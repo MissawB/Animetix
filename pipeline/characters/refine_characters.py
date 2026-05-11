@@ -1,0 +1,107 @@
+import json
+import re
+import os
+import requests
+from tqdm import tqdm
+from dotenv import load_dotenv
+
+# Détection robuste de la racine du projet
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+load_dotenv(os.path.join(BASE_DIR, '.env'))
+
+INPUT_FILE = os.path.join(BASE_DIR, 'data', 'raw', 'raw_characters_db.json')
+OUTPUT_FILE = os.path.join(BASE_DIR, 'data', 'processed', 'refined_characters.json')
+BRAIN_URL = os.getenv("BRAIN_API_URL")
+
+def call_brain_for_extraction(name, description):
+    """Appelle le LLM pour extraire des données structurées."""
+    if not BRAIN_URL:
+        return None
+    
+    prompt = f"""Analyse la description du personnage suivant et extrait les informations au format JSON strict.
+    Nom : {name}
+    Description : {description[:1500]}
+    
+    JSON attendu :
+    {{
+        "age": "string ou null",
+        "gender": "Male/Female/Other",
+        "role": "Protagoniste/Antagoniste/Secondaire",
+        "personality_traits": ["trait1", "trait2"],
+        "powers_abilities": ["pouvoir1", "pouvoir2"],
+        "affiliations": ["groupe1", "groupe2"],
+        "summary_clean": "résumé court en français sans spoilers"
+    }}
+    """
+    
+    try:
+        response = requests.post(f"{BRAIN_URL}/generate", json={
+            "prompt": prompt,
+            "system_prompt": "Tu es un expert en analyse de personnages de fiction. Réponds UNIQUEMENT en JSON."
+        }, timeout=45)
+        
+        if response.status_code == 200:
+            text = response.json().get("text", "")
+            # Nettoyage sommaire du JSON si l'IA ajoute des balises
+            match = re.search(r'\{.*\}', text, re.DOTALL)
+            if match:
+                return json.loads(match.group(0))
+    except Exception as e:
+        print(f"⚠️ Error extracting for {name}: {e}")
+    return None
+
+def run_refinement():
+    if not os.path.exists(INPUT_FILE):
+        print(f"❌ {INPUT_FILE} introuvable.")
+        return
+
+    with open(INPUT_FILE, 'r', encoding='utf-8') as f:
+        db = json.load(f)
+
+    # Charger les déjà raffinés pour l'incrémentalité
+    refined_db = []
+    refined_ids = set()
+    if os.path.exists(OUTPUT_FILE):
+        with open(OUTPUT_FILE, 'r', encoding='utf-8') as f:
+            refined_db = json.load(f)
+            refined_ids = {c['id'] for c in refined_db}
+
+    new_chars = [c for c in db if c['id'] not in refined_ids]
+    if not new_chars:
+        print("ℹ️ Aucun nouveau personnage à raffiner.")
+        return
+
+    print(f"✨ Raffinement LLM de {len(new_chars)} personnages...")
+    
+    for c in tqdm(new_chars):
+        extracted = call_brain_for_extraction(c['name'], c['description'] or "")
+        
+        if extracted:
+            c['metadata'] = {
+                'age': extracted.get('age'),
+                'gender': extracted.get('gender'),
+                'role': extracted.get('role'),
+                'traits': extracted.get('personality_traits', []),
+                'powers': extracted.get('powers_abilities', []),
+                'affiliations': extracted.get('affiliations', [])
+            }
+            c['clean_description'] = extracted.get('summary_clean') or c['description']
+        else:
+            # Fallback si le LLM échoue
+            c['metadata'] = {'gender': c.get('gender')}
+            c['clean_description'] = c['description']
+            
+        refined_db.append(c)
+        
+        # Sauvegarde régulière (tous les 10) pour ne pas tout perdre en cas de crash
+        if len(refined_db) % 10 == 0:
+            with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
+                json.dump(refined_db, f, indent=2, ensure_ascii=False)
+
+    with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
+        json.dump(refined_db, f, indent=2, ensure_ascii=False)
+        
+    print(f"✅ Terminé ! Total: {len(refined_db)} personnages raffinés.")
+
+if __name__ == "__main__":
+    run_refinement()

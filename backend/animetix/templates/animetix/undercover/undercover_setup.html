@@ -1,46 +1,239 @@
 {% extends 'animetix/base.html' %}
+{% load static %}
 
-{% block title %}Animetix - Undercover Party Setup{% endblock %}
+{% block title %}Animetix - Undercover Setup{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6 text-center">
-        <h1 class="display-5 mb-4">🕵️ Undercover Party</h1>
-        <p class="lead mb-5">Déduction sociale en local dans l'univers <strong>{{ media_type }}</strong>.</p>
-        
-        <div class="card p-4 shadow-sm">
-            <form action="{% url 'undercover_party_play' %}" method="post">
-                {% csrf_token %}
-                
-                <div class="mb-4 text-start">
-                    <label class="form-label fw-bold">Nombre de joueurs :</label>
-                    <input type="number" name="num_players" class="form-control form-control-lg" min="3" max="12" value="3">
-                    <div class="form-text text-muted">Minimum 3 joueurs requis.</div>
-                </div>
+<style>
+    .setup-bg {
+        background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
+        min-height: 100vh;
+        position: relative;
+    }
+    .setup-bg::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: url('/static/animetix/img/ui/Light.png') center/contain no-repeat;
+        opacity: 0.15;
+        filter: blur(2px);
+        z-index: 0;
+    }
+    .glass-card {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 1;
+        position: relative;
+    }
+    .glass-card:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(253, 185, 19, 0.2);
+    }
+    .player-btn.active {
+        background: #fdb913 !important;
+        color: black !important;
+        box-shadow: 0 0 25px rgba(253, 185, 19, 0.4);
+        transform: scale(1.1);
+    }
+    .mode-tab.active {
+        border-bottom: 4px solid #fdb913;
+        color: #fdb913 !important;
+    }
+    .diff-btn {
+        transition: all 0.2s;
+        border: 2px solid transparent;
+    }
+    .diff-btn.active {
+        transform: scale(1.1);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+</style>
 
-                <div class="mb-4 text-start">
-                    <label class="form-label fw-bold">Difficulté :</label>
-                    <select name="difficulty" class="form-select form-select-lg">
-                        <option value="Easy">Facile (Sujets éloignés)</option>
-                        <option value="Normal" selected>Normal (Sujets proches)</option>
-                        <option value="Hard">Difficile (Sujets quasi-identiques)</option>
-                    </select>
-                    <div class="form-text text-muted">Définit à quel point l'Undercover sera "proche" des Civils.</div>
+<div class="setup-bg text-white pb-20 overflow-hidden">
+    
+    <div class="relative z-10 max-w-7xl mx-auto px-6 pt-12">
+        <!-- HEADER -->
+        <div class="flex items-center gap-8 mb-16">
+            <div class="w-24 h-24 bg-yellow-400 rounded-[2rem] flex items-center justify-center shadow-[0_0_50px_rgba(253,185,19,0.2)] rotate-6">
+                <i class="bi bi-incognito text-black text-5xl"></i>
+            </div>
+            <div>
+                <h1 class="manga-font text-6xl md:text-8xl tracking-tighter italic leading-none">UNDERCOVER</h1>
+                <div class="flex items-center gap-4 mt-3">
+                    <span class="bg-red-600 text-[10px] font-black px-3 py-1 rounded-full tracking-widest">IA SÉMANTIQUE</span>
+                    <p class="text-yellow-400 manga-font tracking-[0.3em] text-sm opacity-80 uppercase">Infiltration & Déduction</p>
                 </div>
-
-                <button type="submit" class="btn btn-primary btn-lg w-100 py-3">
-                    Lancer la Soirée
-                </button>
-            </form>
+            </div>
         </div>
-        
-        <div class="mt-4 alert alert-light border">
-            <h5>Règles :</h5>
-            <small class="text-muted">
-                Tout le monde reçoit le même mot, sauf un joueur (l'Undercover) qui reçoit une œuvre thématiquement proche. 
-                Donnez des indices sans révéler votre mot !
-            </small>
+
+        <!-- MODE SWITCHER -->
+        <div class="flex gap-12 border-b border-white/10 mb-12 relative z-10">
+            <button onclick="switchTab('local')" id="tab-local" class="mode-tab active pb-4 manga-font text-lg transition-all">MODE LOCAL</button>
+            <button onclick="switchTab('online')" id="tab-online" class="mode-tab pb-4 manga-font text-lg transition-all opacity-40 hover:opacity-100">EN LIGNE</button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-16 relative z-10">
+            
+            <!-- CONFIGURATION COLUMN -->
+            <div class="lg:col-span-8 space-y-12">
+                
+                <!-- UNIVERS SELECTION -->
+                <div class="space-y-6">
+                    <label class="manga-font text-xs tracking-widest opacity-60">CHOISIR L'UNIVERS</label>
+                    <div class="grid grid-cols-3 gap-4">
+                        <a href="{% url 'switch_mode' 'Anime' %}" class="glass-card p-6 rounded-3xl text-center no-underline transition-all {% if request.session.media_type == 'Anime' or not request.session.media_type %}border-yellow-400 bg-yellow-400/10 shadow-[0_0_20px_rgba(253,185,19,0.1)]{% endif %}">
+                            <i class="bi bi-tv text-2xl {% if request.session.media_type == 'Anime' or not request.session.media_type %}text-yellow-400{% else %}text-gray-500{% endif %}"></i>
+                            <span class="manga-font block mt-2 text-sm {% if request.session.media_type == 'Anime' or not request.session.media_type %}text-white{% else %}text-white/40{% endif %}">ANIME</span>
+                        </a>
+                        <a href="{% url 'switch_mode' 'Manga' %}" class="glass-card p-6 rounded-3xl text-center no-underline transition-all {% if request.session.media_type == 'Manga' %}border-yellow-400 bg-yellow-400/10 shadow-[0_0_20px_rgba(253,185,19,0.1)]{% endif %}">
+                            <i class="bi bi-book text-2xl {% if request.session.media_type == 'Manga' %}text-yellow-400{% else %}text-gray-500{% endif %}"></i>
+                            <span class="manga-font block mt-2 text-sm {% if request.session.media_type == 'Manga' %}text-white{% else %}text-white/40{% endif %}">LIVRE</span>
+                        </a>
+                        <a href="{% url 'switch_mode' 'Character' %}" class="glass-card p-6 rounded-3xl text-center no-underline transition-all {% if request.session.media_type == 'Character' %}border-yellow-400 bg-yellow-400/10 shadow-[0_0_20px_rgba(253,185,19,0.1)]{% endif %}">
+                            <i class="bi bi-people text-2xl {% if request.session.media_type == 'Character' %}text-yellow-400{% else %}text-gray-500{% endif %}"></i>
+                            <span class="manga-font block mt-2 text-sm {% if request.session.media_type == 'Character' %}text-white{% else %}text-white/40{% endif %}">PERSO</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- DIFFICULTY SELECTION (C, B, A, S, P) - SHARED -->
+                <div class="space-y-6">
+                    <label class="manga-font text-xs tracking-widest opacity-60">RARETÉ DES ŒUVRES (DIFFICULTÉ)</label>
+                    <div class="grid grid-cols-5 gap-3 bg-white/5 p-2 rounded-[2rem]">
+                        <button onclick="setDiff('Easy')" class="diff-btn manga-font text-xl py-4 rounded-2xl {% if request.session.difficulty == 'Easy' %}bg-green-500 text-white active{% else %}text-green-500/40 hover:bg-green-500/10{% endif %}">C</button>
+                        <button onclick="setDiff('Normal')" class="diff-btn manga-font text-xl py-4 rounded-2xl {% if request.session.difficulty == 'Normal' or not request.session.difficulty %}bg-blue-500 text-white active{% else %}text-blue-500/40 hover:bg-blue-500/10{% endif %}">B</button>
+                        <button onclick="setDiff('Hard')" class="diff-btn manga-font text-xl py-4 rounded-2xl {% if request.session.difficulty == 'Hard' %}bg-orange-500 text-white active{% else %}text-orange-500/40 hover:bg-orange-500/10{% endif %}">A</button>
+                        <button onclick="setDiff('Impossible')" class="diff-btn manga-font text-xl py-4 rounded-2xl {% if request.session.difficulty == 'Impossible' %}bg-red-600 text-white active{% else %}text-red-600/40 hover:bg-red-600/10{% endif %}">S</button>
+                        <a href="{% url 'custom_config' %}" class="diff-btn manga-font text-xl py-4 rounded-2xl flex items-center justify-center no-underline {% if request.session.difficulty == 'Custom' %}bg-purple-600 text-white active{% else %}text-purple-600/40 hover:bg-purple-600/10{% endif %}">P</a>
+                    </div>
+                </div>
+
+                <!-- FORMULAIRES DYNAMIQUES -->
+                <div id="content-local" class="space-y-12 animate__animated animate__fadeIn">
+                    <!-- PLAYER SELECTOR -->
+                    <div class="space-y-6">
+                        <label class="manga-font text-xs tracking-widest opacity-60">EFFECTIF DE L'ESCOUADE</label>
+                        <div class="flex flex-wrap gap-4">
+                            {% for i in "34567891"|make_list %}
+                                {% with val=forloop.counter|add:2 %}
+                                <button type="button" onclick="setPlayers({{ val }})" id="p-btn-{{ val }}" class="player-btn w-16 h-16 rounded-2xl glass-card manga-font text-2xl flex items-center justify-center {% if val == 4 %}active{% endif %}">
+                                    {{ val }}
+                                </button>
+                                {% endwith %}
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <form action="{% url 'undercover_party_play' %}" method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="num_players" id="num_players_input" value="4">
+                        <button type="submit" class="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-black italic manga-font py-8 rounded-[2.5rem] shadow-[0_20px_50px_rgba(253,185,19,0.3)] transition-all hover:scale-[1.02] flex items-center justify-center gap-6 text-2xl">
+                            <i class="bi bi-play-circle-fill text-4xl"></i> INITIALISER LA PARTIE
+                        </button>
+                    </form>
+                </div>
+
+                <!-- ONLINE FORM -->
+                <div id="content-online" class="hidden space-y-12 animate__animated animate__fadeIn">
+                    <div class="p-8 rounded-[2rem] bg-blue-600/10 border border-blue-500/30 flex items-center gap-6">
+                        <i class="bi bi-globe2 text-blue-400 text-4xl"></i>
+                        <p class="text-sm opacity-80 leading-relaxed">
+                            Le mode en ligne permet à chaque joueur d'utiliser son propre écran. <br>
+                            <strong>Créez un salon</strong> ou rejoignez celui d'un ami avec son code secret.
+                        </p>
+                    </div>
+
+                    <form action="{% url 'undercover_online_join' %}" method="post" class="space-y-10">
+                        {% csrf_token %}
+                        <div class="space-y-4">
+                            <label class="manga-font text-xs tracking-widest opacity-60 text-center block">CODE DU SALON</label>
+                            <input type="text" name="room_code" maxlength="4" placeholder="VIDE = CRÉER" class="w-full bg-white/5 border border-white/10 rounded-3xl py-8 text-center text-4xl manga-font tracking-[0.5em] focus:border-yellow-400 focus:bg-white/10 outline-none transition-all">
+                        </div>
+
+                        <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-black italic manga-font py-8 rounded-[2.5rem] shadow-[0_20px_50px_rgba(59,130,246,0.3)] transition-all hover:scale-[1.02] flex items-center justify-center gap-6 text-2xl">
+                            <i class="bi bi-plus-circle-fill text-3xl"></i> REJOINDRE LE RÉSEAU
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+
+            <!-- RULES COLUMN -->
+            <div class="lg:col-span-4">
+                <div class="p-10 rounded-[3rem] glass-card space-y-10 border-l-4 border-yellow-400">
+                    <h3 class="manga-font text-2xl text-yellow-400 italic tracking-tighter">PROTOCOLE</h3>
+                    
+                    <div class="space-y-8">
+                        <div class="flex gap-6 items-start">
+                            <div class="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center shrink-0 manga-font text-lg shadow-xl">01</div>
+                            <div>
+                                <p class="text-sm font-bold uppercase text-white/90 mb-1">Mots Proches</p>
+                                <p class="text-xs opacity-60 leading-relaxed">L'IA génère deux concepts sémantiquement liés mais distincts pour brouiller les pistes.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-6 items-start">
+                            <div class="w-12 h-12 rounded-2xl bg-red-600/20 text-red-400 flex items-center justify-center shrink-0 manga-font text-lg shadow-xl">02</div>
+                            <div>
+                                <p class="text-sm font-bold uppercase text-white/90 mb-1">Infiltration</p>
+                                <p class="text-xs opacity-60 leading-relaxed">Un membre de l'escouade reçoit le mot divergent. Il doit s'adapter pour ne pas être repéré.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-6 items-start">
+                            <div class="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center shrink-0 manga-font text-lg shadow-xl">03</div>
+                            <div>
+                                <p class="text-sm font-bold uppercase text-white/90 mb-1">Interrogatoire</p>
+                                <p class="text-xs opacity-60 leading-relaxed">Chacun donne un indice subtil. Trop clair : l'IA démasquée gagne. Trop flou : vous êtes suspecté.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-10 border-t border-white/10">
+                        <div class="p-6 rounded-2xl bg-black/40 flex items-center gap-4 border border-white/5">
+                            <i class="bi bi-cpu text-yellow-400 text-3xl"></i>
+                            <span class="text-[9px] manga-font tracking-widest opacity-50 leading-loose">SYSTÈME D'ANALYSE <br> SÉMANTIQUE V6.4 ACTIVE</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
+
+<script>
+function setPlayers(n) {
+    document.getElementById('num_players_input').value = n;
+    document.querySelectorAll('.player-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById('p-btn-' + n).classList.add('active');
+}
+
+function setDiff(val) {
+    fetch(`/switch_diff/${val}/`).then(() => window.location.reload());
+}
+
+function switchTab(mode) {
+    const localTab = document.getElementById('tab-local');
+    const onlineTab = document.getElementById('tab-online');
+    const localContent = document.getElementById('content-local');
+    const onlineContent = document.getElementById('content-online');
+
+    if (mode === 'local') {
+        localTab.classList.add('active');
+        localTab.classList.remove('opacity-40');
+        onlineTab.classList.remove('active');
+        onlineTab.classList.add('opacity-40');
+        localContent.classList.remove('hidden');
+        onlineContent.classList.add('hidden');
+    } else {
+        onlineTab.classList.add('active');
+        onlineTab.classList.remove('opacity-40');
+        localTab.classList.remove('active');
+        localTab.classList.add('opacity-40');
+        onlineContent.classList.remove('hidden');
+        localContent.classList.add('hidden');
+    }
+}
+</script>
 {% endblock %}

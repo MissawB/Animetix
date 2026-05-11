@@ -1,0 +1,166 @@
+{% extends 'animetix/base.html' %}
+{% load static %}
+
+{% block title %}Animetix - Code Manga Setup{% endblock %}
+
+{% block content %}
+<style>
+    .glass-setup-card {
+        background: rgba(0, 0, 0, 0.45) !important;
+        backdrop-filter: blur(30px) !important;
+        -webkit-backdrop-filter: blur(30px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        border-radius: 40px !important;
+        box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.8) !important;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .glass-setup-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -50%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.03), transparent);
+        transform: skewX(-25deg);
+        pointer-events: none;
+        transition: 0.5s;
+    }
+    .glass-setup-card:hover::before { left: 150%; }
+
+    .diff-toggle-group {
+        display: flex;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        padding: 4px;
+        gap: 4px;
+    }
+    .diff-toggle-item {
+        flex: 1;
+        padding: 10px;
+        border-radius: 16px;
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: white;
+        opacity: 0.4;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-align: center;
+        border: none;
+        background: transparent;
+    }
+    .btn-check:checked + .diff-toggle-item {
+        opacity: 1;
+        background: #ffc107;
+        color: #000;
+        box-shadow: 0 0 15px rgba(255, 193, 7, 0.3);
+    }
+</style>
+
+<div class="row justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="col-lg-10 text-center">
+        
+        <!-- HEADER -->
+        <div class="animate__animated animate__fadeInDown mb-5">
+            <div class="mb-4">
+                <img src="{% static 'animetix/img/logo/white_logo.png' %}" class="h-20 mx-auto dark:block hidden">
+                <img src="{% static 'animetix/img/logo/logo.png' %}" class="h-20 mx-auto dark:hidden block">
+            </div>
+            <h1 class="display-4 fw-black uppercase italic manga-font text-dark dark:text-white tracking-tighter mb-2">Code Manga</h1>
+            <p class="lead text-dark dark:text-white opacity-75 mb-0">Réseau d'espionnage tactique en temps réel.</p>
+        </div>
+        
+        <div class="row g-4 justify-content-center">
+            <div class="col-md-7 col-lg-6">
+                <div class="glass-setup-card p-5 animate__animated animate__fadeInUp">
+                    <div class="mb-5">
+                        <div class="w-20 h-20 bg-warning/10 border-2 border-warning/20 rounded-full d-flex align-items-center justify-content-center mx-auto mb-4 shadow-[0_0_30px_rgba(255,193,7,0.2)]">
+                            <i class="bi bi-shield-lock-fill text-warning fs-1"></i>
+                        </div>
+                        <h2 class="h3 fw-black text-white uppercase italic manga-font tracking-wider">Accès Réseau</h2>
+                        <p class="text-white opacity-50 small uppercase tracking-widest">Initialisation de la session cryptée</p>
+                    </div>
+
+                    <form onsubmit="event.preventDefault(); joinRoom();">
+                        <!-- ROOM CODE -->
+                        <div class="mb-4">
+                            <label class="small fw-black text-white/40 uppercase tracking-[0.3em] mb-3 d-block">Identifiant du Salon</label>
+                            <input type="text" id="room-code-input" 
+                                   class="form-control form-control-lg border-0 bg-white/5 rounded-pill text-center text-white fw-black py-4 shadow-inner" 
+                                   placeholder="CRÉER OU REJOINDRE" maxlength="4" 
+                                   style="text-transform: uppercase; letter-spacing: 0.5em; font-size: 1.5rem;">
+                        </div>
+
+                        <!-- DIFFICULTY -->
+                        <div class="mb-5">
+                            <label class="small fw-black text-white/40 uppercase tracking-[0.3em] mb-3 d-block">Protocoles d'Analyse (Difficulté)</label>
+                            <div class="diff-toggle-group">
+                                <input type="radio" class="btn-check" name="difficulty" id="diff-easy" value="Easy">
+                                <label class="diff-toggle-item" for="diff-easy">Classe C</label>
+                                
+                                <input type="radio" class="btn-check" name="difficulty" id="diff-normal" value="Normal" checked>
+                                <label class="diff-toggle-item" for="diff-normal">Classe B</label>
+                                
+                                <input type="radio" class="btn-check" name="difficulty" id="diff-hard" value="Hard">
+                                <label class="diff-toggle-item" for="diff-hard">Classe A</label>
+                            </div>
+                        </div>
+
+                        <!-- SUBMIT -->
+                        <button type="button" onclick="joinRoom()" class="btn btn-warning w-100 py-4 fw-black italic manga-font uppercase tracking-widest rounded-pill shadow-[0_0_40px_rgba(255,193,7,0.3)] hover:scale-105 transition-all text-xl">
+                            🚀 Initier la Connexion
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- RÈGLES COMPACTES -->
+        <div class="mt-5 row justify-content-center">
+            <div class="col-md-10 col-lg-8">
+                <div class="p-4 rounded-4 bg-black/20 border border-white/5 text-start animate__animated animate__fadeIn">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="d-flex gap-3">
+                                <div class="w-10 h-10 rounded-3 bg-primary/20 d-flex align-items-center justify-content-center text-primary"><i class="bi bi-grid-3x3"></i></div>
+                                <div>
+                                    <h6 class="fw-black text-dark dark:text-white uppercase italic manga-font mb-1">La Matrice</h6>
+                                    <p class="text-dark dark:text-white opacity-50 xsmall mb-0">25 codes neuronaux. Trouvez ceux de votre couleur.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex gap-3">
+                                <div class="w-10 h-10 rounded-3 bg-danger/20 d-flex align-items-center justify-content-center text-danger"><i class="bi bi-person-badge-fill"></i></div>
+                                <div>
+                                    <h6 class="fw-black text-dark dark:text-white uppercase italic manga-font mb-1">Maître Espion</h6>
+                                    <p class="text-dark dark:text-white opacity-50 xsmall mb-0">Transmet des indices codés à son agent.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function joinRoom() {
+        let code = document.getElementById('room-code-input').value.toUpperCase().trim();
+        const difficulty = document.querySelector('input[name="difficulty"]:checked').value;
+        
+        if (!code) {
+            code = Math.random().toString(36).substring(2, 6).toUpperCase();
+        }
+        
+        const baseUrl = "{% url 'codemanga_room' 'PLACEHOLDER' %}".replace('PLACEHOLDER', code);
+        window.location.href = `${baseUrl}?difficulty=${difficulty}`;
+    }
+</script>
+{% endblock %}

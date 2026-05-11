@@ -1,18 +1,77 @@
-# Garder les fichiers JSON et NPY (vecteurs) pour le déploiement
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# --- Virtual Environments ---
+.venv/
+venv/
+ENV/
+env/
+ENV/
+
+# --- Django ---
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+backend/db.sqlite3
+backend/db.sqlite3-journal
+
+# --- Dagster ---
+.dagster_home/
+pipeline/.dagster_home/
+dagster.yaml
+
+# --- Data & MLOps ---
+data/raw/
+data/models/
+data/chroma_db/
+checkpoints/
+wandb/
+.wandb/
+mlruns/
+lightning_logs/
+
+# Preserve specific artifacts for deployment (from original .gitignore)
 !data/artifacts/*.json
 !data/processed/*.json
 !data/artifacts/*.npy
 
-# Ignorer tout le reste de data par défaut
-data/raw/
-data/models/
+# --- IDEs & Tools ---
+.idea/
+.vscode/
+*.swp
+*.swo
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
 
-# Ignorer le fichier de secrets
+# --- Secrets ---
 .env
+secrets.json
 
-# Ignorer les fichiers cache de Python
-__pycache__/
-*.pyc
-
-# Ignorer
-.idea
+# --- OS ---
+.DS_Store
+Thumbs.db

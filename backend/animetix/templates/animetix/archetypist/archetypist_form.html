@@ -1,78 +1,282 @@
 {% extends 'animetix/base.html' %}
+{% load static %}
 
-{% block title %}Animetix - Story Archetypist{% endblock %}
+{% block title %}La Forge de l'Imaginaire - Animetix{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8 text-center">
-        <h1 class="display-5 mb-4">🎬 Story Archetypist</h1>
-        <p class="lead mb-5">Fusionnez deux <strong>{{ media_type }}s</strong> en un scénario unique.</p>
-        
-        <div class="card p-4 shadow-sm">
-            <form action="{% url 'archetypist' %}" method="post">
-                {% csrf_token %}
-                
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">Œuvre A :</label>
-                        <select id="select-A" name="title_A" placeholder="Aléatoire si vide...">
-                            <option value=""></option>
-                            <!-- Options injectées par JS -->
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">Œuvre B :</label>
-                        <select id="select-B" name="title_B" placeholder="Aléatoire si vide...">
-                            <option value=""></option>
-                            <!-- Options injectées par JS -->
-                        </select>
-                    </div>
-                </div>
+<style>
+    body { overflow-x: hidden; }
+    .cover-img {
+        position: absolute; width: 140px; height: 200px; border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3); object-fit: cover; z-index: 0;
+        transition: all 0.5s ease; opacity: 0.3; filter: grayscale(0.5);
+    }
+    .cover-img:hover { opacity: 0.8; filter: grayscale(0); transform: scale(1.1) !important; z-index: 10; }
 
-                <div class="alert alert-light border small text-muted mb-4">
-                    💡 Laissez les sélections vides pour obtenir un mélange aléatoire cohérent.
-                </div>
+    .glass-forge-card {
+        background: rgba(0, 0, 0, 0.45) !important; backdrop-filter: blur(30px) !important;
+        -webkit-backdrop-filter: blur(30px) !important; border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.8) !important; border-radius: 40px !important;
+        position: relative; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
 
-                <button type="submit" class="btn btn-primary btn-lg w-100 py-3">
-                    Générer la Fusion
-                </button>
-            </form>
+    /* SEGMENTED TOGGLE UI */
+    .media-toggle-group {
+        display: flex; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px; padding: 4px; gap: 4px; backdrop-filter: blur(10px);
+    }
+    .media-toggle-item {
+        flex: 1; border: none; background: transparent; color: white;
+        font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em;
+        padding: 8px 5px; border-radius: 16px; transition: all 0.4s ease; opacity: 0.4;
+        display: flex; flex-direction: column; align-items: center; gap: 4px;
+    }
+    .media-toggle-item i { font-size: 14px; }
+    .media-toggle-item:hover { opacity: 0.8; background: rgba(255, 255, 255, 0.05); }
+    .media-toggle-item.active {
+        opacity: 1; background: #ffc107 !important; color: #000 !important;
+        box-shadow: 0 0 20px rgba(255, 193, 7, 0.4);
+    }
+
+    /* BOUTON FUSION HAUTE FIDÉLITÉ */
+    .btn-forge-active {
+        background: linear-gradient(135deg, #ffc107 0%, #ff8f00 100%);
+        color: #000 !important;
+        border: none;
+        position: relative;
+        padding: 22px 60px;
+        border-radius: 60px;
+        font-family: 'Chakra Petch', sans-serif;
+        font-weight: 900;
+        font-style: italic;
+        text-transform: uppercase;
+        letter-spacing: 4px;
+        overflow: hidden;
+        box-shadow: 0 0 50px rgba(255, 193, 7, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.3);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        cursor: pointer;
+        font-size: 1.25rem;
+    }
+    .btn-forge-active:hover {
+        transform: scale(1.08) translateY(-3px);
+        box-shadow: 0 0 80px rgba(255, 193, 7, 0.6), inset 0 0 30px rgba(255, 255, 255, 0.5);
+    }
+    .btn-forge-active::after {
+        content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, transparent 70%);
+        opacity: 0; transition: opacity 0.3s; pointer-events: none;
+    }
+    .btn-forge-active:hover::after { opacity: 1; }
+
+    .search-results-box {
+        position: absolute; top: 100%; left: 0; right: 0;
+        background: rgba(15, 15, 25, 0.99); border: 1px solid rgba(255, 255, 255, 0.1);
+        max-height: 250px; overflow-y: auto; z-index: 2000; margin-top: 15px;
+        backdrop-filter: blur(35px); border-radius: 25px; text-align: left;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+    }
+    .search-item {
+        padding: 12px 18px; cursor: pointer; display: flex; align-items: center;
+        gap: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.2s;
+    }
+    .search-item:hover { background: rgba(255, 193, 7, 0.2); transform: translateX(5px); }
+    .search-item img { width: 35px; height: 50px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
+
+    @keyframes flyLeft { 0% { opacity: 0; transform: translateX(-120vw) rotate(-60deg); } 100% { opacity: 0.3; transform: translateX(0) rotate(var(--rot, 0deg)); } }
+    @keyframes flyRight { 0% { opacity: 0; transform: translateX(120vw) rotate(60deg); } 100% { opacity: 0.3; transform: translateX(0) rotate(var(--rot, 0deg)); } }
+    @keyframes flyTop { 0% { opacity: 0; transform: translateY(-120vh) rotate(30deg); } 100% { opacity: 0.3; transform: translateY(0) rotate(var(--rot, 0deg)); } }
+    @keyframes flyBottom { 0% { opacity: 0; transform: translateY(120vh) rotate(-30deg); } 100% { opacity: 0.3; transform: translateY(0) rotate(var(--rot, 0deg)); } }
+</style>
+
+<div class="row justify-content-center position-relative align-items-center" style="min-height: 85vh;">
+    <div class="absolute inset-0 pointer-events-none d-none d-lg-block" style="position: absolute; top:0; left:0; width:100%; height:100%;">
+        {% for item in example_covers %}
+        <img src="{{ item.image }}" class="cover-img {{ item.css_style }} {{ item.fly_class }}" style="animation-delay: {{ item.animation_delay }}s;" alt="">
+        {% endfor %}
+    </div>
+
+    <div class="col-md-11 col-lg-10 text-center relative z-10">
+        <div id="forge-container">
+            <!-- HEADER AVEC LOGO RÉACTIF -->
+            <div class="animate-fade-down mb-5">
+                <div class="mb-4">
+                    <img src="{% static 'animetix/img/logo/logo.png' %}" alt="Logo" class="h-28 mx-auto dark:hidden block">
+                    <img src="{% static 'animetix/img/logo/white_logo.png' %}" alt="Logo" class="h-28 mx-auto hidden dark:block">
+                </div>
+                <h1 class="display-4 fw-black uppercase italic manga-font mb-1 tracking-tighter text-dark dark:text-white drop-shadow-2xl">La Forge de l'Imaginaire</h1>
+            </div>
+
+            <div class="p-2 mb-4">
+                <form hx-post="{% url 'archetypist' %}" hx-target="#forge-result" hx-indicator="#loading-overlay" hx-swap="innerHTML transition:true">
+                    {% csrf_token %}
+                    <div class="flex flex-row items-center justify-center gap-5 mb-5">
+                        
+                        <!-- ENTITÉ ALPHA -->
+                        <div class="w-full max-w-[380px]">
+                            <div class="p-5 glass-forge-card">
+                                <div id="preview-A" class="mb-4 rounded-5 overflow-hidden bg-black/30 border border-white/5 hidden shadow-inner" style="height: 180px;"></div>
+                                <div class="position-relative text-center">
+                                    <div id="selected-info-A" class="mb-4 hidden animate__animated animate__fadeIn">
+                                        <h4 class="text-white manga-font mb-1 text-xl" id="display-title-A"></h4>
+                                        <p class="text-xs text-warning opacity-80 italic" id="display-native-A"></p>
+                                    </div>
+                                    <input type="text" autocomplete="off" name="title_A" id="input-A" 
+                                           class="form-control form-control-lg border-0 bg-white/5 rounded-pill text-center manga-font text-white text-sm py-4 shadow-sm" 
+                                           placeholder="DÉMARRER ALPHA" required oninput="searchItems(this, 'results-A', 'preview-A', 'A')">
+                                    <div id="results-A" class="search-results-box hidden"></div>
+                                    <input type="hidden" name="media_type_A" id="media-type-alpha" value="{{ media_type }}">
+                                </div>
+                                <!-- ALPHA MEDIA TOGGLE -->
+                                <div class="mt-5 media-toggle-group">
+                                    <button type="button" onclick="setMedia('A', '{{ media_type }}', this)" class="media-toggle-item active">
+                                        <i class="bi {% if media_type == 'Anime' %}bi-tv{% elif media_type == 'Manga' %}bi-book{% else %}bi-person-badge{% endif %}"></i>
+                                        <span>{{ media_type }}</span>
+                                    </button>
+                                    {% for opt in cross_options %}
+                                    <button type="button" onclick="setMedia('A', '{{ opt.type }}', this)" class="media-toggle-item">
+                                        <i class="bi {{ opt.icon }}"></i>
+                                        <span>{{ opt.label|slice:":5" }}</span>
+                                    </button>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- VS DIVIDER -->
+                        <div class="flex flex-col items-center">
+                            <div class="text-warning font-black italic manga-font text-6xl animate-pulse drop-shadow-[0_0_30px_rgba(255,193,7,0.7)]">X</div>
+                        </div>
+
+                        <!-- ENTITÉ BÊTA -->
+                        <div class="w-full max-w-[380px]">
+                            <div class="p-5 glass-forge-card">
+                                <div id="preview-B" class="mb-4 rounded-5 overflow-hidden bg-black/30 border border-white/5 hidden shadow-inner" style="height: 160px;"></div>
+                                <div class="position-relative text-center">
+                                    <div id="selected-info-B" class="mb-4 hidden animate__animated animate__fadeIn">
+                                        <h4 class="text-white manga-font mb-1 text-xl" id="display-title-B"></h4>
+                                        <p class="text-xs text-warning opacity-80 italic" id="display-native-B"></p>
+                                    </div>
+                                    <input type="text" autocomplete="off" name="title_B" id="input-B" 
+                                           class="form-control form-control-lg border-0 bg-white/5 rounded-pill text-center manga-font text-white text-sm py-4 shadow-sm" 
+                                           placeholder="DÉMARRER BÊTA" required oninput="searchItems(this, 'results-B', 'preview-B', 'B')">
+                                    <div id="results-B" class="search-results-box hidden"></div>
+                                    <input type="hidden" name="media_type_B" id="media-type-beta" value="{{ media_type }}">
+                                </div>
+                                <!-- BÊTA MEDIA TOGGLE -->
+                                <div class="mt-5 media-toggle-group">
+                                    <button type="button" onclick="setMedia('B', '{{ media_type }}', this)" class="media-toggle-item active">
+                                        <i class="bi {% if media_type == 'Anime' %}bi-tv{% elif media_type == 'Manga' %}bi-book{% else %}bi-person-badge{% endif %}"></i>
+                                        <span>{{ media_type }}</span>
+                                    </button>
+                                    {% for opt in cross_options %}
+                                    <button type="button" onclick="setMedia('B', '{{ opt.type }}', this)" class="media-toggle-item">
+                                        <i class="bi {{ opt.icon }}"></i>
+                                        <span>{{ opt.label|slice:":5" }}</span>
+                                    </button>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-forge-active animate__animated animate__pulse animate__infinite">
+                        🔥 Lancer la Fusion
+                    </button>
+                </form>
+            </div>
+
+            <div id="forge-result" class="mt-5"></div>
+
+            <!-- OVERLAY CHARGEMENT -->
+            <div id="loading-overlay" class="htmx-indicator position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background: rgba(0,0,0,0.98); z-index: 3000; backdrop-filter: blur(30px);">
+                <div class="text-center text-white">
+                    <div class="relative w-48 h-48 mx-auto mb-10">
+                        <div class="absolute inset-0 border-[6px] border-warning border-t-transparent rounded-full animate-spin"></div>
+                        <div class="absolute inset-8 border-[6px] border-white border-b-transparent rounded-full animate-spin-slow"></div>
+                        <div class="absolute inset-0 flex items-center justify-center manga-font text-warning text-5xl italic font-black">FORGE</div>
+                    </div>
+                    <h2 class="manga-font italic text-6xl text-warning tracking-tighter">Génération Neuronale...</h2>
+                </div>
+            </div>
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block extra_js %}
+<script id="items-data-hidden" type="application/json">{{ items_json|safe }}</script>
+<script id="cross-data-hidden" type="application/json">{{ cross_data_json|safe }}</script>
+
+<style>
+    .htmx-indicator { display: none; }
+    .htmx-request .htmx-indicator { display: flex; }
+    @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
+    .animate-spin-slow { animation: spin-slow 3s linear infinite; }
+</style>
+
 <script>
-    const items = {{ items_json|safe }};
+    let mainItems = [];
+    let crossData = {};
+    let currentAlphaPool = [];
+    let currentBetaPool = [];
 
-    function setupSelect(id) {
-        return new TomSelect(id, {
-            valueField: 'title',
-            labelField: 'title',
-            searchField: ['title', 'title_english', 'title_native'],
-            maxOptions: 50,
-            options: items,
-            render: {
-                option: function(data, escape) {
-                    return `<div class="d-flex align-items-center py-1">
-                        <div class="me-2" style="width: 30px; height: 40px; flex-shrink: 0;">
-                            <img src="${escape(data.image)}" class="rounded w-100 h-100" style="object-fit: cover;" onerror="this.src='https://via.placeholder.com/30x40?text=?'">
-                        </div>
-                        <div class="flex-grow-1 overflow-hidden text-start">
-                            <div class="fw-bold text-truncate small">${escape(data.title)}</div>
-                            <div class="text-muted" style="font-size: 0.7rem;">${escape(data.title_english || '')}</div>
-                        </div>
-                    </div>`;
-                },
-                item: function(data, escape) {
-                    return `<div class="small fw-bold">${escape(data.title)}</div>`;
-                }
-            }
-        });
+    function searchItems(input, resultsId, previewId, side) {
+        const query = input.value.toLowerCase().trim();
+        const resultsBox = document.getElementById(resultsId);
+        if (query.length < 2) { resultsBox.classList.add('hidden'); return; }
+        const pool = (side === 'A') ? currentAlphaPool : currentBetaPool;
+        const filtered = pool.filter(it => {
+            const t = (it.title || "").toLowerCase();
+            const tn = (it.title_native || "").toLowerCase();
+            return t.includes(query) || tn.includes(query);
+        }).slice(0, 10);
+
+        if (filtered.length > 0) {
+            resultsBox.innerHTML = '';
+            filtered.forEach(it => {
+                const title = it.title;
+                const native = it.title_native || "";
+                const img = it.image || "";
+                const div = document.createElement('div');
+                div.className = 'search-item';
+                div.innerHTML = `<img src="${img}" onerror="this.src='{% static 'animetix/img/ui/frieren.png' %}'"><div class="flex-1 overflow-hidden"><div class="font-bold text-[13px] truncate text-white uppercase">${title}</div>${native ? `<div class="text-[10px] text-warning opacity-50 truncate">${native}</div>` : ''}</div>`;
+                div.onmousedown = (e) => { e.preventDefault(); selectItem(title, native, img, input, resultsBox, previewId, side); };
+                resultsBox.appendChild(div);
+            });
+            resultsBox.classList.remove('hidden');
+        } else { resultsBox.classList.add('hidden'); }
     }
 
-    setupSelect("#select-A");
-    setupSelect("#select-B");
+    function selectItem(title, native, img, input, resultsBox, previewId, side) {
+        input.value = title;
+        resultsBox.classList.add('hidden');
+        const preview = document.getElementById(previewId);
+        preview.innerHTML = `<img src="${img}" class="w-full h-full object-contain animate__animated animate__zoomIn" onerror="this.src='{% static 'animetix/img/ui/frieren.png' %}'">`;
+        preview.classList.remove('hidden');
+        const info = document.getElementById('selected-info-' + side);
+        document.getElementById('display-title-' + side).innerText = title;
+        document.getElementById('display-native-' + side).innerText = native;
+        info.classList.remove('hidden');
+        input.placeholder = "";
+    }
+
+    function setMedia(side, type, btn) {
+        const inputHidden = document.getElementById(side === 'A' ? 'media-type-alpha' : 'media-type-beta');
+        inputHidden.value = type;
+        const parent = btn.parentElement;
+        parent.querySelectorAll('.media-toggle-item').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const input = document.getElementById('input-' + side);
+        input.value = ''; input.placeholder = "CHOISIR " + type.toUpperCase();
+        document.getElementById('preview-' + side).classList.add('hidden');
+        document.getElementById('selected-info-' + side).classList.add('hidden');
+        const pool = (type === '{{ media_type }}') ? mainItems : (crossData[type] || []);
+        if (side === 'A') currentAlphaPool = pool; else currentBetaPool = pool;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        mainItems = JSON.parse(document.getElementById('items-data-hidden').textContent || '[]');
+        crossData = JSON.parse(document.getElementById('cross-data-hidden').textContent || '{}');
+        currentAlphaPool = mainItems; currentBetaPool = mainItems;
+        document.addEventListener('click', e => { if (!e.target.closest('.position-relative')) document.querySelectorAll('.search-results-box').forEach(b => b.classList.add('hidden')); });
+    });
 </script>
 {% endblock %}

@@ -1,0 +1,77 @@
+{% extends 'animetix/base.html' %}
+
+{% block title %}Classement Mondial - Animetix{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        
+        <div class="text-center mb-5 animate__animated animate__fadeInDown">
+            <h1 class="display-4 fw-bold mb-2">🏆 Classement Mondial</h1>
+            <p class="lead text-muted">Les plus grands experts en Data Manga & Cinéma</p>
+        </div>
+
+        <div class="card border-0 shadow-lg overflow-hidden" style="border-radius: 30px;">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="bg-primary text-white border-0">
+                        <tr>
+                            <th class="py-4 ps-4 text-center" style="width: 80px;">#</th>
+                            <th class="py-4">Joueur</th>
+                            <th class="py-4 text-center">Rang</th>
+                            <th class="py-4 text-center">XP</th>
+                            <th class="py-4 text-center">Série (Streak)</th>
+                            <th class="py-4 text-center">Victoires</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for profile in top_profiles %}
+                        <tr class="{% if profile.user == request.user %}table-primary{% endif %}">
+                            <td class="py-4 text-center fw-bold fs-5">
+                                {% if forloop.counter == 1 %}🥇
+                                {% elif forloop.counter == 2 %}🥈
+                                {% elif forloop.counter == 3 %}🥉
+                                {% else %}{{ forloop.counter }}{% endif %}
+                            </td>
+                            <td class="py-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-light rounded-circle me-3 d-flex align-items-center justify-content-center fw-bold text-primary shadow-sm" style="width: 45px; height: 45px;">
+                                        {{ profile.user.username|slice:":1"|upper }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold fs-5">{{ profile.user.username }}</div>
+                                        {% if profile.user == request.user %}
+                                        <span class="badge bg-primary xsmall">Vous</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="py-4 text-center">
+                                <span class="badge bg-light text-dark border rounded-pill px-3 py-2 fw-bold shadow-xs">
+                                    {{ profile.rank }}
+                                </span>
+                            </td>
+                            <td class="py-4 text-center fw-bold text-primary">{{ profile.ranked_points }}</td>
+                            <td class="py-4 text-center">
+                                {% if profile.current_streak > 0 %}
+                                <span class="text-warning fw-bold"><i class="bi bi-fire"></i> {{ profile.current_streak }}</span>
+                                {% else %}-{% endif %}
+                            </td>
+                            <td class="py-4 text-center fw-bold">{{ profile.total_wins }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">Aucun profil enregistré pour le moment.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="text-center mt-5">
+            <p class="text-muted small">Les scores sont mis à jour après chaque victoire en mode Classic ou Daily.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

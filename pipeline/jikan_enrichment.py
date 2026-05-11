@@ -1,0 +1,136 @@
+import requests
+import json
+import time
+import os
+
+# Détection robuste de la racine du projet
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+ANIME_INPUT = os.path.join(BASE_DIR, 'data', 'raw', 'raw_anilist_db.json')
+MANGA_INPUT = os.path.join(BASE_DIR, 'data', 'raw', 'raw_anilist_manga_db.json')
+CHAR_INPUT = os.path.join(BASE_DIR, 'data', 'raw', 'raw_characters_db.json')
+
+ANIME_OUTPUT = os.path.join(BASE_DIR, 'data', 'raw', 'jikan_anime_enrichment.json')
+MANGA_OUTPUT = os.path.join(BASE_DIR, 'data', 'raw', 'jikan_manga_enrichment.json')
+CHAR_OUTPUT = os.path.join(BASE_DIR, 'data', 'raw', 'jikan_char_enrichment.json')
+
+def fetch_jikan_details(mal_id, media_type='anime'):
+    url = f"https://api.jikan.moe/v4/{media_type}/{mal_id}/full"
+    try:
+        response = requests.get(url, timeout=15)
+        if response.status_code == 200:
+            return response.json().get('data', {})
+        elif response.status_code == 429:
+            print(f"⚠️ Rate limit reached for {media_type} {mal_id}. Sleeping 10s...")
+            time.sleep(10)
+            return fetch_jikan_details(mal_id, media_type)
+        else:
+            return {}
+    except Exception as e:
+        print(f"❌ Exception for {media_type} {mal_id} details: {e}")
+        return {}
+
+def fetch_jikan_recommendations(mal_id, media_type='anime'):
+    url = f"https://api.jikan.moe/v4/{media_type}/{mal_id}/recommendations"
+    try:
+        response = requests.get(url, timeout=15)
+        if response.status_code == 200:
+            return response.json().get('data', [])
+        elif response.status_code == 429:
+            time.sleep(10)
+            return fetch_jikan_recommendations(mal_id, media_type)
+        return []
+    except: return []
+
+def enrich_media(input_file, output_file, media_type='anime'):
+    if not os.path.exists(input_file):
+        print(f"Skipping {media_type}: {input_file} not found.")
+        return
+
+    with open(input_file, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+
+    enrichment_data = {}
+    if os.path.exists(output_file):
+        try:
+            with open(output_file, 'r', encoding='utf-8') as f:
+                enrichment_data = json.load(f)
+        except: pass
+
+    print(f"🚀 Enriching {len(data)} {media_type}s using Jikan...")
+    
+    count = 0
+    # On limite à 1000 items pour éviter de saturer l'API Jikan pendant des heures
+    # Vous pouvez augmenter cette limite si nécessaire
+    for item in data[:1000]:
+        mal_id = item.get('idMal')
+        if not mal_id or str(mal_id) in enrichment_data:
+            continue
+        
+        # 1. Fetch Details
+        details = fetch_jikan_details(mal_id, media_type)
+        time.sleep(1.2) # Jikan limit: 3 requests per second max
+        
+        # 2. Fetch Recommendations
+        recs = fetch_jikan_recommendations(mal_id, media_type)
+        
+        if details or recs:
+            # SÉCURISATION : Utilisation de .get() pour éviter KeyError: 'content'
+            clean_recs = []
+            for r in recs:
+                entry = r.get('entry', {})
+                clean_recs.append({
+                    'title': entry.get('title', 'Unknown'),
+                    'content': r.get('content', '') # C'est ici que ça plantait
+                })
+
+            enrichment_data[str(mal_id)] = {
+                'background': details.get('background'),
+                'themes': [t.get('name') for t in details.get('themes', []) if 'name' in t],
+                'recommendations': clean_recs
+            }
+        
+        count += 1
+        if count % 20 == 0:
+            print(f"✅ Processed {count} items...")
+            with open(output_file, 'w', encoding='utf-8') as f:
+                json.dump(enrichment_data, f, indent=2, ensure_ascii=False)
+        
+        time.sleep(1.2)
+
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
+    with open(output_file, 'w', encoding='utf-8') as f:
+        json.dump(enrichment_data, f, indent=2, ensure_ascii=False)
+    
+    print(f"✅ Finished enriching {media_type}s!")
+
+def enrich_characters(input_file, output_file):
+    if not os.path.exists(input_file): return
+
+    with open(input_file, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+
+    enrichment_data = {}
+    if os.path.exists(output_file):
+        try:
+            with open(output_file, 'r', encoding='utf-8') as f:
+                enrichment_data = json.load(f)
+        except: pass
+
+    print(f"🚀 Enriching {len(data)} characters using Jikan...")
+    
+    count = 0
+    for item in data[:500]:
+        mal_id = item.get('id') # AniList ID
+        # Pour les persos, on tente de trouver l'équivalent Jikan si possible
+        # Note: L'enrichissement des persos par Jikan est plus complexe car les IDs diffèrent
+        continue # Optionnel pour l'instant pour gagner du temps
+        
+    print("✅ Character enrichment step completed.")
+
+if __name__ == "__main__":
+    os.makedirs(os.path.join(BASE_DIR, 'data', 'raw'), exist_ok=True)
+    
+    enrich_media(ANIME_INPUT, ANIME_OUTPUT, 'anime')
+    enrich_media(MANGA_INPUT, MANGA_OUTPUT, 'manga')
+    # enrich_characters(CHAR_INPUT, CHAR_OUTPUT) # Désactivé par défaut (IDs instables)

@@ -5,6 +5,11 @@
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-10 text-center">
+        {% if is_daily %}
+        <div class="badge bg-warning text-dark fw-bold rounded-pill px-3 py-2 mb-3 shadow-sm animate__animated animate__bounceIn">
+            🏆 DÉFI DU JOUR
+        </div>
+        {% endif %}
         <h2 class="mb-4">{{ txt.nav_paradox }} ({{ media_type }})</h2>
         
         <div class="card shadow-lg mb-5 border-0 overflow-hidden" style="border-radius: 25px;">

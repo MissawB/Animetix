@@ -1,0 +1,85 @@
+{% extends 'animetix/base.html' %}
+
+{% block title %}Akinetix - Le Devin{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8 text-center">
+        
+        <div class="mb-5">
+            <h2 class="fw-bold">🧠 Akinetix : Le Devin</h2>
+            <p class="text-muted">Pensez à un <strong>{{ media_type }}</strong> et je vais tenter de le découvrir !</p>
+        </div>
+
+        <!-- ZONE DE CHAT / QUESTIONS IA -->
+        <div class="card border-0 shadow-lg mb-5 overflow-hidden" style="border-radius: 30px; background: white;">
+            <div class="card-body p-5">
+                
+                <!-- Historique -->
+                <div class="mb-4 text-start">
+                    {% for item in history %}
+                    <div class="d-flex mb-2 opacity-50 small">
+                        <div class="fw-bold me-2 text-primary">IA :</div>
+                        <div class="flex-grow-1">{{ item.q }}</div>
+                        <div class="fw-bold ms-2 text-dark">{{ item.a }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <hr class="mb-5 opacity-10">
+
+                <!-- Question Actuelle -->
+                <div class="animate__animated animate__fadeIn">
+                    <div class="display-6 mb-4 fw-bold text-primary">
+                        {{ current_question }}
+                    </div>
+
+                    {% if not game_over %}
+                    <div class="d-flex justify-content-center gap-3">
+                        <form action="{% url 'akinetix_answer' %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="answer" value="OUI">
+                            <button type="submit" class="btn btn-success btn-lg rounded-pill px-5 shadow-sm fw-bold">OUI</button>
+                        </form>
+                        <form action="{% url 'akinetix_answer' %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="answer" value="NON">
+                            <button type="submit" class="btn btn-danger btn-lg rounded-pill px-5 shadow-sm fw-bold">NON</button>
+                        </form>
+                        <form action="{% url 'akinetix_answer' %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="answer" value="PEUT-ÊTRE">
+                            <button type="submit" class="btn btn-secondary btn-lg rounded-pill px-4 shadow-sm">PEUT-ÊTRE</button>
+                        </form>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning p-4 rounded-4 mt-4 shadow-sm border-0">
+                        <h4 class="fw-bold mb-3">Est-ce la bonne réponse ?</h4>
+                        <div class="d-flex justify-content-center gap-3">
+                            <form action="{% url 'akinetix_confirm' %}" method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="correct" value="true">
+                                <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold">OUI, BIEN JOUÉ !</button>
+                            </form>
+                            <form action="{% url 'akinetix_confirm' %}" method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="correct" value="false">
+                                <button type="submit" class="btn btn-outline-dark rounded-pill px-5">NON, TU AS ÉCHOUÉ</button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+
+        <div class="text-center opacity-50">
+            <a href="{% url 'index' %}" class="text-decoration-none text-muted">
+                <i class="bi bi-arrow-left me-1"></i> Retour à l'accueil
+            </a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

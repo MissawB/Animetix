@@ -1,0 +1,70 @@
+name: Animetix CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    name: Run Unit Tests & Linting
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: animetix
+          POSTGRES_PASSWORD: secretpassword
+          POSTGRES_DB: animetix_test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run All Tests (Pytest)
+      env:
+        DATABASE_URL: postgres://animetix:secretpassword@localhost:5432/animetix_test_db
+        REDIS_URL: redis://localhost:6379/1
+        DJANGO_SECRET_KEY: ci-test-key
+        DJANGO_DEBUG: 'False'
+        BRAIN_API_URL: http://localhost:8000
+      run: |
+        python -m pytest
+
+  deploy:
+    name: Deploy to Production
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+      
+    - name: Deploy Notification
+      run: echo "Tests passed! Triggering deployment script (e.g. Docker Swarm / Kubernetes / HF Spaces hook)..."

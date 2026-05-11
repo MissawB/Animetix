@@ -1,0 +1,3161 @@
+[
+  {
+    "id": 1020,
+    "title": "Grand Theft Auto V",
+    "description": "Grand Theft Auto V is a vast open world game set in Los Santos, a sprawling sun-soaked metropolis struggling to stay afloat in an era of economic uncertainty and cheap reality TV. The game blends storytelling and gameplay in new ways as players repeatedly jump in and out of the lives of the game’s three lead characters, playing all sides of the game’s interwoven story.",
+    "genres": [
+      "Shooter",
+      "Racing",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Comedy",
+      "Sandbox",
+      "Open world"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "PlayStation 4",
+      "PC (Microsoft Windows)",
+      "Xbox 360",
+      "Xbox One"
+    ],
+    "rating": 88.89129664258219,
+    "year": "2013",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co2lbd.jpg",
+    "similar": [
+      "Grand Theft Auto: Vice City",
+      "Grand Theft Auto: San Andreas",
+      "Watch Dogs 2",
+      "Mafia II",
+      "Max Payne 3"
+    ]
+  },
+  {
+    "id": 1942,
+    "title": "The Witcher 3: Wild Hunt",
+    "description": "The Witcher 3: Wild Hunt is an open-world action role-playing game developed by CD Projekt Red.\n\nSet in a dark fantasy world, the game follows Geralt of Rivia, a monster hunter searching for his adopted daughter, Ciri, while navigating political conflicts and supernatural threats. Gameplay features exploration, combat, character progression, and branching narratives shaped by player choices. Widely acclaimed for its writing, world-building, and depth, it is considered one of the most influential RPGs of its generation.",
+    "genres": [
+      "Role-playing (RPG)",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy",
+      "Open world"
+    ],
+    "platforms": [
+      "Xbox Series X|S",
+      "PlayStation 4",
+      "PC (Microsoft Windows)",
+      "PlayStation 5",
+      "Xbox One",
+      "Nintendo Switch"
+    ],
+    "rating": 92.76221531798237,
+    "year": "2015",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/coaarl.jpg",
+    "similar": [
+      "Middle-earth: Shadow of Mordor",
+      "The Legend of Zelda: Breath of the Wild",
+      "Red Dead Redemption 2",
+      "Dragon Age: Inquisition",
+      "The Elder Scrolls V: Skyrim"
+    ]
+  },
+  {
+    "id": 72,
+    "title": "Portal 2",
+    "description": "Sequel to the acclaimed Portal (2007), Portal 2 pits the protagonist of the original game, Chell, and her new robot friend, Wheatley, against more puzzles conceived by GLaDOS, an A.I. with the sole purpose of testing the Portal Gun's mechanics and taking revenge on Chell for the events of Portal. As a result of several interactions and revelations, Chell once again pushes to escape Aperture Science Labs.",
+    "genres": [
+      "Platform",
+      "Puzzle",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Science fiction",
+      "Comedy"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "Linux",
+      "PC (Microsoft Windows)",
+      "Mac",
+      "Xbox 360",
+      "Nintendo Switch"
+    ],
+    "rating": 91.90059933841746,
+    "year": "2011",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1rs4.jpg",
+    "similar": [
+      "Human: Fall Flat",
+      "Pikuniku",
+      "Dream Alone",
+      "Planet Alpha",
+      "Semblance"
+    ]
+  },
+  {
+    "id": 472,
+    "title": "The Elder Scrolls V: Skyrim",
+    "description": "Skyrim reimagines and revolutionizes the open-world fantasy epic, bringing to life a complete virtual world open for you to explore any way you choose. Play any type of character you can imagine, and do whatever you want; the legendary freedom of choice, storytelling, and adventure of The Elder Scrolls is realized like never before.",
+    "genres": [
+      "Role-playing (RPG)",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy",
+      "Stealth",
+      "Sandbox",
+      "Open world"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "PC (Microsoft Windows)",
+      "Xbox 360"
+    ],
+    "rating": 83.78119486818929,
+    "year": "2011",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1tnw.jpg",
+    "similar": [
+      "The Elder Scrolls IV: Oblivion",
+      "Dishonored",
+      "The Elder Scrolls III: Morrowind",
+      "Middle-earth: Shadow of Mordor",
+      "Fallout: New Vegas"
+    ]
+  },
+  {
+    "id": 732,
+    "title": "Grand Theft Auto: San Andreas",
+    "description": "Returning after his mother's murder to the semi-fictional city of Los Santos (based on Los Angeles), Carl Johnson, a former gang banger, must take back the streets for his family and friends by gaining respect and once again gaining control over the streets. However, a story filled with crime, lies and corruption will lead him to trudge the entire state of San Andreas (based on California and Nevada) to rebuild his life.",
+    "genres": [
+      "Shooter",
+      "Racing",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Stealth",
+      "Open world"
+    ],
+    "platforms": [
+      "Xbox",
+      "PlayStation 3",
+      "PlayStation 4",
+      "Android",
+      "PC (Microsoft Windows)",
+      "iOS",
+      "Mac",
+      "Xbox 360",
+      "PlayStation 2"
+    ],
+    "rating": 91.58575378749461,
+    "year": "2004",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co2lb9.jpg",
+    "similar": [
+      "Grand Theft Auto V",
+      "Grand Theft Auto: Vice City",
+      "Grand Theft Auto IV",
+      "Grand Theft Auto: Vice City Stories",
+      "Watch Dogs 2"
+    ]
+  },
+  {
+    "id": 71,
+    "title": "Portal",
+    "description": "Waking up in a seemingly empty laboratory, the player is made to complete various physics-based puzzle challenges through numerous test chambers in order to test out the new Aperture Science Handheld Portal Device, without an explanation as to how, why or by whom.",
+    "genres": [
+      "Platform",
+      "Puzzle",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Science fiction",
+      "Comedy"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "Linux",
+      "Android",
+      "PC (Microsoft Windows)",
+      "Mac",
+      "Xbox 360",
+      "Nintendo Switch"
+    ],
+    "rating": 83.20789427950092,
+    "year": "2007",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/coay61.jpg",
+    "similar": [
+      "Half-Life",
+      "Soma",
+      "Portal 2",
+      "Dishonored",
+      "Syndicate"
+    ]
+  },
+  {
+    "id": 25076,
+    "title": "Red Dead Redemption 2",
+    "description": "Red Dead Redemption 2 is the epic tale of outlaw Arthur Morgan and the infamous Van der Linde gang, on the run across America at the dawn of the modern age.",
+    "genres": [
+      "Shooter",
+      "Role-playing (RPG)",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Drama",
+      "Open world"
+    ],
+    "platforms": [
+      "Google Stadia",
+      "PlayStation 4",
+      "PC (Microsoft Windows)",
+      "Xbox One"
+    ],
+    "rating": 93.59286957498313,
+    "year": "2018",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1q1f.jpg",
+    "similar": [
+      "The Witcher 3: Wild Hunt",
+      "Horizon Zero Dawn",
+      "Death Stranding",
+      "Borderlands 3",
+      "Monster Hunter: World"
+    ]
+  },
+  {
+    "id": 1009,
+    "title": "The Last of Us",
+    "description": "The Last of Us is a third-person action-adventure game featuring a mix of exploration, stealth and combat. Players face both infected creatures and hostile human enemies while progressing through varied environments. The game includes a narrative-driven single-player campaign and a competitive online multiplayer mode called Factions. Trophy support is included, and additional downloadable content was made available separately.",
+    "genres": [
+      "Shooter",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Horror",
+      "Survival",
+      "Stealth"
+    ],
+    "platforms": [
+      "PlayStation 3"
+    ],
+    "rating": 92.2548022012256,
+    "year": "2013",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1r7f.jpg",
+    "similar": [
+      "Grand Theft Auto V",
+      "Dishonored",
+      "Metal Gear Solid V: The Phantom Pain",
+      "Watch Dogs 2",
+      "BioShock Infinite"
+    ]
+  },
+  {
+    "id": 19560,
+    "title": "God of War",
+    "description": "God of War is the sequel to God of War III as well as a continuation of the canon God of War chronology. Unlike previous installments, this game focuses on Norse mythology and follows an older and more seasoned Kratos and his son Atreus in the years since the third game. It is in this harsh, unforgiving world that he must fight to survive… and teach his son to do the same.",
+    "genres": [
+      "Role-playing (RPG)",
+      "Hack and slash/Beat 'em up",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy",
+      "Historical"
+    ],
+    "platforms": [
+      "PlayStation 4",
+      "PC (Microsoft Windows)"
+    ],
+    "rating": 94.176628404751,
+    "year": "2018",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/cobkt6.jpg",
+    "similar": [
+      "God of War Ragnarök",
+      "The Last of Us Part II",
+      "Marvel's Spider-Man",
+      "Horizon Zero Dawn",
+      "Remnant: From the Ashes"
+    ]
+  },
+  {
+    "id": 233,
+    "title": "Half-Life 2",
+    "description": "1998. HALF-LIFE sends a shock through the game industry with its combination of pounding action and continuous, immersive storytelling.\n\nNOW. By taking the suspense, challenge and visceral charge of the original, and adding startling new realism and responsiveness, Half-Life 2 opens the door to a world where the player's presence affects everything around them, from the physical environment to the behaviors even the emotions of both friends and enemies.",
+    "genres": [
+      "Shooter"
+    ],
+    "themes": [
+      "Action",
+      "Science fiction",
+      "Horror"
+    ],
+    "platforms": [
+      "Xbox",
+      "PlayStation 3",
+      "Linux",
+      "Android",
+      "PC (Microsoft Windows)",
+      "Mac",
+      "Xbox 360"
+    ],
+    "rating": 84.71940982694139,
+    "year": "2004",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1nmw.jpg",
+    "similar": [
+      "Half-Life",
+      "Wolfenstein: Youngblood",
+      "Crysis 2",
+      "Cyberpunk 2077",
+      "Immortal: Unchained"
+    ]
+  },
+  {
+    "id": 20,
+    "title": "BioShock",
+    "description": "BioShock is a horror-themed first-person shooter set in a steampunk underwater dystopia. The player is urged to turn everything into a weapon: biologically modifying their own body with Plasmids, hacking devices and systems, upgrading their weapons, crafting new ammo variants, and experimenting with different battle techniques are all possible. The game is described by the developers as a spiritual successor to their previous PC title System Shock 2. BioShock received high praise in critical reviews for its atmospheric audio and visual quality, absorbing and original plot and its unique gaming experience.",
+    "genres": [
+      "Shooter",
+      "Puzzle",
+      "Role-playing (RPG)",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Science fiction",
+      "Horror",
+      "Stealth",
+      "Open world"
+    ],
+    "platforms": [
+      "PC (Microsoft Windows)",
+      "Mac",
+      "Xbox 360"
+    ],
+    "rating": 89.63532411338896,
+    "year": "2007",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co2mli.jpg",
+    "similar": [
+      "BioShock Infinite",
+      "BioShock 2",
+      "Dishonored",
+      "Singularity",
+      "Grand Theft Auto V"
+    ]
+  },
+  {
+    "id": 127,
+    "title": "Assassin's Creed II",
+    "description": "Discover an intriguing and epic story of power, revenge and conspiracy set during a pivotal moment in history: the Italian Renaissance.\nExperience the freedom and immersion of an all new open world and mission structure with settings such as the rooftops and canals of beautiful Venice. Your options in combat, assassination and escape are vast, with many new weapons, settings and gameplay elements.",
+    "genres": [
+      "Platform",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy",
+      "Science fiction",
+      "Historical",
+      "Stealth",
+      "Sandbox",
+      "Open world"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "PC (Microsoft Windows)",
+      "Mac",
+      "Xbox 360"
+    ],
+    "rating": 88.47296375431688,
+    "year": "2009",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1rcf.jpg",
+    "similar": [
+      "Assassin's Creed IV Black Flag",
+      "Assassin's Creed Brotherhood",
+      "Dishonored",
+      "Mafia II",
+      "Watch Dogs 2"
+    ]
+  },
+  {
+    "id": 733,
+    "title": "Grand Theft Auto: Vice City",
+    "description": "In the year 1986, Tommy Vercetti is heavily indebted to his mafia superiors after a drug deal gone awry, but his dreams of taking over Vice City (based on Miami) push him down a different path. Featuring a wide variety of vehicles and weapons, radio stations playing hit songs from the era and an intense atmosphere, GTA: Vice City is an open-world sandbox satire of '80's Miami.",
+    "genres": [
+      "Shooter",
+      "Racing",
+      "Adventure",
+      "Arcade"
+    ],
+    "themes": [
+      "Action",
+      "Comedy",
+      "Sandbox",
+      "Open world"
+    ],
+    "platforms": [
+      "Xbox",
+      "PlayStation 3",
+      "PC (Microsoft Windows)",
+      "Mac",
+      "PlayStation 2"
+    ],
+    "rating": 90.69214343955984,
+    "year": "2002",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co2lbb.jpg",
+    "similar": [
+      "Grand Theft Auto: Vice City Stories",
+      "Grand Theft Auto: Liberty City Stories",
+      "Grand Theft Auto V",
+      "Grand Theft Auto: San Andreas",
+      "Watch Dogs 2"
+    ]
+  },
+  {
+    "id": 7346,
+    "title": "The Legend of Zelda: Breath of the Wild",
+    "description": "The Legend of Zelda: Breath of the Wild is the first 3D open-world game in the Zelda series. Link can travel anywhere and be equipped with weapons and armor found throughout the world to grant him various bonuses. Unlike many games in the series, Breath of the Wild does not impose a specific order in which quests or dungeons must be completed. While the game still has environmental obstacles such as weather effects, inhospitable lands, or powerful enemies, many of them can be overcome using the right method. A lot of critics ranked Breath of the Wild as one of the best video games of all time.",
+    "genres": [
+      "Puzzle",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy",
+      "Science fiction",
+      "Sandbox",
+      "Open world"
+    ],
+    "platforms": [
+      "Wii U",
+      "Nintendo Switch"
+    ],
+    "rating": 95.06430068632778,
+    "year": "2017",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co3p2d.jpg",
+    "similar": [
+      "God of War",
+      "Horizon Zero Dawn",
+      "The Witcher 3: Wild Hunt",
+      "The Legend of Zelda: Twilight Princess",
+      "Uncharted 4: A Thief's End"
+    ]
+  },
+  {
+    "id": 231,
+    "title": "Half-Life",
+    "description": "Dr. Gordon Freeman doesn't speak, but he's got a helluva story to tell. This first-person roller-coaster initiated a new era in the history of action games by combining engrossing gameplay, upgraded graphics, ingenious level design and a revolutionary story that may not be all that it seems, told not through cutscenes, but through the visual environment.",
+    "genres": [
+      "Shooter",
+      "Puzzle",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Science fiction",
+      "Horror",
+      "Thriller",
+      "Warfare"
+    ],
+    "platforms": [
+      "Linux",
+      "PC (Microsoft Windows)",
+      "Mac",
+      "PlayStation 2"
+    ],
+    "rating": 84.22210345512863,
+    "year": "1998",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/coag8n.jpg",
+    "similar": [
+      "Counter-Strike",
+      "Quake 4",
+      "Portal",
+      "Call of Duty",
+      "Doom"
+    ]
+  },
+  {
+    "id": 74,
+    "title": "Mass Effect 2",
+    "description": "Are you prepared to lose everything to save the galaxy? You'll need to be, Commander Shephard. It's time to bring together your greatest allies and recruit the galaxy's fighting elite to continue the resistance against the invading Reapers. So steel yourself, because this is an astronomical mission where sacrifices must be made. You'll face tougher choices and new, deadlier enemies. Arm yourself and prepare for an unforgettable intergalactic adventure.\n\nGame Features:\n\nShift the fight in your favour. Equip yourself with powerful new weapons almost instantly thanks to a new inventory system. Plus, an improved health regeneration system means you'll spend less time hunting for restorative items.\n\nMake every decision matter. Divisive crew members are just the tip of the iceberg, Commander, because you'll also be tasked with issues of intergalactic diplomacy. And time's a wastin' so don't be afraid to use new prompt-based actions that let you interrupt conversations, even if they could alter the fate of your crew...and the galaxy.\n\nForge new alliances, carefully. You'll fight alongside some of your most trustworthy crew members, but you'll also get the opportunity to recruit new talent. Just choose your new partners with care because the fate of the galaxy rests on your shoulders, Commander.",
+    "genres": [
+      "Shooter",
+      "Role-playing (RPG)",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Science fiction"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "PC (Microsoft Windows)",
+      "Xbox 360"
+    ],
+    "rating": 93.47633413895929,
+    "year": "2010",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co20ac.jpg",
+    "similar": [
+      "Wolfenstein: The New Order",
+      "Grand Theft Auto V",
+      "Fallout: New Vegas",
+      "Dishonored",
+      "Deus Ex: Human Revolution"
+    ]
+  },
+  {
+    "id": 538,
+    "title": "BioShock Infinite",
+    "description": "BioShock Infinite is the third game in the BioShock series. It is not a direct sequel/prequel to any of the previous BioShock games but takes place in an entirely different setting, although it shares similar features, gameplay and concepts with the previous games. BioShock Infinite features a range of environments that force the player to adapt, with different weapons and strategies for each situation. Interior spaces feature close combat with enemies, but unlike previous games set in Rapture, the setting of Infinite contains open spaces with emphasis on sniping and ranged combat against as many as fifteen enemies at once.",
+    "genres": [
+      "Shooter",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy",
+      "Science fiction",
+      "Horror",
+      "Historical",
+      "Drama"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "Linux",
+      "PC (Microsoft Windows)",
+      "Mac",
+      "Xbox 360"
+    ],
+    "rating": 89.42120186765337,
+    "year": "2013",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co2n12.jpg",
+    "similar": [
+      "BioShock",
+      "BioShock 2",
+      "Dishonored",
+      "Wolfenstein: The New Order",
+      "Grand Theft Auto V"
+    ]
+  },
+  {
+    "id": 501,
+    "title": "Batman: Arkham City",
+    "description": "Batman: Arkham City builds upon the intense, atmospheric foundation of Batman: Arkham Asylum, sending players soaring into Arkham City, the new maximum security \"home\" for all of Gotham City's thugs, gangsters and insane criminal masterminds.\n\nSet inside the heavily fortified walls of a sprawling district in the heart of Gotham City, this highly anticipated sequel introduces a brand-new story that draws together a new all-star cast of classic characters and murderous villains from the Batman universe, as well as a vast range of new and enhanced gameplay features to deliver the ultimate experience as the Dark Knight.",
+    "genres": [
+      "Hack and slash/Beat 'em up",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Stealth",
+      "Open world"
+    ],
+    "platforms": [
+      "OnLive Game System",
+      "PlayStation 3",
+      "PC (Microsoft Windows)",
+      "Xbox 360",
+      "Nintendo Switch"
+    ],
+    "rating": 89.42001523591122,
+    "year": "2011",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1voh.jpg",
+    "similar": [
+      "Batman: Arkham Asylum",
+      "Batman: Arkham Knight",
+      "The Amazing Spider-Man 2",
+      "Batman: Arkham City Lockdown",
+      "Batman: Arkham Origins"
+    ]
+  },
+  {
+    "id": 7331,
+    "title": "Uncharted 4: A Thief's End",
+    "description": "Several years after his last adventure, retired fortune hunter, Nathan Drake, is forced back into the world of thieves. With the stakes much more personal, Drake embarks on a globe-trotting journey in pursuit of a historical conspiracy behind a fabled pirate treasure. His greatest adventure will test his physical limits, his resolve, and ultimately what he's willing to sacrifice to save the ones he loves.",
+    "genres": [
+      "Shooter",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy",
+      "Historical",
+      "Stealth"
+    ],
+    "platforms": [
+      "PlayStation 4"
+    ],
+    "rating": 91.8840641887556,
+    "year": "2016",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1r7h.jpg",
+    "similar": [
+      "Horizon Zero Dawn",
+      "Uncharted 2: Among Thieves",
+      "Uncharted: Drake's Fortune",
+      "Crysis 2",
+      "Watch Dogs 2"
+    ]
+  },
+  {
+    "id": 500,
+    "title": "Batman: Arkham Asylum",
+    "description": "Batman: Arkham Asylum is an action-adventure game developed by Rocksteady Studios and published by Warner Bros. Interactive Entertainment. Released in 2009, it follows Batman as he battles the Joker, who seizes control of Arkham Asylum and frees its inmates. The game features stealth, combat, and detective elements, with players using Batman's gadgets and skills to subdue enemies and solve puzzles.\n\nSet in a dark, immersive version of Gotham, the story explores Batman’s psychological battle with his foes, including Harley Quinn, Bane, and Scarecrow. The game received critical acclaim for its gameplay, atmosphere, and storytelling, becoming a defining title in superhero video games.",
+    "genres": [
+      "Hack and slash/Beat 'em up",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Science fiction",
+      "Horror",
+      "Stealth",
+      "Open world"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "Ouya",
+      "PC (Microsoft Windows)",
+      "Mac",
+      "Xbox 360",
+      "Nintendo Switch"
+    ],
+    "rating": 87.5297492039673,
+    "year": "2009",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1voj.jpg",
+    "similar": [
+      "Batman: Arkham City",
+      "Batman: Arkham Knight",
+      "Batman: Arkham Origins Blackgate",
+      "Watch Dogs 2",
+      "Batman: Arkham Origins"
+    ]
+  },
+  {
+    "id": 73,
+    "title": "Mass Effect",
+    "description": "What starts as a routine mission to an agrarian outpost quickly becomes the opening salvo in an epic war. As the newly appointed Executive Officer of the SSV Normandy, you'll assemble and lead an elite squad of heroes into battle after heart-pounding battle. Each decision you make will impact not only your fate, but the destiny of the entire galaxy in the Mass Effect trilogy.\n\nKey Features:\n\nIncredible, interactive storytelling. Create and customize your own character, from Commander Shepard's appearance and skills to a personalized arsenal. Unleash devastating abilities as you command and train. Your decisions will control the outcome of each mission, your relationships with your crew and ultimately the entire war.\n\nAn amazing universe to explore. From the massive Citadel to the harsh, radioactive landscape of the Krogan home world – the incredible breadth of the Mass Effect universe will blow you away. Travel to the farthest outposts aboard the SSV Normandy, the most technologically advanced ship in the galaxy. You'll follow the clues left by ancient civilizations, discover hidden bases with fantastic new tech and lead your hand-picked crew into explosive alien battles.\n\nEdge-of-your-seat excitement meets strategic combat. Find the perfect combination of squad-mates and weapons for each battle if you want to lead them to victory. Sun-Tzu's advice remains as pertinent in 2183 as it is today – know your enemy. You'll need different tactics for a squad of enemies with devastating biotic attacks than a heavily armored Geth Colossus so choose your teams wisely.",
+    "genres": [
+      "Shooter",
+      "Role-playing (RPG)"
+    ],
+    "themes": [
+      "Action",
+      "Science fiction",
+      "Romance"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "PC (Microsoft Windows)",
+      "Xbox 360"
+    ],
+    "rating": 87.36649267366985,
+    "year": "2007",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1x7o.jpg",
+    "similar": [
+      "Mass Effect 3",
+      "Immortal: Unchained",
+      "Gene Rain",
+      "Remnant: From the Ashes",
+      "Dragon Age II"
+    ]
+  },
+  {
+    "id": 434,
+    "title": "Red Dead Redemption",
+    "description": "A modern-day Western epic, Red Dead Redemption takes John Marston, a relic from the fast-closing time of the gunslinger, through an open world filled with wildlife, mini-games, and shootouts. Marston sets out to hunt down his old gang mates for the government, who have taken away his family. Along his journey, he meets many characters emblematic of the Wild West, heroism, and the new civilization.",
+    "genres": [
+      "Shooter",
+      "Role-playing (RPG)",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Sandbox",
+      "Open world"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "PC (Microsoft Windows)",
+      "Xbox 360"
+    ],
+    "rating": 90.55968410406575,
+    "year": "2010",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co2lcv.jpg",
+    "similar": [
+      "Grand Theft Auto V",
+      "Max Payne 3",
+      "Dishonored",
+      "Watch Dogs 2",
+      "Watch Dogs"
+    ]
+  },
+  {
+    "id": 11156,
+    "title": "Horizon Zero Dawn",
+    "description": "Welcome to a vibrant world rich with the beauty of nature – but inhabited by awe-inspiring, highly advanced machines. As a young machine hunter named Aloy, you must unravel the mysteries of this world and find your own destiny.",
+    "genres": [
+      "Shooter",
+      "Role-playing (RPG)",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Science fiction",
+      "Stealth",
+      "Drama",
+      "Open world"
+    ],
+    "platforms": [
+      "PlayStation 4",
+      "PC (Microsoft Windows)"
+    ],
+    "rating": 88.1584371663948,
+    "year": "2017",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co2una.jpg",
+    "similar": [
+      "Death Stranding",
+      "Marvel's Spider-Man",
+      "The Last of Us Part II",
+      "Uncharted 4: A Thief's End",
+      "The Outer Worlds"
+    ]
+  },
+  {
+    "id": 16,
+    "title": "Fallout: New Vegas",
+    "description": "In this first-person Western RPG, the player takes on the role of Courier 6, barely surviving after being robbed of their cargo, shot and put into a shallow grave by a New Vegas mob boss. The Courier sets out to track down their robbers and retrieve their cargo, and winds up getting tangled in the complex ideological and socioeconomic web of the many factions and settlements of post-nuclear Nevada.",
+    "genres": [
+      "Shooter",
+      "Role-playing (RPG)"
+    ],
+    "themes": [
+      "Action",
+      "Science fiction",
+      "Survival",
+      "Stealth",
+      "Sandbox",
+      "Open world"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "PC (Microsoft Windows)",
+      "Xbox 360"
+    ],
+    "rating": 84.51856620395998,
+    "year": "2010",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1u60.jpg",
+    "similar": [
+      "Fallout 4",
+      "Fallout 3",
+      "The Elder Scrolls V: Skyrim",
+      "Grand Theft Auto V",
+      "Dishonored"
+    ]
+  },
+  {
+    "id": 1164,
+    "title": "Tomb Raider",
+    "description": "Tomb Raider explores the intense and gritty origin story of Lara Croft and her ascent from a young woman to a hardened survivor. Armed only with raw instincts and the ability to push beyond the limits of human endurance, Lara must fight to unravel the dark history of a forgotten island to escape its relentless hold.",
+    "genres": [
+      "Shooter",
+      "Platform",
+      "Puzzle",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Survival",
+      "Sandbox"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "Linux",
+      "Android",
+      "PC (Microsoft Windows)",
+      "iOS",
+      "Mac",
+      "Xbox 360"
+    ],
+    "rating": 83.1816333059802,
+    "year": "2013",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1rbu.jpg",
+    "similar": [
+      "Tomb Raider",
+      "Dishonored",
+      "Wolfenstein: The New Order",
+      "Far Cry 3",
+      "Watch Dogs 2"
+    ]
+  },
+  {
+    "id": 565,
+    "title": "Uncharted 2: Among Thieves",
+    "description": "In the sequel to Drake's Fortune, Nathan Drake comes across a map that showcases the location of Marco Polo's missing ships. It takes him on a journey to find the infamous Cintamani Stone, and uncover the truth behind it.",
+    "genres": [
+      "Shooter",
+      "Platform",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy",
+      "Historical"
+    ],
+    "platforms": [
+      "PlayStation 3"
+    ],
+    "rating": 92.00008502703196,
+    "year": "2009",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1tnb.jpg",
+    "similar": [
+      "Uncharted 3: Drake's Deception",
+      "Uncharted: Drake's Fortune",
+      "Uncharted 4: A Thief's End",
+      "Crysis 2",
+      "Remnant: From the Ashes"
+    ]
+  },
+  {
+    "id": 529,
+    "title": "Far Cry 3",
+    "description": "Explore an island playground as stunningly beautiful as it is diverse – from mountain ranges to swampy grasslands and white sandy beaches. Fight your way through the island’s towns, temples, river ports and more.\n\nEncounter a diverse and realistic cast of characters, including one of Far Cry’s most notorious villains: Vaas Montenegro. Dive into this deep and enriching story where morals are questionable and hope is all but abandoned.",
+    "genres": [
+      "Shooter",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Survival",
+      "Stealth",
+      "Sandbox",
+      "Open world"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "PC (Microsoft Windows)",
+      "Xbox 360"
+    ],
+    "rating": 86.46103841886544,
+    "year": "2012",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1vpd.jpg",
+    "similar": [
+      "Far Cry 4",
+      "Grand Theft Auto V",
+      "Max Payne 3",
+      "Watch Dogs 2",
+      "Tomb Raider"
+    ]
+  },
+  {
+    "id": 119133,
+    "title": "Elden Ring",
+    "description": "Elden Ring is an action RPG developed by FromSoftware and published by Bandai Namco Entertainment, released in February 2022. Directed by Hidetaka Miyazaki, with world-building contributions from novelist George R. R. Martin, the game features an expansive open world called the Lands Between. Players assume the role of a customisable character known as the Tarnished, who must explore this world, battle formidable enemies, and seek to restore the Elden Ring to become the Elden Lord.\n\nThe game builds on the challenging gameplay mechanics familiar from the Dark Souls series but introduces a more open-ended structure with vast exploration, dynamic weather, and a day-night cycle. It offers deep lore, complex characters, and an interconnected world filled with secrets, dungeons, and powerful bosses.",
+    "genres": [
+      "Role-playing (RPG)",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy",
+      "Open world"
+    ],
+    "platforms": [
+      "Xbox Series X|S",
+      "PlayStation 4",
+      "Nintendo Switch 2",
+      "PC (Microsoft Windows)",
+      "PlayStation 5",
+      "Xbox One"
+    ],
+    "rating": 95.21936881434783,
+    "year": "2022",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co4jni.jpg",
+    "similar": [
+      "Dark Souls",
+      "Dark Souls II",
+      "Tunic",
+      "The Witcher 3: Wild Hunt",
+      "Control"
+    ]
+  },
+  {
+    "id": 14593,
+    "title": "Hollow Knight",
+    "description": "A 2D metroidvania with an emphasis on close combat and exploration in which the player enters the once-prosperous now-bleak insect kingdom of Hallownest, travels through its various districts, meets friendly inhabitants, fights hostile ones and uncovers the kingdom's history while improving their combat abilities and movement arsenal by fighting bosses and accessing out-of-the-way areas.",
+    "genres": [
+      "Platform",
+      "Adventure",
+      "Indie"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy"
+    ],
+    "platforms": [
+      "Xbox Series X|S",
+      "PlayStation 4",
+      "Linux",
+      "Nintendo Switch 2",
+      "PC (Microsoft Windows)",
+      "PlayStation 5",
+      "Mac",
+      "Wii U",
+      "Xbox One",
+      "Nintendo Switch"
+    ],
+    "rating": 91.58715653125749,
+    "year": "2017",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/cobfzp.jpg",
+    "similar": [
+      "Momodora: Reverie Under the Moonlight",
+      "Ziggurat",
+      "Chasm",
+      "Hyper Light Drifter",
+      "Blasphemous"
+    ]
+  },
+  {
+    "id": 1029,
+    "title": "The Legend of Zelda: Ocarina of Time",
+    "description": "The Legend of Zelda: Ocarina of Time is the fifth main installment of The Legend of Zelda series and the first to be released for the Nintendo 64. It was one of the most highly anticipated games of its age, and is listed among the greatest video games ever created by numerous websites and magazines. The gameplay of Ocarina of Time was revolutionary for its time, it has arguably made more of an impact on later games in the series than any of its predecessors even though they had the same cores of exploration, dungeons, puzzles and item usage. Among the gameplay mechanics, one of the most noteworthy is the time-traveling system. The game begins with the player controlling the child Link, but later on an adult Link becomes a playable character as well and each of them has certain unique abilities. Ocarina of Time also introduces the use of music to solve puzzles: as new songs are learned, they can be used to solve puzzles, gain access to new areas and warp to different locations. Dungeon exploration is somewhat more puzzle-oriented than in earlier games but they are not too complex.",
+    "genres": [
+      "Puzzle",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy",
+      "Sandbox",
+      "Open world"
+    ],
+    "platforms": [
+      "Wii",
+      "Nintendo 64",
+      "64DD",
+      "Wii U"
+    ],
+    "rating": 91.54752808888857,
+    "year": "1998",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co3nnx.jpg",
+    "similar": [
+      "The Legend of Zelda: Twilight Princess",
+      "The Legend of Zelda: A Link to the Past",
+      "The Legend of Zelda: The Minish Cap",
+      "The Legend of Zelda: Breath of the Wild",
+      "The Legend of Zelda: Majora's Mask"
+    ]
+  },
+  {
+    "id": 19565,
+    "title": "Marvel's Spider-Man",
+    "description": "Starring the world’s most iconic Super Hero, Spider-Man features the acrobatic abilities, improvisation and web-slinging that the wall-crawler is famous for, while also introducing elements never-before-seen in a Spider-Man game. From traversing with parkour and utilizing the environment, to new combat and blockbuster set pieces, it’s Spider-Man unlike any you’ve played before.",
+    "genres": [
+      "Hack and slash/Beat 'em up",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Stealth",
+      "Drama",
+      "Open world"
+    ],
+    "platforms": [
+      "PlayStation 4"
+    ],
+    "rating": 88.44029187597997,
+    "year": "2018",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1r77.jpg",
+    "similar": [
+      "Horizon Zero Dawn",
+      "Ghost of Tsushima",
+      "The Amazing Spider-Man 2",
+      "The Last of Us Part II",
+      "Marvel's Avengers"
+    ]
+  },
+  {
+    "id": 121,
+    "title": "Minecraft: Java Edition",
+    "description": "Minecraft focuses on allowing the player to explore, interact with, and modify a dynamically generated map made of one-cubic-meter-sized blocks. In addition to blocks, the environment features plants, mobs, and items. Some activities in the game include mining for ore, fighting hostile mobs, and crafting new blocks and tools by gathering various resources found in the game. The game's open-ended model allows players to create structures, creations, and artwork on various multiplayer servers or their single-player maps. Other features include redstone circuits for logic computations and remote actions, minecarts and tracks, and a mysterious underworld called the Nether. A designated but completely optional goal of the game is to travel to a dimension called the End, and defeat the ender dragon.",
+    "genres": [
+      "Simulator",
+      "Adventure"
+    ],
+    "themes": [
+      "Fantasy",
+      "Survival",
+      "Sandbox",
+      "Kids",
+      "Open world"
+    ],
+    "platforms": [
+      "Linux",
+      "PC (Microsoft Windows)",
+      "Mac"
+    ],
+    "rating": 84.820370007436,
+    "year": "2011",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/coa77e.jpg",
+    "similar": [
+      "Rust",
+      "Mr. Prepper",
+      "Terraria",
+      "The Elder Scrolls V: Skyrim",
+      "Stardew Valley"
+    ]
+  },
+  {
+    "id": 1074,
+    "title": "Super Mario 64",
+    "description": "Mario is super in a whole new way! Combining the finest 3-D graphics ever developed for a video game and an explosive soundtrack, Super Mario 64 becomes a new standard for video games. It's packed with bruising battles, daunting obstacle courses, and underwater adventures. Retrieve the Power Stars from their hidden locations and confront your arch-nemesis— Bowser, King of the Koopas!\n\n• Run freely in a grassy meadow, tip-toe through a gloomy dungeon, climb to the top of a mountain, or take a swim in the moat!\n• Leap headfirst into a watery painting and soon you'll be searching for the surface in an underwater realm!\n• On-the-fly, 3-D rendered gameplay delivers the action of ruthless enemy attacks from every angle!\n• Find the Caps that give Mario super powers and ponder the mysteries of the pyramid; you can even race Koopas for fabulous prizes!\n• With the Nintendo 64 Controller and its analog\nControl Stick, Mario can crawl, kick down obstacles, swim, do reverse flips, and even stick the landing on his backwards somersault!\n• Saved game information is stored for up to four players in memory.",
+    "genres": [
+      "Platform",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy",
+      "Open world"
+    ],
+    "platforms": [
+      "Wii",
+      "Nintendo 64",
+      "Wii U"
+    ],
+    "rating": 88.87607649450662,
+    "year": "1996",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co721v.jpg",
+    "similar": [
+      "Super Mario Odyssey",
+      "Super Mario World",
+      "Super Mario Bros. 3",
+      "The Legend of Zelda: Ocarina of Time",
+      "Borderlands 3"
+    ]
+  },
+  {
+    "id": 1070,
+    "title": "Super Mario World",
+    "description": "A 2D platformer and first entry on the SNES in the Super Mario franchise, Super Mario World follows Mario as he attempts to defeat Bowser's underlings and rescue Princess Peach from his clutches. The game features a save system, a less linear world map, an expanded movement arsenal and numerous new items for Mario, alongside new approaches to level design and art direction.",
+    "genres": [
+      "Platform",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy"
+    ],
+    "platforms": [
+      "Arcade",
+      "Super Nintendo Entertainment System",
+      "Wii",
+      "Wii U",
+      "New Nintendo 3DS",
+      "Super Famicom"
+    ],
+    "rating": 95.85148553381298,
+    "year": "1990",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co8lo8.jpg",
+    "similar": [
+      "The Legend of Zelda",
+      "Super Mario Bros.",
+      "Vagante",
+      "Mega Man X",
+      "Super Mario 64"
+    ]
+  },
+  {
+    "id": 7351,
+    "title": "Doom",
+    "description": "Developed by id software, the studio that pioneered the first-person shooter genre and created multiplayer Deathmatch, Doom returns as a brutally fun and challenging modern-day shooter experience. Relentless demons, impossibly destructive guns, and fast, fluid movement provide the foundation for intense, first-person combat – whether you’re obliterating demon hordes through the depths of Hell in the single-player campaign, or competing against your friends in numerous multiplayer modes. Expand your gameplay experience using Doom SnapMap game editor to easily create, play, and share your content with the world.",
+    "genres": [
+      "Shooter"
+    ],
+    "themes": [
+      "Action",
+      "Science fiction",
+      "Horror"
+    ],
+    "platforms": [
+      "PlayStation 4",
+      "PC (Microsoft Windows)",
+      "Xbox One"
+    ],
+    "rating": 86.05667993578442,
+    "year": "2016",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1nc7.jpg",
+    "similar": [
+      "Wolfenstein: The New Order",
+      "Prey",
+      "Syndicate",
+      "Singularity",
+      "Dishonored"
+    ]
+  },
+  {
+    "id": 11133,
+    "title": "Dark Souls III",
+    "description": "Dark Souls III is an action role-playing game developed by FromSoftware and published by Bandai Namco Entertainment. Released in March 2016, it is the fourth entry in the Souls series and the final instalment in the Dark Souls trilogy. Set in the decaying kingdom of Lothric, players take on the role of the \"Ashen One,\" an undead warrior tasked with rekindling the First Flame to prevent the world from falling into darkness.\n\nThe game features challenging combat, intricate level design, and a deep, lore-rich narrative.",
+    "genres": [
+      "Role-playing (RPG)",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy"
+    ],
+    "platforms": [
+      "PlayStation 4",
+      "PC (Microsoft Windows)",
+      "Xbox One"
+    ],
+    "rating": 86.6502516290881,
+    "year": "2016",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/cob9ed.jpg",
+    "similar": [
+      "Remnant: From the Ashes",
+      "Bloodborne",
+      "Dark Souls II",
+      "Dragon: Marked for Death",
+      "Children of Morta"
+    ]
+  },
+  {
+    "id": 533,
+    "title": "Dishonored",
+    "description": "Dishonored is an immersive first-person action game that casts you as a supernatural assassin driven by revenge. With Dishonored’s flexible combat system, creatively eliminate your targets as you combine the supernatural abilities, weapons and unusual gadgets at your disposal. Pursue your enemies under the cover of darkness or ruthlessly attack them head on with weapons drawn. The outcome of each mission plays out based on the choices you make.",
+    "genres": [
+      "Puzzle",
+      "Role-playing (RPG)",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Stealth"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "PC (Microsoft Windows)",
+      "Xbox 360"
+    ],
+    "rating": 87.56001091002392,
+    "year": "2012",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/coabgu.jpg",
+    "similar": [
+      "Wolfenstein: The New Order",
+      "BioShock",
+      "Dishonored 2",
+      "Murdered: Soul Suspect",
+      "BioShock Infinite"
+    ]
+  },
+  {
+    "id": 12517,
+    "title": "Undertale",
+    "description": "A small child falls into the Underground, where monsters have long been banished by humans and are hunting every human that they find. The player controls the child as they try to make it back to the Surface through hostile environments, all the while engaging with a turn-based combat system with puzzle-solving and bullet hell elements, as well as other unconventional game mechanics.",
+    "genres": [
+      "Puzzle",
+      "Role-playing (RPG)",
+      "Turn-based strategy (TBS)",
+      "Adventure",
+      "Indie"
+    ],
+    "themes": [
+      "Fantasy",
+      "Horror",
+      "Comedy",
+      "Drama"
+    ],
+    "platforms": [
+      "PlayStation 4",
+      "Linux",
+      "PC (Microsoft Windows)",
+      "Mac",
+      "PlayStation Vita",
+      "Xbox One",
+      "Nintendo Switch"
+    ],
+    "rating": 91.1772131577981,
+    "year": "2015",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/cob1t2.jpg",
+    "similar": [
+      "Astromeda",
+      "Celeste",
+      "Reversed Rebecca",
+      "Momodora: Reverie Under the Moonlight",
+      "Children of Morta"
+    ]
+  },
+  {
+    "id": 1011,
+    "title": "Borderlands 2",
+    "description": "A new era of shoot and loot is about to begin. Play as one of four new vault hunters facing off against a massive new world of creatures, psychos and the evil mastermind, Handsome Jack. Make new friends, arm them with a bazillion weapons and fight alongside them in 4 player co-op on a relentless quest for revenge and redemption across the undiscovered and unpredictable living planet.",
+    "genres": [
+      "Shooter",
+      "Role-playing (RPG)"
+    ],
+    "themes": [
+      "Action",
+      "Science fiction",
+      "Comedy",
+      "Sandbox",
+      "Open world"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "PlayStation 4",
+      "Linux",
+      "Android",
+      "PC (Microsoft Windows)",
+      "Mac",
+      "PlayStation Vita",
+      "Xbox 360",
+      "Xbox One",
+      "Nintendo Switch"
+    ],
+    "rating": 82.16676621558133,
+    "year": "2012",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co9ba3.jpg",
+    "similar": [
+      "Borderlands",
+      "Borderlands 3",
+      "Immortal: Unchained",
+      "Cyberpunk 2077",
+      "Gene Rain"
+    ]
+  },
+  {
+    "id": 731,
+    "title": "Grand Theft Auto IV",
+    "description": "Grand Theft Auto IV is an action-adventure video game developed by Rockstar North and published by Rockstar Games. It is the eleventh title in the Grand Theft Auto series, and the first main entry since 2004's Grand Theft Auto: San Andreas.\n\nThe game is played from a third-person perspective and its world is navigated on-foot or by vehicle. Throughout the single-player mode, players play as Niko Bellic. An online multiplayer mode is included with the game, allowing up to 32 players to engage in both co-operative and competitive gameplay in a recreation of the single-player setting.\n\nTwo expansion packs were later released for the game, The Lost and Damned and The Ballad of Gay Tony, which both feature new plots that are interconnected with the main Grand Theft Auto IV storyline, and follow new protagonists.",
+    "genres": [
+      "Shooter",
+      "Racing",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Open world"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "PC (Microsoft Windows)",
+      "Xbox 360"
+    ],
+    "rating": 85.78808449485913,
+    "year": "2008",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co2lbv.jpg",
+    "similar": [
+      "Grand Theft Auto III",
+      "Grand Theft Auto: San Andreas",
+      "Grand Theft Auto V",
+      "Grand Theft Auto: Vice City",
+      "Grand Theft Auto: Vice City Stories"
+    ]
+  },
+  {
+    "id": 7599,
+    "title": "Life is Strange",
+    "description": "Life is Strange is a five part episodic game that sets out to revolutionize story based choice and consequence games by allowing the player to rewind time and affect the past, present and future.",
+    "genres": [
+      "Puzzle",
+      "Adventure",
+      "Indie"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy",
+      "Science fiction",
+      "Drama",
+      "Mystery"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "PlayStation 4",
+      "Linux",
+      "Android",
+      "PC (Microsoft Windows)",
+      "iOS",
+      "Mac",
+      "Xbox 360",
+      "Xbox One"
+    ],
+    "rating": 80.99010933823044,
+    "year": "2015",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1r8e.jpg",
+    "similar": [
+      "Blacksad: Under the Skin",
+      "Gone Home",
+      "Beyond: Two Souls",
+      "Murdered: Soul Suspect",
+      "Children of Morta"
+    ]
+  },
+  {
+    "id": 75,
+    "title": "Mass Effect 3",
+    "description": "Earth is burning. The Reapers have taken over and other civilizations are falling like dominoes. Lead the final fight to save humanity and take back Earth from these terrifying machines, Commander Shepard. You'll need backup for these battles. Fortunately, the galaxy has a habit of sending unexpected species your way. Recruit team members and forge new alliances, but be prepared to say goodbye at any time as partners make the ultimate sacrifice. It's time for Commander Shepard to fight for the fate of the human race and save the galaxy. No pressure, Commander.\n\nFight smarter. Take advantage of new powers and combat moves. Shepard can now blind fire at enemies and build tougher melee attacks. Plus, when you fight as a team you can combine new biotic and tech powers to unleash devastating Power Combos.\n\nBuild the final force. Build a team from a variety of races and classes and combine their skills to overcome impossible odds. You'll be joined by newcomers like James Vega, a tough-as-nails soldier, as well as EDI, a trusted AI in a newly acquired physical form. Keep an eye out for beloved characters from your past, but beware. Some may not survive the final battle...\n\nFace off against friends. Enjoy an integrated co-op multiplayer mode and team up with friends online to liberate key conflict zones from increasingly tough opponents. Customize your warrior and earn new weapons, armor, and abilities to build war preparedness stats in your single player campaign.",
+    "genres": [
+      "Shooter",
+      "Role-playing (RPG)",
+      "Strategy",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Science fiction"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "PC (Microsoft Windows)",
+      "Xbox 360"
+    ],
+    "rating": 88.0213928114011,
+    "year": "2012",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1x7q.jpg",
+    "similar": [
+      "Mass Effect",
+      "Mass Effect: Andromeda",
+      "Immortal: Unchained",
+      "Crysis 2",
+      "The Outer Worlds"
+    ]
+  },
+  {
+    "id": 26758,
+    "title": "Super Mario Odyssey",
+    "description": "Explore incredible places far from the Mushroom Kingdom as you join Mario and his new ally Cappy on a massive, globe-trotting 3D adventure. Use amazing new abilities, like the power to capture and control objects, animals, and enemies to collect Power Moons so you can power up the Odyssey airship and save Princess Peach from Bowser’s wedding plans!",
+    "genres": [
+      "Platform",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy",
+      "Sandbox",
+      "Open world"
+    ],
+    "platforms": [
+      "Nintendo Switch 2",
+      "Nintendo Switch"
+    ],
+    "rating": 92.8639205604284,
+    "year": "2017",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1mxf.jpg",
+    "similar": [
+      "Marvel's Spider-Man",
+      "Horizon Zero Dawn",
+      "The Legend of Zelda: Breath of the Wild",
+      "Uncharted 4: A Thief's End",
+      "Super Mario 64"
+    ]
+  },
+  {
+    "id": 623,
+    "title": "Call of Duty 4: Modern Warfare",
+    "description": "Call of Duty 4: Modern Warfare differs from previous installments of the Call of Duty series. Previous Call of Duty games have a distinct three country-specific campaign style, while Call of Duty 4 has a more film-like plot with interlaced story lines from the perspectives of Sgt. Paul Jackson of the Marines 1st Force Recon and Sgt. 'Soap' MacTavish of the British 22nd SAS Regiment.",
+    "genres": [
+      "Shooter",
+      "Simulator"
+    ],
+    "themes": [
+      "Action",
+      "Stealth",
+      "Warfare"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "PC (Microsoft Windows)",
+      "Mac",
+      "Xbox 360"
+    ],
+    "rating": 86.09604806381988,
+    "year": "2007",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1wko.jpg",
+    "similar": [
+      "Call of Duty 2",
+      "Call of Duty: Black Ops",
+      "Call of Duty: Modern Warfare 3",
+      "Call of Duty: World at War",
+      "Call of Duty"
+    ]
+  },
+  {
+    "id": 7334,
+    "title": "Bloodborne",
+    "description": "An action RPG in which the player embodies a Hunter who, after being transfused with the mysterious blood local to the city of Yharnam, sets off into a \"night of the Hunt\", an extended night in which Hunters may phase in and out of dream and reality in order to thin the outbreak of abominable beasts that plague the land and, for the more resilient and insightful Hunters, uncover the answers to the Hunt's many mysteries.",
+    "genres": [
+      "Role-playing (RPG)",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy",
+      "Horror",
+      "Open world"
+    ],
+    "platforms": [
+      "PlayStation 4"
+    ],
+    "rating": 91.36349133499142,
+    "year": "2015",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/cob99l.jpg",
+    "similar": [
+      "Remnant: From the Ashes",
+      "Dark Souls III",
+      "Children of Morta",
+      "Code Vein",
+      "Bloodstained: Ritual of the Night"
+    ]
+  },
+  {
+    "id": 1970,
+    "title": "Assassin's Creed IV Black Flag",
+    "description": "Assassin’s Creed IV Black Flag begins in 1715, when pirates established a lawless republic in the Caribbean and ruled the land and seas. These outlaws paralyzed navies, halted international trade, and plundered vast fortunes. They threatened the power structures that ruled Europe, inspired the imaginations of millions, and left a legacy that still endures.",
+    "genres": [
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy",
+      "Science fiction",
+      "Historical",
+      "Stealth",
+      "Sandbox",
+      "Open world"
+    ],
+    "platforms": [
+      "Google Stadia",
+      "PlayStation 3",
+      "PlayStation 4",
+      "PC (Microsoft Windows)",
+      "Wii U",
+      "Xbox 360",
+      "Xbox One",
+      "Nintendo Switch"
+    ],
+    "rating": 83.91004552859998,
+    "year": "2013",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co4qfn.jpg",
+    "similar": [
+      "Assassin's Creed II",
+      "Middle-earth: Shadow of Mordor",
+      "Watch Dogs",
+      "Watch Dogs 2",
+      "Assassin's Creed Unity"
+    ]
+  },
+  {
+    "id": 128,
+    "title": "Assassin's Creed",
+    "description": "Assassin's Creed is a non-linear action-adventure video game, during which the player controls a 12th-century Levantine Assassin named Altaïr Ibn-La'Ahad during the Third Crusade, whose life is experienced through the Animus by his 21st century descendant, Desmond Miles.",
+    "genres": [
+      "Platform",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy",
+      "Science fiction",
+      "Historical",
+      "Stealth",
+      "Sandbox",
+      "Open world"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "Xbox 360"
+    ],
+    "rating": 77.00916112343337,
+    "year": "2007",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1rrw.jpg",
+    "similar": [
+      "Assassin's Creed III",
+      "Assassin's Creed Revelations",
+      "Assassin's Creed Rogue",
+      "Assassin's Creed Unity",
+      "Assassin's Creed Syndicate"
+    ]
+  },
+  {
+    "id": 15,
+    "title": "Fallout 3",
+    "description": "Fallout 3 from the creators of the award-winning Oblivion, featuring one of the most realized game worlds ever created. Create any kind of character you want and explore the open wastes of post-apocalyptic Washington D.C. Every minute is a fight for survival as you encounter Super Mutants, Ghouls, Raiders and other dangers of the Wasteland. Prepare for the future.\n\nThe third game in the Fallout series, Fallout 3 is a singleplayer action role-playing game (RPG) set in a post-apocalyptic Washington DC. Combining the horrific insanity of the Cold War era theory of mutually assured destruction gone terribly wrong, with the kitschy naivety of American 1950s nuclear propaganda, Fallout 3 will satisfy both players familiar with the popular first two games in its series as well as those coming to the franchise for the first time.",
+    "genres": [
+      "Shooter",
+      "Role-playing (RPG)"
+    ],
+    "themes": [
+      "Action",
+      "Science fiction",
+      "Survival",
+      "Stealth",
+      "Sandbox",
+      "Open world"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "PC (Microsoft Windows)",
+      "Xbox 360"
+    ],
+    "rating": 86.22530124885729,
+    "year": "2008",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1ycw.jpg",
+    "similar": [
+      "Fallout: New Vegas",
+      "Fallout 4",
+      "Grand Theft Auto V",
+      "Dishonored",
+      "Fallout 2"
+    ]
+  },
+  {
+    "id": 17000,
+    "title": "Stardew Valley",
+    "description": "Stardew Valley is an open-ended country-life RPG! You’ve inherited your grandfather’s old farm plot in Stardew Valley. Armed with hand-me-down tools and a few coins, you set out to begin your new life. Can you learn to live off the land and turn these overgrown fields into a thriving home? It won’t be easy. Ever since Joja Corporation came to town, the old ways of life have all but disappeared. The community center, once the town’s most vibrant hub of activity, now lies in shambles. But the valley seems full of opportunity. With a little dedication, you might just be the one to restore Stardew Valley to greatness!",
+    "genres": [
+      "Role-playing (RPG)",
+      "Simulator",
+      "Strategy",
+      "Adventure",
+      "Indie"
+    ],
+    "themes": [
+      "Fantasy",
+      "Business",
+      "Sandbox",
+      "Romance"
+    ],
+    "platforms": [
+      "PlayStation 4",
+      "Linux",
+      "Nintendo Switch 2",
+      "Android",
+      "PC (Microsoft Windows)",
+      "iOS",
+      "Mac",
+      "Wii U",
+      "PlayStation Vita",
+      "Xbox One",
+      "Nintendo Switch"
+    ],
+    "rating": 88.35171663984414,
+    "year": "2016",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/coa93h.jpg",
+    "similar": [
+      "Tunic",
+      "Mr. Prepper",
+      "Children of Morta",
+      "Contraband Police",
+      "Rust"
+    ]
+  },
+  {
+    "id": 18,
+    "title": "Max Payne",
+    "description": "Max Payne is a man with nothing to lose in the violent, cold urban night. A fugitive undercover cop framed for murder, hunted by cops and the mob, Max is a man with his back against the wall, fighting a battle he cannot hope to win. Max Payne is a relentless story-driven game about a man on the edge, fighting to clear his name while struggling to uncover the truth about his slain family amongst a myriad of plot-twists and twisted thugs in the gritty bowels of New York during the century's worst blizzard.\n\nThe groundbreaking original cinematic action-shooter, Max Payne introduced the concept of Bullet Time in videogames. Through its stylish slow-motion gunplay combined with a dark and twisted story, Max Payne redefined the action-shooter genre.",
+    "genres": [
+      "Shooter"
+    ],
+    "themes": [
+      "Action",
+      "Thriller"
+    ],
+    "platforms": [
+      "Xbox",
+      "PlayStation 3",
+      "PlayStation 4",
+      "Android",
+      "PC (Microsoft Windows)",
+      "iOS",
+      "Mac",
+      "Xbox 360",
+      "Xbox One",
+      "PlayStation 2"
+    ],
+    "rating": 79.80447460653511,
+    "year": "2001",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co3wb2.jpg",
+    "similar": [
+      "Max Payne 3",
+      "Grand Theft Auto V",
+      "Watch Dogs 2",
+      "Grand Theft Auto: San Andreas",
+      "Deus Ex: Human Revolution"
+    ]
+  },
+  {
+    "id": 113,
+    "title": "Assassin's Creed Brotherhood",
+    "description": "Live and breathe as Ezio, a legendary Master Assassin, in his enduring struggle against the powerful Templar Order. He must journey into Italy’s greatest city, Rome, center of power, greed and corruption to strike at the heart of the enemy.\nDefeating the corrupt tyrants entrenched there will require not only strength, but leadership, as Ezio commands an entire Brotherhood who will rally to his side. Only by working together can the Assassins defeat their mortal enemies.\nAnd for the first time, introducing a never-before-seen multiplayer layer that allows you to choose from a wide range of unique characters, each with their own signature weapons and assassination techniques, and match your skills against other players from around the world.\nIt’s time to join the Brotherhood.",
+    "genres": [
+      "Puzzle",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy",
+      "Science fiction",
+      "Historical",
+      "Stealth",
+      "Sandbox",
+      "Open world"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "PC (Microsoft Windows)",
+      "Mac",
+      "Xbox 360"
+    ],
+    "rating": 83.05643408110396,
+    "year": "2010",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co6t4d.jpg",
+    "similar": [
+      "Assassin's Creed II",
+      "Assassin's Creed",
+      "Watch Dogs 2",
+      "Dishonored",
+      "Assassin's Creed III"
+    ]
+  },
+  {
+    "id": 1871,
+    "title": "The Walking Dead",
+    "description": "The Walking Dead: Season One (also known as The Walking Dead: The Game) is an episodic interactive drama graphic adventure video game developed and published by Telltale Games. Based on Robert Kirkman's The Walking Dead comic book series, the game consists of five episodes, released between April and November 2012. It is available for Android, iOS, Kindle Fire HDX, Microsoft Windows, Mac OS X, PlayStation 3, PlayStation Vita, Xbox 360, PlayStation 4 and Xbox One. The game is the first of The Walking Dead video game series published by Telltale.",
+    "genres": [
+      "Point-and-click",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Horror",
+      "Survival",
+      "Drama"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "PlayStation 4",
+      "Linux",
+      "Android",
+      "PC (Microsoft Windows)",
+      "iOS",
+      "Mac",
+      "PlayStation Vita",
+      "Xbox 360",
+      "Xbox One",
+      "Nintendo Switch"
+    ],
+    "rating": 85.09061732149539,
+    "year": "2012",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co2j1g.jpg",
+    "similar": [
+      "Dying Light 2: Stay Human",
+      "How to Survive 2",
+      "The Walking Dead: The Final Season",
+      "Days Gone",
+      "Last Day on Earth: Survival"
+    ]
+  },
+  {
+    "id": 9630,
+    "title": "Fallout 4",
+    "description": "Bethesda Game Studios welcome you to the world of Fallout 4, their most ambitious game ever, and the next generation of open-world gaming. As the sole survivor of Vault 111, you enter a world destroyed by nuclear war. Every second is a fight for survival, and every choice is yours. Only you can rebuild and determine the fate of the Wasteland. Welcome home.",
+    "genres": [
+      "Shooter",
+      "Role-playing (RPG)"
+    ],
+    "themes": [
+      "Action",
+      "Science fiction",
+      "Survival",
+      "Stealth",
+      "Sandbox",
+      "Open world"
+    ],
+    "platforms": [
+      "Xbox Series X|S",
+      "PlayStation 4",
+      "PC (Microsoft Windows)",
+      "PlayStation 5",
+      "Xbox One"
+    ],
+    "rating": 82.09738461502101,
+    "year": "2015",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1yc6.jpg",
+    "similar": [
+      "Fallout: New Vegas",
+      "Fallout 3",
+      "Grand Theft Auto V",
+      "Watch Dogs 2",
+      "Watch Dogs"
+    ]
+  },
+  {
+    "id": 1068,
+    "title": "Super Mario Bros. 3",
+    "description": "Super Mario Bros. 3, the third entry in the Super Mario Bros. series and Super Mario franchise, sees Mario or Luigi navigate a nonlinear world map containing platforming levels and optional minigames and challenges. The game features more diverse movement options and new items alongside more complex level designs and boss battles.",
+    "genres": [
+      "Platform"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy"
+    ],
+    "platforms": [
+      "Arcade",
+      "Nintendo 3DS",
+      "Wii",
+      "Family Computer",
+      "Wii U",
+      "Nintendo Entertainment System"
+    ],
+    "rating": 89.37476523459316,
+    "year": "1988",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co7ozx.jpg",
+    "similar": [
+      "Super Mario Bros.",
+      "Super Mario 64",
+      "Super Mario 3D Land",
+      "Super Mario Galaxy 2",
+      "Rayman 2: The Great Escape"
+    ]
+  },
+  {
+    "id": 26192,
+    "title": "The Last of Us Part II",
+    "description": "The Last of Us Part II is an action-adventure game set five years after the events of The Last of Us. The player traverses post-apocalyptic environments such as buildings and forests to advance the story. They can use firearms, improvised weapons, and stealth to defend against hostile humans and cannibalistic creatures infected by a mutated strain of the Cordyceps fungus. The game intermittently switches control between Ellie and Abby, and also briefly Joel in the opening sequence. The nimble nature of the player character introduces platforming elements, allowing the player to jump and climb to traverse environments and gain advantages during combat.",
+    "genres": [
+      "Shooter",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Horror",
+      "Survival",
+      "Stealth"
+    ],
+    "platforms": [
+      "PlayStation 4",
+      "PlayStation 5"
+    ],
+    "rating": 92.62536773952668,
+    "year": "2020",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co5ziw.jpg",
+    "similar": [
+      "Death Stranding",
+      "Days Gone",
+      "Metro Exodus",
+      "Dying Light 2: Stay Human",
+      "Horizon Zero Dawn"
+    ]
+  },
+  {
+    "id": 6036,
+    "title": "The Last of Us Remastered",
+    "description": "The Last of Us Remastered is an updated release of the PS3 game The Last of Us. It is identical to the PS3 version but runs at a 1080p resolution and incorporates character models with a higher resolution. There are also improved shadows and lighting, upgraded textures, 60 frames per second and other types of improvements. In addition to the base game, two map packs and the expansion The Last of Us: Left Behind are included.",
+    "genres": [
+      "Shooter",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Horror",
+      "Survival",
+      "Stealth"
+    ],
+    "platforms": [
+      "PlayStation 4"
+    ],
+    "rating": 95.37383772792649,
+    "year": "2014",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co5zks.jpg",
+    "similar": [
+      "Remnant: From the Ashes",
+      "Days Gone",
+      "Dying Light 2: Stay Human",
+      "Death Stranding",
+      "Metro Exodus"
+    ]
+  },
+  {
+    "id": 76,
+    "title": "Dragon Age: Origins",
+    "description": "Dragon Age: Origins is a third-person role-playing game described as a spiritual successor to Baldur's Gate and Neverwinter Nights franchises. Players create their own character by customizing gender and appearance as well as choosing a race and class. Combat is in real time with the ability to pause at any moment: tactical options include an editor which allows the player to give the AI detailed instructions on how to behave in every possible situation. Although the main storyline is the same for every character created, the game features six unique prologues, two for each race. Dragon Age: Origins received critical acclaim upon release, with praise mostly directed at its story, setting, characters, music and combat system.",
+    "genres": [
+      "Role-playing (RPG)"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy",
+      "Open world"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "PC (Microsoft Windows)",
+      "Mac",
+      "Xbox 360"
+    ],
+    "rating": 88.25110344215673,
+    "year": "2009",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co2mvs.jpg",
+    "similar": [
+      "Dragon Age II",
+      "Dragon Age: Inquisition",
+      "Pillars of Eternity",
+      "The Witcher 2: Assassins of Kings",
+      "Mass Effect"
+    ]
+  },
+  {
+    "id": 1026,
+    "title": "The Legend of Zelda: A Link to the Past",
+    "description": "Venture back to Hyrule and an age of magic and heroes. The predecessors of Link and Zelda face monsters on the march when a menacing magician takes over the kingdom. Only you can prevent his evil plot from shattering the land of Hyrule.\n\nIn your quest, you'll venture into twisting mazes, dungeons, palaces and shadowy forests. Test your mettle with mighty swords and magical weapons. Or heft a boulder and hurl it at your enemies. If the going gets tough, dive into a river - you can swim to escape! Learn powerful spells, locate magical artifacts and solve the mysteries of the evil magician and the hidden realm of Hyrule.",
+    "genres": [
+      "Puzzle",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy"
+    ],
+    "platforms": [
+      "Satellaview",
+      "Super Nintendo Entertainment System",
+      "Wii",
+      "Wii U",
+      "New Nintendo 3DS",
+      "Super Famicom"
+    ],
+    "rating": 95.96892349959387,
+    "year": "1991",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co3vzn.jpg",
+    "similar": [
+      "The Legend of Zelda: The Minish Cap",
+      "The Legend of Zelda: Ocarina of Time",
+      "The Legend of Zelda: Twilight Princess",
+      "The Legend of Zelda: Oracle of Seasons",
+      "The Legend of Zelda: Oracle of Ages"
+    ]
+  },
+  {
+    "id": 375,
+    "title": "Metal Gear Solid",
+    "description": "Metal Gear Solid is a stealth game created by Hideo Kojima which follows the MSX2 video games Metal Gear and Metal Gear 2: Solid Snake. Despite a transition to 3D, Metal Gear Solid's gameplay remains similar to his predecessors. The game utilizes a traditional top-down view and the player must navigate the protagonist Solid Snake through the game's areas without being detected. Detection will set off an alarm which draws armed enemies to his location. Conversations with Snake's allies and cutscenes are used extensively to advance the plot and gain more insight into it. Metal Gear Solid is regarded as one of the greatest and most important video games of all time, and helped popularize the stealth genre and in-engine cinematic cutscenes.",
+    "genres": [
+      "Shooter",
+      "Tactical",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Science fiction",
+      "Survival",
+      "Stealth"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "PlayStation",
+      "PlayStation Portable"
+    ],
+    "rating": 85.24238946664485,
+    "year": "1998",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/cobpak.jpg",
+    "similar": [
+      "Metal Gear Solid 3: Snake Eater",
+      "Metal Gear Solid V: The Phantom Pain",
+      "Rogue Warrior",
+      "Wolfenstein: The New Order",
+      "Metal Gear 2: Solid Snake"
+    ]
+  },
+  {
+    "id": 113112,
+    "title": "Hades",
+    "description": "A rogue-lite hack and slash dungeon crawler in which Zagreus, son of Hades the Greek god of the dead, attempts to escape his home and his oppressive father by fighting the souls of the dead through the various layers of the ever-shifting underworld, while getting to know and forging relationships with its inhabitants.",
+    "genres": [
+      "Role-playing (RPG)",
+      "Hack and slash/Beat 'em up",
+      "Adventure",
+      "Indie"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy",
+      "Drama"
+    ],
+    "platforms": [
+      "Xbox Series X|S",
+      "PlayStation 4",
+      "PC (Microsoft Windows)",
+      "iOS",
+      "PlayStation 5",
+      "Mac",
+      "Xbox One",
+      "Nintendo Switch"
+    ],
+    "rating": 91.46754093208644,
+    "year": "2020",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/cob9kr.jpg",
+    "similar": [
+      "Eternity: The Last Unicorn",
+      "Torchlight III",
+      "Vambrace: Cold Soul",
+      "Marvel's Spider-Man",
+      "Vagante"
+    ]
+  },
+  {
+    "id": 2155,
+    "title": "Dark Souls",
+    "description": "Dark Souls is an action role-playing game developed by FromSoftware and published by Bandai Namco Entertainment. Released in September 2011 as a spiritual sequel to Demon's Souls, it is set in a dark, medieval fantasy world. It is renowned for its challenging gameplay, intricate level design, and deep lore. Players control a customizable character known as the Chosen Undead, embarking on a perilous journey to uncover the secrets of the cursed land of Lordran.\n\nDark Souls is known for its punishing difficulty, requiring players to carefully manage combat, stamina, and resources while navigating hostile environments filled with dangerous enemies and formidable bosses. The game features a unique multiplayer component, allowing players to leave messages for others, summon allies for cooperative play, or invade other players' worlds for PvP combat.\n\nThe original release of Dark Souls received critical acclaim for its atmospheric world, innovative mechanics, and rewarding gameplay, solidifying its place as a seminal title in the action RPG genre.",
+    "genres": [
+      "Role-playing (RPG)",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "PC (Microsoft Windows)",
+      "Xbox 360"
+    ],
+    "rating": 88.61554987945178,
+    "year": "2011",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1x78.jpg",
+    "similar": [
+      "Dark Souls II",
+      "Elden Ring",
+      "Demon's Souls",
+      "Bloodborne",
+      "Dark Souls III"
+    ]
+  },
+  {
+    "id": 974,
+    "title": "Resident Evil 4",
+    "description": "Resident Evil 4 is the sixth installment in the Resident Evil series and is often noted for its departure from the fixed camera angles of earlier titles. It introduced an over-the-shoulder third-person perspective, faster-paced gunplay, and more dynamic controls. The game features larger, more open environments and a new AI system that enables enemies to coordinate attacks and attempt to corner the player. Enemies exhibit more human-like behavior, such as climbing ladders, opening doors, and using weapons.",
+    "genres": [
+      "Shooter",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Horror",
+      "Survival"
+    ],
+    "platforms": [
+      "Nintendo GameCube"
+    ],
+    "rating": 84.50053842147342,
+    "year": "2005",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co2wk8.jpg",
+    "similar": [
+      "Dying Light",
+      "Days Gone",
+      "The Evil Within",
+      "Resident Evil 2",
+      "The Last of Us"
+    ]
+  },
+  {
+    "id": 7342,
+    "title": "Inside",
+    "description": "An atmospheric 2D side-scroller in which, hunted and alone, a boy finds himself drawn into the center of a dark project and struggles to preserve his identity.",
+    "genres": [
+      "Platform",
+      "Puzzle",
+      "Adventure",
+      "Indie"
+    ],
+    "themes": [
+      "Action",
+      "Science fiction",
+      "Horror",
+      "Stealth",
+      "Drama"
+    ],
+    "platforms": [
+      "PlayStation 4",
+      "PC (Microsoft Windows)",
+      "iOS",
+      "Mac",
+      "Xbox One",
+      "Nintendo Switch"
+    ],
+    "rating": 89.08360823586332,
+    "year": "2016",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co2fca.jpg",
+    "similar": [
+      "Limbo",
+      "Soma",
+      "The Vanishing of Ethan Carter",
+      "Amnesia: A Machine for Pigs",
+      "The Witness"
+    ]
+  },
+  {
+    "id": 427,
+    "title": "Final Fantasy VII",
+    "description": "The Western release of Final Fantasy VII (released as Final Fantasy VII International in Japan) included additional elements and alterations, such as streamlining of the menu and Materia system, reducing the health of enemies, new visual cues to help with navigation across the world map, and additional cutscenes relating to Cloud's past.",
+    "genres": [
+      "Role-playing (RPG)",
+      "Adventure"
+    ],
+    "themes": [
+      "Fantasy",
+      "Science fiction"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "PlayStation",
+      "PlayStation Portable"
+    ],
+    "rating": 87.73358572704267,
+    "year": "1997",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co2kx2.jpg",
+    "similar": [
+      "Final Fantasy IX",
+      "Final Fantasy VIII",
+      "Final Fantasy III",
+      "Metal Gear Solid",
+      "Steins;Gate"
+    ]
+  },
+  {
+    "id": 132,
+    "title": "Warcraft III: Reign of Chaos",
+    "description": "Warcraft 3: Reign of Chaos is an RTS made by Blizzard Entertainment. Take control of either the Humans, the Orcs, the Night Elves or the Undead, all with different unit types and heroes with unique abilities.Play the story driven single player campaign, go online to play default- or custom maps against people around the world or create your own maps with the map creation tool.",
+    "genres": [
+      "Real Time Strategy (RTS)",
+      "Strategy"
+    ],
+    "themes": [
+      "Fantasy",
+      "Warfare"
+    ],
+    "platforms": [
+      "PC (Microsoft Windows)",
+      "Mac"
+    ],
+    "rating": 90.56134638101673,
+    "year": "2002",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1xuq.jpg",
+    "similar": [
+      "Praetorians",
+      "Three Kingdoms: Fate of the Dragon",
+      "Age of Empires IV",
+      "Battle for Wesnoth",
+      "Fire Emblem: Three Houses"
+    ]
+  },
+  {
+    "id": 1331,
+    "title": "Limbo",
+    "description": "Limbo is a black and white puzzle-platforming adventure. Players take the role of a young boy traveling through an eerie and treacherous world in an attempt to discover the fate of his sister.",
+    "genres": [
+      "Platform",
+      "Puzzle",
+      "Adventure",
+      "Indie"
+    ],
+    "themes": [
+      "Action",
+      "Horror"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "PlayStation 4",
+      "Linux",
+      "Android",
+      "PC (Microsoft Windows)",
+      "iOS",
+      "Mac",
+      "PlayStation Vita",
+      "Xbox 360",
+      "Xbox One",
+      "Nintendo Switch"
+    ],
+    "rating": 82.52599642982399,
+    "year": "2010",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1qrs.jpg",
+    "similar": [
+      "Inside",
+      "The Vanishing of Ethan Carter",
+      "Ori and the Blind Forest",
+      "Brothers: A Tale of Two Sons",
+      "Fez"
+    ]
+  },
+  {
+    "id": 730,
+    "title": "Grand Theft Auto III",
+    "description": "Featuring a fully 3-D living city, a combination of narrative driven and non-linear gameplay and a completely open environment, Grand Theft Auto III represents a huge leap forward in interactive entertainment. For the first time, players are put at the heart of their very own gangster movie, and let loose in a fully-realised 3 dimensional city, in which anything can happen and probably will.\n\nWith a cast of hundreds, 50 plus vehicles, ranging from sports cars to ice cream trucks and from boats to buses, 3 hours of music, including opera, reggae, house, drum and bass, pop and disco, a huge array of street ready weapons and some of the seediest characters in video game history, Grand Theft Auto 3 is a sprawling epic which will show you that sometimes, crime can pay and sometimes it can pay you back. Available now for PlayStation2, Xbox, PC and Macintosh.",
+    "genres": [
+      "Shooter",
+      "Racing",
+      "Simulator",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Sandbox",
+      "Open world"
+    ],
+    "platforms": [
+      "Xbox",
+      "PlayStation 4",
+      "Android",
+      "PC (Microsoft Windows)",
+      "iOS",
+      "Mac",
+      "PlayStation 2"
+    ],
+    "rating": 89.77320998457118,
+    "year": "2001",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co2lb8.jpg",
+    "similar": [
+      "Grand Theft Auto IV",
+      "Grand Theft Auto",
+      "Grand Theft Auto: Vice City",
+      "Grand Theft Auto V",
+      "Grand Theft Auto 2"
+    ]
+  },
+  {
+    "id": 59,
+    "title": "The Elder Scrolls IV: Oblivion",
+    "description": "The Elder Scrolls IV: Oblivion, the fourth game in the Elder Scrolls story, is set within the province of Cyrodiil, the heartland and Imperial capital of Tamriel. Emperor Uriel Septim VII is assassinated in flight from his own palace, but just before he dies he passes on to you the mystic Amulet of Kings. The adventure proper begins with the quest to find Uriel's lost and illegitimate son who is the only heir to the throne. In a world where the forces of darkness seek their ultimate dominion over the ranks of man and mer alike, you alone stand between the future of Tamriel and the gates of Oblivion.",
+    "genres": [
+      "Role-playing (RPG)",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy",
+      "Historical",
+      "Sandbox",
+      "Open world"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "PC (Microsoft Windows)",
+      "Xbox 360"
+    ],
+    "rating": 82.80100933781306,
+    "year": "2006",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co8fpz.jpg",
+    "similar": [
+      "The Elder Scrolls V: Skyrim",
+      "The Elder Scrolls III: Morrowind",
+      "Dishonored",
+      "Fallout 3",
+      "Fallout: New Vegas"
+    ]
+  },
+  {
+    "id": 126,
+    "title": "Diablo II",
+    "description": "Like its predecessor, Diablo II is an action role-playing game with dark fantasy and horror themes. The player controls a new hero attempting to stop the destruction unleashed by Diablo's return. The game's 4 acts feature a variety of locations and settings to explore and battle in, as well as an increased cast of characters to play as and interact with. Diablo II had become one of the most popular online games of all time. Major factors that contributed to Diablo II's success include what fans found to be addictive hack-and-slash gameplay and free access to Battle.net.",
+    "genres": [
+      "Role-playing (RPG)",
+      "Hack and slash/Beat 'em up"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy"
+    ],
+    "platforms": [
+      "PC (Microsoft Windows)",
+      "Mac"
+    ],
+    "rating": 89.2221252305998,
+    "year": "2000",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co3gfq.jpg",
+    "similar": [
+      "Mr. Prepper",
+      "Rust",
+      "The Elder Scrolls V: Skyrim",
+      "Minecraft: Java Edition",
+      "Contraband Police"
+    ]
+  },
+  {
+    "id": 559,
+    "title": "Call of Duty: Modern Warfare 2",
+    "description": "Call of Duty: Modern Warfare 2 is a first-person shooter video game developed by Infinity Ward and published by Activision for the Xbox 360 and PlayStation 3 video game consoles and the Microsoft Windows operating system. Officially announced on February 11, 2009, the game was released worldwide on November 10, 2009. It is the sixth installment of the Call of Duty series and the direct sequel to Call of Duty 4: Modern Warfare, continuing the same storyline, with Call of Duty: Modern Warfare 3 set to end the storyline.",
+    "genres": [
+      "Shooter"
+    ],
+    "themes": [
+      "Action",
+      "Stealth",
+      "Warfare"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "PC (Microsoft Windows)",
+      "Mac",
+      "Xbox 360"
+    ],
+    "rating": 83.45873776106464,
+    "year": "2009",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co3cwt.jpg",
+    "similar": [
+      "Sniper: Ghost Warrior 3",
+      "Call of Duty: Ghosts",
+      "Breach & Clear",
+      "Battlefield: Bad Company 2",
+      "Call of Duty: Advanced Warfare"
+    ]
+  },
+  {
+    "id": 1877,
+    "title": "Cyberpunk 2077",
+    "description": "Cyberpunk 2077 is an open-world action-adventure game set in Night City, a sprawling metropolis driven by power, glamour, and body modification. Players assume the role of V, a mercenary outlaw in pursuit of a unique implant that holds the key to immortality. The game allows extensive customization of cyberware, skills, and playstyle. Choices made throughout the journey influence both the narrative and the world.",
+    "genres": [
+      "Shooter",
+      "Role-playing (RPG)",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Science fiction",
+      "Sandbox",
+      "Open world"
+    ],
+    "platforms": [
+      "Google Stadia",
+      "Xbox Series X|S",
+      "PlayStation 4",
+      "Nintendo Switch 2",
+      "PC (Microsoft Windows)",
+      "PlayStation 5",
+      "Mac",
+      "Xbox One"
+    ],
+    "rating": 79.02005051109583,
+    "year": "2020",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/coaih8.jpg",
+    "similar": [
+      "Immortal: Unchained",
+      "Borderlands 3",
+      "Gene Rain",
+      "Force of Nature",
+      "Rebel Galaxy Outlaw"
+    ]
+  },
+  {
+    "id": 11208,
+    "title": "NieR: Automata",
+    "description": "NieR: Automata tells the story of androids 2B, 9S and A2 and their battle to reclaim the machine-driven dystopia overrun by powerful machines.",
+    "genres": [
+      "Role-playing (RPG)",
+      "Hack and slash/Beat 'em up"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy",
+      "Science fiction",
+      "Drama",
+      "Open world"
+    ],
+    "platforms": [
+      "PlayStation 4",
+      "PC (Microsoft Windows)"
+    ],
+    "rating": 87.83999476909989,
+    "year": "2017",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co5pcj.jpg",
+    "similar": [
+      "Ziggurat",
+      "Horizon Zero Dawn",
+      "Get Even",
+      "Biomutant",
+      "Aarklash: Legacy"
+    ]
+  },
+  {
+    "id": 39,
+    "title": "Mafia",
+    "description": "Mafia is a 3D action crime epic set in the seedy underworld of the 1930's. Rise from the lowly but well-dressed Footsoldier, to an envied and feared Made Man in an era of mob hits, car chases, and bootlegging. Earn a reputation as a tough enforcer, daring getaway driver, and deadly hitman in your quest for respect and power within the Salieri Family.",
+    "genres": [
+      "Fighting",
+      "Shooter",
+      "Racing",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Stealth",
+      "Open world"
+    ],
+    "platforms": [
+      "Xbox",
+      "PC (Microsoft Windows)",
+      "PlayStation 2"
+    ],
+    "rating": 74.53603576871946,
+    "year": "2002",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1qrt.jpg",
+    "similar": [
+      "Tom Clancy's Ghost Recon: Wildlands",
+      "Grand Theft Auto: Vice City",
+      "Borderlands 3",
+      "Grand Theft Auto III",
+      "Grand Theft Auto IV"
+    ]
+  },
+  {
+    "id": 7344,
+    "title": "Ori and the Blind Forest",
+    "description": "The forest of Nibel is dying. After a powerful storm sets a series of devastating events in motion, an unlikely hero must journey to find his courage and confront a dark nemesis to save his home. Ori and the Blind Forest tells the tale of a young orphan destined for heroics, through a visually stunning action-platformer crafted by Moon Studios for Xbox One and PC. Featuring hand-painted artwork, meticulously animated character performance, and a fully orchestrated score, Ori and the Blind Forest explores a deeply emotional story about love and sacrifice, and the hope that exists in us all.",
+    "genres": [
+      "Platform",
+      "Puzzle",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy",
+      "Thriller"
+    ],
+    "platforms": [
+      "PC (Microsoft Windows)",
+      "Xbox One",
+      "Nintendo Switch"
+    ],
+    "rating": 87.43588168182015,
+    "year": "2015",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1y41.jpg",
+    "similar": [
+      "Ziggurat",
+      "Little Nightmares",
+      "Figment",
+      "Get Even",
+      "Dead Cells"
+    ]
+  },
+  {
+    "id": 5503,
+    "title": "Batman: Arkham Knight",
+    "description": "Batman: Arkham Knight is an action-adventure game developed by Rocksteady Studios, released in 2015. It is the final installment in the Arkham series. Players control Batman as he faces Scarecrow, who unites Gotham's criminals to destroy the Dark Knight. The mysterious Arkham Knight, a new adversary, aids Scarecrow in his plan.\n\nThe game features open-world exploration, stealth, combat, and puzzle-solving. A key addition is the Batmobile, used for traversal and combat. The story explores Batman’s psychological struggles and the collapse of his alliances as Gotham spirals into chaos.",
+    "genres": [
+      "Hack and slash/Beat 'em up",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Thriller",
+      "Stealth",
+      "Drama",
+      "Open world"
+    ],
+    "platforms": [
+      "PlayStation 4",
+      "PC (Microsoft Windows)",
+      "Xbox One",
+      "Nintendo Switch"
+    ],
+    "rating": 88.35039004427188,
+    "year": "2015",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/coagib.jpg",
+    "similar": [
+      "Batman: Arkham Asylum",
+      "Batman: Arkham City",
+      "Watch Dogs 2",
+      "Middle-earth: Shadow of Mordor",
+      "The Amazing Spider-Man 2"
+    ]
+  },
+  {
+    "id": 1266,
+    "title": "Assassin's Creed III",
+    "description": "The American Colonies, 1775. A brave young warrior fights to save his homeland. But what begins as a struggle over territory turns into an extraordinary journey that will transform him into a Master Assassin—and will forever change the destiny of a nation.\n\nYou are Connor, warrior son of a Native American mother and British father. As the colonies draw closer to revolution, you will dedicate your life to the freedom of your clan –becoming the spark that ignites the revolution into full blaze. Your crusade will take you through blood-soaked battlefields to crowded city streets, to perilous wilderness and beyond. You will not only witness history—you will make it.\nWelcome to an entirely new chapter in the Assassin’s Creed saga.",
+    "genres": [
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy",
+      "Science fiction",
+      "Historical",
+      "Stealth",
+      "Sandbox",
+      "Open world"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "PC (Microsoft Windows)",
+      "Wii U",
+      "Xbox 360"
+    ],
+    "rating": 77.32598336781554,
+    "year": "2012",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1xii.jpg",
+    "similar": [
+      "Assassin's Creed",
+      "Assassin's Creed Rogue",
+      "Assassin's Creed Revelations",
+      "Assassin's Creed Syndicate",
+      "Assassin's Creed Unity"
+    ]
+  },
+  {
+    "id": 247,
+    "title": "Half-Life 2: Episode Two",
+    "description": "The second episodic sequel to one of the most influential first-person shooters of its time, Half-Life 2.",
+    "genres": [
+      "Shooter",
+      "Puzzle"
+    ],
+    "themes": [
+      "Action",
+      "Science fiction"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "Linux",
+      "PC (Microsoft Windows)",
+      "Mac",
+      "Xbox 360"
+    ],
+    "rating": 78.7940094821257,
+    "year": "2007",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co2mw2.jpg",
+    "similar": [
+      "Half-Life",
+      "Portal",
+      "Singularity",
+      "Syndicate",
+      "Wolfenstein: The New Order"
+    ]
+  },
+  {
+    "id": 512,
+    "title": "Uncharted 3: Drake's Deception",
+    "description": "A search for the fabled \"Atlantis of the Sands\" propels fortune hunter Nathan Drake on a trek into the heart of the Arabian Desert. When the terrible secrets of this lost city are unearthed, Drake's quest descends into a desperate bid for survival that strains the limits of his endurance and forces him to confront his deepest fears.",
+    "genres": [
+      "Shooter",
+      "Platform",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy",
+      "Historical"
+    ],
+    "platforms": [
+      "PlayStation 3"
+    ],
+    "rating": 88.81950466371737,
+    "year": "2011",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1tp8.jpg",
+    "similar": [
+      "Uncharted 2: Among Thieves",
+      "Uncharted: Drake's Fortune",
+      "Crysis 2",
+      "Remnant: From the Ashes",
+      "Uncharted 4: A Thief's End"
+    ]
+  },
+  {
+    "id": 119171,
+    "title": "Baldur's Gate III",
+    "description": "An ancient evil has returned to Baldur's Gate, intent on devouring it from the inside out. The fate of Faerun lies in your hands. Alone, you may resist. But together, you can overcome.",
+    "genres": [
+      "Role-playing (RPG)",
+      "Strategy",
+      "Turn-based strategy (TBS)"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy"
+    ],
+    "platforms": [
+      "Google Stadia",
+      "Xbox Series X|S",
+      "Linux",
+      "PC (Microsoft Windows)",
+      "PlayStation 5",
+      "Mac"
+    ],
+    "rating": 95.08243516592157,
+    "year": "2023",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co670h.jpg",
+    "similar": [
+      "Battle Brothers",
+      "Fire Emblem: Three Houses",
+      "God of War",
+      "Fallen Enchantress",
+      "Dragon Age: Inquisition"
+    ]
+  },
+  {
+    "id": 116,
+    "title": "Star Wars: Knights of the Old Republic",
+    "description": "Choose Your Path! Set 4,000 years before the Galactic Empire, you are the last hope for the Jedi Order and the Republic - can you master the ways of the Force to become their savior? Or will you fall to the dark side and achieve ultimate power? Hero, villain, peacekeeper, or chaos-bringer... you and your party will determine the fate of the galaxy!\n\nStar Wars: Knights of the Old Republic is a role-playing video game. Players will be able to create their own characters and be able to choose what gender, appearance, class, skills, attributes, and feats they have throughout the game - no two characters will be the same!",
+    "genres": [
+      "Role-playing (RPG)",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Science fiction",
+      "Stealth",
+      "Open world"
+    ],
+    "platforms": [
+      "Xbox",
+      "Android",
+      "PC (Microsoft Windows)",
+      "iOS",
+      "Mac",
+      "Nintendo Switch"
+    ],
+    "rating": 91.89870324582846,
+    "year": "2003",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1tmz.jpg",
+    "similar": [
+      "Star Wars: Knights of the Old Republic II - The Sith Lords",
+      "Mass Effect 2",
+      "Dishonored",
+      "Prey",
+      "Deus Ex"
+    ]
+  },
+  {
+    "id": 26226,
+    "title": "Celeste",
+    "description": "Help Madeline survive her inner demons on her journey to the top of Celeste Mountain, in this super-tight platformer from the creators of TowerFall. Brave hundreds of hand-crafted challenges, uncover devious secrets, and piece together the mystery of the mountain.",
+    "genres": [
+      "Platform",
+      "Adventure",
+      "Indie"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy"
+    ],
+    "platforms": [
+      "Google Stadia",
+      "PlayStation 4",
+      "Linux",
+      "PC (Microsoft Windows)",
+      "Mac",
+      "Xbox One",
+      "Nintendo Switch"
+    ],
+    "rating": 89.02433354355693,
+    "year": "2018",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/cob9dh.jpg",
+    "similar": [
+      "Momodora: Reverie Under the Moonlight",
+      "Children of Morta",
+      "Pikuniku",
+      "Chasm",
+      "Tunic"
+    ]
+  },
+  {
+    "id": 3025,
+    "title": "Middle-earth: Shadow of Mordor",
+    "description": "Middle-earth: Shadow of Mordor is a open world third-person action role-playing video game developed by Monolith Productions and published by Warner Bros. Interactive Entertainment, which takes place in the world of J.R.R. Tolkien's Legendarium.\n\nThe game takes place in the 60-year gap between the events of Tolkien's The Hobbit and The Lord of The Rings. It is a story of revenge, slaughter, and mystery set entirely in Mordor, the Land of Shadows. At its center is Talion, an ordinary man who loses everything, including his mortal life.\n\nThe game is set in a fully open world, and features various role-playing game elements such as experience points and skills. There are various ways the player can complete their main objective. Aside from the main storyline, there are various side quests and random events the player can complete within Mordor.\n\nThe melee system is inspired by that of the Batman Arkham series. Getting into a good fighting rhythm, using both regular attacks and counter-attacks will improve the player's combo multiplier.\n\nA unique feature of Middle-earth: Shadow of Mordor is the Nemesis system. Every enemy in the game has their own name, rank, and memory. These enemies will continue to do their own jobs and tasks even when they're off screen. If the player does not kill an enemy in an encounter, this enemy will remember the player and change their tactics and conversations based on the encounter.",
+    "genres": [
+      "Role-playing (RPG)",
+      "Hack and slash/Beat 'em up",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy",
+      "Stealth",
+      "Open world"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "PlayStation 4",
+      "Linux",
+      "PC (Microsoft Windows)",
+      "Mac",
+      "Xbox 360",
+      "Xbox One"
+    ],
+    "rating": 81.73060891953824,
+    "year": "2014",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co20pd.jpg",
+    "similar": [
+      "Dishonored",
+      "Watch Dogs 2",
+      "The Witcher 3: Wild Hunt",
+      "Batman: Arkham Knight",
+      "Watch Dogs"
+    ]
+  },
+  {
+    "id": 19686,
+    "title": "Resident Evil 2",
+    "description": "Resident Evil 2 is a remake of 1998's Resident Evil 2. The game was not developed with the intent of improving the original, but rather a reimagining of the original story with redesigned maps, characters and story elements. Gameplay mechanics are more similar to Resident Evil 7: Biohazard though with the use of an over-the-shoulder camera.",
+    "genres": [
+      "Shooter",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Horror",
+      "Survival"
+    ],
+    "platforms": [
+      "Xbox Series X|S",
+      "PlayStation 4",
+      "PC (Microsoft Windows)",
+      "iOS",
+      "PlayStation 5",
+      "Mac",
+      "Xbox One"
+    ],
+    "rating": 90.1616546214897,
+    "year": "2019",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1ir3.jpg",
+    "similar": [
+      "Days Gone",
+      "Borderlands 3",
+      "Metro Exodus",
+      "Dying Light 2: Stay Human",
+      "How to Survive 2"
+    ]
+  },
+  {
+    "id": 478,
+    "title": "The Witcher 2: Assassins of Kings",
+    "description": "This third-person dark fantasy Western RPG and sequel to The Witcher (2007), featuring multiple endings and branching narrative paths, follows the travels of Geralt of Rivia, witcher, who, after being falsely accused of regicide, sets out to clear his name and find the real killer, in a time of political turmoil and the brink of war between the imperialistic Nilfgaardian Empire and the Four Kingdoms.",
+    "genres": [
+      "Role-playing (RPG)",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy"
+    ],
+    "platforms": [
+      "Linux",
+      "PC (Microsoft Windows)",
+      "Mac",
+      "Xbox 360"
+    ],
+    "rating": 85.09714273447551,
+    "year": "2011",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1wy4.jpg",
+    "similar": [
+      "The Witcher",
+      "Dragon Age: Origins",
+      "The Witcher 3: Wild Hunt",
+      "Dragon Age: Inquisition",
+      "Baldur's Gate III"
+    ]
+  },
+  {
+    "id": 1802,
+    "title": "Chrono Trigger",
+    "description": "In this turn-based Japanese RPG, young Crono must travel through time through a misfunctioning teleporter to rescue his misfortunate companion and take part in an intricate web of past and present perils. The adventure that ensues soon unveils an evil force set to destroy the world, triggering Crono's race against time to change the course of history and bring about a brighter future.",
+    "genres": [
+      "Role-playing (RPG)"
+    ],
+    "themes": [
+      "Fantasy",
+      "Science fiction",
+      "Open world"
+    ],
+    "platforms": [
+      "Satellaview",
+      "Super Nintendo Entertainment System",
+      "Wii",
+      "Super Famicom"
+    ],
+    "rating": 92.25693391004583,
+    "year": "1995",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co3plw.jpg",
+    "similar": [
+      "Fire Emblem: Three Houses",
+      "Legrand Legacy",
+      "Borderlands 3",
+      "Pokémon Shield",
+      "Cyberpunk 2077"
+    ]
+  },
+  {
+    "id": 1372,
+    "title": "Counter-Strike: Global Offensive",
+    "description": "Counter-Strike: Global Offensive expands upon the team-based action gameplay that it pioneered when it was launched over 2 decades ago. CS:GO features new maps, characters, weapons, and game modes, and delivers updated versions of the classic CS content (de_dust2, etc.).",
+    "genres": [
+      "Shooter",
+      "Tactical"
+    ],
+    "themes": [
+      "Action",
+      "Warfare"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "Linux",
+      "PC (Microsoft Windows)",
+      "Mac",
+      "Xbox 360"
+    ],
+    "rating": 81.3322450098195,
+    "year": "2012",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/cobt66.jpg",
+    "similar": [
+      "Rainbow Six Siege",
+      "Counter-Strike",
+      "America's Army: Proving Grounds",
+      "Breach & Clear",
+      "Dota 2"
+    ]
+  },
+  {
+    "id": 7323,
+    "title": "Rise of the Tomb Raider",
+    "description": "Join Lara Croft on her first great tomb raiding expedition as she seeks to discover the secret of immortality. Featuring high-octane action set in the most beautiful and hostile environments on earth, Rise of the Tomb Raider delivers cinematic survival action-adventure.",
+    "genres": [
+      "Shooter",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Survival",
+      "Stealth",
+      "Open world"
+    ],
+    "platforms": [
+      "Google Stadia",
+      "PlayStation 4",
+      "Linux",
+      "PlayStation VR",
+      "PC (Microsoft Windows)",
+      "Mac",
+      "Xbox 360",
+      "Xbox One"
+    ],
+    "rating": 84.18873305421499,
+    "year": "2015",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1rqa.jpg",
+    "similar": [
+      "Middle-earth: Shadow of Mordor",
+      "Watch Dogs 2",
+      "Get Even",
+      "Tom Clancy's The Division",
+      "Far Cry 5"
+    ]
+  },
+  {
+    "id": 76882,
+    "title": "Sekiro: Shadows Die Twice",
+    "description": "Carve your own clever path to vengeance as you come face-to-face with larger than life foes in FromSoftware's dark and twisted adventure set in feudal Japan. Unleash an arsenal of deadly prosthetic tools and ninja abilities, while blending stealth, vertical traversal, and visceral combat. Survive a relentless and bloody confrontation on a quest to restore your honor and save the one you're sworn to protect.",
+    "genres": [
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy",
+      "Historical",
+      "Stealth"
+    ],
+    "platforms": [
+      "Google Stadia",
+      "PlayStation 4",
+      "PC (Microsoft Windows)",
+      "Xbox One"
+    ],
+    "rating": 89.96661842155402,
+    "year": "2019",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co2a23.jpg",
+    "similar": [
+      "The Last of Us Part II",
+      "Death Stranding",
+      "Eternity: The Last Unicorn",
+      "God of War",
+      "Torchlight III"
+    ]
+  },
+  {
+    "id": 545,
+    "title": "Call of Duty: Black Ops",
+    "description": "Call of Duty: Black Ops is the seventh main Call of Duty game and the sequel to Call of Duty: World at War. The game differs from most previous installments, which would involve a usual three-country campaign, while Call of Duty: Black Ops features two playable countries (Russia and the USA) but only has an American campaign. Several new features are also introduced, such as dive-to-prone and the available use of a flashlight on certain weapons. Furthermore, the campaign's playable characters now speak while being controlled by the player.\n\nExtra game included within:\n\n+ Zork (Apple II)",
+    "genres": [
+      "Shooter"
+    ],
+    "themes": [
+      "Action",
+      "Horror",
+      "Survival",
+      "Historical",
+      "Stealth",
+      "Warfare"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "PC (Microsoft Windows)",
+      "Mac",
+      "Xbox 360"
+    ],
+    "rating": 80.38048032013864,
+    "year": "2010",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1wkl.jpg",
+    "similar": [
+      "Call of Duty: Modern Warfare 3",
+      "Call of Duty 4: Modern Warfare",
+      "Wolfenstein: The New Order",
+      "Call of Duty: Ghosts",
+      "Call of Duty: Black Ops II"
+    ]
+  },
+  {
+    "id": 2031,
+    "title": "Wolfenstein: The New Order",
+    "description": "Wolfenstein: The New Order is an action-adventure shooter game played from a first-person perspective. It is the semi-sequel to 2009's Wolfenstein, however utilizes very little from the game and drops any direct references to veil or supernatural.\n\nTo progress through the story, the player battle enemies throughout levels. The game utilizes a health system in which players' health is divided into separate sections that regenerate; if an entire section is lost, the player must use a health pack to replenish the missing health. In combat, a cover system can be used as assistance against enemies. The player have the ability to lean around, over, and under cover, which can be used as a tactical advantage during shootouts and stealth levels. The game gives the player a wide variety of weapon options—they can be found on the ground, retrieved from dead enemies, or removed from their stationary position and carried around.",
+    "genres": [
+      "Shooter",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy",
+      "Science fiction",
+      "Historical",
+      "Stealth",
+      "Warfare"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "PlayStation 4",
+      "PC (Microsoft Windows)",
+      "Xbox 360",
+      "Xbox One"
+    ],
+    "rating": 79.49837731727754,
+    "year": "2014",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co21c0.jpg",
+    "similar": [
+      "Dishonored",
+      "Rogue Warrior",
+      "Wolfenstein",
+      "Syndicate",
+      "Spec Ops: The Line"
+    ]
+  },
+  {
+    "id": 358,
+    "title": "Super Mario Bros.",
+    "description": "A side scrolling 2D platformer and first entry in the Super Mario franchise, Super Mario Bros. follows Italian plumber Mario as he treks across many levels of platforming challenges featuring hostile enemies to rescue Princess Peach from the evil king Bowser.",
+    "genres": [
+      "Platform",
+      "Adventure"
+    ],
+    "themes": [
+      "Action"
+    ],
+    "platforms": [
+      "Family Computer Disk System",
+      "Arcade",
+      "Nintendo 3DS",
+      "Wii",
+      "Family Computer",
+      "Wii U",
+      "Nintendo Entertainment System"
+    ],
+    "rating": 83.77782334747536,
+    "year": "1985",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co6pib.jpg",
+    "similar": [
+      "Super Mario Bros. 3",
+      "Super Mario World",
+      "The Legend of Zelda",
+      "Super Mario Galaxy 2",
+      "Paper Mario: The Thousand-Year Door"
+    ]
+  },
+  {
+    "id": 2207,
+    "title": "Shadow of the Colossus",
+    "description": "An open-world action/adventure game in which a young wanderer, along with a stolen magical sword and his steed companion, trespasses a cursed land, makes a deal with an ancient being to bring a sacrificial victim back to life, and sets off to fulfill his end of the bargain, which involves tracking down and infiltrating the abodes of sixteen colossi and sacrificing them to achieve his goal.",
+    "genres": [
+      "Platform",
+      "Puzzle",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy",
+      "Drama",
+      "Open world"
+    ],
+    "platforms": [
+      "PlayStation 2"
+    ],
+    "rating": 88.72790262484506,
+    "year": "2005",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1ozz.jpg",
+    "similar": [
+      "Forgotton Anne",
+      "Planet Alpha",
+      "Blacksad: Under the Skin",
+      "Borderlands 3",
+      "Pikuniku"
+    ]
+  },
+  {
+    "id": 1384,
+    "title": "Hotline Miami",
+    "description": "A top-down slasher/shooter with unlockable gameplay-altering masks and weapons, featuring a neon-flavoured electronic aesthetic, in which a hitman receives anonymous calls ordering him to travel to certain residences and crime dens and massacre those within, as he stumbles through unreal visions and inconsistencies without any answers to how, why or who.",
+    "genres": [
+      "Shooter",
+      "Indie",
+      "Arcade"
+    ],
+    "themes": [
+      "Action"
+    ],
+    "platforms": [
+      "Google Stadia",
+      "Xbox Series X|S",
+      "PlayStation 3",
+      "PlayStation 4",
+      "Linux",
+      "Android",
+      "PC (Microsoft Windows)",
+      "PlayStation 5",
+      "Mac",
+      "PlayStation Vita",
+      "Xbox One",
+      "Nintendo Switch"
+    ],
+    "rating": 84.6437531249032,
+    "year": "2012",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1vqp.jpg",
+    "similar": [
+      "Pikuniku",
+      "Dream Alone",
+      "Children of Morta",
+      "Ziggurat",
+      "Rico"
+    ]
+  },
+  {
+    "id": 14362,
+    "title": "Detroit: Become Human",
+    "description": "Detroit: Become Human is an interactive narrative adventure game developed by Quantic Dream and released in 2018. Set in a near-future Detroit where androids serve humans, the story follows three android protagonists—Kara, Connor, and Markus—who shape the city’s fate through their choices. Gameplay combines exploration, dialogue interactions, and quick-time events, with branching storylines and multiple endings. The narrative explores themes of artificial intelligence, freedom, and morality.",
+    "genres": [
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Science fiction",
+      "Thriller",
+      "Drama",
+      "Mystery"
+    ],
+    "platforms": [
+      "PlayStation 4",
+      "PC (Microsoft Windows)"
+    ],
+    "rating": 80.02539666484428,
+    "year": "2018",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co6mzf.jpg",
+    "similar": [
+      "Blacksad: Under the Skin",
+      "Twin Mirror",
+      "Omensight",
+      "Life is Strange 2",
+      "Immortal: Unchained"
+    ]
+  },
+  {
+    "id": 1077,
+    "title": "Super Mario Galaxy",
+    "description": "A 3D platformer and first Wii entry in the Super Mario franchise, Super Mario Galaxy sees Mario jump across planets and galaxies with varying items, enemies, geographies and gravity mechanics in order to reach his enemy Bowser, who has attacked the Mushroom Kingdom and hijacked Princess Peach's castle with her inside.",
+    "genres": [
+      "Platform",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Science fiction"
+    ],
+    "platforms": [
+      "Wii",
+      "Wii U"
+    ],
+    "rating": 93.71103534582026,
+    "year": "2007",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co21ro.jpg",
+    "similar": [
+      "Forgotton Anne",
+      "Planet Alpha",
+      "Crysis 2",
+      "Immortal: Unchained",
+      "Super Mario 64"
+    ]
+  },
+  {
+    "id": 379,
+    "title": "Metal Gear Solid 3: Snake Eater",
+    "description": "Metal Gear Solid 3: Snake Eater is the prequel to the entire Metal Gear series. Most of the series' defining gameplay elements have been carried over and as before, Snake must use stealth and wits rather than brute force to infiltrate enemy zones and eliminate his major adversaries. Unlike the previous games, this installment takes place in a large outdoor jungle. Snake is able to use camouflage, climb trees, hide in tall grass or wear clothes that make him less noticeable.",
+    "genres": [
+      "Shooter",
+      "Tactical",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy",
+      "Survival",
+      "Historical",
+      "Stealth",
+      "Drama"
+    ],
+    "platforms": [
+      "PlayStation 2"
+    ],
+    "rating": 89.0959567738187,
+    "year": "2004",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co5ei5.jpg",
+    "similar": [
+      "Metal Gear Solid V: The Phantom Pain",
+      "Metal Gear Solid",
+      "Grand Theft Auto V",
+      "Metal Gear Solid 4: Guns of the Patriots",
+      "BioShock Infinite"
+    ]
+  },
+  {
+    "id": 537,
+    "title": "Assassin's Creed Revelations",
+    "description": "Assassin's Creed Revelations presents the most immersive experience available in the series to date and the culmination of Ezio's adventure. In Assassin's Creed Revelations, master assassin Ezio Auditore walks in the footsteps of his legendary mentor, Altair, on a journey of discovery and revelation. It is a perilous path - one that will take Ezio to Constantinople, the heart of the Ottoman Empire, where a growing army of Templars threatens to destabilize the region.\n\nIn addition to Ezio's award-winning story, the acclaimed online multiplayer experience from Assassin's Creed Brotherhood returns; refined and expanded, with more modes, more maps and more characters that allow players to test their assassin skills against others from around the world. The latest chapter in the Assassin's Creed saga also includes revolutionary gameplay, allowing players to manipulate the construct of Desmond's memories and the Animus to decipher the mysteries of his past and gain insight into the future.",
+    "genres": [
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy",
+      "Historical",
+      "Stealth",
+      "Sandbox",
+      "Open world"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "PC (Microsoft Windows)",
+      "Xbox 360"
+    ],
+    "rating": 79.32106028325435,
+    "year": "2011",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1xih.jpg",
+    "similar": [
+      "Assassin's Creed III",
+      "Assassin's Creed",
+      "Assassin's Creed Rogue",
+      "Assassin's Creed Unity",
+      "Assassin's Creed Origins"
+    ]
+  },
+  {
+    "id": 40,
+    "title": "Mafia II",
+    "description": "The storyline for Mafia II is a gritty drama and chronicles the rise of Vito Scaletta, the son of Sicilian immigrants. As the game progresses, Vito joins the Falcone crime family and becomes \"a made man\" along with his best friend Joe Barbaro.",
+    "genres": [
+      "Shooter",
+      "Racing",
+      "Adventure"
+    ],
+    "themes": [
+      "Action",
+      "Fantasy",
+      "Historical",
+      "Stealth",
+      "Sandbox",
+      "Open world"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "PC (Microsoft Windows)",
+      "Xbox 360"
+    ],
+    "rating": 77.09555054218018,
+    "year": "2010",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co2n13.jpg",
+    "similar": [
+      "Grand Theft Auto V",
+      "Dishonored",
+      "L.A. Noire",
+      "Grand Theft Auto: Vice City",
+      "Watch Dogs 2"
+    ]
+  },
+  {
+    "id": 37,
+    "title": "Dead Space",
+    "description": "Dead Space is a 2008 science fiction survival horror video game developed by EA Redwood Shores (now Visceral Games) for Microsoft Windows, PlayStation 3 and Xbox 360. The game was released on all platforms through October 2008. The game puts the player in control of an engineer named Isaac Clarke, who battles the Necromorphs, reanimated human corpses, aboard an interstellar mining ship, the USG Ishimura.",
+    "genres": [
+      "Shooter",
+      "Puzzle"
+    ],
+    "themes": [
+      "Action",
+      "Science fiction",
+      "Horror",
+      "Survival"
+    ],
+    "platforms": [
+      "PlayStation 3",
+      "PC (Microsoft Windows)",
+      "Xbox 360"
+    ],
+    "rating": 86.8905678018688,
+    "year": "2008",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co2g7w.jpg",
+    "similar": [
+      "Singularity",
+      "Dead Space 3",
+      "BioShock",
+      "Dishonored",
+      "Dead Space 2"
+    ]
+  },
+  {
+    "id": 230,
+    "title": "StarCraft",
+    "description": "StarCraft is a strategic game set in a Galaxy far away on multiple planets. Its style and balance between the three antagonistic species it features is unique and appealed to millions.",
+    "genres": [
+      "Real Time Strategy (RTS)",
+      "Strategy"
+    ],
+    "themes": [
+      "Science fiction",
+      "Warfare"
+    ],
+    "platforms": [
+      "PC (Microsoft Windows)",
+      "Mac"
+    ],
+    "rating": 88.14417199252047,
+    "year": "1998",
+    "image": "https://images.igdb.com/igdb/image/upload/t_cover_big/co9n6m.jpg",
+    "similar": [
+      "Command & Conquer: Generals",
+      "Command & Conquer 3: Tiberium Wars",
+      "Supreme Commander",
+      "The Lord of the Rings: The Battle for Middle-earth II",
+      "Quake 4"
+    ]
+  }
+]

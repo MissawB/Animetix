@@ -1,23 +1,37 @@
-"""
-URL configuration for animetix_project project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/6.0/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 from django.contrib import admin
 from django.urls import path, include
+from django.conf.urls.i18n import i18n_patterns
+from rest_framework import routers
+from animetix import api_views
+from graphene_django.views import GraphQLView
+from django.views.decorators.csrf import csrf_exempt
+from django.views.generic.base import RedirectView
+
+# REST Router
+router = routers.DefaultRouter()
+router.register(r'profiles', api_views.ProfileViewSet)
+router.register(r'daily-challenges', api_views.DailyChallengeViewSet)
+router.register(r'achievements', api_views.AchievementViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('animetix.urls')),
+    path('favicon.ico', RedirectView.as_view(url='/static/animetix/img/logo/logo.png')),
+    path('i18n/', include('django.conf.urls.i18n')), # Permet le switch de langue via POST
+    
+    # --- PROFESSIONNALISATION : API REST (Headless) ---
+    path('api/', include(router.urls)),
+    path('api/search/', api_views.MediaSearchView.as_view(), name='api_search'),
+    path('api/session/', api_views.GameSessionView.as_view(), name='api_session'),
+    path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    
+    # --- PROFESSIONNALISATION : GRAPHQL (Knowledge Graph) ---
+    path("graphql/", csrf_exempt(GraphQLView.as_view(graphiql=True))),
+    
+    # --- OBSERVABILITÉ : PROMETHEUS ---
+    path('metrics/', include('django_prometheus.urls')),
 ]
+
+# URLs traduites
+urlpatterns += i18n_patterns(
+    path('', include('animetix.urls')),
+)

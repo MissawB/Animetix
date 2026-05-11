@@ -1,0 +1,98 @@
+{% extends 'animetix/base.html' %}
+{% load static %}
+
+{% block title %}Animetix - Défis du Jour{% endblock %}
+
+{% block content %}
+<style>
+    .daily-header {
+        background: linear-gradient(135deg, #ffd166 0%, #fdb913 100%);
+        border-radius: 0 0 3rem 3rem;
+    }
+    [data-bs-theme="dark"] .daily-header {
+        background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 100%);
+        border-bottom: 2px solid #ffd166;
+    }
+
+    .manga-card {
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .manga-card:hover {
+        transform: translateY(-10px) rotate(2deg);
+    }
+
+    .completed-overlay {
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+    }
+</style>
+
+<div class="min-h-screen pb-20">
+    <!-- Header -->
+    <div class="daily-header py-16 px-6 shadow-2xl mb-12">
+        <div class="max-w-4xl mx-auto text-center">
+            <h1 class="text-6xl md:text-8xl font-black italic tracking-tighter uppercase text-black dark:text-white manga-font mb-4">
+                DÉFIS DU JOUR<span class="text-yellow-400">.</span>
+            </h1>
+            <p class="text-xl font-bold uppercase tracking-widest text-gray-800 dark:text-yellow-400 opacity-80">
+                Une seule cible, plusieurs façons de la débusquer.
+            </p>
+            <div class="mt-8 flex justify-center gap-4">
+                <span class="bg-black text-white px-6 py-2 rounded-full font-black italic manga-font">
+                    {{ date|date:"d F Y" }}
+                </span>
+                <span class="bg-white text-black px-6 py-2 rounded-full font-black italic manga-font shadow-lg">
+                    {{ media_type|upper }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grid Selection -->
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for mode in modes %}
+            <a href="?mode={{ mode.id }}" class="group relative block h-[300px] rounded-3xl overflow-hidden shadow-xl manga-card no-underline">
+                <!-- Background Gradient -->
+                <div class="absolute inset-0 bg-gradient-to-br {{ mode.gradient }} z-0"></div>
+                
+                <!-- Patterns/Texture -->
+                <img src="https://www.transparenttextures.com/patterns/stardust.png" class="absolute inset-0 w-full h-full object-cover opacity-30 mix-blend-screen z-10" alt="Texture">
+
+                <!-- Title Overlay (Brush Style) -->
+                <div class="absolute top-6 left-6 z-30 transform -rotate-6 transition-transform group-hover:rotate-0">
+                    <h2 class="manga-font text-white text-5xl leading-[0.8] uppercase tracking-tighter" style="text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 0 5px 15px rgba(0,0,0,0.5);">
+                        {{ mode.brush1 }}<br>
+                        <span class="text-yellow-400 text-3xl ml-4">{{ mode.brush2 }}</span>
+                    </h2>
+                </div>
+
+                <!-- Description -->
+                <div class="absolute bottom-6 left-6 right-6 z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <p class="text-white font-bold text-sm italic leading-tight drop-shadow-md">
+                        {{ mode.description }}
+                    </p>
+                </div>
+
+                <!-- Character Icon -->
+                <img src="{{ mode.icon }}" alt="{{ mode.title }}" class="absolute -right-4 -bottom-4 h-[90%] object-contain z-20 drop-shadow-2xl transition-transform duration-500 group-hover:scale-110">
+                
+                {% if mode.completed %}
+                <div class="absolute inset-0 z-40 completed-overlay flex items-center justify-center">
+                    <div class="bg-yellow-400 text-black px-8 py-3 rounded-2xl font-black italic manga-font text-2xl rotate-12 shadow-2xl">
+                        COMPLÉTÉ ✅
+                    </div>
+                </div>
+                {% endif %}
+            </a>
+            {% endfor %}
+        </div>
+        
+        <div class="mt-16 text-center">
+            <a href="{% url 'index' %}" class="inline-flex items-center gap-3 bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-white px-8 py-4 rounded-2xl font-black italic manga-font hover:bg-yellow-400 hover:text-black transition-all no-underline shadow-lg">
+                <i class="bi bi-arrow-left"></i> Retour à l'accueil
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
