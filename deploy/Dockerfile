@@ -31,6 +31,9 @@ ENV PATH="/opt/venv/bin:$PATH"
 # Copy code and set permissions
 COPY --chown=appuser:appuser . .
 
+# Collect static files (assuming settings.py is configured correctly for STATIC_ROOT)
+RUN python backend/manage.py collectstatic --noinput
+
 # Set up data directories with proper permissions
 RUN mkdir -p data/raw data/processed data/models data/artifacts data/chroma_db && chown -R appuser:appuser /app
 
