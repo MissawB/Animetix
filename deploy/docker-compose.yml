@@ -1,0 +1,147 @@
+services:
+  # Application Tout-en-un (Django + Celery gérés par Supervisor)
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    volumes:
+      - ..:/app
+      - data_volume:/app/data
+    env_file:
+      - ../.env
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - REDIS_URL=redis://redis:6379/1
+    ports:
+      - "7860:7860"
+    depends_on:
+      - db
+      - redis
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+
+  # Base de données PostgreSQL
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  # Cache & Broker (Redis)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  # Base de données Vectorielle (ChromaDB)
+  chromadb:
+    profiles: ["data"]
+    image: chromadb/chroma:latest
+    volumes:
+      - chroma_data:/chroma/chroma
+    ports:
+      - "8001:8000"
+    command: "--host 0.0.0.0 --port 8000 --path /chroma/chroma"
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2G
+
+  # Base de données de Graphe (Neo4j)
+  neo4j:
+    profiles: ["data"]
+    image: neo4j:5-community
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      - NEO4J_AUTH=${NEO4J_AUTH}
+    volumes:
+      - neo4j_data:/data
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2G
+
+  # Observabilité : Prometheus
+  prometheus:
+    profiles: ["monitoring"]
+    image: prom/prometheus:latest
+    volumes:
+      - ./infra/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+
+  # Observabilité : Grafana
+  grafana:
+    profiles: ["monitoring"]
+    image: grafana/grafana:latest
+    depends_on:
+      - prometheus
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_ADMIN_PASSWORD}
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+
+  # IA Locale (Ollama)
+  ollama:
+    profiles: ["llm"]
+    image: ollama/ollama:latest
+    volumes:
+      - ollama_storage:/root/.ollama
+    ports:
+      - "11434:11434"
+
+  # Serveur d'Inférence Hautes Performances (vLLM)
+  vllm:
+    profiles: ["llm"]
+    image: vllm/vllm-openai:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      - vllm_cache:/root/.cache/huggingface
+    environment:
+      - HUGGING_FACE_HUB_TOKEN=${HUGGINGFACE_TOKEN}
+    # Optimisation Quantisation 2.0 (BitNet 1.58b)
+    # vLLM supporte désormais le chargement de modèles 1.58-bit pour une efficacité RAM extrême.
+    command: --model meta-llama/Llama-3-8B-Instruct --dtype auto --max-model-len 4096 --gpu-memory-utilization 0.5 --quantization bitsandbytes
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+        limits:
+          memory: 8G
+
+volumes:
+  data_volume:
+  postgres_data:
+  redis_data:
+  chroma_data:
+  neo4j_data:
+  ollama_storage:
+  vllm_cache:

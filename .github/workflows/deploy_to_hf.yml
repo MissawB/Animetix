@@ -5,8 +5,23 @@ on:
   workflow_dispatch:
 
 jobs:
+  check-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      should_deploy: ${{ steps.check.outputs.should_deploy }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Check for changes
+        id: check
+        run: |
+          git diff --quiet HEAD^ HEAD data/models/manifest.json || echo "should_deploy=true" >> $GITHUB_OUTPUT
+
   deploy:
     runs-on: ubuntu-latest
+    needs: check-changes
+    if: needs.check-changes.outputs.should_deploy == 'true' || github.event_name == 'workflow_dispatch'
     environment: HF
     
     steps:
@@ -22,13 +37,6 @@ jobs:
 
       - name: Install huggingface_hub
         run: pip install huggingface_hub
-
-      # ÉTAPE DE DIAGNOSTIC : On vérifie que les fichiers sont là
-      - name: List files for diagnostic
-        run: |
-          echo "🔍 Checking for JSON files..."
-          ls -R data/artifacts/*.json || echo "⚠️ No JSON in artifacts"
-          ls -R data/processed/*.json || echo "⚠️ No JSON in processed"
 
       - name: Deploy to Hugging Face
         env:
@@ -63,58 +71,54 @@ jobs:
               print(f'✅ {repo_id} synced!')
 
           # --- CONFIG WEB ---
-          web_docker = \"\"\"
+          web_docker = """
           FROM python:3.11-slim
           ENV PYTHONDONTWRITEBYTECODE=1
           ENV PYTHONUNBUFFERED=1
           ENV PYTHONPATH='/app/backend:${PYTHONPATH}'
           WORKDIR /app
-          RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+          RUN apt-get update && apt-get install -y --no-install-recommends curl build-essential libpq-dev gcc && rm -rf /var/lib/apt/lists/*
           COPY requirements.txt .
-          RUN sed -i '/torch/d' requirements.txt && \
-              sed -i '/transformers/d' requirements.txt && \
-              sed -i '/sentence-transformers/d' requirements.txt && \
-              sed -i '/accelerate/d' requirements.txt && \
-              sed -i '/bitsandbytes/d' requirements.txt && \
-              pip install --no-cache-dir -r requirements.txt gunicorn
+          RUN pip install --no-cache-dir -r requirements.txt gunicorn supervisor
           COPY . .
-          RUN mkdir -p data/artifacts data/processed
-          # On s'assure que la DB est prête pour les sessions
-          RUN python backend/manage.py migrate
+          RUN mkdir -p data/artifacts data/processed data/chroma_db
           EXPOSE 7860
-          CMD [\\\"gunicorn\\\", \\\"--bind\\\", \\\"0.0.0.0:7860\\\", \\\"--workers\\\", \\\"2\\\", \\\"--timeout\\\", \\\"120\\\", \\\"animetix_project.wsgi:application\\\"]
-          \"\"\"
+          CMD ["supervisord", "-c", "infra/supervisord.conf"]
+          """
           
-          web_readme = \"\"\"
+          web_readme = """
           ---
           title: Animetix
           emoji: 🧩
           sdk: docker
           ---
           # 🧩 Animetix Web
-          \"\"\"
+          """
 
           # --- CONFIG BRAIN ---
-          brain_docker = \"\"\"
+          brain_docker = """
           FROM python:3.11-slim
+          ENV PYTHONUNBUFFERED=1
           WORKDIR /app
-          RUN pip install --no-cache-dir fastapi uvicorn numpy scikit-learn pydantic huggingface_hub
-          COPY brain.py .
+          RUN apt-get update && apt-get install -y --no-install-recommends build-essential gcc && rm -rf /var/lib/apt/lists/*
+          # On installe les dépendances nécessaires pour l'inférence
+          RUN pip install --no-cache-dir torch transformers accelerate fastapi uvicorn pydantic huggingface_hub python-dotenv requests
+          COPY core/brain.py ./brain.py
           COPY data/artifacts/ ./data/artifacts/
           EXPOSE 7860
-          CMD [\\\"uvicorn\\\", \\\"brain:app\\\", \\\"--host\\\", \\\"0.0.0.0\\\", \\\"--port\\\", \\\"7860\\\"]
-          \"\"\"
+          CMD ["uvicorn", "brain:app", "--host", "0.0.0.0", "--port", "7860"]
+          """
           
-          brain_readme = \"\"\"
+          brain_readme = """
           ---
           title: Animetix Brain
           emoji: 🧠
           sdk: docker
           ---
           # 🧠 Animetix Brain API
-          \"\"\"
+          """
 
           # EXÉCUTION
-          deploy_space('MissawB/animetix-web', web_docker, web_readme, ['.venv/*', '.env', 'data/models/*', 'data/raw/*', 'brain.py', 'pipeline/*', '.github/*'])
-          deploy_space('MissawB/animetix-brain', brain_docker, brain_readme, ['.venv/*', '.env', 'backend/*', 'data/raw/*', 'data/processed/*', '.github/*', 'pipeline/*'])
+          deploy_space('MissawB/animetix-web', web_docker, web_readme, ['.venv/*', '.env', 'data/models/*', 'data/raw/*', 'core/brain.py', 'pipeline/*', '.github/*'])
+          deploy_space('MissawB/animetix-brain', brain_docker, brain_readme, ['.venv/*', '.env', 'backend/*', 'data/raw/*', 'data/processed/*', '.github/*', 'pipeline/*', 'core/__init__.py'])
           "

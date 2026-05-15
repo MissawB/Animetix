@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm-inference
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vllm-inference
+  template:
+    metadata:
+      labels:
+        app: vllm-inference
+    spec:
+      containers:
+      - name: vllm
+        image: vllm/vllm-openai:latest
+        args: ["--model", "meta-llama/Llama-3-8B-Instruct", "--dtype", "auto", "--gpu-memory-utilization", "0.5"]
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - secretRef:
+            name: animetix-secrets
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+            memory: "8Gi"
+        volumeMounts:
+        - mountPath: /root/.cache/huggingface
+          name: hf-cache
+      volumes:
+      - name: hf-cache
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vllm-inference
+spec:
+  selector:
+    app: vllm-inference
+  ports:
+  - port: 80
+    targetPort: 8000

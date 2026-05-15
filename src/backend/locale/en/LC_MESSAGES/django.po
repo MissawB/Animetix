@@ -1,0 +1,160 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Animetix\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-05-12 10:00+0000\n"
+"PO-Revision-Date: 2026-05-12 10:00+0000\n"
+"Last-Translator: Gemini\n"
+"Language-Team: English\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "French"
+msgstr "French"
+
+msgid "English"
+msgstr "English"
+
+msgid "MENU"
+msgstr "MENU"
+
+msgid "NIV."
+msgstr "LVL."
+
+msgid "Navigation"
+msgstr "Navigation"
+
+msgid "Accueil"
+msgstr "Home"
+
+msgid "Défi du jour"
+msgstr "Daily Challenge"
+
+msgid "Classement"
+msgstr "Leaderboard"
+
+msgid "Grimoire"
+msgstr "Grimoire"
+
+msgid "Univers"
+msgstr "Universe"
+
+msgid "ANIME"
+msgstr "ANIME"
+
+msgid "LIVRE"
+msgstr "BOOK"
+
+msgid "PERSO"
+msgstr "CHAR"
+
+msgid "Difficulté"
+msgstr "Difficulty"
+
+msgid "ADMINISTRATION"
+msgstr "ADMINISTRATION"
+
+msgid "Paramètres"
+msgstr "Settings"
+
+msgid "Apparence"
+msgstr "Appearance"
+
+msgid "Clair"
+msgstr "Light"
+
+msgid "Sombre"
+msgstr "Dark"
+
+msgid "Auto"
+msgstr "Auto"
+
+msgid "Langage"
+msgstr "Language"
+
+msgid "Classic Mode"
+msgstr "Classic Mode"
+
+msgid "MODE"
+msgstr "MODE"
+
+msgid "Trouvez le titre mystère grâce à la similarité sémantique."
+msgstr "Find the secret title using semantic similarity."
+
+msgid "Emoji Decode"
+msgstr "Emoji Decode"
+
+msgid "DECODE"
+msgstr "DECODE"
+
+msgid "Déchiffrez les symboles pour identifier l'œuvre cachée."
+msgstr "Decipher the symbols to identify the hidden work."
+
+msgid "Animinator Oracle"
+msgstr "Animinator Oracle"
+
+msgid "ORACLE"
+msgstr "ORACLE"
+
+msgid "Posez vos questions à l'Oracle pour débusquer le secret."
+msgstr "Ask the Oracle questions to uncover the secret."
+
+msgid "Akinetix Devin"
+msgstr "Akinetix Devin"
+
+msgid "DEVIN"
+msgstr "GUESSER"
+
+msgid "L'IA analyse vos pensées pour deviner ce que vous cachez."
+msgstr "The AI analyzes your thoughts to guess what you're hiding."
+
+msgid "Paradox Quest"
+msgstr "Paradox Quest"
+
+msgid "QUEST"
+msgstr "QUEST"
+
+msgid "Débusquez l'intrus parmi les scénarios générés par l'IA."
+msgstr "Uncover the intruder among AI-generated scenarios."
+
+msgid "Vision Quest"
+msgstr "Vision Quest"
+
+msgid "Défiez la reconnaissance visuelle de l'IA en décrivant l'image."
+msgstr "Challenge the AI's visual recognition by describing the image."
+
+msgid "Blind Test"
+msgstr "Blind Test"
+
+msgid "TEST"
+msgstr "TEST"
+
+msgid "Devinez l'animé à partir de son opening ou ending."
+msgstr "Guess the anime from its opening or ending."
+
+msgid "Cover Test"
+msgstr "Cover Test"
+
+msgid "Devinez le manga à partir de sa couverture (JA/FR)."
+msgstr "Guess the manga from its cover (JA/FR)."
+
+msgid "Undercover"
+msgstr "Undercover"
+
+msgid "Débusquez l'intrus."
+msgstr "Uncover the intruder."
+
+msgid "Code Manga"
+msgstr "Code Manga"
+
+msgid "Agents secrets."
+msgstr "Secret agents."
+
+msgid "Fusion d'Univers"
+msgstr "Universe Fusion"
+
+msgid "CRÉEZ DES MONDES UNIQUES À TOUT MOMENT"
+msgstr "CREATE UNIQUE WORLDS AT ANY TIME"

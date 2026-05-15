@@ -24,6 +24,7 @@ MANIFEST
 
 # --- Virtual Environments ---
 .venv/
+winvenv/
 venv/
 ENV/
 env/
@@ -71,7 +72,11 @@ htmlcov/
 # --- Secrets ---
 .env
 secrets.json
+deploy/k8s/github-secret.yaml
 
 # --- OS ---
 .DS_Store
 Thumbs.db
+
+.gemini/
+gha-creds-*.json

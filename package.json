@@ -1,0 +1,14 @@
+{
+  "name": "animetix-frontend",
+  "version": "1.0.0",
+  "description": "Frontend build pipeline for Animetix",
+  "scripts": {
+    "build:css": "tailwindcss -i ./src/backend/animetix/static/animetix/css/input.css -o ./src/backend/animetix/static/animetix/css/output.css --minify",
+    "watch:css": "tailwindcss -i ./src/backend/animetix/static/animetix/css/input.css -o ./src/backend/animetix/static/animetix/css/output.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.1",
+    "autoprefixer": "^10.4.17",
+    "postcss": "^8.4.35"
+  }
+}

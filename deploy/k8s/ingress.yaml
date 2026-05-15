@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: animetix-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  rules:
+  - host: animetix.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: django-web
+            port:
+              number: 80
+      - path: /api/vllm
+        pathType: Prefix
+        backend:
+          service:
+            name: vllm-inference
+            port:
+              number: 80

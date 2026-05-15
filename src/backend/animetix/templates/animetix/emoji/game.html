@@ -1,0 +1,114 @@
+{% extends 'animetix/base.html' %}
+{% load custom_filters %}
+{% load ui_components %}
+
+{% block title %}Animetix - Emoji Decode{% endblock %}
+
+{% block dynamic_theme %}
+<style>
+    :root {
+        --accent-gradient: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center pt-10">
+    <div class="col-lg-8 text-center px-6">
+        {% if is_daily %}
+        <div class="badge bg-warning text-dark fw-bold rounded-pill px-4 py-2 mb-4 shadow-sm animate__animated animate__bounceIn">
+            🏆 DÉFI DU JOUR
+        </div>
+        {% endif %}
+        <h2 class="manga-font text-4xl mb-6">🎭 Emoji Decode ({{ media_type }})</h2>
+        
+        <!-- ZONE DES EMOJIS -->
+        <div class="game-card p-10 mb-10 shadow-2xl animate__animated animate__fadeIn rounded-[3rem]" style="background: var(--accent-gradient); border: none;">
+            <div id="emoji-container" class="display-1 text-white mb-4 drop-shadow-lg" style="letter-spacing: 15px;">
+                {% if emojis %}{{ emojis }}{% else %}<div class="spinner-border text-white" role="status"></div>{% endif %}
+            </div>
+            <div id="thought-log" class="text-white/50 text-xs italic font-mono mb-4 flex flex-col gap-1"></div>
+            <p class="text-white opacity-90 font-bold italic">L'IA a résumé une œuvre en 5 emojis. Saurez-vous la retrouver ?</p>
+        </div>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                const emojiContainer = document.getElementById('emoji-container');
+                const thoughtLog = document.getElementById('thought-log');
+                const existingEmojis = "{{ emojis|escapejs }}";
+                const secret = "{{ request.session.emoji_secret|escapejs }}";
+
+                if (!existingEmojis && secret) {
+                    const eventSource = new EventSource(`{% url 'emoji_stream' %}?secret=${encodeURIComponent(secret)}`);
+                    
+                    eventSource.onmessage = function(e) {
+                        const data = JSON.parse(e.data);
+                        if (data.type === 'thought') {
+                            const step = document.createElement('div');
+                            step.className = 'animate__animated animate__fadeIn';
+                            step.innerHTML = `<i class="bi bi-cpu-fill me-2"></i> ${data.content}`;
+                            thoughtLog.appendChild(step);
+                        } else if (data.type === 'result') {
+                            emojiContainer.innerText = data.content;
+                            thoughtLog.classList.add('opacity-0');
+                            eventSource.close();
+                        } else if (data.type === 'error') {
+                            emojiContainer.innerHTML = `<span class="text-sm">🔮 Erreur : ${data.content}</span>`;
+                            eventSource.close();
+                        }
+                    };
+                    
+                    eventSource.onerror = () => eventSource.close();
+                }
+            });
+        </script>
+
+        {% if game_over %}
+        <div class="p-8 rounded-[3rem] bg-white dark:bg-navy-800 mb-12 shadow-2xl animate__animated animate__bounceIn border-4 border-green-500 text-left">
+            <div class="row align-items-center">
+                <div class="col-md-3 mb-4 mb-md-0">
+                    {% for g in guesses %}{% if g.is_correct %}
+                        <img src="{{ g.image }}" class="w-100 rounded-3xl shadow-xl border-4 border-yellow-400" alt="Secret">
+                    {% endif %}{% endfor %}
+                </div>
+                <div class="col-md-9">
+                    <h3 class="manga-font text-4xl mb-2 text-green-500">🎉 VICTOIRE !</h3>
+                    <p class="lead mb-4">C'était bien : <strong class="text-yellow-400">{{ secret_title }}</strong></p>
+                    <a href="{% url 'emoji_decode' %}?new=1" class="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-2xl font-black italic manga-font no-underline inline-block shadow-lg transition-all hover:scale-105">
+                        <i class="bi bi-arrow-repeat me-1"></i> Rejouer
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <!-- BARRE DE RECHERCHE MODULAIRE -->
+        <div class="mb-12">
+            {% search_bar 'emoji_guess' 'Tapez votre proposition...' remaining_items 'emoji-input' %}
+        </div>
+        {% endif %}
+
+        <!-- HISTORIQUE SIMPLIFIÉ -->
+        {% if guesses %}
+        <div class="text-start mt-8 animate__animated animate__fadeInUp">
+            <h5 class="manga-font text-xl italic opacity-50 mb-6">VOS TENTATIVES</h5>
+            <div class="space-y-4">
+                {% for guess in guesses %}
+                <div class="card border-0 shadow-xl overflow-hidden rounded-3xl" style="background: var(--card-bg);">
+                    <div class="card-body p-3 d-flex align-items-center">
+                        <img src="{{ guess.image }}" class="w-12 h-16 object-cover rounded-xl shadow-sm me-4">
+                        <div class="flex-grow-1">
+                            <div class="manga-font text-lg text-main">{{ guess.title_en|default:guess.title }}</div>
+                            <div class="text-muted small opacity-75">{{ guess.title_jp|default:"" }}</div>
+                        </div>
+                        <div class="text-3xl">
+                            {% if guess.is_correct %}✅{% else %}❌{% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

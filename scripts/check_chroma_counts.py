@@ -1,3 +1,11 @@
+import sys
+import os
+from pathlib import Path
+
+# Setup Project Paths
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+sys.path.append(str(PROJECT_ROOT / "src"))
+
 from pipeline.chroma_client import chroma_manager
 
 collections = [

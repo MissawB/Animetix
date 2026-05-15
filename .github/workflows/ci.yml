@@ -7,64 +7,73 @@ on:
     branches: [ main, master ]
 
 jobs:
-  test:
-    name: Run Unit Tests & Linting
+  lint:
+    name: Lint & Format Check
     runs-on: ubuntu-latest
-    
-    services:
-      postgres:
-        image: postgres:15-alpine
-        env:
-          POSTGRES_USER: animetix
-          POSTGRES_PASSWORD: secretpassword
-          POSTGRES_DB: animetix_test_db
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-          
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
-
+    - uses: actions/checkout@v3
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.11'
-        cache: 'pip'
+        python-version: '3.12'
+    - name: Install Tools
+      run: pip install ruff black isort
+    - name: Run Checks
+      run: |
+        ruff check .
+        black --check .
+        isort --check .
 
+  docker-build:
+    name: Validate Docker Build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build Image
+      run: docker build -t test-build -f deploy/Dockerfile .
+
+  test:
+    name: Run Unit Tests
+    needs: [lint, docker-build]
+    runs-on: ubuntu-latest
+    services:
+      # We now use the specialized test composition
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+    - name: Start Services
+      run: docker-compose -f deploy/docker-compose.test.yml up -d
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
     - name: Install Dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-
-    - name: Run All Tests (Pytest)
+    - name: Run Pytest
       env:
         DATABASE_URL: postgres://animetix:secretpassword@localhost:5432/animetix_test_db
         REDIS_URL: redis://localhost:6379/1
         DJANGO_SECRET_KEY: ci-test-key
         DJANGO_DEBUG: 'False'
-        BRAIN_API_URL: http://localhost:8000
-      run: |
-        python -m pytest
+        NEO4J_URI: bolt://localhost:7687
+        NEO4J_USER: neo4j
+        NEO4J_PASSWORD: password
+      run: python -m pytest
 
-  deploy:
-    name: Deploy to Production
+  perf-test:
+    name: RAG Performance Test
     needs: test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    
     steps:
     - name: Checkout Code
       uses: actions/checkout@v3
-      
-    - name: Deploy Notification
-      run: echo "Tests passed! Triggering deployment script (e.g. Docker Swarm / Kubernetes / HF Spaces hook)..."
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+    - name: Install Dependencies
+      run: pip install -r requirements.txt
+    - name: Run Benchmark
+      run: python scripts/mlops_rag_eval.py --fast-mode

@@ -1,0 +1,186 @@
+complexity_analyzer:
+  template: |
+    ANALYSE LA COMPLEXITÉ : '{query}'
+    
+    CRITÈRES :
+    - 0 (Simple) : Recherche de fait direct, métadonnée unique.
+    - 1 (Moyen) : Comparaison, recommandation simple.
+    - 2 (Complexe) : Analyse thématique, paradoxes, synthèse multi-sources, raisonnement logique profond.
+    
+    RÉPONDS UNIQUEMENT EN JSON :
+    {{
+      "complexity_score": 0|1|2,
+      "reasoning": "...",
+      "thinking_budget": 0|500|1500
+    }}
+  system_prompt: "Tu es l'Analyseur de Complexité Animetix."
+
+searcher_plan:
+  template: |
+    RÔLE : Expert en Recherche (Searcher).
+    REQUÊTE UTILISATEUR : '{query}'
+    
+    MISSIONS :
+    1. Identifie les entités nommées.
+    2. Propose une requête de recherche optimisée pour le moteur vectoriel.
+    3. Détermine si l'actualité récente nécessite un accès Web.
+    4. RECONNAISSANCE VISUELLE : Détermine si la requête porte sur des éléments visuels précis (ex: couleurs, objets, décors). Si oui, mets 'is_visual_query' à true.
+    5. RAISONNEMENT GRAPHE : Si la question implique des relations complexes (ex: "autres œuvres du même réalisateur", "tendances d'un studio"), propose une liste de relations à suivre dans le graphe (ex: ["CREATED_BY", "CREATED_BY"] pour trouver les co-créations).
+    
+    RÉPONDS UNIQUEMENT EN JSON :
+    {{
+      "optimized_query": "...",
+      "entities": [],
+      "requires_web": true|false,
+      "is_visual_query": true|false,
+      "graph_traversal_steps": [],
+      "reasoning": "pourquoi ce choix ?"
+    }}
+  system_prompt: "Tu es le Searcher Animetix. Sois précis et technique."
+
+critic_evaluation:
+  template: |
+    RÔLE : Critique de Pertinence (Critic).
+    REQUÊTE : '{query}'
+    CONTEXTE RÉCUPÉRÉ :
+    {context}
+    
+    MISSIONS :
+    1. Évalue si le contexte permet de répondre précisément à la requête.
+    2. Donne un score de confiance (0.0 à 1.0).
+    3. Si insuffisant, suggère une action (RETRY_LOCAL, TRIGGER_WEB, PROCEED).
+    
+    RÉPONDS UNIQUEMENT EN JSON :
+    {{
+      "is_relevant": true|false,
+      "relevance_score": 0.0,
+      "missing_info": "...",
+      "suggested_action": "RETRY_LOCAL|TRIGGER_WEB|PROCEED"
+    }}
+  system_prompt: "Tu es le Critic Animetix. Tu es sévère et factuel."
+
+synthesizer_final:
+  template: |
+    RÔLE : Synthétiseur Expert (Synthesizer).
+    REQUÊTE : '{query}'
+    CONTEXTE VALIDÉ :
+    {context}
+    
+    MISSION : Rédige une réponse d'expert, élégante et sourcée.
+    Génère un dictionnaire JSON :
+    {{
+      "answer": "...",
+      "sources": ["source 1", "source 2"],
+      "confidence": 0.95
+    }}
+  system_prompt: "Tu es le Synthesizer Animetix. Tu rédiges avec le style d'un grand critique média."
+
+deep_fact_checker:
+  template: |
+    RÔLE : Vérificateur de Faits (Fact-Checker).
+    AFFIRMATION À VÉRIFIER : "{text}"
+    
+    MISSION : 
+    1. Extrais les affirmations factuelles clés.
+    2. Pour chaque affirmation, génère une requête Cypher courte pour vérifier le lien dans Neo4j.
+    3. Utilise les labels : Media (title), Character (name), Studio (name), MicroTag (name).
+    
+    STRUCTURE DU GRAPHE :
+    (Media)-[:PRODUCED_BY]->(Studio)
+    (Media)-[:HAS_THEME]->(MicroTag)
+    (Media)-[:CREATED_BY]->(Person)
+    (Media)-[:FEATURES]->(Character)
+    
+    RÉPONDS UNIQUEMENT EN JSON :
+    {{
+      "claims": [
+        {{
+          "claim": "Naruto est produit par Pierrot",
+          "cypher": "MATCH (m:Media {{title: 'Naruto'}})-[:PRODUCED_BY]->(s:Studio {{name: 'Pierrot'}}) RETURN count(s) > 0 as verified"
+        }}
+      ]
+    }}
+  system_prompt: "Tu es le Fact-Checker Neo4j. Tu génères du Cypher valide."
+
+# --- REAL-TIME EVALUATION (LLM-as-a-Judge) ---
+
+answer_judge:
+  template: |
+    RÔLE : Juge Expert en Qualité IA.
+    REQUÊTE : '{query}'
+    CONTEXTE FOURNI :
+    {context}
+    RÉPONSE À ÉVALUER :
+    {answer}
+    
+    MISSIONS :
+    1. FAITHFULNESS : La réponse contient-elle des informations non présentes dans le contexte ? (Hallucinations).
+    2. RELEVANCY : La réponse répond-elle directement et précisément à la requête ?
+    
+    RÉPONDS UNIQUEMENT EN JSON :
+    {{
+      "faithfulness_score": 0.0,
+      "relevancy_score": 0.0,
+      "hallucination_detected": true|false,
+      "reasoning": "Pourquoi cette note ?",
+      "is_reliable": true|false
+    }}
+  system_prompt: "Tu es le Juge Suprême Animetix. Tu es impartial et extrêmement rigoureux."
+
+# CoVe Oracle Prompts
+cove_baseline:
+  template: "Réponds à cette question sur l'univers {media_type} : '{question}'. Ne te limite pas."
+
+cove_plan:
+  template: |
+    Analyse cette réponse : '{baseline_response}'
+    Extrais toutes les affirmations factuelles (noms, studios, dates, thèmes).
+    Formule une question courte pour vérifier chaque affirmation.
+    
+    RÉPONDS UNIQUEMENT EN JSON :
+    {{
+        "verification_questions": ["question 1", "question 2"]
+    }}
+  system_prompt: "Réponds UNIQUEMENT en JSON."
+
+cove_entities:
+  template: "Extrais les noms propres de cette question: '{v_question}'. Réponds par des mots séparés par des virgules."
+
+cove_eval:
+  template: |
+    Question : {v_question}
+    Contexte Graphe : {graph_context}
+    Réponds brièvement par la vérité.
+
+cove_final:
+  template: |
+    Tu dois répondre à cette question : '{question}'.
+    
+    Ta réponse initiale était :
+    {baseline_response}
+    
+    Cependant, nos vérifications ont révélé ceci :
+    {verified_facts}
+    
+    Génère une réponse finale corrigée et précise en tenant compte des faits vérifiés.
+  system_prompt: "Tu es l'Oracle Animetix, tu dis toujours la vérité stricte."
+
+# LLM Service Prompts
+fusion_scenario:
+  template: "MISSION : Fusionne l'univers de {item_a} et {item_b}. LANGUE : {language}. Pas de noms cités."
+  system_prompt: "Tu es un expert Concept Creator spécialisé en {media_type}."
+
+paradox_explanation:
+  template: "Explique pourquoi '{intruder}' est l'intrus par rapport à '{item_a}' et '{item_b}'."
+
+generate_emojis:
+  template: "Donne une suite de 3 à 5 emojis qui représentent le mieux {media_type} '{title}'. Description: {description}."
+
+ask_oracle:
+  template: "Tu es {title} ({media_type}). Réponds à la question : '{question}'. Réponds brièvement."
+
+akinetix_next_question:
+  template: "Jeu Akinetix ({media_type}). Historique: {history}. Candidats restants: {candidates}. Propose une question fermée (Oui/Non) ou devine 'GUESS: Titre'."
+
+undercover_clue:
+  template: "Donne un seul mot-clé thématique commun à ces deux {media_type} : '{item_a}' and '{item_b}'. Ne cite aucun nom."

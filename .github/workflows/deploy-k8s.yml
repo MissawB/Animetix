@@ -1,0 +1,30 @@
+name: Deploy to Kubernetes
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'deploy/k8s/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Set Kube Context
+        uses: azure/k8s-set-context@v4
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBECONFIG }}
+
+      - name: Deploy Manifests
+        run: |
+          kubectl apply -f deploy/k8s/
+          # Attendre la disponibilité des déploiements
+          kubectl rollout status deployment/django-web
+          kubectl rollout status deployment/celery-worker
+          kubectl rollout status deployment/vllm-inference

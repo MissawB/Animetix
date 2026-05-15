@@ -1,0 +1,62 @@
+{% extends "animetix/base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block content %}
+<div class="min-h-screen bg-slate-50 dark:bg-navy-950 p-6 pt-24">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="manga-font text-4xl mb-12">ESPACE <span class="text-yellow-400">COMMUNAUTÉ</span></h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- ABONNEMENTS -->
+            <div class="bg-white dark:bg-navy-800 rounded-[2rem] p-8 shadow-xl border border-gray-100 dark:border-white/5">
+                <h3 class="manga-font text-xl mb-6 flex items-center gap-3">
+                    <i class="bi bi-people-fill text-yellow-400"></i> Mes Abonnements
+                </h3>
+                <div class="space-y-4">
+                    {% for f in following %}
+                    <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-navy-900 rounded-2xl hover:scale-[1.02] transition-transform">
+                        <a href="{% url 'profile_view' f.to_user.username %}" class="flex items-center gap-4 no-underline text-current">
+                            <div class="w-12 h-12 bg-yellow-400 rounded-xl flex items-center justify-center font-black italic border-2 border-black">
+                                {{ f.to_user.username|slice:":1"|upper }}
+                            </div>
+                            <div>
+                                <div class="font-bold">{{ f.to_user.username }}</div>
+                                <div class="text-[10px] uppercase font-black opacity-40">Niveau {{ f.to_user.profile.level }}</div>
+                            </div>
+                        </a>
+                        <button hx-post="{% url 'toggle_follow' f.to_user.id %}" hx-swap="outerHTML" class="btn btn-sm btn-outline-danger rounded-pill px-3">
+                            <i class="bi bi-person-dash"></i>
+                        </button>
+                    </div>
+                    {% empty %}
+                    <p class="text-center py-8 opacity-30 italic">Vous ne suivez personne pour le moment.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- ABONNÉS -->
+            <div class="bg-white dark:bg-navy-800 rounded-[2rem] p-8 shadow-xl border border-gray-100 dark:border-white/5">
+                <h3 class="manga-font text-xl mb-6 flex items-center gap-3">
+                    <i class="bi bi-heart-fill text-red-500"></i> Mes Abonnés
+                </h3>
+                <div class="space-y-4">
+                    {% for f in followers %}
+                    <div class="flex items-center gap-4 p-4 bg-gray-50 dark:bg-navy-900 rounded-2xl">
+                        <div class="w-12 h-12 bg-navy-700 rounded-xl flex items-center justify-center font-black italic border-2 border-white/10">
+                            {{ f.from_user.username|slice:":1"|upper }}
+                        </div>
+                        <div>
+                            <div class="font-bold">{{ f.from_user.username }}</div>
+                            <div class="text-[10px] uppercase font-black opacity-40">Niveau {{ f.from_user.profile.level }}</div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-center py-8 opacity-30 italic">Aucun abonné pour le moment.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

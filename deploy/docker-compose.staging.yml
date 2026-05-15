@@ -1,0 +1,27 @@
+services:
+  # SITE DE STAGING (TESTS)
+  staging_web:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    volumes:
+      - ..:/app
+      - data_volume:/app/data
+    env_file:
+      - ../.env
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER:-animetix}:${POSTGRES_PASSWORD:-secretpassword}@db:5432/${POSTGRES_DB:-animetix_db}
+      - REDIS_URL=redis://redis:6379/1
+      # Activation des fonctionnalités de test
+      - FEATURE_EXPERIMENTAL_MODES=True
+      - FEATURE_AI_DEBUG=True
+      - DJANGO_DEBUG=True
+    ports:
+      - "8080:7860" # Accessible sur le port 8080
+    depends_on:
+      - db
+      - redis
+
+  # Le reste des services (db, redis, chromadb, neo4j, ollama, vllm) 
+  # est partagé avec le site de production pour économiser les ressources GPU/RAM.
+  # Utilise 'docker-compose -f docker-compose.yml -f docker-compose.staging.yml up'

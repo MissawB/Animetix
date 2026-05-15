@@ -1,0 +1,417 @@
+{% extends 'animetix/base.html' %}
+{% load custom_filters %}
+{% load i18n %}
+
+{% block title %}Animetix - {{ media_type }}{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --glass-bg: rgba(255, 255, 255, 0.85);
+        --accent-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+        --success-gradient: linear-gradient(135deg, #22c55e 0%, #10b981 100%);
+        --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        --info-gradient: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        --cold-gradient: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+        --dark-gradient: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    }
+
+    [data-bs-theme="dark"] :root {
+        --glass-bg: rgba(30, 30, 47, 0.9);
+    }
+
+    .game-card {
+        border-radius: 24px;
+        border: none;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        background: var(--card-bg);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .hint-card {
+        border-radius: 16px;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        border: 2px solid rgba(0,0,0,0.03);
+        background: var(--card-bg);
+        overflow: hidden;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 0.75rem 0.5rem;
+        position: relative;
+    }
+    [data-bs-theme="dark"] .hint-card { border-color: rgba(255,255,255,0.03); }
+
+    .hint-card.ready-to-reveal {
+        border-color: rgba(99, 102, 241, 0.3);
+        cursor: pointer;
+    }
+    .hint-card.ready-to-reveal:hover {
+        transform: translateY(-5px) scale(1.02);
+        border-color: #6366f1;
+        box-shadow: 0 10px 20px rgba(99, 102, 241, 0.12);
+    }
+    .hint-card.ready-to-reveal::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+        transform: rotate(45deg);
+        animation: shimmer 3s infinite;
+    }
+    @keyframes shimmer {
+        0% { transform: translateX(-100%) rotate(45deg); }
+        100% { transform: translateX(100%) rotate(45deg); }
+    }
+
+    .hint-card.revealed {
+        background: linear-gradient(180deg, rgba(var(--bs-primary-rgb), 0.01) 0%, rgba(var(--bs-primary-rgb), 0.05) 100%);
+        border-color: rgba(var(--bs-primary-rgb), 0.2);
+    }
+
+    .hint-card.locked {
+        background: rgba(0,0,0,0.01);
+        filter: grayscale(0.8);
+        opacity: 0.6;
+    }
+
+    .goku-loader {
+        width: 69px;
+        height: 65px;
+        background-image: url("https://i.imgur.com/daes1Hn.png");
+        animation: goku-fight .5s steps(5) infinite;
+        transform: scale(0.8);
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        margin: 5px 0;
+    }
+    @keyframes goku-fight {
+        from { background-position: 0px; }
+        to { background-position: -345px; }
+    }
+    
+    .hint-progress-container {
+        width: 80%;
+        height: 6px;
+        background: rgba(0,0,0,0.05);
+        border-radius: 10px;
+        overflow: hidden;
+        margin-top: 5px;
+    }
+    [data-bs-theme="dark"] .hint-progress-container { background: rgba(255,255,255,0.1); }
+
+    .hint-tag {
+        font-size: 0.55rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 800;
+        margin-bottom: 6px;
+        padding: 2px 8px;
+        border-radius: 20px;
+        background: rgba(0,0,0,0.04);
+    }
+
+    .guess-row {
+        border-radius: 16px;
+        margin-bottom: 1rem;
+        border: none;
+        background: var(--card-bg);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        padding: 1.25rem;
+        transition: transform 0.2s ease;
+        animation: slideIn 0.4s ease-out;
+    }
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .progress-custom {
+        height: 12px;
+        border-radius: 20px;
+        background: rgba(0,0,0,0.05);
+        overflow: hidden;
+    }
+    [data-bs-theme="dark"] .progress-custom { background: rgba(255,255,255,0.05); }
+
+    .score-badge {
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 800;
+        font-size: 0.85rem;
+        padding: 6px 14px;
+        border-radius: 12px;
+        color: white;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .bg-gradient-primary { background: var(--accent-gradient); }
+    .bg-gradient-success { background: var(--success-gradient); }
+    .bg-gradient-warning { background: var(--warning-gradient); }
+    .bg-gradient-danger { background: var(--danger-gradient); }
+    .bg-gradient-info { background: var(--info-gradient); }
+    .bg-gradient-secondary { background: var(--cold-gradient); }
+    .bg-gradient-dark { background: var(--dark-gradient); }
+
+    .input-group-custom {
+        background: rgba(0,0,0,0.03);
+        border-radius: 14px;
+        padding: 5px;
+        transition: all 0.3s ease;
+        border: 1px solid transparent;
+    }
+    [data-bs-theme="dark"] .input-group-custom { background: rgba(255,255,255,0.05); }
+    
+    .input-group-custom:focus-within {
+        background: var(--card-bg);
+        border-color: rgba(var(--bs-primary-rgb), 0.3);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    }
+</style>
+
+<div class="row g-4">
+    <div class="col-lg-8 transition-all" id="game-main-col">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                {% if is_daily %}
+                <div class="badge bg-warning text-dark fw-bold rounded-pill px-3 py-1 mb-2 shadow-sm animate__animated animate__bounceIn">
+                    {% trans "🏆 DÉFI DU JOUR" %}
+                </div>
+                {% elif is_ranked %}
+                <div class="badge bg-danger text-white fw-bold rounded-pill px-3 py-1 mb-2 shadow-sm animate__animated animate__pulse animate__infinite">
+                    {% blocktrans %}🔥 MODE RANKED - {{ ranked_points }} PTS{% endblocktrans %}
+                </div>
+                {% endif %}
+                <h2 class="mb-0">{% blocktrans %}Animetix ({{ media_type }} Edition){% endblocktrans %}</h2>
+            </div>
+            <div class="flex gap-2">
+                <div id="offline-indicator" class="hidden badge bg-slate-500 text-white rounded-pill px-3 py-1 animate__animated animate__fadeIn">
+                    <i class="bi bi-wifi-off me-1"></i> MODE HORS-LIGNE
+                </div>
+                <button id="toggle-hints" class="btn btn-sm btn-light border rounded-pill px-3 shadow-sm d-flex align-items-center">
+                    <i class="bi bi-layout-sidebar-reverse me-2 text-primary"></i>
+                    <span id="toggle-text">{% trans "Masquer les indices" %}</span>
+                </button>
+            </div>
+        </div>
+
+        {% if game_over %}
+        <div class="game-card p-5 text-center mb-5 animate__animated animate__zoomIn">
+            <h1 class="display-3 mb-2">
+                {% if guesses.0.title == secret_title %}🎉 {{ txt.game_over_win }}{% else %}🏳️ {{ txt.game_over_loss }}{% endif %}
+            </h1>
+            <p class="lead opacity-75 mb-4">{% trans "Le titre secret était :" %}</p>
+            
+            <div class="row g-0 rounded-4 overflow-hidden shadow-lg mx-auto mb-4" style="max-width: 700px; background: rgba(var(--bs-primary-rgb), 0.03);">
+                <div class="col-md-4">
+                    {% if secret_data.image %}
+                    <img src="{{ secret_data.image|cdn_url }}" class="w-100 h-100" alt="{{ secret_data.title }}" style="object-fit: cover; min-height: 250px;">
+                    {% endif %}
+                </div>
+                <div class="col-md-8 text-start p-4 d-flex flex-column justify-content-center">
+                    <h2 class="h3 fw-bold mb-1">{{ secret_data.title }}</h2>
+                    <p class="text-muted small mb-3">
+                        {% if media_type == 'Character' %}
+                        {{ txt.hint_origin }} : {{ secret_data.origin }}
+                        {% elif secret_data.year %}
+                        ({{ secret_data.year }})
+                        {% endif %}
+                    </p>
+                    <div class="mb-3 d-flex flex-wrap gap-1">
+                        {% if media_type == 'Character' %}
+                            {% if secret_data.metadata.height %}<span class="badge bg-primary rounded-pill">📏 {{ secret_data.metadata.height }}</span>{% endif %}
+                            {% for aff in secret_data.metadata.affiliations %}<span class="badge bg-primary opacity-75 rounded-pill">{{ aff }}</span>{% endfor %}
+                        {% else %}
+                            {% for tag in secret_data.tags|slice:":6" %}
+                            <span class="badge bg-primary opacity-75 rounded-pill">{{ tag }}</span>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    <p class="small mb-0 opacity-75" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                        {{ secret_data.description }}
+                    </p>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-center gap-3">
+                {% if is_daily %}
+                <button onclick="copyDailyScore()" class="btn btn-success btn-lg px-5 py-3 fw-bold rounded-pill shadow animate__animated animate__pulse animate__infinite">
+                    <i class="bi bi-share-fill me-2"></i> {% trans "Partager le score" %}
+                </button>
+                {% endif %}
+
+                {% if is_ranked %}
+                    <a href="{% url 'ranked_next' %}" class="btn btn-warning btn-lg px-5 py-3 fw-bold rounded-pill shadow animate__animated animate__pulse animate__infinite">
+                        {% blocktrans %}🚀 PASSER AU NIVEAU {{ request.session.ranked_level|add:1 }}{% endblocktrans %}
+                    </a>
+                {% else %}
+                    <a href="{% url 'start_game' %}" class="btn btn-primary btn-lg px-5 py-3 fw-bold rounded-pill shadow">
+                        <i class="bi bi-play-fill me-2"></i> {{ txt.btn_replay|default:_("Rejouer") }}
+                    </a>
+                {% endif %}
+
+                <a href="{% url 'index' %}" class="btn btn-outline-secondary btn-lg px-4 py-3 fw-bold rounded-pill">
+                    {% trans "Retour" %}
+                </a>
+            </div>
+        </div>
+        {% else %}
+        {% load ui_components %}
+        {% search_bar 'make_guess' txt.placeholder_guess media_type 'guess-input' %}
+        {% endif %}
+
+        <h4 class="mb-4 opacity-75 d-flex align-items-center">
+            <i class="bi bi-clock-history me-2"></i> {{ txt.table_guess }} :
+        </h4>
+        
+        <div class="list-group mb-5" id="guesses-list">
+            {% if not guesses %}
+            <div class="text-center p-5 opacity-25" id="no-guesses-msg">
+                <i class="bi bi-question-circle display-1"></i>
+                <p class="mt-2">{{ txt.no_guesses_yet|default:"..." }}</p>
+            </div>
+            {% else %}
+            {% for guess in guesses %}
+            <div class="guess-row p-3 animate__animated animate__fadeIn">
+                <div class="d-flex align-items-start gap-3 mb-2">
+                    <div class="flex-shrink-0">
+                        <img src="{{ guess.image }}" class="rounded shadow-sm" style="width: 50px; height: 70px; object-fit: cover;">
+                    </div>
+                    <div class="flex-grow-1 overflow-hidden">
+                        <div class="d-flex align-items-center mb-1">
+                            <h5 class="mb-0 fw-bold text-truncate">{{ guess.title }}</h5>
+                        </div>
+                        <div class="text-muted small text-truncate" style="font-size: 0.75rem;">
+                            {{ guess.title_english }} / {{ guess.title_native }}
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <span class="fw-bold fs-5 text-primary">{{ guess.score }}%</span>
+                    </div>
+                </div>
+                <div class="progress-custom shadow-sm" style="height: 6px;">
+                    <div class="progress-bar progress-bar-smooth bg-gradient-{{ guess.color }}" style="width: {{ guess.score }}%; border-radius: 20px;"></div>
+                </div>
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+
+        <div class="text-center mt-5 mb-5">
+            <a href="{% url 'abandon_game' %}" class="btn btn-link text-danger text-decoration-none" onclick="return confirm('{{ txt.btn_abandon }} ?')">
+                 🏳️ {{ txt.btn_abandon }}
+            </a>
+        </div>
+    </div>
+
+    <div class="col-lg-4 transition-all" id="hints-sidebar-col">
+        <!-- Sidebar logic (unchanged for now) -->
+    </div>
+</div>
+
+<script>
+    function confirmHint(type, message) {
+        if (confirm(message)) {
+            window.location.href = "{% url 'reveal_hint' 'PLACEHOLDER' %}".replace('PLACEHOLDER', type);
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const guessForm = document.querySelector('form[hx-post*="make_guess"]') || document.querySelector('form[action*="make_guess"]');
+        const guessesList = document.getElementById('guesses-list');
+        const offlineIndicator = document.getElementById('offline-indicator');
+        const mediaType = "{{ media_type }}";
+
+        function updateConnectionStatus() {
+            if (!navigator.onLine) {
+                offlineIndicator.classList.remove('hidden');
+                console.log("⚠️ Application Offline. Switching to Local Engine.");
+            } else {
+                offlineIndicator.classList.add('hidden');
+            }
+        }
+
+        window.addEventListener('online', updateConnectionStatus);
+        window.addEventListener('offline', updateConnectionStatus);
+        updateConnectionStatus();
+
+        if (guessForm) {
+            guessForm.addEventListener('submit', function(e) {
+                if (!navigator.onLine) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    
+                    const formData = new FormData(guessForm);
+                    const guessTitle = formData.get('guess');
+                    
+                    if (!window.offlineEngine || !window.offlineEngine.isLoaded) {
+                        alert("Le catalogue offline est encore en cours de chargement...");
+                        return;
+                    }
+
+                    if (!window.offlineEngine.secretItem) {
+                        window.offlineEngine.startNewGame(mediaType);
+                    }
+
+                    const result = window.offlineEngine.makeGuess(guessTitle);
+                    updateGuessesUI(result.guesses);
+                    
+                    if (result.isCorrect) {
+                        sounds.play('win');
+                        alert("🎉 BRAVO ! Vous avez trouvé l'œuvre en mode Offline !");
+                        window.location.reload();
+                    } else {
+                        sounds.play('slash');
+                    }
+                }
+            });
+        }
+
+        function updateGuessesUI(guesses) {
+            if (!guessesList) return;
+            const noMsg = document.getElementById('no-guesses-msg');
+            if (noMsg) noMsg.remove();
+
+            guessesList.innerHTML = "";
+            guesses.forEach((g) => {
+                const html = `
+                    <div class="guess-row p-3 animate__animated animate__fadeIn">
+                        <div class="d-flex align-items-start gap-3 mb-2">
+                            <div class="flex-shrink-0">
+                                <img src="${g.image}" class="rounded shadow-sm" style="width: 50px; height: 70px; object-fit: cover;">
+                            </div>
+                            <div class="flex-grow-1 overflow-hidden">
+                                <h5 class="mb-0 fw-bold text-truncate">${g.title}</h5>
+                                <div class="text-muted small text-truncate" style="font-size: 0.75rem;">Similarité Offline</div>
+                            </div>
+                            <div class="text-end">
+                                <span class="fw-bold fs-5 text-primary">${g.score}%</span>
+                            </div>
+                        </div>
+                        <div class="progress-custom shadow-sm" style="height: 6px;">
+                            <div class="progress-bar bg-gradient-${g.color}" style="width: ${g.score}%; border-radius: 20px;"></div>
+                        </div>
+                    </div>
+                `;
+                guessesList.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        // Sidebar Toggle
+        const toggleBtn = document.getElementById('toggle-hints');
+        const sidebar = document.getElementById('hints-sidebar-col');
+        const mainCol = document.getElementById('game-main-col');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('d-none');
+                mainCol.classList.toggle('col-lg-12');
+                mainCol.classList.toggle('col-lg-8');
+            });
+        }
+    });
+</script>
+{% endblock %}

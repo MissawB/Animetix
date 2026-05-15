@@ -1,0 +1,9 @@
+{% if is_following %}
+    <button hx-post="{% url 'toggle_follow' target_user.id %}" hx-swap="outerHTML" class="px-6 py-2 bg-navy-100 dark:bg-navy-800 text-gray-500 rounded-full text-xs font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all">
+        <i class="bi bi-person-check-fill me-2"></i> Abonné
+    </button>
+{% else %}
+    <button hx-post="{% url 'toggle_follow' target_user.id %}" hx-swap="outerHTML" class="px-6 py-2 bg-yellow-400 text-black rounded-full text-xs font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg">
+        <i class="bi bi-person-plus-fill me-2"></i> S'abonner
+    </button>
+{% endif %}

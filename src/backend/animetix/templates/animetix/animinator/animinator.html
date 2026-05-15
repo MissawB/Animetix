@@ -1,0 +1,369 @@
+{% extends 'animetix/base.html' %}
+{% load static %}
+{% load ui_components %}
+
+{% block title %}Animinator - L'Oracle{% endblock %}
+
+{% block dynamic_theme %}
+<style>
+    :root {
+        --page-bg: #050505;
+        --accent-color: #ffc107;
+        --nav-gradient: linear-gradient(to right, #ffc107, #ff9800);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<style>
+    .glass-chat-container {
+        background: rgba(255, 255, 255, 0.03) !important;
+        backdrop-filter: blur(40px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 40px !important;
+        height: 700px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        box-shadow: 0 50px 100px -20px rgba(0, 0, 0, 1);
+    }
+
+    .glass-chat-container::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 50% 0%, rgba(255, 193, 7, 0.05), transparent 70%);
+        pointer-events: none;
+    }
+
+    .chat-bubble-oracle {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 25px 25px 25px 8px;
+        padding: 18px 24px;
+        color: white;
+        max-width: 85%;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        position: relative;
+    }
+
+    .chat-bubble-user {
+        background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+        border-radius: 25px 25px 8px 25px;
+        padding: 14px 22px;
+        color: #000;
+        font-weight: 800;
+        max-width: 80%;
+        box-shadow: 0 8px 25px rgba(255, 193, 7, 0.3);
+        font-family: 'Chakra Petch', sans-serif;
+    }
+
+    .oracle-avatar {
+        width: 55px;
+        height: 55px;
+        background: rgba(0, 0, 0, 0.5);
+        border: 2px solid #ffc107;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        box-shadow: 0 0 25px rgba(255, 193, 7, 0.4);
+        position: relative;
+        z-index: 2;
+    }
+
+    .oracle-avatar::after {
+        content: "";
+        position: absolute;
+        inset: -4px;
+        border-radius: 50%;
+        border: 1px dashed #ffc107;
+        opacity: 0.5;
+        animation: spin-slow 10s linear infinite;
+    }
+
+    .chat-scroll {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding: 40px;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 193, 7, 0.3) transparent;
+    }
+    .chat-scroll::-webkit-scrollbar { width: 6px; }
+    .chat-scroll::-webkit-scrollbar-thumb { background: rgba(255, 193, 7, 0.3); border-radius: 3px; }
+
+    .input-area-glass {
+        background: rgba(0, 0, 0, 0.3);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 25px 40px;
+        backdrop-filter: blur(10px);
+    }
+
+    .q-badge {
+        font-size: 11px;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        background: linear-gradient(90deg, rgba(255, 193, 7, 0.1), rgba(255, 193, 7, 0.3));
+        color: #ffc107;
+        padding: 6px 16px;
+        border-radius: 12px;
+        border-left: 3px solid #ffc107;
+    }
+
+    .autocomplete-glass {
+        position: absolute;
+        bottom: 100%;
+        left: 0;
+        right: 0;
+        background: rgba(10, 10, 15, 0.98);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        max-height: 300px;
+        overflow-y: auto;
+        z-index: 1000;
+        margin-bottom: 15px;
+        backdrop-filter: blur(30px);
+        border-radius: 25px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+    }
+
+    .search-item {
+        padding: 14px 20px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.3s;
+        color: white;
+    }
+    .search-item:hover { background: rgba(255, 193, 7, 0.2); transform: translateX(8px); color: #ffc107; }
+    .search-item img { width: 40px; height: 55px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
+
+    @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+</style>
+
+<div class="row justify-content-center">
+    <div class="col-lg-10 col-xl-9">
+        
+        <!-- HEADER -->
+        <div class="text-center mb-5 animate__animated animate__fadeInDown">
+            {% if is_daily %}
+            <div class="badge bg-warning text-dark fw-black rounded-pill px-4 py-2 mb-4 shadow-[0_0_30px_rgba(255,193,7,0.5)] tracking-widest uppercase">
+                ⚔️ DÉFI DU JOUR ⚡
+            </div>
+            {% endif %}
+            
+            <div class="mb-4">
+                <img src="{% static 'animetix/img/logo/white_logo.png' %}" class="h-20 mx-auto dark:block hidden">
+                <img src="{% static 'animetix/img/logo/logo.png' %}" class="h-20 mx-auto dark:hidden block">
+            </div>
+            
+            <h1 class="display-4 fw-black uppercase italic manga-font text-dark dark:text-white tracking-tighter mb-3">L'Oracle Animinator</h1>
+            <div class="d-flex justify-content-center align-items-center gap-4">
+                <div class="q-badge">Potentiel de Prophétie : {{ questions_left }}/20</div>
+                <div class="w-48 h-2 bg-white/10 rounded-full overflow-hidden p-0.5">
+                    <div class="h-full bg-gradient-to-r from-warning to-amber-500 rounded-full shadow-[0_0_15px_#ffc107]" style="width: {% widthratio questions_left 20 100 %}%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONSOLE DE CHAT GLASS -->
+        <div class="glass-chat-container mb-5 animate__animated animate__fadeIn">
+            
+            <div class="chat-scroll" id="chat-window">
+                <!-- Message de Bienvenue -->
+                <div class="d-flex gap-4 mb-5">
+                    <div class="oracle-avatar flex-shrink-0">🔮</div>
+                    <div class="chat-bubble-oracle animate__animated animate__fadeInLeft">
+                        <p class="mb-2 fw-black italic manga-font text-warning text-xl uppercase tracking-widest">Le destin est en marche...</p>
+                        <p class="mb-0 opacity-90 leading-relaxed text-lg">Salutations, voyageur. Mes sens perçoivent une œuvre de type <span class="text-warning fw-bold uppercase px-2 py-0.5 bg-warning/10 rounded">{{ media_type }}</span>. Interroge-moi, et les échos du multivers te guideront vers la vérité.</p>
+                    </div>
+                </div>
+
+                {% for msg in chat %}
+                <!-- Question Utilisateur -->
+                <div class="d-flex justify-content-end mb-5">
+                    <div class="chat-bubble-user">
+                        <p class="mb-0 text-lg">{{ msg.q }}</p>
+                    </div>
+                </div>
+                <!-- Réponse Oracle -->
+                <div class="d-flex gap-4 mb-5">
+                    <div class="oracle-avatar flex-shrink-0">🔮</div>
+                    <div class="chat-bubble-oracle border-warning/30 shadow-[0_0_40px_rgba(255,193,7,0.08)]">
+                        <p class="mb-0 fw-bold leading-relaxed text-xl">{{ msg.a }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+
+                <div id="streaming-anchor"></div>
+
+                {% if game_over %}
+                <div class="text-center p-5 animate__animated animate__zoomIn">
+                    <div class="p-5 rounded-[40px] bg-white/5 border-2 border-warning/30 backdrop-blur-xl shadow-2xl">
+                        <h4 class="fw-black uppercase italic manga-font text-warning mb-3 tracking-[0.3em] text-xl">Révélation Totale</h4>
+                        <p class="text-white opacity-50 small mb-2 text-uppercase tracking-widest">L'énigme est résolue :</p>
+                        <h2 class="display-4 fw-black text-white manga-font mb-5 drop-shadow-lg">{{ secret_title }}</h2>
+                        <a href="{% url 'animinator' %}?new=1" class="btn btn-warning rounded-pill px-5 py-4 fw-black italic manga-font uppercase tracking-[0.2em] text-lg shadow-[0_0_40px_rgba(255,193,7,0.4)] hover:scale-105 transition-all">
+                            🔮 Initier une Nouvelle Quête
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- ZONE D'INTERACTION -->
+            {% if not game_over %}
+            <div class="input-area-glass">
+                <div class="row g-4 align-items-end">
+                    <!-- QUESTION -->
+                    <div class="col-md-7">
+                        <p class="small fw-black text-white/30 uppercase tracking-[0.3em] mb-3 px-4">Sonder l'Oracle</p>
+                        <form id="oracle-form">
+                            {% csrf_token %}
+                            <div class="position-relative group">
+                                <input type="text" id="oracle-input" name="question" class="form-control form-control-lg border-0 bg-white/5 rounded-pill text-white px-5 text-sm py-4 shadow-inner focus:bg-white/10 transition-all" 
+                                       placeholder="L'Oracle répondra par Oui ou Non..." required autocomplete="off">
+                                <button type="submit" id="oracle-submit" class="btn btn-warning rounded-circle position-absolute end-0 top-0 m-2 p-0 w-12 h-12 flex items-center justify-center shadow-lg hover:rotate-12 transition-transform">
+                                    <i class="bi bi-send-fill fs-5"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- DEVINETTE -->
+                    <div class="col-md-5">
+                        <p class="small fw-black text-white/30 uppercase tracking-[0.3em] mb-3 px-4">Prophétie finale</p>
+                        {% search_bar "animinator_guess" "Nom de l'œuvre..." remaining_items "animinator-input" %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const chatWindow = document.getElementById('chat-window');
+        const oracleForm = document.getElementById('oracle-form');
+        const oracleInput = document.getElementById('oracle-input');
+        const anchor = document.getElementById('streaming-anchor');
+        const submitBtn = document.getElementById('oracle-submit');
+
+        function scrollToBottom() {
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        scrollToBottom();
+
+        if (oracleForm) {
+            oracleForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const question = oracleInput.value.trim();
+                if (!question) return;
+
+                // 1. Désactiver input
+                oracleInput.disabled = true;
+                submitBtn.disabled = true;
+                oracleInput.value = "";
+
+                // 2. Afficher la question utilisateur
+                const userBubble = `
+                    <div class="d-flex justify-content-end mb-5 animate__animated animate__fadeInRight">
+                        <div class="chat-bubble-user">
+                            <p class="mb-0 text-lg">${question}</p>
+                        </div>
+                    </div>
+                `;
+                anchor.insertAdjacentHTML('beforebegin', userBubble);
+                scrollToBottom();
+
+                // 3. Créer le conteneur pour la réponse Oracle en cours
+                const oracleContainerId = 'oracle-response-' + Date.now();
+                const oracleThoughtId = 'oracle-thought-' + Date.now();
+                const oracleTextId = 'oracle-text-' + Date.now();
+
+                const oracleBubble = `
+                    <div class="d-flex gap-4 mb-5 animate__animated animate__fadeInLeft" id="${oracleContainerId}">
+                        <div class="oracle-avatar flex-shrink-0">🔮</div>
+                        <div class="chat-bubble-oracle border-warning/30 shadow-[0_0_40px_rgba(255,193,7,0.08)] w-full">
+                            <div id="${oracleThoughtId}" class="mb-3 text-xs italic text-warning/50 font-mono flex flex-col gap-1"></div>
+                            <p id="${oracleTextId}" class="mb-0 fw-bold leading-relaxed text-xl"></p>
+                        </div>
+                    </div>
+                `;
+                anchor.insertAdjacentHTML('beforebegin', oracleBubble);
+                scrollToBottom();
+
+                const thoughtContainer = document.getElementById(oracleThoughtId);
+                const textContainer = document.getElementById(oracleTextId);
+
+                // 4. Ouvrir la connexion SSE
+                const eventSource = new EventSource(`{% url 'animinator_stream' %}?q=${encodeURIComponent(question)}`);
+
+                eventSource.onmessage = function(event) {
+                    const data = JSON.parse(event.data);
+
+                    if (data.type === 'thought') {
+                        // Ajouter une étape de réflexion
+                        const step = document.createElement('div');
+                        step.className = 'animate__animated animate__fadeIn';
+                        step.innerHTML = `<i class="bi bi-cpu-fill me-2"></i> ${data.content}`;
+                        thoughtContainer.appendChild(step);
+                    } 
+                    else if (data.type === 'token') {
+                        // Ajouter un token à la réponse (machine à écrire)
+                        textContainer.innerText += data.content;
+                    }
+                    else if (data.type === 'error') {
+                        textContainer.innerHTML = `<span class="text-danger">🔮 Erreur des astres : ${data.content}</span>`;
+                        eventSource.close();
+                        oracleInput.disabled = false;
+                        submitBtn.disabled = false;
+                    }
+                    
+                    scrollToBottom();
+                };
+
+                eventSource.onerror = function() {
+                    eventSource.close();
+                    oracleInput.disabled = false;
+                    submitBtn.disabled = false;
+                    
+                    // On appelle la vue 'animinator_ask' (sync) pour sauvegarder la question en DB/session
+                    // car le streaming est un GET et ne met pas à jour le state Django proprement sans hack
+                    fetch("{% url 'animinator_ask' %}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                        },
+                        body: `question=${encodeURIComponent(question)}`
+                    }).then(() => {
+                        // Si le streaming a fini mais que la page n'a pas refresh (cas SSE normal)
+                        // On pourrait refresh ou juste laisser l'utilisateur continuer
+                        // Pour la démo, on laisse tel quel.
+                    });
+                };
+            });
+        }
+    });
+</script>
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const chatWindow = document.getElementById('chat-window');
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+    });
+</script>
+{% endblock %}

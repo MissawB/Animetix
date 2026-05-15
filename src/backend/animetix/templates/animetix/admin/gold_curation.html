@@ -1,0 +1,79 @@
+{% extends 'animetix/base.html' %}
+{% load i18n %}
+
+{% block title %}Animetix Admin - Gold Curation{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="manga-font fw-black italic text-warning uppercase tracking-widest mb-2">GOLD DATASET CURATION</h1>
+            <p class="text-white/50 small">Validez les meilleurs échanges pour le Fine-Tuning du modèle Otaku.</p>
+        </div>
+        <div class="text-end">
+            <div class="badge bg-success rounded-pill px-4 py-2">
+                <span class="fs-4 fw-black">{{ validated_count }}</span> <br>
+                <small class="text-uppercase tracking-tighter">Entrées Validées</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            {% for entry in entries %}
+            <div id="entry-{{ entry.id }}" class="card bg-white/5 border-0 rounded-[30px] mb-4 overflow-hidden shadow-2xl animate__animated animate__fadeInUp" style="animation-delay: {{ forloop.counter0|add:1 }}00ms">
+                <div class="card-body p-5">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="small fw-black text-warning uppercase tracking-widest mb-2">Contexte / Source</label>
+                            <div class="p-4 rounded-2xl bg-black/30 font-mono text-xs text-white/70 h-48 overflow-y-auto mb-4">
+                                {{ entry.context }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-black text-info uppercase tracking-widest mb-2">Instruction (Prompt)</label>
+                            <div class="p-4 rounded-2xl bg-black/30 text-sm text-white mb-4">
+                                {{ entry.instruction }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <label class="small fw-black text-success uppercase tracking-widest mb-2">Réponse de l'IA (Candidat Gold)</label>
+                        <div class="p-4 rounded-2xl bg-white/5 border border-white/10 text-lg leading-relaxed">
+                            {{ entry.response }}
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-3 mt-5">
+                        <button hx-post="{% url 'reject_gold_entry' entry.id %}" 
+                                hx-target="#entry-{{ entry.id }}" 
+                                hx-swap="outerHTML swap:1s"
+                                class="btn btn-outline-danger rounded-pill px-5 py-3 fw-bold uppercase tracking-widest text-xs">
+                            <i class="bi bi-trash3-fill me-2"></i> Rejeter
+                        </button>
+                        <button hx-post="{% url 'validate_gold_entry' entry.id %}" 
+                                hx-target="#entry-{{ entry.id }}" 
+                                hx-swap="outerHTML swap:1s"
+                                class="btn btn-success rounded-pill px-5 py-3 fw-black italic manga-font uppercase tracking-widest text-sm shadow-lg shadow-success/20">
+                            <i class="bi bi-check-lg me-2"></i> Valider & Intégrer
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-5">
+                <div class="display-1 opacity-10 mb-4">📦</div>
+                <h3 class="text-white/30 manga-font italic">Aucune donnée en attente de curation.</h3>
+                <p class="text-white/20">Les feedbacks positifs des utilisateurs apparaîtront ici automatiquement.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .card { transition: all 0.3s ease; }
+    .card:hover { transform: translateY(-5px); border: 1px solid rgba(255,255,255,0.1) !important; }
+</style>
+{% endblock %}
