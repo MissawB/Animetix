@@ -19,16 +19,19 @@ class SoundscapeGenerationService:
         """
         logger.info("🎵 Soundscape: Analyzing video content for audio generation...")
         
-        # 1. Analyse du contenu via Video-RAG (pour comprendre ce qui se passe)
-        # On simule l'extraction de métadonnées visuelles
+        # 1. Analyse du contenu via Video-RAG (via l'adaptateur inference)
+        # On utilise les nouvelles méthodes de port d'inférence pour une analyse réelle
+        actions = self.inference_engine.localize_video_actions(video_data, ["combat", "pluie", "magie"])
+        description = self.inference_engine.generate_image_description(video_data[:1024*10]) # Premier frame
+        
         analysis = {
-            "scene": "Combat intense sous la pluie",
-            "detected_objects": ["épée", "éclairs", "guerrier"],
-            "vibe": "Epique et mélancolique"
+            "scene": description,
+            "detected_actions": actions,
+            "vibe": "Epique et cinématique"
         }
         
         # 2. Construction du prompt audio
-        audio_prompt = f"Soundscape for an anime scene: {analysis['scene']}. {analysis['vibe']}. Sounds of {', '.join(analysis['detected_objects'])}."
+        audio_prompt = f"Anime soundscape, cinematic: {analysis['scene']}. Actions: {str(analysis['detected_actions'])}. High quality, immersive."
         
-        # 3. Génération via AudioLDM (Inference Engine)
+        # 3. Génération via l'engine AudioLDM
         return self.inference_engine.generate_soundscape(video_metadata=analysis, prompt=audio_prompt)

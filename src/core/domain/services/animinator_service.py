@@ -8,11 +8,10 @@ class AniminatorDomainService:
         self.neo4j = neo4j_manager
 
     def select_secret(self, catalog: Dict) -> Optional[str]:
-        if not catalog: return None
-        # On choisit une œuvre aléatoire parmi les plus populaires
-        items = list(catalog.values())
+        if not catalog or 'title_to_full_data' not in catalog: return None
+        items = list(catalog['title_to_full_data'].values())
         if not items: return None
-        selected = random.choice(items[:50]) # Top 50 popularité
+        selected = random.choice(items)
         return selected.get('title')
 
     def _fetch_graph_facts(self, secret_title: str, question: str) -> str:

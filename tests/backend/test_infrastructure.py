@@ -3,29 +3,41 @@ from unittest.mock import MagicMock
 from src.backend.animetix.session_manager import GameSessionManager
 from src.backend.animetix.presenters import GamePresenter
 
+class MockSession:
+    def __init__(self):
+        self.data = {}
+        self.modified = False
+    def __getitem__(self, key): return self.data[key]
+    def __setitem__(self, key, value): self.data[key] = value
+    def get(self, key, default=None): return self.data.get(key, default)
+    def update(self, data): self.data.update(data)
+    def __contains__(self, key): return key in self.data
+
 @pytest.fixture
 def mock_request():
     request = MagicMock()
-    request.session = {}
+    request.session = MockSession()
     return request
 
 def test_session_manager_classic_start(mock_request):
     manager = GameSessionManager(mock_request)
     manager.start_classic_game("Naruto", "Normal", "Anime")
     
-    assert mock_request.session['secret_title'] == "Naruto"
-    assert mock_request.session['game_over'] is False
-    assert mock_request.session['guesses'] == []
+    assert mock_request.session.data['secret_title'] == "Naruto"
+    assert mock_request.session.data['game_over'] is False
+    assert mock_request.session.data['guesses'] == []
+    assert mock_request.session.modified is True
 
 def test_session_manager_add_guess(mock_request):
     manager = GameSessionManager(mock_request)
-    mock_request.session['guesses'] = []
+    mock_request.session.data['guesses'] = []
     
     guess = {"title": "One Piece", "score": 85.0}
     manager.add_guess(guess)
     
-    assert len(mock_request.session['guesses']) == 1
-    assert mock_request.session['guesses'][0]['title'] == "One Piece"
+    assert len(mock_request.session.data['guesses']) == 1
+    assert mock_request.session.data['guesses'][0]['title'] == "One Piece"
+    assert mock_request.session.modified is True
 
 def test_game_presenter_score_color():
     presenter = GamePresenter()

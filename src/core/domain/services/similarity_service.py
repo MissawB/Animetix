@@ -42,24 +42,26 @@ class SimilarityService:
         if has_direct: score = max(score, 0.9)
         
         return score
+    def calculate_similarity(self, media_type: str, item_a: str, item_b: str) -> float:
+        """Wrapper pour l'appel au repository."""
+        return self.repository.calculate_similarity(media_type, item_a, item_b)
 
     def calculate_raw_similarity(self, media_type: str, secret_title: str, guess_title: str, catalog: Dict) -> float:
         """Calcule la similarité composite (Vecteurs + Graphe)."""
         if secret_title == guess_title:
             return 1.0
-            
+
         secret_full = catalog['title_to_full_data'].get(secret_title)
         guess_full = catalog['title_to_full_data'].get(guess_title)
-        
+
         if not secret_full or not guess_full:
             return 0.0
-            
-        vec_sim = self.calculate_similarity(media_type, str(secret_full['id']), str(guess_full['id']))
+
+        vec_sim = self.repository.calculate_similarity(media_type, str(secret_full['id']), str(guess_full['id']))
         graph_sim = self._calculate_graph_similarity(media_type, str(secret_full['id']), str(guess_full['id']))
-        
+
         # Pondération hybride : 70% Vecteur + 30% Graphe
         return (0.7 * vec_sim) + (0.3 * graph_sim)
-
     def check_title_match(self, user_input: str, media_item: Dict) -> bool:
         """Vérifie si la saisie utilisateur correspond aux titres ou synonymes de l'œuvre."""
         if not user_input or not media_item: return False

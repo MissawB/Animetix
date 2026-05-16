@@ -1,6 +1,9 @@
 import requests
+import logging
 from typing import List, Dict
 from core.ports.web_search_port import WebSearchPort
+
+logger = logging.getLogger("animetix.web")
 
 class DuckDuckGoSearchAdapter(WebSearchPort):
     """
@@ -13,8 +16,6 @@ class DuckDuckGoSearchAdapter(WebSearchPort):
     def search(self, query: str, limit: int = 5) -> List[Dict]:
         """Simulation d'une recherche DuckDuckGo."""
         print(f"🌐 Web Searching for: '{query}'...")
-        # Note: In a real implementation, we would use a search API like Serper, Tavily or DDG scraping.
-        # Here we mock the behavior for the prototype.
         return [
             {
                 "title": f"Result for {query}",
@@ -29,5 +30,6 @@ class DuckDuckGoSearchAdapter(WebSearchPort):
             res = requests.get(url, timeout=10)
             if res.status_code == 200:
                 return res.text[:2000] # Limite pour le contexte LLM
-        except: pass
+        except Exception as e:
+            logger.error(f"Failed to fetch content from {url}: {e}")
         return ""

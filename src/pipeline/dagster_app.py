@@ -86,7 +86,9 @@ def manga_artifacts(): return vectorize_manga.run_vectorization()
 
 # --- 🧪 PIPELINE : MLOPS ---
 @asset(group_name="mlops")
-def self_healing_graph_agent(): return graph_healer.run_graph_healer()
+def self_healing_graph_agent(): 
+    from core.domain.services.graph_healer_service import GraphHealerService
+    return GraphHealerService().perform_healing()
 
 @asset(group_name="mlops", deps=[raw_anime])
 def continuous_pretraining_draft(): return continuous_pretraining.run_cpt()
@@ -213,12 +215,9 @@ defs = Definitions(
     resources={
         "chroma": ChromaResource(persist_path=str(PROJECT_ROOT / "data" / "chroma_db")),
         "neo4j": Neo4jResource(
-            uri=os.getenv("NEO4J_URI", "bolt://localhost:7687"), 
-            user=os.getenv("NEO4J_USER", "neo4j"), 
-            password=os.getenv("NEO4J_PASSWORD") or os.environ.get("NEO4J_PASSWORD")
+            uri=settings.NEO4J_URI, 
+            user=settings.NEO4J_USER, 
+            password=settings.NEO4J_PASSWORD
         )
     }
 )
-
-if not os.getenv("NEO4J_PASSWORD"):
-    logger.warning("NEO4J_PASSWORD is not set in environment variables.")

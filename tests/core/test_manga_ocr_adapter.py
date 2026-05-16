@@ -1,16 +1,19 @@
-import pytest
-from unittest.mock import MagicMock, patch
-from adapters.inference.manga_ocr_adapter import MangaOcrAdapter
+import unittest
+from unittest.mock import MagicMock
+from adapters.inference.manga_ocr_adapter import MangaOCRAdapter
 
-@patch("adapters.inference.manga_ocr_adapter.InferenceClient")
-def test_manga_ocr_calls_hf_api(mock_client_class):
-    mock_client = MagicMock()
-    mock_client_class.return_value = mock_client
-    # Mock dots.mocr response
-    mock_client.post.return_value = '{"generated_text": "\u3053\u3093\u306b\u3061\u306f"}'.encode("utf-8")
-    
-    adapter = MangaOcrAdapter(token="fake_token")
-    result = adapter.process_manga_page(b"fake_image_data")
-    
-    assert "\u3053\u3093\u306b\u3061\u306f" in result["text"]
-    assert result["model"] == "dots.mocr"
+class TestMangaOCRAdapter(unittest.TestCase):
+    def setUp(self):
+        # Mock du pipeline pour éviter le chargement réel du modèle
+        self.adapter = MangaOCRAdapter()
+        self.adapter.ocr_pipeline = MagicMock()
+
+    def test_process_manga_page_success(self):
+        self.adapter.ocr_pipeline.return_value = [{'generated_text': 'test text'}]
+        result = self.adapter.process_manga_page(b"fake_image_data")
+        self.assertEqual(result['text'], 'test text')
+
+    def test_process_manga_page_error(self):
+        self.adapter.ocr_pipeline.side_effect = Exception("OCR error")
+        result = self.adapter.process_manga_page(b"bad_data")
+        self.assertIn("error", result)

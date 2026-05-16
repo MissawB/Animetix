@@ -76,16 +76,15 @@ class LLMService:
             balance_instruction = "Les deux univers doivent être parfaitement équilibrés."
             
         chaos_instruction = "Garde un récit très logique et ancré dans le lore." if chaos_level < 30 else ("N'hésite pas à être abstrait et à briser le 4ème mur." if chaos_level > 70 else "Mélange les concepts de manière créative.")
-
         prompt = f"""
-        Crée un pitch de 3 lignes pour un crossover entre "{item1['title']}" et "{item2['title']}".
-        INSTRUCTIONS CREATIVES:
-        - Style Visuel Cible: {art_style} (Adapte le vocabulaire du pitch à ce style)
-        - Équilibre: {balance_instruction}
-        - Niveau de Chaos ({chaos_level}/100): {chaos_instruction}
-        Réponds en {language}.
-        """
-        return self.generate(prompt, system_prompt="Tu es un scénariste expert en crossovers.", forbidden_terms=[item1['title'], item2['title']])
+Crée un pitch de 3 lignes pour un crossover entre "{item1}" et "{item2}".
+INSTRUCTIONS CREATIVES:
+- Style Visuel Cible: {art_style} (Adapte le vocabulaire du pitch à ce style)
+- Équilibre: {balance_instruction}
+- Niveau de Chaos ({chaos_level}/100): {chaos_instruction}
+Réponds en {language}.
+"""
+        return self.generate(prompt, system_prompt="Tu es un scénariste expert en crossovers.", forbidden_terms=[item1, item2])
 
     def generate_paradox_explanation(self, media_type: str, item_a: str, item_b: str, intruder: str) -> str:
         prompt = self.prompt_manager.get_prompt("paradox_explanation", media_type=media_type, item_a=item_a, item_b=item_b, intruder=intruder)
