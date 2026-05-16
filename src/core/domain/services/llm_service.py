@@ -1,5 +1,6 @@
-from typing import Optional
+from typing import Optional, Dict
 from ...ports.inference_port import InferencePort
+
 from ...ports.usage_port import UsagePort
 from ..exceptions import InferenceError
 from .prompt_manager import PromptManager
@@ -64,9 +65,27 @@ class LLMService:
         except Exception as e:
             raise InferenceError(f"AI Generation failed: {str(e)}")
 
-    def generate_fusion_scenario(self, media_type: str, item_a: str, item_b: str, language: str) -> str:
-        prompt, system_prompt = self.prompt_manager.get_prompt("fusion_scenario", item_a=item_a, item_b=item_b, language=language, media_type=media_type)
-        return self.generate(prompt, system_prompt, forbidden_terms=[item_a, item_b])
+    def generate_fusion_scenario(self, media_type: str, item1: Dict, item2: Dict, language: str, chaos_level: int = 50, universe_balance: int = 50, art_style: str = "Cyberpunk") -> str:
+        """Génère un synopsis de fusion avec des paramètres créatifs."""
+        balance_instruction = ""
+        if universe_balance < 40:
+            balance_instruction = f"L'univers de {item1['title']} doit dominer."
+        elif universe_balance > 60:
+            balance_instruction = f"L'univers de {item2['title']} doit dominer."
+        else:
+            balance_instruction = "Les deux univers doivent être parfaitement équilibrés."
+            
+        chaos_instruction = "Garde un récit très logique et ancré dans le lore." if chaos_level < 30 else ("N'hésite pas à être abstrait et à briser le 4ème mur." if chaos_level > 70 else "Mélange les concepts de manière créative.")
+
+        prompt = f"""
+        Crée un pitch de 3 lignes pour un crossover entre "{item1['title']}" et "{item2['title']}".
+        INSTRUCTIONS CREATIVES:
+        - Style Visuel Cible: {art_style} (Adapte le vocabulaire du pitch à ce style)
+        - Équilibre: {balance_instruction}
+        - Niveau de Chaos ({chaos_level}/100): {chaos_instruction}
+        Réponds en {language}.
+        """
+        return self.generate(prompt, system_prompt="Tu es un scénariste expert en crossovers.", forbidden_terms=[item1['title'], item2['title']])
 
     def generate_paradox_explanation(self, media_type: str, item_a: str, item_b: str, intruder: str) -> str:
         prompt = self.prompt_manager.get_prompt("paradox_explanation", media_type=media_type, item_a=item_a, item_b=item_b, intruder=intruder)
@@ -77,8 +96,13 @@ class LLMService:
         return self.generate(prompt)
 
     def ask_oracle(self, media_type: str, title: str, question: str) -> str:
-        prompt = self.prompt_manager.get_prompt("ask_oracle", media_type=media_type, title=title, question=question)
-        return self.generate(prompt)
+        prompt, system = self.prompt_manager.get_prompt("ask_oracle", media_type=media_type, title=title, question=question)
+        return self.generate(prompt, system)
+
+    def ask_oracle_stream(self, media_type: str, title: str, question: str):
+        """Version streaming de l'Oracle."""
+        prompt, system = self.prompt_manager.get_prompt("ask_oracle", media_type=media_type, title=title, question=question)
+        yield from self.inference_engine.stream_generate(prompt, system)
 
     def propose_next_question(self, media_type: str, history: str, candidates: list) -> str:
         prompt = self.prompt_manager.get_prompt("akinetix_next_question", media_type=media_type, history=history, candidates=candidates[:10])

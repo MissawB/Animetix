@@ -76,3 +76,10 @@ def generate_3d_scene_task(image_data_b64, title):
     
     scene_result = animetix.spatial_computing_service.reconstruct_3d_scene(image_bytes, title)
     return scene_result
+
+def generate_fusion_image(item1, item2, art_style="Cyberpunk"):
+    """Délégation au domaine pour la génération d'image de fusion."""
+    from .containers import get_container
+    container = get_container()
+    return container.fusion_service.generate_fusion_image(item1, item2, art_style=art_style)
+

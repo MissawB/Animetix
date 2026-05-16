@@ -42,7 +42,9 @@ from core.domain.services.cove_oracle_service import CoveOracleService
 from core.domain.services.agentic_rag_service import AgenticRAGService
 from core.domain.services.long_term_memory_service import LongTermMemoryService
 from core.domain.services.semantic_cache_service import SemanticCacheService
+from core.domain.services.creative.fusion_service import FusionDomainService
 from core.domain.services.observability_service import ObservabilityService
+
 
 # Adapters
 from adapters.persistence.unified_repository_adapter import UnifiedRepositoryAdapter
@@ -54,6 +56,7 @@ from adapters.inference.brain_api_adapter import BrainAPIAdapter
 from adapters.inference.vllm_adapter import VllmAdapter
 from adapters.inference.local_llama_adapter import LocalLlamaAdapter
 from adapters.inference.gguf_adapter import GgufAdapter
+from adapters.inference.transformers_adapter import TransformersAdapter
 from adapters.inference.moondream_adapter import MoondreamAdapter
 from adapters.inference.fallback_adapter import FallbackInferenceAdapter
 
@@ -92,19 +95,23 @@ class Container:
 
     @property
     def gguf_adapter(self):
-        return self._get('gguf_adapter', lambda: GgufAdapter(model_path=os.path.join(settings.MODELS_DIR, "qwen2.5-1.5b-instruct.Q4_K_M.gguf")) if os.path.exists(os.path.join(settings.MODELS_DIR, "qwen2.5-1.5b-instruct.Q4_K_M.gguf")) else None)
+        return self._get('gguf_adapter', lambda: GgufAdapter(model_path=os.path.join(settings.MODELS_DIR, "Qwen2.5-1.5B-Instruct-Q4_K_M.gguf")) if os.path.exists(os.path.join(settings.MODELS_DIR, "Qwen2.5-1.5B-Instruct-Q4_K_M.gguf")) else None)
 
     @property
     def moondream_adapter(self):
         return self._get('moondream_adapter', lambda: MoondreamAdapter())
 
     @property
+    def transformers_adapter(self):
+        return self._get('transformers_adapter', lambda: TransformersAdapter(model_id="Qwen/Qwen2.5-1.5B-Instruct", use_4bit=True))
+
+    @property
     def inference_engine(self):
         return self._get('inference_engine', lambda: FallbackInferenceAdapter(adapters=[
-            BrainAPIAdapter(brain_api_url=os.getenv("BRAIN_API_URL", "")),
+            self.transformers_adapter,
             VllmAdapter(api_base=os.getenv("VLLM_API_BASE", "http://vllm:8000/v1"), model_name="meta-llama/Llama-3-8B-Instruct"),
             self.gguf_adapter,
-            LocalLlamaAdapter(model_path=os.path.join(settings.MODELS_DIR, "llama-3-8b"), hf_token=os.getenv("HUGGINGFACE_TOKEN"), use_4bit=True)
+            BrainAPIAdapter(brain_api_url=os.getenv("BRAIN_API_URL", ""))
         ]))
 
     @property
@@ -113,7 +120,7 @@ class Container:
 
     @property
     def llm_service(self):
-        return self._get('llm_service', lambda: LLMService(inference_engine=self.inference_engine, prompt_manager=self.prompt_manager, usage_port=DjangoUsageAdapter(), slm_engine=self.gguf_adapter, obs_service=self.obs_service))
+        return self._get('llm_service', lambda: LLMService(inference_engine=self.inference_engine, prompt_manager=self.prompt_manager, usage_port=DjangoUsageAdapter(), slm_engine=self.transformers_adapter, obs_service=self.obs_service))
 
     @property
     def agent_bus(self):
@@ -137,7 +144,7 @@ class Container:
 
     @property
     def semantic_cache_service(self):
-        return self._get('semantic_cache_service', lambda: SemanticCacheService(chroma_resource=self.repository))
+        return self._get('semantic_cache_service', lambda: SemanticCacheService(inference_engine=self.inference_engine))
 
     @property
     def sync_adapter(self):
@@ -264,19 +271,18 @@ class Container:
         return self._get('native_speech_llm_service', lambda: NativeSpeechLLMService(inference_engine=self.inference_engine))
 
     @property
-    def translation_service(self):
-        return self._get('translation_service', lambda: TranslationService())
+    def fusion_service(self):
+        return self._get('fusion_service', lambda: FusionDomainService(inference_engine=self.inference_engine))
 
     @property
     def catalog_service(self):
+
         from django.core.cache import cache
-        return CatalogService(repository=self.repository, sql_repository=self.django_repository, cache_service=cache)
+        return self._get('catalog_service', lambda: CatalogService(repository=self.repository, sql_repository=self.django_repository, cache_service=cache))
 
     @property
     def game_service(self):
-        sim = SimilarityService(repository=self.repository)
-        und = UndercoverService(catalog_service=self.catalog_service, similarity_service=sim)
-        return GameService(repository=self.repository, catalog_service=self.catalog_service, similarity_service=sim, undercover_service=und)
+        return self._get('game_service', lambda: GameService(repository=self.repository, catalog_service=self.catalog_service, similarity_service=SimilarityService(repository=self.repository), undercover_service=UndercoverService(catalog_service=self.catalog_service, similarity_service=SimilarityService(repository=self.repository))))
 
 # Global container instance
 _container = None
