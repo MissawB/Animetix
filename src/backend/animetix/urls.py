@@ -29,8 +29,8 @@ urlpatterns = [
 
     path('animinator/', views.animinator_view, name='animinator'),
     path('animinator/ask/', views.animinator_ask, name='animinator_ask'),
+    path('animinator/stream/', views.animinator_stream, name='animinator_stream'),
     path('animinator/guess/', views.animinator_guess, name='animinator_guess'),
-    path('animinator/stream/', views.index, name='animinator_stream'), # Placeholder
     
     path('akinetix/', views.akinetix_view, name='akinetix'),
     path('akinetix/answer/', views.akinetix_answer, name='akinetix_answer'),
@@ -55,7 +55,9 @@ urlpatterns = [
     path('codemanga/game/<str:room_code>/', views.codemanga_game, name='codemanga_game'),
     
     path('archetypist/', views.archetypist_view, name='archetypist'),
+    path('fusion/like/<int:fusion_id>/', views.like_fusion, name='like_fusion'),
     path('task/<str:task_id>/', views.get_task_status, name='task_status'),
+
     path('sync_offline/', views.sync_offline_data, name='sync_offline'),
     
     path('leaderboard/', views.leaderboard_view, name='leaderboard'),

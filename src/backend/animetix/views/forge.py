@@ -63,6 +63,30 @@ def archetypist_view(request):
             return render(request, 'animetix/archetypist/archetypist_loading_fragment.html', context)
         return render(request, 'animetix/archetypist/archetypist.html', context)
     media_settings = DIFFICULTY_SETTINGS.get(media_type, DIFFICULTY_SETTINGS["Anime"])
+    # ... (rest of view)
+
+from django.http import HttpResponse
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def like_fusion(request, fusion_id):
+    """Handle liking/unliking a fusion via HTMX."""
+    try:
+        fusion = CreativeFusion.objects.get(id=fusion_id)
+        if request.user in fusion.likes.all():
+            fusion.likes.remove(request.user)
+            liked = False
+        else:
+            fusion.likes.add(request.user)
+            liked = True
+        
+        count = fusion.likes.count()
+        icon = "bi-heart-fill text-rose-500" if liked else "bi-heart"
+        # Return simple HTML fragment for HTMX to swap the button content
+        return HttpResponse(f'<i class="bi {icon} group-hover:scale-125 transition"></i> <span class="manga-font text-[10px]">{count} LIKES</span>')
+    except (CreativeFusion.DoesNotExist, ValueError):
+        return HttpResponse("Error", status=404)
+
     rank_limit = media_settings.get(difficulty, 300)
     full_pool = data.get('db', [])
     if rank_limit is not None:
