@@ -58,6 +58,7 @@ class Profile(models.Model):
     ranked_max_points = models.IntegerField(default=0)
     unlocked_badges = models.JSONField(default=list)
     custom_username_color = models.CharField(max_length=20, null=True, blank=True)
+    collected_fusions = models.ManyToManyField('CreativeFusion', related_name='collected_by_profiles', blank=True)
     
     @property
     def level(self): return (self.xp // 500) + 1

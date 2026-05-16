@@ -66,6 +66,9 @@ urlpatterns = [
     path('social/follow/<int:user_id>/', views.follow_user, name='follow_user'),
     path('social/toggle_follow/<int:user_id>/', views.toggle_follow, name='toggle_follow'),
     path('social/dashboard/', views.social_dashboard, name='social_dashboard'),
+    path('social/collection/', views.my_collection, name='my_collection'),
+    path('social/collection/toggle/<int:fusion_id>/', views.toggle_collection, name='toggle_collection'),
+
     
     path('duel/create/', views.create_duel, name='create_duel'),
     path('duel/join/', views.join_duel, name='join_duel'),

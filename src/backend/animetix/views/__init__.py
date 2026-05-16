@@ -6,7 +6,7 @@ from .animinator import animinator_view, animinator_ask, animinator_guess
 from .akinetix import akinetix_view, akinetix_answer, akinetix_confirm
 from .forge import archetypist_view, like_fusion
 from .paradox import paradox_view, paradox_guess
-from .social import leaderboard_view, achievements_view, profile_view, social_dashboard, toggle_follow, follow_user
+from .social import leaderboard_view, achievements_view, profile_view, social_dashboard, toggle_follow, follow_user, toggle_collection, my_collection
 from .multiplayer import undercover_party_setup, undercover_party_play, undercover_online_join, undercover_online_room, codemanga_setup, codemanga_room, codemanga_game, create_duel, join_duel, duel_room_view, finish_duel, global_boss_view, global_boss_guess
 from .media_games import blindtest_view, blindtest_guess, covertest_view, covertest_guess
 from .mlops import health_check_view, ai_evaluation_dashboard, latent_space_view, submit_ai_feedback, gold_curation_view, validate_gold_entry, reject_gold_entry
