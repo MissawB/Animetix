@@ -73,3 +73,16 @@ def test_plan_and_solve_with_reformulation(agentic_rag, mock_engine, mock_rag, m
     assert "answer" in res
     assert mock_rag.hybrid_search.call_count == 1
     assert mock_web.search.call_count == 1
+
+from unittest.mock import MagicMock, patch
+
+def test_extract_json_logs_error_on_invalid_json(agentic_rag):
+    invalid_json_text = "Here is some text with { invalid json }"
+    
+    with patch("core.domain.services.agentic_rag_service.logger") as mock_logger:
+        res = agentic_rag._extract_json(invalid_json_text)
+        assert res == {}
+        mock_logger.error.assert_called()
+        args, _ = mock_logger.error.call_args
+        assert "Failed to parse JSON" in args[0]
+

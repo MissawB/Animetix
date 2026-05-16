@@ -49,12 +49,15 @@ class AgenticRAGService:
         self.scout = ScoutAgent(self.llm_service, prompt_manager, neo4j_manager)
 
     def plan_and_solve(self, query: str, media_type: str, user_id: Optional[str] = None) -> str:
-        """Wrapper non-streaming."""
-        full_answer = ""
+        """Wrapper non-streaming. Retourne uniquement la réponse finale."""
+        last_answer = ""
         for event in self.plan_and_solve_stream(query, media_type, user_id):
             if event['type'] == 'token':
-                full_answer += event['content']
-        return full_answer
+                last_answer += event['content']
+            elif event['type'] == 'thought' and "[Synthesizer]" in event['content']:
+                # On réinitialise car une nouvelle tentative de synthèse commence
+                last_answer = ""
+        return last_answer
 
     def plan_and_solve_stream(self, query: str, media_type: str, user_id: Optional[str] = None) -> Generator[Dict, None, None]:
         """Boucle principale orchestrée par agents avec Architecture Scout."""
@@ -106,31 +109,43 @@ class AgenticRAGService:
                 yield StreamStep(type="thought", content=f"[Critic] Amélioration requise: {critique.suggested_action}").model_dump()
                 plan.requires_web = (critique.suggested_action == "TRIGGER_WEB")
 
-        # 5. SYNTHÈSE FINALE (Modèle 8B+ sur le Truth Path pré-mâché)
-        yield StreamStep(type="thought", content="[Synthesizer] Rédaction de la réponse expert...").model_dump()
+        # 5. SYNTHÈSE FINALE & AUTO-CORRECTION (BOUCLE)
         full_answer = ""
-        syn_start = time.time()
-        for token in self.synthesizer.synthesize_stream(query, truth_path, thinking_budget=thinking_budget):
-            full_answer += token
-            yield StreamStep(type="token", content=token).model_dump()
-        logger.info(f"PERF: Synthesizer took {(time.time() - syn_start)*1000:.2f}ms")
+        correction_feedback = None
+        
+        for attempt in range(2): # Max 2 tentatives de synthèse
+            if attempt > 0:
+                yield StreamStep(type="thought", content=f"[Synthesizer] Tentative d'auto-correction (itération {attempt})...").model_dump()
+            else:
+                yield StreamStep(type="thought", content="[Synthesizer] Rédaction de la réponse expert...").model_dump()
+            
+            full_answer = ""
+            syn_start = time.time()
+            for token in self.synthesizer.synthesize_stream(query, truth_path, thinking_budget=thinking_budget, correction_feedback=correction_feedback):
+                full_answer += token
+                yield StreamStep(type="token", content=token).model_dump()
+            logger.info(f"PERF: Synthesizer attempt {attempt} took {(time.time() - syn_start)*1000:.2f}ms")
 
-        # 6. ÉVALUATION & PERSISTANCE
-        yield StreamStep(type="thought", content="[Judge] Évaluation de la fiabilité...").model_dump()
-        judge_start = time.time()
-        if evaluation := self.judge.evaluate(query, truth_path, full_answer):
-            logger.info(f"PERF: Judge took {(time.time() - judge_start)*1000:.2f}ms")
-            if not evaluation.is_reliable:
-                yield StreamStep(type="thought", content=f"⚠️ Fiabilité : {evaluation.reasoning}").model_dump()
+            # 6. ÉVALUATION (Judge)
+            yield StreamStep(type="thought", content="[Judge] Évaluation de la fiabilité...").model_dump()
+            judge_start = time.time()
+            evaluation = self.judge.evaluate(query, truth_path, full_answer)
+            if evaluation:
+                logger.info(f"PERF: Judge took {(time.time() - judge_start)*1000:.2f}ms")
+                yield StreamStep(type="eval", content=evaluation.model_dump()).model_dump()
                 
-            if getattr(evaluation, 'hallucination_detected', False):
-                # --- SELF-EVOLVING: AUTO-CORRECTION ---
-                bad_input = f"Requête: {query}\nContexte: {truth_path[:500]}..." 
-                good_output = "RÉPONSE IDÉALE : Je ne peux pas répondre avec certitude..."
-                yield StreamStep(type="thought", content="[Metacognition] Hallucination détectée. Enregistrement d'une auto-correction...").model_dump()
-                self.prompt_manager.add_few_shot_correction("synthesizer_final", bad_input, good_output)
+                if evaluation.is_reliable and not evaluation.hallucination_detected:
+                    break # Succès
                 
-            yield StreamStep(type="eval", content=evaluation.model_dump()).model_dump()
+                if attempt == 0: # Préparer la correction pour le prochain tour
+                    correction_feedback = f"DÉFAUT DÉTECTÉ: {evaluation.reasoning}. Veuillez corriger ces points en restant strictement fidèle au contexte."
+                    if evaluation.hallucination_detected:
+                        # Metacognition: save correction for future few-shots
+                        bad_input = f"Requête: {query}\nContexte: {truth_path[:500]}..." 
+                        good_output = "RÉPONSE IDÉALE : Je dois être plus prudent..."
+                        self.prompt_manager.add_few_shot_correction("synthesizer_final", bad_input, good_output)
+            else:
+                break # Échec Judge, on garde la réponse actuelle
 
         self._store_results(query, full_answer, user_id)
 
@@ -187,6 +202,10 @@ class AgenticRAGService:
     def _extract_json(self, text: str) -> Dict:
         try:
             if '{' in text and '}' in text:
-                return orjson.loads(text[text.find('{'):text.rfind('}')+1])
-        except: pass
+                json_str = text[text.find('{'):text.rfind('}')+1]
+                return orjson.loads(json_str)
+        except orjson.JSONDecodeError as e:
+            logger.error(f"Failed to parse JSON from AI output: {e}. Output was: {text[:200]}...")
+        except Exception as e:
+            logger.error(f"Unexpected error during JSON extraction: {e}")
         return {}
