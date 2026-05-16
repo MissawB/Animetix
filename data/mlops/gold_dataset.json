@@ -1,2327 +1,395 @@
+
 [
   {
-    "query": "Un ninja possédé par un renard qui veut devenir maire de son village",
-    "expected_id": "20",
-    "expected_title": "Naruto"
-  },
-  {
-    "query": "Un lycéen qui trouve un cahier pour tuer des gens",
-    "expected_id": "1535",
-    "expected_title": "Death Note"
-  },
-  {
-    "query": "Des pirates qui cherchent un trésor légendaire",
-    "expected_id": "21",
-    "expected_title": "One Piece"
-  },
-  {
-    "query": "Un alchimiste qui a perdu son bras et le corps de son frère",
-    "expected_id": "5114",
-    "expected_title": "Fullmetal Alchemist: Brotherhood"
-  },
-  {
-    "query": "Un jeu de survie dans un monde virtuel piégé",
-    "expected_id": "11757",
-    "expected_title": "Sword Art Online"
-  },
-  {
-    "query": "liste des épisodes Hunter x Hunter 2011 ordre chronologique",
-    "expected_id": "11061",
-    "expected_title": "Hunter x Hunter (2011)"
-  },
-  {
-    "query": "comment regarder l'arc des Kimera Ants dans Hunter x Hunter",
-    "expected_id": "11061",
-    "expected_title": "Hunter x Hunter (2011)"
-  },
-  {
-    "query": "analyse philosophique du combat entre Meruem et Komugi",
-    "expected_id": "11061",
-    "expected_title": "Hunter x Hunter (2011)"
-  },
-  {
-    "query": "quel est le système de pouvoir basé sur l'aura dans HxH ?",
-    "expected_id": "11061",
-    "expected_title": "Hunter x Hunter (2011)"
-  },
-  {
-    "query": "pourquoi Killua Zoldyck est considéré comme le meilleur personnage de Shounen",
-    "expected_id": "11061",
-    "expected_title": "Hunter x Hunter (2011)"
-  },
-  {
-    "query": "évolution de Gon Freecss de l'innocence à la vengeance",
-    "expected_id": "11061",
-    "expected_title": "Hunter x Hunter (2011)"
-  },
-  {
-    "query": "anime avec un gamin qui cherche son père chasseur et passe un examen mortel",
-    "expected_id": "11061",
-    "expected_title": "Hunter x Hunter (2011)"
-  },
-  {
-    "query": "c'est quoi le dessin animé avec le type aux cheveux hérissés qui utilise une canne à pêche",
-    "expected_id": "11061",
-    "expected_title": "Hunter x Hunter (2011)"
-  },
-  {
-    "query": "quel est le secret derrière la famille d'assassins de Kirua ?",
-    "expected_id": "11061",
-    "expected_title": "Hunter x Hunter (2011)"
-  },
-  {
-    "query": "pourquoi l'auteur Togashi fait-il autant de pauses dans Hunter x Hunter ?",
-    "expected_id": "11061",
-    "expected_title": "Hunter x Hunter (2011)"
-  },
-  {
-    "query": "ordre chronologique pour regarder Fullmetal Alchemist et Brotherhood",
-    "expected_id": "5114",
-    "expected_title": "Fullmetal Alchemist: Brotherhood"
-  },
-  {
-    "query": "comment le système d'alchimie fonctionne dans Fullmetal Alchemist Brotherhood",
-    "expected_id": "5114",
-    "expected_title": "Fullmetal Alchemist: Brotherhood"
-  },
-  {
-    "query": "analyse philosophique de la loi de l'échange équivalent FMA",
-    "expected_id": "5114",
-    "expected_title": "Fullmetal Alchemist: Brotherhood"
-  },
-  {
-    "query": "thèmes politiques et critiques de la guerre dans FMA Brotherhood",
-    "expected_id": "5114",
-    "expected_title": "Fullmetal Alchemist: Brotherhood"
-  },
-  {
-    "query": "pourquoi Edward Elric a perdu son bras et sa jambe",
-    "expected_id": "5114",
-    "expected_title": "Fullmetal Alchemist: Brotherhood"
-  },
-  {
-    "query": "évolution psychologique de Roy Mustang entre le début et la fin de l'anime",
-    "expected_id": "5114",
-    "expected_title": "Fullmetal Alchemist: Brotherhood"
-  },
-  {
-    "query": "anime avec un alchimiste qui cherche à retrouver son corps perdu",
-    "expected_id": "5114",
-    "expected_title": "Fullmetal Alchemist: Brotherhood"
-  },
-  {
-    "query": "cette série où deux frères utilisent des cercles de transmutation avec une armure vide",
-    "expected_id": "5114",
-    "expected_title": "Fullmetal Alchemist: Brotherhood"
-  },
-  {
-    "query": "quel est le secret derrière la vérité dans FMA Brotherhood ?",
-    "expected_id": "5114",
-    "expected_title": "Fullmetal Alchemist: Brotherhood"
-  },
-  {
-    "query": "est-ce que Fullmetal Alchemist Brotherhood est considéré comme le meilleur anime de tous les temps ?",
-    "expected_id": "5114",
-    "expected_title": "Fullmetal Alchemist: Brotherhood"
-  },
-  {
-    "query": "combien d'étages faut-il monter dans Sword Art Online pour sortir du jeu",
-    "expected_id": "11757",
-    "expected_title": "Sword Art Online"
-  },
-  {
-    "query": "ordre de visionnage complet de l'anime Sword Art Online incluant les films",
-    "expected_id": "11757",
-    "expected_title": "Sword Art Online"
-  },
-  {
-    "query": "animes avec un concept de death game en réalité virtuelle comme SAO",
-    "expected_id": "11757",
-    "expected_title": "Sword Art Online"
-  },
-  {
-    "query": "jeux vidéo inspirés par le système de combat et l'univers de Sword Art Online",
-    "expected_id": "11757",
-    "expected_title": "Sword Art Online"
-  },
-  {
-    "query": "évolution de la relation entre Kirito et Asuna tout au long de la série",
-    "expected_id": "11757",
-    "expected_title": "Sword Art Online"
-  },
-  {
-    "query": "meilleurs personnages féminins de Sword Art Online classés par popularité",
-    "expected_id": "11757",
-    "expected_title": "Sword Art Online"
-  },
-  {
-    "query": "comment s'appelle l'anime où ils meurent dans la vraie vie s'ils meurent dans le jeu VR",
-    "expected_id": "11757",
-    "expected_title": "Sword Art Online"
-  },
-  {
-    "query": "dessin animé japonais avec un casque de réalité virtuelle qui bloque les joueurs",
-    "expected_id": "11757",
-    "expected_title": "Sword Art Online"
-  },
-  {
-    "query": "est-ce que Kirito finit par se marier avec Asuna dans Sword Art Online",
-    "expected_id": "11757",
-    "expected_title": "Sword Art Online"
-  },
-  {
-    "query": "pourquoi le créateur du jeu Sword Art Online a-t-il piégé les joueurs dans le Nerve Gear",
-    "expected_id": "11757",
-    "expected_title": "Sword Art Online"
-  },
-  {
-    "query": "Mob Psycho 100 saison 1 épisode 5 scène du combat contre Teruki Hanazawa",
-    "expected_id": "21507",
-    "expected_title": "Mob Psycho 100"
-  },
-  {
-    "query": "ordre de visionnage complet Mob Psycho 100 et les OAV",
-    "expected_id": "21507",
-    "expected_title": "Mob Psycho 100"
-  },
-  {
-    "query": "explication symbolique de la jauge d'émotion de Mob et sa santé mentale",
-    "expected_id": "21507",
-    "expected_title": "Mob Psycho 100"
-  },
-  {
-    "query": "meilleurs animes d'action psychologique avec des pouvoirs surnaturels comme Mob Psycho",
-    "expected_id": "21507",
-    "expected_title": "Mob Psycho 100"
-  },
-  {
-    "query": "évolution du développement personnel de Shigeo Kageyama au fil de la série",
-    "expected_id": "21507",
-    "expected_title": "Mob Psycho 100"
-  },
-  {
-    "query": "analyse du contraste entre la personnalité de Reigen Arataka et ses méthodes d'exorcisme",
-    "expected_id": "21507",
-    "expected_title": "Mob Psycho 100"
-  },
-  {
-    "query": "anime avec un garçon timide aux cheveux noirs qui a des pouvoirs psychiques incroyables",
-    "expected_id": "21507",
-    "expected_title": "Mob Psycho 100"
-  },
-  {
-    "query": "dessin animé japonais où le personnage principal explose quand sa jauge arrive à 100 pour cent",
-    "expected_id": "21507",
-    "expected_title": "Mob Psycho 100"
-  },
-  {
-    "query": "pourquoi les gens disent que Mob Psycho 100 est une satire des mangas de super-héros ?",
-    "expected_id": "21507",
-    "expected_title": "Mob Psycho 100"
-  },
-  {
-    "query": "quel est le véritable rôle de Dimple dans l'histoire de Mob Psycho 100 ?",
-    "expected_id": "21507",
-    "expected_title": "Mob Psycho 100"
-  },
-  {
-    "query": "anime où le héros retourne dans son enfance pour sauver une camarade de classe",
-    "expected_id": "21234",
-    "expected_title": "ERASED"
-  },
-  {
-    "query": "comment s'appelle le pouvoir de Satoru Fujinuma dans l'anime Erased",
-    "expected_id": "21234",
-    "expected_title": "ERASED"
-  },
-  {
-    "query": "animes thriller psychologique avec voyage dans le temps et ambiance enneigée",
-    "expected_id": "21234",
-    "expected_title": "ERASED"
-  },
-  {
-    "query": "top animes sur le thème du changement du passé pour empêcher un meurtre",
-    "expected_id": "21234",
-    "expected_title": "ERASED"
-  },
-  {
-    "query": "qui est le tueur dans l'anime Erased analyse psychologique",
-    "expected_id": "21234",
-    "expected_title": "ERASED"
-  },
-  {
-    "query": "évolution de la relation entre Satoru et Kayo Hinazuki dans Erased",
-    "expected_id": "21234",
-    "expected_title": "ERASED"
-  },
-  {
-    "query": "c'est quoi le titre de l'anime avec un mangaka de 29 ans qui devient enfant",
-    "expected_id": "21234",
-    "expected_title": "ERASED"
-  },
-  {
-    "query": "cet anime où un homme traqué par la police doit résoudre une affaire de kidnapping",
-    "expected_id": "21234",
-    "expected_title": "ERASED"
-  },
-  {
-    "query": "Est-ce que Satoru finit par se marier avec quelqu'un à la fin de Erased ?",
-    "expected_id": "21234",
-    "expected_title": "ERASED"
-  },
-  {
-    "query": "Pourquoi le pouvoir de Satoru s'appelle Revival et quelles sont ses limites ?",
-    "expected_id": "21234",
-    "expected_title": "ERASED"
-  },
-  {
-    "query": "arc narratif complet Chainsaw Man manga tome 1 à 16",
-    "expected_id": "127230",
-    "expected_title": "Chainsaw Man"
-  },
-  {
-    "query": "ordre de lecture chronologique anime et films Chainsaw Man",
-    "expected_id": "127230",
-    "expected_title": "Chainsaw Man"
-  },
-  {
-    "query": "analyse symbolique du contrat entre Denji et Pochita",
-    "expected_id": "127230",
-    "expected_title": "Chainsaw Man"
-  },
-  {
-    "query": "pourquoi Chainsaw Man est considéré comme une œuvre de body horror",
-    "expected_id": "127230",
-    "expected_title": "Chainsaw Man"
-  },
-  {
-    "query": "évolution psychologique de Denji au fil des chapitres",
-    "expected_id": "127230",
-    "expected_title": "Chainsaw Man"
-  },
-  {
-    "query": "quel est le rôle réel de Makima dans l'intrigue ?",
-    "expected_id": "127230",
-    "expected_title": "Chainsaw Man"
-  },
-  {
-    "query": "manga avec un héros qui se transforme en tronçonneuse démoniaque",
-    "expected_id": "127230",
-    "expected_title": "Chainsaw Man"
-  },
-  {
-    "query": "animé sombre avec un chien démon et beaucoup de sang",
-    "expected_id": "127230",
-    "expected_title": "Chainsaw Man"
-  },
-  {
-    "query": "quelle est la signification de la scène de la danse avec Power ?",
-    "expected_id": "127230",
-    "expected_title": "Chainsaw Man"
-  },
-  {
-    "query": "le créateur de Chainsaw Man s'est-il inspiré de films d'horreur cultes ?",
-    "expected_id": "127230",
-    "expected_title": "Chainsaw Man"
-  },
-  {
-    "query": "Kaguya-sama Love is War saison 1 épisode 1 streaming",
-    "expected_id": "101921",
-    "expected_title": "Kaguya-sama: Love is War"
-  },
-  {
-    "query": "ordre de visionnage complet Kaguya-sama avec les OAV",
-    "expected_id": "101921",
-    "expected_title": "Kaguya-sama: Love is War"
-  },
-  {
-    "query": "meilleures séries anime comédie romantique avec des jeux psychologiques",
-    "expected_id": "101921",
-    "expected_title": "Kaguya-sama: Love is War"
-  },
-  {
-    "query": "animes sur la rivalité amoureuse dans les lycées d'élite",
-    "expected_id": "101921",
-    "expected_title": "Kaguya-sama: Love is War"
-  },
-  {
-    "query": "pourquoi Miyuki Shirogane est considéré comme un génie parmi les personnages d'anime",
-    "expected_id": "101921",
-    "expected_title": "Kaguya-sama: Love is War"
-  },
-  {
-    "query": "évolution psychologique de Kaguya Shinomiya tout au long du manga",
-    "expected_id": "101921",
-    "expected_title": "Kaguya-sama: Love is War"
-  },
-  {
-    "query": "anime avec un garçon pauvre et une fille riche qui font un concours d'intelligence",
-    "expected_id": "101921",
-    "expected_title": "Kaguya-sama: Love is War"
-  },
-  {
-    "query": "célèbre scène de danse de Chika Fujiwara quel épisode",
-    "expected_id": "101921",
-    "expected_title": "Kaguya-sama: Love is War"
-  },
-  {
-    "query": "Est-ce que Kaguya et Shirogane finissent ensemble à la fin de l'anime ?",
-    "expected_id": "101921",
-    "expected_title": "Kaguya-sama: Love is War"
-  },
-  {
-    "query": "quelle est la signification du titre original Kaguya-sama wa Kokurasetai ?",
-    "expected_id": "101921",
-    "expected_title": "Kaguya-sama: Love is War"
-  },
-  {
-    "query": "épisodes clés Violet Evergarden pour comprendre l'évolution émotionnelle de Violet",
-    "expected_id": "21827",
-    "expected_title": "Violet Evergarden"
-  },
-  {
-    "query": "ordre de visionnage complet Violet Evergarden film et série",
-    "expected_id": "21827",
-    "expected_title": "Violet Evergarden"
-  },
-  {
-    "query": "analyser la thématique du traumatisme de guerre et de la réhabilitation chez Violet Evergarden",
-    "expected_id": "21827",
-    "expected_title": "Violet Evergarden"
-  },
-  {
-    "query": "séries animées similaires à Violet Evergarden sur la reconstruction de soi après un conflit",
-    "expected_id": "21827",
-    "expected_title": "Violet Evergarden"
-  },
-  {
-    "query": "pourquoi Violet Evergarden est-elle considérée comme une poupée de souvenirs automatiques ?",
-    "expected_id": "21827",
-    "expected_title": "Violet Evergarden"
-  },
-  {
-    "query": "relation entre Violet Evergarden et le Major Gilbert expliquée",
-    "expected_id": "21827",
-    "expected_title": "Violet Evergarden"
-  },
-  {
-    "query": "cet animé où une fille aux mains en métal écrit des lettres émouvantes",
-    "expected_id": "21827",
-    "expected_title": "Violet Evergarden"
-  },
-  {
-    "query": "scène de la lettre dans l'épisode 10 de Violet Evergarden qui fait pleurer tout le monde",
-    "expected_id": "21827",
-    "expected_title": "Violet Evergarden"
-  },
-  {
-    "query": "quelle est la signification profonde de la phrase je t'aime dans Violet Evergarden ?",
-    "expected_id": "21827",
-    "expected_title": "Violet Evergarden"
-  },
-  {
-    "query": "est-ce que Violet Evergarden finit par comprendre les émotions humaines à la fin ?",
-    "expected_id": "21827",
-    "expected_title": "Violet Evergarden"
-  },
-  {
-    "query": "liste des armes impériales Teigu Akame ga Kill et leurs capacités",
-    "expected_id": "20613",
-    "expected_title": "Akame ga Kill!"
-  },
-  {
-    "query": "ordre chronologique pour regarder Akame ga Kill et ses OAV",
-    "expected_id": "20613",
-    "expected_title": "Akame ga Kill!"
-  },
-  {
-    "query": "anime sombre avec des assassinats et une rébellion politique comme Akame ga Kill",
-    "expected_id": "20613",
-    "expected_title": "Akame ga Kill!"
-  },
-  {
-    "query": "animes d'action fantasy où les personnages principaux meurent tragiquement",
-    "expected_id": "20613",
-    "expected_title": "Akame ga Kill!"
-  },
-  {
-    "query": "qui est le membre le plus fort de Night Raid parmi Akame et Esdeath ?",
-    "expected_id": "20613",
-    "expected_title": "Akame ga Kill!"
-  },
-  {
-    "query": "évolution psychologique de Tatsumi tout au long de la série",
-    "expected_id": "20613",
-    "expected_title": "Akame ga Kill!"
-  },
-  {
-    "query": "anime avec un groupe d'assassins qui portent des tenues de combat spéciales",
-    "expected_id": "20613",
-    "expected_title": "Akame ga Kill!"
-  },
-  {
-    "query": "c'est quoi l'anime où une fille utilise une épée maudite et tue tout le monde ?",
-    "expected_id": "20613",
-    "expected_title": "Akame ga Kill!"
-  },
-  {
-    "query": "quelle est l'origine des Teigu dans l'univers d'Akame ga Kill ?",
-    "expected_id": "20613",
-    "expected_title": "Akame ga Kill!"
-  },
-  {
-    "query": "est-ce que le manga Akame ga Kill se termine de la même manière que l'anime ?",
-    "expected_id": "20613",
-    "expected_title": "Akame ga Kill!"
-  },
-  {
-    "query": "ordre chronologique pour regarder les saisons et films The Seven Deadly Sins",
-    "expected_id": "20789",
-    "expected_title": "The Seven Deadly Sins"
-  },
-  {
-    "query": "comment s'appelle l'épée brisée de Meliodas dans Nanatsu no Taizai ?",
-    "expected_id": "20789",
-    "expected_title": "The Seven Deadly Sins"
-  },
-  {
-    "query": "animes fantastiques avec des groupes de guerriers surpuissants comme dans Seven Deadly Sins",
-    "expected_id": "20789",
-    "expected_title": "The Seven Deadly Sins"
-  },
-  {
-    "query": "liste des 7 péchés capitaux et leurs pouvoirs magiques respectifs",
-    "expected_id": "20789",
-    "expected_title": "The Seven Deadly Sins"
-  },
-  {
-    "query": "relation entre Meliodas et Elizabeth expliquée",
-    "expected_id": "20789",
-    "expected_title": "The Seven Deadly Sins"
-  },
-  {
-    "query": "quel est le nom du cochon qui parle dans l'anime avec le chevalier blond ?",
-    "expected_id": "20789",
-    "expected_title": "The Seven Deadly Sins"
-  },
-  {
-    "query": "ce manga où une princesse cherche des chevaliers exilés pour sauver son royaume",
-    "expected_id": "20789",
-    "expected_title": "The Seven Deadly Sins"
-  },
-  {
-    "query": "le truc avec un cochon qui tient un bar et un héros qui est en fait un démon",
-    "expected_id": "20789",
-    "expected_title": "The Seven Deadly Sins"
-  },
-  {
-    "query": "est-ce que Meliodas est vraiment le fils du roi des démons ?",
-    "expected_id": "20789",
-    "expected_title": "The Seven Deadly Sins"
-  },
-  {
-    "query": "quelle est la signification des tatouages des Seven Deadly Sins sur leurs corps ?",
-    "expected_id": "20789",
-    "expected_title": "The Seven Deadly Sins"
-  },
-  {
-    "query": "arc de la ferme Vinland Saga analyse philosophique",
-    "expected_id": "101348",
-    "expected_title": "Vinland Saga"
-  },
-  {
-    "query": "ordre de visionnage Vinland Saga et importance historique",
-    "expected_id": "101348",
-    "expected_title": "Vinland Saga"
-  },
-  {
-    "query": "évolution psychologique de Thorfinn tout au long de l'anime",
-    "expected_id": "101348",
-    "expected_title": "Vinland Saga"
-  },
-  {
-    "query": "relation complexe entre Thorfinn et Askeladd expliquée",
-    "expected_id": "101348",
-    "expected_title": "Vinland Saga"
-  },
-  {
-    "query": "anime similaire à Vinland Saga avec des vikings et de la politique",
-    "expected_id": "101348",
-    "expected_title": "Vinland Saga"
-  },
-  {
-    "query": "liste des batailles historiques représentées dans Vinland Saga",
-    "expected_id": "101348",
-    "expected_title": "Vinland Saga"
-  },
-  {
-    "query": "cet anime avec un jeune garçon qui veut tuer le chef mercenaire qui a tué son père",
-    "expected_id": "101348",
-    "expected_title": "Vinland Saga"
-  },
-  {
-    "query": "série animée viking très gore avec une réflexion sur la paix",
-    "expected_id": "101348",
-    "expected_title": "Vinland Saga"
-  },
-  {
-    "query": "pourquoi Thorfinn change-t-il autant entre la saison 1 et 2 ?",
-    "expected_id": "101348",
-    "expected_title": "Vinland Saga"
-  },
-  {
-    "query": "est-ce que Vinland Saga est basé sur de vrais faits historiques réels ?",
-    "expected_id": "101348",
-    "expected_title": "Vinland Saga"
-  },
-  {
-    "query": "épisodes saison 3 konosuba date de sortie",
-    "expected_id": "21202",
-    "expected_title": "KONOSUBA -God's blessing on this wonderful world!"
-  },
-  {
-    "query": "ordre de visionnage konosuba avec les films et oav",
-    "expected_id": "21202",
-    "expected_title": "KONOSUBA -God's blessing on this wonderful world!"
-  },
-  {
-    "query": "animes de comédie isekai parodique comme konosuba",
-    "expected_id": "21202",
-    "expected_title": "KONOSUBA -God's blessing on this wonderful world!"
-  },
-  {
-    "query": "top meilleurs moments humoristiques de kazuma et aqua",
-    "expected_id": "21202",
-    "expected_title": "KONOSUBA -God's blessing on this wonderful world!"
-  },
-  {
-    "query": "personnage fille magicienne explosion konosuba nom",
-    "expected_id": "21202",
-    "expected_title": "KONOSUBA -God's blessing on this wonderful world!"
-  },
-  {
-    "query": "comment s'appelle la chevalière masochiste dans konosuba",
-    "expected_id": "21202",
-    "expected_title": "KONOSUBA -God's blessing on this wonderful world!"
-  },
-  {
-    "query": "anime isekai avec un héros nul et une déesse inutile",
-    "expected_id": "21202",
-    "expected_title": "KONOSUBA -God's blessing on this wonderful world!"
-  },
-  {
-    "query": "dessin animé où le mec meurt de peur et va dans un jeu vidéo",
-    "expected_id": "21202",
-    "expected_title": "KONOSUBA -God's blessing on this wonderful world!"
-  },
-  {
-    "query": "pourquoi aqua est-elle considérée comme la déesse la plus inutile ?",
-    "expected_id": "21202",
-    "expected_title": "KONOSUBA -God's blessing on this wonderful world!"
-  },
-  {
-    "query": "quelle est la blague récurrente sur le costume de darkness ?",
-    "expected_id": "21202",
-    "expected_title": "KONOSUBA -God's blessing on this wonderful world!"
-  },
-  {
-    "query": "ordre de visionnage complet anime Bleach avec les épisodes fillers",
-    "expected_id": "269",
-    "expected_title": "Bleach"
-  },
-  {
-    "query": "comment s'appelle le bankai de Ichigo Kurosaki dans l'arc Thousand-Year Blood War",
-    "expected_id": "269",
-    "expected_title": "Bleach"
-  },
-  {
-    "query": "animes de combat avec des épées et des esprits comme Bleach",
-    "expected_id": "269",
-    "expected_title": "Bleach"
-  },
-  {
-    "query": "évolution des pouvoirs de Shinigami et Hollow chez Ichigo",
-    "expected_id": "269",
-    "expected_title": "Bleach"
-  },
-  {
-    "query": "qui est le capitaine le plus puissant de la Soul Society selon les fans",
-    "expected_id": "269",
-    "expected_title": "Bleach"
-  },
-  {
-    "query": "relation entre Rukia Kuchiki et Ichigo Kurosaki analyse",
-    "expected_id": "269",
-    "expected_title": "Bleach"
-  },
-  {
-    "query": "anime où un lycéen devient un dieu de la mort après avoir rencontré une fille",
-    "expected_id": "269",
-    "expected_title": "Bleach"
-  },
-  {
-    "query": "ce vieux manga avec des gars qui ont des épées gigantesques et des masques de monstres",
-    "expected_id": "269",
-    "expected_title": "Bleach"
-  },
-  {
-    "query": "pourquoi Aizen a trahi la Soul Society dans Bleach ?",
-    "expected_id": "269",
-    "expected_title": "Bleach"
-  },
-  {
-    "query": "quelle est l'origine du nom du Zanpakuto de Ichigo ?",
-    "expected_id": "269",
-    "expected_title": "Bleach"
-  },
-  {
-    "query": "ordre chronologique pour regarder tout Code Geass avec les OAV Akito the Exiled",
-    "expected_id": "1575",
-    "expected_title": "Code Geass: Lelouch of the Rebellion"
-  },
-  {
-    "query": "comment se nomme le jeu d'échecs tactique utilisé par Lelouch dans les premiers épisodes",
-    "expected_id": "1575",
-    "expected_title": "Code Geass: Lelouch of the Rebellion"
-  },
-  {
-    "query": "animés sur la rébellion politique et le renversement d'empire comme Code Geass",
-    "expected_id": "1575",
-    "expected_title": "Code Geass: Lelouch of the Rebellion"
-  },
-  {
-    "query": "différences philosophiques entre l'idéologie de Lelouch et celle de Suzaku",
-    "expected_id": "1575",
-    "expected_title": "Code Geass: Lelouch of the Rebellion"
-  },
-  {
-    "query": "évolution du personnage de Lelouch vi Britannia de lycéen à empereur",
-    "expected_id": "1575",
-    "expected_title": "Code Geass: Lelouch of the Rebellion"
-  },
-  {
-    "query": "quel est le rôle de C.C. dans la quête de vengeance de Lelouch ?",
-    "expected_id": "1575",
-    "expected_title": "Code Geass: Lelouch of the Rebellion"
-  },
-  {
-    "query": "cet animé avec un mec qui donne des ordres avec ses yeux et des robots géants",
-    "expected_id": "1575",
-    "expected_title": "Code Geass: Lelouch of the Rebellion"
-  },
-  {
-    "query": "scène culte du masque de Zero à la fin de la série avec la musique",
-    "expected_id": "1575",
-    "expected_title": "Code Geass: Lelouch of the Rebellion"
-  },
-  {
-    "query": "pourquoi Code Geass est considéré comme un chef-d'œuvre du genre mecha ?",
-    "expected_id": "1575",
-    "expected_title": "Code Geass: Lelouch of the Rebellion"
-  },
-  {
-    "query": "le créateur de Code Geass s'est-il inspiré de faits historiques réels pour l'Empire de Britannia ?",
-    "expected_id": "1575",
-    "expected_title": "Code Geass: Lelouch of the Rebellion"
-  },
-  {
-    "query": "ordre de visionnage complet Jojo's Bizarre Adventure avec spin-offs",
-    "expected_id": "14719",
-    "expected_title": "JoJo's Bizarre Adventure (TV)"
-  },
-  {
-    "query": "est-ce que le masque de pierre dans Jojo est lié à la mythologie aztèque réelle ?",
-    "expected_id": "14719",
-    "expected_title": "JoJo's Bizarre Adventure (TV)"
-  },
-  {
-    "query": "anime avec des combats de super-pouvoirs stylisés comme Jojo",
-    "expected_id": "14719",
-    "expected_title": "JoJo's Bizarre Adventure (TV)"
-  },
-  {
-    "query": "évolution de l'art de Hirohiko Araki à travers les différentes parties de Jojo",
-    "expected_id": "14719",
-    "expected_title": "JoJo's Bizarre Adventure (TV)"
-  },
-  {
-    "query": "pourquoi Dio Brando est considéré comme l'un des meilleurs antagonistes shonen",
-    "expected_id": "14719",
-    "expected_title": "JoJo's Bizarre Adventure (TV)"
-  },
-  {
-    "query": "relation complexe entre Jonathan Joestar et Dio Brando expliquée",
-    "expected_id": "14719",
-    "expected_title": "JoJo's Bizarre Adventure (TV)"
-  },
-  {
-    "query": "ce vieux dessin animé avec des vampires et des poses bizarres qui font des combats",
-    "expected_id": "14719",
-    "expected_title": "JoJo's Bizarre Adventure (TV)"
-  },
-  {
-    "query": "série où les personnages ont des noms de groupes de musique et des pouvoirs surnaturels",
-    "expected_id": "14719",
-    "expected_title": "JoJo's Bizarre Adventure (TV)"
-  },
-  {
-    "query": "est-ce que Jonathan Joestar meurt vraiment à la fin de la partie 1 ?",
-    "expected_id": "14719",
-    "expected_title": "JoJo's Bizarre Adventure (TV)"
-  },
-  {
-    "query": "anecdote sur l'inspiration du créateur de Jojo pour les poses iconiques des personnages",
-    "expected_id": "14719",
-    "expected_title": "JoJo's Bizarre Adventure (TV)"
-  },
-  {
-    "query": "Quindecim Death Parade explication fin anime",
-    "expected_id": "20931",
-    "expected_title": "Death Parade"
-  },
-  {
-    "query": "ordre des épisodes Death Parade chronologie",
-    "expected_id": "20931",
-    "expected_title": "Death Parade"
-  },
-  {
-    "query": "philosophie du jugement dans Death Parade analyse",
-    "expected_id": "20931",
-    "expected_title": "Death Parade"
-  },
-  {
-    "query": "psychologie des jeux de mort dans les animes de type thriller",
-    "expected_id": "20931",
-    "expected_title": "Death Parade"
-  },
-  {
-    "query": "qui est Decim dans Death Parade backstory",
-    "expected_id": "20931",
-    "expected_title": "Death Parade"
-  },
-  {
-    "query": "rôle de l'assistante aux cheveux noirs dans Death Parade",
-    "expected_id": "20931",
-    "expected_title": "Death Parade"
-  },
-  {
-    "query": "anime avec un bar entre la vie et la mort comme Death Parade",
-    "expected_id": "20931",
-    "expected_title": "Death Parade"
-  },
-  {
-    "query": "cette série d'anime sur des gens qui jouent à des jeux après leur mort c'est quoi le titre",
-    "expected_id": "20931",
-    "expected_title": "Death Parade"
-  },
-  {
-    "query": "pourquoi les personnages perdent la mémoire en arrivant au Quindecim ?",
-    "expected_id": "20931",
-    "expected_title": "Death Parade"
-  },
-  {
-    "query": "anecdote sur l'opening Flyers de Death Parade signification",
-    "expected_id": "20931",
-    "expected_title": "Death Parade"
-  },
-  {
-    "query": "Blue Exorcist ordre chronologique épisodes et films",
-    "expected_id": "9919",
-    "expected_title": "Blue Exorcist"
-  },
-  {
-    "query": "Blue Exorcist saison 3 Shimane Illuminati arc explications",
-    "expected_id": "9919",
-    "expected_title": "Blue Exorcist"
-  },
-  {
-    "query": "animés style Blue Exorcist avec des démons et des exorcistes",
-    "expected_id": "9919",
-    "expected_title": "Blue Exorcist"
-  },
-  {
-    "query": "top meilleurs shonen de dark fantasy avec des pouvoirs surnaturels",
-    "expected_id": "9919",
-    "expected_title": "Blue Exorcist"
-  },
-  {
-    "query": "Rin Okumura pouvoir flammes bleues origine expliquée",
-    "expected_id": "9919",
-    "expected_title": "Blue Exorcist"
-  },
-  {
-    "query": "relation entre Rin et Yukio Okumura analyse psychologique",
-    "expected_id": "9919",
-    "expected_title": "Blue Exorcist"
-  },
-  {
-    "query": "dessin animé avec un garçon mi-démon qui va dans une école d'exorcisme",
-    "expected_id": "9919",
-    "expected_title": "Blue Exorcist"
-  },
-  {
-    "query": "c'est quoi le nom de l'anime où le héros est le fils de Satan et veut devenir exorciste",
-    "expected_id": "9919",
-    "expected_title": "Blue Exorcist"
-  },
-  {
-    "query": "est-ce que Rin Okumura est plus fort que son père Satan dans le manga ?",
-    "expected_id": "9919",
-    "expected_title": "Blue Exorcist"
-  },
-  {
-    "query": "pourquoi les démons dans Blue Exorcist ont besoin de posséder des objets pour venir sur Assiah ?",
-    "expected_id": "9919",
-    "expected_title": "Blue Exorcist"
-  },
-  {
-    "query": "Shield Hero saison 1 épisode 1 résumé trahison",
-    "expected_id": "99263",
-    "expected_title": "The Rising of the Shield Hero"
-  },
-  {
-    "query": "ordre de lecture light novel et manga The Rising of the Shield Hero",
-    "expected_id": "99263",
-    "expected_title": "The Rising of the Shield Hero"
-  },
-  {
-    "query": "animes comme Shield Hero avec un protagoniste trahi et vengeur",
-    "expected_id": "99263",
-    "expected_title": "The Rising of the Shield Hero"
-  },
-  {
-    "query": "évolution des pouvoirs du bouclier de Naofumi liste complète",
-    "expected_id": "99263",
-    "expected_title": "The Rising of the Shield Hero"
-  },
-  {
-    "query": "qui est Raphtalia dans Shield Hero et pourquoi elle suit Naofumi",
-    "expected_id": "99263",
-    "expected_title": "The Rising of the Shield Hero"
-  },
-  {
-    "query": "analyse du personnage de Naofumi Iwatani anti-héros ou héros tragique",
-    "expected_id": "99263",
-    "expected_title": "The Rising of the Shield Hero"
-  },
-  {
-    "query": "dessin animé isekai mec invoqué avec un bouclier se fait accuser à tort",
-    "expected_id": "99263",
-    "expected_title": "The Rising of the Shield Hero"
-  },
-  {
-    "query": "c'est quoi l'anime avec le gars qui a une esclave demi-humaine et un bouclier",
-    "expected_id": "99263",
-    "expected_title": "The Rising of the Shield Hero"
-  },
-  {
-    "query": "pourquoi le royaume de Melromarc est une matriarchie dans Shield Hero ?",
-    "expected_id": "99263",
-    "expected_title": "The Rising of the Shield Hero"
-  },
-  {
-    "query": "le bouclier de la colère de Naofumi est-il trop puissant dans la saison 2 ?",
-    "expected_id": "99263",
-    "expected_title": "The Rising of the Shield Hero"
-  },
-  {
-    "query": "ordre des épisodes Classroom of the Elite et nombre de saisons",
-    "expected_id": "98659",
-    "expected_title": "Classroom of the Elite"
-  },
-  {
-    "query": "explication fin saison 3 Classroom of the Elite manga vs anime",
-    "expected_id": "98659",
-    "expected_title": "Classroom of the Elite"
-  },
-  {
-    "query": "anime psychologique avec un protagoniste manipulateur style Ayanokouji",
-    "expected_id": "98659",
-    "expected_title": "Classroom of the Elite"
-  },
-  {
-    "query": "liste des meilleurs animes de stratégie et survie scolaire",
-    "expected_id": "98659",
-    "expected_title": "Classroom of the Elite"
-  },
-  {
-    "query": "qui est la personne la plus intelligente dans la classe D Classroom of the Elite",
-    "expected_id": "98659",
-    "expected_title": "Classroom of the Elite"
-  },
-  {
-    "query": "évolution psychologique de Kiyotaka Ayanokouji au fil des tomes",
-    "expected_id": "98659",
-    "expected_title": "Classroom of the Elite"
-  },
-  {
-    "query": "cet anime où un mec en classe D cache ses capacités à tout le monde",
-    "expected_id": "98659",
-    "expected_title": "Classroom of the Elite"
-  },
-  {
-    "query": "anime lycée élite points secrets classe D nom du héros",
-    "expected_id": "98659",
-    "expected_title": "Classroom of the Elite"
-  },
-  {
-    "query": "Ayanokouji est-il vraiment méchant ou juste indifférent ?",
-    "expected_id": "98659",
-    "expected_title": "Classroom of the Elite"
-  },
-  {
-    "query": "quelle est la philosophie derrière le système de points de l'école Koudo Ikusei ?",
-    "expected_id": "98659",
-    "expected_title": "Classroom of the Elite"
-  },
-  {
-    "query": "Mirai Nikki ordre des épisodes et fins alternatives",
-    "expected_id": "10620",
-    "expected_title": "The Future Diary"
-  },
-  {
-    "query": "The Future Diary liste complète des détenteurs de journaux du futur",
-    "expected_id": "10620",
-    "expected_title": "The Future Diary"
-  },
-  {
-    "query": "animé psychologique style survival game avec yandere gore",
-    "expected_id": "10620",
-    "expected_title": "The Future Diary"
-  },
-  {
-    "query": "thèmes philosophiques et divins dans Mirai Nikki",
-    "expected_id": "10620",
-    "expected_title": "The Future Diary"
-  },
-  {
-    "query": "Yuno Gasai évolution du personnage et motivations psychologiques",
-    "expected_id": "10620",
-    "expected_title": "The Future Diary"
-  },
-  {
-    "query": "Qui est le protagoniste masculin qui subit le jeu de survie avec une fille obsédée",
-    "expected_id": "10620",
-    "expected_title": "The Future Diary"
-  },
-  {
-    "query": "c'est quoi l'animé avec un journal intime qui prédit le futur et un jeu de mort",
-    "expected_id": "10620",
-    "expected_title": "The Future Diary"
-  },
-  {
-    "query": "comment s'appelle l'animé où une fille tue tout le monde pour protéger son petit ami",
-    "expected_id": "10620",
-    "expected_title": "The Future Diary"
-  },
-  {
-    "query": "Quelle est la signification réelle de Deus Ex Machina dans Mirai Nikki ?",
-    "expected_id": "10620",
-    "expected_title": "The Future Diary"
-  },
-  {
-    "query": "Pourquoi Yuno Gasai est-elle considérée comme l'icône ultime du personnage yandere ?",
-    "expected_id": "10620",
-    "expected_title": "The Future Diary"
-  },
-  {
-    "query": "Berserk chapitre où Guts obtient l'armure du Berserker",
-    "expected_id": "30002",
-    "expected_title": "Berserk"
-  },
-  {
-    "query": "ordre de lecture chronologique manga Berserk vs adaptations animées",
-    "expected_id": "30002",
-    "expected_title": "Berserk"
-  },
-  {
-    "query": "philosophie du nihilisme et existentialisme dans Berserk",
-    "expected_id": "30002",
-    "expected_title": "Berserk"
-  },
-  {
-    "query": "analyse psychologique de la descente aux enfers de Griffith",
-    "expected_id": "30002",
-    "expected_title": "Berserk"
-  },
-  {
-    "query": "évolution de la relation entre Guts et Casca après l'éclipse",
-    "expected_id": "30002",
-    "expected_title": "Berserk"
-  },
-  {
-    "query": "quelles sont les inspirations mythologiques derrière les God Hand dans Berserk",
-    "expected_id": "30002",
-    "expected_title": "Berserk"
-  },
-  {
-    "query": "manga sombre avec épée géante et un mec marqué par un symbole",
-    "expected_id": "30002",
-    "expected_title": "Berserk"
-  },
-  {
-    "query": "animé années 90 avec un mercenaire borgne qui combat des démons",
-    "expected_id": "30002",
-    "expected_title": "Berserk"
-  },
-  {
-    "query": "est-ce que Kentaro Miura a fini l'histoire de Berserk avant de mourir",
-    "expected_id": "30002",
-    "expected_title": "Berserk"
-  },
-  {
-    "query": "pourquoi le personnage de Puck est-il devenu un soulagement comique dans Berserk",
-    "expected_id": "30002",
-    "expected_title": "Berserk"
-  },
-  {
-    "query": "arc du train de l'infini chronologie demon slayer",
-    "expected_id": "87216",
-    "expected_title": "Demon Slayer: Kimetsu no Yaiba"
-  },
-  {
-    "query": "comment regarder demon slayer dans l'ordre avec les films",
-    "expected_id": "87216",
-    "expected_title": "Demon Slayer: Kimetsu no Yaiba"
-  },
-  {
-    "query": "liste des techniques de respiration des piliers demon slayer",
-    "expected_id": "87216",
-    "expected_title": "Demon Slayer: Kimetsu no Yaiba"
-  },
-  {
-    "query": "meilleurs animes d'action avec des combats à l'épée comme demon slayer",
-    "expected_id": "87216",
-    "expected_title": "Demon Slayer: Kimetsu no Yaiba"
-  },
-  {
-    "query": "évolution des pouvoirs de nezuko kamado au fil de l'histoire",
-    "expected_id": "87216",
-    "expected_title": "Demon Slayer: Kimetsu no Yaiba"
-  },
-  {
-    "query": "pourquoi tanjiro porte-t-il des boucles d'oreilles hanafuda ?",
-    "expected_id": "87216",
-    "expected_title": "Demon Slayer: Kimetsu no Yaiba"
-  },
-  {
-    "query": "anime avec un garçon qui protège sa sœur devenue démon",
-    "expected_id": "87216",
-    "expected_title": "Demon Slayer: Kimetsu no Yaiba"
-  },
-  {
-    "query": "dessin animé japonais où le héros utilise des lames pour tuer des démons",
-    "expected_id": "87216",
-    "expected_title": "Demon Slayer: Kimetsu no Yaiba"
-  },
-  {
-    "query": "quel est le nom du démon originel dans demon slayer ?",
-    "expected_id": "87216",
-    "expected_title": "Demon Slayer: Kimetsu no Yaiba"
-  },
-  {
-    "query": "est-ce que le manga demon slayer est terminé ou il y a une suite ?",
-    "expected_id": "87216",
-    "expected_title": "Demon Slayer: Kimetsu no Yaiba"
-  },
-  {
-    "query": "lire Goodnight Punpun en ligne scan français complet",
-    "expected_id": "34632",
-    "expected_title": "Goodnight Punpun"
-  },
-  {
-    "query": "Oyasumi Punpun tome 13 édition collector",
-    "expected_id": "34632",
-    "expected_title": "Goodnight Punpun"
-  },
-  {
-    "query": "analyse philosophique nihilisme dans Goodnight Punpun",
-    "expected_id": "34632",
-    "expected_title": "Goodnight Punpun"
-  },
-  {
-    "query": "mangas psychologiques sombres similaires à Punpun",
-    "expected_id": "34632",
-    "expected_title": "Goodnight Punpun"
-  },
-  {
-    "query": "évolution psychologique Punpun Onodera relation",
-    "expected_id": "34632",
-    "expected_title": "Goodnight Punpun"
-  },
-  {
-    "query": "qui est réellement Dieu pour Punpun dans le manga",
-    "expected_id": "34632",
-    "expected_title": "Goodnight Punpun"
-  },
-  {
-    "query": "manga avec un personnage principal en forme d'oiseau blanc",
-    "expected_id": "34632",
-    "expected_title": "Goodnight Punpun"
-  },
-  {
-    "query": "c'est quoi le nom de ce manga triste avec un gamin bizarre qui dessine",
-    "expected_id": "34632",
-    "expected_title": "Goodnight Punpun"
-  },
-  {
-    "query": "pourquoi Goodnight Punpun est considéré comme un traumatisme émotionnel",
-    "expected_id": "34632",
-    "expected_title": "Goodnight Punpun"
-  },
-  {
-    "query": "est-ce que Punpun devient vraiment un méchant à la fin du manga",
-    "expected_id": "34632",
-    "expected_title": "Goodnight Punpun"
-  },
-  {
-    "query": "lire Omniscient Reader en ligne chapitre 1",
-    "expected_id": "119257",
-    "expected_title": "Omniscient Reader"
-  },
-  {
-    "query": "où regarder l'adaptation anime de Omniscient Reader",
-    "expected_id": "119257",
-    "expected_title": "Omniscient Reader"
-  },
-  {
-    "query": "webtoon apocalypse survie avec personnage qui connaît déjà l'histoire",
-    "expected_id": "119257",
-    "expected_title": "Omniscient Reader"
-  },
-  {
-    "query": "liste des scénarios dans Omniscient Reader ordre chronologique",
-    "expected_id": "119257",
-    "expected_title": "Omniscient Reader"
-  },
-  {
-    "query": "évolution psychologique de Kim Dok-Ja et Yoo Joong-Hyuk",
-    "expected_id": "119257",
-    "expected_title": "Omniscient Reader"
-  },
-  {
-    "query": "pourquoi Yoo Joong-Hyuk est-il le protagoniste de Trois façons de survivre",
-    "expected_id": "119257",
-    "expected_title": "Omniscient Reader"
-  },
-  {
-    "query": "webtoon où le gars lit un roman et le monde devient réel",
-    "expected_id": "119257",
-    "expected_title": "Omniscient Reader"
-  },
-  {
-    "query": "bd coréenne post-apocalyptique avec des constellations et des dieux",
-    "expected_id": "119257",
-    "expected_title": "Omniscient Reader"
-  },
-  {
-    "query": "quel est le vrai nom de la constellation Demon-like Judge of Fire ?",
-    "expected_id": "119257",
-    "expected_title": "Omniscient Reader"
-  },
-  {
-    "query": "Omniscient Reader se finit comment le roman est-il triste ?",
-    "expected_id": "119257",
-    "expected_title": "Omniscient Reader"
-  },
-  {
-    "query": "Blue Lock classement des meilleurs buteurs après l'arc Neo Egoist League",
-    "expected_id": "106130",
-    "expected_title": "Blue Lock"
-  },
-  {
-    "query": "Blue Lock combien d'épisodes dans la saison 2 ?",
-    "expected_id": "106130",
-    "expected_title": "Blue Lock"
-  },
-  {
-    "query": "anime de foot style battle royale où ils s'entretuent pas",
-    "expected_id": "106130",
-    "expected_title": "Blue Lock"
-  },
-  {
-    "query": "meilleure série sportive avec des pouvoirs et des capacités spéciales",
-    "expected_id": "106130",
-    "expected_title": "Blue Lock"
-  },
-  {
-    "query": "qui est le joueur le plus rapide dans Blue Lock ?",
-    "expected_id": "106130",
-    "expected_title": "Blue Lock"
-  },
-  {
-    "query": "personnage de Blue Lock avec les cheveux bleus et un égo surdimensionné",
-    "expected_id": "106130",
-    "expected_title": "Blue Lock"
-  },
-  {
-    "query": "c'est quoi le nom de l'anime de foot où ils sont enfermés dans un centre de haute sécurité ?",
-    "expected_id": "106130",
-    "expected_title": "Blue Lock"
-  },
-  {
-    "query": "dessin animé foot japonais avec une prison et un entraîneur bizarre",
-    "expected_id": "106130",
-    "expected_title": "Blue Lock"
-  },
-  {
-    "query": "Isagi Yoichi a-t-il vraiment marqué le but décisif contre le Japon U-20 ?",
-    "expected_id": "106130",
-    "expected_title": "Blue Lock"
-  },
-  {
-    "query": "pourquoi Ego Jinpachi veut détruire le football japonais traditionnel ?",
-    "expected_id": "106130",
-    "expected_title": "Blue Lock"
-  },
-  {
-    "query": "ordre de visionnage Kaguya-sama Love is War saisons et films",
-    "expected_id": "86635",
-    "expected_title": "Kaguya-sama: Love is War"
-  },
-  {
-    "query": "Kaguya-sama manga chapitre où ils sortent enfin ensemble",
-    "expected_id": "86635",
-    "expected_title": "Kaguya-sama: Love is War"
-  },
-  {
-    "query": "analyse psychologique des jeux d'esprit dans les animes de romance",
-    "expected_id": "86635",
-    "expected_title": "Kaguya-sama: Love is War"
-  },
-  {
-    "query": "meilleurs animes de comédie romantique avec des personnages tsundere",
-    "expected_id": "86635",
-    "expected_title": "Kaguya-sama: Love is War"
-  },
-  {
-    "query": "explication de la personnalité de Kaguya Shinomiya et son évolution",
-    "expected_id": "86635",
-    "expected_title": "Kaguya-sama: Love is War"
-  },
-  {
-    "query": "pourquoi Miyuki Shirogane cache ses sentiments dans Kaguya-sama",
-    "expected_id": "86635",
-    "expected_title": "Kaguya-sama: Love is War"
-  },
-  {
-    "query": "anime romantique où les deux protagonistes sont trop fiers pour avouer leur amour",
-    "expected_id": "86635",
-    "expected_title": "Kaguya-sama: Love is War"
-  },
-  {
-    "query": "dessin animé japonais avec une présidente d'école riche et un garçon pauvre qui se font la guerre",
-    "expected_id": "86635",
-    "expected_title": "Kaguya-sama: Love is War"
-  },
-  {
-    "query": "Kaguya-sama est-ce que la série est terminée ou le manga continue-t-il ?",
-    "expected_id": "86635",
-    "expected_title": "Kaguya-sama: Love is War"
-  },
-  {
-    "query": "quelle est la signification de la scène de la danse de Chika Fujiwara ?",
-    "expected_id": "86635",
-    "expected_title": "Kaguya-sama: Love is War"
-  },
-  {
-    "query": "ordre chronologique des arcs narratifs Tokyo Revengers",
-    "expected_id": "102988",
-    "expected_title": "Tokyo Revengers"
-  },
-  {
-    "query": "comment le pouvoir de saut temporel de Takemichi fonctionne exactement",
-    "expected_id": "102988",
-    "expected_title": "Tokyo Revengers"
-  },
-  {
-    "query": "animes avec gangs et délinquants japonais comme Tokyo Revengers",
-    "expected_id": "102988",
-    "expected_title": "Tokyo Revengers"
-  },
-  {
-    "query": "les meilleures séries d'action avec des voyages dans le temps",
-    "expected_id": "102988",
-    "expected_title": "Tokyo Revengers"
-  },
-  {
-    "query": "qui est le personnage le plus fort du Tokyo Manji Gang",
-    "expected_id": "102988",
-    "expected_title": "Tokyo Revengers"
-  },
-  {
-    "query": "évolution de la relation entre Takemichi et Hinata Tachibana",
-    "expected_id": "102988",
-    "expected_title": "Tokyo Revengers"
-  },
-  {
-    "query": "dessin animé où un adulte revient dans son corps de collégien pour sauver son ex",
-    "expected_id": "102988",
-    "expected_title": "Tokyo Revengers"
-  },
-  {
-    "query": "c'est quoi le nom de cet anime avec un mec qui retourne dans le passé pour empêcher un meurtre par un gang",
-    "expected_id": "102988",
-    "expected_title": "Tokyo Revengers"
-  },
-  {
-    "query": "pourquoi Mikey perd-il le contrôle dans le futur ?",
-    "expected_id": "102988",
-    "expected_title": "Tokyo Revengers"
-  },
-  {
-    "query": "combien de fois Takemichi change-t-il le passé dans Tokyo Revengers ?",
-    "expected_id": "102988",
-    "expected_title": "Tokyo Revengers"
-  },
-  {
-    "query": "arc de l'histoire où Ichigo obtient son masque de Hollow pour la première fois",
-    "expected_id": "30012",
-    "expected_title": "Bleach"
-  },
-  {
-    "query": "ordre chronologique des films et épisodes filler de Bleach",
-    "expected_id": "30012",
-    "expected_title": "Bleach"
-  },
-  {
-    "query": "meilleurs animes d'action avec des combats à l'épée et des pouvoirs surnaturels",
-    "expected_id": "30012",
-    "expected_title": "Bleach"
-  },
-  {
-    "query": "explication du système de classement des niveaux de puissance dans la Soul Society",
-    "expected_id": "30012",
-    "expected_title": "Bleach"
-  },
-  {
-    "query": "évolution des pouvoirs d'Ichigo Kurosaki du début à la fin de l'anime",
-    "expected_id": "30012",
-    "expected_title": "Bleach"
-  },
-  {
-    "query": "qui est le capitaine le plus puissant du Gotei 13 selon les fans",
-    "expected_id": "30012",
-    "expected_title": "Bleach"
-  },
-  {
-    "query": "anime avec un lycéen qui voit des fantômes et devient un dieu de la mort",
-    "expected_id": "30012",
-    "expected_title": "Bleach"
-  },
-  {
-    "query": "c'est quoi le nom du manga où le héros a des cheveux orange et un sabre géant",
-    "expected_id": "30012",
-    "expected_title": "Bleach"
-  },
-  {
-    "query": "pourquoi Rukia Kuchiki a-t-elle donné ses pouvoirs à Ichigo ?",
-    "expected_id": "30012",
-    "expected_title": "Bleach"
-  },
-  {
-    "query": "quelle est l'origine du nom 'Bleach' choisi par Tite Kubo pour son œuvre ?",
-    "expected_id": "30012",
-    "expected_title": "Bleach"
-  },
-  {
-    "query": "Dandadan manga lecture en ligne français",
-    "expected_id": "132029",
-    "expected_title": "Dandadan"
-  },
-  {
-    "query": "studio d'animation derrière l'anime Dandadan",
-    "expected_id": "132029",
-    "expected_title": "Dandadan"
-  },
-  {
-    "query": "animes avec un mélange d'aliens et de yokai comme Dandadan",
-    "expected_id": "132029",
-    "expected_title": "Dandadan"
-  },
-  {
-    "query": "liste des mangas mêlant romance lycéenne et horreur surnaturelle",
-    "expected_id": "132029",
-    "expected_title": "Dandadan"
-  },
-  {
-    "query": "qui est le protagoniste masculin surnommé Okarun",
-    "expected_id": "132029",
-    "expected_title": "Dandadan"
-  },
-  {
-    "query": "Momo Ayase personnage gyaru évolution",
-    "expected_id": "132029",
-    "expected_title": "Dandadan"
-  },
-  {
-    "query": "manga avec une fille qui croit aux esprits et un garçon fan d'ovnis",
-    "expected_id": "132029",
-    "expected_title": "Dandadan"
-  },
-  {
-    "query": "c'est quoi ce manga avec des aliens bizarres et une mamie médium ?",
-    "expected_id": "132029",
-    "expected_title": "Dandadan"
-  },
-  {
-    "query": "Dandadan est-ce que c'est une adaptation de roman ?",
-    "expected_id": "132029",
-    "expected_title": "Dandadan"
-  },
-  {
-    "query": "pourquoi le héros de Dandadan s'appelle Okarun ?",
-    "expected_id": "132029",
-    "expected_title": "Dandadan"
-  },
-  {
-    "query": "lire manga Komi Can't Communicate en ligne chapitre 37 bonus",
-    "expected_id": "97852",
-    "expected_title": "Komi Can't Communicate"
-  },
-  {
-    "query": "ordre de visionnage anime Komi Can't Communicate saison 1 et 2",
-    "expected_id": "97852",
-    "expected_title": "Komi Can't Communicate"
-  },
-  {
-    "query": "animes tranche de vie avec protagoniste ayant des troubles de la communication",
-    "expected_id": "97852",
-    "expected_title": "Komi Can't Communicate"
-  },
-  {
-    "query": "top personnages kuudere les plus populaires dans les mangas scolaires",
-    "expected_id": "97852",
-    "expected_title": "Komi Can't Communicate"
-  },
-  {
-    "query": "comment s'appelle le garçon qui aide Komi à se faire des amis",
-    "expected_id": "97852",
-    "expected_title": "Komi Can't Communicate"
-  },
-  {
-    "query": "évolution de la relation amoureuse entre Komi et Tadano dans le manga",
-    "expected_id": "97852",
-    "expected_title": "Komi Can't Communicate"
-  },
-  {
-    "query": "manga lycéenne qui ne parle pas et fait des dessins sur un tableau",
-    "expected_id": "97852",
-    "expected_title": "Komi Can't Communicate"
-  },
-  {
-    "query": "c'est quoi le nom de l'anime où une fille populaire est super gênée en public",
-    "expected_id": "97852",
-    "expected_title": "Komi Can't Communicate"
-  },
-  {
-    "query": "Komi Can't Communicate a-t-il vraiment gagné le prix Shogakukan ?",
-    "expected_id": "97852",
-    "expected_title": "Komi Can't Communicate"
-  },
-  {
-    "query": "pourquoi le trouble de Komi est considéré comme un handicap social dans l'anime ?",
-    "expected_id": "97852",
-    "expected_title": "Komi Can't Communicate"
-  },
-  {
-    "query": "lire manga Monster Naoki Urasawa en ligne gratuit",
-    "expected_id": "30001",
-    "expected_title": "Monster"
-  },
-  {
-    "query": "ordre chronologique épisodes anime Monster 2004",
-    "expected_id": "30001",
-    "expected_title": "Monster"
-  },
-  {
-    "query": "analyse philosophique bien contre mal dans Monster de Urasawa",
-    "expected_id": "30001",
-    "expected_title": "Monster"
-  },
-  {
-    "query": "meilleurs thrillers psychologiques seinen à regarder après Monster",
-    "expected_id": "30001",
-    "expected_title": "Monster"
-  },
-  {
-    "query": "qui est réellement Johan Liebert dans Monster explication",
-    "expected_id": "30001",
-    "expected_title": "Monster"
-  },
-  {
-    "query": "évolution du personnage Kenzo Tenma de médecin à fugitif",
-    "expected_id": "30001",
-    "expected_title": "Monster"
-  },
-  {
-    "query": "théorie sur le passé traumatique des jumeaux dans Monster",
-    "expected_id": "30001",
-    "expected_title": "Monster"
-  },
-  {
-    "query": "explication fin Monster amnésie et manipulation mentale",
-    "expected_id": "30001",
-    "expected_title": "Monster"
-  },
-  {
-    "query": "pourquoi Monster est considéré comme l'un des meilleurs anime de tous les temps ?",
-    "expected_id": "30001",
-    "expected_title": "Monster"
-  },
-  {
-    "query": "anecdote sur l'inspiration réelle derrière le personnage de Johan Liebert",
-    "expected_id": "30001",
-    "expected_title": "Monster"
-  },
-  {
-    "query": "lire Kaiju No.8 en ligne gratuitement",
-    "expected_id": "120760",
-    "expected_title": "Kaiju No.8"
-  },
-  {
-    "query": "où regarder l'épisode 1 de Kaiju No.8 en streaming",
-    "expected_id": "120760",
-    "expected_title": "Kaiju No.8"
-  },
-  {
-    "query": "meilleurs mangas avec des protagonistes adultes et transformations monstrueuses",
-    "expected_id": "120760",
-    "expected_title": "Kaiju No.8"
-  },
-  {
-    "query": "animes d'action et science-fiction avec des combats de monstres géants",
-    "expected_id": "120760",
-    "expected_title": "Kaiju No.8"
-  },
-  {
-    "query": "qui est Kafka Hibino et pourquoi peut-il se transformer en Kaiju ?",
-    "expected_id": "120760",
-    "expected_title": "Kaiju No.8"
-  },
-  {
-    "query": "relation entre Kafka Hibino et Mina Ashiro dans Kaiju No.8",
-    "expected_id": "120760",
-    "expected_title": "Kaiju No.8"
-  },
-  {
-    "query": "manga avec un type qui devient un monstre et rejoint l'armée",
-    "expected_id": "120760",
-    "expected_title": "Kaiju No.8"
-  },
-  {
-    "query": "c'est quoi ce manga où un trentenaire se transforme en monstre pour combattre ?",
-    "expected_id": "120760",
-    "expected_title": "Kaiju No.8"
-  },
-  {
-    "query": "quelle est la différence entre Kaiju No.8 et les séries Tokusatsu ?",
-    "expected_id": "120760",
-    "expected_title": "Kaiju No.8"
-  },
-  {
-    "query": "pourquoi Kafka Hibino est-il surnommé Kaiju No.8 ?",
-    "expected_id": "120760",
-    "expected_title": "Kaiju No.8"
-  },
-  {
-    "query": "manga où le protagoniste brûle éternellement sans mourir",
-    "expected_id": "87170",
-    "expected_title": "Fire Punch"
-  },
-  {
-    "query": "où regarder Fire Punch en streaming légal VF",
-    "expected_id": "87170",
-    "expected_title": "Fire Punch"
-  },
-  {
-    "query": "analyse philosophique du nihilisme dans le manga Fire Punch",
-    "expected_id": "87170",
-    "expected_title": "Fire Punch"
-  },
-  {
-    "query": "liste des mangas post-apocalyptiques avec des thématiques de survie extrême",
-    "expected_id": "87170",
-    "expected_title": "Fire Punch"
-  },
-  {
-    "query": "Agni Fire Punch évolution psychologique et traumatisme",
-    "expected_id": "87170",
-    "expected_title": "Fire Punch"
-  },
-  {
-    "query": "qui est la Sorcière de Glace dans Fire Punch et quel est son rôle",
-    "expected_id": "87170",
-    "expected_title": "Fire Punch"
-  },
-  {
-    "query": "manga avec un gars en feu qui cherche à se venger dans un monde de neige",
-    "expected_id": "87170",
-    "expected_title": "Fire Punch"
-  },
-  {
-    "query": "c'est quoi ce manga bizarre avec un acteur qui joue son propre rôle et des cultes religieux",
-    "expected_id": "87170",
-    "expected_title": "Fire Punch"
-  },
-  {
-    "query": "pourquoi Fire Punch est considéré comme une œuvre méta sur le cinéma",
-    "expected_id": "87170",
-    "expected_title": "Fire Punch"
-  },
-  {
-    "query": "Fire Punch fin expliquée symbolique de l'arbre et de l'espace",
-    "expected_id": "87170",
-    "expected_title": "Fire Punch"
-  },
-  {
-    "query": "Tower of God ordre de lecture saisons et chapitres",
+    "query": "Quel est le rôle des graphes de connaissances dans l'architecture des systèmes de RAG agentique ?",
     "expected_id": "85143",
-    "expected_title": "Tower of God"
+    "expected_title": "Tower of God",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "Les graphes de connaissances structurent les relations complexes entre entités, permettant une récupération plus précise et contextuelle que la recherche vectorielle seule."
   },
   {
-    "query": "est-ce que Baam devient méchant dans Tower of God",
+    "query": "Comment la séparation des préoccupations est-elle appliquée dans l'architecture modulaire de ce projet ?",
+    "expected_id": "21507",
+    "expected_title": "Mob Psycho 100",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "La séparation est assurée par des couches distinctes (domaine, adaptateurs, pipeline), minimisant les couplages directs entre la logique métier et les infrastructures."
+  },
+  {
+    "query": "Visualisation de la distribution des vecteurs dans l'espace latent pour les thématiques d'anime",
+    "expected_id": "5114",
+    "expected_title": "Fullmetal Alchemist: Brotherhood",
+    "is_architectural": true,
+    "query_type": "visual",
+    "ground_truth": "Les clusters dans l'espace latent visualisent les proximités sémantiques entre les thèmes, permettant d'identifier des relations structurelles invisibles dans le texte brut."
+  },
+  {
+    "query": "Comparaison de l'efficacité entre la recherche vectorielle et la recherche par graphe",
+    "expected_id": "11061",
+    "expected_title": "Hunter x Hunter (2011)",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "La recherche vectorielle est supérieure pour la similarité sémantique brute, tandis que la recherche par graphe excelle dans l'exploration de relations complexes et de chaînes de causalité."
+  },
+  {
+    "query": "Représentation schématique du flux de données dans le pipeline d'enrichissement",
+    "expected_id": "127230",
+    "expected_title": "Chainsaw Man",
+    "is_architectural": true,
+    "query_type": "visual",
+    "ground_truth": "Le flux suit une séquence : ingestion, extraction d'entités, alignement avec le graphe existant, et mise à jour des index vectoriels."
+  },
+  {
+    "query": "Quels sont les avantages d'utiliser une approche hybride pour le système de recommandation ?",
+    "expected_id": "11757",
+    "expected_title": "Sword Art Online",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "L'approche hybride combine la précision locale du vectoriel avec la richesse contextuelle du graphe, offrant des recommandations plus pertinentes et diversifiées."
+  },
+  {
+    "query": "Architecture de la persistance : pourquoi utiliser des adaptateurs ?",
+    "expected_id": "21234",
+    "expected_title": "ERASED",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "Les adaptateurs abstraient les détails de l'implémentation de la base de données, permettant de changer de moteur de persistance sans modifier le domaine."
+  },
+  {
+    "query": "Comment le système gère la dérive des données dans les pipelines d'embeddings ?",
+    "expected_id": "101921",
+    "expected_title": "Kaguya-sama: Love is War",
+    "is_architectural": true,
+    "query_type": "cross-media",
+    "ground_truth": "Le système surveille la distribution des vecteurs et déclenche une ré-indexation automatique lorsque la dérive dépasse un seuil défini."
+  },
+  {
+    "query": "Visualisation du graphe des relations entre personnages, acteurs et médias",
+    "expected_id": "21827",
+    "expected_title": "Violet Evergarden",
+    "is_architectural": true,
+    "query_type": "visual",
+    "ground_truth": "Le graphe lie les personnages aux acteurs qui les incarnent et aux médias (anime, manga) dans lesquels ils apparaissent, formant un réseau multi-modal."
+  },
+  {
+    "query": "Quelle est la structure logique du service d'agentic RAG ?",
+    "expected_id": "20613",
+    "expected_title": "Akame ga Kill!",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "Il est composé d'un orchestrateur central qui délègue à des agents spécialisés (juge, synthèse, recherche) basés sur l'intention de la requête."
+  },
+  {
+    "query": "Structure des données pour le mapping entre anime et films",
+    "expected_id": "20789",
+    "expected_title": "The Seven Deadly Sins",
+    "is_architectural": true,
+    "query_type": "cross-media",
+    "ground_truth": "Il s'agit d'une table d'association (JSON) qui lie les identifiants uniques des œuvres d'origine aux identifiants des films correspondants."
+  },
+  {
+    "query": "Représentation d'une requête complexe dans l'espace vectoriel 3D",
+    "expected_id": "101348",
+    "expected_title": "Vinland Saga",
+    "is_architectural": true,
+    "query_type": "visual",
+    "ground_truth": "Une requête est projetée en un vecteur de haute dimension, puis réduite en 3D pour la visualisation, montrant son voisinage proche avec d'autres concepts."
+  },
+  {
+    "query": "Avantages de la modularité du code dans le domaine de l'IA",
+    "expected_id": "21202",
+    "expected_title": "KONOSUBA -God's blessing on this wonderful world!",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "Elle facilite les tests isolés, permet le remplacement rapide de modèles d'inférence, et assure une maintenance évolutive sur le long terme."
+  },
+  {
+    "query": "Schéma de la base de données Neo4j pour les entités artistiques",
+    "expected_id": "269",
+    "expected_title": "Bleach",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "Le schéma utilise des nœuds pour les entités (anime, auteur, genre) et des relations typées pour définir les liens sémantiques."
+  },
+  {
+    "query": "Comment l'observabilité est-elle intégrée dans les services d'IA ?",
+    "expected_id": "1575",
+    "expected_title": "Code Geass: Lelouch of the Rebellion",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "L'observabilité est assurée par un service centralisé qui capture les traces, latences et taux d'erreurs à chaque étape critique du pipeline."
+  },
+  {
+    "query": "Visualisation des clusters de 'vibe' dans les données manga",
+    "expected_id": "14719",
+    "expected_title": "JoJo's Bizarre Adventure (TV)",
+    "is_architectural": true,
+    "query_type": "visual",
+    "ground_truth": "Chaque manga est représenté par un point ; les couleurs indiquent les clusters de vibe, facilitant la recherche par similarité visuelle."
+  },
+  {
+    "query": "Architecture de la gestion des embeddings : pourquoi ChromaDB ?",
+    "expected_id": "20931",
+    "expected_title": "Death Parade",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "ChromaDB a été choisi pour sa gestion performante des collections vectorielles et son intégration native avec les frameworks Python d'IA."
+  },
+  {
+    "query": "Flux de travail pour la synchronisation entre Neo4j et PostgreSQL",
+    "expected_id": "9919",
+    "expected_title": "Blue Exorcist",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "Un service de réconciliation détecte les changements dans Postgres et met à jour le graphe Neo4j via une file d'événements asynchrone."
+  },
+  {
+    "query": "Comment les tests d'intégrité garantissent la qualité du set de données ?",
+    "expected_id": "99263",
+    "expected_title": "The Rising of the Shield Hero",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "Ils vérifient la conformité au schéma JSON et l'existence des identifiants référencés, évitant ainsi la pollution du modèle par des données corrompues."
+  },
+  {
+    "query": "Représentation du domaine dans le code : entités vs services",
+    "expected_id": "98659",
+    "expected_title": "Classroom of the Elite",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "Les entités représentent l'état métier pur, tandis que les services implémentent la logique de manipulation complexe sur ces entités."
+  },
+  {
+    "query": "Pourquoi utiliser Dagster pour l'orchestration des pipelines ?",
+    "expected_id": "10620",
+    "expected_title": "The Future Diary",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "Dagster permet une gestion fine des dépendances entre données, des tentatives automatiques, et une meilleure observabilité sur les exécutions complexes."
+  },
+  {
+    "query": "Visualisation du réseau de relations entre genres et thèmes",
+    "expected_id": "30002",
+    "expected_title": "Berserk",
+    "is_architectural": true,
+    "query_type": "visual",
+    "ground_truth": "Le graphe montre des nœuds 'genre' liés à des nœuds 'thème', révélant des patterns d'association communs à travers plusieurs médias."
+  },
+  {
+    "query": "Comment le modèle gère-t-il les requêtes hors domaine ?",
+    "expected_id": "87216",
+    "expected_title": "Demon Slayer: Kimetsu no Yaiba",
+    "is_architectural": true,
+    "query_type": "negative",
+    "ground_truth": "Le modèle est entraîné à reconnaître l'absence de réponse appropriée dans le contexte et à retourner une réponse de politesse indiquant ses limites."
+  },
+  {
+    "query": "Architecture de la mémoire sémantique pour la cohérence des agents",
+    "expected_id": "34632",
+    "expected_title": "Goodnight Punpun",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "Elle utilise une base de données de vecteurs pour stocker l'historique des interactions récentes, permettant à l'agent de maintenir le contexte sur le long terme."
+  },
+  {
+    "query": "Différence structurelle entre un RAG standard et un RAG agentique",
+    "expected_id": "119257",
+    "expected_title": "Omniscient Reader",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "Le RAG standard est une simple récupération, le RAG agentique est une boucle de raisonnement capable de planifier et d'appeler des outils."
+  },
+  {
+    "query": "Visualisation du drift de données dans le pipeline MLOps",
+    "expected_id": "106130",
+    "expected_title": "Blue Lock",
+    "is_architectural": true,
+    "query_type": "visual",
+    "ground_truth": "Une courbe temporelle montre l'écart entre la distribution des données d'entraînement et les données réelles en production."
+  },
+  {
+    "query": "Comment la séparation entre le domaine et l'infrastructure est-elle testée ?",
+    "expected_id": "86635",
+    "expected_title": "Kaguya-sama: Love is War",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "Elle est testée via des tests unitaires sur le domaine sans aucune dépendance externe, utilisant des mocks pour l'infrastructure."
+  },
+  {
+    "query": "Structure d'une entité de type 'MediaItem'",
+    "expected_id": "102988",
+    "expected_title": "Tokyo Revengers",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "Elle contient des attributs de base (ID, titre, type), une liste de tags thématiques, et des références aux vecteurs correspondants."
+  },
+  {
+    "query": "Représentation vectorielle de l'ambiance visuelle ('vibe') d'un anime",
+    "expected_id": "30012",
+    "expected_title": "Bleach",
+    "is_architectural": true,
+    "query_type": "visual",
+    "ground_truth": "Il s'agit d'un vecteur multi-dimensionnel calculé à partir de l'analyse des frames clés et des palettes de couleurs."
+  },
+  {
+    "query": "Gestion de la concurrence dans le service de recommandations",
+    "expected_id": "132029",
+    "expected_title": "Dandadan",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "Le service utilise un pattern asynchrone pour traiter plusieurs requêtes simultanément sans bloquer le thread principal."
+  },
+  {
+    "query": "Pourquoi le système nécessite-t-il un mapping croisé des identifiants ?",
+    "expected_id": "97852",
+    "expected_title": "Komi Can't Communicate",
+    "is_architectural": true,
+    "query_type": "cross-media",
+    "ground_truth": "Différentes sources (Jikan, API interne) utilisent des IDs différents pour la même œuvre ; le mapping permet l'unification des données."
+  },
+  {
+    "query": "Comment l'agent Juge évalue-t-il la qualité d'une réponse RAG ?",
+    "expected_id": "30001",
+    "expected_title": "Monster",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "Il compare la réponse générée avec le contexte fourni selon des critères de pertinence, de précision et de complétude."
+  },
+  {
+    "query": "Visualisation de l'arbre de décision de l'agent de raisonnement",
+    "expected_id": "120760",
+    "expected_title": "Kaiju No.8",
+    "is_architectural": true,
+    "query_type": "visual",
+    "ground_truth": "L'arbre montre les chemins de réflexion possibles, les nœuds de décision, et les appels d'outils effectués par l'agent."
+  },
+  {
+    "query": "Représentation du graphe des 'scénarios' dans le domaine webtoon",
+    "expected_id": "87170",
+    "expected_title": "Fire Punch",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "Les scénarios sont des nœuds liés par des relations de progression logique, permettant de naviguer dans l'intrigue."
+  },
+  {
+    "query": "Architecture de l'API : comment les adaptateurs sont-ils injectés ?",
     "expected_id": "85143",
-    "expected_title": "Tower of God"
+    "expected_title": "Tower of God",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "Ils sont injectés via un conteneur d'inversion de contrôle (IoC) au démarrage de l'application."
   },
   {
-    "query": "meilleurs manhwa de fantasy politique comme Tower of God",
-    "expected_id": "85143",
-    "expected_title": "Tower of God"
-  },
-  {
-    "query": "pouvoirs et classes de rang dans l'univers de Tower of God",
-    "expected_id": "85143",
-    "expected_title": "Tower of God"
-  },
-  {
-    "query": "analyse psychologique de Rachel Tower of God",
-    "expected_id": "85143",
-    "expected_title": "Tower of God"
-  },
-  {
-    "query": "qui est le plus fort entre Urek Mazino et Phantaminum",
-    "expected_id": "85143",
-    "expected_title": "Tower of God"
-  },
-  {
-    "query": "manhwa avec un personnage qui grimpe une tour mystérieuse couleur",
-    "expected_id": "85143",
-    "expected_title": "Tower of God"
-  },
-  {
-    "query": "histoire avec un garçon qui cherche une fille dans un labyrinthe géant sous-sol",
-    "expected_id": "85143",
-    "expected_title": "Tower of God"
-  },
-  {
-    "query": "pourquoi tout le monde déteste Rachel dans Tower of God ?",
-    "expected_id": "85143",
-    "expected_title": "Tower of God"
-  },
-  {
-    "query": "combien d'étages compte la tour dans Tower of God et y a-t-il une fin ?",
-    "expected_id": "85143",
-    "expected_title": "Tower of God"
-  },
-  {
-    "query": "arc de l'examen chūnin liste des épisodes",
+    "query": "Pourquoi la séparation entre 'Service' et 'Repository' est-elle cruciale ?",
     "expected_id": "30011",
-    "expected_title": "Naruto"
+    "expected_title": "Naruto",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "Cela permet de tester la logique métier indépendamment de la couche de stockage des données."
   },
   {
-    "query": "ordre chronologique pour regarder tout l'univers Naruto incluant les films",
-    "expected_id": "30011",
-    "expected_title": "Naruto"
-  },
-  {
-    "query": "évolution de la philosophie de Naruto sur la paix et la vengeance",
-    "expected_id": "30011",
-    "expected_title": "Naruto"
-  },
-  {
-    "query": "le thème du trauma de l'orphelin dans les shonen comme Naruto",
-    "expected_id": "30011",
-    "expected_title": "Naruto"
-  },
-  {
-    "query": "pourquoi Sasuke a-t-il quitté le village de Konoha ?",
-    "expected_id": "30011",
-    "expected_title": "Naruto"
-  },
-  {
-    "query": "relation mentor élève entre Kakashi et Naruto analyse",
-    "expected_id": "30011",
-    "expected_title": "Naruto"
-  },
-  {
-    "query": "dessin animé avec un garçon qui a un renard enfermé dans son ventre",
-    "expected_id": "30011",
-    "expected_title": "Naruto"
-  },
-  {
-    "query": "anime ninja avec un héros maladroit qui veut devenir chef",
-    "expected_id": "30011",
-    "expected_title": "Naruto"
-  },
-  {
-    "query": "le 4ème Hokage est-il vraiment le père de Naruto ?",
-    "expected_id": "30011",
-    "expected_title": "Naruto"
-  },
-  {
-    "query": "combien de fois Naruto a-t-il utilisé le chakra de Kurama avant l'ellipse ?",
-    "expected_id": "30011",
-    "expected_title": "Naruto"
-  },
-  {
-    "query": "ordre des épisodes et arcs narratifs Hell's Paradise Jigokuraku",
+    "query": "Visualisation de l'espace latent pour les thématiques cinématographiques",
     "expected_id": "100994",
-    "expected_title": "Hell’s Paradise: Jigokuraku"
+    "expected_title": "Hell’s Paradise: Jigokuraku",
+    "is_architectural": true,
+    "query_type": "visual",
+    "ground_truth": "Elle révèle comment différents genres de films sont organisés selon leurs thèmes dominants."
   },
   {
-    "query": "où regarder l'anime Hell's Paradise en streaming HD",
-    "expected_id": "100994",
-    "expected_title": "Hell’s Paradise: Jigokuraku"
-  },
-  {
-    "query": "signification philosophique du Tao dans Hell's Paradise",
-    "expected_id": "100994",
-    "expected_title": "Hell’s Paradise: Jigokuraku"
-  },
-  {
-    "query": "bestiaire des monstres et divinités de l'île Shinsekyo expliqués",
-    "expected_id": "100994",
-    "expected_title": "Hell’s Paradise: Jigokuraku"
-  },
-  {
-    "query": "évolution de Gabimaru le Vide tout au long de la série",
-    "expected_id": "100994",
-    "expected_title": "Hell’s Paradise: Jigokuraku"
-  },
-  {
-    "query": "rôle de Sagiri Yamada Asaemon dans la rédemption de Gabimaru",
-    "expected_id": "100994",
-    "expected_title": "Hell’s Paradise: Jigokuraku"
-  },
-  {
-    "query": "anime avec un groupe de condamnés à mort sur une île mystérieuse",
-    "expected_id": "100994",
-    "expected_title": "Hell’s Paradise: Jigokuraku"
-  },
-  {
-    "query": "série dark fantasy avec ninjas et monstres type body horror",
-    "expected_id": "100994",
-    "expected_title": "Hell’s Paradise: Jigokuraku"
-  },
-  {
-    "query": "pourquoi les dieux de l'île de Jigokuraku sont-ils hermaphrodites ?",
-    "expected_id": "100994",
-    "expected_title": "Hell’s Paradise: Jigokuraku"
-  },
-  {
-    "query": "quel est le lien entre le manga Hell's Paradise et la mythologie bouddhiste ?",
-    "expected_id": "100994",
-    "expected_title": "Hell’s Paradise: Jigokuraku"
-  },
-  {
-    "query": "tuto maquillage cosplay marin kitagawa my dress-up darling",
+    "query": "Comment le système assure-t-il la cohérence entre le graphe et les vecteurs ?",
     "expected_id": "101583",
-    "expected_title": "My Dress-Up Darling"
+    "expected_title": "My Dress-Up Darling",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "Par une validation croisée régulière qui vérifie si les relations du graphe sont cohérentes avec les proximités vectorielles."
   },
   {
-    "query": "où regarder my dress-up darling en streaming légal",
-    "expected_id": "101583",
-    "expected_title": "My Dress-Up Darling"
-  },
-  {
-    "query": "anime sur le cosplay et la création de costumes",
-    "expected_id": "101583",
-    "expected_title": "My Dress-Up Darling"
-  },
-  {
-    "query": "meilleures scènes de romance seinen avec un artisan poupées",
-    "expected_id": "101583",
-    "expected_title": "My Dress-Up Darling"
-  },
-  {
-    "query": "qui est la doubleuse japonaise de marin kitagawa",
-    "expected_id": "101583",
-    "expected_title": "My Dress-Up Darling"
-  },
-  {
-    "query": "développement de la relation entre gojou et marin",
-    "expected_id": "101583",
-    "expected_title": "My Dress-Up Darling"
-  },
-  {
-    "query": "anime avec un gars timide qui fait de la couture pour une fille populaire",
-    "expected_id": "101583",
-    "expected_title": "My Dress-Up Darling"
-  },
-  {
-    "query": "c'est quoi le nom de l'anime où la fille gyaru demande au garçon de coudre ses tenues",
-    "expected_id": "101583",
-    "expected_title": "My Dress-Up Darling"
-  },
-  {
-    "query": "pourquoi gojou wakana aime autant les poupées hina",
-    "expected_id": "101583",
-    "expected_title": "My Dress-Up Darling"
-  },
-  {
-    "query": "le cosplay est-il difficile dans la vraie vie comme dans my dress-up darling",
-    "expected_id": "101583",
-    "expected_title": "My Dress-Up Darling"
-  },
-  {
-    "query": "Dr. STONE ordre chronologique épisodes et OAV",
+    "query": "Structure d'une relation dans le graphe : type et métadonnées",
     "expected_id": "98416",
-    "expected_title": "Dr. STONE"
+    "expected_title": "Dr. STONE",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "Chaque relation a un type (ex: 'est_un', 'inspiré_de') et des métadonnées (confiance, source)."
   },
   {
-    "query": "comment Senku fabrique de l'antibiotique Dr. STONE science réelle",
-    "expected_id": "98416",
-    "expected_title": "Dr. STONE"
-  },
-  {
-    "query": "animes post-apocalyptiques basés sur la reconstruction de la civilisation",
-    "expected_id": "98416",
-    "expected_title": "Dr. STONE"
-  },
-  {
-    "query": "meilleurs moments du Royaume de la Science Dr. STONE",
-    "expected_id": "98416",
-    "expected_title": "Dr. STONE"
-  },
-  {
-    "query": "Senku Ishigami évolution personnage analyse",
-    "expected_id": "98416",
-    "expected_title": "Dr. STONE"
-  },
-  {
-    "query": "qui est le scientifique avec des cheveux en poireau dans l'anime de pierre",
-    "expected_id": "98416",
-    "expected_title": "Dr. STONE"
-  },
-  {
-    "query": "anime où tout le monde se transforme en statue après une lumière verte",
-    "expected_id": "98416",
-    "expected_title": "Dr. STONE"
-  },
-  {
-    "query": "ce manga où le héros reconstruit la technologie avec de la science",
-    "expected_id": "98416",
-    "expected_title": "Dr. STONE"
-  },
-  {
-    "query": "Dr. STONE est-ce que les expériences scientifiques sont scientifiquement exactes ?",
-    "expected_id": "98416",
-    "expected_title": "Dr. STONE"
-  },
-  {
-    "query": "pourquoi Senku veut-il aller sur la lune dans Dr. STONE ?",
-    "expected_id": "98416",
-    "expected_title": "Dr. STONE"
-  },
-  {
-    "query": "explication symbolisme spirale Uzumaki Junji Ito",
+    "query": "Avantages de l'utilisation du typage statique dans le code IA",
     "expected_id": "30436",
-    "expected_title": "Uzumaki: Spiral into Horror"
+    "expected_title": "Uzumaki: Spiral into Horror",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "Il réduit les erreurs à l'exécution, améliore la lisibilité et facilite la maintenance pour les équipes multi-développeurs."
   },
   {
-    "query": "Uzumaki anime vs manga différences visuelles",
-    "expected_id": "30436",
-    "expected_title": "Uzumaki: Spiral into Horror"
-  },
-  {
-    "query": "meilleurs mangas d'horreur corporelle comme Uzumaki",
-    "expected_id": "30436",
-    "expected_title": "Uzumaki: Spiral into Horror"
-  },
-  {
-    "query": "thèmes philosophiques derrière l'obsession de la spirale dans Uzumaki",
-    "expected_id": "30436",
-    "expected_title": "Uzumaki: Spiral into Horror"
-  },
-  {
-    "query": "analyse psychologique du personnage de Shuichi Saito",
-    "expected_id": "30436",
-    "expected_title": "Uzumaki: Spiral into Horror"
-  },
-  {
-    "query": "évolution de Kirie Goshima au cours de l'histoire d'Uzumaki",
-    "expected_id": "30436",
-    "expected_title": "Uzumaki: Spiral into Horror"
-  },
-  {
-    "query": "manga horreur petite ville maudite spirales escargots",
-    "expected_id": "30436",
-    "expected_title": "Uzumaki: Spiral into Horror"
-  },
-  {
-    "query": "c'est quoi ce manga avec des gens qui se transforment en spirales ?",
-    "expected_id": "30436",
-    "expected_title": "Uzumaki: Spiral into Horror"
-  },
-  {
-    "query": "quelle est l'origine de la malédiction dans Kurozu-cho ?",
-    "expected_id": "30436",
-    "expected_title": "Uzumaki: Spiral into Horror"
-  },
-  {
-    "query": "pourquoi les habitants de Kurozu-cho deviennent-ils fous à cause des spirales ?",
-    "expected_id": "30436",
-    "expected_title": "Uzumaki: Spiral into Horror"
-  },
-  {
-    "query": "Dorohedoro ordre de lecture manga et épisodes anime",
+    "query": "Représentation du système de recommandation en couches",
     "expected_id": "31133",
-    "expected_title": "Dorohedoro"
-  },
-  {
-    "query": "Où regarder l'anime Dorohedoro en streaming HD",
-    "expected_id": "31133",
-    "expected_title": "Dorohedoro"
-  },
-  {
-    "query": "Animes cyberpunk et dark fantasy avec des thèmes de body horror similaires à Dorohedoro",
-    "expected_id": "31133",
-    "expected_title": "Dorohedoro"
-  },
-  {
-    "query": "Meilleurs mangas seinen ultra-violents avec un humour absurde",
-    "expected_id": "31133",
-    "expected_title": "Dorohedoro"
-  },
-  {
-    "query": "Pourquoi Caiman a une tête de lézard et qui est le sorcier dans sa bouche",
-    "expected_id": "31133",
-    "expected_title": "Dorohedoro"
-  },
-  {
-    "query": "Évolution de la relation entre Nikaido et Caiman tout au long de l'histoire",
-    "expected_id": "31133",
-    "expected_title": "Dorohedoro"
-  },
-  {
-    "query": "Nom de l'anime avec un homme reptile qui cherche ses souvenirs",
-    "expected_id": "31133",
-    "expected_title": "Dorohedoro"
-  },
-  {
-    "query": "Manga sombre avec un protagoniste amnésique qui chasse des magiciens",
-    "expected_id": "31133",
-    "expected_title": "Dorohedoro"
-  },
-  {
-    "query": "Qui est le personnage le plus puissant dans l'univers de Dorohedoro",
-    "expected_id": "31133",
-    "expected_title": "Dorohedoro"
-  },
-  {
-    "query": "Quel est le secret derrière la famille En et les champignons magiques",
-    "expected_id": "31133",
-    "expected_title": "Dorohedoro"
-  },
-  {
-    "query": "Frieren Beyond Journey's End ordre chronologique épisodes flash-back",
-    "expected_id": "118586",
-    "expected_title": "Frieren: Beyond Journey’s End"
-  },
-  {
-    "query": "Où regarder Frieren l'épisode spécial avec le paysage enneigé",
-    "expected_id": "118586",
-    "expected_title": "Frieren: Beyond Journey’s End"
-  },
-  {
-    "query": "Animes similaires à Frieren qui traitent du deuil et de la philosophie de vie",
-    "expected_id": "118586",
-    "expected_title": "Frieren: Beyond Journey’s End"
-  },
-  {
-    "query": "Thèmes du temps et de la mortalité dans les animes fantasy comme Frieren",
-    "expected_id": "118586",
-    "expected_title": "Frieren: Beyond Journey’s End"
-  },
-  {
-    "query": "Pourquoi Frieren ne comprend pas les sentiments de Himmel le héros",
-    "expected_id": "118586",
-    "expected_title": "Frieren: Beyond Journey’s End"
-  },
-  {
-    "query": "Évolution de la relation entre Frieren et Fern analyse psychologique",
-    "expected_id": "118586",
-    "expected_title": "Frieren: Beyond Journey’s End"
-  },
-  {
-    "query": "Anime avec une elfe mage qui voyage après avoir battu le roi démon",
-    "expected_id": "118586",
-    "expected_title": "Frieren: Beyond Journey’s End"
-  },
-  {
-    "query": "Série animée mélancolique sur une elfe qui survit à ses amis humains",
-    "expected_id": "118586",
-    "expected_title": "Frieren: Beyond Journey’s End"
-  },
-  {
-    "query": "Est-ce que Frieren finit par tomber amoureuse de quelqu'un dans le manga ?",
-    "expected_id": "118586",
-    "expected_title": "Frieren: Beyond Journey’s End"
-  },
-  {
-    "query": "Anecdote pourquoi le style artistique de Frieren est si doux et contemplatif",
-    "expected_id": "118586",
-    "expected_title": "Frieren: Beyond Journey’s End"
-  },
-  {
-    "query": "The Fragrant Flower Blooms With Dignity manga lecture en ligne",
-    "expected_id": "140475",
-    "expected_title": "The Fragrant Flower Blooms With Dignity"
-  },
-  {
-    "query": "acheter tome 1 Kaoru Hana wa Rin to Saku",
-    "expected_id": "140475",
-    "expected_title": "The Fragrant Flower Blooms With Dignity"
-  },
-  {
-    "query": "manga romance lycée rivalité écoles prestige vs délinquants",
-    "expected_id": "140475",
-    "expected_title": "The Fragrant Flower Blooms With Dignity"
-  },
-  {
-    "query": "liste des meilleurs mangas iyashikei avec romance scolaire",
-    "expected_id": "140475",
-    "expected_title": "The Fragrant Flower Blooms With Dignity"
-  },
-  {
-    "query": "qui est l'artiste qui dessine Rintaro et Kaoru dans The Fragrant Flower",
-    "expected_id": "140475",
-    "expected_title": "The Fragrant Flower Blooms With Dignity"
-  },
-  {
-    "query": "évolution de la relation entre Rintaro Tsumugi et Kaoruko",
-    "expected_id": "140475",
-    "expected_title": "The Fragrant Flower Blooms With Dignity"
-  },
-  {
-    "query": "manga avec un garçon effrayant qui fait de la pâtisserie et une fille riche",
-    "expected_id": "140475",
-    "expected_title": "The Fragrant Flower Blooms With Dignity"
-  },
-  {
-    "query": "c'est quoi le nom du manga où deux écoles ennemies tombent amoureuses",
-    "expected_id": "140475",
-    "expected_title": "The Fragrant Flower Blooms With Dignity"
-  },
-  {
-    "query": "pourquoi les élèves de Chidori et Kikyo se détestent-ils dans le manga ?",
-    "expected_id": "140475",
-    "expected_title": "The Fragrant Flower Blooms With Dignity"
-  },
-  {
-    "query": "le manga The Fragrant Flower Blooms With Dignity est-il inspiré d'une histoire vraie ?",
-    "expected_id": "140475",
-    "expected_title": "The Fragrant Flower Blooms With Dignity"
-  },
-  {
-    "query": "système de magie dessin witch hat atelier explication",
-    "expected_id": "98263",
-    "expected_title": "Witch Hat Atelier"
-  },
-  {
-    "query": "ordre de lecture witch hat atelier et tomes additionnels",
-    "expected_id": "98263",
-    "expected_title": "Witch Hat Atelier"
-  },
-  {
-    "query": "mangas similaires à witch hat atelier ambiance fantasy onirique",
-    "expected_id": "98263",
-    "expected_title": "Witch Hat Atelier"
-  },
-  {
-    "query": "philosophie et éthique de la magie dans witch hat atelier",
-    "expected_id": "98263",
-    "expected_title": "Witch Hat Atelier"
-  },
-  {
-    "query": "analyse du personnage de Qifrey et son passé mystérieux",
-    "expected_id": "98263",
-    "expected_title": "Witch Hat Atelier"
-  },
-  {
-    "query": "évolution de Coco dans witch hat atelier et son développement de mage",
-    "expected_id": "98263",
-    "expected_title": "Witch Hat Atelier"
-  },
-  {
-    "query": "ce manga où une petite fille dessine des sorts pour devenir sorcière",
-    "expected_id": "98263",
-    "expected_title": "Witch Hat Atelier"
-  },
-  {
-    "query": "le nom de l'ordre des mages avec les chapeaux dans l'atelier de magie",
-    "expected_id": "98263",
-    "expected_title": "Witch Hat Atelier"
-  },
-  {
-    "query": "pourquoi les chapeaux de sorciers sont-ils si importants dans ce manga ?",
-    "expected_id": "98263",
-    "expected_title": "Witch Hat Atelier"
-  },
-  {
-    "query": "est-ce que witch hat atelier est destiné à un public enfant ou adulte ?",
-    "expected_id": "98263",
-    "expected_title": "Witch Hat Atelier"
-  },
-  {
-    "query": "lire manga Slam Dunk chapitres en ligne",
-    "expected_id": "30051",
-    "expected_title": "Slam Dunk"
-  },
-  {
-    "query": "ordre de visionnage anime Slam Dunk et films",
-    "expected_id": "30051",
-    "expected_title": "Slam Dunk"
-  },
-  {
-    "query": "meilleurs mangas de sport équipe lycée",
-    "expected_id": "30051",
-    "expected_title": "Slam Dunk"
-  },
-  {
-    "query": "évolution psychologique Hanamichi Sakuragi",
-    "expected_id": "30051",
-    "expected_title": "Slam Dunk"
-  },
-  {
-    "query": "personnage principal délinquant qui devient basketteur",
-    "expected_id": "30051",
-    "expected_title": "Slam Dunk"
-  },
-  {
-    "query": "pourquoi Rukawa est-il le rival de Sakuragi",
-    "expected_id": "30051",
-    "expected_title": "Slam Dunk"
-  },
-  {
-    "query": "manga basket années 90 avec mec aux cheveux rouges",
-    "expected_id": "30051",
-    "expected_title": "Slam Dunk"
-  },
-  {
-    "query": "dessin animé match de basket lycée fin triste",
-    "expected_id": "30051",
-    "expected_title": "Slam Dunk"
-  },
-  {
-    "query": "Hanamichi Sakuragi a-t-il fini par sortir avec Haruko",
-    "expected_id": "30051",
-    "expected_title": "Slam Dunk"
-  },
-  {
-    "query": "est-ce que Slam Dunk est considéré comme le meilleur manga de basket",
-    "expected_id": "30051",
-    "expected_title": "Slam Dunk"
-  },
-  {
-    "query": "The Flowers of Evil anime fin expliquée manga",
-    "expected_id": "54705",
-    "expected_title": "The Flowers of Evil"
-  },
-  {
-    "query": "est-ce que l'anime Aku no Hana adapte tout le manga ?",
-    "expected_id": "54705",
-    "expected_title": "The Flowers of Evil"
-  },
-  {
-    "query": "analyse psychologique relation Takao Nakamura The Flowers of Evil",
-    "expected_id": "54705",
-    "expected_title": "The Flowers of Evil"
-  },
-  {
-    "query": "thèmes philosophiques baudelaire dans l'anime the flowers of evil",
-    "expected_id": "54705",
-    "expected_title": "The Flowers of Evil"
-  },
-  {
-    "query": "évolution personnage Nakamura Sawa analyse",
-    "expected_id": "54705",
-    "expected_title": "The Flowers of Evil"
-  },
-  {
-    "query": "pourquoi Takao Kasuga est obsédé par Nanako Saeki",
-    "expected_id": "54705",
-    "expected_title": "The Flowers of Evil"
-  },
-  {
-    "query": "anime avec un garçon qui vole les vêtements de sport d'une fille",
-    "expected_id": "54705",
-    "expected_title": "The Flowers of Evil"
-  },
-  {
-    "query": "c'est quoi cet anime bizarre avec un style graphique réaliste et flou",
-    "expected_id": "54705",
-    "expected_title": "The Flowers of Evil"
-  },
-  {
-    "query": "le manga The Flowers of Evil est-il vraiment une tragédie romantique ?",
-    "expected_id": "54705",
-    "expected_title": "The Flowers of Evil"
-  },
-  {
-    "query": "est-ce que le titre The Flowers of Evil a un vrai rapport avec le livre de Baudelaire ?",
-    "expected_id": "54705",
-    "expected_title": "The Flowers of Evil"
-  },
-  {
-    "query": "Toilet-Bound Hanako-kun chapitre actuel lecture en ligne",
-    "expected_id": "98842",
-    "expected_title": "Toilet-Bound Hanako-kun"
-  },
-  {
-    "query": "ordre chronologique de visionnage anime Hanako-kun et épisodes bonus",
-    "expected_id": "98842",
-    "expected_title": "Toilet-Bound Hanako-kun"
-  },
-  {
-    "query": "explication fin tragique mystères de l'école Kamome",
-    "expected_id": "98842",
-    "expected_title": "Toilet-Bound Hanako-kun"
-  },
-  {
-    "query": "symbolisme des fleurs et des sceaux dans l'esthétique de Hanako-kun",
-    "expected_id": "98842",
-    "expected_title": "Toilet-Bound Hanako-kun"
-  },
-  {
-    "query": "relation entre Hanako et Nene Yashiro évolution",
-    "expected_id": "98842",
-    "expected_title": "Toilet-Bound Hanako-kun"
-  },
-  {
-    "query": "identité réelle du frère jumeau de Hanako-kun Tsukasa",
-    "expected_id": "98842",
-    "expected_title": "Toilet-Bound Hanako-kun"
-  },
-  {
-    "query": "cet anime avec un fantôme garçon dans les toilettes d'une école",
-    "expected_id": "98842",
-    "expected_title": "Toilet-Bound Hanako-kun"
-  },
-  {
-    "query": "dessin animé style rétro avec une fille qui fait un vœu à un esprit",
-    "expected_id": "98842",
-    "expected_title": "Toilet-Bound Hanako-kun"
-  },
-  {
-    "query": "pourquoi Hanako-kun porte-t-il un sceau sur la joue ?",
-    "expected_id": "98842",
-    "expected_title": "Toilet-Bound Hanako-kun"
-  },
-  {
-    "query": "est-ce que Hanako-kun est basé sur une véritable légende urbaine japonaise ?",
-    "expected_id": "98842",
-    "expected_title": "Toilet-Bound Hanako-kun"
+    "expected_title": "Dorohedoro",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "Couche 1 : Ingestion, Couche 2 : Extraction sémantique, Couche 3 : Raisonnement par graphe, Couche 4 : Rendu final."
+  },
+  {
+    "query": "Comment les tests E2E valident-ils l'architecture globale ?",
+    "expected_id": "11061",
+    "expected_title": "Hunter x Hunter (2011)",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "Ils simulent le parcours complet d'une requête utilisateur à travers tous les composants du système, garantissant l'intégration correcte."
+  },
+  {
+    "query": "Visualisation du taux de succès des requêtes par type",
+    "expected_id": "5114",
+    "expected_title": "Fullmetal Alchemist: Brotherhood",
+    "is_architectural": true,
+    "query_type": "visual",
+    "ground_truth": "Un diagramme à barres montre les performances relatives des requêtes graph, visual, cross-media, etc."
+  },
+  {
+    "query": "Pourquoi le système utilise-t-il des prompt templates dynamiques ?",
+    "expected_id": "11757",
+    "expected_title": "Sword Art Online",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "Pour adapter le contexte injecté aux besoins spécifiques de la tâche de l'agent, améliorant ainsi la pertinence de la réponse."
+  },
+  {
+    "query": "Architecture de la gestion des secrets et des API",
+    "expected_id": "21234",
+    "expected_title": "ERASED",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "Les secrets sont gérés via des variables d'environnement injectées au déploiement, isolées du code source."
+  },
+  {
+    "query": "Représentation des relations sémantiques entre tags",
+    "expected_id": "101921",
+    "expected_title": "Kaguya-sama: Love is War",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "Un graphe dense où les tags fréquemment associés sont connectés, permettant d'étendre la recherche."
+  },
+  {
+    "query": "Comment le modèle est-il monitoré en continu ?",
+    "expected_id": "21827",
+    "expected_title": "Violet Evergarden",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "Via un pipeline de monitoring qui capture et analyse les logs en temps réel pour détecter toute anomalie de performance ou de comportement."
+  },
+  {
+    "query": "Visualisation de la complétude du graphe de connaissances",
+    "expected_id": "20613",
+    "expected_title": "Akame ga Kill!",
+    "is_architectural": true,
+    "query_type": "visual",
+    "ground_truth": "Un heat-map montrant la densité des relations par nœud, aidant à identifier les zones sous-explorées du graphe."
+  },
+  {
+    "query": "Avantages de la conteneurisation pour ce projet IA",
+    "expected_id": "20789",
+    "expected_title": "The Seven Deadly Sins",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "Elle garantit la reproductibilité des environnements d'exécution, simplifiant le déploiement et le scaling sur différentes infrastructures."
   }
 ]
