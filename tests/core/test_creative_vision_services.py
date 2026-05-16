@@ -33,6 +33,12 @@ def test_find_action_boundaries(video_service, mock_engine):
     res = video_service.find_action_boundaries(b"data", ["jump"])
     assert res[0]["action"] == "jump"
 
+def test_identify_episode_from_clip(video_service, mock_engine):
+    mock_engine.localize_video_actions.return_value = [{"answer": "Episode 5: The First Duel", "confidence": 0.95}]
+    result = video_service.identify_episode_from_clip(b"video_data", "Naruto")
+    assert result == "Episode 5: The First Duel"
+    mock_engine.localize_video_actions.assert_called_once()
+
 def test_studio_transform(studio_service, mock_engine):
     mock_engine.transform_image_to_anime.return_value = "img_url"
     assert studio_service.transform_user_to_anime(b"data", "Ghibli") == "img_url"

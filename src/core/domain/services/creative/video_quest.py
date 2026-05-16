@@ -32,3 +32,20 @@ class VideoQuestService:
             "description": f"Moment trouvé pour : {query}",
             "confidence": 0.92
         }
+
+    def identify_episode_from_clip(self, video_data: bytes, anime_title: str) -> str:
+        """
+        Uses SOTA Video understanding to guess which episode this clip belongs to.
+        """
+        query = f"Based on the visual events, character appearances, and dialogue in this clip from {anime_title}, which episode number is this most likely from? Explain why."
+        logger.info(f"🧐 Guessing episode for {anime_title} clip...")
+        results = self.inference_engine.localize_video_actions(video_data, [query])
+        
+        # In a real scenario, the 'localize_video_actions' might return the text answer 
+        # inside the result dict of the first query if used as a prompt.
+        if results and "answer" in results[0]:
+            return results[0]["answer"]
+        elif results and "description" in results[0]:
+            return results[0]["description"]
+        
+        return "Unknown Episode"
