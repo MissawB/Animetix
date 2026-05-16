@@ -1,12 +1,13 @@
-from .services import TRANSLATIONS
+from .containers import get_container
 
 def translation_processor(request):
     """Injecte les textes traduits dans tous les templates."""
     lang = request.session.get('language', 'Français')
     return {
-        'txt': TRANSLATIONS.get(lang, TRANSLATIONS['Français']),
+        'txt': get_container().translation_service.get_translations(lang),
         'current_lang': lang
     }
+
 
 def achievements_processor(request):
     """Injecte les nouveaux succès débloqués pour affichage Toast."""
