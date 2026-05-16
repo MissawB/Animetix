@@ -87,10 +87,20 @@
                         <i class="bi bi-share text-blue-400"></i>
                         <span class="manga-font text-[10px]">PARTAGER</span>
                     </button>
-                    <button class="bg-white text-black rounded-full px-4 py-2 manga-font text-[10px] hover:scale-105 transition-all" onclick="document.getElementById('remix-parent-id').value='{{ fusion_id }}'; document.getElementById('input-A').scrollIntoView({behavior: 'smooth'}); alert('Mode REMIX actif ! Ajustez les curseurs et relancez.');">
-                        🔥 REMIXER
-                    </button>
+                    
+                    {% if user.is_authenticated %}
+                        <button hx-post="{% url 'toggle_collection' fusion_id %}" hx-swap="outerHTML" 
+                                class="bg-white text-black rounded-full px-4 py-2 manga-font text-[10px] hover:scale-105 transition-all flex items-center justify-center gap-2">
+                            <i class="bi bi-bookmark-star text-lg"></i> COLLECTIONNER
+                        </button>
+                    {% else %}
+                        <button onclick="alert('Connectez-vous pour collectionner cette carte !');"
+                                class="bg-white text-black rounded-full px-4 py-2 manga-font text-[10px] hover:scale-105 transition-all flex items-center justify-center gap-2">
+                            <i class="bi bi-bookmark-star text-lg"></i> COLLECTIONNER
+                        </button>
+                    {% endif %}
                 </div>
+
                 {% endif %}
 
                 <!-- BOUTONS FEEDBACK RLHF -->
