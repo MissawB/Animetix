@@ -118,6 +118,10 @@ class OrchestratorAgentService:
         res = self.inference_engine.generate(prompt, system_prompt="Réponds en JSON.")
         try:
             if '{' in res and '}' in res:
-                return orjson.loads(res[res.find('{'):res.rfind('}')+1])
-        except: pass
+                json_str = res[res.find('{'):res.rfind('}')+1]
+                return orjson.loads(json_str)
+        except orjson.JSONDecodeError as e:
+            logger.error(f"Orchestrator failed to parse JSON from AI: {e}. Output was: {res[:200]}")
+        except Exception as e:
+            logger.error(f"Unexpected error in Orchestrator JSON extraction: {e}")
         return {}
