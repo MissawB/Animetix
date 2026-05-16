@@ -102,6 +102,11 @@ class Container:
         return self._get('moondream_adapter', lambda: MoondreamAdapter())
 
     @property
+    def qwen3_vl_adapter(self):
+        from adapters.inference.qwen3_vl_adapter import Qwen3VLAdapter
+        return self._get('qwen3_vl_adapter', lambda: Qwen3VLAdapter(token=os.getenv("HF_TOKEN")))
+
+    @property
     def transformers_adapter(self):
         return self._get('transformers_adapter', lambda: TransformersAdapter(model_id="Qwen/Qwen2.5-1.5B-Instruct", use_4bit=True))
 
@@ -136,7 +141,7 @@ class Container:
 
     @property
     def reasoning_agent(self):
-        return self._get('reasoning_agent', lambda: ReasoningAgentService(inference_engine=self.inference_engine, search_service=self.rag_service, graph_manager=neo4j_manager, agent_bus=self.agent_bus))
+        return self._get('reasoning_agent', lambda: ReasoningAgentService(inference_engine=self.inference_engine, prompt_manager=self.prompt_manager, search_service=self.rag_service, graph_manager=neo4j_manager, agent_bus=self.agent_bus))
 
     @property
     def memory_service(self):
@@ -204,7 +209,7 @@ class Container:
 
     @property
     def video_quest_service(self):
-        return self._get('video_quest_service', lambda: VideoQuestService(inference_engine=self.inference_engine))
+        return self._get('video_quest_service', lambda: VideoQuestService(inference_engine=self.qwen3_vl_adapter))
 
     @property
     def studio_transform_service(self):
