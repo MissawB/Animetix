@@ -80,3 +80,15 @@ Thumbs.db
 
 .gemini/
 gha-creds-*.json
+
+# Geminni/Superpowers
+.superpowers/
+.tmp_dagster_home_*/
+.venv/
+.idea/
+__pycache__/
+*.pyc
+.env
+wandb/
+.pytest_cache/
+*.sqlite3
