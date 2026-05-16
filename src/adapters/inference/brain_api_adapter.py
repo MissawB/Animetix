@@ -11,15 +11,21 @@ class BrainAPIAdapter(InferencePort):
 
     def generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0) -> str:
         if not self.brain_api_url: return "Erreur: BRAIN_API_URL non configurée."
-        for _ in range(self.max_retries):
+        for attempt in range(self.max_retries):
             try:
                 res = requests.post(f"{self.brain_api_url}/generate", json={
                     "prompt": prompt, 
                     "system_prompt": system_prompt,
                     "thinking_budget": thinking_budget
                 }, timeout=30)
-                if res.status_code == 200: return res.json().get("text", "")
-            except: time.sleep(1)
+                res.raise_for_status()
+                return res.json().get("text", "")
+            except requests.exceptions.RequestException as e:
+                logger.error(f"BrainAPI Request failed (Attempt {attempt+1}/{self.max_retries}): {e}")
+                time.sleep(1)
+            except Exception as e:
+                logger.error(f"Unexpected BrainAPI error: {e}")
+                break
         return "Erreur: Le cerveau distant ne répond pas."
 
     def stream_generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0):

@@ -17,8 +17,12 @@ class VllmAdapter(InferencePort):
                 ],
                 "thinking_budget": thinking_budget
             }, timeout=30)
-            if res.status_code == 200: return res.json()['choices'][0]['message']['content']
-        except: pass
+            res.raise_for_status()
+            return res.json()['choices'][0]['message']['content']
+        except requests.exceptions.ConnectionError:
+            logger.error(f"vLLM server at {self.api_base} is unreachable.")
+        except Exception as e:
+            logger.error(f"vLLM Adapter error: {e}")
         return "Erreur: vLLM indisponible."
 
     def stream_generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0):
