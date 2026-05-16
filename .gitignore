@@ -95,3 +95,6 @@ wandb/
 
 # ML Ops artifacts
 data/mlops/
+
+# Superpowers documentation
+docs/superpowers/
