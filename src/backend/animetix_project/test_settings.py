@@ -1,4 +1,4 @@
-from .settings import BASE_DIR, os, sentry_sdk
+from .settings import *
 
 # Clear everything and set a fresh test DB
 DATABASES = {

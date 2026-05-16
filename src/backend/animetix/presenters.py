@@ -256,3 +256,13 @@ class GamePresenter:
             'value': value if is_revealed else None
         }
 
+    @classmethod
+    def format_classic_hints(cls, secret_data: dict, guess_count: int, revealed_ids: list) -> dict:
+        """Centralizes hint formatting for the Classic mode."""
+        return {
+            'origin': cls.format_hint('origin', 'Origine / Année', 5, f"{secret_data.get('origin', 'Inconnu')} ({secret_data.get('year', '????')})", guess_count, revealed_ids),
+            'tags': cls.format_hint('tags', 'Tags', 10, ", ".join(secret_data.get('tags', [])[:5]) if secret_data.get('tags') else "Inconnu", guess_count, revealed_ids),
+            'studio': cls.format_hint('studio', 'Studio', 15, secret_data.get('metadata', {}).get('studio', 'Inconnu'), guess_count, revealed_ids),
+            'desc': cls.format_hint('desc', 'Description', 20, secret_data.get('description', '...')[:100] + "...", guess_count, revealed_ids)
+        }
+

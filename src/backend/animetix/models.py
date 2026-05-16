@@ -31,7 +31,7 @@ class MediaItem(models.Model):
     if VectorField:
         thematic_embedding = VectorField(dimensions=1024, null=True, blank=True)
         plot_embedding = VectorField(dimensions=1024, null=True, blank=True)
-        visual_embedding = VectorField(dimensions=1152, null=True, blank=True)
+        visual_embedding = VectorField(dimensions=512, null=True, blank=True)
     else:
         thematic_embedding = models.JSONField(null=True, blank=True)
         plot_embedding = models.JSONField(null=True, blank=True)

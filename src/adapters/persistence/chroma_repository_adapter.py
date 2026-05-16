@@ -113,7 +113,25 @@ class ChromaRepositoryAdapter(RepositoryPort):
     def upsert_items(self, collection_name: str, ids: List[str], embeddings: List[List[float]], metadatas: List[Dict]):
         try:
             coll = self.client.get_or_create_collection(name=collection_name)
-            coll.upsert(ids=ids, embeddings=embeddings, metadatas=metadatas)
+            
+            # --- SANITIZATION SOTA 2026 ---
+            # ChromaDB n'accepte que str, int, float, bool pour les métadonnées.
+            clean_metas = []
+            for meta in metadatas:
+                clean_meta = {}
+                for k, v in meta.items():
+                    if isinstance(v, (list, dict)):
+                        # On convertit les listes (ex: studios, tags) en chaînes séparées par des virgules
+                        if isinstance(v, list):
+                            clean_meta[k] = ", ".join([str(x) for x in v])
+                        else:
+                            import json
+                            clean_meta[k] = json.dumps(v)
+                    else:
+                        clean_meta[k] = v
+                clean_metas.append(clean_meta)
+            
+            coll.upsert(ids=ids, embeddings=embeddings, metadatas=clean_metas)
         except Exception as e:
             logger.error(f"Chroma Upsert Error in {collection_name}: {e}")
 

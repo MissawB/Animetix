@@ -69,20 +69,24 @@ class PgVectorRepositoryAdapter(RepositoryPort):
             if target_vector is None: return None
             
             # --- STAGE 1 : DYNAMIC SLICING (Matryoshka) ---
-            # Dans l'adaptateur, nous devons être prudents avec l'objet F
-            # Pour les tests, on vérifie si cosine_distance existe
-            annotated_qs = MediaItem.objects.exclude(external_id=item_id)
-            if hasattr(F(field_name), 'cosine_distance'):
-                annotated_qs = annotated_qs.annotate(
-                    fast_dist=F(field_name).cosine_distance(target_vector[:128])
-                ).order_by('fast_dist')
-            else:
-                annotated_qs = annotated_qs.order_by('id')
-                
-            candidates = annotated_qs[:50]
+            # Utilisation des 256 premières dimensions pour un filtrage rapide (SOTA 2026)
+            # Les modèles Jina-v3 sont optimisés pour conserver l'information dans les premiers segments
+            annotated_qs = MediaItem.objects.exclude(external_id=item_id).filter(media_type=target_item.media_type)
+            
+            # Note: Pour pgvector >= 0.5.0, cosine_distance supporte le slicing directement si le champ est de type Vector
+            # On simule ici l'optimisation en limitant la dimension si possible via SQL brut ou via l'adaptateur
+            try:
+                candidates = annotated_qs.annotate(
+                    fast_dist=F(field_name).cosine_distance(target_vector[:256])
+                ).order_by('fast_dist')[:100]
+            except Exception as e:
+                logger.debug(f"Matryoshka Slice Level 1 failed, falling back to indexed search: {e}")
+                candidates = annotated_qs.annotate(
+                    fast_dist=F(field_name).cosine_distance(target_vector)
+                ).order_by('fast_dist')[:100]
             
             # --- STAGE 2 : FULL RERANKING ---
-            # On affine le top 50 avec les 1024 dimensions complètes
+            # On affine le top 100 avec les 1024 dimensions complètes pour une précision maximale
             similar_items = sorted(
                 candidates, 
                 key=lambda x: self._calculate_full_cosine(getattr(x, field_name), target_vector)
@@ -157,12 +161,19 @@ class PgVectorRepositoryAdapter(RepositoryPort):
         if not field_name: return
         
         for i, ext_id in enumerate(ids):
-            try:
-                item = MediaItem.objects.get(external_id=ext_id)
+            meta = metadatas[i]
+            m_type = meta.get('media_type')
+            
+            # On tente de trouver l'item précisément
+            qs = MediaItem.objects.filter(external_id=ext_id)
+            if m_type: qs = qs.filter(media_type=m_type)
+            
+            item = qs.first()
+            if item:
                 setattr(item, field_name, embeddings[i])
                 item.save(update_fields=[field_name])
-            except MediaItem.DoesNotExist:
-                continue
+            else:
+                logger.warning(f"Could not find MediaItem {ext_id} ({m_type}) for vector update.")
 
     def delete_collection(self, collection_name: str):
         field_name = self.coll_to_field.get(collection_name)

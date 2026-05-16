@@ -1,6 +1,9 @@
 import torch
+import logging
 from typing import Optional, List, Dict, Any
 from core.ports.inference_port import InferencePort
+
+logger = logging.getLogger("animetix.inference")
 
 class MoondreamAdapter(InferencePort):
     def __init__(self, model_id: str = "vikhyatk/moondream2"):
@@ -14,7 +17,8 @@ class MoondreamAdapter(InferencePort):
             from transformers import AutoModelForCausalLM, AutoTokenizer
             self.tokenizer = AutoTokenizer.from_pretrained(self.model_id)
             self.model = AutoModelForCausalLM.from_pretrained(self.model_id, trust_remote_code=True)
-        except: pass
+        except Exception as e:
+            logger.error(f"Failed to load Moondream model {self.model_id}: {e}")
 
     def generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0) -> str:
         # Moondream est principalement visuel, mais peut générer du texte

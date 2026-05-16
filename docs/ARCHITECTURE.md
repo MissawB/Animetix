@@ -41,10 +41,15 @@ Animetix utilise une approche agentique pour la découverte de média, articulé
 
 ## 3. Standards Techniques & Observabilité
 
-### Architecture Hexagonale
-Le projet respecte une séparation stricte :
+### Architecture Atomique & Hexagonale
+Le projet respecte une séparation stricte et une structure atomique :
+- **Atomicité** : Les composants doivent être petits, à usage unique et facilement interchangeables.
 - **Domain** : Logique pure (`core/`), typage strict (`Pydantic`), prompts externalisés (`YAML`).
 - **Infrastructure** : Adaptateurs interchangeables pour l'inférence (vLLM, Ollama, Brain API) et la persistance.
+
+### Priorités de Maintenance & Refactorisation
+- **Refactorisation de views.py** : Découpage des logiques par modes de jeu et délégation accrue aux `presenters.py` ou aux services du domaine pour éliminer le "God Object".
+- **Découplage des Utils** : Migration des fonctions utilitaires globales vers des modules dédiés ou des services de domaine pour maximiser la réutilisabilité.
 
 ### MLOps & Sécurité
 - **Boucle DPO** : Collecte de feedback *Chosen/Rejected* validé pour l'alignement continu des modèles.

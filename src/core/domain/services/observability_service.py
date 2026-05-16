@@ -55,6 +55,16 @@ class ObservabilityService:
             "rag/query_length": len(query)
         })
 
+    def log_dynamic_eval(self, query: str, context: str, answer: str, evaluation: Any):
+        """Logue une évaluation dynamique 'LLM-as-a-Judge'."""
+        if not self.enabled: return
+        wandb.log({
+            "eval/faithfulness": getattr(evaluation, 'faithfulness_score', 0.0),
+            "eval/relevancy": getattr(evaluation, 'relevancy_score', 0.0),
+            "eval/hallucination_detected": 1 if getattr(evaluation, 'hallucination_detected', False) else 0,
+            "eval/query": query[:100]
+        })
+
     def log_error(self, error_type: str, message: str):
         """Logue une erreur critique de l'infrastructure IA."""
         if not self.enabled: return

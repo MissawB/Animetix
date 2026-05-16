@@ -1,0 +1,29 @@
+{
+  "timestamp": 1778933648.5449219,
+  "model_id": "unknown",
+  "avg_accuracy": 0.0,
+  "avg_latency": 13.175047000249227,
+  "details": [
+    {
+      "query": "Qui a produit l'anime Naruto ?",
+      "accuracy": 0.0,
+      "latency": 13.692827939987183,
+      "hits": 0,
+      "total_facts": 2
+    },
+    {
+      "query": "De quoi parle le manga Berserk ?",
+      "accuracy": 0.0,
+      "latency": 15.43912935256958,
+      "hits": 0,
+      "total_facts": 4
+    },
+    {
+      "query": "Quelles sont les thématiques de Cowboy Bebop ?",
+      "accuracy": 0.0,
+      "latency": 10.393183708190918,
+      "hits": 0,
+      "total_facts": 4
+    }
+  ]
+}

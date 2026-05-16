@@ -17,7 +17,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            darkMode: ['selector', '[data-bs-theme="dark"]'],
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
@@ -36,7 +36,8 @@
         }
     </script>
 
-    <!-- Project Assets -->
+    <!-- Bootstrap & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <script src="https://unpkg.com/htmx.org@1.9.12"></script>
@@ -64,13 +65,18 @@
             --hero-gradient: linear-gradient(105deg, #fff9e6 40%, #fffcf0 40.1%);
         }
 
-        [data-bs-theme="dark"] :root {
+        /* Dark Mode Overrides - Simplified selector for maximum reliability */
+        html[data-bs-theme="dark"], .dark {
             --page-bg: #0f0f1a;
             --page-text: #f1f2f6;
             --card-bg: #1a1a2e;
             --card-shadow: rgba(0,0,0,0.3);
             --sidebar-bg: #1a1a2e;
             --hero-gradient: linear-gradient(105deg, #0f0f1a 40%, #1a1a2e 40.1%);
+            
+            /* Override Bootstrap body colors */
+            --bs-body-bg: var(--page-bg);
+            --bs-body-color: var(--page-text);
         }
 
         {% block dynamic_theme %}{% endblock %}
@@ -137,6 +143,27 @@
         body.sidebar-open #manga-sidebar { transform: translateX(0); }
         body.sidebar-open #sidebar-overlay { display: block; }
 
+        @media (min-width: 1024px) {
+            body {
+                transition: padding-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                padding-left: 0;
+            }
+            body.sidebar-open {
+                padding-left: 300px;
+            }
+            body.sidebar-open #sidebar-overlay { display: none !important; }
+            
+            #manga-sidebar {
+                box-shadow: none !important;
+                border-right: 1px solid rgba(0,0,0,0.05);
+            }
+            
+            #main-shell { 
+                width: 100%;
+                margin-left: 0 !important;
+            }
+        }
+
         .nav-link-manga {
             font-family: 'Montserrat', sans-serif;
             font-weight: 700;
@@ -165,7 +192,7 @@
         .diff-dot:hover { transform: scale(1.5); }
     </style>
 </head>
-<body class="flex flex-col" hx-boost="true">
+<body class="flex flex-col sidebar-open" hx-boost="true">
 
     <!-- OVERLAY (Visible when sidebar is open) -->
     <div id="sidebar-overlay" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[1500] hidden" onclick="toggleSidebar(); toggleSettings(true)"></div>
@@ -353,7 +380,7 @@
         <!-- DEFAULT TOP NAV -->
         <div class="px-6 md:px-12 py-6 flex items-center justify-between">
             <div class="flex items-center gap-6">
-                <button class="bg-black text-white p-2 rounded-xl hover:scale-110 transition" onclick="toggleSidebar()">
+                <button class="bg-black text-white p-2 rounded-xl hover:scale-110 transition lg:hidden" onclick="toggleSidebar()">
                     <i class="bi bi-list text-xl"></i>
                 </button>
                 <a href="{% url 'index' %}" class="flex items-center no-underline">
@@ -395,240 +422,26 @@
         </footer>
     </div>
 
+    <script src="{% static 'animetix/js/animetix_core.js' %}"></script>
     <script>
-        // --- 🔊 SOUND & HAPTIC MANAGER (Howler.js + Vibration API) ---
-        class SoundManager {
-            constructor() {
-                this.muted = localStorage.getItem('sound_muted') === 'true';
-                this.sounds = {
-                    'click': new Howl({ src: ['https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3'], volume: 0.2 }),
-                    'win': new Howl({ src: ['https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3'], volume: 0.4 }),
-                    'loss': new Howl({ src: ['https://assets.mixkit.co/active_storage/sfx/2513/2513-preview.mp3'], volume: 0.3 }),
-                    'unlock': new Howl({ src: ['https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3'], volume: 0.5 }),
-                    'reveal': new Howl({ src: ['https://assets.mixkit.co/active_storage/sfx/2568/2571-preview.mp3'], volume: 0.3 }),
-                    'error': new Howl({ src: ['https://assets.mixkit.co/active_storage/sfx/2513/2513-preview.mp3'], volume: 0.4 }),
-                };
-            }
-            play(type) {
-                if (this.muted || !this.sounds[type]) return;
-                this.sounds[type].play();
-                
-                // HAPTIC FEEDBACK (Mobile)
-                if ("vibrate" in navigator) {
-                    if (type === 'win') navigator.vibrate([100, 30, 100, 30, 200]);
-                    else if (type === 'error' || type === 'loss') navigator.vibrate(200);
-                    else if (type === 'click') navigator.vibrate(10);
-                }
-            }
-            toggle() {
-                this.muted = !this.muted;
-                localStorage.setItem('sound_muted', this.muted);
-                return this.muted;
-            }
-        }
-        window.soundManager = new SoundManager();
-        window.sounds = { play: (type) => window.soundManager.play(type) };
-
-        // --- 🚀 HTMX & SPA LOGIC ---
-        document.body.addEventListener('htmx:beforeOnLoad', () => {
-            window.sounds.play('click');
-        });
+        // Initialize Core Engine
+        const swPath = '{% static "animetix/sw.js" %}';
+        const isAuthenticated = {{ request.user.is_authenticated|yesno:"true,false" }};
         
-        document.body.addEventListener('htmx:afterSwap', () => {
-            const toasts = document.querySelectorAll('.toast.show');
-            if (toasts.length > 0) window.sounds.play('unlock');
-        });
-
-        function toggleSidebar() {
-            window.sounds.play('click');
-            document.body.classList.toggle('sidebar-open');
-        }
-
-        function toggleSettings(forceClose = false) {
-            if (!forceClose) window.sounds.play('click');
-            const drawer = document.getElementById('settings-drawer');
-            const overlay = document.getElementById('sidebar-overlay');
-            if (forceClose) {
-                drawer.classList.add('translate-x-full');
-                overlay.classList.add('hidden');
-                return;
-            }
-            drawer.classList.toggle('translate-x-full');
-            overlay.classList.toggle('hidden');
-        }
-
-        function applyTheme(theme) {
-            const html = document.documentElement;
-            let actualTheme = theme;
-            
-            if (theme === 'auto') {
-                actualTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-            }
-            
-            html.setAttribute('data-bs-theme', actualTheme);
-            
-            // Update UI buttons in settings
-            ['light', 'dark', 'auto'].forEach(t => {
-                const btn = document.getElementById(`theme-${t}`);
-                if (btn) {
-                    if (t === theme) {
-                        btn.classList.add('border-yellow-400', 'bg-yellow-400/10');
-                    } else {
-                        btn.classList.remove('border-yellow-400', 'bg-yellow-400/10');
-                    }
-                }
-            });
-        }
-
-        function updateTheme(theme) {
-            localStorage.setItem('theme', theme);
-            applyTheme(theme);
-        }
-
-        function toggleTheme() {
-            const currentTheme = localStorage.getItem('theme') || 'auto';
-            let nextTheme;
-            if (currentTheme === 'auto') {
-                nextTheme = 'light';
-            } else if (currentTheme === 'light') {
-                nextTheme = 'dark';
-            } else {
-                nextTheme = 'auto';
-            }
-            updateTheme(nextTheme);
-        }
-
-        // Listen for system theme changes
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-            if (localStorage.getItem('theme') === 'auto') {
-                applyTheme('auto');
-            }
-        });
-
-        async function setDiff(val) {
-            await fetch(`/switch_diff/${val}/`);
-            window.location.reload();
-        }
-
-        // Initialize theme
+        // Initialize Theme
         const savedTheme = localStorage.getItem('theme') || 'auto';
         applyTheme(savedTheme);
-        window.sounds = { play: (type) => {} };
 
-        // --- 🌐 OFFLINE & PWA SUPPORT ---
-        const offlineEngine = window.offlineEngine;
-        if (offlineEngine) {
-            offlineEngine.init();
+        // Initialize PWA
+        initPWA(swPath);
+
+        // Initialize Notifications
+        initNotifications(isAuthenticated);
+
+        // Offline Engine Integration (if available)
+        if (window.offlineEngine) {
+            window.offlineEngine.init();
         }
-
-        // Register Service Worker
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('{% static "animetix/sw.js" %}')
-                    .then(reg => console.log('🚀 Animetix SW Active:', reg.scope))
-                    .catch(err => console.log('❌ SW Registration failed:', err));
-            });
-            
-            navigator.serviceWorker.addEventListener('message', async event => {
-                if (event.data && event.data.type === 'REQUEST_OFFLINE_DATA_SYNC') {
-                    console.log('🔄 Background Sync triggered by SW!');
-                    const scores = JSON.parse(localStorage.getItem('offlineScores') || '[]');
-                    if (scores.length > 0) {
-                        try {
-                            const response = await fetch('/sync_offline/', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify(scores)
-                            });
-                            
-                            if (response.ok) {
-                                console.log('✅ Offline scores synchronized with server!');
-                                localStorage.removeItem('offlineScores');
-                                // Could show a toast here
-                            }
-                        } catch (err) {
-                            console.error('❌ Failed to sync offline data:', err);
-                        }
-                    }
-                }
-            });
-        }
-
-        // REAL-TIME NOTIFICATIONS (WebSockets)
-        {% if request.user.is_authenticated %}
-        const notificationSocket = new WebSocket(
-            (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + 
-            window.location.host + '/ws/notifications/'
-        );
-
-        notificationSocket.onmessage = function(e) {
-            const data = JSON.parse(e.data);
-            if (data.type === 'achievement_unlocked') {
-                showAchievementToast(data.achievement);
-            } else if (data.type === 'friend_achievement' || data.type === 'boss_alert') {
-                showSocialToast(data);
-            }
-        };
-
-        function showSocialToast(data) {
-            const container = document.querySelector('.toast-container');
-            const icon = data.type === 'boss_alert' ? '🔥' : '🤝';
-            const title = data.type === 'boss_alert' ? 'WORLD BOSS' : 'ACTIVITÉ AMIS';
-            
-            const toastHtml = `
-                <div class="toast show animate__animated animate__fadeInRight shadow-2xl" role="alert" style="background: rgba(15,15,26,0.95); border: 2px solid #3b82f6; border-radius: 1rem; margin-bottom: 10px; min-width: 300px;">
-                    <div class="toast-header bg-transparent text-white border-b border-white/5 p-3">
-                        <span class="text-xl me-3">${icon}</span>
-                        <strong class="me-auto manga-font tracking-tighter text-blue-400">${title}</strong>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
-                    </div>
-                    <div class="toast-body p-4 text-white">
-                        <p class="mb-0 text-sm opacity-90">${data.message}</p>
-                    </div>
-                </div>
-            `;
-            const div = document.createElement('div');
-            div.innerHTML = toastHtml;
-            container.appendChild(div.firstChild);
-            window.sounds.play('reveal');
-            
-            setTimeout(() => {
-                const toast = container.lastChild;
-                if (toast) toast.remove();
-            }, 6000);
-        }
-
-        function showAchievementToast(ach) {
-            const container = document.querySelector('.toast-container');
-            const toastHtml = `
-                <div class="toast show animate__animated animate__bounceInRight shadow-2xl" role="alert" aria-live="assertive" aria-atomic="true" style="background: rgba(0,0,0,0.9); border: 2px solid #FFD700; border-radius: 1rem; margin-bottom: 10px;">
-                    <div class="toast-header bg-transparent text-white border-b border-white/10 p-3">
-                        <span class="text-2xl me-3">${ach.icon}</span>
-                        <strong class="me-auto manga-font tracking-tighter">SUCCÈS DÉBLOQUÉ !</strong>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
-                    </div>
-                    <div class="toast-body p-4 text-white">
-                        <h6 class="manga-font text-lg mb-1">${ach.name}</h6>
-                        <div class="flex items-center gap-2">
-                            <span class="px-2 py-0.5 bg-yellow-400 text-black text-[10px] font-black rounded-full">+${ach.xp} XP</span>
-                        </div>
-                    </div>
-                </div>
-            `;
-            const div = document.createElement('div');
-            div.innerHTML = toastHtml;
-            container.appendChild(div.firstChild);
-            window.sounds.play('win');
-            
-            // Auto-hide after 5s
-            setTimeout(() => {
-                const toast = container.lastChild;
-                if (toast) toast.remove();
-            }, 5000);
-        }
-        {% endif %}
     </script>
     {% block extra_js %}{% endblock %}
 </body>

@@ -11,18 +11,26 @@ def mock_search():
     return MagicMock()
 
 @pytest.fixture
-def reasoning_agent(mock_engine, mock_search):
-    return ReasoningAgentService(inference_engine=mock_engine, search_service=mock_search)
+def mock_prompts():
+    pm = MagicMock()
+    # Mock get_prompt to return a tuple (prompt, system_prompt)
+    pm.get_prompt.return_value = ("mock prompt", "mock system")
+    return pm
+
+@pytest.fixture
+def reasoning_agent(mock_engine, mock_prompts, mock_search):
+    return ReasoningAgentService(inference_engine=mock_engine, prompt_manager=mock_prompts, search_service=mock_search)
 
 def test_solve_complex_query_search_path(reasoning_agent, mock_engine, mock_search):
     mock_engine.generate.side_effect = [
-        "THOUGHT: I should search.\nACTION: SEARCH", # Thought
-        "The final answer." # Final Answer
+        "THOUGHT: I should search.\nACTION: SEARCH\nPARAMS: Naruto", # Iteration 1
+        "THOUGHT: I found info.\nACTION: ANSWER",                  # Iteration 2
+        "The final answer about Naruto."                            # Final Answer (outside loop)
     ]
     mock_search.hybrid_search.return_value = [{'title': 'Naruto', 'description': '...'}]
     
     ans = reasoning_agent.solve_complex_query("Who is Naruto?", "Anime")
-    assert "The final answer." in ans
+    assert "The final answer about Naruto." in ans
     assert "Naruto" in ans # Check sources appended
 
 def test_solve_complex_query_no_action(reasoning_agent, mock_engine):

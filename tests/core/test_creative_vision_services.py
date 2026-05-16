@@ -53,9 +53,9 @@ def test_soundscape_generation(soundscape_service, mock_engine):
 
 def test_translate_manga_page(manga_service, mock_engine):
     mock_engine.process_manga_page.return_value = {
-        'bubbles': [{'text': 'Hello', 'bbox': [0,0,10,10]}]
+        'text': 'Hello', 'layout': []
     }
-    manga_service.llm.generate.return_value = "Salut"
+    manga_service.llm_service.generate.return_value = "Salut"
     mock_engine.inpaint_text_bubbles.return_value = "new_img_url"
     
     assert manga_service.translate_manga_page(b"data") == "new_img_url"

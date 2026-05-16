@@ -1,4 +1,4 @@
-from dagster import asset, Definitions, ScheduleDefinition, AssetSelection, define_asset_job, RetryPolicy
+from dagster import asset, Definitions, ScheduleDefinition, AssetSelection, define_asset_job, sensor, RunRequest, DefaultScheduleStatus, RetryPolicy
 from pathlib import Path
 import os
 import sys
@@ -14,16 +14,16 @@ for path in [str(PIPELINE_DIR), str(SRC_DIR), str(BACKEND_DIR)]:
     if path not in sys.path:
         sys.path.append(path)
 
-# --- CONFIGURATION DJANGO (Nécessaire pour les modèles) ---
+# --- CONFIGURATION DJANGO ---
 import django
 from django.apps import apps
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'animetix_project.settings')
 if not apps.ready:
     django.setup()
 
-# --- IMPORTS ---
+# --- IMPORTS PIPELINE ---
 from characters import ingest_characters, refine_characters, filter_characters, train_vibe_characters, vectorize_characters
-from anime import ingest_anime, filter_anime, train_vibe_anime, vectorize_anime, fetch_themes
+from anime import ingest_anime, filter_anime, train_vibe_anime, vectorize_anime, fetch_themes, reconcile_drift
 from manga import ingest_manga, filter_manga, train_vibe_manga, vectorize_manga, fetch_covers
 from mlops import finetuning_dataset, train_expert_model, rlhf_pipeline, evaluation_metrics, latent_space_viz, distillation, auto_lora_trigger, graph_healer, continuous_pretraining
 from evaluation import drift_detection, regression_benchmark
@@ -51,6 +51,11 @@ def character_artifacts(): return vectorize_characters.run_vectorization()
 def raw_anime(): return ingest_anime.run_ingestion()
 
 @asset(deps=[raw_anime], group_name="anime")
+def reconciled_anime(): 
+    """Asset de réconciliation automatique basé sur le drift détecté."""
+    return reconcile_drift.run_reconciliation()
+
+@asset(deps=[reconciled_anime], group_name="anime")
 def filtered_anime(): return filter_anime.run_filtering()
 
 @asset(deps=[filtered_anime], group_name="anime")
@@ -79,7 +84,7 @@ def trained_manga_model(): return train_vibe_manga.run_training()
 @asset(deps=[trained_manga_model], group_name="manga")
 def manga_artifacts(): return vectorize_manga.run_vectorization()
 
-# --- 🧪 PIPELINE : MLOPS (Fine-Tuning, Eval & Viz) ---
+# --- 🧪 PIPELINE : MLOPS ---
 @asset(group_name="mlops")
 def self_healing_graph_agent(): return graph_healer.run_graph_healer()
 
@@ -104,8 +109,8 @@ def exported_user_feedback(): return rlhf_pipeline.exported_user_feedback()
 @asset(group_name="mlops", deps=[exported_user_feedback])
 def trl_ready_dataset(exported_user_feedback): return rlhf_pipeline.trl_ready_dataset(exported_user_feedback)
 
-@asset(group_name="mlops", deps=[trl_ready_dataset, knowledge_drift_check])
-def trigger_model_retraining(trl_ready_dataset, knowledge_drift_check): return rlhf_pipeline.trigger_model_retraining(trl_ready_dataset, knowledge_drift_check)
+@asset(group_name="mlops", deps=[trl_ready_dataset])
+def trigger_model_retraining(): return rlhf_pipeline.trigger_model_retraining()
 
 @asset(group_name="mlops", deps=[trl_ready_dataset])
 def speculative_draft_distillation(): return distillation.run_distillation()
@@ -135,18 +140,66 @@ def sync_characters_to_graph(): return neo4j_sync.run_sync_type_to_graph("Charac
 @asset(group_name="graph", deps=[sync_anime_to_graph, sync_manga_to_graph, sync_characters_to_graph])
 def global_knowledge_graph(): return True
 
-# --- JOBS & SCHEDULES ---
-all_assets_job = define_asset_job(name="all_assets_job", selection=AssetSelection.all())
+# --- JOBS ---
+# Job complet pour rafraîchissement total
+full_pipeline_job = define_asset_job(name="full_pipeline_job", selection=AssetSelection.all())
+
+# Job d'ingestion (Anime, Manga, Characters)
+ingestion_job = define_asset_job(
+    name="ingestion_job", 
+    selection=AssetSelection.groups("characters") | AssetSelection.groups("anime") | AssetSelection.groups("manga")
+)
+
+# Job de maintenance (Drift check, Graph healer, Knowledge graph)
+maintenance_job = define_asset_job(
+    name="maintenance_job",
+    selection=AssetSelection.groups("mlops") | AssetSelection.groups("graph")
+)
+
+# Job de monitoring de santé (uniquement les assets critiques de monitoring)
+health_monitoring_job = define_asset_job(
+    name="health_monitoring_job",
+    selection=AssetSelection.assets(monitor_inference_health, ai_regression_test, knowledge_drift_check)
+)
+
+# Job MLOps pour le capteur (sensor)
 mlops_job = define_asset_job(name="mlops_job", selection=AssetSelection.groups("mlops"))
 
-daily_refresh_schedule = ScheduleDefinition(job=all_assets_job, cron_schedule="0 0 * * *")
-hourly_health_check = ScheduleDefinition(job=mlops_job, cron_schedule="0 * * * *")
+# --- SENSORS ---
+@sensor(job=mlops_job)
+def auto_lora_sensor(context):
+    return auto_lora_trigger.check_gold_dataset_sensor(context)
+
+# --- SCHEDULES ---
+# Ingestion quotidienne à 03:00 du matin
+daily_ingestion_schedule = ScheduleDefinition(
+    job=ingestion_job, 
+    cron_schedule="0 3 * * *",
+    execution_timezone="Europe/Paris",
+    default_status=DefaultScheduleStatus.RUNNING
+)
+
+# Maintenance et Sync Graph à 05:00 du matin (après l'ingestion)
+daily_maintenance_schedule = ScheduleDefinition(
+    job=maintenance_job,
+    cron_schedule="0 5 * * *",
+    execution_timezone="Europe/Paris",
+    default_status=DefaultScheduleStatus.RUNNING
+)
+
+# Monitoring de santé toutes les heures
+hourly_monitoring_schedule = ScheduleDefinition(
+    job=health_monitoring_job,
+    cron_schedule="0 * * * *",
+    execution_timezone="Europe/Paris",
+    default_status=DefaultScheduleStatus.RUNNING
+)
 
 # --- DEFINITIONS ---
 defs = Definitions(
     assets=[
         raw_characters, refined_characters, filtered_characters, trained_characters_model, character_artifacts,
-        raw_anime, filtered_anime, anime_themes, trained_anime_model, anime_artifacts,
+        raw_anime, reconciled_anime, filtered_anime, anime_themes, trained_anime_model, anime_artifacts,
         raw_manga, filtered_manga, manga_covers, trained_manga_model, manga_artifacts,
         monitor_inference_health, exported_user_feedback, trl_ready_dataset, trigger_model_retraining,
         ragas_performance_comparison, legacy_retrieval_metrics, finetuning_dataset_asset, otaku_model_training,
@@ -154,11 +207,18 @@ defs = Definitions(
         ai_regression_test, self_healing_graph_agent, continuous_pretraining_draft,
         sync_anime_to_graph, sync_manga_to_graph, sync_characters_to_graph
     ],
-    jobs=[all_assets_job, mlops_job],
-    schedules=[daily_refresh_schedule, hourly_health_check],
-    sensors=[auto_lora_trigger.check_gold_dataset_sensor],
+    jobs=[full_pipeline_job, ingestion_job, maintenance_job, health_monitoring_job, mlops_job],
+    schedules=[daily_ingestion_schedule, daily_maintenance_schedule, hourly_monitoring_schedule],
+    sensors=[auto_lora_sensor],
     resources={
         "chroma": ChromaResource(persist_path=str(PROJECT_ROOT / "data" / "chroma_db")),
-        "neo4j": Neo4jResource(uri=os.getenv("NEO4J_URI", "bolt://localhost:7687"), user=os.getenv("NEO4J_USER", "neo4j"), password=os.getenv("NEO4J_PASSWORD", "password"))
+        "neo4j": Neo4jResource(
+            uri=os.getenv("NEO4J_URI", "bolt://localhost:7687"), 
+            user=os.getenv("NEO4J_USER", "neo4j"), 
+            password=os.getenv("NEO4J_PASSWORD") or os.environ.get("NEO4J_PASSWORD")
+        )
     }
 )
+
+if not os.getenv("NEO4J_PASSWORD"):
+    logger.warning("NEO4J_PASSWORD is not set in environment variables.")

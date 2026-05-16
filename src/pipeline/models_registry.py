@@ -37,8 +37,8 @@ class ModelsRegistry:
     def vision_model(self):
         if self._vision_model is None:
             from sentence_transformers import SentenceTransformer
-            # Par défaut, on garde la configuration actuelle
-            self._vision_model = SentenceTransformer('google/siglip-so400m-patch14-384', device=self.device)
+            # Changé vers CLIP pour une meilleure compatibilité SentenceTransformers sur Windows
+            self._vision_model = SentenceTransformer('clip-ViT-B-32', device=self.device)
         return self._vision_model
 
 # Instance globale

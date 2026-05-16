@@ -23,11 +23,12 @@ class ResponseJudge:
                 data = orjson.loads(eval_raw[eval_raw.find('{'):eval_raw.rfind('}')+1])
                 evaluation = JudgeEvaluation(**data)
                 
-                if self.obs_service:
+                # Check for method existence to prevent AttributeError
+                if self.obs_service and hasattr(self.obs_service, 'log_dynamic_eval'):
                     self.obs_service.log_dynamic_eval(query, context, answer, evaluation)
                     
                 return evaluation
         except Exception as e:
-            logger.warning(f"Judge parsing failed: {e}")
+            logger.warning(f"Judge parsing failed: {e}. Raw: {eval_raw[:100]}...")
             
         return None

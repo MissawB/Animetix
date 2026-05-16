@@ -2,6 +2,8 @@ import logging
 from typing import Optional, List, Dict, Any, Generator
 from core.ports.inference_port import InferencePort
 
+logger = logging.getLogger("animetix.inference.gguf")
+
 class GgufAdapter(InferencePort):
     def __init__(self, model_path: str):
         self.model_path = model_path
@@ -11,16 +13,38 @@ class GgufAdapter(InferencePort):
         if self.llm: return
         try:
             from llama_cpp import Llama
+            logger.info(f"🏗️ Loading GGUF Model: {self.model_path}")
             self.llm = Llama(model_path=self.model_path, n_ctx=4096, n_gpu_layers=-1)
-        except: pass
+        except ImportError:
+            logger.warning("⚠️ llama-cpp-python not installed. GGUFAdapter disabled.")
+        except Exception as e:
+            logger.error(f"❌ Failed to load GGUF model: {e}")
 
     def generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0) -> str:
-        self._load_model()
-        if not self.llm: return "Erreur: GGUF indisponible."
-        res = self.llm.create_chat_completion(
-            messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}]
-        )
-        return res['choices'][0]['message']['content']
+        try:
+            self._load_model()
+            if not self.llm: return "Erreur: GGUF indisponible."
+            res = self.llm.create_chat_completion(
+                messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}]
+            )
+            return res['choices'][0]['message']['content']
+        except Exception as e:
+            logger.error(f"GGUF Generation Error: {e}")
+            return f"Erreur GGUF: {e}"
+
+    def get_text_embedding(self, text: str) -> List[float]:
+        """Génère un embedding via le modèle GGUF si supporté, sinon fallback local."""
+        try:
+            self._load_model()
+            if not self.llm: return []
+            # llama-cpp-python supporte les embeddings si n_ctx/embedding=True est configuré
+            # Ici on fait un simple fallback vers un modèle SentenceTransformers local pour la stabilité
+            from sentence_transformers import SentenceTransformer
+            model = SentenceTransformer('paraphrase-multilingual-mpnet-base-v2')
+            return model.encode(text).tolist()
+        except Exception as e:
+            logger.error(f"Embedding Error: {e}")
+            return []
 
     def stream_generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0):
         self._load_model()

@@ -38,6 +38,17 @@ class EmojiDomainService:
         yield {"type": "result", "content": emojis}
 
     def generate_emojis(self, media_type: str, title: str, description: str) -> List[str]:
+        """Génère la suite d'emojis pour une œuvre donnée avec robustesse."""
+        try:
+            res = self.llm_service.generate_emojis(media_type, title, description)
+            return res if res else ["❓", "❓", "❓"]
+        except Exception:
+            return ["❓", "❓", "❓"]
 
-        """Génère la suite d'emojis pour une œuvre donnée."""
-        return self.llm_service.generate_emojis(media_type, title, description)
+    def _parse_emojis(self, text: str) -> List[str]:
+        """Extrait les emojis d'une chaîne de texte LLM."""
+        if not text: return ["❓"]
+        # On garde uniquement les caractères emoji
+        import emoji
+        found = [c for c in text if emoji.is_emoji(c)]
+        return found if found else ["❓"]

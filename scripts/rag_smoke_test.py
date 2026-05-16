@@ -18,7 +18,7 @@ def run_smoke_test():
         baseline = json.load(f)
         
     # 2. Exécuter l'évaluation actuelle
-    from scripts.mlops_rag_eval import run_mlops_eval
+    from src.scripts.mlops_rag_eval import run_mlops_eval
     current_report = run_mlops_eval()
     
     # 3. Comparer (exemple simplifié)

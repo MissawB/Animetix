@@ -19,16 +19,23 @@ for pkg in [
     'transformers', 'datasets', 'bleach', 'jwt', 'wandb'
 ]:
     sys.modules[pkg] = MockPackage()
-
 # Force Mock Container Module
 mock_container_instance = MagicMock()
 mock_container_module = MagicMock()
 mock_container_module.get_container.return_value = mock_container_instance
+sys.modules['src.backend.animetix.containers'] = mock_container_module
 sys.modules['animetix.containers'] = mock_container_module
 
 # --- 2. SIMPLE FIXTURES ---
 @pytest.fixture(autouse=True)
+def mock_container(mocker):
+    """Fixture to provide access to the mock container in tests."""
+    return mock_container_instance
+
+@pytest.fixture(autouse=True)
 def mock_heavy_services(mocker):
+# ... code ...
+
     mocker.patch('requests.post', return_value=MagicMock(
         status_code=200, 
         json=lambda: {"text": "{}", "score": 0.5, "image_url": "http://img", "answer": "Naruto", "ready": True, "reasoning": "R"}
@@ -38,12 +45,3 @@ def mock_heavy_services(mocker):
         json=lambda: {"status": "ok"}
     ))
 
-@pytest.fixture(autouse=True)
-def mock_animetix_service(mocker):
-    # Mocking services directly
-    mock_instance = MagicMock()
-    mocker.patch('animetix.views.AnimetixService', return_value=mock_instance)
-    mocker.patch('animetix.services.AnimetixService', return_value=mock_instance)
-    mocker.patch('animetix.api_views.AnimetixService', return_value=mock_instance)
-    mocker.patch('animetix.schema.AnimetixService', return_value=mock_instance)
-    return mock_instance

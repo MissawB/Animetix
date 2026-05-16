@@ -17,6 +17,17 @@ class CatalogService:
         self.cache = cache_service
         self._cached_catalogs = {}
 
+    def load_data(self, media_type: str) -> Optional[Dict]:
+        """Backward compatibility method for AnimetixService.load_data."""
+        try:
+            return self.get_catalog(media_type)
+        except CatalogNotFoundError:
+            logger.warning(f"Catalog for {media_type} not found.")
+            return None
+        except Exception as e:
+            logger.error(f"Error loading data for {media_type}: {e}")
+            return None
+
     def get_catalog(self, media_type: str) -> Dict:
         """
         Charge et prépare le catalogue pour un type de média spécifique.

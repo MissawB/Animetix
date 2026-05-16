@@ -14,17 +14,22 @@ if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(os.path.join(BASE_DIR, 'pipeline'))
 
-from backend.animetix.services import AnimetixService
-from pipeline.neo4j_client import neo4j_manager
-from models_registry import models_registry
+# Initialisation différée
+def get_repo():
+    from backend.animetix.containers import get_container
+    return get_container().repository
 
-animetix_service = AnimetixService()
-repo = animetix_service.repository
+def get_pipeline_resources():
+    from pipeline.models_registry import models_registry
+    from pipeline.neo4j_client import neo4j_manager
+    return models_registry, neo4j_manager
 
 CLEAN_DB = os.path.join(BASE_DIR, 'data', 'processed', 'clean_root_mangas.json')
 BATCH_SIZE = 32 # Taille optimale pour l'inférence sans GPU
 
 def run_vectorization():
+    repo = get_repo()
+    models_registry, neo4j_manager = get_pipeline_resources()
     try:
         if not os.path.exists(CLEAN_DB):
             print(f"❌ {CLEAN_DB} not found."); return

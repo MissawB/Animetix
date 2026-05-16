@@ -1,0 +1,57 @@
+{
+  "timestamp": 1778954670.249428,
+  "model_id": "unknown",
+  "avg_accuracy": 0.619047619047619,
+  "avg_latency": 96.81936700003487,
+  "details": [
+    {
+      "query": "Explique l'intrigue de l'anime Death Note en une phrase.",
+      "accuracy": 0.3333333333333333,
+      "latency": 138.88824081420898,
+      "hits": 1,
+      "total_facts": 3
+    },
+    {
+      "query": "Qui est l'auteur du manga One Piece ?",
+      "accuracy": 1.0,
+      "latency": 61.237143754959106,
+      "hits": 1,
+      "total_facts": 1
+    },
+    {
+      "query": "Quelle est l'arme emblématique de Guts dans Berserk ?",
+      "accuracy": 1.0,
+      "latency": 91.813729763031,
+      "hits": 1,
+      "total_facts": 1
+    },
+    {
+      "query": "Qui a créé la franchise de jeux vidéo Metal Gear ?",
+      "accuracy": 1.0,
+      "latency": 96.94929313659668,
+      "hits": 1,
+      "total_facts": 1
+    },
+    {
+      "query": "Quel studio a produit l'anime Neon Genesis Evangelion ?",
+      "accuracy": 0.0,
+      "latency": 103.84482955932617,
+      "hits": 0,
+      "total_facts": 1
+    },
+    {
+      "query": "Quel studio est derrière l'animation de Jujutsu Kaisen ?",
+      "accuracy": 0.0,
+      "latency": 105.58279538154602,
+      "hits": 0,
+      "total_facts": 1
+    },
+    {
+      "query": "Qui interprète le rôle du Joker dans le film The Dark Knight de 2008 ?",
+      "accuracy": 1.0,
+      "latency": 79.41953659057617,
+      "hits": 1,
+      "total_facts": 1
+    }
+  ]
+}

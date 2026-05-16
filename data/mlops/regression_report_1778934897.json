@@ -1,0 +1,22 @@
+{
+  "timestamp": 1778934897.51596,
+  "model_id": "unknown",
+  "avg_accuracy": 0.0,
+  "avg_latency": 6.156182885169983,
+  "details": [
+    {
+      "query": "Explique l'intrigue de l'anime Death Note en une phrase.",
+      "accuracy": 0.0,
+      "latency": 6.503101110458374,
+      "hits": 0,
+      "total_facts": 3
+    },
+    {
+      "query": "Qui est l'auteur du manga One Piece ?",
+      "accuracy": 0.0,
+      "latency": 5.809264659881592,
+      "hits": 0,
+      "total_facts": 1
+    }
+  ]
+}

@@ -1,3 +1,18 @@
+# Agentic RAG Prompts
+scout_distiller:
+  template: |
+    RÔLE : Scout (Distillateur de Contexte).
+    REQUÊTE : '{query}'
+    CONTEXTE BRUT :
+    {context}
+
+    MISSION : Résume les points clés et extrais les faits cruciaux nécessaires pour répondre à la requête.
+    CONSIGNE CRITIQUE : Conserve impérativement TOUS les noms propres (personnages, shinigami), objets uniques (carnet) et lieux mentionnés.
+
+    RÉPONSE : Texte dense et factuel (Truth Path).
+  system_prompt: "Tu es le Scout Animetix. Ta mission est de ne perdre aucun fait crucial."
+
+
 complexity_analyzer:
   template: |
     ANALYSE LA COMPLEXITÉ : '{query}'
@@ -45,10 +60,8 @@ critic_evaluation:
     CONTEXTE RÉCUPÉRÉ :
     {context}
     
-    MISSIONS :
-    1. Évalue si le contexte permet de répondre précisément à la requête.
-    2. Donne un score de confiance (0.0 à 1.0).
-    3. Si insuffisant, suggère une action (RETRY_LOCAL, TRIGGER_WEB, PROCEED).
+    MISSION : Évalue si le contexte contient des informations factuelles permettant de répondre à la requête.
+    Attention : Sois objectif. Si le nom de l'auteur ou le studio est présent, c'est pertinent !
     
     RÉPONDS UNIQUEMENT EN JSON :
     {{
@@ -57,7 +70,7 @@ critic_evaluation:
       "missing_info": "...",
       "suggested_action": "RETRY_LOCAL|TRIGGER_WEB|PROCEED"
     }}
-  system_prompt: "Tu es le Critic Animetix. Tu es sévère et factuel."
+  system_prompt: "Tu es le Critic Animetix. Tu es rigoureux mais pragmatique."
 
 synthesizer_final:
   template: |
@@ -66,14 +79,35 @@ synthesizer_final:
     CONTEXTE VALIDÉ :
     {context}
     
-    MISSION : Rédige une réponse d'expert, élégante et sourcée.
+    MISSION : Rédige une réponse précise basées UNIQUEMENT sur le contexte fourni.
+    Inclus impérativement les noms propres, dates et faits clés trouvés dans le contexte.
+    
+    RÉPONDS UNIQUEMENT EN JSON :
+    {{
+      "answer": "Ta réponse textuelle ici",
+      "sources": ["source 1", "source 2"],
+      "confidence": 0.95
+    }}
+  system_prompt: "Tu es le Synthesizer Animetix. Ta priorité est la précision factuelle."
+
+synthesizer_correction:
+  template: |
+    RÔLE : Synthétiseur Expert (Correction).
+    REQUÊTE : '{query}'
+    CONTEXTE VALIDÉ :
+    {context}
+    
+    RETOUR DU JUGE (FEEDBACK) :
+    {feedback}
+    
+    MISSION : Rédige une NOUVELLE réponse corrigée, en tenant compte du feedback. Sois extrêmement prudent sur la fidélité au contexte.
     Génère un dictionnaire JSON :
     {{
       "answer": "...",
       "sources": ["source 1", "source 2"],
-      "confidence": 0.95
+      "confidence": 0.98
     }}
-  system_prompt: "Tu es le Synthesizer Animetix. Tu rédiges avec le style d'un grand critique média."
+  system_prompt: "Tu es le Synthesizer Animetix (Mode Auto-Correction). Ta priorité absolue est la fidélité au contexte."
 
 deep_fact_checker:
   template: |
@@ -106,26 +140,28 @@ deep_fact_checker:
 
 answer_judge:
   template: |
-    RÔLE : Juge Expert en Qualité IA.
-    REQUÊTE : '{query}'
-    CONTEXTE FOURNI :
+    RÔLE : Auditeur Qualité IA (Judge).
+    TACHE : Évalue la fiabilité de la réponse fournie par rapport au contexte.
+    
+    REQUÊTE ORIGINALE : '{query}'
+    CONTEXTE (SOURCE DE VÉRITÉ) :
     {context}
-    RÉPONSE À ÉVALUER :
+    RÉPONSE À AUDITER :
     {answer}
     
     MISSIONS :
-    1. FAITHFULNESS : La réponse contient-elle des informations non présentes dans le contexte ? (Hallucinations).
-    2. RELEVANCY : La réponse répond-elle directement et précisément à la requête ?
+    1. FAITHFULNESS : La réponse contient-elle des faits NON présents dans le contexte ? (OUI si hallucination).
+    2. RELEVANCY : La réponse est-elle une réponse directe à la requête ?
     
-    RÉPONDS UNIQUEMENT EN JSON :
+    RÉPONDS UNIQUEMENT EN JSON (Strict) :
     {{
-      "faithfulness_score": 0.0,
-      "relevancy_score": 0.0,
+      "faithfulness_score": 0.0|1.0,
+      "relevancy_score": 0.0|1.0,
       "hallucination_detected": true|false,
-      "reasoning": "Pourquoi cette note ?",
+      "reasoning": "Explication courte de l'audit",
       "is_reliable": true|false
     }}
-  system_prompt: "Tu es le Juge Suprême Animetix. Tu es impartial et extrêmement rigoureux."
+  system_prompt: "Tu es l'Auditeur Suprême Animetix. Tu es impitoyable avec les hallucinations."
 
 # CoVe Oracle Prompts
 cove_baseline:
@@ -184,3 +220,33 @@ akinetix_next_question:
 
 undercover_clue:
   template: "Donne un seul mot-clé thématique commun à ces deux {media_type} : '{item_a}' and '{item_b}'. Ne cite aucun nom."
+
+# Reasoning Agent Prompts
+reasoning_thought:
+  template: |
+    QUERY : {query}
+    CONTEXTE : {media_type}
+    HISTORIQUE : {history}
+    
+    MISSION : Réfléchis étape par étape à la manière de répondre à cette question.
+    Quelles informations manquent ? Dois-je chercher dans la base vectorielle ou le graphe de connaissances ?
+    
+    Réponds impérativement sous ce format :
+    THOUGHT: [Ton raisonnement]
+    ACTION: [SEARCH|GRAPH|ANSWER]
+    PARAMS: [Paramètres de recherche ou titre à explorer]
+  system_prompt: "Tu es un agent de raisonnement logique Animetix."
+
+reasoning_final:
+  template: |
+    CONSIGNES : Réponds à la question en utilisant le CONTEXTE fourni. 
+    TU DOIS citer tes sources à la fin de tes affirmations clés sous la forme [Source: Nom].
+    
+    CONTEXTE :
+    {context}
+    
+    RAISONNEMENT :
+    {thought}
+    
+    QUESTION : {query}
+  system_prompt: "Tu es l'Expert Animetix qui cite toujours ses sources."

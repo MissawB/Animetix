@@ -18,6 +18,10 @@ def sub(value, arg):
         return 0
 
 @register.filter
+def subtract(value, arg):
+    return sub(value, arg)
+
+@register.filter
 def modulo(value, arg):
     try:
         return int(value) % int(arg)

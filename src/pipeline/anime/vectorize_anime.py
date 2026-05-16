@@ -16,20 +16,25 @@ if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 INPUT_FILE = os.path.join(BASE_DIR, 'data', 'processed', 'clean_root_animes.json')
 
-# Imports du domaine
-from pipeline.models_registry import models_registry
-from pipeline.chroma_client import chroma_manager
-from pipeline.neo4j_client import neo4j_manager
+# Initialisation différée
+def get_repo():
+    from backend.animetix.containers import get_container
+    return get_container().repository
+
+def get_pipeline_resources():
+    from pipeline.models_registry import models_registry
+    from pipeline.neo4j_client import neo4j_manager
+    return models_registry, neo4j_manager
 
 BATCH_SIZE = 32
 
 def run_vectorization(chroma_res=None, neo4j_res=None):
     """
     Pipeline de vectorisation Multimodale avec support Matryoshka (MRL).
-    Phase 1 : Embeddings Texte (Jina-v3)
-    Phase 2 : Embeddings Vision (SigLIP)
-    Phase 3 : Sync Neo4j
     """
+    repo = get_repo()
+    models_registry, neo4j_manager = get_pipeline_resources()
+    
     print("🚀 Starting SOTA 2026 Multimodal Vectorization (MRL Enabled)...")
     
     if not os.path.exists(INPUT_FILE):
@@ -50,6 +55,7 @@ def run_vectorization(chroma_res=None, neo4j_res=None):
         batch = new_items[i:i + BATCH_SIZE]
         
         # --- PHASE 1 : TEXTE (Jina-v3 avec Matryoshka) ---
+        # On génère des vecteurs de dimension 1024, optimisés MRL
         descriptions = [item.get('description', '') for item in batch]
         t_embeddings = text_model.encode(descriptions, convert_to_numpy=True)
         
@@ -70,8 +76,11 @@ def run_vectorization(chroma_res=None, neo4j_res=None):
         for idx, item in enumerate(batch):
             ext_id = str(item['id'])
             
-            # Upsert Postgres (via manager global en prod)
-            # Ici on simule l'enregistrement des vecteurs 1024 et 1152
+            # Upsert Postgres avec support Matryoshka
+            # On stocke le vecteur complet (1024), pgvector s'occupera du slicing au query time
+            repo.upsert_items('anime_thematic', [ext_id], [t_embeddings[idx].tolist()], [item])
+            if v_embeddings[idx]:
+                repo.upsert_items('character_visual_vibe', [ext_id], [v_embeddings[idx]], [item])
             
             # SYNC NEO4J AUTOMATIQUE (Dagster Flow)
             try:

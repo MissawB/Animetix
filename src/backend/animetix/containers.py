@@ -216,8 +216,13 @@ class Container:
         return self._get('studio_transform_service', lambda: StudioTransformService(inference_engine=self.inference_engine))
 
     @property
+    def manga_ocr_adapter(self):
+        from adapters.inference.manga_ocr_adapter import MangaOcrAdapter
+        return self._get('manga_ocr_adapter', lambda: MangaOcrAdapter(token=os.getenv("HF_TOKEN")))
+
+    @property
     def manga_flow_service(self):
-        return self._get('manga_flow_service', lambda: MangaFlowService(inference_engine=self.inference_engine, llm_service=self.llm_service))
+        return self._get('manga_flow_service', lambda: MangaFlowService(inference_engine=self.manga_ocr_adapter, llm_service=self.llm_service))
 
     @property
     def soundscape_service(self):

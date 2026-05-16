@@ -1,9 +1,12 @@
 import os
 import torch
 import requests
+import logging
 from typing import Optional, List, Dict, Any
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from core.ports.inference_port import InferencePort
+
+logger = logging.getLogger("animetix.inference")
 
 class LocalLlamaAdapter(InferencePort):
     def __init__(self, model_path: str, hf_token: Optional[str] = None, use_4bit: bool = True, draft_model_path: Optional[str] = None):
@@ -17,7 +20,8 @@ class LocalLlamaAdapter(InferencePort):
         try:
             self.tokenizer = AutoTokenizer.from_pretrained(self.model_path)
             self.model = AutoModelForCausalLM.from_pretrained(self.model_path, device_map="auto", load_in_4bit=True)
-        except: pass
+        except Exception as e:
+            logger.error(f"Failed to load local Llama model from {self.model_path}: {e}")
 
     def generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0) -> str:
         self._load_model()

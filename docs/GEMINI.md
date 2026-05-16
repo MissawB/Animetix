@@ -2,8 +2,14 @@
 
 This file contains foundational mandates for Gemini CLI interventions in this workspace. These instructions take absolute precedence over general defaults.
 
-## Architectural Mandate: Hexagonal Architecture (Ports and Adapters)
-The project MUST follow Hexagonal Architecture principles to ensure decoupling between core logic and infrastructure.
+## Architectural Mandate: Atomic & Hexagonal Architecture (Ports and Adapters)
+The project MUST follow Hexagonal Architecture principles to ensure decoupling between core logic and infrastructure. The architecture MUST be atomic: components should be small, single-purpose, and easily swappable.
+
+### Refactoring Priorities (High Priority)
+- **Modularization of UI Logic:** `base.html` has been partially cleaned by extracting JS into `animetix_core.js`. Continue to modularize complex templates (like `animinator.html` or `online_room.html`) and move inline scripts to dedicated static files.
+- **Decoupling of Utils:** Global utility functions in `src/backend/animetix/utils.py` (e.g., session helpers) MUST be moved to dedicated ports/adapters or domain services to improve reusability and testability.
+- **Error Handling Strengthening:** Systematically replace `except: pass` blocks in IA services (especially in `AgenticRAGService`) with explicit exception handling and structured logging.
+- **Prompt Externalization:** Following the `ReasoningAgentService` refactor, ensure ALL other services use `PromptManager` and external YAML files. NO hardcoded prompts in Python files.
 
 - **Domain (Core):** Pure business logic, entities, and use cases.
     - **Entities:** Located in `src/core/domain/entities/`. Use `Pydantic` or `Dataclasses` for structured data (see `ai_schemas.py`).

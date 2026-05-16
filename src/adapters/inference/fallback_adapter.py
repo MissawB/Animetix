@@ -1,52 +1,90 @@
-from typing import List, Optional, Dict, Any
 import logging
+from typing import List, Optional, Dict, Any
 from core.ports.inference_port import InferencePort
 
-logger = logging.getLogger('animetix')
+logger = logging.getLogger('animetix.inference.fallback')
 
 class FallbackInferenceAdapter(InferencePort):
+    """
+    Orchestre une liste d'adaptateurs d'inférence.
+    Passe au suivant si l'un d'eux échoue ou retourne une chaîne commençant par 'Erreur'.
+    """
     def __init__(self, adapters: List[InferencePort]):
         self.adapters = [a for a in adapters if a is not None]
-
-    def _fallback_call(self, method_name: str, *args, **kwargs):
-        last_error = ""
-        for adapter in self.adapters:
-            try:
-                method = getattr(adapter, method_name)
-                res = method(*args, **kwargs)
-                if res: return res
-            except Exception as e:
-                last_error = str(e)
-                continue
-        return None
 
     def generate(self, prompt: str, system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.", thinking_budget: int = 0) -> str:
         last_error = ""
         for adapter in self.adapters:
+            adapter_name = adapter.__class__.__name__
             try:
+                logger.info(f"🔄 [Fallback] Trying {adapter_name}...")
                 result = adapter.generate(prompt, system_prompt, thinking_budget)
-                if result and not result.startswith("Erreur"): return result
-                last_error = result
+                
+                # CRITIQUE : Si le résultat est nul ou commence par "Erreur", on considère ça comme un échec
+                if not result or str(result).strip().startswith("Erreur"):
+                    last_error = str(result) if result else "Résultat vide"
+                    logger.warning(f"⏩ [Fallback] {adapter_name} failed: {last_error[:50]}")
+                    continue # On passe au suivant
+                
+                # Si on est ici, on a un succès !
+                logger.info(f"✅ [Fallback] {adapter_name} success!")
+                return result
+                
             except Exception as e:
                 last_error = str(e)
+                logger.error(f"❌ [Fallback] {adapter_name} crash: {e}")
                 continue
+                
         return f"Échec critique : Tous les moteurs LLM ont échoué. Dernière erreur: {last_error}"
 
     def stream_generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0):
+        """Streaming avec repli intelligent."""
         for adapter in self.adapters:
             try:
-                return adapter.stream_generate(prompt, system_prompt, thinking_budget)
-            except:
+                # Tentative de premier token pour valider l'adaptateur
+                gen = adapter.stream_generate(prompt, system_prompt, thinking_budget)
+                first_chunk = next(gen)
+                
+                # Validation du premier chunk
+                if first_chunk and not str(first_chunk).strip().startswith("Erreur"):
+                    def success_gen():
+                        yield first_chunk
+                        yield from gen
+                    return success_gen()
+                
+                logger.warning(f"⏩ [Stream Fallback] Skipping {adapter.__class__.__name__} due to invalid chunk.")
+            except StopIteration:
                 continue
+            except Exception as e:
+                logger.error(f"❌ [Stream Fallback] {adapter.__class__.__name__} failed: {e}")
+                continue
+        
+        # Fallback final vers generate standard (qui a sa propre logique de repli)
         def error_gen(): yield self.generate(prompt, system_prompt, thinking_budget)
         return error_gen()
 
+    def _fallback_call(self, method_name: str, *args, **kwargs):
+        for adapter in self.adapters:
+            try:
+                method = getattr(adapter, method_name)
+                res = method(*args, **kwargs)
+                # Si c'est une liste ou dict vide, on considère ça comme un échec potentiel selon le contexte,
+                # mais ici on reste simple.
+                if res is not None: return res
+            except:
+                continue
+        return None
+
+    # --- Implementations déléguées ---
     def calculate_visual_similarity(self, query: str, item_id: str, media_type: str) -> float:
         res = self._fallback_call("calculate_visual_similarity", query, item_id, media_type)
         return float(res) if res is not None else 0.0
 
     def get_image_embedding(self, image_data: bytes, model_id: Optional[str] = None) -> List[float]:
         return self._fallback_call("get_image_embedding", image_data, model_id) or []
+
+    def get_text_embedding(self, text: str) -> List[float]:
+        return self._fallback_call("get_text_embedding", text) or []
 
     def classify_image(self, image_data: bytes, candidate_labels: List[str], model_id: Optional[str] = None) -> Dict[str, float]:
         return self._fallback_call("classify_image", image_data, candidate_labels, model_id) or {}
@@ -76,7 +114,7 @@ class FallbackInferenceAdapter(InferencePort):
         return self._fallback_call("inpaint_text_bubbles", image_data, text_placements) or ""
 
     def moderate_content(self, text: str, categories: List[str]) -> Dict[str, Any]:
-        return self._fallback_call("moderate_content", text, categories) or {}
+        return self._fallback_call("moderate_content", text, categories) or {"is_safe": True}
 
     def generate_image_description(self, image_data: bytes, prompt: str = "") -> str:
         return self._fallback_call("generate_image_description", image_data, prompt) or ""

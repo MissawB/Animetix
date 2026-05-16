@@ -2,11 +2,12 @@ import json
 import random
 from channels.generic.websocket import AsyncWebsocketConsumer
 from asgiref.sync import sync_to_async
-from .services import AnimetixService, LangChainService, DIFFICULTY_SETTINGS
+from .containers import get_container
+from .services import DIFFICULTY_SETTINGS
 from adapters.persistence.django_cache_state_adapter import DjangoCacheStateAdapter
 
-animetix_service = AnimetixService()
 state_adapter = DjangoCacheStateAdapter()
+
 
 # --- 1. CONSUMER UNDERCOVER ---
 class UndercoverConsumer(AsyncWebsocketConsumer):
@@ -105,21 +106,24 @@ class UndercoverConsumer(AsyncWebsocketConsumer):
                 await self.channel_layer.send(ch, {'type': 'send_msg', 'message': {'type': 'private_role', 'role': p['role'], 'word': p['word'], 'image': p['image']}})
 
     async def start_game_logic(self, room):
-        game_data = await sync_to_async(animetix_service.game_service.start_undercover_game)(
+        container = get_container()
+        game_data = await sync_to_async(container.game_service.start_undercover_game)(
             media_type=room['media_type'], difficulty=room['difficulty'],
             player_ids=list(room['players'].keys()), rank_limits=DIFFICULTY_SETTINGS
         )
         if not game_data: return
-        lang_service = LangChainService()
-        clue = await sync_to_async(lang_service.generate_undercover_clue)(
-            room['media_type'], game_data['civil_word'], game_data['undercover_word'], "Français"
-        )
+        
+        clue = await sync_to_async(container.llm_service.generate_undercover_clue)(
+            room['media_type'], game_data['civil_word'], game_data['undercover_word']
+        ) or "Mystère..."
+        
         for ch, p in room['players'].items():
             assignment = game_data['assignments'][ch]
             p['role'], p['word'], p['image'] = assignment['role'], assignment['word'], assignment['image']
         room['clue'], room['state'] = clue, 'playing'
         await self.save_room(room)
         await self.broadcast_state()
+
 
     async def send_msg(self, event): await self.send(text_data=json.dumps(event['message']))
 
@@ -150,12 +154,13 @@ class CodeMangaConsumer(AsyncWebsocketConsumer):
         await self.save_room(room); await self.broadcast_state()
 
     async def generate_grid(self, room):
-        data = await sync_to_async(animetix_service.load_data)('Anime')
+        data = await sync_to_async(get_container().catalog_service.load_data)('Anime')
         if not data: return
         selected = random.sample(list(data['db']), 25)
         roles = (['blue'] * 9) + (['red'] * 8) + (['neutral'] * 7) + (['assassin'] * 1); random.shuffle(roles)
         room['grid'] = [{'title': selected[i].get('title'), 'image': selected[i].get('image'), 'role': roles[i], 'revealed': False} for i in range(25)]
         room['blue_score'], room['red_score'], room['turn'], room['winner'] = 0, 0, 'blue', None
+
 
     async def handle_card_click(self, room, idx):
         if room['state'] != 'playing' or room['winner']: return
@@ -245,12 +250,13 @@ class DuelConsumer(AsyncWebsocketConsumer):
         if duel.is_finished: return
 
         # On charge les data pour la similarité
-        data = await sync_to_async(animetix_service.load_data)(duel.media_type)
+        container = get_container()
+        data = await sync_to_async(container.catalog_service.load_data)(duel.media_type)
         secret = duel.secret_title
         
         # Vérification match direct
         secret_item = data['title_to_full_data'].get(secret)
-        is_correct = await sync_to_async(animetix_service.game_service.check_title_match)(guess, secret_item)
+        is_correct = await sync_to_async(container.game_service.check_title_match)(guess, secret_item)
         
         if is_correct:
             duel.is_finished = True
@@ -271,10 +277,11 @@ class DuelConsumer(AsyncWebsocketConsumer):
             })
         else:
             # Similarité pour feedback (facultatif mais fun en 1vs1)
-            raw_sim = await sync_to_async(animetix_service.game_service.calculate_raw_similarity)(
+            raw_sim = await sync_to_async(container.game_service.calculate_raw_similarity)(
                 duel.media_type, secret, guess, data
             )
             score = round(raw_sim * 100, 1)
+
             
             await self.channel_layer.group_send(self.room_group_name, {
                 'type': 'send_msg',

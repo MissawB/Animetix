@@ -1,0 +1,60 @@
+<h2>Analyse Vidéo : SOTA Mai 2026 (Hugging Face)</h2>
+<p class="subtitle">Focus sur les modèles Open-Weight & APIs Communautaires</p>
+
+<div class="options">
+  <div class="option" data-choice="qwen3" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Qwen3-VL-A3B (Alibaba)</h3>
+      <p><b>Le champion actuel du VideoMME.</b></p>
+      <ul>
+        <li>Architecture MoE (Mixture of Experts) ultra-efficace.</li>
+        <li>Parfait pour le mini-jeu : Compréhension spatio-temporelle fine.</li>
+        <li>Disponible via l'API Inference de Hugging Face ou SiliconFlow.</li>
+      </ul>
+      <div class="label" style="color: #60a5fa;">SOTA Vision-Language</div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="gemma4" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Gemma 4 Multimodal (Google Open)</h3>
+      <p><b>Natif Vidéo & Audio (Avril 2026).</b></p>
+      <ul>
+        <li>Traitement conjoint des frames et de la piste sonore.</li>
+        <li>Licence Apache 2.0 (totalement libre).</li>
+        <li>Idéal pour extraire des métadonnées narratives et musicales.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="option" data-choice="minicpm" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>MiniCPM-V-4.6</h3>
+      <p><b>Le roi de l'Edge Computing.</b></p>
+      <ul>
+        <li>Peut tourner en local sur une configuration modeste.</li>
+        <li>Excellent pour l'extraction de métadonnées visuelles rapides.</li>
+        <li>Moins performant sur les résumés très longs (> 30 min).</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="mockup">
+  <div class="mockup-header">Architecture SOTA 2026 suggérée</div>
+  <div class="mockup-body">
+    <div class="pros-cons">
+      <div class="pros">
+        <h4>Pourquoi cette direction ?</h4>
+        <ul>
+          <li><b>Précision :</b> Qwen3 dépasse les anciens Gemini sur l'analyse de détails (ex: objet en arrière-plan).</li>
+          <li><b>Liberté :</b> Pas de vendor lock-in, tu peux changer de fournisseur d'API (HF, Fal, SiliconFlow) sans changer de code.</li>
+          <li><b>Hybride :</b> On utilise l'API pour l'analyse lourde et MiniCPM en local pour le "Live Preview".</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

@@ -267,7 +267,7 @@ PyJWT==2.8.0
 bleach==6.1.0
 playwright
 
-
+drf_spectacular
 pytest-playwright
 z3-solver
 

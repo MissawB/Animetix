@@ -9,7 +9,7 @@ class SearchPlan(BaseModel):
     requires_web: bool = False
     is_visual_query: bool = False
     graph_traversal_steps: List[str] = Field(default_factory=list, description="List of relationship types to follow in the graph.")
-    reasoning: str
+    reasoning: Optional[str] = None
 
 class CritiqueResult(BaseModel):
     is_relevant: bool

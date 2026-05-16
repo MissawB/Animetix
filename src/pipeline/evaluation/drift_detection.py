@@ -5,7 +5,7 @@ from typing import List, Dict
 from datetime import datetime
 
 # Détection robuste de la racine du projet
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 def run_drift_detection(limit=20):
     """

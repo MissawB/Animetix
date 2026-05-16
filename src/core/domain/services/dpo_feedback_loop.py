@@ -16,7 +16,8 @@ class DPOFeedbackLoop:
         if not os.path.exists(data_dir):
             try:
                 os.makedirs(data_dir, exist_ok=True)
-            except: pass
+            except Exception as e:
+                logger.error(f"Failed to create DPO data directory {data_dir}: {e}")
 
     def validate_feedback(self, entry: Dict) -> bool:
         """

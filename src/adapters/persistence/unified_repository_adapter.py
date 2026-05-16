@@ -16,12 +16,13 @@ class UnifiedRepositoryAdapter(RepositoryPort):
     """
     def __init__(self, chroma_db_path: str, project_root: str):
         self.pgvector = PgVectorRepositoryAdapter()
+        self.chroma = ChromaRepositoryAdapter(db_path=chroma_db_path, project_root=project_root)
         self.django = DjangoRepositoryAdapter()
         self.use_pgvector = self.pgvector.enabled
         if not self.use_pgvector:
-            logger.error("PgVector is required but not enabled. Application will not function correctly.")
-            raise RuntimeError("PgVector not enabled")
-        logger.info("Using PgVector as primary repository adapter.")
+            logger.warning("PgVector not enabled. Falling back to ChromaDB as primary.")
+        else:
+            logger.info("Using PgVector as primary repository adapter.")
 
     def _get_primary(self) -> RepositoryPort:
         return self.pgvector

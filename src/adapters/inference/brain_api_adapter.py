@@ -1,8 +1,11 @@
 import os
 import requests
 import time
+import logging
 from typing import Optional, List, Dict, Any
 from core.ports.inference_port import InferencePort
+
+logger = logging.getLogger("animetix.inference")
 
 class BrainAPIAdapter(InferencePort):
     def __init__(self, brain_api_url: str, max_retries: int = 3):
@@ -37,7 +40,8 @@ class BrainAPIAdapter(InferencePort):
         try:
             res = requests.post(f"{self.brain_api_url}/similarity/visual", json={"query": query, "item_id": item_id, "media_type": media_type}, timeout=10)
             if res.status_code == 200: return res.json().get("score", 0.0)
-        except: pass
+        except Exception as e:
+            logger.error(f"BrainAPI Visual Similarity error: {e}")
         return 0.0
 
     def get_image_embedding(self, image_data: bytes, model_id: Optional[str] = None) -> List[float]: return []
@@ -70,5 +74,6 @@ class BrainAPIAdapter(InferencePort):
         try:
             res = requests.get(f"{self.brain_api_url}/health", timeout=5)
             if res.status_code == 200: return {"status": "online", "engine": "Brain-API"}
-        except: pass
+        except Exception as e:
+            logger.error(f"BrainAPI Health check failed: {e}")
         return {"status": "offline", "engine": "Brain-API"}

@@ -3,12 +3,9 @@
 import os
 import sys
 
-
 def main():
     """Run administrative tasks."""
     # Add project root to sys.path
-    import sys
-    import os
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
     src_path = os.path.join(project_root, "src")
     

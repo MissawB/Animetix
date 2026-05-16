@@ -1,16 +1,81 @@
+<style>
+    /* Absolute Force for Search Bar & Autocomplete visibility */
+    .input-group-custom {
+        background-color: var(--card-bg) !important;
+        border: 1px solid rgba(0,0,0,0.1) !important;
+        transition: background-color 0.3s ease;
+    }
+    
+    html[data-bs-theme="dark"] .input-group-custom, 
+    .dark .input-group-custom {
+        background-color: #1e1e2f !important;
+        border-color: rgba(255,255,255,0.1) !important;
+    }
+
+    .input-group-custom input#{{ input_id }} {
+        background-color: transparent !important;
+        color: var(--page-text) !important;
+        border: none !important;
+    }
+
+    html[data-bs-theme="dark"] .input-group-custom input#{{ input_id }},
+    .dark .input-group-custom input#{{ input_id }} {
+        color: #ffffff !important;
+    }
+
+    html[data-bs-theme="dark"] .input-group-custom input#{{ input_id }}::placeholder,
+    .dark .input-group-custom input#{{ input_id }}::placeholder {
+        color: rgba(255,255,255,0.4) !important;
+    }
+
+    /* Dropdown Results Force */
+    #autocomplete-results-{{ input_id }} {
+        background-color: var(--card-bg) !important;
+        border: 1px solid rgba(0,0,0,0.1) !important;
+        border-radius: 20px !important;
+        overflow: hidden !important;
+    }
+
+    html[data-bs-theme="dark"] #autocomplete-results-{{ input_id }},
+    .dark #autocomplete-results-{{ input_id }} {
+        background-color: #1a1a2e !important;
+        border-color: rgba(255,255,255,0.1) !important;
+    }
+
+    .list-group-item-action {
+        color: var(--page-text) !important;
+        background-color: transparent !important;
+    }
+
+    html[data-bs-theme="dark"] .list-group-item-action,
+    .dark .list-group-item-action {
+        color: #ffffff !important;
+    }
+
+    html[data-bs-theme="dark"] .list-group-item-action:hover,
+    .dark .list-group-item-action:hover {
+        background-color: rgba(255,255,255,0.05) !important;
+    }
+
+    html[data-bs-theme="dark"] .list-group-item-action .fw-bold,
+    .dark .list-group-item-action .fw-bold {
+        color: #ffffff !important;
+    }
+</style>
+
 <div class="mb-5 position-relative">
-    <form hx-post="{{ action_url }}" hx-target="main" hx-swap="innerHTML transition:true" hx-push-url="true" class="m-0">
+    <form hx-post="{{ action_url }}" hx-target="body" hx-select="body" hx-swap="innerHTML transition:true" hx-push-url="true" class="m-0">
         {% csrf_token %}
-        <div class="input-group input-group-custom bg-white dark:bg-navy-800 rounded-3xl overflow-hidden shadow-lg border border-white/10">
+        <div class="input-group input-group-custom rounded-3xl overflow-hidden shadow-lg">
             <span class="input-group-text border-0 bg-transparent ps-4">
                 <i class="bi bi-search fs-5 opacity-50 text-primary"></i>
             </span>
-            <input type="text" id="{{ input_id }}" name="guess" class="form-control form-control-lg border-0 shadow-none bg-transparent py-4 ps-2" placeholder="{{ placeholder }}" autocomplete="off" style="color: inherit;">
+            <input type="text" id="{{ input_id }}" name="guess" class="form-control form-control-lg shadow-none py-4 ps-2" placeholder="{{ placeholder }}" autocomplete="off">
             <button type="submit" class="btn btn-primary px-6 font-black italic manga-font rounded-2xl m-2 shadow-xl transition-all hover:scale-105">
                 Valider
             </button>
         </div>
-        <div id="autocomplete-results-{{ input_id }}" class="list-group position-absolute w-100 mt-2 shadow-2xl animate__animated animate__fadeIn" style="z-index: 1000; display: none; border-radius: 20px; overflow: hidden; background: white; border: 1px solid rgba(0,0,0,0.1);">
+        <div id="autocomplete-results-{{ input_id }}" class="list-group position-absolute w-100 mt-2 shadow-2xl animate__animated animate__fadeIn" style="z-index: 1000; display: none;">
         </div>
     </form>
 </div>
@@ -45,13 +110,13 @@
                         if (data.length > 0) {
                             data.forEach(item => {
                                 const div = document.createElement('div');
-                                div.className = 'list-group-item list-group-item-action d-flex align-items-center border-0 py-3 px-4 hover:bg-gray-50 transition-colors';
+                                div.className = 'list-group-item list-group-item-action d-flex align-items-center border-0 py-3 px-4 hover:bg-gray-50 dark:hover:bg-navy-700 transition-colors bg-transparent';
                                 div.style.cursor = 'pointer';
                                 const imgUrl = item.image || 'https://via.placeholder.com/45x60?text=?';
                                 div.innerHTML = `
                                     <img src="${imgUrl}" style="width: 45px; height: 60px; object-fit: cover; border-radius: 8px;" class="me-3 shadow-sm" onerror="this.src='https://via.placeholder.com/45x60?text=?'">
                                     <div class="overflow-hidden">
-                                        <div class="fw-bold text-truncate text-navy-900" style="color: #1a1a2e !important;">${item.title}</div>
+                                        <div class="fw-bold text-truncate text-navy-900 dark:text-white">${item.title}</div>
                                         <div class="text-muted small text-truncate">${item.title_english || ''}</div>
                                     </div>
                                 `;

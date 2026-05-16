@@ -1,6 +1,9 @@
 import requests
+import logging
 from typing import Optional, List, Dict, Any
 from core.ports.inference_port import InferencePort
+
+logger = logging.getLogger("animetix.inference")
 
 class VllmAdapter(InferencePort):
     def __init__(self, api_base: str = "http://localhost:8000/v1", model_name: str = "meta-llama/Llama-3-8B-Instruct"):
@@ -42,7 +45,25 @@ class VllmAdapter(InferencePort):
     def process_manga_page(self, image_data: bytes) -> Dict[str, Any]: return {}
     def inpaint_text_bubbles(self, image_data: bytes, text_placements: List[Dict]) -> str: return ""
     def moderate_content(self, text: str, categories: List[str]) -> Dict[str, Any]: return {"is_safe": True}
-    def generate_image_description(self, image_data: bytes, prompt: str = "") -> str: return ""
+    def generate_image_description(self, image_data: bytes, prompt: str = "Décris cette image d'anime de manière très détaillée.") -> str:
+        """Utilise le VLM pour décrire une image."""
+        try:
+            # Envoi via l'API vLLM (multimodal support)
+            res = requests.post(f"{self.api_base}/chat/completions", json={
+                "model": self.model_name,
+                "messages": [
+                    {"role": "user", "content": [
+                        {"type": "text", "text": prompt},
+                        {"type": "image_url", "image_url": {"url": "data:image/jpeg;base64," + image_data.hex()}} # Placeholder for base64
+                    ]}
+                ]
+            }, timeout=30)
+            res.raise_for_status()
+            return res.json()['choices'][0]['message']['content']
+        except Exception as e:
+            logger.error(f"VLM Image Description error: {e}")
+            return "Impossible de décrire l'image."
+
     def get_diagnostics(self, prompt: str, completion: str) -> Dict[str, Any]: return {}
     def calculate_uncertainty(self, prompt: str, completion: str) -> Dict[str, float]: return {}
     def estimate_depth(self, image_data: bytes) -> bytes: return b""
@@ -58,5 +79,6 @@ class VllmAdapter(InferencePort):
         try:
             res = requests.get(f"{self.api_base}/models", timeout=5)
             if res.status_code == 200: return {"status": "online", "engine": "vLLM", "model": self.model_name}
-        except: pass
+        except Exception as e:
+            logger.error(f"vLLM health check failed: {e}")
         return {"status": "offline", "engine": "vLLM"}

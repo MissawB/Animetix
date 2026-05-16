@@ -193,11 +193,15 @@ class AgenticRAGService:
 
     def _store_results(self, query: str, answer: str, user_id: str):
         if self.semantic_cache:
-            try: self.semantic_cache.set_cached_response(query, answer)
-            except: pass
+            try: 
+                self.semantic_cache.set_cached_response(query, answer)
+            except Exception as e:
+                logger.error(f"Semantic Cache storage failed: {e}")
         if self.memory_service and user_id:
-            try: self.memory_service.store_memory(user_id, [{"role": "user", "content": query}, {"role": "assistant", "content": answer}])
-            except: pass
+            try: 
+                self.memory_service.store_memory(user_id, [{"role": "user", "content": query}, {"role": "assistant", "content": answer}])
+            except Exception as e:
+                logger.error(f"Long-term memory storage failed for user {user_id}: {e}")
 
     def _extract_json(self, text: str) -> Dict:
         try:
