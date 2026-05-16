@@ -12,6 +12,8 @@ router = routers.DefaultRouter()
 router.register(r'profiles', api_views.ProfileViewSet)
 router.register(r'daily-challenges', api_views.DailyChallengeViewSet)
 router.register(r'achievements', api_views.AchievementViewSet)
+router.register(r'fusions', api_views.CreativeFusionViewSet)
+
 
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 

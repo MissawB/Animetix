@@ -41,3 +41,15 @@ class MediaItemSerializer(serializers.Serializer):
     genres = serializers.ListField(child=serializers.CharField(), required=False)
     tags = serializers.ListField(child=serializers.CharField(), required=False)
     description = serializers.CharField(required=False)
+
+from .models import CreativeFusion
+
+class CreativeFusionSerializer(serializers.ModelSerializer):
+    creator_name = serializers.CharField(source='creator.username', read_only=True)
+    likes_count = serializers.IntegerField(source='likes.count', read_only=True)
+    is_remix = serializers.BooleanField(source='parent_id', read_only=True)
+    
+    class Meta:
+        model = CreativeFusion
+        fields = '__all__'
+

@@ -6,14 +6,10 @@ import datetime
 
 from django.conf import settings
 
-from pgvector.django import VectorField
-from django.db import models
-from django.contrib.auth.models import User
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-import datetime
-
-from django.conf import settings
+try:
+    from pgvector.django import VectorField
+except ImportError:
+    VectorField = None
 
 # --- 🎭 RELATIONAL CATALOG ---
 class MediaItem(models.Model):
@@ -31,10 +27,16 @@ class MediaItem(models.Model):
     release_year = models.IntegerField(null=True, blank=True)
     rating = models.FloatField(null=True, blank=True)
     popularity = models.FloatField(default=0.0)
-    # Jina-v3 standard is 1024, SigLIP-SO400M is 1152
-    thematic_embedding = VectorField(dimensions=1024, null=True, blank=True)
-    plot_embedding = VectorField(dimensions=1024, null=True, blank=True)
-    visual_embedding = VectorField(dimensions=1152, null=True, blank=True)
+    
+    if VectorField:
+        thematic_embedding = VectorField(dimensions=1024, null=True, blank=True)
+        plot_embedding = VectorField(dimensions=1024, null=True, blank=True)
+        visual_embedding = VectorField(dimensions=1152, null=True, blank=True)
+    else:
+        thematic_embedding = models.JSONField(null=True, blank=True)
+        plot_embedding = models.JSONField(null=True, blank=True)
+        visual_embedding = models.JSONField(null=True, blank=True)
+        
     metadata = models.JSONField(default=dict)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -161,8 +163,18 @@ class GoldDatasetEntry(models.Model):
     source_feedback = models.OneToOneField(AIFeedback, on_delete=models.SET_NULL, null=True, blank=True)
     is_validated = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
-
     def __str__(self): return f"Gold Entry {self.id} - {self.instruction[:30]}..."
+
+class SemanticCache(models.Model):
+    """Cache sémantique pour les réponses LLM."""
+    query_text = models.TextField(unique=True)
+    response_text = models.TextField()
+    if VectorField:
+        query_embedding = VectorField(dimensions=768, null=True, blank=True) # paraphrase-multilingual-mpnet-base-v2
+    else:
+        query_embedding = models.JSONField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    def __str__(self): return self.query_text[:50]
 
 class DataCurationTicket(models.Model):
     """Ticket généré par l'IA autonome pour corriger des contradictions."""
@@ -172,7 +184,6 @@ class DataCurationTicket(models.Model):
     source_neo4j = models.JSONField(default=dict)
     is_resolved = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
-
     def __str__(self): return f"Ticket {self.id}: {self.item_title}"
 
 class AITokenUsage(models.Model):
@@ -183,7 +194,6 @@ class AITokenUsage(models.Model):
     total_tokens = models.IntegerField(default=0)
     cost_estimate = models.FloatField(default=0.0) # In USD or native currency
     created_at = models.DateTimeField(auto_now_add=True)
-
     def __str__(self): return f"{self.engine} usage by {self.user.username if self.user else 'Guest'}"
 
 @receiver(post_save, sender=User)
@@ -192,3 +202,25 @@ def create_user_profile(sender, instance, created, **kwargs):
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
     instance.profile.save()
+
+class CreativeFusion(models.Model):
+    title_a = models.CharField(max_length=255)
+    title_b = models.CharField(max_length=255)
+    media_type_a = models.CharField(max_length=50)
+    media_type_b = models.CharField(max_length=50)
+    
+    scenario_text = models.TextField()
+    image_url = models.URLField(max_length=500, null=True, blank=True)
+    
+    chaos_level = models.IntegerField(default=50)
+    universe_balance = models.IntegerField(default=50)
+    art_style = models.CharField(max_length=100, default='Cyberpunk')
+    
+    creator = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='fusions')
+    parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='remixes')
+    likes = models.ManyToManyField(User, related_name='liked_fusions', blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.title_a} x {self.title_b} by {self.creator}"

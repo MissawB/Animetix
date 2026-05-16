@@ -1,36 +1,46 @@
 from celery import shared_task
-from .services import LangChainService
+from .containers import get_container
+import logging
+
+logger = logging.getLogger('animetix.tasks')
 
 @shared_task
-def generate_fusion_scenario_task(media_type, item1, item2, language):
+def generate_fusion_scenario_task(media_type, item1, item2, language, chaos_level=50, universe_balance=50, art_style="Cyberpunk"):
     """Génère le synopsis de fusion."""
-    langchain_service = LangChainService()
-    return langchain_service.generate_scenario_advanced(media_type, item1, item2, language)
+    try:
+        container = get_container()
+        return container.llm_service.generate_fusion_scenario(
+            media_type, item1, item2, language, 
+            chaos_level=chaos_level, universe_balance=universe_balance, art_style=art_style
+        )
+    except Exception as e:
+        logger.error(f"Task Error in generate_fusion_scenario: {e}")
+        return "Erreur lors de la génération du scénario."
 
 @shared_task
-def generate_fusion_image_task(fusion_data, item1, item2):
+def generate_fusion_image_task(fusion_data, item1, item2, art_style="Cyberpunk"):
     """Génère l'image de fusion à partir du résultat du synopsis."""
-    langchain_service = LangChainService()
-    # Si fusion_data est une string (erreur de chaîne précédente), on en fait un dict
-    if isinstance(fusion_data, str):
-        fusion_data = {'scenario': fusion_data}
+    try:
+        from .creative_tasks import generate_fusion_image
+        # Si fusion_data est une string, on en fait un dict
+        if isinstance(fusion_data, str):
+            fusion_data = {'scenario': fusion_data}
+            
+        image_url = generate_fusion_image(item1, item2, art_style=art_style)
         
-    scenario_text = fusion_data.get('scenario', '')
-    title_A = item1.get('title') or item1.get('name')
-    title_B = item2.get('title') or item2.get('name')
-    vis_prompt = f"Fusion of {title_A} and {title_B}: {scenario_text[:200]}"
-    image_url = langchain_service.generate_fusion_image(vis_prompt)
-    
-    # Enrichir le résultat avec l'image
-    fusion_data['fusion_image'] = image_url
-    return fusion_data
+        # Enrichir le résultat avec l'image
+        fusion_data['fusion_image'] = image_url
+        return fusion_data
+    except Exception as e:
+        logger.error(f"Task Error in generate_fusion_image: {e}")
+        return fusion_data
 
 @shared_task
 def answer_complex_query_task(query: str, media_type: str):
     """Tâche asynchrone pour traiter une question complexe."""
-    from animetix.services import AnimetixService
-    rag_service = AnimetixService().rag_service
-    return rag_service.generate_advanced_answer(query, media_type)
+    container = get_container()
+    return container.rag_service.generate_advanced_answer(query, media_type)
+
 
 @shared_task
 def cleanup_duel_resources_task(room_code: str):

@@ -2,19 +2,25 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Profile, DailyChallenge, Achievement
-from .serializers import ProfileSerializer, DailyChallengeSerializer, AchievementSerializer, MediaItemSerializer
-from .services import AnimetixService
+from .models import Profile, DailyChallenge, Achievement, CreativeFusion
+from .serializers import ProfileSerializer, DailyChallengeSerializer, AchievementSerializer, MediaItemSerializer, CreativeFusionSerializer
+from .containers import get_container
 import random
+
+class CreativeFusionViewSet(viewsets.ReadOnlyModelViewSet):
+    """API endpoint that allows creative fusions to be viewed."""
+    queryset = CreativeFusion.objects.all().order_by('-created_at')
+    serializer_class = CreativeFusionSerializer
+
 import base64
+
 import hashlib
 import requests
 from django.core.cache import cache
 from django.http import HttpResponse
 
-animetix_service = AnimetixService()
-
 def image_proxy_view(request):
+
     """Proxy pour les images externes avec cache local."""
     encoded_url = request.GET.get('url')
     if not encoded_url: return HttpResponse(status=400)
@@ -74,7 +80,8 @@ class MediaSearchView(APIView):
             return Response([])
 
         # Utilisation de la méthode de recherche SQL centralisée
-        results = animetix_service.search_items(query, media_type, limit)
+        results = get_container().catalog_service.search_items(query, media_type, limit)
+
         
         # Formatage pour le composant d'autocomplétion
         formatted_results = []
