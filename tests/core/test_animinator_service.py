@@ -12,8 +12,10 @@ def animinator_service(mock_llm_service):
 
 def test_select_secret(animinator_service):
     catalog = {
-        'titles': ['A', 'B'],
-        'title_to_full_data': {'A': {}, 'B': {}}
+        'title_to_full_data': {
+            'A': {'title': 'A'}, 
+            'B': {'title': 'B'}
+        }
     }
     secret = animinator_service.select_secret(catalog)
     assert secret in ['A', 'B']

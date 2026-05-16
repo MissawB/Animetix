@@ -32,9 +32,8 @@ def test_calculate_raw_similarity_character(similarity_service, mock_repository)
     }
     mock_repository.calculate_similarity.return_value = 0.5
     res = similarity_service.calculate_raw_similarity('Character', 'Luffy', 'Zoro', data)
-    # 0.7 * 0.5 + 0.3 * 1.0 = 0.35 + 0.3 = 0.65
-    assert res == pytest.approx(0.65)
-
+    # 0.7 * 0.5 + 0.3 * 0.0 (graph_sim=0 car pas de neo4j) = 0.35
+    assert res == pytest.approx(0.35)
 def test_calculate_similarity(similarity_service, mock_repository):
     mock_repository.calculate_similarity.return_value = 0.8
     assert similarity_service.calculate_similarity('Anime', '1', '2') == 0.8

@@ -40,7 +40,7 @@ def test_graph_extraction_logic(mock_inference_engine):
     assert extracted['relations'][0]['type'] == "ENEMY_OF"
     assert extracted['relations'][0]['source'] == "Naruto Uzumaki"
 
-@patch('pipeline.neo4j_client.neo4j_manager')
+@patch('src.pipeline.enrich_graph_ai.neo4j_manager')
 def test_enrichment_pipeline_sync_call(mock_neo4j_mgr, mock_inference_engine):
     from src.pipeline.enrich_graph_ai import enrich_media_type
     
@@ -53,11 +53,11 @@ def test_enrichment_pipeline_sync_call(mock_neo4j_mgr, mock_inference_engine):
         sample_data = [{"id": 1, "title": "Naruto", "description": "Un synopsis assez long pour passer le filtre de longueur de 100 caracteres."}]
         
         with patch('builtins.open', MagicMock()):
-            with patch('json.load', return_value=sample_data):
+            with patch('json.load', return_value=[{"id": 1, "title": "Naruto", "description": "L'histoire d'un jeune ninja qui veut devenir Hokage et de son rival Sasuke qui souhaite restaurer son clan. C'est une épopée légendaire de 500 épisodes qui commence au village de Konoha."}]):
                 enrich_media_type("Anime", limit=1)
                 
                 # Check if neo4j injection was called with extracted data
-                assert mock_neo4j_mgr.sync_ai_extracted_graph.called
+                mock_neo4j_mgr.sync_ai_extracted_graph.assert_called_once()
                 call_args = mock_neo4j_mgr.sync_ai_extracted_graph.call_args
                 assert call_args[0][0] == "1" # media_id
                 assert len(call_args[0][1]['entities']) == 2
