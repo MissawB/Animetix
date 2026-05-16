@@ -33,7 +33,7 @@ def calculate_animetix_score(metrics):
 
 @asset(group_name="mlops", deps=["anime_artifacts", "manga_artifacts"])
 def ragas_performance_comparison():
-    """Évaluation et comparaison RAGAS (OFFICIELLE) avec W&B."""
+    """Évaluation et comparaison RAGAS (OFFICIELLE) avec W&B par catégorie."""
     if not os.path.exists(GOLD_DATASET):
         return Output(value={}, metadata={"error": "Gold dataset missing"})
 
@@ -51,12 +51,11 @@ def ragas_performance_comparison():
     with open(GOLD_DATASET, 'r', encoding='utf-8') as f:
         gold_data = json.load(f)
 
-    # 100 entrées pour un score officiel statistiquement robuste
-    # On reste sous le quota RPD de 500
-    sample_size = min(100, len(gold_data))
-    eval_set = gold_data[:sample_size]
+    # Utiliser tout le dataset pour une évaluation complète par catégorie
+    sample_size = len(gold_data)
+    eval_set = gold_data
 
-    # Setup Models (Judge = 3.1 Flash Lite pour le quota)
+    # Setup Models
     api_key_gemini = os.getenv("GEMINI_API_KEY")
     JUDGE_MODEL = "gemini-3.1-flash-lite-preview"
     eval_llm = ChatGoogleGenerativeAI(model=JUDGE_MODEL, google_api_key=api_key_gemini)
@@ -69,25 +68,24 @@ def ragas_performance_comparison():
     brain_url = os.getenv("BRAIN_API_URL", "http://127.0.0.1:7860")
 
     comparison_results = {}
-    summary_table = wandb.Table(columns=["Mode", "Faithfulness", "Relevancy", "Context Recall", "Animetix Score"])
+    summary_table = wandb.Table(columns=["Mode", "QueryType", "Faithfulness", "Relevancy", "Context Recall", "Animetix Score"])
 
     for mode in ["vector", "hybrid"]:
         print(f"⚙️ Generating answers for mode: {mode}...")
-        data = {"question": [], "answer": [], "contexts": [], "ground_truth": []}
+        results_list = []
         
         for i, entry in enumerate(eval_set):
             q = entry['query']
             q_vec = embed_model.encode([q]).tolist()
+            q_type = "architectural" if entry.get('is_architectural', False) else "standard"
             
             # Retrieval
             try:
                 res = chroma_manager.query_collection("anime_thematic", q_vec, n_results=3)
-                # Nettoyage des contexts (forcer string, enlever None)
                 contexts = [str(doc) for doc in res['documents'][0] if doc is not None]
                 if not contexts: contexts = ["Pas de contexte trouvé."]
                 ids = [str(i) for i in res['ids'][0] if i is not None]
             except Exception as e:
-                print(f"Chroma error: {e}")
                 contexts, ids = ["Erreur technique recherche"], []
             
             if mode == "hybrid":
@@ -97,62 +95,57 @@ def ragas_performance_comparison():
                         contexts = contexts + [f"Graph Metadata: {graph_ctx}"]
                 except: pass
             
-            # Generation (avec retry basique)
+            # Generation
             answer = "Erreur"
-            for _ in range(2):
-                try:
-                    resp = requests.post(f"{brain_url}/generate", json={
-                        "prompt": f"Context: {contexts}\n\nQuestion: {q}",
-                        "system_prompt": "Expert Anime/Manga précis."
-                    }, timeout=40)
-                    if resp.status_code == 200:
-                        answer = resp.json().get("text", "Erreur")
-                        break
-                except: 
-                    time.sleep(2)
+            try:
+                resp = requests.post(f"{brain_url}/generate", json={
+                    "prompt": f"Context: {contexts}\n\nQuestion: {q}",
+                    "system_prompt": "Expert Anime/Manga précis."
+                }, timeout=40)
+                if resp.status_code == 200:
+                    answer = resp.json().get("text", "Erreur")
+            except: pass
 
-            data["question"].append(q)
-            data["answer"].append(answer)
-            data["contexts"].append(contexts)
-            data["ground_truth"].append(entry.get('expected_title', ''))
-            
-            if (i+1) % 10 == 0: print(f"  Processed {i+1}/{sample_size} samples...")
+            results_list.append({
+                "question": q,
+                "answer": answer,
+                "contexts": contexts,
+                "ground_truth": entry.get('expected_title', ''),
+                "query_type": q_type
+            })
 
-        # Evaluation RAGAS
-        print(f"⚖️ Running RAGAS evaluation (Judge: {JUDGE_MODEL})...")
-        dataset = Dataset.from_dict(data)
-        try:
-            result = evaluate(
-                dataset,
-                metrics=[faithfulness, answer_relevancy, context_precision, context_recall],
-                llm=eval_llm,
-                embeddings=ragas_embeddings
-            )
-            metrics = result.to_pandas().mean().to_dict()
-            animetix_score = calculate_animetix_score(metrics)
-            metrics['animetix_score'] = animetix_score
-            comparison_results[mode] = metrics
+        # Evaluation RAGAS par catégorie
+        print(f"⚖️ Running RAGAS evaluation per category (Mode: {mode})...")
+        df_results = pd.DataFrame(results_list)
+        
+        for q_type in ["architectural", "standard"]:
+            cat_df = df_results[df_results['query_type'] == q_type]
+            if cat_df.empty: continue
             
-            summary_table.add_data(
-                mode, 
-                metrics.get('faithfulness', 0), 
-                metrics.get('answer_relevancy', 0), 
-                metrics.get('context_recall', 0), 
-                animetix_score
-            )
-            wandb.log({f"{mode}_{k}": v for k, v in metrics.items()})
-        except Exception as e:
-            print(f"❌ RAGAS Evaluation Error: {e}")
-            comparison_results[mode] = {"error": str(e), "animetix_score": 0}
+            dataset = Dataset.from_pandas(cat_df)
+            try:
+                result = evaluate(
+                    dataset,
+                    metrics=[faithfulness, answer_relevancy, context_precision, context_recall],
+                    llm=eval_llm,
+                    embeddings=ragas_embeddings
+                )
+                metrics = result.to_pandas().mean().to_dict()
+                animetix_score = calculate_animetix_score(metrics)
+                metrics['animetix_score'] = animetix_score
+                
+                # Logging W&B
+                summary_table.add_data(mode, q_type, metrics.get('faithfulness', 0), metrics.get('answer_relevancy', 0), metrics.get('context_recall', 0), animetix_score)
+                wandb.log({f"{mode}_{q_type}_{k}": v for k, v in metrics.items()})
+            except Exception as e:
+                print(f"❌ RAGAS Evaluation Error for {mode}/{q_type}: {e}")
 
     wandb.log({"Official Comparison": summary_table})
     run.finish()
 
     return Output(
-        value=comparison_results,
+        value={"status": "completed"},
         metadata={
-            "Official Vector Score": float(comparison_results['vector'].get('animetix_score', 0)),
-            "Official Hybrid Score": float(comparison_results['hybrid'].get('animetix_score', 0)),
             "Dataset Size": sample_size,
             "W&B Report": run.url if api_key_wandb else "Local"
         }
