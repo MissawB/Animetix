@@ -92,3 +92,6 @@ __pycache__/
 wandb/
 .pytest_cache/
 *.sqlite3
+
+# ML Ops artifacts
+data/mlops/
