@@ -12,13 +12,13 @@ class FallbackInferenceAdapter(InferencePort):
     def __init__(self, adapters: List[InferencePort]):
         self.adapters = [a for a in adapters if a is not None]
 
-    def generate(self, prompt: str, system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.", thinking_budget: int = 0) -> str:
+    def generate(self, prompt: str, system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.", thinking_budget: int = 0, thinking_mode: bool = False) -> str:
         last_error = ""
         for adapter in self.adapters:
             adapter_name = adapter.__class__.__name__
             try:
                 logger.info(f"🔄 [Fallback] Trying {adapter_name}...")
-                result = adapter.generate(prompt, system_prompt, thinking_budget)
+                result = adapter.generate(prompt, system_prompt, thinking_budget, thinking_mode)
                 
                 # CRITIQUE : Si le résultat est nul ou commence par "Erreur", on considère ça comme un échec
                 if not result or str(result).strip().startswith("Erreur"):
@@ -37,12 +37,12 @@ class FallbackInferenceAdapter(InferencePort):
                 
         return f"Échec critique : Tous les moteurs LLM ont échoué. Dernière erreur: {last_error}"
 
-    def stream_generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0):
+    def stream_generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False):
         """Streaming avec repli intelligent."""
         for adapter in self.adapters:
             try:
                 # Tentative de premier token pour valider l'adaptateur
-                gen = adapter.stream_generate(prompt, system_prompt, thinking_budget)
+                gen = adapter.stream_generate(prompt, system_prompt, thinking_budget, thinking_mode)
                 first_chunk = next(gen)
                 
                 # Validation du premier chunk
@@ -60,7 +60,7 @@ class FallbackInferenceAdapter(InferencePort):
                 continue
         
         # Fallback final vers generate standard (qui a sa propre logique de repli)
-        def error_gen(): yield self.generate(prompt, system_prompt, thinking_budget)
+        def error_gen(): yield self.generate(prompt, system_prompt, thinking_budget, thinking_mode)
         return error_gen()
 
     def _fallback_call(self, method_name: str, *args, **kwargs):

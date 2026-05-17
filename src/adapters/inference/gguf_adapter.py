@@ -25,11 +25,19 @@ class GgufAdapter(InferencePort):
             self._load_model()
             if not self.llm: return "Erreur: GGUF indisponible."
 
+            # Amélioration du prompt de réflexion
             if thinking_mode:
-                system_prompt = f"{system_prompt}\n<think>\nActive ton raisonnement approfondi pour cette requête.\n</think>"
+                thinking_instruction = "\n<think>\nAnalyse la requête en profondeur, explore plusieurs pistes et vérifie tes hypothèses avant de répondre.\n</think>"
+                system_prompt = f"{system_prompt}{thinking_instruction}"
+
+            # Le budget de réflexion peut être interprété comme un surplus de tokens autorisés
+            # ou un temps de calcul minimum (non géré nativement par llama-cpp-python via API standard).
+            # On l'utilise ici pour augmenter dynamiquement max_tokens si fourni.
+            max_tokens = 512 + (thinking_budget if thinking_budget > 0 else 0)
 
             res = self.llm.create_chat_completion(
-                messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}]
+                messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}],
+                max_tokens=max_tokens
             )
             return res['choices'][0]['message']['content']
         except Exception as e:
@@ -55,10 +63,14 @@ class GgufAdapter(InferencePort):
         if not self.llm: yield "Erreur: GGUF indisponible."; return
 
         if thinking_mode:
-            system_prompt = f"{system_prompt}\n<think>\nActive ton raisonnement approfondi pour cette requête.\n</think>"
+            thinking_instruction = "\n<think>\nAnalyse la requête en profondeur, explore plusieurs pistes et vérifie tes hypothèses avant de répondre.\n</think>"
+            system_prompt = f"{system_prompt}{thinking_instruction}"
+
+        max_tokens = 512 + (thinking_budget if thinking_budget > 0 else 0)
 
         stream = self.llm.create_chat_completion(
             messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}],
+            max_tokens=max_tokens,
             stream=True
         )
         for chunk in stream:

@@ -11,16 +11,31 @@ class VllmAdapter(InferencePort):
         self.model_name = model_name
 
     def generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False) -> str:
-        try:
-            res = requests.post(f"{self.api_base}/chat/completions", json={
-                "model": self.model_name,
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": prompt}
-                ],
+        payload = {
+            "model": self.model_name,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": prompt}
+            ]
+        }
+        
+        # vLLM handles extra parameters in 'extra_body' or sometimes directly.
+        # We try to pass them directly if requested, but we'll retry if the server complains.
+        if thinking_mode or thinking_budget > 0:
+            payload["extra_body"] = {
                 "thinking_budget": thinking_budget,
                 "thinking_mode": thinking_mode
-            }, timeout=30)
+            }
+
+        try:
+            res = requests.post(f"{self.api_base}/chat/completions", json=payload, timeout=30)
+            
+            # If 400 Bad Request, it might be due to unsupported extra parameters
+            if res.status_code == 400 and "extra_body" in payload:
+                logger.warning("vLLM server rejected extra_body (thinking parameters). Retrying without them.")
+                del payload["extra_body"]
+                res = requests.post(f"{self.api_base}/chat/completions", json=payload, timeout=30)
+                
             res.raise_for_status()
             return res.json()['choices'][0]['message']['content']
         except requests.exceptions.ConnectionError:
@@ -30,7 +45,38 @@ class VllmAdapter(InferencePort):
         return "Erreur: vLLM indisponible."
 
     def stream_generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False):
-        yield self.generate(prompt, system_prompt, thinking_budget, thinking_mode)
+        # Implementation of streaming with fallback for robustness
+        payload = {
+            "model": self.model_name,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": prompt}
+            ],
+            "stream": True
+        }
+        if thinking_mode or thinking_budget > 0:
+            payload["extra_body"] = {"thinking_budget": thinking_budget, "thinking_mode": thinking_mode}
+
+        try:
+            res = requests.post(f"{self.api_base}/chat/completions", json=payload, stream=True, timeout=30)
+            if res.status_code == 400 and "extra_body" in payload:
+                del payload["extra_body"]
+                res = requests.post(f"{self.api_base}/chat/completions", json=payload, stream=True, timeout=30)
+            
+            res.raise_for_status()
+            for line in res.iter_lines():
+                if line:
+                    line_str = line.decode('utf-8')
+                    if line_str.startswith("data: "):
+                        data_content = line_str[6:]
+                        if data_content == "[DONE]": break
+                        import json
+                        chunk = json.loads(data_content)
+                        delta = chunk['choices'][0].get('delta', {})
+                        if 'content' in delta: yield delta['content']
+        except Exception as e:
+            logger.error(f"vLLM Stream Error: {e}")
+            yield self.generate(prompt, system_prompt, thinking_budget, thinking_mode)
 
     def calculate_visual_similarity(self, query: str, item_id: str, media_type: str) -> float: raise NotImplementedError()
     def get_image_embedding(self, image_data: bytes, model_id: Optional[str] = None) -> List[float]: raise NotImplementedError()
@@ -49,13 +95,15 @@ class VllmAdapter(InferencePort):
     def generate_image_description(self, image_data: bytes, prompt: str = "Décris cette image d'anime de manière très détaillée.") -> str:
         """Utilise le VLM pour décrire une image."""
         try:
+            import base64
+            base64_image = base64.b64encode(image_data).decode('utf-8')
             # Envoi via l'API vLLM (multimodal support)
             res = requests.post(f"{self.api_base}/chat/completions", json={
                 "model": self.model_name,
                 "messages": [
                     {"role": "user", "content": [
                         {"type": "text", "text": prompt},
-                        {"type": "image_url", "image_url": {"url": "data:image/jpeg;base64," + image_data.hex()}} # Placeholder for base64
+                        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
                     ]}
                 ]
             }, timeout=30)

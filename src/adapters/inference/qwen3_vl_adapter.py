@@ -30,19 +30,30 @@ class Qwen3VLAdapter(InferencePort):
         return results
 
     # Required Port methods (minimal implementation for now)
-    def generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0) -> str:
+    def generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False) -> str:
         res = self.client.chat_completion(messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}])
         return res.choices[0].message.content
 
-    def stream_generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0):
-        yield self.generate(prompt, system_prompt, thinking_budget)
+    def stream_generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False):
+        yield self.generate(prompt, system_prompt, thinking_budget, thinking_mode)
 
-    def calculate_visual_similarity(self, query: str, item_id: str, media_type: str) -> float: return 0.0
-    def get_image_embedding(self, image_data: bytes, model_id: Optional[str] = None) -> List[float]: return []
-    def classify_image(self, image_data: bytes, candidate_labels: List[str], model_id: Optional[str] = None) -> Dict[str, float]: return {}
-    def detect_objects(self, image_data: bytes, candidate_queries: List[str], model_id: Optional[str] = None) -> List[Dict]: return []
-    def get_video_temporal_embeddings(self, video_data: bytes) -> List[Dict[str, Any]]: return []
-    def transform_image_to_anime(self, image_data: bytes, studio_style: str, prompt: str = "") -> str: return ""
+    def calculate_visual_similarity(self, query: str, item_id: str, media_type: str) -> float: 
+        raise NotImplementedError("calculate_visual_similarity not implemented for Qwen3-VL")
+        
+    def get_image_embedding(self, image_data: bytes, model_id: Optional[str] = None) -> List[float]: 
+        raise NotImplementedError("get_image_embedding not implemented for Qwen3-VL")
+        
+    def classify_image(self, image_data: bytes, candidate_labels: List[str], model_id: Optional[str] = None) -> Dict[str, float]: 
+        raise NotImplementedError("classify_image not implemented for Qwen3-VL")
+        
+    def detect_objects(self, image_data: bytes, candidate_queries: List[str], model_id: Optional[str] = None) -> List[Dict]: 
+        raise NotImplementedError("detect_objects not implemented for Qwen3-VL")
+        
+    def get_video_temporal_embeddings(self, video_data: bytes) -> List[Dict[str, Any]]: 
+        raise NotImplementedError("get_video_temporal_embeddings not implemented for Qwen3-VL")
+        
+    def transform_image_to_anime(self, image_data: bytes, studio_style: str, prompt: str = "") -> str: 
+        raise NotImplementedError("transform_image_to_anime not implemented for Qwen3-VL")
     def transform_video_to_anime(self, video_data: bytes, studio_style: str, prompt: str = "") -> str: return ""
     def generate_soundscape(self, video_metadata: Dict[str, Any], prompt: Optional[str] = None) -> str: return ""
     def clone_voice(self, text: str, reference_audio: bytes, language: str = "fr") -> bytes: return b""
