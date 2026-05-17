@@ -7,9 +7,10 @@ class InferencePort(ABC):
         self, 
         prompt: str, 
         system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.",
-        thinking_budget: int = 0
+        thinking_budget: int = 0,
+        thinking_mode: bool = False
     ) -> str:
-        """Génère du texte à partir d'un prompt. thinking_budget > 0 active le raisonnement approfondi."""
+        """Génère du texte à partir d'un prompt. thinking_budget > 0 ou thinking_mode=True active le raisonnement approfondi."""
         pass
 
     @abstractmethod
@@ -17,9 +18,10 @@ class InferencePort(ABC):
         self, 
         prompt: str, 
         system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.",
-        thinking_budget: int = 0
+        thinking_budget: int = 0,
+        thinking_mode: bool = False
     ):
-        """Génère du texte en flux (streaming) à partir d'un prompt. thinking_budget > 0 active le raisonnement approfondi."""
+        """Génère du texte en flux (streaming) à partir d'un prompt. thinking_budget > 0 ou thinking_mode=True active le raisonnement approfondi."""
         pass
 
     @abstractmethod
