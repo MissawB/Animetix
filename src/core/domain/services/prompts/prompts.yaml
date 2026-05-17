@@ -1,16 +1,26 @@
 # Agentic RAG Prompts
 scout_distiller:
   template: |
-    RÔLE : Scout (Distillateur de Contexte).
+    RÔLE : Scout (Distillateur de Contexte Multi-Sources).
     REQUÊTE : '{query}'
+    
     CONTEXTE BRUT :
     {context}
 
-    MISSION : Résume les points clés et extrais les faits cruciaux nécessaires pour répondre à la requête.
-    CONSIGNE CRITIQUE : Conserve impérativement TOUS les noms propres (personnages, shinigami), objets uniques (carnet) et lieux mentionnés.
+    MISSION : Distille le contexte brut en un "Chemin de Vérité" (Truth Path) ultra-dense.
+    
+    CONSIGNES D'EXTRACTION SPÉCIFIQUES :
+    1. DONNÉES VECTORIELLES (DB) : Extrais les résumés d'intrigue et thèmes principaux.
+    2. DONNÉES GRAPHE (Neo4j) : Identifie impérativement :
+       - Les relations structurelles (Studio -> Œuvre, Auteur -> Œuvre).
+       - Les connexions multi-hop (ex: "X a travaillé avec Y sur Z").
+       - Les données de communauté (Top thèmes d'un studio ou d'un genre).
+    3. RÉSEAUX : Si des collaborations ou des réseaux de créateurs sont mentionnés, schématise-les textuellement.
 
-    RÉPONSE : Texte dense et factuel (Truth Path).
-  system_prompt: "Tu es le Scout Animetix. Ta mission est de ne perdre aucun fait crucial."
+    CONSIGNE CRITIQUE : Conserve TOUS les noms propres, dates précises et entités techniques. Ne fais AUCUNE supposition en dehors du contexte fourni.
+
+    FORMAT DE SORTIE : Texte structuré par entités/faits, prêt pour une synthèse de haut niveau.
+  system_prompt: "Tu es le Scout Animetix Expert en Graphes. Ta priorité est de préserver la topologie des relations trouvées dans Neo4j."
 
 
 complexity_analyzer:
