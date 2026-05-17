@@ -12,12 +12,18 @@ class SearchPlanner:
         self.llm_service = llm_service
         self.prompt_manager = prompt_manager
 
-    def plan(self, query: str, memories: str = "", thinking_budget: int = 0) -> SearchPlan:
+    def plan(self, query: str, memories: str = "", thinking_budget: int = 0, thinking_mode: bool = False) -> SearchPlan:
         plan_prompt, plan_sys = self.prompt_manager.get_prompt("searcher_plan", query=query)
         if memories:
             plan_sys += f"\nContexte utilisateur : {memories}"
             
-        plan_raw = self.llm_service.generate(plan_prompt, plan_sys, use_slm=True, thinking_budget=thinking_budget)
+        plan_raw = self.llm_service.generate(
+            plan_prompt, 
+            plan_sys, 
+            use_slm=True, 
+            thinking_budget=thinking_budget,
+            thinking_mode=thinking_mode
+        )
         
         try:
             import orjson

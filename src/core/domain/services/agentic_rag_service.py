@@ -64,8 +64,9 @@ class AgenticRAGService:
         
         # 1. ANALYSE COMPLEXITÉ (TTC)
         thinking_budget, complexity = self._assess_complexity(query)
-        if thinking_budget > 0:
-            yield StreamStep(type="thought", content=f"[TTC] Requête complexe (Score {complexity}). Budget: {thinking_budget} tokens.").model_dump()
+        thinking_mode = complexity >= 2
+        if thinking_budget > 0 or thinking_mode:
+            yield StreamStep(type="thought", content=f"[TTC] Requête complexe (Score {complexity}). Budget: {thinking_budget} tokens. Mode Thinking: {thinking_mode}").model_dump()
 
         # 2. CACHE & MÉMOIRE
         if cached := self._check_cache(query):
@@ -77,7 +78,7 @@ class AgenticRAGService:
         # 3. PLANIFICATION
         yield StreamStep(type="thought", content="[Planner] Établissement du plan de recherche...").model_dump()
         start = time.time()
-        plan = self.planner.plan(query, memories, thinking_budget=thinking_budget // 2)
+        plan = self.planner.plan(query, memories, thinking_budget=thinking_budget // 2, thinking_mode=thinking_mode)
         logger.info(f"PERF: Planner took {(time.time() - start)*1000:.2f}ms")
 
         # 4. RÉCUPÉRATION & SCOUTING (BOUCLE)
@@ -100,7 +101,7 @@ class AgenticRAGService:
             
             yield StreamStep(type="thought", content="[Critic] Évaluation du Chemin de Vérité...").model_dump()
             critic_start = time.time()
-            critique = self.critic.evaluate(query, truth_path, thinking_budget=thinking_budget // 4)
+            critique = self.critic.evaluate(query, truth_path, thinking_budget=thinking_budget // 4, thinking_mode=thinking_mode)
             logger.info(f"PERF: Critic took {(time.time() - critic_start)*1000:.2f}ms")
 
             if critique.is_relevant or critique.suggested_action == "PROCEED":
@@ -121,7 +122,13 @@ class AgenticRAGService:
             
             full_answer = ""
             syn_start = time.time()
-            for token in self.synthesizer.synthesize_stream(query, truth_path, thinking_budget=thinking_budget, correction_feedback=correction_feedback):
+            for token in self.synthesizer.synthesize_stream(
+                query, 
+                truth_path, 
+                thinking_budget=thinking_budget, 
+                thinking_mode=thinking_mode,
+                correction_feedback=correction_feedback
+            ):
                 full_answer += token
                 yield StreamStep(type="token", content=token).model_dump()
             logger.info(f"PERF: Synthesizer attempt {attempt} took {(time.time() - syn_start)*1000:.2f}ms")
