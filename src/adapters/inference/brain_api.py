@@ -50,6 +50,8 @@ app = FastAPI(title="Animetix Brain API", version="2.0.0", lifespan=lifespan)
 class GenerateRequest(BaseModel):
     prompt: str
     system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku."
+    thinking_budget: int = 0
+    thinking_mode: bool = False
 
 class SimilarityRequest(BaseModel):
     query: str
@@ -63,7 +65,12 @@ def health():
 @app.post("/generate")
 def generate(req: GenerateRequest):
     try:
-        res = brain_engine.generate(req.prompt, req.system_prompt)
+        res = brain_engine.generate(
+            req.prompt, 
+            req.system_prompt, 
+            thinking_budget=req.thinking_budget, 
+            thinking_mode=req.thinking_mode
+        )
         return {"text": res}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

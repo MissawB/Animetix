@@ -1,11 +1,17 @@
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 from adapters.inference.manga_ocr_adapter import MangaOCRAdapter
 
 class TestMangaOCRAdapter(unittest.TestCase):
     def setUp(self):
+        # Créer une sous-classe qui implémente la méthode abstraite pour le test
+        class ConcreteMangaOCRAdapter(MangaOCRAdapter):
+            def moderate_content(self, text, categories):
+                return {"is_safe": True}
+        
         # Mock du pipeline pour éviter le chargement réel du modèle
-        self.adapter = MangaOCRAdapter()
+        with patch('src.adapters.inference.manga_ocr_adapter.pipeline'):
+            self.adapter = ConcreteMangaOCRAdapter()
         self.adapter.ocr_pipeline = MagicMock()
 
     def test_process_manga_page_success(self):

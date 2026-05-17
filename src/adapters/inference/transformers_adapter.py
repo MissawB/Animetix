@@ -50,8 +50,16 @@ class TransformersAdapter(InferencePort):
     def generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False) -> str:
         try:
             self._load_model()
-            logger.info(f"🚀 [Transformers] Generating for prompt: {prompt[:50]}...")
+            logger.info(f"🚀 [Transformers] Generating for prompt: {prompt[:50]} (Thinking: {thinking_mode}, Budget: {thinking_budget})...")
             
+            # Injection de la réflexion si activée
+            if thinking_mode:
+                thinking_instruction = "\n<think>\nAnalyse la requête en profondeur, explore plusieurs pistes et vérifie tes hypothèses avant de répondre.\n</think>"
+                system_prompt = f"{system_prompt}{thinking_instruction}"
+
+            # Budget de réflexion utilisé pour augmenter le nombre de tokens générés
+            max_new_tokens = 256 + (thinking_budget if thinking_budget > 0 else 0)
+
             # Formatage simplifié ChatML (supporté par Qwen et beaucoup d'autres)
             full_prompt = f"<|im_start|>system\n{system_prompt}<|im_end|>\n<|im_start|>user\n{prompt}<|im_end|>\n<|im_start|>assistant\n"
             
@@ -60,7 +68,7 @@ class TransformersAdapter(InferencePort):
             with torch.no_grad():
                 outputs = self.model.generate(
                     **inputs, 
-                    max_new_tokens=256,
+                    max_new_tokens=max_new_tokens,
                     do_sample=True,
                     temperature=0.3,
                     pad_token_id=self.tokenizer.eos_token_id

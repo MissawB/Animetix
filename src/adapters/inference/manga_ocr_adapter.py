@@ -29,8 +29,24 @@ class MangaOCRAdapter(InferencePort):
             return {"error": str(e)}
 
     # Méthodes héritées non implémentées pour cet adaptateur spécifique
-    def generate(self, *args, **kwargs) -> str: raise NotImplementedError("generate non implémentée")
-    def stream_generate(self, *args, **kwargs): raise NotImplementedError("stream_generate non implémentée")
+    def generate(
+        self, 
+        prompt: str, 
+        system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.",
+        thinking_budget: int = 0,
+        thinking_mode: bool = False
+    ) -> str:
+        raise NotImplementedError("generate non implémentée")
+
+    def stream_generate(
+        self, 
+        prompt: str, 
+        system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.",
+        thinking_budget: int = 0,
+        thinking_mode: bool = False
+    ):
+        raise NotImplementedError("stream_generate non implémentée")
+
     def calculate_visual_similarity(self, *args, **kwargs) -> float: raise NotImplementedError("calculate_visual_similarity non implémentée")
     def get_image_embedding(self, *args, **kwargs) -> List[float]: raise NotImplementedError("get_image_embedding non implémentée")
     def classify_image(self, *args, **kwargs) -> Dict[str, float]: raise NotImplementedError("classify_image non implémentée")

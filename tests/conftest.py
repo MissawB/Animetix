@@ -1,4 +1,11 @@
 import pytest
+import asyncio
+import sys
+
+@pytest.fixture(scope="session", autouse=True)
+def set_event_loop_policy():
+    if sys.platform == 'win32':
+        asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 import os
 from unittest.mock import MagicMock
 

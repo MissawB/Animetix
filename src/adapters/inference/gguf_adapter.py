@@ -26,7 +26,7 @@ class GgufAdapter(InferencePort):
             if not self.llm: return "Erreur: GGUF indisponible."
 
             # Amélioration du prompt de réflexion
-            if thinking_mode:
+            if thinking_mode or thinking_budget > 0:
                 thinking_instruction = "\n<think>\nAnalyse la requête en profondeur, explore plusieurs pistes et vérifie tes hypothèses avant de répondre.\n</think>"
                 system_prompt = f"{system_prompt}{thinking_instruction}"
 
@@ -62,7 +62,7 @@ class GgufAdapter(InferencePort):
         self._load_model()
         if not self.llm: yield "Erreur: GGUF indisponible."; return
 
-        if thinking_mode:
+        if thinking_mode or thinking_budget > 0:
             thinking_instruction = "\n<think>\nAnalyse la requête en profondeur, explore plusieurs pistes et vérifie tes hypothèses avant de répondre.\n</think>"
             system_prompt = f"{system_prompt}{thinking_instruction}"
 

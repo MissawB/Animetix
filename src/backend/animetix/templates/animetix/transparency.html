@@ -1,0 +1,123 @@
+{% extends "animetix/base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}Transparence & Santé du Projet - Animetix{% endblock %}
+
+{% block content %}
+<div class="container py-5 animate__animated animate__fadeIn">
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h1 class="display-4 font-bold mb-3">💎 Transparence & Santé</h1>
+            <p class="lead text-muted">Animetix est un projet passionné, gratuit et sans publicité. Voici comment nous maintenons l'Oracle en ligne.</p>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <!-- Jauge de Santé -->
+        <div class="col-md-6">
+            <div class="card h-100 border-0 shadow-sm p-4" style="background: var(--card-bg);">
+                <h3 class="h5 font-bold mb-4">🩺 État de Santé Financière</h3>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-sm font-medium">Couverture des coûts</span>
+                    <span class="text-sm font-bold">{{ stats.health_percentage }}%</span>
+                </div>
+                <div class="progress mb-4" style="height: 24px; border-radius: 12px;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated {% if stats.health_percentage >= 100 %}bg-success{% elif stats.health_percentage >= 50 %}bg-warning{% else %}bg-danger{% endif %}" 
+                         role="progressbar" 
+                         style="width: {{ stats.health_percentage }}%" 
+                         aria-valuenow="{{ stats.health_percentage }}" 
+                         aria-valuemin="0" 
+                         aria-valuemax="100">
+                    </div>
+                </div>
+                <p class="text-muted small">
+                    {% if stats.is_sustainable %}
+                    ✨ Le projet est actuellement auto-suffisant grâce à vos dons ! Merci infiniment.
+                    {% else %}
+                    ⚠️ Nous avons besoin de {{ stats.health_percentage|floatformat:1 }}% de soutien supplémentaire pour couvrir tous les frais d'IA et de serveurs.
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <!-- Statistiques Clés -->
+        <div class="col-md-6">
+            <div class="row g-3">
+                <div class="col-6">
+                    <div class="card border-0 shadow-sm p-3 text-center" style="background: var(--card-bg);">
+                        <span class="text-muted text-xs uppercase font-bold mb-1">Dons Totaux</span>
+                        <span class="h4 font-black text-yellow-600">{{ stats.total_donations }} $</span>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="card border-0 shadow-sm p-3 text-center" style="background: var(--card-bg);">
+                        <span class="text-muted text-xs uppercase font-bold mb-1">Coûts Totaux</span>
+                        <span class="h4 font-black text-navy-700">{{ stats.total_costs }} $</span>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="card border-0 shadow-sm p-3 text-center" style="background: var(--card-bg);">
+                        <span class="text-muted text-xs uppercase font-bold mb-1">Dons (30j)</span>
+                        <span class="h4 font-black text-green-600">{{ stats.monthly_donations }} $</span>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="card border-0 shadow-sm p-3 text-center" style="background: var(--card-bg);">
+                        <span class="text-muted text-xs uppercase font-bold mb-1">Coûts (30j)</span>
+                        <span class="h4 font-black text-red-600">{{ stats.monthly_costs }} $</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Historique des Dons -->
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm p-4" style="background: var(--card-bg);">
+                <h3 class="h5 font-bold mb-4">🙏 Derniers Mécènes</h3>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr class="text-muted small">
+                                <th>Date</th>
+                                <th>Mécène</th>
+                                <th>Montant</th>
+                                <th>Message</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for donation in stats.recent_donations %}
+                            <tr>
+                                <td class="small">{{ donation.created_at|date:"d/m/Y" }}</td>
+                                <td class="font-bold">{% if donation.user_id %}Utilisateur #{{ donation.user_id }}{% else %}Anonyme{% endif %}</td>
+                                <td><span class="badge bg-yellow-100 text-yellow-800">{{ donation.amount }} {{ donation.currency }}</span></td>
+                                <td class="small italic text-muted">"{{ donation.message|default:"-" }}"</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">Aucun don récent. Soyez le premier !</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Appel au don -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm p-4 bg-gradient-to-br from-yellow-400 to-yellow-600 text-white text-center">
+                <i class="bi bi-cup-hot fill-current text-5xl mb-3"></i>
+                <h3 class="h4 font-bold mb-3">Soutenir le Projet</h3>
+                <p class="mb-4 small opacity-90">Chaque don, même petit, permet de maintenir les serveurs et de débloquer des badges exclusifs.</p>
+                <a href="https://ko-fi.com/animetix" target="_blank" class="btn btn-light btn-lg font-bold w-100 shadow-sm">
+                    Offrir un café sur Ko-fi
+                </a>
+                <p class="mt-3 x-small opacity-75">Badge "Mécène" débloqué instantanément pour les utilisateurs connectés.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

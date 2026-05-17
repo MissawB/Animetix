@@ -85,6 +85,8 @@ urlpatterns = [
     path('admin/gold/reject/<int:entry_id>/', views.reject_gold_entry, name='reject_gold'),
     
     path('latent_space/', views.latent_space_view, name='latent_space'),
+    path('transparency/', views.transparency_dashboard, name='transparency'),
+    path('api/webhooks/donation/', views.donation_webhook, name='donation_webhook'),
     path('feedback/ai/', views.submit_ai_feedback, name='submit_ai_feedback'),
     path('rag/stream/', views.agentic_rag_stream, name='agentic_rag_stream'),
 ]

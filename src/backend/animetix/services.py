@@ -52,5 +52,47 @@ def check_achievements(user, action_type, context=None):
             
     return newly_unlocked
 
-# Legacy class for structural integrity during transition (optional, could be removed)
-# class AnimetixService: ...
+class AnimetixService:
+    """
+    Legacy Service Bridge.
+    Uses the DI Container internally to provide access to all domain services.
+    Maintains structural integrity for code not yet fully migrated to Hexagonal Architecture.
+    """
+    def __init__(self):
+        self._container = get_container()
+
+    @property
+    def catalog_service(self): return self._container.catalog_service
+    @property
+    def blind_test_service(self): return self._container.blind_test_service
+    @property
+    def cover_test_service(self): return self._container.cover_test_service
+    @property
+    def vision_quest_service(self): return self._container.vision_quest_service
+    @property
+    def emoji_service(self): return self._container.emoji_service
+    @property
+    def paradox_service(self): return self._container.paradox_service
+    @property
+    def animinator_service(self): return self._container.animinator_service
+    @property
+    def akinetix_service(self): return self._container.akinetix_service
+    @property
+    def game_service(self): return self._container.game_service
+    @property
+    def llm_service(self): return self._container.llm_service
+    @property
+    def fusion_service(self): return self._container.fusion_service
+    @property
+    def studio_transform_service(self): return self._container.studio_transform_service
+    @property
+    def manga_flow_service(self): return self._container.manga_flow_service
+    @property
+    def soundscape_service(self): return self._container.soundscape_service
+    @property
+    def spatial_computing_service(self): return self._container.spatial_computing_service
+    @property
+    def video_quest_service(self): return self._container.video_quest_service
+    @property
+    def rag_service(self): return self._container.rag_service
+

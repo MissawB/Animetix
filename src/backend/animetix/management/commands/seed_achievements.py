@@ -101,6 +101,22 @@ class Command(BaseCommand):
                 'icon': '🐉',
                 'xp_reward': 2000,
                 'rarity': 'Legendary'
+            },
+            {
+                'code': 'donor_bronze',
+                'name': "Mécène d'Animetix",
+                'description': 'Soutenez le projet avec votre premier don.',
+                'icon': '☕',
+                'xp_reward': 1000,
+                'rarity': 'Rare'
+            },
+            {
+                'code': 'donor_gold',
+                'name': 'Gardien du Savoir',
+                'description': 'Soutenez généreusement le projet pour maintenir l\'Oracle en ligne.',
+                'icon': '🛡️',
+                'xp_reward': 5000,
+                'rarity': 'Legendary'
             }
         ]
 

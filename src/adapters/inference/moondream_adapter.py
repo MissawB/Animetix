@@ -22,7 +22,8 @@ class MoondreamAdapter(InferencePort):
 
     def generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False) -> str:
         # Moondream est principalement visuel, mais peut générer du texte
-        return "Moondream Text Response (Simulated)"
+        mode_str = " (Thinking Mode ON)" if thinking_mode else ""
+        return f"Moondream Text Response{mode_str} (Simulated)"
 
     def stream_generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False):
         yield self.generate(prompt, system_prompt, thinking_budget, thinking_mode)

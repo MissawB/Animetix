@@ -31,7 +31,18 @@ class Qwen3VLAdapter(InferencePort):
 
     # Required Port methods (minimal implementation for now)
     def generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False) -> str:
-        res = self.client.chat_completion(messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}])
+        # Injection de la réflexion si activée
+        if thinking_mode:
+            thinking_instruction = "\n<think>\nAnalyse la requête en profondeur, explore plusieurs pistes et vérifie tes hypothèses avant de répondre.\n</think>"
+            system_prompt = f"{system_prompt}{thinking_instruction}"
+
+        # Le budget peut être utilisé pour max_tokens si supporté par l'endpoint
+        max_tokens = 500 + (thinking_budget if thinking_budget > 0 else 0)
+        
+        res = self.client.chat_completion(
+            messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}],
+            max_tokens=max_tokens
+        )
         return res.choices[0].message.content
 
     def stream_generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False):

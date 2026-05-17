@@ -197,6 +197,18 @@ class AITokenUsage(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     def __str__(self): return f"{self.engine} usage by {self.user.username if self.user else 'Guest'}"
 
+class Donation(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    amount = models.FloatField()
+    currency = models.CharField(max_length=10, default="USD")
+    platform = models.CharField(max_length=50) # Ko-fi, Patreon, etc.
+    transaction_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    message = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Donation of {self.amount} {self.currency} by {self.user.username if self.user else 'Anonymous'}"
+
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created: Profile.objects.create(user=instance)

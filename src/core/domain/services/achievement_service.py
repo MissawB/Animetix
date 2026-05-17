@@ -69,6 +69,12 @@ class AchievementDomainService:
                 
         return newly_unlocked
 
+    def unlock_by_code(self, user_id: int, achievement_code: str):
+        """Force le déblocage d'un succès spécifique."""
+        unlocked_codes = self.port.get_user_unlocked_codes(user_id)
+        if achievement_code not in unlocked_codes:
+            self.port.unlock_achievement(user_id, achievement_code)
+
 class GameEventListener:
     """
     Écouteur d'événements de jeu qui déclenche les vérifications de succès.

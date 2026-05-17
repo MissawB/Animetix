@@ -26,8 +26,12 @@ class LocalLlamaAdapter(InferencePort):
     def generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False) -> str:
         self._load_model()
         if not self.model: return "Erreur: Modèle local non chargé."
-        # ... real inference logic ...
-        return "Réponse du modèle local (Simulation)"
+        
+        # Simulation d'un support des flags
+        mode_str = " (Thinking Mode ON)" if thinking_mode else ""
+        budget_str = f" (Budget: {thinking_budget})" if thinking_budget > 0 else ""
+        
+        return f"Réponse du modèle local{mode_str}{budget_str} pour: {prompt[:20]}..."
 
     def stream_generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False):
         yield self.generate(prompt, system_prompt, thinking_budget, thinking_mode)

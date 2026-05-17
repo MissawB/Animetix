@@ -1,4 +1,6 @@
 from typing import Optional
+from datetime import datetime
+from django.db.models import Sum
 from core.ports.usage_port import UsagePort
 from animetix.models import AITokenUsage
 
@@ -37,3 +39,9 @@ class DjangoUsageAdapter(UsagePort):
             total_tokens=input_tokens + output_tokens,
             cost_estimate=cost
         )
+
+    def get_total_cost(self, since: Optional[datetime] = None) -> float:
+        query = AITokenUsage.objects.all()
+        if since:
+            query = query.filter(created_at__gte=since)
+        return query.aggregate(total=Sum('cost_estimate'))['total'] or 0.0

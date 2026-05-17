@@ -1,5 +1,6 @@
 from celery import shared_task
 from .containers import get_container
+from .creative_tasks import generate_fusion_image
 import logging
 
 logger = logging.getLogger('animetix.tasks')
@@ -21,7 +22,6 @@ def generate_fusion_scenario_task(media_type, item1, item2, language, chaos_leve
 def generate_fusion_image_task(fusion_data, item1, item2, art_style="Cyberpunk"):
     """Génère l'image de fusion à partir du résultat du synopsis."""
     try:
-        from .creative_tasks import generate_fusion_image
         # Si fusion_data est une string, on en fait un dict
         if isinstance(fusion_data, str):
             fusion_data = {'scenario': fusion_data}

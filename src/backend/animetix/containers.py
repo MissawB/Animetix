@@ -44,6 +44,7 @@ from core.domain.services.long_term_memory_service import LongTermMemoryService
 from core.domain.services.semantic_cache_service import SemanticCacheService
 from core.domain.services.creative.fusion_service import FusionDomainService
 from core.domain.services.observability_service import ObservabilityService
+from core.domain.services.health_dashboard_service import HealthDashboardService
 
 
 # Adapters
@@ -51,6 +52,7 @@ from adapters.persistence.unified_repository_adapter import UnifiedRepositoryAda
 from adapters.persistence.django_usage_adapter import DjangoUsageAdapter
 from adapters.persistence.pipeline_sync_adapter import PipelineSyncAdapter
 from adapters.persistence.django_achievement_adapter import DjangoAchievementAdapter
+from adapters.persistence.django_donation_adapter import DjangoDonationAdapter
 from adapters.persistence.web_search_adapter import DuckDuckGoSearchAdapter
 from adapters.inference.brain_api_adapter import BrainAPIAdapter
 from adapters.inference.vllm_adapter import VllmAdapter
@@ -293,6 +295,10 @@ class Container:
     @property
     def game_service(self):
         return self._get('game_service', lambda: GameService(repository=self.repository, catalog_service=self.catalog_service, similarity_service=SimilarityService(repository=self.repository), undercover_service=UndercoverService(catalog_service=self.catalog_service, similarity_service=SimilarityService(repository=self.repository))))
+
+    @property
+    def health_dashboard_service(self):
+        return self._get('health_dashboard_service', lambda: HealthDashboardService(donation_port=DjangoDonationAdapter(), usage_port=DjangoUsageAdapter()))
 
 # Global container instance
 _container = None
