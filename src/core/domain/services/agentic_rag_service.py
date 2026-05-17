@@ -1,7 +1,9 @@
 import logging
 import time
 import orjson
-from typing import List, Dict, Optional, Generator
+from enum import Enum
+from typing import List, Dict, Optional, Generator, Any
+from pydantic import BaseModel
 from core.ports.inference_port import InferencePort
 from core.ports.web_search_port import WebSearchPort
 from .advanced_rag_service import AdvancedRAGService
@@ -14,10 +16,37 @@ from .rag.agents import SearchPlanner, ResponseCritic, ResponseSynthesizer, Resp
 
 logger = logging.getLogger("animetix.rag")
 
+class RAGState(str, Enum):
+    """États de la machine à états RAG."""
+    ANALYZE = "ANALYZE"
+    PLAN = "PLAN"
+    RESEARCH = "RESEARCH"
+    SYNTHESIZE = "SYNTHESIZE"
+    JUDGE = "JUDGE"
+    FINALIZE = "FINALIZE"
+    FAILED = "FAILED"
+
+class RAGContext(BaseModel):
+    """Contexte de la session RAG agentique."""
+    query: str
+    media_type: str
+    user_id: Optional[str] = None
+    thinking_budget: int = 0
+    thinking_mode: bool = False
+    memories: str = ""
+    plan: Optional[SearchPlan] = None
+    raw_context: str = ""
+    truth_path: str = ""
+    full_answer: str = ""
+    correction_feedback: Optional[str] = None
+    iteration: int = 0
+    max_iterations: int = 10
+    current_state: RAGState = RAGState.ANALYZE
+
 class AgenticRAGService:
     """
     Orchestrateur RAG Agentique 2.0.
-    Gère la boucle de réflexion et coordonne les agents spécialisés.
+    Gère la boucle de réflexion et coordonne les agents spécialisés via une machine à états.
     """
     def __init__(
         self, 
@@ -55,114 +84,139 @@ class AgenticRAGService:
             if event['type'] == 'token':
                 last_answer += event['content']
             elif event['type'] == 'thought' and "[Synthesizer]" in event['content']:
-                # On réinitialise car une nouvelle tentative de synthèse commence
                 last_answer = ""
         return last_answer
 
     def plan_and_solve_stream(self, query: str, media_type: str, user_id: Optional[str] = None) -> Generator[Dict, None, None]:
-        """Boucle principale orchestrée par agents sous forme de machine à états (State Machine)."""
+        """Boucle principale orchestrée sous forme de machine à états."""
         
-        # 1. ANALYSE COMPLEXITÉ (TTC)
+        # 1. ANALYSE COMPLEXITÉ ET INITIALISATION CONTEXTE
         thinking_budget, complexity = self._assess_complexity(query)
         thinking_mode = complexity >= 2
+        
         if thinking_budget > 0 or thinking_mode:
             yield StreamStep(type="thought", content=f"[TTC] Requête complexe (Score {complexity}). Budget: {thinking_budget} tokens. Mode Thinking: {thinking_mode}").model_dump()
 
-        # 2. CACHE & MÉMOIRE
         if cached := self._check_cache(query):
             yield from self._stream_cached_response(cached)
             return
             
-        memories = self._get_memories(user_id, query)
+        ctx = RAGContext(
+            query=query,
+            media_type=media_type,
+            user_id=user_id,
+            thinking_budget=thinking_budget,
+            thinking_mode=thinking_mode,
+            memories=self._get_memories(user_id, query),
+            current_state=RAGState.PLAN
+        )
 
-        # 3. INITIALISATION MACHINE À ÉTATS
-        current_state = "PLAN"
-        max_iterations = 5
-        iteration = 0
-        full_answer = ""
-        correction_feedback = None
-        raw_context = ""
-        truth_path = ""
-        plan = None
+        # 2. BOUCLE DE LA MACHINE À ÉTATS
+        while ctx.current_state not in [RAGState.FINALIZE, RAGState.FAILED] and ctx.iteration < ctx.max_iterations:
+            ctx.iteration += 1
+            yield StreamStep(type="thought", content=f"[State Machine] Itération {ctx.iteration} - État: {ctx.current_state}").model_dump()
+
+            try:
+                if ctx.current_state == RAGState.PLAN:
+                    yield from self._handle_plan(ctx)
+                elif ctx.current_state == RAGState.RESEARCH:
+                    yield from self._handle_research(ctx)
+                elif ctx.current_state == RAGState.SYNTHESIZE:
+                    yield from self._handle_synthesize(ctx)
+                elif ctx.current_state == RAGState.JUDGE:
+                    yield from self._handle_judge(ctx)
+                else:
+                    ctx.current_state = RAGState.FINALIZE
+            except Exception as e:
+                logger.error(f"Erreur critique dans l'état {ctx.current_state}: {e}", exc_info=True)
+                yield StreamStep(type="thought", content=f"[Error] Une erreur est survenue dans l'état {ctx.current_state}. Tentative de finalisation...").model_dump()
+                ctx.current_state = RAGState.FAILED
+
+        # 3. FINALISATION
+        self._store_results(ctx.query, ctx.full_answer, ctx.user_id)
+
+    # --- HANDLERS D'ÉTATS ---
+
+    def _handle_plan(self, ctx: RAGContext) -> Generator[Dict, None, None]:
+        yield StreamStep(type="thought", content="[Planner] Établissement du plan de recherche...").model_dump()
+        start = time.time()
+        ctx.plan = self.planner.plan(
+            ctx.query, 
+            ctx.memories, 
+            thinking_budget=ctx.thinking_budget // 2, 
+            thinking_mode=ctx.thinking_mode
+        )
+        logger.info(f"PERF: Planner took {(time.time() - start)*1000:.2f}ms")
+        ctx.current_state = RAGState.RESEARCH
+
+    def _handle_research(self, ctx: RAGContext) -> Generator[Dict, None, None]:
+        if not ctx.plan:
+            ctx.current_state = RAGState.PLAN
+            return
+
+        source = 'Web' if ctx.plan.requires_web else 'Local'
+        yield StreamStep(type="thought", content=f"[Searcher] Exécution recherche ({source})...").model_dump()
         
-        while iteration < max_iterations and current_state != "FINALIZE":
-            iteration += 1
-            yield StreamStep(type="thought", content=f"[State Machine] Itération {iteration} - État: {current_state}").model_dump()
+        search_start = time.time()
+        ctx.raw_context = self._execute_search(ctx.plan, ctx.media_type)
+        logger.info(f"PERF: Searcher ({source}) took {(time.time() - search_start)*1000:.2f}ms")
+        
+        yield StreamStep(type="thought", content="[Scout] Distillation du contexte en Chemin de Vérité...").model_dump()
+        scout_start = time.time()
+        ctx.truth_path = self.scout.find_truth_path(ctx.query, ctx.plan, ctx.raw_context)
+        logger.info(f"PERF: Scout took {(time.time() - scout_start)*1000:.2f}ms")
+        
+        ctx.current_state = RAGState.SYNTHESIZE
 
-            if current_state == "PLAN":
-                yield StreamStep(type="thought", content="[Planner] Établissement du plan de recherche...").model_dump()
-                start = time.time()
-                plan = self.planner.plan(query, memories, thinking_budget=thinking_budget // 2, thinking_mode=thinking_mode)
-                logger.info(f"PERF: Planner took {(time.time() - start)*1000:.2f}ms")
-                current_state = "RESEARCH"
+    def _handle_synthesize(self, ctx: RAGContext) -> Generator[Dict, None, None]:
+        if ctx.correction_feedback:
+            yield StreamStep(type="thought", content="[Synthesizer] Tentative d'auto-correction...").model_dump()
+        else:
+            yield StreamStep(type="thought", content="[Synthesizer] Rédaction de la réponse expert...").model_dump()
+        
+        ctx.full_answer = ""
+        syn_start = time.time()
+        for token in self.synthesizer.synthesize_stream(
+            ctx.query, 
+            ctx.truth_path, 
+            thinking_budget=ctx.thinking_budget, 
+            thinking_mode=ctx.thinking_mode,
+            correction_feedback=ctx.correction_feedback
+        ):
+            ctx.full_answer += token
+            yield StreamStep(type="token", content=token).model_dump()
+        
+        logger.info(f"PERF: Synthesizer took {(time.time() - syn_start)*1000:.2f}ms")
+        ctx.current_state = RAGState.JUDGE
 
-            elif current_state == "RESEARCH":
-                source = 'Web' if plan.requires_web else 'Local'
-                yield StreamStep(type="thought", content=f"[Searcher] Exécution recherche ({source})...").model_dump()
-                
-                search_start = time.time()
-                raw_context = self._execute_search(plan, media_type)
-                logger.info(f"PERF: Searcher ({source}) took {(time.time() - search_start)*1000:.2f}ms")
-                
-                # --- ARCHITECTURE SCOUT ---
-                yield StreamStep(type="thought", content="[Scout] Distillation du contexte brut en Chemin de Vérité...").model_dump()
-                scout_start = time.time()
-                truth_path = self.scout.find_truth_path(query, plan, raw_context)
-                logger.info(f"PERF: Scout took {(time.time() - scout_start)*1000:.2f}ms")
-                
-                current_state = "SYNTHESIZE"
+    def _handle_judge(self, ctx: RAGContext) -> Generator[Dict, None, None]:
+        yield StreamStep(type="thought", content="[Judge] Évaluation de la fiabilité...").model_dump()
+        judge_start = time.time()
+        evaluation = self.judge.evaluate(ctx.query, ctx.truth_path, ctx.full_answer)
+        
+        if not evaluation:
+            logger.warning("Judge failed to return evaluation. Finalizing.")
+            ctx.current_state = RAGState.FINALIZE
+            return
 
-            elif current_state == "SYNTHESIZE":
-                if correction_feedback:
-                    yield StreamStep(type="thought", content=f"[Synthesizer] Tentative d'auto-correction...").model_dump()
-                else:
-                    yield StreamStep(type="thought", content="[Synthesizer] Rédaction de la réponse expert...").model_dump()
-                
-                full_answer = ""
-                syn_start = time.time()
-                for token in self.synthesizer.synthesize_stream(
-                    query, 
-                    truth_path, 
-                    thinking_budget=thinking_budget, 
-                    thinking_mode=thinking_mode,
-                    correction_feedback=correction_feedback
-                ):
-                    full_answer += token
-                    yield StreamStep(type="token", content=token).model_dump()
-                logger.info(f"PERF: Synthesizer took {(time.time() - syn_start)*1000:.2f}ms")
-                current_state = "JUDGE"
+        logger.info(f"PERF: Judge took {(time.time() - judge_start)*1000:.2f}ms")
+        yield StreamStep(type="eval", content=evaluation.model_dump()).model_dump()
+        
+        action = evaluation.next_action
+        if action == JudgeAction.APPROVE:
+            ctx.current_state = RAGState.FINALIZE
+        elif action == JudgeAction.REWRITE:
+            ctx.correction_feedback = f"DÉFAUT DÉTECTÉ: {evaluation.reasoning}. Corrige en restant fidèle au contexte."
+            ctx.current_state = RAGState.SYNTHESIZE
+        elif action == JudgeAction.RESEARCH_MORE:
+            # On pourrait injecter evaluation.reasoning dans le plan ici
+            ctx.current_state = RAGState.RESEARCH
+        elif action == JudgeAction.REPLAN:
+            ctx.current_state = RAGState.PLAN
+        else:
+            ctx.current_state = RAGState.FINALIZE
 
-            elif current_state == "JUDGE":
-                yield StreamStep(type="thought", content="[Judge] Évaluation de la fiabilité...").model_dump()
-                judge_start = time.time()
-                evaluation = self.judge.evaluate(query, truth_path, full_answer)
-                
-                if evaluation:
-                    logger.info(f"PERF: Judge took {(time.time() - judge_start)*1000:.2f}ms")
-                    yield StreamStep(type="eval", content=evaluation.model_dump()).model_dump()
-                    
-                    # Logique de transition basée sur l'action du Judge
-                    action = evaluation.next_action
-                    if action == JudgeAction.APPROVE:
-                        current_state = "FINALIZE"
-                    elif action == JudgeAction.REWRITE:
-                        correction_feedback = f"DÉFAUT DÉTECTÉ: {evaluation.reasoning}. Veuillez corriger ces points en restant strictement fidèle au contexte."
-                        current_state = "SYNTHESIZE"
-                    elif action == JudgeAction.RESEARCH_MORE:
-                        # On pourrait affiner le plan ici si besoin
-                        current_state = "RESEARCH"
-                    elif action == JudgeAction.REPLAN:
-                        current_state = "PLAN"
-                    else:
-                        current_state = "FINALIZE"
-                else:
-                    logger.warning("Judge failed to return evaluation. Finalizing.")
-                    current_state = "FINALIZE"
-
-        # 4. FINALISATION
-        self._store_results(query, full_answer, user_id)
-
-
+    # --- MÉTHODES UTILITAIRES (Inchangées ou légèrement adaptées) ---
     def _assess_complexity(self, query: str) -> tuple[int, int]:
         prompt, sys = self.prompt_manager.get_prompt("complexity_analyzer", query=query)
         res = self.llm_service.generate(prompt, sys, use_slm=True)
