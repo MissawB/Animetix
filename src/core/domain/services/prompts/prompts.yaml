@@ -162,16 +162,22 @@ answer_judge:
     MISSIONS :
     1. FAITHFULNESS : La réponse contient-elle des faits NON présents dans le contexte ? (OUI si hallucination).
     2. RELEVANCY : La réponse est-elle une réponse directe à la requête ?
-    
+    3. ROUTING : Détermine la prochaine action ('next_action') :
+       - 'APPROVE' : Tout est parfait, la réponse est complète et fidèle.
+       - 'REWRITE' : L'info est là mais mal formulée, ou contient une contradiction mineure/hallucination facile à corriger.
+       - 'RESEARCH_MORE' : Il manque des faits cruciaux dans le contexte pour répondre correctement.
+       - 'REPLAN' : La stratégie de recherche était totalement hors-sujet par rapport à la demande utilisateur.
+
     RÉPONDS UNIQUEMENT EN JSON (Strict) :
     {{
       "faithfulness_score": 0.0|1.0,
       "relevancy_score": 0.0|1.0,
       "hallucination_detected": true|false,
       "reasoning": "Explication courte de l'audit",
-      "is_reliable": true|false
+      "is_reliable": true|false,
+      "next_action": "APPROVE"|"REWRITE"|"RESEARCH_MORE"|"REPLAN"
     }}
-  system_prompt: "Tu es l'Auditeur Suprême Animetix. Tu es impitoyable avec les hallucinations."
+  system_prompt: "Tu es l'Auditeur Suprême Animetix. Tu es impitoyable avec les hallucinations et tu diriges le flux du système."
 
 # CoVe Oracle Prompts
 cove_baseline:
@@ -213,8 +219,16 @@ cove_final:
 
 # LLM Service Prompts
 fusion_scenario:
-  template: "MISSION : Fusionne l'univers de {item_a} et {item_b}. LANGUE : {language}. Pas de noms cités."
-  system_prompt: "Tu es un expert Concept Creator spécialisé en {media_type}."
+  template: |
+    Crée un pitch de 3 lignes pour un crossover entre "{item_a}" et "{item_b}".
+    
+    INSTRUCTIONS CRÉATIVES :
+    - Style Visuel : {art_style}
+    - Équilibre des Univers : {balance_instruction}
+    - Niveau de Chaos ({chaos_level}/100) : {chaos_instruction}
+    
+    RÉPONDS EN {language}. Ne cite PAS les noms propres des œuvres.
+  system_prompt: "Tu es un expert Concept Creator spécialisé en {media_type}. Ton pitch doit être immersif et refléter le style visuel demandé."
 
 paradox_explanation:
   template: "Explique pourquoi '{intruder}' est l'intrus par rapport à '{item_a}' et '{item_b}'."
