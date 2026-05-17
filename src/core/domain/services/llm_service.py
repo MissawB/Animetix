@@ -20,12 +20,12 @@ class LLMService:
         self.usage_port = usage_port
         self.obs_service = obs_service
 
-    def generate(self, prompt: str, system_prompt: str = "", forbidden_terms: list = None, use_slm: bool = False, thinking_budget: int = 0) -> str:
+    def generate(self, prompt: str, system_prompt: str = "", forbidden_terms: list = None, use_slm: bool = False, thinking_budget: int = 0, thinking_mode: bool = False) -> str:
         import time
         start_time = time.time()
         try:
             engine = self.slm_engine if use_slm else self.inference_engine
-            res = engine.generate(prompt, system_prompt, thinking_budget=thinking_budget)
+            res = engine.generate(prompt, system_prompt, thinking_budget=thinking_budget, thinking_mode=thinking_mode)
             latency = time.time() - start_time
             
             if not res:
@@ -94,14 +94,14 @@ Réponds en {language}.
         prompt = self.prompt_manager.get_prompt("generate_emojis", media_type=media_type, title=title, description=description[:200])
         return self.generate(prompt)
 
-    def ask_oracle(self, media_type: str, title: str, question: str) -> str:
+    def ask_oracle(self, media_type: str, title: str, question: str, thinking_mode: bool = False) -> str:
         prompt, system = self.prompt_manager.get_prompt("ask_oracle", media_type=media_type, title=title, question=question)
-        return self.generate(prompt, system)
+        return self.generate(prompt, system, thinking_mode=thinking_mode)
 
-    def ask_oracle_stream(self, media_type: str, title: str, question: str):
+    def ask_oracle_stream(self, media_type: str, title: str, question: str, thinking_mode: bool = False):
         """Version streaming de l'Oracle."""
         prompt, system = self.prompt_manager.get_prompt("ask_oracle", media_type=media_type, title=title, question=question)
-        yield from self.inference_engine.stream_generate(prompt, system)
+        yield from self.inference_engine.stream_generate(prompt, system, thinking_mode=thinking_mode)
 
     def propose_next_question(self, media_type: str, history: str, candidates: list) -> str:
         prompt = self.prompt_manager.get_prompt("akinetix_next_question", media_type=media_type, history=history, candidates=candidates[:10])
