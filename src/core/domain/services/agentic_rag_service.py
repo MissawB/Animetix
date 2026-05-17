@@ -8,7 +8,7 @@ from .advanced_rag_service import AdvancedRAGService
 from .prompt_manager import PromptManager
 from .llm_service import LLMService
 from ..entities.ai_schemas import (
-    SearchPlan, CritiqueResult, StreamStep, JudgeEvaluation
+    SearchPlan, CritiqueResult, StreamStep, JudgeEvaluation, JudgeAction
 )
 from .rag.agents import SearchPlanner, ResponseCritic, ResponseSynthesizer, ResponseJudge, ScoutAgent
 
@@ -60,7 +60,7 @@ class AgenticRAGService:
         return last_answer
 
     def plan_and_solve_stream(self, query: str, media_type: str, user_id: Optional[str] = None) -> Generator[Dict, None, None]:
-        """Boucle principale orchestrée par agents avec Architecture Scout."""
+        """Boucle principale orchestrée par agents sous forme de machine à états (State Machine)."""
         
         # 1. ANALYSE COMPLEXITÉ (TTC)
         thinking_budget, complexity = self._assess_complexity(query)
@@ -75,86 +75,93 @@ class AgenticRAGService:
             
         memories = self._get_memories(user_id, query)
 
-        # 3. PLANIFICATION
-        yield StreamStep(type="thought", content="[Planner] Établissement du plan de recherche...").model_dump()
-        start = time.time()
-        plan = self.planner.plan(query, memories, thinking_budget=thinking_budget // 2, thinking_mode=thinking_mode)
-        logger.info(f"PERF: Planner took {(time.time() - start)*1000:.2f}ms")
-
-        # 4. RÉCUPÉRATION & SCOUTING (BOUCLE)
-        raw_context = ""
-        truth_path = ""
-        
-        for i in range(2):
-            source = 'Web' if plan.requires_web else 'Local'
-            yield StreamStep(type="thought", content=f"[Searcher] Exécution recherche ({source})...").model_dump()
-            
-            search_start = time.time()
-            raw_context = self._execute_search(plan, media_type)
-            logger.info(f"PERF: Searcher ({source}) took {(time.time() - search_start)*1000:.2f}ms")
-            
-            # --- ARCHITECTURE SCOUT (SOTA 2026) ---
-            yield StreamStep(type="thought", content="[Scout] Distillation du contexte brut en Chemin de Vérité...").model_dump()
-            scout_start = time.time()
-            truth_path = self.scout.find_truth_path(query, plan, raw_context)
-            logger.info(f"PERF: Scout took {(time.time() - scout_start)*1000:.2f}ms")
-            
-            yield StreamStep(type="thought", content="[Critic] Évaluation du Chemin de Vérité...").model_dump()
-            critic_start = time.time()
-            critique = self.critic.evaluate(query, truth_path, thinking_budget=thinking_budget // 4, thinking_mode=thinking_mode)
-            logger.info(f"PERF: Critic took {(time.time() - critic_start)*1000:.2f}ms")
-
-            if critique.is_relevant or critique.suggested_action == "PROCEED":
-                break
-            else:
-                yield StreamStep(type="thought", content=f"[Critic] Amélioration requise: {critique.suggested_action}").model_dump()
-                plan.requires_web = (critique.suggested_action == "TRIGGER_WEB")
-
-        # 5. SYNTHÈSE FINALE & AUTO-CORRECTION (BOUCLE)
+        # 3. INITIALISATION MACHINE À ÉTATS
+        current_state = "PLAN"
+        max_iterations = 5
+        iteration = 0
         full_answer = ""
         correction_feedback = None
+        raw_context = ""
+        truth_path = ""
+        plan = None
         
-        for attempt in range(2): # Max 2 tentatives de synthèse
-            if attempt > 0:
-                yield StreamStep(type="thought", content=f"[Synthesizer] Tentative d'auto-correction (itération {attempt})...").model_dump()
-            else:
-                yield StreamStep(type="thought", content="[Synthesizer] Rédaction de la réponse expert...").model_dump()
-            
-            full_answer = ""
-            syn_start = time.time()
-            for token in self.synthesizer.synthesize_stream(
-                query, 
-                truth_path, 
-                thinking_budget=thinking_budget, 
-                thinking_mode=thinking_mode,
-                correction_feedback=correction_feedback
-            ):
-                full_answer += token
-                yield StreamStep(type="token", content=token).model_dump()
-            logger.info(f"PERF: Synthesizer attempt {attempt} took {(time.time() - syn_start)*1000:.2f}ms")
+        while iteration < max_iterations and current_state != "FINALIZE":
+            iteration += 1
+            yield StreamStep(type="thought", content=f"[State Machine] Itération {iteration} - État: {current_state}").model_dump()
 
-            # 6. ÉVALUATION (Judge)
-            yield StreamStep(type="thought", content="[Judge] Évaluation de la fiabilité...").model_dump()
-            judge_start = time.time()
-            evaluation = self.judge.evaluate(query, truth_path, full_answer)
-            if evaluation:
-                logger.info(f"PERF: Judge took {(time.time() - judge_start)*1000:.2f}ms")
-                yield StreamStep(type="eval", content=evaluation.model_dump()).model_dump()
-                
-                if evaluation.is_reliable and not evaluation.hallucination_detected:
-                    break # Succès
-                
-                if attempt == 0: # Préparer la correction pour le prochain tour
-                    correction_feedback = f"DÉFAUT DÉTECTÉ: {evaluation.reasoning}. Veuillez corriger ces points en restant strictement fidèle au contexte."
-                    if evaluation.hallucination_detected:
-                        # Metacognition: save correction for future few-shots
-                        bad_input = f"Requête: {query}\nContexte: {truth_path[:500]}..." 
-                        good_output = "RÉPONSE IDÉALE : Je dois être plus prudent..."
-                        self.prompt_manager.add_few_shot_correction("synthesizer_final", bad_input, good_output)
-            else:
-                break # Échec Judge, on garde la réponse actuelle
+            if current_state == "PLAN":
+                yield StreamStep(type="thought", content="[Planner] Établissement du plan de recherche...").model_dump()
+                start = time.time()
+                plan = self.planner.plan(query, memories, thinking_budget=thinking_budget // 2, thinking_mode=thinking_mode)
+                logger.info(f"PERF: Planner took {(time.time() - start)*1000:.2f}ms")
+                current_state = "RESEARCH"
 
+            elif current_state == "RESEARCH":
+                source = 'Web' if plan.requires_web else 'Local'
+                yield StreamStep(type="thought", content=f"[Searcher] Exécution recherche ({source})...").model_dump()
+                
+                search_start = time.time()
+                raw_context = self._execute_search(plan, media_type)
+                logger.info(f"PERF: Searcher ({source}) took {(time.time() - search_start)*1000:.2f}ms")
+                
+                # --- ARCHITECTURE SCOUT ---
+                yield StreamStep(type="thought", content="[Scout] Distillation du contexte brut en Chemin de Vérité...").model_dump()
+                scout_start = time.time()
+                truth_path = self.scout.find_truth_path(query, plan, raw_context)
+                logger.info(f"PERF: Scout took {(time.time() - scout_start)*1000:.2f}ms")
+                
+                current_state = "SYNTHESIZE"
+
+            elif current_state == "SYNTHESIZE":
+                if correction_feedback:
+                    yield StreamStep(type="thought", content=f"[Synthesizer] Tentative d'auto-correction...").model_dump()
+                else:
+                    yield StreamStep(type="thought", content="[Synthesizer] Rédaction de la réponse expert...").model_dump()
+                
+                full_answer = ""
+                syn_start = time.time()
+                for token in self.synthesizer.synthesize_stream(
+                    query, 
+                    truth_path, 
+                    thinking_budget=thinking_budget, 
+                    thinking_mode=thinking_mode,
+                    correction_feedback=correction_feedback
+                ):
+                    full_answer += token
+                    yield StreamStep(type="token", content=token).model_dump()
+                logger.info(f"PERF: Synthesizer took {(time.time() - syn_start)*1000:.2f}ms")
+                current_state = "JUDGE"
+
+            elif current_state == "JUDGE":
+                yield StreamStep(type="thought", content="[Judge] Évaluation de la fiabilité...").model_dump()
+                judge_start = time.time()
+                evaluation = self.judge.evaluate(query, truth_path, full_answer)
+                
+                if evaluation:
+                    logger.info(f"PERF: Judge took {(time.time() - judge_start)*1000:.2f}ms")
+                    yield StreamStep(type="eval", content=evaluation.model_dump()).model_dump()
+                    
+                    # Logique de transition basée sur l'action du Judge
+                    action = evaluation.next_action
+                    if action == JudgeAction.APPROVE:
+                        current_state = "FINALIZE"
+                    elif action == JudgeAction.REWRITE:
+                        correction_feedback = f"DÉFAUT DÉTECTÉ: {evaluation.reasoning}. Veuillez corriger ces points en restant strictement fidèle au contexte."
+                        current_state = "SYNTHESIZE"
+                    elif action == JudgeAction.RESEARCH_MORE:
+                        # On pourrait affiner le plan ici si besoin
+                        current_state = "RESEARCH"
+                    elif action == JudgeAction.REPLAN:
+                        current_state = "PLAN"
+                    else:
+                        current_state = "FINALIZE"
+                else:
+                    logger.warning("Judge failed to return evaluation. Finalizing.")
+                    current_state = "FINALIZE"
+
+        # 4. FINALISATION
         self._store_results(query, full_answer, user_id)
+
 
     def _assess_complexity(self, query: str) -> tuple[int, int]:
         prompt, sys = self.prompt_manager.get_prompt("complexity_analyzer", query=query)
@@ -162,7 +169,9 @@ class AgenticRAGService:
         try:
             data = self._extract_json(res)
             return int(data.get("thinking_budget", 0)), int(data.get("complexity_score", 0))
-        except: return 0, 0
+        except Exception as e:
+            logger.error(f"Error parsing complexity metrics: {e}")
+            return 0, 0
 
     def _check_cache(self, query: str) -> Optional[str]:
         if self.semantic_cache:
