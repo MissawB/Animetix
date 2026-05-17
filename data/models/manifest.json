@@ -1,1 +1,1 @@
-﻿{"text": {"v3": "jinaai/jina-embeddings-v3"}, "llm": {"v1": "Qwen2.5-3B-Instruct"}}
+﻿{"text": {"v3": "jinaai/jina-embeddings-v3"}, "vision": {"v2": "google/siglip2-so400m-patch14-384"}, "llm": {"v2": "Qwen3-4B-Instruct-2507"}}
