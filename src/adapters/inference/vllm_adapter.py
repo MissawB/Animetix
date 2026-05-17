@@ -10,7 +10,7 @@ class VllmAdapter(InferencePort):
         self.api_base = api_base
         self.model_name = model_name
 
-    def generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0) -> str:
+    def generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False) -> str:
         try:
             res = requests.post(f"{self.api_base}/chat/completions", json={
                 "model": self.model_name,
@@ -18,7 +18,8 @@ class VllmAdapter(InferencePort):
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": prompt}
                 ],
-                "thinking_budget": thinking_budget
+                "thinking_budget": thinking_budget,
+                "thinking_mode": thinking_mode
             }, timeout=30)
             res.raise_for_status()
             return res.json()['choices'][0]['message']['content']
@@ -28,23 +29,23 @@ class VllmAdapter(InferencePort):
             logger.error(f"vLLM Adapter error: {e}")
         return "Erreur: vLLM indisponible."
 
-    def stream_generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0):
-        yield self.generate(prompt, system_prompt, thinking_budget)
+    def stream_generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False):
+        yield self.generate(prompt, system_prompt, thinking_budget, thinking_mode)
 
-    def calculate_visual_similarity(self, query: str, item_id: str, media_type: str) -> float: return 0.0
-    def get_image_embedding(self, image_data: bytes, model_id: Optional[str] = None) -> List[float]: return []
-    def classify_image(self, image_data: bytes, candidate_labels: List[str], model_id: Optional[str] = None) -> Dict[str, float]: return {}
-    def detect_objects(self, image_data: bytes, candidate_queries: List[str], model_id: Optional[str] = None) -> List[Dict]: return []
-    def get_video_temporal_embeddings(self, video_data: bytes) -> List[Dict[str, Any]]: return []
-    def localize_video_actions(self, video_data: bytes, action_queries: List[str]) -> List[Dict[str, Any]]: return []
-    def transform_image_to_anime(self, image_data: bytes, studio_style: str, prompt: str = "") -> str: return ""
-    def transform_video_to_anime(self, video_data: bytes, studio_style: str, prompt: str = "") -> str: return ""
-    def generate_soundscape(self, video_metadata: Dict[str, Any], prompt: Optional[str] = None) -> str: return ""
-    def clone_voice(self, text: str, reference_audio: bytes, language: str = "fr") -> bytes: return b""
-    def speech_to_speech(self, audio_input: bytes, system_prompt: str = "") -> bytes: return b""
-    def process_manga_page(self, image_data: bytes) -> Dict[str, Any]: return {}
-    def inpaint_text_bubbles(self, image_data: bytes, text_placements: List[Dict]) -> str: return ""
-    def moderate_content(self, text: str, categories: List[str]) -> Dict[str, Any]: return {"is_safe": True}
+    def calculate_visual_similarity(self, query: str, item_id: str, media_type: str) -> float: raise NotImplementedError()
+    def get_image_embedding(self, image_data: bytes, model_id: Optional[str] = None) -> List[float]: raise NotImplementedError()
+    def classify_image(self, image_data: bytes, candidate_labels: List[str], model_id: Optional[str] = None) -> Dict[str, float]: raise NotImplementedError()
+    def detect_objects(self, image_data: bytes, candidate_queries: List[str], model_id: Optional[str] = None) -> List[Dict]: raise NotImplementedError()
+    def get_video_temporal_embeddings(self, video_data: bytes) -> List[Dict[str, Any]]: raise NotImplementedError()
+    def localize_video_actions(self, video_data: bytes, action_queries: List[str]) -> List[Dict[str, Any]]: raise NotImplementedError()
+    def transform_image_to_anime(self, image_data: bytes, studio_style: str, prompt: str = "") -> str: raise NotImplementedError()
+    def transform_video_to_anime(self, video_data: bytes, studio_style: str, prompt: str = "") -> str: raise NotImplementedError()
+    def generate_soundscape(self, video_metadata: Dict[str, Any], prompt: Optional[str] = None) -> str: raise NotImplementedError()
+    def clone_voice(self, text: str, reference_audio: bytes, language: str = "fr") -> bytes: raise NotImplementedError()
+    def speech_to_speech(self, audio_input: bytes, system_prompt: str = "") -> bytes: raise NotImplementedError()
+    def process_manga_page(self, image_data: bytes) -> Dict[str, Any]: raise NotImplementedError()
+    def inpaint_text_bubbles(self, image_data: bytes, text_placements: List[Dict]) -> str: raise NotImplementedError()
+    def moderate_content(self, text: str, categories: List[str]) -> Dict[str, Any]: raise NotImplementedError()
     def generate_image_description(self, image_data: bytes, prompt: str = "Décris cette image d'anime de manière très détaillée.") -> str:
         """Utilise le VLM pour décrire une image."""
         try:
