@@ -1,7 +1,14 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
+from enum import Enum
 
 # --- AGENTIC RAG 2.0 SCHEMAS ---
+
+class JudgeAction(str, Enum):
+    APPROVE = "APPROVE"
+    REWRITE = "REWRITE"
+    RESEARCH_MORE = "RESEARCH_MORE"
+    REPLAN = "REPLAN"
 
 class SearchPlan(BaseModel):
     optimized_query: str
@@ -30,6 +37,7 @@ class JudgeEvaluation(BaseModel):
     hallucination_detected: bool
     reasoning: str
     is_reliable: bool
+    next_action: JudgeAction
 
 # --- LEGACY SCHEMAS (Internal mapping) ---
 
