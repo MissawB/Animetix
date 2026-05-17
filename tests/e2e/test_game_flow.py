@@ -9,11 +9,8 @@ def test_home_page_loads(page: Page, live_server):
 
 def test_start_game_flow(page: Page, live_server):
     """Vérifie le flux de lancement d'une partie classique."""
-    page.goto(f"{live_server.url}/")
-
-    # Cliquer sur le bouton de lancement (Classic Mode)
-    # L'URL est préfixée par la langue (/fr/game/start/)
-    page.click("a[href*='/game/start/']")
+    # Navigation directe car le lien sur la page d'accueil est un formulaire HTMX complexe
+    page.goto(f"{live_server.url}/game/start/")
 
     # Attendre que la page de jeu charge
     expect(page).to_have_url(re.compile(r".*/game/"))

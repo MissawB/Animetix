@@ -28,6 +28,16 @@ for pkg in [
     sys.modules[pkg] = MockPackage()
 # Force Mock Container Module
 mock_container_instance = MagicMock()
+mock_container_instance.llm_service = MagicMock()
+mock_container_instance.catalog_service = MagicMock()
+mock_container_instance.blind_test_service = MagicMock()
+mock_container_instance.cover_test_service = MagicMock()
+
+# Setup default returns for services
+mock_container_instance.catalog_service.load_data.return_value = {'titles': ['Naruto'], 'lookup': [], 'title_to_full_data': {}}
+mock_container_instance.blind_test_service.get_random_theme.return_value = {'anime_title': 'A'}
+mock_container_instance.cover_test_service.get_random_cover.return_value = {'manga_title': 'M'}
+
 mock_container_module = MagicMock()
 mock_container_module.get_container.return_value = mock_container_instance
 sys.modules['src.backend.animetix.containers'] = mock_container_module
@@ -37,7 +47,16 @@ sys.modules['animetix.containers'] = mock_container_module
 @pytest.fixture(autouse=True)
 def mock_container(mocker):
     """Fixture to provide access to the mock container in tests."""
+    # On reset le mock pour chaque test pour éviter les fuites de state
+    # Mais attention à ne pas supprimer les return_value configurés ci-dessus
+    # mock_container_instance.reset_mock() 
     return mock_container_instance
+
+@pytest.fixture
+def mock_animetix_service(mock_container):
+    """Legacy compatibility fixture."""
+    from animetix.services import AnimetixService
+    return AnimetixService()
 
 @pytest.fixture(autouse=True)
 def mock_heavy_services(mocker):

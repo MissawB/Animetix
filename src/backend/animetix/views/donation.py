@@ -58,11 +58,10 @@ def donation_webhook(request):
         )
         
         donation_port.save(domain_donation)
-        logger.info(f"Donation received: {amount} {currency} from {email}. Transaction: {transaction_id}")
+        logger.info(f"Donation received: {amount} {currency} from {email}")
         
         # Débloquer les achievements si l'utilisateur est connu
         if user:
-            logger.info(f"Unlocking achievement for user {user.username}")
             achievement_service.unlock_by_code(user.id, 'donor_bronze')
             
             # Badge "Gardien" pour les gros dons (ex: > 50 USD)

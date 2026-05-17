@@ -7,7 +7,6 @@ from animetix.models import Donation as DjangoDonation
 
 class DjangoDonationAdapter(DonationPort):
     def save(self, donation: DomainDonation) -> DomainDonation:
-        print(f"DEBUG: Saving donation for transaction {donation.transaction_id}")
         django_donation = DjangoDonation.objects.create(
             user_id=donation.user_id,
             amount=donation.amount,
@@ -16,7 +15,6 @@ class DjangoDonationAdapter(DonationPort):
             transaction_id=donation.transaction_id,
             message=donation.message
         )
-        print(f"DEBUG: Saved django donation with id {django_donation.id}")
         donation.id = django_donation.id
         donation.created_at = django_donation.created_at
         return donation

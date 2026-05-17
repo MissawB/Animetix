@@ -25,7 +25,6 @@ def test_donation_webhook_anonymous(client):
     }
     response = client.post(url, data=json.dumps(data), content_type='application/json')
     
-    print(f"DEBUG: All donations: {list(Donation.objects.all())}")
     assert response.status_code == 200
     assert Donation.objects.filter(transaction_id='tr_123').exists()
 
@@ -44,6 +43,5 @@ def test_donation_webhook_unlocked_achievement(client):
     }
     response = client.post(url, data=json.dumps(data), content_type='application/json')
     
-    print(f"DEBUG: All donations: {list(Donation.objects.all())}")
     assert response.status_code == 200
     assert UserAchievement.objects.filter(user=user, achievement__code='donor_bronze').exists()

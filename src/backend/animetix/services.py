@@ -63,6 +63,9 @@ class AnimetixService:
 
     @property
     def catalog_service(self): return self._container.catalog_service
+    
+    def load_data(self, media_type): return self.catalog_service.load_data(media_type)
+    
     @property
     def blind_test_service(self): return self._container.blind_test_service
     @property
