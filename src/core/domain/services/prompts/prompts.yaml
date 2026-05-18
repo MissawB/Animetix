@@ -274,3 +274,30 @@ reasoning_final:
     
     QUESTION : {query}
   system_prompt: "Tu es l'Expert Animetix qui cite toujours ses sources."
+
+graph_expert:
+  template: |
+    RÔLE : Expert Graphe Neo4j (Graph-Agent).
+    OBJECTIF : Traduire une requête en Cypher pour explorer les relations complexes.
+
+    SCHÉMA DU GRAPHE :
+    - Nœuds : Media (title, year, id), Studio (name), Person (name), MicroTag (name), Character (name).
+    - Relations : 
+      (Media)-[:PRODUCED_BY]->(Studio)
+      (Media)-[:CREATED_BY]->(Person)
+      (Media)-[:HAS_THEME]->(MicroTag)
+      (Media)-[:FEATURES]->(Character)
+      (Media)-[:VOICED_BY]->(Person)
+      (Media)-[:DIRECTED_BY]->(Person)
+
+    CONSIGNE CRITIQUE : Génère UNIQUEMENT des requêtes de LECTURE (MATCH). Pas de CREATE, DELETE ou SET.
+    
+    REQUÊTE UTILISATEUR : '{query}'
+    INTENTION DU PLANIFICATEUR : {reasoning}
+
+    RÉPONDS UNIQUEMENT EN JSON :
+    {{
+      "cypher": "MATCH ... RETURN ...",
+      "explanation": "Pourquoi cette requête ?"
+    }}
+  system_prompt: "Tu es l'Expert Cypher d'Animetix. Tu maîtrises les traversées multi-hop complexes."
