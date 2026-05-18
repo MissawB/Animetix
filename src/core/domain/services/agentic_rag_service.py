@@ -3,7 +3,7 @@ import time
 import orjson
 from enum import Enum
 from typing import List, Dict, Optional, Generator, Any
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from core.ports.inference_port import InferencePort
 from core.ports.web_search_port import WebSearchPort
 from .advanced_rag_service import AdvancedRAGService
@@ -40,7 +40,7 @@ class RAGContext(BaseModel):
     memories: str = ""
     plan: Optional[SearchPlan] = None
     raw_context: str = ""
-    candidates: List[Dict] = []
+    candidates: List[Dict] = Field(default_factory=list)
     truth_path: str = ""
     full_answer: str = ""
     correction_feedback: Optional[str] = None
@@ -48,6 +48,8 @@ class RAGContext(BaseModel):
     max_iterations: int = 10
     current_state: RAGState = RAGState.ANALYZE
     graph_expert: Optional[GraphExpert] = None
+    visual_context: Optional[str] = None
+    image_paths: List[str] = Field(default_factory=list)
 
 class AgenticRAGService:
     """
