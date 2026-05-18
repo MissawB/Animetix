@@ -70,6 +70,7 @@ class Qwen3VLAdapter(InferencePort):
     def clone_voice(self, text: str, reference_audio: bytes, language: str = "fr") -> bytes: return b""
     def speech_to_speech(self, audio_input: bytes, system_prompt: str = "") -> bytes: return b""
     def process_manga_page(self, image_data: bytes) -> Dict[str, Any]: return {}
+    def translate_manga_page(self, image_data: bytes, target_lang: str = "Français") -> Dict[str, Any]: return {}
     def inpaint_text_bubbles(self, image_data: bytes, text_placements: List[Dict]) -> str: return ""
     def moderate_content(self, text: str, categories: List[str]) -> Dict[str, Any]: return {"is_safe": True}
     def generate_image_description(self, image_data: bytes, prompt: str = "") -> str: return ""
@@ -77,6 +78,50 @@ class Qwen3VLAdapter(InferencePort):
     def calculate_uncertainty(self, prompt: str, completion: str) -> Dict[str, float]: return {}
     def estimate_depth(self, image_data: bytes) -> bytes: return b""
     def generate_3d_scene(self, image_data: bytes, depth_map: bytes) -> Dict[str, Any]: return {}
-    def visual_rerank(self, query: str, image_urls: List[str], system_prompt: str = "") -> List[Dict[str, Any]]: return []
+    def visual_rerank(self, query: str, image_urls: List[str], system_prompt: str = "Tu es un expert en analyse visuelle d'anime.") -> List[Dict[str, Any]]:
+        """Utilise Qwen3-VL pour classer une liste d'images par pertinence visuelle."""
+        if not image_urls:
+            return []
+
+        prompt = f"Analyse ces {len(image_urls)} images et classe-les selon leur pertinence par rapport à la requête : '{query}'.\n" \
+                 "Réponds uniquement sous forme de JSON avec la structure suivante : {\"results\": [{\"url\": \"...\", \"score\": 0.95}, ...]}"
+
+        content = [{"type": "text", "text": prompt}]
+        for url in image_urls:
+            content.append({"type": "image_url", "image_url": {"url": url}})
+
+        try:
+            import json
+            import re
+            
+            response = self.client.chat_completion(
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": content}
+                ],
+                max_tokens=1000
+            )
+            
+            text_response = response.choices[0].message.content
+            
+            # Extract JSON from text response
+            json_match = re.search(r'\{.*\}', text_response, re.DOTALL)
+            if json_match:
+                try:
+                    data = json.loads(json_match.group())
+                    results = data.get("results", [])
+                    
+                    if results and len(results) == len(image_urls):
+                        return results
+                except json.JSONDecodeError:
+                    pass
+            
+            logger.warning("Qwen3-VL rerank returned malformed JSON or incomplete results. Using fallback.")
+            return [{"url": url, "score": 1.0 / len(image_urls)} for url in image_urls]
+            
+        except Exception as e:
+            logger.error(f"Qwen3-VL visual rerank failed: {e}")
+            return [{"url": url, "score": 0.0} for url in image_urls]
+
     def get_multimodal_late_interaction(self, image_data: bytes) -> List[List[float]]: return []
     def health_check(self) -> dict: return {"status": "online", "engine": "Qwen3-VL"}

@@ -80,8 +80,67 @@ class VllmAdapter(InferencePort):
 
     def calculate_visual_similarity(self, query: str, item_id: str, media_type: str) -> float: raise NotImplementedError()
     def get_image_embedding(self, image_data: bytes, model_id: Optional[str] = None) -> List[float]: raise NotImplementedError()
-    def classify_image(self, image_data: bytes, candidate_labels: List[str], model_id: Optional[str] = None) -> Dict[str, float]: raise NotImplementedError()
-    def detect_objects(self, image_data: bytes, candidate_queries: List[str], model_id: Optional[str] = None) -> List[Dict]: raise NotImplementedError()
+    def classify_image(self, image_data: bytes, candidate_labels: List[str], model_id: Optional[str] = None) -> Dict[str, float]:
+        """
+        Classifie une image en utilisant le VLM.
+        """
+        try:
+            import base64
+            import json
+            base64_image = base64.b64encode(image_data).decode('utf-8')
+            
+            prompt = f"Classify this image among these labels and return a JSON object with labels as keys and confidence scores as values: {', '.join(candidate_labels)}"
+            
+            res = requests.post(f"{self.api_base}/chat/completions", json={
+                "model": self.model_name,
+                "messages": [
+                    {"role": "user", "content": [
+                        {"type": "text", "text": prompt},
+                        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
+                    ]}
+                ],
+                "response_format": {"type": "json_object"}
+            }, timeout=30)
+            res.raise_for_status()
+            return json.loads(res.json()['choices'][0]['message']['content'])
+        except Exception as e:
+            logger.error(f"VLM Image Classification error: {e}")
+            return {}
+    def detect_objects(self, image_data: bytes, candidate_queries: List[str], model_id: Optional[str] = None) -> List[Dict]:
+        """
+        Détecte des objets en demandant au VLM de retourner des coordonnées.
+        Note: Dépend de la capacité du modèle chargé (ex: Qwen-VL, Llava).
+        """
+        try:
+            import base64
+            import json
+            base64_image = base64.b64encode(image_data).decode('utf-8')
+            
+            prompt = f"Detect these objects in the image and return a JSON list of objects with 'label', 'score', and 'box' [ymin, xmin, ymax, xmax]: {', '.join(candidate_queries)}"
+            
+            res = requests.post(f"{self.api_base}/chat/completions", json={
+                "model": self.model_name,
+                "messages": [
+                    {"role": "user", "content": [
+                        {"type": "text", "text": prompt},
+                        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
+                    ]}
+                ],
+                "response_format": {"type": "json_object"}
+            }, timeout=30)
+            res.raise_for_status()
+            data = res.json()['choices'][0]['message']['content']
+            
+            # Extraction JSON robuste
+            try:
+                detected = json.loads(data)
+                return detected.get("objects", [])
+            except:
+                return []
+        except Exception as e:
+            logger.error(f"VLM Object Detection error: {e}")
+            return []
+
     def get_video_temporal_embeddings(self, video_data: bytes) -> List[Dict[str, Any]]: raise NotImplementedError()
     def localize_video_actions(self, video_data: bytes, action_queries: List[str]) -> List[Dict[str, Any]]: raise NotImplementedError()
     def transform_image_to_anime(self, image_data: bytes, studio_style: str, prompt: str = "") -> str: raise NotImplementedError()
@@ -90,6 +149,7 @@ class VllmAdapter(InferencePort):
     def clone_voice(self, text: str, reference_audio: bytes, language: str = "fr") -> bytes: raise NotImplementedError()
     def speech_to_speech(self, audio_input: bytes, system_prompt: str = "") -> bytes: raise NotImplementedError()
     def process_manga_page(self, image_data: bytes) -> Dict[str, Any]: raise NotImplementedError()
+    def translate_manga_page(self, image_data: bytes, target_lang: str = "Français") -> Dict[str, Any]: raise NotImplementedError()
     def inpaint_text_bubbles(self, image_data: bytes, text_placements: List[Dict]) -> str: raise NotImplementedError()
     def moderate_content(self, text: str, categories: List[str]) -> Dict[str, Any]: raise NotImplementedError()
     def generate_image_description(self, image_data: bytes, prompt: str = "Décris cette image d'anime de manière très détaillée.") -> str:
@@ -118,9 +178,43 @@ class VllmAdapter(InferencePort):
     def estimate_depth(self, image_data: bytes) -> bytes: return b""
     def generate_3d_scene(self, image_data: bytes, depth_map: bytes) -> Dict[str, Any]: return {}
     
-    def visual_rerank(self, query: str, image_urls: List[str], system_prompt: str = "") -> List[Dict[str, Any]]:
-        return [{"url": url, "score": 1.0} for url in image_urls]
-        
+    def visual_rerank(self, query: str, image_urls: List[str], system_prompt: str = "Tu es un expert en analyse visuelle d'anime.") -> List[Dict[str, Any]]:
+        """Utilise le VLM pour classer une liste d'images par pertinence visuelle."""
+        if not image_urls:
+            return []
+
+        prompt = f"Analyse ces {len(image_urls)} images et classe-les selon leur pertinence par rapport à la requête : '{query}'.\n" \
+                 "Réponds uniquement sous forme de JSON avec la structure suivante : {\"results\": [{\"url\": \"...\", \"score\": 0.95}, ...]}"
+
+        content = [{"type": "text", "text": prompt}]
+        for url in image_urls:
+            content.append({"type": "image_url", "image_url": {"url": url}})
+
+        try:
+            import json
+            res = requests.post(f"{self.api_base}/chat/completions", json={
+                "model": self.model_name,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": content}
+                ],
+                "response_format": {"type": "json_object"}
+            }, timeout=60)
+            res.raise_for_status()
+            data = res.json()['choices'][0]['message']['content']
+            
+            results = json.loads(data).get("results", [])
+            
+            # Verification and fallback
+            if not results or len(results) != len(image_urls):
+                logger.warning("vLLM rerank returned incomplete or malformed results. Using uniform scores.")
+                return [{"url": url, "score": 1.0 / len(image_urls)} for url in image_urls]
+                
+            return results
+        except Exception as e:
+            logger.error(f"vLLM visual rerank error: {e}")
+            return [{"url": url, "score": 0.0} for url in image_urls]
+
     def get_multimodal_late_interaction(self, image_data: bytes) -> List[List[float]]:
         return []
 
