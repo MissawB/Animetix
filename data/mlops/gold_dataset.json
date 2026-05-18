@@ -1,395 +1,162 @@
-
 [
   {
-    "query": "Quel est le rôle des graphes de connaissances dans l'architecture des systèmes de RAG agentique ?",
-    "expected_id": "85143",
-    "expected_title": "Tower of God",
-    "is_architectural": true,
-    "query_type": "graph",
-    "ground_truth": "Les graphes de connaissances structurent les relations complexes entre entités, permettant une récupération plus précise et contextuelle que la recherche vectorielle seule."
-  },
-  {
-    "query": "Comment la séparation des préoccupations est-elle appliquée dans l'architecture modulaire de ce projet ?",
-    "expected_id": "21507",
-    "expected_title": "Mob Psycho 100",
-    "is_architectural": true,
-    "query_type": "graph",
-    "ground_truth": "La séparation est assurée par des couches distinctes (domaine, adaptateurs, pipeline), minimisant les couplages directs entre la logique métier et les infrastructures."
-  },
-  {
-    "query": "Visualisation de la distribution des vecteurs dans l'espace latent pour les thématiques d'anime",
-    "expected_id": "5114",
-    "expected_title": "Fullmetal Alchemist: Brotherhood",
-    "is_architectural": true,
-    "query_type": "visual",
-    "ground_truth": "Les clusters dans l'espace latent visualisent les proximités sémantiques entre les thèmes, permettant d'identifier des relations structurelles invisibles dans le texte brut."
-  },
-  {
-    "query": "Comparaison de l'efficacité entre la recherche vectorielle et la recherche par graphe",
+    "query": "Quel est l'animé où un jeune garçon cherche son père qui est un Hunter ?",
     "expected_id": "11061",
     "expected_title": "Hunter x Hunter (2011)",
+    "is_architectural": false,
+    "query_type": "standard",
+    "ground_truth": "L'histoire suit Gon Freecss qui passe l'examen de Hunter pour retrouver son père Ging."
+  },
+  {
+    "query": "Cite 3 autres animés produits par le même studio d'animation qui a fait les premières saisons de L'Attaque des Titans.",
+    "expected_id": "16498",
+    "expected_title": "Attack on Titan",
     "is_architectural": true,
     "query_type": "graph",
-    "ground_truth": "La recherche vectorielle est supérieure pour la similarité sémantique brute, tandis que la recherche par graphe excelle dans l'exploration de relations complexes et de chaînes de causalité."
+    "ground_truth": "Le studio est Wit Studio. D'autres animés incluent Vinland Saga (S1), Spy x Family (S1 avec CloverWorks), et Kabaneri of the Iron Fortress."
   },
   {
-    "query": "Représentation schématique du flux de données dans le pipeline d'enrichissement",
-    "expected_id": "127230",
-    "expected_title": "Chainsaw Man",
-    "is_architectural": true,
-    "query_type": "visual",
-    "ground_truth": "Le flux suit une séquence : ingestion, extraction d'entités, alignement avec le graphe existant, et mise à jour des index vectoriels."
-  },
-  {
-    "query": "Quels sont les avantages d'utiliser une approche hybride pour le système de recommandation ?",
-    "expected_id": "11757",
-    "expected_title": "Sword Art Online",
+    "query": "Je cherche un animé avec une esthétique cyberpunk très prononcée, sorti dans les années 90, avec une femme flic cyborg.",
+    "expected_id": "43",
+    "expected_title": "Ghost in the Shell",
     "is_architectural": true,
     "query_type": "thematic",
-    "ground_truth": "L'approche hybride combine la précision locale du vectoriel avec la richesse contextuelle du graphe, offrant des recommandations plus pertinentes et diversifiées."
+    "ground_truth": "Il s'agit du film Ghost in the Shell (1995), mettant en scène le Major Motoko Kusanagi."
   },
   {
-    "query": "Architecture de la persistance : pourquoi utiliser des adaptateurs ?",
-    "expected_id": "21234",
-    "expected_title": "ERASED",
-    "is_architectural": true,
-    "query_type": "graph",
-    "ground_truth": "Les adaptateurs abstraient les détails de l'implémentation de la base de données, permettant de changer de moteur de persistance sans modifier le domaine."
-  },
-  {
-    "query": "Comment le système gère la dérive des données dans les pipelines d'embeddings ?",
-    "expected_id": "101921",
-    "expected_title": "Kaguya-sama: Love is War",
-    "is_architectural": true,
-    "query_type": "cross-media",
-    "ground_truth": "Le système surveille la distribution des vecteurs et déclenche une ré-indexation automatique lorsque la dérive dépasse un seuil défini."
-  },
-  {
-    "query": "Visualisation du graphe des relations entre personnages, acteurs et médias",
-    "expected_id": "21827",
-    "expected_title": "Violet Evergarden",
-    "is_architectural": true,
-    "query_type": "visual",
-    "ground_truth": "Le graphe lie les personnages aux acteurs qui les incarnent et aux médias (anime, manga) dans lesquels ils apparaissent, formant un réseau multi-modal."
-  },
-  {
-    "query": "Quelle est la structure logique du service d'agentic RAG ?",
-    "expected_id": "20613",
-    "expected_title": "Akame ga Kill!",
-    "is_architectural": true,
-    "query_type": "graph",
-    "ground_truth": "Il est composé d'un orchestrateur central qui délègue à des agents spécialisés (juge, synthèse, recherche) basés sur l'intention de la requête."
-  },
-  {
-    "query": "Structure des données pour le mapping entre anime et films",
-    "expected_id": "20789",
-    "expected_title": "The Seven Deadly Sins",
-    "is_architectural": true,
-    "query_type": "cross-media",
-    "ground_truth": "Il s'agit d'une table d'association (JSON) qui lie les identifiants uniques des œuvres d'origine aux identifiants des films correspondants."
-  },
-  {
-    "query": "Représentation d'une requête complexe dans l'espace vectoriel 3D",
-    "expected_id": "101348",
-    "expected_title": "Vinland Saga",
-    "is_architectural": true,
-    "query_type": "visual",
-    "ground_truth": "Une requête est projetée en un vecteur de haute dimension, puis réduite en 3D pour la visualisation, montrant son voisinage proche avec d'autres concepts."
-  },
-  {
-    "query": "Avantages de la modularité du code dans le domaine de l'IA",
-    "expected_id": "21202",
-    "expected_title": "KONOSUBA -God's blessing on this wonderful world!",
-    "is_architectural": true,
-    "query_type": "thematic",
-    "ground_truth": "Elle facilite les tests isolés, permet le remplacement rapide de modèles d'inférence, et assure une maintenance évolutive sur le long terme."
-  },
-  {
-    "query": "Schéma de la base de données Neo4j pour les entités artistiques",
-    "expected_id": "269",
-    "expected_title": "Bleach",
-    "is_architectural": true,
-    "query_type": "graph",
-    "ground_truth": "Le schéma utilise des nœuds pour les entités (anime, auteur, genre) et des relations typées pour définir les liens sémantiques."
-  },
-  {
-    "query": "Comment l'observabilité est-elle intégrée dans les services d'IA ?",
-    "expected_id": "1575",
-    "expected_title": "Code Geass: Lelouch of the Rebellion",
-    "is_architectural": true,
-    "query_type": "thematic",
-    "ground_truth": "L'observabilité est assurée par un service centralisé qui capture les traces, latences et taux d'erreurs à chaque étape critique du pipeline."
-  },
-  {
-    "query": "Visualisation des clusters de 'vibe' dans les données manga",
-    "expected_id": "14719",
-    "expected_title": "JoJo's Bizarre Adventure (TV)",
-    "is_architectural": true,
-    "query_type": "visual",
-    "ground_truth": "Chaque manga est représenté par un point ; les couleurs indiquent les clusters de vibe, facilitant la recherche par similarité visuelle."
-  },
-  {
-    "query": "Architecture de la gestion des embeddings : pourquoi ChromaDB ?",
-    "expected_id": "20931",
-    "expected_title": "Death Parade",
-    "is_architectural": true,
-    "query_type": "graph",
-    "ground_truth": "ChromaDB a été choisi pour sa gestion performante des collections vectorielles et son intégration native avec les frameworks Python d'IA."
-  },
-  {
-    "query": "Flux de travail pour la synchronisation entre Neo4j et PostgreSQL",
-    "expected_id": "9919",
-    "expected_title": "Blue Exorcist",
-    "is_architectural": true,
-    "query_type": "graph",
-    "ground_truth": "Un service de réconciliation détecte les changements dans Postgres et met à jour le graphe Neo4j via une file d'événements asynchrone."
-  },
-  {
-    "query": "Comment les tests d'intégrité garantissent la qualité du set de données ?",
-    "expected_id": "99263",
-    "expected_title": "The Rising of the Shield Hero",
-    "is_architectural": true,
-    "query_type": "thematic",
-    "ground_truth": "Ils vérifient la conformité au schéma JSON et l'existence des identifiants référencés, évitant ainsi la pollution du modèle par des données corrompues."
-  },
-  {
-    "query": "Représentation du domaine dans le code : entités vs services",
-    "expected_id": "98659",
-    "expected_title": "Classroom of the Elite",
-    "is_architectural": true,
-    "query_type": "graph",
-    "ground_truth": "Les entités représentent l'état métier pur, tandis que les services implémentent la logique de manipulation complexe sur ces entités."
-  },
-  {
-    "query": "Pourquoi utiliser Dagster pour l'orchestration des pipelines ?",
-    "expected_id": "10620",
-    "expected_title": "The Future Diary",
-    "is_architectural": true,
-    "query_type": "thematic",
-    "ground_truth": "Dagster permet une gestion fine des dépendances entre données, des tentatives automatiques, et une meilleure observabilité sur les exécutions complexes."
-  },
-  {
-    "query": "Visualisation du réseau de relations entre genres et thèmes",
-    "expected_id": "30002",
-    "expected_title": "Berserk",
-    "is_architectural": true,
-    "query_type": "visual",
-    "ground_truth": "Le graphe montre des nœuds 'genre' liés à des nœuds 'thème', révélant des patterns d'association communs à travers plusieurs médias."
-  },
-  {
-    "query": "Comment le modèle gère-t-il les requêtes hors domaine ?",
-    "expected_id": "87216",
-    "expected_title": "Demon Slayer: Kimetsu no Yaiba",
-    "is_architectural": true,
-    "query_type": "negative",
-    "ground_truth": "Le modèle est entraîné à reconnaître l'absence de réponse appropriée dans le contexte et à retourner une réponse de politesse indiquant ses limites."
-  },
-  {
-    "query": "Architecture de la mémoire sémantique pour la cohérence des agents",
-    "expected_id": "34632",
-    "expected_title": "Goodnight Punpun",
-    "is_architectural": true,
-    "query_type": "graph",
-    "ground_truth": "Elle utilise une base de données de vecteurs pour stocker l'historique des interactions récentes, permettant à l'agent de maintenir le contexte sur le long terme."
-  },
-  {
-    "query": "Différence structurelle entre un RAG standard et un RAG agentique",
-    "expected_id": "119257",
-    "expected_title": "Omniscient Reader",
-    "is_architectural": true,
-    "query_type": "graph",
-    "ground_truth": "Le RAG standard est une simple récupération, le RAG agentique est une boucle de raisonnement capable de planifier et d'appeler des outils."
-  },
-  {
-    "query": "Visualisation du drift de données dans le pipeline MLOps",
-    "expected_id": "106130",
-    "expected_title": "Blue Lock",
-    "is_architectural": true,
-    "query_type": "visual",
-    "ground_truth": "Une courbe temporelle montre l'écart entre la distribution des données d'entraînement et les données réelles en production."
-  },
-  {
-    "query": "Comment la séparation entre le domaine et l'infrastructure est-elle testée ?",
-    "expected_id": "86635",
-    "expected_title": "Kaguya-sama: Love is War",
-    "is_architectural": true,
-    "query_type": "thematic",
-    "ground_truth": "Elle est testée via des tests unitaires sur le domaine sans aucune dépendance externe, utilisant des mocks pour l'infrastructure."
-  },
-  {
-    "query": "Structure d'une entité de type 'MediaItem'",
-    "expected_id": "102988",
-    "expected_title": "Tokyo Revengers",
-    "is_architectural": true,
-    "query_type": "graph",
-    "ground_truth": "Elle contient des attributs de base (ID, titre, type), une liste de tags thématiques, et des références aux vecteurs correspondants."
-  },
-  {
-    "query": "Représentation vectorielle de l'ambiance visuelle ('vibe') d'un anime",
-    "expected_id": "30012",
-    "expected_title": "Bleach",
-    "is_architectural": true,
-    "query_type": "visual",
-    "ground_truth": "Il s'agit d'un vecteur multi-dimensionnel calculé à partir de l'analyse des frames clés et des palettes de couleurs."
-  },
-  {
-    "query": "Gestion de la concurrence dans le service de recommandations",
-    "expected_id": "132029",
-    "expected_title": "Dandadan",
-    "is_architectural": true,
-    "query_type": "thematic",
-    "ground_truth": "Le service utilise un pattern asynchrone pour traiter plusieurs requêtes simultanément sans bloquer le thread principal."
-  },
-  {
-    "query": "Pourquoi le système nécessite-t-il un mapping croisé des identifiants ?",
-    "expected_id": "97852",
-    "expected_title": "Komi Can't Communicate",
-    "is_architectural": true,
-    "query_type": "cross-media",
-    "ground_truth": "Différentes sources (Jikan, API interne) utilisent des IDs différents pour la même œuvre ; le mapping permet l'unification des données."
-  },
-  {
-    "query": "Comment l'agent Juge évalue-t-il la qualité d'une réponse RAG ?",
-    "expected_id": "30001",
+    "query": "Qui est l'auteur original du manga qui a inspiré l'animé Monster, et a-t-il écrit d'autres œuvres adaptées en animé ?",
+    "expected_id": "19",
     "expected_title": "Monster",
     "is_architectural": true,
-    "query_type": "thematic",
-    "ground_truth": "Il compare la réponse générée avec le contexte fourni selon des critères de pertinence, de précision et de complétude."
+    "query_type": "cross-media",
+    "ground_truth": "L'auteur est Naoki Urasawa. Ses autres œuvres adaptées incluent Pluto, Master Keaton et Yawara!."
   },
   {
-    "query": "Visualisation de l'arbre de décision de l'agent de raisonnement",
-    "expected_id": "120760",
-    "expected_title": "Kaiju No.8",
-    "is_architectural": true,
-    "query_type": "visual",
-    "ground_truth": "L'arbre montre les chemins de réflexion possibles, les nœuds de décision, et les appels d'outils effectués par l'agent."
-  },
-  {
-    "query": "Représentation du graphe des 'scénarios' dans le domaine webtoon",
-    "expected_id": "87170",
-    "expected_title": "Fire Punch",
-    "is_architectural": true,
-    "query_type": "graph",
-    "ground_truth": "Les scénarios sont des nœuds liés par des relations de progression logique, permettant de naviguer dans l'intrigue."
-  },
-  {
-    "query": "Architecture de l'API : comment les adaptateurs sont-ils injectés ?",
-    "expected_id": "85143",
-    "expected_title": "Tower of God",
-    "is_architectural": true,
-    "query_type": "thematic",
-    "ground_truth": "Ils sont injectés via un conteneur d'inversion de contrôle (IoC) au démarrage de l'application."
-  },
-  {
-    "query": "Pourquoi la séparation entre 'Service' et 'Repository' est-elle cruciale ?",
-    "expected_id": "30011",
+    "query": "L'animé avec un personnage masculin aux cheveux argentés, qui cache toujours le bas de son visage avec un masque et a un œil couvert par son bandeau frontal.",
+    "expected_id": "20",
     "expected_title": "Naruto",
     "is_architectural": true,
-    "query_type": "thematic",
-    "ground_truth": "Cela permet de tester la logique métier indépendamment de la couche de stockage des données."
+    "query_type": "visual",
+    "ground_truth": "La description correspond parfaitement à Kakashi Hatake dans l'univers de Naruto."
   },
   {
-    "query": "Visualisation de l'espace latent pour les thématiques cinématographiques",
-    "expected_id": "100994",
-    "expected_title": "Hell’s Paradise: Jigokuraku",
+    "query": "Est-ce que le studio Ghibli a déjà collaboré avec le studio MAPPA sur un long métrage d'animation ?",
+    "expected_id": "0",
+    "expected_title": "None",
+    "is_architectural": true,
+    "query_type": "negative",
+    "ground_truth": "Non, il n'y a aucune collaboration connue entre le Studio Ghibli et le studio MAPPA sur un long métrage."
+  },
+  {
+    "query": "Trouve-moi un manga de dark fantasy où le héros possède une épée gigantesque, a une marque maudite dans le cou, et combat des démons appelés Apôtres.",
+    "expected_id": "2",
+    "expected_title": "Berserk",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "Il s'agit de Berserk, le héros est Guts."
+  },
+  {
+    "query": "Y a-t-il un lien entre le réalisateur de Your Name (Kimi no Na wa) et le film Suzume ?",
+    "expected_id": "32281",
+    "expected_title": "Your Name.",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "Oui, les deux films ont été réalisés par Makoto Shinkai."
+  },
+  {
+    "query": "Je me souviens d'une image avec un carnet noir posé sur l'herbe, et un shinigami géant effrayant qui aime les pommes en arrière-plan.",
+    "expected_id": "1535",
+    "expected_title": "Death Note",
     "is_architectural": true,
     "query_type": "visual",
-    "ground_truth": "Elle révèle comment différents genres de films sont organisés selon leurs thèmes dominants."
+    "ground_truth": "C'est une référence visuelle évidente à Death Note avec le Death Note et le shinigami Ryuk."
   },
   {
-    "query": "Comment le système assure-t-il la cohérence entre le graphe et les vecteurs ?",
-    "expected_id": "101583",
-    "expected_title": "My Dress-Up Darling",
+    "query": "Le film live action de One Piece est-il canon avec le manga original ?",
+    "expected_id": "21",
+    "expected_title": "One Piece",
+    "is_architectural": true,
+    "query_type": "cross-media",
+    "ground_truth": "Le live action Netflix de One Piece est une adaptation supervisée par Eiichiro Oda, mais n'est pas canon au sein de la continuité stricte du manga."
+  },
+  {
+    "query": "Quel est le nom de la technique où Son Goku fusionne avec Vegeta en utilisant des boucles d'oreilles ?",
+    "expected_id": "813",
+    "expected_title": "Dragon Ball Z",
+    "is_architectural": false,
+    "query_type": "standard",
+    "ground_truth": "C'est la fusion Potala, qui donne naissance à Vegetto (Vegito)."
+  },
+  {
+    "query": "Est-ce que Sasuke utilise le Bankai dans l'arc de l'examen Chuunin ?",
+    "expected_id": "20",
+    "expected_title": "Naruto",
+    "is_architectural": true,
+    "query_type": "negative",
+    "ground_truth": "Le Bankai est un concept de Bleach, pas de Naruto. Sasuke utilise le Sharingan ou le Chidori."
+  },
+  {
+    "query": "Quels sont les comédiens de doublage japonais (Seiyuu) principaux qui travaillent le plus souvent dans les animés du studio Kyoto Animation ?",
+    "expected_id": "0",
+    "expected_title": "Multiple",
     "is_architectural": true,
     "query_type": "graph",
-    "ground_truth": "Par une validation croisée régulière qui vérifie si les relations du graphe sont cohérentes avec les proximités vectorielles."
+    "ground_truth": "Le système doit analyser les relations Studio -> Animé -> Seiyuu pour trouver les voix récurrentes chez KyoAni."
   },
   {
-    "query": "Structure d'une relation dans le graphe : type et métadonnées",
-    "expected_id": "98416",
-    "expected_title": "Dr. STONE",
-    "is_architectural": true,
-    "query_type": "graph",
-    "ground_truth": "Chaque relation a un type (ex: 'est_un', 'inspiré_de') et des métadonnées (confiance, source)."
-  },
-  {
-    "query": "Avantages de l'utilisation du typage statique dans le code IA",
-    "expected_id": "30436",
-    "expected_title": "Uzumaki: Spiral into Horror",
+    "query": "Je cherche un anime récent centré sur le deuil, l'immortalité d'une elfe, et le voyage émotionnel après la défaite du roi démon.",
+    "expected_id": "52991",
+    "expected_title": "Frieren: Beyond Journey's End",
     "is_architectural": true,
     "query_type": "thematic",
-    "ground_truth": "Il réduit les erreurs à l'exécution, améliore la lisibilité et facilite la maintenance pour les équipes multi-développeurs."
+    "ground_truth": "Il s'agit de Frieren (Sousou no Frieren)."
   },
   {
-    "query": "Représentation du système de recommandation en couches",
-    "expected_id": "31133",
-    "expected_title": "Dorohedoro",
+    "query": "Une scène où une jeune fille blonde avec des cornes sur la tête verse une larme tout en contrôlant des vecteurs invisibles.",
+    "expected_id": "226",
+    "expected_title": "Elfen Lied",
     "is_architectural": true,
-    "query_type": "graph",
-    "ground_truth": "Couche 1 : Ingestion, Couche 2 : Extraction sémantique, Couche 3 : Raisonnement par graphe, Couche 4 : Rendu final."
+    "query_type": "visual",
+    "ground_truth": "C'est une description visuelle clé du personnage Lucy/Nyu de l'anime Elfen Lied."
   },
   {
-    "query": "Comment les tests E2E valident-ils l'architecture globale ?",
-    "expected_id": "11061",
-    "expected_title": "Hunter x Hunter (2011)",
-    "is_architectural": true,
-    "query_type": "thematic",
-    "ground_truth": "Ils simulent le parcours complet d'une requête utilisateur à travers tous les composants du système, garantissant l'intégration correcte."
-  },
-  {
-    "query": "Visualisation du taux de succès des requêtes par type",
+    "query": "Combien de saisons compte l'adaptation animée complète de Fullmetal Alchemist: Brotherhood par rapport à la première série de 2003 ?",
     "expected_id": "5114",
     "expected_title": "Fullmetal Alchemist: Brotherhood",
     "is_architectural": true,
-    "query_type": "visual",
-    "ground_truth": "Un diagramme à barres montre les performances relatives des requêtes graph, visual, cross-media, etc."
+    "query_type": "cross-media",
+    "ground_truth": "FMA Brotherhood compte 64 épisodes (généralement groupés en 1 longue saison continue ou 5 parties selon les plateformes) et suit fidèlement le manga, contrairement à la version 2003 de 51 épisodes qui propose une fin originale."
   },
   {
-    "query": "Pourquoi le système utilise-t-il des prompt templates dynamiques ?",
-    "expected_id": "11757",
-    "expected_title": "Sword Art Online",
-    "is_architectural": true,
-    "query_type": "thematic",
-    "ground_truth": "Pour adapter le contexte injecté aux besoins spécifiques de la tâche de l'agent, améliorant ainsi la pertinence de la réponse."
-  },
-  {
-    "query": "Architecture de la gestion des secrets et des API",
-    "expected_id": "21234",
-    "expected_title": "ERASED",
-    "is_architectural": true,
-    "query_type": "thematic",
-    "ground_truth": "Les secrets sont gérés via des variables d'environnement injectées au déploiement, isolées du code source."
-  },
-  {
-    "query": "Représentation des relations sémantiques entre tags",
-    "expected_id": "101921",
-    "expected_title": "Kaguya-sama: Love is War",
+    "query": "Quel studio d'animation est responsable des adaptations des œuvres clés du collectif CLAMP ?",
+    "expected_id": "0",
+    "expected_title": "Multiple",
     "is_architectural": true,
     "query_type": "graph",
-    "ground_truth": "Un graphe dense où les tags fréquemment associés sont connectés, permettant d'étendre la recherche."
+    "ground_truth": "Bien que CLAMP collabore avec divers studios, Madhouse a adapté des œuvres majeures comme Cardcaptor Sakura et Chobits."
   },
   {
-    "query": "Comment le modèle est-il monitoré en continu ?",
-    "expected_id": "21827",
-    "expected_title": "Violet Evergarden",
-    "is_architectural": true,
-    "query_type": "thematic",
-    "ground_truth": "Via un pipeline de monitoring qui capture et analyse les logs en temps réel pour détecter toute anomalie de performance ou de comportement."
-  },
-  {
-    "query": "Visualisation de la complétude du graphe de connaissances",
-    "expected_id": "20613",
-    "expected_title": "Akame ga Kill!",
+    "query": "Un personnage avec une cicatrice en forme de croix sur la joue gauche et qui se bat avec un sabre à lame inversée.",
+    "expected_id": "45",
+    "expected_title": "Rurouni Kenshin",
     "is_architectural": true,
     "query_type": "visual",
-    "ground_truth": "Un heat-map montrant la densité des relations par nœud, aidant à identifier les zones sous-explorées du graphe."
+    "ground_truth": "C'est la description visuelle exacte de Kenshin Himura."
   },
   {
-    "query": "Avantages de la conteneurisation pour ce projet IA",
-    "expected_id": "20789",
-    "expected_title": "The Seven Deadly Sins",
+    "query": "Dans quel anime trouve-t-on un système de magie basé sur l'équivalence gardée, où l'on ne peut créer quelque chose qu'en sacrifiant une chose de valeur égale ?",
+    "expected_id": "5114",
+    "expected_title": "Fullmetal Alchemist",
     "is_architectural": true,
     "query_type": "thematic",
-    "ground_truth": "Elle garantit la reproductibilité des environnements d'exécution, simplifiant le déploiement et le scaling sur différentes infrastructures."
+    "ground_truth": "C'est le concept de 'l'Échange Équivalent' (Equivalent Exchange) au cœur de l'alchimie dans Fullmetal Alchemist."
+  },
+  {
+    "query": "Le créateur de l'univers Fate a-t-il aussi écrit le visual novel Tsukihime ?",
+    "expected_id": "0",
+    "expected_title": "Fate/stay night",
+    "is_architectural": true,
+    "query_type": "cross-media",
+    "ground_truth": "Oui, Kinoko Nasu (Type-Moon) est le créateur et scénariste principal de Fate/stay night et de Tsukihime."
   }
 ]
