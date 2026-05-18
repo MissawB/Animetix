@@ -22,6 +22,7 @@ class RAGState(str, Enum):
     PLAN = "PLAN"
     GRAPH_EXPLORE = "GRAPH_EXPLORE"
     RESEARCH = "RESEARCH"
+    VLM_RERANK = "VLM_RERANK"
     SYNTHESIZE = "SYNTHESIZE"
     JUDGE = "JUDGE"
     FINALIZE = "FINALIZE"
@@ -39,6 +40,7 @@ class RAGContext(BaseModel):
     memories: str = ""
     plan: Optional[SearchPlan] = None
     raw_context: str = ""
+    candidates: List[Dict] = []
     truth_path: str = ""
     full_answer: str = ""
     correction_feedback: Optional[str] = None
