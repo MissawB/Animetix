@@ -12,7 +12,7 @@ from .llm_service import LLMService
 from ..entities.ai_schemas import (
     SearchPlan, CritiqueResult, StreamStep, JudgeEvaluation, JudgeAction
 )
-from .rag.agents import SearchPlanner, ResponseCritic, ResponseSynthesizer, ResponseJudge, ScoutAgent
+from .rag.agents import SearchPlanner, ResponseCritic, ResponseSynthesizer, ResponseJudge, ScoutAgent, GraphExpert
 
 logger = logging.getLogger("animetix.rag")
 
@@ -20,6 +20,7 @@ class RAGState(str, Enum):
     """États de la machine à états RAG."""
     ANALYZE = "ANALYZE"
     PLAN = "PLAN"
+    GRAPH_EXPLORE = "GRAPH_EXPLORE"
     RESEARCH = "RESEARCH"
     SYNTHESIZE = "SYNTHESIZE"
     JUDGE = "JUDGE"
@@ -28,6 +29,8 @@ class RAGState(str, Enum):
 
 class RAGContext(BaseModel):
     """Contexte de la session RAG agentique."""
+    model_config = {"arbitrary_types_allowed": True}
+    
     query: str
     media_type: str
     user_id: Optional[str] = None
@@ -42,6 +45,7 @@ class RAGContext(BaseModel):
     iteration: int = 0
     max_iterations: int = 10
     current_state: RAGState = RAGState.ANALYZE
+    graph_expert: Any = None
 
 class AgenticRAGService:
     """
@@ -58,7 +62,8 @@ class AgenticRAGService:
         neo4j_manager=None,
         memory_service=None,
         semantic_cache=None,
-        obs_service=None
+        obs_service=None,
+        graph_expert: Optional[GraphExpert] = None
     ):
         self.inference_engine = inference_engine
         self.rag_service = rag_service
@@ -69,6 +74,7 @@ class AgenticRAGService:
         self.memory_service = memory_service
         self.semantic_cache = semantic_cache
         self.obs_service = obs_service
+        self.graph_expert = graph_expert or GraphExpert(self.llm_service, prompt_manager)
 
         # Initialisation des agents spécialisés
         self.planner = SearchPlanner(self.llm_service, prompt_manager)
@@ -108,7 +114,8 @@ class AgenticRAGService:
             thinking_budget=thinking_budget,
             thinking_mode=thinking_mode,
             memories=self._get_memories(user_id, query),
-            current_state=RAGState.PLAN
+            current_state=RAGState.PLAN,
+            graph_expert=self.graph_expert
         )
 
         # 2. BOUCLE DE LA MACHINE À ÉTATS
@@ -119,6 +126,8 @@ class AgenticRAGService:
             try:
                 if ctx.current_state == RAGState.PLAN:
                     yield from self._handle_plan(ctx)
+                elif ctx.current_state == RAGState.GRAPH_EXPLORE:
+                    yield from self._handle_graph_explore(ctx)
                 elif ctx.current_state == RAGState.RESEARCH:
                     yield from self._handle_research(ctx)
                 elif ctx.current_state == RAGState.SYNTHESIZE:
@@ -147,6 +156,33 @@ class AgenticRAGService:
             thinking_mode=ctx.thinking_mode
         )
         logger.info(f"PERF: Planner took {(time.time() - start)*1000:.2f}ms")
+        
+        if ctx.plan.requires_graph:
+            ctx.current_state = RAGState.GRAPH_EXPLORE
+        else:
+            ctx.current_state = RAGState.RESEARCH
+
+    def _handle_graph_explore(self, ctx: RAGContext) -> Generator[Dict, None, None]:
+        if not ctx.plan:
+            ctx.current_state = RAGState.PLAN
+            return
+
+        yield StreamStep(type="thought", content="[Graph-Agent] Génération d'une requête Cypher...").model_dump()
+        
+        # Le GraphExpert peut être dans ctx ou self. On utilise self.graph_expert
+        cypher = self.graph_expert.generate_cypher(ctx.query, ctx.plan.reasoning)
+        
+        if cypher:
+            yield StreamStep(type="thought", content=f"[Graph-Agent] Exécution Cypher : {cypher}").model_dump()
+            try:
+                results = self.neo4j_manager.execute_query(cypher)
+                res_str = f"\n[Graph-Agent Results]:\n{results}\n"
+                # On ajoute au truth_path comme demandé (pourra être enrichi par Research après)
+                ctx.truth_path += res_str
+            except Exception as e:
+                logger.error(f"Graph execution failed: {e}")
+                yield StreamStep(type="thought", content=f"[Graph-Agent] Erreur d'exécution Cypher : {e}").model_dump()
+        
         ctx.current_state = RAGState.RESEARCH
 
     def _handle_research(self, ctx: RAGContext) -> Generator[Dict, None, None]:
@@ -163,7 +199,14 @@ class AgenticRAGService:
         
         yield StreamStep(type="thought", content="[Scout] Distillation du contexte en Chemin de Vérité...").model_dump()
         scout_start = time.time()
-        ctx.truth_path = self.scout.find_truth_path(ctx.query, ctx.plan, ctx.raw_context)
+        distilled = self.scout.find_truth_path(ctx.query, ctx.plan, ctx.raw_context)
+        
+        # On append pour ne pas perdre les infos du GraphExpert
+        if ctx.truth_path:
+            ctx.truth_path += f"\n[Scout Distillation]:\n{distilled}"
+        else:
+            ctx.truth_path = distilled
+            
         logger.info(f"PERF: Scout took {(time.time() - scout_start)*1000:.2f}ms")
         
         ctx.current_state = RAGState.SYNTHESIZE

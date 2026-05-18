@@ -39,6 +39,7 @@ from core.domain.services.neuro_symbolic_service import NeuroSymbolicService
 from core.domain.services.spatial_computing_service import SpatialComputingService
 from core.domain.services.spatial_audio_service import VoiceCloningService, NativeSpeechLLMService
 from core.domain.services.cove_oracle_service import CoveOracleService
+from core.domain.services.rag.agents import GraphExpert, ScoutAgent
 from core.domain.services.agentic_rag_service import AgenticRAGService
 from core.domain.services.long_term_memory_service import LongTermMemoryService
 from core.domain.services.semantic_cache_service import SemanticCacheService
@@ -82,6 +83,10 @@ class Container:
     @property
     def prompt_manager(self):
         return self._get('prompt_manager', lambda: PromptManager(prompts_dir=os.path.join(settings.PROJECT_ROOT, "src", "core", "domain", "services", "prompts")))
+
+    @property
+    def translation_service(self):
+        return self._get('translation_service', lambda: TranslationService())
 
     @property
     def repository(self):
@@ -138,8 +143,23 @@ class Container:
         return self._get('rag_service', lambda: AdvancedRAGService(repository=self.repository, llm_service=self.llm_service, neo4j_manager=neo4j_manager, reranker=self.reranker))
 
     @property
+    def graph_expert(self):
+        return self._get('graph_expert', lambda: GraphExpert(llm_service=self.llm_service, prompt_manager=self.prompt_manager))
+
+    @property
     def agentic_rag(self):
-        return self._get('agentic_rag', lambda: AgenticRAGService(inference_engine=self.inference_engine, rag_service=self.rag_service, web_search=DuckDuckGoSearchAdapter(), prompt_manager=self.prompt_manager, llm_service=self.llm_service, neo4j_manager=neo4j_manager, memory_service=self.memory_service, semantic_cache=self.semantic_cache_service, obs_service=self.obs_service))
+        return self._get('agentic_rag', lambda: AgenticRAGService(
+            inference_engine=self.inference_engine, 
+            rag_service=self.rag_service, 
+            web_search=DuckDuckGoSearchAdapter(), 
+            prompt_manager=self.prompt_manager, 
+            llm_service=self.llm_service, 
+            neo4j_manager=neo4j_manager, 
+            memory_service=self.memory_service, 
+            semantic_cache=self.semantic_cache_service, 
+            obs_service=self.obs_service,
+            graph_expert=self.graph_expert
+        ))
 
     @property
     def reasoning_agent(self):
