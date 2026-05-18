@@ -158,5 +158,245 @@
     "is_architectural": true,
     "query_type": "cross-media",
     "ground_truth": "Oui, Kinoko Nasu (Type-Moon) est le créateur et scénariste principal de Fate/stay night et de Tsukihime."
+  },
+  {
+    "query": "Quelles autres séries du Weekly Shonen Jump le studio Pierrot a-t-il animées à part Naruto et Bleach ?",
+    "expected_id": "0",
+    "expected_title": "Multiple",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "Le studio Pierrot a animé Black Clover, Yu Yu Hakusho, et Tokyo Ghoul."
+  },
+  {
+    "query": "Est-ce que l'auteur de Death Note a travaillé sur d'autres mangas qui ont reçu une adaptation animée par le studio Madhouse ?",
+    "expected_id": "0",
+    "expected_title": "Multiple",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "Oui, Tsugumi Ohba (et Takeshi Obata) sont les auteurs de Bakuman, dont les premières saisons n'ont pas été faites par Madhouse mais par J.C.Staff, Death Parade a été fait par Madhouse (Death Billiards) mais sans lien avec Ohba. Il n'y a pas d'autre manga majeur d'Ohba adapté par Madhouse."
+  },
+  {
+    "query": "Je me souviens d'une fille avec des couettes blondes, un uniforme scolaire de marin, qui croise souvent les bras et crie souvent 'Baka !' en rougissant.",
+    "expected_id": "0",
+    "expected_title": "Multiple",
+    "is_architectural": true,
+    "query_type": "visual",
+    "ground_truth": "C'est un archétype classique de Tsundere, pouvant faire penser à Erina de Food Wars (pas uniforme marin) ou Sawachika Eri de School Rumble, voire Kagami de Lucky Star."
+  },
+  {
+    "query": "Anime psychologique traitant de la solitude humaine, avec des combats de robots géants appelés EVA.",
+    "expected_id": "30",
+    "expected_title": "Neon Genesis Evangelion",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "Il s'agit de Neon Genesis Evangelion de Hideaki Anno."
+  },
+  {
+    "query": "Est-ce que les événements du film d'animation Jujutsu Kaisen 0 se déroulent avant ou après le manga principal ?",
+    "expected_id": "40748",
+    "expected_title": "Jujutsu Kaisen",
+    "is_architectural": true,
+    "query_type": "cross-media",
+    "ground_truth": "Jujutsu Kaisen 0 est un prequel (Volume 0), ses événements se déroulent avant l'histoire principale avec Yuji Itadori."
+  },
+  {
+    "query": "Dans quel épisode de Dragon Ball Z voit-on Luffy utiliser le Haki des Rois ?",
+    "expected_id": "0",
+    "expected_title": "None",
+    "is_architectural": true,
+    "query_type": "negative",
+    "ground_truth": "Luffy et le Haki des Rois appartiennent à l'univers de One Piece, pas à Dragon Ball Z. Cette scène n'existe pas."
+  },
+  {
+    "query": "Un personnage chauve avec une cape jaune et un visage souvent dessiné de manière très simple et comique.",
+    "expected_id": "30276",
+    "expected_title": "One Punch Man",
+    "is_architectural": true,
+    "query_type": "visual",
+    "ground_truth": "C'est la description visuelle de Saitama dans One Punch Man."
+  },
+  {
+    "query": "Un anime sportif de volley-ball axé sur le travail d'équipe, l'évolution personnelle, et l'idée de voler métaphoriquement.",
+    "expected_id": "20583",
+    "expected_title": "Haikyuu!!",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "Il s'agit du manga/anime Haikyuu!! qui suit le club de Karasuno."
+  },
+  {
+    "query": "L'animé Akira de 1988 couvre-t-il l'intégralité du manga original de Katsuhiro Otomo ?",
+    "expected_id": "47",
+    "expected_title": "Akira",
+    "is_architectural": true,
+    "query_type": "cross-media",
+    "ground_truth": "Non, le film Akira de 1988 a été produit alors que le manga était encore en cours de publication. Il ne couvre pas l'intégralité de l'œuvre et diverge considérablement sur la fin."
+  },
+  {
+    "query": "Quel est le nom du Bankai de Naruto ?",
+    "expected_id": "0",
+    "expected_title": "None",
+    "is_architectural": true,
+    "query_type": "negative",
+    "ground_truth": "Le Bankai est un pouvoir spécifique à l'univers de Bleach. Naruto utilise le chakra et le mode Ermite ou Kyubi, mais n'a pas de Bankai."
+  },
+  {
+    "query": "Quels acteurs de doublage principaux de l'Attaque des Titans retrouvons-nous dans JoJo's Bizarre Adventure ?",
+    "expected_id": "0",
+    "expected_title": "Multiple",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "Daisuke Ono (Erwin Smith / Jotaro Kujo), Takehito Koyasu (Sieg Jäger / Dio Brando), et Yuki Kaji (Eren Jäger / Koichi Hirose)."
+  },
+  {
+    "query": "Une image d'un immense arbre brillant au centre d'un monde fantastique avec une fille aux cheveux dorés.",
+    "expected_id": "0",
+    "expected_title": "Multiple",
+    "is_architectural": true,
+    "query_type": "visual",
+    "ground_truth": "Cela peut faire penser à l'Arbre du Monde dans Sword Art Online (arc ALO) avec Asuna ou Leafa, ou à des éléments de Berserk (Arbre Spirale)."
+  },
+  {
+    "query": "Série centrée sur la musique classique, où un jeune pianiste prodige traumatisé rencontre une violoniste excentrique.",
+    "expected_id": "23273",
+    "expected_title": "Your Lie in April",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "Il s'agit de Your Lie in April (Shigatsu wa Kimi no Uso), avec Kousei Arima et Kaori Miyazono."
+  },
+  {
+    "query": "Combien de films récapitulatifs ont été produits pour l'animé Code Geass avant le film Lelouch of the Re;surrection ?",
+    "expected_id": "1575",
+    "expected_title": "Code Geass",
+    "is_architectural": true,
+    "query_type": "cross-media",
+    "ground_truth": "Il y a eu une trilogie de films récapitulatifs (Initiation, Transgression, Glorification) avant le film Re;surrection."
+  },
+  {
+    "query": "Est-ce que le Studio Ghibli a produit la saison 2 de Demon Slayer ?",
+    "expected_id": "0",
+    "expected_title": "None",
+    "is_architectural": true,
+    "query_type": "negative",
+    "ground_truth": "Non, l'intégralité de l'adaptation animée de Demon Slayer (Kimetsu no Yaiba) est produite par le studio ufotable."
+  },
+  {
+    "query": "Quels animés ont été réalisés par Shinichiro Watanabe à part Cowboy Bebop et Samurai Champloo ?",
+    "expected_id": "0",
+    "expected_title": "Multiple",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "Shinichiro Watanabe a également réalisé Space Dandy, Terror in Resonance (Zankyou no Terror), et Carole & Tuesday."
+  },
+  {
+    "query": "Une fille avec un cache-œil, des cheveux noirs ou violets sombres, qui pense avoir des pouvoirs magiques dans un cadre scolaire.",
+    "expected_id": "14741",
+    "expected_title": "Love, Chunibyo & Other Delusions!",
+    "is_architectural": true,
+    "query_type": "visual",
+    "ground_truth": "C'est la description de Rikka Takanashi dans Chuunibyou demo Koi ga Shitai! (le syndrome de la classe de 4ème)."
+  },
+  {
+    "query": "Œuvre de science-fiction dystopique explorant le concept de libre arbitre avec un système informatique appelé Sibyl.",
+    "expected_id": "13601",
+    "expected_title": "Psycho-Pass",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "Il s'agit de la série Psycho-Pass, où le Système Sibyl mesure le coefficient de criminalité des citoyens."
+  },
+  {
+    "query": "Est-ce que le spin-off Magi: The Labyrinth of Magic sur Sinbad existe aussi en manga ?",
+    "expected_id": "0",
+    "expected_title": "Multiple",
+    "is_architectural": true,
+    "query_type": "cross-media",
+    "ground_truth": "Oui, le spin-off s'appelle Adventure of Sinbad et a d'abord été publié sous forme de manga avant de recevoir son adaptation animée."
+  },
+  {
+    "query": "A quel moment de l'histoire Gon de Hunter x Hunter débloque-t-il le Gear Fourth ?",
+    "expected_id": "0",
+    "expected_title": "None",
+    "is_architectural": true,
+    "query_type": "negative",
+    "ground_truth": "Gon est un personnage de Hunter x Hunter qui utilise le Nen. Le Gear Fourth est une transformation exclusive à Monkey D. Luffy dans One Piece."
+  },
+  {
+    "query": "Quels mangas publiés dans le magazine Ultra Jump ont été adaptés en animé ?",
+    "expected_id": "0",
+    "expected_title": "Multiple",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "Des mangas comme JoJo's Bizarre Adventure (partie 7 Steel Ball Run), Tenjho Tenge, et No Guns Life."
+  },
+  {
+    "query": "Un prêtre portant toujours un énorme crucifix enveloppé de tissu, qui se révèle être une mitrailleuse lourde.",
+    "expected_id": "6",
+    "expected_title": "Trigun",
+    "is_architectural": true,
+    "query_type": "visual",
+    "ground_truth": "C'est la description de Nicholas D. Wolfwood, le prêtre armé de l'anime Trigun."
+  },
+  {
+    "query": "Un isekai où le protagoniste revient sans cesse à la vie après chaque mort pour sauver la fille qu'il aime.",
+    "expected_id": "31240",
+    "expected_title": "Re:Zero",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "Il s'agit de Re:Zero kara Hajimeru Isekai Seikatsu, le héros est Subaru Natsuki et son pouvoir est la Mort Réversible."
+  },
+  {
+    "query": "Le film Evangelion: 3.0+1.0 conclut-il l'histoire du manga original ou des Rebuilds ?",
+    "expected_id": "37497",
+    "expected_title": "Evangelion: 3.0+1.0 Thrice Upon a Time",
+    "is_architectural": true,
+    "query_type": "cross-media",
+    "ground_truth": "Le film 3.0+1.0 sert de conclusion à la quadrilogie des films Rebuild of Evangelion, qui s'écartent drastiquement de la série originale et du manga."
+  },
+  {
+    "query": "Dans Sword Art Online, comment s'appelle le Titan Colossal que Kirito doit vaincre ?",
+    "expected_id": "0",
+    "expected_title": "None",
+    "is_architectural": true,
+    "query_type": "negative",
+    "ground_truth": "Il n'y a pas de Titan Colossal dans Sword Art Online, c'est une créature de L'Attaque des Titans. Kirito affronte des boss d'étage comme The Gleam Eyes."
+  },
+  {
+    "query": "Je cherche un anime avec un mec qui a un bras droit en métal automail rouge, et qui cherche la pierre philosophale.",
+    "expected_id": "5114",
+    "expected_title": "Fullmetal Alchemist",
+    "is_architectural": false,
+    "query_type": "standard",
+    "ground_truth": "C'est Fullmetal Alchemist. Edward Elric possède un automail au bras droit et cherche la pierre pour retrouver son corps et celui de son frère."
+  },
+  {
+    "query": "Un anime de comédie romantique où le président du conseil des élèves et la vice-présidente essaient de se forcer mutuellement à confesser leur amour.",
+    "expected_id": "37999",
+    "expected_title": "Kaguya-sama: Love is War",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "Il s'agit de Kaguya-sama: Love is War, mettant en scène Kaguya Shinomiya et Miyuki Shirogane."
+  },
+  {
+    "query": "Quelles œuvres du studio Trigger utilisent des éléments de science-fiction avec des extraterrestres basés sur des vêtements ?",
+    "expected_id": "18679",
+    "expected_title": "Kill la Kill",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "Il s'agit de Kill la Kill, produit par le studio Trigger, où les fibres de vie extraterrestres (Life Fibers) forment les vêtements."
+  },
+  {
+    "query": "Un personnage aux cheveux roses en pointes qui mange du feu pour reprendre des forces.",
+    "expected_id": "6702",
+    "expected_title": "Fairy Tail",
+    "is_architectural": true,
+    "query_type": "visual",
+    "ground_truth": "C'est Natsu Dragneel, le chasseur de dragons de feu dans Fairy Tail."
+  },
+  {
+    "query": "Un shonen classique sur un garçon sans pouvoirs magiques dans un monde où tout le monde en a, et qui obtient un grimoire à 5 trèfles.",
+    "expected_id": "34572",
+    "expected_title": "Black Clover",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "Il s'agit de Black Clover, le protagoniste est Asta."
   }
 ]
