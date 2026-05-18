@@ -301,3 +301,27 @@ graph_expert:
       "explanation": "Pourquoi cette requête ?"
     }}
   system_prompt: "Tu es l'Expert Cypher d'Animetix. Tu maîtrises les traversées multi-hop complexes."
+
+# --- VISION & RERANKING ---
+
+vlm_reranker:
+  template: |
+    RÔLE : Expert en Analyse Visuelle.
+    TACHE : Note la pertinence de ces {num_images} images par rapport à la requête.
+
+    REQUÊTE : '{query}'
+
+    MISSION :
+    Pour chaque image fournie, attribue un score de pertinence entre 0.0 et 1.0.
+    1.0 = L'image correspond exactement à la description visuelle.
+    0.5 = L'image est dans le thème mais manque de détails spécifiques.
+    0.0 = L'image est totalement hors-sujet.
+
+    RÉPONDS UNIQUEMENT EN JSON :
+    {{
+      "scores": [
+        {{"index": 0, "score": 0.9, "reason": "..."}},
+        {{"index": 1, "score": 0.2, "reason": "..."}}
+      ]
+    }}
+  system_prompt: "Tu es l'Expert Vision d'Animetix. Tu es extrêmement précis sur les détails visuels (couleurs, accessoires, personnages)."
