@@ -11,13 +11,13 @@ class JudgeAction(str, Enum):
     REPLAN = "REPLAN"
 
 class SearchPlan(BaseModel):
-    optimized_query: str
-    entities: List[str] = Field(default_factory=list)
-    requires_web: bool = False
-    requires_graph: bool = False
-    is_visual_query: bool = False
+    optimized_query: str = Field(description="Query optimized for the search engine.")
+    entities: List[str] = Field(default_factory=list, description="Key entities identified in the query.")
+    requires_web: bool = Field(default=False, description="Whether web search is required to answer the query.")
+    requires_graph: bool = Field(default=False, description="Whether graph exploration (Cypher) is required for complex relationships.")
+    is_visual_query: bool = Field(default=False, description="Whether the query involves visual analysis (e.g. poster, visual vibe).")
     graph_traversal_steps: List[str] = Field(default_factory=list, description="List of relationship types to follow in the graph.")
-    reasoning: Optional[str] = None
+    reasoning: str = Field(description="Brief explanation of the search strategy.")
 
 class CritiqueResult(BaseModel):
     is_relevant: bool

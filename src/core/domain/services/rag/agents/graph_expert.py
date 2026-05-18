@@ -1,7 +1,8 @@
 import logging
+import orjson
 from typing import Dict, Optional
-from src.core.domain.services.llm_service import LLMService
-from src.core.domain.services.prompt_manager import PromptManager
+from core.domain.services.llm_service import LLMService
+from core.domain.services.prompt_manager import PromptManager
 
 logger = logging.getLogger("animetix.rag.graph_expert")
 
@@ -18,7 +19,6 @@ class GraphExpert:
             prompt, sys = self.prompt_manager.get_prompt("graph_expert", query=query, reasoning=reasoning)
             res_raw = self.llm_service.generate(prompt, sys, use_slm=True)
             
-            import orjson
             # Extract JSON from potential markdown blocks or noise
             if '{' in res_raw and '}' in res_raw:
                 start_idx = res_raw.find('{')

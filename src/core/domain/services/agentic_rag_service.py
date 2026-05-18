@@ -45,7 +45,7 @@ class RAGContext(BaseModel):
     iteration: int = 0
     max_iterations: int = 10
     current_state: RAGState = RAGState.ANALYZE
-    graph_expert: Any = None
+    graph_expert: Optional[GraphExpert] = None
 
 class AgenticRAGService:
     """
@@ -167,6 +167,11 @@ class AgenticRAGService:
             ctx.current_state = RAGState.PLAN
             return
 
+        if not self.neo4j_manager:
+            yield StreamStep(type="thought", content="[Graph-Agent] Neo4j non disponible pour l'exploration.").model_dump()
+            ctx.current_state = RAGState.RESEARCH
+            return
+
         yield StreamStep(type="thought", content="[Graph-Agent] Génération d'une requête Cypher...").model_dump()
         
         # Le GraphExpert peut être dans ctx ou self. On utilise self.graph_expert
@@ -176,12 +181,17 @@ class AgenticRAGService:
             yield StreamStep(type="thought", content=f"[Graph-Agent] Exécution Cypher : {cypher}").model_dump()
             try:
                 results = self.neo4j_manager.execute_query(cypher)
-                res_str = f"\n[Graph-Agent Results]:\n{results}\n"
-                # On ajoute au truth_path comme demandé (pourra être enrichi par Research après)
-                ctx.truth_path += res_str
+                if results:
+                    res_str = f"\n[Graph-Agent Results]:\n{results}\n"
+                    # On ajoute au truth_path comme demandé (pourra être enrichi par Research après)
+                    ctx.truth_path += res_str
+                else:
+                    yield StreamStep(type="thought", content="[Graph-Agent] Aucun résultat trouvé dans le graphe.").model_dump()
             except Exception as e:
                 logger.error(f"Graph execution failed: {e}")
                 yield StreamStep(type="thought", content=f"[Graph-Agent] Erreur d'exécution Cypher : {e}").model_dump()
+        else:
+            yield StreamStep(type="thought", content="[Graph-Agent] Impossible de générer une requête Cypher pertinente.").model_dump()
         
         ctx.current_state = RAGState.RESEARCH
 
