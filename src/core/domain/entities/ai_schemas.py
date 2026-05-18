@@ -14,6 +14,7 @@ class SearchPlan(BaseModel):
     optimized_query: str
     entities: List[str] = Field(default_factory=list)
     requires_web: bool = False
+    requires_graph: bool = False
     is_visual_query: bool = False
     graph_traversal_steps: List[str] = Field(default_factory=list, description="List of relationship types to follow in the graph.")
     reasoning: Optional[str] = None
