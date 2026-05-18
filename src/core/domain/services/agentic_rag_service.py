@@ -134,6 +134,8 @@ class AgenticRAGService:
                     yield from self._handle_graph_explore(ctx)
                 elif ctx.current_state == RAGState.RESEARCH:
                     yield from self._handle_research(ctx)
+                elif ctx.current_state == RAGState.VLM_RERANK:
+                    yield from self._handle_vlm_rerank(ctx)
                 elif ctx.current_state == RAGState.SYNTHESIZE:
                     yield from self._handle_synthesize(ctx)
                 elif ctx.current_state == RAGState.JUDGE:
@@ -208,7 +210,9 @@ class AgenticRAGService:
         yield StreamStep(type="thought", content=f"[Searcher] Exécution recherche ({source})...").model_dump()
         
         search_start = time.time()
-        ctx.raw_context = self._execute_search(ctx.plan, ctx.media_type)
+        results, ctx_str = self._execute_search(ctx.plan, ctx.media_type)
+        ctx.candidates = results
+        ctx.raw_context = ctx_str
         logger.info(f"PERF: Searcher ({source}) took {(time.time() - search_start)*1000:.2f}ms")
         
         yield StreamStep(type="thought", content="[Scout] Distillation du contexte en Chemin de Vérité...").model_dump()
@@ -223,6 +227,59 @@ class AgenticRAGService:
             
         logger.info(f"PERF: Scout took {(time.time() - scout_start)*1000:.2f}ms")
         
+        if ctx.plan.is_visual_query:
+            ctx.current_state = RAGState.VLM_RERANK
+        else:
+            ctx.current_state = RAGState.SYNTHESIZE
+
+    def _handle_vlm_rerank(self, ctx: RAGContext) -> Generator[Dict, None, None]:
+        yield StreamStep(type="thought", content="[VLM-Reranker] Analyse visuelle des images candidates...").model_dump()
+        
+        # Extraction des URLs d'images
+        image_urls = []
+        valid_candidates = []
+        for c in ctx.candidates:
+            # On cherche plusieurs champs possibles pour l'image
+            url = c.get('image') or c.get('image_url') or c.get('cover_url') or c.get('poster_path')
+            if url:
+                image_urls.append(url)
+                valid_candidates.append(c)
+        
+        if not image_urls:
+            yield StreamStep(type="thought", content="[VLM-Reranker] Aucune image exploitable trouvée pour le reranking.").model_dump()
+            ctx.current_state = RAGState.SYNTHESIZE
+            return
+
+        try:
+            # Appel au VLM pour le reranking
+            # La méthode visual_rerank doit retourner une liste de dicts avec 'index' et 'score'
+            reranked = self.inference_engine.visual_rerank(ctx.query, image_urls)
+            
+            # Attribution des scores aux candidats
+            for item in reranked:
+                idx = item.get('index')
+                if idx is not None and idx < len(valid_candidates):
+                    valid_candidates[idx]['visual_score'] = item.get('score', 0.0)
+            
+            # Tri par score visuel décroissant
+            valid_candidates.sort(key=lambda x: x.get('visual_score', 0.0), reverse=True)
+            
+            # Régénération du truth_path avec le top 5 re-classé
+            top_5 = valid_candidates[:5]
+            new_truth = "### CHEMIN DE VÉRITÉ (RERANKING VISUEL) ###\n"
+            for i, c in enumerate(top_5):
+                new_truth += f"{i+1}. {c.get('title')} (Score Visuel: {c.get('visual_score', 0.0):.2f})\n"
+                new_truth += f"   - Description: {c.get('description', '')[:300]}...\n"
+                if url := (c.get('image') or c.get('image_url') or c.get('cover_url') or c.get('poster_path')):
+                    new_truth += f"   - Image: {url}\n"
+            
+            ctx.truth_path = new_truth
+            yield StreamStep(type="thought", content=f"[VLM-Reranker] Classement visuel terminé. Top match : {top_5[0].get('title')}").model_dump()
+            
+        except Exception as e:
+            logger.error(f"VLM Rerank error: {e}")
+            yield StreamStep(type="thought", content=f"[VLM-Reranker] Échec de l'analyse visuelle : {str(e)}").model_dump()
+            
         ctx.current_state = RAGState.SYNTHESIZE
 
     def _handle_synthesize(self, ctx: RAGContext) -> Generator[Dict, None, None]:
@@ -300,10 +357,11 @@ class AgenticRAGService:
             return self.memory_service.retrieve_relevant_memories(user_id, query)
         return ""
 
-    def _execute_search(self, plan, media_type: str) -> str:
+    def _execute_search(self, plan, media_type: str) -> tuple[List[Dict], str]:
         if plan.requires_web:
             results = self.web_search.search(plan.optimized_query)
-            return "\n".join([f"WEB - {r['title']}: {r['snippet']}" for r in results])
+            context = "\n".join([f"WEB - {r['title']}: {r['snippet']}" for r in results])
+            return results, context
         
         ctx = ""
         results = self.rag_service.hybrid_search(plan.optimized_query, media_type)
@@ -316,7 +374,7 @@ class AgenticRAGService:
             else:
                 graph_ctx = self.neo4j_manager.get_enriched_context(plan.entities)
                 ctx += f"\nGRAPH:\n{graph_ctx}"
-        return ctx
+        return results, ctx
 
     def _store_results(self, query: str, answer: str, user_id: str):
         if self.semantic_cache:
