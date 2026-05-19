@@ -1,0 +1,128 @@
+{% extends 'animetix/base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}Spatial Lab - Animetix 3D Pro{% endblock %}
+
+{% block content %}
+<div class="container py-12">
+    <div class="row mb-12 text-center">
+        <div class="col-12">
+            <span class="badge bg-primary rounded-pill px-4 py-2 mb-3 animate__animated animate__fadeInDown">SOTA 2026 : DEPTH ANYTHING V2</span>
+            <h1 class="display-4 fw-black manga-font italic mb-4">SPATIAL LAB <span class="text-primary">3D</span></h1>
+            <p class="lead text-muted mx-auto" style="max-width: 700px;">
+                Découvrez la puissance du <strong>Displacement Mapping</strong>. Notre IA génère une géométrie 3D complexe à partir d'une simple image.
+            </p>
+        </div>
+    </div>
+
+    <div class="row g-5">
+        <!-- Explorateur d'exemples -->
+        <div class="col-lg-3">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden" style="background: var(--card-bg);">
+                <div class="card-header bg-transparent border-0 p-4 pb-0">
+                    <h5 class="fw-bold mb-0">Galerie</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="mb-4">
+                        <label class="form-label small text-uppercase fw-bold opacity-50">Importer une œuvre</label>
+                        <div class="d-flex flex-column gap-2">
+                            <input type="file" id="image-upload" class="d-none" accept="image/*" onchange="uploadImage(this)">
+                            <button class="btn btn-outline-primary btn-sm rounded-pill w-100 fw-bold" onclick="document.getElementById('image-upload').click()">
+                                <i class="bi bi-upload me-2"></i> PARCOURIR...
+                            </button>
+                            <div class="input-group input-group-sm mt-2">
+                                <input type="text" id="url-input" class="form-control border-primary/20 bg-dark/20 text-white" placeholder="Coller une URL...">
+                                <button class="btn btn-primary" onclick="loadFromUrl()"><i class="bi bi-arrow-right"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <label class="form-label small text-uppercase fw-bold opacity-50 mb-3">Galerie d'Analyse</label>
+                    <div class="row g-2 overflow-auto" style="max-height: 400px;">
+
+                        {% for item in examples %}
+                        <div class="col-6">
+                            <img src="{{ item.image }}" 
+                                 class="img-fluid rounded-3 cursor-pointer hover-scale transition shadow-sm example-thumb" 
+                                 alt="{{ item.title }}"
+                                 onclick="selectImage('{{ item.image|escapejs }}', '{{ item.title|escapejs }}')">
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Zone de Rendu WebGL -->
+        <div class="col-lg-9">
+            <div class="card border-0 shadow-2xl rounded-5 overflow-hidden position-relative" style="background: #050505; height: 700px;">
+                <!-- Loading Overlay -->
+                <div id="loading-overlay" class="d-none position-absolute w-100 h-100 top-0 start-0 d-flex flex-column align-items-center justify-content-center bg-black bg-opacity-90 z-index-50">
+                    <div class="w-50">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span id="status-label" class="text-white text-[10px] fw-bold uppercase tracking-widest">Initialisation...</span>
+                            <div class="text-end">
+                                <span id="estimated-time" class="text-white/40 text-[9px] me-3 uppercase fw-bold">Calcul en cours...</span>
+                                <span id="progress-percent" class="text-primary text-[10px] fw-bold">0%</span>
+                            </div>
+                        </div>
+                        <div class="progress rounded-pill bg-white/10" style="height: 6px;">
+                            <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: 0%"></div>
+                        </div>
+                        <p id="patience-msg" class="text-white/40 text-[9px] text-center mt-3 italic">
+                            Le premier chargement du modèle IA peut prendre jusqu'à 30-60 secondes.
+                        </p>
+                    </div>
+                </div>
+
+                <div id="webgl-container" class="w-100 h-100 cursor-move"></div>
+
+                <div class="position-absolute bottom-0 start-0 w-100 p-4 bg-gradient-to-t from-black/80 to-transparent pointer-events-none">
+                    <div class="d-flex justify-content-between align-items-end pointer-events-auto">
+                        <div class="text-white">
+                            <h4 id="render-title" class="fw-black italic manga-font mb-1">En attente...</h4>
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="badge bg-success rounded-pill px-2 py-1 text-[8px]">WEBGL CORE</span>
+                                <span class="text-primary text-[10px] fw-bold uppercase">Utilisez la souris pour explorer</span>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-3">
+                            <div class="bg-black/40 backdrop-blur rounded-3 p-2 border border-white/10 d-flex gap-4">
+                                <div>
+                                    <label class="text-white text-[8px] uppercase font-bold block mb-1">Intensité 3D</label>
+                                    <input type="range" id="depth-strength" min="0" max="100" value="50" class="form-range" style="width: 80px;">
+                                </div>
+                                <div>
+                                    <label class="text-white text-[8px] uppercase font-bold block mb-1">Zoom</label>
+                                    <input type="range" id="depth-zoom" min="50" max="150" value="100" class="form-range" style="width: 80px;">
+                                </div>
+                            </div>
+                            <button class="btn btn-primary rounded-3 px-4 fw-black italic" onclick="resetCamera()">RESET</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .cursor-pointer { cursor: pointer; }
+    .hover-scale:hover { transform: scale(1.05); }
+    .transition { transition: all 0.3s ease; }
+    .example-thumb { aspect-ratio: 1/1; object-fit: cover; }
+    #webgl-container canvas { display: block; width: 100% !important; height: 100% !important; }
+    .cursor-move { cursor: move; }
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script type="application/json" id="spatial-data">
+    {
+        "generateDepthUrl": "{% url 'generate_depth' %}",
+        "csrfToken": "{{ csrf_token|escapejs }}"
+    }
+</script>
+<script src="{% static 'animetix/js/spatial.js' %}"></script>
+{% endblock %}

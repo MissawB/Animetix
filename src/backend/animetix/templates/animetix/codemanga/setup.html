@@ -150,17 +150,10 @@
     </div>
 </div>
 
-<script>
-    function joinRoom() {
-        let code = document.getElementById('room-code-input').value.toUpperCase().trim();
-        const difficulty = document.querySelector('input[name="difficulty"]:checked').value;
-        
-        if (!code) {
-            code = Math.random().toString(36).substring(2, 6).toUpperCase();
-        }
-        
-        const baseUrl = "{% url 'codemanga_room' 'PLACEHOLDER' %}".replace('PLACEHOLDER', code);
-        window.location.href = `${baseUrl}?difficulty=${difficulty}`;
+<script type="application/json" id="setup-data">
+    {
+        "roomUrlPlaceholder": "{% url 'codemanga_room' 'PLACEHOLDER' %}"
     }
 </script>
+<script src="{% static 'animetix/js/codemanga_setup.js' %}"></script>
 {% endblock %}
