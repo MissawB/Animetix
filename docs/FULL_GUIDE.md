@@ -18,7 +18,7 @@ Situé dans `src/core/domain`, le domaine est le garant de la cohérence logique
     5.  **VLM_RERANK :** (Si visuel) Ré-ordonnancement des candidats par inspection directe des images.
     6.  **SYNTHESIZE :** Rédaction finale par le `ResponseSynthesizer`.
     7.  **JUDGE :** Débat multi-agents (`DebateManager`) pour valider la fidélité au contexte.
-- **Validation Strict Pydantic :** Chaque sortie d'un agent LLM est castée dans un modèle Pydantic (`ai_schemas.py`). Si le JSON est malformé, un mécanisme de **Self-Correction** renvoie l'erreur au LLM pour correction immédiate.
+- **Validation Strict Pydantic :** Chaque sortie d'un agent LLM est castée dans un modèle Pydantic (`src/core/domain/entities/ai_schemas.py`). Si le JSON est malformé, un mécanisme de **Self-Correction** renvoie l'erreur au LLM pour correction immédiate.
 - **Prompt Management (`PromptManager`) :** Les prompts sont externalisés dans des templates YAML. Le système implémente une **Métacognition In-Context** : si une erreur est corrigée par l'utilisateur ou le Juge, elle est enregistrée dans `auto_corrections.json` et réinjectée dynamiquement comme Few-Shot pour éviter que l'IA ne répète la même erreur.
 
 ### B. Ports & Adapters (Isolation de l'Infrastructure)

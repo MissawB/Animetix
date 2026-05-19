@@ -27,6 +27,7 @@ class RAGState(str, Enum):
     SYNTHESIZE = "SYNTHESIZE"
     JUDGE = "JUDGE"
     FINALIZE = "FINALIZE"
+    FALLBACK_RAG = "FALLBACK_RAG"
     FAILED = "FAILED"
 
 class RAGContext(BaseModel):
