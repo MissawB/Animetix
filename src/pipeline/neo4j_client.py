@@ -1,7 +1,10 @@
+import logging
 from neo4j import GraphDatabase
 import os
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 from dotenv import load_dotenv
+
+logger = logging.getLogger("animetix.neo4j")
 
 # Détection robuste de la racine du projet
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -57,6 +60,47 @@ class Neo4jManager:
                 session.execute_write(self._create_relation_tx, rel)
             # 3. Lier au média parent
             session.execute_write(self._link_to_parent_tx, media_id, extracted_data.get('entities', []))
+
+    def sync_combat_lore(self, media_id: str, lore_data_list: List[Dict[str, Any]]):
+        """
+        Injects extracted combat lore into the graph.
+        lore_data_list: List of {
+            'timestamp': str,
+            'character': str,
+            'technique': str,
+            'visual_description': str
+        }
+        """
+        if not self.driver:
+            return
+            
+        query = """
+        MATCH (m:Media {id: $media_id})
+        MERGE (c:Character {name: $character})
+        MERGE (t:Technique {name: $technique})
+        CREATE (e:CombatEvent {
+            timestamp: $timestamp, 
+            description: $description,
+            created_at: datetime()
+        })
+        MERGE (m)-[:CONTAINS_COMBAT]->(e)
+        MERGE (c)-[:PERFORMS]->(e)
+        MERGE (e)-[:INVOLVES_TECHNIQUE]->(t)
+        MERGE (c)-[:USES_TECHNIQUE]->(t)
+        """
+        
+        with self.driver.session() as session:
+            for lore in lore_data_list:
+                try:
+                    session.run(query, 
+                        media_id=media_id,
+                        character=lore.get('character'),
+                        technique=lore.get('technique'),
+                        timestamp=lore.get('timestamp'),
+                        description=lore.get('visual_description')
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to sync combat lore for {lore.get('technique')}: {e}")
 
     @staticmethod
     def _create_entity_tx(tx, entity):
