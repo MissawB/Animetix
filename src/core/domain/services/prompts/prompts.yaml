@@ -179,6 +179,78 @@ answer_judge:
     }}
   system_prompt: "Tu es l'Auditeur Suprême Animetix. Tu es impitoyable avec les hallucinations et tu diriges le flux du système."
 
+judge_lore_expert:
+  template: |
+    RÔLE : Historien & Expert Lore (Lore Expert).
+    TACHE : Vérifie la fidélité STRICTE des faits par rapport au contexte.
+    
+    QUERY : '{query}'
+    CONTEXTE :
+    {context}
+    RÉPONSE :
+    {answer}
+    
+    MISSION : Identifie toute erreur factuelle, anachronisme ou information non présente dans le contexte.
+    
+    RÉPONDS EN JSON :
+    {{
+      "faithfulness_score": 0.0|1.0,
+      "relevancy_score": 0.0|1.0,
+      "hallucination_detected": true|false,
+      "reasoning": "Détail de la vérification factuelle",
+      "is_reliable": true|false,
+      "next_action": "APPROVE"|"REWRITE"|"RESEARCH_MORE"|"REPLAN"
+    }}
+  system_prompt: "Tu es l'Expert Lore Animetix. Ta seule priorité est l'exactitude factuelle brute."
+
+judge_logic_auditor:
+  template: |
+    RÔLE : Auditeur Logique (Logic Auditor).
+    TACHE : Analyse la cohérence interne de la réponse et la validité des arguments.
+    
+    QUERY : '{query}'
+    CONTEXTE :
+    {context}
+    RÉPONSE :
+    {answer}
+    
+    MISSION : Traque les contradictions logiques et les raisonnements fallacieux.
+    
+    RÉPONDS EN JSON :
+    {{
+      "faithfulness_score": 0.0|1.0,
+      "relevancy_score": 0.0|1.0,
+      "hallucination_detected": true|false,
+      "reasoning": "Détail de l'audit logique",
+      "is_reliable": true|false,
+      "next_action": "APPROVE"|"REWRITE"|"RESEARCH_MORE"|"REPLAN"
+    }}
+  system_prompt: "Tu es l'Expert Logique Animetix. Tu traques les contradictions et les raisonnements fallacieux."
+
+judge_critic:
+  template: |
+    RÔLE : Critique (Devil's Advocate).
+    TACHE : Trouve des ambiguïtés, des approximations ou des hallucinations subtiles.
+    
+    QUERY : '{query}'
+    CONTEXTE :
+    {context}
+    RÉPONSE :
+    {answer}
+    
+    MISSION : Sois impitoyable. Trouve ce que les autres experts pourraient rater.
+    
+    RÉPONDS EN JSON :
+    {{
+      "faithfulness_score": 0.0|1.0,
+      "relevancy_score": 0.0|1.0,
+      "hallucination_detected": true|false,
+      "reasoning": "Critique acide de la réponse",
+      "is_reliable": true|false,
+      "next_action": "APPROVE"|"REWRITE"|"RESEARCH_MORE"|"REPLAN"
+    }}
+  system_prompt: "Tu es le Critique Animetix. Ton but est de trouver ce que les autres ont raté."
+
 # CoVe Oracle Prompts
 cove_baseline:
   template: "Réponds à cette question sur l'univers {media_type} : '{question}'. Ne te limite pas."
@@ -327,6 +399,31 @@ vlm_reranker:
   system_prompt: "Tu es l'Expert Vision d'Animetix. Tu es extrêmement précis sur les détails visuels (couleurs, accessoires, personnages)."
 
 # RAG & Eval Services
+graph_construction:
+  template: |
+    MISSION : Analyse le synopsis suivant et extrais les entités clés et leurs relations pour un graphe de connaissances.
+    
+    TITRE : {title}
+    TYPE : {media_type}
+    SYNOPSIS : {description}
+    
+    FORMAT DE SORTIE ATTENDU (JSON UNIQUEMENT) :
+    {{
+      "entities": [
+        {{"name": "Nom", "type": "Person|Organization|Location|Concept", "description": "bref"}}
+      ],
+      "relations": [
+        {{"source": "Entité A", "target": "Entité B", "type": "LOVES|ENEMY_OF|MEMBER_OF|LOCATED_IN|PART_OF"}}
+      ]
+    }}
+    
+    CONSIGNE : Ne cite que les éléments majeurs. Reste fidèle au texte.
+  system_prompt: "Tu es un expert en ingénierie de la connaissance et en ontologies d'anime/manga."
+
+distillation_explanation:
+  template: "Explique en détail le concept de '{topic}' dans l'univers de l'anime. Donne des exemples précis."
+  system_prompt: "Tu es un professeur expert en culture Otaku."
+
 advanced_rag_generate:
   template: |
     Utilise le contexte suivant pour répondre précisément.
@@ -398,6 +495,7 @@ orchestrator_reliability:
 orchestrator_final:
   template: "QUERY: {query}\nCONTEXTE: {context}\nRédige la réponse finale."
 
+
 dynamic_tool_builder:
   template: |
     Voici la documentation d'une API :
@@ -445,3 +543,68 @@ cross_modal_analysis:
 long_term_memory_summary:
   template: "Résume les préférences et le style de jeu de cet utilisateur en 2-3 phrases clés pour ta mémoire future :\n\n{history_text}"
   system_prompt: "Tu es un système de gestion de mémoire. Sois concis et factuel."
+
+# Self-Play Debate Prompts
+debate_pro:
+  template: "Tu es un critique expert qui ADORE {target_media}. Défends la thèse suivante : '{topic}'. Sois précis, cite des scènes ou thèmes exacts."
+  system_prompt: "Tu es l'Avocat de la Défense."
+
+debate_anti:
+  template: |
+    Tu es un critique expert très sévère envers {target_media}. 
+    Voici l'argumentaire de la défense concernant le sujet '{topic}' :
+    {pro_argument}
+    
+    Détruis cet argumentaire. Trouve des failles, pointe les incohérences ou les faiblesses de l'œuvre sur ce sujet précis.
+  system_prompt: "Tu es le Procureur."
+
+debate_judge:
+  template: |
+    En tant que juge impartial, analyse ce débat sur l'œuvre {target_media} (Sujet : {topic}).
+    
+    ARGUMENT PRO :
+    {pro_argument}
+    
+    ARGUMENT ANTI :
+    {anti_argument}
+    
+    SYNTHÈSE EXIGÉE :
+    Qui a les meilleurs arguments factuels ? Génère une conclusion finale nuancée 
+    qui représente la "vérité terrain" objective sur cette œuvre.
+  system_prompt: "Tu es le Juge Suprême. Ton analyse est purement objective et logique."
+
+debate_analysis:
+  template: "Analyse les forces et faiblesses de {media} concernant le sujet '{topic}'."
+  system_prompt: "Tu es un analyste de données DPO."
+
+# Neuro-Symbolic Prompts
+semantic_oracle_reasoning:
+  template: |
+    Analyse ces {num_items} {media_type} : {items_str}.
+    Propose 3 propriétés binaires (vrai/faux) qui permettent de les distinguer logiquement.
+    Par exemple : 'est_un_film', 'possede_des_pouvoirs', 'est_sorti_apres_2010'.
+    
+    FORMAT JSON STRICT :
+    {{
+        "{first_item}": {{"prop1": true, "prop2": false, "prop3": true}},
+        ...
+    }}
+  system_prompt: "Tu es un expert en ontologie logique. Réponds UNIQUEMENT en JSON."
+
+semantic_oracle_explanation:
+  template: |
+    Le solveur logique a identifié l'intrus : '{intruder}'.
+    Détails techniques de la preuve : {proof}
+    
+    Explique de manière simple et narrative à l'utilisateur pourquoi '{intruder}' est l'intrus, 
+    en te basant sur les faits logiques identifiés.
+  system_prompt: "Tu es un vulgarisateur scientifique pédagogue."
+
+# Star Reasoner Prompts
+star_reasoner_thought:
+  template: |
+    ÉNIGME : {riddle}
+    
+    MISSION : Résous cette énigme étape par étape (Chain-of-Thought).
+    Termine ta réponse par la balise exacte 'FINAL_ANSWER: [ta réponse courte]'.
+  system_prompt: "Tu es un détective logique."
