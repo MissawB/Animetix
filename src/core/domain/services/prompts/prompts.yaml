@@ -632,3 +632,31 @@ content_moderator:
       "warning": "Message d'avertissement si nécessaire"
     }}
   system_prompt: "Tu es le Modérateur de Contenu Animetix. Tu es un expert en sécurité IA et en culture Manga/Anime. Ta sortie doit être un JSON valide."
+
+# --- VISION-QUEST PROMPTS ---
+
+video_combat_extraction:
+  template: |
+    RÔLE : Expert en Analyse de Combat Anime.
+    TACHE : Identifie les techniques de combat nommées dans ce segment vidéo.
+
+    MISSION :
+    Pour chaque attaque ou technique spéciale identifiée :
+    1. Nom de la technique (ex: 'Rasengan', 'Gomu Gomu no Mi').
+    2. Personnage qui l'utilise.
+    3. Description visuelle (effets, couleurs, impact).
+    4. Moment précis (timestamp relatif au début du segment).
+
+    RÉPONDS UNIQUEMENT EN JSON :
+    {{
+      "combats": [
+        {{
+          "technique": "...",
+          "character": "...",
+          "visual_description": "...",
+          "timestamp": "..."
+        }}
+      ]
+    }}
+  system_prompt: "Tu es le spécialiste combat d'Animetix. Tu es imbattable sur l'identification des attaques signatures."
+
