@@ -10,9 +10,10 @@ from .advanced_rag_service import AdvancedRAGService
 from .prompt_manager import PromptManager
 from .llm_service import LLMService
 from ..entities.ai_schemas import (
-    SearchPlan, CritiqueResult, StreamStep, JudgeEvaluation, JudgeAction
+    SearchPlan, CritiqueResult, StreamStep, JudgeEvaluation, JudgeAction, DebateOutcome
 )
 from .rag.agents import SearchPlanner, ResponseCritic, ResponseSynthesizer, ResponseJudge, ScoutAgent, GraphExpert
+from .rag.agents.debate_manager import DebateManager
 
 logger = logging.getLogger("animetix.rag")
 
@@ -50,6 +51,7 @@ class RAGContext(BaseModel):
     graph_expert: Optional[GraphExpert] = None
     visual_context: Optional[str] = None
     image_paths: List[str] = Field(default_factory=list)
+    debate_outcome: Optional[DebateOutcome] = None
 
 class AgenticRAGService:
     """
@@ -67,7 +69,8 @@ class AgenticRAGService:
         memory_service=None,
         semantic_cache=None,
         obs_service=None,
-        graph_expert: Optional[GraphExpert] = None
+        graph_expert: Optional[GraphExpert] = None,
+        debate_manager: Optional[DebateManager] = None
     ):
         self.inference_engine = inference_engine
         self.rag_service = rag_service
@@ -79,6 +82,7 @@ class AgenticRAGService:
         self.semantic_cache = semantic_cache
         self.obs_service = obs_service
         self.graph_expert = graph_expert or GraphExpert(self.llm_service, prompt_manager)
+        self.debate_manager = debate_manager
 
         # Initialisation des agents spécialisés
         self.planner = SearchPlanner(self.llm_service, prompt_manager)
@@ -309,26 +313,30 @@ class AgenticRAGService:
         ctx.current_state = RAGState.JUDGE
 
     def _handle_judge(self, ctx: RAGContext) -> Generator[Dict, None, None]:
-        yield StreamStep(type="thought", content="[Judge] Évaluation de la fiabilité...").model_dump()
+        yield StreamStep(type="thought", content="[Swarm] Début du débat multi-agents...").model_dump()
         judge_start = time.time()
-        evaluation = self.judge.evaluate(ctx.query, ctx.truth_path, ctx.full_answer)
         
-        if not evaluation:
-            logger.warning("Judge failed to return evaluation. Finalizing.")
-            ctx.current_state = RAGState.FINALIZE
-            return
-
-        logger.info(f"PERF: Judge took {(time.time() - judge_start)*1000:.2f}ms")
-        yield StreamStep(type="eval", content=evaluation.model_dump()).model_dump()
+        # Conduire le débat via le DebateManager
+        outcome = self.debate_manager.conduct_debate(ctx.query, ctx.truth_path, ctx.full_answer)
+        ctx.debate_outcome = outcome
         
-        action = evaluation.next_action
+        logger.info(f"PERF: Multi-Agent Debate took {(time.time() - judge_start)*1000:.2f}ms")
+        
+        yield StreamStep(
+            type="thought", 
+            content=f"[Swarm] Consensus : {outcome.consensus_action}. Raisonnement : {outcome.final_reasoning}"
+        ).model_dump()
+        
+        # Yield d'un step eval avec le résultat complet
+        yield StreamStep(type="eval", content=outcome.model_dump()).model_dump()
+        
+        action = outcome.consensus_action
         if action == JudgeAction.APPROVE:
             ctx.current_state = RAGState.FINALIZE
         elif action == JudgeAction.REWRITE:
-            ctx.correction_feedback = f"DÉFAUT DÉTECTÉ: {evaluation.reasoning}. Corrige en restant fidèle au contexte."
+            ctx.correction_feedback = f"DÉFAUT DÉTECTÉ: {outcome.final_reasoning}. Corrige en restant fidèle au contexte."
             ctx.current_state = RAGState.SYNTHESIZE
         elif action == JudgeAction.RESEARCH_MORE:
-            # On pourrait injecter evaluation.reasoning dans le plan ici
             ctx.current_state = RAGState.RESEARCH
         elif action == JudgeAction.REPLAN:
             ctx.current_state = RAGState.PLAN

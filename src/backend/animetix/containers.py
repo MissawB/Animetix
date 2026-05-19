@@ -39,7 +39,7 @@ from core.domain.services.neuro_symbolic_service import NeuroSymbolicService
 from core.domain.services.spatial_computing_service import SpatialComputingService
 from core.domain.services.spatial_audio_service import VoiceCloningService, NativeSpeechLLMService
 from core.domain.services.cove_oracle_service import CoveOracleService
-from core.domain.services.rag.agents import GraphExpert, ScoutAgent
+from core.domain.services.rag.agents.debate_manager import DebateManager
 from core.domain.services.agentic_rag_service import AgenticRAGService
 from core.domain.services.long_term_memory_service import LongTermMemoryService
 from core.domain.services.semantic_cache_service import SemanticCacheService
@@ -147,6 +147,10 @@ class Container:
         return self._get('graph_expert', lambda: GraphExpert(llm_service=self.llm_service, prompt_manager=self.prompt_manager))
 
     @property
+    def debate_manager(self):
+        return self._get('debate_manager', lambda: DebateManager(llm_service=self.llm_service, prompt_manager=self.prompt_manager))
+
+    @property
     def agentic_rag(self):
         return self._get('agentic_rag', lambda: AgenticRAGService(
             inference_engine=self.inference_engine, 
@@ -158,7 +162,8 @@ class Container:
             memory_service=self.memory_service, 
             semantic_cache=self.semantic_cache_service, 
             obs_service=self.obs_service,
-            graph_expert=self.graph_expert
+            graph_expert=self.graph_expert,
+            debate_manager=self.debate_manager
         ))
 
     @property
@@ -187,7 +192,7 @@ class Container:
 
     @property
     def graph_builder(self):
-        return self._get('graph_builder', lambda: KnowledgeGraphConstructionService(inference_engine=self.inference_engine))
+        return self._get('graph_builder', lambda: KnowledgeGraphConstructionService(inference_engine=self.inference_engine, prompt_manager=self.prompt_manager))
 
     @property
     def vision_quest_service(self):
@@ -227,7 +232,7 @@ class Container:
 
     @property
     def neuro_symbolic_service(self):
-        return self._get('neuro_symbolic_service', lambda: NeuroSymbolicService(inference_engine=self.inference_engine))
+        return self._get('neuro_symbolic_service', lambda: NeuroSymbolicService(inference_engine=self.inference_engine, prompt_manager=self.prompt_manager))
 
     @property
     def video_quest_service(self):
@@ -244,11 +249,11 @@ class Container:
 
     @property
     def manga_flow_service(self):
-        return self._get('manga_flow_service', lambda: MangaFlowService(inference_engine=self.manga_ocr_adapter, llm_service=self.llm_service))
+        return self._get('manga_flow_service', lambda: MangaFlowService(inference_engine=self.manga_ocr_adapter, llm_service=self.llm_service, prompt_manager=self.prompt_manager))
 
     @property
     def soundscape_service(self):
-        return self._get('soundscape_service', lambda: SoundscapeGenerationService(inference_engine=self.inference_engine, video_service=self.video_quest_service))
+        return self._get('soundscape_service', lambda: SoundscapeGenerationService(inference_engine=self.inference_engine, video_service=self.video_quest_service, prompt_manager=self.prompt_manager))
 
     @property
     def spatial_computing_service(self):
@@ -256,11 +261,11 @@ class Container:
 
     @property
     def guardrail_service(self):
-        return self._get('guardrail_service', lambda: GuardrailService(inference_engine=self.inference_engine))
+        return self._get('guardrail_service', lambda: GuardrailService(inference_engine=self.inference_engine, prompt_manager=self.prompt_manager))
 
     @property
     def red_teaming_agent(self):
-        return self._get('red_teaming_agent', lambda: RedTeamingAgent(inference_engine=self.inference_engine))
+        return self._get('red_teaming_agent', lambda: RedTeamingAgent(inference_engine=self.inference_engine, prompt_manager=self.prompt_manager))
 
     @property
     def akinetix_rl_service(self):
@@ -268,15 +273,15 @@ class Container:
 
     @property
     def self_play_debate_service(self):
-        return self._get('self_play_debate_service', lambda: SelfPlayDebateService(inference_engine=self.inference_engine))
+        return self._get('self_play_debate_service', lambda: SelfPlayDebateService(inference_engine=self.inference_engine, prompt_manager=self.prompt_manager))
 
     @property
     def ragas_eval_service(self):
-        return self._get('ragas_eval_service', lambda: RagasEvalService(judge_engine=self.inference_engine))
+        return self._get('ragas_eval_service', lambda: RagasEvalService(judge_engine=self.inference_engine, prompt_manager=self.prompt_manager))
 
     @property
     def orchestrator(self):
-        return self._get('orchestrator', lambda: OrchestratorAgentService(inference_engine=self.inference_engine, services_factory=self))
+        return self._get('orchestrator', lambda: OrchestratorAgentService(inference_engine=self.inference_engine, services_factory=self, prompt_manager=self.prompt_manager))
 
     @property
     def cross_modal_search(self):
@@ -284,7 +289,7 @@ class Container:
 
     @property
     def vlm_indexing(self):
-        return self._get('vlm_indexing', lambda: VlmIndexingService(inference_engine=self.inference_engine))
+        return self._get('vlm_indexing', lambda: VlmIndexingService(inference_engine=self.inference_engine, prompt_manager=self.prompt_manager))
 
     @property
     def xai_diagnostic_service(self):
@@ -304,7 +309,7 @@ class Container:
 
     @property
     def fusion_service(self):
-        return self._get('fusion_service', lambda: FusionDomainService(inference_engine=self.inference_engine))
+        return self._get('fusion_service', lambda: FusionDomainService(inference_engine=self.inference_engine, prompt_manager=self.prompt_manager))
 
     @property
     def catalog_service(self):
