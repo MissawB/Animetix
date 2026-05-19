@@ -7,10 +7,11 @@ Ce document détaille les choix de conception et l'implémentation technique du 
 Animetix utilise une approche agentique pour la découverte de média, articulée autour de trois piliers :
 
 ### A. Persistance Unifiée & Recherche Vectorielle
-*   **UnifiedRepositoryAdapter** : Centralise l'accès aux données. Utilise **PgVector (PostgreSQL)** avec index **HNSW** pour la performance sub-seconde sur 100k+ items.
+*   **UnifiedRepositoryAdapter** : Gère la persistance hybride. Utilise **PgVector (PostgreSQL)** avec index **HNSW** comme moteur primaire pour une performance sub-seconde sur 100k+ items. **ChromaDB** sert de fallback local et de stockage de synchronisation, garantissant la résilience des données vectorielles.
 *   **Embeddings de Texte** : **Jina-v3** (1024 dims). SOTA 2026 gérant 32k tokens de contexte et optimisé pour les langues asiatiques/multilingues.
 *   **Embeddings Multimodaux** : **SigLIP-SO400M** (1152 dims). Unifie l'espace latent entre images et textes.
 *   **Reranking** : **BGE-Reranker-v2-Gemma**. Précision chirurgicale sur le top 10 des résultats.
+*   **Optimisation Matryoshka (MRL)** : Recherche vectorielle en deux phases (128/256 dims pour le filtrage rapide, 1024 dims pour le raffinement). Gain de performance de 80%.
 
 ### B. Couche de Raisonnement (Agentic RAG 2.0)
 *   **Architecture Scout** : Utilisation d'un modèle ultra-léger (SLM) comme "éclaireur" pour distiller le contexte brut et traverser le graphe Neo4j en millisecondes.
@@ -45,11 +46,17 @@ Animetix utilise une approche agentique pour la découverte de média, articulé
 Le projet respecte une séparation stricte et une structure atomique :
 - **Atomicité** : Les composants doivent être petits, à usage unique et facilement interchangeables.
 - **Domain** : Logique pure (`core/`), typage strict (`Pydantic`), prompts externalisés (`YAML`).
-- **Infrastructure** : Adaptateurs interchangeables pour l'inférence (vLLM, Ollama, Brain API) et la persistance.
+- **Infrastructure** : Adaptateurs interchangeables via le **FallbackInferenceAdapter**. Celui-ci orchestre une cascade de moteurs d'inférence (Transformers local 4-bit, vLLM, GGUF via llama.cpp, et Brain API) pour garantir une disponibilité maximale.
 
-### Priorités de Maintenance & Refactorisation
-- **Refactorisation de views.py** : Découpage des logiques par modes de jeu et délégation accrue aux `presenters.py` ou aux services du domaine pour éliminer le "God Object".
-- **Découplage des Utils** : Migration des fonctions utilitaires globales vers des modules dédiés ou des services de domaine pour maximiser la réutilisabilité.
+### Injection de Dépendances & Lazy Loading
+Le projet utilise un **Conteneur de Dépendances** personnalisé (`src/backend/animetix/containers.py`) pour orchestrer l'instanciation des services.
+- **Lazy Loading** : Les services ne sont instanciés qu'au moment de leur première utilisation, réduisant le temps de démarrage du serveur et la consommation mémoire initiale.
+- **Découplage** : Centralise la configuration des adaptateurs et des services, facilitant les tests unitaires via l'injection de mocks.
+
+### État d'Avancement & Priorités
+- **Terminé : Modularisation de la Logique UI** : Découpage de `views.py` en modules spécialisés dans `src/backend/animetix/views/`, éliminant le "God Object".
+- **Haute Priorité : Découplage des Utils** : Migration des fonctions utilitaires globales vers des services de domaine pour maximiser la réutilisabilité.
+- **Haute Priorité : Renforcement de la Gestion des Erreurs** : Standardisation des exceptions et propagation propre via les adaptateurs de fallback.
 
 ### MLOps & Sécurité
 - **Boucle DPO** : Collecte de feedback *Chosen/Rejected* validé pour l'alignement continu des modèles.
