@@ -24,13 +24,15 @@
 
 ### 🕹️ AI-Driven Game Modes
 *   **Animetix Classic:** Semantic search challenge. Find titles based on thematic similarity scores.
+*   **Vision Quest:** Multimodal challenges using VLM (Visual Language Models) to identify scenes and visual tropes.
+*   **La Forge:** Advanced "Fusion" mode where AI generates hybrid works and archetypes.
 *   **Emoji Decode:** Decipher synopses translated into complex emoji sequences by AI.
 *   **Animinator (Oracle):** Interrogate the AI Oracle. Uses agentic reasoning to verify facts before answering.
 *   **Akinetix (The Guesser):** The AI asks strategic questions to narrow down the media you're thinking of.
 *   **The Paradox:** Logic test. Identify the "intruder" among titles using LLM thematic analysis.
 
 ### 🔍 Intelligent Discovery
-*   **RAG 2.0 Engine:** Harmonizes **ChromaDB** (semantic memory) and **Neo4j** (logical graph memory).
+*   **RAG 2.0 Engine:** Harmonizes **PgVector** (semantic memory) and **Neo4j** (logical graph memory).
 *   **Multimodal Search:** Explore by plot description, visual "vibes", or complex relations.
 *   **Semantic Interpreters:** Explains *why* works are related (e.g., "Shared existential themes").
 
@@ -45,15 +47,16 @@ Animetix strictly follows **Hexagonal Architecture** (Ports & Adapters) to ensur
 
 ### Core Technology
 - **Backend:** **Django 5.0** + **Channels** (WebSockets) for real-time interactions.
+- **Dependency Injection:** Custom lazy-loading **DI Container** (`src/backend/animetix/containers.py`).
 - **Orchestration:** **Dagster** manages the entire ETL & ML pipeline.
-- **Vector DB:** **ChromaDB** with HNSW indexing for lightning-fast similarity search.
+- **Vector DB:** **PgVector** with HNSW indexing (Primary) + **ChromaDB** (Fallback).
 - **Graph DB:** **Neo4j** for modeling complex relationships and attributes.
-- **Inference:** Local LLMs served via **FastAPI** with **BGE-Reranker** for precision.
+- **Inference:** Multi-backend support (**vLLM**, **GGUF**, **Transformers 4-bit**) with **BGE-Reranker** for precision.
 
 ### MLOps Loop
 - **RLHF Pipeline:** Collects user feedback (`AIFeedback`) to continuously align model performance.
 - **Data Intelligence:** Automated ingestion from AniList, Jikan, and TMDB.
-- **Tracking:** Experiment monitoring via **trackio**.
+- **Observability:** Performance tracking via **trackio** and custom health dashboards.
 
 ---
 
@@ -86,7 +89,7 @@ pip install -r requirements.txt
 
 # Run migrations & seed data
 python src/backend/manage.py migrate
-python src/backend/seed_achievements.py
+python src/backend/manage.py seed_achievements
 python src/backend/manage.py sync_catalog
 python src/backend/manage.py runserver
 ```
@@ -98,18 +101,22 @@ python src/backend/manage.py runserver
 ```text
 Double_scenario_Project/
 ├── src/                    # Source Code
-│   ├── core/               # Domain Layer (Pure Logic, Entities, Ports)
-│   ├── adapters/           # Driven Adapters (DB clients, APIs)
-│   ├── backend/            # Driving Adapter (Django Web App)
-│   └── pipeline/           # Data Ops (Dagster Assets & Ops)
-├── scripts/                # Maintenance, Utility & Sync scripts
-├── data/                   # Persistent Data Store
-│   ├── chroma_db/          # Vector Store
-│   ├── artifacts/          # Processed JSON metadata
-│   └── models/             # Local LLM weights & adapters
-├── deploy/                 # Deployment & Containerization
-├── docs/                   # Documentation & Architecture
-└── tests/                  # Test Suite (Pytest)
+│   ├── core/               # Domain Layer (Entities, Services, Ports)
+│   ├── adapters/           # Infrastructure Layer (Driven Adapters)
+│   │   ├── persistence/    # PgVector, Neo4j, Django DB Adapters
+│   │   └── inference/      # vLLM, GGUF, Brain API Adapters
+│   ├── backend/            # Presentation Layer (Driving Adapters)
+│   │   ├── animetix/
+│   │   │   ├── views/      # Modularized UI & API Views (Classic, Vision, Forge, etc.)
+│   │   │   ├── containers.py # Dependency Injection Container
+│   │   │   └── urls.py
+│   │   └── manage.py
+│   └── pipeline/           # Orchestration Layer (Dagster assets & ops)
+├── scripts/                # Maintenance & Sync Utility scripts
+├── data/                   # Persistent storage (Vectors, Artifacts, Models)
+├── deploy/                 # K8s, Docker & CI/CD configs
+├── docs/                   # Architecture & Design Docs
+└── tests/                  # Unified Test Suite (Pytest)
 ```
 
 ---
