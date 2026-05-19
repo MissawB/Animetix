@@ -12,11 +12,12 @@ def test_happy_path(page: Page, live_server):
     expect(page).to_have_title(re.compile("Animetix"))
 
     # 2. Choix d'un mode de jeu (ex: Classic)
-    # Note: On utilise hx-get/hx-post avec HTMX
-    page.click("text=CLASSIC")
+    # On force le clic car les animations "animate-float" rendent l'élément instable pour Playwright
+    page.click("text=CLASSIC", force=True)
     
     # 3. Faire une devinette
-    # On attend que le formulaire soit chargé (SPA feel)
+    # Attendre que la page de jeu soit chargée
+    expect(page).to_have_url(re.compile(r".*/game/"))
     page.wait_for_selector("input[name='guess']")
     page.fill("input[name='guess']", "Naruto")
     page.press("input[name='guess']", "Enter")

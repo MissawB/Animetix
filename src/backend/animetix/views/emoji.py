@@ -1,6 +1,5 @@
 from django.shortcuts import render, redirect
 from .common import animetix_service, handle_win_achievements
-from ..utils import get_current_mode
 from ..session_manager import GameSessionManager
 from ..models import GameplaySession
 from ..forms import GameGuessForm

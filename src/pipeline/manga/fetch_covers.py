@@ -96,7 +96,9 @@ def run_fetching(limit: int = 100) -> str:
         try:
             with open(OUTPUT_FILE, 'r', encoding='utf-8') as f:
                 covers_data = json.load(f)
-        except: pass
+        except Exception as e:
+            print(f"⚠️ Erreur lors du chargement de {OUTPUT_FILE}: {e}")
+            pass
 
     print(f"🚀 Fetching Manga Covers (Limit: {limit})...")
     

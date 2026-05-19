@@ -68,6 +68,9 @@ urlpatterns = [
     path('social/dashboard/', views.social_dashboard, name='social_dashboard'),
     path('social/collection/', views.my_collection, name='my_collection'),
     path('social/collection/toggle/<int:fusion_id>/', views.toggle_collection, name='toggle_collection'),
+    path('notifications/', views.notifications_list_view, name='notifications_list'),
+    path('notifications/mark_read/', views.mark_notifications_read, name='mark_notifications_read'),
+
 
     
     path('duel/create/', views.create_duel, name='create_duel'),
@@ -85,6 +88,11 @@ urlpatterns = [
     path('admin/gold/reject/<int:entry_id>/', views.reject_gold_entry, name='reject_gold'),
     
     path('latent_space/', views.latent_space_view, name='latent_space'),
+    path('spatial/', views.spatial_view, name='spatial_lab'),
+    path('spatial/depth/', views.generate_depth, name='generate_depth'),
+    path('manga_lab/', views.manga_lab_view, name='manga_lab'),
+    path('manga_lab/clean/', views.process_manga_bubbles, name='process_manga_bubbles'),
+    path('manga_lab/translate/', views.translate_manga_bubbles, name='translate_manga_bubbles'),
     path('transparency/', views.transparency_dashboard, name='transparency'),
     path('api/webhooks/donation/', views.donation_webhook, name='donation_webhook'),
     path('feedback/ai/', views.submit_ai_feedback, name='submit_ai_feedback'),

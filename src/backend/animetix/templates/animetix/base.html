@@ -15,26 +15,7 @@
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        yellow: {
-                            400: '#fdb913',
-                            600: '#d97706',
-                        },
-                        navy: {
-                            700: '#1e1e2f',
-                            800: '#1a1a2e',
-                            900: '#0f0f1a',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    <script src="{% static 'animetix/js/base_init.js' %}"></script>
 
     <!-- Bootstrap & Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -50,6 +31,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="{% static 'animetix/img/logo/logo.png' %}">
+
+    <!-- Core Styles -->
+    <link rel="stylesheet" href="{% static 'animetix/css/core.css' %}">
 
     <style>
         :root {
@@ -80,121 +64,13 @@
         }
 
         {% block dynamic_theme %}{% endblock %}
-
-        /* SKELETON LOADERS */
-        .skeleton {
-            background: linear-gradient(90deg, var(--card-bg) 25%, var(--page-bg) 50%, var(--card-bg) 75%);
-            background-size: 200% 100%;
-            animation: skeleton-loading 1.5s infinite;
-            border-radius: 0.5rem;
-        }
-        @keyframes skeleton-loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-
-        /* SMOOTH PROGRESS BARS */
-        .progress-bar-smooth {
-            transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        /* HTMX INDICATORS */
-        .htmx-indicator { display: none; opacity: 0; transition: opacity 0.2s ease-in; }
-        .htmx-request .htmx-indicator { display: block; opacity: 1; }
-        .htmx-request.htmx-indicator { display: block; opacity: 1; }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: var(--page-bg); 
-            color: var(--page-text);
-            transition: background-color 0.5s ease;
-            overflow-x: hidden;
-            min-height: 100vh;
-        }
-
-        .manga-font { font-family: 'Montserrat', sans-serif; font-weight: 900; font-style: italic; text-transform: uppercase; }
-
-        /* HTMX FLUID TRANSITIONS */
-        .htmx-swapping { opacity: 0; transform: translateY(10px); transition: all 0.3s ease-out; }
-        .htmx-added { opacity: 0; transform: translateY(-10px); }
-        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-
-        /* SIDEBAR DRAWER LOGIC */
-        #manga-sidebar {
-            position: fixed;
-            left: 0;
-            top: 0;
-            height: 100vh;
-            width: 300px;
-            background: var(--sidebar-bg);
-            z-index: 2000;
-            transform: translateX(-100%);
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 20px 0 50px rgba(0,0,0,0.1);
-        }
-        [data-bs-theme="dark"] #manga-sidebar { border-right: 1px solid rgba(255,255,255,0.05); }
-
-        body.sidebar-open #manga-sidebar { transform: translateX(0); }
-        body.sidebar-open #sidebar-overlay { display: block; }
-
-        @media (min-width: 1024px) {
-            body {
-                transition: padding-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-                padding-left: 0;
-            }
-            body.sidebar-open {
-                padding-left: 300px;
-            }
-            body.sidebar-open #sidebar-overlay { display: none !important; }
-            
-            #manga-sidebar {
-                box-shadow: none !important;
-                border-right: 1px solid rgba(0,0,0,0.05);
-            }
-            
-            #main-shell { 
-                width: 100%;
-                margin-left: 0 !important;
-            }
-        }
-
-        .nav-link-manga {
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 700;
-            font-style: italic;
-            text-transform: uppercase;
-            transition: all 0.2s;
-            border-left: 4px solid transparent;
-        }
-        .nav-link-manga:hover {
-            background: rgba(253, 185, 19, 0.1);
-            border-left-color: var(--accent-color);
-            padding-left: 1.5rem;
-        }
-        .nav-link-manga.active {
-            background: var(--nav-gradient);
-            color: white !important;
-            border-left-color: #000;
-        }
-
-        .diff-dot {
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            transition: transform 0.2s;
-        }
-        .diff-dot:hover { transform: scale(1.5); }
     </style>
 </head>
-<body class="flex flex-col sidebar-open" hx-boost="true">
+<body class="flex flex-col sidebar-open" hx-boost="true" 
+  data-sw-path="{% static 'animetix/sw.js' %}" 
+  data-is-authenticated="{{ request.user.is_authenticated|yesno:'true,false' }}">
 
-    <!-- OVERLAY (Visible when sidebar is open) -->
+<!-- OVERLAY (Visible when sidebar is open) -->
     <div id="sidebar-overlay" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[1500] hidden" onclick="toggleSidebar(); toggleSettings(true)"></div>
 
     <!-- SIDEBAR (DRAWER) -->
@@ -246,6 +122,22 @@
             {% endif %}
             <a href="{% url 'leaderboard' %}" class="nav-link-manga flex items-center gap-4 p-4 rounded-2xl no-underline text-black dark:text-white {% if request.resolver_match.url_name == 'leaderboard' %}active{% endif %}">
                 <i class="bi bi-trophy-fill text-xl text-orange-400"></i> {% trans "Classement" %}
+            </a>
+            {% if request.user.is_authenticated %}
+            <a href="{% url 'notifications_list' %}" class="nav-link-manga flex items-center justify-between p-4 rounded-2xl no-underline text-black dark:text-white {% if request.resolver_match.url_name == 'notifications_list' %}active{% endif %}">
+                <div class="flex items-center gap-4">
+                    <i class="bi bi-bell-fill text-xl text-blue-500"></i> {% trans "Notifications" %}
+                </div>
+                {% if unread_notifications_count > 0 %}
+                <span class="badge bg-danger rounded-pill px-2 py-1" style="font-size: 0.6rem;">{{ unread_notifications_count }}</span>
+                {% endif %}
+            </a>
+            {% endif %}
+            <a href="{% url 'spatial_lab' %}" class="nav-link-manga flex items-center gap-4 p-4 rounded-2xl no-underline text-black dark:text-white {% if request.resolver_match.url_name == 'spatial_lab' %}active{% endif %}">
+                <i class="bi bi-layers-fill text-xl text-purple-500"></i> SPATIAL LAB
+            </a>
+            <a href="{% url 'manga_lab' %}" class="nav-link-manga flex items-center gap-4 p-4 rounded-2xl no-underline text-black dark:text-white {% if request.resolver_match.url_name == 'manga_lab' %}active{% endif %}">
+                <i class="bi bi-journal-richtext text-xl text-warning"></i> MANGA LAB
             </a>
             {% if features.EXPERIMENTAL_MODES %}
             <a href="{% url 'achievements' %}" class="nav-link-manga flex items-center gap-4 p-4 rounded-2xl no-underline text-black dark:text-white {% if request.resolver_match.url_name == 'achievements' %}active{% endif %}">
@@ -426,26 +318,6 @@
     </div>
 
     <script src="{% static 'animetix/js/animetix_core.js' %}"></script>
-    <script>
-        // Initialize Core Engine
-        const swPath = '{% static "animetix/sw.js" %}';
-        const isAuthenticated = {{ request.user.is_authenticated|yesno:"true,false" }};
-        
-        // Initialize Theme
-        const savedTheme = localStorage.getItem('theme') || 'auto';
-        applyTheme(savedTheme);
-
-        // Initialize PWA
-        initPWA(swPath);
-
-        // Initialize Notifications
-        initNotifications(isAuthenticated);
-
-        // Offline Engine Integration (if available)
-        if (window.offlineEngine) {
-            window.offlineEngine.init();
-        }
-    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

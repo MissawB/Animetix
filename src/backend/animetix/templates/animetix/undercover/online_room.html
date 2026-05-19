@@ -1,9 +1,10 @@
 {% extends 'animetix/base.html' %}
+{% load static %}
 
 {% block title %}Salon {{ room_code }} - Undercover En Ligne{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center g-4">
+<div class="row justify-content-center g-4" id="game-container" data-room-code="{{ room_code }}">
     <!-- COLONNE GAUCHE : JEU -->
     <div class="col-lg-8">
         
@@ -99,7 +100,7 @@
                     <div class="row justify-content-center mb-5">
                         <div class="col-md-10">
                             <div class="card bg-light border-0 rounded-4 p-4 text-start">
-                                <h5 class="fw-bold mb-3"><i class="bi bi- megaphone-fill me-2 text-primary"></i> Instructions</h5>
+                                <h5 class="fw-bold mb-3"><i class="bi bi-megaphone-fill me-2 text-primary"></i> Instructions</h5>
                                 <div class="small text-muted">
                                     1. L'hôte désigne un joueur pour commencer.<br>
                                     2. Donnez un mot-clé décrivant votre titre sans être trop explicite.<br>
@@ -212,182 +213,8 @@
     .chat-msg.other { background: white; margin-right: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
     .chat-msg.system { background: #f1f5f9; text-align: center; font-style: italic; color: #64748b; font-size: 0.8rem; }
 </style>
+{% endblock %}
 
-<script>
-    const roomCode = "{{ room_code }}";
-    const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-    const wsUrl = `${protocol}://${window.location.host}/ws/undercover/${roomCode}/`;
-    let socket = null;
-    let myId = null;
-    let isHost = false;
-
-    function connect() {
-        socket = new WebSocket(wsUrl);
-
-        socket.onopen = () => {
-            const savedName = localStorage.getItem('undercover_name');
-            if (savedName) {
-                document.getElementById('player-name-input').value = savedName;
-                socket.send(JSON.stringify({'action': 'set_name', 'name': savedName}));
-            }
-        };
-
-        socket.onmessage = (e) => {
-            const data = JSON.parse(e.data);
-            if (data.type === 'room_state') updateUI(data);
-            else if (data.type === 'private_role') updatePrivateRole(data);
-            else if (data.type === 'chat_message') addChatMessage(data.message);
-        };
-
-        socket.onclose = () => setTimeout(connect, 2000);
-    }
-
-    function flipCard() {
-        document.getElementById('secret-flip-card').classList.toggle('flipped');
-    }
-
-    function updateUI(data) {
-        // Player List & Host Identification
-        const playerList = document.getElementById('players-list');
-        playerList.innerHTML = '';
-        
-        const myName = document.getElementById('player-name-input').value;
-        const me = data.players.find(p => p.name === myName);
-        if (me) {
-            myId = me.id;
-            isHost = me.is_host;
-        }
-
-        data.players.forEach(p => {
-            const li = document.createElement('li');
-            li.className = 'list-group-item d-flex justify-content-between align-items-center border-0 px-4 py-3';
-            li.innerHTML = `
-                <div class="d-flex align-items-center">
-                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3" style="width: 32px; height: 32px; font-size: 0.8rem;">
-                        ${p.name.charAt(0).toUpperCase()}
-                    </div>
-                    <span class="fw-bold ${p.id === myId ? 'text-primary' : ''}">${p.name}</span>
-                    ${p.is_host ? '<i class="bi bi-star-fill text-warning ms-2 shadow-sm" title="Hôte"></i>' : ''}
-                </div>
-                ${p.has_voted ? '<i class="bi bi-check-circle-fill text-success"></i>' : ''}
-            `;
-            playerList.appendChild(li);
-        });
-
-        document.getElementById('player-count').innerText = data.players.length;
-
-        // Visibility Toggling
-        const sections = {
-            'lobby': document.getElementById('lobby-section'),
-            'playing': document.getElementById('playing-section'),
-            'revealed': document.getElementById('revealed-section')
-        };
-
-        Object.keys(sections).forEach(s => {
-            sections[s].classList.toggle('d-none', data.state !== s);
-        });
-
-        document.getElementById('game-progress').style.width = data.state === 'lobby' ? '33%' : (data.state === 'playing' ? '66%' : '100%');
-
-        if (data.state === 'lobby') {
-            document.getElementById('host-controls').classList.toggle('d-none', !isHost);
-            document.getElementById('waiting-msg').classList.toggle('d-none', isHost);
-        } else if (data.state === 'playing') {
-            document.getElementById('host-reveal-controls').classList.toggle('d-none', !isHost);
-            
-            // Vote buttons
-            const voteList = document.getElementById('vote-list');
-            voteList.innerHTML = '';
-            data.players.forEach(p => {
-                if (p.id === myId) return; // Ne pas voter pour soi
-                const btn = document.createElement('button');
-                btn.className = `btn ${data.votes[myId] === p.id ? 'btn-danger' : 'btn-outline-danger'} rounded-pill fw-bold px-4 py-2`;
-                btn.innerHTML = `<i class="bi bi-bullseye me-2"></i> ${p.name}`;
-                btn.onclick = () => socket.send(JSON.stringify({'action': 'vote', 'voted_for': p.id}));
-                voteList.appendChild(btn);
-            });
-        } else if (data.state === 'revealed') {
-            document.getElementById('final-clue').innerText = `"${data.clue}"`;
-            document.getElementById('host-restart-controls').classList.toggle('d-none', !isHost);
-        }
-    }
-
-    function updatePrivateRole(data) {
-        if (data.word) {
-            document.getElementById('my-word').innerText = data.word;
-            if (data.image) {
-                document.getElementById('my-image').src = data.image;
-                document.getElementById('my-image').classList.remove('d-none');
-            } else {
-                document.getElementById('my-image').classList.add('d-none');
-            }
-        }
-
-        if (data.all_roles) {
-            const container = document.getElementById('final-results-container');
-            container.innerHTML = '';
-            // Note: Comme on n'a pas les noms mappés aux IDs dans all_roles directement ici, 
-            // on affiche au moins le résultat personnel et un message global.
-            const alert = document.createElement('div');
-            alert.className = "col-12";
-            alert.innerHTML = `
-                <div class="alert alert-warning p-4 rounded-4 shadow-sm border-0">
-                    <h4 class="fw-bold">Le rideau tombe !</h4>
-                    <p class="mb-0">Vous étiez : <strong class="text-uppercase">${data.role}</strong>. L'Undercover a-t-il été démasqué ?</p>
-                </div>
-            `;
-            container.appendChild(alert);
-        }
-    }
-
-    function addChatMessage(msg) {
-        const box = document.getElementById('chat-box');
-        const div = document.createElement('div');
-        const isSelf = msg.user === document.getElementById('player-name-input').value;
-        
-        if (msg.is_system) {
-            div.className = 'chat-msg system';
-            div.innerText = msg.text;
-        } else {
-            div.className = `chat-msg ${isSelf ? 'self' : 'other'}`;
-            div.innerHTML = `<strong>${msg.user}:</strong> ${msg.text}`;
-        }
-        
-        box.appendChild(div);
-        box.scrollTop = box.scrollHeight;
-    }
-
-    // Input Listeners
-    document.getElementById('chat-input').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            const text = e.target.value.trim();
-            if (text) {
-                socket.send(JSON.stringify({'action': 'chat', 'message': text}));
-                e.target.value = '';
-            }
-        }
-    });
-
-    document.getElementById('btn-save-name').onclick = () => {
-        const name = document.getElementById('player-name-input').value.trim();
-        if (name) {
-            localStorage.setItem('undercover_name', name);
-            socket.send(JSON.stringify({'action': 'set_name', 'name': name}));
-        }
-    };
-
-    document.getElementById('btn-start-game').onclick = () => {
-        socket.send(JSON.stringify({
-            'action': 'set_settings', 
-            'media_type': document.getElementById('host-media').value,
-            'difficulty': document.getElementById('host-difficulty').value
-        }));
-        socket.send(JSON.stringify({'action': 'start_game'}));
-    };
-
-    document.getElementById('btn-reveal').onclick = () => socket.send(JSON.stringify({'action': 'reveal'}));
-    document.getElementById('btn-back-lobby').onclick = () => socket.send(JSON.stringify({'action': 'back_to_lobby'}));
-
-    connect();
-</script>
+{% block extra_js %}
+<script src="{% static 'animetix/js/undercover_online.js' %}"></script>
 {% endblock %}

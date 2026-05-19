@@ -78,8 +78,14 @@ class VllmAdapter(InferencePort):
             logger.error(f"vLLM Stream Error: {e}")
             yield self.generate(prompt, system_prompt, thinking_budget, thinking_mode)
 
-    def calculate_visual_similarity(self, query: str, item_id: str, media_type: str) -> float: raise NotImplementedError()
-    def get_image_embedding(self, image_data: bytes, model_id: Optional[str] = None) -> List[float]: raise NotImplementedError()
+    def calculate_visual_similarity(self, query: str, item_id: str, media_type: str) -> float:
+        logger.warning(f"calculate_visual_similarity not implemented for VllmAdapter")
+        return 0.0
+
+    def get_image_embedding(self, image_data: bytes, model_id: Optional[str] = None) -> List[float]:
+        logger.warning(f"get_image_embedding not implemented for VllmAdapter")
+        return []
+
     def classify_image(self, image_data: bytes, candidate_labels: List[str], model_id: Optional[str] = None) -> Dict[str, float]:
         """
         Classifie une image en utilisant le VLM.
@@ -141,17 +147,50 @@ class VllmAdapter(InferencePort):
             logger.error(f"VLM Object Detection error: {e}")
             return []
 
-    def get_video_temporal_embeddings(self, video_data: bytes) -> List[Dict[str, Any]]: raise NotImplementedError()
-    def localize_video_actions(self, video_data: bytes, action_queries: List[str]) -> List[Dict[str, Any]]: raise NotImplementedError()
-    def transform_image_to_anime(self, image_data: bytes, studio_style: str, prompt: str = "") -> str: raise NotImplementedError()
-    def transform_video_to_anime(self, video_data: bytes, studio_style: str, prompt: str = "") -> str: raise NotImplementedError()
-    def generate_soundscape(self, video_metadata: Dict[str, Any], prompt: Optional[str] = None) -> str: raise NotImplementedError()
-    def clone_voice(self, text: str, reference_audio: bytes, language: str = "fr") -> bytes: raise NotImplementedError()
-    def speech_to_speech(self, audio_input: bytes, system_prompt: str = "") -> bytes: raise NotImplementedError()
-    def process_manga_page(self, image_data: bytes) -> Dict[str, Any]: raise NotImplementedError()
-    def translate_manga_page(self, image_data: bytes, target_lang: str = "Français") -> Dict[str, Any]: raise NotImplementedError()
-    def inpaint_text_bubbles(self, image_data: bytes, text_placements: List[Dict]) -> str: raise NotImplementedError()
-    def moderate_content(self, text: str, categories: List[str]) -> Dict[str, Any]: raise NotImplementedError()
+    def get_video_temporal_embeddings(self, video_data: bytes) -> List[Dict[str, Any]]:
+        logger.warning(f"get_video_temporal_embeddings not implemented for VllmAdapter")
+        return []
+
+    def localize_video_actions(self, video_data: bytes, action_queries: List[str]) -> List[Dict[str, Any]]:
+        logger.warning(f"localize_video_actions not implemented for VllmAdapter")
+        return []
+
+    def transform_image_to_anime(self, image_data: bytes, studio_style: str, prompt: str = "") -> str:
+        logger.warning(f"transform_image_to_anime not implemented for VllmAdapter")
+        return ""
+
+    def transform_video_to_anime(self, video_data: bytes, studio_style: str, prompt: str = "") -> str:
+        logger.warning(f"transform_video_to_anime not implemented for VllmAdapter")
+        return ""
+
+    def generate_soundscape(self, video_metadata: Dict[str, Any], prompt: Optional[str] = None) -> str:
+        logger.warning(f"generate_soundscape not implemented for VllmAdapter")
+        return ""
+
+    def clone_voice(self, text: str, reference_audio: bytes, language: str = "fr") -> bytes:
+        logger.warning(f"clone_voice not implemented for VllmAdapter")
+        return b""
+
+    def speech_to_speech(self, audio_input: bytes, system_prompt: str = "") -> bytes:
+        logger.warning(f"speech_to_speech not implemented for VllmAdapter")
+        return b""
+
+    def process_manga_page(self, image_data: bytes) -> Dict[str, Any]:
+        logger.warning(f"process_manga_page not implemented for VllmAdapter")
+        return {}
+
+    def translate_manga_page(self, image_data: bytes, target_lang: str = "Français") -> Dict[str, Any]:
+        logger.warning(f"translate_manga_page not implemented for VllmAdapter")
+        return {}
+
+    def inpaint_text_bubbles(self, image_data: bytes, text_placements: List[Dict]) -> str:
+        logger.warning(f"inpaint_text_bubbles not implemented for VllmAdapter")
+        return ""
+
+    def moderate_content(self, text: str, categories: List[str]) -> Dict[str, Any]:
+        logger.warning(f"moderate_content not implemented for VllmAdapter")
+        return {}
+
     def generate_image_description(self, image_data: bytes, prompt: str = "Décris cette image d'anime de manière très détaillée.") -> str:
         """Utilise le VLM pour décrire une image."""
         try:
@@ -246,6 +285,11 @@ class VllmAdapter(InferencePort):
 
     def get_multimodal_late_interaction(self, image_data: bytes) -> List[List[float]]:
         return []
+
+    
+    def generate_image(self, prompt: str, style: str = "") -> str:
+        logger.warning(f"generate_image not implemented for VllmAdapter")
+        return ""
 
     def health_check(self) -> dict:
         try:

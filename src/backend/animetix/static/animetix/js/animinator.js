@@ -66,6 +66,18 @@ document.addEventListener("DOMContentLoaded", function() {
                     textContainer.innerText += data.content;
                 }
                 else if (data.type === 'done') {
+                    // RLHF Feedback integration
+                    const feedbackHtml = `
+                        <div class="mt-4 pt-3 border-t border-white/5 d-flex align-items-center justify-content-center gap-3 animate__animated animate__fadeIn">
+                            <span class="manga-font text-[9px] opacity-40 italic">Vérité révélée ?</span>
+                            <button onclick="submitRLHF('animinator', '${question.replace(/'/g, "\\'")}', '${textContainer.innerText.replace(/'/g, "\\'")}', true, this)" 
+                                    class="btn btn-xs btn-outline-success rounded-pill border-0"><i class="bi bi-check-circle-fill"></i></button>
+                            <button onclick="submitRLHF('animinator', '${question.replace(/'/g, "\\'")}', '${textContainer.innerText.replace(/'/g, "\\'")}', false, this)" 
+                                    class="btn btn-xs btn-outline-danger rounded-pill border-0"><i class="bi bi-x-circle-fill"></i></button>
+                        </div>
+                    `;
+                    textContainer.parentElement.insertAdjacentHTML('beforeend', feedbackHtml);
+
                     const qBadge = document.querySelector('.q-badge');
                     if (qBadge) qBadge.innerText = `Potentiel de Prophétie : ${data.questions_left}/20`;
                     const progressBar = document.querySelector('.h-full.bg-gradient-to-r');

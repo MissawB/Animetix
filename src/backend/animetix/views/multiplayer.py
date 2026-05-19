@@ -1,26 +1,46 @@
 import random
 import string
+import logging
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from .common import animetix_service, langchain_service, handle_win_achievements
-from ..utils import get_current_mode
+from ..session_manager import GameSessionManager
 from ..models import DuelRoom, GlobalBoss, BossParticipation
 from ..forms import GameGuessForm
 from ..services import DIFFICULTY_SETTINGS
 
-def undercover_party_setup(request): return render(request, 'animetix/undercover/undercover_setup.html', {'media_type': get_current_mode(request)})
+logger = logging.getLogger('animetix.multiplayer')
+
+def undercover_party_setup(request): 
+    return render(request, 'animetix/undercover/undercover_setup.html', {'media_type': GameSessionManager(request).get_current_mode()})
+
 def undercover_online_join(request):
-    if request.method == 'POST': return redirect('undercover_online_room', room_code=(request.POST.get('room_code', '').upper().strip() or ''.join(random.choices("ABCDE123", k=4))))
+    if request.method == 'POST': 
+        return redirect('undercover_online_room', room_code=(request.POST.get('room_code', '').upper().strip() or ''.join(random.choices("ABCDE123", k=4))))
     return redirect('undercover_party_setup')
-def undercover_online_room(request, room_code): return render(request, 'animetix/undercover/online_room.html', {'room_code': room_code, 'media_type': get_current_mode(request), 'difficulty': request.session.get('difficulty', 'Normal')})
-def codemanga_setup(request): return render(request, 'animetix/codemanga/setup.html', {'media_type': get_current_mode(request)})
-def codemanga_room(request, room_code): return render(request, 'animetix/codemanga/room.html', {'room_code': room_code, 'difficulty': request.GET.get('difficulty', 'Normal')})
-def codemanga_game(request, room_code): return render(request, 'animetix/codemanga/game.html', {'room_code': room_code, 'difficulty': request.GET.get('difficulty', 'Normal')})
+
+def undercover_online_room(request, room_code): 
+    manager = GameSessionManager(request)
+    return render(request, 'animetix/undercover/online_room.html', {
+        'room_code': room_code, 
+        'media_type': manager.get_current_mode(), 
+        'difficulty': manager.get('difficulty', 'Normal')
+    })
+
+def codemanga_setup(request): 
+    return render(request, 'animetix/codemanga/setup.html', {'media_type': GameSessionManager(request).get_current_mode()})
+
+def codemanga_room(request, room_code): 
+    return render(request, 'animetix/codemanga/room.html', {'room_code': room_code, 'difficulty': request.GET.get('difficulty', 'Normal')})
+
+def codemanga_game(request, room_code): 
+    return render(request, 'animetix/codemanga/game.html', {'room_code': room_code, 'difficulty': request.GET.get('difficulty', 'Normal')})
 
 def undercover_party_play(request):
     if request.method == 'POST':
-        media, num, diff = get_current_mode(request), int(request.POST.get('num_players', 4)), request.session.get('difficulty', 'Normal')
+        manager = GameSessionManager(request)
+        media, num, diff = manager.get_current_mode(), int(request.POST.get('num_players', 4)), manager.get('difficulty', 'Normal')
         player_ids = [str(i+1) for i in range(num)]
         game_data = animetix_service.game_service.start_undercover_game(media_type=media, difficulty=diff, player_ids=player_ids, rank_limits=DIFFICULTY_SETTINGS)
         if not game_data: return redirect('index')
@@ -37,7 +57,8 @@ def undercover_party_play(request):
 
 @login_required
 def create_duel(request):
-    media_type, data = get_current_mode(request), animetix_service.load_data(get_current_mode(request))
+    manager = GameSessionManager(request)
+    media_type, data = manager.get_current_mode(), animetix_service.load_data(manager.get_current_mode())
     code, secret = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6)), random.choice(data.get('titles', ['Naruto']))
     DuelRoom.objects.create(room_code=code, player1=request.user, media_type=media_type, secret_title=secret)
     return redirect('duel_room', room_code=code)
@@ -69,7 +90,9 @@ def finish_duel(request, room_code):
             from ..tasks import cleanup_duel_resources_task
             cleanup_duel_resources_task.delay(room_code)
             return JsonResponse({'status': 'duel_finished'})
-    except DuelRoom.DoesNotExist: pass
+    except DuelRoom.DoesNotExist:
+        logger.warning(f"Attempted to finish non-existent duel room: {room_code}")
+        pass
     return redirect('index')
 
 def global_boss_view(request):

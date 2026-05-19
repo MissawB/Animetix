@@ -1,6 +1,7 @@
 import logging
 from .video_quest import VideoQuestService
 from ....ports.inference_port import InferencePort
+from ..prompt_manager import PromptManager
 
 logger = logging.getLogger("animetix.creative.soundscape")
 
@@ -9,9 +10,10 @@ class SoundscapeGenerationService:
     Video-to-Audio (Soundscape Generation).
     Utilise AudioLDM pour générer automatiquement une ambiance sonore à partir d'une vidéo muette.
     """
-    def __init__(self, inference_engine: InferencePort, video_service: VideoQuestService):
+    def __init__(self, inference_engine: InferencePort, video_service: VideoQuestService, prompt_manager: PromptManager):
         self.inference_engine = inference_engine
         self.video_service = video_service
+        self.prompt_manager = prompt_manager
 
     def generate_soundscape_for_video(self, video_data: bytes) -> str:
         """
@@ -30,8 +32,12 @@ class SoundscapeGenerationService:
             "vibe": "Epique et cinématique"
         }
         
-        # 2. Construction du prompt audio
-        audio_prompt = f"Anime soundscape, cinematic: {analysis['scene']}. Actions: {str(analysis['detected_actions'])}. High quality, immersive."
+        # 2. Construction du prompt audio via PromptManager
+        audio_prompt, _ = self.prompt_manager.get_prompt(
+            "soundscape_generation",
+            scene=analysis['scene'],
+            actions=str(analysis['detected_actions'])
+        )
         
         # 3. Génération via l'engine AudioLDM
         return self.inference_engine.generate_soundscape(video_metadata=analysis, prompt=audio_prompt)

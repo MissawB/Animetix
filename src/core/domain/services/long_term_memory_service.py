@@ -1,6 +1,7 @@
 import logging
 from typing import List, Dict, Any, Optional
 import datetime
+from core.domain.services.prompt_manager import PromptManager
 
 logger = logging.getLogger('animetix')
 
@@ -9,9 +10,10 @@ class LongTermMemoryService:
     Gère la mémoire sémantique à long terme des joueurs.
     Stocke les résumés des parties passées dans ChromaDB pour une personnalisation continue.
     """
-    def __init__(self, chroma_resource, inference_engine):
+    def __init__(self, chroma_resource, inference_engine, prompt_manager: PromptManager):
         self.chroma = chroma_resource
         self.llm = inference_engine
+        self.prompt_manager = prompt_manager
         self.collection_name = "user_long_term_memories"
 
     def _get_collection(self):
@@ -25,10 +27,10 @@ class LongTermMemoryService:
         
         # 1. Générer un résumé via le LLM
         history_text = "\n".join([f"{m['role']}: {m['content']}" for m in conversation_history])
-        prompt = f"Résume les préférences et le style de jeu de cet utilisateur en 2-3 phrases clés pour ta mémoire future :\n\n{history_text}"
+        prompt, system = self.prompt_manager.get_prompt("long_term_memory_summary", history_text=history_text)
         
         try:
-            summary = self.llm.generate(prompt, system_prompt="Tu es un système de gestion de mémoire. Sois concis et factuel.")
+            summary = self.llm.generate(prompt, system_prompt=system)
             
             # 2. Stocker dans Chroma
             coll = self._get_collection()

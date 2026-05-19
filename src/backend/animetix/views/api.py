@@ -4,7 +4,6 @@ from django.http import JsonResponse, HttpResponse, StreamingHttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from celery.result import AsyncResult
 from .common import logger
-from ..utils import get_current_mode
 from ..containers import get_container
 from ..session_manager import GameSessionManager
 

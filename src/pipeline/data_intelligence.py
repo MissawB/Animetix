@@ -36,7 +36,9 @@ class DataIntelligence:
                 text = response.json().get("text", "")
                 tags = [t.strip() for t in text.split(',') if len(t.strip()) > 2]
                 return tags[:10]
-        except: pass
+        except Exception as e:
+            print(f"⚠️ Error generating tags for {title}: {e}")
+            pass
         return []
 
     def extract_visual_knowledge(self, image_data: bytes) -> List[str]:

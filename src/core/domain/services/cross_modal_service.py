@@ -2,6 +2,7 @@ import numpy as np
 import logging
 from typing import List, Dict, Optional
 from core.ports.inference_port import InferencePort
+from core.domain.services.prompt_manager import PromptManager
 
 logger = logging.getLogger("animetix.cross_modal")
 
@@ -51,12 +52,13 @@ class VlmIndexingService:
     VLM para-Indexing.
     Utilise Llava/Idefics pour décrire visuellement le catalogue et indexer ces récits.
     """
-    def __init__(self, inference_engine: InferencePort):
+    def __init__(self, inference_engine: InferencePort, prompt_manager: PromptManager):
         self.inference_engine = inference_engine
+        self.prompt_manager = prompt_manager
 
     def describe_poster(self, image_data: bytes, title: str) -> str:
         """Génère une description textuelle riche du contenu visuel."""
-        prompt = f"Analyse l'affiche de '{title}'. Détaille les couleurs, la composition, les objets présents et l'émotion qui s'en dégage."
+        prompt, system = self.prompt_manager.get_prompt("cross_modal_analysis", title=title)
         description = self.inference_engine.generate_image_description(image_data, prompt)
         return description
 

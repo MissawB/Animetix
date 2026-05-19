@@ -1,4 +1,5 @@
 {% extends 'animetix/base.html' %}
+{% load static %}
 {% load custom_filters %}
 {% load i18n %}
 
@@ -137,7 +138,7 @@
 
 <div class="row g-5">
     <!-- COLONNE PRINCIPALE -->
-    <div class="col-lg-8" id="game-main-col">
+    <div class="col-lg-8" id="game-main-col" data-hint-url-template="{% url 'reveal_hint' 'PLACEHOLDER' %}">
         
         <!-- HEADER DE JEU -->
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 gap-3">
@@ -336,21 +337,10 @@
     </div>
 </div>
 
-<script>
-    function confirmHint(type, message) {
-        if (confirm(message)) {
-            window.location.href = "{% url 'reveal_hint' 'PLACEHOLDER' %}".replace('PLACEHOLDER', type);
-        }
+<script type="application/json" id="classic-config">
+    {
+        "revealUrlTemplate": "{% url 'reveal_hint' 'PLACEHOLDER' %}"
     }
-
-    // Scroll automatique vers le dernier essai
-    {% if not game_over and guesses %}
-    document.addEventListener("DOMContentLoaded", () => {
-        const lastGuess = document.querySelector('.guess-row');
-        if (lastGuess) {
-            // Optionnel : lastGuess.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-    });
-    {% endif %}
 </script>
+<script src="{% static 'animetix/js/classic_game_init.js' %}"></script>
 {% endblock %}

@@ -9,6 +9,12 @@ def mock_engine():
     return MagicMock()
 
 @pytest.fixture
+def mock_prompt_manager():
+    pm = MagicMock()
+    pm.get_prompt.return_value = ("formatted prompt", "system prompt")
+    return pm
+
+@pytest.fixture
 def video_service(mock_engine):
     return VideoQuestService(inference_engine=mock_engine)
 
@@ -17,12 +23,20 @@ def studio_service(mock_engine):
     return StudioTransformService(inference_engine=mock_engine)
 
 @pytest.fixture
-def soundscape_service(mock_engine, video_service):
-    return SoundscapeGenerationService(inference_engine=mock_engine, video_service=video_service)
+def soundscape_service(mock_engine, video_service, mock_prompt_manager):
+    return SoundscapeGenerationService(
+        inference_engine=mock_engine, 
+        video_service=video_service,
+        prompt_manager=mock_prompt_manager
+    )
 
 @pytest.fixture
-def manga_service(mock_engine):
-    return MangaFlowService(inference_engine=mock_engine, llm_service=MagicMock())
+def manga_service(mock_engine, mock_prompt_manager):
+    return MangaFlowService(
+        inference_engine=mock_engine, 
+        llm_service=MagicMock(),
+        prompt_manager=mock_prompt_manager
+    )
 
 def test_index_video_clips(video_service, mock_engine):
     mock_engine.get_video_temporal_embeddings.return_value = [{"start": 0, "end": 10}]

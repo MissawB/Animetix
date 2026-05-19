@@ -39,7 +39,7 @@ def test_generate_with_forbidden_terms(llm_service, mock_engine):
 
 def test_generate_fusion_scenario(llm_service, mock_engine):
     mock_engine.generate.return_value = "Fusion story"
-    res = llm_service.generate_fusion_scenario("Anime", "Naruto", "Sasuke", "Français")
+    res = llm_service.generate_fusion_scenario("Anime", {"title": "Naruto"}, {"title": "Sasuke"}, "Français")
     assert res == "Fusion story"
     mock_engine.generate.assert_called_once()
 

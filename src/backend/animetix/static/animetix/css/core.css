@@ -1,0 +1,109 @@
+/* SKELETON LOADERS */
+.skeleton {
+    background: linear-gradient(90deg, var(--card-bg) 25%, var(--page-bg) 50%, var(--card-bg) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+    border-radius: 0.5rem;
+}
+@keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* SMOOTH PROGRESS BARS */
+.progress-bar-smooth {
+    transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* HTMX INDICATORS */
+.htmx-indicator { display: none; opacity: 0; transition: opacity 0.2s ease-in; }
+.htmx-request .htmx-indicator { display: block; opacity: 1; }
+.htmx-request.htmx-indicator { display: block; opacity: 1; }
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body { 
+    font-family: 'Inter', sans-serif; 
+    background-color: var(--page-bg); 
+    color: var(--page-text);
+    transition: background-color 0.5s ease;
+    overflow-x: hidden;
+    min-height: 100vh;
+}
+
+.manga-font { font-family: 'Montserrat', sans-serif; font-weight: 900; font-style: italic; text-transform: uppercase; }
+
+/* HTMX FLUID TRANSITIONS */
+.htmx-swapping { opacity: 0; transform: translateY(10px); transition: all 0.3s ease-out; }
+.htmx-added { opacity: 0; transform: translateY(-10px); }
+.fade-in { animation: fadeIn 0.5s ease-out forwards; }
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* SIDEBAR DRAWER LOGIC */
+#manga-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    width: 300px;
+    background: var(--sidebar-bg);
+    z-index: 2000;
+    transform: translateX(-100%);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 20px 0 50px rgba(0,0,0,0.1);
+}
+[data-bs-theme="dark"] #manga-sidebar { border-right: 1px solid rgba(255,255,255,0.05); }
+
+body.sidebar-open #manga-sidebar { transform: translateX(0); }
+body.sidebar-open #sidebar-overlay { display: block; }
+
+@media (min-width: 1024px) {
+    body {
+        transition: padding-left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        padding-left: 0;
+    }
+    body.sidebar-open {
+        padding-left: 300px;
+    }
+    body.sidebar-open #sidebar-overlay { display: none !important; }
+    
+    #manga-sidebar {
+        box-shadow: none !important;
+        border-right: 1px solid rgba(0,0,0,0.05);
+    }
+    
+    #main-shell { 
+        width: 100%;
+        margin-left: 0 !important;
+    }
+}
+
+.nav-link-manga {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-style: italic;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    border-left: 4px solid transparent;
+}
+.nav-link-manga:hover {
+    background: rgba(253, 185, 19, 0.1);
+    border-left-color: var(--accent-color);
+    padding-left: 1.5rem;
+}
+.nav-link-manga.active {
+    background: var(--nav-gradient);
+    color: white !important;
+    border-left-color: #000;
+}
+
+.diff-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    transition: transform 0.2s;
+}
+.diff-dot:hover { transform: scale(1.5); }

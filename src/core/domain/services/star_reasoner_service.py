@@ -3,6 +3,7 @@ import json
 import logging
 from typing import List, Dict, Optional
 from core.ports.inference_port import InferencePort
+from core.domain.services.prompt_manager import PromptManager
 
 logger = logging.getLogger("animetix.mlops")
 
@@ -10,9 +11,10 @@ class StarReasonerService:
     """
     Implémentation de STaR (Self-Taught Reasoner).
     """
-    def __init__(self, inference_engine: InferencePort):
+    def __init__(self, inference_engine: InferencePort, prompt_manager: PromptManager, training_data_path: str = "data/mlops/datasets/star_reasoning_traces.jsonl"):
         self.inference_engine = inference_engine
-        self.training_data_path = "data/mlops/datasets/star_reasoning_traces.jsonl"
+        self.prompt_manager = prompt_manager
+        self.training_data_path = training_data_path
 
     def solve_riddle_with_star(self, riddle: str, expected_answer: str, num_attempts: int = 3) -> Dict:
         """
@@ -23,13 +25,11 @@ class StarReasonerService:
         best_answer = "Désolé, je n'ai pas pu résoudre l'énigme."
         
         for i in range(num_attempts):
-            prompt = f"""
-            ÉNIGME : {riddle}
-            
-            MISSION : Résous cette énigme étape par étape (Chain-of-Thought).
-            Termine ta réponse par la balise exacte 'FINAL_ANSWER: [ta réponse courte]'.
-            """
-            response = self.inference_engine.generate(prompt, system_prompt="Tu es un détective logique.")
+            prompt, system = self.prompt_manager.get_prompt(
+                "star_reasoner_thought",
+                riddle=riddle
+            )
+            response = self.inference_engine.generate(prompt, system_prompt=system)
             
             # Extraction de la réponse finale
             final_answer = ""

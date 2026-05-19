@@ -49,22 +49,29 @@ class Qwen3VLAdapter(InferencePort):
         yield self.generate(prompt, system_prompt, thinking_budget, thinking_mode)
 
     def calculate_visual_similarity(self, query: str, item_id: str, media_type: str) -> float: 
-        raise NotImplementedError("calculate_visual_similarity not implemented for Qwen3-VL")
+        logger.warning(f"calculate_visual_similarity not implemented for Qwen3-VL")
+        return 0.0
         
     def get_image_embedding(self, image_data: bytes, model_id: Optional[str] = None) -> List[float]: 
-        raise NotImplementedError("get_image_embedding not implemented for Qwen3-VL")
+        logger.warning(f"get_image_embedding not implemented for Qwen3-VL")
+        return []
         
     def classify_image(self, image_data: bytes, candidate_labels: List[str], model_id: Optional[str] = None) -> Dict[str, float]: 
-        raise NotImplementedError("classify_image not implemented for Qwen3-VL")
+        logger.warning(f"classify_image not implemented for Qwen3-VL")
+        return {}
         
     def detect_objects(self, image_data: bytes, candidate_queries: List[str], model_id: Optional[str] = None) -> List[Dict]: 
-        raise NotImplementedError("detect_objects not implemented for Qwen3-VL")
+        logger.warning(f"detect_objects not implemented for Qwen3-VL")
+        return []
         
     def get_video_temporal_embeddings(self, video_data: bytes) -> List[Dict[str, Any]]: 
-        raise NotImplementedError("get_video_temporal_embeddings not implemented for Qwen3-VL")
+        logger.warning(f"get_video_temporal_embeddings not implemented for Qwen3-VL")
+        return []
         
     def transform_image_to_anime(self, image_data: bytes, studio_style: str, prompt: str = "") -> str: 
-        raise NotImplementedError("transform_image_to_anime not implemented for Qwen3-VL")
+        logger.warning(f"transform_image_to_anime not implemented for Qwen3-VL")
+        return ""
+
     def transform_video_to_anime(self, video_data: bytes, studio_style: str, prompt: str = "") -> str: return ""
     def generate_soundscape(self, video_metadata: Dict[str, Any], prompt: Optional[str] = None) -> str: return ""
     def clone_voice(self, text: str, reference_audio: bytes, language: str = "fr") -> bytes: return b""
@@ -143,4 +150,10 @@ class Qwen3VLAdapter(InferencePort):
             return [{"index": i, "score": 0.0} for i in range(len(image_urls))]
 
     def get_multimodal_late_interaction(self, image_data: bytes) -> List[List[float]]: return []
+    
+    def generate_image(self, prompt: str, style: str = "") -> str:
+        logger.warning(f"generate_image not implemented for Qwen3-VL")
+        return ""
+
     def health_check(self) -> dict: return {"status": "online", "engine": "Qwen3-VL"}
+

@@ -89,7 +89,7 @@
 {% endblock %}
 
 {% block content %}
-<div id="game-matrix" class="min-h-screen flex flex-col text-white pb-6">
+<div id="game-matrix" class="min-h-screen flex flex-col text-white pb-6" data-room-code="{{ room_code }}" data-lobby-url="{% url 'codemanga_room' room_code %}">
 
     <!-- COMPACT HEADER -->
     <header class="flex justify-center items-center mb-4 relative pt-2">
@@ -159,81 +159,7 @@
     </div>
 </div>
 
-<script>
-    const roomCode = "{{ room_code }}";
-    const wsUrl = `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws/codemanga/${roomCode}/`;
-    let socket = new WebSocket(wsUrl);
-    let myRole = localStorage.getItem('cm_role');
-    let myTeam = localStorage.getItem('cm_team');
-    let myName = localStorage.getItem('cm_name') || "Agent";
-
-    socket.onopen = () => socket.send(JSON.stringify({action: 'set_player', name: myName, team: myTeam, role: myRole}));
-
-    socket.onmessage = (e) => {
-        const data = JSON.parse(e.data);
-        if (data.type === 'state') {
-            const room = data.room || data.message;
-            if (room.state === 'lobby') window.location.href = `{% url 'codemanga_room' room_code %}`;
-            else updateUI(room, data.my_role, data.my_team);
-        }
-    };
-
-    function updateUI(room, role, team) {
-        myRole = role; myTeam = team;
-        document.getElementById('blue-score').innerText = 9 - room.blue_score;
-        document.getElementById('red-score').innerText = 8 - room.red_score;
-
-        const turnText = document.getElementById('turn-text');
-        turnText.innerText = `Tour de l'équipe ${room.turn === 'blue' ? 'Bleue' : 'Rouge'}`;
-        turnText.style.color = room.turn === 'blue' ? '#1ea3f0' : '#eb4924';
-
-        // Compact Player Lists
-        const blueP = document.getElementById('blue-players');
-        const redP = document.getElementById('red-players');
-        blueP.innerHTML = ''; redP.innerHTML = '';
-        room.players.forEach(p => {
-            if (!p.team) return;
-            const div = document.createElement('div');
-            div.className = 'player-list-pill' + (p.name === myName ? ' border border-warning' : '');
-            div.innerHTML = `<span class="truncate">${p.name}</span> <span class="ml-auto opacity-40 text-[6px]">${p.role === 'spymaster' ? 'SPY' : 'AGT'}</span>`;
-            if (p.team === 'blue') blueP.appendChild(div); else redP.appendChild(div);
-        });
-
-        const grid = document.getElementById('game-grid');
-        grid.innerHTML = '';
-        room.grid.forEach((card, idx) => {
-            const col = document.createElement('div');
-            let stateClass = "";
-            let borderClass = "";
-            
-            if (card.revealed) stateClass = `revealed role-${card.role}`;
-            else if (myRole === 'spymaster') borderClass = `spymaster-border-${card.role}`;
-
-            col.innerHTML = `
-                <div class="card-matrix ${stateClass} ${borderClass}" onclick="clickCard(${idx})">
-                    ${card.image ? `<img src="${card.image}" class="card-bg-img" onerror="this.style.display='none'">` : ''}
-                    <div class="card-overlay">
-                        <div class="card-title-en text-[9px] md:text-[11px] text-shadow-tactical">${card.title_en}</div>
-                        <div class="card-title-jp text-shadow-tactical">${card.title_jp}</div>
-                    </div>
-                </div>
-            `;
-            grid.appendChild(col);
-        });
-
-        if (room.winner) {
-            document.getElementById('winner-modal').classList.remove('d-none');
-            document.getElementById('winner-text').innerText = `TEAM ${room.winner.toUpperCase()} VICTORIEUSE`;
-        } else document.getElementById('winner-modal').classList.add('d-none');
-    }
-
-    function pickSlot(team, role) {
-        myTeam = team; myRole = role;
-        localStorage.setItem('cm_team', team); localStorage.setItem('cm_role', role);
-        socket.send(JSON.stringify({action: 'set_player', name: myName, team: team, role: role}));
-    }
-
-    function startGame() { socket.send(JSON.stringify({action: 'start_game'})); }
-    function clickCard(idx) { if (myRole === 'spymaster') return; socket.send(JSON.stringify({action: 'click_card', index: idx})); }
-</script>
+{% block extra_js %}
+<script src="{% static 'animetix/js/codemanga_game.js' %}"></script>
+{% endblock %}
 {% endblock %}

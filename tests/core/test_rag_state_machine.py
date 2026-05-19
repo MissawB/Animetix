@@ -37,7 +37,7 @@ def test_research_more_loop_integration(mock_deps):
     # --- CONFIGURATION DU SCÉNARIO ---
     
     # 1. Planner retourne un plan simple
-    service.planner.plan.return_value = SearchPlan(optimized_query="test query", requires_web=False)
+    service.planner.plan.return_value = SearchPlan(optimized_query="test query", requires_web=False, reasoning="test")
     
     # 2. Scout retourne un chemin de vérité
     service.scout.find_truth_path.return_value = "truth_path"
@@ -118,7 +118,7 @@ def test_rewrite_loop(mock_deps):
     service._assess_complexity = MagicMock(return_value=(0, 0))
     service._execute_search = MagicMock(return_value="raw")
 
-    service.planner.plan.return_value = SearchPlan(optimized_query="test", requires_web=False)
+    service.planner.plan.return_value = SearchPlan(optimized_query="test", requires_web=False, reasoning="test")
     service.scout.find_truth_path.return_value = "truth"
     service.synthesizer.synthesize_stream.return_value = iter(["Fix"])
     

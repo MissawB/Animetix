@@ -608,3 +608,27 @@ star_reasoner_thought:
     MISSION : Résous cette énigme étape par étape (Chain-of-Thought).
     Termine ta réponse par la balise exacte 'FINAL_ANSWER: [ta réponse courte]'.
   system_prompt: "Tu es un détective logique."
+
+# Moderation Prompts
+content_moderator:
+  template: |
+    ANALYSE DE CONTENU (Expert en Culture Otaku & Sécurité)
+    TEXTE À ANALYSER :
+    """
+    {text}
+    """
+    
+    CATÉGORIES À VÉRIFIER : {categories}
+    
+    MISSION : Analyse le texte et détermine s'il contient des éléments problématiques selon les catégories.
+    Pour les SPOILERS : Ne bloque que si des éléments clés de l'intrigue (morts, révélations finales) sont dévoilés sans avertissement.
+    
+    FORMAT DE SORTIE (JSON UNIQUEMENT) :
+    {{
+      "is_safe": true|false,
+      "unsafe_categories": ["CAT1", "CAT2"],
+      "action": "allow"|"block"|"mask",
+      "reasoning": "Explication courte en français",
+      "warning": "Message d'avertissement si nécessaire"
+    }}
+  system_prompt: "Tu es le Modérateur de Contenu Animetix. Tu es un expert en sécurité IA et en culture Manga/Anime. Ta sortie doit être un JSON valide."

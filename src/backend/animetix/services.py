@@ -1,6 +1,8 @@
 import logging
 from django.conf import settings
 from .containers import get_container
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 
 logger = logging.getLogger('animetix')
 
@@ -10,6 +12,51 @@ DIFFICULTY_SETTINGS = {
     'Manga': {'Easy': 800, 'Normal': 400, 'Hard': 150, 'Impossible': 30},
     'Character': {'Easy': 500, 'Normal': 250, 'Hard': 100, 'Impossible': 20}
 }
+
+def send_notification(user, title, message, notification_type='info', link=None):
+    """
+    Crée une notification en base de données et l'envoie en temps réel via WebSockets.
+    """
+    from .models import Notification
+    
+    # 1. Sauvegarde en base
+    notification = Notification.objects.create(
+        user=user,
+        title=title,
+        message=message,
+        notification_type=notification_type,
+        link=link
+    )
+    
+    # 2. Envoi via WebSocket
+    channel_layer = get_channel_layer()
+    
+    # Mapping type pour le frontend
+    ws_type = notification_type
+    if notification_type == 'achievement':
+        ws_type = 'achievement_unlocked'
+    
+    async_to_sync(channel_layer.group_send)(
+        f"user_notifications_{user.id}",
+        {
+            "type": "send_notification",
+            "data": {
+                "id": notification.id,
+                "type": ws_type,
+                "title": title,
+                "message": message,
+                "link": link,
+                "created_at": notification.created_at.strftime("%H:%M"),
+                # Pour le toast de succès spécifique
+                "achievement": {
+                    "name": title.replace("Succès Débloqué !", "").strip() or title,
+                    "icon": "🏆",
+                    "xp": 100 # Valeur par défaut
+                }
+            }
+        }
+    )
+    return notification
 
 def check_achievements(user, action_type, context=None):
     """
@@ -33,21 +80,13 @@ def check_achievements(user, action_type, context=None):
     
     # --- NOTIFICATION TEMPS RÉEL (WebSockets) ---
     if newly_unlocked:
-        channel_layer = get_channel_layer()
         for ach in newly_unlocked:
-            async_to_sync(channel_layer.group_send)(
-                f"user_notifications_{user.id}",
-                {
-                    "type": "send_notification",
-                    "data": {
-                        "type": "achievement_unlocked",
-                        "achievement": {
-                            "name": ach.name,
-                            "icon": ach.icon,
-                            "xp": ach.xp_reward
-                        }
-                    }
-                }
+            send_notification(
+                user=user,
+                title="Succès Débloqué !",
+                message=f"Félicitations ! Vous avez débloqué le succès '{ach.name}' (+{ach.xp_reward} XP).",
+                notification_type='achievement',
+                link='/achievements/'
             )
             
     return newly_unlocked
@@ -94,6 +133,8 @@ class AnimetixService:
     def soundscape_service(self): return self._container.soundscape_service
     @property
     def spatial_computing_service(self): return self._container.spatial_computing_service
+    @property
+    def vision_service(self): return self._container.vision_service
     @property
     def video_quest_service(self): return self._container.video_quest_service
     @property

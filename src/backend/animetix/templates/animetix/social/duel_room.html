@@ -70,59 +70,15 @@
         </div>
     </div>
 </div>
+
+<script type="application/json" id="duel-config">
+{
+    "roomCode": "{{ duel.room_code|escapejs }}",
+    "currentUsername": "{{ request.user.username|escapejs }}"
+}
+</script>
 {% endblock %}
 
 {% block extra_js %}
-<script>
-    const roomCode = "{{ duel.room_code }}";
-    const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
-    const duelSocket = new WebSocket(`${wsScheme}://${window.location.host}/ws/duel/${roomCode}/`);
-
-    const input = document.getElementById('duel-guess');
-    const feed = document.getElementById('duel-feed');
-    const winnerDisplay = document.getElementById('winner-name');
-
-    input.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            const val = input.value.trim();
-            if (val) {
-                duelSocket.send(json.stringify({'type': 'guess', 'guess': val}));
-                input.value = '';
-            }
-        }
-    });
-
-    duelSocket.onmessage = function(e) {
-        const data = JSON.parse(e.data);
-        console.log("Duel Event:", data);
-
-        if (data.type === 'duel_state') {
-            if (data.player2) {
-                document.getElementById('p2-name').innerText = data.player2;
-                document.getElementById('p2-avatar').classList.remove('bg-gray-700');
-                document.getElementById('p2-avatar').classList.add('bg-red-500');
-                document.getElementById('p2-avatar').innerText = data.player2[0].toUpperCase();
-                document.getElementById('waiting-p2').classList.add('hidden');
-                document.getElementById('playing-ui').classList.remove('hidden');
-            }
-        }
-
-        if (data.type === 'opponent_guess') {
-            const div = document.createElement('div');
-            div.innerText = `${data.player} a tenté... Score: ${data.score}%`;
-            feed.prepend(div);
-            
-            if (data.player !== "{{ request.user.username }}") {
-                window.sounds.play('hover');
-            }
-        }
-
-        if (data.type === 'duel_finished') {
-            winnerDisplay.innerText = data.winner;
-            document.getElementById('playing-ui').classList.add('hidden');
-            document.getElementById('victory-ui').classList.remove('hidden');
-            window.sounds.play('win');
-        }
-    };
-</script>
+<script src="{% static 'animetix/js/duel_room.js' %}"></script>
 {% endblock %}

@@ -1,12 +1,12 @@
+import random
 from django.shortcuts import render, redirect
 from .common import animetix_service, handle_win_achievements
-from ..utils import get_current_mode
 from ..session_manager import GameSessionManager
 from ..forms import GameGuessForm
 
 def paradox_view(request):
     session = GameSessionManager(request)
-    media_type, data = get_current_mode(request), animetix_service.load_data(get_current_mode(request))
+    media_type, data = session.get_current_mode(), animetix_service.load_data(session.get_current_mode())
     if not data: return redirect('index')
     
     is_daily = session.get('is_daily', False)
@@ -51,4 +51,3 @@ def paradox_guess(request):
                 'is_daily': is_daily
             })
     return redirect('index')
-

@@ -31,7 +31,9 @@ def run_isolated_test():
     })
 
     # 2. Test Extraction
-    service = KnowledgeGraphConstructionService(inference_engine=mock_engine)
+    mock_prompt_manager = MagicMock()
+    mock_prompt_manager.get_prompt.return_value = ("Prompt", "System")
+    service = KnowledgeGraphConstructionService(inference_engine=mock_engine, prompt_manager=mock_prompt_manager)
     extracted = service.extract_entities_and_relations(
         title="Dragon Ball",
         description="Goku combats Vegeta.",

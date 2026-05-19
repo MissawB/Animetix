@@ -103,25 +103,13 @@
 
                 {% endif %}
 
-                <!-- BOUTONS FEEDBACK RLHF -->
+                <!-- BOUTONS FEEDBACK RLHF (JS Optimized) -->
                 <div class="d-flex align-items-center gap-2 bg-black/40 rounded-pill p-1 px-3 border border-white/10 shadow-sm" id="feedback-area">
                     <span class="text-[8px] font-bold text-white opacity-40 uppercase tracking-widest">Feedback ?</span>
-                    <form hx-post="{% url 'submit_ai_feedback' %}" hx-target="#feedback-area" hx-swap="outerHTML">
-                        {% csrf_token %}
-                        <input type="hidden" name="type" value="fusion">
-                        <input type="hidden" name="context" value="{{ item_A.title }} + {{ item_B.title }}">
-                        <input type="hidden" name="output" value="{{ scenario }}">
-                        <input type="hidden" name="is_positive" value="true">
-                        <button type="submit" class="btn btn-sm btn-link text-success p-1"><i class="bi bi-hand-thumbs-up-fill"></i></button>
-                    </form>
-                    <form hx-post="{% url 'submit_ai_feedback' %}" hx-target="#feedback-area" hx-swap="outerHTML">
-                        {% csrf_token %}
-                        <input type="hidden" name="type" value="fusion">
-                        <input type="hidden" name="context" value="{{ item_A.title }} + {{ item_B.title }}">
-                        <input type="hidden" name="output" value="{{ scenario }}">
-                        <input type="hidden" name="is_positive" value="false">
-                        <button type="submit" class="btn btn-sm btn-link text-danger p-1"><i class="bi bi-hand-thumbs-down-fill"></i></button>
-                    </form>
+                    <button onclick="submitRLHF('fusion', '{{ item_A.title }} + {{ item_B.title }}', '{{ scenario|truncatechars:300|escapejs }}', true, this)" 
+                            class="btn btn-sm btn-link text-success p-1"><i class="bi bi-hand-thumbs-up-fill"></i></button>
+                    <button onclick="submitRLHF('fusion', '{{ item_A.title }} + {{ item_B.title }}', '{{ scenario|truncatechars:300|escapejs }}', false, this)" 
+                            class="btn btn-sm btn-link text-danger p-1"><i class="bi bi-hand-thumbs-down-fill"></i></button>
                 </div>
             </div>
         </div>

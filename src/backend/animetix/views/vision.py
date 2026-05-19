@@ -1,3 +1,5 @@
+import base64
+import requests
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django_ratelimit.decorators import ratelimit
@@ -6,6 +8,148 @@ from ..session_manager import GameSessionManager
 from ..models import GameplaySession
 from ..forms import VisionQuestForm
 from core.domain.exceptions import InferenceError
+
+def spatial_view(request):
+    """Vue principale du Spatial Lab (Reconstruction 3D)."""
+    manager = GameSessionManager(request)
+    media_type = manager.get_current_mode()
+    data = animetix_service.load_data(media_type)
+    if not data: return redirect('index')
+    
+    # On propose quelques exemples de la forge ou du catalogue
+    examples = data.get('db', [])[:12]
+    return render(request, 'animetix/vision/spatial.html', {
+        'examples': examples,
+        'media_type': media_type
+    })
+
+@ratelimit(key='ip', rate='5/m', method='POST', block=True)
+def generate_depth(request):
+    """Génère une carte de profondeur pour une image donnée (URL ou Upload)."""
+    if request.method == 'POST':
+        image_url = request.POST.get('image_url')
+        uploaded_file = request.FILES.get('image_file')
+        
+        if not image_url and not uploaded_file:
+            return JsonResponse({'error': 'No image provided (URL or File)'}, status=400)
+            
+        try:
+            image_data = None
+            display_url = image_url
+            
+            # 1. Récupération des données binaires
+            if uploaded_file:
+                image_data = uploaded_file.read()
+                display_url = uploaded_file.name
+            else:
+                res = requests.get(image_url, timeout=10)
+                res.raise_for_status()
+                image_data = res.content
+            
+            # 2. Appel au service de Spatial Computing
+            depth_map_bytes = animetix_service.spatial_computing_service.inference_engine.estimate_depth(image_data)
+            
+            if not depth_map_bytes:
+                return JsonResponse({'error': 'Depth estimation failed'}, status=500)
+                
+            # 3. Encodage en base64 pour affichage direct (Bypass CORS)
+            depth_b64 = base64.b64encode(depth_map_bytes).decode('utf-8')
+            original_b64 = base64.b64encode(image_data).decode('utf-8')
+            
+            return JsonResponse({
+                'status': 'success',
+                'depth_map': f"data:image/png;base64,{depth_b64}",
+                'original_image_b64': f"data:image/jpeg;base64,{original_b64}",
+                'original_url': display_url
+            })
+        except Exception as e:
+            logger.error(f"Spatial Depth Error: {e}")
+            return JsonResponse({'error': str(e)}, status=500)
+            
+    return redirect('spatial_lab')
+
+def manga_lab_view(request):
+    """Vue principale du Manga Lab (Nettoyage de bulles)."""
+    manager = GameSessionManager(request)
+    data = animetix_service.load_data("Manga")
+    if not data: return redirect('index')
+    
+    # Exemples de pages de manga
+    examples = data.get('db', [])[:8]
+    return render(request, 'animetix/vision/manga_lab.html', {
+        'examples': examples
+    })
+
+@ratelimit(key='ip', rate='5/m', method='POST', block=True)
+def process_manga_bubbles(request):
+    """Détecte et nettoie les bulles d'une page de manga."""
+    if request.method == 'POST':
+        image_url = request.POST.get('image_url')
+        uploaded_file = request.FILES.get('image_file')
+        
+        try:
+            image_data = None
+            if uploaded_file:
+                image_data = uploaded_file.read()
+            else:
+                res = requests.get(image_url, timeout=10)
+                res.raise_for_status()
+                image_data = res.content
+            
+            # Pipeline IA : Détection + Inpainting
+            result = animetix_service.vision_service.inference_engine.process_manga_page(image_data)
+            
+            original_b64 = base64.b64encode(image_data).decode('utf-8')
+            
+            return JsonResponse({
+                'status': 'success',
+                'cleaned_image': result['cleaned_image'],
+                'original_image': f"data:image/jpeg;base64,{original_b64}",
+                'bubbles_found': len(result['bubbles'])
+            })
+        except Exception as e:
+            logger.error(f"Manga Lab Error: {e}")
+            return JsonResponse({'error': str(e)}, status=500)
+            
+    return redirect('manga_lab')
+
+@ratelimit(key='ip', rate='3/m', method='POST', block=True)
+def translate_manga_bubbles(request):
+    """Détecte, nettoie et traduit les bulles d'une page de manga. (Reload trigger)"""
+    if request.method == 'POST':
+        image_url = request.POST.get('image_url')
+        uploaded_file = request.FILES.get('image_file')
+        target_lang = request.session.get('language', 'Français')
+        
+        try:
+            image_data = None
+            if uploaded_file:
+                image_data = uploaded_file.read()
+            else:
+                res = requests.get(image_url, timeout=10)
+                res.raise_for_status()
+                image_data = res.content
+            
+            # Pipeline IA complet : Détection + Inpainting + OCR + LLM Translate + Draw
+            result = animetix_service.vision_service.translate_manga_page(image_data, target_lang=target_lang)
+            
+            if "error" in result:
+                return JsonResponse({'error': result["error"]}, status=500)
+                
+            original_b64 = base64.b64encode(image_data).decode('utf-8')
+            
+            return JsonResponse({
+                'status': 'success',
+                'cleaned_image': result['cleaned_image'],
+                'translated_image': result['translated_image'],
+                'original_image': f"data:image/jpeg;base64,{original_b64}",
+                'bubbles_found': len(result['bubbles'])
+            })
+        except Exception as e:
+            logger.error(f"Manga Lab Translation Error: {e}")
+            return JsonResponse({'error': str(e)}, status=500)
+            
+    return redirect('manga_lab')
 
 def vision_quest_view(request):
     session = GameSessionManager(request)

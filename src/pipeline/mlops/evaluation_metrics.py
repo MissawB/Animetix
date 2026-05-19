@@ -93,7 +93,9 @@ def ragas_performance_comparison():
                     graph_ctx = neo4j_manager.get_enriched_context(ids)
                     if graph_ctx:
                         contexts = contexts + [f"Graph Metadata: {graph_ctx}"]
-                except: pass
+                except Exception as e:
+                    print(f"⚠️ Graph context extraction error for {ids}: {e}")
+                    pass
             
             # Generation
             answer = "Erreur"
@@ -104,7 +106,11 @@ def ragas_performance_comparison():
                 }, timeout=40)
                 if resp.status_code == 200:
                     answer = resp.json().get("text", "Erreur")
-            except: pass
+                else:
+                    print(f"❌ Brain API Error {resp.status_code} for question: {q}")
+            except Exception as e:
+                print(f"⚠️ Brain API generation error: {e}")
+                pass
 
             results_list.append({
                 "question": q,

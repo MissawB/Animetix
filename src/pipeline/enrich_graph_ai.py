@@ -1,19 +1,29 @@
 import json
 import os
+import sys
 import logging
 import time
 import requests
 from tqdm import tqdm
+
+# Add src and backend to Python path
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(os.path.dirname(SCRIPT_DIR))
+sys.path.append(os.path.join(PROJECT_ROOT, "src"))
+sys.path.append(os.path.join(PROJECT_ROOT, "src", "backend"))
+
+import django
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'animetix_project.settings')
+django.setup()
+
 from pipeline.neo4j_client import neo4j_manager
-from src.backend.animetix.containers import get_container
+from backend.animetix.containers import get_container
 
 # Configuration
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("animetix.enrichment")
 
 # Paths
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_ROOT = os.path.dirname(os.path.dirname(SCRIPT_DIR))
 ANIME_DB = os.path.join(PROJECT_ROOT, 'data', 'processed', 'clean_root_animes.json')
 
 def fetch_jikan_metadata(mal_id, media_type):

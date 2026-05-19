@@ -28,7 +28,9 @@ def mock_inference_engine():
     return engine
 
 def test_graph_extraction_logic(mock_inference_engine):
-    service = KnowledgeGraphConstructionService(inference_engine=mock_inference_engine)
+    mock_prompt_manager = MagicMock()
+    mock_prompt_manager.get_prompt.return_value = ("Prompt", "System")
+    service = KnowledgeGraphConstructionService(inference_engine=mock_inference_engine, prompt_manager=mock_prompt_manager)
     
     extracted = service.extract_entities_and_relations(
         title="Naruto",

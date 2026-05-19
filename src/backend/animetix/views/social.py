@@ -1,9 +1,19 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.contrib.auth.decorators import login_required
-from ..models import Profile, Achievement, UserAchievement, Friendship, CreativeFusion
+from ..models import Profile, Achievement, UserAchievement, Friendship, CreativeFusion, Notification
+
+@login_required
+def notifications_list_view(request):
+    notifications = Notification.objects.filter(user=request.user).order_by('-created_at')[:50]
+    return render(request, 'animetix/social/notifications.html', {'notifications': notifications})
+
+@login_required
+def mark_notifications_read(request):
+    Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+    return JsonResponse({'status': 'ok'})
 
 @login_required
 def toggle_collection(request, fusion_id):
@@ -66,8 +76,19 @@ def toggle_follow(request, user_id):
     target_user = User.objects.get(id=user_id)
     if target_user == request.user: return HttpResponse(status=400)
     friendship, created = Friendship.objects.get_or_create(from_user=request.user, to_user=target_user)
-    if not created: friendship.delete(); is_following = False
-    else: is_following = True
+    if not created: 
+        friendship.delete()
+        is_following = False
+    else: 
+        is_following = True
+        from ..services import send_notification
+        send_notification(
+            user=target_user,
+            title="Nouveau Follower !",
+            message=f"{request.user.username} vient de commencer à vous suivre. Préparez vos prochains défis !",
+            notification_type='social',
+            link=f"/social/profile/{request.user.username}/"
+        )
     if request.headers.get('HX-Request'):
         return render(request, 'animetix/social/follow_button_fragment.html', {'target_user': target_user, 'is_following': is_following})
     return redirect('profile_view', username=target_user.username)

@@ -2,6 +2,7 @@ import orjson
 import logging
 from typing import List, Dict, Any, Optional
 from core.ports.inference_port import InferencePort
+from .prompt_manager import PromptManager
 
 logger = logging.getLogger('animetix')
 
@@ -21,9 +22,10 @@ class OrchestratorAgentService:
     Orchestration Agentique de type LangGraph (Graphe d'États).
     Gère des flux de raisonnement complexes via des nœuds spécialisés.
     """
-    def __init__(self, inference_engine: InferencePort, services_factory, message_bus=None):
+    def __init__(self, inference_engine: InferencePort, services_factory, prompt_manager: PromptManager, message_bus=None):
         self.inference_engine = inference_engine
         self.factory = services_factory # Accès aux autres services (RAG, Graph, Vision)
+        self.prompt_manager = prompt_manager
         self.message_bus = message_bus
 
     def execute_workflow(self, query: str, media_type: str) -> str:
@@ -59,19 +61,9 @@ class OrchestratorAgentService:
     def _node_planner(self, state: State):
         """Nœud de Planification : Analyse et décide de la stratégie."""
         logger.info("🕸️ State Node: PLANNER")
-        prompt = f"""
-        QUERY: {state.query}
+        prompt, system = self.prompt_manager.get_prompt("orchestrator_planner", query=state.query)
         
-        MISSION: Planifie la résolution de cette question. 
-        Dois-je chercher dans la DB (RETRIEVE) ou passer directement à la réponse (WRITE) ?
-        
-        FORMAT JSON :
-        {{
-            "plan": ["step 1", "step 2"],
-            "next_node": "RETRIEVER" | "WRITER"
-        }}
-        """
-        res = self._safe_json_generate(prompt)
+        res = self._safe_json_generate(prompt, system_prompt=system)
         state.plan = res.get("plan", [])
         state.next_node = res.get("next_node", "RETRIEVER")
 
@@ -87,8 +79,8 @@ class OrchestratorAgentService:
         """Nœud de Vérification : Utilise CoVe pour valider les faits."""
         logger.info("🕸️ State Node: VERIFIER")
         # Si le contexte contient des affirmations risquées, on demande une vérification
-        prompt = f"Le contexte suivant est-il fiable ? {state.context[:500]}. Réponds par OUI ou NON."
-        is_reliable = "OUI" in self.inference_engine.generate(prompt).upper()
+        prompt, system = self.prompt_manager.get_prompt("orchestrator_reliability", context=state.context[:500])
+        is_reliable = "OUI" in self.inference_engine.generate(prompt, system_prompt=system).upper()
         
         if not is_reliable:
             # On pourrait renvoyer vers un nœud de recherche corrective
@@ -99,8 +91,8 @@ class OrchestratorAgentService:
     def _node_writer(self, state: State):
         """Nœud de Rédaction : Synthèse finale avec vérification de confiance."""
         logger.info("🕸️ State Node: WRITER")
-        prompt = f"QUERY: {state.query}\nCONTEXTE: {state.context}\nRédige la réponse finale."
-        state.final_answer = self.inference_engine.generate(prompt)
+        prompt, system = self.prompt_manager.get_prompt("orchestrator_final", query=state.query, context=state.context)
+        state.final_answer = self.inference_engine.generate(prompt, system_prompt=system)
         
         # --- Uncertainty Quantification (XAI) ---
         confidence = self.factory.uncertainty_service.measure_confidence(prompt, state.final_answer)
@@ -114,8 +106,8 @@ class OrchestratorAgentService:
         else:
             state.next_node = "END"
 
-    def _safe_json_generate(self, prompt: str) -> Dict:
-        res = self.inference_engine.generate(prompt, system_prompt="Réponds en JSON.")
+    def _safe_json_generate(self, prompt: str, system_prompt: Optional[str] = None) -> Dict:
+        res = self.inference_engine.generate(prompt, system_prompt=system_prompt)
         try:
             if '{' in res and '}' in res:
                 json_str = res[res.find('{'):res.rfind('}')+1]

@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 from celery import chain
 
 from .common import animetix_service
-from ..utils import get_current_mode
+from ..session_manager import GameSessionManager
 from ..services import DIFFICULTY_SETTINGS
 from ..presenters import ArchetypistPresenter
 from ..models import CreativeFusion
@@ -20,8 +20,9 @@ def archetypist_view(request):
     Main view for the Creative Forge (Archetypist).
     Handles universe fusion requests and display of the forge interface.
     """
-    media_type = get_current_mode(request)
-    difficulty = request.session.get('difficulty', 'Normal')
+    manager = GameSessionManager(request)
+    media_type = manager.get_current_mode()
+    difficulty = manager.get('difficulty', 'Normal')
     data = animetix_service.load_data(media_type)
     
     if not data:

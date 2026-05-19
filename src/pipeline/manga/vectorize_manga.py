@@ -90,10 +90,14 @@ def run_vectorization():
                             vision_ids.append(m_id)
                             vision_images.append(img)
                             vision_metas.append(meta)
-                    except Exception: pass
-                
-                try: neo4j_manager.sync_media_to_graph(item, "Manga")
-                except: pass
+                    except Exception as e:
+                        print(f"⚠️ Error fetching image for {m_id}: {e}")
+                        pass
+
+                    try: neo4j_manager.sync_media_to_graph(item, "Manga")
+                    except Exception as e:
+                    print(f"⚠️ Neo4j Sync Error for {m_id}: {e}")
+                    pass
 
             # Exécution des Inférences
             if batch_texts:

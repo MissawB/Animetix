@@ -31,8 +31,22 @@ def latent_space_view(request):
 
 def submit_ai_feedback(request):
     if request.method == 'POST':
-        is_pos, f_type, context, output = request.POST.get('is_positive') == 'true', request.POST.get('type', 'general'), request.POST.get('context', ''), request.POST.get('output', '')
-        AIFeedback.objects.create(user=request.user if request.user.is_authenticated else None, feedback_type=f_type, input_context=context, output_text=output, is_positive=is_pos)
+        is_pos = request.POST.get('is_positive') == 'true'
+        f_type = request.POST.get('type', 'general')
+        
+        # Extract context with fallback (Priority: input_context -> context -> query)
+        context = request.POST.get('input_context') or request.POST.get('context') or request.POST.get('query', '')
+        
+        # Extract output with fallback (Priority: output_text -> output)
+        output = request.POST.get('output_text') or request.POST.get('output', '')
+        
+        AIFeedback.objects.create(
+            user=request.user if request.user.is_authenticated else None,
+            feedback_type=f_type,
+            input_context=context,
+            output_text=output,
+            is_positive=is_pos
+        )
         return render(request, 'animetix/partials/feedback_thanks.html')
     return redirect('index')
 

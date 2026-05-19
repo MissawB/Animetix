@@ -6,6 +6,7 @@ from typing import List, Dict
 from datasets import Dataset
 from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, Trainer
 from core.ports.inference_port import InferencePort
+from .prompt_manager import PromptManager
 
 logger = logging.getLogger("animetix.mlops")
 
@@ -13,8 +14,9 @@ class ModelDistillationPipeline:
     """
     Pipeline de Distillation : Entraîne un modèle étudiant (1B) à partir d'un enseignant (8B+).
     """
-    def __init__(self, teacher_engine: InferencePort):
+    def __init__(self, teacher_engine: InferencePort, prompt_manager: PromptManager):
         self.teacher = teacher_engine
+        self.prompt_manager = prompt_manager
 
     def generate_distillation_data(self, topics: List[str], count_per_topic: int = 10) -> List[Dict]:
         """
@@ -23,8 +25,8 @@ class ModelDistillationPipeline:
         synthetic_data = []
         for topic in topics:
             logger.info(f"🧠 Teacher generating knowledge for: {topic}...")
-            prompt = f"Explique en détail le concept de '{topic}' dans l'univers de l'anime. Donne des exemples précis."
-            explanation = self.teacher.generate(prompt, system_prompt="Tu es un professeur expert en culture Otaku.")
+            prompt, system_prompt = self.prompt_manager.get_prompt("distillation_explanation", topic=topic)
+            explanation = self.teacher.generate(prompt, system_prompt=system_prompt)
             
             synthetic_data.append({
                 "instruction": f"Explique moi {topic}.",

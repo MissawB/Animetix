@@ -5,6 +5,7 @@ from typing import List, Dict, Optional
 from core.ports.repository_port import RepositoryPort
 from .llm_service import LLMService
 from .rag.hybrid_index import HybridSearchIndex
+from .prompt_manager import PromptManager
 
 logger = logging.getLogger('animetix')
 
@@ -13,11 +14,12 @@ class AdvancedRAGService:
     Service RAG 2.0 combinant recherche hybride, ré-ordonnancement (Reranking)
     et vérification de cohérence (Self-RAG).
     """
-    def __init__(self, repository: RepositoryPort, llm_service: LLMService, neo4j_manager=None, reranker=None):
+    def __init__(self, repository: RepositoryPort, llm_service: LLMService, neo4j_manager=None, reranker=None, prompt_manager: PromptManager = None):
         self.repository = repository
         self.llm_service = llm_service
         self.neo4j_manager = neo4j_manager
         self.reranker = reranker
+        self.prompt_manager = prompt_manager or getattr(llm_service, 'prompt_manager', None)
         self._indices: Dict[str, HybridSearchIndex] = {}
 
     def _get_or_create_index(self, media_type: str) -> HybridSearchIndex:
@@ -78,15 +80,12 @@ class AdvancedRAGService:
             logger.info(f"Self-RAG: Context insufficient for query '{query}'")
             # Ici on pourrait ajouter une logique de recherche web fallback
             
-        prompt = f"Utilise le contexte suivant pour répondre précisément.\n\nCONTEXTE :\n{context}\n\nQUESTION : {query}"
-        return self.llm_service.inference_engine.generate(
-            prompt, 
-            system_prompt="Tu es un expert en media japonais utilisant le Contextual Retrieval pour fournir des réponses ultra-précises."
-        )
+        prompt, system_prompt = self.prompt_manager.get_prompt("advanced_rag_generate", context=context, query=query)
+        return self.llm_service.inference_engine.generate(prompt, system_prompt=system_prompt)
 
     def self_rag_verify(self, query: str, context: str) -> bool:
         """Vérifie si le contexte fourni permet de répondre à la question (évite les hallucinations)."""
-        prompt = f"Réponds par OUI ou NON : le contexte suivant est-il suffisant pour répondre à '{query}' ?\n\nCONTEXTE :\n{context}"
+        prompt, _ = self.prompt_manager.get_prompt("self_rag_verify", context=context, query=query)
         try:
             res = self.llm_service.inference_engine.generate(prompt)
             return "OUI" in res.upper()

@@ -66,7 +66,7 @@ class LLMService:
             raise InferenceError(f"AI Generation failed: {str(e)}")
 
     def generate_fusion_scenario(self, media_type: str, item1: Dict, item2: Dict, language: str, chaos_level: int = 50, universe_balance: int = 50, art_style: str = "Cyberpunk") -> str:
-        """Génère un synopsis de fusion avec des paramètres créatifs."""
+        """Génère un synopsis de fusion avec des paramètres créatifs via PromptManager."""
         balance_instruction = ""
         if universe_balance < 40:
             balance_instruction = f"L'univers de {item1['title']} doit dominer."
@@ -76,15 +76,20 @@ class LLMService:
             balance_instruction = "Les deux univers doivent être parfaitement équilibrés."
             
         chaos_instruction = "Garde un récit très logique et ancré dans le lore." if chaos_level < 30 else ("N'hésite pas à être abstrait et à briser le 4ème mur." if chaos_level > 70 else "Mélange les concepts de manière créative.")
-        prompt = f"""
-Crée un pitch de 3 lignes pour un crossover entre "{item1}" et "{item2}".
-INSTRUCTIONS CREATIVES:
-- Style Visuel Cible: {art_style} (Adapte le vocabulaire du pitch à ce style)
-- Équilibre: {balance_instruction}
-- Niveau de Chaos ({chaos_level}/100): {chaos_instruction}
-Réponds en {language}.
-"""
-        return self.generate(prompt, system_prompt="Tu es un scénariste expert en crossovers.", forbidden_terms=[item1, item2])
+        
+        prompt, system = self.prompt_manager.get_prompt(
+            "fusion_scenario", 
+            media_type=media_type,
+            item_a=item1['title'], 
+            item_b=item2['title'],
+            language=language,
+            art_style=art_style,
+            balance_instruction=balance_instruction,
+            chaos_level=chaos_level,
+            chaos_instruction=chaos_instruction
+        )
+        
+        return self.generate(prompt, system_prompt=system, forbidden_terms=[item1['title'], item2['title']])
 
     def generate_paradox_explanation(self, media_type: str, item_a: str, item_b: str, intruder: str) -> str:
         prompt = self.prompt_manager.get_prompt("paradox_explanation", media_type=media_type, item_a=item_a, item_b=item_b, intruder=intruder)

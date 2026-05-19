@@ -3,14 +3,16 @@ import json
 import time
 from typing import List, Dict, Optional
 from core.ports.inference_port import InferencePort
+from .prompt_manager import PromptManager
 
 class RagasEvalService:
     """
     Service d'évaluation automatisé inspiré par le framework RAGAS.
     Mesure mathématiquement la qualité du RAG (Faithfulness, Relevancy).
     """
-    def __init__(self, judge_engine: InferencePort):
+    def __init__(self, judge_engine: InferencePort, prompt_manager: PromptManager = None):
         self.judge_engine = judge_engine
+        self.prompt_manager = prompt_manager
 
     def evaluate_response(self, query: str, context: str, response: str) -> Dict[str, float]:
         """
@@ -44,31 +46,21 @@ class RagasEvalService:
 
     def _score_faithfulness(self, context: str, response: str) -> float:
         """Fidélité : La réponse est-elle supportée par le contexte ? (0.0 à 1.0)"""
-        prompt = f"""
-        MISSIONS :
-        1. Extrais les affirmations clés de la RÉPONSE.
-        2. Pour chaque affirmation, vérifie si elle est présente dans le CONTEXTE.
-        3. Calcule le ratio (affirmations supportées / total affirmations).
-        
-        CONTEXTE : {context[:2000]}
-        RÉPONSE : {response}
-        
-        Réponds UNIQUEMENT par un chiffre entre 0 et 1.
-        """
-        res = self.judge_engine.generate(prompt, system_prompt="Tu es un auditeur de vérité IA.")
+        prompt, system_prompt = self.prompt_manager.get_prompt("ragas_faithfulness_calc", context=context[:2000], response=response)
+        res = self.judge_engine.generate(prompt, system_prompt=system_prompt)
         try: return float(res.strip())
         except: return 0.5
 
     def _score_relevancy(self, query: str, response: str) -> float:
         """Pertinence : La réponse répond-elle directement à la question ?"""
-        prompt = f"Sur une échelle de 0 à 1, à quel point cette RÉPONSE est-elle pertinente pour la QUESTION : '{query}' ? RÉPONSE : {response}. Réponds UNIQUEMENT par le chiffre."
+        prompt, _ = self.prompt_manager.get_prompt("ragas_relevance_eval", query=query, response=response)
         res = self.judge_engine.generate(prompt)
         try: return float(res.strip())
         except: return 0.5
 
     def _score_precision(self, query: str, context: str) -> float:
         """Précision du contexte : Le contexte contient-il l'information nécessaire ?"""
-        prompt = f"Le CONTEXTE suivant contient-il la réponse à '{query}' ? {context[:1000]}. Réponds par 1 pour OUI, 0 pour NON."
+        prompt, _ = self.prompt_manager.get_prompt("ragas_faithfulness_eval", query=query, context=context)
         res = self.judge_engine.generate(prompt)
         try: return float(res.strip())
         except: return 0.0

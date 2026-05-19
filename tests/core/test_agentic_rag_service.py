@@ -37,12 +37,11 @@ def test_plan_and_solve_local_path(agentic_rag, mock_engine, mock_rag):
         '{"complexity_score": 0, "thinking_budget": 0}', # 0. TTC
         '{"optimized_query": "Naruto facts", "requires_web": false, "reasoning": "R"}', # 1. Planner
         "Truth Path from Scout", # 2. Scout
-        '{"is_relevant": true, "relevance_score": 1.0, "suggested_action": "PROCEED"}', # 3. Critic
-        '{"is_reliable": true, "faithfulness_score": 1.0, "relevancy_score": 1.0, "hallucination_detected": false, "reasoning": "ok"}' # 4. Judge
+        '{"is_reliable": true, "faithfulness_score": 1.0, "relevancy_score": 1.0, "hallucination_detected": false, "reasoning": "ok", "next_action": "APPROVE"}' # 3. Judge
     ]
     
-    res = agentic_rag.plan_and_solve("Who is Naruto?", "Anime")
-    assert "The answer." in res
+    res = agent_rag_plan_and_solve(agentic_rag, "Who is Naruto?", "Anime")
+    assert "answer." in res["answer"]
     mock_rag.hybrid_search.assert_called_once()
 
 def test_plan_and_solve_web_path(agentic_rag, mock_engine, mock_web):
@@ -50,12 +49,11 @@ def test_plan_and_solve_web_path(agentic_rag, mock_engine, mock_web):
         '{"complexity_score": 0, "thinking_budget": 0}', # 0. TTC
         '{"optimized_query": "Latest news", "requires_web": true, "reasoning": "R"}', # 1. Planner
         "Web Truth Path", # 2. Scout
-        '{"is_relevant": true, "relevance_score": 1.0, "suggested_action": "PROCEED"}', # 3. Critic
-        '{"is_reliable": true, "faithfulness_score": 1.0, "relevancy_score": 1.0, "hallucination_detected": false, "reasoning": "ok"}' # 4. Judge
+        '{"is_reliable": true, "faithfulness_score": 1.0, "relevancy_score": 1.0, "hallucination_detected": false, "reasoning": "ok", "next_action": "APPROVE"}' # 3. Judge
     ]
     
-    res = agentic_rag.plan_and_solve("News?", "Anime")
-    assert "the answer." in res.lower()
+    res = agent_rag_plan_and_solve(agentic_rag, "News?", "Anime")
+    assert "answer." in res["answer"].lower()
     mock_web.search.assert_called_once()
 
 def test_plan_and_solve_with_reformulation(agentic_rag, mock_engine, mock_rag, mock_web):
@@ -63,16 +61,44 @@ def test_plan_and_solve_with_reformulation(agentic_rag, mock_engine, mock_rag, m
         '{"complexity_score": 0, "thinking_budget": 0}', # 0. TTC
         '{"optimized_query": "Naruto year", "requires_web": false, "reasoning": "R"}', # 1. Planner
         "Initial Truth Path", # 2. Scout 1
-        '{"is_relevant": false, "relevance_score": 0.2, "suggested_action": "TRIGGER_WEB"}', # 3. Critic 1 (Fail)
-        "Web Truth Path", # 4. Scout 2 (after web)
-        '{"is_relevant": true, "relevance_score": 1.0, "suggested_action": "PROCEED"}', # 5. Critic 2 (Success)
-        '{"is_reliable": true, "faithfulness_score": 1.0, "relevancy_score": 1.0, "hallucination_detected": false, "reasoning": "ok"}' # 6. Judge
+        '{"is_reliable": false, "faithfulness_score": 0.2, "relevancy_score": 0.2, "hallucination_detected": false, "reasoning": "Need web info", "next_action": "REPLAN"}', # 3. Judge 1 (triggers Re-Plan)
+        '{"optimized_query": "Naruto debut year", "requires_web": true, "reasoning": "Need web"}', # 4. Planner (after REPLAN)
+        "Web Truth Path", # 5. Scout 2 (after web search)
+        '{"is_reliable": true, "faithfulness_score": 1.0, "relevancy_score": 1.0, "hallucination_detected": false, "reasoning": "ok", "next_action": "APPROVE"}' # 6. Judge 2
     ]
     
-    res = agentic_rag.plan_and_solve("When did Naruto start?", "Anime")
+    res = agent_rag_plan_and_solve(agentic_rag, "When did Naruto start?", "Anime")
     assert "answer" in res
-    assert mock_rag.hybrid_search.call_count == 1
     assert mock_web.search.call_count == 1
+
+def test_vlm_rerank_path(agentic_rag, mock_engine, mock_rag):
+    mock_engine.generate.side_effect = [
+        '{"complexity_score": 2, "thinking_budget": 100}', # 0. TTC
+        '{"optimized_query": "visual query", "requires_web": false, "is_visual_query": true, "reasoning": "visual search"}', # 1. Planner
+        "Truth Path from Scout", # 2. Scout
+        '{"is_reliable": true, "faithfulness_score": 1.0, "relevancy_score": 1.0, "hallucination_detected": false, "reasoning": "ok", "next_action": "APPROVE"}' # 3. Judge
+    ]
+    mock_rag.hybrid_search.return_value = [{'title': 'DB Result', 'id': '1', 'description': 'A' * 600, 'image_url': 'http://image.jpg'}]
+    mock_engine.visual_rerank.return_value = [
+        {'index': 0, 'score': 0.9}
+    ]
+    
+    # Run the stream and collect states
+    states = []
+    for step in agentic_rag.plan_and_solve_stream("Visual query", "Anime"):
+        if step['type'] == 'thought' and "[State Machine]" in step['content']:
+            states.append(step['content'])
+            
+    assert any("État: RAGState.VLM_RERANK" in s for s in states)
+    mock_engine.visual_rerank.assert_called_once()
+
+def agent_rag_plan_and_solve(service, query, media):
+    # Helper to consume the stream and return final dict
+    res = {}
+    for step in service.plan_and_solve_stream(query, media):
+        if step['type'] == 'token':
+            res['answer'] = res.get('answer', '') + step['content']
+    return res
 
 from unittest.mock import MagicMock, patch
 

@@ -1,13 +1,15 @@
 from typing import Dict, Optional
 import logging
 from ....ports.inference_port import InferencePort
+from ..prompt_manager import PromptManager
 
 logger = logging.getLogger('animetix.creative.fusion')
 
 class FusionDomainService:
     """Domain service for universe fusion operations."""
-    def __init__(self, inference_engine: InferencePort):
+    def __init__(self, inference_engine: InferencePort, prompt_manager: PromptManager):
         self.inference_engine = inference_engine
+        self.prompt_manager = prompt_manager
 
     def generate_fusion_image(self, item_a: Dict, item_b: Dict, art_style: str = "Cyberpunk") -> Optional[str]:
         """
@@ -17,7 +19,12 @@ class FusionDomainService:
         title_a = item_a.get('title') or item_a.get('name', 'A')
         title_b = item_b.get('title') or item_b.get('name', 'B')
         
-        prompt = f"High-quality fusion of {title_a} and {title_b} in {art_style} style. Cinematic lighting, highly detailed."
+        prompt, _ = self.prompt_manager.get_prompt(
+            "fusion_image", 
+            title_a=title_a, 
+            title_b=title_b, 
+            art_style=art_style
+        )
         
         try:
             # We assume the inference engine port might support image generation

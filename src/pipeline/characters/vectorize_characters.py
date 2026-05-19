@@ -89,10 +89,14 @@ def run_vectorization():
                         vision_ids.append(c_id)
                         vision_images.append(img)
                         vision_metas.append(meta)
-                except: pass
+                except Exception as e:
+                    print(f"⚠️ Error fetching image for {c_id}: {e}")
+                    pass
             
             try: neo4j_manager.sync_character_to_graph(item)
-            except: pass
+            except Exception as e:
+                print(f"⚠️ Neo4j Sync Error for {c_id}: {e}")
+                pass
 
         if batch_texts:
             embeddings = text_model.encode(batch_texts, convert_to_numpy=True).tolist()

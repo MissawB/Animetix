@@ -45,32 +45,286 @@ class BrainAPIAdapter(InferencePort):
             logger.error(f"BrainAPI Visual Similarity error: {e}")
         return 0.0
 
-    def get_image_embedding(self, image_data: bytes, model_id: Optional[str] = None) -> List[float]: raise NotImplementedError("get_image_embedding non implémentée")
-    def classify_image(self, image_data: bytes, candidate_labels: List[str], model_id: Optional[str] = None) -> Dict[str, float]: raise NotImplementedError("classify_image non implémentée")
-    def detect_objects(self, image_data: bytes, candidate_queries: List[str], model_id: Optional[str] = None) -> List[Dict]: raise NotImplementedError("detect_objects non implémentée")
-    def get_video_temporal_embeddings(self, video_data: bytes) -> List[Dict[str, Any]]: raise NotImplementedError("get_video_temporal_embeddings non implémentée")
-    def localize_video_actions(self, video_data: bytes, action_queries: List[str]) -> List[Dict[str, Any]]: raise NotImplementedError("localize_video_actions non implémentée")
-    def transform_image_to_anime(self, image_data: bytes, studio_style: str, prompt: str = "") -> str: raise NotImplementedError("transform_image_to_anime non implémentée")
-    def transform_video_to_anime(self, video_data: bytes, studio_style: str, prompt: str = "") -> str: raise NotImplementedError("transform_video_to_anime non implémentée")
-    def generate_soundscape(self, video_metadata: Dict[str, Any], prompt: Optional[str] = None) -> str: raise NotImplementedError("generate_soundscape non implémentée")
-    def clone_voice(self, text: str, reference_audio: bytes, language: str = "fr") -> bytes: raise NotImplementedError("clone_voice non implémentée")
-    def speech_to_speech(self, audio_input: bytes, system_prompt: str = "") -> bytes: raise NotImplementedError("speech_to_speech non implémentée")
-    def process_manga_page(self, image_data: bytes) -> Dict[str, Any]: raise NotImplementedError("process_manga_page non implémentée")
-    def inpaint_text_bubbles(self, image_data: bytes, text_placements: List[Dict]) -> str: raise NotImplementedError("inpaint_text_bubbles non implémentée")
-    def generate_image_description(self, image_data: bytes, prompt: str = "") -> str: raise NotImplementedError("generate_image_description non implémentée")
-    def get_diagnostics(self, prompt: str, completion: str) -> Dict[str, Any]: raise NotImplementedError("get_diagnostics non implémentée")
-    def calculate_uncertainty(self, prompt: str, completion: str) -> Dict[str, float]: raise NotImplementedError("calculate_uncertainty non implémentée")
-    def estimate_depth(self, image_data: bytes) -> bytes: raise NotImplementedError("estimate_depth non implémentée")
-    def generate_3d_scene(self, image_data: bytes, depth_map: bytes) -> Dict[str, Any]: raise NotImplementedError("generate_3d_scene non implémentée")
-    
+    def get_image_embedding(self, image_data: bytes, model_id: Optional[str] = None) -> List[float]:
+        if not self.brain_api_url: return []
+        try:
+            import base64
+            b64 = base64.b64encode(image_data).decode('utf-8')
+            res = requests.post(f"{self.brain_api_url}/vision/embedding", json={"image": b64, "model_id": model_id}, timeout=10)
+            if res.status_code == 200: return res.json().get("embedding", [])
+        except Exception as e:
+            logger.error(f"BrainAPI Image Embedding error: {e}")
+        return []
+
+    def detect_objects(self, image_data: bytes, candidate_queries: List[str], model_id: Optional[str] = None) -> List[Dict]:
+        if not self.brain_api_url: return []
+        try:
+            import base64
+            b64 = base64.b64encode(image_data).decode('utf-8')
+            res = requests.post(f"{self.brain_api_url}/vision/detect", json={
+                "image": b64, 
+                "candidate_labels": candidate_queries,
+                "model_id": model_id
+            }, timeout=20)
+            if res.status_code == 200: return res.json().get("objects", [])
+        except Exception as e:
+            logger.error(f"BrainAPI Object Detection error: {e}")
+        return []
+
+    def generate_image_description(self, image_data: bytes, prompt: str = "") -> str:
+        if not self.brain_api_url: return ""
+        try:
+            import base64
+            b64 = base64.b64encode(image_data).decode('utf-8')
+            res = requests.post(f"{self.brain_api_url}/vision/describe", json={
+                "image": b64, 
+                "prompt": prompt
+            }, timeout=30)
+            if res.status_code == 200: return res.json().get("description", "")
+        except Exception as e:
+            logger.error(f"BrainAPI Image Description error: {e}")
+        return ""
+
+    def estimate_depth(self, image_data: bytes) -> bytes:
+        if not self.brain_api_url: return b""
+        try:
+            import base64
+            b64 = base64.b64encode(image_data).decode('utf-8')
+            res = requests.post(f"{self.brain_api_url}/vision/depth", json={"image": b64}, timeout=20)
+            if res.status_code == 200:
+                return base64.b64decode(res.json().get("depth_b64", ""))
+        except Exception as e:
+            logger.error(f"BrainAPI Depth Estimation error: {e}")
+        return b""
+
     def visual_rerank(self, query: str, image_urls: List[str], system_prompt: str = "") -> List[Dict[str, Any]]:
-        raise NotImplementedError("visual_rerank non implémentée")
+        if not self.brain_api_url: return []
+        try:
+            res = requests.post(f"{self.brain_api_url}/vision/rerank", json={
+                "query": query, 
+                "image_urls": image_urls,
+                "system_prompt": system_prompt
+            }, timeout=30)
+            if res.status_code == 200: return res.json().get("reranked_items", [])
+        except Exception as e:
+            logger.error(f"BrainAPI Visual Rerank error: {e}")
+        return []
+
+    def classify_image(self, image_data: bytes, candidate_labels: List[str], model_id: Optional[str] = None) -> Dict[str, float]:
+        if not self.brain_api_url: return {}
+        try:
+            import base64
+            b64 = base64.b64encode(image_data).decode('utf-8')
+            res = requests.post(f"{self.brain_api_url}/vision/classify", json={
+                "image": b64, 
+                "candidate_labels": candidate_labels,
+                "model_id": model_id
+            }, timeout=20)
+            if res.status_code == 200: return res.json().get("labels", {})
+        except Exception as e:
+            logger.error(f"BrainAPI Image Classification error: {e}")
+        return {}
+
+    def get_video_temporal_embeddings(self, video_data: bytes) -> List[Dict[str, Any]]:
+        if not self.brain_api_url: return []
+        try:
+            import base64
+            b64 = base64.b64encode(video_data).decode('utf-8')
+            res = requests.post(f"{self.brain_api_url}/video/embeddings", json={"video": b64}, timeout=60)
+            if res.status_code == 200: return res.json().get("embeddings", [])
+        except Exception as e:
+            logger.error(f"BrainAPI Video Temporal Embeddings error: {e}")
+        return []
+
+    def localize_video_actions(self, video_data: bytes, action_queries: List[str]) -> List[Dict[str, Any]]:
+        if not self.brain_api_url: return []
+        try:
+            import base64
+            b64 = base64.b64encode(video_data).decode('utf-8')
+            res = requests.post(f"{self.brain_api_url}/video/localize", json={
+                "video": b64, 
+                "queries": action_queries
+            }, timeout=60)
+            if res.status_code == 200: return res.json().get("actions", [])
+        except Exception as e:
+            logger.error(f"BrainAPI Video Action Localization error: {e}")
+        return []
+    def transform_image_to_anime(self, image_data: bytes, studio_style: str, prompt: str = "") -> str:
+        if not self.brain_api_url: return ""
+        try:
+            import base64
+            b64 = base64.b64encode(image_data).decode('utf-8')
+            res = requests.post(f"{self.brain_api_url}/vision/transform/anime", json={
+                "image": b64, 
+                "studio_style": studio_style,
+                "prompt": prompt
+            }, timeout=45)
+            if res.status_code == 200: return res.json().get("image_url_or_b64", "")
+        except Exception as e:
+            logger.error(f"BrainAPI Image to Anime error: {e}")
+        return ""
+
+    def transform_video_to_anime(self, video_data: bytes, studio_style: str, prompt: str = "") -> str:
+        if not self.brain_api_url: return ""
+        try:
+            import base64
+            b64 = base64.b64encode(video_data).decode('utf-8')
+            res = requests.post(f"{self.brain_api_url}/video/transform/anime", json={
+                "video": b64, 
+                "studio_style": studio_style,
+                "prompt": prompt
+            }, timeout=120)
+            if res.status_code == 200: return res.json().get("video_url_or_b64", "")
+        except Exception as e:
+            logger.error(f"BrainAPI Video to Anime error: {e}")
+        return ""
+
+    def generate_soundscape(self, video_metadata: Dict[str, Any], prompt: Optional[str] = None) -> str:
+        if not self.brain_api_url: return ""
+        try:
+            res = requests.post(f"{self.brain_api_url}/audio/generate/soundscape", json={
+                "video_metadata": video_metadata,
+                "prompt": prompt
+            }, timeout=30)
+            if res.status_code == 200: return res.json().get("audio_url_or_b64", "")
+        except Exception as e:
+            logger.error(f"BrainAPI Soundscape Generation error: {e}")
+        return ""
+    def clone_voice(self, text: str, reference_audio: bytes, language: str = "fr") -> bytes:
+        if not self.brain_api_url: return b""
+        try:
+            import base64
+            b64 = base64.b64encode(reference_audio).decode('utf-8')
+            res = requests.post(f"{self.brain_api_url}/audio/clone-voice", json={
+                "text": text, 
+                "reference_audio": b64,
+                "language": language
+            }, timeout=30)
+            if res.status_code == 200: return base64.b64decode(res.json().get("audio_b64", ""))
+        except Exception as e:
+            logger.error(f"BrainAPI Voice Cloning error: {e}")
+        return b""
+
+    def speech_to_speech(self, audio_input: bytes, system_prompt: str = "") -> bytes:
+        if not self.brain_api_url: return b""
+        try:
+            import base64
+            b64 = base64.b64encode(audio_input).decode('utf-8')
+            res = requests.post(f"{self.brain_api_url}/audio/speech-to-speech", json={
+                "audio": b64, 
+                "system_prompt": system_prompt
+            }, timeout=30)
+            if res.status_code == 200: return base64.b64decode(res.json().get("audio_b64", ""))
+        except Exception as e:
+            logger.error(f"BrainAPI Speech-to-Speech error: {e}")
+        return b""
+    def process_manga_page(self, image_data: bytes) -> Dict[str, Any]:
+        if not self.brain_api_url: return {}
+        try:
+            import base64
+            b64 = base64.b64encode(image_data).decode('utf-8')
+            res = requests.post(f"{self.brain_api_url}/vision/manga/process", json={"image": b64}, timeout=30)
+            if res.status_code == 200: return res.json()
+        except Exception as e:
+            logger.error(f"BrainAPI Manga Process error: {e}")
+        return {}
+
+    def translate_manga_page(self, image_data: bytes, target_lang: str = "Français") -> Dict[str, Any]:
+        if not self.brain_api_url: return {}
+        try:
+            import base64
+            b64 = base64.b64encode(image_data).decode('utf-8')
+            res = requests.post(f"{self.brain_api_url}/vision/manga/translate", json={"image": b64, "target_lang": target_lang}, timeout=60)
+            if res.status_code == 200: return res.json()
+        except Exception as e:
+            logger.error(f"BrainAPI Manga Translate error: {e}")
+        return {}
+    def inpaint_text_bubbles(self, image_data: bytes, text_placements: List[Dict]) -> str:
+        if not self.brain_api_url: return ""
+        try:
+            import base64
+            b64 = base64.b64encode(image_data).decode('utf-8')
+            res = requests.post(f"{self.brain_api_url}/vision/manga/inpaint", json={
+                "image": b64, 
+                "text_placements": text_placements
+            }, timeout=30)
+            if res.status_code == 200: return res.json().get("image_url_or_b64", "")
+        except Exception as e:
+            logger.error(f"BrainAPI Manga Inpaint error: {e}")
+        return ""
+    def get_diagnostics(self, prompt: str, completion: str) -> Dict[str, Any]:
+        if not self.brain_api_url: return {}
+        try:
+            res = requests.post(f"{self.brain_api_url}/diagnostics", json={
+                "prompt": prompt, 
+                "completion": completion
+            }, timeout=10)
+            if res.status_code == 200: return res.json().get("diagnostics", {})
+        except Exception as e:
+            logger.error(f"BrainAPI Diagnostics error: {e}")
+        return {}
+
+    def calculate_uncertainty(self, prompt: str, completion: str) -> Dict[str, float]:
+        if not self.brain_api_url: return {}
+        try:
+            res = requests.post(f"{self.brain_api_url}/uncertainty", json={
+                "prompt": prompt, 
+                "completion": completion
+            }, timeout=10)
+            if res.status_code == 200: return res.json().get("uncertainty_metrics", {})
+        except Exception as e:
+            logger.error(f"BrainAPI Uncertainty calculation error: {e}")
+        return {}
+    def generate_3d_scene(self, image_data: bytes, depth_map: bytes) -> Dict[str, Any]:
+        if not self.brain_api_url: return {}
+        try:
+            import base64
+            img_b64 = base64.b64encode(image_data).decode('utf-8')
+            depth_b64 = base64.b64encode(depth_map).decode('utf-8')
+            res = requests.post(f"{self.brain_api_url}/vision/generate-3d", json={
+                "image": img_b64, 
+                "depth_map": depth_b64
+            }, timeout=60)
+            if res.status_code == 200: return res.json().get("scene_data", {})
+        except Exception as e:
+            logger.error(f"BrainAPI 3D Scene Generation error: {e}")
+        return {}
         
     def moderate_content(self, text: str, categories: List[str]) -> Dict[str, Any]:
-        raise NotImplementedError("moderate_content not implemented for BrainAPIAdapter")
+        if not self.brain_api_url: return {}
+        try:
+            res = requests.post(f"{self.brain_api_url}/moderate", json={
+                "text": text, 
+                "categories": categories
+            }, timeout=10)
+            if res.status_code == 200: return res.json().get("moderation", {})
+        except Exception as e:
+            logger.error(f"BrainAPI Moderation error: {e}")
+        return {}
         
     def get_multimodal_late_interaction(self, image_data: bytes) -> List[List[float]]:
-        raise NotImplementedError("get_multimodal_late_interaction non implémentée")
+        if not self.brain_api_url: return []
+        try:
+            import base64
+            b64 = base64.b64encode(image_data).decode('utf-8')
+            res = requests.post(f"{self.brain_api_url}/vision/late-interaction", json={"image": b64}, timeout=20)
+            if res.status_code == 200: return res.json().get("embeddings", [])
+        except Exception as e:
+            logger.error(f"BrainAPI Multimodal Late Interaction error: {e}")
+        return []
+
+    
+    def generate_image(self, prompt: str, style: str = "") -> str:
+        if not self.brain_api_url: return ""
+        try:
+            res = requests.post(f"{self.brain_api_url}/vision/generate", json={
+                "prompt": prompt, 
+                "style": style
+            }, timeout=45)
+            if res.status_code == 200: return res.json().get("image_url_or_b64", "")
+        except Exception as e:
+            logger.error(f"BrainAPI Image Generation error: {e}")
+        return ""
 
     def health_check(self) -> dict:
         if not self.brain_api_url: return {"status": "offline", "reason": "No URL"}

@@ -157,49 +157,5 @@
     .transition-hover:hover { transform: scale(1.02); filter: brightness(1.1); }
 </style>
 
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // Logic pour ajout manuel de titres
-        const setupManual = (inputId, listId, color, name) => {
-            const input = document.getElementById(inputId);
-            const list = document.getElementById(listId);
-            const btn = document.getElementById('btn-add-' + color);
-            btn.onclick = () => {
-                const val = input.value.trim();
-                if (!val) return;
-                const span = document.createElement('span');
-                span.className = `badge bg-${color} bg-opacity-10 text-${color} p-2 rounded-3 d-flex align-items-center gap-2`;
-                span.innerHTML = `${val}<input type="hidden" name="${name}" value="${val}"><i class="bi bi-x-circle-fill cursor-pointer" onclick="this.parentElement.remove()"></i>`;
-                list.appendChild(span);
-                input.value = '';
-            };
-        };
-
-        // Logic pour Select (Genres/Tags)
-        const setupSelect = (selectId, listId, badgeColor, name) => {
-            const select = document.getElementById(selectId);
-            const list = document.getElementById(listId);
-            select.onchange = () => {
-                const val = select.value;
-                if (!val) return;
-                // Éviter les doublons
-                if (list.querySelector(`input[value="${val}"]`)) return;
-                
-                const span = document.createElement('span');
-                span.className = `badge bg-${badgeColor} text-white p-2 rounded-3 d-flex align-items-center gap-2`;
-                span.innerHTML = `${val}<input type="hidden" name="${name}" value="${val}"><i class="bi bi-x-circle-fill cursor-pointer" onclick="this.parentElement.remove()"></i>`;
-                list.appendChild(span);
-                select.value = '';
-            };
-        };
-
-        setupManual('white-input', 'white-list', 'success', 'whitelist');
-        setupManual('black-input', 'black-list', 'danger', 'blacklist');
-        
-        setupSelect('genre-white-select', 'genres-white-list', 'success', 'genres_white');
-        setupSelect('genre-black-select', 'genres-black-list', 'danger', 'genres_black');
-        setupSelect('tag-white-select', 'tags-white-list', 'primary', 'tags_white');
-        setupSelect('tag-black-select', 'tags-black-list', 'dark', 'tags_black');
-    });
-</script>
+<script src="{% static 'animetix/js/custom_config.js' %}"></script>
 {% endblock %}

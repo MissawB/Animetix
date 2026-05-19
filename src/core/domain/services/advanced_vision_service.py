@@ -1,7 +1,7 @@
 import os
 import requests
 import numpy as np
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 from core.ports.inference_port import InferencePort
 
 class AdvancedVisionService:
@@ -59,6 +59,14 @@ class AdvancedVisionService:
 
     def get_character_face_embedding(self, image_data: bytes) -> List[float]:
         return self.inference_engine.get_image_embedding(image_data, model_id=self.face_reid_model)
+
+    def translate_manga_page(self, image_data: bytes, target_lang: str = "Français") -> Dict[str, Any]:
+        """Orchestre la traduction complète d'une page de manga."""
+        return self.inference_engine.translate_manga_page(image_data, target_lang=target_lang)
+
+    def process_manga_page(self, image_data: bytes) -> Dict[str, Any]:
+        """Détecte et nettoie les bulles d'une page de manga."""
+        return self.inference_engine.process_manga_page(image_data)
 
     def calculate_visual_resemblance(self, image_a: bytes, image_b: bytes) -> float:
         """Calcule la similarité cosinus entre deux images."""

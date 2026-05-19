@@ -32,25 +32,57 @@ mock_container_instance.llm_service = MagicMock()
 mock_container_instance.catalog_service = MagicMock()
 mock_container_instance.blind_test_service = MagicMock()
 mock_container_instance.cover_test_service = MagicMock()
+mock_container_instance.game_service = MagicMock()
 
-# Setup default returns for services
-mock_container_instance.catalog_service.load_data.return_value = {'titles': ['Naruto'], 'lookup': [], 'title_to_full_data': {}}
+# Setup default returns for services (MUST be serializable types for E2E tests session)
+mock_container_instance.catalog_service.load_data.return_value = {
+    'titles': ['Naruto'], 
+    'lookup': [{'title': 'Naruto', 'id': '1'}], 
+    'title_to_full_data': {'Naruto': {'title': 'Naruto', 'id': '1'}},
+    'title_to_index': {'Naruto': 0}
+}
 mock_container_instance.blind_test_service.get_random_theme.return_value = {'anime_title': 'A'}
 mock_container_instance.cover_test_service.get_random_cover.return_value = {'manga_title': 'M'}
+mock_container_instance.game_service.select_secret.return_value = "Naruto"
+mock_container_instance.game_service.select_secret_custom.return_value = "Naruto"
 
-mock_container_module = MagicMock()
-mock_container_module.get_container.return_value = mock_container_instance
-sys.modules['src.backend.animetix.containers'] = mock_container_module
-sys.modules['animetix.containers'] = mock_container_module
+# Patch global get_container
+@pytest.fixture(autouse=True)
+def patch_get_container(mocker):
+    # Force import to ensure attributes exist
+    import animetix.containers
+    import animetix.services
+    try:
+        import animetix.views.common
+    except ImportError:
+        pass
+
+    # Pour les tests E2E, on veut éviter les MagicMocks qui polluent la session Django
+    mocker.patch('animetix.containers.get_container', return_value=mock_container_instance)
+    mocker.patch('animetix.services.get_container', return_value=mock_container_instance)
+    mocker.patch('animetix.tasks.get_container', return_value=mock_container_instance)
+    
+    # Try to patch views if they are reachable, otherwise skip (core tests don't need them)
+    try:
+        from animetix.views import common
+        mocker.patch.object(common, 'get_container', return_value=mock_container_instance)
+        
+        from animetix.services import AnimetixService
+        mock_service = MagicMock(spec=AnimetixService)
+        mock_service.load_data = mock_container_instance.catalog_service.load_data
+        mock_service.game_service = mock_container_instance.game_service
+        
+        mocker.patch.object(common, 'animetix_service', mock_service)
+    except (ImportError, AttributeError):
+        pass
+    
+    return mock_container_instance
 
 # --- 2. SIMPLE FIXTURES ---
 @pytest.fixture(autouse=True)
-def mock_container(mocker):
+def mock_container(patch_get_container):
     """Fixture to provide access to the mock container in tests."""
-    # On reset le mock pour chaque test pour éviter les fuites de state
-    # Mais attention à ne pas supprimer les return_value configurés ci-dessus
-    # mock_container_instance.reset_mock() 
-    return mock_container_instance
+    return patch_get_container
 
 @pytest.fixture
 def mock_animetix_service(mock_container):

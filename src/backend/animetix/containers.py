@@ -124,7 +124,7 @@ class Container:
             VllmAdapter(api_base=os.getenv("VLLM_API_BASE", "http://vllm:8000/v1"), model_name="meta-llama/Llama-3-8B-Instruct"),
             self.gguf_adapter,
             BrainAPIAdapter(brain_api_url=os.getenv("BRAIN_API_URL", ""))
-        ]))
+        ], obs_service=self.obs_service))
 
     @property
     def reranker(self):

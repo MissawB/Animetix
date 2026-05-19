@@ -1,4 +1,5 @@
 import pytest
+import json
 from unittest.mock import MagicMock
 from core.domain.services.guardrail_service import GuardrailService, RedTeamingAgent
 
@@ -7,28 +8,58 @@ def mock_engine():
     return MagicMock()
 
 @pytest.fixture
-def guardrail_service(mock_engine):
-    return GuardrailService(inference_engine=mock_engine)
+def mock_prompt_manager():
+    pm = MagicMock()
+    pm.get_prompt.return_value = ("Moderation Prompt", "System Prompt")
+    return pm
 
 @pytest.fixture
-def red_team_agent(mock_engine):
-    return RedTeamingAgent(inference_engine=mock_engine)
+def guardrail_service(mock_engine, mock_prompt_manager):
+    return GuardrailService(inference_engine=mock_engine, prompt_manager=mock_prompt_manager)
 
-def test_validate_input(guardrail_service, mock_engine):
-    mock_engine.moderate_content.return_value = {"is_safe": True}
+@pytest.fixture
+def red_team_agent(mock_engine, mock_prompt_manager):
+    return RedTeamingAgent(inference_engine=mock_engine, prompt_manager=mock_prompt_manager)
+
+def test_validate_input_native(guardrail_service, mock_engine):
+    # Native moderation returns a result with detected_categories
+    mock_engine.moderate_content.return_value = {"is_safe": False, "detected_categories": ["TOXICITY"]}
     res = guardrail_service.validate_input("Hello")
-    assert res["is_safe"] is True
+    assert res["is_safe"] is False
+    assert "TOXICITY" in res["detected_categories"]
     mock_engine.moderate_content.assert_called_once()
 
-def test_validate_output_safe(guardrail_service, mock_engine):
+def test_validate_input_llm_fallback(guardrail_service, mock_engine, mock_prompt_manager):
+    # Native moderation returns a stub (True without categories)
     mock_engine.moderate_content.return_value = {"is_safe": True}
+    mock_engine.generate.return_value = json.dumps({
+        "is_safe": False, 
+        "unsafe_categories": ["HATE_SPEECH"],
+        "action": "block"
+    })
+    
+    res = guardrail_service.validate_input("User input")
+    
+    assert res["is_safe"] is False
+    assert "HATE_SPEECH" in res["unsafe_categories"]
+    mock_engine.generate.assert_called_once()
+
+def test_validate_output_safe(guardrail_service, mock_engine):
+    mock_engine.moderate_content.return_value = {"is_safe": True, "unsafe_categories": []}
     res = guardrail_service.validate_output("Safe response")
     assert res["is_safe"] is True
 
-def test_validate_output_unsafe_spoiler(guardrail_service, mock_engine):
-    mock_engine.moderate_content.return_value = {"is_safe": False, "unsafe_categories": ["SPOILER"]}
+def test_validate_output_unsafe_spoiler_llm(guardrail_service, mock_engine, mock_prompt_manager):
+    # Native moderation fails to find anything, LLM finds spoiler
+    mock_engine.moderate_content.return_value = None
+    mock_engine.generate.return_value = json.dumps({
+        "is_safe": False, 
+        "unsafe_categories": ["SPOILER"],
+        "action": "mask"
+    })
+    
     res = guardrail_service.validate_output("Dumbledore dies")
-    assert res["action"] == "MASK_CONTENT"
+    assert res["action"] == "mask"
     assert "spoilers" in res["warning"]
 
 def test_generate_adversarial_queries(red_team_agent, mock_engine):

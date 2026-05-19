@@ -202,38 +202,8 @@
     </div>
 </div>
 
-<script>
-function setPlayers(n) {
-    document.getElementById('num_players_input').value = n;
-    document.querySelectorAll('.player-btn').forEach(btn => btn.classList.remove('active'));
-    document.getElementById('p-btn-' + n).classList.add('active');
-}
+{% endblock %}
 
-function setDiff(val) {
-    fetch(`/switch_diff/${val}/`).then(() => window.location.reload());
-}
-
-function switchTab(mode) {
-    const localTab = document.getElementById('tab-local');
-    const onlineTab = document.getElementById('tab-online');
-    const localContent = document.getElementById('content-local');
-    const onlineContent = document.getElementById('content-online');
-
-    if (mode === 'local') {
-        localTab.classList.add('active');
-        localTab.classList.remove('opacity-40');
-        onlineTab.classList.remove('active');
-        onlineTab.classList.add('opacity-40');
-        localContent.classList.remove('hidden');
-        onlineContent.classList.add('hidden');
-    } else {
-        onlineTab.classList.add('active');
-        onlineTab.classList.remove('opacity-40');
-        localTab.classList.remove('active');
-        localTab.classList.add('opacity-40');
-        onlineContent.classList.remove('hidden');
-        localContent.classList.add('hidden');
-    }
-}
-</script>
+{% block extra_js %}
+<script src="{% static 'animetix/js/undercover_setup.js' %}"></script>
 {% endblock %}

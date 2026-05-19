@@ -90,6 +90,7 @@ class AgenticRAGService:
         self.synthesizer = ResponseSynthesizer(inference_engine, prompt_manager)
         self.judge = ResponseJudge(self.llm_service, prompt_manager, obs_service)
         self.scout = ScoutAgent(self.llm_service, prompt_manager, neo4j_manager)
+        self.debate_manager = debate_manager or DebateManager(self.llm_service, prompt_manager)
 
     def plan_and_solve(self, query: str, media_type: str, user_id: Optional[str] = None) -> str:
         """Wrapper non-streaming. Retourne uniquement la réponse finale."""

@@ -133,13 +133,105 @@ function initNotifications(isAuthenticated) {
 
     notificationSocket.onmessage = function(e) {
         const data = JSON.parse(e.data);
+        
+        // Update counter if badge exists
+        const badge = document.querySelector('.nav-link-manga .badge.bg-danger');
+        if (badge) {
+            const currentCount = parseInt(badge.innerText) || 0;
+            badge.innerText = currentCount + 1;
+            badge.classList.add('animate__animated', 'animate__pulse');
+            setTimeout(() => badge.classList.remove('animate__animated', 'animate__pulse'), 1000);
+        } else {
+            // If badge doesn't exist, we might need to create it or just ignore for now
+            // (Assumes the page is reloaded or the badge is present in base.html)
+        }
+
         if (data.type === 'achievement_unlocked') {
             showAchievementToast(data.achievement);
         } else if (data.type === 'friend_achievement' || data.type === 'boss_alert') {
             showSocialToast(data);
+        } else if (['info', 'duel', 'system', 'social'].includes(data.type)) {
+            showGenericToast(data);
         }
     };
 }
+
+function showGenericToast(data) {
+    const container = document.querySelector('.toast-container');
+    if (!container) return;
+    
+    const icons = { 'info': 'ℹ️', 'duel': '⚔️', 'system': '⚙️', 'social': '👤' };
+    const colors = { 'info': '#3b82f6', 'duel': '#ef4444', 'system': '#64748b', 'social': '#a855f7' };
+    
+    const icon = icons[data.type] || '🔔';
+    const color = colors[data.type] || '#fdb913';
+    
+    // Check for DPO data (if sent from backend)
+    let feedbackHtml = '';
+    if (data.dpo_context && data.dpo_output) {
+        feedbackHtml = `
+            <div class="mt-3 pt-3 border-t border-white/5 flex items-center justify-between">
+                <span class="text-[8px] font-black opacity-40 italic uppercase">Qualité IA ?</span>
+                <div class="flex gap-2">
+                    <button onclick="submitRLHF('toast', '${data.dpo_context}', '${data.dpo_output}', true, this)" class="btn btn-xs btn-link text-success p-0"><i class="bi bi-hand-thumbs-up"></i></button>
+                    <button onclick="submitRLHF('toast', '${data.dpo_context}', '${data.dpo_output}', false, this)" class="btn btn-xs btn-link text-danger p-0"><i class="bi bi-hand-thumbs-down"></i></button>
+                </div>
+            </div>
+        `;
+    }
+
+    const toastHtml = `
+        <div class="toast show animate__animated animate__fadeInRight shadow-2xl" role="alert" style="background: rgba(15,15,26,0.95); border: 2px solid ${color}; border-radius: 1rem; margin-bottom: 10px; min-width: 300px;">
+            <div class="toast-header bg-transparent text-white border-b border-white/5 p-3">
+                <span class="text-xl me-3">${icon}</span>
+                <strong class="me-auto manga-font tracking-tighter" style="color: ${color}">${data.title || 'NOTIFICATION'}</strong>
+                <small class="text-white opacity-50">${data.created_at || ''}</small>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body p-4 text-white">
+                <p class="mb-2 text-sm opacity-90">${data.message}</p>
+                ${data.link ? `<a href="${data.link}" class="btn btn-sm w-100 mt-2 fw-black italic text-[10px]" style="background: ${color}; color: white;">VOIR PLUS</a>` : ''}
+                ${feedbackHtml}
+            </div>
+        </div>
+    `;
+    const div = document.createElement('div');
+    div.innerHTML = toastHtml;
+    container.appendChild(div.firstChild);
+    window.sounds.play('reveal');
+    
+    // Auto-remove unless it's a critical system message or has DPO
+    if (!data.dpo_context) {
+        setTimeout(() => {
+            const toast = Array.from(container.querySelectorAll('.toast')).find(t => t.innerText.includes(data.message));
+            if (toast) toast.remove();
+        }, 8000);
+    }
+}
+
+// Global HLHF submitter
+window.submitRLHF = function(type, context, output, isPositive, element) {
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    const body = new FormData();
+    body.append('type', type);
+    body.append('context', context);
+    body.append('output', output);
+    body.append('is_positive', isPositive);
+    if (csrftoken) body.append('csrfmiddlewaretoken', csrftoken);
+
+    fetch('/feedback/ai/', {
+        method: 'POST',
+        body: body,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    }).then(res => {
+        if (res.ok) {
+            if (element) {
+                const parent = element.parentElement;
+                parent.innerHTML = '<span class="text-[10px] text-success manga-font animate__animated animate__pulse">MERCI !</span>';
+            }
+        }
+    });
+};
 
 function showSocialToast(data) {
     const container = document.querySelector('.toast-container');

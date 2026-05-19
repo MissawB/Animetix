@@ -218,118 +218,18 @@
             <button class="bg-yellow-400 hover:bg-yellow-500 text-black px-16 py-6 rounded-full font-black italic manga-font text-3xl shadow-[0_20px_50px_rgba(253,185,19,0.4)] transition-all hover:scale-110 active:scale-95" onclick="closeWinOverlay()">
                 VOIR LES DOSSIERS
             </button>
-        </div>
-    </div>
-</div>
+            </div>
+            </div>
+            </div>
+
+<script type="application/json" id="undercover-config">
+{
+    "numPlayers": {{ num_players|default:0 }}
+}
+</script>
 
 {% endblock %}
 
 {% block extra_js %}
-<script>
-    let activeCivils = {{ players|length }} - 1;
-    let activeUndercovers = 1;
-    let pendingElimination = null;
-    let gameOver = false;
-
-    const eliminationOverlay = document.getElementById('elimination-overlay');
-    const winOverlay = document.getElementById('win-overlay');
-
-    function toggleCard(id) {
-        if (gameOver) return;
-        document.getElementById(`agent-${id}`).classList.toggle('is-flipped');
-    }
-
-    function promptElimination(id, role) {
-        if (gameOver) return;
-        
-        // Anti-misclick security: Check if card is flipped (verso)
-        const agentInner = document.getElementById(`agent-${id}`);
-        if (agentInner.classList.contains('is-flipped')) return;
-
-        pendingElimination = { id, role };
-        document.getElementById('overlay-target-id').innerText = id;
-
-        // Show Overlay
-        eliminationOverlay.classList.remove('hidden');
-        eliminationOverlay.classList.add('flex');
-    }
-
-    function closeEliminationOverlay() {
-        eliminationOverlay.classList.add('hidden');
-        eliminationOverlay.classList.remove('flex');
-        pendingElimination = null;
-    }
-
-    document.getElementById('overlay-confirm-btn').addEventListener('click', () => {
-        if (!pendingElimination) return;
-        executeElimination(pendingElimination.id, pendingElimination.role);
-        closeEliminationOverlay();
-    });
-
-    function executeElimination(id, role) {
-        const agent = document.getElementById(`agent-${id}`);
-        const stamp = document.getElementById(`stamp-${id}`);
-
-        agent.classList.add('eliminated');
-        stamp.innerText = role.toUpperCase();
-        stamp.style.color = role === 'Civil' ? '#22c55e' : '#ef4444';
-        stamp.style.borderColor = role === 'Civil' ? '#22c55e' : '#ef4444';
-
-        if (role === 'Undercover') {
-            activeUndercovers--;
-            finishGame(true);
-        } else {
-            activeCivils--;
-            if (activeUndercovers >= activeCivils) {
-                finishGame(false);
-            }
-        }
-    }
-
-    function finishGame(victory) {
-        gameOver = true;
-        const titleText = victory ? "VICTOIRE DES CIVILS" : "VICTOIRE UNDERCOVER";
-        const msgText = victory ? "L'agent infiltré a été démasqué." : "Le système a été totalement corrompu.";
-        const emojiText = victory ? "🏆" : "💀";
-
-        const card = document.getElementById('win-card');
-        const title = document.getElementById('win-title');
-
-        // Update Overlay Style
-        if (victory) {
-            card.classList.add('border-green-500', 'bg-green-950/20');
-            card.style.boxShadow = "0 0 100px rgba(34, 197, 94, 0.3)";
-            title.style.color = "#22c55e";
-        } else {
-            card.classList.add('border-red-600', 'bg-red-950/20');
-            card.style.boxShadow = "0 0 100px rgba(220, 38, 38, 0.3)";
-            title.style.color = "#ef4444";
-        }
-
-        document.getElementById('win-title').innerText = titleText;
-        document.getElementById('win-msg').innerText = msgText;
-        document.getElementById('win-emoji').innerText = emojiText;
-
-        setTimeout(() => {
-            winOverlay.classList.remove('hidden');
-            winOverlay.classList.add('flex');
-            document.getElementById('final-results').classList.remove('hidden');
-        }, 800);
-    }
-
-    function closeWinOverlay() {
-        winOverlay.classList.add('hidden');
-        winOverlay.classList.remove('flex');
-        window.scrollTo({ 
-            top: document.getElementById('final-results').offsetTop - 50, 
-            behavior: 'smooth' 
-        });
-    }
-
-    function triggerAbort() {
-        if(confirm("Confirmer l'abandon de la mission ?")) {
-            finishGame(false);
-        }
-    }
-</script>
+<script src="{% static 'animetix/js/undercover_party.js' %}"></script>
 {% endblock %}

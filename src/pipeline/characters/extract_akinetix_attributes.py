@@ -95,7 +95,9 @@ def run_extraction():
         try:
             with open(OUTPUT_FILE, 'r', encoding='utf-8') as f:
                 attr_db = json.load(f)
-        except: pass
+        except Exception as e:
+            print(f"⚠️ Erreur lors du chargement de {OUTPUT_FILE}: {e}")
+            pass
 
     # Filtrer les personnages qui ont déjà des attributs
     chars_to_process = [c for c in db if str(c['id']) not in attr_db]

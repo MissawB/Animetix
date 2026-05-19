@@ -40,7 +40,9 @@ def fetch_jikan_recommendations(mal_id, media_type='anime'):
             time.sleep(10)
             return fetch_jikan_recommendations(mal_id, media_type)
         return []
-    except: return []
+    except Exception as e:
+        print(f"⚠️ Error fetching recommendations for {mal_id}: {e}")
+        return []
 
 def enrich_media(input_file, output_file, media_type='anime'):
     if not os.path.exists(input_file):
@@ -55,7 +57,9 @@ def enrich_media(input_file, output_file, media_type='anime'):
         try:
             with open(output_file, 'r', encoding='utf-8') as f:
                 enrichment_data = json.load(f)
-        except: pass
+        except Exception as e:
+            print(f"⚠️ Erreur lors du chargement de {output_file}: {e}")
+            pass
 
     print(f"🚀 Enriching {len(data)} {media_type}s using Jikan...")
     
@@ -118,7 +122,9 @@ def enrich_characters(input_file, output_file):
         try:
             with open(output_file, 'r', encoding='utf-8') as f:
                 enrichment_data = json.load(f)
-        except: pass
+        except Exception as e:
+            print(f"⚠️ Erreur lors du chargement de {output_file}: {e}")
+            pass
 
     print(f"🚀 Enriching {len(data)} characters using Jikan...")
     

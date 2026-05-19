@@ -3,6 +3,7 @@ import ast
 import traceback
 from typing import Dict, Any
 from core.ports.inference_port import InferencePort
+from .prompt_manager import PromptManager
 
 logger = logging.getLogger("animetix.agent")
 
@@ -10,8 +11,9 @@ class DynamicToolAgent:
     """
     Implémentation d'un Agent capable de créer ses propres outils.
     """
-    def __init__(self, inference_engine: InferencePort):
+    def __init__(self, inference_engine: InferencePort, prompt_manager: PromptManager):
         self.inference_engine = inference_engine
+        self.prompt_manager = prompt_manager
 
     def build_and_execute_tool(self, api_documentation: str, task: str) -> Dict[str, Any]:
         """
@@ -21,23 +23,13 @@ class DynamicToolAgent:
 
         # ... (rest of logic)
 
-        prompt = f"""
-        Voici la documentation d'une API :
-        {api_documentation}
+        prompt, system = self.prompt_manager.get_prompt(
+            "dynamic_tool_builder", 
+            api_documentation=api_documentation, 
+            task=task
+        )
         
-        TA TÂCHE : {task}
-        
-        MISSION :
-        Écris un script Python valide qui accomplit cette tâche en interrogeant l'API.
-        Le script DOIT :
-        1. Importer `requests`
-        2. Définir une fonction `execute_tool()` qui retourne un dictionnaire Python avec les résultats.
-        3. Ne faire aucun appel bloquant (input, etc.)
-        
-        Renvoie UNIQUEMENT le bloc de code Python (sans markdown ni explications).
-        """
-        
-        generated_code = self.inference_engine.generate(prompt, system_prompt="Tu es un Ingénieur Logiciel Senior.")
+        generated_code = self.inference_engine.generate(prompt, system_prompt=system)
         
         # Nettoyage rudimentaire du markdown si le modèle l'a tout de même inclus
         if "```python" in generated_code:

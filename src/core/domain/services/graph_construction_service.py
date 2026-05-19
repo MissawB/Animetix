@@ -2,38 +2,25 @@ import orjson
 import logging
 from typing import Dict, List
 from ...ports.inference_port import InferencePort
+from .prompt_manager import PromptManager
 
 logger = logging.getLogger("animetix.graph")
 
 class KnowledgeGraphConstructionService:
-    def __init__(self, inference_engine: InferencePort):
+    def __init__(self, inference_engine: InferencePort, prompt_manager: PromptManager):
         self.inference_engine = inference_engine
+        self.prompt_manager = prompt_manager
 
     def extract_entities_and_relations(self, title: str, description: str, media_type: str) -> Dict:
         """
         Utilise le LLM pour extraire des entités et des relations structurées à partir d'un synopsis.
         """
-        prompt = f"""
-        MISSION : Analyse le synopsis suivant et extrais les entités clés et leurs relations pour un graphe de connaissances.
-        
-        TITRE : {title}
-        TYPE : {media_type}
-        SYNOPSIS : {description}
-        
-        FORMAT DE SORTIE ATTENDU (JSON UNIQUEMENT) :
-        {{
-          "entities": [
-            {{"name": "Nom", "type": "Person|Organization|Location|Concept", "description": "bref"}}
-          ],
-          "relations": [
-            {{"source": "Entité A", "target": "Entité B", "type": "LOVES|ENEMY_OF|MEMBER_OF|LOCATED_IN|PART_OF"}}
-          ]
-        }}
-        
-        CONSIGNE : Ne cite que les éléments majeurs. Reste fidèle au texte.
-        """
-        
-        system_prompt = "Tu es un expert en ingénierie de la connaissance et en ontologies d'anime/manga."
+        prompt, system_prompt = self.prompt_manager.get_prompt(
+            "graph_construction",
+            title=title,
+            media_type=media_type,
+            description=description
+        )
         
         response = self.inference_engine.generate(prompt, system_prompt)
         

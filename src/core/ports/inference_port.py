@@ -25,6 +25,11 @@ class InferencePort(ABC):
         pass
 
     @abstractmethod
+    def generate_image(self, prompt: str, style: str = "") -> str:
+        """Génère une image à partir d'un prompt et retourne une URL ou Base64."""
+        pass
+
+    @abstractmethod
     def calculate_visual_similarity(self, query: str, item_id: str, media_type: str) -> float:
         """Calcule la similarité entre un texte et une image d'un item."""
         pass
@@ -94,6 +99,11 @@ class InferencePort(ABC):
     @abstractmethod
     def process_manga_page(self, image_data: bytes) -> Dict[str, Any]:
         """Segmente les cases et extrait le texte d'une planche de manga (OCR)."""
+        pass
+
+    @abstractmethod
+    def translate_manga_page(self, image_data: bytes, target_lang: str = "Français") -> Dict[str, Any]:
+        """Détecte, OCR, traduit et redessine le texte dans les bulles d'une page de manga."""
         pass
 
     @abstractmethod

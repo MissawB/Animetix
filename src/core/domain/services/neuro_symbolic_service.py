@@ -1,6 +1,7 @@
 import logging
 from typing import Tuple, Optional, List
 from core.ports.inference_port import InferencePort
+from core.domain.services.prompt_manager import PromptManager
 from .neuro_symbolic.formal_solver import FormalLogicSolver
 from .neuro_symbolic.semantic_oracle import SemanticOracle
 
@@ -11,8 +12,8 @@ class NeuroSymbolicService:
     Service de Raisonnement Hybride (Neuro-Symbolique).
     Orchestre l'Oracle (LLM) et le Solveur Formel (Z3).
     """
-    def __init__(self, inference_engine: InferencePort, solver: Optional[FormalLogicSolver] = None):
-        self.oracle = SemanticOracle(inference_engine)
+    def __init__(self, inference_engine: InferencePort, prompt_manager: PromptManager, solver: Optional[FormalLogicSolver] = None):
+        self.oracle = SemanticOracle(inference_engine, prompt_manager)
         self.solver = solver or FormalLogicSolver()
         
     def solve_paradox(self, media_type: str, item_a: str, item_b: str, item_c: str) -> Tuple[Optional[str], str]:
