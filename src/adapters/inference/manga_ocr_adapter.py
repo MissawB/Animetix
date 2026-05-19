@@ -28,6 +28,13 @@ class MangaOCRAdapter(InferencePort):
             logger.error(f"Manga OCR processing failed: {e}")
             return {"error": str(e)}
 
+    def translate_manga_page(self, image_data: bytes, target_lang: str = "Français") -> Dict[str, Any]:
+        self._log_not_implemented("translate_manga_page")
+        return {}
+
+    def _log_not_implemented(self, method_name: str):
+        logger.warning(f"Method '{method_name}' is not implemented in MangaOCRAdapter and returns a default value.")
+
     # Méthodes héritées non implémentées pour cet adaptateur spécifique
     def generate(
         self, 
@@ -36,7 +43,8 @@ class MangaOCRAdapter(InferencePort):
         thinking_budget: int = 0,
         thinking_mode: bool = False
     ) -> str:
-        raise NotImplementedError("generate non implémentée")
+        self._log_not_implemented("generate")
+        return ""
 
     def stream_generate(
         self, 
@@ -45,25 +53,91 @@ class MangaOCRAdapter(InferencePort):
         thinking_budget: int = 0,
         thinking_mode: bool = False
     ):
-        raise NotImplementedError("stream_generate non implémentée")
+        self._log_not_implemented("stream_generate")
+        return iter([])
 
-    def calculate_visual_similarity(self, *args, **kwargs) -> float: raise NotImplementedError("calculate_visual_similarity non implémentée")
-    def get_image_embedding(self, *args, **kwargs) -> List[float]: raise NotImplementedError("get_image_embedding non implémentée")
-    def classify_image(self, *args, **kwargs) -> Dict[str, float]: raise NotImplementedError("classify_image non implémentée")
-    def detect_objects(self, *args, **kwargs) -> List[Dict]: raise NotImplementedError("detect_objects non implémentée")
-    def get_video_temporal_embeddings(self, *args, **kwargs) -> List[Dict[str, Any]]: raise NotImplementedError("get_video_temporal_embeddings non implémentée")
-    def localize_video_actions(self, *args, **kwargs) -> List[Dict[str, Any]]: raise NotImplementedError("localize_video_actions non implémentée")
-    def transform_image_to_anime(self, *args, **kwargs) -> str: raise NotImplementedError("transform_image_to_anime non implémentée")
-    def transform_video_to_anime(self, *args, **kwargs) -> str: raise NotImplementedError("transform_video_to_anime non implémentée")
-    def generate_soundscape(self, *args, **kwargs) -> str: raise NotImplementedError("generate_soundscape non implémentée")
-    def clone_voice(self, *args, **kwargs) -> bytes: raise NotImplementedError("clone_voice non implémentée")
-    def speech_to_speech(self, *args, **kwargs) -> bytes: raise NotImplementedError("speech_to_speech non implémentée")
-    def inpaint_text_bubbles(self, *args, **kwargs) -> str: raise NotImplementedError("inpaint_text_bubbles non implémentée")
-    def generate_image_description(self, *args, **kwargs) -> str: raise NotImplementedError("generate_image_description non implémentée")
-    def get_diagnostics(self, *args, **kwargs) -> Dict[str, Any]: raise NotImplementedError("get_diagnostics non implémentée")
-    def calculate_uncertainty(self, *args, **kwargs) -> Dict[str, float]: raise NotImplementedError("calculate_uncertainty non implémentée")
-    def estimate_depth(self, *args, **kwargs) -> bytes: raise NotImplementedError("estimate_depth non implémentée")
-    def generate_3d_scene(self, *args, **kwargs) -> Dict[str, Any]: raise NotImplementedError("generate_3d_scene non implémentée")
-    def visual_rerank(self, *args, **kwargs) -> List[Dict[str, Any]]: raise NotImplementedError("visual_rerank non implémentée")
-    def get_multimodal_late_interaction(self, *args, **kwargs) -> List[List[float]]: raise NotImplementedError("get_multimodal_late_interaction non implémentée")
+    def calculate_visual_similarity(self, *args, **kwargs) -> float:
+        self._log_not_implemented("calculate_visual_similarity")
+        return 0.0
+
+    def get_image_embedding(self, *args, **kwargs) -> List[float]:
+        self._log_not_implemented("get_image_embedding")
+        return []
+
+    def classify_image(self, *args, **kwargs) -> Dict[str, float]:
+        self._log_not_implemented("classify_image")
+        return {}
+
+    def detect_objects(self, *args, **kwargs) -> List[Dict]:
+        self._log_not_implemented("detect_objects")
+        return []
+
+    def get_video_temporal_embeddings(self, *args, **kwargs) -> List[Dict[str, Any]]:
+        self._log_not_implemented("get_video_temporal_embeddings")
+        return []
+
+    def localize_video_actions(self, *args, **kwargs) -> List[Dict[str, Any]]:
+        self._log_not_implemented("localize_video_actions")
+        return []
+
+    def transform_image_to_anime(self, *args, **kwargs) -> str:
+        self._log_not_implemented("transform_image_to_anime")
+        return ""
+
+    def transform_video_to_anime(self, *args, **kwargs) -> str:
+        self._log_not_implemented("transform_video_to_anime")
+        return ""
+
+    def generate_soundscape(self, *args, **kwargs) -> str:
+        self._log_not_implemented("generate_soundscape")
+        return ""
+
+    def clone_voice(self, *args, **kwargs) -> bytes:
+        self._log_not_implemented("clone_voice")
+        return b""
+
+    def speech_to_speech(self, *args, **kwargs) -> bytes:
+        self._log_not_implemented("speech_to_speech")
+        return b""
+
+    def inpaint_text_bubbles(self, *args, **kwargs) -> str:
+        self._log_not_implemented("inpaint_text_bubbles")
+        return ""
+
+    def generate_image_description(self, *args, **kwargs) -> str:
+        self._log_not_implemented("generate_image_description")
+        return ""
+
+    def get_diagnostics(self, *args, **kwargs) -> Dict[str, Any]:
+        self._log_not_implemented("get_diagnostics")
+        return {}
+
+    def calculate_uncertainty(self, *args, **kwargs) -> Dict[str, float]:
+        self._log_not_implemented("calculate_uncertainty")
+        return {}
+
+    def estimate_depth(self, *args, **kwargs) -> bytes:
+        self._log_not_implemented("estimate_depth")
+        return b""
+
+    def generate_3d_scene(self, *args, **kwargs) -> Dict[str, Any]:
+        self._log_not_implemented("generate_3d_scene")
+        return {}
+
+    def visual_rerank(self, *args, **kwargs) -> List[Dict[str, Any]]:
+        self._log_not_implemented("visual_rerank")
+        return []
+
+    def get_multimodal_late_interaction(self, *args, **kwargs) -> List[List[float]]:
+        self._log_not_implemented("get_multimodal_late_interaction")
+        return []
+    
+    def moderate_content(self, *args, **kwargs) -> Dict[str, Any]:
+        self._log_not_implemented("moderate_content")
+        return {}
+
+    def generate_image(self, *args, **kwargs) -> str:
+        self._log_not_implemented("generate_image")
+        return ""
+
     def health_check(self) -> dict: return {"status": "online" if self.ocr_pipeline else "offline", "engine": "LightonOCR"}
