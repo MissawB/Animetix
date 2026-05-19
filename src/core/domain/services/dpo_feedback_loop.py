@@ -12,6 +12,8 @@ class DPOFeedbackLoop:
     Automates the collection and validation of user feedback for DPO fine-tuning.
     Ensures high-quality chosen/rejected pairs.
     """
+    DEFAULT_REJECTED_RESPONSE = "Désolé, je ne peux pas traiter cette demande pour le moment."
+
     def __init__(self, data_dir: str = "data/mlops/datasets", prompt_manager: PromptManager = None):
         self.data_dir = data_dir
         self.prompt_manager = prompt_manager
@@ -32,6 +34,9 @@ class DPOFeedbackLoop:
         # Length check
         if len(entry['output']) < 15:
             return False
+        
+        if len(entry.get('context', '')) < 5: # Added: check for non-trivial context
+            return False
             
         # Quality check: avoid generic error responses
         generic_errors = ["je ne sais pas", "désolé", "erreur", "temporairement indisponible", "i am sorry"]
@@ -44,13 +49,17 @@ class DPOFeedbackLoop:
         """
         Creates a DPO pair (Chosen/Rejected) based on user satisfaction.
         """
-        prompt, _ = self.prompt_manager.get_prompt("dpo_expert_response", context=entry['context'])
+        # Robust prompt generation
+        if self.prompt_manager:
+            prompt, _ = self.prompt_manager.get_prompt("dpo_expert_response", context=entry['context'])
+        else:
+            prompt = f"Context: {entry['context']}\nResponse:"
         
         if entry.get('is_positive'):
             return {
                 "prompt": prompt,
                 "chosen": entry['output'],
-                "rejected": "Désolé, je ne peux pas traiter cette demande pour le moment." # Generic baseline
+                "rejected": self.DEFAULT_REJECTED_RESPONSE
             }
         else:
             chosen = chosen_override or "RÉPONSE_À_GÉNÉRER_PAR_MODÈLE_ORACLE"
