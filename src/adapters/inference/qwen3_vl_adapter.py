@@ -83,8 +83,12 @@ class Qwen3VLAdapter(InferencePort):
         if not image_urls:
             return []
 
-        prompt = f"Analyse ces {len(image_urls)} images et classe-les selon leur pertinence par rapport à la requête : '{query}'.\n" \
-                 "Réponds uniquement sous forme de JSON avec la structure suivante : {\"results\": [{\"url\": \"...\", \"score\": 0.95}, ...]}"
+        # Construction du prompt. Si le query semble déjà être un prompt complexe (contient 'MISSION'), on l'utilise tel quel.
+        if "MISSION" in query:
+            prompt = query
+        else:
+            prompt = f"Analyse ces {len(image_urls)} images (indexées de 0 à {len(image_urls)-1}) et classe-les selon leur pertinence par rapport à la requête : '{query}'.\n" \
+                     "Réponds uniquement sous forme de JSON avec la structure suivante : {\"scores\": [{\"index\": 0, \"score\": 0.95}, ...]}"
 
         content = [{"type": "text", "text": prompt}]
         for url in image_urls:
@@ -104,24 +108,39 @@ class Qwen3VLAdapter(InferencePort):
             
             text_response = response.choices[0].message.content
             
-            # Extract JSON from text response
+            # Extraction JSON robuste
             json_match = re.search(r'\{.*\}', text_response, re.DOTALL)
             if json_match:
                 try:
                     data = json.loads(json_match.group())
-                    results = data.get("results", [])
+                    results = data.get("scores") or data.get("results") or []
                     
-                    if results and len(results) == len(image_urls):
-                        return results
-                except json.JSONDecodeError:
+                    final_results = []
+                    for i, item in enumerate(results):
+                        idx = item.get("index")
+                        if idx is None and "url" in item:
+                            try:
+                                idx = image_urls.index(item["url"])
+                            except ValueError:
+                                idx = i
+                        
+                        if idx is not None:
+                            final_results.append({
+                                "index": int(idx),
+                                "score": float(item.get("score", 0.0))
+                            })
+                    
+                    if final_results:
+                        return final_results
+                except (json.JSONDecodeError, ValueError):
                     pass
             
             logger.warning("Qwen3-VL rerank returned malformed JSON or incomplete results. Using fallback.")
-            return [{"url": url, "score": 1.0 / len(image_urls)} for url in image_urls]
+            return [{"index": i, "score": 1.0 / len(image_urls)} for i in range(len(image_urls))]
             
         except Exception as e:
             logger.error(f"Qwen3-VL visual rerank failed: {e}")
-            return [{"url": url, "score": 0.0} for url in image_urls]
+            return [{"index": i, "score": 0.0} for i in range(len(image_urls))]
 
     def get_multimodal_late_interaction(self, image_data: bytes) -> List[List[float]]: return []
     def health_check(self) -> dict: return {"status": "online", "engine": "Qwen3-VL"}

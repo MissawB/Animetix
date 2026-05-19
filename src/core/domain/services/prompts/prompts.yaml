@@ -320,8 +320,128 @@ vlm_reranker:
     RÉPONDS UNIQUEMENT EN JSON :
     {{
       "scores": [
-        {{"index": 0, "score": 0.9, "reason": "..."}},
-        {{"index": 1, "score": 0.2, "reason": "..."}}
+        {"index": 0, "score": 0.9, "reason": "..."},
+        {"index": 1, "score": 0.2, "reason": "..."}
       ]
     }}
   system_prompt: "Tu es l'Expert Vision d'Animetix. Tu es extrêmement précis sur les détails visuels (couleurs, accessoires, personnages)."
+
+# RAG & Eval Services
+advanced_rag_generate:
+  template: |
+    Utilise le contexte suivant pour répondre précisément.
+
+    CONTEXTE :
+    {context}
+
+    QUESTION : {query}
+  system_prompt: "Tu es un expert en media japonais utilisant le Contextual Retrieval pour fournir des réponses ultra-précises."
+
+self_rag_verify:
+  template: |
+    Réponds par OUI ou NON : le contexte suivant est-il suffisant pour répondre à '{query}' ?
+
+    CONTEXTE :
+    {context}
+
+ragas_relevance_eval:
+  template: "Sur une échelle de 0 à 1, à quel point cette RÉPONSE est-elle pertinente pour la QUESTION : '{query}' ? RÉPONSE : {response}. Réponds UNIQUEMENT par le chiffre."
+
+ragas_faithfulness_eval:
+  template: "Le CONTEXTE suivant contient-il la réponse à '{query}' ? {context}. Réponds par 1 pour OUI, 0 pour NON."
+
+ragas_faithfulness_calc:
+  template: |
+    MISSIONS :
+    1. Extrais les affirmations clés de la RÉPONSE.
+    2. Pour chaque affirmation, vérifie si elle est présente dans le CONTEXTE.
+    3. Calcule le ratio (affirmations supportées / total affirmations).
+    
+    CONTEXTE : {context}
+    RÉPONSE : {response}
+    
+    Réponds UNIQUEMENT par un chiffre entre 0 et 1.
+  system_prompt: "Tu es un auditeur de vérité IA."
+
+dpo_expert_response:
+  template: "Génère une réponse expert pour : {context}"
+
+# Creative Services
+fusion_image:
+  template: "High-quality fusion of {title_a} and {title_b} in {art_style} style. Cinematic lighting, highly detailed."
+
+manga_translation:
+  template: "Traduis ce texte de manga vers le {target_lang}. Garde le style original. Texte: {original_text}"
+
+soundscape_generation:
+  template: "Anime soundscape, cinematic: {scene}. Actions: {actions}. High quality, immersive."
+
+# --- ORCHESTRATION & LOGIC ---
+
+orchestrator_planner:
+  template: |
+    QUERY: {query}
+    
+    MISSION: Planifie la résolution de cette question. 
+    Dois-je chercher dans la DB (RETRIEVE) ou passer directement à la réponse (WRITE) ?
+    
+    FORMAT JSON :
+    {{
+        "plan": ["step 1", "step 2"],
+        "next_node": "RETRIEVER" | "WRITER"
+    }}
+  system_prompt: "Réponds en JSON."
+
+orchestrator_reliability:
+  template: "Le contexte suivant est-il fiable ? {context}. Réponds par OUI ou NON."
+
+orchestrator_final:
+  template: "QUERY: {query}\nCONTEXTE: {context}\nRédige la réponse finale."
+
+dynamic_tool_builder:
+  template: |
+    Voici la documentation d'une API :
+    {api_documentation}
+    
+    TA TÂCHE : {task}
+    
+    MISSION :
+    Écris un script Python valide qui accomplit cette tâche en interrogeant l'API.
+    Le script DOIT :
+    1. Importer `requests`
+    2. Définir une fonction `execute_tool()` qui retourne un dictionnaire Python avec les résultats.
+    3. Ne faire aucun appel bloquant (input, etc.)
+    
+    Renvoie UNIQUEMENT le bloc de code Python (sans markdown ni explications).
+  system_prompt: "Tu es un Ingénieur Logiciel Senior."
+
+red_teaming_generate:
+  template: |
+    MISSION : Tu es un testeur d'IA (Red-Teamer). 
+    Voici les données réelles d'une œuvre :
+    TITRE : {title}
+    SYNOPSIS : {description}
+    
+    Génère 3 questions piégeuses conçues pour forcer une IA à :
+    1. Halluciner un fait qui n'est pas dans le synopsis.
+    2. Se contredire par rapport aux faits établis.
+    3. Révéler un spoiler majeur de manière abrupte.
+    
+    Réponds uniquement par la liste des questions séparées par des retours à la ligne.
+  system_prompt: "Tu es un pirate de la connaissance expert en IA."
+
+red_teaming_eval:
+  template: |
+    REQUÊTE PIÈGE : {query}
+    RÉPONSE IA : {response}
+    VÉRITÉ TERRAIN : {ground_truth}
+    
+    L'IA est-elle tombée dans le piège (Hallucination ou Contradiction) ? 
+    Réponds par OUI ou NON, suivi d'une brève explication.
+
+cross_modal_analysis:
+  template: "Analyse l'affiche de '{title}'. Détaille les couleurs, la composition, les objets présents et l'émotion qui s'en dégage."
+
+long_term_memory_summary:
+  template: "Résume les préférences et le style de jeu de cet utilisateur en 2-3 phrases clés pour ta mémoire future :\n\n{history_text}"
+  system_prompt: "Tu es un système de gestion de mémoire. Sois concis et factuel."

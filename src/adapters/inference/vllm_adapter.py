@@ -183,8 +183,12 @@ class VllmAdapter(InferencePort):
         if not image_urls:
             return []
 
-        prompt = f"Analyse ces {len(image_urls)} images et classe-les selon leur pertinence par rapport à la requête : '{query}'.\n" \
-                 "Réponds uniquement sous forme de JSON avec la structure suivante : {\"results\": [{\"url\": \"...\", \"score\": 0.95}, ...]}"
+        # Construction du prompt. Si le query semble déjà être un prompt complexe (contient 'MISSION'), on l'utilise tel quel.
+        if "MISSION" in query:
+            prompt = query
+        else:
+            prompt = f"Analyse ces {len(image_urls)} images (indexées de 0 à {len(image_urls)-1}) et classe-les selon leur pertinence par rapport à la requête : '{query}'.\n" \
+                     "Réponds uniquement sous forme de JSON avec la structure suivante : {\"scores\": [{\"index\": 0, \"score\": 0.95}, ...]}"
 
         content = [{"type": "text", "text": prompt}]
         for url in image_urls:
@@ -192,6 +196,7 @@ class VllmAdapter(InferencePort):
 
         try:
             import json
+            import re
             res = requests.post(f"{self.api_base}/chat/completions", json={
                 "model": self.model_name,
                 "messages": [
@@ -201,19 +206,43 @@ class VllmAdapter(InferencePort):
                 "response_format": {"type": "json_object"}
             }, timeout=60)
             res.raise_for_status()
-            data = res.json()['choices'][0]['message']['content']
+            raw_content = res.json()['choices'][0]['message']['content']
             
-            results = json.loads(data).get("results", [])
+            # Extraction JSON robuste
+            json_match = re.search(r'\{.*\}', raw_content, re.DOTALL)
+            if json_match:
+                data = json.loads(json_match.group())
+            else:
+                data = json.loads(raw_content)
+
+            results = data.get("scores") or data.get("results") or []
             
-            # Verification and fallback
-            if not results or len(results) != len(image_urls):
-                logger.warning("vLLM rerank returned incomplete or malformed results. Using uniform scores.")
-                return [{"url": url, "score": 1.0 / len(image_urls)} for url in image_urls]
+            # Harmonisation : s'assurer qu'on a 'index' et 'score'
+            # Si le modèle a retourné 'url', on tente de mapper vers l'index
+            final_results = []
+            for i, item in enumerate(results):
+                idx = item.get("index")
+                if idx is None and "url" in item:
+                    # Fallback si le modèle a renvoyé l'URL au lieu de l'index
+                    try:
+                        idx = image_urls.index(item["url"])
+                    except ValueError:
+                        idx = i
                 
-            return results
+                if idx is not None:
+                    final_results.append({
+                        "index": int(idx),
+                        "score": float(item.get("score", 0.0))
+                    })
+            
+            if not final_results:
+                logger.warning("vLLM rerank returned no valid results. Using fallback.")
+                return [{"index": i, "score": 1.0 / len(image_urls)} for i in range(len(image_urls))]
+                
+            return final_results
         except Exception as e:
             logger.error(f"vLLM visual rerank error: {e}")
-            return [{"url": url, "score": 0.0} for url in image_urls]
+            return [{"index": i, "score": 0.0} for i in range(len(image_urls))]
 
     def get_multimodal_late_interaction(self, image_data: bytes) -> List[List[float]]:
         return []

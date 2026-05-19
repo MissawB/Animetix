@@ -251,9 +251,16 @@ class AgenticRAGService:
             return
 
         try:
+            # Récupération du prompt spécifique via le PromptManager
+            prompt_text, system_prompt = self.prompt_manager.get_prompt(
+                "vlm_reranker", 
+                query=ctx.query, 
+                num_images=len(image_urls)
+            )
+
             # Appel au VLM pour le reranking
             # La méthode visual_rerank doit retourner une liste de dicts avec 'index' et 'score'
-            reranked = self.inference_engine.visual_rerank(ctx.query, image_urls)
+            reranked = self.inference_engine.visual_rerank(prompt_text, image_urls, system_prompt=system_prompt)
             
             # Attribution des scores aux candidats
             for item in reranked:
@@ -264,16 +271,14 @@ class AgenticRAGService:
             # Tri par score visuel décroissant
             valid_candidates.sort(key=lambda x: x.get('visual_score', 0.0), reverse=True)
             
-            # Régénération du truth_path avec le top 5 re-classé
+            # Mise à jour du truth_path avec le top 5 re-classé (on append pour préserver Graph/Scout)
             top_5 = valid_candidates[:5]
-            new_truth = "### CHEMIN DE VÉRITÉ (RERANKING VISUEL) ###\n"
+            vlm_context = "\n### VÉRIFICATION VISUELLE (RERANKING) ###\n"
             for i, c in enumerate(top_5):
-                new_truth += f"{i+1}. {c.get('title')} (Score Visuel: {c.get('visual_score', 0.0):.2f})\n"
-                new_truth += f"   - Description: {c.get('description', '')[:300]}...\n"
-                if url := (c.get('image') or c.get('image_url') or c.get('cover_url') or c.get('poster_path')):
-                    new_truth += f"   - Image: {url}\n"
+                vlm_context += f"{i+1}. {c.get('title')} (Score Visuel: {c.get('visual_score', 0.0):.2f})\n"
+                vlm_context += f"   - Description: {c.get('description', '')[:300]}...\n"
             
-            ctx.truth_path = new_truth
+            ctx.truth_path += f"\n{vlm_context}"
             yield StreamStep(type="thought", content=f"[VLM-Reranker] Classement visuel terminé. Top match : {top_5[0].get('title')}").model_dump()
             
         except Exception as e:
