@@ -10,9 +10,16 @@ Animetix n'est pas une simple application web, c'est une **Cognitive Architectur
 
 ### A. Core Domain (Intelligence Pure)
 Situé dans `src/core/domain`, le domaine est le garant de la cohérence logique.
-- **Services de Découverte (`AgenticRAGService`) :** Orchestre une boucle de raisonnement "Corrective RAG" (CRAG). Contrairement au RAG classique qui fait `Question -> Retrieval -> Answer`, Animetix fait `Question -> Plan -> Search -> Distill -> Validate -> Synthesize -> Judge`.
-- **Validation Strict Pydantic :** Chaque sortie d'un agent LLM est castée dans un modèle Pydantic (`ai_schemas.py`). Si le JSON est malformé, un mécanisme de **Self-Correction** renvoie l'erreur au LLM pour correction immédiate (Inference-time error handling).
-- **Externalisation des Prompts :** Utilisation du `PromptManager`. Les prompts sont des templates YAML supportant l'**injection dynamique de Few-Shot**. Si le système détecte une erreur récurrente, il enregistre une correction qui est automatiquement injectée dans les futurs prompts (Apprentissage In-Context).
+- **Services de Découverte (`AgenticRAGService`) :** Orchestre une boucle de raisonnement cognitive complexe sous forme de machine à états fini (FSM). Contrairement au RAG classique qui fait `Question -> Retrieval -> Answer`, Animetix exécute le cycle suivant :
+    1.  **ANALYZE :** Analyse de la complexité et allocation d'un budget de réflexion (TTC).
+    2.  **PLAN :** Le `SearchPlanner` établit une stratégie (Web vs Local vs Graphe).
+    3.  **RESEARCH :** Recherche hybride et exploration multi-hop dans Neo4j via le `GraphExpert`.
+    4.  **DISTILL :** Le `ScoutAgent` extrait un "Chemin de Vérité" (Truth Path) du bruit documentaire.
+    5.  **VLM_RERANK :** (Si visuel) Ré-ordonnancement des candidats par inspection directe des images.
+    6.  **SYNTHESIZE :** Rédaction finale par le `ResponseSynthesizer`.
+    7.  **JUDGE :** Débat multi-agents (`DebateManager`) pour valider la fidélité au contexte.
+- **Validation Strict Pydantic :** Chaque sortie d'un agent LLM est castée dans un modèle Pydantic (`ai_schemas.py`). Si le JSON est malformé, un mécanisme de **Self-Correction** renvoie l'erreur au LLM pour correction immédiate.
+- **Prompt Management (`PromptManager`) :** Les prompts sont externalisés dans des templates YAML. Le système implémente une **Métacognition In-Context** : si une erreur est corrigée par l'utilisateur ou le Juge, elle est enregistrée dans `auto_corrections.json` et réinjectée dynamiquement comme Few-Shot pour éviter que l'IA ne répète la même erreur.
 
 ### B. Ports & Adapters (Isolation de l'Infrastructure)
 - **InferencePort :** Interface unifiée supportant le streaming SSE, le *Test-Time Compute* (TTC) et le routage SLM.
@@ -37,10 +44,12 @@ Animetix implémente le **Matryoshka Representation Learning** sur le modèle **
     2.  **Phase de "Zoom" :** Les 50 meilleurs candidats sont ré-évalués en utilisant les **1024 dimensions** complètes.
 - **Résultat :** Latence de recherche < 50ms sur 1 million d'items.
 
-### C. Vision Multimodale (SigLIP)
-Passage au modèle **SigLIP-SO400M** qui remplace CLIP. 
-- **Alignement :** Contrairement à CLIP, SigLIP utilise une fonction de perte sigmoid qui permet un alignement bien plus fin entre les concepts textuels complexes et les détails visuels des affiches.
-- **VLM Reranker :** Pour les requêtes visuelles (ex: "l'anime avec un robot bleu géant"), un modèle Vision-Langage (Qwen-VL) inspecte réellement les fichiers images des 5 premiers résultats pour valider la correspondance visuelle exacte.
+### C. Vision & Voice (Multimodalité SOTA)
+Animetix ne se limite pas au texte, il intègre des capacités sensorielles avancées :
+1.  **Vision (SigLIP-SO400M) :** Utilisation de SigLIP pour l'alignement Image-Texte. Contrairement à CLIP, SigLIP utilise une fonction de perte sigmoid permettant un alignement plus fin.
+2.  **Visual Reranker (Qwen-VL) :** Pour les requêtes visuelles complexes, un modèle Vision-Langage inspecte réellement les fichiers images pour valider la correspondance visuelle exacte.
+3.  **Voice Cloning (RVC) :** Le `VoiceCloningService` permet de générer des réponses audio avec la voix exacte d'un personnage à partir d'un échantillon de 10 secondes (Zero-shot cloning).
+4.  **Native Speech LLM (S2S) :** Support des interactions Speech-to-Speech (S2S) via le `NativeSpeechLLMService`, traitant l'audio de bout en bout sans passer par une transcription textuelle intermédiaire, réduisant drastiquement la latence émotionnelle.
 
 ---
 
@@ -61,7 +70,11 @@ Le graphe n'est pas un simple index, c'est une structure de relations :
 
 ### 1. Mode Paradox Quest (IA Neuro-Symbolique)
 *   **Technologie :** Combine un LLM avec un solveur logique (Z3 / Neuro-symbolic layer).
-*   **Mécanique :** L'IA identifie 2 œuvres avec un lien logique fort et 1 "intrus". Le joueur doit trouver l'intrus. L'IA justifie le choix par un raisonnement mathématique formel sur les attributs du graphe.
+*   **Mécanique :** L'IA identifie 2 œuvres avec un lien logique fort et 1 "intrus". Le joueur doit trouver l'intrus. 
+*   **Boucle de Résolution :**
+    1.  **Extraction Sémantique :** Un "Oracle" (LLM) extrait les propriétés booléennes des items.
+    2.  **Résolution Formelle :** Le solveur **Z3** traite ces faits pour identifier mathématiquement l'intrus (Preuve SAT).
+    3.  **Vulgarisation :** L'Oracle traduit la preuve mathématique en une explication narrative compréhensible pour le joueur.
 
 ### 2. Mode Akinetix RL (Reinforcement Learning)
 *   **Technologie :** Proximal Policy Optimization (PPO).
@@ -70,6 +83,10 @@ Le graphe n'est pas un simple index, c'est une structure de relations :
 ### 3. Mode La Forge (Génération Multimodale)
 *   **Technologie :** Stable Diffusion XL + IP-Adapter + ControlNet.
 *   **Mécanique :** Fusion de deux univers sémantiques. Le LLM génère un synopsis hybride, et le pipeline de vision génère une affiche respectant les codes visuels des deux œuvres (ex: mélange du trait de *Akira* avec l'ambiance de *Ghibli*).
+
+### 4. Mode Spatial Computing (Exploration 3D)
+*   **Technologie :** DepthAnything + 3D Gaussian Splatting.
+*   **Mécanique :** Reconstruction d'une scène 3D navigable à partir d'une simple image 2D (ex: poster généré dans La Forge). Le `SpatialComputingService` estime la carte de profondeur et génère un nuage de points volumétrique permettant une immersion VR immédiate dans l'univers hybride.
 
 ---
 
