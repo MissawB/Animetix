@@ -40,6 +40,11 @@ class JudgeEvaluation(BaseModel):
     is_reliable: bool
     next_action: JudgeAction
 
+class DebateOutcome(BaseModel):
+    critiques: Dict[str, JudgeEvaluation] = Field(description="Critiques from specialized agents.")
+    consensus_action: JudgeAction = Field(description="Final action decided by the Debate Manager.")
+    final_reasoning: str = Field(description="Summary of the debate and final decision.")
+
 # --- LEGACY SCHEMAS (Internal mapping) ---
 
 class AgenticAnalysis(BaseModel):
