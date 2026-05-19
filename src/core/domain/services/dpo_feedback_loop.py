@@ -3,6 +3,7 @@ import json
 import logging
 from typing import List, Dict, Any
 from datetime import datetime
+from .prompt_manager import PromptManager
 
 logger = logging.getLogger("animetix.mlops")
 
@@ -11,8 +12,9 @@ class DPOFeedbackLoop:
     Automates the collection and validation of user feedback for DPO fine-tuning.
     Ensures high-quality chosen/rejected pairs.
     """
-    def __init__(self, data_dir: str = "data/mlops/datasets"):
+    def __init__(self, data_dir: str = "data/mlops/datasets", prompt_manager: PromptManager = None):
         self.data_dir = data_dir
+        self.prompt_manager = prompt_manager
         if not os.path.exists(data_dir):
             try:
                 os.makedirs(data_dir, exist_ok=True)
@@ -38,11 +40,11 @@ class DPOFeedbackLoop:
             
         return True
 
-    def create_dpo_pair(self, entry: Dict) -> Dict:
+    def create_dpo_pair(self, entry: Dict, chosen_override: str = None) -> Dict:
         """
         Creates a DPO pair (Chosen/Rejected) based on user satisfaction.
         """
-        prompt = f"Génère une réponse expert pour : {entry['context']}"
+        prompt, _ = self.prompt_manager.get_prompt("dpo_expert_response", context=entry['context'])
         
         if entry.get('is_positive'):
             return {
@@ -51,9 +53,10 @@ class DPOFeedbackLoop:
                 "rejected": "Désolé, je ne peux pas traiter cette demande pour le moment." # Generic baseline
             }
         else:
+            chosen = chosen_override or "RÉPONSE_À_GÉNÉRER_PAR_MODÈLE_ORACLE"
             return {
                 "prompt": prompt,
-                "chosen": "RÉPONSE_À_GÉNÉRER_PAR_MODÈLE_ORACLE", 
+                "chosen": chosen,
                 "rejected": entry['output']
             }
 
@@ -97,6 +100,26 @@ class DPOFeedbackLoop:
                 }
                 if self.validate_feedback(entry):
                     f.write(json.dumps(self.create_dpo_pair(entry), ensure_ascii=False) + '\n')
+
+    def get_rejected_for_curation(self, limit: int = 100) -> List[Dict]:
+        """
+        Retrieves negative feedback entries for Swarm curation.
+        """
+        from animetix.models import AIFeedback
+        feedbacks = AIFeedback.objects.filter(is_positive=False)[:limit]
+        
+        results = []
+        for fb in feedbacks:
+            entry = {
+                'id': fb.id,
+                'context': fb.input_context,
+                'output': fb.output_text,
+                'is_positive': fb.is_positive
+            }
+            if self.validate_feedback(entry):
+                results.append(entry)
+        
+        return results
 
     def analyze_feedback_trends(self) -> Dict:
         """Analyzes recent feedback to detect performance drops."""
