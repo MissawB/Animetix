@@ -270,4 +270,11 @@ playwright
 drf_spectacular
 pytest-playwright
 z3-solver
+diffusers
+opencv-python-headless
+imageio[ffmpeg]
+TTS
+manga_ocr
+ultralytics
+huggingface_hub
 
