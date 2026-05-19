@@ -62,18 +62,19 @@ class Neo4jManager:
             session.execute_write(self._link_to_parent_tx, media_id, extracted_data.get('entities', []))
 
     def sync_combat_lore(self, media_id: str, lore_data_list: List[Dict[str, Any]]):
-        """
-        Injects extracted combat lore into the graph.
-        lore_data_list: List of {
-            'timestamp': str,
-            'character': str,
-            'technique': str,
-            'visual_description': str
-        }
-        """
-        if not self.driver:
+        """Injects extracted combat lore into the graph."""
+        if not self.driver or not lore_data_list:
             return
             
+        with self.driver.session() as session:
+            for lore in lore_data_list:
+                try:
+                    session.execute_write(self._sync_combat_tx, str(media_id), lore)
+                except Exception as e:
+                    logger.error(f"Failed to sync combat lore for {lore.get('technique', 'unknown')}: {e}")
+
+    @staticmethod
+    def _sync_combat_tx(tx, media_id: str, lore: Dict[str, Any]):
         query = """
         MATCH (m:Media {id: $media_id})
         MERGE (c:Character {name: $character})
@@ -88,19 +89,13 @@ class Neo4jManager:
         MERGE (e)-[:INVOLVES_TECHNIQUE]->(t)
         MERGE (c)-[:USES_TECHNIQUE]->(t)
         """
-        
-        with self.driver.session() as session:
-            for lore in lore_data_list:
-                try:
-                    session.run(query, 
-                        media_id=media_id,
-                        character=lore.get('character'),
-                        technique=lore.get('technique'),
-                        timestamp=lore.get('timestamp'),
-                        description=lore.get('visual_description')
-                    )
-                except Exception as e:
-                    logger.error(f"Failed to sync combat lore for {lore.get('technique')}: {e}")
+        tx.run(query, 
+            media_id=media_id,
+            character=lore.get('character'),
+            technique=lore.get('technique'),
+            timestamp=lore.get('timestamp'),
+            description=lore.get('visual_description')
+        )
 
     @staticmethod
     def _create_entity_tx(tx, entity):
