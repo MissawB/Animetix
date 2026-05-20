@@ -631,10 +631,66 @@ class TransformersAdapter(InferencePort):
         except Exception as e:
             logger.error(f"❌ Image to Anime failed: {e}"); return ""
 
+    def _load_audioldm_engine(self):
+        """Chargement paresseux de AudioLDM."""
+        if hasattr(self, '_audioldm_pipeline'): return
+        try:
+            import torch
+            from diffusers import AudioLDMPipeline
+            logger.info("⏳ Loading AudioLDM for Contextual Soundscapes...")
+            model_id = "cvssp/audioldm-s-full-v2"
+            torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+            
+            self._audioldm_pipeline = AudioLDMPipeline.from_pretrained(
+                model_id,
+                torch_dtype=torch_dtype
+            )
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            self._audioldm_pipeline.to(device)
+            logger.info(f"✅ AudioLDM engine loaded on {device}")
+        except ImportError as e:
+            raise InferenceError(f"Dependencies missing for AudioLDM: {str(e)}")
+        except Exception as e:
+            logger.error(f"❌ Failed to load AudioLDM model: {e}")
+            raise InferenceError(f"AudioLDM engine loading failed: {str(e)}")
+
     def generate_soundscape(self, video_metadata: Dict[str, Any], prompt: Optional[str] = None) -> str:
-        """Stub pour la génération d'ambiance sonore."""
-        logger.warning("⚠️ generate_soundscape is not implemented yet (stub).")
-        return "https://example.com/soundscape.mp3"
+        """Génération d'ambiance sonore via AudioLDM basée sur le contexte vidéo."""
+        try:
+            import io
+            import base64
+            import scipy.io.wavfile as wavfile
+            
+            self._load_audioldm_engine()
+            
+            # Construction du prompt basé sur les métadonnées
+            actions = video_metadata.get("actions", [])
+            scene = video_metadata.get("scene", "generic environment")
+            action_desc = ", ".join(actions) if actions else "subtle ambient sounds"
+            
+            base_prompt = f"Soundscape for {scene}, featuring {action_desc}."
+            final_prompt = f"{prompt}. {base_prompt}" if prompt else base_prompt
+            
+            logger.info(f"🎧 Generating soundscape with prompt: {final_prompt}")
+            
+            audio_output = self._audioldm_pipeline(
+                final_prompt,
+                num_inference_steps=10,
+                audio_length_in_s=5.0
+            )
+            
+            waveform = audio_output.audios[0]
+            sample_rate = 16000
+            
+            buffer = io.BytesIO()
+            wavfile.write(buffer, sample_rate, waveform)
+            
+            b64_audio = base64.b64encode(buffer.getvalue()).decode('utf-8')
+            return f"data:audio/wav;base64,{b64_audio}"
+            
+        except Exception as e:
+            logger.error(f"❌ Soundscape generation failed: {e}")
+            raise InferenceError(f"Soundscape generation failed: {str(e)}")
 
     def _load_moshi_engine(self):
         """Chargement paresseux de Kyutai Moshi pour le S2S natif."""
