@@ -43,6 +43,7 @@ from core.domain.services.rag.agents.debate_manager import DebateManager
 from core.domain.services.rag.agents.librarian import LibrarianAgent
 from core.domain.services.rag.agents.forge import ForgeAgent
 from core.domain.services.rag.agents.saga_agent import SagaAgent
+from core.domain.services.rag.agents.chronicler import ChroniclerAgent
 from core.domain.services.agentic_rag_service import AgenticRAGService
 from core.domain.services.long_term_memory_service import LongTermMemoryService
 from core.domain.services.semantic_cache_service import SemanticCacheService
@@ -362,6 +363,13 @@ class Container:
 
 # Global container instance
 _container = None
+
+def get_container():
+    global _container
+    if _container is None:
+        _container = Container()
+    return _container
+one
 
 def get_container():
     global _container

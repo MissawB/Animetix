@@ -19,6 +19,7 @@ from .rag.agents.debate_manager import DebateManager
 from .rag.agents.librarian import LibrarianAgent
 from .rag.agents.forge import ForgeAgent
 from .rag.agents.saga_agent import SagaAgent
+from .rag.agents.chronicler import ChroniclerAgent
 
 logger = logging.getLogger("animetix.rag")
 
@@ -223,6 +224,39 @@ class AgenticRAGService:
         if not ctx.plan:
             ctx.current_state = RAGState.PLAN
             return
+
+        if "théorie" in ctx.query.lower() or "theory" in ctx.query.lower() or "vrai que" in ctx.query.lower():
+            logger.info(f"🔎 [Chronicler] Theory intent detected. Searching FanTheories...")
+            yield StreamStep(type="thought", content="[Chronicler] Vérification des théories de fans dans la base...").model_dump()
+            
+            cypher = """
+            MATCH (s:Saga)-[:HAS_THEORY]->(t:FanTheory)
+            WHERE any(entity IN $entities WHERE toLower(s.name) CONTAINS toLower(entity) OR toLower(t.title) CONTAINS toLower(entity))
+            RETURN t.title as title, t.description as desc, t.plausibility as plausibility
+            LIMIT 3
+            """
+            
+            cypher_fallback = """
+            MATCH (t:FanTheory) 
+            WHERE any(entity IN $entities WHERE toLower(t.title) CONTAINS toLower(entity) OR toLower(t.description) CONTAINS toLower(entity)) 
+            RETURN t.title as title, t.description as desc, t.plausibility as plausibility 
+            LIMIT 3
+            """
+            try:
+                if ctx.plan.entities:
+                    theories = self.neo4j_manager.execute_query(cypher, parameters={"entities": ctx.plan.entities})
+                    if not theories:
+                        theories = self.neo4j_manager.execute_query(cypher_fallback, parameters={"entities": ctx.plan.entities})
+                    if theories:
+                        theory_text = "### CONSENSUS DE FANS (THÉORIES) ###\n"
+                        for th in theories:
+                            theory_text += f"- {th['title']} (Plausibilité : {th['plausibility']}) : {th['desc']}\n"
+                        if ctx.truth_path is None:
+                            ctx.truth_path = ""
+                        ctx.truth_path += f"\n{theory_text}"
+                        yield StreamStep(type="thought", content=f"[Chronicler] Trouvé {len(theories)} théorie(s) pertinente(s).").model_dump()
+            except Exception as e:
+                logger.error(f"Failed to fetch fan theories: {e}")
 
         source = 'Web' if ctx.plan.requires_web else 'Local'
         yield StreamStep(type="thought", content=f"[Searcher] Exécution recherche ({source})...").model_dump()
