@@ -4,6 +4,7 @@ from .synthesizer import ResponseSynthesizer
 from .judge import ResponseJudge
 from .scout import ScoutAgent
 from .graph_expert import GraphExpert
+from .librarian import LibrarianAgent
 
-__all__ = ['SearchPlanner', 'ResponseCritic', 'ResponseSynthesizer', 'ResponseJudge', 'ScoutAgent', 'GraphExpert']
+__all__ = ['SearchPlanner', 'ResponseCritic', 'ResponseSynthesizer', 'ResponseJudge', 'ScoutAgent', 'GraphExpert', 'LibrarianAgent']
 
