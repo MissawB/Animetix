@@ -11,12 +11,17 @@ mock_diffusers = MagicMock()
 mock_imageio = MagicMock()
 mock_tts = MagicMock()
 mock_cv2 = MagicMock()
+mock_scipy = MagicMock()
+mock_audioldm = MagicMock()
 
 sys.modules["diffusers"] = mock_diffusers
 sys.modules["imageio"] = mock_imageio
 sys.modules["TTS"] = mock_tts
 sys.modules["TTS.api"] = mock_tts
 sys.modules["cv2"] = mock_cv2
+sys.modules["scipy"] = mock_scipy
+sys.modules["scipy.io"] = mock_scipy
+sys.modules["audioldm"] = mock_audioldm
 
 from adapters.inference.transformers_adapter import TransformersAdapter
 from core.domain.exceptions import InferenceError
@@ -90,3 +95,23 @@ def test_clone_voice_mocked(adapter):
             
     assert res == b"fake_audio_bytes"
     mock_tts.TTS.assert_called_once()
+
+def test_generate_soundscape_success(adapter):
+    """Vérifie le workflow de génération de soundscape."""
+    mock_pipe = MagicMock()
+    mock_pipe.return_value = {"audios": np.zeros((1, 16000))}
+    
+    with patch("audioldm.build_model", return_value=mock_pipe):
+        with patch("scipy.io.wavfile.write", MagicMock()):
+            with patch("base64.b64encode", return_value=b"fake_audio_base64"):
+                res = adapter.generate_soundscape("forest sounds")
+                
+    assert res.startswith("data:audio/wav;base64,")
+    assert "fake_audio_base64" in res
+
+def test_generate_soundscape_failure(adapter):
+    """Vérifie que la génération échoue proprement si scipy est manquant."""
+    # Simuler l'absence de scipy enlevant la fonction de sauvegarde
+    with patch("scipy.io.wavfile.write", side_effect=ImportError("No scipy")):
+        with pytest.raises(InferenceError):
+            adapter.generate_soundscape("forest sounds")
