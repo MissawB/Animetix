@@ -1,4 +1,5 @@
 import logging
+import orjson
 from typing import Dict, List, Any, Optional
 from core.domain.services.llm_service import LLMService
 from core.domain.services.prompt_manager import PromptManager
@@ -14,7 +15,7 @@ class ChroniclerAgent:
         prompt_manager: PromptManager, 
         neo4j_manager: Neo4jManager,
         web_search: WebSearchPort
-    ):
+    ) -> None:
         self.llm_service = llm_service
         self.prompt_manager = prompt_manager
         self.neo4j_manager = neo4j_manager
@@ -25,16 +26,23 @@ class ChroniclerAgent:
         res_raw = self.llm_service.generate(prompt, sys, use_slm=True)
         
         try:
-            import orjson
-            if '{' in res_raw and '}' in res_raw:
-                data = orjson.loads(res_raw[res_raw.find('{'):res_raw.rfind('}')+1])
-                return data.get('theories', [])
+            start_idx = min([idx for idx in [res_raw.find('{'), res_raw.find('[')] if idx != -1] or [-1])
+            end_idx = max(res_raw.rfind('}'), res_raw.rfind(']'))
+            
+            if start_idx != -1 and end_idx != -1 and start_idx < end_idx:
+                json_str = res_raw[start_idx:end_idx+1]
+                data = orjson.loads(json_str)
+                # The prompt returns {"theories": [...]}. Handle if it returned a list directly.
+                if isinstance(data, dict):
+                    return data.get('theories', [])
+                elif isinstance(data, list):
+                    return data
             return []
         except Exception as e:
             logger.error(f"Failed to parse theories from LLM: {e}")
             return []
 
-    def pulse_community(self, saga_name: str):
+    def pulse_community(self, saga_name: str) -> None:
         """Scans the web for community lore and updates Neo4j."""
         logger.info(f"📡 [Chronicler] Pulsing community lore for {saga_name}...")
         
@@ -45,14 +53,16 @@ class ChroniclerAgent:
             logger.warning(f"No community data found for {saga_name}.")
             return
             
-        compiled_text = "\n".join([f"[{r.get('title')}] {r.get('snippet')}" for r in results])
+        compiled_text = "\n".join([f"[{r.get('title', 'Unknown')}] {r.get('snippet', '')}" for r in results])
         
         theories = self.extract_theories(saga_name, compiled_text)
         logger.info(f"⚖️ [Chronicler] Extracted {len(theories)} theories. Syncing...")
         
         for theory in theories:
-            # Ensure source URL is attached for traceability
-            theory['source_url'] = results[0].get('link', 'Web Search') if results else 'Unknown'
-            self.neo4j_manager.sync_fan_theory(saga_name, theory)
+            try:
+                theory['source_url'] = results[0].get('link', 'Web Search') if results else 'Unknown'
+                self.neo4j_manager.sync_fan_theory(saga_name, theory)
+            except Exception as e:
+                logger.error(f"Failed to sync theory {theory.get('title')} to Neo4j: {e}")
             
         logger.info("✅ Community pulse complete.")
