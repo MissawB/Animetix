@@ -1,25 +1,61 @@
 import os
 import sys
-import django
+import argparse
 import logging
+import django
 
-# Setup paths
-base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(os.path.join(base_dir, "src"))
-sys.path.append(os.path.join(base_dir, "src", "backend"))
+# --- Environment & Django Setup ---
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(BASE_DIR, "src"))
+sys.path.insert(0, os.path.join(BASE_DIR, "src", "backend"))
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'animetix_project.settings')
 django.setup()
 
+# --- App Imports ---
 from animetix.containers import get_container
 from pipeline.neo4j_client import neo4j_manager
 
-logging.basicConfig(level=logging.INFO)
+# --- Logging Setup ---
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger("animetix.vision_quest.worker")
 
+# --- Constants ---
+MAX_MEMORY_SAFE_SIZE = 500 * 1024 * 1024  # 500MB
+
 def process_video_for_combat_lore(media_id: str, video_path: str):
+    """
+    Processes a video file to extract combat-related lore using a Vision-Language Model (VLM).
+    
+    This function reads the video data, sends it to the VisionQuestService for 
+    lore extraction, and then synchronizes any detected combat events to the 
+    Neo4j graph database.
+
+    Args:
+        media_id (str): The unique identifier of the media (anime/movie) in the Neo4j database.
+        video_path (str): The local filesystem path to the video file to be processed.
+
+    Returns:
+        None: Results are logged and synced to the database.
+    """
     if not os.path.exists(video_path):
         logger.error(f"Video file not found: {video_path}")
         return
+
+    # Memory Management: Check file size
+    try:
+        file_size = os.path.getsize(video_path)
+        if file_size > MAX_MEMORY_SAFE_SIZE:
+            logger.warning(
+                f"⚠️ Video file is large ({file_size / (1024*1024):.2f}MB). "
+                "Processing may consume significant memory."
+            )
+    except OSError as e:
+        logger.error(f"Could not check file size for {video_path}: {e}")
+        # Continue anyway as we check existence above
 
     logger.info(f"🚀 Processing video for Media {media_id}: {video_path}")
     
@@ -42,13 +78,16 @@ def process_video_for_combat_lore(media_id: str, video_path: str):
             
     except Exception as e:
         logger.error(f"❌ Error during Vision-Quest processing: {e}")
+        raise  # Re-raise to allow main block to handle exit code
 
 if __name__ == "__main__":
-    # Example usage
-    import argparse
     parser = argparse.ArgumentParser(description="Process anime video for combat lore extraction.")
     parser.add_argument("--id", type=str, required=True, help="Media ID in Neo4j")
     parser.add_argument("--path", type=str, required=True, help="Path to video file")
     args = parser.parse_args()
     
-    process_video_for_combat_lore(args.id, args.path)
+    try:
+        process_video_for_combat_lore(args.id, args.path)
+    except Exception as e:
+        # Final error boundary for CLI exit code
+        sys.exit(1)
