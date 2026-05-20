@@ -27,10 +27,13 @@ class SearchPlanner:
         
         try:
             import orjson
+            from ...exceptions import ParsingError
             if '{' in plan_raw and '}' in plan_raw:
                 data = orjson.loads(plan_raw[plan_raw.find('{'):plan_raw.rfind('}')+1])
                 return SearchPlan(**data)
+            raise ParsingError("No JSON object found in search plan response.")
         except Exception as e:
-            logger.warning(f"Plan parsing failed: {e}. Using fallback.")
-            
-        return SearchPlan(optimized_query=query, reasoning="Fallback", requires_web=False)
+            logger.warning(f"Plan parsing failed: {e}.")
+            if not isinstance(e, ParsingError):
+                raise ParsingError(f"Plan structure invalid: {str(e)}")
+            raise

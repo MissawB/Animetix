@@ -3,6 +3,7 @@ import logging
 from typing import Optional, List, Dict, Any, Generator
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 from core.ports.inference_port import InferencePort
+from core.domain.exceptions import InferenceError
 
 logger = logging.getLogger("animetix.inference.transformers")
 
@@ -35,20 +36,27 @@ class TransformersAdapter(InferencePort):
 
     def generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False) -> str:
         self._load_model()
-        if not self.model: return "Erreur: Modèle local non chargé."
+        if not self.model: 
+            raise InferenceError("Local Transformers model not loaded.")
         
-        # Injection du prompt de réflexion
-        if thinking_mode or thinking_budget > 0:
-            prompt = f"<think>\nAnalyse en profondeur.\n</think>\n{prompt}"
+        try:
+            # Injection du prompt de réflexion
+            if thinking_mode or thinking_budget > 0:
+                prompt = f"<think>\nAnalyse en profondeur.\n</think>\n{prompt}"
+                
+            inputs = self.tokenizer(f"{system_prompt}\n\n{prompt}", return_tensors="pt").to(self.model.device)
+            max_new_tokens = 512 + (thinking_budget if thinking_budget > 0 else 0)
             
-        inputs = self.tokenizer(f"{system_prompt}\n\n{prompt}", return_tensors="pt").to(self.model.device)
-        max_new_tokens = 512 + (thinking_budget if thinking_budget > 0 else 0)
-        
-        outputs = self.model.generate(**inputs, max_new_tokens=max_new_tokens)
-        return self.tokenizer.decode(outputs[0], skip_special_tokens=True).replace(system_prompt, "").strip()
+            outputs = self.model.generate(**inputs, max_new_tokens=max_new_tokens)
+            return self.tokenizer.decode(outputs[0], skip_special_tokens=True).replace(system_prompt, "").strip()
+        except Exception as e:
+            raise InferenceError(f"Generation failed: {str(e)}")
 
     def stream_generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False):
-        yield self.generate(prompt, system_prompt, thinking_budget, thinking_mode)
+        try:
+            yield self.generate(prompt, system_prompt, thinking_budget, thinking_mode)
+        except InferenceError:
+            raise
 
     def detect_objects(self, image_data: bytes, candidate_queries: List[str], model_id: Optional[str] = None) -> List[Dict]:
         try:
@@ -523,8 +531,6 @@ class TransformersAdapter(InferencePort):
         return {"activations": [], "attention_maps": []}
     
     def generate_image(self, prompt: str, style: str = "") -> str:
-        import urllib.parse
-        encoded_prompt = urllib.parse.quote(f"{prompt} {style}".strip())
-        return f"https://pollinations.ai/p/{encoded_prompt}?width=1024&height=1024&seed=42&model=flux"
+        return None # Implementé via DiffusersAdapter
 
     def health_check(self) -> dict: return {"status": "online" if self.model else "offline", "engine": "transformers"}

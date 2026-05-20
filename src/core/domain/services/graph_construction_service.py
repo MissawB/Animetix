@@ -25,11 +25,15 @@ class KnowledgeGraphConstructionService:
         response = self.inference_engine.generate(prompt, system_prompt)
         
         try:
+            import orjson
+            from .exceptions import ParsingError
             # Nettoyage de la réponse au cas où le LLM ajoute du texte autour du JSON
             if '{' in response and '}' in response:
                 clean_json = response[response.find('{'):response.rfind('}')+1]
                 return orjson.loads(clean_json)
+            raise ParsingError("No JSON object found in graph extraction response.")
         except Exception as e:
             logger.error(f"Graph Extraction Error: {e}")
-            
-        return {"entities": [], "relations": []}
+            if not isinstance(e, ParsingError):
+                raise ParsingError(f"Graph JSON parsing failed: {str(e)}")
+            raise

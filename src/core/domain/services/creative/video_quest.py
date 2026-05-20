@@ -66,11 +66,14 @@ class VideoQuestService:
         res_raw = results[0]["answer"]
         try:
             import orjson
+            from ...exceptions import ParsingError
             # Robust JSON extraction
             if '{' in res_raw and '}' in res_raw:
                 data = orjson.loads(res_raw[res_raw.find('{'):res_raw.rfind('}')+1])
                 return data.get('combats', [])
+            raise ParsingError("No JSON object found in combat lore response.")
         except Exception as e:
             logger.error(f"Failed to parse combat lore JSON: {e}")
-            
-        return []
+            if not isinstance(e, ParsingError):
+                raise ParsingError(f"JSON Decode Error in combat lore: {str(e)}")
+            raise

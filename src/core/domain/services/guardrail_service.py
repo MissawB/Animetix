@@ -3,6 +3,7 @@ import logging
 from typing import List, Dict, Any, Optional
 from ...ports.inference_port import InferencePort
 from .prompt_manager import PromptManager
+from ..exceptions import InferenceError, ParsingError
 
 logger = logging.getLogger('animetix.guardrail')
 
@@ -31,8 +32,10 @@ class GuardrailService:
             categories=", ".join(categories)
         )
         
+        # L'InferenceError du moteur va remonter directement
+        response = self.inference_engine.generate(prompt, system_prompt=system)
+        
         try:
-            response = self.inference_engine.generate(prompt, system_prompt=system)
             # Nettoyage basique du JSON si le LLM a ajouté du markdown
             if "```json" in response:
                 response = response.split("```json")[1].split("```")[0].strip()
@@ -41,11 +44,9 @@ class GuardrailService:
             
             result = json.loads(response)
             return result
-        except Exception as e:
-            logger.error(f"❌ [Guardrail] LLM Moderation failed: {e}")
-            # En cas d'échec total, on autorise par défaut pour ne pas bloquer l'UX, 
-            # ou on bloque si la sécurité est critique. Ici on autorise avec log.
-            return {"is_safe": True, "action": "allow", "reasoning": "Fallback error recovery"}
+        except (json.JSONDecodeError, ValueError, IndexError) as e:
+            logger.error(f"❌ [Guardrail] LLM Moderation Parsing failed: {e}")
+            raise ParsingError(f"Failed to parse moderation response: {str(e)}")
 
     def validate_input(self, text: str) -> Dict[str, Any]:
         """Analyse la requête de l'utilisateur avant traitement."""
