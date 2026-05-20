@@ -1,9 +1,21 @@
 import pytest
 import io
+import sys
+import numpy as np
 from unittest.mock import MagicMock, patch
+from PIL import Image
+
+# Force modules to exist in sys.modules so they can be imported and patched
+mock_imageio = MagicMock()
+mock_transformers = MagicMock()
+mock_torch = MagicMock()
+
+sys.modules["imageio"] = mock_imageio
+sys.modules["transformers"] = mock_transformers
+sys.modules["torch"] = mock_torch
+
 from adapters.inference.transformers_adapter import TransformersAdapter
 from core.domain.services.rag.video_rag_service import VideoRAGService
-from PIL import Image
 
 @pytest.fixture
 def adapter():
@@ -15,17 +27,21 @@ def video_service(adapter):
 
 def test_frame_sampling_logic(adapter):
     """Vérifie que l'échantillonnage de frames extrait le bon nombre d'images."""
-    # On mock imageio.get_reader pour simuler une vidéo
-    with patch("imageio.get_reader") as mock_reader:
-        mock_instance = MagicMock()
-        mock_instance.get_meta_data.return_value = {"fps": 1, "duration": 10}
-        mock_instance.__iter__.return_value = [Image.new('RGB', (10, 10)) for _ in range(10)]
-        mock_reader.return_value = mock_instance
-        
-        frames = adapter._sample_video_frames(b"fake_video", max_frames=5)
-        
-        assert len(frames) == 5
-        assert isinstance(frames[0], Image.Image)
+    # On mock imageio.get_reader directement via le mock pré-injecté
+    mock_instance = MagicMock()
+    mock_instance.get_meta_data.return_value = {"fps": 1, "duration": 10}
+    # On yield des tableaux numpy (ce que fait imageio par défaut)
+    mock_instance.__iter__.return_value = [np.zeros((10, 10, 3), dtype=np.uint8) for _ in range(10)]
+    mock_imageio.get_reader.return_value = mock_instance
+    
+    with patch("builtins.open", MagicMock()):
+        with patch("tempfile.NamedTemporaryFile") as mock_tmp:
+            mock_tmp.return_value.__enter__.return_value.name = "fake_path"
+            with patch("os.unlink", MagicMock()):
+                frames = adapter._sample_video_frames(b"fake_video", max_frames=5)
+    
+    assert len(frames) == 5
+    assert isinstance(frames[0], Image.Image)
 
 @patch("adapters.inference.transformers_adapter.TransformersAdapter._load_video_vlm", MagicMock())
 def test_get_video_temporal_embeddings_mocked(adapter):
