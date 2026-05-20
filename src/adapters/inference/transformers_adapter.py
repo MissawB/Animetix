@@ -640,13 +640,17 @@ class TransformersAdapter(InferencePort):
         """Chargement paresseux de Kyutai Moshi pour le S2S natif."""
         if hasattr(self, '_moshi_model'): return
         try:
+            import torch
             from moshi.models import Moshi
             logger.info("⏳ Loading Kyutai Moshi (Speech-to-Speech)...")
+            # Moshi can be large, we use standard loading with hardware detection
             self._moshi_model = Moshi.from_pretrained("kyutai/moshi-1b-preview")
-            if torch.cuda.is_available():
-                self._moshi_model.to("cuda")
-        except ImportError:
-            raise InferenceError("Library 'moshi' is not installed. Please install it with 'pip install moshi'.")
+            
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            self._moshi_model.to(device)
+            logger.info(f"✅ Moshi engine loaded on {device}")
+        except ImportError as e:
+            raise InferenceError(f"Library 'moshi' or dependencies missing: {str(e)}. Please install it with 'pip install moshi'.")
         except Exception as e:
             logger.error(f"❌ Failed to load Moshi model: {e}")
             raise InferenceError(f"Moshi engine loading failed: {str(e)}")
@@ -656,35 +660,41 @@ class TransformersAdapter(InferencePort):
         Implémentation native du Speech-to-Speech via Kyutai Moshi.
         Convertit l'audio d'entrée en 24kHz Mono, passe par Moshi, et renvoie la réponse audio.
         """
+        if not audio_input:
+            raise InferenceError("Audio input is empty.")
+
         try:
             import io
             import wave
             import numpy as np
             from pydub import AudioSegment
+            import torch
             
             self._load_moshi_engine()
             
             # 1. Prétraitement Audio : Resampling à 24kHz Mono
+            # On utilise pydub pour lire n'importe quel format (mp3, wav, ogg)
             audio = AudioSegment.from_file(io.BytesIO(audio_input))
             audio = audio.set_frame_rate(24000).set_channels(1)
             
-            # Conversion en tensor float32 normalisé
+            # Conversion en tensor float32 normalisé [-1.0, 1.0]
             samples = np.array(audio.get_array_of_samples()).astype(np.float32)
+            # max_val dépend du sample_width (16-bit = 32768)
             max_val = float(1 << (8 * audio.sample_width - 1))
             samples /= max_val
             
             input_tensor = torch.from_numpy(samples).unsqueeze(0).to(self._moshi_model.device) # [1, T]
             
-            # 2. Inférence Moshi (Encoder -> Transformer -> Decoder)
-            # Moshi génère généralement de l'audio de manière causale. 
-            # Pour une interface synchrone, on process le buffer.
+            # 2. Inférence Moshi
             with torch.no_grad():
-                # Simulation de l'appel à la génération Moshi
-                # Note: L'API réelle de moshi peut varier, on utilise ici le pattern standard attendu
+                # Moshi API: generate returns the audio tokens/waveform
                 output_audio_tensor = self._moshi_model.generate(input_tensor)
             
             # 3. Post-traitement : Conversion tensor -> WAV bytes
             output_np = output_audio_tensor.detach().cpu().numpy().squeeze()
+            
+            # Clipping pour éviter les distorsions lors de la conversion en int16
+            output_np = np.clip(output_np, -1.0, 1.0)
             output_int16 = (output_np * 32767).astype(np.int16)
             
             buffer = io.BytesIO()
@@ -693,6 +703,10 @@ class TransformersAdapter(InferencePort):
                 wf.setsampwidth(2)
                 wf.setframerate(24000)
                 wf.writeframes(output_int16.tobytes())
+            
+            # Cleanup VRAM
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
                 
             return buffer.getvalue()
             
