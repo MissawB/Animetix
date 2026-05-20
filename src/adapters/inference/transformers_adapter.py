@@ -779,21 +779,65 @@ class TransformersAdapter(InferencePort):
             logger.error(f"❌ Speech-to-Speech failed: {e}")
             raise InferenceError(f"Native S2S failed: {str(e)}")
 
+    async def _fetch_images(self, urls: List[str]) -> List[Any]:
+        import aiohttp
+        import asyncio
+        from PIL import Image
+        from io import BytesIO
+        
+        async with aiohttp.ClientSession() as session:
+            tasks = []
+            for url in urls:
+                async def fetch(url):
+                    try:
+                        async with session.get(url, timeout=10) as response:
+                            if response.status == 200:
+                                data = await response.read()
+                                return Image.open(BytesIO(data)).convert("RGB")
+                    except Exception as e:
+                        logger.warning(f"Failed to fetch {url}: {e}")
+                    return None
+                tasks.append(fetch(url))
+            return await asyncio.gather(*tasks)
+
+    def _load_clip_model(self):
+        if hasattr(self, '_clip_model'): return
+        try:
+            from sentence_transformers import SentenceTransformer
+            logger.info("🏗️ Loading CLIP for reranking...")
+            self._clip_model = SentenceTransformer('clip-ViT-B-32')
+        except Exception as e:
+            logger.error(f"❌ Failed to load CLIP: {e}")
+            raise InferenceError(f"Critical failure during CLIP loading: {str(e)}")
+
     def visual_rerank(self, query: str, image_urls: List[str], system_prompt: str = "") -> List[Dict[str, Any]]: 
         """Reranking visuel via CLIP."""
-        try:
-            from sentence_transformers import util
-            if not hasattr(self, '_clip_model'):
-                from sentence_transformers import SentenceTransformer
-                self._clip_model = SentenceTransformer('clip-ViT-B-32')
+        import asyncio
+        from sentence_transformers import util
+        
+        self._load_clip_model()
+        
+        # Async fetch images
+        images = asyncio.run(self._fetch_images(image_urls))
+        
+        # Filter None results
+        valid_images = [img for img in images if img is not None]
+        valid_urls = [url for url, img in zip(image_urls, images) if img is not None]
+        
+        if not valid_images:
+            return []
             
-            query_emb = self._clip_model.encode(query, convert_to_tensor=True)
-            # Ici on devrait normalement fetch les images, mais pour le stub on compare le query aux URLs
-            results = []
-            for i, url in enumerate(image_urls):
-                results.append({"index": i, "score": 0.5, "url": url})
-            return results
-        except Exception: return [{"index": i, "score": 0.0} for i in range(len(image_urls))]
+        # Embeddings
+        query_emb = self._clip_model.encode(query, convert_to_tensor=True)
+        img_embs = self._clip_model.encode(valid_images, convert_to_tensor=True)
+        
+        scores = util.cos_sim(query_emb, img_embs)[0]
+        
+        results = []
+        for i, score in enumerate(scores):
+            results.append({"url": valid_urls[i], "score": float(score)})
+            
+        return sorted(results, key=lambda x: x["score"], reverse=True)
 
     def moderate_content(self, text: str, categories: List[str]) -> Dict[str, Any]:
         """Analyse le texte pour détecter du contenu inapproprié ou des spoilers (Guardrail)."""
