@@ -10,5 +10,6 @@ from .social import leaderboard_view, achievements_view, profile_view, social_da
 from .multiplayer import undercover_party_setup, undercover_party_play, undercover_online_join, undercover_online_room, codemanga_setup, codemanga_room, codemanga_game, create_duel, join_duel, duel_room_view, finish_duel, global_boss_view, global_boss_guess
 from .media_games import blindtest_view, blindtest_guess, covertest_view, covertest_guess
 from .mlops import health_check_view, ai_evaluation_dashboard, latent_space_view, submit_ai_feedback, gold_curation_view, validate_gold_entry, reject_gold_entry
+from .audio import audio_lab_view, clone_voice_api
 from .donation import transparency_dashboard, donation_webhook
 from .api import get_task_status, emoji_decode_stream, paradox_stream, agentic_rag_stream, sync_offline_data, animinator_stream
