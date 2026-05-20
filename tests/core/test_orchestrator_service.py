@@ -17,34 +17,38 @@ def mock_factory():
 
 @pytest.fixture
 def orchestrator(mock_engine, mock_factory):
-    return OrchestratorAgentService(inference_engine=mock_engine, services_factory=mock_factory)
+    mock_prompt = MagicMock()
+    # On mocke get_prompt pour qu'il retourne un tuple (prompt, system)
+    mock_prompt.get_prompt.return_value = ("prompt", "system")
+    return OrchestratorAgentService(inference_engine=mock_engine, services_factory=mock_factory, prompt_manager=mock_prompt)
 
-def test_execute_workflow_simple(orchestrator, mock_engine):
+@pytest.mark.asyncio
+async def test_execute_workflow_simple(orchestrator, mock_engine):
     mock_engine.generate.side_effect = [
         '{"plan": ["p"], "next_node": "WRITER"}', # Planner
         'The final answer.' # Writer
     ]
-    ans = orchestrator.execute_workflow("What is Naruto?", "Anime")
+    ans = await orchestrator.execute_workflow("What is Naruto?", "Anime")
     assert ans == 'The final answer.'
     assert mock_engine.generate.call_count == 2
 
-def test_execute_workflow_full_path(orchestrator, mock_engine, mock_factory):
+@pytest.mark.asyncio
+async def test_execute_workflow_full_path(orchestrator, mock_engine, mock_factory):
     mock_engine.generate.side_effect = [
         '{"plan": ["p"], "next_node": "RETRIEVER"}', # Planner
         'OUI', # Verifier (is reliable?)
         'Final result.' # Writer
     ]
-    ans = orchestrator.execute_workflow("Query", "Anime")
+    ans = await orchestrator.execute_workflow("Query", "Anime")
     assert ans == 'Final result.'
     mock_factory.agentic_rag.plan_and_solve.assert_called_once()
 
-def test_writer_low_confidence_retry(orchestrator, mock_engine, mock_factory):
+@pytest.mark.asyncio
+async def test_writer_low_confidence_retry(orchestrator, mock_engine, mock_factory):
     mock_engine.generate.side_effect = [
         '{"plan": [], "next_node": "WRITER"}', # Step 1: Planner
         'Bad answer.', # Step 2: Writer
-        '{"plan": [], "next_node": "WRITER"}', # Step 3: Planner (re-called by next node dispatch in loop?) 
-        # Wait, the loop will re-run Planner if next_node is PLANNER.
-        # But WRITER sets next_node to RETRIEVER if low confidence.
+        '{"plan": [], "next_node": "WRITER"}', # Step 3: Planner
         'Better answer.' # Step 5: Writer
     ]
     # Configure factory to return low confidence first
@@ -53,5 +57,5 @@ def test_writer_low_confidence_retry(orchestrator, mock_engine, mock_factory):
         {"confidence_score": 0.9, "is_reliable": True}
     ]
     
-    ans = orchestrator.execute_workflow("Query", "Anime")
+    ans = await orchestrator.execute_workflow("Query", "Anime")
     assert ans == 'Better answer.'

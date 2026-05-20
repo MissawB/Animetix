@@ -28,12 +28,12 @@ class OrchestratorAgentService:
         self.prompt_manager = prompt_manager
         self.message_bus = message_bus
 
-    def execute_workflow(self, query: str, media_type: str) -> str:
+    async def execute_workflow(self, query: str, media_type: str) -> str:
         """Point d'entrée du workflow LangGraph-like."""
         state = State(query, media_type)
         
         if self.message_bus:
-            self.message_bus.publish_binary_message("Orchestrator", "System", "WORKFLOW_START", {"query": query})
+            await self.message_bus.publish_binary_message("Orchestrator", "System", "WORKFLOW_START", {"query": query})
         
         # Simulation d'une boucle de graphe d'états
         max_steps = 10
@@ -54,7 +54,7 @@ class OrchestratorAgentService:
                 state.next_node = "END"
                 
         if self.message_bus:
-            self.message_bus.publish_binary_message("Orchestrator", "System", "WORKFLOW_END", {"answer_length": len(state.final_answer)})
+            await self.message_bus.publish_binary_message("Orchestrator", "System", "WORKFLOW_END", {"answer_length": len(state.final_answer)})
             
         return state.final_answer
 

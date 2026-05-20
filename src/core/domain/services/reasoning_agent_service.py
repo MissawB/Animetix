@@ -18,10 +18,10 @@ class ReasoningAgentService:
         if self.agent_bus:
             self.agent_bus.register_agent("reasoning_agent", self._on_bus_message)
 
-    def _on_bus_message(self, msg_id: str):
+    async def _on_bus_message(self, msg_id: str):
         """Callback pour les messages asynchrones/partagés."""
         if not self.agent_bus: return
-        data = self.agent_bus.read_shared_memory(msg_id)
+        data = await self.agent_bus.read_shared_memory(msg_id)
         if data and data.get("target") == "reasoning_agent":
             logger.info(f"Agent Raisonneur a reçu une instruction via le bus : {data.get('command')}")
             # Ici on pourrait déclencher un solve_complex_query ou une autre action
