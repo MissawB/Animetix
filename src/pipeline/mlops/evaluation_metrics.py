@@ -18,18 +18,8 @@ GOLD_DATASET = os.path.join(BASE_DIR, 'data', 'mlops', 'gold_dataset.json')
 
 def calculate_animetix_score(metrics):
     """Calcule une note globale sur 10 basée sur les métriques RAGAS."""
-    # Poids : Faithfulness (40%), Relevancy (30%), Context Recall (30%)
-    f = metrics.get('faithfulness', 0)
-    r = metrics.get('answer_relevancy', 0)
-    cr = metrics.get('context_recall', 0)
-    
-    # Gestion des NaN
-    f = 0 if np.isnan(f) else f
-    r = 0 if np.isnan(r) else r
-    cr = 0 if np.isnan(cr) else cr
-    
-    score = (f * 0.4 + r * 0.3 + cr * 0.3) * 10
-    return round(score, 2)
+    from core.domain.services.scoring_service import ScoringDomainService
+    return ScoringDomainService.calculate_animetix_ragas_score(metrics)
 
 @asset(group_name="mlops", deps=["anime_artifacts", "manga_artifacts"])
 def ragas_performance_comparison():
