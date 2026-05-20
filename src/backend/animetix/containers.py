@@ -199,6 +199,7 @@ class Container:
             librarian=self.librarian,
             forge=self.forge,
             saga_agent=self.saga_agent,
+            chronicler=self.chronicler,
             uncertainty_service=self.uncertainty_service
         ))
 
