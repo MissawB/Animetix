@@ -24,7 +24,6 @@ class InferencePort(ABC):
         """Génère du texte en flux (streaming) à partir d'un prompt. thinking_budget > 0 ou thinking_mode=True active le raisonnement approfondi."""
         pass
 
-    @abstractmethod
     def generate_structured(
         self, 
         prompt: str, 
@@ -33,7 +32,7 @@ class InferencePort(ABC):
         max_retries: int = 3
     ) -> Any:
         """Génère une réponse structurée validée par un modèle Pydantic."""
-        pass
+        raise NotImplementedError("generate_structured not implemented for this adapter")
 
     @abstractmethod
     def generate_image(self, prompt: str, style: str = "") -> str:

@@ -298,3 +298,26 @@ class VllmAdapter(InferencePort):
         except Exception as e:
             logger.error(f"vLLM health check failed: {e}")
         return {"status": "offline", "engine": "vLLM"}
+
+    def generate_structured(self, prompt: str, response_model: type, system_prompt: str = "Tu es un expert en extraction de données structurées.", max_retries: int = 3) -> Any:
+        try:
+            import instructor
+            from openai import OpenAI
+            
+            client = instructor.from_openai(
+                OpenAI(base_url=self.api_base, api_key="not-needed"),
+                mode=instructor.Mode.JSON
+            )
+            
+            return client.chat.completions.create(
+                model=self.model_name,
+                response_model=response_model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": prompt}
+                ],
+                max_retries=max_retries
+            )
+        except Exception as e:
+            logger.error(f"vLLM Structured Generation failed: {e}")
+            raise
