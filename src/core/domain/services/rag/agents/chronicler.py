@@ -1,0 +1,58 @@
+import logging
+from typing import Dict, List, Any, Optional
+from core.domain.services.llm_service import LLMService
+from core.domain.services.prompt_manager import PromptManager
+from pipeline.neo4j_client import Neo4jManager
+from core.ports.web_search_port import WebSearchPort
+
+logger = logging.getLogger("animetix.rag.chronicler")
+
+class ChroniclerAgent:
+    def __init__(
+        self, 
+        llm_service: LLMService, 
+        prompt_manager: PromptManager, 
+        neo4j_manager: Neo4jManager,
+        web_search: WebSearchPort
+    ):
+        self.llm_service = llm_service
+        self.prompt_manager = prompt_manager
+        self.neo4j_manager = neo4j_manager
+        self.web_search = web_search
+
+    def extract_theories(self, saga_name: str, source_text: str) -> List[Dict[str, Any]]:
+        prompt, sys = self.prompt_manager.get_prompt("chronicler_extraction", source_text=source_text)
+        res_raw = self.llm_service.generate(prompt, sys, use_slm=True)
+        
+        try:
+            import orjson
+            if '{' in res_raw and '}' in res_raw:
+                data = orjson.loads(res_raw[res_raw.find('{'):res_raw.rfind('}')+1])
+                return data.get('theories', [])
+            return []
+        except Exception as e:
+            logger.error(f"Failed to parse theories from LLM: {e}")
+            return []
+
+    def pulse_community(self, saga_name: str):
+        """Scans the web for community lore and updates Neo4j."""
+        logger.info(f"📡 [Chronicler] Pulsing community lore for {saga_name}...")
+        
+        search_query = f"{saga_name} fan theories explained consensus reddit"
+        results = self.web_search.search(search_query)
+        
+        if not results:
+            logger.warning(f"No community data found for {saga_name}.")
+            return
+            
+        compiled_text = "\n".join([f"[{r.get('title')}] {r.get('snippet')}" for r in results])
+        
+        theories = self.extract_theories(saga_name, compiled_text)
+        logger.info(f"⚖️ [Chronicler] Extracted {len(theories)} theories. Syncing...")
+        
+        for theory in theories:
+            # Ensure source URL is attached for traceability
+            theory['source_url'] = results[0].get('link', 'Web Search') if results else 'Unknown'
+            self.neo4j_manager.sync_fan_theory(saga_name, theory)
+            
+        logger.info("✅ Community pulse complete.")
