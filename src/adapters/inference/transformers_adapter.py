@@ -35,7 +35,11 @@ class TransformersAdapter(InferencePort):
             logger.error(f"❌ Failed to load local model: {e}")
 
     def generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False) -> str:
-        self._load_model()
+        try:
+            self._load_model()
+        except Exception as e:
+            raise InferenceError(f"Critical failure during model loading: {str(e)}")
+            
         if not self.model: 
             raise InferenceError("Local Transformers model not loaded.")
         
@@ -335,12 +339,10 @@ class TransformersAdapter(InferencePort):
             os.unlink(tmp_out_path)
             return f"data:video/mp4;base64,{res_base64}"
             
-        except ImportError:
-            logger.error("❌ Dependencies missing for Video Style Transfer (diffusers, imageio, cv2).")
-            return ""
+        except ImportError as e:
+            raise InferenceError(f"Dependencies missing for Video Style Transfer: {str(e)}")
         except Exception as e:
-            logger.error(f"❌ Video Style Transfer failed: {e}")
-            return ""
+            raise InferenceError(f"Video Style Transfer failed: {str(e)}")
 
     def clone_voice(self, text: str, reference_audio: bytes, language: str = "fr") -> bytes:
         """
@@ -348,6 +350,7 @@ class TransformersAdapter(InferencePort):
         """
         try:
             import tempfile
+            import os
             from TTS.api import TTS
             
             if not hasattr(self, '_tts_model'):
@@ -377,12 +380,10 @@ class TransformersAdapter(InferencePort):
             os.unlink(tmp_out_path)
             return audio_data
             
-        except ImportError:
-            logger.error("❌ TTS dependency missing for Voice Cloning.")
-            return b""
+        except ImportError as e:
+            raise InferenceError(f"TTS dependency missing for Voice Cloning: {str(e)}")
         except Exception as e:
-            logger.error(f"❌ Voice Cloning failed: {e}")
-            return b""
+            raise InferenceError(f"Voice Cloning failed: {str(e)}")
 
     def generate_3d_scene(self, image_data: bytes, depth_map: bytes) -> Dict: 
         """

@@ -19,10 +19,18 @@ sys.modules["TTS.api"] = mock_tts
 sys.modules["cv2"] = mock_cv2
 
 from adapters.inference.transformers_adapter import TransformersAdapter
+from core.domain.exceptions import InferenceError
 
 @pytest.fixture
 def adapter():
     return TransformersAdapter(use_4bit=False)
+
+def test_inference_error_on_failure(adapter):
+    """Vérifie que l'adaptateur lève une InferenceError en cas de pépin."""
+    with patch.object(adapter, "_load_model", side_effect=Exception("GPU OOM")):
+        with pytest.raises(InferenceError) as excinfo:
+            adapter.generate("Hello")
+        assert "Critical failure during model loading: GPU OOM" in str(excinfo.value)
 
 def test_generate_3d_scene_logic(adapter):
     """Vérifie la logique de projection RGB-D en PLY."""
@@ -72,10 +80,13 @@ def test_clone_voice_mocked(adapter):
     # mock_tts is sys.modules["TTS"] and sys.modules["TTS.api"]
     tts_instance = mock_tts.TTS.return_value
     
-    # On mock l'écriture du fichier de sortie
-    with patch("builtins.open", MagicMock()):
+    # On mock l'écriture et la lecture du fichier de sortie
+    m = MagicMock()
+    m.__enter__.return_value.read.return_value = b"fake_audio_bytes"
+    
+    with patch("builtins.open", return_value=m):
         with patch("os.unlink", MagicMock()):
             res = adapter.clone_voice("Hello", b"audio_sample")
             
-    assert isinstance(res, bytes)
+    assert res == b"fake_audio_bytes"
     mock_tts.TTS.assert_called_once()
