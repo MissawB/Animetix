@@ -70,18 +70,22 @@ class MultiAgentBus:
     def register_agent(self, agent_id: str, callback: Callable):
         """Enregistre un agent sur le bus d'événements."""
         self._subscribers[agent_id] = callback
-        
+
         if self._redis_client:
             # Annulation d'une tâche existante pour cet agent si elle existe
             if agent_id in self._listen_tasks:
                 self._listen_tasks[agent_id].cancel()
-            
-            # Création d'une tâche de fond pour écouter Redis Pub/Sub
-            task = asyncio.create_task(self._listen_loop(agent_id, callback))
-            self._listen_tasks[agent_id] = task
-            
-        logger.info(f"🔌 Agent '{agent_id}' connected to MultiAgentBus.")
 
+            # Création d'une tâche de fond pour écouter Redis Pub/Sub
+            try:
+                loop = asyncio.get_running_loop()
+                task = loop.create_task(self._listen_loop(agent_id, callback))
+                self._listen_tasks[agent_id] = task
+                logger.info(f"📡 MultiAgentBus: Background listen task started for agent '{agent_id}'")
+            except RuntimeError:
+                logger.warning(f"⚠️ MultiAgentBus: No running event loop. Agent '{agent_id}' will not listen to Pub/Sub messages (Publish-only mode).")
+
+        logger.info(f"🔌 Agent '{agent_id}' registered on MultiAgentBus.")
     async def publish_binary_message(self, sender_id: str, target_id: str, action: str, payload: Dict[str, Any]) -> str:
         """
         Envoie un message binaire optimisé d'un agent à un autre via shared memory.

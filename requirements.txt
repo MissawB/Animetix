@@ -1,4 +1,5 @@
 ﻿accelerate==1.13.0
+diffusers>=0.31.0
 aiofiles==24.1.0
 aiohappyeyeballs==2.6.1
 aiohttp==3.13.5
@@ -270,7 +271,6 @@ playwright
 drf_spectacular
 pytest-playwright
 z3-solver
-diffusers
 opencv-python-headless
 imageio[ffmpeg]
 TTS

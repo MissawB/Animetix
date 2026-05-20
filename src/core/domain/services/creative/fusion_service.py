@@ -27,14 +27,8 @@ class FusionDomainService:
         )
         
         try:
-            # We assume the inference engine port might support image generation
-            # If not, we return a themed placeholder or use a default URL pattern
-            if hasattr(self.inference_engine, 'generate_image'):
-                return self.inference_engine.generate_image(prompt)
-            
-            # Fallback/Mock implementation
-            # In a real project, this would call a Stable Diffusion or DALL-E API
-            return f"https://image.pollinations.ai/prompt/{prompt.replace(' ', '%20')}?width=1024&height=576&nologo=true"
+            # We assume the inference engine port supports image generation
+            return self.inference_engine.generate_image(prompt)
         except Exception as e:
             logger.error(f"Image Generation failed: {e}")
             return None

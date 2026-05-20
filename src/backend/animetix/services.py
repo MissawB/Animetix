@@ -139,4 +139,6 @@ class AnimetixService:
     def video_quest_service(self): return self._container.video_quest_service
     @property
     def rag_service(self): return self._container.rag_service
+    @property
+    def voice_cloning_service(self): return self._container.voice_cloning_service
 

@@ -52,7 +52,7 @@ class AgenticRAGService:
         self.obs_service = obs_service
         self.graph_expert = graph_expert or GraphExpert(self.llm_service, prompt_manager)
         self.debate_manager = debate_manager
-        self.librarian = librarian or LibrarianAgent(self.llm_service, prompt_manager)
+        self.librarian = librarian or LibrarianAgent(self.llm_service, prompt_manager, self.web_search)
         self.uncertainty_service = uncertainty_service or UncertaintyService(inference_engine)
 
         # Initialisation des agents spécialisés

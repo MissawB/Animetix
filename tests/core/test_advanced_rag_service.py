@@ -19,6 +19,10 @@ def mock_repository():
 def mock_llm_service():
     service = MagicMock()
     service.inference_engine.generate.return_value = "OUI"
+    # Ajout d'un mock pour prompt_manager pour éviter les erreurs d'unpacking
+    pm = MagicMock()
+    pm.get_prompt.return_value = ("Test Prompt", "System Prompt")
+    service.prompt_manager = pm
     return service
 
 @pytest.fixture

@@ -152,6 +152,10 @@ class Container:
         return self._get('agent_bus', lambda: MultiAgentBus(redis_url=os.getenv("REDIS_URL")))
 
     @property
+    def web_search(self):
+        return self._get('web_search', lambda: DuckDuckGoSearchAdapter())
+
+    @property
     def rag_service(self):
         return self._get('rag_service', lambda: AdvancedRAGService(repository=self.repository, llm_service=self.llm_service, neo4j_manager=neo4j_manager, reranker=self.reranker))
 
@@ -165,14 +169,14 @@ class Container:
 
     @property
     def librarian(self):
-        return self._get('librarian', lambda: LibrarianAgent(llm_service=self.llm_service, prompt_manager=self.prompt_manager))
+        return self._get('librarian', lambda: LibrarianAgent(llm_service=self.llm_service, prompt_manager=self.prompt_manager, web_search=self.web_search))
 
     @property
     def agentic_rag(self):
         return self._get('agentic_rag', lambda: AgenticRAGService(
             inference_engine=self.inference_engine, 
             rag_service=self.rag_service, 
-            web_search=DuckDuckGoSearchAdapter(), 
+            web_search=self.web_search, 
             prompt_manager=self.prompt_manager, 
             llm_service=self.llm_service, 
             neo4j_manager=neo4j_manager, 
