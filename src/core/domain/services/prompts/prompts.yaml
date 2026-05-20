@@ -51,6 +51,7 @@ searcher_plan:
     3. Détermine si l'actualité récente nécessite un accès Web.
     4. RECONNAISSANCE VISUELLE : Détermine si la requête porte sur des éléments visuels précis (ex: couleurs, objets, décors). Si oui, mets 'is_visual_query' à true.
     5. RAISONNEMENT GRAPHE : Si la question implique des relations complexes (ex: "autres œuvres du même réalisateur", "tendances d'un studio"), propose une liste de relations à suivre dans le graphe (ex: ["CREATED_BY", "CREATED_BY"] pour trouver les co-créations).
+    6. SAGA & ÉVOLUTION : Détermine si la requête porte sur une franchise étendue (ex: Dragon Ball, Fate), un univers complexe ou l'évolution d'une série sur le long terme. Si oui, mets 'requires_saga' à true.
     
     RÉPONDS UNIQUEMENT EN JSON :
     {{
@@ -58,6 +59,7 @@ searcher_plan:
       "entities": [],
       "requires_web": true|false,
       "is_visual_query": true|false,
+      "requires_saga": true|false,
       "graph_traversal_steps": [],
       "reasoning": "pourquoi ce choix ?"
     }}

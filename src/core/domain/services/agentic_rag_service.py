@@ -180,8 +180,11 @@ class AgenticRAGService:
         else:
             yield StreamStep(type="thought", content="[World-Brain] Aucune saga macro-temporelle identifiée pour cette requête.").model_dump()
 
-        # Cascade vers RESEARCH pour les détails spécifiques aux médias
-        ctx.current_state = RAGState.RESEARCH
+        # Cascade intelligente vers GRAPH ou RESEARCH
+        if ctx.plan.requires_graph:
+            ctx.current_state = RAGState.GRAPH_EXPLORE
+        else:
+            ctx.current_state = RAGState.RESEARCH
 
     def _handle_graph_explore(self, ctx: RAGContext) -> Generator[Dict, None, None]:
         if not ctx.plan:
