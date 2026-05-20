@@ -659,7 +659,10 @@ class TransformersAdapter(InferencePort):
         try:
             import io
             import base64
-            import scipy.io.wavfile as wavfile
+            try:
+                import scipy.io.wavfile as wavfile
+            except ImportError as e:
+                raise InferenceError(f"Dependency 'scipy' is missing: {str(e)}")
             
             self._load_audioldm_engine()
             
@@ -685,9 +688,15 @@ class TransformersAdapter(InferencePort):
             buffer = io.BytesIO()
             wavfile.write(buffer, sample_rate, waveform)
             
+            # Cleanup VRAM
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+            
             b64_audio = base64.b64encode(buffer.getvalue()).decode('utf-8')
             return f"data:audio/wav;base64,{b64_audio}"
             
+        except InferenceError:
+            raise
         except Exception as e:
             logger.error(f"❌ Soundscape generation failed: {e}")
             raise InferenceError(f"Soundscape generation failed: {str(e)}")
