@@ -119,3 +119,20 @@ class ForgeHypothesis(BaseModel):
     hypothesis: str
     rationale: str
     confidence: float
+
+# --- GRAPH EXTRACTION SCHEMAS ---
+
+class GraphEntity(BaseModel):
+    name: str = Field(description="Nom de l'entité (ex: Naruto Uzumaki, Konoha)")
+    type: str = Field(description="Type de l'entité (ex: Personnage, Lieu, Clan, Technique)")
+    description: str = Field(description="Brève description de l'entité")
+
+class GraphRelation(BaseModel):
+    source: str = Field(description="Nom de l'entité source")
+    target: str = Field(description="Nom de l'entité cible")
+    relation: str = Field(description="Nature de la relation (ex: MEMBRE_DE, RIVAL_DE, MAITRISE)")
+    description: str = Field(description="Description ou contexte de la relation")
+
+class GraphExtraction(BaseModel):
+    entities: List[GraphEntity] = Field(default_factory=list)
+    relations: List[GraphRelation] = Field(default_factory=list)
