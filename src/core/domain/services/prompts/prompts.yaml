@@ -712,3 +712,34 @@ forge_speculation:
     }}
   system_prompt: "Tu es le cerveau spéculatif d'Animetix. Tu transformes les manques de données en déductions expertes."
 
+# --- THE CHRONICLER PROMPTS ---
+
+chronicler_extraction:
+  template: |
+    RÔLE : Chroniqueur de Communauté (The Chronicler).
+    TACHE : Extrais et classifie les théories de fans à partir du texte brut fourni.
+
+    TEXTE SOURCE (Reddit/Forums) :
+    {source_text}
+
+    MISSION :
+    1. Identifie les théories distinctes sur la franchise.
+    2. Pour chaque théorie, évalue :
+       - Popularité (High|Medium|Low).
+       - Plausibilité (0.0 à 1.0) basée sur la cohérence avec le Lore.
+    3. Précise si certains éléments sont devenus CANON.
+
+    RÉPONDS UNIQUEMENT EN JSON :
+    {{
+      "theories": [
+        {{
+          "title": "...",
+          "description": "...",
+          "popularity": "...",
+          "plausibility": 0.0,
+          "is_canon_candidate": true|false
+        }}
+      ]
+    }}
+  system_prompt: "Tu es l'Expert en Lore Communautaire Animetix. Tu sais séparer le bruit du consensus."
+
