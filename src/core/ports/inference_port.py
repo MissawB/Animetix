@@ -25,6 +25,17 @@ class InferencePort(ABC):
         pass
 
     @abstractmethod
+    def generate_structured(
+        self, 
+        prompt: str, 
+        response_model: type,
+        system_prompt: str = "Tu es un expert en extraction de données structurées.",
+        max_retries: int = 3
+    ) -> Any:
+        """Génère une réponse structurée validée par un modèle Pydantic."""
+        pass
+
+    @abstractmethod
     def generate_image(self, prompt: str, style: str = "") -> str:
         """Génère une image à partir d'un prompt et retourne une URL ou Base64."""
         pass
