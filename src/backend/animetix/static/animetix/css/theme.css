@@ -1,0 +1,26 @@
+:root {
+    /* Dynamic Theme Variables - Default (Classic Blue) */
+    --page-bg: #f1f3f5;
+    --page-text: #1a1a2e;
+    --accent-color: #fdb913; /* Note: Default value, overridden by Django context if provided */
+    --accent-dark: #d97706;
+    --card-bg: #ffffff;
+    --card-shadow: rgba(0,0,0,0.05);
+    --sidebar-bg: #ffffff;
+    --nav-gradient: linear-gradient(to right, var(--accent-color), var(--accent-dark));
+    --hero-gradient: linear-gradient(105deg, #fff9e6 40%, #fffcf0 40.1%);
+}
+
+/* Dark Mode Overrides - Simplified selector for maximum reliability */
+html[data-bs-theme="dark"], .dark {
+    --page-bg: #0f0f1a;
+    --page-text: #f1f2f6;
+    --card-bg: #1a1a2e;
+    --card-shadow: rgba(0,0,0,0.3);
+    --sidebar-bg: #1a1a2e;
+    --hero-gradient: linear-gradient(105deg, #0f0f1a 40%, #1a1a2e 40.1%);
+    
+    /* Override Bootstrap body colors */
+    --bs-body-bg: var(--page-bg);
+    --bs-body-color: var(--page-text);
+}

@@ -1,0 +1,9 @@
+{% load ui_components %}
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 3000;">
+    {% if newly_unlocked_achievements %}
+        {% for ach in newly_unlocked_achievements %}
+            {% achievement_toast ach %}
+        {% endfor %}
+    {% endif %}
+</div>

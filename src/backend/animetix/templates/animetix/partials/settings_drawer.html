@@ -1,0 +1,63 @@
+{% load static %}
+{% load i18n %}
+
+<aside id="settings-drawer" class="fixed right-0 top-0 h-full w-80 bg-white dark:bg-navy-800 z-[2000] translate-x-full transition-transform duration-400 p-8 shadow-[-20px_0_50px_rgba(0,0,0,0.1)] flex flex-col">
+    <div class="mb-12 flex items-center justify-between">
+        <span class="manga-font text-2xl tracking-tighter dark:text-white">⚙️ {% trans "Paramètres" %}</span>
+        <button class="text-3xl hover:rotate-90 transition-transform duration-300" onclick="toggleSettings()">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+
+    <div class="space-y-10">
+        <!-- Theme Selection -->
+        <div>
+            <p class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-6">{% trans "Apparence" %}</p>
+            <div class="grid grid-cols-3 gap-3">
+                <button id="theme-light" onclick="updateTheme('light')" class="flex flex-col items-center gap-2 p-3 rounded-2xl dark:bg-navy-700 border-2 border-transparent transition-all">
+                    <i class="bi bi-sun-fill text-xl text-yellow-500"></i>
+                    <span class="manga-font text-[9px]">{% trans "Clair" %}</span>
+                </button>
+                <button id="theme-dark" onclick="updateTheme('dark')" class="flex flex-col items-center gap-2 p-3 rounded-2xl dark:bg-navy-700 border-2 border-transparent transition-all">
+                    <i class="bi bi-moon-stars-fill text-xl text-blue-500"></i>
+                    <span class="manga-font text-[9px]">{% trans "Sombre" %}</span>
+                </button>
+                <button id="theme-auto" onclick="updateTheme('auto')" class="flex flex-col items-center gap-2 p-3 rounded-2xl dark:bg-navy-700 border-2 border-transparent transition-all">
+                    <i class="bi bi-display text-xl text-gray-500"></i>
+                    <span class="manga-font text-[9px]">{% trans "Auto" %}</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Sound Settings -->
+        <div>
+            <p class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-6">{% trans "Audio" %}</p>
+            <button onclick="window.soundManager.toggle()" class="w-full flex items-center justify-between p-4 rounded-2xl bg-gray-50 dark:bg-navy-700 hover:bg-yellow-400/20 transition-all border-2 border-transparent">
+                <div class="flex items-center gap-3">
+                    <i id="sound-toggle-icon" class="bi bi-volume-up-fill text-xl text-yellow-400"></i>
+                    <span class="manga-font text-xs">{% trans "Effets Sonores" %}</span>
+                </div>
+                <span class="text-[10px] font-black opacity-40">ON / OFF</span>
+            </button>
+        </div>
+
+        <!-- Language Selection -->
+        <div>
+            <p class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-6">{% trans "Langage" %}</p>
+            <div class="space-y-3">
+                <a href="{% url 'switch_lang' 'Français' %}" class="flex items-center justify-between p-4 rounded-2xl no-underline text-black dark:text-white hover:bg-gray-50 dark:hover:bg-navy-700 transition-all">
+                    <span class="manga-font text-xs">Français</span>
+                    {% if current_lang == 'Français' %}<i class="bi bi-check-circle-fill text-green-500"></i>{% endif %}
+                </a>
+                <a href="{% url 'switch_lang' 'English' %}" class="flex items-center justify-between p-4 rounded-2xl no-underline text-black dark:text-white hover:bg-gray-50 dark:hover:bg-navy-700 transition-all">
+                    <span class="manga-font text-xs">English</span>
+                    {% if current_lang == 'English' %}<i class="bi bi-check-circle-fill text-green-500"></i>{% endif %}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-auto opacity-30 text-center">
+        <p class="manga-font text-[8px] tracking-widest">Animetix v6.0.4</p>
+    </div>
+</aside>

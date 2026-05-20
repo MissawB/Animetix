@@ -1,0 +1,17 @@
+{% load static %}
+{% load i18n %}
+
+<div class="px-6 md:px-12 py-6 flex items-center justify-between">
+    <div class="flex items-center gap-6">
+        <button class="bg-black text-white p-2 rounded-xl hover:scale-110 transition lg:hidden" onclick="toggleSidebar()">
+            <i class="bi bi-list text-xl"></i>
+        </button>
+        <a href="{% url 'index' %}" class="flex items-center no-underline">
+            <img src="{% static 'animetix/img/logo/white_logo.png' %}" alt="Logo" class="h-8 dark:hidden">
+            <img src="{% static 'animetix/img/logo/logo.png' %}" alt="Logo" class="h-8 hidden dark:block">
+        </a>
+        <a href="{% url 'transparency' %}" class="hidden md:flex items-center gap-2 no-underline text-xs font-black italic text-muted hover:text-yellow-600 transition-all ml-4">
+            <i class="bi bi-shield-shaded"></i> {% trans "TRANSPARENCE" %}
+        </a>
+    </div>
+</div>
