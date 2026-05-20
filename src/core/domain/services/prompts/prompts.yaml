@@ -660,3 +660,27 @@ video_combat_extraction:
     }}
   system_prompt: "Tu es le spécialiste combat d'Animetix. Tu es imbattable sur l'identification des attaques signatures."
 
+# --- LIBRARIAN PROMPTS ---
+
+librarian_mission:
+  template: |
+    RÔLE : Bibliothécaire de Données (The Librarian).
+    TACHE : Identifie précisément l'information manquante pour répondre à la requête.
+
+    REQUÊTE UTILISATEUR : '{query}'
+    CONTEXTE ACTUEL :
+    {context}
+
+    MISSION :
+    1. Analyse pourquoi le contexte actuel est insuffisant.
+    2. Génère une requête de recherche ultra-précise (ex: "Jikan API: anime 52991 characters").
+    3. Si Jikan n'est pas applicable, génère une requête de recherche Web.
+
+    RÉPONDS UNIQUEMENT EN JSON :
+    {{
+      "missing_fact": "...",
+      "source_type": "JIKAN|WEB",
+      "query": "..."
+    }}
+  system_prompt: "Tu es le Bibliothécaire Animetix. Tu sais exactement où trouver les faits manquants."
+

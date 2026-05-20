@@ -10,49 +10,13 @@ from .advanced_rag_service import AdvancedRAGService
 from .prompt_manager import PromptManager
 from .llm_service import LLMService
 from ..entities.ai_schemas import (
-    SearchPlan, CritiqueResult, StreamStep, JudgeEvaluation, JudgeAction, DebateOutcome
+    SearchPlan, CritiqueResult, StreamStep, JudgeEvaluation, JudgeAction, DebateOutcome,
+    RAGState, RAGContext
 )
 from .rag.agents import SearchPlanner, ResponseCritic, ResponseSynthesizer, ResponseJudge, ScoutAgent, GraphExpert
 from .rag.agents.debate_manager import DebateManager
 
 logger = logging.getLogger("animetix.rag")
-
-class RAGState(str, Enum):
-    """États de la machine à états RAG."""
-    ANALYZE = "ANALYZE"
-    PLAN = "PLAN"
-    GRAPH_EXPLORE = "GRAPH_EXPLORE"
-    RESEARCH = "RESEARCH"
-    VLM_RERANK = "VLM_RERANK"
-    SYNTHESIZE = "SYNTHESIZE"
-    JUDGE = "JUDGE"
-    FINALIZE = "FINALIZE"
-    FALLBACK_RAG = "FALLBACK_RAG"
-    FAILED = "FAILED"
-
-class RAGContext(BaseModel):
-    """Contexte de la session RAG agentique."""
-    model_config = {"arbitrary_types_allowed": True}
-    
-    query: str
-    media_type: str
-    user_id: Optional[str] = None
-    thinking_budget: int = 0
-    thinking_mode: bool = False
-    memories: str = ""
-    plan: Optional[SearchPlan] = None
-    raw_context: str = ""
-    candidates: List[Dict] = Field(default_factory=list)
-    truth_path: str = ""
-    full_answer: str = ""
-    correction_feedback: Optional[str] = None
-    iteration: int = 0
-    max_iterations: int = 10
-    current_state: RAGState = RAGState.ANALYZE
-    graph_expert: Optional[GraphExpert] = None
-    visual_context: Optional[str] = None
-    image_paths: List[str] = Field(default_factory=list)
-    debate_outcome: Optional[DebateOutcome] = None
 
 class AgenticRAGService:
     """
@@ -146,12 +110,17 @@ class AgenticRAGService:
                     yield from self._handle_synthesize(ctx)
                 elif ctx.current_state == RAGState.JUDGE:
                     yield from self._handle_judge(ctx)
+                elif ctx.current_state == RAGState.FALLBACK_RAG:
+                    yield from self._handle_fallback_rag(ctx)
                 else:
                     ctx.current_state = RAGState.FINALIZE
             except Exception as e:
                 logger.error(f"Erreur critique dans l'état {ctx.current_state}: {e}", exc_info=True)
-                yield StreamStep(type="thought", content=f"[Error] Une erreur est survenue dans l'état {ctx.current_state}. Tentative de finalisation...").model_dump()
-                ctx.current_state = RAGState.FAILED
+                if ctx.current_state != RAGState.FALLBACK_RAG:
+                    yield StreamStep(type="thought", content=f"[Recovery] Erreur dans {ctx.current_state}. Bascule vers le mode RAG classique de secours...").model_dump()
+                    ctx.current_state = RAGState.FALLBACK_RAG
+                else:
+                    ctx.current_state = RAGState.FAILED
 
         # 3. FINALISATION
         self._store_results(ctx.query, ctx.full_answer, ctx.user_id)
@@ -333,6 +302,13 @@ class AgenticRAGService:
         yield StreamStep(type="eval", content=outcome.model_dump()).model_dump()
         
         action = outcome.consensus_action
+        
+        # Best-effort : Si on a déjà trop d'itérations, on force l'approbation
+        if ctx.iteration >= 3 and action == JudgeAction.REWRITE:
+            yield StreamStep(type="thought", content="[Swarm] Seuil de correction atteint. Livraison de la meilleure réponse actuelle.").model_dump()
+            ctx.current_state = RAGState.FINALIZE
+            return
+
         if action == JudgeAction.APPROVE:
             ctx.current_state = RAGState.FINALIZE
         elif action == JudgeAction.REWRITE:
@@ -344,6 +320,27 @@ class AgenticRAGService:
             ctx.current_state = RAGState.PLAN
         else:
             ctx.current_state = RAGState.FINALIZE
+
+    def _handle_fallback_rag(self, ctx: RAGContext) -> Generator[Dict, None, None]:
+        """Mode de secours : RAG classique simplifié sans agents complexes."""
+        yield StreamStep(type="thought", content="[Fallback] Exécution d'une recherche hybride standard...").model_dump()
+        
+        # Recherche hybride directe
+        results = self.rag_service.hybrid_search(ctx.query, ctx.media_type)
+        fallback_context = "\n".join([f"- {r.get('title')}: {r.get('description', '')[:500]}" for r in results])
+        
+        yield StreamStep(type="thought", content="[Fallback] Synthèse de la réponse de secours...").model_dump()
+        
+        # Prompt simplifié pour la synthèse
+        prompt = f"Réponds à la question suivante en utilisant UNIQUEMENT le contexte fourni.\nQUESTION: {ctx.query}\nCONTEXTE:\n{fallback_context}"
+        system = "Tu es un assistant expert. Sois concis et factuel."
+        
+        ctx.full_answer = ""
+        for token in self.inference_engine.stream_generate(prompt, system):
+            ctx.full_answer += token
+            yield StreamStep(type="token", content=token).model_dump()
+            
+        ctx.current_state = RAGState.FINALIZE
 
     # --- MÉTHODES UTILITAIRES (Inchangées ou légèrement adaptées) ---
     def _assess_complexity(self, query: str) -> tuple[int, int]:

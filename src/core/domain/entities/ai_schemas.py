@@ -72,3 +72,41 @@ class RagasReport(BaseModel):
 class StreamStep(BaseModel):
     type: str # 'thought' or 'token' or 'eval'
     content: Any
+
+class RAGState(str, Enum):
+    """États de la machine à états RAG."""
+    ANALYZE = "ANALYZE"
+    PLAN = "PLAN"
+    GRAPH_EXPLORE = "GRAPH_EXPLORE"
+    RESEARCH = "RESEARCH"
+    ACQUIRE_KNOWLEDGE = "ACQUIRE_KNOWLEDGE"
+    VLM_RERANK = "VLM_RERANK"
+    SYNTHESIZE = "SYNTHESIZE"
+    JUDGE = "JUDGE"
+    FINALIZE = "FINALIZE"
+    FALLBACK_RAG = "FALLBACK_RAG"
+    FAILED = "FAILED"
+
+class RAGContext(BaseModel):
+    """Contexte de la session RAG agentique."""
+    model_config = {"arbitrary_types_allowed": True}
+
+    query: str
+    media_type: str
+    user_id: Optional[str] = None
+    thinking_budget: int = 0
+    thinking_mode: bool = False
+    memories: str = ""
+    plan: Optional[SearchPlan] = None
+    raw_context: str = ""
+    candidates: List[Dict] = Field(default_factory=list)
+    truth_path: str = ""
+    full_answer: str = ""
+    correction_feedback: Optional[str] = None
+    iteration: int = 0
+    max_iterations: int = 10
+    current_state: RAGState = RAGState.ANALYZE
+    graph_expert: Any = None # To avoid circular imports
+    visual_context: Optional[str] = None
+    image_paths: List[str] = Field(default_factory=list)
+    debate_outcome: Optional[DebateOutcome] = None
