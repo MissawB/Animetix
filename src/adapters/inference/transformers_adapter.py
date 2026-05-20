@@ -1,5 +1,7 @@
 import torch
 import logging
+import aiohttp
+import asyncio
 from typing import Optional, List, Dict, Any, Generator
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 from core.ports.inference_port import InferencePort
@@ -666,10 +668,7 @@ class TransformersAdapter(InferencePort):
         try:
             import io
             import base64
-            try:
-                import scipy.io.wavfile as wavfile
-            except ImportError as e:
-                raise InferenceError(f"Dependency 'scipy' is missing: {str(e)}")
+            import scipy.io.wavfile as wavfile
             
             self._load_audioldm_engine()
             
