@@ -146,6 +146,45 @@ class Neo4jManager:
             except Exception as e:
                 logger.error(f"Failed to sync saga {saga_name}: {e}")
 
+    def sync_fan_theory(self, saga_name: str, theory_data: Dict[str, Any]):
+        """
+        Creates a FanTheory node and links it to the Saga.
+        theory_data: {
+            'title': str,
+            'description': str,
+            'popularity': str (High/Med/Low),
+            'plausibility': float (0-1),
+            'source_url': str
+        }
+        """
+        if not self.driver:
+            return
+            
+        query = """
+        MATCH (s:Saga {name: $saga_name})
+        MERGE (t:FanTheory {title: $title})
+        SET t.description = $description,
+            t.popularity = $popularity,
+            t.plausibility = $plausibility,
+            t.source_url = $source_url,
+            t.updated_at = datetime()
+        MERGE (s)-[:HAS_THEORY]->(t)
+        """
+        
+        with self.driver.session() as session:
+            try:
+                session.run(
+                    query,
+                    saga_name=saga_name,
+                    title=theory_data.get('title'),
+                    description=theory_data.get('description'),
+                    popularity=theory_data.get('popularity'),
+                    plausibility=theory_data.get('plausibility'),
+                    source_url=theory_data.get('source_url', '')
+                )
+            except Exception as e:
+                logger.error(f"Failed to sync fan theory {theory_data.get('title')} for {saga_name}: {e}")
+
     def find_logical_connections(self, media_id):
         if not self.driver: return []
         query = "MATCH (m:Media {id: $id})-[:PRODUCED_BY|CREATED_BY|HAS_THEME*1..2]-(related:Media) WHERE m <> related RETURN related.title AS title, count(*) AS strength ORDER BY strength DESC LIMIT 5"
