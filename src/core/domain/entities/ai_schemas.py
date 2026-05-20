@@ -15,6 +15,7 @@ class SearchPlan(BaseModel):
     entities: List[str] = Field(default_factory=list, description="Key entities identified in the query.")
     requires_web: bool = Field(default=False, description="Whether web search is required to answer the query.")
     requires_graph: bool = Field(default=False, description="Whether graph exploration (Cypher) is required for complex relationships.")
+    requires_saga: bool = Field(default=False, description="Whether saga executive summary is required for macro-context.")
     is_visual_query: bool = Field(default=False, description="Whether the query involves visual analysis (e.g. poster, visual vibe).")
     graph_traversal_steps: List[str] = Field(default_factory=list, description="List of relationship types to follow in the graph.")
     reasoning: str = Field(description="Brief explanation of the search strategy.")
@@ -77,6 +78,7 @@ class RAGState(str, Enum):
     """États de la machine à états RAG."""
     ANALYZE = "ANALYZE"
     PLAN = "PLAN"
+    SAGA_LOOKUP = "SAGA_LOOKUP"
     GRAPH_EXPLORE = "GRAPH_EXPLORE"
     RESEARCH = "RESEARCH"
     ACQUIRE_KNOWLEDGE = "ACQUIRE_KNOWLEDGE"
@@ -107,6 +109,7 @@ class RAGContext(BaseModel):
     iteration: int = 0
     max_iterations: int = 10
     knowledge_acquired: bool = False
+    saga_name: Optional[str] = None
     current_state: RAGState = RAGState.ANALYZE
     graph_expert: Any = None # To avoid circular imports
     visual_context: Optional[str] = None

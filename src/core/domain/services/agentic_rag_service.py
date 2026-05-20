@@ -18,6 +18,7 @@ from .rag.agents import SearchPlanner, ResponseCritic, ResponseSynthesizer, Resp
 from .rag.agents.debate_manager import DebateManager
 from .rag.agents.librarian import LibrarianAgent
 from .rag.agents.forge import ForgeAgent
+from .rag.agents.saga_agent import SagaAgent
 
 logger = logging.getLogger("animetix.rag")
 
@@ -41,6 +42,7 @@ class AgenticRAGService:
         debate_manager: Optional[DebateManager] = None,
         librarian: Optional[LibrarianAgent] = None,
         forge: Optional[ForgeAgent] = None,
+        saga_agent: Optional[SagaAgent] = None,
         uncertainty_service: Optional[UncertaintyService] = None
     ):
         self.inference_engine = inference_engine
@@ -56,6 +58,7 @@ class AgenticRAGService:
         self.debate_manager = debate_manager
         self.librarian = librarian or LibrarianAgent(self.llm_service, prompt_manager, self.web_search)
         self.forge = forge or ForgeAgent(self.llm_service, prompt_manager, self.neo4j_manager)
+        self.saga_agent = saga_agent or SagaAgent(self.llm_service, self.neo4j_manager)
         self.uncertainty_service = uncertainty_service or UncertaintyService(inference_engine)
 
         # Initialisation des agents spécialisés
@@ -109,6 +112,8 @@ class AgenticRAGService:
             try:
                 if ctx.current_state == RAGState.PLAN:
                     yield from self._handle_plan(ctx)
+                elif ctx.current_state == RAGState.SAGA_LOOKUP:
+                    yield from self._handle_saga_lookup(ctx)
                 elif ctx.current_state == RAGState.GRAPH_EXPLORE:
                     yield from self._handle_graph_explore(ctx)
                 elif ctx.current_state == RAGState.RESEARCH:
@@ -151,10 +156,32 @@ class AgenticRAGService:
         )
         logger.info(f"PERF: Planner took {(time.time() - start)*1000:.2f}ms")
         
-        if ctx.plan.requires_graph:
+        if ctx.plan.requires_saga:
+            ctx.current_state = RAGState.SAGA_LOOKUP
+        elif ctx.plan.requires_graph:
             ctx.current_state = RAGState.GRAPH_EXPLORE
         else:
             ctx.current_state = RAGState.RESEARCH
+
+    def _handle_saga_lookup(self, ctx: RAGContext) -> Generator[Dict, None, None]:
+        yield StreamStep(type="thought", content="[World-Brain] Analyse globale de la saga...").model_dump()
+        
+        saga_name = self.saga_agent.lookup_saga(ctx.query)
+        if saga_name:
+            ctx.saga_name = saga_name
+            yield StreamStep(type="thought", content=f"[World-Brain] Saga détectée : {saga_name}. Récupération du résumé exécutif...").model_dump()
+            
+            summary = self.saga_agent.get_saga_context(saga_name)
+            if summary:
+                ctx.truth_path += f"\n\n### RÉSUMÉ GLOBAL DE LA SAGA ({saga_name}) ###\n{summary}\n"
+                yield StreamStep(type="thought", content="[World-Brain] Contexte macro-temporel intégré.").model_dump()
+            else:
+                yield StreamStep(type="thought", content=f"[World-Brain] Aucun résumé trouvé pour la saga {saga_name}.").model_dump()
+        else:
+            yield StreamStep(type="thought", content="[World-Brain] Aucune saga macro-temporelle identifiée pour cette requête.").model_dump()
+
+        # Cascade vers RESEARCH pour les détails spécifiques aux médias
+        ctx.current_state = RAGState.RESEARCH
 
     def _handle_graph_explore(self, ctx: RAGContext) -> Generator[Dict, None, None]:
         if not ctx.plan:
