@@ -112,3 +112,10 @@ class RAGContext(BaseModel):
     visual_context: Optional[str] = None
     image_paths: List[str] = Field(default_factory=list)
     debate_outcome: Optional[DebateOutcome] = None
+
+# --- FORGE AGENT SCHEMAS ---
+
+class ForgeHypothesis(BaseModel):
+    hypothesis: str
+    rationale: str
+    confidence: float

@@ -1,11 +1,16 @@
 import logging
 import re
+import orjson
 from typing import Dict, Optional, Any, List
 from src.core.domain.services.llm_service import LLMService
 from src.core.domain.services.prompt_manager import PromptManager
 from src.pipeline.neo4j_client import Neo4jManager
+from src.core.domain.entities.ai_schemas import ForgeHypothesis
 
 logger = logging.getLogger("animetix.rag.forge")
+
+# Common capitalized words to filter out from entity extraction
+ENTITY_BLACKLIST = {"Who", "What", "When", "The", "How", "An", "Anime", "Manga", "If", "Why", "Where", "Which"}
 
 class ForgeAgent:
     def __init__(self, llm_service: LLMService, prompt_manager: PromptManager, neo4j_manager: Neo4jManager):
@@ -13,13 +18,13 @@ class ForgeAgent:
         self.prompt_manager = prompt_manager
         self.neo4j_manager = neo4j_manager
 
-    def generate_hypothesis(self, query: str, context: str) -> Optional[Dict[str, Any]]:
+    def generate_hypothesis(self, query: str, context: str) -> Optional[ForgeHypothesis]:
         """
         Identifies patterns in the context/graph and generates logical hypotheses.
         """
         # Extract potential entities from query (Capitalized words)
         potential_entities = re.findall(r'\b[A-Z][a-zA-Z]{1,}\b', query)
-        entities = list(set(potential_entities))
+        entities = [e for e in set(potential_entities) if e not in ENTITY_BLACKLIST]
         
         # Enrich context with historical patterns from Neo4j
         pattern_context = self._fetch_patterns(entities)
@@ -30,18 +35,13 @@ class ForgeAgent:
         res_raw = self.llm_service.generate(prompt, system_prompt=sys, use_slm=True)
         
         try:
-            import orjson
             # Find the JSON block in case there's preamble/postamble
             if '{' in res_raw and '}' in res_raw:
                 json_str = res_raw[res_raw.find('{'):res_raw.rfind('}')+1]
                 data = orjson.loads(json_str)
                 
-                # Robust validation: hypothesis and rationale are mandatory
-                if all(k in data for k in ["hypothesis", "rationale"]):
-                    return data
-                else:
-                    logger.warning(f"Forge hypothesis missing required fields: {list(data.keys())}")
-                    return None
+                # Pydantic validation
+                return ForgeHypothesis(**data)
             return None
         except Exception as e:
             logger.error(f"Failed to parse Forge hypothesis: {e}")
