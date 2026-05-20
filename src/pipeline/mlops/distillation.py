@@ -20,12 +20,15 @@ def run_distillation():
     output = os.path.join(BASE_DIR, "checkpoints", "animetix-draft-135m")
     
     try:
+        # On utilise une valeur d'epochs faible pour le pipeline par défaut (ex: 1.0)
+        # Mais on assure que c'est le REEL entraînement qui est lancé.
         train_speculative_draft_model(
             teacher_model_id=teacher,
             student_model_id=student,
-            output_dir=output
+            output_dir=output,
+            epochs=1.0
         )
-        print("✅ Distillation Pipeline Complete.")
+        print("✅ Real Distillation Pipeline Complete.")
         return output
     except Exception as e:
         print(f"❌ Distillation Failed: {e}")

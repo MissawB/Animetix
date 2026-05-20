@@ -34,15 +34,35 @@ class ModelDistillationPipeline:
             })
         return synthetic_data
 
-    def fine_tune_student(self, train_data: List[Dict], student_model_id: str = "meta-llama/Llama-3.2-1B"):
+    def fine_tune_student(self, train_data: List[Dict], student_model_id: str = "HuggingFaceTB/SmolLM-135M", epochs: float = 3.0):
         """
-        Lance le fine-tuning du modèle étudiant sur les données distillées.
+        Lance le fine-tuning REEL du modèle étudiant sur les données distillées.
         """
         logger.info(f"🚀 Fine-tuning Student Model: {student_model_id}")
-        # Logique de chargement dataset -> Tokenization -> Trainer
-        dataset = Dataset.from_list(train_data)
-        logger.info(f"📊 Dataset size: {len(dataset)} examples.")
         
-        # En production, on utiliserait SFTTrainer de la librairie TRL
+        # Enregistrement temporaire des données pour le script d'entraînement
+        data_dir = "data/mlops/datasets"
+        os.makedirs(data_dir, exist_ok=True)
+        data_path = os.path.join(data_dir, "trl_train_data.jsonl")
+        
+        with open(data_path, "w", encoding="utf-8") as f:
+            for item in train_data:
+                f.write(json.dumps(item) + "\n")
+        
+        logger.info(f"📊 Dataset prepared at {data_path} with {len(train_data)} examples.")
+        
+        # Appel de la logique d'entraînement (Import local pour éviter les dépendances circulaires)
+        from scripts.distill_draft_model import train_speculative_draft_model
+        
         output_dir = f"checkpoints/distilled-{student_model_id.split('/')[-1]}"
-        logger.info(f"✅ Training completed. Model saved at {output_dir}")
+        
+        try:
+            train_speculative_draft_model(
+                student_model_id=student_model_id,
+                output_dir=output_dir,
+                epochs=epochs
+            )
+            logger.info(f"✅ Training completed successfully. Model saved at {output_dir}")
+        except Exception as e:
+            logger.error(f"❌ Training failed: {e}")
+            raise
