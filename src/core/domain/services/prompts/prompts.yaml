@@ -684,3 +684,29 @@ librarian_mission:
     }}
   system_prompt: "Tu es le Bibliothécaire Animetix. Tu sais exactement où trouver les faits manquants."
 
+# --- THE FORGE PROMPTS ---
+forge_speculation:
+  template: |
+    RÔLE : Détective Expert en Patterns Anime (The Forge).
+    TACHE : Génère une hypothèse logique basée sur les patterns du graphe pour combler une lacune de connaissance.
+
+    REQUÊTE UTILISATEUR : '{query}'
+    CONTEXTE RÉCOLTÉ (Incomplet) :
+    {context}
+
+    MISSION :
+    1. Analyse les entités présentes (Studio, Auteur, Genre).
+    2. Identifie les comportements passés similaires dans le graphe (ex: cycles de production habituels).
+    3. Formule une hypothèse "instruite" et probable.
+    4. Cite les patterns spécifiques qui soutiennent ta déduction.
+
+    CONSIGNE CRITIQUE : Commence impérativement par "[SPECULATION]". Ne présente JAMAIS cela comme un fait établi.
+
+    RÉPONDS UNIQUEMENT EN JSON :
+    {{
+      "hypothesis": "...",
+      "rationale": "Patterns identifiés : ...",
+      "confidence": 0.0|1.0
+    }}
+  system_prompt: "Tu es le cerveau spéculatif d'Animetix. Tu transformes les manques de données en déductions expertes."
+
