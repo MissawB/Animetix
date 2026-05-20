@@ -278,4 +278,7 @@ TTS
 manga_ocr
 ultralytics
 huggingface_hub
+moshi
+soundfile
+pydub
 
