@@ -33,7 +33,9 @@ def measure_performance(name: str, results_list: List):
     
     start_vram = 0
     if HAS_TORCH and torch.cuda.is_available():
-        start_vram = torch.cuda.memory_allocated() / (1024 * 1024)  # MB
+        try:
+            start_vram = torch.cuda.memory_allocated() / (1024 * 1024)  # MB
+        except: start_vram = 0
 
     metrics = {'name': name, 'status': 'PASS'}
     try:
@@ -51,13 +53,66 @@ def measure_performance(name: str, results_list: List):
         metrics['ram_mb'] = end_mem
         
         if HAS_TORCH and torch.cuda.is_available():
-            end_vram = torch.cuda.memory_allocated() / (1024 * 1024)
-            metrics['vram_mb'] = end_vram
-            logger.info(f"BENCHMARK [{name}]: {latency:.2f}ms | RAM: {end_mem:.2f}MB | VRAM: {end_vram:.2f}MB")
+            try:
+                end_vram = torch.cuda.memory_allocated() / (1024 * 1024)
+                metrics['vram_mb'] = end_vram
+                logger.info(f"BENCHMARK [{name}]: {latency:.2f}ms | RAM: {end_mem:.2f}MB | VRAM: {end_vram:.2f}MB")
+            except: logger.info(f"BENCHMARK [{name}]: {latency:.2f}ms | RAM: {end_mem:.2f}MB")
         else:
             logger.info(f"BENCHMARK [{name}]: {latency:.2f}ms | RAM: {end_mem:.2f}MB")
             
         results_list.append(metrics)
+
+def create_dummy_video() -> bytes:
+    """Creates a tiny valid MP4 buffer for benchmarking."""
+    try:
+        import imageio
+        buf = io.BytesIO()
+        frame = np.zeros((64, 64, 3), dtype=np.uint8)
+        with imageio.get_writer(buf, format='mp4', fps=1) as writer:
+            writer.append_data(frame)
+        return buf.getvalue()
+    except Exception as e:
+        logger.warning(f"Could not create dummy video: {e}")
+        return b"dummy_video_content"
+
+def create_dummy_audio() -> bytes:
+    """Creates a 1s silent WAV buffer for benchmarking."""
+    buf = io.BytesIO()
+    with wave.open(buf, 'wb') as wf:
+        wf.setnchannels(1)
+        wf.setsampwidth(2)
+        wf.setframerate(24000)
+        wf.writeframes(np.zeros(24000, dtype=np.int16).tobytes())
+    return buf.getvalue()
+
+def benchmark_video_style_transfer(results):
+    """Benchmarks the Video Style Transfer module."""
+    try:
+        from adapters.inference.transformers_adapter import TransformersAdapter
+        adapter = TransformersAdapter()
+        video_data = create_dummy_video()
+        
+        logger.info("Starting Video Style Transfer benchmark...")
+        with measure_performance("Video Style Transfer", results):
+            adapter.transform_video_to_anime(video_data, "Ghibli", "landscape")
+            
+    except Exception as e:
+        results.append({'name': "Video Style Transfer", 'status': f"SKIP ({str(e)})", 'latency_ms': 0, 'ram_mb': 0})
+
+def benchmark_voice_ai(results):
+    """Benchmarks the Voice AI (Speech-to-Speech) module."""
+    try:
+        from adapters.inference.transformers_adapter import TransformersAdapter
+        adapter = TransformersAdapter()
+        audio_data = create_dummy_audio()
+        
+        logger.info("Starting Voice AI (S2S) benchmark...")
+        with measure_performance("Voice AI (S2S)", results):
+            adapter.speech_to_speech(audio_data)
+            
+    except Exception as e:
+        results.append({'name': "Voice AI (S2S)", 'status': f"SKIP ({str(e)})", 'latency_ms': 0, 'ram_mb': 0})
 
 def benchmark_distillation(results):
     """Benchmarks a single training step of the Distillation loop."""
@@ -65,7 +120,6 @@ def benchmark_distillation(results):
         from scripts.distill_draft_model import train_speculative_draft_model
         logger.info("Starting Distillation benchmark (1 step)...")
         with measure_performance("Model Distillation (SFT)", results):
-            # epochs < 1 allows for minimal steps
             train_speculative_draft_model(epochs=0.01, output_dir="checkpoints/benchmark-distill")
     except Exception as e:
         results.append({'name': "Model Distillation (SFT)", 'status': f"SKIP ({str(e)})", 'latency_ms': 0, 'ram_mb': 0})

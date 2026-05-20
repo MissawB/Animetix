@@ -555,7 +555,7 @@ class TransformersAdapter(InferencePort):
         try:
             self._load_video_vlm()
             import orjson
-            from ..exceptions import ParsingError
+            from core.domain.exceptions import ParsingError
             
             # 1. Échantillonnage global (8 frames pour avoir une vue d'ensemble)
             frames = self._sample_video_frames(video_data, max_frames=8)
