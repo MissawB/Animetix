@@ -125,6 +125,27 @@ class Neo4jManager:
         if author:
             tx.run("MATCH (m:Media {id: $id}) MERGE (p:Person {name: $author_name}) MERGE (m)-[:CREATED_BY]->(p)", id=str(item['id']), author_name=author)
 
+    def sync_saga(self, saga_name: str, executive_summary: str, media_ids: List[str]):
+        """
+        Creates a Saga node and links it to its media items.
+        """
+        if not self.driver:
+            return
+            
+        query = """
+        MERGE (s:Saga {name: $saga_name})
+        SET s.executive_summary = $summary, s.updated_at = datetime()
+        WITH s
+        UNWIND $ids as mid
+        MATCH (m:Media {id: mid})
+        MERGE (s)-[:CONTAINS_MEDIA]->(m)
+        """
+        with self.driver.session() as session:
+            try:
+                session.run(query, saga_name=saga_name, summary=executive_summary, ids=media_ids)
+            except Exception as e:
+                logger.error(f"Failed to sync saga {saga_name}: {e}")
+
     def find_logical_connections(self, media_id):
         if not self.driver: return []
         query = "MATCH (m:Media {id: $id})-[:PRODUCED_BY|CREATED_BY|HAS_THEME*1..2]-(related:Media) WHERE m <> related RETURN related.title AS title, count(*) AS strength ORDER BY strength DESC LIMIT 5"
