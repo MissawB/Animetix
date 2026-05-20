@@ -855,9 +855,46 @@ class TransformersAdapter(InferencePort):
             "action": "block" if not is_safe else "allow"
         }
 
+    def _load_colpali_engine(self):
+        """Chargement paresseux de ColPali."""
+        if hasattr(self, '_colpali_model'): return
+        try:
+            from colpali_engine.models import ColPali, ColPaliProcessor
+            logger.info("🏗️ Loading ColPali for Late Interaction...")
+            model_id = "vidore/colpali-v1.2"
+            
+            self._colpali_model = ColPali.from_pretrained(
+                model_id,
+                torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
+                device_map="auto"
+            )
+            self._colpali_processor = ColPaliProcessor.from_pretrained(model_id)
+            logger.info("✅ ColPali engine loaded.")
+        except Exception as e:
+            logger.error(f"❌ Failed to load ColPali: {e}")
+            raise InferenceError(f"ColPali engine loading failed: {str(e)}")
+
     def get_multimodal_late_interaction(self, image_data: bytes) -> List[List[float]]:
-        """Stub pour Late Interaction (ColEmbed)."""
-        return [[0.0]*128 for _ in range(32)]
+        """Implémentation réelle ColPali late interaction."""
+        try:
+            from PIL import Image
+            from io import BytesIO
+            
+            self._load_colpali_engine()
+            img = Image.open(BytesIO(image_data)).convert("RGB")
+            
+            with torch.no_grad():
+                batch = self._colpali_processor.process_images([img]).to(self._colpali_model.device)
+                embeddings = self._colpali_model(**batch)
+            
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+                
+            return embeddings.cpu().tolist()
+        except Exception as e:
+            logger.error(f"❌ ColPali inference failed: {e}")
+            raise InferenceError(f"ColPali inference failed: {str(e)}")
+
 
     def calculate_uncertainty(self, prompt: str, completion: str) -> Dict[str, float]: 
         return {"entropy": 0.0, "perplexity": 1.0}
