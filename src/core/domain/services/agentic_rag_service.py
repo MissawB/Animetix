@@ -61,7 +61,7 @@ class AgenticRAGService:
         self.librarian = librarian or LibrarianAgent(self.llm_service, prompt_manager, self.web_search)
         self.forge = forge or ForgeAgent(self.llm_service, prompt_manager, self.neo4j_manager)
         self.saga_agent = saga_agent or SagaAgent(self.llm_service, self.neo4j_manager)
-        self.chronicler = chronicler or ChroniclerAgent(self.llm_service, prompt_manager, self.neo4j_manager)
+        self.chronicler = chronicler or ChroniclerAgent(self.llm_service, prompt_manager, self.neo4j_manager, self.web_search)
         self.uncertainty_service = uncertainty_service or UncertaintyService(inference_engine)
 
         # Initialisation des agents spécialisés
