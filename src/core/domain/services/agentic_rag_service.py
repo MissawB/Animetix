@@ -17,6 +17,7 @@ from ..entities.ai_schemas import (
 from .rag.agents import SearchPlanner, ResponseCritic, ResponseSynthesizer, ResponseJudge, ScoutAgent, GraphExpert
 from .rag.agents.debate_manager import DebateManager
 from .rag.agents.librarian import LibrarianAgent
+from .rag.agents.forge import ForgeAgent
 
 logger = logging.getLogger("animetix.rag")
 
@@ -39,6 +40,7 @@ class AgenticRAGService:
         graph_expert: Optional[GraphExpert] = None,
         debate_manager: Optional[DebateManager] = None,
         librarian: Optional[LibrarianAgent] = None,
+        forge: Optional[ForgeAgent] = None,
         uncertainty_service: Optional[UncertaintyService] = None
     ):
         self.inference_engine = inference_engine
@@ -53,6 +55,7 @@ class AgenticRAGService:
         self.graph_expert = graph_expert or GraphExpert(self.llm_service, prompt_manager)
         self.debate_manager = debate_manager
         self.librarian = librarian or LibrarianAgent(self.llm_service, prompt_manager, self.web_search)
+        self.forge = forge or ForgeAgent(self.llm_service, prompt_manager, self.neo4j_manager)
         self.uncertainty_service = uncertainty_service or UncertaintyService(inference_engine)
 
         # Initialisation des agents spécialisés
@@ -112,6 +115,8 @@ class AgenticRAGService:
                     yield from self._handle_research(ctx)
                 elif ctx.current_state == RAGState.ACQUIRE_KNOWLEDGE:
                     yield from self._handle_acquire_knowledge(ctx)
+                elif ctx.current_state == RAGState.SPECULATE:
+                    yield from self._handle_speculate(ctx)
                 elif ctx.current_state == RAGState.VLM_RERANK:
                     yield from self._handle_vlm_rerank(ctx)
                 elif ctx.current_state == RAGState.SYNTHESIZE:
@@ -228,10 +233,30 @@ class AgenticRAGService:
             if fresh_data:
                 ctx.truth_path += f"\n\n### FRESH WEB/JIKAN DATA ###\n{fresh_data}\n"
                 yield StreamStep(type="thought", content="[Librarian] Nouvelles connaissances intégrées au Chemin de Vérité.").model_dump()
+                ctx.current_state = RAGState.SYNTHESIZE
             else:
-                yield StreamStep(type="thought", content="[Librarian] Aucune donnée supplémentaire trouvée.").model_dump()
+                yield StreamStep(type="thought", content="[Librarian] Aucune donnée supplémentaire trouvée. Passage en mode spéculation...").model_dump()
+                ctx.current_state = RAGState.SPECULATE
         else:
             yield StreamStep(type="thought", content="[Librarian] Aucune lacune critique identifiée.").model_dump()
+            ctx.current_state = RAGState.SYNTHESIZE
+
+    def _handle_speculate(self, ctx: RAGContext) -> Generator[Dict, None, None]:
+        yield StreamStep(type="thought", content="[The Forge] Lancement du moteur de spéculation logique...").model_dump()
+        
+        res = self.forge.generate_hypothesis(ctx.query, ctx.truth_path)
+        
+        if res and res.hypothesis:
+            yield StreamStep(type="thought", content=f"[The Forge] Hypothèse générée : {res.hypothesis} (Basé sur : {res.rationale})").model_dump()
+            
+            speculation_block = f"\n\n### HYPOTHÈSE LOGIQUE (DÉDUCTION) ###\n"
+            speculation_block += f"DÉDUCTION : {res.hypothesis}\n"
+            speculation_block += f"RAISONNEMENT : {res.rationale}\n"
+            speculation_block += f"NOTE : Cette information est une déduction logique basée sur les données disponibles et peut ne pas être factuelle à 100%.\n"
+            
+            ctx.truth_path += speculation_block
+        else:
+            yield StreamStep(type="thought", content="[The Forge] Impossible de forger une hypothèse cohérente.").model_dump()
             
         ctx.current_state = RAGState.SYNTHESIZE
 

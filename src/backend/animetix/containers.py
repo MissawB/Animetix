@@ -41,6 +41,7 @@ from core.domain.services.spatial_audio_service import VoiceCloningService, Nati
 from core.domain.services.cove_oracle_service import CoveOracleService
 from core.domain.services.rag.agents.debate_manager import DebateManager
 from core.domain.services.rag.agents.librarian import LibrarianAgent
+from core.domain.services.rag.agents.forge import ForgeAgent
 from core.domain.services.agentic_rag_service import AgenticRAGService
 from core.domain.services.long_term_memory_service import LongTermMemoryService
 from core.domain.services.semantic_cache_service import SemanticCacheService
@@ -172,6 +173,10 @@ class Container:
         return self._get('librarian', lambda: LibrarianAgent(llm_service=self.llm_service, prompt_manager=self.prompt_manager, web_search=self.web_search))
 
     @property
+    def forge(self):
+        return self._get('forge', lambda: ForgeAgent(llm_service=self.llm_service, prompt_manager=self.prompt_manager, neo4j_manager=neo4j_manager))
+
+    @property
     def agentic_rag(self):
         return self._get('agentic_rag', lambda: AgenticRAGService(
             inference_engine=self.inference_engine, 
@@ -186,6 +191,7 @@ class Container:
             graph_expert=self.graph_expert,
             debate_manager=self.debate_manager,
             librarian=self.librarian,
+            forge=self.forge,
             uncertainty_service=self.uncertainty_service
         ))
 
