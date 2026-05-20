@@ -334,3 +334,34 @@ class BrainAPIAdapter(InferencePort):
         except Exception as e:
             logger.error(f"BrainAPI Health check failed: {e}")
         return {"status": "offline", "engine": "Brain-API"}
+
+    def generate_structured(self, prompt: str, response_model: type, system_prompt: str = "Tu es un expert en extraction de données structurées.", max_retries: int = 3) -> Any:
+        """Génération structurée via le Cerveau distant (compatible OpenAI/Instructor)."""
+        try:
+            import instructor
+            from openai import OpenAI
+            
+            # Note: On suppose que brain_api_url pointe vers la racine de l'API compatible OpenAI (ex: http://brain:5000/v1)
+            # Si brain_api_url est juste l'URL de base sans /v1, il faudra peut-être l'ajouter.
+            base_url = self.brain_api_url
+            if not base_url.endswith("/v1") and "/generate" not in base_url:
+                # Heuristique si besoin, mais on reste sur brain_api_url pour l'instant
+                pass
+
+            client = instructor.from_openai(
+                OpenAI(base_url=base_url, api_key="not-needed"),
+                mode=instructor.Mode.JSON
+            )
+            
+            return client.chat.completions.create(
+                model="brain-default", # Nom du modèle par défaut pour le cerveau
+                response_model=response_model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": prompt}
+                ],
+                max_retries=max_retries
+            )
+        except Exception as e:
+            logger.error(f"BrainAPI Structured Generation failed: {e}")
+            raise

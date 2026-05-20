@@ -198,3 +198,30 @@ class FallbackInferenceAdapter(InferencePort):
         statuses = [a.health_check() for a in self.adapters]
         is_online = any(s.get("status") == "online" for s in statuses)
         return {"status": "online" if is_online else "offline", "adapters": statuses}
+
+    def generate_structured(self, prompt: str, response_model: type, system_prompt: str = "Tu es un expert en extraction de données structurées.", max_retries: int = 3) -> Any:
+        """Génération structurée avec repli."""
+        last_error = ""
+        for adapter in self.adapters:
+            start_time = time.time()
+            try:
+                # Vérifier si l'adaptateur supporte la génération structurée
+                if not hasattr(adapter, "generate_structured"):
+                    continue
+
+                logger.info(f"🔄 [Fallback Structured] Trying {adapter.__class__.__name__}...")
+                result = adapter.generate_structured(prompt, response_model, system_prompt, max_retries)
+                latency = time.time() - start_time
+                
+                if result is not None:
+                    logger.info(f"✅ [Fallback Structured] {adapter.__class__.__name__} success in {latency:.2f}s")
+                    return result
+                
+                self._report_failure(adapter, "generate_structured", "Résultat None", latency, prompt)
+            except Exception as e:
+                latency = time.time() - start_time
+                last_error = str(e)
+                self._report_failure(adapter, "generate_structured", f"CRASH: {last_error}", latency, prompt)
+                continue
+                
+        raise Exception(f"Échec critique : Tous les adaptateurs ont échoué pour la génération structurée. Dernière erreur: {last_error}")
