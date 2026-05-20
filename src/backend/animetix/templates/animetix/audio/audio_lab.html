@@ -1,0 +1,115 @@
+{% extends 'animetix/base.html' %}
+{% load static %}
+
+{% block title %}Audio Lab - Voice Cloning{% endblock %}
+
+{% block content %}
+<div class="container py-12">
+    <div class="row mb-8 text-center">
+        <div class="col-12">
+            <h1 class="display-4 fw-black manga-font italic mb-2">AUDIO <span class="text-warning">LAB</span></h1>
+            <p class="text-muted">Clonez les voix de vos personnages préférés en quelques secondes.</p>
+        </div>
+    </div>
+
+    <div class="row g-5">
+        <!-- Sidebar: Source Selection -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4" style="background: var(--card-bg);">
+                <h5 class="fw-bold mb-4">Source Vocale</h5>
+                
+                <ul class="nav nav-pills nav-fill mb-4 bg-light rounded-pill p-1" id="voiceTabs" role="tablist">
+                    <li class="nav-item">
+                        <button class="nav-link active rounded-pill px-2" data-bs-toggle="pill" data-bs-target="#tab-library">BIBLIO</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link rounded-pill px-2" data-bs-toggle="pill" data-bs-target="#tab-upload">UPLOAD</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link rounded-pill px-2" data-bs-toggle="pill" data-bs-target="#tab-mic">MICRO</button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="voiceTabContent">
+                    <div class="tab-pane fade show active" id="tab-library">
+                        <div class="row g-2">
+                            {% for voice in library_voices %}
+                            <div class="col-4">
+                                <div class="voice-card text-center p-3 rounded-3 border-2 cursor-pointer transition" 
+                                     data-voice-id="{{ voice.id }}" onclick="selectVoice('{{ voice.id }}')">
+                                    <div class="fs-2">{{ voice.icon }}</div>
+                                    <div class="small fw-bold mt-1">{{ voice.name }}</div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="tab-upload">
+                        <div class="upload-zone border-2 border-dashed rounded-4 p-5 text-center">
+                            <input type="file" id="audio-file" accept="audio/*" class="d-none" onchange="handleFileUpload(this)">
+                            <button class="btn btn-outline-warning rounded-pill px-4" onclick="document.getElementById('audio-file').click()">
+                                <i class="bi bi-upload"></i> Choisir un fichier
+                            </button>
+                            <p class="small text-muted mt-2">WAV/MP3 (Max 2Mo)</p>
+                            <div id="file-info" class="small fw-bold text-success d-none"></div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="tab-mic">
+                        <div class="text-center p-4">
+                            <button id="record-btn" class="btn btn-danger rounded-circle p-4 shadow-lg mb-3" onclick="toggleRecording()">
+                                <i class="bi bi-mic-fill fs-3"></i>
+                            </button>
+                            <div id="record-status" class="small fw-bold">Prêt à enregistrer</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Panel: Generation -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 p-5" style="background: var(--card-bg);">
+                <div class="mb-4">
+                    <label class="form-label fw-bold opacity-60">Texte à générer</label>
+                    <textarea id="clone-text" class="form-control bg-light border-0 p-4 rounded-4" rows="6" 
+                              placeholder="Entrez le texte que le personnage doit dire..."></textarea>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-5">
+                    <div class="text-muted small">Moteur: <span class="badge bg-dark">XTTS v2 LOCAL</span></div>
+                    <button id="generate-btn" class="btn btn-warning rounded-pill px-5 py-3 fw-bold" onclick="generateClone()">
+                        GÉNÉRER L'AUDIO
+                    </button>
+                </div>
+
+                <!-- Player -->
+                <div id="result-zone" class="d-none animate__animated animate__fadeIn">
+                    <div class="bg-light p-4 rounded-4 d-flex align-items-center gap-4">
+                        <audio id="audio-player" class="flex-grow-1" controls></audio>
+                        <a id="download-link" href="#" download="animetix-clone.mp3" class="btn btn-dark rounded-circle p-3">
+                            <i class="bi bi-download"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Loading -->
+                <div id="loading-zone" class="d-none text-center p-5">
+                    <div class="spinner-grow text-warning mb-3"></div>
+                    <p class="manga-font tracking-widest fw-bold">CLONAGE IA EN COURS...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .voice-card { background: rgba(0,0,0,0.03); border: 2px solid transparent; }
+    .voice-card.selected { border-color: var(--accent-color); background: rgba(253, 185, 19, 0.1); }
+    .cursor-pointer { cursor: pointer; }
+    .transition { transition: all 0.2s; }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'animetix/js/audio_lab.js' %}"></script>
+{% endblock %}
