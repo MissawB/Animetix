@@ -40,6 +40,7 @@ from core.domain.services.spatial_computing_service import SpatialComputingServi
 from core.domain.services.spatial_audio_service import VoiceCloningService, NativeSpeechLLMService
 from core.domain.services.cove_oracle_service import CoveOracleService
 from core.domain.services.rag.agents.debate_manager import DebateManager
+from core.domain.services.rag.agents.librarian import LibrarianAgent
 from core.domain.services.agentic_rag_service import AgenticRAGService
 from core.domain.services.long_term_memory_service import LongTermMemoryService
 from core.domain.services.semantic_cache_service import SemanticCacheService
@@ -61,6 +62,8 @@ from adapters.inference.local_llama_adapter import LocalLlamaAdapter
 from adapters.inference.gguf_adapter import GgufAdapter
 from adapters.inference.transformers_adapter import TransformersAdapter
 from adapters.inference.moondream_adapter import MoondreamAdapter
+from adapters.inference.diffusers_adapter import DiffusersAdapter
+from adapters.inference.xtts_adapter import XTTSAdapter
 from adapters.inference.fallback_adapter import FallbackInferenceAdapter
 
 # Clients
@@ -118,9 +121,19 @@ class Container:
         return self._get('transformers_adapter', lambda: TransformersAdapter(model_id="Qwen/Qwen2.5-1.5B-Instruct", use_4bit=True))
 
     @property
+    def diffusers_adapter(self):
+        return self._get('diffusers_adapter', lambda: DiffusersAdapter(model_id="stabilityai/sdxl-turbo", use_fp16=True))
+
+    @property
+    def xtts_adapter(self):
+        return self._get('xtts_adapter', lambda: XTTSAdapter())
+
+    @property
     def inference_engine(self):
         return self._get('inference_engine', lambda: FallbackInferenceAdapter(adapters=[
             self.transformers_adapter,
+            self.diffusers_adapter,
+            self.xtts_adapter,
             VllmAdapter(api_base=os.getenv("VLLM_API_BASE", "http://vllm:8000/v1"), model_name="meta-llama/Llama-3-8B-Instruct"),
             self.gguf_adapter,
             BrainAPIAdapter(brain_api_url=os.getenv("BRAIN_API_URL", ""))
@@ -151,6 +164,10 @@ class Container:
         return self._get('debate_manager', lambda: DebateManager(llm_service=self.llm_service, prompt_manager=self.prompt_manager))
 
     @property
+    def librarian(self):
+        return self._get('librarian', lambda: LibrarianAgent(llm_service=self.llm_service, prompt_manager=self.prompt_manager))
+
+    @property
     def agentic_rag(self):
         return self._get('agentic_rag', lambda: AgenticRAGService(
             inference_engine=self.inference_engine, 
@@ -163,7 +180,9 @@ class Container:
             semantic_cache=self.semantic_cache_service, 
             obs_service=self.obs_service,
             graph_expert=self.graph_expert,
-            debate_manager=self.debate_manager
+            debate_manager=self.debate_manager,
+            librarian=self.librarian,
+            uncertainty_service=self.uncertainty_service
         ))
 
     @property

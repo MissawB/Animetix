@@ -9,12 +9,14 @@ from core.ports.web_search_port import WebSearchPort
 from .advanced_rag_service import AdvancedRAGService
 from .prompt_manager import PromptManager
 from .llm_service import LLMService
+from .xai_service import UncertaintyService
 from ..entities.ai_schemas import (
     SearchPlan, CritiqueResult, StreamStep, JudgeEvaluation, JudgeAction, DebateOutcome,
     RAGState, RAGContext
 )
 from .rag.agents import SearchPlanner, ResponseCritic, ResponseSynthesizer, ResponseJudge, ScoutAgent, GraphExpert
 from .rag.agents.debate_manager import DebateManager
+from .rag.agents.librarian import LibrarianAgent
 
 logger = logging.getLogger("animetix.rag")
 
@@ -35,7 +37,9 @@ class AgenticRAGService:
         semantic_cache=None,
         obs_service=None,
         graph_expert: Optional[GraphExpert] = None,
-        debate_manager: Optional[DebateManager] = None
+        debate_manager: Optional[DebateManager] = None,
+        librarian: Optional[LibrarianAgent] = None,
+        uncertainty_service: Optional[UncertaintyService] = None
     ):
         self.inference_engine = inference_engine
         self.rag_service = rag_service
@@ -48,6 +52,8 @@ class AgenticRAGService:
         self.obs_service = obs_service
         self.graph_expert = graph_expert or GraphExpert(self.llm_service, prompt_manager)
         self.debate_manager = debate_manager
+        self.librarian = librarian or LibrarianAgent(self.llm_service, prompt_manager)
+        self.uncertainty_service = uncertainty_service or UncertaintyService(inference_engine)
 
         # Initialisation des agents spécialisés
         self.planner = SearchPlanner(self.llm_service, prompt_manager)
@@ -104,6 +110,8 @@ class AgenticRAGService:
                     yield from self._handle_graph_explore(ctx)
                 elif ctx.current_state == RAGState.RESEARCH:
                     yield from self._handle_research(ctx)
+                elif ctx.current_state == RAGState.ACQUIRE_KNOWLEDGE:
+                    yield from self._handle_acquire_knowledge(ctx)
                 elif ctx.current_state == RAGState.VLM_RERANK:
                     yield from self._handle_vlm_rerank(ctx)
                 elif ctx.current_state == RAGState.SYNTHESIZE:
@@ -207,6 +215,26 @@ class AgenticRAGService:
         else:
             ctx.current_state = RAGState.SYNTHESIZE
 
+    def _handle_acquire_knowledge(self, ctx: RAGContext) -> Generator[Dict, None, None]:
+        yield StreamStep(type="thought", content="[Librarian] Analyse des lacunes de connaissances...").model_dump()
+        
+        gap = self.librarian.identify_gap(ctx.query, ctx.truth_path)
+        
+        if gap and gap.get("query"):
+            yield StreamStep(type="thought", content=f"[Librarian] Recherche active sur {gap.get('source_type', 'Web')} : {gap['query']}").model_dump()
+            
+            fresh_data = self.librarian.fetch_data(gap)
+            
+            if fresh_data:
+                ctx.truth_path += f"\n\n### FRESH WEB/JIKAN DATA ###\n{fresh_data}\n"
+                yield StreamStep(type="thought", content="[Librarian] Nouvelles connaissances intégrées au Chemin de Vérité.").model_dump()
+            else:
+                yield StreamStep(type="thought", content="[Librarian] Aucune donnée supplémentaire trouvée.").model_dump()
+        else:
+            yield StreamStep(type="thought", content="[Librarian] Aucune lacune critique identifiée.").model_dump()
+            
+        ctx.current_state = RAGState.SYNTHESIZE
+
     def _handle_vlm_rerank(self, ctx: RAGContext) -> Generator[Dict, None, None]:
         yield StreamStep(type="thought", content="[VLM-Reranker] Analyse visuelle des images candidates...").model_dump()
         
@@ -281,6 +309,16 @@ class AgenticRAGService:
             yield StreamStep(type="token", content=token).model_dump()
         
         logger.info(f"PERF: Synthesizer took {(time.time() - syn_start)*1000:.2f}ms")
+        
+        # --- MESURE D'INCERTITUDE ---
+        if not ctx.knowledge_acquired:
+            confidence = self.uncertainty_service.measure_confidence(ctx.query, ctx.full_answer)
+            if confidence < 0.6:
+                yield StreamStep(type="thought", content=f"[Uncertainty] Basse confiance détectée ({confidence:.2f}). Déclenchement du Librarian...").model_dump()
+                ctx.knowledge_acquired = True
+                ctx.current_state = RAGState.ACQUIRE_KNOWLEDGE
+                return
+
         ctx.current_state = RAGState.JUDGE
 
     def _handle_judge(self, ctx: RAGContext) -> Generator[Dict, None, None]:
@@ -315,7 +353,11 @@ class AgenticRAGService:
             ctx.correction_feedback = f"DÉFAUT DÉTECTÉ: {outcome.final_reasoning}. Corrige en restant fidèle au contexte."
             ctx.current_state = RAGState.SYNTHESIZE
         elif action == JudgeAction.RESEARCH_MORE:
-            ctx.current_state = RAGState.RESEARCH
+            if len(ctx.truth_path) < 200 and not ctx.knowledge_acquired:
+                yield StreamStep(type="thought", content="[Judge] Contexte local insuffisant. Bascule vers Librarian pour chercher des infos fraîches...").model_dump()
+                ctx.current_state = RAGState.ACQUIRE_KNOWLEDGE
+            else:
+                ctx.current_state = RAGState.RESEARCH
         elif action == JudgeAction.REPLAN:
             ctx.current_state = RAGState.PLAN
         else:

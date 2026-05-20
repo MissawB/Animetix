@@ -105,6 +105,7 @@ class RAGContext(BaseModel):
     correction_feedback: Optional[str] = None
     iteration: int = 0
     max_iterations: int = 10
+    knowledge_acquired: bool = False
     current_state: RAGState = RAGState.ANALYZE
     graph_expert: Any = None # To avoid circular imports
     visual_context: Optional[str] = None
