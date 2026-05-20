@@ -181,25 +181,30 @@ class Container:
     @property
     def saga_agent(self):
         return self._get('saga_agent', lambda: SagaAgent(llm_service=self.llm_service, neo4j_manager=neo4j_manager))
+@property
+def chronicler(self):
+    return self._get('chronicler', lambda: ChroniclerAgent(self.llm_service, self.prompt_manager, neo4j_manager, self.web_search))
 
-    @property
-    def agentic_rag(self):
-        return self._get('agentic_rag', lambda: AgenticRAGService(
-            inference_engine=self.inference_engine, 
-            rag_service=self.rag_service, 
-            web_search=self.web_search, 
-            prompt_manager=self.prompt_manager, 
-            llm_service=self.llm_service, 
-            neo4j_manager=neo4j_manager, 
-            memory_service=self.memory_service, 
-            semantic_cache=self.semantic_cache_service, 
-            obs_service=self.obs_service,
-            graph_expert=self.graph_expert,
-            debate_manager=self.debate_manager,
-            librarian=self.librarian,
-            forge=self.forge,
-            saga_agent=self.saga_agent,
-            chronicler=self.chronicler,
+@property
+def agentic_rag(self):
+    return self._get('agentic_rag', lambda: AgenticRAGService(
+        inference_engine=self.inference_engine, 
+        rag_service=self.rag_service, 
+        web_search=self.web_search, 
+        prompt_manager=self.prompt_manager, 
+        llm_service=self.llm_service, 
+        neo4j_manager=neo4j_manager, 
+        memory_service=self.memory_service, 
+        semantic_cache=self.semantic_cache_service, 
+        obs_service=self.obs_service,
+        graph_expert=self.graph_expert,
+        debate_manager=self.debate_manager,
+        librarian=self.librarian,
+        forge=self.forge,
+        saga_agent=self.saga_agent,
+        chronicler=self.chronicler,
+        uncertainty_service=self.uncertainty_service
+    ))
             uncertainty_service=self.uncertainty_service
         ))
 
