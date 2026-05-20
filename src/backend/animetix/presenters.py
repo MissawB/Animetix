@@ -238,10 +238,8 @@ class GamePresenter:
     @staticmethod
     def get_score_color(score: float) -> str:
         """Returns a Tailwind color class based on the similarity score."""
-        if score > 90: return "danger"
-        if score > 70: return "warning"
-        if score > 40: return "primary"
-        return "secondary"
+        from core.domain.services.scoring_service import ScoringDomainService
+        return ScoringDomainService.get_ui_score_color_class(score)
 
     @staticmethod
     def format_hint(h_type: str, label: str, unlock_at: int, value: str, guess_count: int, revealed_ids: list) -> dict:
