@@ -13,6 +13,13 @@ class TransformersAdapter(InferencePort):
         self.model = None
         self.tokenizer = None
         self.use_4bit = use_4bit
+        self._http_session: Optional[aiohttp.ClientSession] = None
+
+    async def _get_session(self) -> aiohttp.ClientSession:
+        import aiohttp
+        if self._http_session is None or self._http_session.closed:
+            self._http_session = aiohttp.ClientSession()
+        return self._http_session
 
     def _load_model(self):
         if self.model: return
@@ -785,20 +792,20 @@ class TransformersAdapter(InferencePort):
         from PIL import Image
         from io import BytesIO
         
-        async with aiohttp.ClientSession() as session:
-            tasks = []
-            for url in urls:
-                async def fetch(url):
-                    try:
-                        async with session.get(url, timeout=10) as response:
-                            if response.status == 200:
-                                data = await response.read()
-                                return Image.open(BytesIO(data)).convert("RGB")
-                    except Exception as e:
-                        logger.warning(f"Failed to fetch {url}: {e}")
-                    return None
-                tasks.append(fetch(url))
-            return await asyncio.gather(*tasks)
+        session = await self._get_session()
+        tasks = []
+        for url in urls:
+            async def fetch(url):
+                try:
+                    async with session.get(url, timeout=10) as response:
+                        if response.status == 200:
+                            data = await response.read()
+                            return Image.open(BytesIO(data)).convert("RGB")
+                except Exception as e:
+                    logger.warning(f"Failed to fetch {url}: {e}")
+                return None
+            tasks.append(fetch(url))
+        return await asyncio.gather(*tasks)
 
     def _load_clip_model(self):
         if hasattr(self, '_clip_model'): return
@@ -810,15 +817,14 @@ class TransformersAdapter(InferencePort):
             logger.error(f"❌ Failed to load CLIP: {e}")
             raise InferenceError(f"Critical failure during CLIP loading: {str(e)}")
 
-    def visual_rerank(self, query: str, image_urls: List[str], system_prompt: str = "") -> List[Dict[str, Any]]: 
-        """Reranking visuel via CLIP."""
-        import asyncio
+    async def visual_rerank(self, query: str, image_urls: List[str], system_prompt: str = "") -> List[Dict[str, Any]]: 
+        """Reranking visuel via CLIP (Async)."""
         from sentence_transformers import util
         
         self._load_clip_model()
         
         # Async fetch images
-        images = asyncio.run(self._fetch_images(image_urls))
+        images = await self._fetch_images(image_urls)
         
         # Filter None results
         valid_images = [img for img in images if img is not None]
