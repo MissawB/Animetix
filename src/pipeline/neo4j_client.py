@@ -159,9 +159,16 @@ class Neo4jManager:
         """
         if not self.driver:
             return
-            
+        with self.driver.session() as session:
+            try:
+                session.execute_write(self._sync_fan_theory_tx, saga_name, theory_data)
+            except Exception as e:
+                logger.error(f"Failed to sync fan theory {theory_data.get('title')} for {saga_name}: {e}")
+
+    @staticmethod
+    def _sync_fan_theory_tx(tx, saga_name: str, theory_data: Dict[str, Any]):
         query = """
-        MATCH (s:Saga {name: $saga_name})
+        MERGE (s:Saga {name: $saga_name})
         MERGE (t:FanTheory {title: $title})
         SET t.description = $description,
             t.popularity = $popularity,
@@ -170,20 +177,15 @@ class Neo4jManager:
             t.updated_at = datetime()
         MERGE (s)-[:HAS_THEORY]->(t)
         """
-        
-        with self.driver.session() as session:
-            try:
-                session.run(
-                    query,
-                    saga_name=saga_name,
-                    title=theory_data.get('title'),
-                    description=theory_data.get('description'),
-                    popularity=theory_data.get('popularity'),
-                    plausibility=theory_data.get('plausibility'),
-                    source_url=theory_data.get('source_url', '')
-                )
-            except Exception as e:
-                logger.error(f"Failed to sync fan theory {theory_data.get('title')} for {saga_name}: {e}")
+        tx.run(
+            query,
+            saga_name=saga_name,
+            title=theory_data.get('title'),
+            description=theory_data.get('description'),
+            popularity=theory_data.get('popularity'),
+            plausibility=theory_data.get('plausibility'),
+            source_url=theory_data.get('source_url', '')
+        )
 
     def find_logical_connections(self, media_id):
         if not self.driver: return []
