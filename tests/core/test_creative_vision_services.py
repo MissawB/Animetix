@@ -15,8 +15,8 @@ def mock_prompt_manager():
     return pm
 
 @pytest.fixture
-def video_service(mock_engine):
-    return VideoQuestService(inference_engine=mock_engine)
+def video_service(mock_engine, mock_prompt_manager):
+    return VideoQuestService(inference_engine=mock_engine, prompt_manager=mock_prompt_manager)
 
 @pytest.fixture
 def studio_service(mock_engine):
@@ -51,6 +51,20 @@ def test_identify_episode_from_clip(video_service, mock_engine):
     mock_engine.localize_video_actions.return_value = [{"answer": "Episode 5: The First Duel", "confidence": 0.95}]
     result = video_service.identify_episode_from_clip(b"video_data", "Naruto")
     assert result == "Episode 5: The First Duel"
+    mock_engine.localize_video_actions.assert_called_once()
+
+def test_extract_combat_lore(video_service, mock_engine, mock_prompt_manager):
+    # Mock VLM response with JSON-like answer
+    mock_engine.localize_video_actions.return_value = [
+        {"answer": 'Here is the extraction: {"combats": [{"character": "Goku", "technique": "Kamehameha"}]}'}
+    ]
+    
+    result = video_service.extract_combat_lore(b"video_data")
+    
+    assert len(result) == 1
+    assert result[0]["character"] == "Goku"
+    assert result[0]["technique"] == "Kamehameha"
+    mock_prompt_manager.get_prompt.assert_called_with("video_combat_extraction")
     mock_engine.localize_video_actions.assert_called_once()
 
 def test_studio_transform(studio_service, mock_engine):

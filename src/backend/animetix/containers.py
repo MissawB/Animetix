@@ -236,7 +236,7 @@ class Container:
 
     @property
     def video_quest_service(self):
-        return self._get('video_quest_service', lambda: VideoQuestService(inference_engine=self.qwen3_vl_adapter))
+        return self._get('video_quest_service', lambda: VideoQuestService(inference_engine=self.qwen3_vl_adapter, prompt_manager=self.prompt_manager))
 
     @property
     def studio_transform_service(self):

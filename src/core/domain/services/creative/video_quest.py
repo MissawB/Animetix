@@ -1,6 +1,7 @@
 import logging
 from typing import List, Dict, Any, Optional
 from ....ports.inference_port import InferencePort
+from ..prompt_manager import PromptManager
 
 logger = logging.getLogger("animetix.creative.video_quest")
 
@@ -10,8 +11,9 @@ class VideoQuestService:
     Permet de trouver des moments précis basés sur des actions ou descriptions.
     (SOTA: Temporal Action Localization)
     """
-    def __init__(self, inference_engine: InferencePort):
+    def __init__(self, inference_engine: InferencePort, prompt_manager: PromptManager):
         self.inference_engine = inference_engine
+        self.prompt_manager = prompt_manager
 
     def index_video_clips(self, video_data: bytes) -> List[Dict[str, Any]]:
         """Décompose une vidéo en segments et extrait leurs embeddings (Legacy Video-RAG)."""
@@ -49,3 +51,26 @@ class VideoQuestService:
             return results[0]["description"]
         
         return "Unknown Episode"
+
+    def extract_combat_lore(self, video_data: bytes) -> List[Dict[str, Any]]:
+        """
+        Extrait les informations de combat (lore) à partir d'une vidéo via le VLM.
+        """
+        prompt, sys = self.prompt_manager.get_prompt("video_combat_extraction")
+        # Call VLM
+        results = self.inference_engine.localize_video_actions(video_data, [prompt])
+        
+        if not results or "answer" not in results[0]:
+            return []
+            
+        res_raw = results[0]["answer"]
+        try:
+            import orjson
+            # Robust JSON extraction
+            if '{' in res_raw and '}' in res_raw:
+                data = orjson.loads(res_raw[res_raw.find('{'):res_raw.rfind('}')+1])
+                return data.get('combats', [])
+        except Exception as e:
+            logger.error(f"Failed to parse combat lore JSON: {e}")
+            
+        return []
