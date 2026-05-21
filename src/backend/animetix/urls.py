@@ -1,5 +1,11 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from . import views
+from . import api_views
+
+router = DefaultRouter()
+router.register(r'fusions', api_views.CreativeFusionViewSet, basename='fusion')
+router.register(r'achievements', api_views.AchievementViewSet, basename='achievement')
 
 urlpatterns = [
     path('', views.index, name='index'),
@@ -46,6 +52,8 @@ urlpatterns = [
     path('covertest/', views.covertest_view, name='covertest'),
     path('covertest/guess/', views.covertest_guess, name='covertest_guess'),
     
+    path('game/vs-battle/', views.vs_battle_view, name='vs_battle'),
+    
     path('undercover/setup/', views.undercover_party_setup, name='undercover_party_setup'),
     path('undercover/play/', views.undercover_party_play, name='undercover_party_play'),
     path('undercover/join/', views.undercover_online_join, name='undercover_online_join'),
@@ -71,8 +79,6 @@ urlpatterns = [
     path('notifications/', views.notifications_list_view, name='notifications_list'),
     path('notifications/mark_read/', views.mark_notifications_read, name='mark_notifications_read'),
 
-
-    
     path('duel/create/', views.create_duel, name='create_duel'),
     path('duel/join/', views.join_duel, name='join_duel'),
     path('duel/room/<str:room_code>/', views.duel_room_view, name='duel_room'),
@@ -99,4 +105,46 @@ urlpatterns = [
     path('api/webhooks/donation/', views.donation_webhook, name='donation_webhook'),
     path('feedback/ai/', views.submit_ai_feedback, name='submit_ai_feedback'),
     path('rag/stream/', views.agentic_rag_stream, name='agentic_rag_stream'),
+    
+    # Decoupled REST API for Classic Game
+    path('api/v1/game/classic/state/', api_views.ClassicGameStateView.as_view(), name='api_classic_state'),
+    path('api/v1/game/classic/start/', api_views.ClassicGameStartView.as_view(), name='api_classic_start'),
+    path('api/v1/game/classic/guess/', api_views.ClassicGameGuessView.as_view(), name='api_classic_guess'),
+    path('api/v1/game/classic/reveal/', api_views.ClassicGameRevealView.as_view(), name='api_classic_reveal'),
+    
+    # Decoupled REST API for Akinetix Game
+    path('api/v1/game/akinetix/state/', api_views.AkinetixGameStateView.as_view(), name='api_akinetix_state'),
+    path('api/v1/game/akinetix/start/', api_views.AkinetixGameStartView.as_view(), name='api_akinetix_start'),
+    path('api/v1/game/akinetix/answer/', api_views.AkinetixGameAnswerView.as_view(), name='api_akinetix_answer'),
+    path('api/v1/game/akinetix/confirm/', api_views.AkinetixGameConfirmView.as_view(), name='api_akinetix_confirm'),
+    
+    # Decoupled REST API for Emoji Decode Game
+    path('api/v1/game/emoji/state/', api_views.EmojiGameStateView.as_view(), name='api_emoji_state'),
+    path('api/v1/game/emoji/start/', api_views.EmojiGameStartView.as_view(), name='api_emoji_start'),
+    path('api/v1/game/emoji/guess/', api_views.EmojiGameGuessView.as_view(), name='api_emoji_guess'),
+    
+    # Decoupled REST API for Paradox Game
+    path('api/v1/game/paradox/state/', api_views.ParadoxGameStateView.as_view(), name='api_paradox_state'),
+    path('api/v1/game/paradox/start/', api_views.ParadoxGameStartView.as_view(), name='api_paradox_start'),
+    path('api/v1/game/paradox/guess/', api_views.ParadoxGameGuessView.as_view(), name='api_paradox_guess'),
+    
+    # Decoupled REST API for Vision Quest Game
+    path('api/v1/game/vision/state/', api_views.VisionGameStateView.as_view(), name='api_vision_state'),
+    path('api/v1/game/vision/start/', api_views.VisionGameStartView.as_view(), name='api_vision_start'),
+    path('api/v1/game/vision/guess/', api_views.VisionGameGuessView.as_view(), name='api_vision_guess'),
+    
+    # Decoupled REST API for Blindtest Game
+    path('api/v1/game/blindtest/state/', api_views.BlindtestGameStateView.as_view(), name='api_blindtest_state'),
+    path('api/v1/game/blindtest/start/', api_views.BlindtestGameStartView.as_view(), name='api_blindtest_start'),
+    path('api/v1/game/blindtest/guess/', api_views.BlindtestGameGuessView.as_view(), name='api_blindtest_guess'),
+    
+    # Decoupled REST API for Covertest Game
+    path('api/v1/game/covertest/state/', api_views.CovertestGameStateView.as_view(), name='api_covertest_state'),
+    path('api/v1/game/covertest/start/', api_views.CovertestGameStartView.as_view(), name='api_covertest_start'),
+    path('api/v1/game/covertest/guess/', api_views.CovertestGameGuessView.as_view(), name='api_covertest_guess'),
+    
+    # API v1 Router and specific views
+    path('api/v1/', include(router.urls)),
+    path('api/v1/game/archetypist/start/', api_views.ArchetypistStartFusionView.as_view(), name='api_archetypist_start'),
+    path('api/v1/game/archetypist/status/', api_views.ArchetypistTaskStatusView.as_view(), name='api_archetypist_status'),
 ]
