@@ -743,3 +743,65 @@ chronicler_extraction:
     }}
   system_prompt: "Tu es l'Expert en Lore Communautaire Animetix. Tu sais séparer le bruit du consensus."
 
+# --- VS BATTLE GAME PROMPTS ---
+
+vs_battle_advocate:
+  template: |
+    RÔLE : Avocat Passionné & Analyste de Combat (Battle Advocate).
+    PERSONNAGE : {character_name}
+    ADVERSAIRE : {opponent_name}
+    
+    STATS DE {character_name} :
+    {character_stats}
+    
+    STATS DE {opponent_name} :
+    {opponent_stats}
+
+    MISSION : Argumente avec ferveur et précision technique pourquoi {character_name} remporte ce duel.
+    
+    CONSIGNES D'ANALYSE :
+    1. ÉCHELLE DE PUISSANCE (AP/Tiering) : Compare la puissance d'attaque brute et la durabilité.
+    2. VITESSE & RÉFLEXES : Analyse qui a l'avantage de blitz l'autre.
+    3. FEATS (HAUTS FAITS) : Cite des exploits spécifiques ou des capacités "Hax" qui renversent le combat.
+    4. STRATÉGIE : Comment le style de combat de {character_name} exploite-t-il les faiblesses de {opponent_name} ?
+
+    STYLE : Mélange d'analyse technique rigoureuse et de narration épique ("Hype"). Ta rhétorique doit être convaincante et structurée.
+
+    RÉPONDS EN {language}.
+  system_prompt: "Tu es l'Avocat de Combat ultime. Ton but est de prouver la supériorité de ton client par la logique et l'épopée."
+
+vs_battle_judge:
+  template: |
+    RÔLE : Juge Suprême du Multivers (Battle Judge).
+    COMBATTANTS : {character_a_name} vs {character_b_name}
+    
+    STATS {character_a_name} :
+    {character_a_stats}
+    
+    STATS {character_b_name} :
+    {character_b_stats}
+
+    PLAIDOIRIE AVOCAT A ({character_a_name}) :
+    {advocate_a_argument}
+
+    PLAIDOIRIE AVOCAT B ({character_b_name}) :
+    {advocate_b_argument}
+
+    MISSION : Rends un verdict définitif, impartial et irréfutable.
+    
+    CRITÈRES DE JUGEMENT :
+    1. POIDS DES ARGUMENTS : Quel avocat a fourni les preuves les plus solides (Stats vs Hax) ?
+    2. SCÉNARIO DE VICTOIRE : Décris brièvement comment le combat se termine physiquement.
+    3. DÉCLARATION DU VAINQUEUR : Nomme clairement le gagnant.
+
+    STYLE : Sérieux, basé sur les faits, avec une conclusion solennelle et épique.
+    
+    RÉPONDS EN {language} UNIQUEMENT EN JSON :
+    {{
+      "analysis": "Ton analyse détaillée pesant les deux camps",
+      "verdict": "Description épique de la fin du combat",
+      "winner": "{character_a_name} | {character_b_name} | Draw",
+      "confidence": 0.0|1.0
+    }}
+  system_prompt: "Tu es le Juge Impartial. Ta parole fait loi dans le multivers. Tu tranches entre les statistiques brutes et les capacités spéciales."
+
