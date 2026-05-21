@@ -144,6 +144,7 @@ class GraphExtraction(BaseModel):
 
 class CombatStats(BaseModel):
     tier: str = Field(description="Attack Potency Tier (e.g., 2-C)")
+    tier_value: int = Field(default=0, description="Normalized power scale (0-100)")
     speed: str = Field(description="Combat and Reaction speed")
     durability: str = Field(description="Durability and Stamina")
     intelligence: str = Field(description="Combat IQ and Strategy")
@@ -151,6 +152,7 @@ class CombatStats(BaseModel):
 
 class CombatCharacter(BaseModel):
     name: str = Field(description="Name of the character.")
+    image_url: Optional[str] = Field(default=None, description="URL of the character portrait")
     wiki_url: str = Field(description="Source URL for character statistics (e.g. VS Battles Wiki).")
     stats: CombatStats = Field(description="Structured combat statistics and abilities.")
     summary: str = Field(description="Brief summary of the character's background and powers.")
