@@ -199,6 +199,22 @@ class FallbackInferenceAdapter(InferencePort):
         is_online = any(s.get("status") == "online" for s in statuses)
         return {"status": "online" if is_online else "offline", "adapters": statuses}
 
+    @property
+    def primary_adapter(self):
+        return self.adapters[0] if self.adapters else None
+
+    def rerank_documents(self, query: str, documents: List[str]) -> List[float]:
+        if hasattr(self.primary_adapter, 'rerank_documents'):
+            try:
+                return self.primary_adapter.rerank_documents(query, documents)
+            except Exception as e:
+                import logging
+                logger = logging.getLogger("animetix")
+                logger.warning(f"Primary reranker failed: {e}. Falling back to default scoring (0.0).")
+                return [0.0] * len(documents)
+        from core.ports.inference_port import InferenceNotImplementedError
+        raise InferenceNotImplementedError("Reranking not supported by current primary adapter")
+
     def generate_structured(self, prompt: str, response_model: type, system_prompt: str = "Tu es un expert en extraction de données structurées.", max_retries: int = 3) -> Any:
         """Génération structurée avec repli."""
         last_error = ""

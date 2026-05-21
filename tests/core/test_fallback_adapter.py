@@ -53,3 +53,11 @@ def test_clone_voice_fallback(fallback_adapter, mock_adapter_1, mock_adapter_2):
     mock_adapter_1.clone_voice.return_value = None
     mock_adapter_2.clone_voice.return_value = b"audio"
     assert fallback_adapter.clone_voice("text", b"ref") == b"audio"
+
+def test_rerank_documents_fallback(fallback_adapter, mock_adapter_1, mock_adapter_2):
+    mock_adapter_1.rerank_documents.return_value = [0.9, 0.8]
+    assert fallback_adapter.rerank_documents("query", ["doc1", "doc2"]) == [0.9, 0.8]
+
+def test_rerank_documents_fallback_failure(fallback_adapter, mock_adapter_1, mock_adapter_2):
+    mock_adapter_1.rerank_documents.side_effect = Exception("Fail")
+    assert fallback_adapter.rerank_documents("query", ["doc1", "doc2"]) == [0.0, 0.0]

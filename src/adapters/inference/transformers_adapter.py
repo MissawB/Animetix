@@ -1,11 +1,16 @@
-import torch
 import logging
 import aiohttp
 import asyncio
 from typing import Optional, List, Dict, Any, Generator
-from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 from core.ports.inference_port import InferencePort
 from core.domain.exceptions import InferenceError
+from core.utils.lazy_import import lazy_import
+
+torch = lazy_import('torch')
+transformers = lazy_import('transformers')
+AutoModelForCausalLM = transformers.AutoModelForCausalLM
+AutoTokenizer = transformers.AutoTokenizer
+pipeline = transformers.pipeline
 
 logger = logging.getLogger("animetix.inference.transformers")
 
@@ -438,7 +443,7 @@ class TransformersAdapter(InferencePort):
                     points.append((X, Y, Z, r, g, b_val))
             
             # Création du fichier PLY (Format Binaire pour la compacité)
-            header = f"ply\nformat binary_little_endian 1.0\nelement vertex {len(points)}\nproperty float x\nproperty float y\nproperty float z\nproperty uint8 red\nproperty property uint8 green\nproperty uint8 blue\nend_header\n"
+            header = f"ply\nformat binary_little_endian 1.0\nelement vertex {len(points)}\nproperty float x\nproperty float y\nproperty float z\nproperty uint8 red\nproperty uint8 green\nproperty uint8 blue\nend_header\n"
             
             ply_data = header.encode('ascii')
             for p in points:
@@ -906,3 +911,23 @@ class TransformersAdapter(InferencePort):
         return None # Implementé via DiffusersAdapter
 
     def health_check(self) -> dict: return {"status": "online" if self.model else "offline", "engine": "transformers"}
+
+    def rerank_documents(self, query: str, documents: List[str]) -> List[float]:
+        """Implémentation du reranking avec sentence_transformers."""
+        if not documents:
+            return []
+            
+        from core.utils.lazy_import import lazy_import
+        sentence_transformers = lazy_import('sentence_transformers')
+        
+        # Singleton pour le reranker afin d'éviter de le recharger
+        if not hasattr(self, '_cross_encoder'):
+            # Utilisation du modèle BGE-reranker ou ms-marco par défaut
+            self._cross_encoder = sentence_transformers.CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
+            
+        pairs = [[query, doc] for doc in documents]
+        scores = self._cross_encoder.predict(pairs)
+        
+        # S'assurer que le retour est bien une liste de floats
+        return [float(score) for score in scores]
+
