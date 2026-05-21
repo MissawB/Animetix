@@ -180,6 +180,16 @@ class ArchetypistPresenter:
                     "gradient": "from-amber-600 via-yellow-500 to-orange-400",
                     "post_only": True
                 },
+                {
+                    "titre": _("Versus Battle"),
+                    "titre_brush_1": _("VERSUS"),
+                    "titre_brush_2": _("BATTLE"),
+                    "description": _("Simulez un combat d'experts entre deux personnages mythiques."),
+                    "url": "vs_battle",
+                    "icon_url": "/static/animetix/img/ui/Naruto_Sasuke.png",
+                    "gradient": "from-red-600 via-gray-800 to-black",
+                    "post_only": False
+                },
             ],
             'multi': [
                 {"titre": _("Undercover"), "description": _("Débusquez l'intrus."), "url": "undercover_party_setup", "icon_url": "/static/animetix/img/ui/Light.png", "is_new": False, "post_only": False},
