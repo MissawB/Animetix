@@ -143,25 +143,25 @@ class GraphExtraction(BaseModel):
 # --- VS BATTLE GAME SCHEMAS ---
 
 class CombatStats(BaseModel):
-    tier: str = Field(description="Attack Potency Tier")
+    tier: str = Field(description="Attack Potency Tier (e.g., 2-C)")
     speed: str = Field(description="Combat and Reaction speed")
     durability: str = Field(description="Durability and Stamina")
     intelligence: str = Field(description="Combat IQ and Strategy")
     abilities: List[str] = Field(default_factory=list, description="Hax and Special Powers")
 
 class CombatCharacter(BaseModel):
-    name: str
-    wiki_url: str
-    stats: CombatStats
-    summary: str
+    name: str = Field(description="Name of the character.")
+    wiki_url: str = Field(description="Source URL for character statistics (e.g. VS Battles Wiki).")
+    stats: CombatStats = Field(description="Structured combat statistics and abilities.")
+    summary: str = Field(description="Brief summary of the character's background and powers.")
 
 class DebateTurn(BaseModel):
     agent: str = Field(description="Role: 'Advocate_A', 'Advocate_B', or 'Judge'")
-    content: str
+    content: str = Field(description="The actual argument or verdict text provided by the agent.")
 
 class CombatResult(BaseModel):
-    character_a: CombatCharacter
-    character_b: CombatCharacter
-    debate_history: List[DebateTurn] = Field(default_factory=list)
-    winner: str
-    verdict_summary: str
+    character_a: CombatCharacter = Field(description="The first combatant.")
+    character_b: CombatCharacter = Field(description="The second combatant.")
+    debate_history: List[DebateTurn] = Field(default_factory=list, description="Chronological record of the debate turns.")
+    winner: str = Field(description="Name of the winning character.")
+    verdict_summary: str = Field(description="Detailed explanation of the final decision and scaling factors.")
