@@ -15,10 +15,14 @@ class FandomAdapter(FandomPort):
 
     def fetch_character_data(self, character_name: str) -> Dict[str, Any]:
         params = {
-            "action": "parse",
-            "page": character_name,
+            "action": "query",
+            "titles": character_name,
+            "prop": "pageimages|revisions",
+            "piprop": "original",
+            "rvprop": "content",
             "format": "json",
-            "prop": "wikitext"
+            "formatversion": 2,
+            "redirects": 1
         }
         try:
             logger.info(f"Fetching Fandom data for character: {character_name}")
@@ -26,16 +30,21 @@ class FandomAdapter(FandomPort):
             response.raise_for_status()
             
             data = response.json()
-            if "error" in data:
-                logger.error(f"Fandom API Error: {data['error']['info']}")
-                raise Exception(f"Fandom API Error: {data['error']['info']}")
+            pages = data.get("query", {}).get("pages", [])
+            
+            if not pages or pages[0].get("missing"):
+                logger.warning(f"Character not found: {character_name}")
+                return {"name": character_name, "wikitext": "", "image_url": None}
                 
-            wikitext = data.get("parse", {}).get("wikitext", {}).get("*", "")
+            page = pages[0]
+            wikitext = page.get("revisions", [{}])[0].get("content", "")
+            image_url = page.get("original", {}).get("source")
             
             return {
                 "name": character_name,
-                "wikitext": wikitext
+                "wikitext": wikitext,
+                "image_url": image_url
             }
-        except requests.RequestException as e:
+        except Exception as e:
             logger.error(f"Failed to fetch data from Fandom: {e}")
             raise
