@@ -1,6 +1,10 @@
 from abc import ABC, abstractmethod
 from typing import Optional, List, Dict, Any
 
+class InferenceNotImplementedError(NotImplementedError):
+    """Exception levée lorsqu'une fonctionnalité d'inférence n'est pas supportée par un adaptateur."""
+    pass
+
 class InferencePort(ABC):
     @abstractmethod
     def generate(
@@ -32,7 +36,12 @@ class InferencePort(ABC):
         max_retries: int = 3
     ) -> Any:
         """Génère une réponse structurée validée par un modèle Pydantic."""
-        raise NotImplementedError("generate_structured not implemented for this adapter")
+        raise InferenceNotImplementedError("generate_structured not implemented for this adapter")
+
+    @abstractmethod
+    def rerank_documents(self, query: str, documents: List[str]) -> List[float]:
+        """Évalue la pertinence de plusieurs documents par rapport à une requête (Cross-Encoder)."""
+        pass
 
     @abstractmethod
     def generate_image(self, prompt: str, style: str = "") -> str:
