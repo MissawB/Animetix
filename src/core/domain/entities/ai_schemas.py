@@ -139,3 +139,29 @@ class GraphRelation(BaseModel):
 class GraphExtraction(BaseModel):
     entities: List[GraphEntity] = Field(default_factory=list)
     relations: List[GraphRelation] = Field(default_factory=list)
+
+# --- VS BATTLE GAME SCHEMAS ---
+
+class CombatStats(BaseModel):
+    tier: str = Field(description="Attack Potency Tier")
+    speed: str = Field(description="Combat and Reaction speed")
+    durability: str = Field(description="Durability and Stamina")
+    intelligence: str = Field(description="Combat IQ and Strategy")
+    abilities: List[str] = Field(default_factory=list, description="Hax and Special Powers")
+
+class CombatCharacter(BaseModel):
+    name: str
+    wiki_url: str
+    stats: CombatStats
+    summary: str
+
+class DebateTurn(BaseModel):
+    agent: str = Field(description="Role: 'Advocate_A', 'Advocate_B', or 'Judge'")
+    content: str
+
+class CombatResult(BaseModel):
+    character_a: CombatCharacter
+    character_b: CombatCharacter
+    debate_history: List[DebateTurn] = Field(default_factory=list)
+    winner: str
+    verdict_summary: str
