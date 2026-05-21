@@ -8,7 +8,9 @@ def mock_engine():
 
 @pytest.fixture
 def tool_agent(mock_engine):
-    return DynamicToolAgent(inference_engine=mock_engine)
+    mock_pm = MagicMock()
+    mock_pm.get_prompt.return_value = ("prompt", "system")
+    return DynamicToolAgent(inference_engine=mock_engine, prompt_manager=mock_pm)
 
 def test_build_and_execute_tool_success(tool_agent, mock_engine):
     # Mock LLM generating correct Python code

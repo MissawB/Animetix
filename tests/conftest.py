@@ -9,23 +9,43 @@ def set_event_loop_policy():
 import os
 from unittest.mock import MagicMock
 
-# --- 1. MOCK HEAVY LIBRARIES ---
-# We use a simple mocking strategy that doesn't trigger Django registration.
 class MockPackage(MagicMock):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__path__ = []
 
+    def __getattr__(self, name):
+        if name and name[0].isupper():
+            # Dynamically create a class to prevent issubclass() and subclassing errors
+            mock_cls = type(name, (object,), {
+                "__getattr__": lambda s, attr: MagicMock(),
+                "__init__": lambda *a, **k: None,
+            })
+            setattr(self, name, mock_cls)
+            return mock_cls
+        return super().__getattr__(name)
+
 import sys
-for pkg in [
-    'sentence_transformers', 'chromadb', 'chromadb.utils', 
-    'chromadb.utils.embedding_functions', 'chromadb.api', 
-    'chromadb.api.rust', 'chromadb.config', 'google.colab',
-    'neo4j', 'pipeline.neo4j_client', 'z3', 'peft', 'torch',
-    'sentry_sdk', 'sentry_sdk.integrations', 'sentry_sdk.integrations.django',
-    'transformers', 'datasets', 'bleach', 'jwt', 'wandb'
-]:
-    sys.modules[pkg] = MockPackage()
+import pytest
+
+@pytest.fixture(autouse=False)
+def mock_heavy_packages(monkeypatch):
+    """Provide on‑demand mocks for heavy optional packages.
+    Tests that need a specific package can call this fixture and
+    monkeypatch the module name to a ``MockPackage`` instance.
+    """
+    from tests.conftest import MockPackage
+    packages = [
+        'sentence_transformers', 'chromadb', 'chromadb.utils',
+        'chromadb.utils.embedding_functions', 'chromadb.api',
+        'chromadb.api.rust', 'chromadb.config', 'google.colab',
+        'neo4j', 'pipeline.neo4j_client', 'z3', 'peft', 'torch',
+        'sentry_sdk', 'sentry_sdk.integrations', 'sentry_sdk.integrations.django',
+        'transformers', 'datasets', 'bleach', 'jwt', 'wandb'
+    ]
+    for pkg in packages:
+        monkeypatch.setitem(sys.modules, pkg, MockPackage())
+    return True
 # Force Mock Container Module
 mock_container_instance = MagicMock()
 mock_container_instance.llm_service = MagicMock()
@@ -33,18 +53,57 @@ mock_container_instance.catalog_service = MagicMock()
 mock_container_instance.blind_test_service = MagicMock()
 mock_container_instance.cover_test_service = MagicMock()
 mock_container_instance.game_service = MagicMock()
+mock_container_instance.akinetix_service = MagicMock()
+mock_container_instance.animinator_service = MagicMock()
+mock_container_instance.game_service = MagicMock()
+mock_container_instance.akinetix_service = MagicMock()
+mock_container_instance.animinator_service = MagicMock()
+mock_container_instance.vision_quest_service = MagicMock()
 
 # Setup default returns for services (MUST be serializable types for E2E tests session)
 mock_container_instance.catalog_service.load_data.return_value = {
-    'titles': ['Naruto'], 
-    'lookup': [{'title': 'Naruto', 'id': '1'}], 
-    'title_to_full_data': {'Naruto': {'title': 'Naruto', 'id': '1'}},
-    'title_to_index': {'Naruto': 0}
+    'titles': ['Naruto', 'Bleach'], 
+    'lookup': [{'title': 'Naruto', 'id': '1'}, {'title': 'Bleach', 'id': '2'}], 
+    'title_to_full_data': {
+        'Naruto': {'title': 'Naruto', 'id': '1', 'image': 'n.jpg'},
+        'Bleach': {'title': 'Bleach', 'id': '2', 'image': 'b.jpg'}
+    },
+    'title_to_index': {'Naruto': 0, 'Bleach': 1}
 }
-mock_container_instance.blind_test_service.get_random_theme.return_value = {'anime_title': 'A'}
-mock_container_instance.cover_test_service.get_random_cover.return_value = {'manga_title': 'M'}
+mock_container_instance.blind_test_service.get_random_theme.return_value = {
+    'anime_title': 'A', 'song_title': 'S', 'artists': 'Art', 'video_url': 'v.mp4', 'type': 'OP'
+}
+mock_container_instance.cover_test_service.get_random_cover.return_value = {
+    'manga_title': 'M', 'cover_url': 'c.jpg', 'locale': 'ja', 'volume': '1'
+}
 mock_container_instance.game_service.select_secret.return_value = "Naruto"
 mock_container_instance.game_service.select_secret_custom.return_value = "Naruto"
+mock_container_instance.game_service.check_title_match.return_value = False
+mock_container_instance.akinetix_service.start_new_game.return_value = {
+    'history': [], 'current_q': 'Q?', 'current_attr': 'A', 'game_over': False, 'ai_guess': None, 'probs': {}, 'asked_attrs': []
+}
+mock_container_instance.akinetix_service.process_answer.return_value = {
+    'history': [], 'current_q': 'Q2?', 'current_attr': 'A2', 'game_over': False, 'ai_guess': None, 'probs': {}, 'asked_attrs': []
+}
+mock_container_instance.animinator_service.select_secret.return_value = "Naruto"
+mock_container_instance.animinator_service.start_new_game.return_value = {
+    'history': [], 'current_q': 'Q?', 'current_attr': 'A', 'game_over': False, 'ai_guess': None, 'probs': {}, 'asked_attrs': []
+}
+mock_container_instance.animinator_service.process_question.return_value = {
+    'history': [], 'current_q': 'Q2?', 'current_attr': 'A2', 'game_over': False, 'ai_guess': None, 'probs': {}, 'asked_attrs': [], 'answer': 'yes'
+}
+mock_container_instance.animinator_service.ask_oracle.return_value = {
+    'answer': 'Oui', 'reasoning': 'Oracle reason'
+}
+mock_container_instance.vision_quest_service.select_secret.return_value = {'id': 1, 'title': 'Naruto', 'image': 'n.jpg'}
+mock_container_instance.vision_quest_service.start_new_game.return_value = {'id': 1, 'title': 'Naruto', 'image': 'n.jpg'}
+
+# Set the global container early to prevent import-time real instantiations
+try:
+    import animetix.containers
+    animetix.containers._container = mock_container_instance
+except ImportError:
+    pass
 
 # Patch global get_container
 @pytest.fixture(autouse=True)
@@ -88,7 +147,11 @@ def mock_container(patch_get_container):
 def mock_animetix_service(mock_container):
     """Legacy compatibility fixture."""
     from animetix.services import AnimetixService
-    return AnimetixService()
+    mock = MagicMock(spec=AnimetixService)
+    # Forward common methods to the container's mock if needed
+    mock.load_data = mock_container.catalog_service.load_data
+    mock.game_service = mock_container.game_service
+    return mock
 
 @pytest.fixture(autouse=True)
 def mock_heavy_services(mocker):

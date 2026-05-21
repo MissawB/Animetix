@@ -1,9 +1,12 @@
 import os
 import json
 import time
+import logging
 from typing import List, Dict, Optional
 from core.ports.inference_port import InferencePort
 from .prompt_manager import PromptManager
+
+logger = logging.getLogger("animetix.ragas")
 
 class RagasEvalService:
     """
@@ -48,19 +51,28 @@ class RagasEvalService:
         """Fidélité : La réponse est-elle supportée par le contexte ? (0.0 à 1.0)"""
         prompt, system_prompt = self.prompt_manager.get_prompt("ragas_faithfulness_calc", context=context[:2000], response=response)
         res = self.judge_engine.generate(prompt, system_prompt=system_prompt)
-        try: return float(res.strip())
-        except: return 0.5
+        try:
+            return float(res.strip())
+        except Exception as e:
+            logger.warning(f"RAGAS Faithfulness scoring failed (raw response: '{res}'): {e}")
+            return 0.5
 
     def _score_relevancy(self, query: str, response: str) -> float:
         """Pertinence : La réponse répond-elle directement à la question ?"""
         prompt, _ = self.prompt_manager.get_prompt("ragas_relevance_eval", query=query, response=response)
         res = self.judge_engine.generate(prompt)
-        try: return float(res.strip())
-        except: return 0.5
+        try:
+            return float(res.strip())
+        except Exception as e:
+            logger.warning(f"RAGAS Relevancy scoring failed (raw response: '{res}'): {e}")
+            return 0.5
 
     def _score_precision(self, query: str, context: str) -> float:
         """Précision du contexte : Le contexte contient-il l'information nécessaire ?"""
         prompt, _ = self.prompt_manager.get_prompt("ragas_faithfulness_eval", query=query, context=context)
         res = self.judge_engine.generate(prompt)
-        try: return float(res.strip())
-        except: return 0.0
+        try:
+            return float(res.strip())
+        except Exception as e:
+            logger.warning(f"RAGAS Context Precision scoring failed (raw response: '{res}'): {e}")
+            return 0.0

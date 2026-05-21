@@ -33,7 +33,8 @@ class CoveOracleService:
         try:
             plan = CoVePlan(**plan_data)
             verification_questions = plan.verification_questions
-        except Exception:
+        except Exception as e:
+            logger.warning(f"CoVe plan parsing failed: {e}")
             verification_questions = []
         
         if not verification_questions:

@@ -1,6 +1,10 @@
 import numpy as np
 from typing import List, Dict, Optional
-from sklearn.feature_extraction.text import TfidfVectorizer
+from core.utils.lazy_import import lazy_import
+
+# Lazy import for sklearn's TfidfVectorizer
+sklearn_text = lazy_import('sklearn.feature_extraction.text')
+TfidfVectorizer = sklearn_text.TfidfVectorizer
 
 class HybridSearchIndex:
     """
@@ -57,6 +61,53 @@ class HybridSearchIndex:
                 if len(results) >= limit: break
                 
         return results
+
+    def search_with_scores(self, query: str, limit: int = 20) -> List[tuple]:
+        """Exécute une recherche lexicale et retourne les parents avec leurs scores bruts."""
+        if not self.is_initialized():
+            return []
+            
+        query_vec = self.vectorizer.transform([query.lower()])
+        scores = (self.matrix * query_vec.T).toarray().flatten()
+        
+        top_indices = np.argsort(scores)[::-1][:limit*2]
+        
+        seen_parents = set()
+        results = []
+        for i in top_indices:
+            if scores[i] <= 0: continue
+            chunk = self.chunks[i]
+            parent = self.parent_child_map.get(chunk)
+            if parent and parent['id'] not in seen_parents:
+                results.append((parent, float(scores[i])))
+                seen_parents.add(parent['id'])
+                if len(results) >= limit: break
+                
+        return results
+
+    @staticmethod
+    def reciprocal_rank_fusion(lexical_list: List[Dict], semantic_list: List[Dict], k: int = 60) -> List[Dict]:
+        """Fusionne deux listes de résultats en utilisant le Reciprocal Rank Fusion (RRF)."""
+        rrf_scores = {}
+        doc_map = {}
+        
+        def get_doc_id(doc):
+            return str(doc.get('id') or doc.get('external_id') or '')
+            
+        for rank, doc in enumerate(lexical_list):
+            doc_id = get_doc_id(doc)
+            if not doc_id: continue
+            doc_map[doc_id] = doc
+            rrf_scores[doc_id] = rrf_scores.get(doc_id, 0.0) + 1.0 / (k + rank + 1)
+            
+        for rank, doc in enumerate(semantic_list):
+            doc_id = get_doc_id(doc)
+            if not doc_id: continue
+            doc_map[doc_id] = doc
+            rrf_scores[doc_id] = rrf_scores.get(doc_id, 0.0) + 1.0 / (k + rank + 1)
+            
+        sorted_docs = sorted(rrf_scores.items(), key=lambda x: x[1], reverse=True)
+        return [doc_map[doc_id] for doc_id, score in sorted_docs]
 
     def _generate_context_header(self, item: Dict, media_type: str) -> str:
         title = item.get('title') or item.get('name', 'Inconnu')

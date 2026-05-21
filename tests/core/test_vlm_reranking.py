@@ -25,11 +25,20 @@ def test_vlm_reranking_end_to_end(mock_dependencies):
         prompt_manager=prompt_manager
     )
 
+    # Force high confidence to skip fallback and librarian
+    agentic_rag.uncertainty_service = MagicMock()
+    agentic_rag.uncertainty_service.measure_confidence.return_value = 1.0
+
     # 1. Mock complexity analyzer (TTC)
     # 2. Mock Planner returning is_visual_query=True
     # 3. Mock Scout returning truth path
     # 4. Mock Judge returning APPROVE
-    
+
+    # Mock synthesizer to return a high score directly if using ResponseSynthesizer
+    # Actually, let's just patch CONDUCT_DEBATE too if it's used
+    from core.domain.entities.ai_schemas import DebateOutcome, JudgeAction
+    outcome = DebateOutcome(consensus_action=JudgeAction.APPROVE, final_reasoning="Perfect", critiques={})
+    agentic_rag.debate_manager.conduct_debate = MagicMock(return_value=outcome)    
     inference_engine.generate.side_effect = [
         '{"complexity_score": 2, "thinking_budget": 100}', # TTC
         '{"optimized_query": "blue hair girl", "requires_web": false, "is_visual_query": true, "reasoning": "Looking for visual features"}', # Planner

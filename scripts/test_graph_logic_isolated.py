@@ -3,20 +3,20 @@ import os
 from unittest.mock import MagicMock
 import json
 
-# Force mock modules for heavy libraries that are broken in this env
-class Mocked: pass
-sys.modules['neo4j'] = Mocked()
-sys.modules['sentence_transformers'] = Mocked()
-sys.modules['pandas'] = Mocked()
-sys.modules['torch'] = Mocked()
-
 # Add src to path
 sys.path.append(os.path.join(os.getcwd(), 'src'))
 
-from core.domain.services.graph_construction_service import KnowledgeGraphConstructionService
-
 def run_isolated_test():
     print("🧪 Starting Isolated AI Logic Test...")
+    
+    # Force mock modules for heavy libraries that are broken in this env
+    class Mocked: pass
+    sys.modules['neo4j'] = Mocked()
+    sys.modules['sentence_transformers'] = Mocked()
+    sys.modules['pandas'] = Mocked()
+    sys.modules['torch'] = Mocked()
+    
+    from core.domain.services.graph_construction_service import KnowledgeGraphConstructionService
     
     # 1. Setup Mock Engine
     mock_engine = MagicMock()

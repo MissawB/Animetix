@@ -1,71 +1,84 @@
-# 🏗️ Architecture & Fonctionnalités : Animetix
+# Architecture Technique & Modulaire (Atomic & Hexagonal)
 
-Ce document détaille les choix de conception et l'implémentation technique du projet **Animetix**.
-
-## 1. Architecture du Système IA (RAG 2.0)
-
-Animetix utilise une approche agentique pour la découverte de média, articulée autour de trois piliers :
-
-### A. Persistance Unifiée & Recherche Vectorielle
-*   **UnifiedRepositoryAdapter** : Gère la persistance hybride. Utilise **PgVector (PostgreSQL)** avec index **HNSW** comme moteur primaire pour une performance sub-seconde sur 100k+ items. **ChromaDB** sert de fallback local et de stockage de synchronisation, garantissant la résilience des données vectorielles.
-*   **Embeddings de Texte** : **Jina-v3** (1024 dims). SOTA 2026 gérant 32k tokens de contexte et optimisé pour les langues asiatiques/multilingues.
-*   **Embeddings Multimodaux** : **SigLIP-SO400M** (1152 dims). Unifie l'espace latent entre images et textes.
-*   **Reranking** : **BGE-Reranker-v2-Gemma**. Précision chirurgicale sur le top 10 des résultats.
-*   **Optimisation Matryoshka (MRL)** : Recherche vectorielle en deux phases (128/256 dims pour le filtrage rapide, 1024 dims pour le raffinement). Gain de performance de 80%.
-
-### B. Couche de Raisonnement (Agentic RAG 2.0)
-*   **Architecture Scout** : Utilisation d'un modèle ultra-léger (SLM) comme "éclaireur" pour distiller le contexte brut et traverser le graphe Neo4j en millisecondes.
-*   **Multi-Agent Orchestration** : Découplage en **Searcher**, **Critic** et **Synthesizer**.
-*   **Test-Time Compute** : Allocation dynamique de tokens de réflexion (Thinking Mode) via **DeepSeek-R1** ou **Qwen-Thinking**.
-
-### C. Graphe de Connaissances (Neo4j)
-*   **GraphRAG Avancé** : Raisonnement "Multi-Hop" et synthèses de communautés globales.
-*   **Automatisation** : Synchronisation incrémentale via le pipeline Dagster.
-
-## 3. Optimisations & Scalabilité SOTA
-
-*   **Matryoshka Dynamic Slicing** : Recherche vectorielle en deux phases (128 dims pour le filtrage, 1024 dims pour le reranking). Gain de performance de 80%.
-*   **Quantisation 2.0 (BitNet 1.58b)** : Support des modèles à un bit pour faire tourner des architectures de 30B+ sur du matériel grand public.
-
-## 2. Modes de Jeu & Innovation
-
-### Solo
-*   **Classic** : Recherche par similarité sémantique pure.
-*   **Emoji Decode** : Identification d'œuvres via des suites d'emojis générées par LLM.
-*   **Akinetix** : Algorithme Bayesien classique optimisé pour deviner les personnages.
-*   **Paradox Quest** : Utilisation d'IA Neuro-Symbolique (Z3 Solver) pour détecter les anomalies thématiques.
-*   **Vision Quest** : Reconnaissance visuelle interactive via CLIP.
-
-### Social & Créatif
-*   **Duels 1vs1** : Compétition temps réel via WebSockets (Django Channels).
-*   **La Forge** : Fusion d'univers générant des synopsis et des visuels via Stable Diffusion/Flux.
-
-## 3. Standards Techniques & Observabilité
-
-### Architecture Atomique & Hexagonale
-Le projet respecte une séparation stricte et une structure atomique :
-- **Atomicité** : Les composants doivent être petits, à usage unique et facilement interchangeables.
-- **Domain** : Logique pure (`core/`), typage strict (`Pydantic`), prompts externalisés (`YAML`).
-- **Infrastructure** : Adaptateurs interchangeables via le **FallbackInferenceAdapter**. Celui-ci orchestre une cascade de moteurs d'inférence (Transformers local 4-bit, vLLM, GGUF via llama.cpp, et Brain API) pour garantir une disponibilité maximale.
-
-### Injection de Dépendances & Lazy Loading
-Le projet utilise un **Conteneur de Dépendances** personnalisé (`src/backend/animetix/containers.py`) pour orchestrer l'instanciation des services.
-- **Lazy Loading** : Les services ne sont instanciés qu'au moment de leur première utilisation, réduisant le temps de démarrage du serveur et la consommation mémoire initiale.
-- **Découplage** : Centralise la configuration des adaptateurs et des services, facilitant les tests unitaires via l'injection de mocks.
-
-### État d'Avancement & Priorités
-- **Terminé : Modularisation de la Logique UI** : Découpage de `views.py` en modules spécialisés dans `src/backend/animetix/views/`, éliminant le "God Object".
-- **Haute Priorité : Découplage des Utils** : Migration des fonctions utilitaires globales vers des services de domaine pour maximiser la réutilisabilité.
-- **Haute Priorité : Renforcement de la Gestion des Erreurs** : Standardisation des exceptions et propagation propre via les adaptateurs de fallback.
-
-### MLOps & Sécurité
-- **Boucle DPO** : Collecte de feedback *Chosen/Rejected* validé pour l'alignement continu des modèles.
-- **Observabilité** : Monitoring des coûts LLM (token tracking) et évaluation systématique via **Ragas**.
-- **Sécurité IA** : Protection contre les injections XSS via sanitisation des outputs LLM (Bleach).
-
-## 4. Documentation API
-- **Swagger UI** : `/api/docs/`
-- **Redoc** : `/api/redoc/`
+Ce document décrit l'architecture logicielle du projet **Double_scenario_Project** (Anime Archetype Engine). Le projet adopte une approche **Atomic & Hexagonal** (Clean Architecture) pour garantir un découplage strict entre la logique métier (Domain) et l'infrastructure (Adapters).
 
 ---
-*Version 3.0 - Focus Scalabilité, Sécurité et Inférence Streaming*
+
+## 1. Vue d'Ensemble de l'Hexagone
+
+L'architecture s'articule autour de trois strates :
+
+```mermaid
+graph TD
+    subgraph Frameworks & Adapters (Externe)
+        Django[Django Backend & Channels]
+        ML_Adapters[Adapteurs d'Inférence: LocalLlama, Diffusers, Transformers]
+        Persistence_Adapters[Adapteurs de Persistance: PgVector (Primaire), Neo4j, ChromaDB]
+    end
+
+    subgraph Ports (Interfaces)
+        InferencePort[InferencePort - inclut Reranking]
+        PersistencePort[PersistencePort - UnifiedRepository]
+    end
+
+    subgraph Core Domain (Métier)
+        Services[Services Métier: AdvancedRAGService, PromptManager, Agents]
+        Models[Modèles Pydantic: DTOs, Schémas IA]
+    end
+
+    Django --> Services
+    Services --> InferencePort
+    Services --> PersistencePort
+    ML_Adapters --> InferencePort
+    Persistence_Adapters --> PersistencePort
+```
+
+---
+
+## 2. Structure du Code Source
+
+Le code est organisé sous `src/` :
+
+- **`core/ports/`** : Abstractions (ABC) définissant les contrats métier.
+  - `InferencePort` : Génération de texte/image, clonage de voix, et désormais `rerank_documents`.
+  - `PersistencePort` : Accès aux données unifié (`UnifiedRepositoryAdapter`).
+- **`core/domain/services/`** : Logique métier pure, sans dépendance infra.
+- **`adapters/`** : Implémentations concrètes (Infrastructure).
+  - `adapters/persistence/` : Gestion multi-source (PgVector, Neo4j, Fallback ChromaDB).
+  - `adapters/inference/` : Supports vLLM, GGUF, Transformers.
+- **`backend/`** : Orchestration Django. Injection via `containers.py`.
+
+---
+
+## 3. Stockage & Persistance (Primary: PgVector)
+
+Le projet utilise **PgVector** comme stockage vectoriel principal. L'accès aux données est unifié via `PersistencePort` qui gère la logique de fallback (ex: utilisation de ChromaDB en cas d'indisponibilité de PgVector). Neo4j est utilisé en complément pour la persistance des relations complexes du graphe de connaissances.
+
+---
+
+## 4. Stratégie d'Importations Paresseuses (Lazy Imports)
+
+Pour optimiser le chargement, les bibliothèques lourdes (`torch`, `transformers`, etc.) sont chargées via `lazy_import.py`. L'import réel ne se déclenche qu'au premier accès attributaire, évitant des surcoûts inutiles pour les composants non IA.
+
+---
+
+## 5. Gestion des Fonctionnalités & Extension
+
+Les adaptateurs concrétisent les ports. Toute méthode non supportée lève `InferenceNotImplementedError`. L'ajout de fonctionnalités (ex: Reranking) suit le cycle :
+1. Extension du **Port**.
+2. Implémentation dans l'**Adapter** correspondant.
+3. Mise à jour de l'injection dans `containers.py`.
+
+---
+
+## 6. Déploiement : Architecture découplée (Pure SPA)
+
+Animetix est désormais conçu comme une **Pure SPA**. 
+
+- **Frontend (Statique)** : `index.html` + Bundle React (Vite) peut être servi par n'importe quel serveur statique (Nginx, S3, Vercel).
+- **Backend (API)** : Django sert exclusivement d'API JSON via `/api/v1/`.
+
+La dépendance structurelle à `base.html` (Django Templates) est devenue optionnelle et conservée uniquement pour des raisons de rétrocompatibilité. Pour un déploiement 100% découplé :
+1. Construire le front avec `npm run build` dans le dossier `frontend/`.
+2. Servir le dossier `dist/` via Nginx ou un CDN.
+3. Configurer le reverse proxy pour rediriger les appels `/api/` vers le backend Django.

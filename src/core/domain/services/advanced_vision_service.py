@@ -1,8 +1,11 @@
 import os
 import requests
+import logging
 import numpy as np
 from typing import List, Dict, Optional, Any
 from core.ports.inference_port import InferencePort
+
+logger = logging.getLogger('animetix.vision')
 
 class AdvancedVisionService:
     def __init__(self, inference_engine: InferencePort):
@@ -102,5 +105,6 @@ class AdvancedVisionService:
                     reranked.append(item)
                     
             return reranked
-        except:
+        except Exception as e:
+            logger.warning(f"Visual reranking failed (VLM rerank): {e}")
             return candidate_items

@@ -16,7 +16,8 @@ from src.core.domain.services.graph_construction_service import KnowledgeGraphCo
 def mock_inference_engine():
     engine = MagicMock()
     # Simulated LLM response for a typical anime synopsis
-    engine.generate.return_value = json.dumps({
+    mock_model = MagicMock()
+    mock_model.model_dump.return_value = {
         "entities": [
             {"name": "Naruto Uzumaki", "type": "Person", "description": "Protagoniste"},
             {"name": "Sasuke Uchiha", "type": "Person", "description": "Rival"}
@@ -24,7 +25,8 @@ def mock_inference_engine():
         "relations": [
             {"source": "Naruto Uzumaki", "target": "Sasuke Uchiha", "type": "ENEMY_OF"}
         ]
-    })
+    }
+    engine.generate_structured.return_value = mock_model
     return engine
 
 def test_graph_extraction_logic(mock_inference_engine):
@@ -48,8 +50,9 @@ def test_enrichment_pipeline_sync_call(mock_neo4j_mgr, mock_inference_engine):
     
     # Mocking the container to return our mock service
     mock_container = MagicMock()
-    mock_container.graph_builder = KnowledgeGraphConstructionService(inference_engine=mock_inference_engine)
-    
+    mock_prompt_manager = MagicMock()
+    mock_prompt_manager.get_prompt.return_value = ("prompt", "system")
+    mock_container.graph_builder = KnowledgeGraphConstructionService(inference_engine=mock_inference_engine, prompt_manager=mock_prompt_manager)    
     with patch('src.pipeline.enrich_graph_ai.get_container', return_value=mock_container):
         # We simulate a small catalog
         sample_data = [{"id": 1, "title": "Naruto", "description": "Un synopsis assez long pour passer le filtre de longueur de 100 caracteres."}]

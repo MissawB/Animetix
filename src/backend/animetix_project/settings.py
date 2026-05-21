@@ -264,7 +264,7 @@ else:
     }
     CELERY_BROKER_URL = "memory://"
     if not IS_PRODUCTION:
-        print("ℹ️  Redis not found, using Local Memory Cache.")
+        print("[INFO] Redis not found, using Local Memory Cache.")
 
 CELERY_RESULT_BACKEND = REDIS_URL if REDIS_URL and not REDIS_URL.startswith("rediss://") else "rpc://" 
 CELERY_ACCEPT_CONTENT = ['json']
@@ -326,4 +326,4 @@ if sentry_dsn and not os.environ.get('PYTEST_CURRENT_TEST'):
         traces_sample_rate=0.1,
         send_default_pii=True, # Utile pour savoir quel utilisateur a eu l'erreur
     )
-    print("✅ Sentry initialized with Django & Celery integrations.")
+    print("[SUCCESS] Sentry initialized with Django & Celery integrations.")

@@ -41,22 +41,23 @@
 
 ---
 
-## Architecture & Tech Stack
+## 🏗️ Architecture & Tech Stack
 
-Animetix strictly follows **Hexagonal Architecture** (Ports & Adapters) to ensure business logic remains independent of infrastructure.
+Animetix is built on an **Atomic & Hexagonal Architecture** (Ports & Adapters), ensuring the core domain is strictly decoupled from infrastructure concerns.
 
 ### Core Technology
 - **Backend:** **Django 5.0** + **Channels** (WebSockets) for real-time interactions.
 - **Dependency Injection:** Custom lazy-loading **DI Container** (`src/backend/animetix/containers.py`).
-- **Orchestration:** **Dagster** manages the entire ETL & ML pipeline.
-- **Vector DB:** **PgVector** with HNSW indexing (Primary) + **ChromaDB** (Fallback).
-- **Graph DB:** **Neo4j** for modeling complex relationships and attributes.
-- **Inference:** Multi-backend support (**vLLM**, **GGUF**, **Transformers 4-bit**) with **BGE-Reranker** for precision.
+- **Orchestration:** **Dagster** manages ETL & ML pipelines.
+- **Vector DB:** **PgVector** (Primary storage) with HNSW indexing + **ChromaDB** (Fallback).
+- **Graph DB:** **Neo4j** for complex relationship modeling.
+- **Inference:** Unified **InferencePort** supporting **vLLM**, **GGUF**, **Transformers** with automated **Cross-Encoder Reranking**.
 
-### MLOps Loop
-- **RLHF Pipeline:** Collects user feedback (`AIFeedback`) to continuously align model performance.
-- **Data Intelligence:** Automated ingestion from AniList, Jikan, and TMDB.
-- **Observability:** Performance tracking via **trackio** and custom health dashboards.
+### Key Design Principles
+- **Atomic Components:** Small, single-purpose modules.
+- **Strict Typing:** Python 3.10+ with Pydantic for data validation.
+- **Lazy Loading:** Critical for performance; AI dependencies load only when accessed.
+- **Observability:** Metrics via **Ragas** and continuous **DPO alignment**.
 
 ---
 

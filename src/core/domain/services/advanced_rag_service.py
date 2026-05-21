@@ -83,7 +83,7 @@ class AdvancedRAGService:
         return ""
 
     def rerank_results(self, query: str, candidates: List[Dict]) -> List[Dict]:
-        """Ré-ordonne les candidats en utilisant le modèle de cross-encoding de l'InferencePort."""
+        """Ré-ordonne les candidats en utilisant le modèle de cross-encoding via InferencePort."""
         if not candidates:
             return candidates
         
@@ -102,7 +102,12 @@ class AdvancedRAGService:
             texts_to_score.append(doc_text)
             
         try:
+            # Appel via l'interface InferencePort (via l'attribut inference_engine)
             scores = self.llm_service.inference_engine.rerank_documents(query, texts_to_score)
+            if len(scores) != len(candidates):
+                logger.warning("Reranking scores count mismatch, falling back to original rank.")
+                return candidates
+                
             ranked_indices = np.argsort(scores)[::-1]
             return [candidates[i] for i in ranked_indices]
         except Exception as e:

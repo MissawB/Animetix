@@ -1,9 +1,19 @@
 import logging
 import numpy as np
 from typing import Optional
-import torch
-import torch.nn as nn
-import torch.optim as optim
+try:
+    import torch
+    import torch.nn as nn
+    import torch.optim as optim
+    HAS_TORCH = True
+except ImportError:
+    HAS_TORCH = False
+    # Placeholder definitions to prevent syntax/import errors on class creation
+    class nn:
+        class Module:
+            pass
+    optim = None
+
 from .akinetix_rl_env import AkinetixRLEnvironment
 
 logger = logging.getLogger("animetix.rl")
@@ -27,6 +37,11 @@ class AkinetixPolicyNetwork(nn.Module):
 class AkinetixRLTrainer:
     """Service d'entraînement pour le mode Akinetix."""
     def __init__(self, env: AkinetixRLEnvironment):
+        if not HAS_TORCH:
+            raise ImportError(
+                "torch and its submodules are required to use AkinetixRLTrainer. "
+                "Please install them via 'pip install torch'."
+            )
         self.env = env
         self.state_dim = 3 # pool_size, entropy, steps
         self.action_dim = len(env.attributes)

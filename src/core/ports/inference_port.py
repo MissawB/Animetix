@@ -38,10 +38,9 @@ class InferencePort(ABC):
         """Génère une réponse structurée validée par un modèle Pydantic."""
         raise InferenceNotImplementedError("generate_structured not implemented for this adapter")
 
-    @abstractmethod
     def rerank_documents(self, query: str, documents: List[str]) -> List[float]:
         """Évalue la pertinence de plusieurs documents par rapport à une requête (Cross-Encoder)."""
-        pass
+        raise InferenceNotImplementedError("rerank_documents not implemented for this adapter")
 
     @abstractmethod
     def generate_image(self, prompt: str, style: str = "") -> str:

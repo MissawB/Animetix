@@ -64,7 +64,7 @@ class MultiAgentBus:
             try:
                 await pubsub.unsubscribe(channel)
                 await pubsub.close()
-            except:
+            except Exception:
                 pass
 
     def register_agent(self, agent_id: str, callback: Callable):

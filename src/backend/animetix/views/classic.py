@@ -102,7 +102,8 @@ def start_ranked_mode(request):
 def ranked_next_level(request):
     session = GameSessionManager(request)
     if not session.get('is_ranked'): return redirect('index')
-    media_type = get_current_mode(request); data = animetix_service.load_data(media_type)
+    media_type = session.get_current_mode()
+    data = animetix_service.load_data(media_type)
     points = request.user.profile.ranked_points if request.user.is_authenticated else 0
     rank_limit = min(2500, 100 + int(points / 2))
     valid_lookup = data.get('lookup', [])[:rank_limit]

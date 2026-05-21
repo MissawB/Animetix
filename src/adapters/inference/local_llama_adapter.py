@@ -1,10 +1,15 @@
 import os
-import torch
 import requests
 import logging
 from typing import Optional, List, Dict, Any
-from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from core.ports.inference_port import InferencePort
+from core.utils.lazy_import import lazy_import
+
+torch = lazy_import('torch')
+transformers = lazy_import('transformers')
+AutoModelForCausalLM = transformers.AutoModelForCausalLM
+AutoTokenizer = transformers.AutoTokenizer
+BitsAndBytesConfig = transformers.BitsAndBytesConfig
 
 logger = logging.getLogger("animetix.inference")
 

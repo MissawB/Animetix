@@ -49,6 +49,7 @@ from core.domain.services.agentic_rag_service import AgenticRAGService
 from core.domain.services.long_term_memory_service import LongTermMemoryService
 from core.domain.services.semantic_cache_service import SemanticCacheService
 from core.domain.services.creative.fusion_service import FusionDomainService
+from core.domain.services.creative.vs_battle_service import VsBattleService
 from core.domain.services.observability_service import ObservabilityService
 from core.domain.services.health_dashboard_service import HealthDashboardService
 
@@ -366,6 +367,10 @@ class Container:
     @property
     def fusion_service(self):
         return self._get('fusion_service', lambda: FusionDomainService(inference_engine=self.inference_engine, prompt_manager=self.prompt_manager))
+
+    @property
+    def vs_battle_service(self):
+        return self._get('vs_battle_service', lambda: VsBattleService(fandom_port=self.fandom_adapter, inference_engine=self.inference_engine, prompt_manager=self.prompt_manager))
 
     @property
     def catalog_service(self):

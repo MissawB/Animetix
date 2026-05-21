@@ -1,97 +1,10 @@
-{% extends "animetix/base.html" %}
-{% load i18n %}
+{% extends 'animetix/base.html' %}
+{% load static %}
 
 {% block content %}
-<div class="min-h-screen bg-slate-900 text-white p-6 pt-24">
-    <div class="max-w-4xl mx-auto">
-        <div class="flex items-center justify-between mb-8">
-            <h1 class="text-3xl font-bold font-brush text-cyan-400">
-                <i class="bi bi-activity mr-2"></i>HEALTH DASHBOARD
-            </h1>
-            <span class="text-slate-400 text-sm">Last update: {{ now|date:"H:i:s" }}</span>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Brain API Card -->
-            <div class="bg-slate-800 border-2 border-slate-700 rounded-2xl p-6 hover:border-cyan-500/50 transition-colors">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-xl font-bold flex items-center">
-                        <i class="bi bi-cpu mr-2 text-cyan-400"></i>BRAIN API
-                    </h2>
-                    <span class="px-3 py-1 rounded-full text-xs font-bold {% if brain_status == 'Online' %}bg-green-500/20 text-green-400{% else %}bg-red-500/20 text-red-400{% endif %}">
-                        {{ brain_status }}
-                    </span>
-                </div>
-                <p class="text-slate-400 text-sm mb-2">Endpoint: <code class="bg-slate-900 px-2 py-1 rounded text-cyan-300">{{ brain_url }}</code></p>
-                <div class="mt-4 pt-4 border-t border-slate-700">
-                    <div class="flex justify-between text-sm">
-                        <span class="text-slate-400">Latency</span>
-                        <span class="text-cyan-400">-- ms</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Cache & Redis Card -->
-            <div class="bg-slate-800 border-2 border-slate-700 rounded-2xl p-6 hover:border-amber-500/50 transition-colors">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-xl font-bold flex items-center">
-                        <i class="bi bi-database mr-2 text-amber-400"></i>REDIS CACHE
-                    </h2>
-                    <span class="px-3 py-1 rounded-full text-xs font-bold {% if cache_status == 'Connected' %}bg-green-500/20 text-green-400{% else %}bg-red-500/20 text-red-400{% endif %}">
-                        {{ cache_status }}
-                    </span>
-                </div>
-                <div class="space-y-3">
-                    <div class="flex justify-between items-center">
-                        <span class="text-slate-400 text-sm">Images en cache</span>
-                        <span class="text-2xl font-bold text-amber-400">{{ image_cache_count }}</span>
-                    </div>
-                    <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
-                        <div class="bg-amber-500 h-full" style="width: 45%"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Celery Workers Card -->
-            <div class="bg-slate-800 border-2 border-slate-700 rounded-2xl p-6 hover:border-purple-500/50 transition-colors">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-xl font-bold flex items-center">
-                        <i class="bi bi-gear-wide-connected mr-2 text-purple-400"></i>CELERY WORKERS
-                    </h2>
-                    <span class="px-3 py-1 rounded-full text-xs font-bold {% if 'Online' in celery_status %}bg-green-500/20 text-green-400{% else %}bg-red-500/20 text-red-400{% endif %}">
-                        {{ celery_status }}
-                    </span>
-                </div>
-                <p class="text-slate-400 text-sm">Tasks processed (24h): <span class="text-purple-400 font-bold">--</span></p>
-                <div class="mt-4 space-y-2">
-                    <div class="flex items-center text-xs text-slate-500">
-                        <div class="w-2 h-2 rounded-full bg-green-500 mr-2"></div> worker-1 (Active)
-                    </div>
-                </div>
-            </div>
-
-            <!-- Database Card -->
-            <div class="bg-slate-800 border-2 border-slate-700 rounded-2xl p-6 hover:border-emerald-500/50 transition-colors">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-xl font-bold flex items-center">
-                        <i class="bi bi-hdd-network mr-2 text-emerald-400"></i>POSTGRES SQL
-                    </h2>
-                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-green-500/20 text-green-400">
-                        Connected
-                    </span>
-                </div>
-                <div class="flex justify-between text-sm">
-                    <span class="text-slate-400">Active Connections</span>
-                    <span class="text-emerald-400 font-bold">4</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="mt-12 text-center">
-            <a href="{% url 'index' %}" class="text-slate-500 hover:text-cyan-400 transition-colors">
-                <i class="bi bi-arrow-left mr-2"></i>Back to Laboratory
-            </a>
-        </div>
-    </div>
+<div class="min-h-screen">
+    <div id="health-root"></div>
 </div>
+
+<script type="module" src="{% static 'frontend/dist/assets/index.js' %}"></script>
 {% endblock %}

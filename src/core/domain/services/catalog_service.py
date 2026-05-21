@@ -118,3 +118,11 @@ class CatalogService:
         else:
             self._cached_catalogs.clear()
             # Note: On ne vide pas tout Redis pour ne pas impacter les sessions
+
+    def search_items(self, query: str, media_type: Optional[str] = None, limit: int = 10) -> List[Dict]:
+        """Recherche des éléments dans le catalogue SQL (Source of Truth) pour autocomplétion."""
+        try:
+            return self.sql_repository.search_media_items(query, media_type, limit)
+        except Exception as e:
+            logger.error(f"Error in search_items: {e}")
+            return []

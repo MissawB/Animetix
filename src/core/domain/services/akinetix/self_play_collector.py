@@ -1,6 +1,6 @@
 import logging
+from typing import Callable
 from core.domain.services.akinetix_rl_env import AkinetixRLEnvironment
-from backend.animetix.models import GameplaySession
 import numpy as np
 
 logger = logging.getLogger("animetix.rl.selfplay")
@@ -10,8 +10,9 @@ class AkinetixSelfPlayCollector:
     Collecteur de données de self-play. Joue des parties et enregistre
     les trajectoires (state, action, reward) en base pour le RL.
     """
-    def __init__(self, catalog_db: list):
+    def __init__(self, catalog_db: list, session_creator: Callable = None):
         self.env = AkinetixRLEnvironment(catalog_db)
+        self.session_creator = session_creator
 
     def run_episodes(self, n_episodes: int = 10):
         """Lance des épisodes et persiste les données de jeu."""
@@ -34,12 +35,15 @@ class AkinetixSelfPlayCollector:
                 state = next_state
                 done = terminated or truncated
             
-            # Persistance via Django Model
-            GameplaySession.objects.create(
-                game_mode="akinetix_rl_selfplay",
-                media_type="Anime",
-                target_item=info["target"],
-                history=trajectory,
-                was_won=True # Simplified for collection
-            )
+            # Persistance via Django Model / Port
+            if self.session_creator:
+                self.session_creator(
+                    game_mode="akinetix_rl_selfplay",
+                    media_type="Anime",
+                    target_item=info["target"],
+                    history=trajectory,
+                    was_won=True # Simplified for collection
+                )
+            else:
+                logger.warning(f"No session_creator provided. Episode result: {info['target']} won in {len(trajectory)} steps.")
         logger.info("Self-play collection completed.")

@@ -5,6 +5,14 @@ from ...ports.usage_port import UsagePort
 from ..exceptions import InferenceError
 from .prompt_manager import PromptManager
 
+# --- OPENTELEMETRY TRACING ---
+try:
+    from opentelemetry import trace
+    from opentelemetry.trace import Status, StatusCode
+    tracer = trace.get_tracer("animetix.llm_service")
+except ImportError:
+    tracer = None
+
 class LLMService:
     def __init__(
         self, 
@@ -23,6 +31,16 @@ class LLMService:
     def generate(self, prompt: str, system_prompt: str = "", forbidden_terms: list = None, use_slm: bool = False, thinking_budget: int = 0, thinking_mode: bool = False) -> str:
         import time
         start_time = time.time()
+
+        span = None
+        if tracer:
+            span = tracer.start_span("LLMService.generate")
+            span.set_attribute("llm.prompt", prompt[:1000])
+            span.set_attribute("llm.system_prompt", system_prompt[:1000])
+            span.set_attribute("llm.use_slm", use_slm)
+            span.set_attribute("llm.thinking_mode", thinking_mode)
+            span.set_attribute("llm.thinking_budget", thinking_budget)
+
         try:
             engine = self.slm_engine if use_slm else self.inference_engine
             res = engine.generate(prompt, system_prompt, thinking_budget=thinking_budget, thinking_mode=thinking_mode)
@@ -30,6 +48,13 @@ class LLMService:
             
             if not res:
                 raise InferenceError("Engine returned empty response")
+            
+            if span:
+                span.set_attribute("llm.response", res[:1000])
+                span.set_attribute("llm.latency", latency)
+                span.set_status(Status(StatusCode.OK))
+                span.end()
+                span = None
             
             # --- W&B OBSERVABILITY ---
             if self.obs_service:
@@ -63,6 +88,9 @@ class LLMService:
             
             return res
         except Exception as e:
+            if span:
+                span.set_status(Status(StatusCode.ERROR, description=str(e)))
+                span.end()
             raise InferenceError(f"AI Generation failed: {str(e)}")
 
     def generate_fusion_scenario(self, media_type: str, item1: Dict, item2: Dict, language: str, chaos_level: int = 50, universe_balance: int = 50, art_style: str = "Cyberpunk") -> str:

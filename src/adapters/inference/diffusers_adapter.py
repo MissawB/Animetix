@@ -1,10 +1,12 @@
-import torch
 import logging
 import base64
 from io import BytesIO
 from typing import Optional, List, Dict, Any
 from PIL import Image
 from core.ports.inference_port import InferencePort
+from core.utils.lazy_import import lazy_import
+
+torch = lazy_import('torch')
 
 logger = logging.getLogger("animetix.inference.diffusers")
 

@@ -11,17 +11,22 @@ mock_diffusers = MagicMock()
 mock_imageio = MagicMock()
 mock_tts = MagicMock()
 mock_cv2 = MagicMock()
-mock_scipy = MagicMock()
 mock_audioldm = MagicMock()
 
-sys.modules["diffusers"] = mock_diffusers
-sys.modules["imageio"] = mock_imageio
-sys.modules["TTS"] = mock_tts
-sys.modules["TTS.api"] = mock_tts
-sys.modules["cv2"] = mock_cv2
-sys.modules["scipy"] = mock_scipy
-sys.modules["scipy.io"] = mock_scipy
-sys.modules["audioldm"] = mock_audioldm
+# Set a mock __spec__ for them to satisfy find_spec and checks
+for m_obj in [mock_diffusers, mock_imageio, mock_tts, mock_cv2, mock_audioldm]:
+    m_obj.__spec__ = MagicMock()
+
+@pytest.fixture(autouse=True)
+def mock_sys_modules(monkeypatch):
+    monkeypatch.setitem(sys.modules, "diffusers", mock_diffusers)
+    monkeypatch.setitem(sys.modules, "imageio", mock_imageio)
+    monkeypatch.setitem(sys.modules, "TTS", mock_tts)
+    monkeypatch.setitem(sys.modules, "TTS.api", mock_tts)
+    monkeypatch.setitem(sys.modules, "cv2", mock_cv2)
+    monkeypatch.setitem(sys.modules, "audioldm", mock_audioldm)
+
+pytest.importorskip("scipy")
 
 from adapters.inference.transformers_adapter import TransformersAdapter
 from core.domain.exceptions import InferenceError
@@ -104,7 +109,7 @@ def test_generate_soundscape_success(adapter):
     with patch("audioldm.build_model", return_value=mock_pipe):
         with patch("scipy.io.wavfile.write", MagicMock()):
             with patch("base64.b64encode", return_value=b"fake_audio_base64"):
-                res = adapter.generate_soundscape("forest sounds")
+                res = adapter.generate_soundscape({"scene": "forest"}, prompt="forest sounds")
                 
     assert res.startswith("data:audio/wav;base64,")
     assert "fake_audio_base64" in res
@@ -114,4 +119,4 @@ def test_generate_soundscape_failure(adapter):
     # Simuler l'absence de scipy enlevant la fonction de sauvegarde
     with patch("scipy.io.wavfile.write", side_effect=ImportError("No scipy")):
         with pytest.raises(InferenceError):
-            adapter.generate_soundscape("forest sounds")
+            adapter.generate_soundscape({"scene": "forest"}, prompt="forest sounds")

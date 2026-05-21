@@ -6,7 +6,8 @@ from ..forms import GameGuessForm
 
 def emoji_decode_view(request):
     session = GameSessionManager(request)
-    media_type, data = get_current_mode(request), animetix_service.load_data(get_current_mode(request))
+    media_type = session.get_current_mode()
+    data = animetix_service.load_data(media_type)
     if not data: return redirect('index')
     
     if request.GET.get('new') == '1': 
@@ -48,7 +49,7 @@ def emoji_decode_guess(request):
         form = GameGuessForm(request.POST)
         if form.is_valid():
             guess_title = form.cleaned_data['guess']
-            secret, media_type = state['secret'], get_current_mode(request)
+            secret, media_type = state['secret'], session.get_current_mode()
             data = animetix_service.load_data(media_type)
             guesses = state['guesses']
             guess_full, secret_item = data['title_to_full_data'].get(guess_title), data['title_to_full_data'].get(secret)

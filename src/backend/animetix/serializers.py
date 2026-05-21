@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Profile, DailyChallenge, ChallengeResult, Achievement, UserAchievement
+from .models import Profile, DailyChallenge, ChallengeResult, Achievement, UserAchievement, CreativeFusion
 from django.contrib.auth.models import User
 
 class UserSerializer(serializers.ModelSerializer):
@@ -42,14 +42,32 @@ class MediaItemSerializer(serializers.Serializer):
     tags = serializers.ListField(child=serializers.CharField(), required=False)
     description = serializers.CharField(required=False)
 
-from .models import CreativeFusion
+from .models import Friendship
+
+class FriendshipSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='to_user.username', read_only=True)
+    level = serializers.IntegerField(source='to_user.profile.level', read_only=True)
+
+    class Meta:
+        model = Friendship
+        fields = ['id', 'to_user', 'username', 'level', 'created_at']
+
+class SocialUserSerializer(serializers.ModelSerializer):
+    level = serializers.IntegerField(source='profile.level', read_only=True)
+    
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'level']
 
 class CreativeFusionSerializer(serializers.ModelSerializer):
-    creator_name = serializers.CharField(source='creator.username', read_only=True)
+    creator_name = serializers.ReadOnlyField(source='creator.username')
     likes_count = serializers.IntegerField(source='likes.count', read_only=True)
-    is_remix = serializers.BooleanField(source='parent_id', read_only=True)
-    
+    is_remix = serializers.SerializerMethodField()
+
     class Meta:
         model = CreativeFusion
         fields = '__all__'
+
+    def get_is_remix(self, obj):
+        return obj.parent is not None
 

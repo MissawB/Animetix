@@ -15,6 +15,7 @@ class UnifiedRepositoryAdapter(RepositoryPort):
     Relational: Django ORM
     """
     def __init__(self, chroma_db_path: str, project_root: str):
+        self.project_root = project_root
         self.pgvector = PgVectorRepositoryAdapter()
         self.chroma = ChromaRepositoryAdapter(db_path=chroma_db_path, project_root=project_root)
         self.django = DjangoRepositoryAdapter()

@@ -4,10 +4,10 @@ from core.ports.state_port import StatePort
 
 class DjangoCacheStateAdapter(StatePort):
     async def get_state(self, key: str) -> Optional[Any]:
-        return cache.get(key)
+        return await cache.aget(key)
 
     async def set_state(self, key: str, value: Any, timeout: Optional[int] = None):
-        cache.set(key, value, timeout)
+        await cache.aset(key, value, timeout)
 
     async def delete_state(self, key: str):
-        cache.delete(key)
+        await cache.adelete(key)

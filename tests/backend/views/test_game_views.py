@@ -23,7 +23,10 @@ def test_blindtest_guess_correct(client, mock_animetix_service):
     session['blindtest_secret'] = 'Naruto'
     session['blindtest_guesses'] = []
     session.save()
-    
+
+    # Simulate correct guess
+    mock_animetix_service.game_service.check_title_match.return_value = True
+
     url = reverse('blindtest_guess')
     response = client.post(url, {'guess': 'Naruto'})
     

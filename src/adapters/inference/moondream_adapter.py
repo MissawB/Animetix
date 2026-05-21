@@ -1,7 +1,9 @@
-import torch
 import logging
 from typing import Optional, List, Dict, Any
 from core.ports.inference_port import InferencePort
+from core.utils.lazy_import import lazy_import
+
+torch = lazy_import('torch')
 
 logger = logging.getLogger("animetix.inference")
 

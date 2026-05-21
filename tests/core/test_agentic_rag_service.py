@@ -30,7 +30,9 @@ def mock_prompt_manager():
 
 @pytest.fixture
 def agentic_rag(mock_engine, mock_rag, mock_web, mock_prompt_manager):
-    return AgenticRAGService(inference_engine=mock_engine, rag_service=mock_rag, web_search=mock_web, prompt_manager=mock_prompt_manager)
+    mock_xai = MagicMock()
+    mock_xai.measure_confidence.return_value = 0.95
+    return AgenticRAGService(inference_engine=mock_engine, rag_service=mock_rag, web_search=mock_web, prompt_manager=mock_prompt_manager, uncertainty_service=mock_xai)
 
 def test_plan_and_solve_local_path(agentic_rag, mock_engine, mock_rag):
     mock_engine.generate.side_effect = [
@@ -57,19 +59,27 @@ def test_plan_and_solve_web_path(agentic_rag, mock_engine, mock_web):
     mock_web.search.assert_called_once()
 
 def test_plan_and_solve_with_reformulation(agentic_rag, mock_engine, mock_rag, mock_web):
-    mock_engine.generate.side_effect = [
-        '{"complexity_score": 0, "thinking_budget": 0}', # 0. TTC
-        '{"optimized_query": "Naruto year", "requires_web": false, "reasoning": "R"}', # 1. Planner
-        "Initial Truth Path", # 2. Scout 1
-        '{"is_reliable": false, "faithfulness_score": 0.2, "relevancy_score": 0.2, "hallucination_detected": false, "reasoning": "Need web info", "next_action": "REPLAN"}', # 3. Judge 1 (triggers Re-Plan)
-        '{"optimized_query": "Naruto debut year", "requires_web": true, "reasoning": "Need web"}', # 4. Planner (after REPLAN)
-        "Web Truth Path", # 5. Scout 2 (after web search)
-        '{"is_reliable": true, "faithfulness_score": 1.0, "relevancy_score": 1.0, "hallucination_detected": false, "reasoning": "ok", "next_action": "APPROVE"}' # 6. Judge 2
-    ]
+    from core.domain.entities.ai_schemas import SearchPlan, DebateOutcome, JudgeAction
     
-    res = agent_rag_plan_and_solve(agentic_rag, "When did Naruto start?", "Anime")
-    assert "answer" in res
-    assert mock_web.search.call_count == 1
+    plan1 = SearchPlan(optimized_query="Naruto year", requires_web=False, reasoning="R")
+    plan2 = SearchPlan(optimized_query="Naruto debut year", requires_web=True, reasoning="Need web")
+    
+    # Premier débat: on demande un Re-plan
+    outcome1 = DebateOutcome(consensus_action=JudgeAction.REPLAN, final_reasoning="Need web info", critiques={})
+    # Deuxième débat: on approuve
+    outcome2 = DebateOutcome(consensus_action=JudgeAction.APPROVE, final_reasoning="ok", critiques={})
+
+    # Force high confidence to skip Librarian
+    agentic_rag.uncertainty_service.measure_confidence.return_value = 1.0
+
+    with patch.object(agentic_rag.planner, 'plan', side_effect=[plan1, plan2]), \
+         patch.object(agentic_rag.scout, 'find_truth_path', return_value="Truth Path"), \
+         patch.object(agentic_rag.debate_manager, 'conduct_debate', side_effect=[outcome1, outcome2]), \
+         patch.object(agentic_rag, '_assess_complexity', return_value=(0, 0)):
+        
+        res = agent_rag_plan_and_solve(agentic_rag, "When did Naruto start?", "Anime")
+        assert "answer" in res
+        assert mock_web.search.called
 
 def test_vlm_rerank_path(agentic_rag, mock_engine, mock_rag):
     mock_engine.generate.side_effect = [

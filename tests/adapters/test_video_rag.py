@@ -7,12 +7,9 @@ from PIL import Image
 
 # Force modules to exist in sys.modules so they can be imported and patched
 mock_imageio = MagicMock()
-mock_transformers = MagicMock()
-mock_torch = MagicMock()
 
 sys.modules["imageio"] = mock_imageio
-sys.modules["transformers"] = mock_transformers
-sys.modules["torch"] = mock_torch
+
 
 from adapters.inference.transformers_adapter import TransformersAdapter
 from core.domain.services.rag.video_rag_service import VideoRAGService

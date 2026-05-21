@@ -1,6 +1,9 @@
 import random
+import logging
 from typing import Dict, Optional, List
 from .llm_service import LLMService
+
+logger = logging.getLogger("animetix.emoji")
 
 class EmojiDomainService:
     def __init__(self, llm_service: LLMService):
@@ -42,7 +45,8 @@ class EmojiDomainService:
         try:
             res = self.llm_service.generate_emojis(media_type, title, description)
             return res if res else ["❓", "❓", "❓"]
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Emoji generation failed for '{title}': {e}")
             return ["❓", "❓", "❓"]
 
     def _parse_emojis(self, text: str) -> List[str]:

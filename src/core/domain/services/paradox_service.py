@@ -68,7 +68,8 @@ class ParadoxDomainService:
                 )}
             else:
                 yield {"type": "result", "content": ParadoxLogic(reasoning="LLM Fallback", scenario=full_res)}
-        except:
+        except Exception as e:
+            logger.warning(f"Paradox logic generator parsing failed: {e}")
             yield {"type": "result", "content": ParadoxLogic(reasoning="Error", scenario=full_res)}
 
     def generate_logic(self, media_type: str, item_a: Dict, item_b: Dict, intruder: Dict, language: str) -> ParadoxLogic:

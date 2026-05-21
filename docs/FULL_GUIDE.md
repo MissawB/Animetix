@@ -3,27 +3,20 @@
 Ce document constitue la spécification technique exhaustive et le manuel opérationnel de la plateforme **Animetix**. Il est conçu pour les ingénieurs IA, les développeurs Fullstack et les architectes système souhaitant comprendre ou faire évoluer cet écosystème complexe.
 
 ---
-
 ## 🏛️ 1. Architecture Cognitive : L'Hexagone 2.0
 
-Animetix n'est pas une simple application web, c'est une **Cognitive Architecture** distribuée suivant les principes de l'architecture hexagonale.
+Animetix est bâtie sur une **Architecture Atomic & Hexagonal** (Ports & Adapters). Cette structure garantit une isolation stricte entre le domaine métier et les détails techniques.
 
 ### A. Core Domain (Intelligence Pure)
-Situé dans `src/core/domain`, le domaine est le garant de la cohérence logique.
-- **Services de Découverte (`AgenticRAGService`) :** Orchestre une boucle de raisonnement cognitive complexe sous forme de machine à états fini (FSM). Contrairement au RAG classique qui fait `Question -> Retrieval -> Answer`, Animetix exécute le cycle suivant :
-    1.  **ANALYZE :** Analyse de la complexité et allocation d'un budget de réflexion (TTC).
-    2.  **PLAN :** Le `SearchPlanner` établit une stratégie (Web vs Local vs Graphe).
-    3.  **RESEARCH :** Recherche hybride et exploration multi-hop dans Neo4j via le `GraphExpert`.
-    4.  **DISTILL :** Le `ScoutAgent` extrait un "Chemin de Vérité" (Truth Path) du bruit documentaire.
-    5.  **VLM_RERANK :** (Si visuel) Ré-ordonnancement des candidats par inspection directe des images.
-    6.  **SYNTHESIZE :** Rédaction finale par le `ResponseSynthesizer`.
-    7.  **JUDGE :** Débat multi-agents (`DebateManager`) pour valider la fidélité au contexte.
-- **Validation Strict Pydantic :** Chaque sortie d'un agent LLM est castée dans un modèle Pydantic (`src/core/domain/entities/ai_schemas.py`). Si le JSON est malformé, un mécanisme de **Self-Correction** renvoie l'erreur au LLM pour correction immédiate.
-- **Prompt Management (`PromptManager`) :** Les prompts sont externalisés dans des templates YAML. Le système implémente une **Métacognition In-Context** : si une erreur est corrigée par l'utilisateur ou le Juge, elle est enregistrée dans `auto_corrections.json` et réinjectée dynamiquement comme Few-Shot pour éviter que l'IA ne répète la même erreur.
+Le domaine (`src/core/domain`) centralise la logique via :
+- **Services (ex: `AgenticRAGService`) :** Machines à états cognitifs (FSM).
+- **InferencePort :** Interface unifiée supportant le streaming SSE, le *Test-Time Compute* (TTC) et le routage multi-modèle. Elle expose désormais `rerank_documents` pour intégrer des Cross-Encoders (BGE-Reranker) lors de la recherche.
+- **PersistencePort (UnifiedRepository) :** Gère la persistance de manière unifiée, avec **PgVector** comme moteur de stockage primaire pour les vecteurs, complété par Neo4j pour les relations.
 
-### B. Ports & Adapters (Isolation de l'Infrastructure)
-- **InferencePort :** Interface unifiée supportant le streaming SSE, le *Test-Time Compute* (TTC) et le routage SLM.
-- **RepositoryPort :** Interface de persistance capable de basculer dynamiquement entre une source relationnelle (PostgreSQL) et vectorielle (PgVector/Chroma).
+### B. Infrastructure (Adapters)
+- **Persistence :** Le `UnifiedRepositoryAdapter` abstrait la complexité du stockage, garantissant une résilience via fallback (PgVector -> ChromaDB).
+- **Inference :** Supporte vLLM, GGUF, et Transformers, avec un système de `lazy_import` pour éviter les overheads inutiles au démarrage.
+
 
 ---
 

@@ -805,3 +805,20 @@ vs_battle_judge:
     }}
   system_prompt: "Tu es le Juge Impartial. Ta parole fait loi dans le multivers. Tu tranches entre les statistiques brutes et les capacités spéciales."
 
+vs_battle_parser:
+  template: |
+    Tu es un expert en extraction de données structurées pour le site VS Battles Wiki.
+    Extrais les informations du wikitext suivant pour remplir le schéma CombatCharacter.
+    
+    WIKITEXT :
+    {wikitext}
+    
+    CONSIGNES :
+    - Tier : Cherche "Tier:" (ex: 2-C, High 6-A).
+    - Vitesse : Cherche "Speed:".
+    - Durabilité : Cherche "Durability:".
+    - Intelligence : Cherche "Intelligence:".
+    - Capacités : Liste les "Powers and Abilities".
+    - Résumé : Un court paragraphe introductif.
+  system_prompt: "Tu es un extracteur de données rigoureux spécialisé dans les wikis de combat."
+

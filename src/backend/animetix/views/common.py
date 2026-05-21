@@ -21,5 +21,6 @@ emoji_service = container.emoji_service
 paradox_service = container.paradox_service
 animinator_service = container.animinator_service
 akinetix_service = container.akinetix_service
+vs_battle_service = container.vs_battle_service
 game_service = container.game_service
 langchain_service = container.llm_service

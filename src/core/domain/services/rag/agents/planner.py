@@ -27,7 +27,7 @@ class SearchPlanner:
         
         try:
             import orjson
-            from ...exceptions import ParsingError
+            from core.domain.exceptions import ParsingError
             if '{' in plan_raw and '}' in plan_raw:
                 data = orjson.loads(plan_raw[plan_raw.find('{'):plan_raw.rfind('}')+1])
                 return SearchPlan(**data)

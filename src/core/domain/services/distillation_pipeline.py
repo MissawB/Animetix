@@ -1,10 +1,7 @@
 import os
 import json
-import torch
 import logging
 from typing import List, Dict
-from datasets import Dataset
-from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, Trainer
 from core.ports.inference_port import InferencePort
 from .prompt_manager import PromptManager
 

@@ -1,0 +1,158 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Montserrat:ital,wght@0,400;0,700;0,900;1,900&family=Permanent+Marker&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    /* Theme Variables */
+    --page-bg: #f1f3f5;
+    --page-text: #1a1a2e;
+    --accent-color: #fdb913;
+    --accent-dark: #d97706;
+    --card-bg: #ffffff;
+    --card-shadow: rgba(0,0,0,0.05);
+    --sidebar-bg: #ffffff;
+    --nav-gradient: linear-gradient(to right, var(--accent-color), var(--accent-dark));
+    --hero-gradient: linear-gradient(105deg, #fff9e6 40%, #fffcf0 40.1%);
+}
+
+.dark {
+    --page-bg: #0f0f1a;
+    --page-text: #f1f2f6;
+    --card-bg: #1a1a2e;
+    --card-shadow: rgba(0,0,0,0.3);
+    --sidebar-bg: #1a1a2e;
+    --hero-gradient: linear-gradient(105deg, #0f0f1a 40%, #1a1a2e 40.1%);
+}
+
+/* SKELETON LOADERS */
+.skeleton {
+    background: linear-gradient(90deg, var(--card-bg) 25%, var(--page-bg) 50%, var(--card-bg) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+    border-radius: 0.5rem;
+}
+@keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* CORE STYLES */
+body { 
+    font-family: 'Inter', sans-serif; 
+    background-color: var(--page-bg); 
+    color: var(--page-text);
+    min-height: 100vh;
+}
+
+.manga-font { font-family: 'Montserrat', sans-serif; font-weight: 900; font-style: italic; text-transform: uppercase; }
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+  
+  :root {
+    --page-bg: #f1f3f5;
+    --page-text: #1a1a2e;
+    --card-bg: #ffffff;
+    --card-shadow: rgba(0,0,0,0.05);
+    --hero-gradient: linear-gradient(105deg, #fff9e6 40%, #fffcf0 40.1%);
+  }
+
+  /* Dark mode configuration */
+  [data-bs-theme="dark"], .dark {
+    --page-bg: #0f0f1a;
+    --page-text: #f1f2f6;
+    --card-bg: #1a1a2e;
+    --card-shadow: rgba(0,0,0,0.3);
+    --hero-gradient: linear-gradient(105deg, #0f0f1a 40%, #1a1a2e 40.1%);
+  }
+
+  body {
+    @apply font-sans antialiased;
+    background-image: url("/img/background.png");
+    background-attachment: fixed;
+    background-size: cover;
+    background-position: center;
+    background-color: var(--page-bg);
+    color: var(--page-text);
+    min-height: 100vh;
+    transition: background-color 0.5s ease, color 0.5s ease;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: inherit;
+    filter: blur(8px);
+    z-index: -1;
+    opacity: 0.08;
+    pointer-events: none;
+  }
+
+  [data-bs-theme="dark"] body::before, .dark body::before {
+    opacity: 0.05;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  .manga-font {
+    @apply font-manga font-black italic uppercase;
+  }
+
+  .brush-font {
+    @apply font-brush;
+  }
+
+  .hero-bg {
+    background: var(--hero-gradient);
+  }
+
+  .glass-card {
+    background-color: var(--card-bg);
+    @apply rounded-2xl border border-black/5 dark:border-white/5 transition-colors duration-500;
+    box-shadow: 0 4px 32px var(--card-shadow);
+  }
+
+  .collection-card {
+    background: linear-gradient(to right, #ffd166, #fdb913);
+  }
+
+  .btn-primary {
+    @apply bg-anime-accent text-black font-black italic manga-font px-6 py-3 rounded-xl transition-all duration-300 hover:bg-anime-accent-dark hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100;
+  }
+  
+  .btn-secondary {
+    @apply bg-black/80 dark:bg-white/10 text-white font-black italic manga-font px-5 py-2.5 rounded-xl transition-all duration-300 hover:bg-black dark:hover:bg-white/20;
+  }
+  
+  .input-field {
+    @apply bg-transparent border-2 border-black/10 dark:border-white/10 rounded-xl px-4 py-3 text-anime-light-text dark:text-anime-dark-text placeholder-black/30 dark:placeholder-white/30 focus:outline-none focus:border-anime-accent focus:ring-2 focus:ring-anime-accent/20 transition-all duration-200 w-full;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1.5 text-xs font-black uppercase px-3 py-1 rounded-full;
+  }
+
+  .badge-correct {
+    @apply badge bg-anime-success/20 text-anime-success border border-anime-success/30;
+  }
+  
+  .badge-wrong {
+    @apply badge bg-anime-error/20 text-anime-error border border-anime-error/30;
+  }
+  
+  .badge-partial {
+    @apply badge bg-[#fdb913]/20 text-[#d97706] dark:text-[#fdb913] border border-[#fdb913]/30;
+  }
+}
+
