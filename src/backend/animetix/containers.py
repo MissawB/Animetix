@@ -60,6 +60,7 @@ from adapters.persistence.pipeline_sync_adapter import PipelineSyncAdapter
 from adapters.persistence.django_achievement_adapter import DjangoAchievementAdapter
 from adapters.persistence.django_donation_adapter import DjangoDonationAdapter
 from adapters.persistence.web_search_adapter import DuckDuckGoSearchAdapter
+from adapters.persistence.fandom_adapter import FandomAdapter
 from adapters.inference.brain_api_adapter import BrainAPIAdapter
 from adapters.inference.vllm_adapter import VllmAdapter
 from adapters.inference.local_llama_adapter import LocalLlamaAdapter
@@ -167,6 +168,10 @@ class Container:
     @property
     def web_search(self):
         return self._get('web_search', lambda: DuckDuckGoSearchAdapter())
+
+    @property
+    def fandom_adapter(self):
+        return self._get('fandom_adapter', lambda: FandomAdapter())
 
     @property
     def rag_service(self):
