@@ -44,6 +44,7 @@ from core.domain.services.rag.agents.librarian import LibrarianAgent
 from core.domain.services.rag.agents.forge import ForgeAgent
 from core.domain.services.rag.agents.saga_agent import SagaAgent
 from core.domain.services.rag.agents.chronicler import ChroniclerAgent
+from core.domain.services.rag.agents.graph_expert import GraphExpert
 from core.domain.services.agentic_rag_service import AgenticRAGService
 from core.domain.services.long_term_memory_service import LongTermMemoryService
 from core.domain.services.semantic_cache_service import SemanticCacheService
@@ -68,6 +69,7 @@ from adapters.inference.moondream_adapter import MoondreamAdapter
 from adapters.inference.diffusers_adapter import DiffusersAdapter
 from adapters.inference.xtts_adapter import XTTSAdapter
 from adapters.inference.fallback_adapter import FallbackInferenceAdapter
+from adapters.inference.unified_inference_adapter import UnifiedInferenceAdapter
 
 # Clients
 from pipeline.neo4j_client import neo4j_manager
@@ -132,8 +134,16 @@ class Container:
         return self._get('xtts_adapter', lambda: XTTSAdapter())
 
     @property
+    def unified_inference_adapter(self):
+        return self._get('unified_inference_adapter', lambda: UnifiedInferenceAdapter(
+            api_base=os.getenv("LLM_API_BASE", "http://localhost:11434/v1"),
+            model_name=os.getenv("LLM_MODEL_NAME", "llama3")
+        ))
+
+    @property
     def inference_engine(self):
         return self._get('inference_engine', lambda: FallbackInferenceAdapter(adapters=[
+            self.unified_inference_adapter,
             self.transformers_adapter,
             self.diffusers_adapter,
             self.xtts_adapter,
@@ -160,7 +170,7 @@ class Container:
 
     @property
     def rag_service(self):
-        return self._get('rag_service', lambda: AdvancedRAGService(repository=self.repository, llm_service=self.llm_service, neo4j_manager=neo4j_manager, reranker=self.reranker))
+        return self._get('rag_service', lambda: AdvancedRAGService(repository=self.repository, llm_service=self.llm_service, neo4j_manager=neo4j_manager))
 
     @property
     def graph_expert(self):

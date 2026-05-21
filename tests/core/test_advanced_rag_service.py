@@ -37,14 +37,13 @@ def test_hybrid_search(rag_service):
     assert len(results) >= 1
     assert "Naruto" in results[0]['title']
 
-def test_rerank_results_no_reranker(rag_service):
+def test_rerank_results_fallback(rag_service, mock_llm_service):
+    mock_llm_service.inference_engine.rerank_documents.side_effect = Exception("Simulated error")
     candidates = [{'id': '1', 'title': 'A'}, {'id': '2', 'title': 'B'}]
     assert rag_service.rerank_results("query", candidates) == candidates
 
-def test_rerank_results_with_mock_reranker(rag_service):
-    mock_reranker = MagicMock()
-    mock_reranker.predict.return_value = np.array([0.1, 0.9])
-    rag_service.reranker = mock_reranker
+def test_rerank_results_with_mock_reranker(rag_service, mock_llm_service):
+    mock_llm_service.inference_engine.rerank_documents.return_value = [0.1, 0.9]
     
     candidates = [{'id': '1', 'title': 'A'}, {'id': '2', 'title': 'B'}]
     ranked = rag_service.rerank_results("query", candidates)
