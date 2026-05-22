@@ -20,10 +20,10 @@ class ChromaManager:
             self.client = chromadb.HttpClient(host=chroma_host, port=chroma_port)
             # Test de connexion simple
             self.client.heartbeat()
-            print(f"✅ Connected to ChromaDB Server at {chroma_host}:{chroma_port}")
+            print(f"[OK] Connected to ChromaDB Server at {chroma_host}:{chroma_port}")
         except Exception:
             # Fallback sur le client persistant si le serveur n'est pas joignable (ex: exécution d'un script seul)
-            print(f"ℹ️ ChromaDB Server not found, falling back to PersistentClient at {CHROMA_PATH}")
+            print(f"[INFO] ChromaDB Server not found, falling back to PersistentClient at {CHROMA_PATH}")
             os.makedirs(CHROMA_PATH, exist_ok=True)
             self.client = chromadb.PersistentClient(path=CHROMA_PATH)
 
