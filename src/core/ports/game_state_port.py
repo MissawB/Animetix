@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 class GameStatePort(ABC):
     """
@@ -12,16 +12,16 @@ class GameStatePort(ABC):
         pass
 
     @abstractmethod
-    def set(self, key: str, value: Any):
+    def set(self, key: str, value: Any) -> None:
         """Sets a value in the state store."""
         pass
 
     @abstractmethod
-    def update(self, data: Dict[str, Any]):
+    def update(self, data: Dict[str, Any]) -> None:
         """Updates multiple keys in the state store."""
         pass
 
     @abstractmethod
-    def delete(self, key: str):
+    def delete(self, key: str) -> None:
         """Deletes a key from the state store."""
         pass
