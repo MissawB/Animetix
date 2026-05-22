@@ -1,4 +1,5 @@
-from .base import index, start_daily_challenge, custom_config_view, save_custom_config, switch_mode, switch_language, switch_difficulty
+# All legacy base HTML views removed
+
 from .classic import start_game, game_view, make_guess, start_ranked_mode, ranked_next_level, reveal_hint, abandon_game
 from .vision import vision_quest_view, vision_quest_guess, spatial_view, generate_depth, manga_lab_view, process_manga_bubbles, translate_manga_bubbles
 from .emoji import emoji_decode_view, emoji_decode_guess
@@ -12,5 +13,5 @@ from .media_games import blindtest_view, blindtest_guess, covertest_view, covert
 from .vs_battle import vs_battle_view
 from .mlops import health_check_view, ai_evaluation_dashboard, latent_space_view, submit_ai_feedback, gold_curation_view, validate_gold_entry, reject_gold_entry
 from .audio import audio_lab_view, clone_voice_api
-from .donation import transparency_dashboard, donation_webhook
+from .donation import donation_webhook
 from .api import get_task_status, emoji_decode_stream, paradox_stream, agentic_rag_stream, sync_offline_data, animinator_stream

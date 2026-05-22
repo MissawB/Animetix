@@ -9,16 +9,6 @@ from core.domain.entities.donation import Donation as DomainDonation
 
 logger = logging.getLogger("animetix.donation")
 
-def transparency_dashboard(request):
-    """Vue du tableau de bord de transparence."""
-    container = get_container()
-    health_service = container.health_dashboard_service
-    stats = health_service.get_health_stats()
-    
-    return render(request, 'animetix/transparency.html', {
-        'stats': stats,
-        'title': "Transparence & Santé du Projet"
-    })
 
 @csrf_exempt
 def donation_webhook(request):
