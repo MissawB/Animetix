@@ -1,6 +1,6 @@
 import os
 from django.shortcuts import render, redirect
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.contrib.admin.views.decorators import staff_member_required
 from .common import animetix_service
 from ..models import AIREvalResult, GoldDatasetEntry, AIFeedback
@@ -47,7 +47,7 @@ def submit_ai_feedback(request):
             output_text=output,
             is_positive=is_pos
         )
-        return render(request, 'animetix/partials/feedback_thanks.html')
+        return JsonResponse({'status': 'success', 'message': 'Feedback submitted successfully'})
     return redirect('index')
 
 @staff_member_required
