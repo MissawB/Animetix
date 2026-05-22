@@ -1,7 +1,8 @@
 import random
 import logging
 import orjson
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Any
+from core.ports.game_state_port import GameStatePort
 from .llm_service import LLMService
 from .neuro_symbolic_service import NeuroSymbolicService
 from ..entities.ai_schemas import ParadoxLogic
@@ -12,6 +13,26 @@ class ParadoxDomainService:
     def __init__(self, llm_service: LLMService, neuro_symbolic_service: Optional[NeuroSymbolicService] = None):
         self.llm_service = llm_service
         self.neuro_symbolic_service = neuro_symbolic_service
+
+    def get_state(self, port: GameStatePort) -> Dict[str, Any]:
+        return {
+            'answer': port.get('paradox_answer'),
+            'options': port.get('paradox_options', []),
+            'reasoning': port.get('paradox_reasoning'),
+            'scenario': port.get('paradox_scenario'),
+            'media': port.get('paradox_media', 'Anime'),
+            'is_daily': port.get('is_daily', False)
+        }
+
+    def save_state(self, port: GameStatePort, state: Dict[str, Any]):
+        port.update({
+            'paradox_answer': state.get('answer'),
+            'paradox_options': state.get('options'),
+            'paradox_reasoning': state.get('reasoning'),
+            'paradox_scenario': state.get('scenario'),
+            'paradox_media': state.get('media'),
+            'paradox_game_over': state.get('game_over', False)
+        })
 
     def prepare_challenge(self, catalog: Dict, is_daily: bool = False, secret_title: str = None) -> Tuple[Optional[str], Optional[str], Optional[str]]:
         """Prépare les 3 œuvres (2 normales + 1 intrus)."""
@@ -80,13 +101,14 @@ class ParadoxDomainService:
 
         if self.neuro_symbolic_service:
             # Approche Hybride (Neuro-Symbolic AI)
-            identified_intruder, explanation = self.neuro_symbolic_service.solve_paradox(
+            identified_intruder, explanation, meta = self.neuro_symbolic_service.solve_paradox(
                 media_type, label_a, label_b, label_i
             )
             
             if identified_intruder:
+                reasoning_type = "Formel (Z3 SAT)" if meta.get('method') == 'formal' else "Heuristique (Mock SAT)"
                 return ParadoxLogic(
-                    reasoning="Raisonnement Mathématique Formel (Z3 Solver)",
+                    reasoning=f"Raisonnement {reasoning_type} via {meta.get('engine', 'Logic Solver')}",
                     scenario=explanation
                 )
                 

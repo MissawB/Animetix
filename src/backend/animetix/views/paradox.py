@@ -1,25 +1,34 @@
 import random
 from django.shortcuts import render, redirect
 from .common import animetix_service, handle_win_achievements
-from ..session_manager import GameSessionManager
 from ..forms import GameGuessForm
+from src.adapters.persistence.session_state_adapter import DjangoSessionStateAdapter
 
 def paradox_view(request):
-    session = GameSessionManager(request)
-    media_type, data = session.get_current_mode(), animetix_service.load_data(session.get_current_mode())
+    state_port = DjangoSessionStateAdapter(request.session)
+    media_type = state_port.get('current_mode', 'Anime')
+    data = animetix_service.load_data(media_type)
     if not data: return redirect('index')
     
-    is_daily = session.get('is_daily', False)
-    state = session.get_paradox_state()
+    is_daily = state_port.get('is_daily', False)
+    state = animetix_service.paradox_service.get_state(state_port)
     
-    if not (is_daily and state['answer'] == session.get('secret_title')):
-        res_prepare = animetix_service.paradox_service.prepare_challenge(data, is_daily, session.get('secret_title'))
+    if not (is_daily and state.get('answer') == state_port.get('secret_title')):
+        res_prepare = animetix_service.paradox_service.prepare_challenge(data, is_daily, state_port.get('secret_title'))
         if not res_prepare or len(res_prepare) < 3: return redirect('index')
         t1, t2, intruder = res_prepare
-        res = animetix_service.paradox_service.generate_logic(media_type, data['title_to_full_data'][t1], data['title_to_full_data'][t2], data['title_to_full_data'][intruder], session.get('language', 'Français'))
-        session.start_paradox_game(intruder, [t1, t2, intruder], res.get('reasoning'), res.get('scenario'), media_type)
-        if is_daily: session.set('is_daily', True)
-        state = session.get_paradox_state()
+        res = animetix_service.paradox_service.generate_logic(media_type, data['title_to_full_data'][t1], data['title_to_full_data'][t2], data['title_to_full_data'][intruder], state_port.get('language', 'Français'))
+        
+        new_state = {
+            'answer': intruder,
+            'options': [t1, t2, intruder],
+            'reasoning': res.reasoning,
+            'scenario': res.scenario,
+            'media': media_type,
+            'is_daily': is_daily
+        }
+        animetix_service.paradox_service.save_state(state_port, new_state)
+        state = new_state
 
     options = [{'title': t, 'image': data['title_to_full_data'][t].get('image')} for t in state['options']]
     random.shuffle(options)
@@ -31,12 +40,17 @@ def paradox_view(request):
     })
 
 def paradox_guess(request):
-    session = GameSessionManager(request)
-    state = session.get_paradox_state()
+    state_port = DjangoSessionStateAdapter(request.session)
+    state = animetix_service.paradox_service.get_state(state_port)
     if request.method == 'POST':
         form = GameGuessForm(request.POST)
         if form.is_valid():
-            choice, answer, titles, media, is_daily = form.cleaned_data['guess'], state['answer'], state['options'], state['media'], state['is_daily']
+            choice = form.cleaned_data['guess']
+            answer = state['answer']
+            titles = state['options']
+            media = state['media']
+            is_daily = state['is_daily']
+            
             is_correct, data = (choice == answer), animetix_service.load_data(media)
             if is_correct and request.user.is_authenticated:
                 newly_unlocked = request.user.profile.add_win(is_daily=is_daily, game_mode='paradox', media_type=media, attempts=1)
