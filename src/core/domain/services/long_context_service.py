@@ -1,71 +1,56 @@
-import random
-import time
 import logging
 from typing import List, Dict, Optional
 from core.ports.inference_port import InferencePort
+from .prompt_manager import PromptManager
 
-logger = logging.getLogger("animetix.benchmark")
+logger = logging.getLogger("animetix.long_context")
 
-class LongContextDiscoveryService:
+class LongContextDomainService:
     """
-    Service de test et de gestion des contextes longs.
-    Implémente la logique 'Needle In A Haystack' pour évaluer la mémoire du LLM.
+    Service de gestion de contextes massifs (Sagas entières).
+    Implémente le résumé hiérarchique et la compression sémantique.
     """
-    def __init__(self, inference_engine: InferencePort):
+    def __init__(self, inference_engine: InferencePort, prompt_manager: PromptManager):
         self.inference_engine = inference_engine
+        self.prompt_manager = prompt_manager
+        self.chunk_size = 4000 # Taille des morceaux en caractères (~1000 tokens)
 
-    def create_haystack(self, filler_text: str, needle: str, target_token_count: int, needle_position: float = 0.5) -> str:
+    def summarize_long_saga(self, full_text: str) -> str:
         """
-        Génère une 'botte de foin' de texte avec une 'aiguille' (information) cachée à une position précise.
-        needle_position: entre 0.0 (début) et 1.0 (fin).
+        Génère un résumé global d'un texte très long via une approche récursive.
         """
-        # Simulation simplifiée : on répète le texte de remplissage jusqu'à atteindre la taille
-        # (Dans un vrai test, on utiliserait un tokenizer pour compter précisément)
-        words = filler_text.split()
-        current_text = words * (target_token_count // max(1, len(words)))
-        
-        insert_idx = int(len(current_text) * needle_position)
-        current_text.insert(insert_idx, f"\n--- INFORMATION SECRÈTE : {needle} ---\n")
-        
-        return " ".join(current_text)
+        if len(full_text) < self.chunk_size * 1.5:
+            return self._summarize_chunk(full_text)
 
-    def run_needle_test(self, needle: str, question: str, context_size: int, position: float) -> Dict:
-        """
-        Exécute un test de rappel sur un contexte long.
-        """
-        filler = "L'anime est un média japonais fascinant avec de nombreux genres comme le Shounen, le Seinen et le Shojo."
-        haystack = self.create_haystack(filler, needle, context_size, position)
+        # 1. Découpage en morceaux
+        chunks = [full_text[i:i + self.chunk_size] for i in range(0, len(full_text), self.chunk_size)]
         
-        start_time = time.time()
-        response = self.inference_engine.generate(
-            prompt=f"Lis attentivement ce texte et réponds à la question.\n\nTEXTE :\n{haystack}\n\nQUESTION : {question}",
-            system_prompt="Tu es un testeur de mémoire haute précision. Réponds de manière concise."
-        )
-        duration = time.time() - start_time
-        
-        # Vérification si l'aiguille est présente dans la réponse
-        success = needle.lower() in response.lower()
-        
-        return {
-            "context_size": context_size,
-            "needle_position": position,
-            "success": success,
-            "response": response,
-            "latency_sec": duration
-        }
+        # 2. Résumé de chaque morceau
+        intermediate_summaries = []
+        for i, chunk in enumerate(chunks):
+            logger.debug(f"📜 Summarizing chunk {i+1}/{len(chunks)}...")
+            summary = self._summarize_chunk(chunk)
+            intermediate_summaries.append(f"Segment {i+1}: {summary}")
 
-    def benchmark_model_limits(self, sizes=[2000, 8000, 16000, 32000]):
-        """
-        Lance une série de tests pour cartographier les limites de rappel du modèle.
-        """
-        results = []
-        needle = "Le code secret du coffre de Spike Spiegel est 1234."
-        question = "Quel est le code secret du coffre de Spike Spiegel ?"
+        # 3. Récursion ou synthèse finale
+        combined_summaries = "\n\n".join(intermediate_summaries)
         
-        for size in sizes:
-            for pos in [0.1, 0.5, 0.9]: # Début, Milieu, Fin
-                logger.info(f"📊 Testing Size: {size}, Position: {pos}...")
-                res = self.run_needle_test(needle, question, size, pos)
-                results.append(res)
-                
-        return results
+        if len(combined_summaries) > self.chunk_size * 2:
+            return self.summarize_long_saga(combined_summaries)
+            
+        return self._synthesize_final(combined_summaries)
+
+    def extract_key_lore_points(self, long_text: str) -> List[str]:
+        """Extrait les éléments de lore importants d'une longue saga."""
+        summary = self.summarize_long_saga(long_text)
+        prompt, system = self.prompt_manager.get_prompt("lore_extraction", context=summary)
+        response = self.inference_engine.generate(prompt, system_prompt=system)
+        return [p.strip() for p in response.split('\n') if len(p.strip()) > 5]
+
+    def _summarize_chunk(self, text: str) -> str:
+        prompt, system = self.prompt_manager.get_prompt("hierarchical_summary_chunk", text=text)
+        return self.inference_engine.generate(prompt, system_prompt=system)
+
+    def _synthesize_final(self, summaries: str) -> str:
+        prompt, system = self.prompt_manager.get_prompt("hierarchical_summary_final", context=summaries)
+        return self.inference_engine.generate(prompt, system_prompt=system)

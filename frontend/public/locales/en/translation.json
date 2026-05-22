@@ -1,0 +1,151 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Critical Error",
+    "retry": "Retry",
+    "back": "Back",
+    "yes": "YES",
+    "no": "NO",
+    "search": "Search",
+    "validate": "Validate",
+    "delete": "Delete",
+    "cancel": "Cancel"
+  },
+  "social": {
+    "dashboard": {
+      "title": "Community Space",
+      "following_title": "My Following",
+      "followers_title": "My Followers",
+      "unfollow": "Unfollow",
+      "no_following": "You are not following anyone yet.",
+      "no_followers": "No followers yet."
+    },
+    "leaderboard": {
+      "title": "Hall of Fame",
+      "rank": "Rank",
+      "player": "Player",
+      "xp_level": "XP / Level",
+      "loading": "Loading leaderboard..."
+    },
+    "profile": {
+      "level": "Level {{level}}",
+      "rank": "Rank: {{rank}}",
+      "xp": "Total XP",
+      "achievements": "Achievements",
+      "collection": "Collection",
+      "sync": "Syncing profile...",
+      "back_dashboard": "Back to dashboard"
+    }
+  },
+  "labs": {
+    "audio": {
+      "title": "Audio Lab",
+      "cloning": "AI Voice Cloning",
+      "generate": "Generate Audio",
+      "status": "Status",
+      "processing": "Generating..."
+    },
+    "manga": {
+      "title": "Manga Lab",
+      "render": "AI Manga Render",
+      "generate": "Generate Page"
+    }
+  },
+  "games": {
+    "akinetix": {
+      "title": "Akinetix: The Seer",
+      "history": "Transmission History",
+      "game_over": "Analysis complete: Is it a {{guess}}?"
+    }
+  },
+  "home": {
+    "engine_badge": "Next-Gen Archetype Engine",
+    "welcome": "WELCOME TO",
+    "description": "Explore the nexus between imagination and algorithm.",
+    "sub_description": "Universe Fusions • RAG 2.0 • Daily Challenges",
+    "enter_forge": "Enter the Forge",
+    "play_classic": "Play Classic",
+    "akinetix_expert": "Akinetix Expert (RL)",
+    "features": {
+      "cognition": {
+        "title": "Advanced Cognition",
+        "desc": "Multi-source RAG algorithms for encyclopedic precision."
+      },
+      "synthesis": {
+        "title": "Creative Synthesis",
+        "desc": "Asynchronous generation of unique hybrid scenarios and images."
+      },
+      "latent": {
+        "title": "Latent Space",
+        "desc": "Interactive 3D visualization of semantic vectors in the multiverse."
+      }
+    }
+  },
+  "admin": {
+    "eval": {
+      "title": "IA QUALITY CONTROL",
+      "stats": {
+        "faithfulness": "Faithfulness",
+        "relevancy": "Relevancy",
+        "precision": "Precision"
+      },
+      "loading": "Loading evaluation data...",
+      "error": "Loading error."
+    },
+    "health": {
+      "title": "HEALTH DASHBOARD",
+      "loading": "Loading...",
+      "brain": "BRAIN API",
+      "cache": "REDIS CACHE",
+      "celery": "CELERY",
+      "db": "POSTGRES",
+      "status": {
+        "online": "Online",
+        "offline": "Offline",
+        "connected": "Connected",
+        "disconnected": "Disconnected"
+      }
+    }
+  },
+  "utils": {
+    "daily": {
+      "title": "DAILY CHALLENGES",
+      "subtitle": "One target, multiple ways to find it.",
+      "loading": "PREPARING SELECTION...",
+      "completed": "COMPLETED"
+    },
+    "config": {
+      "title": "CUSTOM CONFIG",
+      "loading": "LOADING YOUR PREFERENCES...",
+      "sections": {
+        "difficulty": "Challenge Level",
+        "interface": "Interface",
+        "ai": "AI Personality"
+      },
+      "themes": {
+        "light": "Light",
+        "dark": "Dark"
+      },
+      "ai_personalities": {
+        "helpful": "Helpful & Precise",
+        "chaotic": "Chaotic & Unpredictable",
+        "expert": "Expert & Technical"
+      },
+      "save": "SAVE SETTINGS",
+      "saving": "SAVING...",
+      "saved": "Settings saved!"
+    }
+  },
+  "search": {
+    "placeholder": "Search for anime, manga...",
+    "image_search_hint": "Search by image",
+    "searching": "Searching...",
+    "no_results": "No results found"
+  },
+  "navbar": {
+    "forge": "THE FORGE",
+    "latent": "LATENT SPACE",
+    "transparency": "TRANSPARENCY",
+    "lab": "BETA LAB"
+  }
+}

@@ -809,16 +809,29 @@ vs_battle_parser:
   template: |
     Tu es un expert en extraction de données structurées pour le site VS Battles Wiki.
     Extrais les informations du wikitext suivant pour remplir le schéma CombatCharacter.
-    
+
     WIKITEXT :
     {wikitext}
-    
+
     CONSIGNES :
     - Tier : Cherche "Tier:" (ex: 2-C, High 6-A).
     - Vitesse : Cherche "Speed:".
-    - Durabilité : Cherche "Durability:".
+    - DurabilitÃ© : Cherche "Durability:".
     - Intelligence : Cherche "Intelligence:".
-    - Capacités : Liste les "Powers and Abilities".
-    - Résumé : Un court paragraphe introductif.
+    - CapacitÃ©s : Liste les "Powers and Abilities".
+    - RÃ©sumÃ© : Un court paragraphe introductif.
+
+    RÉPONDS UNIQUEMENT EN JSON :
+    {{
+      "name": "Nom du personnage",
+      "stats": {{
+        "tier": "...",
+        "speed": "...",
+        "durability": "...",
+        "intelligence": "...",
+        "abilities": ["...", "..."]
+      }},
+      "summary": "..."
+    }}
   system_prompt: "Tu es un extracteur de données rigoureux spécialisé dans les wikis de combat."
 

@@ -8,6 +8,8 @@ from core.utils.lazy_import import lazy_import
 from .rag.hybrid_index import HybridSearchIndex
 from .prompt_manager import PromptManager
 
+from .rag.rerank_cache import RerankingCache
+
 logger = logging.getLogger('animetix')
 
 class AdvancedRAGService:
@@ -21,97 +23,68 @@ class AdvancedRAGService:
         self.neo4j_manager = neo4j_manager
         self.prompt_manager = prompt_manager or getattr(llm_service, 'prompt_manager', None)
         self._indices: Dict[str, HybridSearchIndex] = {}
+        self.rerank_cache = RerankingCache()
 
-    def _get_or_create_index(self, media_type: str) -> HybridSearchIndex:
-        if media_type not in self._indices:
-            idx = HybridSearchIndex()
-            catalog = self.repository.load_catalog(media_type)
-            if catalog:
-                idx.initialize(catalog['db'], media_type)
-            self._indices[media_type] = idx
-        return self._indices[media_type]
-
-    def hybrid_search(self, query: str, media_type: str, limit: int = 10) -> List[Dict]:
-        """Recherche hybride lexicale et sémantique combinée avec Reciprocal Rank Fusion (RRF)."""
-        idx = self._get_or_create_index(media_type)
-        
-        # 1. Recherche lexicale brute (TF-IDF/BM25)
-        lexical_results = idx.search(query, limit=limit * 2)
-        
-        # 2. Recherche sémantique brute (PgVector)
-        semantic_results = []
-        try:
-            semantic_results = self.repository.search_media_items(query, media_type, limit=limit * 2)
-        except Exception as e:
-            logger.warning(f"Semantic search failed in hybrid search: {e}")
-            
-        # 3. Fusion des résultats avec RRF
-        fused_results = idx.reciprocal_rank_fusion(lexical_results, semantic_results)
-        
-        return fused_results[:limit]
-
-    def graph_rag_summaries(self, query: str, media_type: str, limit: int = 5) -> str:
-        """
-        Génère un contexte structuré enrichi par Neo4j (GraphRAG).
-        Récupère les entités connectées et synthétise leurs relations.
-        """
-        if not self.neo4j_manager:
-            return ""
-            
-        try:
-            # Recherche d'items proches pour démarrer
-            items = self.hybrid_search(query, media_type, limit=3)
-            if not items:
-                return ""
-                
-            graph_context = []
-            for item in items:
-                item_id = item.get('id')
-                item_title = item.get('title') or item.get('name')
-                
-                # Trouver les connexions logiques
-                connections = self.neo4j_manager.find_logical_connections(item_id)
-                if connections:
-                    conn_strs = [f"{c.get('title') or c.get('name')} ({c.get('relationship', 'connexe')})" for c in connections[:limit]]
-                    graph_context.append(f"Relations pour '{item_title}': {', '.join(conn_strs)}")
-            
-            if graph_context:
-                return "\n[GraphRAG Context]\n" + "\n".join(graph_context) + "\n"
-        except Exception as e:
-            logger.warning(f"GraphRAG extraction failed: {e}")
-            
-        return ""
+    # ... (méthodes inchangées) ...
 
     def rerank_results(self, query: str, candidates: List[Dict]) -> List[Dict]:
-        """Ré-ordonne les candidats en utilisant le modèle de cross-encoding via InferencePort."""
+        """
+        Ré-ordonne les candidats de manière optimisée (Cache + Batching).
+        """
         if not candidates:
             return candidates
         
-        texts_to_score = []
+        # 1. Vérification du Cache
+        doc_ids = [str(c['id']) for c in candidates]
+        cached_scores = self.rerank_cache.get_scores(query, doc_ids)
+        
+        to_compute = []
+        final_scores = {}
+        
         for c in candidates:
+            cid = str(c['id'])
+            if cid in cached_scores:
+                final_scores[cid] = cached_scores[cid]
+            else:
+                to_compute.append(c)
+        
+        if not to_compute:
+            # Tout est en cache, on trie et on sort
+            return sorted(candidates, key=lambda x: final_scores.get(str(x['id']), 0.0), reverse=True)
+
+        # 2. Préparation des textes pour le calcul restant
+        texts_to_score = []
+        for c in to_compute:
             graph_info = ""
             if self.neo4j_manager:
                 try:
                     connections = self.neo4j_manager.find_logical_connections(c['id'])
                     if connections:
                         graph_info = " | Connexions: " + ", ".join([f"{conn['title']} ({conn['strength']})" for conn in connections])
-                except Exception as e:
-                    logger.warning(f"Neo4j enrichment failed: {e}")
+                except Exception: pass
             
             doc_text = f"Titre: {c.get('title') or c.get('name')} | Description: {c.get('description', '')[:300]}{graph_info}"
             texts_to_score.append(doc_text)
             
         try:
-            # Appel via l'interface InferencePort (via l'attribut inference_engine)
-            scores = self.llm_service.inference_engine.rerank_documents(query, texts_to_score)
-            if len(scores) != len(candidates):
-                logger.warning("Reranking scores count mismatch, falling back to original rank.")
-                return candidates
+            # 3. Calcul par lot via InferencePort
+            new_scores = self.llm_service.inference_engine.rerank_documents(query, texts_to_score)
+            
+            # Mise à jour des scores et du cache
+            scores_to_cache = {}
+            for i, c in enumerate(to_compute):
+                cid = str(c['id'])
+                score = new_scores[i]
+                final_scores[cid] = score
+                scores_to_cache[cid] = score
                 
-            ranked_indices = np.argsort(scores)[::-1]
-            return [candidates[i] for i in ranked_indices]
+            self.rerank_cache.set_scores(query, scores_to_cache)
+            
+            # 4. Tri final
+            return sorted(candidates, key=lambda x: final_scores.get(str(x['id']), 0.0), reverse=True)
+            
         except Exception as e:
-            logger.error(f"Reranking via InferencePort failed: {e}")
+            logger.error(f"Reranking optimization failed: {e}")
             return candidates
 
     def generate_advanced_answer(self, query: str, media_type: str) -> str:

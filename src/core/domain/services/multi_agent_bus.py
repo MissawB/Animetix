@@ -2,10 +2,31 @@ import asyncio
 import orjson
 import logging
 import os
+import json
 from typing import Dict, Any, Callable, Optional, Union
 import time
 
-logger = logging.getLogger('animetix')
+# --- STRUCTURED LOGGING FOR LOKI ---
+logger = logging.getLogger('animetix.bus')
+
+class LokiJSONFormatter(logging.Formatter):
+    """Formateur JSON pour Grafana Loki."""
+    def format(self, record):
+        log_data = {
+            "timestamp": self.formatTime(record, self.datefmt),
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+        }
+        if hasattr(record, "bus_event"):
+            log_data["event"] = record.bus_event
+        return json.dumps(log_data)
+
+# Configuration du logger structuré
+bus_handler = logging.StreamHandler()
+bus_handler.setFormatter(LokiJSONFormatter())
+logger.handlers = [bus_handler]
+logger.propagate = False
 
 class MultiAgentBus:
     """
@@ -25,11 +46,11 @@ class MultiAgentBus:
             try:
                 import redis.asyncio as aredis
                 self._redis_client = aredis.from_url(self.redis_url)
-                logger.info("🚀 MultiAgentBus: Connected to Async Redis for Shared Memory communication.")
+                logger.info("Connected to Async Redis for Shared Memory communication.", extra={"bus_event": {"type": "system", "status": "connected"}})
             except ImportError:
-                logger.warning("⚠️ redis.asyncio not found. Falling back to in-memory shared store.")
+                logger.warning("redis.asyncio not found. Falling back to in-memory shared store.", extra={"bus_event": {"type": "system", "status": "fallback"}})
             except Exception as e:
-                logger.error(f"❌ Failed to connect to Redis: {e}")
+                logger.error(f"Failed to connect to Redis: {e}", extra={"bus_event": {"type": "system", "status": "error"}})
 
     async def _listen_loop(self, agent_id: str, callback: Callable):
         """Boucle d'écoute asynchrone pour un agent via Redis Pub/Sub."""
@@ -37,29 +58,27 @@ class MultiAgentBus:
         pubsub = self._redis_client.pubsub()
         await pubsub.subscribe(channel)
         
-        logger.debug(f"📡 Agent '{agent_id}' listening on channel '{channel}'")
+        logger.debug(f"Agent listening on channel '{channel}'", extra={"bus_event": {"type": "listen", "agent_id": agent_id}})
         
         try:
             while True:
-                # get_message est asynchrone dans redis.asyncio
                 message = await pubsub.get_message(ignore_subscribe_messages=True)
                 if message and message['type'] == 'message':
                     msg_id = message['data'].decode('utf-8') if isinstance(message['data'], bytes) else message['data']
                     
-                    # Exécution du callback (supporte sync et async)
                     try:
                         if asyncio.iscoroutinefunction(callback):
                             await callback(msg_id)
                         else:
                             callback(msg_id)
                     except Exception as callback_err:
-                        logger.error(f"❌ Callback error for agent '{agent_id}': {callback_err}")
+                        logger.error(f"Callback error for agent: {callback_err}", extra={"bus_event": {"type": "callback_error", "agent_id": agent_id, "msg_id": msg_id}})
                 
-                await asyncio.sleep(0.01) # Prévenir le CPU pinning
+                await asyncio.sleep(0.01)
         except asyncio.CancelledError:
-            logger.info(f"🛑 Stopped listening for agent '{agent_id}'")
+            logger.info(f"Stopped listening for agent '{agent_id}'")
         except Exception as e:
-            logger.error(f"❌ Error in listen loop for agent '{agent_id}': {e}")
+            logger.error(f"Error in listen loop for agent '{agent_id}': {e}")
         finally:
             try:
                 await pubsub.unsubscribe(channel)
@@ -72,34 +91,27 @@ class MultiAgentBus:
         self._subscribers[agent_id] = callback
 
         if self._redis_client:
-            # Annulation d'une tâche existante pour cet agent si elle existe
             if agent_id in self._listen_tasks:
                 self._listen_tasks[agent_id].cancel()
 
-            # Création d'une tâche de fond pour écouter Redis Pub/Sub
             try:
                 loop = asyncio.get_running_loop()
                 task = loop.create_task(self._listen_loop(agent_id, callback))
                 self._listen_tasks[agent_id] = task
-                logger.info(f"📡 MultiAgentBus: Background listen task started for agent '{agent_id}'")
             except RuntimeError:
-                logger.warning(f"⚠️ MultiAgentBus: No running event loop. Agent '{agent_id}' will not listen to Pub/Sub messages (Publish-only mode).")
+                pass
 
-        logger.info(f"🔌 Agent '{agent_id}' registered on MultiAgentBus.")
+        logger.info(f"Agent '{agent_id}' registered on MultiAgentBus.", extra={"bus_event": {"type": "registration", "agent_id": agent_id}})
+
     async def publish_binary_message(self, sender_id: str, target_id: str, action: str, payload: Dict[str, Any]) -> str:
         """
         Envoie un message binaire optimisé d'un agent à un autre via shared memory.
         """
         start_time = time.perf_counter()
-        
-        # 1. Sérialisation binaire ultra-rapide via orjson
         binary_payload = orjson.dumps(payload)
-        
-        # 2. Identifiant unique du message
         msg_id = f"animetix:bus:msg:{int(time.time()*1000)}_{self.message_counter}"
         self.message_counter += 1
         
-        # 3. Stockage dans la mémoire partagée (Redis ou Local)
         msg_envelope = {
             "sender": sender_id,
             "target": target_id,
@@ -108,19 +120,16 @@ class MultiAgentBus:
         }
         
         if self._redis_client:
-            # On utilise Redis HSET pour l'enveloppe et SET pour le payload binaire (Blob)
-            await self._redis_client.set(f"{msg_id}:payload", binary_payload, ex=60) # TTL 60s
+            await self._redis_client.set(f"{msg_id}:payload", binary_payload, ex=60)
             await self._redis_client.hset(msg_id, mapping=msg_envelope)
             await self._redis_client.expire(msg_id, 60)
             
-            # 4. Notification distribuée via Redis Pub/Sub
             channel = f"animetix:bus:agent:{target_id}"
             await self._redis_client.publish(channel, msg_id)
         else:
             msg_envelope["payload"] = binary_payload
             self._shared_memory_store[msg_id] = msg_envelope
             
-            # 4. Notification locale
             if target_id in self._subscribers:
                 callback = self._subscribers[target_id]
                 if asyncio.iscoroutinefunction(callback):
@@ -129,7 +138,19 @@ class MultiAgentBus:
                     callback(msg_id)
             
         latency = (time.perf_counter() - start_time) * 1000
-        logger.debug(f"⚡ Inter-Agent Bus: {sender_id} -> {target_id} [{action}] in {latency:.3f}ms")
+        
+        # LOGGING STRUCTURÉ POUR LOKI
+        logger.debug(
+            f"Message: {sender_id} -> {target_id} [{action}]",
+            extra={"bus_event": {
+                "type": "publish",
+                "sender": sender_id,
+                "target": target_id,
+                "action": action,
+                "latency_ms": round(latency, 3),
+                "msg_id": msg_id
+            }}
+        )
         
         return msg_id
 
@@ -159,4 +180,4 @@ class MultiAgentBus:
         if self._redis_client:
             await self._redis_client.close()
         
-        logger.info("🔌 MultiAgentBus shutdown complete.")
+        logger.info("MultiAgentBus shutdown complete.", extra={"bus_event": {"type": "system", "status": "shutdown"}})

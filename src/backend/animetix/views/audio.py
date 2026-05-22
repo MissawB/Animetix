@@ -5,9 +5,11 @@ from io import BytesIO
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django_ratelimit.decorators import ratelimit
-from .common import animetix_service, logger
+from ..containers import get_container
 from ..session_manager import GameSessionManager
 from pydub import AudioSegment
+
+logger = logging.getLogger('animetix')
 
 def audio_lab_view(request):
     """Affiche l'interface de l'Audio Lab."""
@@ -24,6 +26,7 @@ def audio_lab_view(request):
 @ratelimit(key='ip', rate='3/m', method='POST', block=True)
 def clone_voice_api(request):
     """Point de terminaison pour le clonage de voix."""
+    container = get_container()
     if request.method != 'POST':
         return redirect('audio_lab')
     
@@ -49,7 +52,7 @@ def clone_voice_api(request):
             return JsonResponse({'error': 'Échantillon vocal manquant.'}, status=400)
 
         # 1. Génération via XTTS (Port d'inférence)
-        cloned_wav = animetix_service.voice_cloning_service.generate_character_voice(
+        cloned_wav = container.voice_cloning_service.generate_character_voice(
             text=text, 
             character_audio_sample=ref_audio_bytes
         )

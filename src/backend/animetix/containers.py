@@ -21,6 +21,7 @@ from core.domain.services.emoji_service import EmojiDomainService
 from core.domain.services.paradox_service import ParadoxDomainService
 from core.domain.services.animinator_service import AniminatorDomainService
 from core.domain.services.akinetix_service import AkinetixDomainService
+from core.domain.services.akinetix_rl_service import AkinetixRLDomainService
 from core.domain.services.blind_test_service import BlindTestDomainService
 from core.domain.services.cover_test_service import CoverTestDomainService
 from core.domain.services.creative.video_quest import VideoQuestService
@@ -48,6 +49,10 @@ from core.domain.services.rag.agents.graph_expert import GraphExpert
 from core.domain.services.agentic_rag_service import AgenticRAGService
 from core.domain.services.long_term_memory_service import LongTermMemoryService
 from core.domain.services.semantic_cache_service import SemanticCacheService
+from core.domain.services.star_reasoner_service import StarReasonerService
+from core.domain.services.star_mlops_service import StarMLOpsDomainService
+from core.domain.services.drift_service import DriftService
+from core.domain.services.dpo_feedback_loop import DPOFeedbackLoop
 from core.domain.services.creative.fusion_service import FusionDomainService
 from core.domain.services.creative.vs_battle_service import VsBattleService
 from core.domain.services.observability_service import ObservabilityService
@@ -268,6 +273,15 @@ class Container:
         return self._get('animinator_service', lambda: AniminatorDomainService(llm_service=self.llm_service))
 
     @property
+    def graph_healer_service(self):
+        return self._get('graph_healer_service', lambda: GraphHealerDomainService(
+            neo4j_manager=neo4j_manager,
+            construction_service=self.graph_builder,
+            repository=self.repository,
+            inference_engine=self.inference_engine
+        ))
+
+    @property
     def akinetix_service(self):
         return self._get('akinetix_service', lambda: AkinetixDomainService(catalog_service=self.catalog_service))
 
@@ -318,7 +332,11 @@ class Container:
 
     @property
     def guardrail_service(self):
-        return self._get('guardrail_service', lambda: GuardrailService(inference_engine=self.inference_engine, prompt_manager=self.prompt_manager))
+        return self._get('guardrail_service', lambda: GuardrailService(
+            inference_engine=self.inference_engine, 
+            prompt_manager=self.prompt_manager,
+            neo4j_manager=neo4j_manager
+        ))
 
     @property
     def red_teaming_agent(self):
@@ -327,6 +345,10 @@ class Container:
     @property
     def akinetix_rl_service(self):
         return self._get('akinetix_rl_service', lambda: AkinetixRLService(catalog_service=self.game_service))
+
+    @property
+    def akinetix_expert_service(self):
+        return self._get('akinetix_expert_service', lambda: AkinetixRLDomainService(catalog_service=self.catalog_service))
 
     @property
     def self_play_debate_service(self):
@@ -365,12 +387,45 @@ class Container:
         return self._get('native_speech_llm_service', lambda: NativeSpeechLLMService(inference_engine=self.inference_engine))
 
     @property
+    def star_mlops_service(self):
+        return self._get('star_mlops_service', lambda: StarMLOpsDomainService(prompt_manager=self.prompt_manager))
+
+    @property
+    def drift_service(self):
+        return self._get('drift_service', lambda: DriftService())
+
+    @property
+    def dpo_service(self):
+        return self._get('dpo_service', lambda: DPOFeedbackLoop(prompt_manager=self.prompt_manager))
+
+    @property
+    def long_context_service(self):
+        return self._get('long_context_service', lambda: LongContextDomainService(inference_engine=self.inference_engine, prompt_manager=self.prompt_manager))
+
+    @property
+    def lora_manager(self):
+        """Gestionnaire de Hot-Swapping LoRA (chargé seulement si un adaptateur est requis)."""
+        # On passe le modèle interne de l'adaptateur principal si c'est un TransformersAdapter
+        # En fallback, on peut passer None si l'inference_engine est une API distante (Ollama/vLLM)
+        model = getattr(self.transformers_adapter, 'model', None)
+        return self._get('lora_manager', lambda: MultiLoraManager(base_model=model))
+
+    @property
     def fusion_service(self):
-        return self._get('fusion_service', lambda: FusionDomainService(inference_engine=self.inference_engine, prompt_manager=self.prompt_manager))
+        return self._get('fusion_service', lambda: FusionDomainService(
+            inference_engine=self.inference_engine, 
+            prompt_manager=self.prompt_manager,
+            lora_manager=self.lora_manager
+        ))
 
     @property
     def vs_battle_service(self):
-        return self._get('vs_battle_service', lambda: VsBattleService(fandom_port=self.fandom_adapter, inference_engine=self.inference_engine, prompt_manager=self.prompt_manager))
+        return self._get('vs_battle_service', lambda: VsBattleService(
+            fandom_port=self.fandom_adapter, 
+            inference_engine=self.inference_engine, 
+            prompt_manager=self.prompt_manager,
+            web_search_port=self.web_search
+        ))
 
     @property
     def catalog_service(self):

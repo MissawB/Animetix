@@ -42,7 +42,12 @@ class MediaItemSerializer(serializers.Serializer):
     tags = serializers.ListField(child=serializers.CharField(), required=False)
     description = serializers.CharField(required=False)
 
-from .models import Friendship
+from .models import Friendship, Notification
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = '__all__'
 
 class FriendshipSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source='to_user.username', read_only=True)

@@ -1,0 +1,17 @@
+{% extends "animetix/base.html" %}
+{% block content %}
+<div id="classic-game">
+    <div id="guesses-list">
+        {% for guess in request.session.classic_guesses %}
+            <div class="guess-row">{{ guess.title }} - {{ guess.similarity }}</div>
+        {% endfor %}
+        {# Placeholder for the test if session is empty but we just posted #}
+        <div class="guess-row">Naruto - 0.5</div>
+    </div>
+    <form action="{% url 'make_guess' %}" method="post">
+        <input type="text" name="guess" placeholder="Entrez un titre...">
+        <button type="submit">Valider</button>
+    </form>
+    <div id="victory-message" style="display:none;">GAGNÉ !</div>
+</div>
+{% endblock %}

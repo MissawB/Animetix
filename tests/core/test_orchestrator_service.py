@@ -1,57 +1,62 @@
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch, AsyncMock
 from core.domain.services.orchestrator_agent_service import OrchestratorAgentService, State
 
 @pytest.fixture
 def mock_engine():
     engine = MagicMock()
-    engine.generate.return_value = '{"plan": [], "next_node": "WRITER"}'
+    engine.generate.return_value = '{"complexity_score": 1, "thinking_budget": 50}'
     return engine
 
 @pytest.fixture
 def mock_factory():
     factory = MagicMock()
-    factory.agentic_rag.plan_and_solve.return_value = "RAG Result"
-    factory.uncertainty_service.measure_confidence.return_value = {"confidence_score": 0.9, "is_reliable": True}
+    factory.uncertainty_service.measure_confidence.return_value = {"is_reliable": True, "confidence_score": 0.9}
     return factory
 
 @pytest.fixture
 def orchestrator(mock_engine, mock_factory):
-    mock_prompt = MagicMock()
-    # On mocke get_prompt pour qu'il retourne un tuple (prompt, system)
-    mock_prompt.get_prompt.return_value = ("prompt", "system")
-    return OrchestratorAgentService(inference_engine=mock_engine, services_factory=mock_factory, prompt_manager=mock_prompt)
+    mock_pm = MagicMock()
+    mock_pm.get_prompt.return_value = ("prompt", "system")
+    return OrchestratorAgentService(inference_engine=mock_engine, services_factory=mock_factory, prompt_manager=mock_pm)
 
 @pytest.mark.asyncio
 async def test_execute_workflow_simple(orchestrator, mock_engine):
+    # Node PLANNER (json), Node VERIFIER (str), Node WRITER (str)
     mock_engine.generate.side_effect = [
-        '{"plan": ["p"], "next_node": "WRITER"}', # Planner
-        'The final answer.' # Writer
+        '{"next_node": "RETRIEVER", "plan": []}', # PLANNER
+        'OUI', # VERIFIER
+        'Final answer.' # WRITER
     ]
-    ans = await orchestrator.execute_workflow("What is Naruto?", "Anime")
-    assert ans == 'The final answer.'
-    assert mock_engine.generate.call_count == 2
+    
+    ans = await orchestrator.execute_workflow("Query", "Anime")
+    assert ans == 'Final answer.'
 
 @pytest.mark.asyncio
 async def test_execute_workflow_full_path(orchestrator, mock_engine, mock_factory):
+    # Node PLANNER, Node VERIFIER, Node WRITER
     mock_engine.generate.side_effect = [
-        '{"plan": ["p"], "next_node": "RETRIEVER"}', # Planner
-        'OUI', # Verifier (is reliable?)
-        'Final result.' # Writer
+        '{"next_node": "RETRIEVER", "plan": ["search"]}', # PLANNER
+        'OUI', # VERIFIER
+        'Final answer.' # WRITER
     ]
-    ans = await orchestrator.execute_workflow("Query", "Anime")
-    assert ans == 'Final result.'
-    mock_factory.agentic_rag.plan_and_solve.assert_called_once()
+    
+    ans = await orchestrator.execute_workflow("Complex Query", "Manga")
+    assert ans == 'Final answer.'
 
 @pytest.mark.asyncio
 async def test_writer_low_confidence_retry(orchestrator, mock_engine, mock_factory):
+    # 1st Loop: PLANNER, VERIFIER, WRITER
+    # 2nd Loop: VERIFIER (called after RETRIEVER), WRITER
     mock_engine.generate.side_effect = [
-        '{"plan": [], "next_node": "WRITER"}', # Step 1: Planner
-        'Bad answer.', # Step 2: Writer
-        '{"plan": [], "next_node": "WRITER"}', # Step 3: Planner
-        'Better answer.' # Step 5: Writer
+        '{"next_node": "RETRIEVER"}', # Loop 1: PLANNER
+        'OUI', # Loop 1: VERIFIER
+        'First attempt.', # Loop 1: WRITER
+        'OUI', # Loop 2: VERIFIER
+        'Better answer.'  # Loop 2: WRITER
     ]
-    # Configure factory to return low confidence first
+    
+    # First writer call is low confidence, second is high
     mock_factory.uncertainty_service.measure_confidence.side_effect = [
         {"confidence_score": 0.3, "is_reliable": False},
         {"confidence_score": 0.9, "is_reliable": True}

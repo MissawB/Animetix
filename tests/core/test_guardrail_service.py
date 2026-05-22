@@ -46,6 +46,7 @@ def test_validate_input_llm_fallback(guardrail_service, mock_engine, mock_prompt
 
 def test_validate_output_safe(guardrail_service, mock_engine):
     mock_engine.moderate_content.return_value = {"is_safe": True, "unsafe_categories": []}
+    mock_engine.generate.return_value = '{"is_safe": true, "unsafe_categories": []}'
     res = guardrail_service.validate_output("Safe response")
     assert res["is_safe"] is True
 

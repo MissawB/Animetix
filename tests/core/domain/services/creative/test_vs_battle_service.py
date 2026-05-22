@@ -56,7 +56,7 @@ def test_fetch_and_parse_character(vs_battle_service, mock_fandom_port, mock_inf
     result = vs_battle_service.fetch_and_parse_character(character_name)
     
     # Verify
-    mock_fandom_port.fetch_character_data.assert_called_once_with(character_name)
+    mock_fandom_port.fetch_character_data.assert_called_once_with(character_name, franchise=None)
     mock_inference_port.generate_structured.assert_called_once()
     assert result.name == "Naruto Uzumaki"
     assert result.stats.tier == "5-B"

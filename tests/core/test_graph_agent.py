@@ -41,7 +41,7 @@ def mock_neo4j():
 
 @pytest.fixture
 def agentic_rag(mock_inference, mock_rag_service, mock_web_search, mock_prompt_manager, mock_llm_service, mock_neo4j):
-    return AgenticRAGService(
+    service = AgenticRAGService(
         inference_engine=mock_inference,
         rag_service=mock_rag_service,
         web_search=mock_web_search,
@@ -49,6 +49,10 @@ def agentic_rag(mock_inference, mock_rag_service, mock_web_search, mock_prompt_m
         llm_service=mock_llm_service,
         neo4j_manager=mock_neo4j
     )
+    # Force high confidence to skip recovery and librarian
+    service.uncertainty_service = MagicMock()
+    service.uncertainty_service.measure_confidence.return_value = 1.0
+    return service
 
 def test_graph_exploration_flow(agentic_rag, mock_llm_service, mock_neo4j):
     # side_effect for LLMService.generate
@@ -95,7 +99,7 @@ def test_graph_exploration_flow(agentic_rag, mock_llm_service, mock_neo4j):
     
     # Verify that the last evaluation was APPROVE
     eval_steps = [s['content'] for s in steps if s['type'] == 'eval']
-    assert eval_steps[-1]['next_action'] == JudgeAction.APPROVE
+    assert eval_steps[-1]['consensus_action'] == JudgeAction.APPROVE
 
 if __name__ == "__main__":
     import sys

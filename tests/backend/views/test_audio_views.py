@@ -17,12 +17,15 @@ def test_audio_lab_view(mock_render, client):
     assert any(v['id'] == 'naruto' for v in args[2]['library_voices'])
 
 @pytest.mark.django_db
-@patch('animetix.views.audio.animetix_service')
+@patch('animetix.views.audio.get_container')
 @patch('animetix.views.audio.AudioSegment')
-def test_clone_voice_api_success(mock_audio_segment, mock_animetix_service, client):
+def test_clone_voice_api_success(mock_audio_segment, mock_get_container, client):
     # Setup mocks
+    mock_container = MagicMock()
+    mock_get_container.return_value = mock_container
+    
     mock_vc_service = MagicMock()
-    mock_animetix_service.voice_cloning_service = mock_vc_service
+    mock_container.voice_cloning_service = mock_vc_service
     mock_vc_service.generate_character_voice.return_value = b"fake_wav_data"
     
     mock_audio_instance = MagicMock()

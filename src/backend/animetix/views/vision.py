@@ -3,17 +3,21 @@ import requests
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django_ratelimit.decorators import ratelimit
-from .common import animetix_service, handle_win_achievements, logger
+from ..containers import get_container
 from ..session_manager import GameSessionManager
 from ..models import GameplaySession
 from ..forms import VisionQuestForm
 from core.domain.exceptions import InferenceError
+import logging
+
+logger = logging.getLogger('animetix')
 
 def spatial_view(request):
     """Vue principale du Spatial Lab (Reconstruction 3D)."""
+    container = get_container()
     manager = GameSessionManager(request)
     media_type = manager.get_current_mode()
-    data = animetix_service.load_data(media_type)
+    data = container.catalog_service.load_data(media_type)
     if not data: return redirect('index')
     
     # On propose quelques exemples de la forge ou du catalogue
@@ -26,6 +30,7 @@ def spatial_view(request):
 @ratelimit(key='ip', rate='5/m', method='POST', block=True)
 def generate_depth(request):
     """Génère une carte de profondeur pour une image donnée (URL ou Upload)."""
+    container = get_container()
     if request.method == 'POST':
         image_url = request.POST.get('image_url')
         uploaded_file = request.FILES.get('image_file')
@@ -47,7 +52,7 @@ def generate_depth(request):
                 image_data = res.content
             
             # 2. Appel au service de Spatial Computing
-            depth_map_bytes = animetix_service.spatial_computing_service.inference_engine.estimate_depth(image_data)
+            depth_map_bytes = container.spatial_computing_service.inference_engine.estimate_depth(image_data)
             
             if not depth_map_bytes:
                 return JsonResponse({'error': 'Depth estimation failed'}, status=500)
@@ -70,8 +75,8 @@ def generate_depth(request):
 
 def manga_lab_view(request):
     """Vue principale du Manga Lab (Nettoyage de bulles)."""
-    manager = GameSessionManager(request)
-    data = animetix_service.load_data("Manga")
+    container = get_container()
+    data = container.catalog_service.load_data("Manga")
     if not data: return redirect('index')
     
     # Exemples de pages de manga
@@ -83,6 +88,7 @@ def manga_lab_view(request):
 @ratelimit(key='ip', rate='5/m', method='POST', block=True)
 def process_manga_bubbles(request):
     """Détecte et nettoie les bulles d'une page de manga."""
+    container = get_container()
     if request.method == 'POST':
         image_url = request.POST.get('image_url')
         uploaded_file = request.FILES.get('image_file')
@@ -97,7 +103,7 @@ def process_manga_bubbles(request):
                 image_data = res.content
             
             # Pipeline IA : Détection + Inpainting
-            result = animetix_service.vision_service.inference_engine.process_manga_page(image_data)
+            result = container.vision_service.inference_engine.process_manga_page(image_data)
             
             original_b64 = base64.b64encode(image_data).decode('utf-8')
             
@@ -115,7 +121,8 @@ def process_manga_bubbles(request):
 
 @ratelimit(key='ip', rate='3/m', method='POST', block=True)
 def translate_manga_bubbles(request):
-    """Détecte, nettoie et traduit les bulles d'une page de manga. (Reload trigger)"""
+    """Détecte, nettoie et traduit les bulles d'une page de manga."""
+    container = get_container()
     if request.method == 'POST':
         image_url = request.POST.get('image_url')
         uploaded_file = request.FILES.get('image_file')
@@ -131,7 +138,7 @@ def translate_manga_bubbles(request):
                 image_data = res.content
             
             # Pipeline IA complet : Détection + Inpainting + OCR + LLM Translate + Draw
-            result = animetix_service.vision_service.translate_manga_page(image_data, target_lang=target_lang)
+            result = container.vision_service.translate_manga_page(image_data, target_lang=target_lang)
             
             if "error" in result:
                 return JsonResponse({'error': result["error"]}, status=500)
@@ -152,9 +159,10 @@ def translate_manga_bubbles(request):
     return redirect('manga_lab')
 
 def vision_quest_view(request):
+    container = get_container()
     session = GameSessionManager(request)
     media_type = "Anime"
-    data = animetix_service.load_data(media_type)
+    data = container.catalog_service.load_data(media_type)
     if not data: return redirect('index')
     
     is_daily = session.get('is_daily', False)
@@ -165,7 +173,7 @@ def vision_quest_view(request):
             secret_title = session.get('secret_title')
             secret = data['title_to_full_data'].get(secret_title)
         else:
-            secret = animetix_service.vision_quest_service.select_secret(data)
+            secret = container.vision_quest_service.select_secret(data)
         if not secret: return redirect('index')
         session.start_vision_game(str(secret['id']), secret['title'], secret['image'], media_type)
         if is_daily: session.set('is_daily', True)
@@ -182,6 +190,7 @@ def vision_quest_view(request):
 
 @ratelimit(key='ip', rate='5/m', method='POST', block=True)
 def vision_quest_guess(request):
+    container = get_container()
     session = GameSessionManager(request)
     state = session.get_vision_state()
     if request.method == 'POST' and not state['game_over']:
@@ -189,7 +198,7 @@ def vision_quest_guess(request):
         if form.is_valid():
             try:
                 query, secret_id, secret_title, media_type, is_daily = form.cleaned_data['description'], state['secret_id'], state['secret_title'], state['media_type'], state['is_daily']
-                score = animetix_service.vision_quest_service.calculate_score(query, secret_id, secret_title, media_type)
+                score = container.vision_quest_service.calculate_score(query, secret_id, secret_title, media_type)
                 
                 guesses = state['guesses']
                 guesses.insert(0, {'text': query, 'score': score})
@@ -198,12 +207,21 @@ def vision_quest_guess(request):
                 if score > state['best_score']: 
                     session.set('vision_best_score', score)
                     
-                if animetix_service.vision_quest_service.check_victory(score):
+                if container.vision_quest_service.check_victory(score):
                     session.set('vision_game_over', True)
                     if request.user.is_authenticated:
-                        newly_unlocked = request.user.profile.add_win(is_daily=is_daily, game_mode='vision_quest', media_type=media_type, attempts=len(guesses))
-                        handle_win_achievements(request, newly_unlocked)
-                    GameplaySession.objects.create(game_mode='vision_quest', media_type=media_type, target_item=secret_title, history=guesses, was_won=True)
+                        try:
+                            newly_unlocked = request.user.profile.add_win(is_daily=is_daily, game_mode='vision_quest', media_type=media_type, attempts=len(guesses))
+                            session.handle_win_achievements(newly_unlocked)
+                        except Exception: pass
+                    GameplaySession.objects.create(
+                        user=request.user if request.user.is_authenticated else None,
+                        game_mode='vision_quest', 
+                        media_type=media_type, 
+                        target_item=secret_title, 
+                        history=guesses, 
+                        was_won=True
+                    )
             except InferenceError as e:
                 logger.error(f"Inference Error in Vision Quest: {e}")
                 return JsonResponse({'error': "Le moteur d'IA est temporairement indisponible."}, status=503)

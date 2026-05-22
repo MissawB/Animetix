@@ -2,12 +2,16 @@ from dagster import asset, Definitions, ScheduleDefinition, AssetSelection, defi
 from pathlib import Path
 import os
 import sys
+from dotenv import load_dotenv
 
 # Chemins de base dynamiques
 PIPELINE_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = PIPELINE_DIR.parent.parent
 SRC_DIR = PIPELINE_DIR.parent
 BACKEND_DIR = SRC_DIR / "backend"
+
+# Chargement du .env
+load_dotenv(PROJECT_ROOT / ".env")
 
 # Ajout des dossiers au path pour les imports
 for path in [str(PIPELINE_DIR), str(SRC_DIR), str(BACKEND_DIR)]:
@@ -17,14 +21,17 @@ for path in [str(PIPELINE_DIR), str(SRC_DIR), str(BACKEND_DIR)]:
 # --- CONFIGURATION DJANGO ---
 import django
 from django.apps import apps
+from django.conf import settings
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'animetix_project.settings')
 if not apps.ready:
     django.setup()
 
 # --- IMPORTS PIPELINE ---
-from characters import ingest_characters, refine_characters, filter_characters, train_vibe_characters, vectorize_characters
+from characters import ingest_characters, refine_characters, filter_characters, train_vibe_characters, vectorize_characters, combat_data, vectorize_combat
 from anime import ingest_anime, filter_anime, train_vibe_anime, vectorize_anime, fetch_themes, reconcile_drift
 from manga import ingest_manga, filter_manga, train_vibe_manga, vectorize_manga, fetch_covers
+from games import ingest_games, filter_games, vectorize_games
+from actors import ingest_actors, filter_actors, vectorize_actors, cross_media_mapping
 from mlops import finetuning_dataset, train_expert_model, rlhf_pipeline, evaluation_metrics, latent_space_viz, distillation, auto_lora_trigger, graph_healer, continuous_pretraining
 from evaluation import drift_detection, regression_benchmark
 import neo4j_sync
@@ -45,6 +52,40 @@ def trained_characters_model(): return train_vibe_characters.run_training()
 
 @asset(deps=[trained_characters_model], group_name="characters")
 def character_artifacts(): return vectorize_characters.run_vectorization()
+
+# --- 🎭 PIPELINE : ACTORS ---
+@asset(group_name="actors")
+def raw_actors(): return ingest_actors.run_ingestion()
+
+@asset(deps=[raw_actors], group_name="actors")
+def filtered_actors(): return filter_actors.run_filtering()
+
+@asset(deps=[filtered_actors], group_name="actors")
+def actor_artifacts(chroma: ChromaResource): 
+    return vectorize_actors.run_vectorization(chroma_res=chroma)
+
+@asset(deps=[actor_artifacts, character_artifacts], group_name="actors")
+def actor_mapping(chroma: ChromaResource): 
+    return cross_media_mapping.run_mapping(chroma_res=chroma)
+
+# --- ⚔️ PIPELINE : COMBAT (VS Battle) ---
+@asset(deps=[filtered_characters], group_name="combat")
+def raw_combat_data(): return combat_data.run_combat_data_ingestion(limit=20)
+
+@asset(deps=[raw_combat_data], group_name="combat")
+def combat_artifacts(chroma: ChromaResource): 
+    return vectorize_combat.run_combat_vectorization(chroma_res=chroma)
+
+# --- 🎮 PIPELINE : GAMES ---
+@asset(group_name="games")
+def raw_games(): return ingest_games.run_ingestion()
+
+@asset(deps=[raw_games], group_name="games")
+def filtered_games(): return filter_games.run_filtering()
+
+@asset(deps=[filtered_games], group_name="games")
+def game_artifacts(chroma: ChromaResource): 
+    return vectorize_games.run_vectorization(chroma_res=chroma)
 
 # --- 📺 PIPELINE : ANIME ---
 @asset(group_name="anime")
@@ -139,17 +180,20 @@ def sync_manga_to_graph(): return neo4j_sync.run_sync_type_to_graph("Manga")
 @asset(group_name="graph", deps=[character_artifacts])
 def sync_characters_to_graph(): return neo4j_sync.run_sync_type_to_graph("Character")
 
-@asset(group_name="graph", deps=[sync_anime_to_graph, sync_manga_to_graph, sync_characters_to_graph])
+@asset(group_name="graph", deps=[game_artifacts])
+def sync_games_to_graph(): return neo4j_sync.run_sync_type_to_graph("Game")
+
+@asset(group_name="graph", deps=[sync_anime_to_graph, sync_manga_to_graph, sync_characters_to_graph, sync_games_to_graph])
 def global_knowledge_graph(): return True
 
 # --- JOBS ---
 # Job complet pour rafraîchissement total
 full_pipeline_job = define_asset_job(name="full_pipeline_job", selection=AssetSelection.all())
 
-# Job d'ingestion (Anime, Manga, Characters)
+# Job d'ingestion (Anime, Manga, Characters, Games, Actors, Combat)
 ingestion_job = define_asset_job(
     name="ingestion_job", 
-    selection=AssetSelection.groups("characters") | AssetSelection.groups("anime") | AssetSelection.groups("manga")
+    selection=AssetSelection.groups("characters") | AssetSelection.groups("anime") | AssetSelection.groups("manga") | AssetSelection.groups("games") | AssetSelection.groups("actors") | AssetSelection.groups("combat")
 )
 
 # Job de maintenance (Drift check, Graph healer, Knowledge graph)
@@ -203,11 +247,14 @@ defs = Definitions(
         raw_characters, refined_characters, filtered_characters, trained_characters_model, character_artifacts,
         raw_anime, reconciled_anime, filtered_anime, anime_themes, trained_anime_model, anime_artifacts,
         raw_manga, filtered_manga, manga_covers, trained_manga_model, manga_artifacts,
+        raw_games, filtered_games, game_artifacts,
+        raw_actors, filtered_actors, actor_artifacts, actor_mapping,
+        raw_combat_data, combat_artifacts,
         monitor_inference_health, exported_user_feedback, trl_ready_dataset, trigger_model_retraining,
         ragas_performance_comparison, legacy_retrieval_metrics, finetuning_dataset_asset, otaku_model_training,
         latent_space_data_asset, global_knowledge_graph, speculative_draft_distillation, knowledge_drift_check, 
         ai_regression_test, self_healing_graph_agent, continuous_pretraining_draft,
-        sync_anime_to_graph, sync_manga_to_graph, sync_characters_to_graph
+        sync_anime_to_graph, sync_manga_to_graph, sync_characters_to_graph, sync_games_to_graph
     ],
     jobs=[full_pipeline_job, ingestion_job, maintenance_job, health_monitoring_job, mlops_job],
     schedules=[daily_ingestion_schedule, daily_maintenance_schedule, hourly_monitoring_schedule],
@@ -215,9 +262,9 @@ defs = Definitions(
     resources={
         "chroma": ChromaResource(persist_path=str(PROJECT_ROOT / "data" / "chroma_db")),
         "neo4j": Neo4jResource(
-            uri=settings.NEO4J_URI, 
-            user=settings.NEO4J_USER, 
-            password=settings.NEO4J_PASSWORD
+            uri=os.getenv("NEO4J_URI", "bolt://localhost:7687"), 
+            user=os.getenv("NEO4J_USER", "neo4j"), 
+            password=os.getenv("NEO4J_PASSWORD", "secretpassword")
         )
     }
 )

@@ -1,11 +1,10 @@
 import pytest
 import asyncio
 import sys
+import os
 
-@pytest.fixture(scope="session", autouse=True)
-def set_event_loop_policy():
-    if sys.platform == 'win32':
-        asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
+
 import os
 from unittest.mock import MagicMock
 
@@ -15,6 +14,15 @@ class MockPackage(MagicMock):
         self.__path__ = []
 
     def __getattr__(self, name):
+        if name == 'Image':
+            from PIL import Image
+            return Image
+        if name == 'ImageColor':
+            from PIL import ImageColor
+            return ImageColor
+        if name == 'ImageFile':
+            from PIL import ImageFile
+            return ImageFile
         if name and name[0].isupper():
             # Dynamically create a class to prevent issubclass() and subclassing errors
             mock_cls = type(name, (object,), {
@@ -55,10 +63,8 @@ mock_container_instance.cover_test_service = MagicMock()
 mock_container_instance.game_service = MagicMock()
 mock_container_instance.akinetix_service = MagicMock()
 mock_container_instance.animinator_service = MagicMock()
-mock_container_instance.game_service = MagicMock()
-mock_container_instance.akinetix_service = MagicMock()
-mock_container_instance.animinator_service = MagicMock()
 mock_container_instance.vision_quest_service = MagicMock()
+mock_container_instance.uncertainty_service = MagicMock()
 
 # Setup default returns for services (MUST be serializable types for E2E tests session)
 mock_container_instance.catalog_service.load_data.return_value = {
@@ -78,6 +84,8 @@ mock_container_instance.cover_test_service.get_random_cover.return_value = {
 }
 mock_container_instance.game_service.select_secret.return_value = "Naruto"
 mock_container_instance.game_service.select_secret_custom.return_value = "Naruto"
+mock_container_instance.game_service.check_title_match.return_value = False
+mock_container_instance.game_service.calculate_raw_similarity.return_value = 0.5
 mock_container_instance.game_service.check_title_match.return_value = False
 mock_container_instance.akinetix_service.start_new_game.return_value = {
     'history': [], 'current_q': 'Q?', 'current_attr': 'A', 'game_over': False, 'ai_guess': None, 'probs': {}, 'asked_attrs': []
@@ -108,6 +116,49 @@ except ImportError:
 # Patch global get_container
 @pytest.fixture(autouse=True)
 def patch_get_container(mocker):
+    # Reset all mocks in the global container instance to prevent state leak
+    for attr in dir(mock_container_instance):
+        m = getattr(mock_container_instance, attr)
+        if isinstance(m, MagicMock):
+            m.reset_mock(return_value=True, side_effect=True)
+            
+    # Setup default returns for services again (after reset)
+    mock_container_instance.catalog_service.load_data.return_value = {
+        'titles': ['Naruto', 'Bleach'], 
+        'lookup': [{'title': 'Naruto', 'id': '1'}, {'title': 'Bleach', 'id': '2'}], 
+        'title_to_full_data': {
+            'Naruto': {'title': 'Naruto', 'id': '1', 'image': 'n.jpg'},
+            'Bleach': {'title': 'Bleach', 'id': '2', 'image': 'b.jpg'}
+        },
+        'title_to_index': {'Naruto': 0, 'Bleach': 1}
+    }
+    mock_container_instance.blind_test_service.get_random_theme.return_value = {
+        'anime_title': 'A', 'song_title': 'S', 'artists': 'Art', 'video_url': 'v.mp4', 'type': 'OP'
+    }
+    mock_container_instance.cover_test_service.get_random_cover.return_value = {
+        'manga_title': 'M', 'cover_url': 'c.jpg', 'locale': 'ja', 'volume': '1'
+    }
+    mock_container_instance.game_service.select_secret.return_value = "Naruto"
+    mock_container_instance.game_service.select_secret_custom.return_value = "Naruto"
+    mock_container_instance.game_service.check_title_match.return_value = False
+    mock_container_instance.game_service.calculate_raw_similarity.return_value = 0.5
+    
+    mock_container_instance.akinetix_service.start_new_game.return_value = {
+        'history': [], 'current_q': 'Q?', 'current_attr': 'A', 'game_over': False, 'ai_guess': None, 'probs': {}, 'asked_attrs': []
+    }
+    mock_container_instance.akinetix_service.process_answer.return_value = {
+        'history': [], 'current_q': 'Q2?', 'current_attr': 'A2', 'game_over': False, 'ai_guess': None, 'probs': {}, 'asked_attrs': []
+    }
+    mock_container_instance.animinator_service.select_secret.return_value = "Naruto"
+    mock_container_instance.animinator_service.start_new_game.return_value = {
+        'history': [], 'current_q': 'Q?', 'current_attr': 'A', 'game_over': False, 'ai_guess': None, 'probs': {}, 'asked_attrs': []
+    }
+    mock_container_instance.animinator_service.process_question.return_value = {
+        'history': [], 'current_q': 'Q2?', 'current_attr': 'A2', 'game_over': False, 'ai_guess': None, 'probs': {}, 'asked_attrs': [], 'answer': 'yes'
+    }
+    mock_container_instance.vision_quest_service.select_secret.return_value = {'id': 1, 'title': 'Naruto', 'image': 'n.jpg'}
+    mock_container_instance.vision_quest_service.start_new_game.return_value = {'id': 1, 'title': 'Naruto', 'image': 'n.jpg'}
+    
     # Force import to ensure attributes exist
     import animetix.containers
     import animetix.services
@@ -151,6 +202,8 @@ def mock_animetix_service(mock_container):
     # Forward common methods to the container's mock if needed
     mock.load_data = mock_container.catalog_service.load_data
     mock.game_service = mock_container.game_service
+    mock.blind_test_service = mock_container.blind_test_service
+    mock.cover_test_service = mock_container.cover_test_service
     return mock
 
 @pytest.fixture(autouse=True)

@@ -1,0 +1,1069 @@
+openapi: 3.0.3
+info:
+  title: Animetix API
+  version: 1.0.0
+  description: Documentation des APIs REST d'Animetix (Media Discovery & AI Games)
+paths:
+  /api/achievements/:
+    get:
+      operationId: api_achievements_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAchievementList'
+          description: ''
+  /api/achievements/{id}/:
+    get:
+      operationId: api_achievements_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) achievement.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Achievement'
+          description: ''
+  /api/daily-challenges/:
+    get:
+      operationId: api_daily_challenges_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDailyChallengeList'
+          description: ''
+  /api/daily-challenges/{id}/:
+    get:
+      operationId: api_daily_challenges_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) daily challenge.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DailyChallenge'
+          description: ''
+  /api/fusions/:
+    get:
+      operationId: api_fusions_list
+      description: API endpoint pour visualiser, créer, liker et remixer des fusions
+        créatives.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCreativeFusionList'
+          description: ''
+    post:
+      operationId: api_fusions_create
+      description: API endpoint pour visualiser, créer, liker et remixer des fusions
+        créatives.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreativeFusion'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreativeFusion'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreativeFusion'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreativeFusion'
+          description: ''
+  /api/fusions/{id}/:
+    get:
+      operationId: api_fusions_retrieve
+      description: API endpoint pour visualiser, créer, liker et remixer des fusions
+        créatives.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) creative
+          fusion.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreativeFusion'
+          description: ''
+    put:
+      operationId: api_fusions_update
+      description: API endpoint pour visualiser, créer, liker et remixer des fusions
+        créatives.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) creative
+          fusion.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreativeFusion'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreativeFusion'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreativeFusion'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreativeFusion'
+          description: ''
+    patch:
+      operationId: api_fusions_partial_update
+      description: API endpoint pour visualiser, créer, liker et remixer des fusions
+        créatives.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) creative
+          fusion.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCreativeFusion'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCreativeFusion'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCreativeFusion'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreativeFusion'
+          description: ''
+    delete:
+      operationId: api_fusions_destroy
+      description: API endpoint pour visualiser, créer, liker et remixer des fusions
+        créatives.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) creative
+          fusion.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/fusions/{id}/like/:
+    post:
+      operationId: api_fusions_like_create
+      description: API endpoint pour visualiser, créer, liker et remixer des fusions
+        créatives.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) creative
+          fusion.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreativeFusion'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreativeFusion'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreativeFusion'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreativeFusion'
+          description: ''
+  /api/fusions/{id}/remix/:
+    post:
+      operationId: api_fusions_remix_create
+      description: API endpoint pour visualiser, créer, liker et remixer des fusions
+        créatives.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) creative
+          fusion.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreativeFusion'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreativeFusion'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreativeFusion'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreativeFusion'
+          description: ''
+  /api/profiles/:
+    get:
+      operationId: api_profiles_list
+      description: API endpoint pour visualiser les profils utilisateurs.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProfileList'
+          description: ''
+  /api/profiles/{id}/:
+    get:
+      operationId: api_profiles_retrieve
+      description: API endpoint pour visualiser les profils utilisateurs.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) profile.
+        required: true
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+          description: ''
+  /api/profiles/me/:
+    get:
+      operationId: api_profiles_me_retrieve
+      description: API endpoint pour visualiser les profils utilisateurs.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+          description: ''
+  /api/search/:
+    get:
+      operationId: api_search_retrieve
+      description: Recherche d'œuvres via SQL (Source of Truth) pour autocomplétion
+        performante.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/session/:
+    get:
+      operationId: api_session_retrieve
+      description: Endpoint pour gérer l'état du jeu via API.
+      tags:
+      - api
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /fr/api/v1/achievements/:
+    get:
+      operationId: fr_api_v1_achievements_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      tags:
+      - fr
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAchievementList'
+          description: ''
+  /fr/api/v1/config/:
+    get:
+      operationId: fr_api_v1_config_retrieve
+      tags:
+      - fr
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /fr/api/v1/custom-config/:
+    get:
+      operationId: fr_api_v1_custom_config_retrieve
+      tags:
+      - fr
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /fr/api/v1/daily-challenge/:
+    get:
+      operationId: fr_api_v1_daily_challenge_retrieve
+      tags:
+      - fr
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /fr/api/v1/fusions/:
+    get:
+      operationId: fr_api_v1_fusions_list
+      description: API endpoint pour visualiser, créer, liker et remixer des fusions
+        créatives.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      tags:
+      - fr
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCreativeFusionList'
+          description: ''
+    post:
+      operationId: fr_api_v1_fusions_create
+      description: API endpoint pour visualiser, créer, liker et remixer des fusions
+        créatives.
+      tags:
+      - fr
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreativeFusion'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreativeFusion'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreativeFusion'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreativeFusion'
+          description: ''
+  /fr/api/v1/game/akinetix/state/:
+    get:
+      operationId: fr_api_v1_game_akinetix_state_retrieve
+      tags:
+      - fr
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /fr/api/v1/game/blindtest/state/:
+    get:
+      operationId: fr_api_v1_game_blindtest_state_retrieve
+      tags:
+      - fr
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /fr/api/v1/game/classic/state/:
+    get:
+      operationId: fr_api_v1_game_classic_state_retrieve
+      tags:
+      - fr
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /fr/api/v1/game/covertest/state/:
+    get:
+      operationId: fr_api_v1_game_covertest_state_retrieve
+      tags:
+      - fr
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /fr/api/v1/game/emoji/state/:
+    get:
+      operationId: fr_api_v1_game_emoji_state_retrieve
+      tags:
+      - fr
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /fr/api/v1/game/paradox/state/:
+    get:
+      operationId: fr_api_v1_game_paradox_state_retrieve
+      tags:
+      - fr
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /fr/api/v1/game/vision/state/:
+    get:
+      operationId: fr_api_v1_game_vision_state_retrieve
+      tags:
+      - fr
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /fr/api/v1/latent-space/:
+    get:
+      operationId: fr_api_v1_latent_space_retrieve
+      tags:
+      - fr
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /fr/api/v1/leaderboard/:
+    get:
+      operationId: fr_api_v1_leaderboard_retrieve
+      tags:
+      - fr
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /fr/api/v1/profile/{username}/:
+    get:
+      operationId: fr_api_v1_profile_retrieve
+      parameters:
+      - in: path
+        name: username
+        schema:
+          type: string
+        required: true
+      tags:
+      - fr
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /fr/api/v1/social/collection/:
+    get:
+      operationId: fr_api_v1_social_collection_retrieve
+      tags:
+      - fr
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: No response body
+  /fr/api/v1/social/notifications/:
+    get:
+      operationId: fr_api_v1_social_notifications_retrieve
+      tags:
+      - fr
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: No response body
+  /fr/api/v1/spatial-lab/:
+    post:
+      operationId: fr_api_v1_spatial_lab_create
+      tags:
+      - fr
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /fr/api/v1/transparency/:
+    get:
+      operationId: fr_api_v1_transparency_retrieve
+      tags:
+      - fr
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+components:
+  schemas:
+    Achievement:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        code:
+          type: string
+          maxLength: 50
+        name:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+        icon:
+          type: string
+          maxLength: 50
+        xp_reward:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        rarity:
+          type: string
+          maxLength: 20
+      required:
+      - code
+      - description
+      - icon
+      - id
+      - name
+    CreativeFusion:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        creator_name:
+          type: string
+          title: Nom d’utilisateur
+          description: Requis. 150 caractères maximum. Uniquement des lettres, nombres
+            et les caractères « @ », « . », « + », « - » et « _ ».
+          readOnly: true
+        likes_count:
+          type: integer
+          readOnly: true
+        is_remix:
+          type: string
+          readOnly: true
+        title_a:
+          type: string
+          maxLength: 255
+        title_b:
+          type: string
+          maxLength: 255
+        media_type_a:
+          type: string
+          maxLength: 50
+        media_type_b:
+          type: string
+          maxLength: 50
+        scenario_text:
+          type: string
+        image_url:
+          type: string
+          format: uri
+          nullable: true
+          maxLength: 500
+        chaos_level:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        universe_balance:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        art_style:
+          type: string
+          maxLength: 100
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        creator:
+          type: integer
+          nullable: true
+        parent:
+          type: integer
+          nullable: true
+        likes:
+          type: array
+          items:
+            type: integer
+      required:
+      - created_at
+      - creator_name
+      - id
+      - is_remix
+      - likes_count
+      - media_type_a
+      - media_type_b
+      - scenario_text
+      - title_a
+      - title_b
+    DailyChallenge:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        date:
+          type: string
+          format: date
+        media_type:
+          type: string
+          maxLength: 20
+        game_mode:
+          type: string
+          maxLength: 20
+        secret_title:
+          type: string
+          maxLength: 255
+      required:
+      - date
+      - id
+      - media_type
+      - secret_title
+    PaginatedAchievementList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Achievement'
+    PaginatedCreativeFusionList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreativeFusion'
+    PaginatedDailyChallengeList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DailyChallenge'
+    PaginatedProfileList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Profile'
+    PatchedCreativeFusion:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        creator_name:
+          type: string
+          title: Nom d’utilisateur
+          description: Requis. 150 caractères maximum. Uniquement des lettres, nombres
+            et les caractères « @ », « . », « + », « - » et « _ ».
+          readOnly: true
+        likes_count:
+          type: integer
+          readOnly: true
+        is_remix:
+          type: string
+          readOnly: true
+        title_a:
+          type: string
+          maxLength: 255
+        title_b:
+          type: string
+          maxLength: 255
+        media_type_a:
+          type: string
+          maxLength: 50
+        media_type_b:
+          type: string
+          maxLength: 50
+        scenario_text:
+          type: string
+        image_url:
+          type: string
+          format: uri
+          nullable: true
+          maxLength: 500
+        chaos_level:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        universe_balance:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        art_style:
+          type: string
+          maxLength: 100
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        creator:
+          type: integer
+          nullable: true
+        parent:
+          type: integer
+          nullable: true
+        likes:
+          type: array
+          items:
+            type: integer
+    Profile:
+      type: object
+      properties:
+        user:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
+        xp:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        current_streak:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        max_streak:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        total_wins:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        total_games:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        ranked_points:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        ranked_max_points:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        rank:
+          type: string
+          readOnly: true
+      required:
+      - rank
+      - user
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          title: Nom d’utilisateur
+          description: Requis. 150 caractères maximum. Uniquement des lettres, nombres
+            et les caractères « @ », « . », « + », « - » et « _ ».
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          title: Adresse électronique
+          maxLength: 254
+      required:
+      - id
+      - username
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid

@@ -5,9 +5,26 @@ import torch
 import sys
 from unittest.mock import MagicMock, patch
 
-# COMPLETELY Mock modules before any test execution
-mock_moshi_model = MagicMock()
-mock_audio = MagicMock()
+# Define mocks
+mock_moshi = MagicMock()
+mock_moshi_models = MagicMock()
+mock_pydub = MagicMock()
+mock_pydub_segment = MagicMock()
+
+# Setup the mock structure
+mock_pydub.AudioSegment = mock_pydub_segment
+# Moshi class should be accessible via moshi.models.Moshi
+mock_moshi_models.Moshi = MagicMock()
+
+# Inject mocks into sys.modules to handle local imports in TransformersAdapter
+@pytest.fixture(autouse=True)
+def mock_dependencies():
+    with patch.dict('sys.modules', {
+        'moshi': mock_moshi,
+        'moshi.models': mock_moshi_models,
+        'pydub': mock_pydub
+    }):
+        yield
 
 from src.adapters.inference.transformers_adapter import TransformersAdapter
 from core.domain.exceptions import InferenceError
@@ -20,17 +37,17 @@ class TestS2SInference:
             del adp._moshi_model
         return adp
 
-    @patch('moshi.models.Moshi.from_pretrained')
-    @patch('pydub.AudioSegment.from_file')
     @patch('torch.cuda.is_available', return_value=False)
     @patch('torch.from_numpy')
-    def test_speech_to_speech_success(self, mock_from_numpy, mock_cuda, mock_from_file, mock_moshi_fp, adapter):
+    def test_speech_to_speech_success(self, mock_from_numpy, mock_cuda, adapter):
         # Setup Moshi mock
-        mock_moshi_fp.return_value = mock_moshi_model
+        mock_moshi_model = MagicMock()
+        mock_moshi_models.Moshi.from_pretrained.return_value = mock_moshi_model
         mock_moshi_model.device = "cpu"
 
         # Setup AudioSegment mock
-        mock_from_file.return_value = mock_audio
+        mock_audio = MagicMock()
+        mock_pydub_segment.from_file.return_value = mock_audio
         mock_audio.set_frame_rate.return_value = mock_audio
         mock_audio.set_channels.return_value = mock_audio
         mock_audio.sample_width = 2
@@ -65,24 +82,28 @@ class TestS2SInference:
         with pytest.raises(InferenceError, match="Moshi engine loading failed"):
             adapter.speech_to_speech(b"some audio")
 
-    @patch('pydub.AudioSegment.from_file')
-    @patch('torch.cuda.is_available', return_value=False)
-    def test_speech_to_speech_general_failure(self, mock_cuda, mock_from_file, adapter):
+    def test_speech_to_speech_general_failure(self, adapter):
+        # Manually set a mock model to skip loading
         adapter._moshi_model = MagicMock()
-        mock_from_file.side_effect = Exception("Pydub crash")
+        # Make pydub fail
+        mock_pydub_segment.from_file.side_effect = Exception("Pydub crash")
+        
         with pytest.raises(InferenceError, match="Native S2S failed"):
             adapter.speech_to_speech(b"some audio")
+        
+        # Reset side effect
+        mock_pydub_segment.from_file.side_effect = None
 
-    @patch('moshi.models.Moshi.from_pretrained')
-    @patch('pydub.AudioSegment.from_file')
     @patch('torch.cuda.is_available', return_value=False)
     @patch('torch.from_numpy')
-    def test_speech_to_speech_resampling_normalization(self, mock_from_numpy, mock_cuda, mock_from_file, mock_moshi_fp, adapter):
+    def test_speech_to_speech_resampling_normalization(self, mock_from_numpy, mock_cuda, adapter):
         # Setup Moshi mock
-        mock_moshi_fp.return_value = mock_moshi_model
+        mock_moshi_model = MagicMock()
+        mock_moshi_models.Moshi.from_pretrained.return_value = mock_moshi_model
         mock_moshi_model.device = "cpu"
 
-        mock_from_file.return_value = mock_audio
+        mock_audio = MagicMock()
+        mock_pydub_segment.from_file.return_value = mock_audio
         mock_audio.set_frame_rate.return_value = mock_audio
         mock_audio.set_channels.return_value = mock_audio
         mock_audio.sample_width = 2
@@ -108,7 +129,8 @@ class TestS2SInference:
         assert np.allclose(captured_samples, np.array([0.5], dtype=np.float32))
 
     def test_speech_to_speech_import_error(self, adapter):
-        with patch.dict('sys.modules', {'moshi': None, 'moshi.models': None, 'pydub': None}):
-            # This test might fail if pydub was already loaded, but it's a separate test
-            with pytest.raises(InferenceError):
+        # We need to simulate a failure to import by shadowing the mocked sys.modules
+        # but the adapter does 'from moshi.models import Moshi' which will see None and raise ImportError
+        with patch.dict('sys.modules', {'moshi.models': None}):
+            with pytest.raises(InferenceError, match="Library 'moshi' or dependencies missing"):
                 adapter.speech_to_speech(b"audio")

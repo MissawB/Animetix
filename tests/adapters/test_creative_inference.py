@@ -44,12 +44,12 @@ def test_inference_error_on_failure(adapter):
 
 def test_generate_3d_scene_logic(adapter):
     """Vérifie la logique de projection RGB-D en PLY."""
-    img = Image.new('RGB', (2, 2), color='red')
+    img = Image.new('RGB', (2, 2))
     img_byte_arr = io.BytesIO()
     img.save(img_byte_arr, format='PNG')
     dummy_rgb = img_byte_arr.getvalue()
     
-    depth = Image.new('L', (2, 2), color=128)
+    depth = Image.new('L', (2, 2), color=255)
     depth_byte_arr = io.BytesIO()
     depth.save(depth_byte_arr, format='PNG')
     dummy_depth = depth_byte_arr.getvalue()

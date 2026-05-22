@@ -53,9 +53,9 @@ def broadcast_boss_phase(sender, instance, created, **kwargs):
 def sync_media_on_save(sender, instance, created, **kwargs):
     """
     Signal pour synchroniser automatiquement ChromaDB et Neo4j 
-    lorsqu'un MediaItem est créé ou modifié.
+    lorsqu'un MediaItem est créé ou modifié (Asynchrone via Celery).
     """
-    animetix_service = AnimetixService()
+    from .tasks import sync_media_item_task
     
     # Préparation des données pour le domaine
     data = {
@@ -72,8 +72,8 @@ def sync_media_on_save(sender, instance, created, **kwargs):
         'metadata': instance.metadata
     }
     
-    # Délégation au service de synchronisation du domaine
-    animetix_service.sync_service.handle_media_update(
+    # Lancement de la tâche asynchrone
+    sync_media_item_task.delay(
         media_type=instance.media_type,
         item_id=instance.external_id,
         data=data

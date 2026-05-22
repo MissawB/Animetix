@@ -403,7 +403,9 @@ class AgenticRAGService:
         
         # --- MESURE D'INCERTITUDE ---
         if not ctx.knowledge_acquired:
-            confidence = self.uncertainty_service.measure_confidence(ctx.query, ctx.full_answer)
+            res = self.uncertainty_service.measure_confidence(ctx.query, ctx.full_answer)
+            # Support both dict (new) and float (legacy/mock)
+            confidence = res.get("confidence_score", 1.0) if isinstance(res, dict) else float(res)
             if confidence < 0.6:
                 yield StreamStep(type="thought", content=f"[Uncertainty] Basse confiance détectée ({confidence:.2f}). Déclenchement du Librarian...").model_dump()
                 ctx.knowledge_acquired = True
@@ -433,7 +435,7 @@ class AgenticRAGService:
         action = outcome.consensus_action
         
         # Best-effort : Si on a déjà trop d'itérations, on force l'approbation
-        if ctx.iteration >= 3 and action == JudgeAction.REWRITE:
+        if ctx.iteration >= 10 and action == JudgeAction.REWRITE:
             yield StreamStep(type="thought", content="[Swarm] Seuil de correction atteint. Livraison de la meilleure réponse actuelle.").model_dump()
             ctx.current_state = RAGState.FINALIZE
             return

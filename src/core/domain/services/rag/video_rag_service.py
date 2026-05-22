@@ -1,49 +1,96 @@
 import logging
-from typing import List, Dict, Any
+import base64
+from typing import List, Dict, Any, Optional
 from core.ports.inference_port import InferencePort
+from .agents.debate_manager import DebateManager
 
 logger = logging.getLogger("animetix.rag.video")
 
 class VideoRAGService:
     """
-    Service d'analyse temporelle longue (Video-RAG).
-    Implémente une stratégie de fenêtrage temporel pour traiter de longues scènes.
+    Orchestrateur Video-RAG Industriel.
+    Gère l'analyse distribuée de vidéos d'anime via Celery et VLM.
     """
-    def __init__(self, inference_engine: InferencePort):
+    def __init__(self, inference_engine: InferencePort, prompt_manager=None):
         self.inference_engine = inference_engine
-        self.window_size_seconds = 30 # Analyse par tranches de 30s
+        self.prompt_manager = prompt_manager
+        self.chunk_duration = 30 # Secondes par segment
 
-    def process_long_video(self, video_data: bytes) -> List[Dict[str, Any]]:
+    def start_distributed_analysis(self, video_data: bytes, query: Optional[str] = None) -> Any:
         """
-        Analyse une vidéo en profondeur via le RAG temporel.
-        Extrait un récit complet et localise les points d'intérêt.
+        Point d'entrée pour l'analyse asynchrone distribuée.
+        Découpe la vidéo et lance un groupe de tâches Celery.
         """
-        logger.info("🎬 Video-RAG: Starting deep temporal analysis...")
+        logger.info("🎬 Video-RAG: Initializing distributed analysis workflow...")
         
-        # 1. Extraction du récit temporel global (via VLM)
-        temporal_narrative = self.inference_engine.get_video_temporal_embeddings(video_data)
+        # 1. Découpage logique (Simulé ici, en prod utiliserait un wrapper FFmpeg)
+        # On divise les octets pour la démo, mais on prépare la structure
+        chunks = self._segment_video(video_data)
         
-        # 2. Localisation d'actions prédéfinies (Lore, combats, etc.)
-        common_queries = ["combat", "dialogue important", "transformation"]
-        localized_actions = self.inference_engine.localize_video_actions(video_data, common_queries)
+        from backend.animetix.tasks import process_video_chunk_task, aggregate_video_results_task
+        from celery import group, chain
+
+        # 2. Création du groupe de tâches (Map)
+        task_group = group(
+            process_video_chunk_task.s(
+                base64.b64encode(chunk).decode('utf-8'), 
+                i, 
+                len(chunks), 
+                query
+            ) for i, chunk in enumerate(chunks)
+        )
+
+        # 3. Chaînage vers l'agrégation (Reduce)
+        workflow = chain(task_group, aggregate_video_results_task.s(original_query=query))
         
+        # 4. Lancement
+        result = workflow.apply_async()
+        return {"task_id": result.id, "status": "started", "chunks": len(chunks)}
+
+    def process_segment(self, segment_data: bytes) -> Dict[str, Any]:
+        """Analyse un segment individuel (Exécuté par un worker Celery)."""
+        # Extraction du récit pour ce segment
+        narrative = self.inference_engine.get_video_temporal_embeddings(segment_data)
         return {
-            "narrative": temporal_narrative,
-            "actions": localized_actions
+            "narrative": narrative,
+            "has_action": "combat" in str(narrative).lower()
         }
 
-    def find_precise_moment(self, video_data: bytes, query: str) -> List[Dict[str, Any]]:
-        """Localise précisément un moment spécifique demandé par l'utilisateur."""
-        logger.info(f"🔍 Video-RAG: Searching for precise moment: '{query}'")
-        return self.inference_engine.localize_video_actions(video_data, [query])
-
-    def _segment_video(self, video_data: bytes) -> List[bytes]:
-        """Découpage physique du flux binaire en segments."""
-        # Simulation : en prod, utiliser ffmpeg pour découper proprement
-        return [video_data[:len(video_data)//2], video_data[len(video_data)//2:]]
+    def find_precise_moment(self, video_data: bytes, query: str) -> Dict[str, Any]:
+        """Recherche sémantique précise dans un clip."""
+        results = self.inference_engine.localize_video_actions(video_data, [query])
+        return results[0] if results else {"description": "Non trouvé"}
 
     def query_long_video(self, analysis_results: List[Dict[str, Any]], query: str) -> str:
-        """Répond à une question complexe sur toute la durée de la vidéo."""
-        # Logique de synthèse via LLM sur les segments agrégés
-        context = "\n".join([str(s['data']) for s in analysis_results])
-        return f"Synthèse basée sur l'analyse de {len(analysis_results)} segments pour : {query}"
+        """
+        Réduction : Synthétise les résultats de tous les segments via le LLM.
+        """
+        # Construction du contexte chronologique
+        timeline_context = ""
+        for res in analysis_results:
+            idx = res['index']
+            data = res['data']
+            ts = res['timestamp_start']
+            timeline_context += f"[{ts}s - {ts+30}s] : {data.get('narrative') or data.get('description')}\n"
+
+        # Appel au LLM pour la synthèse finale
+        if self.prompt_manager:
+            prompt, system = self.prompt_manager.get_prompt(
+                "video_rag_synthesis",
+                query=query,
+                context=timeline_context
+            )
+            return self.inference_engine.generate(prompt, system_prompt=system)
+        
+        return f"Synthèse simplifiée pour '{query}' basée sur {len(analysis_results)} segments."
+
+    def _segment_video(self, video_data: bytes) -> List[bytes]:
+        """Découpage physique du flux. (En prod: FFmpeg)"""
+        # Pour le prototype industriel, on divise en 4 pour montrer le parallélisme
+        size = len(video_data)
+        return [
+            video_data[0 : size//4],
+            video_data[size//4 : size//2],
+            video_data[size//2 : 3*size//4],
+            video_data[3*size//4 : ]
+        ]

@@ -1,0 +1,294 @@
+import os
+import json
+import datetime
+from django.conf import settings
+from rest_framework import viewsets, permissions, status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from ..models import DailyChallenge
+from ..serializers import DailyChallengeSerializer
+from ..containers import get_container
+
+class DailyChallengeViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = DailyChallenge.objects.all()
+    serializer_class = DailyChallengeSerializer
+    permission_classes = [permissions.AllowAny]
+
+class LatentSpaceDataView(APIView):
+    """Sert les données de projection 3D depuis les artifacts JSON."""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        media = request.query_params.get('media', 'anime').lower()
+        type_param = request.query_params.get('type', 'thematic').lower()
+        
+        mapping = {
+            ('anime', 'thematic'): 'latent_space_anime_thematic.json',
+            ('anime', 'visual'): 'latent_space_anime_visual_vibe.json',
+            ('anime', 'scenario'): 'latent_space_anime_plot.json',
+            ('manga', 'thematic'): 'latent_space_manga_thematic.json',
+            ('manga', 'visual'): 'latent_space_manga_visual_vibe.json',
+            ('manga', 'scenario'): 'latent_space_manga_plot.json',
+            ('character', 'thematic'): 'latent_space_character_vibe.json',
+            ('character', 'visual'): 'latent_space_character_visual_vibe.json',
+        }
+        
+        filename = mapping.get((media, type_param), 'latent_space_3d.json')
+        project_root = settings.BASE_DIR.parent.parent
+        file_path = project_root / "data" / "artifacts" / filename
+        
+        if not os.path.exists(file_path):
+            file_path = project_root / "data" / "artifacts" / "latent_space_3d.json"
+            if not os.path.exists(file_path):
+                return Response([], status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            return Response(data)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class DailyChallengeDataView(APIView):
+    """Récupère les informations du défi quotidien actuel."""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        today = datetime.date.today()
+        # On tente de récupérer le challenge en DB ou on le crée
+        challenge, created = DailyChallenge.objects.get_or_create(
+            date=today,
+            defaults={
+                'title': f"Défi du {today}",
+                'media_type': 'Anime',
+                'difficulty': 'Normal',
+                'description': "Le défi quotidien d'Animetix."
+            }
+        )
+        
+        return Response({
+            'id': challenge.id,
+            'date': challenge.date,
+            'media_type': challenge.media_type,
+            'difficulty': challenge.difficulty,
+            'is_completed': False, # À lier aux résultats de l'utilisateur
+            'reward_xp': 500
+        })
+
+class CustomConfigDataView(APIView):
+    """Sert la configuration personnalisée enregistrée."""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        if request.user.is_authenticated:
+            config = getattr(request.user.profile, 'custom_config', {})
+            return Response(config)
+        return Response({})
+
+class TransparencyDataView(APIView):
+    """Données sur l'intégrité de l'IA et du Knowledge Graph (Public/Admin)."""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        container = get_container()
+        # 1. Santé globale de l'inférence
+        stats = container.health_dashboard_service.get_global_health()
+        
+        # 2. Audit du Knowledge Graph
+        try:
+            graph_health = container.graph_healer_service.audit_graph_quality()
+            stats['knowledge_graph'] = graph_health
+        except Exception:
+            stats['knowledge_graph'] = {"status": "unavailable"}
+
+        # 3. Détection de dérive des embeddings
+        try:
+            drift_report = container.drift_service.get_drift_report()
+            stats['embedding_drift'] = drift_report
+        except Exception:
+            stats['embedding_drift'] = {"status": "unavailable"}
+            
+        return Response(stats)
+
+    def post(self, request):
+        """Déclenche manuellement un cycle de nettoyage/guérison du graphe ou recalibrage drift."""
+        if not request.user.is_staff:
+            return Response({"error": "Admin only"}, status=403)
+            
+        action = request.data.get('action')
+        container = get_container()
+        try:
+            if action == 'graph_cleanup':
+                container.graph_healer_service.check_and_fix_broken_relations()
+                return Response({"status": "success", "message": "Graph cleanup cycle triggered."})
+            elif action == 'drift_baseline':
+                coll = request.data.get('collection', 'anime')
+                container.drift_service.generate_new_baseline(coll)
+                return Response({"status": "success", "message": f"New baseline generated for {coll}"})
+            return Response({"error": "Invalid action"}, status=400)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+class DPOCurationView(APIView):
+    """Interface de curation pour le feedback utilisateur (DPO)."""
+    permission_classes = [permissions.IsAdminUser]
+
+    def get(self, request):
+        """Liste les feedbacks négatifs nécessitant une correction humaine."""
+        container = get_container()
+        rejected = container.dpo_service.get_rejected_for_curation()
+        return Response(rejected)
+
+    def post(self, request):
+        """Valide ou écrase une paire DPO avec une réponse 'Chosen' idéale."""
+        feedback_id = request.data.get('feedback_id')
+        chosen_text = request.data.get('chosen_text')
+        
+        from ...models import AIFeedback
+        try:
+            fb = AIFeedback.objects.get(id=feedback_id)
+            container = get_container()
+            
+            # Création de la paire DPO validée
+            entry = {
+                'context': fb.input_context,
+                'output': fb.output_text,
+                'is_positive': False
+            }
+            dpo_pair = container.dpo_service.create_dpo_pair(entry, chosen_override=chosen_text)
+            
+            # Sauvegarde dans le dataset de curation validé
+            project_root = settings.BASE_DIR.parent.parent
+            path = project_root / "data" / "mlops" / "datasets" / "dpo_validated_curation.jsonl"
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            
+            with open(path, 'a', encoding='utf-8') as f:
+                f.write(json.dumps(dpo_pair, ensure_ascii=False) + '\n')
+            
+            # Optionnel: supprimer le feedback de la liste de curation
+            fb.is_curated = True # Ajout supposé au modèle
+            fb.save()
+            
+            return Response({"status": "success", "message": "DPO pair validated and exported."})
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+class SpatialLabDataView(APIView):
+    """Génère une carte de profondeur pour une image donnée."""
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        import base64
+        import requests
+        image_url = request.data.get('image_url')
+        uploaded_file = request.FILES.get('image_file')
+        
+        if not image_url and not uploaded_file:
+            return Response({'error': 'No image provided'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            image_data = None
+            if uploaded_file:
+                image_data = uploaded_file.read()
+            else:
+                res = requests.get(image_url, timeout=10)
+                res.raise_for_status()
+                image_data = res.content
+            
+            depth_map_bytes = get_container().spatial_computing_service.inference_engine.estimate_depth(image_data)
+            
+            if not depth_map_bytes:
+                return Response({'error': 'Depth estimation failed'}, status=500)
+                
+            depth_b64 = base64.b64encode(depth_map_bytes).decode('utf-8')
+            return Response({
+                'status': 'success',
+                'depth_map': f"data:image/png;base64,{depth_b64}"
+            })
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
+
+class MangaLabDataView(APIView):
+    """Nettoyage et traduction de bulles de manga."""
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        import requests
+        image_url = request.data.get('image_url')
+        uploaded_file = request.FILES.get('image_file')
+        action = request.data.get('action', 'clean')
+        
+        try:
+            image_data = None
+            if uploaded_file:
+                image_data = uploaded_file.read()
+            else:
+                res = requests.get(image_url, timeout=10)
+                res.raise_for_status()
+                image_data = res.content
+            
+            vision_service = get_container().vision_service
+            if action == 'translate':
+                target_lang = request.data.get('language', 'Français')
+                result = vision_service.translate_manga_page(image_data, target_lang=target_lang)
+            else:
+                result = vision_service.inference_engine.process_manga_page(image_data)
+            
+            return Response({
+                'status': 'success',
+                'cleaned': result.get('cleaned_image'),
+                'translated': result.get('translated_image'),
+                'bubbles_found': len(result.get('bubbles', []))
+            })
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
+
+class AudioLabDataView(APIView):
+    """Clonage vocal XTTS."""
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        import base64
+        text = request.data.get('text', '').strip()
+        voice_source = request.data.get('source_type', 'upload')
+        
+        if not text:
+            return Response({'error': 'Texte manquant'}, status=400)
+        
+        try:
+            ref_audio_bytes = b""
+            if voice_source == 'library':
+                voice_id = request.data.get('voice_id')
+                project_root = settings.BASE_DIR.parent.parent
+                path = project_root / "data" / "audio" / "library" / f"{voice_id}.wav"
+                if os.path.exists(path):
+                    with open(path, "rb") as f: ref_audio_bytes = f.read()
+            else:
+                audio_file = request.FILES.get('audio_data')
+                if audio_file: ref_audio_bytes = audio_file.read()
+
+            if not ref_audio_bytes:
+                return Response({'error': 'Échantillon vocal manquant'}, status=400)
+
+            cloned_wav = get_container().voice_cloning_service.generate_character_voice(
+                text=text, 
+                character_audio_sample=ref_audio_bytes
+            )
+
+            if not cloned_wav:
+                return Response({'error': 'Échec de la génération'}, status=500)
+
+            from io import BytesIO
+            from pydub import AudioSegment
+            wav_io = BytesIO(cloned_wav)
+            audio = AudioSegment.from_wav(wav_io)
+            mp3_io = BytesIO()
+            audio.export(mp3_io, format="mp3", bitrate="128k")
+            
+            res_b64 = base64.b64encode(mp3_io.getvalue()).decode('utf-8')
+            return Response({
+                'status': 'success',
+                'audio_url': f"data:audio/mp3;base64,{res_b64}"
+            })
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)

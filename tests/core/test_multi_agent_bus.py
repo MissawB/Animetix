@@ -13,34 +13,38 @@ async def test_register_agent(bus):
     callback = MagicMock()
     bus.register_agent("agent1", callback)
     assert "agent1" in bus._subscribers
+    assert bus._subscribers["agent1"] == callback
+    await bus.close()
 
 @pytest.mark.asyncio
 async def test_publish_and_read_message(bus):
-    # On utilise AsyncMock car le bus supporte maintenant les callbacks async
     callback = AsyncMock()
-    bus.register_agent("target", callback)
+    bus.register_agent("agent2", callback)
     
-    payload = {"data": "hello"}
-    msg_id = await bus.publish_binary_message("sender", "target", "test_action", payload)
+    payload = {"key": "value"}
+    msg_id = await bus.publish_binary_message("agent1", "agent2", "test_action", payload)
     
-    # Callback should have been called with msg_id
+    assert msg_id in bus._shared_memory_store
     callback.assert_called_once_with(msg_id)
     
-    # Read message
-    read_payload = await bus.read_shared_memory(msg_id)
-    assert read_payload == payload
+    result = await bus.read_shared_memory(msg_id)
+    assert result == payload
+    await bus.close()
 
 @pytest.mark.asyncio
 async def test_cleanup(bus):
-    msg_id = await bus.publish_binary_message("s", "t", "a", {"d": 1})
+    payload = {"k": "v"}
+    msg_id = await bus.publish_binary_message("a1", "a2", "act", payload)
     assert msg_id in bus._shared_memory_store
     await bus.cleanup(msg_id)
     assert msg_id not in bus._shared_memory_store
+    await bus.close()
 
 @pytest.mark.asyncio
 async def test_read_non_existent(bus):
     result = await bus.read_shared_memory("invalid")
     assert result == {}
+    await bus.close()
 
 @pytest.mark.asyncio
 async def test_close(bus):

@@ -96,8 +96,8 @@ def run_vectorization():
 
                     try: neo4j_manager.sync_media_to_graph(item, "Manga")
                     except Exception as e:
-                    print(f"⚠️ Neo4j Sync Error for {m_id}: {e}")
-                    pass
+                        print(f"⚠️ Neo4j Sync Error for {m_id}: {e}")
+                        pass
 
             # Exécution des Inférences
             if batch_texts:

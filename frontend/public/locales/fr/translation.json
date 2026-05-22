@@ -1,0 +1,151 @@
+{
+  "common": {
+    "loading": "Chargement...",
+    "error": "Erreur critique",
+    "retry": "Réessayer",
+    "back": "Retour",
+    "yes": "OUI",
+    "no": "NON",
+    "search": "Rechercher",
+    "validate": "Valider",
+    "delete": "Supprimer",
+    "cancel": "Annuler"
+  },
+  "social": {
+    "dashboard": {
+      "title": "Espace Communauté",
+      "following_title": "Mes Abonnements",
+      "followers_title": "Mes Abonnés",
+      "unfollow": "Désabonner",
+      "no_following": "Vous ne suivez personne pour le moment.",
+      "no_followers": "Aucun abonné pour le moment."
+    },
+    "leaderboard": {
+      "title": "Hall of Fame",
+      "rank": "Rang",
+      "player": "Joueur",
+      "xp_level": "XP / Niveau",
+      "loading": "Chargement du classement..."
+    },
+    "profile": {
+      "level": "Niveau {{level}}",
+      "rank": "Rang : {{rank}}",
+      "xp": "XP Totale",
+      "achievements": "Succès",
+      "collection": "Collection",
+      "sync": "Synchronisation du profil...",
+      "back_dashboard": "Retour au dashboard"
+    }
+  },
+  "labs": {
+    "audio": {
+      "title": "Audio Lab",
+      "cloning": "Clonage Vocal IA",
+      "generate": "Générer l'audio",
+      "status": "Statut",
+      "processing": "Génération en cours..."
+    },
+    "manga": {
+      "title": "Manga Lab",
+      "render": "Rendu Manga IA",
+      "generate": "Générer la planche"
+    }
+  },
+  "games": {
+    "akinetix": {
+      "title": "Akinetix : Le Devin",
+      "history": "Historique de transmission",
+      "game_over": "Analyse terminée : C'est un(e) {{guess}} ?"
+    }
+  },
+  "home": {
+    "engine_badge": "Next-Gen Archetype Engine",
+    "welcome": "BIENVENUE SUR",
+    "description": "Explorez le nexus entre imagination et algorithme.",
+    "sub_description": "Fusions d'univers • RAG 2.0 • Challenges Quotidiens",
+    "enter_forge": "Entrer dans la Forge",
+    "play_classic": "Jouer au Classique",
+    "akinetix_expert": "Akinetix Expert (RL)",
+    "features": {
+      "cognition": {
+        "title": "Cognition Avancée",
+        "desc": "Algorithmes de RAG multi-sources pour une précision encyclopédique."
+      },
+      "synthesis": {
+        "title": "Synthèse Créative",
+        "desc": "Génération asynchrone de scénarios et d'images hybrides uniques."
+      },
+      "latent": {
+        "title": "Latent Space",
+        "desc": "Visualisation 3D interactive des vecteurs sémantiques du multivers."
+      }
+    }
+  },
+  "admin": {
+    "eval": {
+      "title": "CONTRÔLE QUALITÉ IA",
+      "stats": {
+        "faithfulness": "Fidélité",
+        "relevancy": "Pertinence",
+        "precision": "Précision"
+      },
+      "loading": "Chargement des données d'évaluation...",
+      "error": "Erreur de chargement."
+    },
+    "health": {
+      "title": "TABLEAU DE BORD SANTÉ",
+      "loading": "Chargement...",
+      "brain": "BRAIN API",
+      "cache": "REDIS CACHE",
+      "celery": "CELERY",
+      "db": "POSTGRES",
+      "status": {
+        "online": "En ligne",
+        "offline": "Hors ligne",
+        "connected": "Connecté",
+        "disconnected": "Déconnecté"
+      }
+    }
+  },
+  "utils": {
+    "daily": {
+      "title": "DÉFIS DU JOUR",
+      "subtitle": "Une seule cible, plusieurs façons de la débusquer.",
+      "loading": "PRÉPARATION DE LA SÉLECTION...",
+      "completed": "COMPLÉTÉ"
+    },
+    "config": {
+      "title": "CONFIGURATION PERSONNALISÉE",
+      "loading": "CHARGEMENT DE TES PRÉFÉRENCES...",
+      "sections": {
+        "difficulty": "Niveau de Défi",
+        "interface": "Interface",
+        "ai": "Personnalité de l'IA"
+      },
+      "themes": {
+        "light": "Clair",
+        "dark": "Sombre"
+      },
+      "ai_personalities": {
+        "helpful": "Serviable & Précis",
+        "chaotic": "Chaotique & Imprévisible",
+        "expert": "Expert & Technique"
+      },
+      "save": "SAUVEGARDER LES PARAMÈTRES",
+      "saving": "ENREGISTREMENT...",
+      "saved": "Paramètres enregistrés !"
+    }
+  },
+  "search": {
+    "placeholder": "Rechercher un anime, manga...",
+    "image_search_hint": "Recherche par image",
+    "searching": "Recherche en cours...",
+    "no_results": "Aucun résultat trouvé"
+  },
+  "navbar": {
+    "forge": "LA FORGE",
+    "latent": "LATENT SPACE",
+    "transparency": "TRANSPARENCE",
+    "lab": "BETA LAB"
+  }
+}

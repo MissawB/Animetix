@@ -104,7 +104,6 @@ class TestMultiAgentDebateIntegration:
             iter(["Third attempt "])
         ]
 
-        # Initialize Service
         service = AgenticRAGService(
             inference_engine=mock_inference,
             rag_service=mock_rag_service,
@@ -112,6 +111,8 @@ class TestMultiAgentDebateIntegration:
             prompt_manager=mock_prompt_manager,
             llm_service=mock_llm_service
         )
+        service.uncertainty_service = MagicMock()
+        service.uncertainty_service.measure_confidence.return_value = {"confidence_score": 1.0, "is_reliable": True}
         service.planner = planner_mock
         service.synthesizer = synthesizer_mock
 

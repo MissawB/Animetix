@@ -13,25 +13,30 @@ export default {
         brush: ['"Permanent Marker"', 'cursive'],
       },
       colors: {
-        'anime-accent': '#fdb913',
-        'anime-accent-dark': '#d97706',
+        'brand-primary': 'rgb(var(--color-primary) / <alpha-value>)',
+        'brand-secondary': 'rgb(var(--color-secondary) / <alpha-value>)',
+        'brand-success': 'rgb(var(--color-success) / <alpha-value>)',
+        'brand-danger': 'rgb(var(--color-danger) / <alpha-value>)',
+        'brand-warning': 'rgb(var(--color-warning) / <alpha-value>)',
+        'brand-accent': 'rgb(var(--color-accent) / <alpha-value>)',
+        'surface-bg': 'rgb(var(--color-bg) / <alpha-value>)',
+        'surface-text': 'rgb(var(--color-text) / <alpha-value>)',
+        'surface-card': 'rgb(var(--color-card) / <alpha-value>)',
         
-        // Light Mode
-        'anime-light-bg': '#f1f3f5',
-        'anime-light-text': '#1a1a2e',
-        'anime-light-card': '#ffffff',
-        
-        // Dark Mode
-        'anime-dark-bg': '#0f0f1a',
-        'anime-dark-text': '#f1f2f6',
-        'anime-dark-card': '#1a1a2e',
-        
-        // Core Game Colors (Retained from previous iteration)
-        'anime-purple': '#7c3aed',
-        'anime-pink': '#ec4899',
-        'anime-cyan': '#06b6d4',
-        'anime-success': '#10b981',
-        'anime-error': '#ef4444',
+        // Legacy compat (if needed)
+        'anime-accent': 'rgb(var(--color-accent) / <alpha-value>)',
+        'anime-success': 'rgb(var(--color-success) / <alpha-value>)',
+        'anime-error': 'rgb(var(--color-danger) / <alpha-value>)',
+      },
+      borderRadius: {
+        'token-card': 'var(--radius-card)',
+        'token-button': 'var(--radius-button)',
+      },
+      borderWidth: {
+        'token-card': 'var(--border-width-card)',
+      },
+      boxShadow: {
+        'token-card': 'var(--shadow-card)',
       },
       animation: {
         'fade-in': 'fadeIn 0.4s ease-out',

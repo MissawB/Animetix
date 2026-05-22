@@ -4,11 +4,14 @@ import hashlib
 from django.shortcuts import render, redirect
 from django.conf import settings
 from django.http import JsonResponse
-from .common import animetix_service, logger
+from ..containers import get_container
 from .classic import start_game
 from ..session_manager import GameSessionManager
 from ..presenters import ArchetypistPresenter
 from ..models import DailyChallenge, ChallengeResult
+import logging
+
+logger = logging.getLogger('animetix')
 
 def index(request):
     mode = GameSessionManager(request).get_current_mode()
@@ -29,10 +32,17 @@ def index(request):
 
 
 def start_daily_challenge(request):
+    container = get_container()
     manager = GameSessionManager(request)
-    media_type, today = manager.get_current_mode(), datetime.date.today()
-    daily, created = DailyChallenge.objects.get_or_create(date=today, defaults={'media_type': media_type, 'secret_title': '', 'game_mode': 'classic'})
-    data = animetix_service.load_data(media_type)
+    media_type = manager.get_current_mode()
+    today = datetime.date.today()
+    
+    daily, created = DailyChallenge.objects.get_or_create(
+        date=today, 
+        defaults={'media_type': media_type, 'secret_title': '', 'game_mode': 'classic'}
+    )
+    
+    data = container.catalog_service.load_data(media_type)
     if not data: return redirect('index')
     
     if created or not daily.secret_title:
@@ -46,7 +56,13 @@ def start_daily_challenge(request):
         daily.save()
         random.seed(None)
         
-    request.session.update({'is_daily': True, 'daily_id': daily.id, 'secret_title': daily.secret_title, 'media_type': media_type, 'game_over': False})
+    request.session.update({
+        'is_daily': True, 
+        'daily_id': daily.id, 
+        'secret_title': daily.secret_title, 
+        'media_type': media_type, 
+        'game_over': False
+    })
     
     mode_param = request.GET.get('mode')
     if mode_param:
@@ -78,9 +94,10 @@ def start_daily_challenge(request):
     return render(request, 'animetix/daily_selection.html', {'date': today, 'media_type': media_type, 'modes': modes_daily})
 
 def custom_config_view(request):
+    container = get_container()
     manager = GameSessionManager(request)
     media_type = manager.get_current_mode()
-    data = animetix_service.load_data(media_type)
+    data = container.catalog_service.load_data(media_type)
     all_genres, all_tags = set(), set()
     if data:
         for item in data['db']: 

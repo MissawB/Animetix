@@ -1,7 +1,7 @@
 import json
 import random
 from django.shortcuts import render, redirect
-from .common import animetix_service, handle_win_achievements
+from ..containers import get_container
 from ..presenters import ArchetypistPresenter, GamePresenter
 from ..session_manager import GameSessionManager
 from ..models import GameplaySession
@@ -9,9 +9,11 @@ from ..forms import GameGuessForm
 from ..services import DIFFICULTY_SETTINGS
 
 def start_game(request, override_secret=None):
+    container = get_container()
     session = GameSessionManager(request)
-    media_type, difficulty = session.get_current_mode(), session.get('difficulty', 'Normal')
-    data = animetix_service.load_data(media_type)
+    media_type = session.get_current_mode()
+    difficulty = session.get('difficulty', 'Normal')
+    data = container.catalog_service.load_data(media_type)
     if not data: return redirect('index')
     
     if override_secret: 
@@ -28,9 +30,9 @@ def start_game(request, override_secret=None):
                 'tags_white': session.get('custom_tags_white', []),
                 'tags_black': session.get('custom_tags_black', []),
             }
-            secret_title = animetix_service.game_service.select_secret_custom(media_type, config, data)
+            secret_title = container.game_service.select_secret_custom(media_type, config, data)
         else:
-            secret_title = animetix_service.game_service.select_secret(media_type, difficulty, DIFFICULTY_SETTINGS)
+            secret_title = container.game_service.select_secret(media_type, difficulty, DIFFICULTY_SETTINGS)
 
     if not secret_title: return redirect('index')
 
@@ -38,10 +40,11 @@ def start_game(request, override_secret=None):
     return redirect('game')
 
 def game_view(request):
+    container = get_container()
     session = GameSessionManager(request)
     state = session.get_classic_state()
     media_type, secret_title = state['media_type'], state['secret_title']
-    data = animetix_service.load_data(media_type)
+    data = container.catalog_service.load_data(media_type)
     if not data or not secret_title: return redirect('index')
     
     secret_data = data['title_to_full_data'].get(secret_title)
@@ -62,25 +65,37 @@ def game_view(request):
 
 
 def make_guess(request):
+    container = get_container()
     session = GameSessionManager(request)
     state = session.get_classic_state()
+    
     if request.method == 'POST' and not state['game_over']:
         form = GameGuessForm(request.POST)
         if form.is_valid():
-            guess_title, media_type = form.cleaned_data['guess'], state['media_type']
-            secret_title, max_sim = state['secret_title'], session.get('max_raw_sim', 1.0)
-            data = animetix_service.load_data(media_type)
+            guess_title = form.cleaned_data['guess']
+            media_type = state['media_type']
+            secret_title = state['secret_title']
+            max_sim = session.get('max_raw_sim', 1.0)
+            
+            data = container.catalog_service.load_data(media_type)
             if not data or guess_title not in data['title_to_index']: return redirect('game')
             
-            raw_sim = animetix_service.game_service.calculate_raw_similarity(media_type, secret_title, guess_title, data)
+            raw_sim = container.game_service.calculate_raw_similarity(media_type, secret_title, guess_title, data)
             secret_item = data['title_to_full_data'].get(secret_title)
-            is_correct = animetix_service.game_service.check_title_match(guess_title, secret_item)
+            is_correct = container.game_service.check_title_match(guess_title, secret_item)
             
             score = 100.0 if is_correct else round(min(0.99, (raw_sim / max_sim) * 0.99) * 100, 2)
             color = GamePresenter.get_score_color(score)
             
             g_data = data['title_to_full_data'].get(guess_title, {})
-            session.add_guess({"title": guess_title, "title_english": g_data.get('title_english'), "title_native": g_data.get('title_native'), "image": g_data.get('image'), "score": score, "color": color})
+            session.add_guess({
+                "title": guess_title, 
+                "title_english": g_data.get('title_english'), 
+                "title_native": g_data.get('title_native'), 
+                "image": g_data.get('image'), 
+                "score": score, 
+                "color": color
+            })
             
             if is_correct:
                 session.set_game_over(True)
@@ -89,9 +104,26 @@ def make_guess(request):
                     for i, item in enumerate(data['lookup']):
                         if (item.get('title') or item.get('name')) == secret_title:
                             item_rank = i + 1; break
-                    newly_unlocked = request.user.profile.add_win(is_daily=state['is_daily'], is_ranked=state['is_ranked'], item_rank=item_rank, game_mode='classic', media_type=media_type, attempts=len(state['guesses']) + 1)
-                    handle_win_achievements(request, newly_unlocked)
-                GameplaySession.objects.create(user=request.user if request.user.is_authenticated else None, game_mode='classic', media_type=media_type, target_item=secret_title, history=session.get('guesses'), was_won=True)
+                    try:
+                        newly_unlocked = request.user.profile.add_win(
+                            is_daily=state['is_daily'], 
+                            is_ranked=state['is_ranked'], 
+                            item_rank=item_rank, 
+                            game_mode='classic', 
+                            media_type=media_type, 
+                            attempts=len(session.get('guesses'))
+                        )
+                        session.handle_win_achievements(newly_unlocked)
+                    except Exception: pass
+                    
+                GameplaySession.objects.create(
+                    user=request.user if request.user.is_authenticated else None, 
+                    game_mode='classic', 
+                    media_type=media_type, 
+                    target_item=secret_title, 
+                    history=session.get('guesses'), 
+                    was_won=True
+                )
     return redirect('game')
 
 def start_ranked_mode(request):
@@ -100,10 +132,11 @@ def start_ranked_mode(request):
     return ranked_next_level(request)
 
 def ranked_next_level(request):
+    container = get_container()
     session = GameSessionManager(request)
     if not session.get('is_ranked'): return redirect('index')
     media_type = session.get_current_mode()
-    data = animetix_service.load_data(media_type)
+    data = container.catalog_service.load_data(media_type)
     points = request.user.profile.ranked_points if request.user.is_authenticated else 0
     rank_limit = min(2500, 100 + int(points / 2))
     valid_lookup = data.get('lookup', [])[:rank_limit]

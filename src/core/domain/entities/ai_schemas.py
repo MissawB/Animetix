@@ -143,19 +143,19 @@ class GraphExtraction(BaseModel):
 # --- VS BATTLE GAME SCHEMAS ---
 
 class CombatStats(BaseModel):
-    tier: str = Field(description="Attack Potency Tier (e.g., 2-C)")
+    tier: str = Field(default="Unknown", description="Attack Potency Tier (e.g., 2-C)")
     tier_value: int = Field(default=0, description="Normalized power scale (0-100)")
-    speed: str = Field(description="Combat and Reaction speed")
-    durability: str = Field(description="Durability and Stamina")
-    intelligence: str = Field(description="Combat IQ and Strategy")
+    speed: Optional[str] = Field(default="Unknown", description="Combat and Reaction speed")
+    durability: Optional[str] = Field(default="Unknown", description="Durability and Stamina")
+    intelligence: Optional[str] = Field(default="Unknown", description="Combat IQ and Strategy")
     abilities: List[str] = Field(default_factory=list, description="Hax and Special Powers")
 
 class CombatCharacter(BaseModel):
     name: str = Field(description="Name of the character.")
     image_url: Optional[str] = Field(default=None, description="URL of the character portrait")
-    wiki_url: str = Field(description="Source URL for character statistics (e.g. VS Battles Wiki).")
-    stats: CombatStats = Field(description="Structured combat statistics and abilities.")
-    summary: str = Field(description="Brief summary of the character's background and powers.")
+    wiki_url: Optional[str] = Field(default=None, description="Source URL for character statistics (e.g. VS Battles Wiki).")
+    stats: CombatStats = Field(default_factory=CombatStats, description="Structured combat statistics and abilities.")
+    summary: str = Field(default="No summary available.", description="Brief summary of the character's background and powers.")
 
 class DebateTurn(BaseModel):
     agent: str = Field(description="Role: 'Advocate_A', 'Advocate_B', or 'Judge'")

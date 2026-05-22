@@ -62,15 +62,10 @@ def test_process_video_for_combat_lore_e2e(mock_vlm_response, tmp_path):
     # Reset container cache to ensure mocks are used
     container._cache = {}
     
-    mock_adapter = MagicMock()
-    # Mock localize_video_actions to return the expected format
-    mock_adapter.localize_video_actions.return_value = [
-        {"query": "mocked_prompt", "answer": json.dumps(mock_vlm_response)}
-    ]
-    
-    # Inject mock into container cache
-    container._cache['qwen3_vl_adapter'] = mock_adapter
-    
+    mock_v_service = MagicMock()
+    mock_v_service.extract_combat_lore.return_value = mock_vlm_response["combats"]
+    container.video_quest_service = mock_v_service
+
     # 3. Mock Neo4j Manager and run test
     with patch("vision_quest_worker.neo4j_manager") as mock_neo4j:
         # 4. Run the worker logic

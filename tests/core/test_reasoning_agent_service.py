@@ -41,9 +41,12 @@ def test_solve_complex_query_no_action(reasoning_agent, mock_engine):
     ans = reasoning_agent.solve_complex_query("What is Anime?", "Anime")
     assert ans == "It is a show."
 
-def test_on_bus_message(reasoning_agent):
+@pytest.mark.asyncio
+async def test_on_bus_message(reasoning_agent):
     # Smoke test for callback
+    from unittest.mock import AsyncMock
     mock_bus = MagicMock()
+    mock_bus.read_shared_memory = AsyncMock()
     reasoning_agent.agent_bus = mock_bus
-    reasoning_agent._on_bus_message("msg1")
+    await reasoning_agent._on_bus_message("msg1")
     mock_bus.read_shared_memory.assert_called_once_with("msg1")

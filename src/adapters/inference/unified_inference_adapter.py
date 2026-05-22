@@ -71,7 +71,8 @@ class UnifiedInferenceAdapter(InferencePort):
         prompt: str,
         system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.",
         thinking_budget: int = 0,
-        thinking_mode: bool = False
+        thinking_mode: bool = False,
+        json_mode: bool = False
     ) -> str:
         payload = {
             "model": self.model_name,
@@ -79,8 +80,12 @@ class UnifiedInferenceAdapter(InferencePort):
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": prompt}
             ],
-            "temperature": 0.7
+            "temperature": 0.2 if json_mode else 0.7
         }
+
+        if json_mode:
+            # Standard OpenAI/vLLM/Ollama way to request JSON
+            payload["response_format"] = {"type": "json_object"}
 
         # Handle deep reasoning parameters if requested
         if thinking_mode or thinking_budget > 0:
@@ -100,6 +105,12 @@ class UnifiedInferenceAdapter(InferencePort):
                     logger.warning("Target LLM server rejected thinking parameters, retrying without them.")
                     del payload["extra_body"]
                     res = requests.post(url, json=payload, headers=self._get_headers(), timeout=self.timeout)
+                
+                # Retry without json_mode if 400 (some old Ollama versions might not like response_format)
+                if res.status_code == 400 and json_mode:
+                    logger.warning("Target LLM server rejected JSON mode, retrying with raw text.")
+                    del payload["response_format"]
+                    res = requests.post(url, json=payload, headers=self._get_headers(), timeout=self.timeout)
 
                 res.raise_for_status()
                 data = res.json()
@@ -114,6 +125,38 @@ class UnifiedInferenceAdapter(InferencePort):
                 break
 
         return f"Erreur: Le service d'inférence ({self.model_name}) est indisponible. Erreur: {last_error}"
+
+    def generate_structured(self, prompt: str, response_model: Any, system_prompt: str = "", max_retries: int = 3) -> Any:
+        """
+        Implementation of structured generation for UnifiedInferenceAdapter.
+        Uses JSON mode and manual Pydantic validation.
+        """
+        try:
+            # We use the existing generate with json_mode=True
+            raw_json = self.generate(prompt, system_prompt=system_prompt, json_mode=True)
+            
+            # Robust extraction in case the model added markdown blocks despite JSON mode
+            import json
+            import re
+            
+            clean_json = raw_json.strip()
+            if "```" in clean_json:
+                match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", clean_json, re.DOTALL | re.IGNORECASE)
+                if match:
+                    clean_json = match.group(1)
+                else:
+                    # Try to find first { and last }
+                    start = clean_json.find('{')
+                    end = clean_json.rfind('}')
+                    if start != -1 and end != -1:
+                        clean_json = clean_json[start:end+1]
+
+            data = json.loads(clean_json)
+            return response_model.model_validate(data)
+        except Exception as e:
+            logger.error(f"Failed structured generation in UnifiedInferenceAdapter: {e}")
+            raise
+
 
     def stream_generate(
         self,

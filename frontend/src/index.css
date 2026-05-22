@@ -4,26 +4,73 @@
 @tailwind utilities;
 
 :root {
-    /* Theme Variables */
-    --page-bg: #f1f3f5;
-    --page-text: #1a1a2e;
-    --accent-color: #fdb913;
-    --accent-dark: #d97706;
-    --card-bg: #ffffff;
-    --card-shadow: rgba(0,0,0,0.05);
-    --sidebar-bg: #ffffff;
-    --nav-gradient: linear-gradient(to right, var(--accent-color), var(--accent-dark));
-    --hero-gradient: linear-gradient(105deg, #fff9e6 40%, #fffcf0 40.1%);
+    /* Design Tokens - Colors */
+    --color-primary: 37, 99, 235;    /* #2563eb - Blue 600 */
+    --color-primary-hover: 29, 78, 216;
+    --color-secondary: 107, 114, 128;
+    --color-success: 34, 197, 94;
+    --color-danger: 239, 68, 68;
+    --color-warning: 234, 179, 8;
+    --color-accent: 253, 185, 19;   /* #fdb913 */
+    
+    /* Surface Tokens */
+    --color-bg: 241, 243, 245;
+    --color-text: 26, 26, 46;
+    --color-card: 255, 255, 255;
+    --color-card-border: 0, 0, 0;
+    --opacity-card-border: 0.05;
+    
+    /* Layout Tokens */
+    --radius-card: 3rem;
+    --radius-button: 1rem;
+    --border-width-card: 1px;
+    
+    /* Shadows */
+    --shadow-card: 0 10px 50px -12px rgba(0, 0, 0, 0.25);
+    
+    /* Animation */
+    --transition-speed: 0.3s;
 }
 
-.dark {
-    --page-bg: #0f0f1a;
-    --page-text: #f1f2f6;
-    --card-bg: #1a1a2e;
-    --card-shadow: rgba(0,0,0,0.3);
-    --sidebar-bg: #1a1a2e;
-    --hero-gradient: linear-gradient(105deg, #0f0f1a 40%, #1a1a2e 40.1%);
+[data-bs-theme="dark"], .dark {
+    --color-bg: 15, 15, 26;
+    --color-text: 241, 242, 246;
+    --color-card: 26, 26, 46;
+    --color-card-border: 255, 255, 255;
+    --opacity-card-border: 0.05;
+    --shadow-card: 0 10px 50px -12px rgba(0, 0, 0, 0.5);
 }
+
+/* Theme Presets */
+.theme-naruto {
+    --color-primary: 249, 115, 22;   /* Orange */
+    --color-accent: 0, 0, 0;         /* Black */
+    --radius-card: 1rem;             /* Shaper look */
+    --border-width-card: 3px;
+    --opacity-card-border: 1;
+}
+
+.theme-manga-classic {
+    --color-primary: 0, 0, 0;
+    --color-secondary: 0, 0, 0;
+    --color-bg: 255, 255, 255;
+    --color-card: 255, 255, 255;
+    --color-text: 0, 0, 0;
+    --color-card-border: 0, 0, 0;
+    --opacity-card-border: 1;
+    --border-width-card: 4px;
+    --radius-card: 0px;
+    --shadow-card: 10px 10px 0px 0px rgba(0,0,0,1);
+}
+
+@layer base {
+  body {
+    background-color: rgb(var(--color-bg));
+    color: rgb(var(--color-text));
+    transition: background-color var(--transition-speed), color var(--transition-speed);
+  }
+}
+
 
 /* SKELETON LOADERS */
 .skeleton {
