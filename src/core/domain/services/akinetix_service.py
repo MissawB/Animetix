@@ -1,6 +1,7 @@
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Optional, Tuple, Any
 from .akinetix_classical_service import ClassicalAkinetixService
 from .catalog_service import CatalogService
+from core.ports.game_state_port import GameStatePort
 
 class AkinetixDomainService:
     """
@@ -72,3 +73,42 @@ class AkinetixDomainService:
             })
             
         return new_state
+
+    def get_state(self, port: GameStatePort) -> dict[str, Any]:
+        """Loads Akinetix-specific state from the port."""
+        return {
+            'history': port.get('akinetix_history', []),
+            'current_q': port.get('akinetix_current_q'),
+            'current_attr': port.get('akinetix_current_attr'),
+            'game_over': port.get('akinetix_game_over', False),
+            'ai_guess': port.get('akinetix_ai_guess'),
+            'probs': port.get('akinetix_probs'),
+            'asked_attrs': port.get('akinetix_asked_attrs'),
+            'is_daily': port.get('is_daily', False)
+        }
+
+    def save_state(self, port: GameStatePort, state: dict[str, Any]) -> None:
+        """Saves Akinetix-specific state back to the port."""
+        port.update({
+            'akinetix_history': state.get('history'),
+            'akinetix_current_q': state.get('current_q'),
+            'akinetix_current_attr': state.get('current_attr'),
+            'akinetix_game_over': state.get('game_over', False),
+            'akinetix_ai_guess': state.get('ai_guess'),
+            'akinetix_probs': state.get('probs'),
+            'akinetix_asked_attrs': state.get('asked_attrs'),
+            'is_daily': state.get('is_daily', False)
+        })
+    
+    def reset_state(self, port: GameStatePort) -> None:
+        """Clears Akinetix state in the port."""
+        port.update({
+            'akinetix_history': [],
+            'akinetix_current_q': None,
+            'akinetix_current_attr': None,
+            'akinetix_game_over': False,
+            'akinetix_ai_guess': None,
+            'akinetix_probs': None,
+            'akinetix_asked_attrs': None,
+            'is_daily': False
+        })
