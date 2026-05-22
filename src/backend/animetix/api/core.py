@@ -137,3 +137,17 @@ class ConfigView(APIView):
         }
         return Response(data)
 
+
+class CurrentUserView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        if request.user.is_authenticated:
+            return Response({
+                "id": request.user.id,
+                "username": request.user.username,
+                "email": request.user.email
+            })
+        return Response({"detail": "Not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+
+

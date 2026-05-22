@@ -99,3 +99,8 @@ export async function getFusionStatus(taskId: string, fusionId: number): Promise
   return apiClient(`/api/v1/archetypist/status/?task_id=${taskId}&fusion_id=${fusionId}`);
 }
 
+export async function getAuthUser(): Promise<any> {
+  return apiClient('/api/v1/auth/me/');
+}
+
+

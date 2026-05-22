@@ -6,6 +6,7 @@ urlpatterns = [
     path('achievements/', api_views.AchievementViewSet.as_view({'get': 'list'}), name='api-achievements'),
     path('search/', api_views.MediaSearchView.as_view(), name='api_search'),
     path('config/', api_views.ConfigView.as_view(), name='api_config'),
+    path('auth/me/', api_views.CurrentUserView.as_view(), name='api_auth_me'),
     path('leaderboard/', api_views.LeaderboardView.as_view(), name='api_leaderboard'),
     path('profile/<str:username>/', api_views.ProfileDetailView.as_view(), name='api_profile_detail'),
     path('social/collection/', api_views.MyCollectionView.as_view(), name='api_collection'),

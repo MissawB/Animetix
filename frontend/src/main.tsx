@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import AppRouter from './components/AppRouter'
+import { AuthProvider } from './context/AuthProvider'
 import { ErrorBoundary } from './components/ui/ErrorBoundary'
 import { ToastContainer } from './components/ui/ToastContainer'
 import { initObservability } from './utils/observability'
@@ -15,8 +16,10 @@ if (rootElement) {
   createRoot(rootElement).render(
     <StrictMode>
       <ErrorBoundary>
-        <AppRouter />
-        <ToastContainer />
+        <AuthProvider>
+          <AppRouter />
+          <ToastContainer />
+        </AuthProvider>
       </ErrorBoundary>
     </StrictMode>,
   );
