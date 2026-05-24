@@ -398,5 +398,85 @@
     "is_architectural": true,
     "query_type": "thematic",
     "ground_truth": "Il s'agit de Black Clover, le protagoniste est Asta."
+  },
+  {
+    "query": "Quels comédiens de doublage français (VF) prêtent leur voix à la fois à des personnages de Naruto et de One Piece ?",
+    "expected_id": "0",
+    "expected_title": "Multiple",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "Le système doit lier les relations de voix françaises. Par exemple, Christophe Lemoine double à la fois Shikamaru (Naruto) et Baggy le Clown (One Piece), et Stéphane Excoffier intervient également sur ces franchises."
+  },
+  {
+    "query": "Je cherche la maison d'édition française qui publie des chefs-d'œuvre de dark fantasy comme Berserk et des mangas d'action comme Tokyo Ghoul.",
+    "expected_id": "2",
+    "expected_title": "Glénat",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "Il s'agit des éditions Glénat, qui publient Berserk de Kentaro Miura et Tokyo Ghoul de Sui Ishida en France."
+  },
+  {
+    "query": "Dans quel magazine prépublie l'auteur original de Monster et de Pluto, et a-t-il reçu des prix majeurs pour ces mangas ?",
+    "expected_id": "19",
+    "expected_title": "Monster",
+    "is_architectural": true,
+    "query_type": "cross-media",
+    "ground_truth": "L'auteur est Naoki Urasawa. Il prépublie principalement dans des magazines comme Big Comic Original (Monster) et Big Comic Spirits (20th Century Boys). Il a remporté de prestigieuses distinctions comme le Prix culturel Osamu Tezuka et le Shogakukan Manga Award."
+  },
+  {
+    "query": "Trouve-moi le groupe d'anisong légendaire ou le chanteur qui interprète le générique d'ouverture emblématique Guren no Yumiya pour L'Attaque des Titans.",
+    "expected_id": "16498",
+    "expected_title": "Attack on Titan",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "L'opening emblématique 'Guren no Yumiya' de L'Attaque des Titans est interprété par le groupe Linked Horizon dirigé par Revo."
+  },
+  {
+    "query": "Quel acteur de doublage japonais (Seiyuu) prête sa voix au charismatique Levi Ackerman dans L'Attaque des Titans et dans Trafalgar Law dans One Piece ?",
+    "expected_id": "0",
+    "expected_title": "Hiroshi Kamiya",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "L'acteur emblématique est Hiroshi Kamiya, qui prête sa voix à la fois au Caporal Levi dans Shingeki no Kyojin et à Trafalgar Law dans One Piece."
+  },
+  {
+    "query": "Combien de tomes compte le manga original Death Note par rapport à son nombre d'épisodes dans son adaptation animée ?",
+    "expected_id": "1535",
+    "expected_title": "Death Note",
+    "is_architectural": true,
+    "query_type": "cross-media",
+    "ground_truth": "Le manga original Death Note compte exactement 12 tomes (plus un tome spécial 13) tandis que son adaptation animée par Studio Madhouse comporte exactement 37 épisodes regroupés en une seule saison."
+  },
+  {
+    "query": "Est-ce que le célèbre doubleur français de Guts dans l'anime de 1997 double aussi Son Goku dans la version française de Dragon Ball Z ?",
+    "expected_id": "0",
+    "expected_title": "None",
+    "is_architectural": true,
+    "query_type": "negative",
+    "ground_truth": "Non, Guts dans la VF de la série Berserk de 1997 est doublé principalement par Emmanuel Gradi, tandis que Son Goku dans Dragon Ball Z est doublé par le comédien historique Patrick Borg."
+  },
+  {
+    "query": "Quels sites de distribution ou plateformes de streaming légal diffusent l'anime Demon Slayer (Kimetsu no Yaiba) en France ?",
+    "expected_id": "38000",
+    "expected_title": "Demon Slayer",
+    "is_architectural": true,
+    "query_type": "standard",
+    "ground_truth": "En France, l'anime Demon Slayer est distribué légalement sur les plateformes de streaming Crunchyroll et Netflix."
+  },
+  {
+    "query": "Je me souviens d'un anime de comédie romantique récent avec un opening extrêmement populaire sur YouTube chanté par YOASOBI, parlant de la face cachée d'une idol et de ses jumeaux.",
+    "expected_id": "0",
+    "expected_title": "Oshi no Ko",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "Il s'agit de l'anime Oshi no Ko, et l'opening ultra-populaire chanté par YOASOBI est intitulé 'Idol'."
+  },
+  {
+    "query": "Le manga Neon Genesis Evangelion a-t-il remporté le Prix culturel Osamu Tezuka dans la catégorie manga en 2020 ?",
+    "expected_id": "0",
+    "expected_title": "None",
+    "is_architectural": true,
+    "query_type": "negative",
+    "ground_truth": "Non, le manga Neon Genesis Evangelion s'est terminé en 2013 et n'a pas reçu le prix en 2020. En 2020, c'est le manga Nyx no Lantern de Kan Takahama qui a reçu le Grand Prix."
   }
 ]
