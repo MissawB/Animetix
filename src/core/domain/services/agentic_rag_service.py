@@ -480,7 +480,7 @@ class AgenticRAGService:
     # --- MÉTHODES UTILITAIRES (Inchangées ou légèrement adaptées) ---
     def _assess_complexity(self, query: str) -> tuple[int, int]:
         prompt, sys = self.prompt_manager.get_prompt("complexity_analyzer", query=query)
-        res = self.llm_service.generate(prompt, sys, use_slm=True)
+        res = self.llm_service.generate(prompt, sys, use_slm=False)
         try:
             data = self._extract_json(res)
             return int(data.get("thinking_budget", 0)), int(data.get("complexity_score", 0))

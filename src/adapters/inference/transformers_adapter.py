@@ -65,8 +65,10 @@ class TransformersAdapter(InferencePort):
             inputs = self.tokenizer(f"{system_prompt}\n\n{prompt}", return_tensors="pt").to(self.model.device)
             max_new_tokens = 512 + (thinking_budget if thinking_budget > 0 else 0)
             
+            input_length = inputs.input_ids.shape[1]
             outputs = self.model.generate(**inputs, max_new_tokens=max_new_tokens)
-            return self.tokenizer.decode(outputs[0], skip_special_tokens=True).replace(system_prompt, "").strip()
+            generated_tokens = outputs[0][input_length:]
+            return self.tokenizer.decode(generated_tokens, skip_special_tokens=True).strip()
         except Exception as e:
             raise InferenceError(f"Generation failed: {str(e)}")
 

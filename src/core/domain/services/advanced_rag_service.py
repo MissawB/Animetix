@@ -25,7 +25,66 @@ class AdvancedRAGService:
         self._indices: Dict[str, HybridSearchIndex] = {}
         self.rerank_cache = RerankingCache()
 
-    # ... (méthodes inchangées) ...
+    def _get_or_create_index(self, media_type: str) -> HybridSearchIndex:
+        if media_type not in self._indices:
+            idx = HybridSearchIndex()
+            catalog = self.repository.load_catalog(media_type)
+            if catalog:
+                idx.initialize(catalog['db'], media_type)
+            self._indices[media_type] = idx
+        return self._indices[media_type]
+
+    def hybrid_search(self, query: str, media_type: str, limit: int = 10) -> List[Dict]:
+        """Recherche hybride lexicale et sémantique combinée avec Reciprocal Rank Fusion (RRF)."""
+        idx = self._get_or_create_index(media_type)
+        
+        # 1. Recherche lexicale brute (TF-IDF/BM25)
+        lexical_results = idx.search(query, limit=limit * 2)
+        
+        # 2. Recherche sémantique brute (PgVector)
+        semantic_results = []
+        try:
+            semantic_results = self.repository.search_media_items(query, media_type, limit=limit * 2)
+        except Exception as e:
+            logger.warning(f"Semantic search failed in hybrid search: {e}")
+            
+        # 3. Fusion des résultats avec RRF
+        fused_results = idx.reciprocal_rank_fusion(lexical_results, semantic_results)
+        
+        return fused_results[:limit]
+
+    def graph_rag_summaries(self, query: str, media_type: str, limit: int = 5) -> str:
+        """
+        Génère un contexte structuré enrichi par Neo4j (GraphRAG).
+        Récupère les entités connectées et synthétise leurs relations.
+        """
+        if not self.neo4j_manager:
+            return ""
+            
+        try:
+            # Recherche d'items proches pour démarrer
+            items = self.hybrid_search(query, media_type, limit=3)
+            if not items:
+                return ""
+                
+            graph_context = []
+            for item in items:
+                item_id = item.get('id')
+                item_title = item.get('title') or item.get('name')
+                
+                # Trouver les connexions logiques
+                connections = self.neo4j_manager.find_logical_connections(item_id)
+                if connections:
+                    conn_strs = [f"{c.get('title') or c.get('name')} ({c.get('relationship', 'connexe')})" for c in connections[:limit]]
+                    graph_context.append(f"Relations pour '{item_title}': {', '.join(conn_strs)}")
+            
+            if graph_context:
+                return "\n[GraphRAG Context]\n" + "\n".join(graph_context) + "\n"
+        except Exception as e:
+            logger.warning(f"GraphRAG extraction failed: {e}")
+            
+        return ""
+
 
     def rerank_results(self, query: str, candidates: List[Dict]) -> List[Dict]:
         """

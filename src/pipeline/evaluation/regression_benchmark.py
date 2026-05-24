@@ -1,12 +1,20 @@
 import os
+import sys
 import json
 import time
 from typing import List, Dict
 import torch
-from animetix.containers import get_container
 
 # Détection robuste de la racine du projet
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.insert(0, os.path.join(BASE_DIR, "src"))
+sys.path.insert(0, os.path.join(BASE_DIR, "src", "backend"))
+
+import django
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'animetix_project.settings')
+django.setup()
+
+from animetix.containers import get_container
 
 # --- GOLD SET DE RÉFÉRENCE ---
 # Ce set couvre les différents types de médias et niveaux de complexité.

@@ -165,7 +165,7 @@ class Container:
 
     @property
     def llm_service(self):
-        return self._get('llm_service', lambda: LLMService(inference_engine=self.inference_engine, prompt_manager=self.prompt_manager, usage_port=DjangoUsageAdapter(), slm_engine=self.transformers_adapter, obs_service=self.obs_service))
+        return self._get('llm_service', lambda: LLMService(inference_engine=self.inference_engine, prompt_manager=self.prompt_manager, usage_port=DjangoUsageAdapter(), slm_engine=self.inference_engine, obs_service=self.obs_service))
 
     @property
     def agent_bus(self):
@@ -234,7 +234,7 @@ class Container:
 
     @property
     def memory_service(self):
-        return self._get('memory_service', lambda: LongTermMemoryService(chroma_resource=self.repository, inference_engine=self.inference_engine))
+        return self._get('memory_service', lambda: LongTermMemoryService(chroma_resource=self.repository, inference_engine=self.inference_engine, prompt_manager=self.prompt_manager))
 
     @property
     def semantic_cache_service(self):
