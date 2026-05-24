@@ -45,6 +45,31 @@ GOLD_SET = [
         "query": "Qui interprète le rôle du Joker dans le film The Dark Knight de 2008 ?",
         "expected_facts": [["Heath Ledger", "Ledger"]],
         "media_type": "Movie"
+    },
+    {
+        "query": "Quelle maison d'édition publie le manga Berserk en France ?",
+        "expected_facts": [["Glénat", "Editions Glénat"]],
+        "media_type": "Manga"
+    },
+    {
+        "query": "Quel comédien de doublage français prête sa voix principale au personnage de Luffy dans l'anime One Piece ?",
+        "expected_facts": [["Stéphane Excoffier", "Excoffier", "Brigitte Lecordier", "Lecordier"]],
+        "media_type": "Character"
+    },
+    {
+        "query": "Quel prix prestigieux a récompensé le manga L'Attaque des Titans en 2011 au Japon ?",
+        "expected_facts": [["Prix du manga Kōdansha", "Kodansha Manga Award", "Kodansha", "Kōdansha"]],
+        "media_type": "Manga"
+    },
+    {
+        "query": "Combien de saisons et d'épisodes compte l'adaptation animée de Demon Slayer (Kimetsu no Yaiba) ?",
+        "expected_facts": [["4 saisons", "quatre saisons"], ["60 épisodes", "soixante épisodes"]],
+        "media_type": "Anime"
+    },
+    {
+        "query": "Dans quel magazine de prépublication japonais a été sérialisé le manga Hunter x Hunter ?",
+        "expected_facts": [["Weekly Shōnen Jump", "Shonen Jump", "Weekly Shonen Jump"]],
+        "media_type": "Manga"
     }
 ]
 
