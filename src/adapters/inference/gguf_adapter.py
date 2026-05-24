@@ -1,6 +1,9 @@
 import logging
 from typing import Optional, List, Dict, Any, Generator
 from core.ports.inference_port import InferencePort
+from sentence_transformers import CrossEncoder
+import json
+import re
 
 logger = logging.getLogger("animetix.inference.gguf")
 
@@ -8,6 +11,7 @@ class GgufAdapter(InferencePort):
     def __init__(self, model_path: str):
         self.model_path = model_path
         self.llm = None
+        self._cross_encoder = None
 
     def _load_model(self):
         if self.llm: return
@@ -43,6 +47,25 @@ class GgufAdapter(InferencePort):
         except Exception as e:
             logger.error(f"GGUF Generation Error: {e}")
             return f"Erreur GGUF: {e}"
+
+    def rerank_documents(self, query: str, documents: List[str]) -> List[float]:
+        if not documents: return []
+        if not self._cross_encoder:
+            self._cross_encoder = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
+        pairs = [[query, doc] for doc in documents]
+        scores = self._cross_encoder.predict(pairs)
+        return [float(score) for score in scores]
+
+    def generate_structured(self, prompt: str, response_model: type, system_prompt: str = "Tu es un expert.", max_retries: int = 3) -> Any:
+        for i in range(max_retries):
+            try:
+                response = self.generate(prompt, system_prompt)
+                match = re.search(r'{.*}', response, re.DOTALL)
+                if match:
+                    return json.loads(match.group(0))
+            except Exception as e:
+                logger.warning(f"Structured generation failed (try {i+1}): {e}")
+        return None
 
     def get_text_embedding(self, text: str) -> List[float]:
         """Génère un embedding via le modèle GGUF si supporté, sinon fallback local."""

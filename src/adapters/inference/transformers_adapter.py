@@ -912,6 +912,20 @@ class TransformersAdapter(InferencePort):
 
     def health_check(self) -> dict: return {"status": "online" if self.model else "offline", "engine": "transformers"}
 
+    def generate_structured(self, prompt: str, response_model: type, system_prompt: str = "Tu es un expert.", max_retries: int = 3) -> Any:
+        import json
+        import re
+        
+        for i in range(max_retries):
+            try:
+                response = self.generate(prompt, system_prompt)
+                match = re.search(r'{.*}', response, re.DOTALL)
+                if match:
+                    return json.loads(match.group(0))
+            except Exception as e:
+                logger.warning(f"Structured generation failed (try {i+1}): {e}")
+        return None
+
     def rerank_documents(self, query: str, documents: List[str]) -> List[float]:
         """Implémentation du reranking avec sentence_transformers."""
         if not documents:
