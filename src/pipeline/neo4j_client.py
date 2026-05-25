@@ -4,6 +4,8 @@ import os
 from typing import List, Dict, Optional, Any
 from dotenv import load_dotenv
 
+from core.ports.graph_database_port import GraphDatabasePort
+
 logger = logging.getLogger("animetix.neo4j")
 
 # Détection robuste de la racine du projet
@@ -14,7 +16,7 @@ NEO4J_URI = os.getenv("NEO4J_URI", "bolt://localhost:7687")
 NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "secretpassword")
 
-class Neo4jManager:
+class Neo4jManager(GraphDatabasePort):
     def __init__(self):
         self._driver = None
         self._uri = NEO4J_URI

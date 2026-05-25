@@ -3,12 +3,12 @@ import numpy as np
 import logging
 from typing import List, Dict, Optional
 from core.ports.repository_port import RepositoryPort
+from core.ports.graph_persistence_port import GraphPersistencePort
+from ..exceptions import InfrastructureError, ParsingError, InferenceError
 from .llm_service import LLMService
-from core.utils.lazy_import import lazy_import
 from .rag.hybrid_index import HybridSearchIndex
-from .prompt_manager import PromptManager
-
 from .rag.rerank_cache import RerankingCache
+from .prompt_manager import PromptManager
 
 logger = logging.getLogger('animetix')
 
@@ -17,7 +17,7 @@ class AdvancedRAGService:
     Service RAG 2.0 combinant recherche hybride, ré-ordonnancement (Reranking)
     et vérification de cohérence (Self-RAG).
     """
-    def __init__(self, repository: RepositoryPort, llm_service: LLMService, neo4j_manager=None, prompt_manager: PromptManager = None):
+    def __init__(self, repository: RepositoryPort, llm_service: LLMService, neo4j_manager: Optional[GraphPersistencePort] = None, prompt_manager: PromptManager = None):
         self.repository = repository
         self.llm_service = llm_service
         self.neo4j_manager = neo4j_manager
@@ -45,8 +45,13 @@ class AdvancedRAGService:
         semantic_results = []
         try:
             semantic_results = self.repository.search_media_items(query, media_type, limit=limit * 2)
+        except InfrastructureError as e:
+            logger.warning(f"Semantic search failed in hybrid search: {e}", extra={'context': {'query': query, 'media_type': media_type}})
         except Exception as e:
-            logger.warning(f"Semantic search failed in hybrid search: {e}")
+            logger.error(
+                f"Unexpected error in semantic search: {e}", 
+                extra={'context': {'query': query, 'media_type': media_type, 'error': str(e)}}
+            )
             
         # 3. Fusion des résultats avec RRF
         fused_results = idx.reciprocal_rank_fusion(lexical_results, semantic_results)
@@ -80,8 +85,10 @@ class AdvancedRAGService:
             
             if graph_context:
                 return "\n[GraphRAG Context]\n" + "\n".join(graph_context) + "\n"
-        except Exception as e:
+        except InfrastructureError as e:
             logger.warning(f"GraphRAG extraction failed: {e}")
+        except Exception as e:
+            logger.error(f"Unexpected error in GraphRAG summaries: {e}")
             
         return ""
 
@@ -120,7 +127,8 @@ class AdvancedRAGService:
                     connections = self.neo4j_manager.find_logical_connections(c['id'])
                     if connections:
                         graph_info = " | Connexions: " + ", ".join([f"{conn['title']} ({conn['strength']})" for conn in connections])
-                except Exception: pass
+                except Exception as e:
+                    logger.error("Error fetching logical connections for candidate %s: %s", c.get('id'), e, exc_info=True)
             
             doc_text = f"Titre: {c.get('title') or c.get('name')} | Description: {c.get('description', '')[:300]}{graph_info}"
             texts_to_score.append(doc_text)

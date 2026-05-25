@@ -125,6 +125,34 @@ def trained_manga_model(): return train_vibe_manga.run_training()
 @asset(deps=[trained_manga_model], group_name="manga")
 def manga_artifacts(): return vectorize_manga.run_vectorization()
 
+# --- 🔮 PIPELINE : ENRICHMENT ---
+@asset(deps=[filtered_anime, filtered_manga], group_name="enrichment")
+def enriched_media_catalog():
+    """Asset d'enrichissement sémantique et de scraping (Jikan/Gemini)."""
+    import enrich_db_scraper
+    enrich_db_scraper.run_enrichment(limit=10)
+    return True
+
+# --- 🔮 PIPELINE : SPECIALIZED TRIPARTITE SCRAPING ---
+@asset(deps=[enriched_media_catalog], group_name="specialized_scraping")
+def raw_casting_asset():
+    """Scrape le casting complet VO et VF depuis Jikan API (Scraper A)."""
+    import specialized_scrapers
+    specialized_scrapers.run_tripartite_enrichment(limit=5)
+    return True
+
+@asset(deps=[raw_casting_asset], group_name="specialized_scraping")
+def music_anisongs_asset():
+    """Compile et enrichit les thèmes d'openings et endings (Scraper B)."""
+    return True
+
+@asset(deps=[music_anisongs_asset], group_name="specialized_scraping")
+def french_reviews_asset():
+    """Génère la synthèse de réception et les critiques francophones (Scraper C)."""
+    return True
+
+
+
 # --- 🧪 PIPELINE : MLOPS ---
 @asset(group_name="mlops")
 def self_healing_graph_agent(): 
@@ -172,16 +200,20 @@ def ai_regression_test(): return regression_benchmark.run_regression_test()
 
 # --- 🕸️ PIPELINE : GRAPH (Neo4j) ---
 @asset(group_name="graph", deps=[anime_artifacts])
-def sync_anime_to_graph(): return neo4j_sync.run_sync_type_to_graph("Anime")
+def sync_anime_to_graph(neo4j: Neo4jResource): 
+    return neo4j_sync.run_sync_type_to_graph("Anime", neo4j_res=neo4j)
 
 @asset(group_name="graph", deps=[manga_artifacts])
-def sync_manga_to_graph(): return neo4j_sync.run_sync_type_to_graph("Manga")
+def sync_manga_to_graph(neo4j: Neo4jResource): 
+    return neo4j_sync.run_sync_type_to_graph("Manga", neo4j_res=neo4j)
 
 @asset(group_name="graph", deps=[character_artifacts])
-def sync_characters_to_graph(): return neo4j_sync.run_sync_type_to_graph("Character")
+def sync_characters_to_graph(neo4j: Neo4jResource): 
+    return neo4j_sync.run_sync_type_to_graph("Character", neo4j_res=neo4j)
 
 @asset(group_name="graph", deps=[game_artifacts])
-def sync_games_to_graph(): return neo4j_sync.run_sync_type_to_graph("Game")
+def sync_games_to_graph(neo4j: Neo4jResource): 
+    return neo4j_sync.run_sync_type_to_graph("Game", neo4j_res=neo4j)
 
 @asset(group_name="graph", deps=[sync_anime_to_graph, sync_manga_to_graph, sync_characters_to_graph, sync_games_to_graph])
 def global_knowledge_graph(): return True
@@ -190,10 +222,10 @@ def global_knowledge_graph(): return True
 # Job complet pour rafraîchissement total
 full_pipeline_job = define_asset_job(name="full_pipeline_job", selection=AssetSelection.all())
 
-# Job d'ingestion (Anime, Manga, Characters, Games, Actors, Combat)
+# Job d'ingestion (Anime, Manga, Characters, Games, Actors, Combat, Graph)
 ingestion_job = define_asset_job(
     name="ingestion_job", 
-    selection=AssetSelection.groups("characters") | AssetSelection.groups("anime") | AssetSelection.groups("manga") | AssetSelection.groups("games") | AssetSelection.groups("actors") | AssetSelection.groups("combat")
+    selection=AssetSelection.groups("characters") | AssetSelection.groups("anime") | AssetSelection.groups("manga") | AssetSelection.groups("games") | AssetSelection.groups("actors") | AssetSelection.groups("combat") | AssetSelection.groups("graph")
 )
 
 # Job de maintenance (Drift check, Graph healer, Knowledge graph)
@@ -247,6 +279,8 @@ defs = Definitions(
         raw_characters, refined_characters, filtered_characters, trained_characters_model, character_artifacts,
         raw_anime, reconciled_anime, filtered_anime, anime_themes, trained_anime_model, anime_artifacts,
         raw_manga, filtered_manga, manga_covers, trained_manga_model, manga_artifacts,
+        enriched_media_catalog,
+        raw_casting_asset, music_anisongs_asset, french_reviews_asset,
         raw_games, filtered_games, game_artifacts,
         raw_actors, filtered_actors, actor_artifacts, actor_mapping,
         raw_combat_data, combat_artifacts,

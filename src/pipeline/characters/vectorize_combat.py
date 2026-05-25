@@ -57,13 +57,15 @@ def run_combat_vectorization(chroma_res=None):
     embeddings = model.encode(corpus, show_progress_bar=True)
 
     # Sync with ChromaDB
-    # manager = chroma_res.manager if chroma_res else chroma_manager
-    # collection = manager.get_collection("combat_profiles")
-    
-    # Correction: Use the resource directly
     collection = chroma_res.get_collection("combat_profiles") if chroma_res else chroma_manager.get_collection("combat_profiles")
     
     try:
+        # Avoid duplicate IDs by deleting existing ones if they exist
+        existing = collection.get(ids=ids)
+        if existing['ids']:
+            logger.info(f"♻️ Updating {len(existing['ids'])} existing profiles in ChromaDB...")
+            collection.delete(ids=existing['ids'])
+            
         collection.add(
             ids=ids,
             embeddings=embeddings.tolist(),

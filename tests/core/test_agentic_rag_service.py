@@ -122,3 +122,46 @@ def test_extract_json_logs_error_on_invalid_json(agentic_rag):
         args, _ = mock_logger.error.call_args
         assert "Failed to parse JSON" in args[0]
 
+def test_thinking_mode_streaming(agentic_rag, mock_engine):
+    # TTC indicates complex query
+    mock_engine.generate.side_effect = [
+        '{"complexity_score": 3, "thinking_budget": 500}', # 0. TTC
+        '{"optimized_query": "complex query", "requires_web": false, "reasoning": "R"}', # 1. Planner
+        "Truth Path", # 2. Scout
+        '{"is_reliable": true, "faithfulness_score": 1.0, "relevancy_score": 1.0, "hallucination_detected": false, "reasoning": "ok", "next_action": "APPROVE"}' # 3. Judge
+    ]
+    
+    # Synthesizer output with thought tags
+    mock_engine.stream_generate.return_value = iter([
+        "<thought>", "Reasoning ", "process", "</thought>", "Final ", "Answer"
+    ])
+    
+    steps = list(agentic_rag.plan_and_solve_stream("Complex query", "Anime"))
+    
+    # Check that thoughts are yielded as thoughts
+    # Note: the actual content might be different depending on how the parser handles whitespace
+    thoughts = [s['content'] for s in steps if s['type'] == 'thought' and "Reasoning" in str(s['content'])]
+    assert len(thoughts) > 0
+    
+    # Check that tokens are yielded as tokens
+    tokens = "".join([str(s['content']) for s in steps if s['type'] == 'token'])
+    assert "Final Answer" in tokens
+    assert "Reasoning" not in tokens
+
+def test_fallback_on_inference_error(agentic_rag, mock_engine, mock_rag):
+    from core.domain.entities.exceptions import InferenceTimeoutError
+    
+    mock_engine.generate.side_effect = [
+        '{"complexity_score": 0, "thinking_budget": 0}', # 0. TTC
+        InferenceTimeoutError("Timeout!") # 1. Planner fails
+    ]
+    
+    # Mock classic RAG for fallback
+    mock_rag.classic_rag.return_value = "Classic fallback answer"
+    
+    steps = list(agentic_rag.plan_and_solve_stream("Query", "Anime"))
+    
+    # Verify fallback state was reached
+    assert any("[Recovery] Erreur" in str(s['content']) for s in steps if s['type'] == 'thought')
+    assert any("RAGState.FALLBACK_RAG" in str(s['content']) for s in steps if s['type'] == 'thought')
+

@@ -54,6 +54,7 @@ watchdog==6.0.0
 # --------------------------------------------------------------------------
 # 4. Heavy ML/AI, Deep Learning, NLP & Computer Vision (Loaded Lazily)
 # --------------------------------------------------------------------------
+ragas
 bitsandbytes==0.44.1
 diffusers>=0.31.0
 google-ai-generativelanguage==0.11.0
@@ -302,5 +303,6 @@ z3-solver
 zipp==3.23.0
 zope.interface==8.4
 zstandard==0.25.0
+dependency-injector==4.49.0
 ﻿accelerate==1.13.0
 

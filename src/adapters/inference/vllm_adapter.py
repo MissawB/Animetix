@@ -79,12 +79,12 @@ class VllmAdapter(InferencePort):
             yield self.generate(prompt, system_prompt, thinking_budget, thinking_mode)
 
     def calculate_visual_similarity(self, query: str, item_id: str, media_type: str) -> float:
-        logger.warning(f"calculate_visual_similarity not implemented for VllmAdapter")
-        return 0.0
+        from core.ports.inference_port import InferenceNotImplementedError
+        raise InferenceNotImplementedError("calculate_visual_similarity not implemented for VllmAdapter")
 
     def get_image_embedding(self, image_data: bytes, model_id: Optional[str] = None) -> List[float]:
-        logger.warning(f"get_image_embedding not implemented for VllmAdapter")
-        return []
+        from core.ports.inference_port import InferenceNotImplementedError
+        raise InferenceNotImplementedError("get_image_embedding not implemented for VllmAdapter")
 
     def classify_image(self, image_data: bytes, candidate_labels: List[str], model_id: Optional[str] = None) -> Dict[str, float]:
         """
@@ -147,50 +147,6 @@ class VllmAdapter(InferencePort):
             logger.error(f"VLM Object Detection error: {e}")
             return []
 
-    def get_video_temporal_embeddings(self, video_data: bytes) -> List[Dict[str, Any]]:
-        logger.warning(f"get_video_temporal_embeddings not implemented for VllmAdapter")
-        return []
-
-    def localize_video_actions(self, video_data: bytes, action_queries: List[str]) -> List[Dict[str, Any]]:
-        logger.warning(f"localize_video_actions not implemented for VllmAdapter")
-        return []
-
-    def transform_image_to_anime(self, image_data: bytes, studio_style: str, prompt: str = "") -> str:
-        logger.warning(f"transform_image_to_anime not implemented for VllmAdapter")
-        return ""
-
-    def transform_video_to_anime(self, video_data: bytes, studio_style: str, prompt: str = "") -> str:
-        logger.warning(f"transform_video_to_anime not implemented for VllmAdapter")
-        return ""
-
-    def generate_soundscape(self, video_metadata: Dict[str, Any], prompt: Optional[str] = None) -> str:
-        logger.warning(f"generate_soundscape not implemented for VllmAdapter")
-        return ""
-
-    def clone_voice(self, text: str, reference_audio: bytes, language: str = "fr") -> bytes:
-        logger.warning(f"clone_voice not implemented for VllmAdapter")
-        return b""
-
-    def speech_to_speech(self, audio_input: bytes, system_prompt: str = "") -> bytes:
-        logger.warning(f"speech_to_speech not implemented for VllmAdapter")
-        return b""
-
-    def process_manga_page(self, image_data: bytes) -> Dict[str, Any]:
-        logger.warning(f"process_manga_page not implemented for VllmAdapter")
-        return {}
-
-    def translate_manga_page(self, image_data: bytes, target_lang: str = "Français") -> Dict[str, Any]:
-        logger.warning(f"translate_manga_page not implemented for VllmAdapter")
-        return {}
-
-    def inpaint_text_bubbles(self, image_data: bytes, text_placements: List[Dict]) -> str:
-        logger.warning(f"inpaint_text_bubbles not implemented for VllmAdapter")
-        return ""
-
-    def moderate_content(self, text: str, categories: List[str]) -> Dict[str, Any]:
-        logger.warning(f"moderate_content not implemented for VllmAdapter")
-        return {}
-
     def generate_image_description(self, image_data: bytes, prompt: str = "Décris cette image d'anime de manière très détaillée.") -> str:
         """Utilise le VLM pour décrire une image."""
         try:
@@ -209,14 +165,10 @@ class VllmAdapter(InferencePort):
             res.raise_for_status()
             return res.json()['choices'][0]['message']['content']
         except Exception as e:
+            from core.ports.inference_port import InferenceNotImplementedError
             logger.error(f"VLM Image Description error: {e}")
-            return "Impossible de décrire l'image."
-
-    def get_diagnostics(self, prompt: str, completion: str) -> Dict[str, Any]: return {}
-    def calculate_uncertainty(self, prompt: str, completion: str) -> Dict[str, float]: return {}
-    def estimate_depth(self, image_data: bytes) -> bytes: return b""
-    def generate_3d_scene(self, image_data: bytes, depth_map: bytes) -> Dict[str, Any]: return {}
-    
+            raise InferenceNotImplementedError(f"Impossible de décrire l'image via vLLM: {e}")
+            
     def visual_rerank(self, query: str, image_urls: List[str], system_prompt: str = "Tu es un expert en analyse visuelle d'anime.") -> List[Dict[str, Any]]:
         """Utilise le VLM pour classer une liste d'images par pertinence visuelle."""
         if not image_urls:
@@ -275,21 +227,22 @@ class VllmAdapter(InferencePort):
                     })
             
             if not final_results:
-                logger.warning("vLLM rerank returned no valid results. Using fallback.")
-                return [{"index": i, "score": 1.0 / len(image_urls)} for i in range(len(image_urls))]
+                from core.domain.exceptions import InferenceError
+                raise InferenceError("vLLM rerank returned no valid results.")
                 
             return final_results
         except Exception as e:
+            from core.domain.exceptions import InferenceError
             logger.error(f"vLLM visual rerank error: {e}")
-            return [{"index": i, "score": 0.0} for i in range(len(image_urls))]
+            raise InferenceError(f"vLLM visual rerank failed: {str(e)}")
 
     def get_multimodal_late_interaction(self, image_data: bytes) -> List[List[float]]:
-        return []
+        from core.ports.inference_port import InferenceNotImplementedError
+        raise InferenceNotImplementedError("get_multimodal_late_interaction not implemented for VllmAdapter")
 
-    
     def generate_image(self, prompt: str, style: str = "") -> str:
-        logger.warning(f"generate_image not implemented for VllmAdapter")
-        return ""
+        from core.ports.inference_port import InferenceNotImplementedError
+        raise InferenceNotImplementedError("generate_image not implemented for VllmAdapter")
 
     def health_check(self) -> dict:
         try:

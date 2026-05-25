@@ -17,10 +17,13 @@ scout_distiller:
        - Les données de communauté (Top thèmes d'un studio ou d'un genre).
     3. RÉSEAUX : Si des collaborations ou des réseaux de créateurs sont mentionnés, schématise-les textuellement.
 
-    CONSIGNE CRITIQUE : Conserve TOUS les noms propres, dates précises et entités techniques. Ne fais AUCUNE supposition en dehors du contexte fourni.
+    CONSIGNE CRITIQUE : 
+    1. Conserve TOUS les noms propres, dates précises et entités techniques appartenant STRICTEMENT à l'entité recherchée dans la requête.
+    2. Si des faits (tels que des prix, récompenses, auteurs ou studios) concernent d'autres œuvres distractrices présentes dans le contexte brut, EXCLUS-les explicitement pour éviter toute interférence factuelle dans le Truth Path final.
+    3. Ne fais AUCUNE supposition en dehors du contexte fourni.
 
     FORMAT DE SORTIE : Texte structuré par entités/faits, prêt pour une synthèse de haut niveau.
-  system_prompt: "Tu es le Scout Animetix Expert en Graphes. Ta priorité est de préserver la topologie des relations trouvées dans Neo4j."
+  system_prompt: "Tu es le Scout Animetix Expert en Graphes. Ta priorité est de préserver la topologie des relations trouvées dans Neo4j et d'éliminer rigoureusement les distracteurs."
 
 
 complexity_analyzer:
@@ -86,20 +89,23 @@ critic_evaluation:
 
 synthesizer_final:
   template: |
-    RÔLE : Synthétiseur Expert (Synthesizer).
-    REQUÊTE : '{query}'
-    CONTEXTE VALIDÉ :
+    RÃ”LE : SynthÃ©tiseur Expert (Synthesizer).
+    REQUÃŠTE : '{query}'
+    CONTEXTE VALIDÃ‰ :
     {context}
-    
-    MISSION : Rédige une réponse précise basées UNIQUEMENT sur le contexte fourni.
-    Inclus impérativement les noms propres, dates et faits clés trouvés dans le contexte.
-    
-    RÉPONDS UNIQUEMENT EN JSON :
+
+    MISSION : RÃ©dige une rÃ©ponse prÃ©cise basÃ©es UNIQUEMENT sur le contexte fourni.
+    Inclus impÃ©rativement les noms propres, dates et faits clÃ©s trouvÃ©s dans le contexte.
+
+    Si `thinking_mode` est activÃ©, tu DOIS commencer ta rÃ©ponse par une balise `<thought>` contenant ton raisonnement dÃ©taillÃ©, tes doutes et tes vÃ©rifications logiques avant de fournir le JSON final.
+
+    RÃ‰PONDS UNIQUEMENT EN JSON :
     {{
-      "answer": "Ta réponse textuelle ici",
+      "answer": "Ta rÃ©ponse textuelle ici",
       "sources": ["source 1", "source 2"],
       "confidence": 0.95
     }}
+
   system_prompt: "Tu es le Synthesizer Animetix. Ta priorité est la précision factuelle."
 
 synthesizer_correction:
@@ -108,17 +114,21 @@ synthesizer_correction:
     REQUÊTE : '{query}'
     CONTEXTE VALIDÉ :
     {context}
-    
+
     RETOUR DU JUGE (FEEDBACK) :
     {feedback}
-    
+
     MISSION : Rédige une NOUVELLE réponse corrigée, en tenant compte du feedback. Sois extrêmement prudent sur la fidélité au contexte.
+
+    Si `thinking_mode` est activé, tu DOIS commencer ta réponse par une balise `<thought>` contenant ton raisonnement détaillé, tes doutes et tes vérifications logiques avant de fournir le JSON final.
+
     Génère un dictionnaire JSON :
     {{
       "answer": "...",
       "sources": ["source 1", "source 2"],
       "confidence": 0.98
     }}
+
   system_prompt: "Tu es le Synthesizer Animetix (Mode Auto-Correction). Ta priorité absolue est la fidélité au contexte."
 
 deep_fact_checker:
@@ -161,6 +171,8 @@ answer_judge:
     RÉPONSE À AUDITER :
     {answer}
     
+    Si `thinking_mode` est activé, tu DOIS commencer ta réponse par une balise `<thought>` contenant ton raisonnement détaillé avant de fournir le JSON final.
+
     MISSIONS :
     1. FAITHFULNESS : La réponse contient-elle des faits NON présents dans le contexte ? (OUI si hallucination).
     2. RELEVANCY : La réponse est-elle une réponse directe à la requête ?
@@ -240,6 +252,8 @@ judge_critic:
     RÉPONSE :
     {answer}
     
+    Si `thinking_mode` est activé, tu DOIS commencer ta réponse par une balise `<thought>` contenant ton raisonnement détaillé avant de fournir le JSON final.
+
     MISSION : Sois impitoyable. Trouve ce que les autres experts pourraient rater.
     
     RÉPONDS EN JSON :

@@ -73,6 +73,22 @@ class CreativeFusionSerializer(serializers.ModelSerializer):
         model = CreativeFusion
         fields = '__all__'
 
-    def get_is_remix(self, obj):
-        return obj.parent is not None
+from .models import AIREvalResult, GoldDatasetEntry, AIFeedback
+
+class AIREvalResultSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AIREvalResult
+        fields = '__all__'
+
+class GoldDatasetEntrySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GoldDatasetEntry
+        fields = '__all__'
+
+class AIFeedbackSerializer(serializers.ModelSerializer):
+    username = serializers.ReadOnlyField(source='user.username')
+    
+    class Meta:
+        model = AIFeedback
+        fields = '__all__'
 

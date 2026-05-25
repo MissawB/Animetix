@@ -4,7 +4,7 @@ import orjson
 from typing import Dict, Optional, Any, List
 from src.core.domain.services.llm_service import LLMService
 from src.core.domain.services.prompt_manager import PromptManager
-from src.pipeline.neo4j_client import Neo4jManager
+from src.core.ports.graph_persistence_port import GraphPersistencePort
 from src.core.domain.entities.ai_schemas import ForgeHypothesis
 
 logger = logging.getLogger("animetix.rag.forge")
@@ -13,7 +13,7 @@ logger = logging.getLogger("animetix.rag.forge")
 ENTITY_BLACKLIST = {"Who", "What", "When", "The", "How", "An", "Anime", "Manga", "If", "Why", "Where", "Which"}
 
 class ForgeAgent:
-    def __init__(self, llm_service: LLMService, prompt_manager: PromptManager, neo4j_manager: Neo4jManager):
+    def __init__(self, llm_service: LLMService, prompt_manager: PromptManager, neo4j_manager: GraphPersistencePort):
         self.llm_service = llm_service
         self.prompt_manager = prompt_manager
         self.neo4j_manager = neo4j_manager

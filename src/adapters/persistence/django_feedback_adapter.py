@@ -1,0 +1,43 @@
+from typing import List, Dict, Any
+from core.ports.feedback_port import FeedbackRepositoryPort
+
+class DjangoFeedbackAdapter(FeedbackRepositoryPort):
+    def save_feedback(self, input_context: str, output_text: str, is_positive: bool, user_id: Any = None, feedback_type: str = "general") -> None:
+        from animetix.models import AIFeedback
+        AIFeedback.objects.create(
+            input_context=input_context,
+            output_text=output_text,
+            is_positive=is_positive,
+            user_id=user_id,
+            feedback_type=feedback_type
+        )
+
+    def get_recent_feedback(self, limit: int = 100, feedback_type: str = None) -> List[Dict[str, Any]]:
+        from animetix.models import AIFeedback
+        query = AIFeedback.objects.all()
+        if feedback_type:
+            query = query.filter(feedback_type=feedback_type)
+        feedbacks = query.order_by('-created_at')[:limit]
+        return [
+            {
+                'id': fb.id,
+                'input_context': fb.input_context,
+                'output_text': fb.output_text,
+                'is_positive': fb.is_positive,
+                'created_at': fb.created_at,
+                'feedback_type': fb.feedback_type
+            } for fb in feedbacks
+        ]
+
+    def get_feedback_stats(self) -> Dict[str, Any]:
+        from animetix.models import AIFeedback
+        from django.db.models import Count
+        total = AIFeedback.objects.count()
+        if total == 0:
+            return {"satisfaction_rate": 0, "total": 0}
+        
+        pos = AIFeedback.objects.filter(is_positive=True).count()
+        return {
+            "satisfaction_rate": (pos / total) * 100,
+            "total": total
+        }

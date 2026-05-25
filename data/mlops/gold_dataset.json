@@ -1,99 +1,99 @@
 [
   {
-    "query": "Quel est l'animé où un jeune garçon cherche son père qui est un Hunter ?",
+    "query": "Quel est l'anim\u00e9 o\u00f9 un jeune gar\u00e7on cherche son p\u00e8re qui est un Hunter ?",
     "expected_id": "11061",
     "expected_title": "Hunter x Hunter (2011)",
     "is_architectural": false,
-    "query_type": "standard",
-    "ground_truth": "L'histoire suit Gon Freecss qui passe l'examen de Hunter pour retrouver son père Ging.",
+    "query_type": "graph",
+    "ground_truth": "L'histoire suit Gon Freecss qui passe l'examen de Hunter pour retrouver son p\u00e8re Ging.",
     "domain": "general",
     "difficulty": "easy",
     "contexts": []
   },
   {
-    "query": "Cite 3 autres animés produits par le même studio d'animation qui a fait les premières saisons de L'Attaque des Titans.",
+    "query": "Cite 3 autres anim\u00e9s produits par le m\u00eame studio d'animation qui a fait les premi\u00e8res saisons de L'Attaque des Titans.",
     "expected_id": "16498",
     "expected_title": "Attack on Titan",
     "is_architectural": true,
     "query_type": "graph",
-    "ground_truth": "Le studio est Wit Studio. D'autres animés incluent Vinland Saga (S1), Spy x Family (S1 avec CloverWorks), et Kabaneri of the Iron Fortress.",
+    "ground_truth": "Le studio est Wit Studio. D'autres anim\u00e9s incluent Vinland Saga (S1), Spy x Family (S1 avec CloverWorks), et Kabaneri of the Iron Fortress.",
     "domain": "episodes_stats",
     "difficulty": "hard",
     "contexts": []
   },
   {
-    "query": "Je cherche un animé avec une esthétique cyberpunk très prononcée, sorti dans les années 90, avec une femme flic cyborg.",
+    "query": "Je cherche un anim\u00e9 avec une esth\u00e9tique cyberpunk tr\u00e8s prononc\u00e9e, sorti dans les ann\u00e9es 90, avec une femme flic cyborg.",
     "expected_id": "43",
     "expected_title": "Ghost in the Shell",
     "is_architectural": true,
     "query_type": "thematic",
-    "ground_truth": "Il s'agit du film Ghost in the Shell (1995), mettant en scène le Major Motoko Kusanagi.",
+    "ground_truth": "Il s'agit du film Ghost in the Shell (1995), mettant en sc\u00e8ne le Major Motoko Kusanagi.",
     "domain": "general",
     "difficulty": "medium",
     "contexts": []
   },
   {
-    "query": "Qui est l'auteur original du manga qui a inspiré l'animé Monster, et a-t-il écrit d'autres œuvres adaptées en animé ?",
+    "query": "Qui est l'auteur original du manga qui a inspir\u00e9 l'anim\u00e9 Monster, et a-t-il \u00e9crit d'autres \u0153uvres adapt\u00e9es en anim\u00e9 ?",
     "expected_id": "19",
     "expected_title": "Monster",
     "is_architectural": true,
     "query_type": "cross-media",
-    "ground_truth": "L'auteur est Naoki Urasawa. Ses autres œuvres adaptées incluent Pluto, Master Keaton et Yawara!.",
+    "ground_truth": "L'auteur est Naoki Urasawa. Ses autres \u0153uvres adapt\u00e9es incluent Pluto, Master Keaton et Yawara!.",
     "domain": "general",
     "difficulty": "hard",
     "contexts": []
   },
   {
-    "query": "L'animé avec un personnage masculin aux cheveux argentés, qui cache toujours le bas de son visage avec un masque et a un œil couvert par son bandeau frontal.",
+    "query": "L'anim\u00e9 avec un personnage masculin aux cheveux argent\u00e9s, qui cache toujours le bas de son visage avec un masque et a un \u0153il couvert par son bandeau frontal.",
     "expected_id": "20",
     "expected_title": "Naruto",
     "is_architectural": true,
     "query_type": "visual",
-    "ground_truth": "La description correspond parfaitement à Kakashi Hatake dans l'univers de Naruto.",
+    "ground_truth": "La description correspond parfaitement \u00e0 Kakashi Hatake dans l'univers de Naruto.",
     "domain": "general",
     "difficulty": "medium",
     "contexts": []
   },
   {
-    "query": "Est-ce que le studio Ghibli a déjà collaboré avec le studio MAPPA sur un long métrage d'animation ?",
+    "query": "Est-ce que le studio Ghibli a d\u00e9j\u00e0 collabor\u00e9 avec le studio MAPPA sur un long m\u00e9trage d'animation ?",
     "expected_id": "0",
     "expected_title": "None",
     "is_architectural": true,
     "query_type": "negative",
-    "ground_truth": "Non, il n'y a aucune collaboration connue entre le Studio Ghibli et le studio MAPPA sur un long métrage.",
+    "ground_truth": "Non, il n'y a aucune collaboration connue entre le Studio Ghibli et le studio MAPPA sur un long m\u00e9trage.",
     "domain": "general",
     "difficulty": "hard",
     "contexts": []
   },
   {
-    "query": "Trouve-moi un manga de dark fantasy où le héros possède une épée gigantesque, a une marque maudite dans le cou, et combat des démons appelés Apôtres.",
+    "query": "Trouve-moi un manga de dark fantasy o\u00f9 le h\u00e9ros poss\u00e8de une \u00e9p\u00e9e gigantesque, a une marque maudite dans le cou, et combat des d\u00e9mons appel\u00e9s Ap\u00f4tres.",
     "expected_id": "2",
     "expected_title": "Berserk",
     "is_architectural": true,
     "query_type": "thematic",
-    "ground_truth": "Il s'agit de Berserk, le héros est Guts.",
+    "ground_truth": "Il s'agit de Berserk, le h\u00e9ros est Guts.",
     "domain": "general",
     "difficulty": "medium",
     "contexts": []
   },
   {
-    "query": "Y a-t-il un lien entre le réalisateur de Your Name (Kimi no Na wa) et le film Suzume ?",
+    "query": "Y a-t-il un lien entre le r\u00e9alisateur de Your Name (Kimi no Na wa) et le film Suzume ?",
     "expected_id": "32281",
     "expected_title": "Your Name.",
     "is_architectural": true,
     "query_type": "graph",
-    "ground_truth": "Oui, les deux films ont été réalisés par Makoto Shinkai.",
+    "ground_truth": "Oui, les deux films ont \u00e9t\u00e9 r\u00e9alis\u00e9s par Makoto Shinkai.",
     "domain": "general",
     "difficulty": "hard",
     "contexts": []
   },
   {
-    "query": "Je me souviens d'une image avec un carnet noir posé sur l'herbe, et un shinigami géant effrayant qui aime les pommes en arrière-plan.",
+    "query": "Je me souviens d'une image avec un carnet noir pos\u00e9 sur l'herbe, et un shinigami g\u00e9ant effrayant qui aime les pommes en arri\u00e8re-plan.",
     "expected_id": "1535",
     "expected_title": "Death Note",
     "is_architectural": true,
     "query_type": "visual",
-    "ground_truth": "C'est une référence visuelle évidente à Death Note avec le Death Note et le shinigami Ryuk.",
+    "ground_truth": "C'est une r\u00e9f\u00e9rence visuelle \u00e9vidente \u00e0 Death Note avec le Death Note et le shinigami Ryuk.",
     "domain": "general",
     "difficulty": "medium",
     "contexts": []
@@ -104,18 +104,18 @@
     "expected_title": "One Piece",
     "is_architectural": true,
     "query_type": "cross-media",
-    "ground_truth": "Le live action Netflix de One Piece est une adaptation supervisée par Eiichiro Oda, mais n'est pas canon au sein de la continuité stricte du manga.",
+    "ground_truth": "Le live action Netflix de One Piece est une adaptation supervis\u00e9e par Eiichiro Oda, mais n'est pas canon au sein de la continuit\u00e9 stricte du manga.",
     "domain": "general",
     "difficulty": "hard",
     "contexts": []
   },
   {
-    "query": "Quel est le nom de la technique où Son Goku fusionne avec Vegeta en utilisant des boucles d'oreilles ?",
+    "query": "Quel est le nom de la technique o\u00f9 Son Goku fusionne avec Vegeta en utilisant des boucles d'oreilles ?",
     "expected_id": "813",
     "expected_title": "Dragon Ball Z",
     "is_architectural": false,
-    "query_type": "standard",
-    "ground_truth": "C'est la fusion Potala, qui donne naissance à Vegetto (Vegito).",
+    "query_type": "graph",
+    "ground_truth": "C'est la fusion Potala, qui donne naissance \u00e0 Vegetto (Vegito).",
     "domain": "general",
     "difficulty": "easy",
     "contexts": []
@@ -132,18 +132,18 @@
     "contexts": []
   },
   {
-    "query": "Quels sont les comédiens de doublage japonais (Seiyuu) principaux qui travaillent le plus souvent dans les animés du studio Kyoto Animation ?",
+    "query": "Quels sont les com\u00e9diens de doublage japonais (Seiyuu) principaux qui travaillent le plus souvent dans les anim\u00e9s du studio Kyoto Animation ?",
     "expected_id": "0",
     "expected_title": "Multiple",
     "is_architectural": true,
     "query_type": "graph",
-    "ground_truth": "Le système doit analyser les relations Studio -> Animé -> Seiyuu pour trouver les voix récurrentes chez KyoAni.",
+    "ground_truth": "Le syst\u00e8me doit analyser les relations Studio -> Anim\u00e9 -> Seiyuu pour trouver les voix r\u00e9currentes chez KyoAni.",
     "domain": "seiyuu",
     "difficulty": "hard",
     "contexts": []
   },
   {
-    "query": "Je cherche un anime récent centré sur le deuil, l'immortalité d'une elfe, et le voyage émotionnel après la défaite du roi démon.",
+    "query": "Je cherche un anime r\u00e9cent centr\u00e9 sur le deuil, l'immortalit\u00e9 d'une elfe, et le voyage \u00e9motionnel apr\u00e8s la d\u00e9faite du roi d\u00e9mon.",
     "expected_id": "52991",
     "expected_title": "Frieren: Beyond Journey's End",
     "is_architectural": true,
@@ -154,40 +154,40 @@
     "contexts": []
   },
   {
-    "query": "Une scène où une jeune fille blonde avec des cornes sur la tête verse une larme tout en contrôlant des vecteurs invisibles.",
+    "query": "Une sc\u00e8ne o\u00f9 une jeune fille blonde avec des cornes sur la t\u00eate verse une larme tout en contr\u00f4lant des vecteurs invisibles.",
     "expected_id": "226",
     "expected_title": "Elfen Lied",
     "is_architectural": true,
     "query_type": "visual",
-    "ground_truth": "C'est une description visuelle clé du personnage Lucy/Nyu de l'anime Elfen Lied.",
+    "ground_truth": "C'est une description visuelle cl\u00e9 du personnage Lucy/Nyu de l'anime Elfen Lied.",
     "domain": "general",
     "difficulty": "medium",
     "contexts": []
   },
   {
-    "query": "Combien de saisons compte l'adaptation animée complète de Fullmetal Alchemist: Brotherhood par rapport à la première série de 2003 ?",
+    "query": "Combien de saisons compte l'adaptation anim\u00e9e compl\u00e8te de Fullmetal Alchemist: Brotherhood par rapport \u00e0 la premi\u00e8re s\u00e9rie de 2003 ?",
     "expected_id": "5114",
     "expected_title": "Fullmetal Alchemist: Brotherhood",
     "is_architectural": true,
     "query_type": "cross-media",
-    "ground_truth": "FMA Brotherhood compte 64 épisodes (généralement groupés en 1 longue saison continue ou 5 parties selon les plateformes) et suit fidèlement le manga, contrairement à la version 2003 de 51 épisodes qui propose une fin originale.",
+    "ground_truth": "FMA Brotherhood compte 64 \u00e9pisodes (g\u00e9n\u00e9ralement group\u00e9s en 1 longue saison continue ou 5 parties selon les plateformes) et suit fid\u00e8lement le manga, contrairement \u00e0 la version 2003 de 51 \u00e9pisodes qui propose une fin originale.",
     "domain": "episodes_stats",
     "difficulty": "hard",
     "contexts": []
   },
   {
-    "query": "Quel studio d'animation est responsable des adaptations des œuvres clés du collectif CLAMP ?",
+    "query": "Quel studio d'animation est responsable des adaptations des \u0153uvres cl\u00e9s du collectif CLAMP ?",
     "expected_id": "0",
     "expected_title": "Multiple",
     "is_architectural": true,
     "query_type": "graph",
-    "ground_truth": "Bien que CLAMP collabore avec divers studios, Madhouse a adapté des œuvres majeures comme Cardcaptor Sakura et Chobits.",
+    "ground_truth": "Bien que CLAMP collabore avec divers studios, Madhouse a adapt\u00e9 des \u0153uvres majeures comme Cardcaptor Sakura et Chobits.",
     "domain": "general",
     "difficulty": "hard",
     "contexts": []
   },
   {
-    "query": "Un personnage avec une cicatrice en forme de croix sur la joue gauche et qui se bat avec un sabre à lame inversée.",
+    "query": "Un personnage avec une cicatrice en forme de croix sur la joue gauche et qui se bat avec un sabre \u00e0 lame invers\u00e9e.",
     "expected_id": "45",
     "expected_title": "Rurouni Kenshin",
     "is_architectural": true,
@@ -198,45 +198,45 @@
     "contexts": []
   },
   {
-    "query": "Dans quel anime trouve-t-on un système de magie basé sur l'équivalence gardée, où l'on ne peut créer quelque chose qu'en sacrifiant une chose de valeur égale ?",
+    "query": "Dans quel anime trouve-t-on un syst\u00e8me de magie bas\u00e9 sur l'\u00e9quivalence gard\u00e9e, o\u00f9 l'on ne peut cr\u00e9er quelque chose qu'en sacrifiant une chose de valeur \u00e9gale ?",
     "expected_id": "5114",
     "expected_title": "Fullmetal Alchemist",
     "is_architectural": true,
     "query_type": "thematic",
-    "ground_truth": "C'est le concept de 'l'Échange Équivalent' (Equivalent Exchange) au cœur de l'alchimie dans Fullmetal Alchemist.",
+    "ground_truth": "C'est le concept de 'l'\u00c9change \u00c9quivalent' (Equivalent Exchange) au c\u0153ur de l'alchimie dans Fullmetal Alchemist.",
     "domain": "general",
     "difficulty": "medium",
     "contexts": []
   },
   {
-    "query": "Le créateur de l'univers Fate a-t-il aussi écrit le visual novel Tsukihime ?",
+    "query": "Le cr\u00e9ateur de l'univers Fate a-t-il aussi \u00e9crit le visual novel Tsukihime ?",
     "expected_id": "0",
     "expected_title": "Fate/stay night",
     "is_architectural": true,
     "query_type": "cross-media",
-    "ground_truth": "Oui, Kinoko Nasu (Type-Moon) est le créateur et scénariste principal de Fate/stay night et de Tsukihime.",
+    "ground_truth": "Oui, Kinoko Nasu (Type-Moon) est le cr\u00e9ateur et sc\u00e9nariste principal de Fate/stay night et de Tsukihime.",
     "domain": "general",
     "difficulty": "hard",
     "contexts": []
   },
   {
-    "query": "Quelles autres séries du Weekly Shonen Jump le studio Pierrot a-t-il animées à part Naruto et Bleach ?",
+    "query": "Quelles autres s\u00e9ries du Weekly Shonen Jump le studio Pierrot a-t-il anim\u00e9es \u00e0 part Naruto et Bleach ?",
     "expected_id": "0",
     "expected_title": "Multiple",
     "is_architectural": true,
     "query_type": "graph",
-    "ground_truth": "Le studio Pierrot a animé Black Clover, Yu Yu Hakusho, et Tokyo Ghoul.",
+    "ground_truth": "Le studio Pierrot a anim\u00e9 Black Clover, Yu Yu Hakusho, et Tokyo Ghoul.",
     "domain": "general",
     "difficulty": "hard",
     "contexts": []
   },
   {
-    "query": "Est-ce que l'auteur de Death Note a travaillé sur d'autres mangas qui ont reçu une adaptation animée par le studio Madhouse ?",
+    "query": "Est-ce que l'auteur de Death Note a travaill\u00e9 sur d'autres mangas qui ont re\u00e7u une adaptation anim\u00e9e par le studio Madhouse ?",
     "expected_id": "0",
     "expected_title": "Multiple",
     "is_architectural": true,
     "query_type": "graph",
-    "ground_truth": "Oui, Tsugumi Ohba (et Takeshi Obata) sont les auteurs de Bakuman, dont les premières saisons n'ont pas été faites par Madhouse mais par J.C.Staff, Death Parade a été fait par Madhouse (Death Billiards) mais sans lien avec Ohba. Il n'y a pas d'autre manga majeur d'Ohba adapté par Madhouse.",
+    "ground_truth": "Oui, Tsugumi Ohba (et Takeshi Obata) sont les auteurs de Bakuman, dont les premi\u00e8res saisons n'ont pas \u00e9t\u00e9 faites par Madhouse mais par J.C.Staff, Death Parade a \u00e9t\u00e9 fait par Madhouse (Death Billiards) mais sans lien avec Ohba. Il n'y a pas d'autre manga majeur d'Ohba adapt\u00e9 par Madhouse.",
     "domain": "general",
     "difficulty": "hard",
     "contexts": []
@@ -247,13 +247,13 @@
     "expected_title": "Multiple",
     "is_architectural": true,
     "query_type": "visual",
-    "ground_truth": "C'est un archétype classique de Tsundere, pouvant faire penser à Erina de Food Wars (pas uniforme marin) ou Sawachika Eri de School Rumble, voire Kagami de Lucky Star.",
+    "ground_truth": "C'est un arch\u00e9type classique de Tsundere, pouvant faire penser \u00e0 Erina de Food Wars (pas uniforme marin) ou Sawachika Eri de School Rumble, voire Kagami de Lucky Star.",
     "domain": "general",
     "difficulty": "medium",
     "contexts": []
   },
   {
-    "query": "Anime psychologique traitant de la solitude humaine, avec des combats de robots géants appelés EVA.",
+    "query": "Anime psychologique traitant de la solitude humaine, avec des combats de robots g\u00e9ants appel\u00e9s EVA.",
     "expected_id": "30",
     "expected_title": "Neon Genesis Evangelion",
     "is_architectural": true,
@@ -264,29 +264,29 @@
     "contexts": []
   },
   {
-    "query": "Est-ce que les événements du film d'animation Jujutsu Kaisen 0 se déroulent avant ou après le manga principal ?",
+    "query": "Est-ce que les \u00e9v\u00e9nements du film d'animation Jujutsu Kaisen 0 se d\u00e9roulent avant ou apr\u00e8s le manga principal ?",
     "expected_id": "40748",
     "expected_title": "Jujutsu Kaisen",
     "is_architectural": true,
     "query_type": "cross-media",
-    "ground_truth": "Jujutsu Kaisen 0 est un prequel (Volume 0), ses événements se déroulent avant l'histoire principale avec Yuji Itadori.",
+    "ground_truth": "Jujutsu Kaisen 0 est un prequel (Volume 0), ses \u00e9v\u00e9nements se d\u00e9roulent avant l'histoire principale avec Yuji Itadori.",
     "domain": "general",
     "difficulty": "hard",
     "contexts": []
   },
   {
-    "query": "Dans quel épisode de Dragon Ball Z voit-on Luffy utiliser le Haki des Rois ?",
+    "query": "Dans quel \u00e9pisode de Dragon Ball Z voit-on Luffy utiliser le Haki des Rois ?",
     "expected_id": "0",
     "expected_title": "None",
     "is_architectural": true,
     "query_type": "negative",
-    "ground_truth": "Luffy et le Haki des Rois appartiennent à l'univers de One Piece, pas à Dragon Ball Z. Cette scène n'existe pas.",
+    "ground_truth": "Luffy et le Haki des Rois appartiennent \u00e0 l'univers de One Piece, pas \u00e0 Dragon Ball Z. Cette sc\u00e8ne n'existe pas.",
     "domain": "episodes_stats",
     "difficulty": "hard",
     "contexts": []
   },
   {
-    "query": "Un personnage chauve avec une cape jaune et un visage souvent dessiné de manière très simple et comique.",
+    "query": "Un personnage chauve avec une cape jaune et un visage souvent dessin\u00e9 de mani\u00e8re tr\u00e8s simple et comique.",
     "expected_id": "30276",
     "expected_title": "One Punch Man",
     "is_architectural": true,
@@ -297,7 +297,7 @@
     "contexts": []
   },
   {
-    "query": "Un anime sportif de volley-ball axé sur le travail d'équipe, l'évolution personnelle, et l'idée de voler métaphoriquement.",
+    "query": "Un anime sportif de volley-ball ax\u00e9 sur le travail d'\u00e9quipe, l'\u00e9volution personnelle, et l'id\u00e9e de voler m\u00e9taphoriquement.",
     "expected_id": "20583",
     "expected_title": "Haikyuu!!",
     "is_architectural": true,
@@ -308,12 +308,12 @@
     "contexts": []
   },
   {
-    "query": "L'animé Akira de 1988 couvre-t-il l'intégralité du manga original de Katsuhiro Otomo ?",
+    "query": "L'anim\u00e9 Akira de 1988 couvre-t-il l'int\u00e9gralit\u00e9 du manga original de Katsuhiro Otomo ?",
     "expected_id": "47",
     "expected_title": "Akira",
     "is_architectural": true,
     "query_type": "cross-media",
-    "ground_truth": "Non, le film Akira de 1988 a été produit alors que le manga était encore en cours de publication. Il ne couvre pas l'intégralité de l'œuvre et diverge considérablement sur la fin.",
+    "ground_truth": "Non, le film Akira de 1988 a \u00e9t\u00e9 produit alors que le manga \u00e9tait encore en cours de publication. Il ne couvre pas l'int\u00e9gralit\u00e9 de l'\u0153uvre et diverge consid\u00e9rablement sur la fin.",
     "domain": "general",
     "difficulty": "hard",
     "contexts": []
@@ -324,7 +324,7 @@
     "expected_title": "None",
     "is_architectural": true,
     "query_type": "negative",
-    "ground_truth": "Le Bankai est un pouvoir spécifique à l'univers de Bleach. Naruto utilise le chakra et le mode Ermite ou Kyubi, mais n'a pas de Bankai.",
+    "ground_truth": "Le Bankai est un pouvoir sp\u00e9cifique \u00e0 l'univers de Bleach. Naruto utilise le chakra et le mode Ermite ou Kyubi, mais n'a pas de Bankai.",
     "domain": "general",
     "difficulty": "hard",
     "contexts": []
@@ -335,24 +335,24 @@
     "expected_title": "Multiple",
     "is_architectural": true,
     "query_type": "graph",
-    "ground_truth": "Daisuke Ono (Erwin Smith / Jotaro Kujo), Takehito Koyasu (Sieg Jäger / Dio Brando), et Yuki Kaji (Eren Jäger / Koichi Hirose).",
+    "ground_truth": "Daisuke Ono (Erwin Smith / Jotaro Kujo), Takehito Koyasu (Sieg J\u00e4ger / Dio Brando), et Yuki Kaji (Eren J\u00e4ger / Koichi Hirose).",
     "domain": "general",
     "difficulty": "hard",
     "contexts": []
   },
   {
-    "query": "Une image d'un immense arbre brillant au centre d'un monde fantastique avec une fille aux cheveux dorés.",
+    "query": "Une image d'un immense arbre brillant au centre d'un monde fantastique avec une fille aux cheveux dor\u00e9s.",
     "expected_id": "0",
     "expected_title": "Multiple",
     "is_architectural": true,
     "query_type": "visual",
-    "ground_truth": "Cela peut faire penser à l'Arbre du Monde dans Sword Art Online (arc ALO) avec Asuna ou Leafa, ou à des éléments de Berserk (Arbre Spirale).",
+    "ground_truth": "Cela peut faire penser \u00e0 l'Arbre du Monde dans Sword Art Online (arc ALO) avec Asuna ou Leafa, ou \u00e0 des \u00e9l\u00e9ments de Berserk (Arbre Spirale).",
     "domain": "general",
     "difficulty": "medium",
     "contexts": []
   },
   {
-    "query": "Série centrée sur la musique classique, où un jeune pianiste prodige traumatisé rencontre une violoniste excentrique.",
+    "query": "S\u00e9rie centr\u00e9e sur la musique classique, o\u00f9 un jeune pianiste prodige traumatis\u00e9 rencontre une violoniste excentrique.",
     "expected_id": "23273",
     "expected_title": "Your Lie in April",
     "is_architectural": true,
@@ -363,12 +363,12 @@
     "contexts": []
   },
   {
-    "query": "Combien de films récapitulatifs ont été produits pour l'animé Code Geass avant le film Lelouch of the Re;surrection ?",
+    "query": "Combien de films r\u00e9capitulatifs ont \u00e9t\u00e9 produits pour l'anim\u00e9 Code Geass avant le film Lelouch of the Re;surrection ?",
     "expected_id": "1575",
     "expected_title": "Code Geass",
     "is_architectural": true,
     "query_type": "cross-media",
-    "ground_truth": "Il y a eu une trilogie de films récapitulatifs (Initiation, Transgression, Glorification) avant le film Re;surrection.",
+    "ground_truth": "Il y a eu une trilogie de films r\u00e9capitulatifs (Initiation, Transgression, Glorification) avant le film Re;surrection.",
     "domain": "general",
     "difficulty": "hard",
     "contexts": []
@@ -379,40 +379,40 @@
     "expected_title": "None",
     "is_architectural": true,
     "query_type": "negative",
-    "ground_truth": "Non, l'intégralité de l'adaptation animée de Demon Slayer (Kimetsu no Yaiba) est produite par le studio ufotable.",
+    "ground_truth": "Non, l'int\u00e9gralit\u00e9 de l'adaptation anim\u00e9e de Demon Slayer (Kimetsu no Yaiba) est produite par le studio ufotable.",
     "domain": "episodes_stats",
     "difficulty": "hard",
     "contexts": []
   },
   {
-    "query": "Quels animés ont été réalisés par Shinichiro Watanabe à part Cowboy Bebop et Samurai Champloo ?",
+    "query": "Quels anim\u00e9s ont \u00e9t\u00e9 r\u00e9alis\u00e9s par Shinichiro Watanabe \u00e0 part Cowboy Bebop et Samurai Champloo ?",
     "expected_id": "0",
     "expected_title": "Multiple",
     "is_architectural": true,
     "query_type": "graph",
-    "ground_truth": "Shinichiro Watanabe a également réalisé Space Dandy, Terror in Resonance (Zankyou no Terror), et Carole & Tuesday.",
+    "ground_truth": "Shinichiro Watanabe a \u00e9galement r\u00e9alis\u00e9 Space Dandy, Terror in Resonance (Zankyou no Terror), et Carole & Tuesday.",
     "domain": "general",
     "difficulty": "hard",
     "contexts": []
   },
   {
-    "query": "Une fille avec un cache-œil, des cheveux noirs ou violets sombres, qui pense avoir des pouvoirs magiques dans un cadre scolaire.",
+    "query": "Une fille avec un cache-\u0153il, des cheveux noirs ou violets sombres, qui pense avoir des pouvoirs magiques dans un cadre scolaire.",
     "expected_id": "14741",
     "expected_title": "Love, Chunibyo & Other Delusions!",
     "is_architectural": true,
     "query_type": "visual",
-    "ground_truth": "C'est la description de Rikka Takanashi dans Chuunibyou demo Koi ga Shitai! (le syndrome de la classe de 4ème).",
+    "ground_truth": "C'est la description de Rikka Takanashi dans Chuunibyou demo Koi ga Shitai! (le syndrome de la classe de 4\u00e8me).",
     "domain": "general",
     "difficulty": "medium",
     "contexts": []
   },
   {
-    "query": "Œuvre de science-fiction dystopique explorant le concept de libre arbitre avec un système informatique appelé Sibyl.",
+    "query": "\u0152uvre de science-fiction dystopique explorant le concept de libre arbitre avec un syst\u00e8me informatique appel\u00e9 Sibyl.",
     "expected_id": "13601",
     "expected_title": "Psycho-Pass",
     "is_architectural": true,
     "query_type": "thematic",
-    "ground_truth": "Il s'agit de la série Psycho-Pass, où le Système Sibyl mesure le coefficient de criminalité des citoyens.",
+    "ground_truth": "Il s'agit de la s\u00e9rie Psycho-Pass, o\u00f9 le Syst\u00e8me Sibyl mesure le coefficient de criminalit\u00e9 des citoyens.",
     "domain": "general",
     "difficulty": "medium",
     "contexts": []
@@ -423,24 +423,24 @@
     "expected_title": "Multiple",
     "is_architectural": true,
     "query_type": "cross-media",
-    "ground_truth": "Oui, le spin-off s'appelle Adventure of Sinbad et a d'abord été publié sous forme de manga avant de recevoir son adaptation animée.",
+    "ground_truth": "Oui, le spin-off s'appelle Adventure of Sinbad et a d'abord \u00e9t\u00e9 publi\u00e9 sous forme de manga avant de recevoir son adaptation anim\u00e9e.",
     "domain": "general",
     "difficulty": "hard",
     "contexts": []
   },
   {
-    "query": "A quel moment de l'histoire Gon de Hunter x Hunter débloque-t-il le Gear Fourth ?",
+    "query": "A quel moment de l'histoire Gon de Hunter x Hunter d\u00e9bloque-t-il le Gear Fourth ?",
     "expected_id": "0",
     "expected_title": "None",
     "is_architectural": true,
     "query_type": "negative",
-    "ground_truth": "Gon est un personnage de Hunter x Hunter qui utilise le Nen. Le Gear Fourth est une transformation exclusive à Monkey D. Luffy dans One Piece.",
+    "ground_truth": "Gon est un personnage de Hunter x Hunter qui utilise le Nen. Le Gear Fourth est une transformation exclusive \u00e0 Monkey D. Luffy dans One Piece.",
     "domain": "general",
     "difficulty": "hard",
     "contexts": []
   },
   {
-    "query": "Quels mangas publiés dans le magazine Ultra Jump ont été adaptés en animé ?",
+    "query": "Quels mangas publi\u00e9s dans le magazine Ultra Jump ont \u00e9t\u00e9 adapt\u00e9s en anim\u00e9 ?",
     "expected_id": "0",
     "expected_title": "Multiple",
     "is_architectural": true,
@@ -451,23 +451,23 @@
     "contexts": []
   },
   {
-    "query": "Un prêtre portant toujours un énorme crucifix enveloppé de tissu, qui se révèle être une mitrailleuse lourde.",
+    "query": "Un pr\u00eatre portant toujours un \u00e9norme crucifix envelopp\u00e9 de tissu, qui se r\u00e9v\u00e8le \u00eatre une mitrailleuse lourde.",
     "expected_id": "6",
     "expected_title": "Trigun",
     "is_architectural": true,
     "query_type": "visual",
-    "ground_truth": "C'est la description de Nicholas D. Wolfwood, le prêtre armé de l'anime Trigun.",
+    "ground_truth": "C'est la description de Nicholas D. Wolfwood, le pr\u00eatre arm\u00e9 de l'anime Trigun.",
     "domain": "general",
     "difficulty": "medium",
     "contexts": []
   },
   {
-    "query": "Un isekai où le protagoniste revient sans cesse à la vie après chaque mort pour sauver la fille qu'il aime.",
+    "query": "Un isekai o\u00f9 le protagoniste revient sans cesse \u00e0 la vie apr\u00e8s chaque mort pour sauver la fille qu'il aime.",
     "expected_id": "31240",
     "expected_title": "Re:Zero",
     "is_architectural": true,
     "query_type": "thematic",
-    "ground_truth": "Il s'agit de Re:Zero kara Hajimeru Isekai Seikatsu, le héros est Subaru Natsuki et son pouvoir est la Mort Réversible.",
+    "ground_truth": "Il s'agit de Re:Zero kara Hajimeru Isekai Seikatsu, le h\u00e9ros est Subaru Natsuki et son pouvoir est la Mort R\u00e9versible.",
     "domain": "general",
     "difficulty": "medium",
     "contexts": []
@@ -478,7 +478,7 @@
     "expected_title": "Evangelion: 3.0+1.0 Thrice Upon a Time",
     "is_architectural": true,
     "query_type": "cross-media",
-    "ground_truth": "Le film 3.0+1.0 sert de conclusion à la quadrilogie des films Rebuild of Evangelion, qui s'écartent drastiquement de la série originale et du manga.",
+    "ground_truth": "Le film 3.0+1.0 sert de conclusion \u00e0 la quadrilogie des films Rebuild of Evangelion, qui s'\u00e9cartent drastiquement de la s\u00e9rie originale et du manga.",
     "domain": "general",
     "difficulty": "hard",
     "contexts": []
@@ -489,40 +489,40 @@
     "expected_title": "None",
     "is_architectural": true,
     "query_type": "negative",
-    "ground_truth": "Il n'y a pas de Titan Colossal dans Sword Art Online, c'est une créature de L'Attaque des Titans. Kirito affronte des boss d'étage comme The Gleam Eyes.",
+    "ground_truth": "Il n'y a pas de Titan Colossal dans Sword Art Online, c'est une cr\u00e9ature de L'Attaque des Titans. Kirito affronte des boss d'\u00e9tage comme The Gleam Eyes.",
     "domain": "general",
     "difficulty": "hard",
     "contexts": []
   },
   {
-    "query": "Je cherche un anime avec un mec qui a un bras droit en métal automail rouge, et qui cherche la pierre philosophale.",
+    "query": "Je cherche un anime avec un mec qui a un bras droit en m\u00e9tal automail rouge, et qui cherche la pierre philosophale.",
     "expected_id": "5114",
     "expected_title": "Fullmetal Alchemist",
     "is_architectural": false,
-    "query_type": "standard",
-    "ground_truth": "C'est Fullmetal Alchemist. Edward Elric possède un automail au bras droit et cherche la pierre pour retrouver son corps et celui de son frère.",
+    "query_type": "graph",
+    "ground_truth": "C'est Fullmetal Alchemist. Edward Elric poss\u00e8de un automail au bras droit et cherche la pierre pour retrouver son corps et celui de son fr\u00e8re.",
     "domain": "general",
     "difficulty": "easy",
     "contexts": []
   },
   {
-    "query": "Un anime de comédie romantique où le président du conseil des élèves et la vice-présidente essaient de se forcer mutuellement à confesser leur amour.",
+    "query": "Un anime de com\u00e9die romantique o\u00f9 le pr\u00e9sident du conseil des \u00e9l\u00e8ves et la vice-pr\u00e9sidente essaient de se forcer mutuellement \u00e0 confesser leur amour.",
     "expected_id": "37999",
     "expected_title": "Kaguya-sama: Love is War",
     "is_architectural": true,
     "query_type": "thematic",
-    "ground_truth": "Il s'agit de Kaguya-sama: Love is War, mettant en scène Kaguya Shinomiya et Miyuki Shirogane.",
+    "ground_truth": "Il s'agit de Kaguya-sama: Love is War, mettant en sc\u00e8ne Kaguya Shinomiya et Miyuki Shirogane.",
     "domain": "general",
     "difficulty": "medium",
     "contexts": []
   },
   {
-    "query": "Quelles œuvres du studio Trigger utilisent des éléments de science-fiction avec des extraterrestres basés sur des vêtements ?",
+    "query": "Quelles \u0153uvres du studio Trigger utilisent des \u00e9l\u00e9ments de science-fiction avec des extraterrestres bas\u00e9s sur des v\u00eatements ?",
     "expected_id": "18679",
     "expected_title": "Kill la Kill",
     "is_architectural": true,
     "query_type": "graph",
-    "ground_truth": "Il s'agit de Kill la Kill, produit par le studio Trigger, où les fibres de vie extraterrestres (Life Fibers) forment les vêtements.",
+    "ground_truth": "Il s'agit de Kill la Kill, produit par le studio Trigger, o\u00f9 les fibres de vie extraterrestres (Life Fibers) forment les v\u00eatements.",
     "domain": "general",
     "difficulty": "hard",
     "contexts": []
@@ -539,7 +539,7 @@
     "contexts": []
   },
   {
-    "query": "Un shonen classique sur un garçon sans pouvoirs magiques dans un monde où tout le monde en a, et qui obtient un grimoire à 5 trèfles.",
+    "query": "Un shonen classique sur un gar\u00e7on sans pouvoirs magiques dans un monde o\u00f9 tout le monde en a, et qui obtient un grimoire \u00e0 5 tr\u00e8fles.",
     "expected_id": "34572",
     "expected_title": "Black Clover",
     "is_architectural": true,
@@ -550,139 +550,139 @@
     "contexts": []
   },
   {
-    "query": "Quels comédiens de doublage français (VF) prêtent leur voix à la fois à des personnages de Naruto et de One Piece ?",
+    "query": "Quels com\u00e9diens de doublage fran\u00e7ais (VF) pr\u00eatent leur voix \u00e0 la fois \u00e0 des personnages de Naruto et de One Piece ?",
     "expected_id": "0",
     "expected_title": "Multiple",
     "is_architectural": true,
     "query_type": "graph",
-    "ground_truth": "Le système doit lier les relations de voix françaises. Par exemple, Christophe Lemoine double à la fois Shikamaru (Naruto) et Baggy le Clown (One Piece), et Stéphane Excoffier intervient également sur ces franchises.",
+    "ground_truth": "Le syst\u00e8me doit lier les relations de voix fran\u00e7aises. Par exemple, Christophe Lemoine double \u00e0 la fois Shikamaru (Naruto) et Baggy le Clown (One Piece), et St\u00e9phane Excoffier intervient \u00e9galement sur ces franchises.",
     "domain": "voice_actors_vf",
     "difficulty": "hard",
     "contexts": [
-      "En France, Christophe Lemoine est la voix française de Shikamaru Nara dans Naruto et de Baggy le Clown dans One Piece.",
-      "Stéphane Excoffier double plusieurs personnages marquants de l'animation en version française, dont Luffy enfant dans One Piece."
+      "En France, Christophe Lemoine est la voix fran\u00e7aise de Shikamaru Nara dans Naruto et de Baggy le Clown dans One Piece.",
+      "St\u00e9phane Excoffier double plusieurs personnages marquants de l'animation en version fran\u00e7aise, dont Luffy enfant dans One Piece."
     ]
   },
   {
-    "query": "Je cherche la maison d'édition française qui publie des chefs-d'œuvre de dark fantasy comme Berserk et des mangas d'action comme Tokyo Ghoul.",
+    "query": "Je cherche la maison d'\u00e9dition fran\u00e7aise qui publie des chefs-d'\u0153uvre de dark fantasy comme Berserk et des mangas d'action comme Tokyo Ghoul.",
     "expected_id": "2",
-    "expected_title": "Glénat",
+    "expected_title": "Gl\u00e9nat",
     "is_architectural": true,
     "query_type": "thematic",
-    "ground_truth": "Il s'agit des éditions Glénat, qui publient Berserk de Kentaro Miura et Tokyo Ghoul de Sui Ishida en France.",
+    "ground_truth": "Il s'agit des \u00e9ditions Gl\u00e9nat, qui publient Berserk de Kentaro Miura et Tokyo Ghoul de Sui Ishida en France.",
     "domain": "publishers_fr",
     "difficulty": "medium",
     "contexts": [
-      "Les éditions Glénat publient la version française du manga de dark fantasy Berserk écrit par Kentaro Miura.",
-      "Tokyo Ghoul de Sui Ishida est publié en France aux éditions Glénat."
+      "Les \u00e9ditions Gl\u00e9nat publient la version fran\u00e7aise du manga de dark fantasy Berserk \u00e9crit par Kentaro Miura.",
+      "Tokyo Ghoul de Sui Ishida est publi\u00e9 en France aux \u00e9ditions Gl\u00e9nat."
     ]
   },
   {
-    "query": "Dans quel magazine prépublie l'auteur original de Monster et de Pluto, et a-t-il reçu des prix majeurs pour ces mangas ?",
+    "query": "Dans quel magazine pr\u00e9publie l'auteur original de Monster et de Pluto, et a-t-il re\u00e7u des prix majeurs pour ces mangas ?",
     "expected_id": "19",
     "expected_title": "Monster",
     "is_architectural": true,
     "query_type": "cross-media",
-    "ground_truth": "L'auteur est Naoki Urasawa. Il prépublie principalement dans des magazines comme Big Comic Original (Monster) et Big Comic Spirits (20th Century Boys). Il a remporté de prestigieuses distinctions comme le Prix culturel Osamu Tezuka et le Shogakukan Manga Award.",
+    "ground_truth": "L'auteur est Naoki Urasawa. Il pr\u00e9publie principalement dans des magazines comme Big Comic Original (Monster) et Big Comic Spirits (20th Century Boys). Il a remport\u00e9 de prestigieuses distinctions comme le Prix culturel Osamu Tezuka et le Shogakukan Manga Award.",
     "domain": "publishers_fr",
     "difficulty": "hard",
     "contexts": [
-      "Naoki Urasawa prépublie Monster dans Big Comic Original et Pluto dans Big Comic Spirits.",
-      "Monster a remporté le Grand Prix du Prix culturel Osamu Tezuka en 1999."
+      "Naoki Urasawa pr\u00e9publie Monster dans Big Comic Original et Pluto dans Big Comic Spirits.",
+      "Monster a remport\u00e9 le Grand Prix du Prix culturel Osamu Tezuka en 1999."
     ]
   },
   {
-    "query": "Trouve-moi le groupe d'anisong légendaire ou le chanteur qui interprète le générique d'ouverture emblématique Guren no Yumiya pour L'Attaque des Titans.",
+    "query": "Trouve-moi le groupe d'anisong l\u00e9gendaire ou le chanteur qui interpr\u00e8te le g\u00e9n\u00e9rique d'ouverture embl\u00e9matique Guren no Yumiya pour L'Attaque des Titans.",
     "expected_id": "16498",
     "expected_title": "Attack on Titan",
     "is_architectural": true,
     "query_type": "thematic",
-    "ground_truth": "L'opening emblématique 'Guren no Yumiya' de L'Attaque des Titans est interprété par le groupe Linked Horizon dirigé par Revo.",
+    "ground_truth": "L'opening embl\u00e9matique 'Guren no Yumiya' de L'Attaque des Titans est interpr\u00e9t\u00e9 par le groupe Linked Horizon dirig\u00e9 par Revo.",
     "domain": "anisongs",
     "difficulty": "medium",
     "contexts": [
-      "Linked Horizon, dirigé par le compositeur Revo, interprète l'opening Guren no Yumiya pour la première saison de Shingeki no Kyojin (L'Attaque des Titans)."
+      "Linked Horizon, dirig\u00e9 par le compositeur Revo, interpr\u00e8te l'opening Guren no Yumiya pour la premi\u00e8re saison de Shingeki no Kyojin (L'Attaque des Titans)."
     ]
   },
   {
-    "query": "Quel acteur de doublage japonais (Seiyuu) prête sa voix au charismatique Levi Ackerman dans L'Attaque des Titans et dans Trafalgar Law dans One Piece ?",
+    "query": "Quel acteur de doublage japonais (Seiyuu) pr\u00eate sa voix au charismatique Levi Ackerman dans L'Attaque des Titans et dans Trafalgar Law dans One Piece ?",
     "expected_id": "0",
     "expected_title": "Hiroshi Kamiya",
     "is_architectural": true,
     "query_type": "graph",
-    "ground_truth": "L'acteur emblématique est Hiroshi Kamiya, qui prête sa voix à la fois au Caporal Levi dans Shingeki no Kyojin et à Trafalgar Law dans One Piece.",
+    "ground_truth": "L'acteur embl\u00e9matique est Hiroshi Kamiya, qui pr\u00eate sa voix \u00e0 la fois au Caporal Levi dans Shingeki no Kyojin et \u00e0 Trafalgar Law dans One Piece.",
     "domain": "seiyuu",
     "difficulty": "hard",
     "contexts": [
-      "Hiroshi Kamiya prête sa voix au Caporal Levi Ackerman dans L'Attaque des Titans et à Trafalgar Law dans One Piece."
+      "Hiroshi Kamiya pr\u00eate sa voix au Caporal Levi Ackerman dans L'Attaque des Titans et \u00e0 Trafalgar Law dans One Piece."
     ]
   },
   {
-    "query": "Combien de tomes compte le manga original Death Note par rapport à son nombre d'épisodes dans son adaptation animée ?",
+    "query": "Combien de tomes compte le manga original Death Note par rapport \u00e0 son nombre d'\u00e9pisodes dans son adaptation anim\u00e9e ?",
     "expected_id": "1535",
     "expected_title": "Death Note",
     "is_architectural": true,
     "query_type": "cross-media",
-    "ground_truth": "Le manga original Death Note compte exactement 12 tomes (plus un tome spécial 13) tandis que son adaptation animée par Studio Madhouse comporte exactement 37 épisodes regroupés en une seule saison.",
+    "ground_truth": "Le manga original Death Note compte exactement 12 tomes (plus un tome sp\u00e9cial 13) tandis que son adaptation anim\u00e9e par Studio Madhouse comporte exactement 37 \u00e9pisodes regroup\u00e9s en une seule saison.",
     "domain": "episodes_stats",
     "difficulty": "hard",
     "contexts": [
-      "Le manga original Death Note écrit par Tsugumi Ohba s'étend sur 12 tomes reliés, plus un tome spécial 13.",
-      "L'adaptation animée de Death Note produite par Madhouse compte exactement 37 épisodes."
+      "Le manga original Death Note \u00e9crit par Tsugumi Ohba s'\u00e9tend sur 12 tomes reli\u00e9s, plus un tome sp\u00e9cial 13.",
+      "L'adaptation anim\u00e9e de Death Note produite par Madhouse compte exactement 37 \u00e9pisodes."
     ]
   },
   {
-    "query": "Est-ce que le célèbre doubleur français de Guts dans l'anime de 1997 double aussi Son Goku dans la version française de Dragon Ball Z ?",
+    "query": "Est-ce que le c\u00e9l\u00e8bre doubleur fran\u00e7ais de Guts dans l'anime de 1997 double aussi Son Goku dans la version fran\u00e7aise de Dragon Ball Z ?",
     "expected_id": "0",
     "expected_title": "None",
     "is_architectural": true,
     "query_type": "negative",
-    "ground_truth": "Non, Guts dans la VF de la série Berserk de 1997 est doublé principalement par Emmanuel Gradi, tandis que Son Goku dans Dragon Ball Z est doublé par le comédien historique Patrick Borg.",
+    "ground_truth": "Non, Guts dans la VF de la s\u00e9rie Berserk de 1997 est doubl\u00e9 principalement par Emmanuel Gradi, tandis que Son Goku dans Dragon Ball Z est doubl\u00e9 par le com\u00e9dien historique Patrick Borg.",
     "domain": "voice_actors_vf",
     "difficulty": "hard",
     "contexts": [
-      "Emmanuel Gradi est la voix de Guts dans le doublage français de l'anime Berserk de 1997.",
-      "Dans Dragon Ball Z, Son Goku est doublé par le comédien de doublage Patrick Borg."
+      "Emmanuel Gradi est la voix de Guts dans le doublage fran\u00e7ais de l'anime Berserk de 1997.",
+      "Dans Dragon Ball Z, Son Goku est doubl\u00e9 par le com\u00e9dien de doublage Patrick Borg."
     ]
   },
   {
-    "query": "Quels sites de distribution ou plateformes de streaming légal diffusent l'anime Demon Slayer (Kimetsu no Yaiba) en France ?",
+    "query": "Quels sites de distribution ou plateformes de streaming l\u00e9gal diffusent l'anime Demon Slayer (Kimetsu no Yaiba) en France ?",
     "expected_id": "38000",
     "expected_title": "Demon Slayer",
     "is_architectural": true,
-    "query_type": "standard",
-    "ground_truth": "En France, l'anime Demon Slayer est distribué légalement sur les plateformes de streaming Crunchyroll et Netflix.",
+    "query_type": "graph",
+    "ground_truth": "En France, l'anime Demon Slayer est distribu\u00e9 l\u00e9galement sur les plateformes de streaming Crunchyroll et Netflix.",
     "domain": "general",
     "difficulty": "medium",
     "contexts": [
-      "Les plateformes de streaming Crunchyroll et Netflix diffusent légalement l'anime Demon Slayer (Kimetsu no Yaiba) en France."
+      "Les plateformes de streaming Crunchyroll et Netflix diffusent l\u00e9galement l'anime Demon Slayer (Kimetsu no Yaiba) en France."
     ]
   },
   {
-    "query": "Je me souviens d'un anime de comédie romantique récent avec un opening extrêmement populaire sur YouTube chanté par YOASOBI, parlant de la face cachée d'une idol et de ses jumeaux.",
+    "query": "Je me souviens d'un anime de com\u00e9die romantique r\u00e9cent avec un opening extr\u00eamement populaire sur YouTube chant\u00e9 par YOASOBI, parlant de la face cach\u00e9e d'une idol et de ses jumeaux.",
     "expected_id": "0",
     "expected_title": "Oshi no Ko",
     "is_architectural": true,
     "query_type": "thematic",
-    "ground_truth": "Il s'agit de l'anime Oshi no Ko, et l'opening ultra-populaire chanté par YOASOBI est intitulé 'Idol'.",
+    "ground_truth": "Il s'agit de l'anime Oshi no Ko, et l'opening ultra-populaire chant\u00e9 par YOASOBI est intitul\u00e9 'Idol'.",
     "domain": "anisongs",
     "difficulty": "medium",
     "contexts": [
-      "YOASOBI chante la chanson Idol, opening de l'anime de comédie dramatique Oshi no Ko traitant de la vie d'une idol et de ses jumeaux."
+      "YOASOBI chante la chanson Idol, opening de l'anime de com\u00e9die dramatique Oshi no Ko traitant de la vie d'une idol et de ses jumeaux."
     ]
   },
   {
-    "query": "Le manga Neon Genesis Evangelion a-t-il remporté le Prix culturel Osamu Tezuka dans la catégorie manga en 2020 ?",
+    "query": "Le manga Neon Genesis Evangelion a-t-il remport\u00e9 le Prix culturel Osamu Tezuka dans la cat\u00e9gorie manga en 2020 ?",
     "expected_id": "0",
     "expected_title": "None",
     "is_architectural": true,
     "query_type": "negative",
-    "ground_truth": "Non, le manga Neon Genesis Evangelion s'est terminé en 2013 et n'a pas reçu le prix en 2020. En 2020, c'est le manga Nyx no Lantern de Kan Takahama qui a reçu le Grand Prix.",
+    "ground_truth": "Non, le manga Neon Genesis Evangelion s'est termin\u00e9 en 2013 et n'a pas re\u00e7u le prix en 2020. En 2020, c'est le manga Nyx no Lantern de Kan Takahama qui a re\u00e7u le Grand Prix.",
     "domain": "general",
     "difficulty": "hard",
     "contexts": [
       "Le manga Neon Genesis Evangelion s'est conclu en 2013.",
-      "En 2020, c'est le manga Nyx no Lantern de Kan Takahama qui a remporté le Grand Prix du Prix culturel Osamu Tezuka."
+      "En 2020, c'est le manga Nyx no Lantern de Kan Takahama qui a remport\u00e9 le Grand Prix du Prix culturel Osamu Tezuka."
     ]
   }
 ]

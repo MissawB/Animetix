@@ -1,9 +1,14 @@
-from typing import Optional, Dict
+from typing import Optional, Dict, Type, Any
+import logging
+import orjson
+from pydantic import BaseModel
 from ...ports.inference_port import InferencePort
 
 from ...ports.usage_port import UsagePort
-from ..exceptions import InferenceError
+from ..exceptions import InferenceError, ParsingError
 from .prompt_manager import PromptManager
+
+logger = logging.getLogger('animetix')
 
 # --- OPENTELEMETRY TRACING ---
 try:
@@ -88,10 +93,52 @@ class LLMService:
             
             return res
         except Exception as e:
+            logger.error(
+                f"AI Generation failed: {str(e)}", 
+                extra={'context': {'prompt': prompt[:200], 'use_slm': use_slm}}
+            )
             if span:
                 span.set_status(Status(StatusCode.ERROR, description=str(e)))
                 span.end()
-            raise InferenceError(f"AI Generation failed: {str(e)}")
+            raise InferenceError(f"AI Generation failed: {str(e)}", context={'original_error': str(e)})
+
+    def generate_structured(self, prompt: str, schema: Type[BaseModel], system_prompt: str = "", use_slm: bool = False) -> Any:
+        """Génère une réponse structurée (JSON) avec une tentative de correction automatique en cas d'échec."""
+        res = self.generate(prompt, system_prompt=system_prompt, use_slm=use_slm)
+        try:
+            return self._parse_json(res, schema)
+        except ParsingError as e:
+            logger.warning(f"Initial JSON parsing failed, attempting retry: {e}")
+            return self._retry_json(prompt, res, str(e), schema, system_prompt, use_slm)
+
+    def _parse_json(self, text: str, schema: Type[BaseModel]) -> Any:
+        try:
+            # Extraction du bloc JSON si nécessaire
+            if '{' in text and '}' in text:
+                json_str = text[text.find('{'):text.rfind('}')+1]
+                data = orjson.loads(json_str)
+                return schema.model_validate(data)
+            else:
+                raise ParsingError("No JSON block found in output")
+        except Exception as e:
+            raise ParsingError(f"Failed to parse or validate JSON: {str(e)}")
+
+    def _retry_json(self, original_prompt: str, malformed_output: str, error_msg: str, schema: Type[BaseModel], system_prompt: str, use_slm: bool) -> Any:
+        """Tente de corriger un JSON malformé en demandant explicitement une correction à l'IA."""
+        fix_prompt = (
+            f"Tu as précédemment retourné un JSON invalide. Voici l'erreur : {error_msg}\n"
+            f"Voici ton contenu malformé :\n{malformed_output}\n\n"
+            f"S'il te plaît, corrige-le et retourne UNIQUEMENT le JSON valide correspondant au schéma suivant :\n"
+            f"{schema.model_json_schema()}"
+        )
+        
+        # On utilise souvent un modèle plus rapide/robuste pour la correction
+        res = self.generate(fix_prompt, system_prompt="Tu es un expert en correction de JSON. Retourne uniquement du JSON valide.", use_slm=use_slm)
+        try:
+            return self._parse_json(res, schema)
+        except ParsingError as e:
+            logger.error(f"JSON retry failed: {e}", extra={'context': {'output': res[:500]}})
+            raise ParsingError(f"JSON recovery failed after retry: {str(e)}")
 
     def generate_fusion_scenario(self, media_type: str, item1: Dict, item2: Dict, language: str, chaos_level: int = 50, universe_balance: int = 50, art_style: str = "Cyberpunk") -> str:
         """Génère un synopsis de fusion avec des paramètres créatifs via PromptManager."""

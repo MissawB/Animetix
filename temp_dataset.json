@@ -1,0 +1,482 @@
+[
+  {
+    "query": "Quel est l'animé où un jeune garçon cherche son père qui est un Hunter ?",
+    "expected_id": "11061",
+    "expected_title": "Hunter x Hunter (2011)",
+    "is_architectural": false,
+    "query_type": "standard",
+    "ground_truth": "L'histoire suit Gon Freecss qui passe l'examen de Hunter pour retrouver son père Ging."
+  },
+  {
+    "query": "Cite 3 autres animés produits par le même studio d'animation qui a fait les premières saisons de L'Attaque des Titans.",
+    "expected_id": "16498",
+    "expected_title": "Attack on Titan",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "Le studio est Wit Studio. D'autres animés incluent Vinland Saga (S1), Spy x Family (S1 avec CloverWorks), et Kabaneri of the Iron Fortress."
+  },
+  {
+    "query": "Je cherche un animé avec une esthétique cyberpunk très prononcée, sorti dans les années 90, avec une femme flic cyborg.",
+    "expected_id": "43",
+    "expected_title": "Ghost in the Shell",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "Il s'agit du film Ghost in the Shell (1995), mettant en scène le Major Motoko Kusanagi."
+  },
+  {
+    "query": "Qui est l'auteur original du manga qui a inspiré l'animé Monster, et a-t-il écrit d'autres œuvres adaptées en animé ?",
+    "expected_id": "19",
+    "expected_title": "Monster",
+    "is_architectural": true,
+    "query_type": "cross-media",
+    "ground_truth": "L'auteur est Naoki Urasawa. Ses autres œuvres adaptées incluent Pluto, Master Keaton et Yawara!."
+  },
+  {
+    "query": "L'animé avec un personnage masculin aux cheveux argentés, qui cache toujours le bas de son visage avec un masque et a un œil couvert par son bandeau frontal.",
+    "expected_id": "20",
+    "expected_title": "Naruto",
+    "is_architectural": true,
+    "query_type": "visual",
+    "ground_truth": "La description correspond parfaitement à Kakashi Hatake dans l'univers de Naruto."
+  },
+  {
+    "query": "Est-ce que le studio Ghibli a déjà collaboré avec le studio MAPPA sur un long métrage d'animation ?",
+    "expected_id": "0",
+    "expected_title": "None",
+    "is_architectural": true,
+    "query_type": "negative",
+    "ground_truth": "Non, il n'y a aucune collaboration connue entre le Studio Ghibli et le studio MAPPA sur un long métrage."
+  },
+  {
+    "query": "Trouve-moi un manga de dark fantasy où le héros possède une épée gigantesque, a une marque maudite dans le cou, et combat des démons appelés Apôtres.",
+    "expected_id": "2",
+    "expected_title": "Berserk",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "Il s'agit de Berserk, le héros est Guts."
+  },
+  {
+    "query": "Y a-t-il un lien entre le réalisateur de Your Name (Kimi no Na wa) et le film Suzume ?",
+    "expected_id": "32281",
+    "expected_title": "Your Name.",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "Oui, les deux films ont été réalisés par Makoto Shinkai."
+  },
+  {
+    "query": "Je me souviens d'une image avec un carnet noir posé sur l'herbe, et un shinigami géant effrayant qui aime les pommes en arrière-plan.",
+    "expected_id": "1535",
+    "expected_title": "Death Note",
+    "is_architectural": true,
+    "query_type": "visual",
+    "ground_truth": "C'est une référence visuelle évidente à Death Note avec le Death Note et le shinigami Ryuk."
+  },
+  {
+    "query": "Le film live action de One Piece est-il canon avec le manga original ?",
+    "expected_id": "21",
+    "expected_title": "One Piece",
+    "is_architectural": true,
+    "query_type": "cross-media",
+    "ground_truth": "Le live action Netflix de One Piece est une adaptation supervisée par Eiichiro Oda, mais n'est pas canon au sein de la continuité stricte du manga."
+  },
+  {
+    "query": "Quel est le nom de la technique où Son Goku fusionne avec Vegeta en utilisant des boucles d'oreilles ?",
+    "expected_id": "813",
+    "expected_title": "Dragon Ball Z",
+    "is_architectural": false,
+    "query_type": "standard",
+    "ground_truth": "C'est la fusion Potala, qui donne naissance à Vegetto (Vegito)."
+  },
+  {
+    "query": "Est-ce que Sasuke utilise le Bankai dans l'arc de l'examen Chuunin ?",
+    "expected_id": "20",
+    "expected_title": "Naruto",
+    "is_architectural": true,
+    "query_type": "negative",
+    "ground_truth": "Le Bankai est un concept de Bleach, pas de Naruto. Sasuke utilise le Sharingan ou le Chidori."
+  },
+  {
+    "query": "Quels sont les comédiens de doublage japonais (Seiyuu) principaux qui travaillent le plus souvent dans les animés du studio Kyoto Animation ?",
+    "expected_id": "0",
+    "expected_title": "Multiple",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "Le système doit analyser les relations Studio -> Animé -> Seiyuu pour trouver les voix récurrentes chez KyoAni."
+  },
+  {
+    "query": "Je cherche un anime récent centré sur le deuil, l'immortalité d'une elfe, et le voyage émotionnel après la défaite du roi démon.",
+    "expected_id": "52991",
+    "expected_title": "Frieren: Beyond Journey's End",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "Il s'agit de Frieren (Sousou no Frieren)."
+  },
+  {
+    "query": "Une scène où une jeune fille blonde avec des cornes sur la tête verse une larme tout en contrôlant des vecteurs invisibles.",
+    "expected_id": "226",
+    "expected_title": "Elfen Lied",
+    "is_architectural": true,
+    "query_type": "visual",
+    "ground_truth": "C'est une description visuelle clé du personnage Lucy/Nyu de l'anime Elfen Lied."
+  },
+  {
+    "query": "Combien de saisons compte l'adaptation animée complète de Fullmetal Alchemist: Brotherhood par rapport à la première série de 2003 ?",
+    "expected_id": "5114",
+    "expected_title": "Fullmetal Alchemist: Brotherhood",
+    "is_architectural": true,
+    "query_type": "cross-media",
+    "ground_truth": "FMA Brotherhood compte 64 épisodes (généralement groupés en 1 longue saison continue ou 5 parties selon les plateformes) et suit fidèlement le manga, contrairement à la version 2003 de 51 épisodes qui propose une fin originale."
+  },
+  {
+    "query": "Quel studio d'animation est responsable des adaptations des œuvres clés du collectif CLAMP ?",
+    "expected_id": "0",
+    "expected_title": "Multiple",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "Bien que CLAMP collabore avec divers studios, Madhouse a adapté des œuvres majeures comme Cardcaptor Sakura et Chobits."
+  },
+  {
+    "query": "Un personnage avec une cicatrice en forme de croix sur la joue gauche et qui se bat avec un sabre à lame inversée.",
+    "expected_id": "45",
+    "expected_title": "Rurouni Kenshin",
+    "is_architectural": true,
+    "query_type": "visual",
+    "ground_truth": "C'est la description visuelle exacte de Kenshin Himura."
+  },
+  {
+    "query": "Dans quel anime trouve-t-on un système de magie basé sur l'équivalence gardée, où l'on ne peut créer quelque chose qu'en sacrifiant une chose de valeur égale ?",
+    "expected_id": "5114",
+    "expected_title": "Fullmetal Alchemist",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "C'est le concept de 'l'Échange Équivalent' (Equivalent Exchange) au cœur de l'alchimie dans Fullmetal Alchemist."
+  },
+  {
+    "query": "Le créateur de l'univers Fate a-t-il aussi écrit le visual novel Tsukihime ?",
+    "expected_id": "0",
+    "expected_title": "Fate/stay night",
+    "is_architectural": true,
+    "query_type": "cross-media",
+    "ground_truth": "Oui, Kinoko Nasu (Type-Moon) est le créateur et scénariste principal de Fate/stay night et de Tsukihime."
+  },
+  {
+    "query": "Quelles autres séries du Weekly Shonen Jump le studio Pierrot a-t-il animées à part Naruto et Bleach ?",
+    "expected_id": "0",
+    "expected_title": "Multiple",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "Le studio Pierrot a animé Black Clover, Yu Yu Hakusho, et Tokyo Ghoul."
+  },
+  {
+    "query": "Est-ce que l'auteur de Death Note a travaillé sur d'autres mangas qui ont reçu une adaptation animée par le studio Madhouse ?",
+    "expected_id": "0",
+    "expected_title": "Multiple",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "Oui, Tsugumi Ohba (et Takeshi Obata) sont les auteurs de Bakuman, dont les premières saisons n'ont pas été faites par Madhouse mais par J.C.Staff, Death Parade a été fait par Madhouse (Death Billiards) mais sans lien avec Ohba. Il n'y a pas d'autre manga majeur d'Ohba adapté par Madhouse."
+  },
+  {
+    "query": "Je me souviens d'une fille avec des couettes blondes, un uniforme scolaire de marin, qui croise souvent les bras et crie souvent 'Baka !' en rougissant.",
+    "expected_id": "0",
+    "expected_title": "Multiple",
+    "is_architectural": true,
+    "query_type": "visual",
+    "ground_truth": "C'est un archétype classique de Tsundere, pouvant faire penser à Erina de Food Wars (pas uniforme marin) ou Sawachika Eri de School Rumble, voire Kagami de Lucky Star."
+  },
+  {
+    "query": "Anime psychologique traitant de la solitude humaine, avec des combats de robots géants appelés EVA.",
+    "expected_id": "30",
+    "expected_title": "Neon Genesis Evangelion",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "Il s'agit de Neon Genesis Evangelion de Hideaki Anno."
+  },
+  {
+    "query": "Est-ce que les événements du film d'animation Jujutsu Kaisen 0 se déroulent avant ou après le manga principal ?",
+    "expected_id": "40748",
+    "expected_title": "Jujutsu Kaisen",
+    "is_architectural": true,
+    "query_type": "cross-media",
+    "ground_truth": "Jujutsu Kaisen 0 est un prequel (Volume 0), ses événements se déroulent avant l'histoire principale avec Yuji Itadori."
+  },
+  {
+    "query": "Dans quel épisode de Dragon Ball Z voit-on Luffy utiliser le Haki des Rois ?",
+    "expected_id": "0",
+    "expected_title": "None",
+    "is_architectural": true,
+    "query_type": "negative",
+    "ground_truth": "Luffy et le Haki des Rois appartiennent à l'univers de One Piece, pas à Dragon Ball Z. Cette scène n'existe pas."
+  },
+  {
+    "query": "Un personnage chauve avec une cape jaune et un visage souvent dessiné de manière très simple et comique.",
+    "expected_id": "30276",
+    "expected_title": "One Punch Man",
+    "is_architectural": true,
+    "query_type": "visual",
+    "ground_truth": "C'est la description visuelle de Saitama dans One Punch Man."
+  },
+  {
+    "query": "Un anime sportif de volley-ball axé sur le travail d'équipe, l'évolution personnelle, et l'idée de voler métaphoriquement.",
+    "expected_id": "20583",
+    "expected_title": "Haikyuu!!",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "Il s'agit du manga/anime Haikyuu!! qui suit le club de Karasuno."
+  },
+  {
+    "query": "L'animé Akira de 1988 couvre-t-il l'intégralité du manga original de Katsuhiro Otomo ?",
+    "expected_id": "47",
+    "expected_title": "Akira",
+    "is_architectural": true,
+    "query_type": "cross-media",
+    "ground_truth": "Non, le film Akira de 1988 a été produit alors que le manga était encore en cours de publication. Il ne couvre pas l'intégralité de l'œuvre et diverge considérablement sur la fin."
+  },
+  {
+    "query": "Quel est le nom du Bankai de Naruto ?",
+    "expected_id": "0",
+    "expected_title": "None",
+    "is_architectural": true,
+    "query_type": "negative",
+    "ground_truth": "Le Bankai est un pouvoir spécifique à l'univers de Bleach. Naruto utilise le chakra et le mode Ermite ou Kyubi, mais n'a pas de Bankai."
+  },
+  {
+    "query": "Quels acteurs de doublage principaux de l'Attaque des Titans retrouvons-nous dans JoJo's Bizarre Adventure ?",
+    "expected_id": "0",
+    "expected_title": "Multiple",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "Daisuke Ono (Erwin Smith / Jotaro Kujo), Takehito Koyasu (Sieg Jäger / Dio Brando), et Yuki Kaji (Eren Jäger / Koichi Hirose)."
+  },
+  {
+    "query": "Une image d'un immense arbre brillant au centre d'un monde fantastique avec une fille aux cheveux dorés.",
+    "expected_id": "0",
+    "expected_title": "Multiple",
+    "is_architectural": true,
+    "query_type": "visual",
+    "ground_truth": "Cela peut faire penser à l'Arbre du Monde dans Sword Art Online (arc ALO) avec Asuna ou Leafa, ou à des éléments de Berserk (Arbre Spirale)."
+  },
+  {
+    "query": "Série centrée sur la musique classique, où un jeune pianiste prodige traumatisé rencontre une violoniste excentrique.",
+    "expected_id": "23273",
+    "expected_title": "Your Lie in April",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "Il s'agit de Your Lie in April (Shigatsu wa Kimi no Uso), avec Kousei Arima et Kaori Miyazono."
+  },
+  {
+    "query": "Combien de films récapitulatifs ont été produits pour l'animé Code Geass avant le film Lelouch of the Re;surrection ?",
+    "expected_id": "1575",
+    "expected_title": "Code Geass",
+    "is_architectural": true,
+    "query_type": "cross-media",
+    "ground_truth": "Il y a eu une trilogie de films récapitulatifs (Initiation, Transgression, Glorification) avant le film Re;surrection."
+  },
+  {
+    "query": "Est-ce que le Studio Ghibli a produit la saison 2 de Demon Slayer ?",
+    "expected_id": "0",
+    "expected_title": "None",
+    "is_architectural": true,
+    "query_type": "negative",
+    "ground_truth": "Non, l'intégralité de l'adaptation animée de Demon Slayer (Kimetsu no Yaiba) est produite par le studio ufotable."
+  },
+  {
+    "query": "Quels animés ont été réalisés par Shinichiro Watanabe à part Cowboy Bebop et Samurai Champloo ?",
+    "expected_id": "0",
+    "expected_title": "Multiple",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "Shinichiro Watanabe a également réalisé Space Dandy, Terror in Resonance (Zankyou no Terror), et Carole & Tuesday."
+  },
+  {
+    "query": "Une fille avec un cache-œil, des cheveux noirs ou violets sombres, qui pense avoir des pouvoirs magiques dans un cadre scolaire.",
+    "expected_id": "14741",
+    "expected_title": "Love, Chunibyo & Other Delusions!",
+    "is_architectural": true,
+    "query_type": "visual",
+    "ground_truth": "C'est la description de Rikka Takanashi dans Chuunibyou demo Koi ga Shitai! (le syndrome de la classe de 4ème)."
+  },
+  {
+    "query": "Œuvre de science-fiction dystopique explorant le concept de libre arbitre avec un système informatique appelé Sibyl.",
+    "expected_id": "13601",
+    "expected_title": "Psycho-Pass",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "Il s'agit de la série Psycho-Pass, où le Système Sibyl mesure le coefficient de criminalité des citoyens."
+  },
+  {
+    "query": "Est-ce que le spin-off Magi: The Labyrinth of Magic sur Sinbad existe aussi en manga ?",
+    "expected_id": "0",
+    "expected_title": "Multiple",
+    "is_architectural": true,
+    "query_type": "cross-media",
+    "ground_truth": "Oui, le spin-off s'appelle Adventure of Sinbad et a d'abord été publié sous forme de manga avant de recevoir son adaptation animée."
+  },
+  {
+    "query": "A quel moment de l'histoire Gon de Hunter x Hunter débloque-t-il le Gear Fourth ?",
+    "expected_id": "0",
+    "expected_title": "None",
+    "is_architectural": true,
+    "query_type": "negative",
+    "ground_truth": "Gon est un personnage de Hunter x Hunter qui utilise le Nen. Le Gear Fourth est une transformation exclusive à Monkey D. Luffy dans One Piece."
+  },
+  {
+    "query": "Quels mangas publiés dans le magazine Ultra Jump ont été adaptés en animé ?",
+    "expected_id": "0",
+    "expected_title": "Multiple",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "Des mangas comme JoJo's Bizarre Adventure (partie 7 Steel Ball Run), Tenjho Tenge, et No Guns Life."
+  },
+  {
+    "query": "Un prêtre portant toujours un énorme crucifix enveloppé de tissu, qui se révèle être une mitrailleuse lourde.",
+    "expected_id": "6",
+    "expected_title": "Trigun",
+    "is_architectural": true,
+    "query_type": "visual",
+    "ground_truth": "C'est la description de Nicholas D. Wolfwood, le prêtre armé de l'anime Trigun."
+  },
+  {
+    "query": "Un isekai où le protagoniste revient sans cesse à la vie après chaque mort pour sauver la fille qu'il aime.",
+    "expected_id": "31240",
+    "expected_title": "Re:Zero",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "Il s'agit de Re:Zero kara Hajimeru Isekai Seikatsu, le héros est Subaru Natsuki et son pouvoir est la Mort Réversible."
+  },
+  {
+    "query": "Le film Evangelion: 3.0+1.0 conclut-il l'histoire du manga original ou des Rebuilds ?",
+    "expected_id": "37497",
+    "expected_title": "Evangelion: 3.0+1.0 Thrice Upon a Time",
+    "is_architectural": true,
+    "query_type": "cross-media",
+    "ground_truth": "Le film 3.0+1.0 sert de conclusion à la quadrilogie des films Rebuild of Evangelion, qui s'écartent drastiquement de la série originale et du manga."
+  },
+  {
+    "query": "Dans Sword Art Online, comment s'appelle le Titan Colossal que Kirito doit vaincre ?",
+    "expected_id": "0",
+    "expected_title": "None",
+    "is_architectural": true,
+    "query_type": "negative",
+    "ground_truth": "Il n'y a pas de Titan Colossal dans Sword Art Online, c'est une créature de L'Attaque des Titans. Kirito affronte des boss d'étage comme The Gleam Eyes."
+  },
+  {
+    "query": "Je cherche un anime avec un mec qui a un bras droit en métal automail rouge, et qui cherche la pierre philosophale.",
+    "expected_id": "5114",
+    "expected_title": "Fullmetal Alchemist",
+    "is_architectural": false,
+    "query_type": "standard",
+    "ground_truth": "C'est Fullmetal Alchemist. Edward Elric possède un automail au bras droit et cherche la pierre pour retrouver son corps et celui de son frère."
+  },
+  {
+    "query": "Un anime de comédie romantique où le président du conseil des élèves et la vice-présidente essaient de se forcer mutuellement à confesser leur amour.",
+    "expected_id": "37999",
+    "expected_title": "Kaguya-sama: Love is War",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "Il s'agit de Kaguya-sama: Love is War, mettant en scène Kaguya Shinomiya et Miyuki Shirogane."
+  },
+  {
+    "query": "Quelles œuvres du studio Trigger utilisent des éléments de science-fiction avec des extraterrestres basés sur des vêtements ?",
+    "expected_id": "18679",
+    "expected_title": "Kill la Kill",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "Il s'agit de Kill la Kill, produit par le studio Trigger, où les fibres de vie extraterrestres (Life Fibers) forment les vêtements."
+  },
+  {
+    "query": "Un personnage aux cheveux roses en pointes qui mange du feu pour reprendre des forces.",
+    "expected_id": "6702",
+    "expected_title": "Fairy Tail",
+    "is_architectural": true,
+    "query_type": "visual",
+    "ground_truth": "C'est Natsu Dragneel, le chasseur de dragons de feu dans Fairy Tail."
+  },
+  {
+    "query": "Un shonen classique sur un garçon sans pouvoirs magiques dans un monde où tout le monde en a, et qui obtient un grimoire à 5 trèfles.",
+    "expected_id": "34572",
+    "expected_title": "Black Clover",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "Il s'agit de Black Clover, le protagoniste est Asta."
+  },
+  {
+    "query": "Quels comédiens de doublage français (VF) prêtent leur voix à la fois à des personnages de Naruto et de One Piece ?",
+    "expected_id": "0",
+    "expected_title": "Multiple",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "Le système doit lier les relations de voix françaises. Par exemple, Christophe Lemoine double à la fois Shikamaru (Naruto) et Baggy le Clown (One Piece), et Stéphane Excoffier intervient également sur ces franchises."
+  },
+  {
+    "query": "Je cherche la maison d'édition française qui publie des chefs-d'œuvre de dark fantasy comme Berserk et des mangas d'action comme Tokyo Ghoul.",
+    "expected_id": "2",
+    "expected_title": "Glénat",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "Il s'agit des éditions Glénat, qui publient Berserk de Kentaro Miura et Tokyo Ghoul de Sui Ishida en France."
+  },
+  {
+    "query": "Dans quel magazine prépublie l'auteur original de Monster et de Pluto, et a-t-il reçu des prix majeurs pour ces mangas ?",
+    "expected_id": "19",
+    "expected_title": "Monster",
+    "is_architectural": true,
+    "query_type": "cross-media",
+    "ground_truth": "L'auteur est Naoki Urasawa. Il prépublie principalement dans des magazines comme Big Comic Original (Monster) et Big Comic Spirits (20th Century Boys). Il a remporté de prestigieuses distinctions comme le Prix culturel Osamu Tezuka et le Shogakukan Manga Award."
+  },
+  {
+    "query": "Trouve-moi le groupe d'anisong légendaire ou le chanteur qui interprète le générique d'ouverture emblématique Guren no Yumiya pour L'Attaque des Titans.",
+    "expected_id": "16498",
+    "expected_title": "Attack on Titan",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "L'opening emblématique 'Guren no Yumiya' de L'Attaque des Titans est interprété par le groupe Linked Horizon dirigé par Revo."
+  },
+  {
+    "query": "Quel acteur de doublage japonais (Seiyuu) prête sa voix au charismatique Levi Ackerman dans L'Attaque des Titans et dans Trafalgar Law dans One Piece ?",
+    "expected_id": "0",
+    "expected_title": "Hiroshi Kamiya",
+    "is_architectural": true,
+    "query_type": "graph",
+    "ground_truth": "L'acteur emblématique est Hiroshi Kamiya, qui prête sa voix à la fois au Caporal Levi dans Shingeki no Kyojin et à Trafalgar Law dans One Piece."
+  },
+  {
+    "query": "Combien de tomes compte le manga original Death Note par rapport à son nombre d'épisodes dans son adaptation animée ?",
+    "expected_id": "1535",
+    "expected_title": "Death Note",
+    "is_architectural": true,
+    "query_type": "cross-media",
+    "ground_truth": "Le manga original Death Note compte exactement 12 tomes (plus un tome spécial 13) tandis que son adaptation animée par Studio Madhouse comporte exactement 37 épisodes regroupés en une seule saison."
+  },
+  {
+    "query": "Est-ce que le célèbre doubleur français de Guts dans l'anime de 1997 double aussi Son Goku dans la version française de Dragon Ball Z ?",
+    "expected_id": "0",
+    "expected_title": "None",
+    "is_architectural": true,
+    "query_type": "negative",
+    "ground_truth": "Non, Guts dans la VF de la série Berserk de 1997 est doublé principalement par Emmanuel Gradi, tandis que Son Goku dans Dragon Ball Z est doublé par le comédien historique Patrick Borg."
+  },
+  {
+    "query": "Quels sites de distribution ou plateformes de streaming légal diffusent l'anime Demon Slayer (Kimetsu no Yaiba) en France ?",
+    "expected_id": "38000",
+    "expected_title": "Demon Slayer",
+    "is_architectural": true,
+    "query_type": "standard",
+    "ground_truth": "En France, l'anime Demon Slayer est distribué légalement sur les plateformes de streaming Crunchyroll et Netflix."
+  },
+  {
+    "query": "Je me souviens d'un anime de comédie romantique récent avec un opening extrêmement populaire sur YouTube chanté par YOASOBI, parlant de la face cachée d'une idol et de ses jumeaux.",
+    "expected_id": "0",
+    "expected_title": "Oshi no Ko",
+    "is_architectural": true,
+    "query_type": "thematic",
+    "ground_truth": "Il s'agit de l'anime Oshi no Ko, et l'opening ultra-populaire chanté par YOASOBI est intitulé 'Idol'."
+  },
+  {
+    "query": "Le manga Neon Genesis Evangelion a-t-il remporté le Prix culturel Osamu Tezuka dans la catégorie manga en 2020 ?",
+    "expected_id": "0",
+    "expected_title": "None",
+    "is_architectural": true,
+    "query_type": "negative",
+    "ground_truth": "Non, le manga Neon Genesis Evangelion s'est terminé en 2013 et n'a pas reçu le prix en 2020. En 2020, c'est le manga Nyx no Lantern de Kan Takahama qui a reçu le Grand Prix."
+  }
+]

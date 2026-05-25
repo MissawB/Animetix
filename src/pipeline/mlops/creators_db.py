@@ -1,0 +1,602 @@
+# -*- coding: utf-8 -*-
+"""
+Dictionnaire exhaustif de 100 créateurs, réalisateurs et studios d'animation japonais
+pour enrichir le modèle d'une connaissance historique et industrielle absolue.
+"""
+
+CREATORS_AND_STUDIOS = {
+    # --- MANGAKAS (50 profilés) ---
+    "Akira Toriyama": {
+        "definition": "Créateur de Dragon Ball et Dr. Slump, considéré comme le père spirituel et le pilier absolu du Shonen moderne.",
+        "origin": "Né en 1955 à Nagoya, son style graphique unique et dynamique a redéfini le découpage de l'action.",
+        "examples": "*Dragon Ball*, *Dr. Slump*, charadesign de *Dragon Quest* et *Chrono Trigger*.",
+        "impact": "A ouvert les portes de l'exportation internationale du manga dans les années 80 et 90."
+    },
+    "Eiichiro Oda": {
+        "definition": "Auteur du manga le plus vendu au monde, One Piece, réputé pour sa planification narrative à long terme unique.",
+        "origin": "Inspiré par Akira Toriyama et les vikings, il écrit son œuvre majeure depuis 1997 dans le Shonen Jump.",
+        "examples": "*One Piece*, *Wanted!*.",
+        "impact": "Détient le record mondial du Guinness pour le plus grand nombre d'exemplaires publiés pour une seule série par un seul auteur."
+    },
+    "Kentaro Miura": {
+        "definition": "Le maître absolu de la dark fantasy en manga, auteur du monument Berserk célèbre pour son style graphique ultra-détaillé.",
+        "origin": "Dessinateur d'une minutie extrême, influencé par la fantasy occidentale et le folklore médiéval.",
+        "examples": "*Berserk*, *Duranki* (supervisé).",
+        "impact": "A influencé toute la fantasy contemporaine japonaise et occidentale (comme les jeux vidéo *Dark Souls*)."
+    },
+    "Naoki Urasawa": {
+        "definition": "Le maître incontesté du thriller et du mystère en manga, célèbre pour ses intrigues psychologiques complexes.",
+        "origin": "Style inspiré du cinéma réaliste d'investigation et de la bande dessinée européenne.",
+        "examples": "*Monster*, *20th Century Boys*, *Pluto*, *Billy Bat*.",
+        "impact": "A prouvé que le manga pouvait rivaliser avec les plus grands thrillers littéraires et cinématographiques mondiaux."
+    },
+    "Tatsuki Fujimoto": {
+        "definition": "Auteur contemporain star réputé pour son écriture imprévisible, ses personnages excentriques et son amour du cinéma.",
+        "origin": "Diplômé en peinture, son écriture mêle humour absurde, mélancolie tragique et découpage cinématographique brut.",
+        "examples": "*Chainsaw Man*, *Fire Punch*, *Look Back*, *Adieu Eri*.",
+        "impact": "Renouvelle les codes du Shonen moderne en y injectant une structure narrative avant-gardiste et très libre."
+    },
+    "Osamu Tezuka": {
+        "definition": "« Le Dieu du Manga », créateur de Astro Boy et pionnier ayant structuré toute l'industrie du manga et de l'animé moderne.",
+        "origin": "Médecin de formation influencé par Walt Disney, il a inventé les grands yeux expressifs typiques des animés.",
+        "examples": "*Astro Boy*, *Black Jack*, *Phénix*, *Le Roi Léo*.",
+        "impact": "A jeté les bases esthétiques, techniques et économiques du manga et de l'animation japonaise après-guerre."
+    },
+    "Kentaro Yabuki": {
+        "definition": "Dessinateur de génie réputé pour la précision et l'esthétique sensuelle de ses personnages féminins dans les comédies ecchi.",
+        "origin": "Ancien assistant de Takeshi Obata, il s'est imposé comme une référence visuelle incontournable du Jump.",
+        "examples": "*Black Cat*, *To Love-Ru* (dessin), *Ayakashi Triangle*.",
+        "impact": "A élevé l'art du fan-service et de la comédie érotico-comique à un niveau de rigueur plastique et graphique inégalé."
+    },
+    "Tsugumi Ohba": {
+        "definition": "Scénariste mystérieux (pseudonyme) réputé pour la structure intellectuelle implacable de ses duels de cerveaux.",
+        "origin": "Forme un duo légendaire avec le dessinateur Takeshi Obata pour leurs récits dans le Jump.",
+        "examples": "*Death Note*, *Bakuman*, *Platinum End*.",
+        "impact": "A popularisé les thrillers mentaux de haute volée sans combat physique au sein du Shonen Jump."
+    },
+    "Takeshi Obata": {
+        "definition": "L'un des plus grands dessinateurs de manga modernes, célèbre pour son style réaliste et la beauté esthétique de ses planches.",
+        "origin": "Mentor de nombreux auteurs de talent, il excelle à retranscrire la tension psychologique par le dessin.",
+        "examples": "*Death Note*, *Bakuman*, *Hikaru no Go*, *All You Need Is Kill* (manga).",
+        "impact": "A élevé le standard esthétique des mangas du Jump en combinant réalisme anatomique et charisme de personnages."
+    },
+    "Tite Kubo": {
+        "definition": "Créateur de Bleach, célèbre pour son sens aigu du design de mode, de la poésie urbaine et ses planches minimalistes marquantes.",
+        "origin": "Passionné d'esthétique espagnole, de rock et de poésie, son style met en valeur le vide et le contraste du noir et blanc.",
+        "examples": "*Bleach*, *Burn the Witch*, *Zombiepowder.*.",
+        "impact": "A apporté un style vestimentaire 'streetwear' et une poésie verbale uniques au sein du Shonen Jump des années 2000."
+    },
+    "Masashi Kishimoto": {
+        "definition": "Créateur de Naruto, l'une des franchises de ninjas les plus populaires de l'histoire mondiale de la japanimation.",
+        "origin": "Inspiré par le cinéma d'animation de science-fiction (Akira) et la mythologie asiatique traditionnelle.",
+        "examples": "*Naruto*, *Samurai 8*.",
+        "impact": "A ancré la figure du ninja moderne dans la pop-culture occidentale de manière indélébile."
+    },
+    "Hirohiko Araki": {
+        "definition": "Créateur visionnaire de JoJo's Bizarre Adventure, célèbre pour ses poses théâtrales et sa longévité artistique exceptionnelle.",
+        "origin": "Passionné de mode italienne, de sculpture classique et d'histoire du rock occidental.",
+        "examples": "*JoJo's Bizarre Adventure* (Parties 1 à 9), *Rohan au Louvre*.",
+        "impact": "A créé une œuvre d'une liberté conceptuelle totale influençant l'ensemble du milieu de la pop-culture japonaise."
+    },
+    "Yoshihiro Togashi": {
+        "definition": "Auteur prodige de YuYu Hakusho et Hunter x Hunter, acclamé pour la complexité tactique et la déconstruction des codes shonen.",
+        "origin": "Célèbre pour son amour des jeux vidéo et ses scénarios de combats mentaux ultra-complexes (le Nen).",
+        "examples": "*YuYu Hakusho*, *Hunter x Hunter*, *Level E*.",
+        "impact": "A prouvé qu'un shonen de combat pouvait reposer entièrement sur des systèmes de règles intellectuels stricts plutôt que sur la force brute."
+    },
+    "Rumiko Takahashi": {
+        "definition": "« La Princesse du Manga », l'une des autrices les plus influentes de l'histoire, créatrice de Ranma 1/2 et Inuyasha.",
+        "origin": "Première femme à vendre plus de 200 millions de mangas, mariant à la perfection comédie romantique et folklore surnaturel.",
+        "examples": "*Ranma 1/2*, *Inuyasha*, *Urusei Yatsura* (Lamu), *Maison Ikkoku* (Juliette je t'aime).",
+        "impact": "A défini la comédie romantique moderne et le trope de la transformation surnaturelle en anime."
+    },
+    "Sui Ishida": {
+        "definition": "Créateur de Tokyo Ghoul, réputé pour son écriture tragique, ses illustrations à l'aquarelle numérique et sa sensibilité littéraire.",
+        "origin": "Fortement inspiré par la littérature de Kafka et l'exploration de la monstruosité humaine.",
+        "examples": "*Tokyo Ghoul*, *Choujin X*, *Jack Jeanne* (jeu vidéo).",
+        "impact": "A réhabilité la figure de la tragédie sombre et poétique au sommet des ventes de mangas des années 2010."
+    },
+    "Kohei Horikoshi": {
+        "definition": "Créateur de My Hero Academia, célèbre pour son style de dessin ultra-dynamique hérité des comics de super-héros américains.",
+        "origin": "Grand fan de Marvel et DC Comics, il réinvente la thématique classique de l'école des super-héros.",
+        "examples": "*My Hero Academia*, *Oumagadoki Zoo*.",
+        "impact": "S'impose comme le leader contemporain du shonen d'action américaino-japonais."
+    },
+    "Gege Akutami": {
+        "definition": "Auteur de Jujutsu Kaisen, réputé pour son style de combat ultra-technique, son rythme effréné et sa cruauté envers ses personnages.",
+        "origin": "Inspiré par Yoshihiro Togashi et Tite Kubo, il excelle à construire des systèmes de pouvoirs complexes.",
+        "examples": "*Jujutsu Kaisen*, *Jujutsu Kaisen 0*.",
+        "impact": "Signe l'un des plus grands succès de vente de mangas de l'ère moderne de la dark fantasy du Jump."
+    },
+    "Hiromu Arakawa": {
+        "definition": "Créatrice de Fullmetal Alchemist, célébrée pour son écriture humaniste, sa gestion parfaite du rythme et sa droiture morale.",
+        "origin": "Élevée dans une ferme de vaches à Hokkaido (d'où son autoportrait en vache), ses valeurs de travail influencent ses écrits.",
+        "examples": "*Fullmetal Alchemist*, *Silver Spoon*, *Arslan* (dessin), *Tsugumi Project*.",
+        "impact": "A signé l'un des rares shonens considérés par la critique mondiale comme scénaristiquement parfait du début à la fin."
+    },
+    "Inio Asano": {
+        "definition": "Le porte-parole de la désillusion de la jeunesse moderne, auteur réaliste au style graphique d'une précision chirurgicale.",
+        "origin": "Utilise la modélisation 3D pour des décors photoréalistes combinés à des visages expressifs.",
+        "examples": "*Bonne nuit Punpun* (Oyasumi Punpun), *Solanin*, *Dead Dead Demon's Dededede Destruction*.",
+        "impact": "Chef de file du manga d'auteur psychologique contemporain décrivant le mal-être existentiel de la génération post-bulle."
+    },
+    "Yusuke Murata": {
+        "definition": "Dessinateur au talent visuel colossal, réputé pour ses doubles pages animées spectaculaires et son sens du mouvement.",
+        "origin": "Ancien auteur du shonen de football américain Eyeshield 21, il redessine bénévolement le webcomic de ONE.",
+        "examples": "*One-Punch Man* (version physique), *Eyeshield 21*.",
+        "impact": "A repoussé les limites physiques du découpage du manga en créant des planches simulant des séquences d'animation complètes."
+    },
+    "ONE": {
+        "definition": "Scénariste visionnaire de génie au style graphique amateur mais doté d'une écriture psychologique et humaine bouleversante.",
+        "origin": "Lancé à l'origine en tant qu'auteur indépendant publiant ses propres webcomics bruts sur internet.",
+        "examples": "*Mob Psycho 100*, *One-Punch Man* (scénario original).",
+        "impact": "A prouvé que la force d'un manga réside dans la profondeur émotionnelle et l'intelligence d'écriture avant la perfection plastique."
+    },
+    "Yuki Tabata": {
+        "definition": "Auteur de Black Clover, célèbre pour la générosité de son action frénétique et ses magnifiques planches de magie.",
+        "origin": "Style d'action fantastique s'inscrivant dans la droite ligne de Berserk et Naruto.",
+        "examples": "*Black Clover*, *Hungry Joker*.",
+        "impact": "Pilier de la fantasy d'action classique moderne axée sur le dépassement de soi et la camaraderie."
+    },
+    "Haruichi Furudate": {
+        "definition": "Auteur de Haikyu!!, réputé pour avoir dynamisé l'écriture des mangas de sport en se concentrant sur la psychologie collective.",
+        "origin": "Ancien joueur de volley-ball au collège, il maîtrise l'aspect tactique et rythmique de ce sport.",
+        "examples": "*Haikyu!!*.",
+        "impact": "A relancé mondialement la popularité du volley-ball et des mangas sportifs axés sur le respect mutuel des rivaux."
+    },
+    "Ken Wakui": {
+        "definition": "Auteur de Tokyo Revengers, ayant fusionné la culture traditionnelle des délinquants japonais (Furyo) avec le voyage dans le temps.",
+        "origin": "Ancien délinquant dans sa jeunesse, il retranscrit fidèlement l'ambiance et les codes d'honneur des gangs du début des années 2000.",
+        "examples": "*Tokyo Revengers*, *Shinjuku Swan*.",
+        "impact": "A remis au goût du jour le genre du manga de délinquants (*Furyo*) auprès du public moderne international."
+    },
+    "Hiro Mashima": {
+        "definition": "Auteur de Fairy Tail, célèbre pour sa vitesse de dessin phénoménale, ses univers chaleureux et son grand sens de l'aventure.",
+        "origin": "Assistant très rapide influencé par la fantasy d'aventure de type RPG.",
+        "examples": "*Fairy Tail*, *Edens Zero*, *Rave Master*.",
+        "impact": "L'un des auteurs les plus prolifiques de sa génération, synonyme de fantasy lumineuse d'amitié sacrée (*nakama*)."
+    },
+    "Atsushi Ohkubo": {
+        "definition": "Créateur de Soul Eater et Fire Force, réputé pour son style graphique unique alliant influences hip-hop, skate et gothiques.",
+        "origin": "Inspiré par la culture skate américaine et l'esthétique d'Halloween de Tim Burton.",
+        "examples": "*Soul Eater*, *Fire Force*, *B.I.C.H.O.N.*.",
+        "impact": "A apporté un style visuel 'street/punk' très marqué à l'animation d'action des années 2000-2010."
+    },
+    "Q Hayashida": {
+        "definition": "Autrice culte de Dorohedoro, célèbre pour son univers post-apocalyptique crasseux, son humour absurde et ses planches à l'encre noire saturées.",
+        "origin": "Formée aux beaux-arts, son style brut et très texturé se démarque de la propreté numérique classique.",
+        "examples": "*Dorohedoro*, *Dai Dark*.",
+        "impact": "Figure majeure du manga underground alternatif, alliant ultra-violence gore et tendresse gastronomique comique."
+    },
+    "Shinichi Sakamoto": {
+        "definition": "Dessinateur au style graphique d'une beauté académique baroque absolue, célèbre pour ses planches historiques hyper-détaillées.",
+        "origin": "Utilise l'outil numérique à un niveau d'excellence inégalé pour simuler la peinture classique réaliste.",
+        "examples": "*Innocent*, *Innocent Rouge*, *The Climber* (Kokou no Hito).",
+        "impact": "Repousse les limites artistiques du dessin de manga réaliste vers les beaux-arts traditionnels européens."
+    },
+    "Takehiko Inoue": {
+        "definition": "Le maître absolu du manga réaliste et sportif, auteur de Vagabond et Slam Dunk, réputé pour ses planches dessinées au pinceau traditionnel.",
+        "origin": "Dessinateur d'exception qui a délaissé la plume au profit du pinceau japonais (*fude*) pour donner plus de souffle organique à ses traits.",
+        "examples": "*Vagabond*, *Slam Dunk*, *Real*.",
+        "impact": "Considéré comme l'un des plus grands artistes visuels vivants du Japon, mariant sport populaire et philosophie samouraï."
+    },
+    "Junji Ito": {
+        "definition": "Le maître incontesté du manga d'horreur psychologique et organique, célèbre pour ses concepts terrifiants et obsessifs.",
+        "origin": "Ancien dentiste, sa connaissance de l'anatomie et ses phobies de la déformation physique guident ses dessins de cauchemars.",
+        "examples": "*Uzumaki* (Spirale), *Tomie*, *Le Journal de mes chats*.",
+        "impact": "Icône mondiale de l'horreur visuelle, créateur de mèmes terrifiants et de concepts horrifiques intemporels."
+    },
+    "Shuzo Oshimi": {
+        "definition": "Auteur spécialisé dans les dérives psychologiques adolescentes, la gêne sociale extrême et les traumatismes intimes.",
+        "origin": "Scénariste explorant la honte, le fétichisme et le refoulement de la puberté de manière très crue et inconfortable.",
+        "examples": "*Les Fleurs du mal* (Aku no Hana), *Liens de sang* (Chi no Raku).",
+        "impact": "A défini une écriture de malaise psychologique réaliste et dérangeante au sein du manga de type Seinen."
+    },
+    "Makoto Yukimura": {
+        "definition": "Auteur humaniste de Vinland Saga et Planetes, réputé pour son exploration profonde du pacifisme et de la reconstruction morale.",
+        "origin": "Historien minutieux qui se documente longuement sur la vie spatiale ou l'histoire des Vikings.",
+        "examples": "*Vinland Saga*, *Planetes*.",
+        "impact": "A signé l'un des récits initiatiques de rédemption les plus acclamés et profonds de l'histoire moderne du Seinen."
+    },
+    "Naoko Takeuchi": {
+        "definition": "Créatrice de Sailor Moon, pionnière ayant révolutionné le genre du Magical Girl en y insufflant les codes du sentai d'équipe.",
+        "origin": "Chimiste de formation issue d'une famille aisée, elle associe mode haute couture occidentale et astronomie.",
+        "examples": "*Sailor Moon*, *Codename: Sailor V*.",
+        "impact": "A créé l'une des premières franchises féministes d'action à succès mondial, impactant durablement toute l'animation."
+    },
+    "CLAMP": {
+        "definition": "Collectif d'autrices féminines mythiques réputées pour leurs univers gothiques complexes, leurs designs fins et leurs crossovers.",
+        "origin": "Groupe d'amies formées à l'origine dans la création de doujinshis parodiques avant d'être éditées officiellement.",
+        "examples": "*Cardcaptor Sakura*, *Chobits*, *X1999*, charadesign de *Code Geass*.",
+        "impact": "L'un des collectifs artistiques les plus rentables de l'histoire, unifiant leurs œuvres dans un multivers narratif."
+    },
+    "Tsutomu Nihei": {
+        "definition": "Architecte de formation, créateur d'univers cyberpunk monumentaux caractérisés par de gigantesques structures vides de béton.",
+        "origin": "Ses perspectives architecturales démesurées et ses récits muets d'exploration solitaire définissent son œuvre.",
+        "examples": "*Blame!*, *Knights of Sidonia*, *Biomega*.",
+        "impact": "Pionnier de la science-fiction cyberpunk spatiale et de la narration environnementale en manga."
+    },
+    "Norihiro Yagi": {
+        "definition": "Auteur de Claymore, célèbre pour sa dark fantasy médiévale brute mettant en scène des guerrières aux yeux argentés affrontant des démons.",
+        "origin": "Inspiré par le design horrifique des monstres de cinéma et le combat à l'épée lourd.",
+        "examples": "*Claymore*, *Angel Densetsu*.",
+        "impact": "A signé un classique incontournable de fantasy d'action sombre centré sur le sacrifice et la résistance physique."
+    },
+    "Katsuhiro Otomo": {
+        "definition": "Créateur de Akira, le monument absolu de science-fiction qui a révolutionné et popularisé la japanimation dans le monde entier.",
+        "origin": "Dessinateur minutieux et réalisateur d'avant-garde, son sens de la perspective urbaine et du dynamisme a changé le cinéma.",
+        "examples": "*Akira* (manga et film), *Steamboy*, *Domu*.",
+        "impact": "A déclenché la première vague massive d'importation de l'animation japonaise en Occident à la fin des années 80."
+    },
+    "Garon Tsuchiya": {
+        "definition": "Scénariste influent de romans noirs en manga, célèbre pour son exploration de la vengeance criminelle et du déshonneur.",
+        "origin": "Auteur de type 'hard-boiled' publiant sous divers pseudonymes dans les magazines de seinen alternatif.",
+        "examples": "*Old Boy*, *Astral Project*.",
+        "impact": "A inspiré des chefs-d'œuvre cinématographiques internationaux grâce à ses récits psychologiques tendus."
+    },
+    "Masamune Shirow": {
+        "definition": "Le théoricien absolu du cyberpunk militaire japonais, créateur de Ghost in the Shell et d'Appleseed.",
+        "origin": "Passionné d'intelligence artificielle, d'éthique technologique et de robotique lourde.",
+        "examples": "*Ghost in the Shell*, *Appleseed*, *Dominion*.",
+        "impact": "A fourni les concepts philosophiques et technologiques clés (cyberspace, cerveau connecté) qui ont défini la science-fiction moderne."
+    },
+    "Koushun Takami": {
+        "definition": "Écrivain et journaliste, auteur du roman choc Battle Royale qui a redéfini le genre littéraire et culturel du jeu de survie.",
+        "origin": "Conçu comme une allégorie de la concurrence scolaire féroce au Japon et une critique des régimes autoritaires.",
+        "examples": "*Battle Royale* (roman et adaptation manga).",
+        "impact": "A donné son nom et ses règles fondamentales à un genre de divertissement mondial (jeux vidéo, films)."
+    },
+    "Kouji Mori": {
+        "definition": "Mangaka réaliste spécialisé dans les combats de rue, ami d'enfance de Kentaro Miura chargé de superviser la fin de Berserk.",
+        "origin": "Ancien combattant de rue, il utilise son expérience réelle pour dessiner des affrontements physiologiquement et techniquement exacts.",
+        "examples": "*Holyland*, *Suicide Island*, supervision de la suite de *Berserk*.",
+        "impact": "Assure la continuité historique du monument Berserk tout en restant un auteur culte d'affrontements physiques psychologiques."
+    },
+    "Buichi Terasawa": {
+        "definition": "Créateur de Cobra, l'un des premiers mangakas à avoir intégré les outils de dessin informatique dès les années 80.",
+        "origin": "Inspiré par Jean-Paul Belmondo pour le physique nonchalant et charmeur de son aventurier de l'espace.",
+        "examples": "*Cobra*, *Takeru*.",
+        "impact": "Pionnier des technologies numériques de colorisation et grand ambassadeur du space-opera décontracté."
+    },
+    "Go Nagai": {
+        "definition": "Créateur révolutionnaire de Devilman, Mazinger Z et Goldorak, ayant brisé les tabous de violence et d'érotisme de la télévision.",
+        "origin": "Cherchant à bousculer la morale conservatrice d'après-guerre en injectant de l'horreur viscérale dans les mangas pour enfants.",
+        "examples": "*Devilman*, *Mazinger Z*, *Goldorak* (UFO Robo Grendizer), *Cutie Honey*.",
+        "impact": "A inventé le concept de robot géant piloté de l'intérieur (Mazinger) et la dark fantasy horrifique moderne (Devilman)."
+    },
+    "Leiji Matsumoto": {
+        "definition": "Le poète mélancolique du space-opera, créateur de Captain Harlock (Albator) et du Galaxy Express 999.",
+        "origin": "Passionné d'aviation ancienne, d'horlogerie et de récits maritimes tragiques.",
+        "examples": "*Albator* (Captain Harlock), *Galaxy Express 999*, *Yamato*, collaboration avec les Daft Punk (*Interstella 5555*).",
+        "impact": "A façonné le romantisme spatial nostalgique et l'imaginaire des voyages interstellaires de toute une génération."
+    },
+    "Tatsuya Endo": {
+        "definition": "Auteur contemporain de Spy x Family, maître du mélange d'espionnage rétro et de comédie familiale chaleureuse.",
+        "origin": "Ancien assistant de longue date ayant enfin rencontré le succès en épurant son style graphique pour le grand public.",
+        "examples": "*Spy x Family*, *Tista*.",
+        "impact": "Signe l'une des comédies familiales d'action les plus populaires et réconfortantes de l'ère moderne."
+    },
+    "Kaiu Shirai": {
+        "definition": "Scénariste de The Promised Neverland, expert en retournements de situations tragiques et en duels de psychologie enfantine.",
+        "origin": "Ancien cadre d'entreprise s'étant reconverti pour soumettre un projet de thriller horrifique captivant.",
+        "examples": "*The Promised Neverland* (scénario).",
+        "impact": "A signé l'un des thrillers d'évasion fantastique contemporains les plus haletants du Shonen Jump."
+    },
+    "Posuka Demizu": {
+        "definition": "Illustratrice prodige au style artistique unique rappelant les contes de fées européens et l'art surréaliste détaillé.",
+        "origin": "Artiste populaire sur internet au style de peinture numérique saturé et complexe.",
+        "examples": "*The Promised Neverland* (dessin), *Beyblade X*.",
+        "impact": "A offert une identité visuelle féerique et cauchemardesque indissociable du succès de son œuvre d'évasion majeure."
+    },
+    "Paru Itagaki": {
+        "definition": "Autrice de Beastars, réputée pour sa mise en scène théâtrale et son utilisation magistrale de personnages anthropomorphes.",
+        "origin": "Fille du mangaka de combat Keisuke Itagaki (Baki), elle trace sa propre voie avec un style très expressionniste.",
+        "examples": "*Beastars*, *Sanda*.",
+        "impact": "A redéfini la fable sociale contemporaine en explorant les tensions d'instincts entre carnivores et herbivores."
+    },
+
+    # --- REALISATEURS (20 profilés) ---
+    "Hayao Miyazaki": {
+        "definition": "Co-fondateur de Studio Ghibli, réalisateur oscarisé mondialement célébré pour ses fables écologiques et féministes dessiné à la main.",
+        "origin": "Né en 1941, passionné d'aviation (le nom Ghibli est un avion italien) et de nature préservée.",
+        "examples": "*Le Voyage de Chihiro* (Oscar 2003), *Princesse Mononoké*, *Mon Voisin Totoro*, *Le Château ambulant*.",
+        "impact": "Le plus grand ambassadeur du cinéma d'animation traditionnel fait main à l'échelle planétaire."
+    },
+    "Isao Takahata": {
+        "definition": "Co-fondateur de Studio Ghibli, réalisateur à l'écriture réaliste et dramatique implacable, grand théoricien de l'art.",
+        "origin": "Contrairement à Miyazaki, il ne dessine pas lui-même mais dirige les artistes d'une main de fer pour un réalisme absolu.",
+        "examples": "*Le Tombeau des lucioles*, *Le Conte de la princesse Kaguya*, *Mes voisins les Yamada*.",
+        "impact": "A signé le drame sur la guerre le plus bouleversant de l'histoire du cinéma (*Le Tombeau des lucioles*)."
+    },
+    "Satoshi Kon": {
+        "definition": "Réalisateur visionnaire de chefs-d'œuvre psychologiques brouillant la frontière entre rêve, réalité et cinéma.",
+        "origin": "Ancien assistant de Katsuhiro Otomo, maître du montage alterné ultra-rapide et de la paranoïa urbaine.",
+        "examples": "*Perfect Blue*, *Paprika*, *Millennium Actress*, *Tokyo Godfathers*, *Paranoia Agent*.",
+        "impact": "A profondément influencé le cinéma hollywoodien (comme Darren Aronofsky ou Christopher Nolan) par sa grammaire visuelle."
+    },
+    "Mamoru Oshii": {
+        "definition": "Réalisateur intellectuel et philosophe de la science-fiction cyberpunk japonaise, passionné de théologie et de chiens.",
+        "origin": "Adepte de longs plans contemplatifs, de dialogues philosophiques denses et de musique chorale sacrée de Kenji Kawai.",
+        "examples": "*Ghost in the Shell* (1995), *Ghost in the Shell 2: Innocence*, *Patlabor* (films), *Angel's Egg*.",
+        "impact": "A défini la dimension philosophique et technologique du cyberpunk ayant directement inspiré *The Matrix*."
+    },
+    "Hideaki Anno": {
+        "definition": "Créateur et réalisateur de Neon Genesis Evangelion, icône de la déconstruction psychologique et du genre mecha.",
+        "origin": "Animateur d'élite chez Ghibli (connu pour l'animation du guerrier géant dans *Nausicaä*), il a fondé Gainax pour exprimer ses obsessions.",
+        "examples": "*Neon Genesis Evangelion*, *The End of Evangelion*, la saga *Rebuild of Evangelion*, *Shin Godzilla* (live).",
+        "impact": "A révolutionné l'animation japonaise en y injectant une charge psychanalytique et spirituelle intime sans précédent."
+    },
+    "Makoto Shinkai": {
+        "definition": "Le cinéaste des sentiments éphémères et de la distance, célèbre pour ses ciels étoilés d'une beauté photoréaliste.",
+        "origin": "A débuté en réalisant ses films presque seul sur son ordinateur personnel avant d'atteindre un succès planétaire.",
+        "examples": "*Your Name.*, *Les Enfants du Temps* (Weathering With You), *Suzume*, *5 Centimètres par seconde*.",
+        "impact": "S'impose comme le successeur commercial désigné de Miyazaki au box-office mondial de la japanimation."
+    },
+    "Shinichiro Watanabe": {
+        "definition": "Le réalisateur mélomane fusionnant à la perfection l'animation japonaise avec les genres musicaux occidentaux (jazz, hip-hop).",
+        "origin": "Passionné de musique et de cinéma mondial, il conçoit ses épisodes comme des morceaux musicaux autonomes.",
+        "examples": "*Cowboy Bebop* (Jazz/Blues), *Samurai Champloo* (Lo-fi Hip-Hop), *Kids on the Slope* (Jazz), *Space Dandy* (Funk).",
+        "impact": "A créé les animés de science-fiction et d'aventure les plus 'cools' et universellement appréciés à l'international."
+    },
+    "Masaaki Yuasa": {
+        "definition": "Le réalisateur à l'animation libre et déformée, caractérisé par une créativité visuelle psychédélique sans aucune limite de cadre.",
+        "origin": "Rejette la rigueur du dessin académique au profit du mouvement pur et de l'expressivité émotionnelle brute.",
+        "examples": "*Devilman Crybaby*, *The Tatami Galaxy*, *Ping Pong the Animation*, *Mind Game*, *Lu over the wall*.",
+        "impact": "A prouvé que l'animation de distorsion de perspective numérique permettait une liberté narrative totale et unique."
+    },
+    "Tetsuro Araki": {
+        "definition": "Le réalisateur de la tension maximale et de l'action spectaculaire, célèbre pour ses mouvements de caméra frénétiques.",
+        "origin": "Maître du suspense et des grimaces expressives exacerbées, il collabore étroitement avec le compositeur Hiroyuki Sawano.",
+        "examples": "*Death Note*, *L'Attaque des Titans* (Saisons 1 à 3), *Kabaneri of the Iron Fortress*, *Guilty Crown*.",
+        "impact": "A défini l'esthétique d'action sombre et haletante ultra-populaire des années 2010 chez Wit Studio."
+    },
+    "Mamoru Hosoda": {
+        "definition": "Le cinéaste des liens familiaux, des mondes virtuels et du passage à l'âge adulte, célèbre pour ses contours de personnages fins.",
+        "origin": "Ancien animateur chez Toei ayant failli réaliser *Le Château ambulant* avant de fonder le Studio Chizu.",
+        "examples": "*Summer Wars*, *La Traversée du temps*, *Les Enfants Loups Ame & Yuki*, *Le Garçon et la Bête*, *Belle*.",
+        "impact": "Spécialiste reconnu des fables familiales fantastiques modernes combinant univers virtuels et quotidien rural."
+    },
+    "Akiyuki Shinbo": {
+        "definition": "Le maître de la mise en scène avant-garde de Shaft, célèbre pour ses choix de couleurs saturées et ses cadrages atypiques.",
+        "origin": "Directeur artistique imposant une grammaire visuelle théâtrale coupée de textes en plein écran et de poses insolites.",
+        "examples": "*Monogatari Series*, *Puella Magi Madoka Magica*, *Sayonara Zetsubou Sensei*, *Sangatsu no Lion*.",
+        "impact": "A transformé le studio Shaft en une entité artistique unique, immédiatement reconnaissable au premier coup d'œil."
+    },
+    "Naoko Yamada": {
+        "definition": "Réalisatrice au style de mise en scène extrêmement sensible, axé sur le langage corporel subtil et la poésie du quotidien.",
+        "origin": "Formée chez Kyoto Animation, elle utilise des caméras simulant des focales réelles pour filmer ses personnages.",
+        "examples": "*Silent Voice* (Koe no Katachi), *K-On!*, *Liz and the Blue Bird*, *Heike Monogatari*.",
+        "impact": "L'une des voix féminines les plus importantes de la réalisation moderne, saluée pour sa délicatesse psychologique."
+    },
+    "Ryuhei Kitamura": {
+        "definition": "Réalisateur japonais de films d'action intenses, caractérisé par un style nerveux, dynamique et très influencé par la BD.",
+        "origin": "Né en 1969, formé au cinéma d'action indépendant avant d'adapter de grandes franchises.",
+        "examples": "*Lupin the 3rd* (Live action), *Versus*, *Godzilla: Final Wars*.",
+        "impact": "Apporte une dynamique d'action rock'n'roll décomplexée aux productions live-action japonaises."
+    },
+    "Shinsuke Sato": {
+        "definition": "Le réalisateur japonais spécialiste des adaptations de mangas d'action d'envergure en prise de vue réelle sur grand écran.",
+        "origin": "Célèbre pour sa maîtrise des effets numériques massifs de reconstitution et la chorégraphie de combats d'armées.",
+        "examples": "*Kingdom* (films live), *Alice in Borderland* (Netflix), *Gantz* (films live), *Bleach* (film live).",
+        "impact": "A prouvé que le cinéma japonais pouvait produire des adaptations d'animes spectaculaires et de qualité internationale."
+    },
+    "Takashi Miike": {
+        "definition": "Réalisateur culte ultra-prolifique de films d'action violents, parodiques et de thrillers yakuza de série B.",
+        "origin": "Célèbre pour sa capacité à tourner plusieurs films par an avec un style outrancier et théâtral unique.",
+        "examples": "*JoJo's Bizarre Adventure: Diamond Is Unbreakable*, *Ace Attorney* (live), *Crows Zero*, *Audition*.",
+        "impact": "A transposé la folie esthétique (coiffures, grimaces) des mangas au cinéma en prise de vue réelle de manière assumée."
+    },
+    "Sunao Katabuchi": {
+        "definition": "Cinéaste spécialisé dans la reconstitution historique ultra-précise du quotidien de la Seconde Guerre mondiale au Japon.",
+        "origin": "Ancien assistant de Hayao Miyazaki, il passe des années à rechercher des archives pour dessiner des intérieurs d'époque parfaits.",
+        "examples": "*Dans un recoin de ce monde* (Dans un coin de ce monde), *Mai Mai Miracle*, *Black Lagoon* (réalisation).",
+        "impact": "A signé l'un des drames historiques de guerre les plus acclamés et historiquement précis du cinéma."
+    },
+    "Gisaburo Sugii": {
+        "definition": "Réalisateur pionnier historique ayant posé les bases de l'animation de combat et des adaptations dramatiques littéraires.",
+        "origin": "Ancien animateur d'Osamu Tezuka chez Mushi Production, il développe un style de cadrage dramatique réaliste.",
+        "examples": "*Street Fighter II: The Animated Movie*, *Train de nuit dans la Voie lactée* (Ginga Tetsudou no Yoru).",
+        "impact": "A réalisé l'adaptation de jeu de combat la plus influente et la plus esthétique des années 90."
+    },
+    "Takeshi Koike": {
+        "definition": "Réalisateur d'élite caractérisé par un style de dessin extrêmement stylisé aux ombres noires massives et au trait acéré.",
+        "origin": "A passé 7 ans à dessiner entièrement à la main les 100 000 planches de son chef-d'œuvre de course automobile Redline.",
+        "examples": "*Redline*, *Lupin III: Une femme nommée Fujiko Mine* (charadesign et réalisation de films).",
+        "impact": "L'un des derniers virtuoses de l'animation manuelle pure de haute voltige stylistique."
+    },
+    "Yasuhiro Yoshiura": {
+        "definition": "Cinéaste indépendant explorant la science-fiction philosophique intime, la robotique et les inversions spatiales.",
+        "origin": "Réalisateur autodidacte adepte de l'outil numérique 3D pour simuler des décors complexes.",
+        "examples": "*Time of Eve* (Eve no Jikan), *Patéma et le monde inversé* (Sakasama no Patema), *Sing a Bit of Harmony*.",
+        "input": "",
+        "impact": "Renouvelle la science-fiction d'anticipation bienveillante explorant le lien émotionnel entre humains et androïdes."
+    },
+    "Keiichi Hara": {
+        "definition": "Réalisateur dramatique spécialisé dans le deuil familial, la reconstruction personnelle et la peinture historique.",
+        "origin": "Connu pour sa sensibilité réaliste et son attention aux décors traditionnels d'époque du Japon féodal.",
+        "examples": "*Miss Hokusai* (Sarusuberi), *Un été avec Coo*, *Le Château solitaire dans le miroir*.",
+        "impact": "Signe des longs-métrages poétiques explorant le folklore shintoïste et la solitude sociale enfantine."
+    },
+
+    # --- STUDIOS (30 profilés) ---
+    "Studio Ghibli": {
+        "definition": "Le studio d'animation le plus célèbre du Japon, cofondé par Hayao Miyazaki et Isao Takahata, symbole mondial de l'animation poétique dessiné à la main.",
+        "origin": "Fondé en 1985 après le succès de *Nausicaä*, son nom fait référence à un vent chaud du désert libyen.",
+        "examples": "*Le Voyage de Chihiro*, *Mon Voisin Totoro*, *Le Tombeau des lucioles*, *Princesse Mononoké*.",
+        "impact": "A inscrit l'animation japonaise au panthéon du cinéma mondial (Oscar en 2003)."
+    },
+    "Kyoto Animation": {
+        "definition": "Studio d'élite (KyoAni) acclamé pour son esthétique d'une délicatesse inouïe, son animation d'une précision folle et son modèle social bienveillant.",
+        "origin": "Fondé par Yoko Hatta dans les années 80, il forme ses propres animateurs en interne et produit des œuvres d'une régularité plastique inégalée.",
+        "examples": "*Violet Evergarden*, *Clannad*, *Silent Voice*, *K-On!*, *La Mélancolie de Haruhi Suzumiya*.",
+        "impact": "Un symbole de dévouement artistique absolu, ayant surmonté une terrible attaque incendiaire en 2019 grâce au soutien mondial des fans."
+    },
+    "ufotable": {
+        "definition": "Studio d'animation d'élite célèbre pour son intégration numérique 3D spectaculaire, son traitement de la lumière et sa gestion des combats fluides.",
+        "origin": "Fondé en 2000, le studio possède ses propres départements d'effets visuels et de modélisation 3D en interne.",
+        "examples": "*Demon Slayer* (Kimetsu no Yaiba), la saga *Fate/Zero* et *Fate/stay night [Unlimited Blade Works]*.",
+        "impact": "A redéfini les standards de l'animation d'action numérique contemporaine (souvent surnommé 'Unlimited Budget Works' par les fans)."
+    },
+    "MAPPA": {
+        "definition": "Le géant de l'action moderne ultra-productive, célèbre pour ses adaptations sombres de dark fantasy d'envergure nationale.",
+        "origin": "Fondé en 2011 par Masao Maruyama (ancien fondateur de Madhouse) pour s'affranchir des contraintes commerciales.",
+        "examples": "*Jujutsu Kaisen*, *L'Attaque des Titans Saison Finale*, *Chainsaw Man*, *Vinland Saga Saison 2*, *Hell's Paradise*.",
+        "impact": "Est devenu le studio d'action le plus puissant et le plus prolifique des années 2020 au prix de controverses sur les conditions de travail."
+    },
+    "Madhouse": {
+        "definition": "L'un des studios d'animation historiques les plus prestigieux du Japon, célèbre pour avoir produit des chefs-d'œuvre d'action sombres et matures.",
+        "origin": "Fondé en 1972 par d'anciens animateurs d'Osamu Tezuka (dont Masao Maruyama et Osamu Dezaki).",
+        "examples": "*Death Note*, *Hunter x Hunter (2011)*, *Monster*, *One-Punch Man* (Saison 1), *Frieren* (Sousou no Frieren).",
+        "impact": "A produit la majorité des thrillers sombres et des séries d'action de référence absolue des années 2000-2010."
+    },
+    "Shaft": {
+        "definition": "Studio avant-gardiste célèbre pour sa mise en scène géométrique abstraite, ses choix de couleurs saturées et ses fameux cadrages typiques.",
+        "origin": "Transformé artistiquement dans les années 2000 sous l'impulsion du réalisateur Akiyuki Shinbo.",
+        "examples": "*Monogatari Series* (Bakemonogatari, etc.), *Puella Magi Madoka Magica*, *Sayonara Zetsubou Sensei*.",
+        "impact": "A prouvé qu'un style visuel hautement théâtral et déstructuré pouvait rencontrer un succès commercial massif."
+    },
+    "Studio Trigger": {
+        "definition": "Studio indépendant célèbre pour son animation frénétique hyper-expressive, son humour déjanté et ses couleurs flashy héritées de Gainax.",
+        "origin": "Fondé en 2011 par Hiroyuki Imaishi et Masahiko Ohtsuka après leur départ historique du studio Gainax.",
+        "examples": "*Kill la Kill*, *Cyberpunk: Edgerunners*, *Dungeon Meshi* (Gloutons & Dragons), *Promare*.",
+        "impact": "Le fer de lance de l'animation dynamique de type 'sakuga' débridée et exubérante contemporaine."
+    },
+    "Bones": {
+        "definition": "Le studio d'animation roi de l'action physique et mécanique dessinée à la main, réputé pour la constance technique exceptionnelle de ses productions.",
+        "origin": "Fondé en 1998 par d'anciens membres du studio Sunrise après la production de *Cowboy Bebop*.",
+        "examples": "*Fullmetal Alchemist: Brotherhood*, *Mob Psycho 100*, *My Hero Academia*, *Soul Eater*, *Bungo Stray Dogs*.",
+        "impact": "Référence absolue de la chorégraphie d'action fluide dessinée à la main sans artifice numérique excessif."
+    },
+    "Wit Studio": {
+        "definition": "Studio d'action haut de gamme célèbre pour la réalisation spectaculaire à haute vitesse des premières saisons de L'Attaque des Titans.",
+        "origin": "Fondé en 2012 en tant que filiale de Production I.G par George Wada et Tetsuya Nakaminami.",
+        "examples": "*L'Attaque des Titans* (Saisons 1 à 3), *Vinland Saga* (Saison 1), *Spy x Family* (coproduit), *Kabaneri*.",
+        "impact": "A signé l'esthétique d'action sombre et cinétique la plus influente et marquante des années 2010."
+    },
+    "Sunrise": {
+        "definition": "Le légendaire studio de mechas (robots géants) et de science-fiction spatiale, renommé Bandai Namco Filmworks en 2022.",
+        "origin": "Fondé en 1972 par d'anciens membres de Mushi Pro, le studio a bâti sa réputation sur la science-fiction militaire.",
+        "examples": "*Mobile Suit Gundam*, *Code Geass*, *Cowboy Bebop*, *City Hunter* (Nicky Larson), *Love Live!*.",
+        "impact": "Le plus grand producteur de séries de mechas et de science-fiction de l'histoire du Japon."
+    },
+    "Toei Animation": {
+        "definition": "Le plus ancien et le plus grand studio d'animation du Japon, pilier historique de la diffusion internationale des licences majeures.",
+        "origin": "Fondé en 1948, il a formé tous les grands maîtres historiques (Miyazaki, Takahata, etc.) avant de se spécialiser dans les formats longs.",
+        "examples": "*Dragon Ball*, *One Piece*, *Saint Seiya* (Les Chevaliers du Zodiaque), *Sailor Moon*, *Slam Dunk*.",
+        "impact": "La locomotive commerciale historique qui a exporté la japanimation à la télévision à travers le globe entier."
+    },
+    "Production I.G": {
+        "definition": "Studio de pointe réputé pour ses innovations technologiques numériques et ses chef-d'œuvres de science-fiction cyberpunk et de sport.",
+        "origin": "Fondé en 1987 par Mitsuhisa Ishikawa, le studio s'est imposé grâce à sa rigueur technique et ses collaborations internationales.",
+        "examples": "*Ghost in the Shell*, *Psycho-Pass*, *Haikyu!!*, *Guilty Crown*, *Kuroko's Basket*.",
+        "impact": "Pionnier de l'intégration 2D/3D et grand spécialiste de l'anticipation cyberpunk technologique de prestige."
+    },
+    "CoMix Wave Films": {
+        "definition": "Studio d'animation de prestige spécialisé dans la production des longs-métrages de Makoto Shinkai.",
+        "origin": "Né d'une agence artistique indépendante, le studio se concentre sur des décors photoréalistes peints à la main d'une beauté irréelle.",
+        "examples": "*Your Name.*, *Les Enfants du Temps*, *Suzume*, *5 Centimètres par seconde*.",
+        "impact": "A élevé l'art du décor d'arrière-plan (*background art*) au rang d'acteur narratif central du cinéma d'animation contemporain."
+    },
+    "Gainax": {
+        "definition": "Le studio otaku mythique des années 90, à l'origine de Neon Genesis Evangelion et de Gurren Lagann, ayant fait faillite en 2024.",
+        "origin": "Fondé par des étudiants fans de science-fiction (dont Hideaki Anno, Hiroyuki Yamaga) pour réaliser des films amateurs (*Daicon*).",
+        "examples": "*Neon Genesis Evangelion*, *Gurren Lagann* (Tengen Toppa Gurren Lagann), *FLCL*, *Gunbuster*.",
+        "impact": "A défini la culture geek otaku rebelle et a accouché de l'animé de science-fiction le plus influent de l'histoire moderne."
+    },
+    "A-1 Pictures": {
+        "definition": "Filiale d'Aniplex (Sony), l'un des studios de production contemporains les plus influents réputé pour sa flexibilité esthétique.",
+        "origin": "Fondé en 2005 par le géant de la distribution de musique et d'animés Aniplex pour assurer la production en interne.",
+        "examples": "*Sword Art Online*, *Kaguya-sama: Love is War*, *Solo Leveling*, *Your Lie in April*, *Fairy Tail* (premières saisons).",
+        "impact": "La machine de production majeure de licences phares d'Isekai et de comédies romantiques des années 2010-2020."
+    },
+    "CloverWorks": {
+        "definition": "Ancienne branche de production d'A-1 Pictures devenue autonome, réputée pour ses animations fluides de tranches de vie et de comédies d'action.",
+        "origin": "Studio réorganisé en 2018 pour focaliser une identité visuelle moderne et élégante pour les licences grand public.",
+        "examples": "*Spy x Family* (coproduit), *My Dress-Up Darling*, *The Promised Neverland* (Saison 1), *Bocchi the Rock!*.",
+        "impact": "S'impose rapidement comme l'un des producteurs contemporains de tranches de vie lycéennes les plus qualitatifs visuellement."
+    },
+    "David Production": {
+        "definition": "Studio célèbre pour son adaptation magistrale, ultra-fidèle et colorée de la saga JoJo's Bizarre Adventure.",
+        "origin": "Fondé en 2007 par d'anciens producteurs de Gonzo cherchant à se concentrer sur des projets de niche fidèles.",
+        "examples": "*JoJo's Bizarre Adventure* (Parties 1 à 6), *Fire Force*, *Cells at Work!* (Les Brigades du Temps).",
+        "impact": "A ressuscité avec un succès triomphal la franchise mythique d'Araki qui était considérée comme impossible à adapter fidèlement en animé."
+    },
+    "Studio Pierrot": {
+        "definition": "Le géant historique des longs formats shonens du Jump, responsable de Naruto et de Bleach.",
+        "origin": "Fondé en 1979 par d'anciens membres de Tatsunoko Pro, spécialisé au départ dans les animés pour enfants avant d'adapter les géants du Jump.",
+        "examples": "*Naruto*, *Bleach*, *Tokyo Ghoul*, *Yu Yu Hakusho*, *Great Teacher Onizuka*.",
+        "impact": "Le principal concurrent historique de Toei Animation pour l'adaptation de licences majeures de shonens d'action fleuves."
+    },
+    "Wit Studio $\leftrightarrow$ MAPPA (Transition historique)": {
+        "definition": "Le changement de production historique le plus délibéré de l'animation moderne concernant la saison finale de L'Attaque des Titans.",
+        "origin": "Wit Studio a cédé les droits de production après la Saison 3 en raison d'un manque de rentabilité et d'un calendrier intenable imposé par le comité.",
+        "examples": "*L'Attaque des Titans* (Wit S1-S3, MAPPA Saison Finale).",
+        "impact": "A suscité de vifs débats sur l'esthétique (utilisation de la 3D pour les Titans chez MAPPA vs 2D tracée chez Wit)."
+    },
+    "Science SARU": {
+        "definition": "Studio d'animation avant-garde fondé par Masaaki Yuasa, exploitant des techniques d'animation Flash hybrides uniques.",
+        "origin": "Créé en 2013 par Yuasa et Eunyoung Choi pour fluidifier la déformation d'animation numérique à bas coût de production.",
+        "examples": "*Devilman Crybaby*, *Keep Your Hands Off Eizouken!*, *Dandadan*, *Heike Monogatari*.",
+        "impact": "Apporte une bouffée d'air frais artistique au sein de l'industrie en produisant des œuvres expérimentales acclamées."
+    },
+    "White Fox": {
+        "definition": "Studio réputé pour ses adaptations intenses, sombres et d'une fidélité chirurgicale de Visual Novels et light novels.",
+        "origin": "Fondé en 2007, réputé pour des épisodes longs sans générique afin de caser le maximum de scénario possible.",
+        "examples": "*Steins;Gate*, *Re:Zero - Starting Life in Another World*, *Goblin Slayer*, *Akame ga Kill!*.",
+        "impact": "Référence absolue pour l'adaptation sombre de light novels de fantasy et de thrillers de voyage dans le temps."
+    },
+    "Kinema Citrus": {
+        "definition": "Studio d'animation réputé pour la richesse visuelle organique de ses décors et la gestion de la fantasy dramatique.",
+        "origin": "Fondé en 2008 par d'anciens membres de Production I.G et Bones.",
+        "examples": "*Made in Abyss*, *The Rising of the Shield Hero*, *My Happy Marriage* (Mon Mariage Heureux).",
+        "impact": "A signé l'un des univers de fantasy d'exploration les plus prenants et visuellement saisissants de sa génération (*Made in Abyss*)."
+    },
+    "Studio Deen": {
+        "definition": "Studio d'animation historique prolifique, célèbre pour ses collaborations régulières avec de grands artistes comme Rumiko Takahashi.",
+        "origin": "Fondé en 1975 par d'anciens animateurs de Sunrise.",
+        "examples": "*Konosuba*, *Fate/stay night* (2006), *Higurashi quand ils pleurent*, *Kenshin* (OAVs culte).",
+        "impact": "L'un des studios les plus productifs de l'industrie, oscillant entre adaptations cultes et séries d'action simplifiées."
+    },
+    "J.C.Staff": {
+        "definition": "Studio de production de masse extrêmement prolifique, s'étant fait une spécialité des comédies romantiques et des adaptations de light novels légères.",
+        "origin": "Fondé en 1986 par d'anciens producteurs de Tatsunoko, axé sur la gestion simultanée de nombreux projets.",
+        "examples": "*Food Wars!* (Shokugeki no Souma), *One-Punch Man* (Saison 2), *Toradora!*, *DanMachi*.",
+        "impact": "Le producteur majeur de comédies romantiques lycéennes de référence des années 2000-2010."
+    },
+    "Studio Mir": {
+        "definition": "Le studio d'animation sud-coréen d'élite réputé pour son style visuel dynamique à l'occidentale.",
+        "origin": "Fondé en 2010 par d'anciens animateurs coréens de *Avatar: The Last Airbender*.",
+        "examples": "*La Légende de Korra*, *DOTA: Dragon's Blood*, *The Witcher: Nightmare of the Wolf*.",
+        "impact": "Le principal studio d'animation de prestige assurant la jonction entre l'animation asiatique et les budgets de plateformes occidentales."
+    },
+    "Fortiche Production": {
+        "definition": "Le studio d'animation français d'élite célèbre pour avoir réalisé la série Arcane, combinant peinture numérique 2D et modélisation 3D.",
+        "origin": "Fondé en 2009 à Paris, réputé pour son style visuel unique de peinture animée et ses clips musicaux.",
+        "examples": "*Arcane*, clips de *League of Legends* ('Get Jinxed', 'Rise').",
+        "impact": "A inscrit le savoir-faire de l'animation française au sommet de la production industrielle mondiale."
+    },
+    "Xebec": {
+        "definition": "Studio historique réputé pour ses comédies de science-fiction, de mechas et ses comédies romantiques ecchi phares des années 90-2000.",
+        "origin": "Filiale de Production I.G fondée en 1995, dissoute en 2019.",
+        "examples": "*To Love-Ru*, *Shaman King* (2001), *Love Hina*, *Martian Successor Nadesico*.",
+        "impact": "A produit les comédies de harem et de science-fiction parodique les plus emblématiques des débuts de l'ère du DVD."
+    },
+    "GONZO": {
+        "definition": "Le studio pionnier de l'intégration d'effets visuels 3D dans l'animation traditionnelle des années 2000, aujourd'hui réduit à la production de niche.",
+        "origin": "Fondé en 1992 par d'anciens membres du studio Gainax (dont Mahiro Maeda).",
+        "examples": "*Hellsing* (première série), *Rosario + Vampire*, *Gantz*, *Last Exile*, *Afro Samurai*.",
+        "impact": "A été le leader technologique de la modélisation 3D numérique d'action au début des années 2000 avant de subir de lourdes crises financières."
+    },
+    "Brain's Base": {
+        "definition": "Studio spécialisé dans les adaptations complexes d'intrigues chorales, d'ambiances mystiques urbaines et de comédies romantiques lycéennes.",
+        "origin": "Fondé en 1996 par d'anciens membres de Tokyo Movie Shinsha.",
+        "examples": "*Durarara!!*, *Baccano!*, *My Teen Romantic Comedy SNAFU* (Saison 1), *Natsume Yujin-cho*.",
+        "impact": "A signé les adaptations d'intrigues chorales urbaines les plus acclamées et complexes des années 2000."
+    },
+    "Lerche": {
+        "definition": "Studio d'animation contemporain réputé pour ses adaptations fidèles d'intrigues lycéennes psychologiques ou fantastiques.",
+        "origin": "Créé en 2011 en tant que branche d'élite du studio Studio Hibari.",
+        "examples": "*Assassination Classroom*, *Classroom of the Elite*, *Given*, *Danganronpa: The Animation*.",
+        "impact": "A produit plusieurs comédies d'action lycéennes à suspense majeures des années 2010."
+    }
+}

@@ -35,8 +35,9 @@ def donation_webhook(request):
         user = User.objects.filter(email=email).first()
         
         container = get_container()
-        donation_port = container.health_dashboard_service.donation_port
-        achievement_service = container.achievement_service
+        dashboard_service = container.health_dashboard_service()
+        donation_port = dashboard_service.donation_port
+        achievement_service = container.achievement_service()
         
         domain_donation = DomainDonation(
             user_id=user.id if user else None,

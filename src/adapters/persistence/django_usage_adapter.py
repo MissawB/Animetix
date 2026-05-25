@@ -2,41 +2,38 @@ from typing import Optional
 from datetime import datetime
 from django.db.models import Sum
 from core.ports.usage_port import UsagePort
+from core.domain.services.pricing_service import PricingService
 from animetix.models import AITokenUsage
 
 class DjangoUsageAdapter(UsagePort):
+    def __init__(self, pricing_service: Optional[PricingService] = None):
+        self.pricing_service = pricing_service or PricingService()
+
     def log_usage(
         self, 
         engine: str, 
-        input_tokens: int, 
-        output_tokens: int, 
+        input_tokens: int = 0, 
+        output_tokens: int = 0, 
+        units: int = 0,
         user_id: Optional[int] = None
     ):
         """
-        Saves token usage to Django database.
-        Estimates cost based on engine (Placeholders for pricing).
+        Saves usage to Django database.
+        Uses PricingService for accurate cost calculation.
         """
-        # Simplistic cost estimation (USD per 1M tokens)
-        pricing = {
-            'gpt-4o': {'in': 5.0, 'out': 15.0},
-            'gpt-3.5-turbo': {'in': 0.5, 'out': 1.5},
-            'claude-3-sonnet': {'in': 3.0, 'out': 15.0},
-            'local-llama': {'in': 0.0, 'out': 0.0},
-            'brain-api': {'in': 1.0, 'out': 2.0}, # Internal pricing
-        }
-        
-        # Fallback pricing
-        engine_price = pricing.get(engine, {'in': 1.0, 'out': 2.0})
-        
-        cost = (input_tokens / 1_000_000 * engine_price['in']) + \
-               (output_tokens / 1_000_000 * engine_price['out'])
+        cost = self.pricing_service.calculate_cost(
+            engine=engine,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            units=units
+        )
         
         AITokenUsage.objects.create(
             user_id=user_id,
             engine=engine,
             input_tokens=input_tokens,
             output_tokens=output_tokens,
-            total_tokens=input_tokens + output_tokens,
+            total_tokens=input_tokens + output_tokens + units,
             cost_estimate=cost
         )
 

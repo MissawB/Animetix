@@ -1,7 +1,7 @@
 import logging
 from typing import Optional
 from core.domain.services.llm_service import LLMService
-from pipeline.neo4j_client import Neo4jManager
+from core.ports.graph_persistence_port import GraphPersistencePort
 
 logger = logging.getLogger("animetix.rag.saga_agent")
 
@@ -10,7 +10,7 @@ class SagaAgent:
     Agent spécialisé dans la récupération du macro-contexte des franchises (Sagas).
     Permet d'obtenir l'Executive Summary global d'une licence.
     """
-    def __init__(self, llm_service: LLMService, neo4j_manager: Neo4jManager):
+    def __init__(self, llm_service: LLMService, neo4j_manager: GraphPersistencePort):
         self.llm_service = llm_service
         self.neo4j_manager = neo4j_manager
 

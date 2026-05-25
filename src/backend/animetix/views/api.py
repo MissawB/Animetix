@@ -5,11 +5,11 @@ from django.views.decorators.csrf import csrf_exempt
 from celery.result import AsyncResult
 from .common import logger
 from ..containers import get_container
-from ..session_manager import GameSessionManager
+from animetix.api.dependencies import get_session_service
 
 def get_task_status(request, task_id):
     """Checks the status of a Celery task and returns a result fragment if ready."""
-    session = GameSessionManager(request)
+    session = get_session_service(request)
     try:
         res = AsyncResult(task_id)
         if res.ready():
@@ -31,7 +31,7 @@ def get_task_status(request, task_id):
 
 def emoji_decode_stream(request):
     """Streams emoji generation events for the UI."""
-    session = GameSessionManager(request)
+    session = get_session_service(request)
     media_type, secret = session.get_current_mode(), request.GET.get('secret')
     if not secret: return HttpResponse(status=400)
     
@@ -48,7 +48,7 @@ def emoji_decode_stream(request):
 
 def paradox_stream(request):
     """Streams paradox logic generation events."""
-    session = GameSessionManager(request)
+    session = get_session_service(request)
     container = get_container()
     media_type = session.get_current_mode()
     data = container.catalog_service.load_data(media_type)
@@ -68,7 +68,7 @@ def paradox_stream(request):
 
 def agentic_rag_stream(request):
     """Streams agentic RAG planning and solving events."""
-    session = GameSessionManager(request)
+    session = get_session_service(request)
     query, media_type = request.GET.get('q', ''), session.get_current_mode()
     if not query: return JsonResponse({'error': 'No query provided'}, status=400)
     def event_stream():
@@ -84,7 +84,7 @@ def agentic_rag_stream(request):
 
 def animinator_stream(request):
     """Streams the Oracle's response and updates the game state in session."""
-    session = GameSessionManager(request)
+    session = get_session_service(request)
     container = get_container()
     media_type = session.get('media_type', 'Anime')
     secret = session.get('animinator_secret')

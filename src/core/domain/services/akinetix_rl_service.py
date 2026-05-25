@@ -1,16 +1,24 @@
 import logging
 import numpy as np
+import warnings
 from typing import List, Dict, Optional, Tuple
 from .akinetix_rl_env import AkinetixRLEnvironment
 from .catalog_service import CatalogService
 
 logger = logging.getLogger("animetix.rl.service")
 
+# Deprecation Warning
+warnings.warn(
+    "AkinetixRLDomainService is deprecated and will be removed in a future version. "
+    "Please use src.core.domain.services.akinetix_engine.AkinetixEngine instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
+
 class AkinetixRLDomainService:
     """
-    Service de domaine utilisant l'IA par renforcement pour Akinetix.
-    Il peut utiliser un modèle Torch si disponible, ou une stratégie 
-    d'optimisation du gain d'information (le but du RL).
+    DEPRECATED: Service de domaine utilisant l'IA par renforcement pour Akinetix.
+    Utilisez AkinetixEngine à la place.
     """
     def __init__(self, catalog_service: CatalogService):
         self.catalog_service = catalog_service

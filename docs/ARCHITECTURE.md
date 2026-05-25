@@ -73,12 +73,17 @@ Les adaptateurs concrétisent les ports. Toute méthode non supportée lève `In
 
 ## 6. Déploiement : Architecture découplée (Pure SPA)
 
-Animetix est désormais conçu comme une **Pure SPA**. 
+Animetix est désormais conçu et déployé comme une **Pure SPA** (Single Page Application) totalement découplée.
 
-- **Frontend (Statique)** : `index.html` + Bundle React (Vite) peut être servi par n'importe quel serveur statique (Nginx, S3, Vercel).
-- **Backend (API)** : Django sert exclusivement d'API JSON via `/api/v1/`.
+- **Frontend (Statique)** : Une application React moderne construite avec **Vite** (`frontend/`). Le bundle généré (`dist/`) est servi de manière ultra-performante. En développement, Vite tourne sur le port `5173` et proxyfie les requêtes `/api` et `/ws` vers le backend Django.
+- **Backend (Headless API)** : Django fonctionne strictement comme une API headless. Toutes les anciennes routes HTML et contrôleurs de vues Django obsolètes ont été **intégralement supprimés** (nettoyage complet de `base.html` et des templates associés). 
+- **Routage Unifié** : Django configure un routage systématique où la racine et toutes les requêtes de fallback (`re_path(r'^(?!api/|static/|admin/).*$', spa_view)`) redirigent vers `spa_view` pour laisser React gérer le routage côté client via `react-router-dom`.
 
-La dépendance structurelle à `base.html` (Django Templates) est devenue optionnelle et conservée uniquement pour des raisons de rétrocompatibilité. Pour un déploiement 100% découplé :
-1. Construire le front avec `npm run build` dans le dossier `frontend/`.
-2. Servir le dossier `dist/` via Nginx ou un CDN.
-3. Configurer le reverse proxy pour rediriger les appels `/api/` vers le backend Django.
+### Synthèse des flux et découplage
+1. **Communication** : API REST JSON via `/api/v1/` et requêtes GraphQL interactives via `/graphql/` (Knowledge Graph).
+2. **Gestion d'État** : Tout l'état de l'application et les logiques de jeux complexes (Akinetix, Paradox, Forge) ont été déportés de la couche de présentation Django vers des **Domain Services** dans `src/core/domain/services/`.
+3. **Sécurité et Authentification** : L'état d'authentification est centralisé côté React SPA, validé par un endpoint Django dédié (`feat(spa-auth)`).
+4. **Configuration de Production** :
+   - Construire le front avec `npm run build` dans le dossier `frontend/`.
+   - Servir les fichiers statiques de `dist/` via Nginx ou un service CDN.
+   - Configurer le reverse proxy pour diriger `/api/`, `/graphql/` et les connexions WebSocket `/ws/` vers le serveur d'application Django (Gunicorn/Uvicorn).

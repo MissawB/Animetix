@@ -100,6 +100,45 @@ class DjangoRepositoryAdapter(RepositoryPort):
         items = qs.order_by('-popularity')[offset:offset+limit]
         return [self._to_dict(item) for item in items]
 
+    def load_latent_space(self, media_type: str, vibe_type: str) -> Optional[List[Dict]]:
+        from animetix.models import LatentSpacePoint
+        points = LatentSpacePoint.objects.filter(media_type=media_type.lower(), vibe_type=vibe_type.lower())
+        if not points.exists():
+            return None
+        return [
+            {
+                'x': p.x, 'y': p.y, 'z': p.z,
+                'title': p.title, 'external_id': p.external_id,
+                'cluster': p.cluster, 'metadata': p.metadata
+            } for p in points
+        ]
+
+    def sync_latent_space(self, media_type: str, vibe_type: str, data: List[Dict]) -> int:
+        from animetix.models import LatentSpacePoint
+        count = 0
+        media_type = media_type.lower()
+        vibe_type = vibe_type.lower()
+        
+        # Suppression des anciens points pour ce type
+        LatentSpacePoint.objects.filter(media_type=media_type, vibe_type=vibe_type).delete()
+        
+        objs = []
+        for d in data:
+            objs.append(LatentSpacePoint(
+                media_type=media_type,
+                vibe_type=vibe_type,
+                external_id=str(d.get('external_id') or d.get('id', '')),
+                title=d.get('title') or d.get('name', 'Unknown'),
+                x=d.get('x', 0.0),
+                y=d.get('y', 0.0),
+                z=d.get('z', 0.0),
+                cluster=d.get('cluster', 0),
+                metadata=d.get('metadata', {})
+            ))
+        
+        created = LatentSpacePoint.objects.bulk_create(objs, batch_size=500)
+        return len(created)
+
     def _to_dict(self, item: MediaItem) -> Dict:
         data = {
             'id': item.external_id,

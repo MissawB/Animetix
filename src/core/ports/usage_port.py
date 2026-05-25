@@ -7,11 +7,12 @@ class UsagePort(ABC):
     def log_usage(
         self, 
         engine: str, 
-        input_tokens: int, 
-        output_tokens: int, 
+        input_tokens: int = 0, 
+        output_tokens: int = 0, 
+        units: int = 0,
         user_id: Optional[int] = None
     ):
-        """Logs LLM token usage."""
+        """Logs AI usage (tokens or units)."""
         pass
 
     @abstractmethod

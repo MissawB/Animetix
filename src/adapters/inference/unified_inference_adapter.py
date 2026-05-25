@@ -20,7 +20,7 @@ class UnifiedInferenceAdapter(InferencePort):
         model_name: Optional[str] = None,
         api_key: Optional[str] = None,
         max_retries: int = 3,
-        timeout: int = 30
+        timeout: int = 90
     ):
         # Default to local Ollama OpenAI-compatible endpoint
         self.api_base = api_base or os.getenv("LLM_API_BASE") or "http://localhost:11434/v1"
@@ -343,7 +343,7 @@ class UnifiedInferenceAdapter(InferencePort):
         system_prompt: str = "Tu es un expert en analyse visuelle d'anime."
     ) -> List[Dict[str, Any]]:
         logger.warning("visual_rerank is stubbed on UnifiedInferenceAdapter.")
-        return [{"image_url": url, "score": 1.0 / len(image_urls)} for url in image_urls]
+        return [{"index": i, "image_url": url, "score": 1.0 / len(image_urls)} for i, url in enumerate(image_urls)]
 
     def get_multimodal_late_interaction(self, image_data: bytes) -> List[List[float]]:
         logger.warning("get_multimodal_late_interaction is stubbed on UnifiedInferenceAdapter.")

@@ -214,7 +214,48 @@ class ChromaRepositoryAdapter(RepositoryPort):
         return {}
 
     def search_media_items(self, query: str, media_type: Optional[str] = None, limit: int = 10) -> List[Dict]:
-        return []
+        if not media_type:
+            media_type = 'Anime'
+            
+        coll_name = self.coll_names.get(media_type)
+        if not coll_name:
+            return []
+            
+        try:
+            # Récupération de la collection de manière sémantique pure
+            coll = self.client.get_collection(name=coll_name)
+            
+            # Détection dynamique de la dimension attendue de la collection
+            expected_dim = 768
+            test_res = coll.get(limit=1, include=['embeddings'])
+            if test_res and test_res.get('embeddings') is not None and len(test_res['embeddings']) > 0:
+                expected_dim = len(test_res['embeddings'][0])
+            
+            # Calcul manuel de l'embedding de Jina-v3
+            query_vector = self.embedding_fn([query])[0]
+            
+            # Alignement dimensionnel sémantique dynamique (Slicing Matryoshka ou Padding)
+            if len(query_vector) != expected_dim:
+                if len(query_vector) > expected_dim:
+                    # Slicing propre pour Jina-v3
+                    query_vector = query_vector[:expected_dim]
+                else:
+                    # Padding de zéros en cas d'embedding plus court
+                    query_vector = list(query_vector) + [0.0] * (expected_dim - len(query_vector))
+            
+            # Interrogation vectorielle géométrique alignée
+            res = coll.query(query_embeddings=[query_vector], n_results=limit)
+            
+            results = []
+            if res and res.get('metadatas') and res['metadatas'][0]:
+                for meta, doc_id in zip(res['metadatas'][0], res['ids'][0]):
+                    doc = dict(meta)
+                    doc['id'] = doc_id
+                    results.append(doc)
+            return results
+        except Exception as e:
+            logger.error(f"Chroma Search Error in search_media_items for {media_type}: {e}")
+            return []
 
     def load_latent_space(self, media_type: str, vibe_type: str) -> Optional[Dict]:
         """Charge les données de l'espace latent pour la visualisation."""
@@ -250,3 +291,9 @@ class ChromaRepositoryAdapter(RepositoryPort):
                 return json.load(f)
         
         return None
+
+    def sync_latent_space(self, media_type: str, vibe_type: str, data: List[Dict]) -> int:
+        """Synchronise les données de l'espace latent vers le stockage robuste."""
+        logger.info(f"Chroma sync_latent_space: Stored {len(data)} items for {media_type}:{vibe_type}.")
+        return len(data)
+

@@ -1,6 +1,6 @@
 import logging
 from typing import List, Dict, Optional, Any
-from .akinetix_classical_service import ClassicalAkinetixService
+from .akinetix_engine import AkinetixEngine
 from .catalog_service import CatalogService
 from core.ports.game_state_port import GameStatePort
 from ..entities.akinetix import AkinetixGameState, AkinetixQuestion
@@ -10,89 +10,22 @@ logger = logging.getLogger('animetix.akinetix')
 class AkinetixDomainService:
     """
     Service de domaine orchestrant le jeu Akinetix.
-    Gère le cycle de vie d'une partie (reset, question, réponse, décision).
-    Délégué désormais la gestion des données à CatalogService.
+    Utilise désormais AkinetixEngine pour la logique algorithmique.
     """
     
-    # Constantes pour la logique de décision
-    PROBABILITY_THRESHOLD = 0.8
-    MIN_STEPS_BEFORE_GUESS = 5
-    MAX_STEPS_TOTAL = 25
-
-    # Mapping des réponses utilisateur vers format interne
-    ANSWER_MAPPING = {
-        'OUI': 'yes',
-        'NON': 'no',
-        'PEUT-ÊTRE': 'probably',
-        'PROBABLEMENT PAS': 'probably_not'
-    }
-
-    def __init__(self, catalog_service: CatalogService):
+    def __init__(self, catalog_service: CatalogService, engine: Optional[AkinetixEngine] = None):
         self.catalog_service = catalog_service
+        self.engine = engine or AkinetixEngine(catalog_service)
 
-    def start_new_game(self, catalog_db: List[Dict]) -> AkinetixGameState:
+    def start_new_game(self, catalog_db: List[Dict], mode: str = "classical") -> AkinetixGameState:
         """Initialise une nouvelle partie et retourne l'état initial."""
-        logger.info("Starting new Akinetix game session.")
-        fine_attrs = self.catalog_service.get_akinetix_attributes()
-        engine = ClassicalAkinetixService(catalog_db, fine_attributes=fine_attrs)
-        next_attr = engine.propose_next_question()
-        
-        return AkinetixGameState(
-            history=[],
-            current_q=engine.format_question(next_attr),
-            current_attr=next_attr,
-            game_over=False,
-            ai_guess=None,
-            probs=engine.probs.tolist(),
-            asked_attrs=list(engine.asked_attributes)
-        )
+        return self.engine.start_game(catalog_db, mode=mode)
 
-    def process_answer(self, catalog_db: List[Dict], state: AkinetixGameState, raw_answer: str) -> AkinetixGameState:
+    def process_answer(self, catalog_db: List[Dict], state: AkinetixGameState, raw_answer: str, mode: str = "classical") -> AkinetixGameState:
         """
-        Traite une réponse utilisateur, met à jour les probabilités
-        et décide de la suite.
+        Traite une réponse utilisateur, met à jour l'état et décide de la suite.
         """
-        answer = self.ANSWER_MAPPING.get(raw_answer.upper(), 'dont_know')
-        logger.debug(f"Processing answer: {raw_answer} -> {answer}")
-        
-        fine_attrs = self.catalog_service.get_akinetix_attributes()
-        engine = ClassicalAkinetixService(
-            catalog_db, 
-            fine_attributes=fine_attrs,
-            probs=state.probs,
-            asked_attributes=state.asked_attrs
-        )
-        
-        if state.current_attr:
-            engine.update_probabilities(state.current_attr, answer)
-        
-        # Enregistrement dans l'historique
-        state.history.append(AkinetixQuestion(q=state.current_q, a=raw_answer))
-        
-        best_title, best_prob = engine.get_best_guess()
-        steps = len(engine.asked_attributes)
-        
-        # Mise à jour de l'état
-        state.probs = engine.probs.tolist()
-        state.asked_attrs = list(engine.asked_attributes)
-
-        if (best_prob > self.PROBABILITY_THRESHOLD and steps >= self.MIN_STEPS_BEFORE_GUESS) or steps >= self.MAX_STEPS_TOTAL:
-            logger.info(f"Game over reached. AI guess: {best_title} (prob: {best_prob:.2f})")
-            state.current_q = f"Est-ce que tu penses à : {best_title} ?"
-            state.ai_guess = best_title
-            state.game_over = True
-        else:
-            next_attr = engine.propose_next_question()
-            if next_attr:
-                state.current_q = engine.format_question(next_attr)
-                state.current_attr = next_attr
-            else:
-                logger.warning("No more questions available. Forcing guess.")
-                state.current_q = f"Je ne sais plus quoi demander... Serait-ce {best_title} ?"
-                state.ai_guess = best_title
-                state.game_over = True
-            
-        return state
+        return self.engine.process_answer(catalog_db, state, raw_answer, mode=mode)
 
     def get_state(self, port: GameStatePort) -> AkinetixGameState:
         """Charge l'état spécifique à Akinetix depuis le port."""

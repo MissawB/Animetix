@@ -1,5 +1,7 @@
 from celery import shared_task
-from .containers import get_container
+def get_container():
+    from .containers import get_container as _get_container
+    return _get_container()
 from .creative_tasks import generate_fusion_image
 import logging
 
@@ -109,6 +111,67 @@ def answer_complex_query_task(query: str, media_type: str):
 
 
 @shared_task
+def scheduled_dpo_optimization():
+    """
+    Tâche périodique pour optimiser les prompts à partir des feedbacks négatifs accumulés.
+    Identifie les catégories avec suffisamment d'échecs et déclenche l'ingénierie Meta-Prompt.
+    """
+    from animetix.models import AIFeedback
+    from django.db.models import Count
+    from django.core.cache import cache
+    
+    lock_id = "scheduled_dpo_optimization_lock"
+    # Acquire lock for 1 hour (max task duration)
+    # cache.add is atomic in django-redis
+    if not cache.add(lock_id, "true", 3600):
+        logger.warning("🤖 [DPO Task] Already running. Skipping.")
+        return "Task already running."
+    
+    try:
+        container = get_container()
+        dpo_loop = container.dpo_feedback_loop
+        prompt_manager = container.prompt_manager
+        
+        logger.info("🤖 [DPO Task] Starting automated prompt optimization cycle...")
+    
+        # 1. Identifier les catégories (feedback_type) ayant suffisamment de feedbacks 'Rejected'
+        # On cherche au moins 5 feedbacks négatifs récents pour justifier une optimisation
+        MIN_REJECTED_THRESHOLD = 5
+        
+        stats = AIFeedback.objects.filter(is_positive=False).values('feedback_type').annotate(
+            rejected_count=Count('id')
+        ).filter(rejected_count__gte=MIN_REJECTED_THRESHOLD)
+        
+        optimized_categories = []
+        
+        for stat in stats:
+            prompt_key = stat['feedback_type']
+            # Vérifier si c'est une clé de prompt valide gérée par le PromptManager
+            if prompt_key in prompt_manager.prompts:
+                logger.info(f"✨ [DPO Task] Optimizing prompt '{prompt_key}' (Rejected count: {stat['rejected_count']})")
+                
+                try:
+                    new_prompt = dpo_loop.optimize_prompt_from_feedback(prompt_key, limit=50)
+                    if new_prompt:
+                        logger.info(f"✅ [DPO Task] Success: Prompt '{prompt_key}' has been updated.")
+                        logger.info(f"📝 [DPO Task] New prompt for '{prompt_key}':\n{new_prompt}")
+                        optimized_categories.append(prompt_key)
+                    else:
+                        logger.warning(f"⚠️ [DPO Task] Optimization failed or no changes for '{prompt_key}'.")
+                except Exception as e:
+                    logger.error(f"❌ [DPO Task] Error optimizing '{prompt_key}': {e}")
+            else:
+                logger.debug(f"ℹ️ [DPO Task] Category '{prompt_key}' found in feedback but not in PromptManager. Skipping.")
+    
+        if not optimized_categories:
+            return "No prompts needed optimization today."
+            
+        return f"Optimization cycle complete. Categories updated: {', '.join(optimized_categories)}"
+    finally:
+        cache.delete(lock_id)
+
+
+@shared_task
 def cleanup_duel_resources_task(room_code: str):
     """Nettoie les ressources liées à un salon de duel."""
     try:
@@ -124,3 +187,35 @@ def cleanup_duel_resources_task(room_code: str):
     except ImportError:
         pass 
     return f"Cleanup triggered for {room_code}"
+
+
+@shared_task
+def log_dpo_preference_task(query, chosen, rejected, project_root):
+    """Journalisation asynchrone des paires de préférence DPO via Celery."""
+    import json
+    import os
+    try:
+        datasets_dir = os.path.join(project_root, "data", "mlops", "datasets")
+        os.makedirs(datasets_dir, exist_ok=True)
+        path = os.path.join(datasets_dir, "ai_feedback.jsonl")
+
+        pair_chosen = {
+            "context": query,
+            "output": chosen,
+            "is_positive": True
+        }
+        pair_rejected = {
+            "context": query,
+            "output": rejected,
+            "is_positive": False
+        }
+
+        with open(path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(pair_chosen, ensure_ascii=False) + "\n")
+            f.write(json.dumps(pair_rejected, ensure_ascii=False) + "\n")
+        
+        logger.info(f"💾 [Celery DPO] Logged preference pair for query='{query[:30]}...'")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to log DPO feedback in Celery: {e}")
+        return False

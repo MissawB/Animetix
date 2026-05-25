@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import MagicMock
-from src.backend.animetix.session_manager import GameSessionManager
+from src.adapters.persistence.session_state_adapter import DjangoSessionStateAdapter
+from src.core.domain.services.game_session_service import GameSessionService
 from src.backend.animetix.presenters import GamePresenter
 
 class MockSession:
@@ -19,21 +20,23 @@ def mock_request():
     request.session = MockSession()
     return request
 
-def test_session_manager_classic_start(mock_request):
-    manager = GameSessionManager(mock_request)
-    manager.start_classic_game("Naruto", "Normal", "Anime")
+def test_session_service_classic_start(mock_request):
+    port = DjangoSessionStateAdapter(mock_request.session)
+    service = GameSessionService(port)
+    service.start_classic_game("Naruto", "Normal", "Anime")
     
     assert mock_request.session.data['secret_title'] == "Naruto"
     assert mock_request.session.data['game_over'] is False
     assert mock_request.session.data['guesses'] == []
     assert mock_request.session.modified is True
 
-def test_session_manager_add_guess(mock_request):
-    manager = GameSessionManager(mock_request)
+def test_session_service_add_guess(mock_request):
+    port = DjangoSessionStateAdapter(mock_request.session)
+    service = GameSessionService(port)
     mock_request.session.data['guesses'] = []
     
     guess = {"title": "One Piece", "score": 85.0}
-    manager.add_guess(guess)
+    service.add_guess(guess)
     
     assert len(mock_request.session.data['guesses']) == 1
     assert mock_request.session.data['guesses'][0]['title'] == "One Piece"

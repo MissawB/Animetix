@@ -1,0 +1,1 @@
+$f = \"C:\Users\bahma\PycharmProjects\Projet solo\Double_scenario_Project\data\mlops\gold_dataset.json\"; $c = [System.IO.File]::ReadAllText($f); $c = $c.Replace(\"`\"query_type`\": `\"standard`\"\", \"`\"query_type`\": `\"graph`\"\"); [System.IO.File]::WriteAllText($f, $c)

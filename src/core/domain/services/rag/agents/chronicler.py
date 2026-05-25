@@ -3,7 +3,7 @@ import orjson
 from typing import Dict, List, Any, Optional
 from core.domain.services.llm_service import LLMService
 from core.domain.services.prompt_manager import PromptManager
-from pipeline.neo4j_client import Neo4jManager
+from core.ports.graph_persistence_port import GraphPersistencePort
 from core.ports.web_search_port import WebSearchPort
 
 logger = logging.getLogger("animetix.rag.chronicler")
@@ -13,7 +13,7 @@ class ChroniclerAgent:
         self, 
         llm_service: LLMService, 
         prompt_manager: PromptManager, 
-        neo4j_manager: Neo4jManager,
+        neo4j_manager: GraphPersistencePort,
         web_search: WebSearchPort
     ) -> None:
         self.llm_service = llm_service

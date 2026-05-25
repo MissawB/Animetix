@@ -2,12 +2,13 @@ import re
 import logging
 from typing import Dict, List, Optional
 from ...ports.inference_port import InferencePort
+from ...ports.graph_persistence_port import GraphPersistencePort
 from .prompt_manager import PromptManager
 
 logger = logging.getLogger('animetix.reasoning')
 
 class ReasoningAgentService:
-    def __init__(self, inference_engine: InferencePort, prompt_manager: PromptManager, search_service=None, graph_manager=None, agent_bus=None):
+    def __init__(self, inference_engine: InferencePort, prompt_manager: PromptManager, search_service=None, graph_manager: Optional[GraphPersistencePort] = None, agent_bus=None):
         self.inference_engine = inference_engine
         self.prompt_manager = prompt_manager
         self.search_service = search_service

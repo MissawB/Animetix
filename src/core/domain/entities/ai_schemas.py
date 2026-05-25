@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional, Dict, Any
 from enum import Enum
 
@@ -151,11 +151,13 @@ class CombatStats(BaseModel):
     abilities: List[str] = Field(default_factory=list, description="Hax and Special Powers")
 
 class CombatCharacter(BaseModel):
-    name: str = Field(description="Name of the character.")
-    image_url: Optional[str] = Field(default=None, description="URL of the character portrait")
-    wiki_url: Optional[str] = Field(default=None, description="Source URL for character statistics (e.g. VS Battles Wiki).")
-    stats: CombatStats = Field(default_factory=CombatStats, description="Structured combat statistics and abilities.")
-    summary: str = Field(default="No summary available.", description="Brief summary of the character's background and powers.")
+    name: str = Field(alias="Name", description="Name of the character.")
+    image_url: Optional[str] = Field(default=None, alias="Image_URL", description="URL of the character portrait")
+    wiki_url: Optional[str] = Field(default=None, alias="Wiki_URL", description="Source URL for character statistics (e.g. VS Battles Wiki).")
+    stats: CombatStats = Field(default_factory=CombatStats, alias="Stats", description="Structured combat statistics and abilities.")
+    summary: str = Field(default="No summary available.", alias="Summary", description="Brief summary of the character's background and powers.")
+
+    model_config = ConfigDict(populate_by_name=True, extra='ignore')
 
 class DebateTurn(BaseModel):
     agent: str = Field(description="Role: 'Advocate_A', 'Advocate_B', or 'Judge'")

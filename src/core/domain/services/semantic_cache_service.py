@@ -1,48 +1,39 @@
 import logging
-import hashlib
-from typing import Optional
-from django.conf import settings
-from animetix.models import SemanticCache
-import numpy as np
+from typing import Optional, List
+from core.ports.inference_port import InferencePort
+from core.ports.cache_port import SemanticCachePort
 
 logger = logging.getLogger('animetix.cache')
 
 class SemanticCacheService:
     """
-    Cache sémantique utilisant le modèle Django SemanticCache.
-    Si pgvector est disponible, utilise la recherche vectorielle, sinon fallback texte.
+    Service de mise en cache sémantique pour réduire les coûts et la latence des appels LLM.
+    Utilise un port de persistance (SemanticCachePort) pour isoler le domaine de l'infrastructure Django.
     """
-    def __init__(self, inference_engine=None):
+    def __init__(self, inference_engine: Optional[InferencePort] = None, cache_port: Optional[SemanticCachePort] = None):
         self.inference_engine = inference_engine
+        self.cache_port = cache_port
         self.similarity_threshold = 0.92
 
     def get_cached_response(self, query: str) -> Optional[str]:
-        """Cherche une réponse en cache via similarité sémantique."""
+        """Cherche une réponse en cache via correspondance exacte ou similarité sémantique."""
+        if not self.cache_port:
+            return None
+            
         try:
             # 1. Tentative de correspondance exacte (très rapide)
-            exact = SemanticCache.objects.filter(query_text=query).first()
+            exact = self.cache_port.get(query)
             if exact:
                 logger.info(f"⚡ [Cache] Exact hit for: {query[:50]}...")
-                return exact.response_text
+                return exact
 
             # 2. Si on a un moteur d'inférence pour les embeddings, on tente le vectoriel
-            if self.inference_engine:
-                # Note: On assume que l'inference_engine peut générer des embeddings 
-                # (via une méthode non définie explicitement ici mais présente dans les adapters)
-                if hasattr(self.inference_engine, 'get_text_embedding'):
-                    emb = self.inference_engine.get_text_embedding(query)
-                    
-                    # Recherche via pgvector si possible
-                    from django.db.models import F
-                    # On cherche l'entrée la plus proche
-                    # similarity = 1 - cosine_distance
-                    match = SemanticCache.objects.annotate(
-                        sim=1 - F('query_embedding').cosine_distance(emb)
-                    ).filter(sim__gte=self.similarity_threshold).order_by('-sim').first()
-                    
-                    if match:
-                        logger.info(f"🧠 [Cache] Semantic hit (sim: {match.sim:.2f})")
-                        return match.response_text
+            if self.inference_engine and hasattr(self.inference_engine, 'get_text_embedding'):
+                emb = self.inference_engine.get_text_embedding(query)
+                res = self.cache_port.get_semantic(emb, self.similarity_threshold)
+                if res:
+                    logger.info("🧠 [Cache] Semantic hit")
+                    return res
                         
             return None
         except Exception as e:
@@ -50,17 +41,16 @@ class SemanticCacheService:
             return None
 
     def set_cached_response(self, query: str, response: str):
-        """Stocke une réponse dans le cache."""
+        """Stocke une réponse dans le cache avec son embedding."""
+        if not self.cache_port:
+            return
+
         try:
-            cache_entry, created = SemanticCache.objects.get_or_create(
-                query_text=query,
-                defaults={'response_text': response}
-            )
-            
-            # Mise à jour de l'embedding si nécessaire
-            if created and self.inference_engine and hasattr(self.inference_engine, 'get_text_embedding'):
+            emb = []
+            if self.inference_engine and hasattr(self.inference_engine, 'get_text_embedding'):
                 emb = self.inference_engine.get_text_embedding(query)
-                cache_entry.query_embedding = emb
-                cache_entry.save()
+            
+            self.cache_port.set(query, emb, response)
+            logger.info(f"💾 [Cache] Stored response for: {query[:50]}...")
         except Exception as e:
             logger.error(f"Cache Storage Error: {e}")

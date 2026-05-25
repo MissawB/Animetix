@@ -63,3 +63,59 @@ class ModelDistillationPipeline:
         except Exception as e:
             logger.error(f"❌ Training failed: {e}")
             raise
+
+    def extract_golden_patterns(self, prompt_key: str) -> str:
+        """
+        Analyse le Gold Dataset pour extraire les 'Golden Patterns' (clés du succès).
+        Ces patterns sont ensuite injectés dans les System Prompts via le PromptManager.
+        """
+        # Chemin vers le Gold Dataset défini dans le projet
+        gold_path = "data/mlops/gold_dataset.json"
+        if not os.path.exists(gold_path):
+            logger.warning(f"⚠️ Gold Dataset missing at {gold_path}. Cannot extract patterns.")
+            return ""
+
+        try:
+            with open(gold_path, "r", encoding="utf-8") as f:
+                gold_data = json.load(f)
+            
+            # Filtrer les entrées correspondant à la clé du prompt (ex: 'fusion_scenario')
+            # On prend les 5 meilleurs exemples validés
+            relevant_examples = [
+                item for item in gold_data 
+                if item.get("prompt_key") == prompt_key and item.get("is_gold", True)
+            ][:5]
+
+            if not relevant_examples:
+                logger.info(f"ℹ️ No gold examples found for '{prompt_key}'. Skipping extraction.")
+                return ""
+
+            logger.info(f"🌟 Extracting Golden Patterns for '{prompt_key}' from {len(relevant_examples)} examples...")
+            
+            # Construction du prompt pour le modèle Enseignant (Meta-Prompting)
+            examples_str = json.dumps(relevant_examples, indent=2, ensure_ascii=False)
+            analysis_prompt = (
+                f"Voici une liste d'exemples 'Gold' (réussites parfaites) pour le prompt '{prompt_key}' :\n\n"
+                f"{examples_str}\n\n"
+                "Analyse ces exemples et identifie les 'Golden Patterns' (structure, ton, vocabulaire, règles implicites) "
+                "qui garantissent la qualité. Résume ces patterns sous forme de directives claires pour un assistant IA."
+            )
+            
+            system_prompt = "Tu es un expert en Meta-Prompting et Ingénierie de la connaissance."
+            
+            # Le modèle enseignant (8B+) analyse les données gold
+            golden_patterns = self.teacher.generate(analysis_prompt, system_prompt=system_prompt)
+            
+            if golden_patterns:
+                logger.info(f"✅ Golden Patterns extracted for '{prompt_key}'.")
+                # Injection automatique dans le PromptManager
+                current_system = self.prompt_manager.get_system_prompt(prompt_key)
+                # On ajoute les patterns au début du system prompt
+                new_system = f"--- GOLDEN PATTERNS (DO NOT IGNORE) ---\n{golden_patterns}\n\n{current_system}"
+                self.prompt_manager.update_system_prompt(prompt_key, new_system)
+                return golden_patterns
+                
+            return ""
+        except Exception as e:
+            logger.error(f"❌ Failed to extract golden patterns for {prompt_key}: {e}")
+            return ""

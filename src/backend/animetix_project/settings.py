@@ -272,6 +272,14 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
 
+from celery.schedules import crontab
+CELERY_BEAT_SCHEDULE = {
+    'dpo-optimization-daily': {
+        'task': 'animetix.tasks.scheduled_dpo_optimization',
+        'schedule': crontab(hour=3, minute=0),
+    },
+}
+
 # Static files
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')

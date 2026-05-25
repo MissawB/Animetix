@@ -3,6 +3,7 @@ import logging
 import tempfile
 from typing import Optional, List, Dict, Any
 from core.ports.inference_port import InferencePort
+from core.ports.usage_port import UsagePort
 from core.utils.lazy_import import lazy_import
 
 torch = lazy_import('torch')
@@ -14,8 +15,13 @@ class XTTSAdapter(InferencePort):
     Adaptateur dédié au clonage de voix via Coqui XTTS v2.
     Gère le chargement paresseux du modèle pour économiser les ressources.
     """
-    def __init__(self, model_name: str = "tts_models/multilingual/multi-dataset/xtts_v2"):
+    def __init__(
+        self, 
+        model_name: str = "tts_models/multilingual/multi-dataset/xtts_v2",
+        usage_port: Optional[UsagePort] = None
+    ):
         self.model_name = model_name
+        self.usage_port = usage_port
         self._tts_model = None
 
     def _load_model(self):
@@ -65,37 +71,41 @@ class XTTSAdapter(InferencePort):
             if os.path.exists(tmp_ref_path): os.unlink(tmp_ref_path)
             if os.path.exists(tmp_out_path): os.unlink(tmp_out_path)
 
+            # --- LOG USAGE ---
+            if self.usage_port:
+                try:
+                    from animetix.middleware import get_current_user_id
+                    user_id = get_current_user_id()
+                except (ImportError, Exception):
+                    user_id = None
+                
+                # XTTS v2 costs are tracked per request (unit)
+                self.usage_port.log_usage(
+                    engine="xtts-v2",
+                    units=1,
+                    user_id=user_id
+                )
+
             return audio_data
 
         except Exception as e:
             logger.error(f"❌ Voice Cloning failed in XTTSAdapter: {e}")
             return b""
 
-    # Méthodes du port non implémentées par cet adaptateur spécifique
-    def generate(self, *args, **kwargs): return ""
-    def stream_generate(self, *args, **kwargs): yield ""
-    def calculate_visual_similarity(self, *args, **kwargs): return 0.0
-    def get_image_embedding(self, *args, **kwargs): return []
-    def classify_image(self, *args, **kwargs): return {}
-    def detect_objects(self, *args, **kwargs): return []
-    def get_video_temporal_embeddings(self, *args, **kwargs): return []
-    def localize_video_actions(self, *args, **kwargs): return []
-    def transform_image_to_anime(self, *args, **kwargs): return ""
-    def transform_video_to_anime(self, *args, **kwargs): return ""
-    def generate_soundscape(self, *args, **kwargs): return ""
-    def speech_to_speech(self, *args, **kwargs): return b""
-    def estimate_depth(self, *args, **kwargs): return b""
-    def generate_3d_scene(self, *args, **kwargs): return {}
-    def process_manga_page(self, *args, **kwargs): return {}
-    def translate_manga_page(self, *args, **kwargs): return {}
-    def inpaint_text_bubbles(self, *args, **kwargs): return ""
-    def moderate_content(self, *args, **kwargs): return {"is_safe": True}
-    def generate_image_description(self, *args, **kwargs): return ""
-    def get_diagnostics(self, *args, **kwargs): return {}
-    def calculate_uncertainty(self, *args, **kwargs): return {}
-    def visual_rerank(self, *args, **kwargs): return []
-    def get_multimodal_late_interaction(self, *args, **kwargs): return []
-    def generate_image(self, *args, **kwargs): return ""
+    def generate_soundscape(self, prompt: str, duration: int = 10) -> bytes:
+        import wave
+        import io
+        logger.warning("Mock implementation of generate_soundscape used")
+        buffer = io.BytesIO()
+        with wave.open(buffer, 'wb') as wav_file:
+            wav_file.setnchannels(1)
+            wav_file.setsampwidth(2)
+            wav_file.setframerate(44100)
+        return buffer.getvalue()
+
+    def speech_to_speech(self, audio_data: bytes, target_voice: bytes) -> bytes:
+        logger.warning("Mock implementation of speech_to_speech used")
+        return audio_data
 
     def health_check(self) -> dict:
         return {

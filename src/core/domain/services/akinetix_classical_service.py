@@ -2,15 +2,24 @@ import math
 import random
 import numpy as np
 import logging
+import warnings
 from typing import List, Dict, Any, Tuple, Optional
 from .akinetix.question_formatter import QuestionFormatter
 
 logger = logging.getLogger('animetix')
 
+# Deprecation Warning
+warnings.warn(
+    "ClassicalAkinetixService is deprecated and will be removed in a future version. "
+    "Please use src.core.domain.services.akinetix_engine.AkinetixEngine instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
+
 class ClassicalAkinetixService:
     """
-    Moteur algorithmique d'Akinetix.
-    Gère les probabilités (Bayes) et le choix des questions (Entropie/Information Gain).
+    DEPRECATED: Moteur algorithmique d'Akinetix.
+    Utilisez AkinetixEngine à la place.
     """
     def __init__(self, 
                  catalog_db: List[Dict], 

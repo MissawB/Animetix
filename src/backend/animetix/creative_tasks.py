@@ -1,11 +1,14 @@
 from celery import shared_task
-from backend.animetix.services import AnimetixService
 import time
+import logging
+
+logger = logging.getLogger('animetix.creative_tasks')
 
 @shared_task
 def process_video_search_task(video_data_b64, query):
     """Tâche asynchrone pour Video-RAG."""
     import base64
+    from backend.animetix.services import AnimetixService
     video_bytes = base64.b64decode(video_data_b64)
     animetix = AnimetixService()
     
@@ -20,6 +23,7 @@ def process_video_search_task(video_data_b64, query):
 def transform_user_image_task(image_data_b64, studio_name):
     """Tâche asynchrone pour Anime-to-Real transformation."""
     import base64
+    from backend.animetix.services import AnimetixService
     image_bytes = base64.b64decode(image_data_b64)
     animetix = AnimetixService()
     
@@ -30,6 +34,7 @@ def transform_user_image_task(image_data_b64, studio_name):
 def translate_manga_page_task(image_data_b64, target_lang):
     """Tâche asynchrone pour le pipeline Manga Flow."""
     import base64
+    from backend.animetix.services import AnimetixService
     image_bytes = base64.b64decode(image_data_b64)
     animetix = AnimetixService()
     
@@ -40,6 +45,7 @@ def translate_manga_page_task(image_data_b64, target_lang):
 def localize_video_action_task(video_data_b64, actions):
     """Tâche asynchrone pour la Temporal Action Localization (TAL)."""
     import base64
+    from backend.animetix.services import AnimetixService
     video_bytes = base64.b64decode(video_data_b64)
     animetix = AnimetixService()
     
@@ -51,6 +57,7 @@ def localize_video_action_task(video_data_b64, actions):
 def transform_video_task(video_data_b64, studio_name):
     """Tâche asynchrone pour le Neural Style Transfer sur vidéo avec consistance temporelle."""
     import base64
+    from backend.animetix.services import AnimetixService
     video_bytes = base64.b64decode(video_data_b64)
     animetix = AnimetixService()
     
@@ -61,6 +68,7 @@ def transform_video_task(video_data_b64, studio_name):
 def generate_video_soundscape_task(video_data_b64):
     """Tâche asynchrone pour générer une ambiance sonore à partir d'une vidéo."""
     import base64
+    from backend.animetix.services import AnimetixService
     video_bytes = base64.b64decode(video_data_b64)
     animetix = AnimetixService()
     
@@ -71,6 +79,7 @@ def generate_video_soundscape_task(video_data_b64):
 def generate_3d_scene_task(image_data_b64, title):
     """Tâche asynchrone pour la reconstruction de scène 3D (Spatial Computing)."""
     import base64
+    from backend.animetix.services import AnimetixService
     image_bytes = base64.b64decode(image_data_b64)
     animetix = AnimetixService()
     
@@ -82,4 +91,3 @@ def generate_fusion_image(item1, item2, art_style="Cyberpunk"):
     from .containers import get_container
     container = get_container()
     return container.fusion_service.generate_fusion_image(item1, item2, art_style=art_style)
-

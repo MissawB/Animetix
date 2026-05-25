@@ -1,7 +1,9 @@
 import os
 import yaml
 import logging
+import json
 from typing import Dict, Any, Optional, List
+from filelock import FileLock, Timeout
 
 logger = logging.getLogger("animetix.prompts")
 
@@ -36,7 +38,6 @@ class PromptManager:
         self.few_shot_file = os.path.join(self.prompts_dir, "auto_corrections.json")
         if os.path.exists(self.few_shot_file):
             try:
-                import json
                 with open(self.few_shot_file, 'r', encoding='utf-8') as f:
                     self.few_shot_examples = json.load(f)
             except Exception as e:
@@ -55,13 +56,55 @@ class PromptManager:
         # Keep only the last 5 corrections to avoid prompt bloat
         self.few_shot_examples[prompt_key] = self.few_shot_examples[prompt_key][-5:]
         
-        import json
+        lock_path = f"{self.few_shot_file}.lock"
+        lock = FileLock(lock_path, timeout=5)
         try:
-            with open(self.few_shot_file, 'w', encoding='utf-8') as f:
-                json.dump(self.few_shot_examples, f, ensure_ascii=False, indent=2)
-            logger.info(f"🧠 Metacognition: New self-correction saved for {prompt_key}.")
+            with lock:
+                with open(self.few_shot_file, 'w', encoding='utf-8') as f:
+                    json.dump(self.few_shot_examples, f, ensure_ascii=False, indent=2)
+                logger.info(f"🧠 Metacognition: New self-correction saved for {prompt_key}.")
+        except Timeout:
+            logger.error(f"Timeout acquiring lock for {self.few_shot_file}")
         except Exception as e:
             logger.error(f"Failed to save correction: {e}")
+
+    def update_system_prompt(self, key: str, new_system_prompt: str):
+        """Met à jour (et persiste) le system prompt pour une clé donnée."""
+        if key not in self.prompts:
+            self.prompts[key] = {"template": "{context}"}
+        
+        if isinstance(self.prompts[key], str):
+             self.prompts[key] = {"template": self.prompts[key]}
+        
+        self.prompts[key]["system_prompt"] = new_system_prompt
+        
+        # Persistance dans un fichier d'overrides
+        overrides_path = os.path.join(self.prompts_dir, "dpo_optimized_prompts.yaml")
+        
+        lock_path = f"{overrides_path}.lock"
+        lock = FileLock(lock_path, timeout=5)
+        
+        try:
+            with lock:
+                overrides = {}
+                if os.path.exists(overrides_path):
+                    with open(overrides_path, 'r', encoding='utf-8') as f:
+                        try:
+                            overrides = yaml.safe_load(f) or {}
+                        except Exception as e:
+                            logger.error(f"Error loading overrides: {e}")
+                            overrides = {}
+                
+                overrides[key] = self.prompts[key]
+                
+                with open(overrides_path, 'w', encoding='utf-8') as f:
+                    yaml.dump(overrides, f, allow_unicode=True)
+                    
+                logger.info(f"🚀 Prompt '{key}' optimized and saved to {overrides_path}")
+        except Timeout:
+            logger.error(f"Timeout acquiring lock for {overrides_path}")
+        except Exception as e:
+            logger.error(f"Error updating system prompt: {e}")
 
     def get_prompt(self, key: str, **kwargs) -> Any:
         """

@@ -4,14 +4,14 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions
 from ..containers import get_container
-from ..session_manager import GameSessionManager
+from animetix.api.dependencies import get_session_service
 
 class EmojiStreamView(APIView):
     """Streams emoji generation events for the UI."""
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
-        session = GameSessionManager(request)
+        session = get_session_service(request)
         media_type, secret = session.get_current_mode(), request.GET.get('secret')
         if not secret: return HttpResponse(status=400)
         
@@ -31,7 +31,7 @@ class ParadoxStreamView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
-        session = GameSessionManager(request)
+        session = get_session_service(request)
         container = get_container()
         media_type = session.get_current_mode()
         data = container.catalog_service.load_data(media_type)
@@ -54,7 +54,7 @@ class AgenticRAGStreamView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
-        session = GameSessionManager(request)
+        session = get_session_service(request)
         query = request.GET.get('q', '')
         media_type = request.GET.get('media_type') or session.get_current_mode()
         
@@ -79,7 +79,7 @@ class AniminatorStreamView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
-        session = GameSessionManager(request)
+        session = get_session_service(request)
         container = get_container()
         media_type = session.get('media_type', 'Anime')
         secret = session.get('animinator_secret')

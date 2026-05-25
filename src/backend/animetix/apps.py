@@ -6,4 +6,21 @@ class AnimetixConfig(AppConfig):
     label = 'animetix'
 
     def ready(self):
-        pass
+        from .containers import get_container
+        container = get_container()
+        container.wire(modules=[
+            "animetix.api.games.classic",
+            "animetix.api.games.akinetix",
+            "animetix.api.games.emoji",
+            "animetix.api.games.paradox",
+            "animetix.api.games.vision",
+            "animetix.api.games.blindtest",
+            "animetix.api.games.covertest",
+            "animetix.api.games.akinetix_rl",
+            "animetix.api.games.archetypist",
+            "animetix.api.core",
+            "animetix.api.social",
+            "animetix.api.labs",
+            "animetix.api.mlops",
+            "animetix.views.common"
+        ])

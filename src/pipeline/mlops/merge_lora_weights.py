@@ -3,13 +3,13 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import PeftModel
 
-# Base directory
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Base directory (4 levels up from src/pipeline/mlops/)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 def merge_lora():
-    base_model_name = "unsloth/Llama-3.2-3B-Instruct"
-    adapter_path = os.path.join(BASE_DIR, "data", "models", "otaku-llama-adapter", "checkpoint-100")
-    output_path = os.path.join(BASE_DIR, "data", "models", "otaku-llama-3.2-3b-final")
+    base_model_name = "unsloth/Qwen2.5-7B-Instruct"
+    adapter_path = os.path.join(BASE_DIR, "data", "models", "otaku-qwen-7b-adapter", "checkpoint-100")
+    output_path = os.path.join(BASE_DIR, "data", "models", "otaku-qwen-7b-final")
 
     if not os.path.exists(adapter_path):
         print(f"Error: Adapter not found at {adapter_path}. Please train the model first.")

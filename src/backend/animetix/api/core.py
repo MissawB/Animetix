@@ -6,7 +6,6 @@ from ..models import Profile, DailyChallenge, Achievement, CreativeFusion, Gamep
 from ..serializers import (ProfileSerializer, DailyChallengeSerializer, AchievementSerializer, 
                             MediaItemSerializer, CreativeFusionSerializer, FriendshipSerializer)
 from ..containers import get_container
-from ..session_manager import GameSessionManager
 from django.contrib.auth.models import User
 import random
 import datetime
@@ -102,22 +101,69 @@ class MediaSearchView(APIView):
             
         return Response(formatted_results)
 
+from animetix.api.dependencies import get_session_service
+
 class GameSessionView(APIView):
     """Endpoint pour g├®rer l'├®tat du jeu via API."""
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def get(self, request):
-        # R├®cup├¿re l'├®tat actuel de la session (compatible avec l'existant)
+        # R├®cup├¿re l'├®tat actuel de la session via le service de session
+        session = get_session_service(request)
         return Response({
-            "media_type": request.session.get('media_type'),
-            "is_ranked": request.session.get('is_ranked'),
-            "is_daily": request.session.get('is_daily'),
-            "game_over": request.session.get('game_over'),
-            "guess_count": len(request.session.get('guesses', []))
+            "media_type": session.get('media_type'),
+            "is_ranked": session.get('is_ranked'),
+            "is_daily": session.get('is_daily'),
+            "game_over": session.get('game_over'),
+            "guess_count": len(session.get('guesses', []))
         })
 
 
-from ..session_manager import GameSessionManager
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
+
+class LoginView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return Response({"success": True})
+        return Response({"success": False, "error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+class LogoutView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        logout(request)
+        return Response({"success": True})
+
+
+class RegisterView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        username = request.data.get('username')
+        email = request.data.get('email')
+        password = request.data.get('password')
+
+        if not username or not password or not email:
+            return Response({"success": False, "error": "Missing fields"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if User.objects.filter(username=username).exists():
+            return Response({"success": False, "error": "Username already exists"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.create_user(username=username, email=email, password=password)
+            login(request, user)
+            return Response({"success": True})
+        except Exception as e:
+            return Response({"success": False, "error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class ConfigView(APIView):
     permission_classes = [permissions.AllowAny]

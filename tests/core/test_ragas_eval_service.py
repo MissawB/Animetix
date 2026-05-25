@@ -8,25 +8,50 @@ def mock_engine():
 
 @pytest.fixture
 def eval_service(mock_engine):
-    mock_pm = MagicMock()
-    mock_pm.get_prompt.return_value = ("prompt", "system")
-    return RagasEvalService(judge_engine=mock_engine, prompt_manager=mock_pm)
+    return RagasEvalService(judge_engine=mock_engine)
 
 def test_evaluate_response_success(eval_service, mock_engine):
-    # Mock scores (strings that will be converted to floats)
-    mock_engine.generate.side_effect = ["0.8", "0.9", "1"]
+    # Mock Ragas evaluate result
+    mock_result = {
+        "faithfulness": 0.8,
+        "answer_relevancy": 0.9,
+        "context_precision": 1.0
+    }
     
-    with patch("animetix.models.AIREvalResult.objects.create") as mock_create:
+    with patch("core.domain.services.ragas_eval_service.evaluate", return_value=mock_result) as mock_evaluate:
         res = eval_service.evaluate_response("q", "c", "r")
         assert res["faithfulness"] == 0.8
         assert res["answer_relevancy"] == 0.9
         assert res["context_precision"] == 1.0
-        mock_create.assert_called_once()
+        mock_evaluate.assert_called_once()
 
-def test_score_faithfulness_fallback(eval_service, mock_engine):
-    mock_engine.generate.return_value = "invalid"
-    assert eval_service._score_faithfulness("c", "r") == 0.5
+def test_evaluate_response_failure(eval_service, mock_engine):
+    with patch("core.domain.services.ragas_eval_service.evaluate", side_effect=Exception("Ragas error")):
+        res = eval_service.evaluate_response("q", "c", "r")
+        assert res["faithfulness"] == 0.0
+        assert res["answer_relevancy"] == 0.0
+        assert res["context_precision"] == 0.0
 
-def test_score_precision_fallback(eval_service, mock_engine):
-    mock_engine.generate.return_value = "error"
-    assert eval_service._score_precision("q", "c") == 0.0
+def test_run_batch_evaluation_no_gold_port(eval_service):
+    res = eval_service.run_batch_evaluation()
+    assert res == {}
+
+def test_run_batch_evaluation_success(mock_engine):
+    mock_gold = MagicMock()
+    mock_gold.get_all_entries.return_value = [
+        {"question": "q1", "context": "c1", "answer": "a1", "ground_truth": "gt1"}
+    ]
+    
+    service = RagasEvalService(judge_engine=mock_engine, gold_port=mock_gold)
+    
+    mock_result = {
+        "faithfulness": 0.7,
+        "answer_relevancy": 0.6,
+        "context_precision": 0.5
+    }
+    
+    with patch("core.domain.services.ragas_eval_service.evaluate", return_value=mock_result):
+        res = service.run_batch_evaluation()
+        assert res["faithfulness"] == 0.7
+        assert res["answer_relevancy"] == 0.6
+        assert res["context_precision"] == 0.5

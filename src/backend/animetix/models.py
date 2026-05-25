@@ -216,6 +216,26 @@ def create_user_profile(sender, instance, created, **kwargs):
 def save_user_profile(sender, instance, **kwargs):
     instance.profile.save()
 
+class LatentSpacePoint(models.Model):
+    """Point de données dans l'espace latent pour la visualisation 3D."""
+    media_type = models.CharField(max_length=20) # anime, manga, character
+    vibe_type = models.CharField(max_length=20) # thematic, visual, scenario
+    external_id = models.CharField(max_length=100)
+    title = models.CharField(max_length=255)
+    x = models.FloatField()
+    y = models.FloatField()
+    z = models.FloatField()
+    cluster = models.IntegerField(default=0)
+    metadata = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('media_type', 'vibe_type', 'external_id')
+        indexes = [
+            models.Index(fields=['media_type', 'vibe_type']),
+        ]
+    def __str__(self): return f"{self.media_type} - {self.vibe_type} - {self.title}"
+
 class CreativeFusion(models.Model):
     title_a = models.CharField(max_length=255)
     title_b = models.CharField(max_length=255)

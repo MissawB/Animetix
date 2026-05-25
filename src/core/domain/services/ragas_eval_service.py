@@ -1,78 +1,138 @@
-import os
-import json
-import time
 import logging
-from typing import List, Dict, Optional
+import asyncio
+from typing import List, Dict, Any, Optional
+
+from datasets import Dataset
+from ragas import evaluate
+from ragas.metrics import faithfulness, answer_relevancy, context_precision
+
 from core.ports.inference_port import InferencePort
-from .prompt_manager import PromptManager
+from core.ports.eval_port import EvalResultPort
+from core.ports.gold_dataset_port import GoldDatasetPort
+from adapters.inference.langchain_adapter import LangChainInferenceAdapter
 
 logger = logging.getLogger("animetix.ragas")
 
 class RagasEvalService:
     """
-    Service d'évaluation automatisé inspiré par le framework RAGAS.
-    Mesure mathématiquement la qualité du RAG (Faithfulness, Relevancy).
+    Service d'évaluation RAG utilisant le framework RAGAS.
+    Mesure mathématiquement la qualité du RAG (Faithfulness, Relevancy, Precision).
     """
-    def __init__(self, judge_engine: InferencePort, prompt_manager: PromptManager = None):
+    def __init__(
+        self, 
+        judge_engine: InferencePort, 
+        eval_port: Optional[EvalResultPort] = None,
+        gold_port: Optional[GoldDatasetPort] = None
+    ):
         self.judge_engine = judge_engine
-        self.prompt_manager = prompt_manager
+        self.eval_port = eval_port
+        self.gold_port = gold_port
+        
+        # Wrap our inference engine into a LangChain compatible object for Ragas
+        self.langchain_llm = LangChainInferenceAdapter(inference_engine=judge_engine)
 
     def evaluate_response(self, query: str, context: str, response: str) -> Dict[str, float]:
         """
-        Calcule les scores de qualité pour une interaction RAG donnée et enregistre le résultat.
+        Calcule les scores de qualité pour une interaction RAG donnée via RAGAS.
         """
-        scores = {
-            "faithfulness": self._score_faithfulness(context, response),
-            "answer_relevancy": self._score_relevancy(query, response),
-            "context_precision": self._score_precision(query, context)
+        # Prepare data for RAGAS
+        data = {
+            "question": [query],
+            "contexts": [[context]],
+            "answer": [response]
         }
+        dataset = Dataset.from_dict(data)
         
-        # Détection d'hallucination (seuil arbitraire)
-        hallucination = scores['faithfulness'] < 0.3
-        
-        # Persistance (si Django est disponible)
         try:
-            from animetix.models import AIREvalResult
-            AIREvalResult.objects.create(
-                query=query,
-                response=response,
-                context=context,
-                faithfulness=scores['faithfulness'],
-                relevancy=scores['answer_relevancy'],
-                precision=scores['context_precision'],
-                hallucination_detected=hallucination
+            # Run evaluation
+            # Note: Ragas metrics might require an embedding model. 
+            # If not provided, it might try to use default OpenAI embeddings.
+            # For now we use the LLM-based metrics.
+            result = evaluate(
+                dataset,
+                metrics=[faithfulness, answer_relevancy, context_precision],
+                llm=self.langchain_llm
             )
-        except ImportError:
-            pass
             
-        return scores
-
-    def _score_faithfulness(self, context: str, response: str) -> float:
-        """Fidélité : La réponse est-elle supportée par le contexte ? (0.0 à 1.0)"""
-        prompt, system_prompt = self.prompt_manager.get_prompt("ragas_faithfulness_calc", context=context[:2000], response=response)
-        res = self.judge_engine.generate(prompt, system_prompt=system_prompt)
-        try:
-            return float(res.strip())
+            scores = {
+                "faithfulness": float(result["faithfulness"]),
+                "answer_relevancy": float(result["answer_relevancy"]),
+                "context_precision": float(result["context_precision"])
+            }
+            
+            # Hallucination detection
+            hallucination = scores['faithfulness'] < 0.5
+            
+            # Persistence via Port
+            if self.eval_port:
+                metrics = {
+                    'faithfulness': scores['faithfulness'],
+                    'answer_relevance': scores['answer_relevancy'],
+                    'context_precision': scores['context_precision'],
+                    'hallucination': hallucination
+                }
+                self.eval_port.save_result(query, context, response, metrics)
+                
+            return scores
+            
         except Exception as e:
-            logger.warning(f"RAGAS Faithfulness scoring failed (raw response: '{res}'): {e}")
-            return 0.5
+            logger.error(f"RAGAS evaluation failed: {e}")
+            # Fallback to neutral scores if evaluation fails
+            return {
+                "faithfulness": 0.0,
+                "answer_relevancy": 0.0,
+                "context_precision": 0.0
+            }
 
-    def _score_relevancy(self, query: str, response: str) -> float:
-        """Pertinence : La réponse répond-elle directement à la question ?"""
-        prompt, _ = self.prompt_manager.get_prompt("ragas_relevance_eval", query=query, response=response)
-        res = self.judge_engine.generate(prompt)
+    def run_batch_evaluation(self) -> Dict[str, Any]:
+        """
+        Charge les entrées du Gold Dataset et lance une suite complète d'évaluation RAGAS.
+        Compare les réponses générées par le système contre la vérité terrain (ground truth).
+        """
+        if not self.gold_port:
+            logger.error("GoldDatasetPort is required for batch evaluation")
+            return {}
+            
+        entries = self.gold_port.get_all_entries()
+        if not entries:
+            logger.warning("No entries found in Gold Dataset")
+            return {}
+            
+        logger.info(f"Running batch evaluation on {len(entries)} entries")
+        
+        questions = []
+        contexts = []
+        answers = []
+        ground_truths = []
+        
+        for entry in entries:
+            # We assume the Gold Dataset entry has these fields or similar
+            questions.append(entry.get('question', ''))
+            contexts.append([entry.get('context', '')])
+            answers.append(entry.get('answer', '')) # This should be the system generated answer
+            ground_truths.append(entry.get('ground_truth', ''))
+            
+        data = {
+            "question": questions,
+            "contexts": contexts,
+            "answer": answers,
+            "ground_truth": ground_truths
+        }
+        dataset = Dataset.from_dict(data)
+        
         try:
-            return float(res.strip())
+            result = evaluate(
+                dataset,
+                metrics=[faithfulness, answer_relevancy, context_precision],
+                llm=self.langchain_llm
+            )
+            
+            logger.info(f"Batch evaluation complete: {result}")
+            
+            # We can also save individual results if needed, 
+            # but Ragas result already contains the aggregated scores.
+            return dict(result)
+            
         except Exception as e:
-            logger.warning(f"RAGAS Relevancy scoring failed (raw response: '{res}'): {e}")
-            return 0.5
-
-    def _score_precision(self, query: str, context: str) -> float:
-        """Précision du contexte : Le contexte contient-il l'information nécessaire ?"""
-        prompt, _ = self.prompt_manager.get_prompt("ragas_faithfulness_eval", query=query, context=context)
-        res = self.judge_engine.generate(prompt)
-        try:
-            return float(res.strip())
-        except Exception as e:
-            logger.warning(f"RAGAS Context Precision scoring failed (raw response: '{res}'): {e}")
-            return 0.0
+            logger.error(f"RAGAS batch evaluation failed: {e}")
+            return {}

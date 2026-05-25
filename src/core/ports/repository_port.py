@@ -56,3 +56,13 @@ class RepositoryPort(ABC):
     def search_media_items(self, query: str, media_type: Optional[str] = None, limit: int = 10, offset: int = 0) -> List[Dict]:
         """Recherche textuelle dans le catalogue relationnel avec pagination."""
         pass
+
+    @abstractmethod
+    def load_latent_space(self, media_type: str, vibe_type: str) -> Optional[Dict]:
+        """Charge les données de l'espace latent pour la visualisation."""
+        pass
+
+    @abstractmethod
+    def sync_latent_space(self, media_type: str, vibe_type: str, data: List[Dict]) -> int:
+        """Synchronise les données de l'espace latent vers le stockage robuste."""
+        pass

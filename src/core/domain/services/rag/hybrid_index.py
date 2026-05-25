@@ -27,7 +27,9 @@ class HybridSearchIndex:
         for item in items:
             context_header = self._generate_context_header(item, media_type)
             
-            full_text = f"{item.get('title', '')} {item.get('description', '')}"
+            title = item.get('title') or item.get('name') or ''
+            desc = item.get('description') or item.get('clean_description') or ''
+            full_text = f"{title} {desc}"
             item_chunks = self._chunk_text(full_text, size=300)
             
             for chunk in item_chunks:
@@ -125,4 +127,29 @@ class HybridSearchIndex:
         return context
 
     def _chunk_text(self, text: str, size: int) -> List[str]:
-        return [text[i:i+size] for i in range(0, len(text), size)]
+        """Découpage intelligent par phrases sémantiquement cohérentes."""
+        import re
+        sentence_end = re.compile(r'(?<=[.!?])\s+')
+        sentences = sentence_end.split(text)
+        
+        chunks = []
+        current_chunk = []
+        current_length = 0
+        
+        for sentence in sentences:
+            sentence = sentence.strip()
+            if not sentence:
+                continue
+                
+            if current_length + len(sentence) > size and current_chunk:
+                chunks.append(" ".join(current_chunk))
+                current_chunk = [sentence]
+                current_length = len(sentence)
+            else:
+                current_chunk.append(sentence)
+                current_length += len(sentence) + 1
+                
+        if current_chunk:
+            chunks.append(" ".join(current_chunk))
+            
+        return chunks

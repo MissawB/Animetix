@@ -5,7 +5,7 @@ from .prompt_manager import PromptManager
 
 logger = logging.getLogger("animetix.graph.healer")
 
-class GraphHealerDomainService:
+class GraphHealerService:
     """
     Service de domaine gérant l'auto-guérison et la construction résiliente du Knowledge Graph.
     Il surveille les lacunes dans Neo4j et déclenche des extractions IA si nécessaire.

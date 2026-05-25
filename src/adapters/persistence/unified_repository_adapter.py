@@ -41,6 +41,9 @@ class UnifiedRepositoryAdapter(RepositoryPort):
         return self.django.get_media_item(media_type, external_id)
 
     def search_media_items(self, query: str, media_type: Optional[str] = None, limit: int = 10, offset: int = 0) -> List[Dict]:
+        results = self.chroma.search_media_items(query, media_type, limit)
+        if results:
+            return results
         return self.django.search_media_items(query, media_type, limit, offset)
 
     def upsert_items(self, collection_name: str, ids: List[str], embeddings: List[List[float]], metadatas: List[Dict]):
@@ -57,3 +60,14 @@ class UnifiedRepositoryAdapter(RepositoryPort):
 
     def get_catalog_by_type(self, media_type: str, limit: int = 1000, offset: int = 0) -> List[Dict]:
         return self.django.get_catalog_by_type(media_type, limit, offset)
+
+    def load_latent_space(self, media_type: str, vibe_type: str) -> Optional[Dict]:
+        """Charge l'espace latent, en privilégiant la DB relationnelle robuste."""
+        db_res = self.django.load_latent_space(media_type, vibe_type)
+        if db_res:
+            return db_res
+        return self.chroma.load_latent_space(media_type, vibe_type)
+
+    def sync_latent_space(self, media_type: str, vibe_type: str, data: List[Dict]) -> int:
+        """Synchronise l'espace latent vers la DB relationnelle."""
+        return self.django.sync_latent_space(media_type, vibe_type, data)

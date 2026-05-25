@@ -5,7 +5,7 @@ from .prompt_manager import PromptManager
 
 logger = logging.getLogger("animetix.long_context")
 
-class LongContextDomainService:
+class LongContextDiscoveryService:
     """
     Service de gestion de contextes massifs (Sagas entières).
     Implémente le résumé hiérarchique et la compression sémantique.

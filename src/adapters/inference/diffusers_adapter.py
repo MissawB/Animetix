@@ -4,6 +4,7 @@ from io import BytesIO
 from typing import Optional, List, Dict, Any
 from PIL import Image
 from core.ports.inference_port import InferencePort
+from core.ports.usage_port import UsagePort
 from core.utils.lazy_import import lazy_import
 
 torch = lazy_import('torch')
@@ -15,9 +16,15 @@ class DiffusersAdapter(InferencePort):
     Adaptateur local pour la génération d'images utilisant la bibliothèque Diffusers.
     Optimisé pour SDXL-Turbo (vitesse) ou Animagine (style).
     """
-    def __init__(self, model_id: str = "stabilityai/sdxl-turbo", use_fp16: bool = True):
+    def __init__(
+        self, 
+        model_id: str = "stabilityai/sdxl-turbo", 
+        use_fp16: bool = True,
+        usage_port: Optional[UsagePort] = None
+    ):
         self.model_id = model_id
         self.use_fp16 = use_fp16
+        self.usage_port = usage_port
         self.pipe = None
 
     def _load_model(self):
@@ -60,7 +67,6 @@ class DiffusersAdapter(InferencePort):
         
         try:
             # Paramètres optimisés pour SDXL-Turbo (vitesse max)
-            # Si on change de modèle, il faudra peut-être ajuster num_inference_steps
             num_steps = 1 if "turbo" in self.model_id.lower() else 30
             guidance_scale = 0.0 if "turbo" in self.model_id.lower() else 7.5
             
@@ -74,37 +80,65 @@ class DiffusersAdapter(InferencePort):
             buffered = BytesIO()
             image.save(buffered, format="JPEG", quality=85)
             img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+
+            # --- LOG USAGE ---
+            if self.usage_port:
+                try:
+                    from animetix.middleware import get_current_user_id
+                    user_id = get_current_user_id()
+                except (ImportError, Exception):
+                    user_id = None
+                
+                self.usage_port.log_usage(
+                    engine=self.model_id,
+                    units=1,
+                    user_id=user_id
+                )
             
             return f"data:image/jpeg;base64,{img_str}"
         except Exception as e:
             logger.error(f"❌ Local Image Generation failed: {e}")
             return f"Erreur de génération : {str(e)}"
 
-    # Les autres méthodes du port ne sont pas implémentées ici (déjà gérées par TransformersAdapter ou autres)
-    def generate(self, *args, **kwargs): pass
-    def stream_generate(self, *args, **kwargs): pass
-    def calculate_visual_similarity(self, *args, **kwargs): return 0.0
-    def get_image_embedding(self, *args, **kwargs): return []
-    def classify_image(self, *args, **kwargs): return {}
-    def detect_objects(self, *args, **kwargs): return []
-    def get_video_temporal_embeddings(self, *args, **kwargs): return []
-    def localize_video_actions(self, *args, **kwargs): return []
-    def transform_image_to_anime(self, *args, **kwargs): return ""
-    def transform_video_to_anime(self, *args, **kwargs): return ""
-    def generate_soundscape(self, *args, **kwargs): return ""
-    def clone_voice(self, *args, **kwargs): return b""
-    def speech_to_speech(self, *args, **kwargs): return b""
-    def estimate_depth(self, *args, **kwargs): return b""
-    def generate_3d_scene(self, *args, **kwargs): return {}
-    def process_manga_page(self, *args, **kwargs): return {}
-    def translate_manga_page(self, *args, **kwargs): return {}
-    def inpaint_text_bubbles(self, *args, **kwargs): return ""
-    def moderate_content(self, *args, **kwargs): return {"is_safe": True}
-    def generate_image_description(self, *args, **kwargs): return ""
-    def get_diagnostics(self, *args, **kwargs): return {}
-    def calculate_uncertainty(self, *args, **kwargs): return {}
-    def visual_rerank(self, *args, **kwargs): return []
-    def get_multimodal_late_interaction(self, *args, **kwargs): return []
+    def estimate_depth(self, image_data: bytes) -> bytes:
+        """Estime la carte de profondeur (Depth Map) d'une image 2D."""
+        try:
+            from transformers import pipeline
+            if not hasattr(self, '_depth_pipe') or self._depth_pipe is None:
+                logger.info("🏗️ Loading Depth Estimation Model: LiheYoung/depth-anything-small-hf")
+                device = 0 if torch.cuda.is_available() else -1
+                self._depth_pipe = pipeline("depth-estimation", model="LiheYoung/depth-anything-small-hf", device=device)
+            
+            image = Image.open(BytesIO(image_data))
+            result = self._depth_pipe(image)
+            depth_image = result["depth"]
+            
+            buffered = BytesIO()
+            depth_image.save(buffered, format="PNG")
+            return buffered.getvalue()
+        except Exception as e:
+            logger.error(f"❌ Depth estimation failed: {e}")
+            return b""
+
+    def transform_image_to_anime(self, image_data: bytes, studio_style: str = "", prompt: str = "") -> bytes:
+        """Mock implementation of transform_image_to_anime."""
+        logger.warning("Mock implementation of transform_image_to_anime used")
+        return image_data
+
+    def transform_video_to_anime(self, video_data: bytes, studio_style: str = "", prompt: str = "") -> bytes:
+        """Mock implementation of transform_video_to_anime."""
+        logger.warning("Mock implementation of transform_video_to_anime used")
+        return video_data
+
+    def generate(self, prompt: str, system_prompt: str = "", **kwargs) -> str:
+        """Diffusers n'est pas un moteur de texte. On lève une erreur explicite."""
+        from core.ports.inference_port import InferenceNotImplementedError
+        raise InferenceNotImplementedError("DiffusersAdapter ne supporte pas la génération de texte pure. Utilisez GgufAdapter ou TransformersAdapter.")
+
+    def stream_generate(self, prompt: str, system_prompt: str = "", **kwargs):
+        """Diffusers n'est pas un moteur de texte."""
+        from core.ports.inference_port import InferenceNotImplementedError
+        raise InferenceNotImplementedError("DiffusersAdapter ne supporte pas le streaming de texte.")
 
     def health_check(self) -> dict:
         return {
@@ -113,3 +147,4 @@ class DiffusersAdapter(InferencePort):
             "model": self.model_id,
             "device": str(next(self.pipe.parameters()).device) if self.pipe else "N/A"
         }
+
