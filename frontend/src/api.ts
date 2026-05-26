@@ -103,4 +103,9 @@ export async function getAuthUser(): Promise<User> {
   return apiClient('/api/v1/auth/me/');
 }
 
+// --- Graph API ---
+export async function getGraphNeighborhood(id: string, type: string, depth: number = 1): Promise<{nodes: any[], links: any[]}> {
+  return apiClient(`/api/v1/graph/neighbors/?id=${id}&type=${type}&depth=${depth}`);
+}
+
 

@@ -22,5 +22,6 @@ class AnimetixConfig(AppConfig):
             "animetix.api.social",
             "animetix.api.labs",
             "animetix.api.mlops",
+            "animetix.api.graph",
             "animetix.views.common"
         ])

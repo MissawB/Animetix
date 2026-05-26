@@ -21,7 +21,9 @@ urlpatterns = [
     path('spatial-lab/', api_views.SpatialLabDataView.as_view(), name='api_spatial_lab'),
     path('manga-lab/', api_views.MangaLabDataView.as_view(), name='api_manga_lab'),
     path('audio-lab/', api_views.AudioLabDataView.as_view(), name='api_audio_lab'),
+    path('singularity-lab/', api_views.SingularityLabDataView.as_view(), name='api_singularity_lab'),
     path('mlops/dpo/curation/', api_views.DPOCurationView.as_view(), name='api_dpo_curation'),
+    path('graph/neighbors/', api_views.GraphNeighborsView.as_view(), name='api_graph_neighbors'),
     
     # --- STREAMING IA ---
     path('stream/emoji/', api_views.EmojiStreamView.as_view(), name='api_emoji_stream'),

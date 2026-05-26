@@ -65,6 +65,7 @@ mock_container_instance.akinetix_service = MagicMock()
 mock_container_instance.animinator_service = MagicMock()
 mock_container_instance.vision_quest_service = MagicMock()
 mock_container_instance.uncertainty_service = MagicMock()
+mock_container_instance.graph_persistence_port = MagicMock()
 
 # Setup default returns for services (MUST be serializable types for E2E tests session)
 mock_container_instance.catalog_service.load_data.return_value = {

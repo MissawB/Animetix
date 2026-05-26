@@ -92,3 +92,8 @@ class GraphPersistencePort(ABC):
         """Récupère un résumé textuel des préférences et de l'historique de l'utilisateur."""
         pass
 
+    @abstractmethod
+    def get_neighborhood(self, item_id: str, media_type: str, depth: int = 1) -> Dict[str, Any]:
+        """Retrieves nodes and relationships within a certain depth."""
+        pass
+

@@ -97,3 +97,21 @@ class Neo4jGraphAdapter(GraphPersistencePort):
             logger.warning(f"⚠️ Graph User Memory: Failed to retrieve preferences: {e}")
             return ""
 
+    def get_neighborhood(self, item_id: str, media_type: str, depth: int = 1) -> Dict[str, Any]:
+        """Retrieves nodes and relationships within a certain depth using APOC."""
+        query = """
+        MATCH (start:Media {id: $id, type: $type})
+        CALL apoc.path.subgraphAll(start, {maxLevel: $depth})
+        YIELD nodes, relationships
+        RETURN [n in nodes | {id: id(n), properties: properties(n), labels: labels(n)}] as nodes,
+               [r in relationships | {id: id(r), source: id(startNode(r)), target: id(endNode(r)), type: type(r), properties: properties(r)}] as links
+        """
+        try:
+            results = self.execute_read(query, {"id": item_id, "type": media_type, "depth": depth})
+            if not results:
+                return {"nodes": [], "links": []}
+            return results[0]
+        except Exception as e:
+            logger.error(f"❌ Neo4j Adapter: Failed to fetch neighborhood for {item_id}: {e}")
+            return {"nodes": [], "links": []}
+

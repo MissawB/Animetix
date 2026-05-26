@@ -5,3 +5,4 @@ from .api.games import *
 from .api.labs import *
 from .api.streams import *
 from .api.mlops import *
+from .api.graph import *
