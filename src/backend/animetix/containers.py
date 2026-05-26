@@ -64,6 +64,13 @@ from core.domain.services.neuro_symbolic_user_profiler import NeuroSymbolicUserP
 from core.domain.services.dspy_prompt_optimizer import DSPyPromptOptimizer
 from core.domain.services.cfr_game_solver import CFRGameSolver
 from core.domain.services.liquid_neural_network import LiquidNeuralNetworkSimulator
+from core.domain.services.quantum_cognitive_model import QuantumCognitivePreferenceModel
+from core.domain.services.swarm_consensus import SwarmConsensusOrchestrator
+from core.domain.services.counterfactual_simulator import CounterfactualConversationSimulator
+from core.domain.services.self_evolving_compiler import SelfEvolvingCompiler
+from core.domain.services.synaptic_plasticity import SynapticPlasticitySimulator
+from core.domain.services.domain_synthesizer import AutonomousDomainSynthesizer
+
 
 
 from core.domain.services.star_mlops_service import StarMLOpsDomainService
@@ -196,10 +203,10 @@ class Container(containers.DeclarativeContainer):
             unified_inference_adapter,
             transformers_adapter,
             gguf_adapter,
-            moondream_adapter,
-            manga_ocr_adapter,
             diffusers_adapter,
             xtts_adapter,
+            moondream_adapter,
+            manga_ocr_adapter,
             providers.Factory(
                 VllmAdapter,
                 api_base=os.getenv("VLLM_API_BASE", "http://vllm:8000/v1"),
@@ -469,17 +476,22 @@ class Container(containers.DeclarativeContainer):
 
     studio_transform_service = providers.Singleton(
         StudioTransformService,
-        inference_engine=diffusers_adapter
+        inference_engine=diffusers_adapter,
+        prompt_manager=prompt_manager
     )
 
     manga_flow_service = providers.Singleton(
         MangaFlowService,
-        inference_engine=inference_engine
+        inference_engine=manga_ocr_adapter,
+        llm_service=llm_service,
+        prompt_manager=prompt_manager
     )
 
     soundscape_service = providers.Singleton(
         SoundscapeGenerationService,
-        inference_engine=inference_engine
+        inference_engine=inference_engine,
+        video_service=video_quest_service,
+        prompt_manager=prompt_manager
     )
 
     guardrail_service = providers.Singleton(
@@ -598,6 +610,37 @@ class Container(containers.DeclarativeContainer):
         state_dimension=4,
         input_dimension=2
     )
+
+    quantum_cognitive_model = providers.Singleton(
+        QuantumCognitivePreferenceModel,
+        dimension=4
+    )
+
+    swarm_consensus_orchestrator = providers.Singleton(
+        SwarmConsensusOrchestrator,
+        agent_names=["VisualExpert", "AcousticExpert", "LoreExpert"]
+    )
+
+    counterfactual_simulator = providers.Singleton(
+        CounterfactualConversationSimulator,
+        inference_engine=inference_engine
+    )
+
+    self_evolving_compiler = providers.Singleton(
+        SelfEvolvingCompiler
+    )
+
+    synaptic_plasticity_simulator = providers.Singleton(
+        SynapticPlasticitySimulator,
+        num_concepts=10
+    )
+
+    autonomous_domain_synthesizer = providers.Singleton(
+        AutonomousDomainSynthesizer,
+        inference_engine=inference_engine,
+        neo4j_manager=graph_persistence_port
+    )
+
 
 
 
