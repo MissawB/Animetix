@@ -1,13 +1,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useUIStore } from '../store/uiStore';
-import { Menu, Shield, Sparkles, Box, FlaskConical } from 'lucide-react';
+import { useAuthStore } from '../store/authStore';
+import { Menu, Shield, Sparkles, Box, FlaskConical, Network } from 'lucide-react';
 import { FeatureGate } from './utils/FeatureGate';
 import { useTranslation } from 'react-i18next';
 
 const Navbar: React.FC = () => {
   const { t } = useTranslation();
   const toggleSidebar = useUIStore((state) => state.toggleSidebar);
+  const { user } = useAuthStore();
   
   return (
     <nav className="px-6 md:px-12 py-6 flex items-center justify-between sticky top-0 bg-white/80 dark:bg-navy-950/80 backdrop-blur-md z-50 border-b border-gray-100 dark:border-white/5">
@@ -29,11 +31,15 @@ const Navbar: React.FC = () => {
             <Shield className="w-4 h-4" /> {t('navbar.transparency')}
           </Link>
           
-          <FeatureGate flag="experimental-lab">
-            <Link to="/experimental/" className="flex items-center gap-2 no-underline text-xs font-black italic text-red-500 hover:scale-105 transition-all uppercase tracking-widest">
-              <FlaskConical className="w-4 h-4" /> {t('navbar.lab')}
+          <Link to="/experimental/" className="flex items-center gap-2 no-underline text-xs font-black italic text-red-500 hover:scale-105 transition-all uppercase tracking-widest">
+            <FlaskConical className="w-4 h-4" /> {t('navbar.lab')}
+          </Link>
+
+          {user?.tier === 'premium' && (
+            <Link to="/graph/" className="flex items-center gap-2 no-underline text-xs font-black italic text-gray-500 hover:text-purple-500 transition-all uppercase tracking-widest">
+              <Network className="w-4 h-4 text-purple-500" /> Explore Graph
             </Link>
-          </FeatureGate>
+          )}
         </div>
       </div>
     </nav>
