@@ -5,6 +5,12 @@ class PricingService:
     Industrialized pricing registry for all AI models used in the project.
     Stores costs in USD per 1M tokens or per unit (image, audio request, etc.).
     """
+    TIER_LIMITS = {
+        'free': {'daily_tokens': 50000, 'daily_requests': 30},
+        'premium': {'daily_tokens': 1000000, 'daily_requests': 500},
+        'pro': {'daily_tokens': 10000000, 'daily_requests': 5000},
+    }
+
     def __init__(self):
         # Pricing registry: USD per 1M tokens or per unit
         self._registry: Dict[str, Dict[str, float]] = {
@@ -55,3 +61,10 @@ class PricingService:
 
     def get_pricing_info(self, engine: str) -> Optional[Dict[str, float]]:
         return self._registry.get(engine)
+
+    def get_limits(self, tier: str) -> Dict[str, int]:
+        """
+        Retrieves daily limits for a given user tier.
+        Defaults to 'free' tier if unknown.
+        """
+        return self.TIER_LIMITS.get(tier, self.TIER_LIMITS['free'])
