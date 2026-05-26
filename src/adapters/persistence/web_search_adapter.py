@@ -15,7 +15,7 @@ class DuckDuckGoSearchAdapter(WebSearchPort):
 
     def search(self, query: str, limit: int = 5) -> List[Dict]:
         """Simulation d'une recherche DuckDuckGo."""
-        print(f"🌐 Web Searching for: '{query}'...")
+        logger.info(f"🌐 Web Searching for: '{query}'...")
         return [
             {
                 "title": f"Result for {query}",

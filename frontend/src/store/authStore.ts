@@ -1,8 +1,9 @@
 import { create } from 'zustand';
 import { getAuthUser } from '../api';
+import { User } from '../types';
 
 interface AuthState {
-  user: any | null;
+  user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   checkAuth: () => Promise<void>;

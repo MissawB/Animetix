@@ -1,15 +1,15 @@
-import { AkinetixState, ClassicGameState, DailyChallenge, Profile, User } from './types';
+import { AkinetixState, AppConfig, ClassicGameState, DailyChallenge, MediaItem, Profile, User } from './types';
 import { apiClient } from './utils/apiClient';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
 
 // --- Config API ---
-export async function getAppConfig(): Promise<any> {
+export async function getAppConfig(): Promise<AppConfig> {
   return apiClient('/api/v1/config/');
 }
 
 // --- Search API ---
-export async function searchMedia(query: string, mediaType = 'anime'): Promise<any[]> {
+export async function searchMedia(query: string, mediaType = 'anime'): Promise<MediaItem[]> {
   return apiClient(`/api/v1/search/?q=${encodeURIComponent(query)}&media_type=${mediaType}`);
 }
 
@@ -99,7 +99,7 @@ export async function getFusionStatus(taskId: string, fusionId: number): Promise
   return apiClient(`/api/v1/archetypist/status/?task_id=${taskId}&fusion_id=${fusionId}`);
 }
 
-export async function getAuthUser(): Promise<any> {
+export async function getAuthUser(): Promise<User> {
   return apiClient('/api/v1/auth/me/');
 }
 

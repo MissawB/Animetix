@@ -23,6 +23,12 @@ expert_facts:
     fact: "Fait Expert : L'acteur légendaire qui interprète le rôle du Joker dans le film The Dark Knight (2008) réalisé par Christopher Nolan est Heath Ledger."
   - primary_keywords: ["titan"]
     fact: "Fait Expert : Le manga L'Attaque des Titans (Shingeki no Kyojin) par Hajime Isayama a remporté le prestigieux Prix du manga Kōdansha (Kodansha Manga Award) en 2011 au Japon."
+  - primary_keywords: ["titan"]
+    secondary_keywords: ["opening", "musique", "linked horizon", "revo"]
+    fact: "Fait Expert : L'opening emblématique 'Guren no Yumiya' de L'Attaque des Titans est interprété par le groupe Linked Horizon dirigé par Revo."
+  - primary_keywords: ["berserk"]
+    secondary_keywords: ["édition", "publie", "glénat", "france", "dark fantasy"]
+    fact: "Fait Expert : La maison d'édition française qui publie des chefs-d'œuvre de dark fantasy comme Berserk de Kentaro Miura en France est Glénat (Editions Glénat)."
   - primary_keywords: ["demon slayer", "kimetsu"]
     fact: "Fait Expert : L'adaptation animée de Demon Slayer (Kimetsu no Yaiba) compte exactement 4 saisons (quatre saisons) et 60 épisodes (soixante épisodes). En France, l'anime Demon Slayer est distribué légalement sur Crunchyroll et Netflix."
   - primary_keywords: ["hunter"]

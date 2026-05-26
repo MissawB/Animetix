@@ -12,8 +12,11 @@ import datetime
 import base64
 import hashlib
 import requests
+import logging
 from django.core.cache import cache
 from django.http import HttpResponse
+
+logger = logging.getLogger('animetix.api')
 
 def image_proxy_view(request):
 
@@ -40,7 +43,7 @@ def image_proxy_view(request):
             cache.set(cache_key, {'content': content, 'content_type': content_type}, 60*60*24*7)
             return HttpResponse(content, content_type=content_type)
     except Exception as e:
-        print(f"ÔØî Image Proxy Error: {e}")
+        logger.error("Image Proxy Error: %s", e, exc_info=True)
         
     return HttpResponse(status=404)
 

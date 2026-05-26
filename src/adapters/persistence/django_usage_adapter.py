@@ -1,6 +1,7 @@
 from typing import Optional
 from datetime import datetime
-from django.db.models import Sum
+from django.db.models import Sum, Count
+from django.utils import timezone
 from core.ports.usage_port import UsagePort
 from core.domain.services.pricing_service import PricingService
 from animetix.models import AITokenUsage
@@ -42,3 +43,28 @@ class DjangoUsageAdapter(UsagePort):
         if since:
             query = query.filter(created_at__gte=since)
         return query.aggregate(total=Sum('cost_estimate'))['total'] or 0.0
+
+    def check_quota(self, user_id: int, tier: str) -> bool:
+        """
+        Checks if a user has exceeded their daily quota based on their tier.
+        """
+        limits = self.pricing_service.get_limits(tier)
+        
+        today = timezone.now().date()
+        stats = AITokenUsage.objects.filter(
+            user_id=user_id,
+            created_at__date=today
+        ).aggregate(
+            tokens=Sum('total_tokens'),
+            requests=Count('id')
+        )
+        
+        used_tokens = stats['tokens'] or 0
+        used_requests = stats['requests'] or 0
+        
+        if used_tokens >= limits['daily_tokens']:
+            return False
+        if used_requests >= limits['daily_requests']:
+            return False
+            
+        return True

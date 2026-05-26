@@ -19,3 +19,8 @@ class UsagePort(ABC):
     def get_total_cost(self, since: Optional[datetime] = None) -> float:
         """Returns the total estimated cost of LLM usage."""
         pass
+
+    @abstractmethod
+    def check_quota(self, user_id: int, tier: str) -> bool:
+        """Returns True if user is within their quota."""
+        pass

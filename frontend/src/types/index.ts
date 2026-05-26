@@ -1,7 +1,25 @@
 export interface User {
+  id: number;
+  username: string;
+  email: string;
   is_authenticated: boolean;
-  username: string | null;
-  rank?: string | null;
+  avatar?: string;
+  xp?: number;
+}
+
+export interface AppConfig {
+  version: string;
+  maintenance_mode: boolean;
+  features: Record<string, boolean>;
+}
+
+export interface MediaItem {
+  id: string;
+  title: string;
+  media_type: 'Anime' | 'Manga' | 'Movie' | 'Game' | 'Actor';
+  image?: string;
+  description?: string;
+  popularity?: number;
 }
 
 export interface Profile {

@@ -1,8 +1,11 @@
+import logging
 from typing import List
 from django.contrib.auth.models import User
 from animetix.models import Achievement, UserAchievement, Profile
 from core.ports.achievement_port import AchievementPort
 from core.domain.entities.achievement import AchievementDefinition
+
+logger = logging.getLogger('animetix')
 
 class DjangoAchievementAdapter(AchievementPort):
     def get_all_achievements(self) -> List[AchievementDefinition]:
@@ -34,6 +37,6 @@ class DjangoAchievementAdapter(AchievementPort):
             profile.xp += achievement.xp_reward
             profile.save()
             
-            print(f"🏆 Achievement Unlocked: {achievement.name} for {user.username}")
+            logger.info(f"🏆 Achievement Unlocked: {achievement.name} for {user.username}")
         except Exception as e:
-            print(f"❌ Error unlocking achievement {achievement_code} for user {user_id}: {e}")
+            logger.error(f"❌ Error unlocking achievement {achievement_code} for user {user_id}: {e}")

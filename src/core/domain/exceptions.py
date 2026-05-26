@@ -5,6 +5,7 @@ from .entities.exceptions import (
     InfrastructureError,
     InferenceError,
     InferenceTimeoutError,
+    QuotaExceededError,
     ContentModerationError,
     ParsingError,
     PromptTemplateError,

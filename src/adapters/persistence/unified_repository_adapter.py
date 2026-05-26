@@ -41,7 +41,7 @@ class UnifiedRepositoryAdapter(RepositoryPort):
         return self.django.get_media_item(media_type, external_id)
 
     def search_media_items(self, query: str, media_type: Optional[str] = None, limit: int = 10, offset: int = 0) -> List[Dict]:
-        results = self.chroma.search_media_items(query, media_type, limit)
+        results = self.chroma.search_media_items(query, media_type, limit, offset)
         if results:
             return results
         return self.django.search_media_items(query, media_type, limit, offset)

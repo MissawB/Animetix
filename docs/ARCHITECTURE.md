@@ -40,7 +40,8 @@ graph TD
 Le code est organisé sous `src/` :
 
 - **`core/ports/`** : Abstractions (ABC) définissant les contrats métier.
-  - `InferencePort` : Génération de texte/image, clonage de voix, et désormais `rerank_documents`.
+  - `InferencePort` : Génération de texte/image, clonage de voix, reranking, et vision avancée.
+  - `MlopsPort` : Gestion de la télémétrie, journalisation DPO et feedbacks IA via Celery.
   - `PersistencePort` : Accès aux données unifié (`UnifiedRepositoryAdapter`).
 - **`core/domain/services/`** : Logique métier pure, sans dépendance infra.
 - **`adapters/`** : Implémentations concrètes (Infrastructure).

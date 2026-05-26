@@ -20,6 +20,10 @@ class InferenceTimeoutError(InferenceError):
     """Raised when an AI model or inference engine times out."""
     pass
 
+class QuotaExceededError(DomainError):
+    """Raised when a user has reached their daily AI limit."""
+    pass
+
 class ContentModerationError(InfrastructureError):
     """Raised specifically when moderation fails to run."""
     pass

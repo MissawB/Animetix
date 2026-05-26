@@ -1,31 +1,34 @@
 import json
 import os
 import sys
+import logging
 
 # Détection robuste de la racine du projet
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(os.path.join(BASE_DIR, 'pipeline'))
 from chroma_client import chroma_manager
 
-print("🔗 Starting Cross-Media Mapping (Characters <-> Actors) via ChromaDB...")
+logger = logging.getLogger('animetix')
+
+logger.info("🔗 Starting Cross-Media Mapping (Characters <-> Actors) via ChromaDB...")
 
 # Fichier de sortie
 MAP_CHAR_ACTOR = os.path.join(BASE_DIR, 'data', 'artifacts', 'char_to_actor_map.json')
 
 def run_mapping(chroma_res=None):
-    print(f"   - Mapping character_vibe to actor_vibe...")
+    logger.info(f"   - Mapping character_vibe to actor_vibe...")
     
     manager = chroma_res.manager if chroma_res else chroma_manager
     try:
         source_coll = manager.get_collection("character_vibe")
         target_coll = manager.get_collection("actor_vibe")
     except Exception as e:
-        print(f"⚠️ Collection error: {e}")
+        logger.error(f"⚠️ Collection error: {e}")
         return False
 
     source_data = source_coll.get(include=['embeddings', 'metadatas'])
     if not source_data['ids']:
-        print(f"⚠️ Character collection is empty.")
+        logger.warning(f"⚠️ Character collection is empty.")
         return True
 
     mapping = {}
@@ -33,7 +36,7 @@ def run_mapping(chroma_res=None):
     embeddings = source_data['embeddings']
     metadatas = source_data['metadatas']
 
-    print(f"   - Processing {len(ids)} characters...")
+    logger.info(f"   - Processing {len(ids)} characters...")
 
     BATCH_SIZE = 50
     for i in range(0, len(ids), BATCH_SIZE):
@@ -64,5 +67,5 @@ def run_mapping(chroma_res=None):
     os.makedirs(os.path.dirname(MAP_CHAR_ACTOR), exist_ok=True)
     with open(MAP_CHAR_ACTOR, 'w', encoding='utf-8') as f:
         json.dump(mapping, f, indent=2, ensure_ascii=False)
-    print(f"✅ Character-Actor Mapping saved to {MAP_CHAR_ACTOR}")
+    logger.info(f"✅ Character-Actor Mapping saved to {MAP_CHAR_ACTOR}")
     return True

@@ -1,6 +1,7 @@
 import logging
 import aiohttp
 import asyncio
+import os
 from typing import Optional, List, Dict, Any, Generator
 from core.ports.inference_port import InferencePort
 from core.domain.exceptions import InferenceError
@@ -24,7 +25,6 @@ class TransformersAdapter(InferencePort):
         self._http_session: Optional[aiohttp.ClientSession] = None
 
     async def _get_session(self) -> aiohttp.ClientSession:
-        import aiohttp
         if self._http_session is None or self._http_session.closed:
             self._http_session = aiohttp.ClientSession()
         return self._http_session
@@ -106,19 +106,6 @@ class TransformersAdapter(InferencePort):
         except Exception as e:
             logger.error(f"❌ Image description failed: {e}"); return "Échec description."
 
-    def estimate_depth(self, image_data: bytes) -> bytes:
-        try:
-            from PIL import Image
-            from io import BytesIO
-            img = Image.open(BytesIO(image_data)).convert("RGB")
-            if not hasattr(self, '_depth_pipeline'):
-                self._depth_pipeline = pipeline("depth-estimation", model="Intel/dpt-large", device=0 if torch.cuda.is_available() else -1)
-            result = self._depth_pipeline(img)
-            buf = BytesIO(); result["depth"].save(buf, format="PNG")
-            return buf.getvalue()
-        except Exception as e:
-            logger.error(f"❌ Depth Estimation failed: {e}"); return b""
-
     def get_image_embedding(self, image_data: bytes, model_id: Optional[str] = None) -> List[float]:
         try:
             from PIL import Image
@@ -142,65 +129,6 @@ class TransformersAdapter(InferencePort):
         except Exception as e:
             logger.error(f"❌ Image Classification failed: {e}"); return {}
 
-    def inpaint_text_bubbles(self, image_data: bytes, translated_texts: list) -> bytes:
-        logger.info("Mock implementation of inpaint_text_bubbles used")
-        return image_data
-
-    def process_manga_page(self, image_data: bytes) -> dict:
-        logger.info("Mock implementation of process_manga_page used")
-        return {"status": "processed", "text": ""}
-
-    def translate_manga_page(self, image_data: bytes, target_lang: str = "Français") -> Dict[str, Any]:
-        try:
-            from PIL import Image, ImageDraw
-            from io import BytesIO
-            import base64
-            from manga_ocr import MangaOcr
-            res = self.process_manga_page(image_data)
-            if not res.get("bubbles"): return res
-            img_pil = Image.open(BytesIO(image_data)).convert("RGB")
-            
-            if not hasattr(self, '_manga_ocr_model'): 
-                logger.info(f"⏳ Loading MangaOCR on {self.manga_ocr_device}...")
-                if self.manga_ocr_device == "cpu":
-                    import torch
-                    # Temporarily override cuda availability to force CPU if requested
-                    original_is_available = torch.cuda.is_available
-                    torch.cuda.is_available = lambda: False
-                    try:
-                        self._manga_ocr_model = MangaOcr()
-                    finally:
-                        torch.cuda.is_available = original_is_available
-                else:
-                    self._manga_ocr_model = MangaOcr()
-                
-            # Clear cache before heavy LLM ops
-            if torch.cuda.is_available(): torch.cuda.empty_cache()
-            
-            # Travailler sur l'image aux bulles BLANCHES
-            cleaned_img = Image.open(BytesIO(base64.b64decode(res["cleaned_image"].split(",")[1]))).convert("RGB")
-            draw = ImageDraw.Draw(cleaned_img)
-            
-            for b in res["bubbles"]:
-                x1, y1, x2, y2 = [int(v) for v in b["box"]]
-                # OCR sur l'original pour lire le japonais
-                jp = self._manga_ocr_model(img_pil.crop((x1, y1, x2, y2)))
-                if jp.strip():
-                    fr = self.generate(f"Traduis en {target_lang} (FINAL ONLY): {jp}", system_prompt="Expert traducteur manga.")
-                    import textwrap
-                    width_px = x2 - x1
-                    # Calcul d'une largeur de texte adaptée à la bulle
-                    wrapped = textwrap.fill(fr, width=max(8, int(width_px/12)))
-                    
-                    # Centrage vertical et horizontal approximatif
-                    draw.multiline_text((x1 + width_px*0.1, y1 + (y2-y1)*0.2), wrapped, fill=(0,0,0), align="center")
-            
-            buf = BytesIO(); cleaned_img.save(buf, format="JPEG")
-            res["translated_image"] = f"data:image/jpeg;base64,{base64.b64encode(buf.getvalue()).decode('utf-8')}"
-            return res
-        except Exception as e:
-            logger.error(f"❌ Translation failed: {e}"); return {"error": str(e)}
-
     def calculate_visual_similarity(self, query: str, item_id: str, media_type: str) -> float:
         try:
             from sentence_transformers import util
@@ -217,185 +145,6 @@ class TransformersAdapter(InferencePort):
         except Exception as e:
             logger.error(f"❌ Visual similarity calculation failed: {e}")
             return 1.0 if query.lower() in item_id.lower() or item_id.lower() in query.lower() else 0.5
-
-    def transform_video_to_anime(self, video_data: bytes, studio_style: str, prompt: str = "") -> str:
-        """
-        Neural Style Transfer Vidéo SOTA (type FateZero).
-        Utilise diffusers pour styliser les images et imageio pour reconstruire la vidéo.
-        """
-        try:
-            import cv2
-            import numpy as np
-            import base64
-            import tempfile
-            import imageio
-            import os
-            from PIL import Image
-            from io import BytesIO
-            from diffusers import AutoPipelineForImage2Image
-            
-            logger.info(f"🎞️ Starting Video Style Transfer: {studio_style}")
-            
-            # 1. Chargement paresseux du pipeline Diffusion
-            if not hasattr(self, '_sd_pipeline'):
-                logger.info("⏳ Loading SDXL-Turbo for fast video stylization...")
-                self._sd_pipeline = AutoPipelineForImage2Image.from_pretrained(
-                    "stabilityai/sdxl-turbo", 
-                    torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
-                    variant="fp16" if torch.cuda.is_available() else None
-                )
-                if torch.cuda.is_available():
-                    self._sd_pipeline.enable_model_cpu_offload()
-            
-            # 2. Extraction des frames
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp_in:
-                tmp_in.write(video_data)
-                tmp_in_path = tmp_in.name
-                
-            reader = imageio.get_reader(tmp_in_path)
-            fps = reader.get_meta_data()['fps']
-            frames = []
-            
-            # Pour éviter les timeouts, on limite à 10 frames max en dev local
-            max_frames = 10
-            for i, frame in enumerate(reader):
-                if i >= max_frames: break
-                
-                # Transformation SDXL
-                pil_img = Image.fromarray(frame).resize((512, 512))
-                styled_frame = self._sd_pipeline(
-                    prompt=f"anime style, {studio_style}, {prompt}", 
-                    image=pil_img, 
-                    strength=0.5, 
-                    guidance_scale=0.0, 
-                    num_inference_steps=2
-                ).images[0]
-                
-                frames.append(np.array(styled_frame))
-            
-            reader.close()
-            os.unlink(tmp_in_path)
-            
-            # 3. Re-encodage
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp_out:
-                tmp_out_path = tmp_out.name
-                writer = imageio.get_writer(tmp_out_path, fps=fps)
-                for f in frames: writer.append_data(f)
-                writer.close()
-                
-            with open(tmp_out_path, "rb") as f:
-                res_base64 = base64.b64encode(f.read()).decode("utf-8")
-                
-            os.unlink(tmp_out_path)
-            return f"data:video/mp4;base64,{res_base64}"
-            
-        except ImportError as e:
-            raise InferenceError(f"Dependencies missing for Video Style Transfer: {str(e)}")
-        except Exception as e:
-            raise InferenceError(f"Video Style Transfer failed: {str(e)}")
-
-    def clone_voice(self, text: str, reference_audio: bytes, language: str = "fr") -> bytes:
-        """
-        Zero-Shot Voice Cloning (RVC-like) via Coqui TTS.
-        """
-        try:
-            import tempfile
-            import os
-            from TTS.api import TTS
-            
-            if not hasattr(self, '_tts_model'):
-                logger.info("⏳ Loading Coqui XTTS v2 for voice cloning...")
-                self._tts_model = TTS("tts_models/multilingual/multi-dataset/xtts_v2")
-                if torch.cuda.is_available():
-                    self._tts_model.to("cuda")
-
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp_ref:
-                tmp_ref.write(reference_audio)
-                tmp_ref_path = tmp_ref.name
-                
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp_out:
-                tmp_out_path = tmp_out.name
-                
-            self._tts_model.tts_to_file(
-                text=text, 
-                speaker_wav=tmp_ref_path, 
-                language=language, 
-                file_path=tmp_out_path
-            )
-            
-            with open(tmp_out_path, "rb") as f:
-                audio_data = f.read()
-                
-            os.unlink(tmp_ref_path)
-            os.unlink(tmp_out_path)
-            return audio_data
-            
-        except ImportError as e:
-            raise InferenceError(f"TTS dependency missing for Voice Cloning: {str(e)}")
-        except Exception as e:
-            raise InferenceError(f"Voice Cloning failed: {str(e)}")
-
-    def generate_3d_scene(self, image_data: bytes, depth_map: bytes) -> Dict: 
-        """
-        Génération de scène 3D via projection de nuage de points (Deterministic Spatial Computing).
-        Génère un fichier .PLY navigable.
-        """
-        try:
-            import numpy as np
-            import base64
-            from PIL import Image
-            from io import BytesIO
-            import struct
-
-            rgb = Image.open(BytesIO(image_data)).convert("RGB")
-            depth = Image.open(BytesIO(depth_map)).convert("L")
-            
-            # Redimensionnement pour performance
-            rgb = rgb.resize((256, 256))
-            depth = depth.resize((256, 256))
-            
-            rgb_arr = np.array(rgb)
-            depth_arr = np.array(depth)
-            
-            h, w = depth_arr.shape
-            points = []
-            
-            # Projection 2D -> 3D simple
-            # On suppose un FOV standard
-            fx, fy = 200.0, 200.0 
-            cx, cy = w / 2, h / 2
-            
-            for y in range(h):
-                for x in range(w):
-                    z = float(depth_arr[y, x]) / 255.0
-                    if z <= 0.05: continue # On ignore le fond trop proche/noir
-                    
-                    # Unprojection
-                    X = (x - cx) * z / fx
-                    Y = (y - cy) * z / fy
-                    Z = z
-                    
-                    r, g, b_val = rgb_arr[y, x]
-                    points.append((X, Y, Z, r, g, b_val))
-            
-            # Création du fichier PLY (Format Binaire pour la compacité)
-            header = f"ply\nformat binary_little_endian 1.0\nelement vertex {len(points)}\nproperty float x\nproperty float y\nproperty float z\nproperty uint8 red\nproperty uint8 green\nproperty uint8 blue\nend_header\n"
-            
-            ply_data = header.encode('ascii')
-            for p in points:
-                ply_data += struct.pack("<fffBBB", *p)
-                
-            res_base64 = base64.b64encode(ply_data).decode("utf-8")
-            return {
-                "status": "success",
-                "model_url": f"data:application/octet-stream;base64,{res_base64}",
-                "viewer_type": "point_cloud",
-                "point_count": len(points)
-            }
-            
-        except Exception as e:
-            logger.error(f"❌ 3D Scene generation failed: {e}")
-            return {"status": "error", "message": str(e)}
 
     def _load_video_vlm(self):
         """Chargement paresseux de Qwen2-VL pour le RAG temporel."""
@@ -505,7 +254,6 @@ class TransformersAdapter(InferencePort):
         try:
             self._load_video_vlm()
             import orjson
-            from core.domain.exceptions import ParsingError
             
             # 1. Échantillonnage global (8 frames pour avoir une vue d'ensemble)
             frames = self._sample_video_frames(video_data, max_frames=8)
@@ -554,181 +302,25 @@ class TransformersAdapter(InferencePort):
             logger.error(f"❌ Action localization failed: {e}")
             raise InferenceError(f"Video action localization failed: {str(e)}")
 
-    def transform_image_to_anime(self, image_data: bytes, studio_style: str, prompt: str = "") -> str: 
-        """Transforme une image en anime via SDXL-Turbo (Similaire à la vidéo mais pour une image seule)."""
+    async def _fetch_images(self, urls: List[str]) -> List[Any]:
+        session = await self._get_session()
+        tasks = []
+        for url in urls:
+            tasks.append(self._fetch_single_image(session, url))
+        return await asyncio.gather(*tasks)
+
+    async def _fetch_single_image(self, session: aiohttp.ClientSession, url: str) -> Optional[Any]:
         try:
-            import base64
             from PIL import Image
             from io import BytesIO
-            from diffusers import AutoPipelineForImage2Image
-            
-            if not hasattr(self, '_sd_pipeline'):
-                self._sd_pipeline = AutoPipelineForImage2Image.from_pretrained(
-                    "stabilityai/sdxl-turbo", 
-                    torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32
-                )
-            
-            pil_img = Image.open(BytesIO(image_data)).convert("RGB").resize((512, 512))
-            res = self._sd_pipeline(
-                prompt=f"anime style, {studio_style}, {prompt}", 
-                image=pil_img, 
-                strength=0.5, 
-                num_inference_steps=2
-            ).images[0]
-            
-            buf = BytesIO(); res.save(buf, format="JPEG")
-            return f"data:image/jpeg;base64,{base64.b64encode(buf.getvalue()).decode('utf-8')}"
+            async with session.get(url, timeout=10) as response:
+                if response.status == 200:
+                    content = await response.read()
+                    return Image.open(BytesIO(content)).convert("RGB")
         except Exception as e:
-            logger.error(f"❌ Image to Anime failed: {e}"); return ""
+            logger.warning(f"Failed to fetch image {url}: {e}")
+        return None
 
-    def _load_audioldm_engine(self):
-        """Chargement paresseux de AudioLDM."""
-        if hasattr(self, '_audioldm_pipeline'): return
-        try:
-            import torch
-            from diffusers import AudioLDMPipeline
-            logger.info("⏳ Loading AudioLDM for Contextual Soundscapes...")
-            model_id = "cvssp/audioldm-s-full-v2"
-            torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
-            
-            self._audioldm_pipeline = AudioLDMPipeline.from_pretrained(
-                model_id,
-                torch_dtype=torch_dtype
-            )
-            device = "cuda" if torch.cuda.is_available() else "cpu"
-            self._audioldm_pipeline.to(device)
-            logger.info(f"✅ AudioLDM engine loaded on {device}")
-        except ImportError as e:
-            raise InferenceError(f"Dependencies missing for AudioLDM: {str(e)}")
-        except Exception as e:
-            logger.error(f"❌ Failed to load AudioLDM model: {e}")
-            raise InferenceError(f"AudioLDM engine loading failed: {str(e)}")
-
-    def generate_soundscape(self, video_metadata: Dict[str, Any], prompt: Optional[str] = None) -> str:
-        """Génération d'ambiance sonore via AudioLDM basée sur le contexte vidéo."""
-        try:
-            import io
-            import base64
-            import scipy.io.wavfile as wavfile
-            
-            self._load_audioldm_engine()
-            
-            # Construction du prompt basé sur les métadonnées
-            actions = video_metadata.get("actions", [])
-            scene = video_metadata.get("scene", "generic environment")
-            action_desc = ", ".join(actions) if actions else "subtle ambient sounds"
-            
-            base_prompt = f"Soundscape for {scene}, featuring {action_desc}."
-            final_prompt = f"{prompt}. {base_prompt}" if prompt else base_prompt
-            
-            logger.info(f"🎧 Generating soundscape with prompt: {final_prompt}")
-            
-            audio_output = self._audioldm_pipeline(
-                final_prompt,
-                num_inference_steps=10,
-                audio_length_in_s=5.0
-            )
-            
-            waveform = audio_output.audios[0]
-            sample_rate = 16000
-            
-            buffer = io.BytesIO()
-            wavfile.write(buffer, sample_rate, waveform)
-            
-            # Cleanup VRAM
-            if torch.cuda.is_available():
-                torch.cuda.empty_cache()
-            
-            b64_audio = base64.b64encode(buffer.getvalue()).decode('utf-8')
-            return f"data:audio/wav;base64,{b64_audio}"
-            
-        except InferenceError:
-            raise
-        except Exception as e:
-            logger.error(f"❌ Soundscape generation failed: {e}")
-            raise InferenceError(f"Soundscape generation failed: {str(e)}")
-
-    def _load_moshi_engine(self):
-        """Chargement paresseux de Kyutai Moshi pour le S2S natif."""
-        if hasattr(self, '_moshi_model'): return
-        try:
-            import torch
-            from moshi.models import Moshi
-            logger.info("⏳ Loading Kyutai Moshi (Speech-to-Speech)...")
-            # Moshi can be large, we use standard loading with hardware detection
-            self._moshi_model = Moshi.from_pretrained("kyutai/moshi-1b-preview")
-            
-            device = "cuda" if torch.cuda.is_available() else "cpu"
-            self._moshi_model.to(device)
-            logger.info(f"✅ Moshi engine loaded on {device}")
-        except ImportError as e:
-            raise InferenceError(f"Library 'moshi' or dependencies missing: {str(e)}. Please install it with 'pip install moshi'.")
-        except Exception as e:
-            logger.error(f"❌ Failed to load Moshi model: {e}")
-            raise InferenceError(f"Moshi engine loading failed: {str(e)}")
-
-    def speech_to_speech(self, audio_input: bytes, system_prompt: str = "") -> bytes:
-        """
-        Implémentation native du Speech-to-Speech via Kyutai Moshi.
-        Convertit l'audio d'entrée en 24kHz Mono, passe par Moshi, et renvoie la réponse audio.
-        """
-        if not audio_input:
-            raise InferenceError("Audio input is empty.")
-
-        try:
-            import io
-            import wave
-            import numpy as np
-            from pydub import AudioSegment
-            import torch
-            
-            self._load_moshi_engine()
-            
-            # 1. Prétraitement Audio : Resampling à 24kHz Mono
-            # On utilise pydub pour lire n'importe quel format (mp3, wav, ogg)
-            audio = AudioSegment.from_file(io.BytesIO(audio_input))
-            audio = audio.set_frame_rate(24000).set_channels(1)
-            
-            # Conversion en tensor float32 normalisé [-1.0, 1.0]
-            samples = np.array(audio.get_array_of_samples()).astype(np.float32)
-            # max_val dépend du sample_width (16-bit = 32768)
-            max_val = float(1 << (8 * audio.sample_width - 1))
-            samples /= max_val
-            
-            input_tensor = torch.from_numpy(samples).unsqueeze(0).to(self._moshi_model.device) # [1, T]
-            
-            # 2. Inférence Moshi
-            with torch.no_grad():
-                # Moshi API: generate returns the audio tokens/waveform
-                output_audio_tensor = self._moshi_model.generate(input_tensor)
-            
-            # 3. Post-traitement : Conversion tensor -> WAV bytes
-            output_np = output_audio_tensor.detach().cpu().numpy().squeeze()
-            
-            # Clipping pour éviter les distorsions lors de la conversion en int16
-            output_np = np.clip(output_np, -1.0, 1.0)
-            output_int16 = (output_np * 32767).astype(np.int16)
-            
-            buffer = io.BytesIO()
-            with wave.open(buffer, 'wb') as wf:
-                wf.setnchannels(1)
-                wf.setsampwidth(2)
-                wf.setframerate(24000)
-                wf.writeframes(output_int16.tobytes())
-            
-            # Cleanup VRAM
-            if torch.cuda.is_available():
-                torch.cuda.empty_cache()
-                
-            return buffer.getvalue()
-            
-        except Exception as e:
-            logger.error(f"❌ Speech-to-Speech failed: {e}")
-            raise InferenceError(f"Native S2S failed: {str(e)}")
-
-    async def _fetch_images(self, urls: List[str]) -> List[Any]:
-        import aiohttp
-        import asyncio
     def _fetch_images_sync(self, urls: List[str]) -> List[Any]:
         import requests
         from PIL import Image
@@ -762,8 +354,6 @@ class TransformersAdapter(InferencePort):
         from sentence_transformers import util
         
         self._load_clip_model()
-        
-        # Sync fetch images
         images = self._fetch_images_sync(image_urls)
         
         # Filter None results
@@ -780,11 +370,12 @@ class TransformersAdapter(InferencePort):
         scores = util.cos_sim(query_emb, img_embs)[0]
         
         results = []
-        for orig_idx, (url, img) in enumerate(zip(image_urls, images)):
+        valid_idx = 0
+        for orig_idx, img in enumerate(images):
             if img is not None:
-                valid_idx = valid_urls.index(url)
                 score = float(scores[valid_idx])
-                results.append({"index": orig_idx, "url": url, "score": score})
+                results.append({"index": orig_idx, "url": image_urls[orig_idx], "score": score})
+                valid_idx += 1
             
         return sorted(results, key=lambda x: x["score"], reverse=True)
 
@@ -839,7 +430,6 @@ class TransformersAdapter(InferencePort):
             logger.error(f"❌ ColPali inference failed: {e}")
             raise InferenceError(f"ColPali inference failed: {str(e)}")
 
-
     def health_check(self) -> dict: return {"status": "online" if self.model else "offline", "engine": "transformers"}
 
     def rerank_documents(self, query: str, documents: List[str]) -> List[float]:
@@ -847,10 +437,8 @@ class TransformersAdapter(InferencePort):
         if not documents:
             return []
             
-        # --- 1. INTÉGRATION SOTA : COHERE RERANK API (SI CONFIGURÉ) ---
         cohere_key = os.getenv("COHERE_API_KEY")
         if cohere_key:
-            logger.info("📡 Cohere Rerank: Sending request to Cohere Multilingual v3 API...")
             try:
                 import requests
                 headers = {
@@ -865,36 +453,24 @@ class TransformersAdapter(InferencePort):
                 response = requests.post("https://api.cohere.ai/v1/rerank", headers=headers, json=payload, timeout=10)
                 if response.status_code == 200:
                     data = response.json()
-                    # L'API renvoie des résultats triés par pertinence, on doit reconstruire les scores dans l'ordre initial
                     scores = [0.0] * len(documents)
                     for item in data.get("results", []):
                         idx = item.get("index")
                         if idx is not None and idx < len(scores):
                             scores[idx] = float(item.get("relevance_score", 0.0))
-                    logger.info("✅ Cohere Rerank API: Successful reranking.")
                     return scores
-                else:
-                    logger.warning(f"⚠️ Cohere Rerank API failed with status {response.status_code}: {response.text}. Falling back to Local Reranker.")
             except Exception as e:
-                logger.error(f"❌ Cohere Rerank API connection failed: {e}. Falling back to Local Reranker.")
+                logger.error(f"❌ Cohere Rerank API connection failed: {e}.")
 
-        # --- 2. INTÉGRATION SOTA LOCAL : BGE-RERANKER-LARGE OU MODÈLE PAR DÉFAUT ---
         from core.utils.lazy_import import lazy_import
         sentence_transformers = lazy_import('sentence_transformers')
         
-        # Choix du modèle local via variable d'environnement ou fallback
         model_name = os.getenv("RERANKER_MODEL", "cross-encoder/ms-marco-MiniLM-L-6-v2")
         
-        # Singleton pour le reranker afin d'éviter de le recharger
         if not hasattr(self, '_cross_encoder') or getattr(self, '_cross_encoder_name', '') != model_name:
-            logger.info(f"🤖 Local Rerank: Loading CrossEncoder model: {model_name}...")
             self._cross_encoder = sentence_transformers.CrossEncoder(model_name)
             self._cross_encoder_name = model_name
             
         pairs = [[query, doc] for doc in documents]
         scores = self._cross_encoder.predict(pairs)
-        
-        # S'assurer que le retour est bien une liste de floats
         return [float(score) for score in scores]
-
-

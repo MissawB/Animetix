@@ -129,20 +129,14 @@ class AgenticRAGService:
 
     # --- MÉTHODES UTILITAIRES ---
     def _assess_complexity(self, query: str) -> tuple[int, int]:
-        prompt, sys = self.prompt_manager.get_prompt("complexity_analyzer", query=query)
         try:
-            res = self.llm_service.generate(prompt, sys, use_slm=False)
-            data = self._extract_json(res)
-            return int(data.get("thinking_budget", 0)), int(data.get("complexity_score", 0))
-        except (ParsingError, ValueError) as e:
-            logger.error(f"Error parsing complexity metrics: {e}")
+            from .complexity_analyser import ComplexityAnalyser
+            analyser = ComplexityAnalyser(self.prompt_manager, self.llm_service)
+            return analyser.assess_complexity(query)
+        except Exception as e:
+            logger.error(f"Error in dynamic complexity analysis: {e}")
             return 0, 0
-        except InferenceError as e:
-            logger.error(f"Inference failed during complexity analysis: {e}")
-            return 0, 0
-        except (InfrastructureError, RuntimeError) as e:
-            logger.error(f"Unexpected error in complexity analysis: {e}")
-            return 0, 0
+
 
     def _check_cache(self, query: str) -> Optional[str]:
         if self.semantic_cache:

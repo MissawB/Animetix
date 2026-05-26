@@ -3,6 +3,10 @@ import json
 import time
 import os
 import sys
+import logging
+
+# Setup logging
+logger = logging.getLogger('animetix')
 
 # Force UTF-8 for Windows output
 if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
@@ -38,7 +42,7 @@ def fetch_themes_for_anime(mal_id: int) -> dict | None:
                 return data[0]
         return None
     except Exception as e:
-        print(f"❌ Error fetching themes for MAL ID {mal_id}: {e}")
+        logger.error(f"❌ Error fetching themes for MAL ID {mal_id}: {e}")
         return None
 
 def run_fetching(limit: int = 200) -> str:
@@ -62,10 +66,9 @@ def run_fetching(limit: int = 200) -> str:
             with open(OUTPUT_FILE, 'r', encoding='utf-8') as f:
                 themes_data = json.load(f)
         except Exception as e:
-            print(f"⚠️ Erreur lors du chargement de {OUTPUT_FILE}: {e}")
-            pass
+            logger.warning(f"⚠️ Erreur lors du chargement de {OUTPUT_FILE}: {e}")
 
-    print(f"🚀 Fetching Anime Themes from AnimeThemes.moe (Limit: {limit})...")
+    logger.info(f"🚀 Fetching Anime Themes from AnimeThemes.moe (Limit: {limit})...")
     
     count = 0
     processed = 0
@@ -83,7 +86,7 @@ def run_fetching(limit: int = 200) -> str:
                 processed += 1
             continue
             
-        print(f"   - [{processed+1}/{limit}] Fetching for: {anime.get('title')}")
+        logger.info(f"   - [{processed+1}/{limit}] Fetching for: {anime.get('title')}")
         theme_info = fetch_themes_for_anime(mal_id)
         
         if theme_info:
@@ -135,7 +138,7 @@ def run_fetching(limit: int = 200) -> str:
         json.dump(themes_data, f, indent=2, ensure_ascii=False)
     
     status = f"✅ Finished! Added themes for {count} animes. Total in DB: {len(themes_data)}"
-    print(status)
+    logger.info(status)
     return status
 
 if __name__ == "__main__":

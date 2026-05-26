@@ -40,6 +40,9 @@ from core.domain.services.xai_service import XaiDiagnosticService, UncertaintySe
 from core.domain.services.multi_agent_bus import MultiAgentBus
 from core.domain.services.neuro_symbolic_service import NeuroSymbolicService
 from core.domain.services.spatial_computing_service import SpatialComputingService
+from core.domain.services.static_diorama_3d_service import StaticDiorama3DService
+from core.domain.services.cinematic_volumetric_reconstruction_service import CinematicVolumetricReconstructionService
+
 from core.domain.services.spatial_audio_service import VoiceCloningService, NativeSpeechLLMService
 from core.domain.services.cove_oracle_service import CoveOracleService
 from core.domain.services.rag.agents.debate_manager import DebateManager
@@ -55,6 +58,14 @@ from pipeline.mlops.graph_community_partitioner import GraphCommunityPartitioner
 from core.domain.services.long_term_memory_service import LongTermMemoryService
 from core.domain.services.semantic_cache_service import SemanticCacheService
 from core.domain.services.star_reasoner_service import StarReasonerService
+from core.domain.services.tree_of_thoughts_service import TreeOfThoughtsSearchService
+from core.domain.services.episodic_memory_compressor import EpisodicMemoryCompressor
+from core.domain.services.neuro_symbolic_user_profiler import NeuroSymbolicUserProfiler
+from core.domain.services.dspy_prompt_optimizer import DSPyPromptOptimizer
+from core.domain.services.cfr_game_solver import CFRGameSolver
+from core.domain.services.liquid_neural_network import LiquidNeuralNetworkSimulator
+
+
 from core.domain.services.star_mlops_service import StarMLOpsDomainService
 from core.domain.services.drift_service import DriftService
 from core.domain.services.dpo_feedback_loop import DPOFeedbackLoop
@@ -89,6 +100,7 @@ from adapters.inference.transformers_adapter import TransformersAdapter
 from adapters.inference.moondream_adapter import MoondreamAdapter
 from adapters.inference.diffusers_adapter import DiffusersAdapter
 from adapters.inference.xtts_adapter import XTTSAdapter
+from adapters.inference.manga_ocr_adapter import MangaOCRAdapter
 from adapters.inference.fallback_adapter import FallbackInferenceAdapter
 from adapters.inference.unified_inference_adapter import UnifiedInferenceAdapter
 
@@ -152,6 +164,8 @@ class Container(containers.DeclarativeContainer):
 
     moondream_adapter = providers.Singleton(MoondreamAdapter)
 
+    manga_ocr_adapter = providers.Singleton(MangaOCRAdapter)
+
     transformers_adapter = providers.Singleton(
         TransformersAdapter,
         model_id="Qwen/Qwen2.5-1.5B-Instruct",
@@ -181,6 +195,9 @@ class Container(containers.DeclarativeContainer):
         adapters=providers.List(
             unified_inference_adapter,
             transformers_adapter,
+            gguf_adapter,
+            moondream_adapter,
+            manga_ocr_adapter,
             diffusers_adapter,
             xtts_adapter,
             providers.Factory(
@@ -188,7 +205,6 @@ class Container(containers.DeclarativeContainer):
                 api_base=os.getenv("VLLM_API_BASE", "http://vllm:8000/v1"),
                 model_name="meta-llama/Llama-3-8B-Instruct"
             ),
-            gguf_adapter,
             providers.Factory(
                 BrainAPIAdapter,
                 brain_api_url=os.getenv("BRAIN_API_URL", "")
@@ -516,6 +532,17 @@ class Container(containers.DeclarativeContainer):
         vision_service=vision_service
     )
 
+    static_diorama_3d_service = providers.Singleton(
+        StaticDiorama3DService,
+        vision_service=vision_service
+    )
+
+    cinematic_volumetric_reconstruction_service = providers.Singleton(
+        CinematicVolumetricReconstructionService,
+        vision_service=vision_service
+    )
+
+
     voice_cloning_service = providers.Singleton(
         VoiceCloningService,
         xtts_engine=xtts_adapter
@@ -537,6 +564,42 @@ class Container(containers.DeclarativeContainer):
         llm_service=llm_service,
         prompt_manager=prompt_manager
     )
+
+    tree_of_thoughts_service = providers.Singleton(
+        TreeOfThoughtsSearchService,
+        inference_engine=inference_engine,
+        prompt_manager=prompt_manager
+    )
+
+    episodic_memory_compressor = providers.Singleton(
+        EpisodicMemoryCompressor,
+        chroma_resource=repository,
+        inference_engine=inference_engine,
+        neo4j_manager=graph_persistence_port
+    )
+
+    neuro_symbolic_user_profiler = providers.Singleton(
+        NeuroSymbolicUserProfiler,
+        feedback_adapter=feedback_adapter
+    )
+
+    dspy_prompt_optimizer = providers.Singleton(
+        DSPyPromptOptimizer,
+        inference_engine=inference_engine
+    )
+
+    cfr_game_solver = providers.Singleton(
+        CFRGameSolver,
+        num_actions=4
+    )
+
+    liquid_neural_network = providers.Singleton(
+        LiquidNeuralNetworkSimulator,
+        state_dimension=4,
+        input_dimension=2
+    )
+
+
 
     star_mlops_service = providers.Singleton(
         StarMLOpsDomainService,

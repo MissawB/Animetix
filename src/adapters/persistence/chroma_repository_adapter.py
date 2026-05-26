@@ -93,40 +93,11 @@ class ChromaRepositoryAdapter(RepositoryPort):
             with open(db_path, 'rb') as f: 
                 db_content = orjson.loads(f.read())
             
-            # --- EXPERT POP-CULTURE FACT INJECTIONS (RAG ENRICHMENT) ---
-            INJECTIONS = {
-                "Anime": [
-                    {"match": "evangelion", "text": "L'anime Neon Genesis Evangelion a été produit par le studio Gainax (Studio Gainax) en collaboration avec King Records et Hideaki Anno."},
-                    {"match": "demon slayer", "text": "L'adaptation animée de Demon Slayer (Kimetsu no Yaiba) compte exactement 4 saisons (quatre saisons) et 60 épisodes (soixante épisodes). En France, l'anime Demon Slayer est distribué légalement sur Crunchyroll et Netflix."},
-                    {"match": "titan", "text": "L'opening emblématique 'Guren no Yumiya' de L'Attaque des Titans est interprété par le groupe Linked Horizon dirigé par Revo."}
-                ],
-                "Manga": [
-                    {"match": "berserk", "text": "La maison d'édition française qui publie des chefs-d'œuvre de dark fantasy comme Berserk de Kentaro Miura en France est Glénat (Editions Glénat)."},
-                    {"match": "titan", "text": "Le manga L'Attaque des Titans (Shingeki no Kyojin) par Hajime Isayama a été récompensé par le prestigieux Prix du manga Kōdansha (Kodansha Manga Award) en 2011 au Japon."},
-                    {"match": "hunter", "text": "Le manga Hunter x Hunter de Yoshihiro Togashi a été sérialisé dans le célèbre magazine de prépublication japonais Weekly Shōnen Jump (Shonen Jump)."}
-                ],
-                "Character": [
-                    {"match": "luffy", "text": "Le comédien de doublage français (VF) qui prête sa voix principale au personnage de Luffy dans l'anime One Piece est Stéphane Excoffier. La comédienne Brigitte Lecordier prête également sa voix à Luffy enfant."}
-                ]
-            }
-            
-            injections = INJECTIONS.get(media_type, [])
-            if injections:
-                for item in db_content:
-                    title_lower = str(item.get("title", "")).lower()
-                    name_lower = str(item.get("name", "")).lower()
-                    for inj in injections:
-                        if inj["match"] in title_lower or inj["match"] in name_lower:
-                            desc = item.get("description", "") or item.get("clean_description", "") or ""
-                            # Prepend the injected fact so it is never lost during truncation
-                            injected_text = f"{inj['text']} {desc}".strip()
-                            item["description"] = injected_text
-                            item["clean_description"] = injected_text
-            
             try:
                 coll = self.client.get_or_create_collection(name=self.coll_names[media_type], embedding_function=self.embedding_fn)
                 res = coll.get(include=['metadatas'])
-            except:
+            except Exception as e:
+                logger.error(f"Error getting collection {media_type} in load_catalog: {e}")
                 res = {"metadatas": []}
 
             catalog = {
@@ -213,7 +184,7 @@ class ChromaRepositoryAdapter(RepositoryPort):
                 return orjson.loads(f.read())
         return {}
 
-    def search_media_items(self, query: str, media_type: Optional[str] = None, limit: int = 10) -> List[Dict]:
+    def search_media_items(self, query: str, media_type: Optional[str] = None, limit: int = 10, offset: int = 0) -> List[Dict]:
         if not media_type:
             media_type = 'Anime'
             
@@ -244,7 +215,7 @@ class ChromaRepositoryAdapter(RepositoryPort):
                     query_vector = list(query_vector) + [0.0] * (expected_dim - len(query_vector))
             
             # Interrogation vectorielle géométrique alignée
-            res = coll.query(query_embeddings=[query_vector], n_results=limit)
+            res = coll.query(query_embeddings=[query_vector], n_results=limit, offset=offset)
             
             results = []
             if res and res.get('metadatas') and res['metadatas'][0]:

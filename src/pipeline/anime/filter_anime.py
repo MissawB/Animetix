@@ -2,6 +2,10 @@ import re
 import json
 import os
 import sys
+import logging
+
+# Setup logging
+logger = logging.getLogger('animetix')
 
 # Forcer l'encodage UTF-8 pour éviter les erreurs sur Windows avec les emojis
 if hasattr(sys.stdout, 'reconfigure'):
@@ -25,9 +29,9 @@ def clean_description(text):
 
 def run_refinement():
     if not os.path.exists(RAW_FILE):
-        print(f"❌ Error: {RAW_FILE} not found."); return
+        logger.error(f"❌ Error: {RAW_FILE} not found."); return
 
-    print("Loading raw database...")
+    logger.info("Loading raw database...")
     with open(RAW_FILE, 'r', encoding='utf-8') as f:
         all_animes = json.load(f)
 
@@ -55,10 +59,10 @@ def run_refinement():
             micro_tags = []
             if processed_count < 200:
                 try:
-                    print(f"   🧠 Intelligence extraction [{processed_count+1}/200]: {anime['title']['romaji']}...")
+                    logger.info(f"   🧠 Intelligence extraction [{processed_count+1}/200]: {anime['title']['romaji']}...")
                     micro_tags = intelligence_service.extract_micro_tags(anime['title']['romaji'], clean_desc, "Anime")
                 except Exception as e:
-                    print(f"   ⚠️ Warning: Intelligence extraction failed for {anime['title']['romaji']}: {e}")
+                    logger.warning(f"   ⚠️ Warning: Intelligence extraction failed for {anime['title']['romaji']}: {e}")
                     micro_tags = []
             
             clean_tags = [t['name'] for t in anime.get('tags', []) if t.get('rank', 0) >= 70]
@@ -90,7 +94,7 @@ def run_refinement():
     with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
         json.dump(clean_root_animes, f, indent=2, ensure_ascii=False)
 
-    print(f"✅ Intelligence Filtering Complete! Total: {len(clean_root_animes)} animes.")
+    logger.info(f"✅ Intelligence Filtering Complete! Total: {len(clean_root_animes)} animes.")
 
 if __name__ == "__main__":
     run_refinement()

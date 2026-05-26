@@ -33,7 +33,21 @@ class LLMService:
         self.usage_port = usage_port
         self.obs_service = obs_service
 
-    def generate(self, prompt: str, system_prompt: str = "", forbidden_terms: list = None, use_slm: bool = False, thinking_budget: int = 0, thinking_mode: bool = False) -> str:
+    def generate(self, prompt: str, system_prompt: str = "", forbidden_terms: list = None, use_slm: bool = False, thinking_budget: int = 0, thinking_mode: bool = False, user_id: int = None, tier: str = 'free') -> str:
+        # --- QUOTA CHECK ---
+        if not user_id:
+            try:
+                from animetix.middleware import get_current_user_id, get_current_user_tier
+                user_id = get_current_user_id()
+                tier = get_current_user_tier()
+            except ImportError:
+                pass
+
+        if user_id and self.usage_port:
+            if not self.usage_port.check_quota(user_id, tier):
+                from ..exceptions import QuotaExceededError
+                raise QuotaExceededError("You have reached your daily AI limit.")
+
         import time
         start_time = time.time()
 
@@ -71,11 +85,6 @@ class LLMService:
             if self.usage_port:
                 in_tokens = (len(prompt) + len(system_prompt)) // 4
                 out_tokens = len(res) // 4
-                try:
-                    from animetix.middleware import get_current_user_id
-                    user_id = get_current_user_id()
-                except ImportError:
-                    user_id = None
                 
                 engine_name = getattr(engine, 'model_name', 'brain-api')
                 if use_slm: engine_name += "-slm"

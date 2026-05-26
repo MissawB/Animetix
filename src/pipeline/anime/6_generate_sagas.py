@@ -1,8 +1,12 @@
 import os
 import sys
 import json
+import logging
 import django
 from tqdm import tqdm
+
+# Setup logging
+logger = logging.getLogger('animetix')
 
 # Setup environment
 # abspath(__file__) is src/pipeline/anime/6_generate_sagas.py
@@ -20,14 +24,14 @@ from backend.animetix.containers import get_container
 from pipeline.neo4j_client import neo4j_manager
 
 def run_saga_ingestion():
-    print("🚀 Starting Saga Ingestion & Summarization...")
+    logger.info("🚀 Starting Saga Ingestion & Summarization...")
     container = get_container()
     llm = container.llm_service
     
     # 1. Load Data
     db_path = os.path.join(base_dir, 'data', 'processed', 'clean_root_animes.json')
     if not os.path.exists(db_path):
-        print(f"❌ Error: Data file not found at {db_path}")
+        logger.error(f"❌ Error: Data file not found at {db_path}")
         return
 
     with open(db_path, 'r', encoding='utf-8') as f:
@@ -46,7 +50,7 @@ def run_saga_ingestion():
     # Filter to only keep sagas with > 1 item for now, or all? 
     # The plan says "Identify major sagas". Sagas with 1 item are just standalone titles.
     sagas = {k: v for k, v in groups.items() if len(v) > 1}
-    print(f"📊 Identified {len(sagas)} major sagas with multiple installments.")
+    logger.info(f"📊 Identified {len(sagas)} major sagas with multiple installments.")
     
     for name, items in tqdm(sagas.items(), desc="Summarizing Sagas"):
         # Collect context: take a snippet of each description to stay within context limits if needed
@@ -64,9 +68,9 @@ def run_saga_ingestion():
             ids = [str(it['id']) for it in items]
             neo4j_manager.sync_saga(name, summary, ids)
         except Exception as e:
-            print(f"⚠️ Failed to summarize/sync saga '{name}': {e}")
+            logger.warning(f"⚠️ Failed to summarize/sync saga '{name}': {e}")
             
-    print("✅ Saga ingestion complete.")
+    logger.info("✅ Saga ingestion complete.")
 
 if __name__ == "__main__":
     run_saga_ingestion()

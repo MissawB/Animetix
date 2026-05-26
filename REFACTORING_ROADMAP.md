@@ -1,21 +1,12 @@
-# Double Scenario Project - Refactoring Roadmap
+# Double Scenario Project - Refactoring Roadmap (Round 3)
 
-## Phase 1: High Priority Technical Debt (IN PROGRESS)
-- [x] Gestion des Erreurs Silencieuses (`except Exception: pass`)
-- [x] Injections Expert en Dur (Refactor `RAGWorkflowManager._get_expert_injections`)
-- [x] Journalisation DPO Ad-hoc (Move to Celery / MLOps Port)
-- [x] Découplage de `utils/session.py` en Port
-- [x] Correction du Hack Device (MangaOcr)
+## Phase 1-5: Infrastructure & Technical Debt (DONE)
+- [x] All initial infrastructure and debt tasks completed.
 
-## Phase 2: Missing Features - GGUF & Integration (DONE)
-- [x] GGUF Multimodal Expansion (Vision CLIP/Llava support)
-- [x] Reranking Visuel natif dans vLLM
-
-## Phase 3: Missing Features - Advanced Multimodal Inference (DONE)
-- [x] Vidéo & 3D (estimate_depth, generate_3d_scene, etc.)
-- [x] Audio (clone_voice, generate_soundscape)
-- [x] Manga (translate_manga_page, inpaint_text_bubbles)
-
-## Phase 4: Pipeline & SPA (DONE)
-- [x] Automatisation Synchronisation Neo4j (Dagster)
-- [x] Migration des endpoints d'authentification restants
+## Phase 6: Adapter Consolidation & Specialized Inference (NEW)
+- [ ] Integration of `MangaOCRAdapter` in `containers.py`
+- [ ] Suppression des méthodes redondantes dans `TransformersAdapter` (Video, Audio, Manga, 3D)
+- [ ] Transfert de la logique `generate_3d_scene` vers un service de domaine ou adaptateur dédié
+- [ ] Correction de l'ordre de priorité dans `FallbackInferenceAdapter`
+- [ ] Durcissement du typage Frontend (Suppression sélective des `any`)
+- [ ] Harmonisation des tests `test_creative_inference.py` avec la nouvelle distribution des tâches

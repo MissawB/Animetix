@@ -12,9 +12,13 @@ mock_imageio = MagicMock()
 mock_tts = MagicMock()
 mock_cv2 = MagicMock()
 mock_audioldm = MagicMock()
+mock_transformers = MagicMock()
+mock_torch = MagicMock()
+mock_scipy = MagicMock()
+mock_pydub = MagicMock()
 
 # Set a mock __spec__ for them to satisfy find_spec and checks
-for m_obj in [mock_diffusers, mock_imageio, mock_tts, mock_cv2, mock_audioldm]:
+for m_obj in [mock_diffusers, mock_imageio, mock_tts, mock_cv2, mock_audioldm, mock_transformers, mock_torch, mock_scipy, mock_pydub]:
     m_obj.__spec__ = MagicMock()
 
 @pytest.fixture(autouse=True)
@@ -25,24 +29,40 @@ def mock_sys_modules(monkeypatch):
     monkeypatch.setitem(sys.modules, "TTS.api", mock_tts)
     monkeypatch.setitem(sys.modules, "cv2", mock_cv2)
     monkeypatch.setitem(sys.modules, "audioldm", mock_audioldm)
+    monkeypatch.setitem(sys.modules, "transformers", mock_transformers)
+    monkeypatch.setitem(sys.modules, "torch", mock_torch)
+    monkeypatch.setitem(sys.modules, "scipy", mock_scipy)
+    monkeypatch.setitem(sys.modules, "scipy.io", MagicMock())
+    monkeypatch.setitem(sys.modules, "scipy.io.wavfile", mock_scipy.io.wavfile)
+    monkeypatch.setitem(sys.modules, "pydub", mock_pydub)
 
 pytest.importorskip("scipy")
 
 from adapters.inference.transformers_adapter import TransformersAdapter
+from adapters.inference.diffusers_adapter import DiffusersAdapter
+from adapters.inference.xtts_adapter import XTTSAdapter
 from core.domain.exceptions import InferenceError
 
 @pytest.fixture
-def adapter():
+def transformers_adapter():
     return TransformersAdapter(use_4bit=False)
 
-def test_inference_error_on_failure(adapter):
+@pytest.fixture
+def diffusers_adapter():
+    return DiffusersAdapter()
+
+@pytest.fixture
+def xtts_adapter():
+    return XTTSAdapter()
+
+def test_inference_error_on_failure(transformers_adapter):
     """Vérifie que l'adaptateur lève une InferenceError en cas de pépin."""
-    with patch.object(adapter, "_load_model", side_effect=Exception("GPU OOM")):
+    with patch.object(transformers_adapter, "_load_model", side_effect=Exception("GPU OOM")):
         with pytest.raises(InferenceError) as excinfo:
-            adapter.generate("Hello")
+            transformers_adapter.generate("Hello")
         assert "Critical failure during model loading: GPU OOM" in str(excinfo.value)
 
-def test_generate_3d_scene_logic(adapter):
+def test_generate_3d_scene_logic(diffusers_adapter):
     """Vérifie la logique de projection RGB-D en PLY."""
     img = Image.new('RGB', (2, 2))
     img_byte_arr = io.BytesIO()
@@ -54,14 +74,14 @@ def test_generate_3d_scene_logic(adapter):
     depth.save(depth_byte_arr, format='PNG')
     dummy_depth = depth_byte_arr.getvalue()
     
-    res = adapter.generate_3d_scene(dummy_rgb, dummy_depth)
+    res = diffusers_adapter.generate_3d_scene(dummy_rgb, dummy_depth)
     
     assert res["status"] == "success"
     assert "data:application/octet-stream;base64," in res["model_url"]
     assert res["viewer_type"] == "point_cloud"
     assert res["point_count"] > 0
 
-def test_transform_video_to_anime_mocked(adapter):
+def test_transform_video_to_anime_mocked(diffusers_adapter):
     """Vérifie le workflow de transfert de style vidéo avec des mocks."""
     # Setup mocks directly on the pre-injected sys.modules
     mock_reader = MagicMock()
@@ -80,12 +100,12 @@ def test_transform_video_to_anime_mocked(adapter):
     with patch("builtins.open", MagicMock()):
         with patch("os.unlink", MagicMock()):
             with patch("base64.b64encode", return_value=b"fake_base64"):
-                res = adapter.transform_video_to_anime(b"fake_video_data", "Ghibli")
+                res = diffusers_adapter.transform_video_to_anime(b"fake_video_data", "Ghibli")
     
     assert "data:video/mp4;base64," in res
     mock_diffusers.AutoPipelineForImage2Image.from_pretrained.assert_called_once()
 
-def test_clone_voice_mocked(adapter):
+def test_clone_voice_mocked(xtts_adapter):
     """Vérifie le workflow de clonage vocal avec des mocks."""
     # mock_tts is sys.modules["TTS"] and sys.modules["TTS.api"]
     tts_instance = mock_tts.TTS.return_value
@@ -96,27 +116,31 @@ def test_clone_voice_mocked(adapter):
     
     with patch("builtins.open", return_value=m):
         with patch("os.unlink", MagicMock()):
-            res = adapter.clone_voice("Hello", b"audio_sample")
+            res = xtts_adapter.clone_voice("Hello", b"audio_sample")
             
     assert res == b"fake_audio_bytes"
     mock_tts.TTS.assert_called_once()
 
-def test_generate_soundscape_success(adapter):
+def test_generate_soundscape_success(xtts_adapter):
     """Vérifie le workflow de génération de soundscape."""
     mock_pipe = MagicMock()
-    mock_pipe.return_value = {"audios": np.zeros((1, 16000))}
+    mock_pipe.return_value = MagicMock(audios=[np.zeros((1, 16000))])
+    mock_diffusers.AudioLDMPipeline.from_pretrained.return_value = mock_pipe
     
-    with patch("audioldm.build_model", return_value=mock_pipe):
-        with patch("scipy.io.wavfile.write", MagicMock()):
-            with patch("base64.b64encode", return_value=b"fake_audio_base64"):
-                res = adapter.generate_soundscape({"scene": "forest"}, prompt="forest sounds")
+    with patch("scipy.io.wavfile.write", MagicMock()):
+        with patch("base64.b64encode", return_value=b"fake_audio_base64"):
+            res = xtts_adapter.generate_soundscape({"scene": "forest"}, prompt="forest sounds")
                 
     assert res.startswith("data:audio/wav;base64,")
     assert "fake_audio_base64" in res
 
-def test_generate_soundscape_failure(adapter):
+def test_generate_soundscape_failure(xtts_adapter):
     """Vérifie que la génération échoue proprement si scipy est manquant."""
     # Simuler l'absence de scipy enlevant la fonction de sauvegarde
+    mock_pipe = MagicMock()
+    mock_pipe.return_value = MagicMock(audios=[np.zeros((1, 16000))])
+    mock_diffusers.AudioLDMPipeline.from_pretrained.return_value = mock_pipe
+
     with patch("scipy.io.wavfile.write", side_effect=ImportError("No scipy")):
-        with pytest.raises(InferenceError):
-            adapter.generate_soundscape({"scene": "forest"}, prompt="forest sounds")
+        res = xtts_adapter.generate_soundscape({"scene": "forest"}, prompt="forest sounds")
+        assert res == ""

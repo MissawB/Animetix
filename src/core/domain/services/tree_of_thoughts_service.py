@@ -1,0 +1,124 @@
+# -*- coding: utf-8 -*-
+"""
+Tree-of-Thoughts (ToT) Search Service for Animetix.
+Explores multiple reasoning paths and evaluates thought nodes to find the optimal logical consensus.
+"""
+
+import logging
+from typing import List, Dict, Any, Optional
+from core.ports.inference_port import InferencePort
+from core.domain.services.prompt_manager import PromptManager
+
+logger = logging.getLogger("animetix.cognition.tot")
+
+class TreeOfThoughtsSearchService:
+    def __init__(self, inference_engine: InferencePort, prompt_manager: PromptManager):
+        self.inference_engine = inference_engine
+        self.prompt_manager = prompt_manager
+
+    def solve_with_tree_of_thoughts(self, query: str, breadth: int = 3, depth: int = 3) -> Dict[str, Any]:
+        """
+        Orchestre une exploration Tree-of-Thoughts.
+        Chaque étape génère plusieurs branches (breadth) évaluées par un critique.
+        """
+        logger.info(f"🌳 ToT: Starting Tree-of-Thoughts search for query: '{query}'")
+        
+        # Racine de l'arbre
+        current_paths = [{"thought_path": [], "score": 1.0, "text": "Start"}]
+        
+        for step in range(1, depth + 1):
+            logger.info(f"🪜 ToT: Processing Depth Level {step}/{depth}...")
+            new_paths = []
+            
+            for path in current_paths:
+                # Génération de branches alternatives (breadth)
+                for branch_idx in range(breadth):
+                    thought_prompt = (
+                        f"Requête : {query}\n"
+                        f"Étapes de raisonnement passées : {' -> '.join(path['thought_path'])}\n"
+                        f"Génère l'étape suivante (Étape #{step}, Option #{branch_idx+1}) dans ton raisonnement logique. "
+                        f"Sois extrêmement concis (1 phrase)."
+                    )
+                    
+                    try:
+                        next_thought = self.inference_engine.generate(
+                            prompt=thought_prompt,
+                            system_prompt="Tu es un planificateur cognitif d'élite d'arbre de pensées."
+                        ).strip()
+                    except Exception as e:
+                        logger.error(f"Error generating thought branch: {e}")
+                        next_thought = f"Thought option {branch_idx+1} for step {step}."
+                    
+                    # Évaluation par le modèle critique
+                    score = self._evaluate_thought_node(query, path["thought_path"], next_thought)
+                    
+                    # Seuil d'élagage cognitif (pruning)
+                    if score >= 0.5:
+                        updated_path = list(path["thought_path"]) + [next_thought]
+                        new_paths.append({
+                            "thought_path": updated_path,
+                            "score": path["score"] * score,
+                            "text": next_thought
+                        })
+            
+            # Si toutes les branches ont été élaguées, on conserve les meilleures du niveau précédent
+            if not new_paths:
+                logger.warning("⚠️ ToT: All branches pruned! Falling back to best previous paths.")
+                break
+                
+            # Tri et sélection des meilleures branches (limité à la largeur de recherche breadth)
+            new_paths.sort(key=lambda x: x["score"], reverse=True)
+            current_paths = new_paths[:breadth]
+            
+        # Sélection de la meilleure trace de raisonnement
+        best_path = current_paths[0] if current_paths else {"thought_path": ["Calcul direct"], "score": 0.5}
+        
+        # Synthèse finale
+        synthesis_prompt = (
+            f"Requête initiale : {query}\n"
+            f"Trace de pensée sélectionnée par l'arbre sémantique :\n"
+            f"{' -> '.join(best_path['thought_path'])}\n\n"
+            f"Rédige la réponse finale rigoureuse en français."
+        )
+        
+        try:
+            final_answer = self.inference_engine.generate(
+                prompt=synthesis_prompt,
+                system_prompt="Tu es le Synthétiseur final d'Animetix."
+            )
+        except Exception as e:
+            logger.error(f"Synthesis failed in ToT: {e}")
+            final_answer = "Désolé, la synthèse arborescente a échoué."
+            
+        return {
+            "query": query,
+            "best_thought_path": best_path["thought_path"],
+            "path_score": best_path["score"],
+            "final_answer": final_answer
+        }
+
+    def _evaluate_thought_node(self, query: str, history: List[str], next_thought: str) -> float:
+        """
+        Modèle critique local attribuant une note de pertinence sémantique de 0.0 à 1.0.
+        """
+        critic_prompt = (
+            f"Requête : {query}\n"
+            f"Historique de pensée : {' -> '.join(history)}\n"
+            f"Nouvelle proposition : {next_thought}\n\n"
+            f"Attribue une note de pertinence STRICTEMENT sous la forme d'un nombre flottant entre 0.0 et 1.0 (ex: 0.85). "
+            f"Ne renvoie rien d'autre que le nombre."
+        )
+        
+        try:
+            score_text = self.inference_engine.generate(
+                prompt=critic_prompt,
+                system_prompt="Tu es le Critique logique d'arbre de pensées. Réponds uniquement par un chiffre."
+            ).strip()
+            # Nettoyage et conversion
+            import re
+            match = re.search(r"\d+\.\d+", score_text)
+            if match:
+                return min(1.0, max(0.0, float(match.group(0))))
+            return 0.8  # note de repli par défaut
+        except Exception:
+            return 0.7

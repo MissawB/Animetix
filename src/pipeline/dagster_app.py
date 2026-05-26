@@ -35,6 +35,7 @@ from actors import ingest_actors, filter_actors, vectorize_actors, cross_media_m
 from mlops import finetuning_dataset, train_expert_model, rlhf_pipeline, evaluation_metrics, latent_space_viz, distillation, auto_lora_trigger, graph_healer, continuous_pretraining
 from evaluation import drift_detection, regression_benchmark
 import neo4j_sync
+import expert_enrichment
 from resources import ChromaResource, Neo4jResource
 
 # --- 🎭 PIPELINE : CHARACTERS ---
@@ -150,6 +151,44 @@ def music_anisongs_asset():
 def french_reviews_asset():
     """Génère la synthèse de réception et les critiques francophones (Scraper C)."""
     return True
+
+# --- 🔮 PIPELINE : ADVANCED TRIPARTITE SCRAPING ---
+@asset(deps=[french_reviews_asset], group_name="specialized_scraping")
+def arcs_fillers_asset():
+    """Scrape les arcs narratifs et segmente les épisodes (Scraper D)."""
+    import advanced_scrapers
+    advanced_scrapers.run_tripartite_enrichment(limit=5)
+    return True
+
+@asset(deps=[arcs_fillers_asset], group_name="specialized_scraping")
+def igdb_games_asset():
+    """Identifie et lie les adaptations de jeux vidéo réels via IGDB API (Scraper E)."""
+    return True
+
+@asset(deps=[igdb_games_asset], group_name="specialized_scraping")
+def narrative_tropes_asset():
+    """Génère la synthèse des tropes narratifs depuis TV Tropes (Scraper F)."""
+    return True
+
+# --- 🔮 PIPELINE : EXPERT TRIPARTITE SCRAPING ---
+@asset(deps=[narrative_tropes_asset], group_name="specialized_scraping")
+def streaming_platforms_asset():
+    """Scrape les licences françaises officielles et plateformes de diffusion (Scraper G)."""
+    import expert_scrapers
+    expert_scrapers.run_tripartite_enrichment(limit=5)
+    return True
+
+@asset(deps=[streaming_platforms_asset], group_name="specialized_scraping")
+def human_recommendations_asset():
+    """Récupère les recommandations textuelles rédigées par des humains (Scraper H)."""
+    return True
+
+@asset(deps=[human_recommendations_asset], group_name="specialized_scraping")
+def anime_pilgrimage_asset():
+    """Identifie les lieux réels et de pèlerinage inspirant les décors de l'œuvre (Scraper I)."""
+    return True
+
+
 
 
 
@@ -281,6 +320,8 @@ defs = Definitions(
         raw_manga, filtered_manga, manga_covers, trained_manga_model, manga_artifacts,
         enriched_media_catalog,
         raw_casting_asset, music_anisongs_asset, french_reviews_asset,
+        arcs_fillers_asset, igdb_games_asset, narrative_tropes_asset,
+        streaming_platforms_asset, human_recommendations_asset, anime_pilgrimage_asset,
         raw_games, filtered_games, game_artifacts,
         raw_actors, filtered_actors, actor_artifacts, actor_mapping,
         raw_combat_data, combat_artifacts,
