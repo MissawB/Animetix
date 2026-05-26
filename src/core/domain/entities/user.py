@@ -14,6 +14,8 @@ class UserProfile:
     total_games: int = 0
     ranked_points: int = 0
     ranked_max_points: int = 0
+    tier: str = 'free'
+    api_key: Optional[str] = None
 
     @property
     def rank_label(self) -> str:

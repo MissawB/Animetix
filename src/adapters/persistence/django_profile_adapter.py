@@ -15,7 +15,9 @@ class DjangoProfileAdapter:
             total_wins=django_profile.total_wins,
             total_games=django_profile.total_games,
             ranked_points=django_profile.ranked_points,
-            ranked_max_points=django_profile.ranked_max_points
+            ranked_max_points=django_profile.ranked_max_points,
+            tier=django_profile.tier,
+            api_key=django_profile.api_key
         )
 
     @staticmethod
@@ -28,4 +30,6 @@ class DjangoProfileAdapter:
         django_profile.total_games = domain_profile.total_games
         django_profile.ranked_points = domain_profile.ranked_points
         django_profile.ranked_max_points = domain_profile.ranked_max_points
+        django_profile.tier = domain_profile.tier
+        django_profile.api_key = domain_profile.api_key
         django_profile.save()

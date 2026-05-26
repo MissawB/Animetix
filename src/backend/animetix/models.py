@@ -47,6 +47,7 @@ class MediaItem(models.Model):
 
 # --- 👤 USER SYSTEM ---
 class Profile(models.Model):
+    TIERS = [('free', 'Free'), ('premium', 'Premium'), ('pro', 'Professional')]
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     xp = models.IntegerField(default=0)
     current_streak = models.IntegerField(default=0)
@@ -59,6 +60,8 @@ class Profile(models.Model):
     unlocked_badges = models.JSONField(default=list)
     custom_username_color = models.CharField(max_length=20, null=True, blank=True)
     collected_fusions = models.ManyToManyField('CreativeFusion', related_name='collected_by_profiles', blank=True)
+    tier = models.CharField(max_length=20, choices=TIERS, default='free')
+    api_key = models.CharField(max_length=100, unique=True, null=True, blank=True)
     
     @property
     def level(self): return (self.xp // 500) + 1
