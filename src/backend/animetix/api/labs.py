@@ -292,3 +292,90 @@ class AudioLabDataView(APIView):
             })
         except Exception as e:
             return Response({'error': str(e)}, status=500)
+
+class SingularityLabDataView(APIView):
+    """Interact with fifth generation Evolving AI and Singularity services (SOTA 2035+)."""
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        action = request.data.get('action', '')
+        container = get_container()
+
+        if action == 'compile':
+            function_name = request.data.get('function_name', 'cosine_similarity').strip()
+            slow_logic_code = request.data.get('slow_logic_code', '').strip()
+            
+            if not slow_logic_code:
+                slow_logic_code = "double similarity = compute(a, b);"
+                
+            try:
+                optimized_fn = container.self_evolving_compiler.analyze_and_optimize(function_name, slow_logic_code)
+                import numpy as np
+                a = np.array([1.0, 2.0, 3.0])
+                b = np.array([1.0, 2.0, 3.0])
+                test_val = optimized_fn(a, b)
+                
+                return Response({
+                    'status': 'success',
+                    'message': f"Microcode pour '{function_name}' généré et compilé avec succès !",
+                    'test_output': f"Calcul de similarité test : {test_val:.4f}",
+                    'c_code_generated': f"double {function_name}_optimized(double* a, double* b, int n) {{ ... }}"
+                })
+            except Exception as e:
+                return Response({'error': str(e)}, status=500)
+
+        elif action == 'plasticity':
+            activations = request.data.get('activations', [1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+            active_indices = request.data.get('trigger_spikes', [0, 1])
+            learning_rate = float(request.data.get('learning_rate', 0.05))
+            
+            try:
+                simulator = container.synaptic_plasticity_simulator
+                
+                import time
+                current_time = time.time()
+                simulator.trigger_spikes(active_indices, current_time)
+                
+                updated_W = simulator.update_hebbian(activations, learning_rate=learning_rate)
+                
+                stdp_log = []
+                if len(active_indices) >= 2:
+                    pre = active_indices[0]
+                    post = active_indices[1]
+                    simulator.last_spike_times[pre] = current_time - 0.05
+                    simulator.last_spike_times[post] = current_time
+                    dW = simulator.update_stdp(pre, post, learning_rate=learning_rate)
+                    stdp_log.append(f"STDP: Connexion [{pre} -> {post}] mise à jour de {dW:+.4f}")
+                
+                return Response({
+                    'status': 'success',
+                    'message': "Plasticité synaptique neuromorphique mise à jour !",
+                    'weights': updated_W.tolist(),
+                    'stdp_log': stdp_log
+                })
+            except Exception as e:
+                return Response({'error': str(e)}, status=500)
+
+        elif action == 'synthesize':
+            universe_name = request.data.get('universe_name', 'CyberVibe').strip()
+            genre = request.data.get('genre', 'Cyberpunk').strip()
+            
+            try:
+                synthesizer = container.autonomous_domain_synthesizer
+                universe = synthesizer.synthesize_multiverse(universe_name, genre)
+                
+                evaluation = synthesizer.evaluate_coherence_and_interest(universe)
+                persisted = synthesizer.persist_universe_to_graph(universe)
+                
+                return Response({
+                    'status': 'success',
+                    'universe': universe,
+                    'evaluation': evaluation,
+                    'persisted': persisted
+                })
+            except Exception as e:
+                return Response({'error': str(e)}, status=500)
+
+        else:
+            return Response({'error': 'Action inconnue'}, status=400)
+

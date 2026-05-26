@@ -2,11 +2,10 @@ import os
 import sys
 import json
 import logging
-import django
 from tqdm import tqdm
 
 # Setup logging
-logger = logging.getLogger('animetix')
+logger = logging.getLogger("animetix." + __name__)
 
 # Setup environment
 # abspath(__file__) is src/pipeline/anime/6_generate_sagas.py

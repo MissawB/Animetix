@@ -5,8 +5,12 @@ import os
 import sys
 import torch
 import numpy as np
+import logging
 from PIL import Image
 from io import BytesIO
+
+# Setup logging
+logger = logging.getLogger("animetix." + __name__)
 
 # Force UTF-8 for Windows output
 if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
@@ -35,10 +39,10 @@ def run_vectorization(chroma_res=None, neo4j_res=None):
     repo = get_repo()
     models_registry, neo4j_manager = get_pipeline_resources()
     
-    print("🚀 Starting SOTA 2026 Multimodal Vectorization (MRL Enabled)...")
+    logger.info("🚀 Starting SOTA 2026 Multimodal Vectorization (MRL Enabled)...")
     
     if not os.path.exists(INPUT_FILE):
-        print(f"❌ Error: Input file {INPUT_FILE} not found.")
+        logger.error(f"❌ Error: Input file {INPUT_FILE} not found.")
         return
 
     with open(INPUT_FILE, 'r', encoding='utf-8') as f:
@@ -86,11 +90,11 @@ def run_vectorization(chroma_res=None, neo4j_res=None):
             try:
                 neo4j_manager.sync_media_to_graph(item, "Anime")
             except Exception as e:
-                print(f"⚠️ Neo4j Sync Error for {item['title']}: {e}")
+                logger.warning(f"⚠️ Neo4j Sync Error for {item['title']}: {e}")
 
-        print(f"   📦 Processed {min(i + BATCH_SIZE, len(new_items))}/{len(new_items)}...")
+        logger.info(f"   📦 Processed {min(i + BATCH_SIZE, len(new_items))}/{len(new_items)}...")
 
-    print(f"✅ SOTA Vectorization & Neo4j Sync Complete.")
+    logger.info(f"✅ SOTA Vectorization & Neo4j Sync Complete.")
     return True
 
 if __name__ == "__main__":

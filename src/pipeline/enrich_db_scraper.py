@@ -27,7 +27,7 @@ try:
     django.setup()
     from animetix.models import MediaItem
 except Exception as e:
-    print(f"Django setup warning: {e}. Running in offline JSON mode.")
+    logger.warning(f"Django setup warning: {e}. Running in offline JSON mode.")
     MediaItem = None
 
 # Logger

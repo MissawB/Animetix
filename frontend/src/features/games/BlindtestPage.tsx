@@ -83,7 +83,7 @@ const BlindtestPage: React.FC = () => {
 
           <div className="mt-10 space-y-3">
             <h4 className="text-[10px] font-black opacity-30 uppercase tracking-widest">Tentatives précédentes</h4>
-            {gameState.guesses.map((g: any, i: number) => (
+            {gameState.guesses.map((g: { title: string; is_correct: boolean }, i: number) => (
               <div key={i} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-navy-900 rounded-xl border border-gray-100 dark:border-white/5">
                 <span className="font-bold opacity-80">{g.title}</span>
                 {g.is_correct ? <Check className="text-green-500 w-5 h-5" /> : <X className="text-red-500 w-5 h-5" />}

@@ -2,7 +2,11 @@ import requests
 import json
 import os
 import time
+import logging
 from typing import List, Dict
+
+# Setup logging
+logger = logging.getLogger("animetix." + __name__)
 
 # Configuration
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -71,30 +75,30 @@ def fetch_by_mal_id(mal_id: int):
         if response.status_code == 200:
             return response.json().get('data', {}).get('Media')
         else:
-            print(f"❌ Error {response.status_code} for MAL ID {mal_id}")
+            logger.error(f"❌ Error {response.status_code} for MAL ID {mal_id}")
             return None
     except Exception as e:
-        print(f"❌ Exception for MAL ID {mal_id}: {e}")
+        logger.error(f"❌ Exception for MAL ID {mal_id}: {e}")
         return None
 
 def run_reconciliation():
     if not os.path.exists(DRIFT_REPORT):
-        print("ℹ️ No drift report found. Skipping reconciliation.")
+        logger.info("ℹ️ No drift report found. Skipping reconciliation.")
         return False
 
     with open(DRIFT_REPORT, 'r', encoding='utf-8') as f:
         report = json.load(f)
 
     if not report.get('needs_refresh') and not report.get('missing_items'):
-        print("✅ Data is up to date according to report.")
+        logger.info("✅ Data is up to date according to report.")
         return False
 
     missing_items = report.get('missing_items', [])
     if not missing_items:
-        print("ℹ️ No specific missing items listed.")
+        logger.info("ℹ️ No specific missing items listed.")
         return False
 
-    print(f"🔄 Reconciling {len(missing_items)} missing items from drift report...")
+    logger.info(f"🔄 Reconciling {len(missing_items)} missing items from drift report...")
 
     # Load existing raw DB
     if os.path.exists(RAW_DB):
@@ -108,24 +112,24 @@ def run_reconciliation():
     added_count = 0
     for item in missing_items:
         mal_id = int(item['id'])
-        print(f"   - Fetching MAL ID {mal_id} ({item['title']})...")
+        logger.info(f"   - Fetching MAL ID {mal_id} ({item['title']})...")
         anime_data = fetch_by_mal_id(mal_id)
         
         if anime_data and anime_data['id'] not in existing_ids:
             all_animes.append(anime_data)
             existing_ids.add(anime_data['id'])
             added_count += 1
-            print(f"     ✅ Added: {anime_data['title']['romaji']}")
+            logger.info(f"     ✅ Added: {anime_data['title']['romaji']}")
         
         time.sleep(0.7) # AniList rate limit
 
     if added_count > 0:
         with open(RAW_DB, 'w', encoding='utf-8') as f:
             json.dump(all_animes, f, indent=2, ensure_ascii=False)
-        print(f"🚀 Reconciliation complete! Added {added_count} items.")
+        logger.info(f"🚀 Reconciliation complete! Added {added_count} items.")
         return True
     
-    print("ℹ️ No new items were actually added.")
+    logger.info("ℹ️ No new items were actually added.")
     return False
 
 if __name__ == "__main__":

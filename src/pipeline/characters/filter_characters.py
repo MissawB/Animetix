@@ -1,6 +1,9 @@
 import json
 import os
 import sys
+import logging
+
+logger = logging.getLogger("animetix." + __name__)
 
 # Forcer l'encodage UTF-8 pour éviter les erreurs sur Windows avec les emojis
 if hasattr(sys.stdout, 'reconfigure'):
@@ -15,13 +18,13 @@ LOOKUP_FILE = os.path.join(BASE_DIR, 'data', 'artifacts', 'char_data_for_lookup.
 
 def run_filtering():
     if not os.path.exists(INPUT_FILE):
-        print(f"❌ {INPUT_FILE} introuvable.")
+        logger.error(f"❌ {INPUT_FILE} introuvable.")
         return
 
     with open(INPUT_FILE, 'r', encoding='utf-8') as f:
         db = json.load(f)
 
-    print(f"🧹 Filtrage de {len(db)} personnages...")
+    logger.info(f"🧹 Filtrage de {len(db)} personnages...")
     
     # On ne garde que ceux qui ont une image et une description correcte
     filtered = []
@@ -38,7 +41,7 @@ def run_filtering():
     with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
         json.dump(filtered, f, indent=2, ensure_ascii=False)
         
-    print(f"✅ Terminé ! {len(filtered)} personnages conservés dans {OUTPUT_FILE}.")
+    logger.info(f"✅ Terminé ! {len(filtered)} personnages conservés dans {OUTPUT_FILE}.")
 
 if __name__ == "__main__":
     run_filtering()

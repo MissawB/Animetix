@@ -1,7 +1,11 @@
 import json
 import os
+import logging
 from tqdm import tqdm
 from pipeline.neo4j_client import neo4j_manager
+
+# Logger
+logger = logging.getLogger("animetix." + __name__)
 
 # Chemins des catalogues clean
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -15,7 +19,7 @@ def run_sync_type_to_graph(media_type: str, neo4j_res=None):
     Synchronise un type de média spécifique vers Neo4j.
     Utilise une ressource Neo4j si fournie, sinon le manager global.
     """
-    print(f"🕸️ Syncing {media_type} to Neo4j...")
+    logger.info(f"🕸️ Syncing {media_type} to Neo4j...")
 
     # Initialisation du manager avec la ressource si présente
     if neo4j_res:
@@ -36,7 +40,7 @@ def run_sync_type_to_graph(media_type: str, neo4j_res=None):
 
     db_path = file_map.get(media_type)
     if not db_path or not os.path.exists(db_path):
-        print(f"⚠️ Source file for {media_type} not found.")
+        logger.warning(f"⚠️ Source file for {media_type} not found.")
         return 0
 
     sync_count = 0
@@ -50,16 +54,16 @@ def run_sync_type_to_graph(media_type: str, neo4j_res=None):
                     manager.sync_media_to_graph(item, media_type)
                 sync_count += 1
             except Exception as e:
-                print(f"⚠️ Error syncing {media_type} {item.get('title', item.get('name'))}: {e}")
+                logger.error(f"⚠️ Error syncing {media_type} {item.get('title', item.get('name'))}: {e}")
 
     return sync_count
 def run_sync_all_to_graph():
     """
     Synchronise l'intégralité du catalogue vers Neo4j.
     """
-    print("🕸️ Starting Global Graph Synchronization...")
+    logger.info("🕸️ Starting Global Graph Synchronization...")
     run_sync_type_to_graph("Anime")
     run_sync_type_to_graph("Manga")
     run_sync_type_to_graph("Character")
-    print("✅ Global Graph Sync Complete.")
+    logger.info("✅ Global Graph Sync Complete.")
     return True

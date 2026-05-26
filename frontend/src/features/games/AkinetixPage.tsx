@@ -54,7 +54,7 @@ const AkinetixPage: React.FC = () => {
               <h4 className="text-xs font-black uppercase opacity-40 mb-3 flex items-center gap-2">
                   <History className="w-3 h-3" /> {t('games.akinetix.history')}
               </h4>
-              {gameState.history.map((item: any, i: number) => (
+              {gameState.history.map((item: { q: string; a: string }, i: number) => (
                 <div key={i} className="text-sm opacity-70 mb-2 border-l-2 border-yellow-400 pl-3">
                   <span className="font-bold text-yellow-500">IA :</span> {item.q} <span className="font-black italic ml-2">{item.a}</span>
                 </div>

@@ -36,13 +36,14 @@ class LLMService:
 
     def generate(self, prompt: str, system_prompt: str = "", forbidden_terms: list = None, use_slm: bool = False, thinking_budget: int = 0, thinking_mode: bool = False, user_id: int = None, tier: str = 'free') -> str:
         # --- QUOTA CHECK ---
-        try:
-            from animetix.middleware import get_current_user_id, get_current_user_tier
-            user_id = get_current_user_id()
-            tier = get_current_user_tier()
-        except ImportError as e:
-            logger.warning(f"Handled error: {e}")
-            pass
+        if not user_id:
+            try:
+                from animetix.middleware import get_current_user_id, get_current_user_tier
+                user_id = get_current_user_id()
+                tier = get_current_user_tier()
+            except ImportError as e:
+                logger.warning(f"Handled error: {e}")
+                pass
 
         if user_id and self.usage_port:
             if not self.usage_port.check_quota(user_id, tier):

@@ -7,7 +7,7 @@ from typing import Dict, Any, Callable, Optional, Union
 import time
 
 # --- STRUCTURED LOGGING FOR LOKI ---
-logger = logging.getLogger('animetix.bus')
+logger = logging.getLogger("animetix." + __name__)
 
 class LokiJSONFormatter(logging.Formatter):
     """Formateur JSON pour Grafana Loki."""
@@ -83,8 +83,8 @@ class MultiAgentBus:
             try:
                 await pubsub.unsubscribe(channel)
                 await pubsub.close()
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Handled error: {e}")
 
     def register_agent(self, agent_id: str, callback: Callable):
         """Enregistre un agent sur le bus d'événements."""

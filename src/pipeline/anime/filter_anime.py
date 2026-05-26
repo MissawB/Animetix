@@ -5,7 +5,7 @@ import sys
 import logging
 
 # Setup logging
-logger = logging.getLogger('animetix')
+logger = logging.getLogger("animetix." + __name__)
 
 # Forcer l'encodage UTF-8 pour éviter les erreurs sur Windows avec les emojis
 if hasattr(sys.stdout, 'reconfigure'):

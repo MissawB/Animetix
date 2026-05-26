@@ -14,6 +14,9 @@ transformers_logging.set_verbosity_error()
 logging.getLogger("huggingface_hub").setLevel(logging.ERROR)
 logging.getLogger("sentence_transformers").setLevel(logging.WARNING)
 
+# Logger configuration
+logger = logging.getLogger("animetix." + __name__)
+
 # Détection robuste de la racine du projet
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -38,10 +41,10 @@ BATCH_SIZE = 16
 EPOCHS = 3
 
 def run_training():
-    print(f"--- Début du Fine-Tuning des Embeddings Personnages (Vibe) ---")
+    logger.info(f"--- Début du Fine-Tuning des Embeddings Personnages (Vibe) ---")
 
     if not os.path.exists(INPUT_FILE):
-        print(f"Erreur : {INPUT_FILE} introuvable. Lancez d'abord le filtrage.")
+        logger.error(f"Erreur : {INPUT_FILE} introuvable. Lancez d'abord le filtrage.")
         return
 
     with open(INPUT_FILE, 'r', encoding='utf-8') as f:
@@ -66,18 +69,18 @@ def run_training():
             train_examples.append(InputExample(texts=[bio_snippet, title]))
 
     if len(train_examples) < 20:
-        print("Pas assez d'exemples d'entraînement.")
+        logger.warning("Pas assez d'exemples d'entraînement.")
         return
 
-    print(f"Nombre d'exemples d'entraînement générés : {len(train_examples)}")
+    logger.info(f"Nombre d'exemples d'entraînement générés : {len(train_examples)}")
 
-    print(f"Chargement du modèle : {MODEL_NAME}")
+    logger.info(f"Chargement du modèle : {MODEL_NAME}")
     model = SentenceTransformer(MODEL_NAME)
 
     train_dataloader = DataLoader(train_examples, shuffle=True, batch_size=BATCH_SIZE)
     train_loss = losses.MultipleNegativesRankingLoss(model=model)
 
-    print(f"Entraînement en cours...")
+    logger.info(f"Entraînement en cours...")
     model.fit(
         train_objectives=[(train_dataloader, train_loss)],
         epochs=EPOCHS,
@@ -86,7 +89,7 @@ def run_training():
         show_progress_bar=True
     )
 
-    print(f"✅ Modèle fine-tuné sauvegardé dans : {OUTPUT_PATH}")
+    logger.info(f"✅ Modèle fine-tuné sauvegardé dans : {OUTPUT_PATH}")
 
 if __name__ == "__main__":
     run_training()

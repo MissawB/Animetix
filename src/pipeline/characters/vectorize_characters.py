@@ -3,8 +3,12 @@ import numpy as np
 import os
 import sys
 import requests
+import logging
 from PIL import Image
 from io import BytesIO
+
+# Logger configuration
+logger = logging.getLogger("animetix." + __name__)
 
 # Force UTF-8 for Windows output
 if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
@@ -37,7 +41,7 @@ def run_vectorization():
     models_registry, neo4j_manager = get_pipeline_resources()
     if hasattr(sys.stdout, 'reconfigure'): sys.stdout.reconfigure(encoding='utf-8')
     if not os.path.exists(CLEAN_DB):
-        print(f"❌ {CLEAN_DB} not found."); return
+        logger.error(f"❌ {CLEAN_DB} not found."); return
 
     with open(CLEAN_DB, 'r', encoding='utf-8') as f:
         db = json.load(f)
@@ -49,9 +53,9 @@ def run_vectorization():
     new_items = [item for item in db if str(item['id']) not in existing_ids or str(item['id']) not in existing_vision_ids]
 
     if not new_items:
-        print("ℹ️ Character database up to date."); return
+        logger.info("ℹ️ Character database up to date."); return
 
-    print(f"🚀 Multimodal Vectorization of {len(new_items)} characters (Batching mode: {BATCH_SIZE})...")
+    logger.info(f"🚀 Multimodal Vectorization of {len(new_items)} characters (Batching mode: {BATCH_SIZE})...")
     text_model = models_registry.text_model
     vision_model = models_registry.vision_model
     
@@ -90,12 +94,12 @@ def run_vectorization():
                         vision_images.append(img)
                         vision_metas.append(meta)
                 except Exception as e:
-                    print(f"⚠️ Error fetching image for {c_id}: {e}")
+                    logger.warning(f"⚠️ Error fetching image for {c_id}: {e}")
                     pass
             
             try: neo4j_manager.sync_character_to_graph(item)
             except Exception as e:
-                print(f"⚠️ Neo4j Sync Error for {c_id}: {e}")
+                logger.warning(f"⚠️ Neo4j Sync Error for {c_id}: {e}")
                 pass
 
         if batch_texts:
@@ -106,9 +110,9 @@ def run_vectorization():
             v_embeddings = vision_model.encode(vision_images, convert_to_numpy=True).tolist()
             repo.upsert_items("character_visual_vibe", vision_ids, v_embeddings, vision_metas)
 
-        print(f"   📦 Processed {min(i + BATCH_SIZE, len(new_items))}/{len(new_items)}...")
+        logger.info(f"   📦 Processed {min(i + BATCH_SIZE, len(new_items))}/{len(new_items)}...")
 
-    print(f"✅ Character Multimodal Sync Complete.")
+    logger.info(f"✅ Character Multimodal Sync Complete.")
 
 if __name__ == "__main__":
     run_vectorization()

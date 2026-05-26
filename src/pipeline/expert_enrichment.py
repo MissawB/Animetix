@@ -2,6 +2,9 @@ import json
 import yaml
 import os
 import sys
+import logging
+
+logger = logging.getLogger("animetix.pipeline.expert_enrichment")
 
 # Forcer l'encodage UTF-8 pour éviter les erreurs sur Windows
 if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
@@ -20,10 +23,10 @@ def run_expert_enrichment():
     CHAR_FILE = os.path.join(BASE_DIR, 'data', 'processed', 'filtered_characters.json')
 
     if not os.path.exists(FACTS_FILE):
-        print(f"❌ Fichier expert_facts.yaml introuvable à {FACTS_FILE}")
+        logger.error(f"❌ Fichier expert_facts.yaml introuvable à {FACTS_FILE}")
         return
 
-    print(f"📖 Chargement des faits experts depuis {FACTS_FILE}...")
+    logger.info(f"📖 Chargement des faits experts depuis {FACTS_FILE}...")
     with open(FACTS_FILE, 'r', encoding='utf-8') as f:
         facts_data = yaml.safe_load(f)
     expert_facts = facts_data.get('expert_facts', [])
@@ -36,10 +39,10 @@ def run_expert_enrichment():
 
     for file_path, label in files_to_process:
         if not os.path.exists(file_path):
-            print(f"⚠️ Fichier non trouvé : {file_path}")
+            logger.warning(f"⚠️ Fichier non trouvé : {file_path}")
             continue
 
-        print(f"🔄 Enrichissement des {label}s dans {os.path.basename(file_path)}...")
+        logger.info(f"🔄 Enrichissement des {label}s dans {os.path.basename(file_path)}...")
         with open(file_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
 
@@ -96,7 +99,7 @@ def run_expert_enrichment():
         with open(file_path, 'w', encoding='utf-8') as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
         
-        print(f"✅ Enrichissement terminé pour {label} : {enriched_items_count} items mis à jour ({total_facts_added} faits injectés).")
+        logger.info(f"✅ Enrichissement terminé pour {label} : {enriched_items_count} items mis à jour ({total_facts_added} faits injectés).")
 
 if __name__ == "__main__":
     run_expert_enrichment()

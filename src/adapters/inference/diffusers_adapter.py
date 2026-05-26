@@ -4,7 +4,7 @@ import os
 import tempfile
 from io import BytesIO
 from typing import Optional, List, Dict, Any
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 from core.ports.inference_port import InferencePort
 from core.ports.usage_port import UsagePort
 from core.domain.exceptions import InferenceError
@@ -33,6 +33,7 @@ class DiffusersAdapter(InferencePort):
         self.pipe = None
         self._img2img_pipe = None
         self._depth_pipe = None
+        self._inpaint_pipe = None
 
     def _get_dtype(self):
         return torch.float16 if (self.use_fp16 and torch.cuda.is_available()) else torch.float32
@@ -74,6 +75,24 @@ class DiffusersAdapter(InferencePort):
                 self._img2img_pipe.enable_model_cpu_offload()
         except Exception as e:
             logger.error(f"❌ Failed to load img2img model: {e}")
+
+    def _load_inpainting(self):
+        if self._inpaint_pipe: return
+        try:
+            from diffusers import AutoPipelineForInpainting
+            logger.info(f"🏗️ Loading Local Diffusion Model (Inpainting): {self.model_id}")
+            self._inpaint_pipe = AutoPipelineForInpainting.from_pretrained(
+                self.model_id, 
+                torch_dtype=self._get_dtype(), 
+                variant=self._get_variant(),
+                trust_remote_code=True
+            )
+            if torch.cuda.is_available():
+                self._inpaint_pipe.to("cuda")
+                self._inpaint_pipe.enable_model_cpu_offload()
+                self._inpaint_pipe.enable_vae_tiling()
+        except Exception as e:
+            logger.error(f"❌ Failed to load inpainting model: {e}")
 
     def generate_image(self, prompt: str, style: str = "") -> str:
         self._load_txt2img()
@@ -145,30 +164,67 @@ class DiffusersAdapter(InferencePort):
         except Exception as e:
             logger.error(f"❌ Video to Anime failed: {e}"); return ""
 
-    def generate_3d_scene(self, image_data: bytes, depth_map: bytes) -> Dict:
+    def inpaint_text_bubbles(self, image_data: bytes, bubbles: List[Dict]) -> str:
+        """
+        Nettoie les bulles de texte via inpainting et réinscrit le nouveau texte.
+        """
         try:
-            import struct
-            import numpy as np
-            rgb = Image.open(BytesIO(image_data)).convert("RGB").resize((256, 256))
-            depth = Image.open(BytesIO(depth_map)).convert("L").resize((256, 256))
-            rgb_arr, depth_arr = np.array(rgb), np.array(depth)
-            h, w = depth_arr.shape
-            points = []
-            fx, fy = 200.0, 200.0
-            cx, cy = w / 2, h / 2
-            for y in range(h):
-                for x in range(w):
-                    z = float(depth_arr[y, x]) / 255.0
-                    if z <= 0.05: continue
-                    X, Y, Z = (x - cx) * z / fx, (y - cy) * z / fy, z
-                    r, g, b = rgb_arr[y, x]
-                    points.append((X, Y, Z, r, g, b))
-            header = f"ply\nformat binary_little_endian 1.0\nelement vertex {len(points)}\nproperty float x\nproperty float y\nproperty float z\nproperty uint8 red\nproperty uint8 green\nproperty uint8 blue\nend_header\n"
-            ply_data = header.encode('ascii')
-            for p in points: ply_data += struct.pack("<fffBBB", *p)
-            return {"status": "success", "model_url": f"data:application/octet-stream;base64,{base64.b64encode(ply_data).decode('utf-8')}", "viewer_type": "point_cloud", "point_count": len(points)}
+            self._load_inpainting()
+            if not self._inpaint_pipe: return "Erreur: Modèle d'inpainting non chargé."
+            
+            init_image = Image.open(BytesIO(image_data)).convert("RGB")
+            width, height = init_image.size
+            
+            # 1. Création du masque d'inpainting
+            mask_image = Image.new("L", (width, height), 0)
+            draw_mask = ImageDraw.Draw(mask_image)
+            for bubble in bubbles:
+                bbox = bubble.get('bbox') # [x1, y1, x2, y2]
+                if bbox:
+                    # On ajoute une petite marge pour bien couvrir le texte
+                    draw_mask.rectangle(bbox, fill=255)
+            
+            # 2. Inpainting pour effacer le texte existant
+            num_steps = 4 if "turbo" in self.model_id.lower() else 25
+            inpainted_image = self._inpaint_pipe(
+                prompt="clean manga bubble, no text, white background",
+                image=init_image,
+                mask_image=mask_image,
+                num_inference_steps=num_steps
+            ).images[0]
+            
+            # 3. Dessin du nouveau texte
+            draw_final = ImageDraw.Draw(inpainted_image)
+            try:
+                # Tentative de chargement d'une police systeme
+                font = ImageFont.truetype("arial.ttf", 20)
+            except:
+                font = ImageFont.load_default()
+
+            for bubble in bubbles:
+                bbox = bubble.get('bbox')
+                text = bubble.get('text')
+                if bbox and text:
+                    x1, y1, x2, y2 = bbox
+                    # Calcul pour centrer le texte dans la bubble
+                    t_bbox = draw_final.textbbox((0, 0), text, font=font)
+                    t_w, t_h = t_bbox[2] - t_bbox[0], t_bbox[3] - t_bbox[1]
+                    pos_x = (x1 + x2) / 2 - t_w / 2
+                    pos_y = (y1 + y2) / 2 - t_h / 2
+                    draw_final.text((pos_x, pos_y), text, fill="black", font=font)
+
+            # --- Accounting ---
+            if self.usage_port:
+                self.usage_port.log_usage(engine="diffusers-inpaint", units=1)
+
+            buffered = BytesIO()
+            inpainted_image.save(buffered, format="JPEG", quality=85)
+            img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+            return f"data:image/jpeg;base64,{img_str}"
+
         except Exception as e:
-            logger.error(f"❌ 3D Scene failed: {e}"); return {"status": "error", "message": str(e)}
+            logger.error(f"❌ Inpaint Text Bubbles failed: {e}")
+            return f"Erreur: {e}"
 
     def health_check(self) -> dict:
         return {"status": "online" if self.pipe or self._img2img_pipe else "offline", "engine": "diffusers", "model": self.model_id}

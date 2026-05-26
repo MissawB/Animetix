@@ -1,7 +1,7 @@
 import logging
 import time
 from typing import List, Optional, Dict, Any
-from core.ports.inference_port import InferencePort
+from core.ports.inference_port import InferencePort, InferenceNotImplementedError
 
 logger = logging.getLogger('animetix.inference.fallback')
 
@@ -40,6 +40,8 @@ class FallbackInferenceAdapter(InferencePort):
     def generate(self, prompt: str, system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.", thinking_budget: int = 0, thinking_mode: bool = False) -> str:
         last_error = ""
         for adapter in self.adapters:
+            if not hasattr(adapter, "generate") or not callable(getattr(adapter, "generate")):
+                continue
             adapter_name = adapter.__class__.__name__
             start_time = time.time()
             try:
@@ -70,6 +72,8 @@ class FallbackInferenceAdapter(InferencePort):
     def stream_generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False):
         """Streaming avec repli intelligent."""
         for adapter in self.adapters:
+            if not hasattr(adapter, "stream_generate") or not callable(getattr(adapter, "stream_generate")):
+                continue
             start_time = time.time()
             try:
                 # Tentative de premier token pour valider l'adaptateur
@@ -104,6 +108,8 @@ class FallbackInferenceAdapter(InferencePort):
 
     def _fallback_call(self, method_name: str, *args, **kwargs):
         for adapter in self.adapters:
+            if not hasattr(adapter, method_name) or not callable(getattr(adapter, method_name)):
+                continue
             start_time = time.time()
             try:
                 method = getattr(adapter, method_name)
@@ -204,16 +210,36 @@ class FallbackInferenceAdapter(InferencePort):
         return self.adapters[0] if self.adapters else None
 
     def rerank_documents(self, query: str, documents: List[str]) -> List[float]:
-        if hasattr(self.primary_adapter, 'rerank_documents'):
+        """Ré-ordonne les documents avec repli si nécessaire."""
+        if not documents:
+            return []
+
+        last_error = ""
+        for adapter in self.adapters:
+            if not hasattr(adapter, 'rerank_documents') or not callable(getattr(adapter, 'rerank_documents')):
+                continue
+            
+            adapter_name = adapter.__class__.__name__
+            start_time = time.time()
             try:
-                return self.primary_adapter.rerank_documents(query, documents)
+                logger.info(f"🔄 [Fallback] Trying {adapter_name}.rerank_documents...")
+                scores = adapter.rerank_documents(query, documents)
+                latency = time.time() - start_time
+                
+                if scores and len(scores) == len(documents):
+                    logger.info(f"✅ [Fallback] {adapter_name}.rerank_documents success in {latency:.2f}s!")
+                    return scores
+                
+                last_error = "Résultat vide ou taille incorrecte"
+                self._report_failure(adapter, "rerank_documents", last_error, latency)
             except Exception as e:
-                import logging
-                logger = logging.getLogger("animetix")
-                logger.warning(f"Primary reranker failed: {e}. Falling back to default scoring (0.0).")
-                return [0.0] * len(documents)
-        from core.ports.inference_port import InferenceNotImplementedError
-        raise InferenceNotImplementedError("Reranking not supported by current primary adapter")
+                latency = time.time() - start_time
+                last_error = str(e)
+                self._report_failure(adapter, "rerank_documents", f"CRASH: {last_error}", latency)
+                continue
+
+        logger.warning(f"⚠️ All rerankers failed. Falling back to default scoring (0.0). Last error: {last_error}")
+        return [0.0] * len(documents)
 
     def generate_structured(self, prompt: str, response_model: type, system_prompt: str = "Tu es un expert en extraction de données structurées.", max_retries: int = 3) -> Any:
         """Génération structurée avec repli."""

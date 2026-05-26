@@ -2,7 +2,11 @@ import requests
 import json
 import time
 import os
+import logging
 from dotenv import load_dotenv
+
+# Logger configuration
+logger = logging.getLogger("animetix." + __name__)
 
 # Détection robuste de la racine du projet
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -40,18 +44,18 @@ def fetch_igdb_characters(token):
         if response.status_code == 200:
             return response.json()
     except Exception as e:
-        print(f"❌ IGDB Character Error: {e}")
+        logger.error(f"❌ IGDB Character Error: {e}")
     return []
 
 def run_ingestion_vg():
     if not CLIENT_ID or not CLIENT_SECRET:
-        print("❌ Missing IGDB credentials")
+        logger.error("❌ Missing IGDB credentials")
         return
 
     token = get_twitch_token()
     if not token: return
 
-    print("🎮 Collecting Famous Video Game Characters...")
+    logger.info("🎮 Collecting Famous Video Game Characters...")
     characters = fetch_igdb_characters(token)
     
     formatted_chars = []
@@ -75,7 +79,7 @@ def run_ingestion_vg():
     with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
         json.dump(formatted_chars, f, indent=2, ensure_ascii=False)
     
-    print(f"✅ Saved {len(formatted_chars)} Video Game characters to {OUTPUT_FILE}")
+    logger.info(f"✅ Saved {len(formatted_chars)} Video Game characters to {OUTPUT_FILE}")
 
 if __name__ == "__main__":
     run_ingestion_vg()

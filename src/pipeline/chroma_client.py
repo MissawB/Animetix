@@ -1,6 +1,10 @@
 import chromadb
 from chromadb.config import Settings
 import os
+import logging
+
+# Logger
+logger = logging.getLogger("animetix." + __name__)
 
 # Détection robuste de la racine du projet
 # __file__ is at src/pipeline/chroma_client.py
@@ -20,10 +24,10 @@ class ChromaManager:
             self.client = chromadb.HttpClient(host=chroma_host, port=chroma_port)
             # Test de connexion simple
             self.client.heartbeat()
-            print(f"[OK] Connected to ChromaDB Server at {chroma_host}:{chroma_port}")
+            logger.info(f"[OK] Connected to ChromaDB Server at {chroma_host}:{chroma_port}")
         except Exception:
             # Fallback sur le client persistant si le serveur n'est pas joignable (ex: exécution d'un script seul)
-            print(f"[INFO] ChromaDB Server not found, falling back to PersistentClient at {CHROMA_PATH}")
+            logger.info(f"[INFO] ChromaDB Server not found, falling back to PersistentClient at {CHROMA_PATH}")
             os.makedirs(CHROMA_PATH, exist_ok=True)
             self.client = chromadb.PersistentClient(path=CHROMA_PATH)
 
@@ -62,7 +66,7 @@ class ChromaManager:
                 embeddings=embeddings[i:end].tolist() if hasattr(embeddings, 'tolist') else embeddings[i:end],
                 metadatas=metadatas[i:end]
             )
-        print(f"✅ Added {len(ids)} items to Chroma collection '{collection_name}'")
+        logger.info(f"✅ Added {len(ids)} items to Chroma collection '{collection_name}'")
 
     def query_collection(self, collection_name, query_texts=None, query_embeddings=None, n_results=10):
         """Recherche dans une collection avec support hybride."""

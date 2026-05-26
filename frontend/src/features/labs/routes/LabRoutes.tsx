@@ -5,6 +5,7 @@ const MangaLabPage = lazy(() => import('../MangaLabPage'));
 const AudioLabPage = lazy(() => import('../AudioLabPage'));
 const LatentSpacePage = lazy(() => import('../LatentSpacePage'));
 const SpatialLabPage = lazy(() => import('../SpatialLabPage'));
+const SingularityLabPage = lazy(() => import('../SingularityLabPage'));
 
 export const LabRoutes = (
   <>
@@ -12,5 +13,6 @@ export const LabRoutes = (
     <Route path="/audio_lab/" element={<AudioLabPage />} />
     <Route path="/latent-space/" element={<LatentSpacePage />} />
     <Route path="/spatial-lab/" element={<SpatialLabPage />} />
+    <Route path="/experimental/" element={<SingularityLabPage />} />
   </>
 );

@@ -2,8 +2,12 @@ import json
 import re
 import os
 import requests
+import logging
 from tqdm import tqdm
 from dotenv import load_dotenv
+
+# Logger configuration
+logger = logging.getLogger("animetix." + __name__)
 
 # Détection robuste de la racine du projet
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -47,12 +51,12 @@ def call_brain_for_extraction(name, description):
             if match:
                 return json.loads(match.group(0))
     except Exception as e:
-        print(f"⚠️ Error extracting for {name}: {e}")
+        logger.warning(f"⚠️ Error extracting for {name}: {e}")
     return None
 
 def run_refinement():
     if not os.path.exists(INPUT_FILE):
-        print(f"❌ {INPUT_FILE} introuvable.")
+        logger.error(f"❌ {INPUT_FILE} introuvable.")
         return
 
     with open(INPUT_FILE, 'r', encoding='utf-8') as f:
@@ -68,10 +72,10 @@ def run_refinement():
 
     new_chars = [c for c in db if c['id'] not in refined_ids]
     if not new_chars:
-        print("ℹ️ Aucun nouveau personnage à raffiner.")
+        logger.info("ℹ️ Aucun nouveau personnage à raffiner.")
         return
 
-    print(f"✨ Raffinement LLM de {len(new_chars)} personnages...")
+    logger.info(f"✨ Raffinement LLM de {len(new_chars)} personnages...")
     
     for c in tqdm(new_chars):
         extracted = call_brain_for_extraction(c['name'], c['description'] or "")
@@ -101,7 +105,7 @@ def run_refinement():
     with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
         json.dump(refined_db, f, indent=2, ensure_ascii=False)
         
-    print(f"✅ Terminé ! Total: {len(refined_db)} personnages raffinés.")
+    logger.info(f"✅ Terminé ! Total: {len(refined_db)} personnages raffinés.")
 
 if __name__ == "__main__":
     run_refinement()

@@ -9,9 +9,20 @@ import { CardSkeleton } from '../../components/ui/Skeleton';
 
 import { useTranslation } from 'react-i18next';
 
+interface CovertestState {
+  cover_url: string;
+  gameOver: boolean;
+  secret_title?: string;
+  guesses: Array<{ title: string; is_correct: boolean }>;
+}
+
 const CovertestPage: React.FC = () => {
   const { t } = useTranslation();
-  const { gameState, loading, handleGuess } = useCovertest();
+  const { gameState, loading, handleGuess } = useCovertest() as unknown as { 
+    gameState: CovertestState | undefined; 
+    loading: boolean; 
+    handleGuess: (arg: { guess: string }) => Promise<void> 
+  };
   const [guess, setGuess] = useState<string>('');
 
   const onSubmit = async () => {
@@ -73,7 +84,7 @@ const CovertestPage: React.FC = () => {
 
             <div className="mt-12 space-y-3">
               <h4 className="text-[10px] font-black opacity-30 uppercase tracking-[0.2em] mb-4">Journal des tentatives</h4>
-              {gameState.guesses.map((g: any, i: number) => (
+              {gameState.guesses.map((g: { title: string; is_correct: boolean }, i: number) => (
                 <div key={i} className={`flex items-center justify-between p-4 rounded-2xl border-l-4 transition-all ${g.is_correct ? 'bg-green-500/10 border-green-500' : 'bg-red-500/10 border-red-500'}`}>
                   <span className="font-bold">{g.title}</span>
                   <Badge variant={g.is_correct ? 'success' : 'danger'}>

@@ -2,8 +2,13 @@ import json
 import os
 import sys
 import time
+import logging
 from sentence_transformers import SentenceTransformer, InputExample, losses
 from torch.utils.data import DataLoader
+
+# Setup logging
+logger = logging.getLogger("animetix." + __name__)
+
 try:
     from hf_trackio import trackio
 except ImportError:
@@ -28,7 +33,7 @@ BATCH_SIZE = 16
 EPOCHS = 2
 
 def run_training():
-    print("--- Début du Fine-Tuning des Embeddings (Vibe) ---")
+    logger.info("--- Début du Fine-Tuning des Embeddings (Vibe) ---")
     
     # Initialize Tracking
     tracker = trackio.init(project="animetix-vibe", job_name=f"anime-vibe-{int(time.time())}")
@@ -39,7 +44,7 @@ def run_training():
         with open(clean_db, 'r', encoding='utf-8') as f:
             data = json.load(f)
     except FileNotFoundError:
-        print(f"Erreur : {clean_db} introuvable.")
+        logger.error(f"Erreur : {clean_db} introuvable.")
         tracker.finish(status="FAILED")
         return
     
@@ -56,11 +61,11 @@ def run_training():
                 train_examples.append(InputExample(texts=[review, title]))
 
     if len(train_examples) < 10:
-        print("Pas assez de critiques pour un fine-tuning efficace.")
+        logger.warning("Pas assez de critiques pour un fine-tuning efficace.")
         tracker.finish(status="FAILED")
         return
 
-    print(f"Nombre d'exemples d'entraînement : {len(train_examples)}")
+    logger.info(f"Nombre d'exemples d'entraînement : {len(train_examples)}")
     tracker.log_metric("num_train_examples", len(train_examples))
 
     # 3. Chargement du modèle de base
@@ -71,7 +76,7 @@ def run_training():
     train_loss = losses.MultipleNegativesRankingLoss(model=model)
 
     # 5. Entraînement
-    print(f"Entraînement en cours pour {EPOCHS} époques...")
+    logger.info(f"Entraînement en cours pour {EPOCHS} époques...")
     model.fit(
         train_objectives=[(train_dataloader, train_loss)],
         epochs=EPOCHS,
@@ -82,7 +87,7 @@ def run_training():
 
     tracker.log_artifact("final_model", OUTPUT_PATH)
     tracker.finish(status="COMPLETED")
-    print(f"✅ Modèle fine-tuné sauvegardé dans : {OUTPUT_PATH}")
+    logger.info(f"✅ Modèle fine-tuné sauvegardé dans : {OUTPUT_PATH}")
 
 if __name__ == "__main__":
     run_training()

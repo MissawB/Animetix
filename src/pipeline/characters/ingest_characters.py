@@ -3,6 +3,10 @@ import json
 import time
 import os
 import sys
+import logging
+
+# Logger
+logger = logging.getLogger("animetix." + __name__)
 
 # Force UTF-8 for Windows output
 if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
@@ -56,14 +60,14 @@ def fetch_page(page, retries=3):
                 return response.json()
             elif response.status_code == 429:
                 wait_time = (i + 1) * 30 # Attente progressive : 30s, 60s, 90s
-                print(f"⚠️ Erreur 429 (Rate Limit). Attente de {wait_time}s...")
+                logger.warning(f"⚠️ Erreur 429 (Rate Limit). Attente de {wait_time}s...")
                 time.sleep(wait_time)
                 continue
             else:
-                print(f"❌ Erreur {response.status_code} à la page {page}")
+                logger.error(f"❌ Erreur {response.status_code} à la page {page}")
                 return None
         except Exception as e:
-            print(f"❌ Exception à la page {page}: {e}")
+            logger.error(f"❌ Exception à la page {page}: {e}")
             time.sleep(5)
     return None
 
@@ -80,10 +84,10 @@ def run_ingestion():
     page = 1
     max_pages = 60
 
-    print(f"🚀 Ingestion des personnages (Déjà connus: {len(existing_characters)})...")
+    logger.info(f"🚀 Ingestion des personnages (Déjà connus: {len(existing_characters)})...")
 
     while has_next_page and page <= max_pages:
-        print(f"   - Page {page}...")
+        logger.info(f"   - Page {page}...")
         data = fetch_page(page)
         
         if data and 'data' in data and 'Page' in data['data']:
@@ -108,16 +112,16 @@ def run_ingestion():
             page += 1
             time.sleep(1) # Pause entre les pages pour respecter les limites
         else:
-            print(f"🛑 Arrêt à la page {page} due à une erreur persistante.")
+            logger.error(f"🛑 Arrêt à la page {page} due à une erreur persistante.")
             break
 
     if new_added_count > 0:
         os.makedirs(os.path.dirname(FILE_PATH), exist_ok=True)
         with open(FILE_PATH, 'w', encoding='utf-8') as f:
             json.dump(existing_characters, f, indent=2, ensure_ascii=False)
-        print(f"✅ Terminé ! {new_added_count} nouveaux personnages ajoutés (Total: {len(existing_characters)}).")
+        logger.info(f"✅ Terminé ! {new_added_count} nouveaux personnages ajoutés (Total: {len(existing_characters)}).")
     else:
-        print("✅ Terminé ! Aucun nouveau personnage à ajouter.")
+        logger.info("✅ Terminé ! Aucun nouveau personnage à ajouter.")
 
 if __name__ == "__main__":
     run_ingestion()

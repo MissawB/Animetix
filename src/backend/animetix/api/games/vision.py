@@ -1,4 +1,5 @@
 from rest_framework import permissions, status
+import logging
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from dependency_injector.wiring import inject, Provide
@@ -6,6 +7,8 @@ from ...containers import Container
 from animetix.api.dependencies import get_session_service
 from ...models import GameplaySession
 from ...forms import VisionQuestForm
+
+logger = logging.getLogger("animetix." + __name__)
 
 # --- VISION QUEST ---
 
@@ -125,8 +128,8 @@ class VisionGameGuessView(APIView):
                                     'xp_reward': ach.xp_reward,
                                     'badge_url': ach.badge_url if hasattr(ach, 'badge_url') else None
                                 })
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        logger.warning(f"Handled error: {e}")
                 GameplaySession.objects.create(
                     user=request.user if request.user.is_authenticated else None,
                     game_mode='vision',

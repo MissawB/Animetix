@@ -104,6 +104,7 @@ from adapters.inference.vllm_adapter import VllmAdapter
 from adapters.inference.local_llama_adapter import LocalLlamaAdapter
 from adapters.inference.gguf_adapter import GgufAdapter
 from adapters.inference.transformers_adapter import TransformersAdapter
+from adapters.inference.vision_transformers_adapter import VisionTransformersAdapter
 from adapters.inference.moondream_adapter import MoondreamAdapter
 from adapters.inference.diffusers_adapter import DiffusersAdapter
 from adapters.inference.xtts_adapter import XTTSAdapter
@@ -179,6 +180,11 @@ class Container(containers.DeclarativeContainer):
         use_4bit=True
     )
 
+    vision_transformers_adapter = providers.Singleton(
+        VisionTransformersAdapter,
+        use_4bit=True
+    )
+
     diffusers_adapter = providers.Singleton(
         DiffusersAdapter,
         model_id="stabilityai/sdxl-turbo",
@@ -202,6 +208,7 @@ class Container(containers.DeclarativeContainer):
         adapters=providers.List(
             unified_inference_adapter,
             transformers_adapter,
+            vision_transformers_adapter,
             gguf_adapter,
             diffusers_adapter,
             xtts_adapter,
@@ -376,7 +383,7 @@ class Container(containers.DeclarativeContainer):
 
     vision_service = providers.Singleton(
         AdvancedVisionService,
-        inference_engine=inference_engine
+        inference_engine=vision_transformers_adapter
     )
 
     graph_builder = providers.Singleton(
@@ -387,7 +394,7 @@ class Container(containers.DeclarativeContainer):
 
     vision_quest_service = providers.Singleton(
         VisionQuestDomainService,
-        inference_engine=moondream_adapter,
+        inference_engine=vision_transformers_adapter,
         vision_service=vision_service
     )
 

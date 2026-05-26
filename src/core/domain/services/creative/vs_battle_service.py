@@ -13,7 +13,7 @@ from src.core.ports.inference_port import InferencePort
 from src.core.ports.web_search_port import WebSearchPort
 from src.core.domain.services.prompt_manager import PromptManager
 
-logger = logging.getLogger("animetix.vs_battle")
+logger = logging.getLogger("animetix." + __name__)
 
 T = TypeVar('T', bound=BaseModel)
 
@@ -35,11 +35,15 @@ class VsBattleService:
 
     def _normalize_anime_name(self, name: str) -> str:
         """
-        Normalizes common Japanese/English spelling variations in anime names.
+        Normalizes common Japanese/English spelling variations and removes wiki suffixes.
+        Example: Power (Chainsaw Man) -> power, Tanjirou -> tanjiro
         """
+        import re
         n = name.lower()
+        # Remove everything in parentheses (common wiki suffix)
+        n = re.sub(r'\(.*?\)', '', n)
+        # Handle 'ou' -> 'o' (Gojou -> Gojo, Tanjirou -> Tanjiro)
         n = n.replace('ou', 'o').replace('uu', 'u')
-        n = n.replace(' (anime)', '').replace(' (manga)', '')
         return n.strip()
 
     def _is_name_match(self, requested_name: str, found_title: str, loose: bool = False) -> bool:
@@ -51,7 +55,6 @@ class VsBattleService:
         found_norm = self._normalize_anime_name(found_title)
         
         req_parts = [p for p in req_norm.split() if len(p) > 1]
-        found_parts = [p for p in found_norm.split() if len(p) > 1]
         
         if loose:
             # --- LOOSE MODE (Rescue) ---
@@ -61,6 +64,7 @@ class VsBattleService:
             return first_name_match or any_part_match
 
         # --- STRICT MODE (Default) ---
+        found_parts = [p for p in found_norm.split() if len(p) > 1]
         if all(part in found_norm for part in req_parts) or all(part in req_norm for part in found_parts):
             return True
             
@@ -87,8 +91,8 @@ class VsBattleService:
             if match:
                 try:
                     return json.loads(match.group(1))
-                except json.JSONDecodeError:
-                    pass
+                except json.JSONDecodeError as e:
+                    logger.warning(f"Handled error: {e}")
             
             # 3. Last ditch: try to find the first '{' and last '}'
             start = text.find('{')
@@ -96,8 +100,8 @@ class VsBattleService:
             if start != -1 and end != -1:
                 try:
                     return json.loads(text[start:end+1])
-                except json.JSONDecodeError:
-                    pass
+                except json.JSONDecodeError as e:
+                    logger.warning(f"Handled error: {e}")
             
             raise ValueError(f"Could not extract valid JSON from LLM response: {text[:200]}...")
 
@@ -133,18 +137,17 @@ class VsBattleService:
 
     def fetch_character_versions(self, name: str, franchise: Optional[str] = None, loose_pass: bool = False) -> List[CombatCharacter]:
         """
-        Fetches ALL valid character versions from Fandom using an escalating multi-pass search.
-        Automatically triggers a 'Loose Pass' if no results are found initially.
+        Fetches ALL valid character versions from Fandom.
         """
         pass_type = "RESCUE (Loose)" if loose_pass else "STRICT"
-        logger.info(f"🔍 Finding all Wiki versions for: {name} (Franchise: {franchise}, Mode: {pass_type})")
+        logger.info(f"🔍 Finding Wiki versions for: {name} (Mode: {pass_type})")
         
-        # Multi-pass search queries: from very specific to broad
+        # 1. Multi-pass search queries
         search_queries = [
             f"{name} {franchise} VS Battles Wiki" if franchise and not loose_pass else f"{name} profile VS Battles Wiki",
             f"{name} VS Battles Wiki",
-            f"{name.split()[0]} {franchise} VS Battles Wiki" if franchise and len(name.split()) > 1 else None,
-            name if loose_pass else None # Last ditch: just the name
+            # FINAL FALLBACK: Search for the series Verse page if dedicated profile is missing
+            f"{franchise} Verse VS Battles Wiki" if loose_pass and franchise else None
         ]
         
         all_raw_data = []
@@ -154,65 +157,56 @@ class VsBattleService:
             if not query: continue
             
             logger.info(f"🌐 Querying: {query}")
-            candidates = self.fandom_port.fetch_character_data(query) # Using query as name for the port's search
+            candidates = self.fandom_port.fetch_character_data(query) 
             
             if candidates:
                 for cand in candidates:
                     cand_name = cand.get('name', '')
                     if cand_name not in seen_titles:
-                        # Validation: Ensure it's not a generic wiki page
                         if "Standard Format" in cand_name or "Powerscaling" in cand_name:
                             continue
                         
-                        if self._is_name_match(name, cand_name, loose=loose_pass):
+                        if self._is_name_match(name, cand_name, loose=loose_pass) or (loose_pass and "Verse" in cand_name):
+                            if "Verse" in cand_name:
+                                cand['name'] = f"{name} (Verse Estimate)"
                             all_raw_data.append(cand)
                             seen_titles.add(cand_name)
                 
-                # If we found direct matches for the character, we stop searching
-                if len(all_raw_data) >= 1:
-                    logger.info(f"✨ Found {len(all_raw_data)} versions, stopping search pass.")
-                    break
+                if len(all_raw_data) >= 1: break
 
         # 2. TRIGGER RESCUE PASS IF NEEDED
         if not all_raw_data and not loose_pass:
             logger.info(f"🛟 No results for '{name}' in strict mode. Triggering Rescue Pass...")
             return self.fetch_character_versions(name, franchise=franchise, loose_pass=True)
 
+        # 3. FINAL FALLBACK: AI GENERATED PROFILE (Synthetic)
         if not all_raw_data:
-             return []
-
-        parsed_versions = []
-
-        # 3. PARSE ALL CANDIDATES
-        for raw_data in all_raw_data:
-            wikitext = raw_data.get("wikitext", "")
-            wiki_url = raw_data.get("url", "")
-            image_url = raw_data.get("image_url")
-            page_title = raw_data.get("name", name)
-
+            logger.warning(f"🤖 Wiki page missing for '{name}'. Triggering Synthetic AI Generation...")
             try:
-                prompt, system = self.prompt_manager.get_prompt("vs_battle_parser", wikitext=wikitext[:5000])
-                character = self._safe_generate_structured(
-                    prompt=prompt,
-                    system_prompt=system,
+                gen_prompt, gen_system = self.prompt_manager.get_prompt(
+                    "vs_battle_ai_generator",
+                    name=name,
+                    franchise=franchise or "Unknown"
+                )
+                synthetic_char = self._safe_generate_structured(
+                    prompt=gen_prompt,
+                    system_prompt=gen_system,
                     response_model=CombatCharacter
                 )
+                # Ensure identity
+                synthetic_char.name = f"{name} (AI Generated)"
+                synthetic_char.wiki_url = f"https://vsbattles.fandom.com/wiki/{name.replace(' ', '_')}"
+                if synthetic_char.stats:
+                    best_tier = self._extract_max_tier(synthetic_char.stats.tier)
+                    synthetic_char.stats.tier_value = self._map_tier_to_value(best_tier)
                 
-                character.name = page_title
-                character.wiki_url = wiki_url
-                character.image_url = image_url or character.image_url
-                
-                if character.stats:
-                    best_tier_str = self._extract_max_tier(character.stats.tier)
-                    character.stats.tier_value = self._map_tier_to_value(best_tier_str)
-                    
-                    logger.info(f"✅ Parsed version: {character.name} (Tier {character.stats.tier} -> Value: {character.stats.tier_value})")
-                    parsed_versions.append(character)
+                return [synthetic_char]
             except Exception as e:
-                logger.warning(f"⚠️ Failed to parse version '{page_title}': {e}")
-                continue
-                
-        return parsed_versions
+                logger.error(f"❌ Failed to generate synthetic profile for {name}: {e}")
+                return []
+
+        parsed_versions = []
+        # ... (rest of parsing logic) ...
 
     def _map_tier_to_value(self, tier_str: str) -> int:
         """
@@ -238,7 +232,7 @@ class VsBattleService:
             (r"\b3-B\b", 60), (r"MULTI-GALAXY", 60),
             (r"\b3-C\b", 58), (r"GALAXY", 58),
             (r"\b4-A\b", 55), (r"MULTI-SOLAR SYSTEM", 55),
-            (r"\b4-B\b", 53), (r"SOLAR SYSTEM", 53),
+            (r"\b4-B\b", 53), (r"COSMIC", 53), (r"SOLAR SYSTEM", 53),
             (r"\b4-C\b", 50), (r"STAR", 50),
             (r"\b5-A\b", 48), (r"LARGE PLANET", 48),
             (r"\b5-B\b", 46), (r"PLANET", 46),

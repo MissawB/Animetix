@@ -11,9 +11,9 @@ export const animationTokens = {
     slow: 0.6,
   },
   easing: {
-    base: [0.4, 0, 0.2, 1], // standard ease
-    spring: [0.175, 0.885, 0.32, 1.275], // easeOutBack (rebond doux)
-    gentle: [0, 0, 0.2, 1],
+    base: [0.4, 0, 0.2, 1] as [number, number, number, number], // standard ease
+    spring: [0.175, 0.885, 0.32, 1.275] as [number, number, number, number], // easeOutBack (rebond doux)
+    gentle: [0, 0, 0.2, 1] as [number, number, number, number],
   },
 };
 

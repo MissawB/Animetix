@@ -41,6 +41,8 @@ pytest.importorskip("scipy")
 from adapters.inference.transformers_adapter import TransformersAdapter
 from adapters.inference.diffusers_adapter import DiffusersAdapter
 from adapters.inference.xtts_adapter import XTTSAdapter
+from adapters.inference.vision_transformers_adapter import VisionTransformersAdapter
+from adapters.inference.fallback_adapter import FallbackInferenceAdapter
 from core.domain.exceptions import InferenceError
 
 @pytest.fixture
@@ -55,6 +57,14 @@ def diffusers_adapter():
 def xtts_adapter():
     return XTTSAdapter()
 
+@pytest.fixture
+def vision_adapter():
+    return VisionTransformersAdapter(use_4bit=False)
+
+@pytest.fixture
+def fallback_adapter(transformers_adapter, vision_adapter):
+    return FallbackInferenceAdapter(adapters=[transformers_adapter, vision_adapter])
+
 def test_inference_error_on_failure(transformers_adapter):
     """Vérifie que l'adaptateur lève une InferenceError en cas de pépin."""
     with patch.object(transformers_adapter, "_load_model", side_effect=Exception("GPU OOM")):
@@ -62,8 +72,12 @@ def test_inference_error_on_failure(transformers_adapter):
             transformers_adapter.generate("Hello")
         assert "Critical failure during model loading: GPU OOM" in str(excinfo.value)
 
-def test_generate_3d_scene_logic(diffusers_adapter):
-    """Vérifie la logique de projection RGB-D en PLY."""
+def test_generate_3d_scene_logic():
+    """Vérifie la logique de projection RGB-D en PLY transférée dans SpatialComputingService."""
+    from core.domain.services.spatial_computing_service import SpatialComputingService
+    mock_engine = MagicMock()
+    service = SpatialComputingService(inference_engine=mock_engine)
+    
     img = Image.new('RGB', (2, 2))
     img_byte_arr = io.BytesIO()
     img.save(img_byte_arr, format='PNG')
@@ -74,7 +88,7 @@ def test_generate_3d_scene_logic(diffusers_adapter):
     depth.save(depth_byte_arr, format='PNG')
     dummy_depth = depth_byte_arr.getvalue()
     
-    res = diffusers_adapter.generate_3d_scene(dummy_rgb, dummy_depth)
+    res = service.generate_3d_scene(dummy_rgb, dummy_depth)
     
     assert res["status"] == "success"
     assert "data:application/octet-stream;base64," in res["model_url"]
@@ -144,3 +158,60 @@ def test_generate_soundscape_failure(xtts_adapter):
     with patch("scipy.io.wavfile.write", side_effect=ImportError("No scipy")):
         res = xtts_adapter.generate_soundscape({"scene": "forest"}, prompt="forest sounds")
         assert res == ""
+
+def test_vision_depth_estimation_mocked(vision_adapter):
+    """Vérifie l'estimation de profondeur avec un pipeline mocké."""
+    mock_pipeline = MagicMock()
+    dummy_depth = Image.new('L', (10, 10), color=128)
+    mock_pipeline.return_value = {"depth": dummy_depth}
+    
+    img = Image.new('RGB', (10, 10))
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    valid_image_data = buf.getvalue()
+    
+    with patch("adapters.inference.vision_transformers_adapter.pipeline", return_value=mock_pipeline):
+        res = vision_adapter.estimate_depth(valid_image_data)
+        
+    assert isinstance(res, bytes)
+    assert len(res) > 0
+
+def test_vision_manga_ocr_mocked(vision_adapter):
+    """Vérifie l'OCR manga avec un pipeline mocké."""
+    mock_pipeline = MagicMock()
+    mock_pipeline.return_value = [{"generated_text": "Sugoi!"}]
+    
+    img = Image.new('RGB', (10, 10))
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    valid_image_data = buf.getvalue()
+    
+    with patch("adapters.inference.vision_transformers_adapter.pipeline", return_value=mock_pipeline):
+        res = vision_adapter.process_manga_page(valid_image_data)
+        
+    assert res["status"] == "success"
+    assert res["text"] == "Sugoi!"
+    assert len(res["layout"]) > 0
+
+def test_vision_3d_scene_mocked(vision_adapter):
+    """Vérifie la structure de retour de la génération de scène 3D."""
+    res = vision_adapter.generate_3d_scene(b"rgb_data", b"depth_data")
+    assert res["status"] == "success"
+    assert "model_url" in res
+    assert res["metadata"]["original_size"] == len(b"rgb_data")
+
+def test_fallback_rerank_documents_chain():
+    """Vérifie que FallbackInferenceAdapter essaie plusieurs adaptateurs pour le reranking."""
+    mock_fail = MagicMock()
+    mock_fail.rerank_documents.side_effect = Exception("Service Down")
+    
+    mock_success = MagicMock()
+    mock_success.rerank_documents.return_value = [0.9, 0.1]
+    
+    fallback = FallbackInferenceAdapter(adapters=[mock_fail, mock_success])
+    
+    scores = fallback.rerank_documents("query", ["doc1", "doc2"])
+    
+    assert scores == [0.9, 0.1]
+    assert mock_fail.rerank_documents.called
+    assert mock_success.rerank_documents.called

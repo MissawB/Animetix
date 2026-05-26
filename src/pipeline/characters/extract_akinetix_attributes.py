@@ -2,8 +2,11 @@ import json
 import re
 import os
 import requests
+import logging
 from tqdm import tqdm
 from dotenv import load_dotenv
+
+logger = logging.getLogger("animetix." + __name__)
 
 # Détection robuste de la racine du projet
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -57,11 +60,11 @@ def extract_binary_attributes(name, description, metadata):
             if match:
                 return json.loads(match.group(0)).get("attributes", {})
             else:
-                print(f"⚠️ No JSON found in response for {name}: {text[:100]}...")
+                logger.warning(f"⚠️ No JSON found in response for {name}: {text[:100]}...")
         else:
-            print(f"❌ API Error {response.status_code} for {name}: {response.text[:100]}...")
+            logger.error(f"❌ API Error {response.status_code} for {name}: {response.text[:100]}...")
     except Exception as e:
-        print(f"⚠️ Error for {name}: {e}")
+        logger.warning(f"⚠️ Error for {name}: {e}")
     return None
 
 def simulate_binary_attributes(name, description):
@@ -83,7 +86,7 @@ def simulate_binary_attributes(name, description):
 
 def run_extraction():
     if not os.path.exists(INPUT_FILE):
-        print(f"❌ {INPUT_FILE} introuvable.")
+        logger.error(f"❌ {INPUT_FILE} introuvable.")
         return
 
     with open(INPUT_FILE, 'r', encoding='utf-8') as f:
@@ -96,21 +99,21 @@ def run_extraction():
             with open(OUTPUT_FILE, 'r', encoding='utf-8') as f:
                 attr_db = json.load(f)
         except Exception as e:
-            print(f"⚠️ Erreur lors du chargement de {OUTPUT_FILE}: {e}")
+            logger.warning(f"⚠️ Erreur lors du chargement de {OUTPUT_FILE}: {e}")
             pass
 
     # Filtrer les personnages qui ont déjà des attributs
     chars_to_process = [c for c in db if str(c['id']) not in attr_db]
     
     if not chars_to_process:
-        print("ℹ️ Tous les personnages ont déjà leurs attributs Akinetix.")
+        logger.info("ℹ️ Tous les personnages ont déjà leurs attributs Akinetix.")
         return
 
     # On traite une partie pour le test
     limit = 500
     chars_to_process = chars_to_process[:limit]
 
-    print(f"🧠 Simulation/Extraction des attributs pour {len(chars_to_process)} personnages...")
+    logger.info(f"🧠 Simulation/Extraction des attributs pour {len(chars_to_process)} personnages...")
     
     success_count = 0
     for c in tqdm(chars_to_process):
@@ -132,7 +135,7 @@ def run_extraction():
     with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
         json.dump(attr_db, f, indent=2, ensure_ascii=False)
         
-    print(f"✅ Terminé ! {success_count} personnages mappés. Total dans la DB: {len(attr_db)}.")
+    logger.info(f"✅ Terminé ! {success_count} personnages mappés. Total dans la DB: {len(attr_db)}.")
 
 if __name__ == "__main__":
     run_extraction()

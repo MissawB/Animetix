@@ -72,7 +72,7 @@ const ClassicGamePage: React.FC = () => {
                       <History className="w-4 h-4" /> Historique des tentatives
                   </h3>
                   <div className="space-y-4">
-                      {gameState.guesses.map((g: any, i: number) => (
+                      {gameState.guesses.map((g: { title: string; is_correct: boolean }, i: number) => (
                           <div key={i} className={`p-4 rounded-2xl flex items-center justify-between transition-all ${g.is_correct ? 'bg-green-500 text-white shadow-green-500/20' : 'bg-gray-50 dark:bg-navy-900 border border-gray-100 dark:border-white/5'}`}>
                               <span className="font-bold">{g.title}</span>
                               <Badge variant={g.is_correct ? 'success' : 'danger'}>

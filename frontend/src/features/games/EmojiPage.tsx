@@ -8,10 +8,15 @@ import { Badge } from '../../components/ui/Badge';
 import { CardSkeleton } from '../../components/ui/Skeleton';
 
 import { useTranslation } from 'react-i18next';
+import { EmojiState } from '../../../types';
 
 const EmojiPage: React.FC = () => {
   const { t } = useTranslation();
-  const { gameState, loading, handleGuess } = useEmoji();
+  const { gameState, loading, handleGuess } = useEmoji() as unknown as {
+    gameState: EmojiState | undefined;
+    loading: boolean;
+    handleGuess: (arg: { guess: string }) => Promise<void>;
+  };
   const [guess, setGuess] = useState<string>('');
 
   const onSubmit = async () => {
@@ -69,7 +74,7 @@ const EmojiPage: React.FC = () => {
 
         <div className="max-w-2xl mx-auto space-y-4 mt-12">
           <h4 className="text-[10px] font-black uppercase opacity-30 tracking-[0.3em] mb-6">Tes tentatives</h4>
-          {gameState.guesses.map((g: any, i: number) => (
+          {gameState.guesses.map((g: { title: string; title_en?: string; image: string; is_correct: boolean }, i: number) => (
             <Card key={i} padding="sm" className="flex items-center transition-all hover:scale-[1.02]">
               <img src={g.image} className="w-14 h-20 object-cover rounded-2xl shadow-md border-2 border-surface-text/10" alt="" />
               <div className="flex-grow text-left ml-6">

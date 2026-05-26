@@ -7,7 +7,7 @@ import base64
 from typing import Optional, List, Dict, Any
 from core.ports.inference_port import InferencePort
 
-logger = logging.getLogger("animetix.inference.unified")
+logger = logging.getLogger("animetix." + __name__)
 
 class UnifiedInferenceAdapter(InferencePort):
     """
@@ -204,7 +204,8 @@ class UnifiedInferenceAdapter(InferencePort):
                             delta = chunk['choices'][0].get('delta', {})
                             if 'content' in delta:
                                 yield delta['content']
-                        except Exception:
+                        except Exception as e:
+                            logger.warning(f"Error parsing stream chunk: {e}")
                             continue
         except Exception as e:
             logger.error(f"Unified Stream Error: {e}")
@@ -324,15 +325,15 @@ class UnifiedInferenceAdapter(InferencePort):
             res = requests.get(f"{self.api_base.replace('/v1', '')}/api/tags", timeout=5)
             if res.status_code == 200:
                 return {"status": "online", "engine": "Ollama/Unified", "models": res.json().get("models", [])}
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Ollama health check failed: {e}")
 
         try:
             res = requests.get(f"{self.api_base}/models", headers=self._get_headers(), timeout=5)
             if res.status_code == 200:
                 return {"status": "online", "engine": "OpenAI-Compatible/Unified"}
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"OpenAI-compatible health check failed: {e}")
 
         return {"status": "offline", "engine": "Unified"}
 

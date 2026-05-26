@@ -6,7 +6,7 @@ import sys
 import logging
 
 # Setup logging
-logger = logging.getLogger('animetix')
+logger = logging.getLogger("animetix." + __name__)
 
 # Force UTF-8 for Windows output
 if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):

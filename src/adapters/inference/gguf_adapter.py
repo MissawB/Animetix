@@ -4,7 +4,7 @@ from typing import Optional, List, Dict, Any
 from core.ports.inference_port import InferencePort, InferenceNotImplementedError
 from sentence_transformers import CrossEncoder
 
-logger = logging.getLogger("animetix.inference.gguf")
+logger = logging.getLogger("animetix." + __name__)
 
 class GgufAdapter(InferencePort):
     def __init__(self, model_path: str, clip_model_path: Optional[str] = None):
@@ -124,8 +124,8 @@ class GgufAdapter(InferencePort):
                 # Si le modèle supporte les embeddings nativement
                 emb = self.llm.create_embedding(text)
                 return emb['data'][0]['embedding']
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Native GGUF embedding failed, falling back to SentenceTransformer: {e}")
         
         # Fallback local
         from sentence_transformers import SentenceTransformer

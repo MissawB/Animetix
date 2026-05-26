@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Moon, Sun, Bot, Award } from 'lucide-react';
+import { Save, Moon, Sun, Bot, Award, Sparkles } from 'lucide-react';
 import { useCustomConfig } from './hooks/useCustomConfig';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';

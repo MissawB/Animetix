@@ -1,4 +1,5 @@
 import random
+import logging
 from celery.result import AsyncResult
 from rest_framework import permissions, status
 from rest_framework.response import Response
@@ -7,6 +8,8 @@ from dependency_injector.wiring import inject, Provide
 from ...containers import Container
 from animetix.api.dependencies import get_session_service
 from ...models import CreativeFusion
+
+logger = logging.getLogger("animetix." + __name__)
 
 # --- ARCHETYPIST / CREATIVE FUSION ---
 
@@ -52,8 +55,8 @@ class ArchetypistStartFusionView(APIView):
         if parent_id:
             try:
                 parent_fusion = CreativeFusion.objects.get(id=parent_id)
-            except (CreativeFusion.DoesNotExist, ValueError):
-                pass
+            except (CreativeFusion.DoesNotExist, ValueError) as e:
+                logger.warning(f"Handled error in ArchetypistStartFusionView: {e}")
                 
         fusion = CreativeFusion.objects.create(
             title_a=t1, title_b=t2, media_type_a=media_A, media_type_b=media_B,
