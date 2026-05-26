@@ -8,14 +8,15 @@ from ...ports.usage_port import UsagePort
 from ..exceptions import InferenceError, ParsingError
 from .prompt_manager import PromptManager
 
-logger = logging.getLogger('animetix')
+logger = logging.getLogger("animetix." + __name__)
 
 # --- OPENTELEMETRY TRACING ---
 try:
     from opentelemetry import trace
     from opentelemetry.trace import Status, StatusCode
     tracer = trace.get_tracer("animetix.llm_service")
-except ImportError:
+except ImportError as e:
+    logger.warning(f"Handled error: {e}")
     tracer = None
 
 class LLMService:
@@ -35,13 +36,13 @@ class LLMService:
 
     def generate(self, prompt: str, system_prompt: str = "", forbidden_terms: list = None, use_slm: bool = False, thinking_budget: int = 0, thinking_mode: bool = False, user_id: int = None, tier: str = 'free') -> str:
         # --- QUOTA CHECK ---
-        if not user_id:
-            try:
-                from animetix.middleware import get_current_user_id, get_current_user_tier
-                user_id = get_current_user_id()
-                tier = get_current_user_tier()
-            except ImportError:
-                pass
+        try:
+            from animetix.middleware import get_current_user_id, get_current_user_tier
+            user_id = get_current_user_id()
+            tier = get_current_user_tier()
+        except ImportError as e:
+            logger.warning(f"Handled error: {e}")
+            pass
 
         if user_id and self.usage_port:
             if not self.usage_port.check_quota(user_id, tier):
@@ -197,8 +198,12 @@ class LLMService:
         return self.generate(prompt)
 
     def generate_undercover_clue(self, media_type: str, item_a: str, item_b: str) -> str:
-        prompt = self.prompt_manager.get_prompt("undercover_clue", media_type=media_type, item_a=item_a, item_b=item_b)
-        return self.generate(prompt, forbidden_terms=[item_a, item_b])
+        prompt, system = self.prompt_manager.get_prompt("undercover_clue", media_type=media_type, item_a=item_a, item_b=item_b)
+        return self.generate(prompt, system_prompt=system, forbidden_terms=[item_a, item_b])
+
+    def explain_relationship(self, source_name: str, target_name: str, rel_type: str) -> str:
+        prompt, system = self.prompt_manager.get_prompt("explain_link", source_name=source_name, target_name=target_name, rel_type=rel_type)
+        return self.generate(prompt, system_prompt=system)
 
     def get_status(self) -> dict:
         return self.inference_engine.health_check()
