@@ -25,7 +25,7 @@ export const paradoxMachine = setup({
       }
     }),
     submitGuess: fromPromise(async ({ input }: { input: { itemId: number } }) => {
-      return await paradoxService.submit({ guess: input.itemId });
+      return await paradoxService.submit({ intruder_id: input.itemId });
     })
   }
 }).createMachine({

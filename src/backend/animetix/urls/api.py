@@ -35,6 +35,7 @@ urlpatterns = [
     # --- ARCHETYPIST (LA FORGE) ---
     path('archetypist/start/', api_views.ArchetypistStartFusionView.as_view(), name='api_archetypist_start'),
     path('archetypist/status/', api_views.ArchetypistTaskStatusView.as_view(), name='api_archetypist_status'),
+    path('archetypist/vn/<int:fusion_id>/', api_views.ForgeVNView.as_view(), name='api_forge_vn'),
     
     # ... autres endpoints API
     path('game/classic/state/', api_views.ClassicGameStateView.as_view(), name='api_classic_state'),

@@ -24,9 +24,11 @@ class CrossModalSearchService:
 
         text_vec = []
         if text_query:
-            # On utilise le CLIP text encoder (simulé ici par un appel spécifique)
-            # Normalement on appellerait self.inference_engine.get_text_embedding(...)
-            text_vec = np.random.rand(512) # Mock
+            try:
+                text_vec = self.inference_engine.get_text_embedding(text_query)
+            except Exception as e:
+                logger.warning(f"⚠️ Failed to get real text embedding: {e}. Falling back to mock vector.")
+                text_vec = np.random.rand(512).tolist()
             
         image_vec = []
         if image_data:

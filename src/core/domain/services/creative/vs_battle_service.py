@@ -13,7 +13,7 @@ from src.core.ports.inference_port import InferencePort
 from src.core.ports.web_search_port import WebSearchPort
 from src.core.domain.services.prompt_manager import PromptManager
 
-logger = logging.getLogger("animetix." + __name__)
+logger = logging.getLogger("animetix.vs_battle")
 
 T = TypeVar('T', bound=BaseModel)
 
@@ -46,63 +46,108 @@ class VsBattleService:
         n = n.replace('ou', 'o').replace('uu', 'u')
         return n.strip()
 
-    def _is_name_match(self, requested_name: str, found_title: str, loose: bool = False) -> bool:
+    def _is_franchise_match(self, franchise: str, categories: List[str], found_title: str) -> bool:
+        """
+        Validates if the found wiki page belongs to the requested franchise.
+        """
+        if not franchise:
+            return True
+            
+        f_norm = franchise.lower()
+        title_norm = found_title.lower()
+        
+        # 1. Check title (e.g. 'Power (Chainsaw Man)')
+        if f_norm in title_norm:
+            return True
+            
+        # 2. Check categories (e.g. 'Category:Chainsaw Man Characters')
+        for cat in categories:
+            cat_norm = cat.lower()
+            if f_norm in cat_norm:
+                return True
+                
+        return False
+
+    def _is_name_match(self, requested_name: str, found_title: str, loose: bool = False, franchise_matched: bool = False) -> bool:
         """
         Determines if a found wiki title belongs to the requested character.
-        Strict by default, flexible in 'loose' mode.
+        If franchise is already matched, name validation is significantly loosened.
         """
         req_norm = self._normalize_anime_name(requested_name)
         found_norm = self._normalize_anime_name(found_title)
         
         req_parts = [p for p in req_norm.split() if len(p) > 1]
-        
-        if loose:
-            # --- LOOSE MODE (Rescue) ---
-            if not req_parts: return True
-            first_name_match = req_parts[0] in found_norm
-            any_part_match = any(part in found_norm for part in req_parts)
-            return first_name_match or any_part_match
-
-        # --- STRICT MODE (Default) ---
         found_parts = [p for p in found_norm.split() if len(p) > 1]
-        if all(part in found_norm for part in req_parts) or all(part in req_norm for part in found_parts):
-            return True
-            
-        if req_parts and found_parts:
-            similarity = difflib.SequenceMatcher(None, req_parts[0], found_parts[0]).ratio()
-            if similarity > 0.8: return True
-                
-        if len(req_parts) >= 2 and len(found_parts) >= 2:
-            if req_parts[0] in found_parts and req_parts[-1] in found_parts:
+        
+        if not req_parts or not found_parts:
+            # Fallback for very short names
+            return req_norm in found_norm or found_norm in req_norm
+
+        # --- FRANCHISE-BOOSTED MATCH ---
+        if franchise_matched:
+            # If franchise matches, we only need the first name to match
+            if req_parts[0] in found_norm or found_parts[0] in req_norm:
                 return True
 
+        # --- LAST NAME CONFLICT CHECK ---
+        if len(req_parts) > 1 and len(found_parts) > 1:
+            req_last = req_parts[-1]
+            found_last = found_parts[-1]
+            if req_last not in found_norm and found_last not in req_norm:
+                similarity = difflib.SequenceMatcher(None, req_last, found_last).ratio()
+                if similarity < 0.7:
+                    logger.warning(f"❌ Name conflict: '{requested_name}' vs '{found_title}' (Last name mismatch)")
+                    return False
+
+        if loose:
+            return req_parts[0] in found_norm or any(p in found_norm for p in req_parts)
+
+        # --- STRICT MODE ---
+        if all(part in found_norm for part in req_parts):
+            return True
+            
+        similarity = difflib.SequenceMatcher(None, req_parts[0], found_parts[0]).ratio()
+        if similarity > 0.85:
+            return True
+                
         return False
+
+    def _recover_image(self, character_name: str, franchise: Optional[str]) -> Optional[str]:
+        """
+        Uses WebSearchPort to find an image URL if one is missing from the wiki.
+        """
+        if not self.web_search_port:
+            return None
+        
+        logger.info(f"🖼️ [Image Recovery] Searching image for: {character_name}")
+        try:
+            query = f"{character_name} {franchise or ''} official portrait anime"
+            results = self.web_search_port.search(query)
+            for res in results[:5]:
+                url = res.get('url', '')
+                if any(ext in url.lower() for ext in ['.jpg', '.png', '.webp', '.jpeg']):
+                    return url
+            return None
+        except Exception as e:
+            logger.warning(f"⚠️ Image recovery failed: {e}")
+            return None
 
     def _extract_json(self, text: str) -> Dict[str, Any]:
         """
         Robustly extracts JSON from LLM output, handling markdown code blocks and garbage.
         """
         try:
-            # 1. Try direct parse
             return json.loads(text.strip())
         except json.JSONDecodeError:
-            # 2. Try extraction from markdown block
             match = _regex_module.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, _regex_module.DOTALL | _regex_module.IGNORECASE)
             if match:
-                try:
-                    return json.loads(match.group(1))
-                except json.JSONDecodeError as e:
-                    logger.warning(f"Handled error: {e}")
-            
-            # 3. Last ditch: try to find the first '{' and last '}'
+                try: return json.loads(match.group(1))
+                except json.JSONDecodeError: pass
             start = text.find('{')
             end = text.rfind('}')
             if start != -1 and end != -1:
-                try:
-                    return json.loads(text[start:end+1])
-                except json.JSONDecodeError as e:
-                    logger.warning(f"Handled error: {e}")
-            
+                try: return json.loads(text[start:end+1])
+                except json.JSONDecodeError: pass
             raise ValueError(f"Could not extract valid JSON from LLM response: {text[:200]}...")
 
     def _safe_generate_structured(self, prompt: str, system_prompt: str, response_model: Type[T]) -> T:
@@ -118,7 +163,6 @@ class VsBattleService:
             )
         except Exception as e:
             logger.warning(f"Structured generation failed ({e}), falling back to manual parsing.")
-            # Ensure the prompt asks for JSON (already true in our updated prompts)
             raw_response = self.inference_engine.generate(prompt, system_prompt=system_prompt)
             json_data = self._extract_json(raw_response)
             return response_model.model_validate(json_data)
@@ -131,20 +175,20 @@ class VsBattleService:
         versions = self.fetch_character_versions(name, franchise=franchise)
         if not versions:
             raise ValueError(f"Could not successfully parse any valid profile for '{name}'")
-            
-        # Return the one with highest tier_value
         return max(versions, key=lambda c: c.stats.tier_value if c.stats else -1)
 
     def fetch_character_versions(self, name: str, franchise: Optional[str] = None, loose_pass: bool = False) -> List[CombatCharacter]:
         """
-        Fetches ALL valid character versions from Fandom.
+        Fetches ALL valid character versions from Fandom using an escalating multi-pass search.
+        Includes a final fallback to 'Verse' pages and Synthetic AI generation.
         """
         pass_type = "RESCUE (Loose)" if loose_pass else "STRICT"
-        logger.info(f"🔍 Finding Wiki versions for: {name} (Mode: {pass_type})")
+        logger.info(f"🔍 Finding Wiki versions for: {name} (Franchise: {franchise}, Mode: {pass_type})")
         
-        # 1. Multi-pass search queries
         search_queries = [
             f"{name} {franchise} VS Battles Wiki" if franchise and not loose_pass else f"{name} profile VS Battles Wiki",
+            # Handle cases like Thorfinn Karlsefni -> Thorfinn
+            f"{name.split()[0]} {franchise} VS Battles Wiki" if franchise and len(name.split()) > 1 else None,
             f"{name} VS Battles Wiki",
             # FINAL FALLBACK: Search for the series Verse page if dedicated profile is missing
             f"{franchise} Verse VS Battles Wiki" if loose_pass and franchise else None
@@ -166,7 +210,11 @@ class VsBattleService:
                         if "Standard Format" in cand_name or "Powerscaling" in cand_name:
                             continue
                         
-                        if self._is_name_match(name, cand_name, loose=loose_pass) or (loose_pass and "Verse" in cand_name):
+                        # FRANCHISE VALIDATION
+                        is_franchise_ok = self._is_franchise_match(franchise, cand.get('categories', []), cand_name)
+                        
+                        # Match identity OR allow Verse page in loose mode
+                        if self._is_name_match(name, cand_name, loose=loose_pass, franchise_matched=is_franchise_ok) or (loose_pass and "Verse" in cand_name):
                             if "Verse" in cand_name:
                                 cand['name'] = f"{name} (Verse Estimate)"
                             all_raw_data.append(cand)
@@ -195,7 +243,12 @@ class VsBattleService:
                 )
                 # Ensure identity
                 synthetic_char.name = f"{name} (AI Generated)"
+                synthetic_char.franchise = franchise
                 synthetic_char.wiki_url = f"https://vsbattles.fandom.com/wiki/{name.replace(' ', '_')}"
+                
+                # RECOVER IMAGE for synthetic characters
+                synthetic_char.image_url = self._recover_image(name, franchise)
+                
                 if synthetic_char.stats:
                     best_tier = self._extract_max_tier(synthetic_char.stats.tier)
                     synthetic_char.stats.tier_value = self._map_tier_to_value(best_tier)
@@ -206,6 +259,8 @@ class VsBattleService:
                 return []
 
         parsed_versions = []
+
+        # 4. PARSE ALL CANDIDATES
         for raw_data in all_raw_data:
             wikitext = raw_data.get("wikitext", "")
             wiki_url = raw_data.get("url", "")
@@ -221,8 +276,13 @@ class VsBattleService:
                 )
                 
                 character.name = page_title
+                character.franchise = franchise
                 character.wiki_url = wiki_url
                 character.image_url = image_url or character.image_url
+                
+                # RECOVER IMAGE if wiki didn't provide one
+                if not character.image_url:
+                    character.image_url = self._recover_image(page_title, franchise)
                 
                 if character.stats:
                     best_tier_str = self._extract_max_tier(character.stats.tier)
@@ -235,7 +295,6 @@ class VsBattleService:
                 continue
                 
         return parsed_versions
-
 
     def _map_tier_to_value(self, tier_str: str) -> int:
         """

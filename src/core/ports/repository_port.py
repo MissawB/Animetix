@@ -66,3 +66,8 @@ class RepositoryPort(ABC):
     def sync_latent_space(self, media_type: str, vibe_type: str, data: List[Dict]) -> int:
         """Synchronise les données de l'espace latent vers le stockage robuste."""
         pass
+
+    @abstractmethod
+    def get_creative_fusion(self, fusion_id: int) -> Optional[Dict]:
+        """Récupère une fusion créative par son ID."""
+        pass

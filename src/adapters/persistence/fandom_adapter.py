@@ -18,7 +18,10 @@ class FandomAdapter(FandomPort):
         """
         Uses a robust search-then-fetch strategy to retrieve all character variations.
         """
-        query = f"{character_name} {franchise} VS Battles Wiki" if franchise else f"{character_name} profile VS Battles Wiki"
+        # Clean input: remove redundant suffixes if already present (from service calls)
+        clean_name = character_name.replace(" profile VS Battles Wiki", "").replace(" VS Battles Wiki", "").strip()
+        
+        query = f"{clean_name} {franchise} VS Battles Wiki" if franchise else f"{clean_name} profile VS Battles Wiki"
         logger.info(f"🔍 [Fandom] Searching for: {query}")
 
         # 1. Search for all relevant pages
@@ -45,13 +48,14 @@ class FandomAdapter(FandomPort):
                 page_title = result["title"]
                 logger.info(f"🎯 [Fandom] Found candidate: {page_title}")
                 
-                # 2. Fetch page content and images for each
+                # 2. Fetch page content, images and categories
                 fetch_params = {
                     "action": "query",
                     "titles": page_title,
-                    "prop": "pageimages|revisions",
+                    "prop": "pageimages|revisions|categories",
                     "piprop": "original",
                     "rvprop": "content",
+                    "cllimit": 50,
                     "format": "json",
                     "formatversion": 2
                 }
@@ -63,11 +67,14 @@ class FandomAdapter(FandomPort):
                 pages = data.get("query", {}).get("pages", [])
                 if pages:
                     page = pages[0]
+                    categories = [cl.get("title", "") for cl in page.get("categories", [])]
+                    
                     all_versions.append({
                         "name": page_title,
                         "wikitext": page.get("revisions", [{}])[0].get("content", ""),
                         "image_url": page.get("original", {}).get("source"),
-                        "url": f"{self.base_url}/wiki/{page_title.replace(' ', '_')}"
+                        "url": f"{self.base_url}/wiki/{page_title.replace(' ', '_')}",
+                        "categories": categories
                     })
             
             return all_versions

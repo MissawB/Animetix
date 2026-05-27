@@ -29,9 +29,21 @@ class AkinetixEngine:
         'PROBABLEMENT PAS': 'probably_not'
     }
 
-    def __init__(self, catalog_service: CatalogService, formatter: Optional[QuestionFormatter] = None):
+    def __init__(self, catalog_service: CatalogService, formatter: Optional[QuestionFormatter] = None, cfr_solver: Any = None):
         self.catalog_service = catalog_service
         self.formatter = formatter or QuestionFormatter()
+        self.cfr_solver = cfr_solver
+
+    def get_next_question(self, candidates: List[str], game_state: Dict[str, Any]) -> Tuple[str, float]:
+        """
+        Délègue la sélection de la meilleure question au solveur CFR si disponible,
+        sinon retourne la première avec une confiance par défaut.
+        """
+        if self.cfr_solver:
+            return self.cfr_solver.solve_best_question(candidates, game_state)
+        
+        # Fallback si pas de solveur (heuristique simple)
+        return candidates[0] if candidates else "Inconnu", 0.5
 
     def start_game(self, catalog_db: List[Dict], mode: str = "classical") -> AkinetixGameState:
         """Starts a new game with the chosen mode."""
@@ -259,12 +271,24 @@ class AkinetixEngine:
         if attr_type == 'studio': return attr_val in item.get('studios', [])
         return False
 
-    def _rl_filter_candidates(self, db, history, asked_attrs):
-        # Filtrage basique pour la simulation RL
+    def _rl_filter_candidates(self, db: List[Dict], history: List[Any], asked_attrs: List[str]) -> List[Dict]:
+        # Filtrage réel basé sur l'historique des réponses utilisateur
         candidates = db
-        # En réalité, on devrait utiliser les réponses stockées dans history
-        # Pour cet exemple, on simplifie car l'env RL original était aussi très simple
-        return candidates[:max(1, len(candidates) // (len(history) + 1))]
+        for i, question_obj in enumerate(history):
+            if i >= len(asked_attrs):
+                break
+            attr = asked_attrs[i]
+            if ':' not in attr:
+                continue
+            attr_type, attr_val = attr.split(':', 1)
+            raw_ans = question_obj.a.upper()
+            
+            if raw_ans == 'OUI':
+                candidates = [c for c in candidates if self._rl_check_attr(c, attr_type, attr_val)]
+            elif raw_ans == 'NON':
+                candidates = [c for c in candidates if not self._rl_check_attr(c, attr_type, attr_val)]
+                
+        return candidates if candidates else db[:1]
 
     def _rl_format_question(self, attribute: str) -> str:
         return self.formatter.format(attribute)

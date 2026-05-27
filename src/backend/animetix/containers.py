@@ -31,6 +31,7 @@ from core.domain.services.creative.video_quest import VideoQuestService
 from core.domain.services.creative.studio_transform import StudioTransformService
 from core.domain.services.creative.manga_flow import MangaFlowService
 from core.domain.services.creative.soundscape import SoundscapeGenerationService
+from core.domain.services.creative.visual_novel_service import VisualNovelService
 from core.domain.services.guardrail_service import GuardrailService, RedTeamingAgent
 from core.domain.services.akinetix_rl_env import AkinetixRLService
 from core.domain.services.self_play_debate_service import SelfPlayDebateService
@@ -500,6 +501,12 @@ class Container(containers.DeclarativeContainer):
         VideoQuestService,
         inference_engine=inference_engine,
         prompt_manager=prompt_manager
+    )
+
+    visual_novel_service = providers.Singleton(
+        VisualNovelService,
+        llm_service=llm_service,
+        repository=repository
     )
 
     studio_transform_service = providers.Singleton(

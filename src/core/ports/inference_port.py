@@ -60,6 +60,10 @@ class InferencePort(ABC):
         """Génère une image à partir d'un prompt et retourne une URL ou Base64."""
         raise InferenceNotImplementedError("generate_image not implemented for this adapter")
 
+    def generate_sprite(self, prompt: str, style: str = "") -> str:
+        """Génère un sprite de personnage (généralement sur fond transparent ou blanc)."""
+        return self.generate_image(f"{prompt}, full body portrait on pure white background, anime character sheet style", style)
+
     def calculate_visual_similarity(self, query: str, item_id: str, media_type: str) -> float:
         """Calcule la similarité entre un texte et une image d'un item."""
         raise InferenceNotImplementedError("calculate_visual_similarity not implemented for this adapter")

@@ -24,8 +24,12 @@ export function GraphExplorer({ initialId, initialType }: GraphExplorerProps) {
     }
   };
 
-  const getLabel = (node: GraphNode) => {
-    return node.properties?.title || node.properties?.name || node.id || 'Unknown';
+  const getLabel = (node: GraphNode): string => {
+    const val = node.properties?.title || node.properties?.name || node.id || 'Unknown';
+    if (Array.isArray(val)) {
+      return val.join(', ');
+    }
+    return String(val);
   };
 
   return (

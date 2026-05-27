@@ -15,7 +15,30 @@ class FallbackInferenceAdapter(InferencePort):
         self.adapters = [a for a in adapters if a is not None]
         self.obs_service = obs_service
         self._capability_cache = {}
+        self._online_adapters = set()
+        self._check_initial_health()
         self._build_capability_cache()
+
+    def _check_initial_health(self) -> None:
+        for adapter in self.adapters:
+            try:
+                if hasattr(adapter, 'health_check'):
+                    status = adapter.health_check()
+                    if status.get("status") == "online":
+                        self._online_adapters.add(adapter)
+                else:
+                    self._online_adapters.add(adapter)
+            except Exception:
+                pass
+        # Si tous sont offline (ex: tests hors ligne), on les autorise tous par sécurité
+        if not self._online_adapters:
+            self._online_adapters.update(self.adapters)
+
+    def _get_ordered_adapters(self, adapters: List[InferencePort]) -> List[InferencePort]:
+        # Tente d'abord les adaptateurs en ligne, puis les autres en dernier recours
+        online = [a for a in adapters if a in self._online_adapters]
+        offline = [a for a in adapters if a not in self._online_adapters]
+        return online + offline
 
     def _is_method_overridden(self, adapter: InferencePort, method_name: str) -> bool:
         # Ignore mock objects to avoid registering instance-level mock methods as capabilities
@@ -82,7 +105,8 @@ class FallbackInferenceAdapter(InferencePort):
         if not capable_adapters:
             capable_adapters = self.adapters
 
-        for adapter in capable_adapters:
+        ordered_adapters = self._get_ordered_adapters(capable_adapters)
+        for adapter in ordered_adapters:
             if not hasattr(adapter, "generate") or not callable(getattr(adapter, "generate")):
                 continue
             adapter_name = adapter.__class__.__name__
@@ -118,7 +142,8 @@ class FallbackInferenceAdapter(InferencePort):
         if not capable_adapters:
             capable_adapters = self.adapters
 
-        for adapter in capable_adapters:
+        ordered_adapters = self._get_ordered_adapters(capable_adapters)
+        for adapter in ordered_adapters:
             if not hasattr(adapter, "stream_generate") or not callable(getattr(adapter, "stream_generate")):
                 continue
             start_time = time.time()
@@ -158,7 +183,8 @@ class FallbackInferenceAdapter(InferencePort):
         if not capable_adapters:
             capable_adapters = self.adapters
 
-        for adapter in capable_adapters:
+        ordered_adapters = self._get_ordered_adapters(capable_adapters)
+        for adapter in ordered_adapters:
             if not hasattr(adapter, method_name) or not callable(getattr(adapter, method_name)):
                 continue
             start_time = time.time()
@@ -267,7 +293,8 @@ class FallbackInferenceAdapter(InferencePort):
             return []
 
         last_error = ""
-        for adapter in self.adapters:
+        ordered_adapters = self._get_ordered_adapters(self.adapters)
+        for adapter in ordered_adapters:
             if not hasattr(adapter, 'rerank_documents') or not callable(getattr(adapter, 'rerank_documents')):
                 continue
             
@@ -296,7 +323,8 @@ class FallbackInferenceAdapter(InferencePort):
     def generate_structured(self, prompt: str, response_model: type, system_prompt: str = "Tu es un expert en extraction de données structurées.", max_retries: int = 3) -> Any:
         """Génération structurée avec repli."""
         last_error = ""
-        for adapter in self.adapters:
+        ordered_adapters = self._get_ordered_adapters(self.adapters)
+        for adapter in ordered_adapters:
             start_time = time.time()
             try:
                 # Vérifier si l'adaptateur supporte la génération structurée

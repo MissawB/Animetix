@@ -143,7 +143,7 @@ class GraphExtraction(BaseModel):
 # --- VS BATTLE GAME SCHEMAS ---
 
 class CombatStats(BaseModel):
-    tier: str = Field(default="Unknown", description="Attack Potency Tier (e.g., 2-C)")
+    tier: Optional[str] = Field(default="Unknown", description="Attack Potency Tier (e.g., 2-C)")
     tier_value: int = Field(default=0, description="Normalized power scale (0-100)")
     speed: Optional[str] = Field(default="Unknown", description="Combat and Reaction speed")
     durability: Optional[str] = Field(default="Unknown", description="Durability and Stamina")
@@ -152,6 +152,7 @@ class CombatStats(BaseModel):
 
 class CombatCharacter(BaseModel):
     name: str = Field(alias="Name", description="Name of the character.")
+    franchise: Optional[str] = Field(default=None, alias="Franchise", description="The series or universe the character belongs to.")
     image_url: Optional[str] = Field(default=None, alias="Image_URL", description="URL of the character portrait")
     wiki_url: Optional[str] = Field(default=None, alias="Wiki_URL", description="Source URL for character statistics (e.g. VS Battles Wiki).")
     stats: CombatStats = Field(default_factory=CombatStats, alias="Stats", description="Structured combat statistics and abilities.")
@@ -169,3 +170,15 @@ class CombatResult(BaseModel):
     debate_history: List[DebateTurn] = Field(default_factory=list, description="Chronological record of the debate turns.")
     winner: str = Field(description="Name of the winning character.")
     verdict_summary: str = Field(description="Detailed explanation of the final decision and scaling factors.")
+
+# --- VISUAL NOVEL GENERATION SCHEMAS ---
+
+class VNScene(BaseModel):
+    character: str
+    text: str
+    mood: str
+    bg_prompt: str
+
+class VNScript(BaseModel):
+    title: str
+    scenes: List[VNScene]

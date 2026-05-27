@@ -1,4 +1,4 @@
-$session_dir = "C:\Users\bahma\PycharmProjects\Projet solo\Double_scenario_Project\.superpowers\brainstorm\ai-companions-session"
+$session_dir = "C:\Users\bahma\PycharmProjects\Projet solo\Double_scenario_Project\.superpowers\brainstorm\forge-vn-session"
 If (!(Test-Path $session_dir)) {
     New-Item -ItemType Directory -Path (Join-Path $session_dir "state"), (Join-Path $session_dir "content") -Force
 }

@@ -26,10 +26,12 @@ class LLMService:
         prompt_manager: PromptManager, 
         usage_port: Optional[UsagePort] = None,
         slm_engine: Optional[InferencePort] = None,
+        vision_engine: Optional[InferencePort] = None,
         obs_service = None
     ):
         self.inference_engine = inference_engine
         self.slm_engine = slm_engine or inference_engine # Fallback to main if no SLM
+        self.vision_engine = vision_engine or inference_engine # Fallback to main if no Vision
         self.prompt_manager = prompt_manager
         self.usage_port = usage_port
         self.obs_service = obs_service

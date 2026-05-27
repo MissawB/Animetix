@@ -107,6 +107,40 @@ class DiffusersAdapter(InferencePort):
         except Exception as e:
             logger.error(f"❌ Image Generation failed: {e}"); return f"Erreur: {e}"
 
+    def generate_sprite(self, prompt: str, style: str = "") -> str:
+        """
+        Génère un sprite de personnage sur fond blanc et tente de le rendre transparent.
+        """
+        sprite_prompt = f"{prompt}, full body portrait on pure white background, anime character sheet style"
+        image_data_url = self.generate_image(sprite_prompt, style)
+        
+        if image_data_url.startswith("data:image"):
+            try:
+                # Tentative de rendre le fond blanc transparent
+                header, encoded = image_data_url.split(",", 1)
+                img_data = base64.b64decode(encoded)
+                img = Image.open(BytesIO(img_data)).convert("RGBA")
+                
+                # Algorithme simple de suppression du fond blanc
+                datas = img.getdata()
+                new_data = []
+                for item in datas:
+                    # Si le pixel est presque blanc, on le rend transparent
+                    if item[0] > 240 and item[1] > 240 and item[2] > 240:
+                        new_data.append((255, 255, 255, 0))
+                    else:
+                        new_data.append(item)
+                img.putdata(new_data)
+                
+                buffered = BytesIO()
+                img.save(buffered, format="PNG")
+                img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+                return f"data:image/png;base64,{img_str}"
+            except Exception as e:
+                logger.error(f"❌ Sprite transparency processing failed: {e}")
+                return image_data_url
+        return image_data_url
+
     def estimate_depth(self, image_data: bytes) -> bytes:
         try:
             from transformers import pipeline
