@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useUIStore } from '../store/uiStore';
 import { useAuthStore } from '../store/authStore';
-import { Menu, Shield, Sparkles, Box, FlaskConical, Network } from 'lucide-react';
+import { Menu, Shield, Sparkles, Box, FlaskConical, Network, Users } from 'lucide-react';
 import { FeatureGate } from './utils/FeatureGate';
 import { useTranslation } from 'react-i18next';
 
@@ -34,6 +34,12 @@ const Navbar: React.FC = () => {
           <Link to="/experimental/" className="flex items-center gap-2 no-underline text-xs font-black italic text-red-500 hover:scale-105 transition-all uppercase tracking-widest">
             <FlaskConical className="w-4 h-4" /> {t('navbar.lab')}
           </Link>
+
+          {user && (
+            <Link to="/clubs/" className="flex items-center gap-2 no-underline text-xs font-black italic text-gray-500 hover:text-blue-500 transition-all uppercase tracking-widest">
+              <Users className="w-4 h-4 text-blue-500" /> {t('navbar.clubs', 'Clubs')}
+            </Link>
+          )}
 
           {user?.tier === 'premium' && (
             <Link to="/graph/" className="flex items-center gap-2 no-underline text-xs font-black italic text-gray-500 hover:text-purple-500 transition-all uppercase tracking-widest">
