@@ -182,6 +182,24 @@ class AdvancedRAGService:
         prompt, system_prompt = self.prompt_manager.get_prompt("advanced_rag_generate", context=context, query=query)
         return self.llm_service.inference_engine.generate(prompt, system_prompt=system_prompt)
 
+    def generate_holistic_answer(self, query: str, media_type: str, category_name: str) -> str:
+        """
+        Exploite les communautés de graphe (Hierarchical GraphRAG) pour répondre
+        à des questions macroscopiques ou holistiques.
+        """
+        if not self.neo4j_manager:
+            return "Hierarchical GraphRAG requires Neo4j connection."
+            
+        community_summary = self.neo4j_manager.get_community_summary(media_type, category_name)
+        
+        if not community_summary:
+            return "No community summary found for this category."
+            
+        context = f"[Community Summary: {category_name}]\n{community_summary}\n"
+        
+        prompt, system_prompt = self.prompt_manager.get_prompt("advanced_rag_generate", context=context, query=query)
+        return self.llm_service.inference_engine.generate(prompt, system_prompt=system_prompt)
+
     def self_rag_verify(self, query: str, context: str) -> bool:
         """Vérifie si le contexte fourni permet de répondre à la question (évite les hallucinations)."""
         prompt, _ = self.prompt_manager.get_prompt("self_rag_verify", context=context, query=query)

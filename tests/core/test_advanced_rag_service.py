@@ -35,3 +35,19 @@ def test_rag_colbert_filtering():
     # Verify ColBERT was called to filter down to 10 (or 5 in our mock) before rerank
     mock_colbert.rank_documents.assert_called_once_with("test query", dummy_docs)
     service.rerank_results.assert_called_once_with("test query", filtered_docs)
+
+def test_generate_holistic_answer():
+    mock_repo = MagicMock()
+    mock_llm = MagicMock()
+    mock_neo4j = MagicMock()
+    mock_neo4j.get_community_summary.return_value = "This is a community summary."
+    mock_prompt_mgr = MagicMock()
+    mock_prompt_mgr.get_prompt.return_value = ("prompt", "sys")
+    
+    service = AdvancedRAGService(mock_repo, mock_llm, neo4j_manager=mock_neo4j, prompt_manager=mock_prompt_mgr)
+    
+    # Should use the community summary instead of normal vector search
+    service.generate_holistic_answer("What is the main theme?", "Anime", "Shonen")
+    
+    mock_neo4j.get_community_summary.assert_called_once_with("Anime", "Shonen")
+    mock_llm.inference_engine.generate.assert_called_once()
