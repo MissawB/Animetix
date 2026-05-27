@@ -21,30 +21,72 @@ class CinematicVolumetricReconstructionService:
 
     def reconstruct_dynamic_cinematic_scene(self, video_data: bytes, title: str) -> Dict[str, Any]:
         """
-        Pipeline dynamique 2D Vidéo -> Analyse Temporelle -> Volumétrie Dynamique DyNeRF/DCS.
+        Pipeline dynamique 2D Vidéo -> Analyse Temporelle -> Volumétrie Dynamique (Time-based PLY sequence).
         """
+        import imageio
+        from io import BytesIO
+        from PIL import Image
+        import tempfile
+        import os
+        import numpy as np
+
         logger.info(f"🌌 DCS Spatial: Starting Dynamic Volumetric Cinematic reconstruction for '{title}'...")
         
-        # 1. Extraction des embeddings temporels
-        logger.info("🎥 Extracting Video Temporal Action Embeddings (Video-RAG)...")
-        temporal_embeddings = self.inference_engine.get_video_temporal_embeddings(video_data)
-        
-        # 2. Localisation temporelle et reconstruction volumétrique dynamic (DyNeRF)
-        logger.info("🪄 Running Dynamic Cinematic Splatting (DyNeRF Space Calibration)...")
-        # simulation d'un entraînement Dynamic Splat ou inférence de modèle de reconstruction vidéo spatialisé
-        model_url = f"/static/3d/dynamic_{abs(hash(title)) % 1000}.splat"
-        
-        logger.info(f"✅ DCS Dynamic 3D Cinematic Scene generated for '{title}'. Ready for interactive timeline navigation.")
-        
-        return {
-            "status": "success",
-            "model_url": model_url,
-            "viewer_type": "dynamic_cinematic_splatting",
-            "metadata": {
-                "title": title,
-                "navigable": True,
-                "mode": "DCS_Dynamic_Cinematic_Splatting_3D",
-                "timeline_duration_sec": len(temporal_embeddings) * 2 if temporal_embeddings else 10,
-                "reconstructed_camera_path": "orbital_pan"
+        try:
+            # 1. Sauvegarde temporaire pour lecture
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp:
+                tmp.write(video_data)
+                tmp_path = tmp.name
+            
+            # 2. Échantillonnage intelligent
+            reader = imageio.get_reader(tmp_path)
+            meta = reader.get_meta_data()
+            fps = meta.get('fps', 24)
+            
+            frames_3d = []
+            max_frames = 5 # Limite pour la démo / performance
+            
+            for i, frame in enumerate(reader):
+                # On prend une frame toutes les 0.5 secondes environ
+                if i % int(fps / 2 or 1) != 0:
+                    continue
+                if len(frames_3d) >= max_frames:
+                    break
+                
+                # Conversion frame (numpy) -> bytes (PNG)
+                pil_img = Image.fromarray(frame)
+                buf = BytesIO()
+                pil_img.save(buf, format="PNG")
+                img_bytes = buf.getvalue()
+                
+                # 3. Inférence : Profondeur + Projection 3D
+                depth = self.inference_engine.estimate_depth(img_bytes)
+                scene = self.inference_engine.generate_3d_scene(img_bytes, depth)
+                
+                if scene["status"] == "success":
+                    frames_3d.append({
+                        "timestamp": i / fps,
+                        "ply_url": scene["model_url"],
+                        "point_count": scene.get("point_count", 0)
+                    })
+            
+            reader.close()
+            if os.path.exists(tmp_path):
+                os.unlink(tmp_path)
+            
+            logger.info(f"✅ DCS: Dynamic 3D Timeline generated with {len(frames_3d)} frames for '{title}'.")
+            
+            return {
+                "status": "success",
+                "frames": frames_3d,
+                "viewer_type": "dynamic_cinematic_splatting",
+                "metadata": {
+                    "title": title,
+                    "frame_count": len(frames_3d),
+                    "mode": "DCS_Dynamic_Cinematic_Splatting_3D",
+                    "navigable": True
+                }
             }
-        }
+        except Exception as e:
+            logger.error(f"❌ DCS Reconstruction failed for '{title}': {e}")
+            return {"status": "error", "message": str(e)}

@@ -434,13 +434,66 @@ class VisionTransformersAdapter(InferencePort):
             return {"text": "", "layout": [], "status": "error", "message": str(e)}
 
     def generate_3d_scene(self, image_data: bytes, depth_map: bytes) -> dict:
-        """Génère une scène 3D (actuellement un placeholder structuré)."""
+        """Génère une scène 3D sous forme de nuage de points PLY binaire à partir d'une image et de sa profondeur."""
         try:
-            # Cette méthode prépare les métadonnées pour le moteur de rendu frontend (Three.js/Babylon.js)
-            # En production, cela pourrait appeler un modèle type Zero-1-to-3 ou Stable-Video-Diffusion-3D
+            from PIL import Image
+            import numpy as np
+            import struct
+            import base64
+            from io import BytesIO
+            
+            # 1. Parsing et redimensionnement pour optimisation (nuage de points dense mais gérable)
+            rgb = Image.open(BytesIO(image_data)).convert("RGB").resize((128, 128))
+            depth = Image.open(BytesIO(depth_map)).convert("L").resize((128, 128))
+            rgb_arr, depth_arr = np.array(rgb), np.array(depth)
+
+            h, w = depth_arr.shape
+            points = []
+            fx, fy = 150.0, 150.0 # Focal length simulée
+            cx, cy = w / 2, h / 2
+            
+            # 2. Projection géométrique 2D -> 3D
+            for y in range(h):
+                for x in range(w):
+                    # On normalise la profondeur entre 0 et 1
+                    z = float(depth_arr[y, x]) / 255.0
+                    
+                    # On ignore les points trop sombres ou trop "loin" (bruit)
+                    if z <= 0.1:
+                        continue
+                        
+                    # Calcul des coordonnées cartésiennes
+                    X = (x - cx) * z / fx
+                    Y = (y - cy) * z / fy
+                    Z = z
+                    
+                    # Récupération de la couleur
+                    r, g, b = rgb_arr[y, x]
+                    points.append((X, Y, Z, r, g, b))
+                    
+            # 3. Construction du fichier PLY binaire
+            header = (
+                "ply\n"
+                "format binary_little_endian 1.0\n"
+                f"element vertex {len(points)}\n"
+                "property float x\n"
+                "property float y\n"
+                "property float z\n"
+                "property uint8 red\n"
+                "property uint8 green\n"
+                "property uint8 blue\n"
+                "end_header\n"
+            )
+            
+            ply_data = header.encode('ascii')
+            for p in points:
+                # <fffBBB : 3 floats pour x,y,z et 3 bytes non signés pour r,g,b
+                ply_data += struct.pack("<fffBBB", *p)
+                
             return {
                 "status": "success",
-                "model_url": "/assets/3d/placeholder_scene.glb",
+                "model_url": f"data:application/octet-stream;base64,{base64.b64encode(ply_data).decode('utf-8')}",
+                "point_count": len(points),
                 "in_painted": True,
                 "metadata": {
                     "original_size": len(image_data),
