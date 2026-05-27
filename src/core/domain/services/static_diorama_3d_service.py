@@ -46,7 +46,7 @@ class StaticDiorama3DService:
         return {
             "status": "success",
             "model_url": scene_data["model_url"],
-            "viewer_type": "gaussian_splatting",
+            "viewer_type": "static_gaussian_diorama",
             "metadata": {
                 "title": title,
                 "navigable": True,

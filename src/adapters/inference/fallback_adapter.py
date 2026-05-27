@@ -99,7 +99,7 @@ class FallbackInferenceAdapter(InferencePort):
                 metadata={"status": "failed", "method": method, "error": error[:100]}
             )
 
-    def generate(self, prompt: str, system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.", thinking_budget: int = 0, thinking_mode: bool = False) -> str:
+    def generate(self, prompt: str, system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.", thinking_budget: int = 0, thinking_mode: bool = False, json_mode: bool = False) -> str:
         last_error = ""
         capable_adapters = self._capability_cache.get("generate", [])
         if not capable_adapters:
@@ -113,7 +113,15 @@ class FallbackInferenceAdapter(InferencePort):
             start_time = time.time()
             try:
                 logger.info(f"🔄 [Fallback] Trying {adapter_name}...")
-                result = adapter.generate(prompt, system_prompt, thinking_budget, thinking_mode)
+                
+                # Check if the adapter supports json_mode
+                import inspect
+                sig = inspect.signature(adapter.generate)
+                if 'json_mode' in sig.parameters:
+                    result = adapter.generate(prompt, system_prompt, thinking_budget, thinking_mode, json_mode=json_mode)
+                else:
+                    result = adapter.generate(prompt, system_prompt, thinking_budget, thinking_mode)
+                
                 latency = time.time() - start_time
                 
                 # CRITIQUE : Si le résultat est nul ou commence par "Erreur", on considère ça comme un échec

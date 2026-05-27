@@ -58,7 +58,7 @@ class AgenticRAGService:
             from unittest.mock import MagicMock
             is_mock = isinstance(workflow_manager, MagicMock)
         except ImportError:
-            pass
+            logger.debug("unittest.mock not available, skipping mock check.")
 
         if workflow_manager is None or is_mock:
             from .rag.agents import SearchPlanner, ResponseCritic, ResponseSynthesizer, ResponseJudge, ScoutAgent, GraphExpert, RetrievalEvaluator, ContextCompressor

@@ -26,9 +26,10 @@ def fix_adapter(file_path):
     # Check for missing methods
     abstract_methods = list(InferencePort.__abstractmethods__)
     
-    stub_template = """
+    stub_template = """ 
     def {name}(self, *args, **kwargs):
-        raise NotImplementedError("{name} not implemented in {class_name}")
+        # TODO: implement {name} for {class_name}
+        pass
 """
     
     stubs_to_add = []

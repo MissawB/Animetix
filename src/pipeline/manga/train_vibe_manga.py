@@ -1,8 +1,11 @@
 import json
 import os
 import sys
+import logging
 from sentence_transformers import SentenceTransformer, InputExample, losses
 from torch.utils.data import DataLoader
+
+logger = logging.getLogger("animetix.pipeline." + __name__)
 
 # Force UTF-8 for Windows output
 if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
@@ -18,7 +21,7 @@ BATCH_SIZE = 16
 EPOCHS = 2
 
 def run_training():
-    print("--- Début du Fine-Tuning des Embeddings Manga (Vibe) ---")
+    logger.info("--- Début du Fine-Tuning des Embeddings Manga (Vibe) ---")
 
     # 1. Chargement des données
     clean_db = os.path.join(BASE_DIR, 'data', 'processed', 'clean_root_mangas.json')
@@ -26,7 +29,7 @@ def run_training():
         with open(clean_db, 'r', encoding='utf-8') as f:
             data = json.load(f)
     except FileNotFoundError:
-        print(f"Erreur : {clean_db} introuvable.")
+        logger.error(f"Erreur : {clean_db} introuvable.")
         return
 
     # 2. Préparation des exemples d'entraînement
@@ -39,10 +42,10 @@ def run_training():
                 train_examples.append(InputExample(texts=[review, title]))
 
     if len(train_examples) < 10:
-        print("Pas assez de critiques pour un fine-tuning efficace.")
+        logger.warning("Pas assez de critiques pour un fine-tuning efficace.")
         return
 
-    print(f"Nombre d'exemples d'entraînement : {len(train_examples)}")
+    logger.info(f"Nombre d'exemples d'entraînement : {len(train_examples)}")
 
     # 3. Chargement du modèle de base
     model = SentenceTransformer(MODEL_NAME)
@@ -52,7 +55,7 @@ def run_training():
     train_loss = losses.MultipleNegativesRankingLoss(model=model)
 
     # 5. Entraînement
-    print(f"Entraînement en cours pour {EPOCHS} époques...")
+    logger.info(f"Entraînement en cours pour {EPOCHS} époques...")
     model.fit(
         train_objectives=[(train_dataloader, train_loss)],
         epochs=EPOCHS,
@@ -61,7 +64,7 @@ def run_training():
         show_progress_bar=True
     )
 
-    print(f"✅ Modèle fine-tuné Manga sauvegardé dans : {OUTPUT_PATH}")
+    logger.info(f"✅ Modèle fine-tuné Manga sauvegardé dans : {OUTPUT_PATH}")
 
 if __name__ == "__main__":
     run_training()

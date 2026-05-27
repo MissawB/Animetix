@@ -26,7 +26,7 @@ def latent_space_data_multi():
     from chroma_client import chroma_manager
 
     # Préchargement des bases de données locales pour mapping (Fallback si metadata absente)
-    print("📂 Loading local databases for metadata mapping...")
+    logger.info("📂 Loading local databases for metadata mapping...")
     db_paths = {
         "anime": os.path.join(BASE_DIR, 'data', 'processed', 'clean_root_animes.json'),
         "manga": os.path.join(BASE_DIR, 'data', 'processed', 'clean_root_mangas.json'),
@@ -49,7 +49,7 @@ def latent_space_data_multi():
                             genres = item.get('genres', [])
                             id_to_genre[item_id] = genres[0] if genres else key.capitalize()
             except Exception as e:
-                print(f"⚠️ Warning loading {path}: {e}")
+                logger.warning(f"⚠️ Warning loading {path}: {e}")
 
     collections = [
         ("anime_thematic", "latent_space_anime_thematic.json"),
@@ -67,20 +67,20 @@ def latent_space_data_multi():
     os.makedirs(ARTIFACTS_DIR, exist_ok=True)
 
     for coll_name, filename in collections:
-        print(f"🔮 Processing collection: {coll_name}...")
+        logger.info(f"🔮 Processing collection: {coll_name}...")
         try:
             coll = chroma_manager.get_collection(coll_name)
             # On prend un échantillon représentatif
             res = coll.get(include=['embeddings', 'metadatas'], limit=1000)
 
             if res['embeddings'] is None or len(res['embeddings']) == 0:
-                print(f"⚠️ No embeddings found in collection '{coll_name}'. Skipping.")
+                logger.warning(f"⚠️ No embeddings found in collection '{coll_name}'. Skipping.")
                 continue
 
             embeddings = np.array(res['embeddings'])
             metadatas = res['metadatas']
 
-            print(f"🧩 Computing UMAP 3D projection for {len(embeddings)} points in {coll_name}...")
+            logger.info(f"🧩 Computing UMAP 3D projection for {len(embeddings)} points in {coll_name}...")
             # Paramètres UMAP optimisés pour la viz
             reducer = umap.UMAP(n_components=3, n_neighbors=15, min_dist=0.1, random_state=42)
             coords_3d = reducer.fit_transform(embeddings)
@@ -120,12 +120,16 @@ def latent_space_data_multi():
                 with open(default_path, 'w', encoding='utf-8') as f:
                     json.dump(plot_data, f, indent=2, ensure_ascii=False)
 
-            print(f"✅ Saved to {output_path}")
+            logger.info(f"✅ Saved to {output_path}")
 
         except Exception as e:
-            print(f"❌ Error processing {coll_name}: {e}")
+            logger.error(f"❌ Error processing {coll_name}: {e}")
 
     return True
+
+if __name__ == "__main__":
+    latent_space_data_multi()
+ True
 
 if __name__ == "__main__":
     latent_space_data_multi()

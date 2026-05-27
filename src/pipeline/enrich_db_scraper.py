@@ -31,7 +31,7 @@ except Exception as e:
     MediaItem = None
 
 # Logger
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+# logging.basicConfig moved to main guard to avoid overriding global logging config
 logger = logging.getLogger("animetix.pipeline.enrich_scraper")
 
 # Charger .env

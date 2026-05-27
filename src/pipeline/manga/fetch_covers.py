@@ -3,6 +3,9 @@ import json
 import time
 import os
 import sys
+import logging
+
+logger = logging.getLogger("animetix.pipeline." + __name__)
 
 # Force UTF-8 for Windows output
 if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
@@ -37,7 +40,7 @@ def get_mangadex_id(mal_id: int) -> str | None:
                 return list(mangadex_entries.keys())[0]
         return None
     except Exception as e:
-        print(f"❌ Error mapping MAL ID {mal_id} to MangaDex: {e}")
+        logger.error(f"❌ Error mapping MAL ID {mal_id} to MangaDex: {e}")
         return None
 
 def fetch_covers(mangadex_id: str) -> dict:
@@ -73,7 +76,7 @@ def fetch_covers(mangadex_id: str) -> dict:
                     })
         return covers
     except Exception as e:
-        print(f"❌ Error fetching covers for MangaDex ID {mangadex_id}: {e}")
+        logger.error(f"❌ Error fetching covers for MangaDex ID {mangadex_id}: {e}")
         return covers
 
 def run_fetching(limit: int = 100) -> str:
@@ -97,10 +100,10 @@ def run_fetching(limit: int = 100) -> str:
             with open(OUTPUT_FILE, 'r', encoding='utf-8') as f:
                 covers_data = json.load(f)
         except Exception as e:
-            print(f"⚠️ Erreur lors du chargement de {OUTPUT_FILE}: {e}")
+            logger.warning(f"⚠️ Erreur lors du chargement de {OUTPUT_FILE}: {e}")
             pass
 
-    print(f"🚀 Fetching Manga Covers (Limit: {limit})...")
+    logger.info(f"🚀 Fetching Manga Covers (Limit: {limit})...")
     
     count = 0
     processed = 0
@@ -116,7 +119,7 @@ def run_fetching(limit: int = 100) -> str:
                 processed += 1
             continue
             
-        print(f"   - [{processed+1}/{limit}] Processing: {manga.get('title')}")
+        logger.info(f"   - [{processed+1}/{limit}] Processing: {manga.get('title')}")
         
         md_id = get_mangadex_id(mal_id)
         if md_id:
@@ -141,7 +144,7 @@ def run_fetching(limit: int = 100) -> str:
         json.dump(covers_data, f, indent=2, ensure_ascii=False)
     
     status = f"✅ Finished! Added covers for {count} mangas. Total in DB: {len(covers_data)}"
-    print(status)
+    logger.info(status)
     return status
 
 if __name__ == "__main__":

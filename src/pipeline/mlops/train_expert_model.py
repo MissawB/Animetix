@@ -9,6 +9,7 @@ os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 import sys
 import torch
 import time
+import logging
 from datasets import load_dataset
 from transformers import (
     AutoModelForCausalLM,
@@ -19,13 +20,16 @@ from transformers import (
 from peft import LoraConfig, get_peft_model
 from trl import SFTTrainer, DataCollatorForCompletionOnlyLM
 
+# Configuration du logger
+logger = logging.getLogger("animetix.pipeline.mlops.train_expert")
+
 # Essayer d'importer liger_kernel pour la fusion d'opérateurs Triton
 try:
     from liger_kernel.transformers import monkey_patch_liger
     monkey_patch_liger()
-    print("[INFO] Liger Kernel fused successfully (Triton mathematical operators optimized).")
+    logger.info("⚙️ Liger Kernel fused successfully (Triton mathematical operators optimized).")
 except ImportError:
-    print("[INFO] Liger Kernel not available, skipping Triton mathematical operator fusion.")
+    logger.info("ℹ️ Liger Kernel not available, skipping Triton mathematical operator fusion.")
 
 # Import hf_trackio pour le suivi MLOps
 try:
@@ -53,30 +57,30 @@ def run_expert_training():
     tracker = trackio.init(project="animetix-expert", job_name=f"expert-qlora-{int(time.time())}")
 
     if not os.path.exists(dataset_path):
-        print(f"[ERROR] Dataset not found at {dataset_path}. Run finetuning_dataset.py first.")
+        logger.error(f"❌ Dataset not found at {dataset_path}. Run finetuning_dataset.py first.")
         tracker.finish(status="FAILED")
         return
 
-    print(f"[INFO] Starting highly-optimized QLoRA Fine-Tuning for {model_name}...")
+    logger.info(f"🚀 Starting highly-optimized QLoRA Fine-Tuning for {model_name}...")
     tracker.log_param("model_base", model_name)
     tracker.log_artifact("dataset", dataset_path)
 
     # 1. Configuration et chargement du tokenizer
-    print("[INFO] Loading tokenizer...")
+    logger.info("📂 Loading tokenizer...")
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     tokenizer.pad_token = tokenizer.eos_token
     tokenizer.padding_side = "right"
 
     # 2. Chargement et fractionnement Train/Eval (95/05)
-    print("[INFO] Loading and splitting dataset...")
+    logger.info("📂 Loading and splitting dataset...")
     full_dataset = load_dataset("json", data_files=dataset_path, split="train")
     split_dataset = full_dataset.train_test_split(test_size=0.05, seed=42)
     train_ds = split_dataset["train"]
     eval_ds = split_dataset["test"]
-    print(f"[SUCCESS] Dataset loaded: {len(train_ds)} training samples, {len(eval_ds)} validation samples.")
+    logger.info(f"✅ Dataset loaded: {len(train_ds)} training samples, {len(eval_ds)} validation samples.")
 
     # 3. Application du patron de discussion ChatML natif de Qwen
-    print("[INFO] Formatting dataset with native ChatML templates...")
+    logger.info("⚙️ Formatting dataset with native ChatML templates...")
     def process_chatml(item):
         user_content = item["instruction"]
         if item["input"]:
@@ -99,7 +103,7 @@ def run_expert_training():
     
     try:
         from unsloth import FastLanguageModel
-        print("[INFO] Unsloth detected. Loading model with native GPU optimizations...")
+        logger.info("🚀 Unsloth detected. Loading model with native GPU optimizations...")
         model, tokenizer = FastLanguageModel.from_pretrained(
             model_name=model_name,
             max_seq_length=768,
@@ -118,9 +122,9 @@ def run_expert_training():
             random_state=42,
             use_rslora=True,   # Rank-Stabilized LoRA activé
         )
-        print("[SUCCESS] Model loaded and LoRA adapters injected using Unsloth FastLanguageModel.")
+        logger.info("✅ Model loaded and LoRA adapters injected using Unsloth FastLanguageModel.")
     except ImportError:
-        print("[INFO] Unsloth not available. Falling back to standard Hugging Face PEFT + BitsAndBytesConfig...")
+        logger.info("ℹ️ Unsloth not available. Falling back to standard Hugging Face PEFT + BitsAndBytesConfig...")
         
         bnb_config = BitsAndBytesConfig(
             load_in_4bit=True,
@@ -148,7 +152,7 @@ def run_expert_training():
             use_rslora=True,   # Rank-Stabilized LoRA activé
             task_type="CAUSAL_LM",
         )
-        print("[SUCCESS] Model loaded with standard BitsAndBytes and PEFT configuration.")
+        logger.info("✅ Model loaded with standard BitsAndBytes and PEFT configuration.")
 
     # 5. Assistant-Only Loss Masking (Data Collator ciblant uniquement la réponse de l'assistant)
     response_template = "<|im_start|>assistant\n"
@@ -196,15 +200,15 @@ def run_expert_training():
     )
 
     # Lancement de l'entraînement
-    print("[INFO] Launching training steps...")
+    logger.info("🚀 Launching training steps...")
     trainer.train()
     
     tracker.log_artifact("adapter", output_dir)
     tracker.finish(status="COMPLETED")
-    print(f"[SUCCESS] Model successfully trained and adapter saved at {output_dir}")
+    logger.info(f"✅ Model successfully trained and adapter saved at {output_dir}")
 
 if __name__ == "__main__":
     if torch.cuda.is_available():
         run_expert_training()
     else:
-        print("[WARNING] CUDA is not available. This training script is optimized and ready for GPU execution.")
+        logger.warning("⚠️ CUDA is not available. This training script is optimized and ready for GPU execution.")

@@ -1,8 +1,11 @@
 import os
 import torch
 import json
+import logging
 from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, Trainer
 from datasets import Dataset
+
+logger = logging.getLogger("animetix.pipeline." + __name__)
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -11,12 +14,12 @@ def run_cpt(draft_model_id="checkpoints/animetix-draft-135m", limit=5000):
     Continuous Pre-Training (CPT) sur le modèle Draft (135M).
     Entraîne le modèle à prédire le token suivant sur les synopsis purs pour injecter de nouvelles connaissances.
     """
-    print(f"🔄 Starting Continuous Pre-Training (CPT) on {draft_model_id}...")
+    logger.info(f"🔄 Starting Continuous Pre-Training (CPT) on {draft_model_id}...")
     
     # 1. Préparation du Dataset de textes bruts (Synopsis)
     db_path = os.path.join(BASE_DIR, 'data', 'processed', 'clean_root_animes.json')
     if not os.path.exists(db_path):
-        print("❌ Anime DB not found.")
+        logger.error("❌ Anime DB not found.")
         return
         
     with open(db_path, 'r', encoding='utf-8') as f:
@@ -30,7 +33,7 @@ def run_cpt(draft_model_id="checkpoints/animetix-draft-135m", limit=5000):
             texts.append(f"Anime: {title}\nSynopsis: {desc}")
             
     if not texts:
-        print("❌ No text data found for CPT.")
+        logger.error("❌ No text data found for CPT.")
         return
         
     dataset = Dataset.from_dict({"text": texts})
@@ -83,15 +86,15 @@ def run_cpt(draft_model_id="checkpoints/animetix-draft-135m", limit=5000):
         train_dataset=tokenized_datasets,
     )
     
-    print("🚀 Starting CPT Training...")
+    logger.info("🚀 Starting CPT Training...")
     try:
         trainer.train()
         model.save_pretrained(output_dir)
         tokenizer.save_pretrained(output_dir)
-        print(f"✅ CPT Training Complete. Model saved to {output_dir}")
+        logger.info(f"✅ CPT Training Complete. Model saved to {output_dir}")
         return output_dir
     except Exception as e:
-        print(f"❌ CPT Training Failed: {e}")
+        logger.error(f"❌ CPT Training Failed: {e}")
         return None
 
 if __name__ == "__main__":

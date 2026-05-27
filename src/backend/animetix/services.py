@@ -1,8 +1,6 @@
 import logging
-from django.conf import settings
+import warnings
 from .containers import get_container
-from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
 
 logger = logging.getLogger('animetix')
 
@@ -15,130 +13,90 @@ DIFFICULTY_SETTINGS = {
 
 def send_notification(user, title, message, notification_type='info', link=None):
     """
-    Crée une notification en base de données et l'envoie en temps réel via WebSockets.
+    Deprecated bridge for sending notifications.
+    Use container.notification_port().send(...) instead.
     """
-    from .models import Notification
-    
-    # 1. Sauvegarde en base
-    notification = Notification.objects.create(
-        user=user,
+    warnings.warn("send_notification is deprecated, use container.notification_port()", DeprecationWarning)
+    container = get_container()
+    return container.notification_port().send(
+        user_id=user.id,
         title=title,
         message=message,
         notification_type=notification_type,
         link=link
     )
-    
-    # 2. Envoi via WebSocket
-    channel_layer = get_channel_layer()
-    
-    # Mapping type pour le frontend
-    ws_type = notification_type
-    if notification_type == 'achievement':
-        ws_type = 'achievement_unlocked'
-    
-    async_to_sync(channel_layer.group_send)(
-        f"user_notifications_{user.id}",
-        {
-            "type": "send_notification",
-            "data": {
-                "id": notification.id,
-                "type": ws_type,
-                "title": title,
-                "message": message,
-                "link": link,
-                "created_at": notification.created_at.strftime("%H:%M"),
-                # Pour le toast de succès spécifique
-                "achievement": {
-                    "name": title.replace("Succès Débloqué !", "").strip() or title,
-                    "icon": "🏆",
-                    "xp": 100 # Valeur par défaut
-                }
-            }
-        }
-    )
-    return notification
 
 def check_achievements(user, action_type, context=None):
     """
-    Infrastructure helper to check for achievements and notify user via WebSockets.
-    Bridge between Core Domain and Django Channels.
+    Deprecated bridge for checking achievements.
+    Use container.achievement_service().check_and_unlock(...) instead.
     """
+    warnings.warn("check_achievements is deprecated, use achievement_service()", DeprecationWarning)
     from core.domain.entities.achievement import GameEvent
-    from asgiref.sync import async_to_sync
-    from channels.layers import get_channel_layer
     
     container = get_container()
     context = context or {}
     event = GameEvent(
         user_id=user.id, game_mode=context.get('game_mode', 'unknown'), media_type=context.get('media_type', 'unknown'),
         was_won=(action_type == 'win'), is_daily=context.get('is_daily', False), is_ranked=context.get('is_ranked', False),
-        attempts=context.get('attempts', 0), streak=user.profile.current_streak,
-        total_wins=user.profile.total_wins, total_games=user.profile.total_games, item_rarity=context.get('item_rarity', 'Common')
+        attempts=context.get('attempts', 0), streak=getattr(user.profile, 'current_streak', 0),
+        total_wins=getattr(user.profile, 'total_wins', 0), total_games=getattr(user.profile, 'total_games', 0), 
+        item_rarity=context.get('item_rarity', 'Common')
     )
     
-    newly_unlocked = container.achievement_listener.on_game_finished(event)
-    
-    # --- NOTIFICATION TEMPS RÉEL (WebSockets) ---
-    if newly_unlocked:
-        for ach in newly_unlocked:
-            send_notification(
-                user=user,
-                title="Succès Débloqué !",
-                message=f"Félicitations ! Vous avez débloqué le succès '{ach.name}' (+{ach.xp_reward} XP).",
-                notification_type='achievement',
-                link='/achievements/'
-            )
-            
-    return newly_unlocked
+    return container.achievement_service().check_and_unlock(event)
 
 class AnimetixService:
     """
-    Legacy Service Bridge.
-    Uses the DI Container internally to provide access to all domain services.
-    Maintains structural integrity for code not yet fully migrated to Hexagonal Architecture.
+    DEPRECATED Legacy Service Bridge.
+    Directly use the DI Container (get_container()) for all domain services.
     """
     def __init__(self):
+        warnings.warn("AnimetixService is deprecated, use get_container() directly", DeprecationWarning)
         self._container = get_container()
 
     @property
     def catalog_service(self): return self._container.catalog_service
     
-    def load_data(self, media_type): return self.catalog_service.load_data(media_type)
+    def load_data(self, media_type): return self.catalog_service().load_data(media_type)
     
     @property
-    def blind_test_service(self): return self._container.blind_test_service
+    def blind_test_service(self): return self._container.blind_test_service()
     @property
-    def cover_test_service(self): return self._container.cover_test_service
+    def cover_test_service(self): return self._container.cover_test_service()
     @property
-    def vision_quest_service(self): return self._container.vision_quest_service
+    def vision_quest_service(self): return self._container.vision_quest_service()
     @property
-    def emoji_service(self): return self._container.emoji_service
+    def emoji_service(self): return self._container.emoji_service()
     @property
-    def paradox_service(self): return self._container.paradox_service
+    def paradox_service(self): return self._container.paradox_service()
     @property
-    def animinator_service(self): return self._container.animinator_service
+    def animinator_service(self): return self._container.animinator_service()
     @property
-    def akinetix_service(self): return self._container.akinetix_service
+    def akinetix_service(self): return self._container.akinetix_service()
     @property
-    def game_service(self): return self._container.game_service
+    def game_service(self): return self._container.game_service()
     @property
-    def llm_service(self): return self._container.llm_service
+    def llm_service(self): return self._container.llm_service()
     @property
-    def fusion_service(self): return self._container.fusion_service
+    def fusion_service(self): return self._container.fusion_service()
     @property
-    def studio_transform_service(self): return self._container.studio_transform_service
+    def studio_transform_service(self): return self._container.studio_transform_service()
     @property
-    def manga_flow_service(self): return self._container.manga_flow_service
+    def manga_flow_service(self): return self._container.manga_flow_service()
     @property
-    def soundscape_service(self): return self._container.soundscape_service
+    def soundscape_service(self): return self._container.soundscape_service()
     @property
-    def spatial_computing_service(self): return self._container.spatial_computing_service
+    def spatial_computing_service(self): return self._container.spatial_computing_service()
     @property
-    def vision_service(self): return self._container.vision_service
+    def vision_service(self): return self._container.vision_service()
     @property
-    def video_quest_service(self): return self._container.video_quest_service
+    def video_quest_service(self): return self._container.video_quest_service()
     @property
-    def rag_service(self): return self._container.rag_service
+    def rag_service(self): return self._container.rag_service()
     @property
-    def voice_cloning_service(self): return self._container.voice_cloning_service
-
+    def voice_cloning_service(self): return self._container.voice_cloning_service()
+    @property
+    def notification_port(self): return self._container.notification_port()
+    @property
+    def achievement_service(self): return self._container.achievement_service()

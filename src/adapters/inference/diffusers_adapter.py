@@ -96,7 +96,7 @@ class DiffusersAdapter(InferencePort):
 
     def generate_image(self, prompt: str, style: str = "") -> str:
         self._load_txt2img()
-        if not self.pipe: return "Erreur: Modèle non chargé."
+        raise InferenceError("Model not loaded for txt2img generation.")
         try:
             num_steps = 1 if "turbo" in self.model_id.lower() else 30
             guidance_scale = 0.0 if "turbo" in self.model_id.lower() else 7.5
@@ -152,7 +152,7 @@ class DiffusersAdapter(InferencePort):
             buf = BytesIO(); result["depth"].save(buf, format="PNG")
             return buf.getvalue()
         except Exception as e:
-            logger.error(f"❌ Depth Estimation failed: {e}"); return b""
+            logger.error(f"❌ Depth Estimation failed: {e}"); raise InferenceError(f"Depth estimation failed: {e}")
 
     def transform_image_to_anime(self, image_data: bytes, studio_style: str = "", prompt: str = "") -> str:
         try:

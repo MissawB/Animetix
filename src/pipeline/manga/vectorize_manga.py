@@ -3,12 +3,15 @@ import numpy as np
 import os
 import sys
 import requests
+import logging
 from PIL import Image
 from io import BytesIO
 
 # Force UTF-8 for Windows output
 if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
+
+logger = logging.getLogger("animetix.pipeline." + __name__)
 
 # Détection robuste de la racine du projet
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -32,7 +35,7 @@ def run_vectorization():
     models_registry, neo4j_manager = get_pipeline_resources()
     try:
         if not os.path.exists(CLEAN_DB):
-            print(f"❌ {CLEAN_DB} not found."); return
+            logger.error(f"❌ {CLEAN_DB} not found."); return
 
         with open(CLEAN_DB, 'r', encoding='utf-8') as f:
             db = json.load(f)
@@ -45,9 +48,9 @@ def run_vectorization():
         new_items = [item for item in db if str(item['id']) not in existing_ids or str(item['id']) not in existing_vision_ids or str(item['id']) not in existing_plot_ids]
 
         if not new_items:
-            print("ℹ️ Manga database up to date."); return
+            logger.info("ℹ️ Manga database up to date."); return
 
-        print(f"🚀 Multimodal Vectorization of {len(new_items)} mangas (Batching mode: {BATCH_SIZE})...")
+        logger.info(f"🚀 Multimodal Vectorization of {len(new_items)} mangas (Batching mode: {BATCH_SIZE})...")
         
         text_model = models_registry.text_model
         vision_model = models_registry.vision_model
@@ -91,12 +94,12 @@ def run_vectorization():
                             vision_images.append(img)
                             vision_metas.append(meta)
                     except Exception as e:
-                        print(f"⚠️ Error fetching image for {m_id}: {e}")
+                        logger.warning(f"⚠️ Error fetching image for {m_id}: {e}")
                         pass
 
                     try: neo4j_manager.sync_media_to_graph(item, "Manga")
                     except Exception as e:
-                        print(f"⚠️ Neo4j Sync Error for {m_id}: {e}")
+                        logger.warning(f"⚠️ Neo4j Sync Error for {m_id}: {e}")
                         pass
 
             # Exécution des Inférences
@@ -112,14 +115,14 @@ def run_vectorization():
                 v_embeddings = vision_model.encode(vision_images, convert_to_numpy=True).tolist()
                 repo.upsert_items("manga_visual_vibe", vision_ids, v_embeddings, vision_metas)
 
-            print(f"   📦 Processed {min(i + BATCH_SIZE, len(new_items))}/{len(new_items)}...")
+            logger.info(f"   📦 Processed {min(i + BATCH_SIZE, len(new_items))}/{len(new_items)}...")
 
-        print(f"✅ Manga Multimodal Sync Complete.")
+        logger.info(f"✅ Manga Multimodal Sync Complete.")
 
     except Exception as e:
         import traceback
         error_msg = f"CRITICAL ERROR in run_vectorization():\n{e}\n{traceback.format_exc()}"
-        print(error_msg, file=sys.stderr)
+        logger.error(error_msg)
         with open(os.path.join(BASE_DIR, "manga_vectorize_error.log"), "a", encoding="utf-8") as f:
             f.write(error_msg + "\n")
 

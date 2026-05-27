@@ -10,7 +10,11 @@ import json
 import os
 import random
 import sys
+import logging
+from typing import List, Any
 from datasets import load_dataset
+
+logger = logging.getLogger("animetix.pipeline." + __name__)
 
 # Chemins de fichiers absolus
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -167,7 +171,7 @@ def get_display_character(name):
 
 # --- GENERATEURS DE TEXTE NATUREL EN FRANÇAIS ---
 
-def make_french_anime_profile(title, genres, studios, tags, year):
+def make_french_anime_profile(title: str, genres: List[str], studios: List[str], tags: List[str], year: int) -> str:
     cleaned_tags = clean_tags(tags)
     cleaned_genres = clean_tags(genres)
     
@@ -185,7 +189,7 @@ def make_french_anime_profile(title, genres, studios, tags, year):
     ]
     return " ".join(profile_parts)
 
-def make_french_manga_profile(title, genres, tags):
+def make_french_manga_profile(title: str, genres: List[str], tags: List[str]) -> str:
     cleaned_tags = clean_tags(tags)
     cleaned_genres = clean_tags(genres)
     
@@ -542,7 +546,7 @@ def generate_volumes_and_episodes_instructions():
 
 def fetch_general_instructions(count):
     """Télécharge de manière stable 'pinzhenchen/alpaca-cleaned-fr' depuis HF Hub."""
-    print(f"[INFO] Loading {count} general French SFT instructions from Hugging Face...")
+    logger.info(f"[INFO] Loading {count} general French SFT instructions from Hugging Face...")
     ds = load_dataset('pinzhenchen/alpaca-cleaned-fr', split='train')
     
     general_samples = []
@@ -553,7 +557,7 @@ def fetch_general_instructions(count):
             "input": item.get("input", ""),
             "output": item.get("output", "")
         })
-    print(f"[SUCCESS] Loaded exactly {len(general_samples)} general SFT instructions.")
+    logger.info(f"[SUCCESS] Loaded exactly {len(general_samples)} general SFT instructions.")
     return general_samples
 
 def deduplicate_dataset(dataset):
@@ -567,7 +571,7 @@ def deduplicate_dataset(dataset):
             continue
         seen.add(key)
         deduped.append(item)
-    print(f"[INFO] Deduplication removed {duplicates_count} duplicate SFT pairs.")
+    logger.info(f"[INFO] Deduplication removed {duplicates_count} duplicate SFT pairs.")
     return deduped
 
 # --- METHODE D'ASSEMBLAGE UNIFIEE ---
@@ -576,32 +580,32 @@ def run_generate_instruction_dataset():
     specialized_data = []
 
     # 1. TRANSMEDIA BRIDGES (400 instructions en français)
-    print("[INFO] Generating high-quality transmedia bridge instructions...")
+    logger.info("[INFO] Generating high-quality transmedia bridge instructions...")
     transmedia_data = generate_transmedia_instructions()
     specialized_data.extend(transmedia_data)
 
     # 1b. MAGAZINES AND AWARDS (160 instructions en français)
-    print("[INFO] Generating high-quality magazines and awards relational instructions...")
+    logger.info("[INFO] Generating high-quality magazines and awards relational instructions...")
     awards_mag_data = generate_awards_and_magazines_instructions()
     specialized_data.extend(awards_mag_data)
 
     # 1c. SONGS AND SEIYUU (160 instructions en français)
-    print("[INFO] Generating high-quality openings, endings, and seiyuu relational instructions...")
+    logger.info("[INFO] Generating high-quality openings, endings, and seiyuu relational instructions...")
     songs_seiyuu_data = generate_songs_and_seiyuu_instructions()
     specialized_data.extend(songs_seiyuu_data)
 
     # 1d. PAYSAGE FRANÇAIS - RELATIONS (160 instructions en français)
-    print("[INFO] Generating high-quality French market relational instructions...")
+    logger.info("[INFO] Generating high-quality French market relational instructions...")
     french_relations = generate_french_market_relations_instructions()
     specialized_data.extend(french_relations)
 
     # 1e. PAYSAGE FRANÇAIS - PROFILS (600 instructions en français)
-    print("[INFO] Generating high-quality French voice actors, publishers, and distributors profile instructions...")
+    logger.info("[INFO] Generating high-quality French voice actors, publishers, and distributors profile instructions...")
     french_profiles = generate_french_market_profile_instructions()
     specialized_data.extend(french_profiles)
 
     # 1f. VOLUMES ET EPISODES (72 instructions en français)
-    print("[INFO] Generating high-quality manga volumes and anime episodes instructions...")
+    logger.info("[INFO] Generating high-quality manga volumes and anime episodes instructions...")
     vol_ep_data = generate_volumes_and_episodes_instructions()
     specialized_data.extend(vol_ep_data)
     
@@ -609,7 +613,7 @@ def run_generate_instruction_dataset():
     if os.path.exists(ANIME_DB):
         with open(ANIME_DB, 'r', encoding='utf-8') as f:
             animes = json.load(f)
-            print(f"[INFO] Processing ALL {len(animes)} animes with popularity weighting...")
+            logger.info(f"[INFO] Processing ALL {len(animes)} animes with popularity weighting...")
             for item in animes:
                 title = item.get('title', 'Unknown')
                 genres = item.get('genres', [])
@@ -643,7 +647,7 @@ def run_generate_instruction_dataset():
     if os.path.exists(MANGA_DB):
         with open(MANGA_DB, 'r', encoding='utf-8') as f:
             mangas = json.load(f)
-            print(f"[INFO] Processing ALL {len(mangas)} mangas with popularity weighting...")
+            logger.info(f"[INFO] Processing ALL {len(mangas)} mangas with popularity weighting...")
             for item in mangas:
                 title = item.get('title', 'Unknown')
                 genres = item.get('genres', [])
@@ -676,7 +680,7 @@ def run_generate_instruction_dataset():
         with open(CHAR_DB, 'r', encoding='utf-8') as f:
             chars = json.load(f)
             top_chars = [c for c in chars if c.get('popularity', {}).get('favourites', 0) > 50]
-            print(f"[INFO] Processing {len(top_chars)} characters with tiered augmentation...")
+            logger.info(f"[INFO] Processing {len(top_chars)} characters with tiered augmentation...")
             
             for c in top_chars:
                 name = c.get('name', 'Anonyme')
@@ -718,12 +722,12 @@ def run_generate_instruction_dataset():
     meta_required = int(non_meta_count * 0.0625)
     general_required = int(non_meta_count * 0.1875)
     
-    print(f"[INFO] Total Non-meta (80% target) instructions generated: {non_meta_count}")
-    print(f"[INFO] Target Meta required (5% target): {meta_required}")
-    print(f"[INFO] Target General required (15% target): {general_required}")
+    logger.info(f"[INFO] Total Non-meta (80% target) instructions generated: {non_meta_count}")
+    logger.info(f"[INFO] Target Meta required (5% target): {meta_required}")
+    logger.info(f"[INFO] Target General required (15% target): {general_required}")
     
     # Pool de questions méta
-    print("[INFO] Generating high-quality Otaku Meta Vocabulary questions pool...")
+    logger.info("[INFO] Generating high-quality Otaku Meta Vocabulary questions pool...")
     meta_pool = generate_otaku_meta_instructions()
     meta_pool = deduplicate_dataset(meta_pool)
     
@@ -765,7 +769,7 @@ def run_generate_instruction_dataset():
     final_dataset.extend(general_data)
     
     # Mélange global
-    print("[INFO] Shuffling the unified massive dataset...")
+    logger.info("[INFO] Shuffling the unified massive dataset...")
     random.shuffle(final_dataset)
     
     # Sauvegarde finale en JSONL
@@ -779,12 +783,12 @@ def run_generate_instruction_dataset():
     actual_meta_ratio = len(selected_meta) / total_count * 100
     actual_gen_ratio = len(general_data) / total_count * 100
     
-    print(f"[SUCCESS] UNIFIED MASSIVE AND OPTIMIZED DATASET READY: {total_count} total instructions.")
-    print(f"[INFO] Final Ratios Check:")
-    print(f"  - Specialized, Bridges & French Market (80% target): {len(specialized_data)} / {total_count} ({actual_spec_ratio:.2f}%)")
-    print(f"  - Otaku Meta-Vocabulary (5% target): {len(selected_meta)} / {total_count} ({actual_meta_ratio:.2f}%)")
-    print(f"  - General French SFT (15% target): {len(general_data)} / {total_count} ({actual_gen_ratio:.2f}%)")
-    print(f"[INFO] Saved at: {OUTPUT_DATASET}")
+    logger.info(f"[SUCCESS] UNIFIED MASSIVE AND OPTIMIZED DATASET READY: {total_count} total instructions.")
+    logger.info(f"[INFO] Final Ratios Check:")
+    logger.info(f"  - Specialized, Bridges & French Market (80% target): {len(specialized_data)} / {total_count} ({actual_spec_ratio:.2f}%)")
+    logger.info(f"  - Otaku Meta-Vocabulary (5% target): {len(selected_meta)} / {total_count} ({actual_meta_ratio:.2f}%)")
+    logger.info(f"  - General French SFT (15% target): {len(general_data)} / {total_count} ({actual_gen_ratio:.2f}%)")
+    logger.info(f"[INFO] Saved at: {OUTPUT_DATASET}")
 
 if __name__ == "__main__":
     run_generate_instruction_dataset()

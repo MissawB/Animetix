@@ -11,11 +11,15 @@
 # ///
 
 import os
+import logging
 from datasets import load_dataset
 from unsloth import FastLanguageModel
 from trl import SFTTrainer, SFTConfig
 from peft import LoraConfig
 import trackio
+
+# Configuration du logger
+logger = logging.getLogger("animetix.pipeline.mlops.remote_train")
 
 def train():
     # Remplacé Llama-3.2-3B par Qwen2.5-3B-Instruct (SOTA 2026 pour le multilingue / culture japonaise)

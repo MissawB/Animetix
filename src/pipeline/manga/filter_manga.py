@@ -2,6 +2,9 @@ import re
 import json
 import os
 import sys
+import logging
+
+logger = logging.getLogger("animetix.pipeline." + __name__)
 
 # Forcer l'encodage UTF-8 pour éviter les erreurs sur Windows avec les emojis
 if hasattr(sys.stdout, 'reconfigure'):
@@ -33,10 +36,10 @@ def clean_description(text):
 
 def run_refinement():
     if not os.path.exists(RAW_FILE):
-        print(f"❌ Error: {RAW_FILE} not found.")
+        logger.error(f"❌ Error: {RAW_FILE} not found.")
         return
 
-    print("Loading the raw database...")
+    logger.info("Loading the raw database...")
     with open(RAW_FILE, 'r', encoding='utf-8') as f:
         all_mangas = json.load(f)
 
@@ -46,7 +49,7 @@ def run_refinement():
         if m.get('description')
     }
 
-    print(f"{len(mangas_map)} mangas with description loaded.")
+    logger.info(f"{len(mangas_map)} mangas with description loaded.")
 
     non_root_ids = set()
     RELATIONS_TO_EXCLUDE = ['PREQUEL', 'REMAKE', 'ALTERNATIVE_SETTING', 'ALTERNATIVE_VERSION']
@@ -61,7 +64,7 @@ def run_refinement():
                 non_root_ids.add(m_id)
                 break
 
-    print(f"{len(non_root_ids)} mangas identified as non-roots.")
+    logger.info(f"{len(non_root_ids)} mangas identified as non-roots.")
 
     clean_root_mangas = []
     for m_id, m in mangas_map.items():
@@ -96,7 +99,7 @@ def run_refinement():
     with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
         json.dump(clean_root_mangas, f, indent=2, ensure_ascii=False)
 
-    print(f"✅ Clean database saved: {len(clean_root_mangas)} 'root' mangas.")
+    logger.info(f"✅ Clean database saved: {len(clean_root_mangas)} 'root' mangas.")
 
 if __name__ == "__main__":
     run_refinement()

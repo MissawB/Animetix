@@ -2,7 +2,10 @@ import requests
 import json
 import time
 import os
+import logging
 from dotenv import load_dotenv
+
+logger = logging.getLogger("animetix.pipeline." + __name__)
 
 # Détection robuste de la racine du projet
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -22,9 +25,9 @@ def get_twitch_token():
         if response.status_code == 200:
             return response.json().get('access_token')
         else:
-            print(f"❌ Error getting Twitch token: {response.text}")
+            logger.error(f"❌ Error getting Twitch token: {response.text}")
     except Exception as e:
-        print(f"❌ Twitch Auth Exception: {e}")
+        logger.error(f"❌ Twitch Auth Exception: {e}")
     return None
 
 def fetch_igdb(query, token):
@@ -40,28 +43,28 @@ def fetch_igdb(query, token):
         if response.status_code == 200:
             return response.json()
         elif response.status_code == 429:
-            print("⚠️ Rate limit hit, sleeping...")
+            logger.warning("⚠️ Rate limit hit, sleeping...")
             time.sleep(1)
             return fetch_igdb(query, token)
         else:
-            print(f"❌ IGDB Error {response.status_code}: {response.text}")
+            logger.error(f"❌ IGDB Error {response.status_code}: {response.text}")
     except Exception as e:
-        print(f"❌ IGDB Exception: {e}")
+        logger.error(f"❌ IGDB Exception: {e}")
     return []
 
 def run_ingestion():
     if not CLIENT_ID or not CLIENT_SECRET:
-        print("❌ Missing IGDB_CLIENT_ID or IGDB_CLIENT_SECRET in .env")
+        logger.error("❌ Missing IGDB_CLIENT_ID or IGDB_CLIENT_SECRET in .env")
         return False
 
     token = get_twitch_token()
     if not token: return False
 
-    print("🎮 Collecting Popular Games from IGDB...")
+    logger.info("🎮 Collecting Popular Games from IGDB...")
     
     new_raw_data = []
     for offset in range(0, 500, 50):
-        print(f"   - Progress: offset {offset}...")
+        logger.info(f"   - Progress: offset {offset}...")
         query = "fields name, summary, genres.name, themes.name, platforms.name, total_rating, total_rating_count, cover.url, first_release_date, similar_games.name, storyline; sort total_rating_count desc; limit 50; offset " + str(offset) + ";"
         
         results = fetch_igdb(query, token)
@@ -85,12 +88,12 @@ def run_ingestion():
         time.sleep(0.25)
 
     if not new_raw_data:
-        print("❌ Final attempt failed. No games retrieved.")
+        logger.error("❌ Final attempt failed. No games retrieved.")
         return False
 
     os.makedirs(os.path.dirname(OUTPUT_FILE), exist_ok=True)
     with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
         json.dump(new_raw_data, f, indent=2, ensure_ascii=False)
     
-    print(f"✅ Ingestion finished! Added {len(new_raw_data)} games.")
+    logger.info(f"✅ Ingestion finished! Added {len(new_raw_data)} games.")
     return True

@@ -78,14 +78,6 @@ class VllmAdapter(InferencePort):
             logger.error(f"vLLM Stream Error: {e}")
             yield self.generate(prompt, system_prompt, thinking_budget, thinking_mode)
 
-    def calculate_visual_similarity(self, query: str, item_id: str, media_type: str) -> float:
-        from core.ports.inference_port import InferenceNotImplementedError
-        raise InferenceNotImplementedError("calculate_visual_similarity not implemented for VllmAdapter")
-
-    def get_image_embedding(self, image_data: bytes, model_id: Optional[str] = None) -> List[float]:
-        from core.ports.inference_port import InferenceNotImplementedError
-        raise InferenceNotImplementedError("get_image_embedding not implemented for VllmAdapter")
-
     def classify_image(self, image_data: bytes, candidate_labels: List[str], model_id: Optional[str] = None) -> Dict[str, float]:
         """
         Classifie une image en utilisant le VLM.
@@ -112,6 +104,7 @@ class VllmAdapter(InferencePort):
         except Exception as e:
             logger.error(f"VLM Image Classification error: {e}")
             return {}
+
     def detect_objects(self, image_data: bytes, candidate_queries: List[str], model_id: Optional[str] = None) -> List[Dict]:
         """
         Détecte des objets en demandant au VLM de retourner des coordonnées.
@@ -168,9 +161,8 @@ class VllmAdapter(InferencePort):
             res.raise_for_status()
             return res.json()['choices'][0]['message']['content']
         except Exception as e:
-            from core.ports.inference_port import InferenceNotImplementedError
             logger.error(f"VLM Image Description error: {e}")
-            raise InferenceNotImplementedError(f"Impossible de décrire l'image via vLLM: {e}")
+            return "[Image description not available]"
             
     def visual_rerank(self, query: str, image_urls: List[str], system_prompt: str = "Tu es un expert en analyse visuelle d'anime.") -> List[Dict[str, Any]]:
         """Utilise le VLM pour classer une liste d'images par pertinence visuelle."""
@@ -238,14 +230,6 @@ class VllmAdapter(InferencePort):
             from core.domain.exceptions import InferenceError
             logger.error(f"vLLM visual rerank error: {e}")
             raise InferenceError(f"vLLM visual rerank failed: {str(e)}")
-
-    def get_multimodal_late_interaction(self, image_data: bytes) -> List[List[float]]:
-        from core.ports.inference_port import InferenceNotImplementedError
-        raise InferenceNotImplementedError("get_multimodal_late_interaction not implemented for VllmAdapter")
-
-    def generate_image(self, prompt: str, style: str = "") -> str:
-        from core.ports.inference_port import InferenceNotImplementedError
-        raise InferenceNotImplementedError("generate_image not implemented for VllmAdapter")
 
     def health_check(self) -> dict:
         try:

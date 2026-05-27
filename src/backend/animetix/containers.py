@@ -116,7 +116,7 @@ from adapters.inference.manga_ocr_adapter import MangaOCRAdapter
 from adapters.inference.fallback_adapter import FallbackInferenceAdapter
 from adapters.inference.unified_inference_adapter import UnifiedInferenceAdapter
 
-# Clients
+from adapters.infrastructure.django_notification_adapter import DjangoNotificationAdapter
 logger = logging.getLogger('animetix')
 
 class Container(containers.DeclarativeContainer):
@@ -454,7 +454,8 @@ class Container(containers.DeclarativeContainer):
 
     achievement_service = providers.Singleton(
         AchievementDomainService,
-        port=providers.Factory(DjangoAchievementAdapter)
+        port=providers.Factory(DjangoAchievementAdapter),
+        notification_port=providers.Singleton(DjangoNotificationAdapter)
     )
 
     achievement_listener = providers.Singleton(
@@ -501,6 +502,11 @@ class Container(containers.DeclarativeContainer):
             catalog_service=catalog_service,
             similarity_service=providers.Factory(SimilarityService, repository=repository)
         )
+    )
+    # Game Session Service Factory
+    game_session_service_factory = providers.Factory(
+        GameSessionService,
+        state_port=providers.Dependency()
     )
 
     video_quest_service = providers.Singleton(
@@ -725,11 +731,12 @@ class Container(containers.DeclarativeContainer):
         usage_port=usage_port
     )
 
-    game_session_service_factory = providers.Factory(
-        GameSessionService
+    # Infrastructure Ports
+    notification_port = providers.Singleton(
+        DjangoNotificationAdapter
     )
 
-# Instantiate the container
+    # Instantiate the container
 container = Container()
 
 def get_container():

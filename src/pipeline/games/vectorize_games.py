@@ -3,6 +3,9 @@ from sentence_transformers import SentenceTransformer
 import numpy as np
 import os
 import sys
+import logging
+
+logger = logging.getLogger("animetix.pipeline." + __name__)
 
 # Détection robuste de la racine du projet
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -19,7 +22,7 @@ VEC_VIBE = os.path.join(BASE_DIR, 'data', 'artifacts', 'game_vibe_vectors.npy')
 
 def run_vectorization(chroma_res=None):
     if not os.path.exists(CLEAN_DB):
-        print(f"❌ {CLEAN_DB} not found.")
+        logger.error(f"❌ {CLEAN_DB} not found.")
         return False
 
     with open(CLEAN_DB, 'r', encoding='utf-8') as f:
@@ -33,7 +36,7 @@ def run_vectorization(chroma_res=None):
     old_vibe = None
 
     if os.path.exists(LOOKUP_FILE):
-        print(f"📂 Loading existing lookup and vectors...")
+        logger.info(f"📂 Loading existing lookup and vectors...")
         try:
             with open(LOOKUP_FILE, 'r', encoding='utf-8') as f:
                 existing_lookup = json.load(f)
@@ -43,18 +46,18 @@ def run_vectorization(chroma_res=None):
                 old_thematic = np.load(VEC_THEMATIC)
                 old_plot = np.load(VEC_PLOT)
                 old_vibe = np.load(VEC_VIBE)
-                print(f"✅ Loaded {len(existing_ids)} existing vectors.")
+                logger.info(f"✅ Loaded {len(existing_ids)} existing vectors.")
         except Exception as e:
-            print(f"⚠️ Error loading existing artifacts: {e}")
+            logger.warning(f"⚠️ Error loading existing artifacts: {e}")
 
     # --- FILTRAGE DU DELTA ---
     new_items = [item for item in db if item['id'] not in existing_ids]
 
     if not new_items:
-        print("ℹ️ No new games to vectorize. Everything is up to date.")
+        logger.info("ℹ️ No new games to vectorize. Everything is up to date.")
         return True
 
-    print(f"🚀 Found {len(new_items)} new games to vectorize.")
+    logger.info(f"🚀 Found {len(new_items)} new games to vectorize.")
 
     # --- Data Preparation ---
     new_data_for_lookup = []
@@ -82,16 +85,16 @@ def run_vectorization(chroma_res=None):
         vibe_corpus.append(f"Mood: {genres}, {themes}")
 
     # --- Calculating Embeddings ---
-    print("Loading model (paraphrase-multilingual-mpnet-base-v2)...")
+    logger.info("Loading model (paraphrase-multilingual-mpnet-base-v2)...")
     model = SentenceTransformer('paraphrase-multilingual-mpnet-base-v2')
 
-    print(f"✨ Encoding {len(new_items)} vectors...")
+    logger.info(f"✨ Encoding {len(new_items)} vectors...")
     new_thematic = model.encode(thematic_corpus, show_progress_bar=True)
     new_plot = model.encode(plot_corpus, show_progress_bar=True)
     new_vibe = model.encode(vibe_corpus, show_progress_bar=True)
 
     # --- STOCKAGE CHROMADB ---
-    print("🚀 Syncing with ChromaDB...")
+    logger.info("🚀 Syncing with ChromaDB...")
     try:
         ids = [str(item['id']) for item in new_data_for_lookup]
         metadatas = new_data_for_lookup 
@@ -100,12 +103,12 @@ def run_vectorization(chroma_res=None):
         manager.add_to_collection("game_thematic", ids, new_thematic, metadatas)
         manager.add_to_collection("game_plot", ids, new_plot, metadatas)
         manager.add_to_collection("game_vibe", ids, new_vibe, metadatas)
-        print("✅ ChromaDB synchronization complete.")
+        logger.info("✅ ChromaDB synchronization complete.")
     except Exception as e:
-        print(f"⚠️ ChromaDB Error: {e}")
+        logger.warning(f"⚠️ ChromaDB Error: {e}")
 
     # --- Fusion et Sauvegarde Backup ---
-    print("Merging and saving artifacts...")
+    logger.info("Merging and saving artifacts...")
     if old_thematic is not None and len(old_thematic) > 0:
         final_thematic = np.concatenate([old_thematic, new_thematic])
         final_plot = np.concatenate([old_plot, new_plot])
@@ -125,5 +128,5 @@ def run_vectorization(chroma_res=None):
     with open(LOOKUP_FILE, 'w', encoding='utf-8') as f:
         json.dump(final_lookup, f, indent=2, ensure_ascii=False)
 
-    print(f"✅ Incremental Game Vectorization Complete! Total: {len(final_lookup)}")
+    logger.info(f"✅ Incremental Game Vectorization Complete! Total: {len(final_lookup)}")
     return True

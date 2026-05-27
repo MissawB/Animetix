@@ -2,7 +2,10 @@ import os
 import sys
 import json
 import django
+import logging
 from tqdm import tqdm
+
+logger = logging.getLogger("animetix.pipeline." + __name__)
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 sys.path.append(os.path.join(BASE_DIR, 'src', 'backend'))
@@ -20,12 +23,12 @@ def run_graph_healer(limit=100):
     from animetix.models import DataCurationTicket
     from pipeline.neo4j_client import neo4j_manager
     
-    print("🩺 Starting Graph Healer Agent...")
+    logger.info("🩺 Starting Graph Healer Agent...")
     
     # 1. Charger la vérité terrain (PostgreSQL/JSON)
     db_path = os.path.join(BASE_DIR, 'data', 'processed', 'clean_root_animes.json')
     if not os.path.exists(db_path):
-        print("❌ DB not found.")
+        logger.error("❌ DB not found.")
         return
         
     with open(db_path, 'r', encoding='utf-8') as f:
@@ -70,7 +73,7 @@ def run_graph_healer(limit=100):
             if created:
                 anomalies_found += 1
                 
-    print(f"✅ Graph Healer finished. {anomalies_found} new curation tickets created.")
+    logger.info(f"✅ Graph Healer finished. {anomalies_found} new curation tickets created.")
 
 if __name__ == "__main__":
     run_graph_healer()

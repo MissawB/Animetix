@@ -83,6 +83,7 @@ class CinematicVolumetricReconstructionService:
                 "metadata": {
                     "title": title,
                     "frame_count": len(frames_3d),
+                    "timeline_duration_sec": meta.get('duration', 0),
                     "mode": "DCS_Dynamic_Cinematic_Splatting_3D",
                     "navigable": True
                 }

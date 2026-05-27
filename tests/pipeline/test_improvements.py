@@ -139,13 +139,22 @@ def test_dpo_sensor_mocked(mock_setup):
 # ==========================================
 # 6. TESTS MODE SPATIAL STATIQUE VS DYNAMIQUE
 # ==========================================
-def test_spatial_computing_modes():
+@patch('imageio.get_reader')
+@patch('subprocess.run')
+def test_spatial_computing_modes(mock_sub, mock_imageio):
     from src.core.domain.services.static_diorama_3d_service import StaticDiorama3DService
     from src.core.domain.services.cinematic_volumetric_reconstruction_service import CinematicVolumetricReconstructionService
     
+    # Mock imageio reader
+    mock_reader = MagicMock()
+    mock_reader.get_meta_data.return_value = {'duration': 4.0, 'fps': 24.0}
+    # Mock iteration to yield at least one frame
+    mock_reader.__iter__.return_value = [np.zeros((100, 100, 3), dtype=np.uint8)]
+    mock_imageio.return_value = mock_reader
+    
     mock_engine = MagicMock()
     mock_engine.estimate_depth.return_value = b"depth_map_bytes"
-    mock_engine.generate_3d_scene.return_value = {"model_url": "/models/static.splat", "in_painted": True}
+    mock_engine.generate_3d_scene.return_value = {"status": "success", "model_url": "/models/static.splat", "in_painted": True}
     mock_engine.get_video_temporal_embeddings.return_value = [{"segment": 0}, {"segment": 1}]
     
     # 1. SGS Statique

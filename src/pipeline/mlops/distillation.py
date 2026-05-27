@@ -1,9 +1,12 @@
 import os
 import sys
+import logging
 
 # Ajout du chemin src pour l'import des scripts
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(os.path.join(BASE_DIR, 'scripts'))
+
+logger = logging.getLogger("animetix.pipeline." + __name__)
 
 from distill_draft_model import train_speculative_draft_model
 
@@ -12,7 +15,7 @@ def run_distillation():
     Lance le pipeline de distillation pour créer le Draft Model.
     Utilisé pour le Speculative Decoding dans LocalLlamaAdapter.
     """
-    print("💎 Starting Speculative Decoding Distillation...")
+    logger.info("💎 Starting Speculative Decoding Distillation...")
     
     # Configuration par défaut
     teacher = "meta-llama/Llama-3-8B-Instruct" # Ou un modèle local si dispo
@@ -28,10 +31,10 @@ def run_distillation():
             output_dir=output,
             epochs=1.0
         )
-        print("✅ Real Distillation Pipeline Complete.")
+        logger.info("✅ Real Distillation Pipeline Complete.")
         return output
     except Exception as e:
-        print(f"❌ Distillation Failed: {e}")
+        logger.error(f"❌ Distillation Failed: {e}")
         return None
 
 if __name__ == "__main__":

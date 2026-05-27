@@ -2,7 +2,11 @@ import requests
 import json
 import time
 import os
+import logging
 from dotenv import load_dotenv
+
+# Configuration du logger
+logger = logging.getLogger("animetix.pipeline.movies.ingest")
 
 # Détection robuste de la racine du projet
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -13,7 +17,7 @@ BASE_URL = "https://api.themoviedb.org/3"
 OUTPUT_FILE = os.path.join(BASE_DIR, 'data', 'raw', 'raw_tmdb_db.json')
 
 if not TMDB_API_KEY:
-    print("❌ TMDB_API_KEY not found in .env file.")
+    logger.error("❌ TMDB_API_KEY not found in .env file.")
     exit()
 
 def fetch_tmdb_page(endpoint, page=1, params={}):
@@ -25,11 +29,13 @@ def fetch_tmdb_page(endpoint, page=1, params={}):
         if response.status_code == 200:
             return response.json()
         elif response.status_code == 429:
-            print("⚠️ Rate limit reached. Sleeping...")
+            logger.warning("⚠️ Rate limit reached. Sleeping...")
             time.sleep(10)
             return fetch_tmdb_page(endpoint, page, params)
         return None
-    except: return None
+    except Exception as e: 
+        logger.error(f"❌ Error fetching TMDB page: {e}")
+        return None
 
 def ingest_movies():
     existing_data = []
@@ -37,19 +43,19 @@ def ingest_movies():
 
     # Charger les données existantes
     if os.path.exists(OUTPUT_FILE):
-        print(f"📂 Loading existing data from {OUTPUT_FILE}...")
+        logger.info(f"📂 Loading existing data from {OUTPUT_FILE}...")
         try:
             with open(OUTPUT_FILE, 'r', encoding='utf-8') as f:
                 existing_data = json.load(f)
                 existing_ids = {item['id'] for item in existing_data}
-            print(f"✅ Found {len(existing_data)} existing items.")
+            logger.info(f"✅ Found {len(existing_data)} existing items.")
         except Exception as e:
-            print(f"⚠️ Could not load existing data: {e}")
+            logger.warning(f"⚠️ Could not load existing data: {e}")
 
     all_raw = []
     
     # On récupère 50 pages de chaque (50 * 20 = 1000 items par catégorie)
-    print("🎬 Collecting 1000+ candidate Movies & Series...")
+    logger.info("🎬 Collecting 1000+ candidate Movies & Series...")
     for page in range(1, 51):
         m = fetch_tmdb_page("movie/popular", page=page)
         if m: 
@@ -66,7 +72,7 @@ def ingest_movies():
                 all_raw.append(item)
         
         if page % 10 == 0:
-            print(f"   - Progress: {page}/50 pages collected...")
+            logger.info(f"   - Progress: {page}/50 pages collected...")
         time.sleep(0.1)
     
     # Tri par popularité et on regarde les candidats
@@ -81,10 +87,10 @@ def ingest_movies():
     candidates_to_enrich = new_candidates[:limit_new]
 
     if not candidates_to_enrich:
-        print("ℹ️ No new items to enrich. Database is up to date.")
+        logger.info("ℹ️ No new items to enrich. Database is up to date.")
         return
 
-    print(f"✨ Enriching {len(candidates_to_enrich)} new items (Description, Cast, Keywords)...")
+    logger.info(f"✨ Enriching {len(candidates_to_enrich)} new items (Description, Cast, Keywords)...")
     new_enriched_data = []
     for i, item in enumerate(candidates_to_enrich):
         m_type = "movie" if item['media_type_custom'] == 'Movie' else "tv"
@@ -110,7 +116,7 @@ def ingest_movies():
             new_enriched_data.append(formatted)
         
         if (i + 1) % 50 == 0:
-            print(f"📦 Enriched {i+1}/{len(candidates_to_enrich)}...")
+            logger.info(f"📦 Enriched {i+1}/{len(candidates_to_enrich)}...")
         time.sleep(0.1)
 
     # Fusion
@@ -120,7 +126,7 @@ def ingest_movies():
     with open(OUTPUT_FILE, 'w', encoding='utf-8') as f:
         json.dump(final_data, f, indent=2, ensure_ascii=False)
     
-    print(f"✅ Collection finished! Added {len(new_enriched_data)} new items. Total: {len(final_data)}")
+    logger.info(f"✅ Collection finished! Added {len(new_enriched_data)} new items. Total: {len(final_data)}")
 
 if __name__ == "__main__":
     ingest_movies()

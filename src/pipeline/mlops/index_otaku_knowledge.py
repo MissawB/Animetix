@@ -18,7 +18,7 @@ try:
     django.setup()
     from animetix.containers import get_container
 except Exception as e:
-    print(f"Django init warning: {e}. Running in standalone simulated mode.")
+    logger.warning(f"Django init warning: {e}. Running in standalone simulated mode.")
     get_container = None
 
 logger = logging.getLogger("animetix.mlops.knowledge_indexer")

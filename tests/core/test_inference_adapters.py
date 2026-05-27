@@ -5,8 +5,8 @@ from src.adapters.inference.brain_api_adapter import BrainAPIAdapter
 from src.adapters.inference.gguf_adapter import GgufAdapter
 from src.adapters.inference.local_llama_adapter import LocalLlamaAdapter
 from src.adapters.inference.manga_ocr_adapter import MangaOCRAdapter
-from src.adapters.inference.transformers_text_adapter import TransformersTextAdapter
-from src.adapters.inference.transformers_rerank_adapter import TransformersRerankAdapter
+from src.adapters.inference.local_text_adapter import LocalTextAdapter
+from src.adapters.inference.local_rerank_adapter import LocalRerankAdapter
 
 from core.ports.inference_port import InferenceNotImplementedError
 
@@ -37,7 +37,7 @@ def test_local_llama_not_implemented():
         adapter.calculate_visual_similarity("test", "1", "image")
 
 def test_transformers_not_implemented():
-    adapter = TransformersTextAdapter(model_id="fake/id")
+    adapter = LocalTextAdapter(model_id="fake/id")
     with pytest.raises(InferenceNotImplementedError):
         adapter.calculate_visual_similarity("test", "1", "image")
 
@@ -52,7 +52,7 @@ def test_inference_not_implemented_error():
     assert "rerank_documents not implemented for this adapter" in str(excinfo.value)
 
 def test_transformers_rerank_documents():
-    adapter = TransformersRerankAdapter()
+    adapter = LocalRerankAdapter()
     from unittest.mock import patch, MagicMock
     with patch('core.utils.lazy_import.lazy_import') as mock_lazy:
         mock_st = MagicMock()
@@ -72,15 +72,15 @@ def test_transformers_rerank_documents():
         assert result == [0.9, 0.1]
         
 def test_transformers_rerank_empty():
-    adapter = TransformersRerankAdapter()
+    adapter = LocalRerankAdapter()
     result = adapter.rerank_documents("query", [])
     assert result == []
 
 
 def test_transformers_text_and_rerank_adapters_instantiation():
-    text_adapter = TransformersTextAdapter(model_id="fake/id")
+    text_adapter = LocalTextAdapter(model_id="fake/id")
     assert text_adapter.model_id == "fake/id"
     
-    rerank_adapter = TransformersRerankAdapter()
+    rerank_adapter = LocalRerankAdapter()
     assert rerank_adapter.model_name is not None
 

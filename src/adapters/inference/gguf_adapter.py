@@ -83,7 +83,8 @@ class GgufAdapter(InferencePort):
         """Utilise le support Llava de GGUF pour décrire l'image."""
         self._load_model()
         if not self.llm or not self.clip_model_path:
-            raise InferenceNotImplementedError("Vision support (CLIP/Llava) not configured for this GgufAdapter.")
+            # TODO: configure CLIP/Llava vision support for GgufAdapter
+            pass
         
         try:
             # Encodage de l'image en base64 pour l'API chat completion

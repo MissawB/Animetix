@@ -1,10 +1,12 @@
 from typing import List, Optional
 from ..entities.achievement import AchievementDefinition, GameEvent
 from ...ports.achievement_port import AchievementPort
+from ...ports.notification_port import NotificationPort
 
 class AchievementDomainService:
-    def __init__(self, port: AchievementPort):
+    def __init__(self, port: AchievementPort, notification_port: Optional[NotificationPort] = None):
         self.port = port
+        self.notification_port = notification_port
 
     def check_and_unlock(self, event: GameEvent) -> List[AchievementDefinition]:
         """
@@ -66,6 +68,21 @@ class AchievementDomainService:
             if should_unlock:
                 self.port.unlock_achievement(event.user_id, ach.code)
                 newly_unlocked.append(ach)
+                
+                # --- NOTIFICATION ---
+                if self.notification_port:
+                    self.notification_port.send(
+                        user_id=event.user_id,
+                        title="Succès Débloqué !",
+                        message=f"Félicitations ! Vous avez débloqué le succès '{ach.name}' (+{ach.xp_reward} XP).",
+                        notification_type='achievement',
+                        link='/achievements/',
+                        achievement={
+                            "name": ach.name,
+                            "icon": "🏆",
+                            "xp": ach.xp_reward
+                        }
+                    )
                 
         return newly_unlocked
 

@@ -18,17 +18,17 @@ sys.path.insert(0, os.path.join(BASE_DIR, "src", "backend"))
 # Configuration Django
 import django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'animetix_project.settings')
+
+logger = logging.getLogger("animetix.pipeline." + __name__)
+
 try:
     django.setup()
     from animetix.models import MediaItem
     from animetix.containers import get_container
 except Exception as e:
-    print(f"Django init warning: {e}. Running in simulated catalog mode.")
+    logger.warning(f"⚠️ Django init warning: {e}. Running in simulated catalog mode.")
     MediaItem = None
     get_container = None
-
-logger = logging.getLogger("animetix.mlops.fandom_scraper")
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 # Mapping statique robuste des Fandoms pour les franchises clés (Fidélité 100%)
 FANDOM_MAP = {

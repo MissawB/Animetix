@@ -1,7 +1,11 @@
 import os
 import torch
+import logging
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import PeftModel
+
+# Configuration du logger
+logger = logging.getLogger("animetix.pipeline.mlops.merge_lora")
 
 # Base directory (4 levels up from src/pipeline/mlops/)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))

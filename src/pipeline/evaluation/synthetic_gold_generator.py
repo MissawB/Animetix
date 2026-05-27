@@ -10,7 +10,7 @@ import logging
 sys.stdout.reconfigure(encoding='utf-8')
 sys.stderr.reconfigure(encoding='utf-8')
 
-logger = logging.getLogger("animetix." + __name__)
+logger = logging.getLogger("animetix.pipeline." + __name__)
 
 # Root detection
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -169,13 +169,13 @@ Règles critiques :
                 query = parsed["query"]
                 ground_truth = parsed["ground_truth"]
                 success = True
-                print(" -> Success via Ollama llama3!")
+                logger.info(" -> Success via Ollama llama3!")
         except Exception as pe:
-            print(f" -> Parse error: {pe}")
+            logger.error(f" -> Parse error: {pe}")
             
     # Safe fallback if LLM offline or chokes
     if not success:
-        print(" -> Fallback: Generating programmatic QA pair.")
+        logger.info(" -> Fallback: Generating programmatic QA pair.")
         if entry["domain"] == "voice_actors_vf":
             query = f"Qui est le comédien ou la comédienne de doublage français qui prête sa voix à {entry['expected_title']} dans la VF ?"
             ground_truth = fact
@@ -212,4 +212,4 @@ output_path = os.path.join(output_dir, "synthetic_gold_dataset.json")
 with open(output_path, "w", encoding="utf-8") as f:
     json.dump(synthetic_gold_dataset, f, indent=2, ensure_ascii=False)
 
-print(f"\n✅ Generation complete! Saved exactly {len(synthetic_gold_dataset)} records to {output_path}")
+logger.info(f"✅ Generation complete! Saved exactly {len(synthetic_gold_dataset)} records to {output_path}")

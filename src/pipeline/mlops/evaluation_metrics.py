@@ -3,6 +3,7 @@ import os
 import numpy as np
 import requests
 import wandb
+import logging
 from sentence_transformers import SentenceTransformer
 from dagster import asset, Output, AssetObservation
 import pandas as pd
@@ -11,6 +12,8 @@ from ragas.metrics import faithfulness, answer_relevancy, context_precision, con
 from ragas.embeddings import LangchainEmbeddingsWrapper
 from datasets import Dataset
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+
+logger = logging.getLogger("animetix.pipeline." + __name__)
 
 # Chemins
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -61,7 +64,7 @@ def ragas_performance_comparison():
     summary_table = wandb.Table(columns=["Mode", "QueryType", "Faithfulness", "Relevancy", "Context Recall", "Animetix Score"])
 
     for mode in ["vector", "hybrid"]:
-        print(f"⚙️ Generating answers for mode: {mode}...")
+        logger.info(f"⚙️ Generating answers for mode: {mode}...")
         results_list = []
         
         for i, entry in enumerate(eval_set):
@@ -84,7 +87,7 @@ def ragas_performance_comparison():
                     if graph_ctx:
                         contexts = contexts + [f"Graph Metadata: {graph_ctx}"]
                 except Exception as e:
-                    print(f"⚠️ Graph context extraction error for {ids}: {e}")
+                    logger.warning(f"⚠️ Graph context extraction error for {ids}: {e}")
                     pass
             
             # Generation
@@ -97,9 +100,9 @@ def ragas_performance_comparison():
                 if resp.status_code == 200:
                     answer = resp.json().get("text", "Erreur")
                 else:
-                    print(f"❌ Brain API Error {resp.status_code} for question: {q}")
+                    logger.error(f"❌ Brain API Error {resp.status_code} for question: {q}")
             except Exception as e:
-                print(f"⚠️ Brain API generation error: {e}")
+                logger.warning(f"⚠️ Brain API generation error: {e}")
                 pass
 
             results_list.append({
@@ -111,7 +114,7 @@ def ragas_performance_comparison():
             })
 
         # Evaluation RAGAS par catégorie
-        print(f"⚖️ Running RAGAS evaluation per category (Mode: {mode})...")
+        logger.info(f"⚖️ Running RAGAS evaluation per category (Mode: {mode})...")
         df_results = pd.DataFrame(results_list)
         
         for q_type in ["architectural", "standard"]:
@@ -134,7 +137,7 @@ def ragas_performance_comparison():
                 summary_table.add_data(mode, q_type, metrics.get('faithfulness', 0), metrics.get('answer_relevancy', 0), metrics.get('context_recall', 0), animetix_score)
                 wandb.log({f"{mode}_{q_type}_{k}": v for k, v in metrics.items()})
             except Exception as e:
-                print(f"❌ RAGAS Evaluation Error for {mode}/{q_type}: {e}")
+                logger.error(f"❌ RAGAS Evaluation Error for {mode}/{q_type}: {e}")
 
     wandb.log({"Official Comparison": summary_table})
     run.finish()

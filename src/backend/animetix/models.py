@@ -287,6 +287,7 @@ class Notification(models.Model):
 class DiscoveryClub(models.Model):
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField()
+    theme = models.CharField(max_length=50, default='General')
     creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_clubs')
     members = models.ManyToManyField(User, through='ClubMembership', related_name='joined_clubs')
     image_url = models.URLField(max_length=500, null=True, blank=True)
@@ -297,10 +298,10 @@ class DiscoveryClub(models.Model):
     def __str__(self): return self.name
 
 class ClubMembership(models.Model):
-    ROLES = [('member', 'Membre'), ('admin', 'Administrateur'), ('owner', 'Propriétaire')]
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    club = models.ForeignKey(DiscoveryClub, on_delete=models.CASCADE)
-    role = models.CharField(max_length=20, choices=ROLES, default='member')
+    ROLES = [('Member', 'Member'), ('Officer', 'Officer')]
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='club_memberships')
+    club = models.ForeignKey(DiscoveryClub, on_delete=models.CASCADE, related_name='memberships')
+    role = models.CharField(max_length=20, choices=ROLES, default='Member')
     joined_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

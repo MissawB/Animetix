@@ -113,7 +113,8 @@ class DiscoveryClubSerializer(serializers.ModelSerializer):
     class Meta:
         model = DiscoveryClub
         fields = [
-            'id', 'name', 'description', 'creator', 'creator_name', 
+            'id', 'name', 'description', 'theme', 'creator', 'creator_name', 
             'members_count', 'image_url', 'is_private', 'events', 
             'created_at', 'updated_at'
         ]
+        read_only_fields = ['creator']
