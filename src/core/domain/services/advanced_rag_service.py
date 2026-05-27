@@ -17,11 +17,12 @@ class AdvancedRAGService:
     Service RAG 2.0 combinant recherche hybride, ré-ordonnancement (Reranking)
     et vérification de cohérence (Self-RAG).
     """
-    def __init__(self, repository: RepositoryPort, llm_service: LLMService, neo4j_manager: Optional[GraphPersistencePort] = None, prompt_manager: PromptManager = None):
+    def __init__(self, repository: RepositoryPort, llm_service: LLMService, neo4j_manager: Optional[GraphPersistencePort] = None, prompt_manager: PromptManager = None, colbert_adapter=None):
         self.repository = repository
         self.llm_service = llm_service
         self.neo4j_manager = neo4j_manager
         self.prompt_manager = prompt_manager or getattr(llm_service, 'prompt_manager', None)
+        self.colbert_adapter = colbert_adapter
         self._indices: Dict[str, HybridSearchIndex] = {}
         self.rerank_cache = RerankingCache()
 
@@ -155,8 +156,14 @@ class AdvancedRAGService:
             return candidates
 
     def generate_advanced_answer(self, query: str, media_type: str) -> str:
-        """Processus complet : Search -> Rerank (RRF) -> GraphRAG -> Verify -> Generate."""
-        candidates = self.hybrid_search(query, media_type, limit=10)
+        # 1. Fetch wide candidate pool
+        candidates = self.hybrid_search(query, media_type, limit=20)
+        
+        # 2. Optional: ColBERT Late-Interaction filtering
+        if self.colbert_adapter and len(candidates) > 10:
+            candidates = self.colbert_adapter.rank_documents(query, candidates)[:10]
+            
+        # 3. Heavy Cross-Encoder Reranking
         ranked_candidates = self.rerank_results(query, candidates)
         
         top_results = ranked_candidates[:5]

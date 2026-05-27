@@ -241,6 +241,8 @@ class Container(containers.DeclarativeContainer):
     )
 
     # --- Domain Services ---
+    from adapters.persistence.colbert_adapter import LateInteractionColBERTAdapter
+    colbert_adapter = providers.Singleton(LateInteractionColBERTAdapter)
 
     llm_service = providers.Singleton(
         LLMService,

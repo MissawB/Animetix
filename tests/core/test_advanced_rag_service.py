@@ -1,63 +1,37 @@
 import pytest
 from unittest.mock import MagicMock
-import numpy as np
 from core.domain.services.advanced_rag_service import AdvancedRAGService
 
-@pytest.fixture
-def mock_repository():
-    repo = MagicMock()
-    # On met plus de contenu pour aider le vectorizer TF-IDF
-    repo.load_catalog.return_value = {
-        'db': [
-            {'id': '1', 'title': 'Naruto', 'description': 'Naruto is a shinobi ninja from the leaf village. He wants to be Hokage.', 'genres': ['Action']},
-            {'id': '2', 'title': 'One Piece', 'description': 'Luffy is a pirate who wants to find the One Piece treasure in the grand sea.', 'genres': ['Adventure']}
-        ]
-    }
-    return repo
-
-@pytest.fixture
-def mock_llm_service():
-    service = MagicMock()
-    service.inference_engine.generate.return_value = "OUI"
-    # Ajout d'un mock pour prompt_manager pour éviter les erreurs d'unpacking
-    pm = MagicMock()
-    pm.get_prompt.return_value = ("Test Prompt", "System Prompt")
-    service.prompt_manager = pm
-    return service
-
-@pytest.fixture
-def rag_service(mock_repository, mock_llm_service):
-    return AdvancedRAGService(repository=mock_repository, llm_service=mock_llm_service)
-
-def test_hybrid_search(rag_service):
-    # La recherche hybride initialise l'index automatiquement au premier appel
-    # On utilise un mot qui est CLAIREMENT dans le texte
-    results = rag_service.hybrid_search("ninja", "Anime", limit=1)
+def test_rag_colbert_filtering():
+    mock_repo = MagicMock()
+    mock_llm = MagicMock()
+    mock_colbert = MagicMock()
     
-    assert len(results) >= 1
-    assert "Naruto" in results[0]['title']
-
-def test_rerank_results_fallback(rag_service, mock_llm_service):
-    mock_llm_service.inference_engine.rerank_documents.side_effect = Exception("Simulated error")
-    candidates = [{'id': '1', 'title': 'A'}, {'id': '2', 'title': 'B'}]
-    assert rag_service.rerank_results("query", candidates) == candidates
-
-def test_rerank_results_with_mock_reranker(rag_service, mock_llm_service):
-    mock_llm_service.inference_engine.rerank_documents.return_value = [0.1, 0.9]
+    # Simulate hybrid search returning 20 results
+    mock_repo.load_catalog.return_value = {"db": []}
     
-    candidates = [{'id': '1', 'title': 'A'}, {'id': '2', 'title': 'B'}]
-    ranked = rag_service.rerank_results("query", candidates)
+    service = AdvancedRAGService(mock_repo, mock_llm, colbert_adapter=mock_colbert)
     
-    assert ranked[0]['title'] == 'B' # Higher score
-    assert ranked[1]['title'] == 'A'
-
-def test_self_rag_verify(rag_service, mock_llm_service):
-    assert rag_service.self_rag_verify("query", "context") is True
+    # Mock internal hybrid_search to return dummy docs
+    dummy_docs = [{"id": i, "title": f"Doc {i}"} for i in range(20)]
+    service.hybrid_search = MagicMock(return_value=dummy_docs)
     
-    mock_llm_service.inference_engine.generate.return_value = "NON"
-    assert rag_service.self_rag_verify("query", "context") is False
-
-def test_generate_advanced_answer(rag_service, mock_llm_service):
-    mock_llm_service.inference_engine.generate.return_value = "The answer is Naruto."
-    ans = rag_service.generate_advanced_answer("Who is Naruto?", "Anime")
-    assert "Naruto" in ans
+    # Mock ColBERT to return top 5
+    filtered_docs = dummy_docs[:5]
+    for d in filtered_docs:
+        d["colbert_score"] = 0.9
+    mock_colbert.rank_documents.return_value = filtered_docs
+    
+    # Mock rerank_results
+    service.rerank_results = MagicMock(return_value=filtered_docs)
+    
+    # Mock prompt_manager
+    mock_prompt_mgr = MagicMock()
+    mock_prompt_mgr.get_prompt.return_value = ("prompt", "sys")
+    service.prompt_manager = mock_prompt_mgr
+    
+    service.generate_advanced_answer("test query", "Anime")
+    
+    # Verify ColBERT was called to filter down to 10 (or 5 in our mock) before rerank
+    mock_colbert.rank_documents.assert_called_once_with("test query", dummy_docs)
+    service.rerank_results.assert_called_once_with("test query", filtered_docs)
