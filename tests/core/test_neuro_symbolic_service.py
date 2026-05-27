@@ -25,9 +25,9 @@ def test_solve_paradox_success(neuro_service, mock_engine):
     ]
     
     neuro_service.solver = MagicMock()
-    neuro_service.solver.find_intruder.return_value = ("C", "Proof C")
+    neuro_service.solver.find_intruder.return_value = ("C", "Proof C", {})
     
-    intruder, explanation = neuro_service.solve_paradox("Anime", "A", "B", "C")
+    intruder, explanation, meta = neuro_service.solve_paradox("Anime", "A", "B", "C")
     assert intruder == "C"
     assert explanation == "The explanation."
 

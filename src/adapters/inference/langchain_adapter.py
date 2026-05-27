@@ -15,7 +15,7 @@ class LangChainInferenceAdapter(BaseChatModel):
     Adapter that wraps an InferencePort into a LangChain BaseChatModel.
     Enables our custom inference engines to be used with LangChain-based tools like Ragas.
     """
-    inference_engine: InferencePort
+    inference_engine: Any
     system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku."
     
     class Config:

@@ -19,8 +19,8 @@ from core.domain.services.dpo_feedback_loop import DPOFeedbackLoop
 def curate_dpo_dataset():
     print("🚀 Starting Swarm-to-DPO Curation...")
     container = get_container()
-    rag = container.agentic_rag
-    loop = DPOFeedbackLoop(prompt_manager=container.prompt_manager)
+    rag = container.agentic_rag()
+    loop = DPOFeedbackLoop(prompt_manager=container.prompt_manager())
     
     # 1. Fetch rejected feedbacks
     rejected = AIFeedback.objects.filter(is_positive=False)

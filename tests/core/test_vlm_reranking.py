@@ -9,30 +9,46 @@ def mock_dependencies():
     rag_service = MagicMock()
     web_search = MagicMock()
     prompt_manager = MagicMock()
+    llm_service = MagicMock()
+    workflow_manager = MagicMock()
     
     # Default prompt manager returns
     prompt_manager.get_prompt.return_value = ("prompt", "system")
     
-    return inference_engine, rag_service, web_search, prompt_manager
+    return inference_engine, rag_service, web_search, prompt_manager, llm_service, workflow_manager
 
 def test_vlm_reranking_end_to_end(mock_dependencies):
-    inference_engine, rag_service, web_search, prompt_manager = mock_dependencies
+    inference_engine, rag_service, web_search, prompt_manager, llm_service, workflow_manager = mock_dependencies
     
     agentic_rag = AgenticRAGService(
         inference_engine=inference_engine,
         rag_service=rag_service,
         web_search=web_search,
-        prompt_manager=prompt_manager
+        prompt_manager=prompt_manager,
+        llm_service=llm_service,
+        workflow_manager=workflow_manager
     )
 
     # Force high confidence to skip fallback and librarian
     agentic_rag.uncertainty_service = MagicMock()
-    agentic_rag.uncertainty_service.measure_confidence.return_value = 1.0
+    agentic_rag.uncertainty_service.measure_confidence.return_value = {
+        "confidence_score": 1.0,
+        "is_reliable": True,
+        "perplexity": None,
+        "action_required": "PROCEED"
+    }
 
     # 1. Mock complexity analyzer (TTC)
+    llm_service.generate.return_value = '{"complexity_score": 2, "thinking_budget": 100}'
+    
     # 2. Mock Planner returning is_visual_query=True
-    # 3. Mock Scout returning truth path
-    # 4. Mock Judge returning APPROVE
+    mock_plan = SearchPlan(
+        optimized_query="blue hair girl",
+        requires_web=False,
+        is_visual_query=True,
+        reasoning="Looking for visual features"
+    )
+    llm_service.generate_structured.return_value = mock_plan
 
     # Mock synthesizer to return a high score directly if using ResponseSynthesizer
     # Actually, let's just patch CONDUCT_DEBATE too if it's used
@@ -40,8 +56,6 @@ def test_vlm_reranking_end_to_end(mock_dependencies):
     outcome = DebateOutcome(consensus_action=JudgeAction.APPROVE, final_reasoning="Perfect", critiques={})
     agentic_rag.debate_manager.conduct_debate = MagicMock(return_value=outcome)    
     inference_engine.generate.side_effect = [
-        '{"complexity_score": 2, "thinking_budget": 100}', # TTC
-        '{"optimized_query": "blue hair girl", "requires_web": false, "is_visual_query": true, "reasoning": "Looking for visual features"}', # Planner
         "Initial truth path from Scout", # Scout
         '{"is_reliable": true, "faithfulness_score": 1.0, "relevancy_score": 1.0, "hallucination_detected": false, "reasoning": "Perfect", "next_action": "APPROVE"}' # Judge
     ]

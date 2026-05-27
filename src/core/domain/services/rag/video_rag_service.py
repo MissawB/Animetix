@@ -84,6 +84,15 @@ class VideoRAGService:
         
         return f"Synthèse simplifiée pour '{query}' basée sur {len(analysis_results)} segments."
 
+    def process_long_video(self, video_data: bytes) -> Dict[str, Any]:
+        """Orchestration de bout en bout de l'analyse d'une longue vidéo (Sync)."""
+        narrative = self.inference_engine.get_video_temporal_embeddings(video_data)
+        actions = self.inference_engine.localize_video_actions(video_data, [""])
+        return {
+            "narrative": narrative,
+            "actions": actions
+        }
+
     def _segment_video(self, video_data: bytes) -> List[bytes]:
         """Découpage physique du flux. (En prod: FFmpeg)"""
         # Pour le prototype industriel, on divise en 4 pour montrer le parallélisme

@@ -54,3 +54,24 @@ class LongContextDiscoveryService:
     def _synthesize_final(self, summaries: str) -> str:
         prompt, system = self.prompt_manager.get_prompt("hierarchical_summary_final", context=summaries)
         return self.inference_engine.generate(prompt, system_prompt=system)
+
+    def create_haystack(self, filler: str, needle: str, size: int, depth: float) -> str:
+        words = [filler] * size
+        insert_idx = int(size * depth)
+        words.insert(insert_idx, needle)
+        return " ".join(words)
+
+    def run_needle_test(self, needle: str, question: str, size: int, depth: float) -> dict:
+        haystack = self.create_haystack("filler", needle, size, depth)
+        prompt = f"Context: {haystack}\nQuestion: {question}"
+        response = self.inference_engine.generate(prompt)
+        success = needle in response
+        return {"success": success, "context_size": size, "depth": depth}
+
+    def benchmark_model_limits(self, sizes: list) -> list:
+        results = []
+        for size in sizes:
+            for depth in [0.1, 0.5, 0.9]:
+                res = self.run_needle_test("1234", "What is the secret?", size, depth)
+                results.append(res)
+        return results

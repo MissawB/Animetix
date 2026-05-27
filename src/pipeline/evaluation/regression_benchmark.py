@@ -2,8 +2,11 @@ import os
 import sys
 import json
 import time
+import logging
 from typing import List, Dict
 import torch
+
+logger = logging.getLogger("animetix." + __name__)
 
 # Détection robuste de la racine du projet
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -83,7 +86,7 @@ GOLD_SET = [
 
 def run_regression_test(model_adapter=None):
     """Benchmark de précision IA."""
-    print(f"🧪 Starting AI Regression Test...")
+    logger.info(f"🧪 Starting AI Regression Test...")
     container = get_container()
     agent = container.agentic_rag()
     
@@ -98,7 +101,7 @@ def run_regression_test(model_adapter=None):
     total_score = 0
 
     for test in GOLD_SET:
-        print(f"   🤔 Testing: '{test['query']}'...")
+        logger.info(f"   🤔 Testing: '{test['query']}'...")
         start_time = time.time()
         
         # On exécute le RAG Agentique (mode non-streaming pour le test)
@@ -120,7 +123,7 @@ def run_regression_test(model_adapter=None):
         except:
             pass # On garde le texte brut si le parsing échoue
             
-        print(f"   🤖 AI Answer: {answer_text[:100]}...")
+        logger.info(f"   🤖 AI Answer: {answer_text[:100]}...")
         
         # Scoring : présence des faits attendus (Case insensitive + Strip)
         hits = 0
@@ -130,7 +133,7 @@ def run_regression_test(model_adapter=None):
                 if any(syn.lower().strip() in answer_text.lower() for syn in fact):
                     hits += 1
                 else:
-                    print(f"      ❌ Missing fact (synonyms): {fact}")
+                    logger.warning(f"      ❌ Missing fact (synonyms): {fact}")
             elif fact.lower().strip() in answer_text.lower():
                 hits += 1
             else:
@@ -138,7 +141,7 @@ def run_regression_test(model_adapter=None):
                 if fact.lower() in answer_text.lower():
                     hits += 1
                 else:
-                    print(f"      ❌ Missing fact: '{fact}'")
+                    logger.warning(f"      ❌ Missing fact: '{fact}'")
         
         accuracy = hits / len(test['expected_facts'])
         total_score += accuracy
@@ -168,9 +171,9 @@ def run_regression_test(model_adapter=None):
     with open(report_path, 'w', encoding='utf-8') as f:
         json.dump(report, f, indent=2, ensure_ascii=False)
 
-    print(f"✅ Regression Test Complete.")
-    print(f"📊 Avg Accuracy: {avg_accuracy:.2%}")
-    print(f"⏱️ Avg Latency: {avg_latency:.2f}s")
+    logger.info(f"✅ Regression Test Complete.")
+    logger.info(f"📊 Avg Accuracy: {avg_accuracy:.2%}")
+    logger.info(f"⏱️ Avg Latency: {avg_latency:.2f}s")
     
     return report
 

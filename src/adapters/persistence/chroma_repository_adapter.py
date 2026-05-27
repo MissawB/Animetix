@@ -146,14 +146,16 @@ class ChromaRepositoryAdapter(RepositoryPort):
         try:
             coll = self.client.get_collection(name=collection_name)
             return coll.count()
-        except:
+        except Exception as e:
+            logger.exception(f"Error getting collection count for {collection_name}: {e}")
             return 0
 
     def get_all_ids(self, collection_name: str) -> List[str]:
         try:
             coll = self.client.get_or_create_collection(name=collection_name)
             return coll.get().get('ids', [])
-        except:
+        except Exception as e:
+            logger.exception(f"Error getting all IDs for {collection_name}: {e}")
             return []
 
     def get_media_item(self, media_type: str, external_id: str) -> Optional[Dict]:

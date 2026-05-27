@@ -31,7 +31,9 @@ def fetch_tmdb_page(endpoint, page=1, params={}):
             time.sleep(10)
             return fetch_tmdb_page(endpoint, page, params)
         return None
-    except: return None
+    except requests.RequestException as e:
+        logger.error(f"❌ TMDB API request failed on {endpoint}: {e}")
+        return None
 
 def run_ingestion():
     if not TMDB_API_KEY:

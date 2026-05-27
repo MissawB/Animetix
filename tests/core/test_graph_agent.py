@@ -47,6 +47,7 @@ def agentic_rag(mock_inference, mock_rag_service, mock_web_search, mock_prompt_m
         web_search=mock_web_search,
         prompt_manager=mock_prompt_manager,
         llm_service=mock_llm_service,
+        workflow_manager=MagicMock(),
         neo4j_manager=mock_neo4j
     )
     # Force high confidence to skip recovery and librarian
@@ -55,17 +56,29 @@ def agentic_rag(mock_inference, mock_rag_service, mock_web_search, mock_prompt_m
     return service
 
 def test_graph_exploration_flow(agentic_rag, mock_llm_service, mock_neo4j):
-    # side_effect for LLMService.generate
-    # 1. Complexity Analyzer
-    # 2. Planner (requires_graph=True)
-    # 3. GraphExpert (Cypher generation)
-    # 4. Judge (Approval) - Scout is skipped because raw_context is empty
-    
+    from core.domain.entities.ai_schemas import SearchPlan, DebateOutcome, JudgeAction
+    mock_plan = SearchPlan(
+        optimized_query="Voice actor both Ghibli and MAPPA",
+        requires_graph=True,
+        reasoning="relational query"
+    )
+    mock_llm_service.generate_structured.return_value = mock_plan
+
+    outcome = DebateOutcome(consensus_action=JudgeAction.APPROVE, final_reasoning="Perfect", critiques={})
+    agentic_rag.debate_manager.conduct_debate = MagicMock(return_value=outcome)
+
+    agentic_rag.semantic_router = MagicMock()
+    agentic_rag.semantic_router.classify.return_value = "COMPLEX"
+
+    agentic_rag.workflow_manager.community_partitioner = MagicMock()
+    agentic_rag.workflow_manager.community_partitioner.search_communities.return_value = [
+        {"name": "MOCK", "summary": "MOCK SUMMARY", "entities": ["Mamoru"]}
+    ]
+
     responses = [
         '{"thinking_budget": 0, "complexity_score": 2}', # 1. TTC
-        '{"optimized_query": "Voice actor both Ghibli and MAPPA", "requires_graph": true, "reasoning": "relational query"}', # 2. Planner
-        '{"cypher": "MATCH (p:Person)-[:ACTED_IN]->(m:Movie) RETURN p.name", "explanation": "test"}', # 3. GraphExpert
-        '{"faithfulness_score": 1.0, "relevancy_score": 1.0, "hallucination_detected": false, "reasoning": "ok", "is_reliable": true, "next_action": "APPROVE"}' # 4. Judge
+        '{"cypher": "MATCH (p:Person)-[:ACTED_IN]->(m:Movie) RETURN p.name", "explanation": "test"}', # 2. GraphExpert
+        '{"faithfulness_score": 1.0, "relevancy_score": 1.0, "hallucination_detected": false, "reasoning": "ok", "is_reliable": true, "next_action": "APPROVE"}' # 3. Judge
     ]
     
     mock_llm_service.generate.side_effect = responses

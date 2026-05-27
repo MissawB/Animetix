@@ -1,25 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getGraphNeighborhood } from '../../api';
+import { GraphData } from '../../types';
 
-export interface GraphNode {
-  id: string;
-  labels: string[];
-  properties: Record<string, any>;
-  [key: string]: any;
-}
-
-export interface GraphLink {
-  source: string;
-  target: string;
-  type: string;
-  properties: Record<string, any>;
-  [key: string]: any;
-}
-
-export interface GraphData {
-  nodes: GraphNode[];
-  links: GraphLink[];
-}
 
 export function useGraphData(id: string, type: string, depth: number) {
   const [data, setData] = useState<GraphData>({ nodes: [], links: [] });

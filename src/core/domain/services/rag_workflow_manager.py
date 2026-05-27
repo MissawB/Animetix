@@ -149,7 +149,7 @@ class RAGWorkflowManager:
                         "error_type": type(e).__name__
                     }
                 )
-                yield StreamStep(type="thought", content=f"[Recovery] {type(e).__name__} dans {ctx.current_state}. Bascule vers le mode RAG classique de secours...").model_dump()
+                yield StreamStep(type="thought", content=f"[Recovery] Erreur de logique ou timeout ({type(e).__name__}) dans {ctx.current_state}. Bascule vers le mode RAG classique de secours...").model_dump()
                 ctx.current_state = RAGState.FALLBACK_RAG
             except AnimetixError as e:
                 logger.error(

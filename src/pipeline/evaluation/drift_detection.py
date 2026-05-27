@@ -1,8 +1,11 @@
 import requests
 import json
 import os
+import logging
 from typing import List, Dict
 from datetime import datetime
+
+logger = logging.getLogger("animetix." + __name__)
 
 # Détection robuste de la racine du projet
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -12,14 +15,14 @@ def run_drift_detection(limit=20):
     Vérifie si les animes les plus populaires de la saison actuelle sont présents dans le catalogue.
     Alerte si un 'drift' de connaissances est détecté.
     """
-    print(f"🔍 Starting Knowledge Drift Detection ({datetime.now().date()})...")
+    logger.info(f"🔍 Starting Knowledge Drift Detection ({datetime.now().date()})...")
     
     # 1. Récupérer les top animes de la saison via Jikan API
     try:
         res = requests.get("https://api.jikan.moe/v4/seasons/now", timeout=10)
         seasonal_animes = res.json().get('data', [])[:limit]
     except Exception as e:
-        print(f"❌ Failed to fetch seasonal data: {e}")
+        logger.error(f"❌ Failed to fetch seasonal data: {e}")
         return {"status": "error", "message": str(e)}
 
     # 2. Charger le catalogue local (clean_root_animes.json)
@@ -43,7 +46,7 @@ def run_drift_detection(limit=20):
             })
 
     drift_score = len(missing) / limit
-    print(f"📊 Drift Score: {drift_score:.2f} ({len(missing)} missing items)")
+    logger.info(f"📊 Drift Score: {drift_score:.2f} ({len(missing)} missing items)")
 
     result = {
         "status": "success",

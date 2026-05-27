@@ -9,14 +9,43 @@ def mock_deps():
     mock_xai.measure_confidence.return_value = 1.0
     mock_pm = MagicMock()
     mock_pm.get_prompt.return_value = ("prompt", "system")
+    
+    mock_rag = MagicMock()
+    mock_router = MagicMock()
+    mock_router.classify.return_value = "COMPLEX"
+
+    from core.domain.services.rag_workflow_manager import RAGWorkflowManager
+    mock_wm = RAGWorkflowManager(
+        planner=MagicMock(),
+        critic=MagicMock(),
+        synthesizer=MagicMock(),
+        judge=MagicMock(),
+        scout=MagicMock(),
+        semantic_router=mock_router,
+        retrieval_evaluator=MagicMock(),
+        community_partitioner=MagicMock(),
+        graph_expert=MagicMock(),
+        debate_manager=MagicMock(),
+        librarian=MagicMock(),
+        forge=MagicMock(),
+        saga_agent=MagicMock(),
+        chronicler=MagicMock(),
+        uncertainty_service=mock_xai,
+        inference_engine=MagicMock(),
+        web_search=MagicMock(),
+        prompt_manager=mock_pm,
+        rag_service=mock_rag,
+    )
     return {
         'inference_engine': MagicMock(),
-        'rag_service': MagicMock(),
+        'rag_service': mock_rag,
         'web_search': MagicMock(),
         'prompt_manager': mock_pm,
         'llm_service': MagicMock(),
+        'workflow_manager': mock_wm,
         'obs_service': MagicMock(),
-        'uncertainty_service': mock_xai
+        'uncertainty_service': mock_xai,
+        'semantic_router': mock_router
     }
 
 def test_research_more_loop_integration(mock_deps):

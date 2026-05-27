@@ -61,7 +61,8 @@ class CounterfactualConversationSimulator:
             import re
             match = re.search(r"\d+\.\d+", score_text)
             alternative_utility = float(match.group(0)) if match else 0.70
-        except Exception:
+        except Exception as e:
+            logger.warning("⚠️ Counterfactual Utility evaluation failed. Falling back to default utility 0.75.", exc_info=True)
             alternative_utility = 0.75
             
         # Calcul du regret contrefactuel :

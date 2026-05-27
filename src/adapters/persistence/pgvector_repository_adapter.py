@@ -191,7 +191,11 @@ class PgVectorRepositoryAdapter(RepositoryPort):
     def get_media_item(self, media_type: str, external_id: str) -> Optional[Dict]:
         try:
             return self._to_full_dict(MediaItem.objects.get(media_type=media_type, external_id=external_id))
-        except: return None
+        except MediaItem.DoesNotExist:
+            return None
+        except Exception as e:
+            logger.exception(f"Unexpected error getting media item {media_type} with ID {external_id}: {e}")
+            return None
 
     def get_catalog_by_type(self, media_type: str, limit: int = 1000, offset: int = 0) -> List[Dict]:
         return [self._to_full_dict(i) for i in MediaItem.objects.filter(media_type=media_type)[offset:offset+limit]]

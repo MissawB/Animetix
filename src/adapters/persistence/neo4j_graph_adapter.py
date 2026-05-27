@@ -60,7 +60,8 @@ class Neo4jGraphAdapter(GraphPersistencePort):
         try:
             self._manager.driver.verify_connectivity()
             return True
-        except Exception:
+        except Exception as e:
+            logger.debug("Neo4j connectivity check failed.", exc_info=True)
             return False
 
     def close(self) -> None:

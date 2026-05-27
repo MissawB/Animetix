@@ -35,10 +35,23 @@ def mock_sys_modules(monkeypatch):
     monkeypatch.setitem(sys.modules, "scipy.io", MagicMock())
     monkeypatch.setitem(sys.modules, "scipy.io.wavfile", mock_scipy.io.wavfile)
     monkeypatch.setitem(sys.modules, "pydub", mock_pydub)
+    
+    # Also clear the lazy import cache so that it doesn't leak into other tests
+    from core.utils.lazy_import import _loaded_modules
+    for m in ["diffusers", "imageio", "TTS", "cv2", "audioldm", "transformers", "torch", "scipy", "pydub"]:
+        if m in _loaded_modules:
+            del _loaded_modules[m]
+
+    yield
+    
+    from core.utils.lazy_import import _loaded_modules
+    for m in ["diffusers", "imageio", "TTS", "cv2", "audioldm", "transformers", "torch", "scipy", "pydub"]:
+        if m in _loaded_modules:
+            del _loaded_modules[m]
 
 pytest.importorskip("scipy")
 
-from adapters.inference.transformers_adapter import TransformersAdapter
+from adapters.inference.local_text_adapter import LocalTextAdapter
 from adapters.inference.diffusers_adapter import DiffusersAdapter
 from adapters.inference.xtts_adapter import XTTSAdapter
 from adapters.inference.vision_transformers_adapter import VisionTransformersAdapter
@@ -47,7 +60,7 @@ from core.domain.exceptions import InferenceError
 
 @pytest.fixture
 def transformers_adapter():
-    return TransformersAdapter(use_4bit=False)
+    return LocalTextAdapter(use_4bit=False)
 
 @pytest.fixture
 def diffusers_adapter():
@@ -67,7 +80,7 @@ def fallback_adapter(transformers_adapter, vision_adapter):
 
 def test_inference_error_on_failure(transformers_adapter):
     """Vérifie que l'adaptateur lève une InferenceError en cas de pépin."""
-    with patch.object(transformers_adapter, "_load_model", side_effect=Exception("GPU OOM")):
+    with patch.object(transformers_adapter, "_load_model", side_effect=InferenceError("Critical failure during model loading: GPU OOM")):
         with pytest.raises(InferenceError) as excinfo:
             transformers_adapter.generate("Hello")
         assert "Critical failure during model loading: GPU OOM" in str(excinfo.value)

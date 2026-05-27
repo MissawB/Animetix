@@ -32,7 +32,15 @@ def mock_prompt_manager():
 def agentic_rag(mock_engine, mock_rag, mock_web, mock_prompt_manager):
     mock_xai = MagicMock()
     mock_xai.measure_confidence.return_value = 0.95
-    return AgenticRAGService(inference_engine=mock_engine, rag_service=mock_rag, web_search=mock_web, prompt_manager=mock_prompt_manager, uncertainty_service=mock_xai)
+    return AgenticRAGService(
+        inference_engine=mock_engine, 
+        rag_service=mock_rag, 
+        web_search=mock_web, 
+        prompt_manager=mock_prompt_manager, 
+        llm_service=MagicMock(),
+        workflow_manager=MagicMock(),
+        uncertainty_service=mock_xai
+    )
 
 def test_plan_and_solve_local_path(agentic_rag, mock_engine, mock_rag):
     mock_engine.generate.side_effect = [
@@ -151,13 +159,9 @@ def test_thinking_mode_streaming(agentic_rag, mock_engine):
 def test_fallback_on_inference_error(agentic_rag, mock_engine, mock_rag):
     from core.domain.entities.exceptions import InferenceTimeoutError
     
-    mock_engine.generate.side_effect = [
-        '{"complexity_score": 0, "thinking_budget": 0}', # 0. TTC
-        InferenceTimeoutError("Timeout!") # 1. Planner fails
-    ]
-    
     # Mock classic RAG for fallback
     mock_rag.classic_rag.return_value = "Classic fallback answer"
+    agentic_rag.planner.plan = MagicMock(side_effect=InferenceTimeoutError("Timeout!"))
     
     steps = list(agentic_rag.plan_and_solve_stream("Query", "Anime"))
     

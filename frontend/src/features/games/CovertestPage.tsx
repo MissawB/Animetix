@@ -6,29 +6,20 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Badge } from '../../components/ui/Badge';
 import { CardSkeleton } from '../../components/ui/Skeleton';
+import { CovertestState } from '../../types';
 
 import { useTranslation } from 'react-i18next';
 
-interface CovertestState {
-  cover_url: string;
-  gameOver: boolean;
-  secret_title?: string;
-  guesses: Array<{ title: string; is_correct: boolean }>;
-}
-
 const CovertestPage: React.FC = () => {
   const { t } = useTranslation();
-  const { gameState, loading, handleGuess } = useCovertest() as unknown as { 
-    gameState: CovertestState | undefined; 
-    loading: boolean; 
-    handleGuess: (arg: { guess: string }) => Promise<void> 
-  };
+  const { gameState, loading, handleGuess } = useCovertest();
   const [guess, setGuess] = useState<string>('');
 
   const onSubmit = async () => {
     await handleGuess({ guess });
     setGuess('');
   };
+
 
   if (loading) return (
     <div className="flex justify-center items-center py-12 px-6">

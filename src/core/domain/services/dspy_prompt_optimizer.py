@@ -69,7 +69,8 @@ class DSPyPromptOptimizer:
                     )
                     score = self._evaluate_accuracy(generated, expected)
                     scores.append(score)
-                except Exception:
+                except Exception as e:
+                    logger.warning("⚠️ DSPy variant evaluation step failed. Appending fallback score 0.5.", exc_info=True)
                     scores.append(0.5)
                     
             avg_score = sum(scores) / len(scores) if scores else 0.0
@@ -102,5 +103,6 @@ class DSPyPromptOptimizer:
             if match:
                 return float(match.group(0))
             return 0.8
-        except Exception:
+        except Exception as e:
+            logger.warning("⚠️ DSPy Judge evaluation failed. Falling back to default score 0.7.", exc_info=True)
             return 0.7

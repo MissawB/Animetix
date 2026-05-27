@@ -21,6 +21,7 @@ from core.domain.services.vision_quest_service import VisionQuestDomainService
 from core.domain.services.emoji_service import EmojiDomainService
 from core.domain.services.paradox_service import ParadoxDomainService
 from core.domain.services.animinator_service import AniminatorDomainService
+from core.domain.services.companion_service import CompanionService
 from core.domain.services.akinetix_service import AkinetixDomainService
 from core.domain.services.akinetix_engine import AkinetixEngine
 from core.domain.services.akinetix_rl_service import AkinetixRLDomainService
@@ -103,11 +104,13 @@ from adapters.inference.brain_api_adapter import BrainAPIAdapter
 from adapters.inference.vllm_adapter import VllmAdapter
 from adapters.inference.local_llama_adapter import LocalLlamaAdapter
 from adapters.inference.gguf_adapter import GgufAdapter
-from adapters.inference.transformers_adapter import TransformersAdapter
+from adapters.inference.local_text_adapter import LocalTextAdapter
+from adapters.inference.local_rerank_adapter import LocalRerankAdapter
+from adapters.inference.local_guardrail_adapter import LocalGuardrailAdapter
 from adapters.inference.vision_transformers_adapter import VisionTransformersAdapter
 from adapters.inference.moondream_adapter import MoondreamAdapter
 from adapters.inference.diffusers_adapter import DiffusersAdapter
-from adapters.inference.xtts_adapter import XTTSAdapter
+from adapters.inference.audio_transformers_adapter import AudioTransformersAdapter
 from adapters.inference.manga_ocr_adapter import MangaOCRAdapter
 from adapters.inference.fallback_adapter import FallbackInferenceAdapter
 from adapters.inference.unified_inference_adapter import UnifiedInferenceAdapter
@@ -174,10 +177,18 @@ class Container(containers.DeclarativeContainer):
 
     manga_ocr_adapter = providers.Singleton(MangaOCRAdapter)
 
-    transformers_adapter = providers.Singleton(
-        TransformersAdapter,
+    local_text_adapter = providers.Singleton(
+        LocalTextAdapter,
         model_id="Qwen/Qwen2.5-1.5B-Instruct",
         use_4bit=True
+    )
+
+    local_rerank_adapter = providers.Singleton(
+        LocalRerankAdapter
+    )
+
+    local_guardrail_adapter = providers.Singleton(
+        LocalGuardrailAdapter
     )
 
     vision_transformers_adapter = providers.Singleton(
@@ -192,8 +203,8 @@ class Container(containers.DeclarativeContainer):
         usage_port=usage_port
     )
 
-    xtts_adapter = providers.Singleton(
-        XTTSAdapter,
+    audio_transformers_adapter = providers.Singleton(
+        AudioTransformersAdapter,
         usage_port=usage_port
     )
 
@@ -207,11 +218,13 @@ class Container(containers.DeclarativeContainer):
         FallbackInferenceAdapter,
         adapters=providers.List(
             unified_inference_adapter,
-            transformers_adapter,
-            vision_transformers_adapter,
+            local_text_adapter,
+            local_rerank_adapter,
+            local_guardrail_adapter,
             gguf_adapter,
             diffusers_adapter,
-            xtts_adapter,
+            vision_transformers_adapter,
+            audio_transformers_adapter,
             moondream_adapter,
             manga_ocr_adapter,
             providers.Factory(
@@ -420,6 +433,12 @@ class Container(containers.DeclarativeContainer):
         llm_service=llm_service
     )
 
+    companion_service = providers.Singleton(
+        CompanionService,
+        llm_service=llm_service,
+        prompt_manager=prompt_manager
+    )
+
     blind_test_service = providers.Singleton(
         BlindTestDomainService,
         repository=repository
@@ -564,7 +583,7 @@ class Container(containers.DeclarativeContainer):
 
     voice_cloning_service = providers.Singleton(
         VoiceCloningService,
-        xtts_engine=xtts_adapter
+        inference_engine=audio_transformers_adapter
     )
 
     native_speech_llm_service = providers.Singleton(

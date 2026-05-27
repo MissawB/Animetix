@@ -26,7 +26,8 @@ def image_proxy_view(request):
     
     try:
         url = base64.b64decode(encoded_url).decode('utf-8')
-    except:
+    except Exception as e:
+        logger.error(f"Failed to decode image proxy URL: {e}")
         return HttpResponse(status=400)
 
     cache_key = f"img_cache_{hashlib.md5(url.encode()).hexdigest()}"

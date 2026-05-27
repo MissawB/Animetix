@@ -22,6 +22,7 @@ def test_chronicler_theories_integration():
         web_search=mock_web_search,
         prompt_manager=mock_prompt_mgr,
         llm_service=mock_llm,
+        workflow_manager=MagicMock(),
         neo4j_manager=mock_neo4j
     )
 

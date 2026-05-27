@@ -137,11 +137,14 @@ class VllmAdapter(InferencePort):
             res.raise_for_status()
             data = res.json()['choices'][0]['message']['content']
             
-            # Extraction JSON robuste
             try:
                 detected = json.loads(data)
                 return detected.get("objects", [])
-            except:
+            except json.JSONDecodeError as e:
+                logger.error(f"VLM Object Detection JSON decode error: {e}. Output was: {data[:200]}...")
+                return []
+            except Exception as e:
+                logger.exception(f"Unexpected error parsing VLM Object Detection: {e}")
                 return []
         except Exception as e:
             logger.error(f"VLM Object Detection error: {e}")

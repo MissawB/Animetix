@@ -31,13 +31,23 @@ class DjangoFeedbackAdapter(FeedbackRepositoryPort):
 
     def get_feedback_stats(self) -> Dict[str, Any]:
         from animetix.models import AIFeedback
-        from django.db.models import Count
         total = AIFeedback.objects.count()
         if total == 0:
-            return {"satisfaction_rate": 0, "total": 0}
+            return {"satisfaction_rate": 0, "total": 0, "top_failures": []}
         
         pos = AIFeedback.objects.filter(is_positive=True).count()
+        negatives = AIFeedback.objects.filter(is_positive=False).order_by('-created_at')[:5]
+        
+        top_failures = []
+        for neg in negatives:
+            top_failures.append({
+                "id": neg.id,
+                "input_context": neg.input_context,
+                "output_text": neg.output_text
+            })
+            
         return {
             "satisfaction_rate": (pos / total) * 100,
-            "total": total
+            "total": total,
+            "top_failures": top_failures
         }

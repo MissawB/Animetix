@@ -11,12 +11,12 @@ mock_imageio = MagicMock()
 sys.modules["imageio"] = mock_imageio
 
 
-from adapters.inference.transformers_adapter import TransformersAdapter
+from src.adapters.inference.vision_transformers_adapter import VisionTransformersAdapter
 from core.domain.services.rag.video_rag_service import VideoRAGService
 
 @pytest.fixture
 def adapter():
-    return TransformersAdapter(use_4bit=False)
+    return VisionTransformersAdapter(use_4bit=False)
 
 @pytest.fixture
 def video_service(adapter):
@@ -40,7 +40,7 @@ def test_frame_sampling_logic(adapter):
     assert len(frames) == 5
     assert isinstance(frames[0], Image.Image)
 
-@patch("adapters.inference.transformers_adapter.TransformersAdapter._load_video_vlm", MagicMock())
+@patch("src.adapters.inference.vision_transformers_adapter.VisionTransformersAdapter._load_video_vlm", MagicMock())
 def test_get_video_temporal_embeddings_mocked(adapter):
     """Vérifie le workflow de récit temporel avec mocks VLM."""
     adapter._video_processor = MagicMock()
@@ -60,7 +60,7 @@ def test_get_video_temporal_embeddings_mocked(adapter):
     assert len(res) == 1
     assert "Gear 5" in res[0]["summary"]
 
-@patch("adapters.inference.transformers_adapter.TransformersAdapter._load_video_vlm", MagicMock())
+@patch("src.adapters.inference.vision_transformers_adapter.VisionTransformersAdapter._load_video_vlm", MagicMock())
 def test_video_rag_service_orchestration(video_service):
     """Vérifie que le service de domaine orchestre correctement l'analyse."""
     video_service.inference_engine.get_video_temporal_embeddings = MagicMock(return_value=[{"summary": "test"}])

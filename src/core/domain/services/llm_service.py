@@ -111,6 +111,8 @@ class LLMService:
             if span:
                 span.set_status(Status(StatusCode.ERROR, description=str(e)))
                 span.end()
+            if type(e).__name__ == "InferenceTimeoutError":
+                raise e
             raise InferenceError(f"AI Generation failed: {str(e)}", context={'original_error': str(e)})
 
     def generate_structured(self, prompt: str, schema: Type[BaseModel], system_prompt: str = "", use_slm: bool = False) -> Any:

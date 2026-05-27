@@ -1,8 +1,11 @@
+import logging
 from typing import List, Dict, Optional
 from core.ports.repository_port import RepositoryPort
 from animetix.models import MediaItem
 from django.db.models import Q
 from pgvector.django import CosineDistance
+
+logger = logging.getLogger('animetix')
 
 class DjangoRepositoryAdapter(RepositoryPort):
     def get_nearest_neighbors(self, collection_name: str, item_id: str, n_results: int = 5) -> List[Dict]:
@@ -56,7 +59,8 @@ class DjangoRepositoryAdapter(RepositoryPort):
                 d=CosineDistance(embedding_field, vec_b)
             ).first().d
             return 1.0 - dist
-        except:
+        except Exception as e:
+            logger.exception(f"Error calculating similarity in DjangoRepositoryAdapter: {e}")
             return 0.0
 
     def upsert_items(self, collection_name: str, ids: List[str], embeddings: List[List[float]], metadatas: List[Dict]):

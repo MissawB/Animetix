@@ -206,7 +206,36 @@ class VsBattleService:
                 return []
 
         parsed_versions = []
-        # ... (rest of parsing logic) ...
+        for raw_data in all_raw_data:
+            wikitext = raw_data.get("wikitext", "")
+            wiki_url = raw_data.get("url", "")
+            image_url = raw_data.get("image_url")
+            page_title = raw_data.get("name", name)
+
+            try:
+                prompt, system = self.prompt_manager.get_prompt("vs_battle_parser", wikitext=wikitext[:5000])
+                character = self._safe_generate_structured(
+                    prompt=prompt,
+                    system_prompt=system,
+                    response_model=CombatCharacter
+                )
+                
+                character.name = page_title
+                character.wiki_url = wiki_url
+                character.image_url = image_url or character.image_url
+                
+                if character.stats:
+                    best_tier_str = self._extract_max_tier(character.stats.tier)
+                    character.stats.tier_value = self._map_tier_to_value(best_tier_str)
+                    
+                    logger.info(f"✅ Parsed version: {character.name} (Tier {character.stats.tier} -> Value: {character.stats.tier_value})")
+                    parsed_versions.append(character)
+            except Exception as e:
+                logger.warning(f"⚠️ Failed to parse version '{page_title}': {e}")
+                continue
+                
+        return parsed_versions
+
 
     def _map_tier_to_value(self, tier_str: str) -> int:
         """

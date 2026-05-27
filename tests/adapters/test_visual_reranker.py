@@ -1,39 +1,25 @@
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
-from src.adapters.inference.transformers_adapter import TransformersAdapter
+from unittest.mock import MagicMock, patch
+from src.adapters.inference.vision_transformers_adapter import VisionTransformersAdapter
 
-@pytest.mark.asyncio
-async def test_visual_rerank_success():
-    # Mocking necessary components
+def test_visual_rerank_success():
+    # Mocking requests.get
     class MockResponse:
-        status = 200
-        async def read(self):
-            return b"fake_image_data"
-        async def __aenter__(self):
-            return self
-        async def __aexit__(self, exc_type, exc_val, exc_tb):
-            pass
+        status_code = 200
+        content = b"fake_image_data"
 
-    class MockSession:
-        def get(self, url, **kwargs):
-            return MockResponse()
-        async def __aenter__(self):
-            return self
-        async def __aexit__(self, exc_type, exc_val, exc_tb):
-            pass
-
-    with patch("aiohttp.ClientSession", return_value=MockSession()), \
+    with patch("requests.get", return_value=MockResponse()), \
          patch("sentence_transformers.SentenceTransformer") as mock_model, \
          patch("sentence_transformers.util.cos_sim") as mock_cos_sim, \
          patch("PIL.Image.open") as mock_image_open:
         
         # Setup mocks
         mock_model.return_value.encode.return_value = [1, 0]
-        mock_cos_sim.return_value = [[0.9], [0.5]]
+        mock_cos_sim.return_value = [[0.9, 0.5]]
         mock_image_open.return_value = MagicMock()
         
-        adapter = TransformersAdapter()
-        results = await adapter.visual_rerank(
+        adapter = VisionTransformersAdapter()
+        results = adapter.visual_rerank(
             query="test query",
             image_urls=["url1", "url2"]
         )        
@@ -41,18 +27,17 @@ async def test_visual_rerank_success():
         assert "url" in results[0]
         assert results[0]["score"] == 0.9
 
-@pytest.mark.asyncio
-async def test_visual_rerank_failure():
-    # Mocking an HTTP error
-    mock_session = AsyncMock()
-    mock_response = AsyncMock()
-    mock_response.status = 404
-    mock_session.get.return_value.__aenter__.return_value = mock_response
+def test_visual_rerank_failure():
+    # Mocking requests.get to return a failure status code
+    class MockResponse:
+        status_code = 404
+        content = b""
     
-    with patch("aiohttp.ClientSession", return_value=mock_session):
-        adapter = TransformersAdapter()
-        with pytest.raises(Exception):
-            await adapter.visual_rerank(
-                query="test query", 
-                items=[{"id": "1", "image_url": "invalid_url"}]
-            )
+    with patch("requests.get", return_value=MockResponse()):
+        adapter = VisionTransformersAdapter()
+        results = adapter.visual_rerank(
+            query="test query", 
+            image_urls=["invalid_url"]
+        )
+        assert results == []
+

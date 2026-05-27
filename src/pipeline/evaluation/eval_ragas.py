@@ -1,5 +1,6 @@
 import os
 import asyncio
+import logging
 from typing import List, Dict
 from pipeline.chroma_client import chroma_manager
 from pipeline.neo4j_client import neo4j_manager
@@ -13,6 +14,8 @@ from sentence_transformers import SentenceTransformer
 from dotenv import load_dotenv
 
 load_dotenv()
+
+logger = logging.getLogger("animetix." + __name__)
 
 # Configuration de l'LLM de jugement (Gemini)
 eval_llm = ChatGoogleGenerativeAI(
@@ -68,12 +71,12 @@ class RAGEvaluator:
             if response.status_code == 200:
                 return response.json().get("text", "")
         except Exception as e:
-            print(f"Error generating answer: {e}")
+            logger.error(f"Error generating answer: {e}")
         return "Erreur de génération."
 
     async def run_evaluation(self, test_questions: List[Dict[str, str]], mode: str = "vector"):
         """Lance l'évaluation RAGAS sur un set de questions."""
-        print(f"\n🚀 Starting evaluation in mode: {mode.upper()}")
+        logger.info(f"🚀 Starting evaluation in mode: {mode.upper()}")
         data = {
             "question": [],
             "answer": [],
@@ -85,7 +88,7 @@ class RAGEvaluator:
             q = item["question"]
             gt = item["ground_truth"]
             
-            print(f"🧐 Evaluating: {q}")
+            logger.info(f"🧐 Evaluating: {q}")
             contexts = self.get_contexts(q, mode=mode)
             answer = self.generate_answer(q, contexts)
             
@@ -108,8 +111,8 @@ class RAGEvaluator:
             embeddings=ragas_embeddings
         )
         
-        print(f"📊 Results ({mode}):")
-        print(result)
+        logger.info(f"📊 Results ({mode}):")
+        logger.info(result)
         return result
 
 if __name__ == "__main__":

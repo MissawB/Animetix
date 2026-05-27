@@ -7,8 +7,14 @@ def mock_engine():
     return MagicMock()
 
 @pytest.fixture
-def long_context_service(mock_engine):
-    return LongContextDiscoveryService(inference_engine=mock_engine)
+def mock_prompt_manager():
+    pm = MagicMock()
+    pm.get_prompt.return_value = ("formatted prompt", "system prompt")
+    return pm
+
+@pytest.fixture
+def long_context_service(mock_engine, mock_prompt_manager):
+    return LongContextDiscoveryService(inference_engine=mock_engine, prompt_manager=mock_prompt_manager)
 
 def test_create_haystack(long_context_service):
     haystack = long_context_service.create_haystack("filler", "needle", 100, 0.5)

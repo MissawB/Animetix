@@ -3,6 +3,7 @@ import asyncio
 import time
 import requests
 import wandb
+import logging
 from typing import List, Dict
 from datasets import Dataset
 from ragas import evaluate, RunConfig
@@ -10,6 +11,9 @@ from ragas.metrics import Faithfulness, AnswerRelevancy
 from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
 from ragas.embeddings import LangchainEmbeddingsWrapper
 from dotenv import load_dotenv
+
+# Logger
+logger = logging.getLogger("animetix." + __name__)
 
 load_dotenv()
 
@@ -62,7 +66,7 @@ async def evaluate_model(engine_name: str, config: Dict):
         config=config
     )
 
-    print(f"\n🚀 Evaluating Engine: {engine_name}")
+    logger.info(f"🚀 Evaluating Engine: {engine_name}")
     
     data = {
         "question": [],
@@ -99,7 +103,7 @@ async def evaluate_model(engine_name: str, config: Dict):
         data["answer"].append(answer)
         data["contexts"].append(["No specific context provided in this direct test."])
         data["ground_truth"].append(gt)
-        print(f"✅ Q: {q} | Latency: {latency:.2f}s")
+        logger.info(f"✅ Q: {q} | Latency: {latency:.2f}s")
 
     # Ragas Evaluation
     dataset = Dataset.from_dict(data)
@@ -146,7 +150,7 @@ async def main():
     
     await evaluate_model(engine, {"model_type": engine, "task": "comparison"})
     
-    print("\n💡 Tip: To compare, stop the local model or rename the folder to force 'Fallback-API' and run this script again.")
+    logger.info("💡 Tip: To compare, stop the local model or rename the folder to force 'Fallback-API' and run this script again.")
 
 if __name__ == "__main__":
     asyncio.run(main())

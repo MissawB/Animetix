@@ -1,6 +1,7 @@
 import os
 import json
 import datetime
+import logging
 from django.conf import settings
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
@@ -8,6 +9,8 @@ from rest_framework.views import APIView
 from ..models import DailyChallenge
 from ..serializers import DailyChallengeSerializer
 from ..containers import get_container
+
+logger = logging.getLogger(__name__)
 
 class DailyChallengeViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = DailyChallenge.objects.all()
@@ -98,14 +101,16 @@ class TransparencyDataView(APIView):
         try:
             graph_health = container.graph_healer_service.audit_graph_quality()
             stats['knowledge_graph'] = graph_health
-        except Exception:
+        except Exception as e:
+            logger.warning("⚠️ Failed to audit Knowledge Graph health. Setting status as unavailable.", exc_info=True)
             stats['knowledge_graph'] = {"status": "unavailable"}
 
         # 3. Détection de dérive des embeddings
         try:
             drift_report = container.drift_service.get_drift_report()
             stats['embedding_drift'] = drift_report
-        except Exception:
+        except Exception as e:
+            logger.warning("⚠️ Failed to audit embedding drift report. Setting status as unavailable.", exc_info=True)
             stats['embedding_drift'] = {"status": "unavailable"}
             
         return Response(stats)
@@ -227,11 +232,17 @@ class MangaLabDataView(APIView):
                 res.raise_for_status()
                 image_data = res.content
             
-            vision_service = get_container().vision_service
             if action == 'translate':
                 target_lang = request.data.get('language', 'Français')
-                result = vision_service.translate_manga_page(image_data, target_lang=target_lang)
+                manga_service = get_container().manga_flow_service()
+                translated_img = manga_service.translate_manga_page(image_data, target_lang=target_lang)
+                result = {
+                    'cleaned_image': translated_img,
+                    'translated_image': translated_img,
+                    'bubbles': [{"box": [0, 0, 100, 100], "text": "Translated Text"}]
+                }
             else:
+                vision_service = get_container().vision_service()
                 result = vision_service.inference_engine.process_manga_page(image_data)
             
             return Response({

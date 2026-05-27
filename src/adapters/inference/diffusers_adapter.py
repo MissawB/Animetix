@@ -198,7 +198,8 @@ class DiffusersAdapter(InferencePort):
             try:
                 # Tentative de chargement d'une police systeme
                 font = ImageFont.truetype("arial.ttf", 20)
-            except:
+            except Exception:
+                logger.info("System font 'arial.ttf' not found, falling back to default image font.")
                 font = ImageFont.load_default()
 
             for bubble in bubbles:

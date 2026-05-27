@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
-import { useGraphData, GraphNode, GraphLink } from './useGraphData';
+import { useGraphData } from './useGraphData';
+import { GraphNode, GraphLink } from '../../types';
 
 interface GraphExplorerProps {
   initialId: string;
@@ -62,10 +63,10 @@ export function GraphExplorer({ initialId, initialType }: GraphExplorerProps) {
         <div className="absolute inset-0">
           <ForceGraph2D
             graphData={data}
-            nodeAutoColorBy={(node: any) => node.labels?.[0]}
-            nodeColor={(node: any) => getNodeColor(node as GraphNode)}
-            nodeLabel={(node: any) => getLabel(node as GraphNode)}
-            linkLabel={(link: any) => link.type}
+            nodeAutoColorBy={(node) => (node as GraphNode).labels?.[0]}
+            nodeColor={(node) => getNodeColor(node as GraphNode)}
+            nodeLabel={(node) => getLabel(node as GraphNode)}
+            linkLabel={(link) => (link as GraphLink).type}
             backgroundColor="#111827"
           />
         </div>

@@ -74,3 +74,17 @@ def test_evaluate_vulnerability(red_team_agent, mock_engine):
     res = red_team_agent.evaluate_vulnerability("q", "r", "gt")
     assert res["is_vulnerable"] is True
     assert "halluciné" in res["analysis"]
+
+def test_guardrail_verification_raises_moderation_error_on_inference_failure():
+    from core.domain.entities.exceptions import ContentModerationError
+    mock_engine = MagicMock()
+    mock_engine.generate.side_effect = Exception("Inference engine connection timeout")
+    
+    # We setup the guardrail with the crashing engine
+    service = GuardrailService(inference_engine=mock_engine)
+    
+    with pytest.raises(ContentModerationError) as excinfo:
+        service.moderate_content("Sample text to check", categories=["spoiler"])
+        
+    assert "Guardrail verification failed due to internal error" in str(excinfo.value)
+

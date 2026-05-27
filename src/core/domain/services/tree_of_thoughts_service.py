@@ -120,5 +120,6 @@ class TreeOfThoughtsSearchService:
             if match:
                 return min(1.0, max(0.0, float(match.group(0))))
             return 0.8  # note de repli par défaut
-        except Exception:
+        except Exception as e:
+            logger.warning("⚠️ Logic Critic evaluation failed. Falling back to default score 0.7.", exc_info=True)
             return 0.7

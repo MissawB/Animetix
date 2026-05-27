@@ -29,7 +29,8 @@ def mock_dependencies():
         "neo4j_manager": neo4j_manager,
         "graph_expert": graph_expert,
         "saga_agent": saga_agent,
-        "uncertainty_service": uncertainty_service
+        "uncertainty_service": uncertainty_service,
+        "workflow_manager": MagicMock()
     }
 
 def test_world_brain_cascading_flow(mock_dependencies):
@@ -42,6 +43,7 @@ def test_world_brain_cascading_flow(mock_dependencies):
         web_search=mock_dependencies["web_search"],
         prompt_manager=mock_dependencies["prompt_manager"],
         llm_service=mock_dependencies["llm_service"],
+        workflow_manager=mock_dependencies["workflow_manager"],
         neo4j_manager=mock_dependencies["neo4j_manager"],
         graph_expert=mock_dependencies["graph_expert"],
         saga_agent=mock_dependencies["saga_agent"],

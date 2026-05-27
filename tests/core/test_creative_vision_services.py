@@ -19,8 +19,8 @@ def video_service(mock_engine, mock_prompt_manager):
     return VideoQuestService(inference_engine=mock_engine, prompt_manager=mock_prompt_manager)
 
 @pytest.fixture
-def studio_service(mock_engine):
-    return StudioTransformService(inference_engine=mock_engine)
+def studio_service(mock_engine, mock_prompt_manager):
+    return StudioTransformService(inference_engine=mock_engine, prompt_manager=mock_prompt_manager)
 
 @pytest.fixture
 def soundscape_service(mock_engine, video_service, mock_prompt_manager):

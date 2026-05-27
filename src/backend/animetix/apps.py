@@ -23,5 +23,6 @@ class AnimetixConfig(AppConfig):
             "animetix.api.labs",
             "animetix.api.mlops",
             "animetix.api.graph",
+            "animetix.api.companion",
             "animetix.views.common"
         ])

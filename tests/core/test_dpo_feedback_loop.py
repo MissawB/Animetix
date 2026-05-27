@@ -6,7 +6,8 @@ from core.domain.services.dpo_feedback_loop import DPOFeedbackLoop
 
 @pytest.fixture
 def dpo_loop(tmp_path):
-    return DPOFeedbackLoop(data_dir=str(tmp_path))
+    from adapters.persistence.django_feedback_adapter import DjangoFeedbackAdapter
+    return DPOFeedbackLoop(data_dir=str(tmp_path), feedback_port=DjangoFeedbackAdapter())
 
 @pytest.mark.django_db
 def test_export_preference_dataset(dpo_loop, tmp_path):

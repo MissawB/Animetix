@@ -26,15 +26,14 @@ def mock_dependencies():
     }):
         yield
 
-from src.adapters.inference.transformers_adapter import TransformersAdapter
+from src.adapters.inference.audio_transformers_adapter import AudioTransformersAdapter
 from core.domain.exceptions import InferenceError
 
 class TestS2SInference:
     @pytest.fixture
     def adapter(self):
-        adp = TransformersAdapter()
-        if hasattr(adp, '_moshi_model'):
-            del adp._moshi_model
+        adp = AudioTransformersAdapter()
+        adp._moshi_model = None
         return adp
 
     @patch('torch.cuda.is_available', return_value=False)
@@ -76,7 +75,7 @@ class TestS2SInference:
         with pytest.raises(InferenceError, match="Audio input is empty"):
             adapter.speech_to_speech(b"")
 
-    @patch('src.adapters.inference.transformers_adapter.TransformersAdapter._load_moshi_engine')
+    @patch('src.adapters.inference.audio_transformers_adapter.AudioTransformersAdapter._load_moshi')
     def test_speech_to_speech_load_failure(self, mock_load, adapter):
         mock_load.side_effect = InferenceError("Moshi engine loading failed")
         with pytest.raises(InferenceError, match="Moshi engine loading failed"):

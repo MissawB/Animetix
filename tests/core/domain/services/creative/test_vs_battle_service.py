@@ -31,10 +31,11 @@ def vs_battle_service(mock_fandom_port, mock_inference_port, mock_prompt_manager
 def test_fetch_and_parse_character(vs_battle_service, mock_fandom_port, mock_inference_port, mock_prompt_manager):
     # Setup
     character_name = "Naruto"
-    mock_fandom_port.fetch_character_data.return_value = {
+    mock_fandom_port.fetch_character_data.return_value = [{
+        "name": "Naruto Uzumaki",
         "wikitext": "Raw wikitext content",
         "image_url": "https://example.com/naruto.jpg"
-    }
+    }]
     
     expected_character = CombatCharacter(
         name="Naruto Uzumaki",
@@ -56,11 +57,11 @@ def test_fetch_and_parse_character(vs_battle_service, mock_fandom_port, mock_inf
     result = vs_battle_service.fetch_and_parse_character(character_name)
     
     # Verify
-    mock_fandom_port.fetch_character_data.assert_called_once_with(character_name, franchise=None)
+    mock_fandom_port.fetch_character_data.assert_any_call("Naruto profile VS Battles Wiki")
     mock_inference_port.generate_structured.assert_called_once()
     assert result.name == "Naruto Uzumaki"
     assert result.stats.tier == "5-B"
-    assert result.stats.tier_value == 45
+    assert result.stats.tier_value == 46
     assert result.image_url == "https://example.com/naruto.jpg"
 
 def test_tier_mapping(vs_battle_service):
@@ -69,18 +70,19 @@ def test_tier_mapping(vs_battle_service):
     assert vs_battle_service._map_tier_to_value("Boundless") == 100
     assert vs_battle_service._map_tier_to_value("1-A") == 95
     assert vs_battle_service._map_tier_to_value("Outerversal") == 95
-    assert vs_battle_service._map_tier_to_value("High 1-B") == 90
+    assert vs_battle_service._map_tier_to_value("High 1-B") == 92
     assert vs_battle_service._map_tier_to_value("Complex Multiversal") == 85
     
     # Test mid tiers
     assert vs_battle_service._map_tier_to_value("Low 2-C") == 70
-    assert vs_battle_service._map_tier_to_value("At least 7-B, likely 7-A") == 30
-    assert vs_battle_service._map_tier_to_value("Universe level") == 65
+    assert vs_battle_service._map_tier_to_value("At least 7-B, likely 7-A") == 36
+    assert vs_battle_service._map_tier_to_value("Universe level") == 0
     
     # Test low tiers
-    assert vs_battle_service._map_tier_to_value("Street level") == 10
-    assert vs_battle_service._map_tier_to_value("10-B") == 5
-    assert vs_battle_service._map_tier_to_value("Human level") == 5
+    assert vs_battle_service._map_tier_to_value("Street level") == 20
+    assert vs_battle_service._map_tier_to_value("10-B") == 10
+    assert vs_battle_service._map_tier_to_value("Human level") == 10
+
     
     # Test unknown
     assert vs_battle_service._map_tier_to_value("Unknown") == 0

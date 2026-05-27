@@ -4,23 +4,26 @@ import sys
 import json
 import urllib.request
 import urllib.error
+import logging
 
 # Force UTF-8 for console output on Windows
 sys.stdout.reconfigure(encoding='utf-8')
 sys.stderr.reconfigure(encoding='utf-8')
 
+logger = logging.getLogger("animetix." + __name__)
+
 # Root detection
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 sys.path.insert(0, os.path.join(BASE_DIR, "src"))
 
-print("Initializing Synthetic Gold Dataset Generator...")
+logger.info("Initializing Synthetic Gold Dataset Generator...")
 
 try:
     from pipeline.mlops.french_market_db import FRENCH_VOICE_ACTORS
     from pipeline.mlops.songs_and_seiyuu_db import SEIYUU_PROFILES, ANIME_SONGS_AND_SINGERS
     from pipeline.mlops.magazines_and_awards_db import SERIALIZATION_MAGAZINES, POP_CULTURE_AWARDS
 except ImportError as e:
-    print(f"Import error: {e}. Attempting manual path injection...")
+    logger.warning(f"Import error: {e}. Attempting manual path injection...")
     sys.path.insert(0, os.path.join(BASE_DIR, "src", "pipeline", "mlops"))
     from french_market_db import FRENCH_VOICE_ACTORS
     from songs_and_seiyuu_db import SEIYUU_PROFILES, ANIME_SONGS_AND_SINGERS
@@ -127,16 +130,16 @@ def ask_ollama(prompt: str) -> str:
             res_data = json.loads(response.read().decode("utf-8"))
             return res_data["choices"][0]["message"]["content"]
     except Exception as e:
-        print(f"Ollama API Error or Timeout: {e}")
+        logger.error(f"Ollama API Error or Timeout: {e}")
         return ""
 
 synthetic_gold_dataset = []
 
-print(f"Generating synthetic QA pairs for {len(FACTS)} relational motifs...")
+logger.info(f"Generating synthetic QA pairs for {len(FACTS)} relational motifs...")
 
 for i, entry in enumerate(FACTS):
     fact = entry["fact"]
-    print(f"\n[{i+1}/{len(FACTS)}] Synthesizing: '{fact}'")
+    logger.info(f"\n[{i+1}/{len(FACTS)}] Synthesizing: '{fact}'")
     
     prompt = f"""
 Basé sur le fait véridique suivant en français :

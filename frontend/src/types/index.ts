@@ -5,6 +5,7 @@ export interface User {
   is_authenticated: boolean;
   avatar?: string;
   xp?: number;
+  tier?: string;
 }
 
 export interface AppConfig {
@@ -141,4 +142,71 @@ export interface AudioLabState {
   audio_url?: string;
   status?: string;
 }
+
+export interface CompilerResult {
+  message: string;
+  test_output: string;
+  c_code_generated: string;
+}
+
+export interface PlasticityResult {
+  weights: number[][];
+  message: string;
+  stdp_log: string[];
+}
+
+export interface EvalResult {
+  ai_score: number;
+  community_score: number;
+  is_worthy: boolean;
+}
+
+export interface UniverseData {
+  name: string;
+  genre: string;
+  description: string;
+  cosmology: string;
+  factions: Array<{ name: string; description: string }>;
+  characters: Array<{ name: string; role: string; power_level: number }>;
+  episodes: Array<{ number: number; title: string; summary: string }>;
+}
+
+export interface SearchItem {
+  id?: number | string;
+  title?: string;
+  name?: string;
+  image_url?: string;
+  type?: string;
+}
+
+export interface CovertestState extends GameState {
+  cover_url: string;
+  secret_title?: string;
+  guesses: Array<{ title: string; is_correct: boolean }>;
+}
+
+export interface GraphNode {
+  id: string;
+  labels: string[];
+  properties: Record<string, string | number | boolean | string[] | null | undefined>;
+  x?: number;
+  y?: number;
+  vx?: number;
+  vy?: number;
+  fx?: number;
+  fy?: number;
+}
+
+export interface GraphLink {
+  source: string | GraphNode;
+  target: string | GraphNode;
+  type: string;
+  properties: Record<string, string | number | boolean | string[] | null | undefined>;
+}
+
+export interface GraphData {
+  nodes: GraphNode[];
+  links: GraphLink[];
+}
+
 

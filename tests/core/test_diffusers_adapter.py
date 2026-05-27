@@ -7,10 +7,30 @@ from io import BytesIO
 # Mock missing modules for environment independence
 mock_diffusers = MagicMock()
 mock_pil = MagicMock()
+
+# Save original modules to prevent test pollution
+_orig_pil = sys.modules.get("PIL")
+_orig_diffusers = sys.modules.get("diffusers")
+
 sys.modules["diffusers"] = mock_diffusers
 sys.modules["PIL"] = mock_pil
 
 from adapters.inference.diffusers_adapter import DiffusersAdapter
+
+@pytest.fixture(scope="module", autouse=True)
+def cleanup_sys_modules():
+    yield
+    # Restore original modules after this module's tests complete
+    if _orig_pil is not None:
+        sys.modules["PIL"] = _orig_pil
+    elif "PIL" in sys.modules:
+        del sys.modules["PIL"]
+        
+    if _orig_diffusers is not None:
+        sys.modules["diffusers"] = _orig_diffusers
+    elif "diffusers" in sys.modules:
+        del sys.modules["diffusers"]
+
 
 @pytest.fixture
 def mock_pipeline():

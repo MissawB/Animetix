@@ -12,7 +12,7 @@ class GuardrailService:
     Système de Guardrails multi-couches (2026 SOTA).
     Assure la sécurité, la factualité et l'intégrité de l'expérience utilisateur.
     """
-    def __init__(self, inference_engine: InferencePort, prompt_manager: PromptManager, neo4j_manager=None):
+    def __init__(self, inference_engine: InferencePort, prompt_manager: Optional[PromptManager] = None, neo4j_manager=None):
         self.inference_engine = inference_engine
         self.prompt_manager = prompt_manager
         self.neo4j = neo4j_manager
@@ -38,9 +38,15 @@ class GuardrailService:
 
         # 2. Modération via modèle spécialisé (Llama-Guard) ou LLM
         result = self.inference_engine.moderate_content(text, categories=self.enabled_categories)
-        if not result or result.get("stub"):
+        if not result or result.get("stub") or ("unsafe_categories" not in result and "detected_categories" not in result):
             result = self._llm_moderate(text, self.enabled_categories, mode="input")
             
+        if result:
+            if "unsafe_categories" in result and "detected_categories" not in result:
+                result["detected_categories"] = result["unsafe_categories"]
+            elif "detected_categories" in result and "unsafe_categories" not in result:
+                result["unsafe_categories"] = result["detected_categories"]
+
         return result
 
     def validate_output(self, response_text: str, context: Optional[str] = None, query: str = "") -> Dict[str, Any]:
@@ -61,19 +67,29 @@ class GuardrailService:
         check_text = f"REQUÊTE: {query}\nCONTEXTE: {context[:1000] if context else 'N/A'}\nRÉPONSE: {response_text}"
         result = self.inference_engine.moderate_content(check_text, categories=self.enabled_categories)
         
-        if not result or result.get("stub"):
+        if not result or result.get("stub") or ("unsafe_categories" not in result and "detected_categories" not in result):
             result = self._llm_moderate(check_text, self.enabled_categories, mode="output")
+
+        if result:
+            if "unsafe_categories" in result and "detected_categories" not in result:
+                result["detected_categories"] = result["unsafe_categories"]
+            elif "detected_categories" in result and "unsafe_categories" not in result:
+                result["unsafe_categories"] = result["detected_categories"]
 
         # 3. Actions correctives dynamiques
         if result.get("detected_categories"):
             if "SPOILER" in result["detected_categories"]:
                 result["action"] = "mask"
-                result["warning"] = "⚠️ Alerte Spoiler : Ce contenu a été masqué pour préserver votre découverte."
+                result["warning"] = "⚠️ Alerte Spoiler : Ce contenu contient des spoilers et a été masqué pour préserver votre découverte."
             elif any(c in result["detected_categories"] for c in ["HATE_SPEECH", "INAPPROPRIATE_CONTENT"]):
                 result["action"] = "block"
                 result["message"] = "Je ne peux pas afficher cette réponse car elle ne respecte pas nos règles de sécurité."
 
         return result
+
+    def moderate_content(self, text: str, categories: List[str]) -> Dict[str, Any]:
+        """Expose le service de modération de contenu en utilisant le LLM."""
+        return self._llm_moderate(text, categories)
 
     def _is_potential_jailbreak(self, text: str) -> bool:
         """Heuristique simple pour détecter les tentatives de détournement."""
@@ -97,26 +113,52 @@ class GuardrailService:
 
     def _llm_moderate(self, text: str, categories: List[str], mode: str = "output") -> Dict[str, Any]:
         """Utilise le cerveau principal pour une modération fine par prompt."""
-        prompt_key = "input_moderator" if mode == "input" else "output_moderator"
-        prompt, system = self.prompt_manager.get_prompt(
-            prompt_key, 
-            text=text, 
-            categories=", ".join(categories)
-        )
-        
-        response = self.inference_engine.generate(prompt, system_prompt=system)
-        
         try:
+            prompt_key = "input_moderator" if mode == "input" else "output_moderator"
+            if self.prompt_manager is None:
+                prompt, system = f"Text: {text}, Categories: {', '.join(categories)}", "System"
+            else:
+                prompt, system = self.prompt_manager.get_prompt(
+                    prompt_key, 
+                    text=text, 
+                    categories=", ".join(categories)
+                )
+            
+            response = self.inference_engine.generate(prompt, system_prompt=system)
+            
             if "```json" in response:
                 response = response.split("```json")[1].split("```")[0].strip()
             result = json.loads(response)
+            
+            # Map is_safe
+            is_safe = result.get("is_safe")
+            if is_safe is None:
+                is_safe = result.get("safe")
+            if is_safe is None:
+                is_safe = True
+                
+            # Map detected_categories
+            detected_categories = result.get("detected_categories")
+            if detected_categories is None:
+                detected_categories = result.get("unsafe_categories")
+            if detected_categories is None:
+                detected_categories = result.get("violations", [])
+                
+            # Map action
+            action = result.get("action")
+            if action is None:
+                action = "none" if is_safe else "block"
+                
             return {
-                "is_safe": result.get("safe", True),
-                "detected_categories": result.get("violations", []),
-                "action": "none" if result.get("safe") else "block"
+                "is_safe": is_safe,
+                "detected_categories": detected_categories,
+                "unsafe_categories": detected_categories,
+                "action": action
             }
-        except Exception:
-            return {"is_safe": True, "detected_categories": [], "action": "none", "stub": True}
+        except Exception as e:
+            logger.exception("❌ Guardrail verification failed due to unexpected error.")
+            from core.domain.entities.exceptions import ContentModerationError
+            raise ContentModerationError("Guardrail verification failed due to internal error.") from e
 
 class RedTeamingAgent:
     """
@@ -134,4 +176,10 @@ class RedTeamingAgent:
             description=media_item.get('description', '')[:500]
         )
         response = self.inference_engine.generate(prompt, system_prompt=system)
-        return [q.strip() for q in response.split('\n') if len(q.strip()) > 15]
+        return [q.strip() for q in response.split('\n') if len(q.strip()) > 5]
+
+    def evaluate_vulnerability(self, query: str, response: str, ground_truth: str) -> dict:
+        prompt = f"Query: {query}\nResponse: {response}\nGround Truth: {ground_truth}"
+        evaluation = self.inference_engine.generate(prompt)
+        is_vulnerable = "halluciné" in evaluation.lower() or "oui" in evaluation.lower()
+        return {"is_vulnerable": is_vulnerable, "analysis": evaluation}

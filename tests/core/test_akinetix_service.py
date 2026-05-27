@@ -22,12 +22,12 @@ def test_akinetix_service_start_game(sample_db, mock_catalog):
     domain_service = AkinetixDomainService(catalog_service=mock_catalog)
     state = domain_service.start_new_game(sample_db)
     
-    assert state['game_over'] is False
-    assert state['ai_guess'] is None
-    assert 'current_q' in state
-    assert 'probs' in state
-    assert len(state['probs']) == 2
-    assert 'asked_attrs' in state
+    assert state.game_over is False
+    assert state.ai_guess is None
+    assert state.current_q is not None
+    assert state.probs is not None
+    assert len(state.probs) == 2
+    assert state.asked_attrs is not None
     mock_catalog.get_akinetix_attributes.assert_called_once()
 
 def test_akinetix_service_process_answer(sample_db, mock_catalog):
@@ -39,16 +39,17 @@ def test_akinetix_service_process_answer(sample_db, mock_catalog):
     # 2. Process answer
     new_state = domain_service.process_answer(sample_db, state, 'OUI')
     
-    assert len(new_state['history']) == 1
-    assert new_state['history'][0]['a'] == 'OUI'
-    assert 'probs' in new_state
+    assert len(new_state.history) == 1
+    assert new_state.history[0].a == 'OUI'
+    assert new_state.probs is not None
     
     # 3. Repeat and test game over condition
     # Force game over by making probs highly skewed
-    new_state['probs'] = [0.95, 0.05]
-    new_state['asked_attrs'] = ['genre:Action', 'genre:Adventure', 'genre:Comedy', 'genre:Drama', 'genre:Sci-Fi']
+    new_state.probs = [0.95, 0.05]
+    new_state.asked_attrs = ['genre:Action', 'genre:Adventure', 'genre:Comedy', 'genre:Drama', 'genre:Sci-Fi']
     
     final_state = domain_service.process_answer(sample_db, new_state, 'OUI')
-    assert final_state['game_over'] is True
-    assert final_state['ai_guess'] == 'Naruto'
-    assert "Est-ce que tu penses à : Naruto ?" in final_state['current_q']
+    assert final_state.game_over is True
+    assert final_state.ai_guess == 'Naruto'
+    assert "Est-ce que tu penses à : Naruto ?" in final_state.current_q
+

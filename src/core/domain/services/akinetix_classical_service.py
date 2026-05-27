@@ -8,14 +8,6 @@ from .akinetix.question_formatter import QuestionFormatter
 
 logger = logging.getLogger('animetix')
 
-# Deprecation Warning
-warnings.warn(
-    "ClassicalAkinetixService is deprecated and will be removed in a future version. "
-    "Please use src.core.domain.services.akinetix_engine.AkinetixEngine instead.",
-    DeprecationWarning,
-    stacklevel=2
-)
-
 class ClassicalAkinetixService:
     """
     DEPRECATED: Moteur algorithmique d'Akinetix.
@@ -27,7 +19,12 @@ class ClassicalAkinetixService:
                  probs: Optional[List[float]] = None, 
                  asked_attributes: Optional[List[str]] = None,
                  formatter: Optional[QuestionFormatter] = None):
-        
+        warnings.warn(
+            "ClassicalAkinetixService is deprecated and will be removed in a future version. "
+            "Please use src.core.domain.services.akinetix_engine.AkinetixEngine instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
         self.catalog = catalog_db
         self.fine_attributes = fine_attributes or {}
         self.formatter = formatter or QuestionFormatter()

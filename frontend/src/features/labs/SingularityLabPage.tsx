@@ -5,22 +5,7 @@ import { apiClient } from '../../utils/apiClient';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
-
-interface EvalResult {
-  ai_score: number;
-  community_score: number;
-  is_worthy: boolean;
-}
-
-interface UniverseData {
-  name: string;
-  genre: string;
-  description: string;
-  cosmology: string;
-  factions: Array<{ name: string; description: string }>;
-  characters: Array<{ name: string; role: string; power_level: number }>;
-  episodes: Array<{ number: number; title: string; summary: string }>;
-}
+import { CompilerResult, PlasticityResult, UniverseData, EvalResult } from '../../types';
 
 const CONCEPTS = [
   'Shonen', 'Seinen', 'Cyberpunk', 'Mecha', 'Fantasy',
@@ -33,13 +18,13 @@ const SingularityLabPage: React.FC = () => {
   // State: Compiler
   const [fnName, setFnName] = useState('semantic_cosine_opt');
   const [cCode, setCCode] = useState('// Version optimisée générée à la volée\ndouble semantic_cosine_opt(double* a, double* b, int n) {\n    double dot = 0.0;\n    // ... calcul matriciel vectorisé C ...\n    return dot;\n}');
-  const [compilerResult, setCompilerResult] = useState<any>(null);
+  const [compilerResult, setCompilerResult] = useState<CompilerResult | null>(null);
 
   // State: Plasticity
   const [activations, setActivations] = useState<number[]>(Array(10).fill(0).map(() => Math.random()));
   const [selectedSpikes, setSelectedSpikes] = useState<number[]>([]);
   const [lr, setLr] = useState(0.05);
-  const [plasticityResult, setPlasticityResult] = useState<any>(null);
+  const [plasticityResult, setPlasticityResult] = useState<PlasticityResult | null>(null);
 
   // State: Multiverse
   const [universeName, setUniverseName] = useState('ShinSekai');

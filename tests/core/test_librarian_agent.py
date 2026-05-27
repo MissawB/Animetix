@@ -57,6 +57,8 @@ def test_librarian_loop_integration(mock_dependencies):
         rag_service=rag_service,
         web_search=web_search,
         prompt_manager=prompt_manager,
+        llm_service=MagicMock(),
+        workflow_manager=MagicMock(),
         uncertainty_service=uncertainty_service,
         librarian=librarian,
         debate_manager=debate_manager

@@ -2,7 +2,6 @@ import logging
 import base64
 from typing import Optional, List, Dict, Any
 from core.ports.inference_port import InferencePort, InferenceNotImplementedError
-from sentence_transformers import CrossEncoder
 
 logger = logging.getLogger("animetix." + __name__)
 
@@ -112,6 +111,7 @@ class GgufAdapter(InferencePort):
     def rerank_documents(self, query: str, documents: List[str]) -> List[float]:
         if not documents: return []
         if not self._cross_encoder:
+            from sentence_transformers import CrossEncoder
             self._cross_encoder = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
         pairs = [[query, doc] for doc in documents]
         scores = self._cross_encoder.predict(pairs)

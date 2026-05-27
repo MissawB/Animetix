@@ -24,6 +24,7 @@ urlpatterns = [
     path('singularity-lab/', api_views.SingularityLabDataView.as_view(), name='api_singularity_lab'),
     path('mlops/dpo/curation/', api_views.DPOCurationView.as_view(), name='api_dpo_curation'),
     path('graph/neighbors/', api_views.GraphNeighborsView.as_view(), name='api_graph_neighbors'),
+    path('companion/interact/', api_views.CompanionInteractView.as_view(), name='api_companion_interact'),
     
     # --- STREAMING IA ---
     path('stream/emoji/', api_views.EmojiStreamView.as_view(), name='api_emoji_stream'),

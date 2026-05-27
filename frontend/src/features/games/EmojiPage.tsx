@@ -8,7 +8,7 @@ import { Badge } from '../../components/ui/Badge';
 import { CardSkeleton } from '../../components/ui/Skeleton';
 
 import { useTranslation } from 'react-i18next';
-import { EmojiState } from '../../../types';
+import { EmojiState } from '../../types';
 
 const EmojiPage: React.FC = () => {
   const { t } = useTranslation();

@@ -65,7 +65,7 @@ class Command(BaseCommand):
                 rating = item.get('rating') or item.get('score')
                 if isinstance(rating, str):
                     try: rating = float(rating)
-                    except: rating = None
+                    except (ValueError, TypeError): rating = None
 
                 # Remove mapped fields from metadata to avoid redundancy
                 metadata = item.copy()

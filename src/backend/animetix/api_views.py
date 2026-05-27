@@ -6,3 +6,4 @@ from .api.labs import *
 from .api.streams import *
 from .api.mlops import *
 from .api.graph import *
+from .api.companion import *

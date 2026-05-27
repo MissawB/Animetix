@@ -14,6 +14,45 @@ class FallbackInferenceAdapter(InferencePort):
     def __init__(self, adapters: List[InferencePort], obs_service: Optional[Any] = None):
         self.adapters = [a for a in adapters if a is not None]
         self.obs_service = obs_service
+        self._capability_cache = {}
+        self._build_capability_cache()
+
+    def _is_method_overridden(self, adapter: InferencePort, method_name: str) -> bool:
+        # Ignore mock objects to avoid registering instance-level mock methods as capabilities
+        if getattr(adapter.__class__, "__module__", "") == "unittest.mock" or hasattr(adapter, "mock_calls"):
+            return False
+
+        cls = adapter.__class__
+        method = getattr(cls, method_name, None)
+        if method is None or not callable(method):
+            return False
+            
+        port_method = getattr(InferencePort, method_name, None)
+        if port_method is None:
+            return True
+            
+        adapter_func = getattr(method, "__func__", method)
+        port_func = getattr(port_method, "__func__", port_method)
+        
+        return adapter_func is not port_func
+
+    def _build_capability_cache(self) -> None:
+        import inspect
+        from core.ports.inference_port import InferencePort
+        
+        port_methods = [
+            name for name, val in inspect.getmembers(InferencePort, predicate=inspect.isfunction)
+            if not name.startswith("_")
+        ]
+        
+        for method_name in port_methods:
+            capable = [
+                adapter for adapter in self.adapters
+                if self._is_method_overridden(adapter, method_name)
+            ]
+            self._capability_cache[method_name] = capable
+            logger.debug(f"⚙️ [Fallback] Registered capable engines for '{method_name}': {[a.__class__.__name__ for a in capable]}")
+
 
     def _report_failure(self, adapter: InferencePort, method: str, error: str, latency: float, prompt_hint: str = ""):
         """Helper centralisé pour le logging et le monitoring des échecs."""
@@ -39,7 +78,11 @@ class FallbackInferenceAdapter(InferencePort):
 
     def generate(self, prompt: str, system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.", thinking_budget: int = 0, thinking_mode: bool = False) -> str:
         last_error = ""
-        for adapter in self.adapters:
+        capable_adapters = self._capability_cache.get("generate", [])
+        if not capable_adapters:
+            capable_adapters = self.adapters
+
+        for adapter in capable_adapters:
             if not hasattr(adapter, "generate") or not callable(getattr(adapter, "generate")):
                 continue
             adapter_name = adapter.__class__.__name__
@@ -71,7 +114,11 @@ class FallbackInferenceAdapter(InferencePort):
 
     def stream_generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False):
         """Streaming avec repli intelligent."""
-        for adapter in self.adapters:
+        capable_adapters = self._capability_cache.get("stream_generate", [])
+        if not capable_adapters:
+            capable_adapters = self.adapters
+
+        for adapter in capable_adapters:
             if not hasattr(adapter, "stream_generate") or not callable(getattr(adapter, "stream_generate")):
                 continue
             start_time = time.time()
@@ -107,7 +154,11 @@ class FallbackInferenceAdapter(InferencePort):
         return self._fallback_call("generate_image", prompt, style) or ""
 
     def _fallback_call(self, method_name: str, *args, **kwargs):
-        for adapter in self.adapters:
+        capable_adapters = self._capability_cache.get(method_name, [])
+        if not capable_adapters:
+            capable_adapters = self.adapters
+
+        for adapter in capable_adapters:
             if not hasattr(adapter, method_name) or not callable(getattr(adapter, method_name)):
                 continue
             start_time = time.time()
@@ -116,13 +167,14 @@ class FallbackInferenceAdapter(InferencePort):
                 res = method(*args, **kwargs)
                 latency = time.time() - start_time
                 
-                # Si c'est une liste ou dict vide, on considère ça comme un échec potentiel selon le contexte,
-                # mais ici on reste simple.
                 if res is not None: 
                     logger.info(f"✅ [Fallback] {adapter.__class__.__name__}.{method_name} success in {latency:.2f}s")
                     return res
                 
                 self._report_failure(adapter, method_name, "Résultat None", latency)
+            except (InferenceNotImplementedError, NotImplementedError):
+                # Ignorer silencieusement la non-implémentation
+                continue
             except Exception as e:
                 latency = time.time() - start_time
                 self._report_failure(adapter, method_name, f"CRASH: {str(e)}", latency)

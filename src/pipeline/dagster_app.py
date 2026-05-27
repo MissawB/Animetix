@@ -195,8 +195,7 @@ def anime_pilgrimage_asset():
 # --- 🧪 PIPELINE : MLOPS ---
 @asset(group_name="mlops")
 def self_healing_graph_agent(): 
-    from core.domain.services.graph_healer_service import GraphHealerService
-    return GraphHealerService().perform_healing()
+    return graph_healer.run_graph_healer()
 
 @asset(group_name="mlops", deps=[raw_anime])
 def continuous_pretraining_draft(): return continuous_pretraining.run_cpt()
