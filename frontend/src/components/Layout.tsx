@@ -7,6 +7,7 @@ import { useLocation } from 'react-router-dom';
 import { queryClient } from '../utils/queryClient';
 import { useCustomConfig } from '../features/utils/hooks/useCustomConfig';
 import { pageVariants } from './ui/animations';
+import CompanionOverlay from '../features/companion/CompanionOverlay';
 
 const Footer: React.FC = () => (
   <footer className="py-8 text-center text-gray-500 text-xs">
@@ -49,6 +50,7 @@ const LayoutContent: React.FC<{ children: ReactNode }> = ({ children }) => {
         </AnimatePresence>
       </main>
       <Footer />
+      <CompanionOverlay />
     </div>
   );
 };

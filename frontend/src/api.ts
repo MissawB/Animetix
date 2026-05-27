@@ -1,4 +1,4 @@
-import { AkinetixState, AppConfig, ClassicGameState, DailyChallenge, MediaItem, Profile, User } from './types';
+import { AkinetixState, AppConfig, ClassicGameState, DailyChallenge, MediaItem, Profile, User, GraphData } from './types';
 import { apiClient } from './utils/apiClient';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
@@ -104,8 +104,25 @@ export async function getAuthUser(): Promise<User> {
 }
 
 // --- Graph API ---
-export async function getGraphNeighborhood(id: string, type: string, depth: number = 1): Promise<{nodes: any[], links: any[]}> {
+export async function getGraphNeighborhood(id: string, type: string, depth: number = 1): Promise<GraphData> {
   return apiClient(`/api/v1/graph/neighbors/?id=${id}&type=${type}&depth=${depth}`);
+}
+
+// --- Companion API ---
+export interface CompanionResponse {
+  response: string;
+  history: { role: string; content: string }[];
+}
+
+export async function interactWithCompanion(mentorId: string, message: string, contextUrl: string = ''): Promise<CompanionResponse> {
+  return apiClient('/api/v1/companion/interact/', {
+    method: 'POST',
+    body: JSON.stringify({
+      mentor_id: mentorId,
+      user_message: message,
+      context_url: contextUrl,
+    }),
+  });
 }
 
 
