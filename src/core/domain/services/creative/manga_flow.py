@@ -15,16 +15,33 @@ class MangaFlowService:
         # 1. OCR SOTA
         ocr_res = self.inference_engine.process_manga_page(image_data)
         
-        # 2. Translation & Inpainting (Conceptual logic)
-        # In a real scenario, we would iterate over bubbles. 
-        # For now, we simulate the flow:
-        prompt, system_prompt = self.prompt_manager.get_prompt(
-            "manga_translation",
-            target_lang=target_lang,
-            original_text=ocr_res.get('text', '')
-        )
-            
-        translated_text = self.llm_service.generate(prompt, system_prompt=system_prompt)
+        layout = ocr_res.get('layout', [])
         
-        # ... logic to inpaint using ocr_res['layout'] if provided ...
-        return self.inference_engine.inpaint_text_bubbles(image_data, [{"text": translated_text, "bbox": [0,0,100,100]}])
+        # If no layout detected, fallback to empty or single box
+        if not layout:
+             return self.inference_engine.inpaint_text_bubbles(image_data, [])
+
+        translated_bubbles = []
+        
+        # 2. Translation & Inpainting
+        for bubble in layout:
+            original_text = bubble.get('text', '')
+            bbox = bubble.get('bbox')
+            
+            if not original_text or not bbox:
+                continue
+                
+            prompt, system_prompt = self.prompt_manager.get_prompt(
+                "manga_translation",
+                target_lang=target_lang,
+                original_text=original_text
+            )
+                
+            translated_text = self.llm_service.generate(prompt, system_prompt=system_prompt)
+            
+            translated_bubbles.append({
+                "text": translated_text,
+                "bbox": bbox
+            })
+            
+        return self.inference_engine.inpaint_text_bubbles(image_data, translated_bubbles)
