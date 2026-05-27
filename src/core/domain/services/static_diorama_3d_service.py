@@ -21,7 +21,7 @@ class StaticDiorama3DService:
 
     def reconstruct_static_diorama(self, image_data: bytes, title: str) -> Dict[str, Any]:
         """
-        Pipeline complet 2D fixe -> Estimation de Profondeur -> Diorama Spatial 3D.
+        Pipeline complet 2D fixe -> Estimation de Profondeur -> Diorama Spatial 3D (PLY Point Cloud).
         """
         logger.info(f"🌌 SGS Spatial: Starting Static 3D reconstruction for '{title}'...")
         
@@ -33,8 +33,8 @@ class StaticDiorama3DService:
             logger.error("❌ Depth estimation failed. Aborting SGS reconstruction.")
             return {"status": "error", "message": "Failed to generate depth map."}
 
-        # 2. Génération du diorama 3D par Gaussian Splatting
-        logger.info("🪄 Generating 3D Static Diorama via Gaussian Splatting (with 3D in-painting)...")
+        # 2. Génération du diorama 3D par Gaussian Splatting (Point Cloud Projection)
+        logger.info("🪄 Generating 3D Static Diorama (PLY Point Cloud)...")
         scene_data = self.inference_engine.generate_3d_scene(image_data, depth_map)
         
         if not scene_data or "model_url" not in scene_data:
@@ -46,11 +46,12 @@ class StaticDiorama3DService:
         return {
             "status": "success",
             "model_url": scene_data["model_url"],
-            "viewer_type": "static_gaussian_diorama",
+            "viewer_type": "gaussian_splatting",
             "metadata": {
                 "title": title,
                 "navigable": True,
                 "mode": "SGS_Static_Diorama_3D",
-                "in_painted_areas": scene_data.get("in_painted", True)
+                "in_painted_areas": scene_data.get("in_painted", True),
+                "point_count": scene_data.get("point_count", 0)
             }
         }

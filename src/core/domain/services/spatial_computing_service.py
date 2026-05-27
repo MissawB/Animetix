@@ -25,58 +25,13 @@ class SpatialComputingService:
 
     def generate_3d_scene(self, image_data: bytes, depth_map: bytes) -> Dict[str, Any]:
         """
-        Génère une scène 3D sous forme de nuage de points PLY à partir d'une image RGB et d'une carte de profondeur.
-        Transféré depuis les adaptateurs d'inférence pour centraliser la géométrie 3D dans le domaine.
+        Délègue la génération de la scène 3D à l'unité d'inférence.
+        Centralise les métadonnées de rendu.
         """
         try:
-            try:
-                rgb = Image.open(BytesIO(image_data)).convert("RGB").resize((256, 256))
-                depth = Image.open(BytesIO(depth_map)).convert("L").resize((256, 256))
-                rgb_arr, depth_arr = np.array(rgb), np.array(depth)
-            except Exception as img_err:
-                logger.warning(f"⚠️ Image parsing failed: {img_err}. Using high-fidelity dummy array for compatibility.")
-                # Création d'une structure d'image d'attente/test
-                rgb_arr = np.zeros((2, 2, 3), dtype=np.uint8)
-                depth_arr = np.ones((2, 2), dtype=np.uint8) * 255
-
-            h, w = depth_arr.shape
-            points = []
-            fx, fy = 200.0, 200.0
-            cx, cy = w / 2, h / 2
-            
-            for y in range(h):
-                for x in range(w):
-                    z = float(depth_arr[y, x]) / 255.0
-                    if z <= 0.05:
-                        continue
-                    X, Y, Z = (x - cx) * z / fx, (y - cy) * z / fy, z
-                    r, g, b = rgb_arr[y, x]
-                    points.append((X, Y, Z, r, g, b))
-                    
-            header = (
-                "ply\n"
-                "format binary_little_endian 1.0\n"
-                f"element vertex {len(points)}\n"
-                "property float x\n"
-                "property float y\n"
-                "property float z\n"
-                "property uint8 red\n"
-                "property uint8 green\n"
-                "property uint8 blue\n"
-                "end_header\n"
-            )
-            ply_data = header.encode('ascii')
-            for p in points:
-                ply_data += struct.pack("<fffBBB", *p)
-                
-            return {
-                "status": "success",
-                "model_url": f"data:application/octet-stream;base64,{base64.b64encode(ply_data).decode('utf-8')}",
-                "viewer_type": "point_cloud",
-                "point_count": len(points)
-            }
+            return self.inference_engine.generate_3d_scene(image_data, depth_map)
         except Exception as e:
-            logger.error(f"❌ 3D Scene generation failed: {e}")
+            logger.error(f"❌ 3D Scene delegation failed: {e}")
             return {"status": "error", "message": str(e)}
 
     def reconstruct_3d_scene(self, image_data: bytes, title: str) -> Dict[str, Any]:
