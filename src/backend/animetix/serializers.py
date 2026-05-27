@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Profile, DailyChallenge, ChallengeResult, Achievement, UserAchievement, CreativeFusion
+from .models import Profile, DailyChallenge, ChallengeResult, Achievement, UserAchievement, CreativeFusion, DiscoveryClub, ClubMembership, ClubEvent
 from django.contrib.auth.models import User
 
 class UserSerializer(serializers.ModelSerializer):
@@ -93,8 +93,6 @@ class AIFeedbackSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 # --- 🏘️ CLUB SERIALIZERS ---
-from .models import DiscoveryClub, ClubMembership, ClubEvent
-
 class ClubMembershipSerializer(serializers.ModelSerializer):
     username = serializers.ReadOnlyField(source='user.username')
     
@@ -119,4 +117,3 @@ class DiscoveryClubSerializer(serializers.ModelSerializer):
             'members_count', 'image_url', 'is_private', 'events', 
             'created_at', 'updated_at'
         ]
-

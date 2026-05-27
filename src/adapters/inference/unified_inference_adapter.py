@@ -114,7 +114,13 @@ class UnifiedInferenceAdapter(InferencePort):
 
                 res.raise_for_status()
                 data = res.json()
-                return data["choices"][0]["message"]["content"]
+                raw_content = data["choices"][0]["message"]["content"]
+                
+                # CLEANUP metadata sometimes added by the adapter infrastructure
+                if "---" in raw_content:
+                    raw_content = raw_content.split("---")[0].strip()
+                    
+                return raw_content
             except requests.exceptions.RequestException as e:
                 last_error = e
                 logger.error(f"Inference attempt {attempt+1}/{self.max_retries} failed: {e}")

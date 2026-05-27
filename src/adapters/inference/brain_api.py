@@ -11,7 +11,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 from adapters.inference.local_llama_adapter import LocalLlamaAdapter
 from adapters.inference.vllm_adapter import VllmAdapter
 
-logger = logging.getLogger("brain")
+logger = logging.getLogger("animetix.brain")
 
 from contextlib import asynccontextmanager
 

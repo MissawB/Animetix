@@ -209,4 +209,37 @@ export interface GraphData {
   links: GraphLink[];
 }
 
+// --- Club API Types ---
+export interface ClubEvent {
+  id: number;
+  club: number;
+  title: string;
+  description: string;
+  event_date: string;
+  created_at: string;
+}
+
+export interface DiscoveryClub {
+  id: number;
+  name: string;
+  description: string;
+  creator: number;
+  creator_name: string;
+  members_count: number;
+  image_url?: string;
+  is_private: boolean;
+  events: ClubEvent[];
+  created_at: string;
+  updated_at: string;
+  is_member?: boolean;
+}
+
+export interface ClubMembership {
+  id: number;
+  user: number;
+  username: string;
+  role: 'member' | 'admin' | 'owner';
+  joined_at: string;
+}
+
 

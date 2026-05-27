@@ -2,55 +2,64 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from ..models import Profile, CreativeFusion, Achievement, DailyChallenge, Notification
+from ..models import Profile, CreativeFusion, Achievement, DailyChallenge, Notification, DiscoveryClub, ClubMembership, ClubEvent
 from ..serializers import (ProfileSerializer, CreativeFusionSerializer, AchievementSerializer, 
                             FriendshipSerializer, DailyChallengeSerializer, NotificationSerializer,
-                            DiscoveryClubSerializer, ClubMembershipSerializer)
+                            DiscoveryClubSerializer, ClubMembershipSerializer, ClubEventSerializer)
 from django.contrib.auth.models import User
 from django.db.models import F
-from ..models import DiscoveryClub, ClubMembership
 
 class ClubViewSet(viewsets.ModelViewSet):
     """API endpoint pour gérer les clubs de découverte."""
-    queryset = DiscoveryClub.objects.all()
+    queryset = DiscoveryClub.objects.all().prefetch_related('members')
     serializer_class = DiscoveryClubSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def perform_create(self, serializer):
-        # Restriction Premium : Seuls les utilisateurs Premium/Pro peuvent créer des clubs
-        if self.request.user.profile.tier == 'free':
-            raise permissions.exceptions.PermissionDenied("Seuls les membres Premium peuvent créer des clubs.")
+        # Restriction Premium pour la création
+        if self.request.user.profile.tier != 'premium':
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError("Seuls les membres Premium peuvent fonder des clubs.")
         
         club = serializer.save(creator=self.request.user)
-        # Le créateur devient automatiquement admin/owner
-        ClubMembership.objects.create(user=self.request.user, club=club, role='owner')
+        # Créateur devient automatiquement Officier
+        ClubMembership.objects.create(user=self.request.user, club=club, role='Officer')
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def join(self, request, pk=None):
         club = self.get_object()
-        user = request.user
         
-        # Limite de 3 clubs pour les utilisateurs gratuits
-        if user.profile.tier == 'free' and user.joined_clubs.count() >= 3:
+        # Limite de 3 clubs pour les comptes gratuits
+        if request.user.profile.tier == 'free' and request.user.club_memberships.count() >= 3:
             return Response({"error": "Limite de 3 clubs atteinte pour les comptes gratuits."}, status=status.HTTP_400_BAD_REQUEST)
             
-        membership, created = ClubMembership.objects.get_or_create(user=user, club=club)
+        membership, created = ClubMembership.objects.get_or_create(user=request.user, club=club)
         if not created:
-            return Response({"message": "Déjà membre."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'status': 'already member'}, status=status.HTTP_400_BAD_REQUEST)
             
-        return Response({"status": "joined"}, status=status.HTTP_201_CREATED)
+        return Response({'status': 'joined'})
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def leave(self, request, pk=None):
         club = self.get_object()
+        ClubMembership.objects.filter(user=request.user, club=club).delete()
+        return Response({'status': 'left'})
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def trigger_event(self, request, pk=None):
+        club = self.get_object()
+        # Vérification si l'utilisateur est Officier
         try:
             membership = ClubMembership.objects.get(user=request.user, club=club)
-            if membership.role == 'owner':
-                return Response({"error": "Le propriétaire ne peut pas quitter le club sans le supprimer ou transférer la propriété."}, status=status.HTTP_400_BAD_REQUEST)
-            membership.delete()
-            return Response({"status": "left"})
+            if membership.role != 'Officer':
+                return Response({"error": "Seuls les officiers peuvent lancer des événements."}, status=status.HTTP_403_FORBIDDEN)
         except ClubMembership.DoesNotExist:
-            return Response({"error": "Non membre."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Vous n'êtes pas membre de ce club."}, status=status.HTTP_403_FORBIDDEN)
+
+        event_id = request.data.get('event_id')
+        from ..tasks.club_events import trigger_club_event
+        trigger_club_event.delay(club.id, event_id)
+        return Response({'status': 'event triggered'})
 
 class ProfileViewSet(viewsets.ReadOnlyModelViewSet):
     """API endpoint pour visualiser les profils utilisateurs."""

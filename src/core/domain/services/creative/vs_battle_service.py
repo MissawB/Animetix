@@ -132,36 +132,74 @@ class VsBattleService:
             logger.warning(f"⚠️ Image recovery failed: {e}")
             return None
 
-    def _extract_json(self, text: str) -> Dict[str, Any]:
+    def _extract_json(self, text: Any) -> Dict[str, Any]:
         """
-        Robustly extracts JSON from LLM output, handling markdown code blocks,
-        redundant metadata (like fusion_id), and garbage.
+        Robustly extracts JSON from LLM output, stripping all metadata/wrapping.
+        Works with raw strings or dictionaries from the inference engine.
         """
-        # Cleanup metadata sometimes added by the adapter in certain modes
-        cleaned_text = text.split("---")[0].strip() # If there's a delimiter
+        if isinstance(text, dict):
+            logger.info("🧩 _extract_json received a dict, looking for nested data...")
+            best = self._find_best_dict(text)
+            return best or text
+
+        logger.info(f"🧩 _extract_json parsing string (len: {len(str(text))})")
         
-        # Handle cases where the LLM might return an object with a 'data' or 'json' key
+        def find_best_dict(obj: Any) -> Optional[Dict]:
+            if isinstance(obj, dict):
+                if any(k in obj for k in ["stats", "tier", "winner", "analysis", "abilities"]):
+                    return obj
+                for v in obj.values():
+                    res = find_best_dict(v)
+                    if res: return res
+            elif isinstance(obj, list):
+                for item in obj:
+                    res = find_best_dict(item)
+                    if res: return res
+            return None
+
+        # 1. Basic cleaning
+        cleaned_text = str(text).split("---")[0].strip()
+        
         try:
             data = json.loads(cleaned_text)
-            if isinstance(data, dict) and "fusion_id" in data:
-                # If the adapter wrapped the result in a metadata object
-                return data.get("json") or data.get("data") or data
-            return data
+            best = find_best_dict(data)
+            if best: return best
+            return data if isinstance(data, dict) else {}
         except json.JSONDecodeError:
-            # Fallback to regex for markdown blocks or partial JSON
+            # 2. Markdown/Regex Fallback
             match = _regex_module.search(r"```(?:json)?\s*(\{.*?\})\s*```", cleaned_text, _regex_module.DOTALL | _regex_module.IGNORECASE)
             if match:
-                try: return json.loads(match.group(1))
+                try:
+                    data = json.loads(match.group(1))
+                    best = find_best_dict(data)
+                    return best or data
                 except json.JSONDecodeError: pass
             
-            # Last ditch: find first { and last }
+            # 3. Bruteforce bracket search
             start = cleaned_text.find('{')
             end = cleaned_text.rfind('}')
             if start != -1 and end != -1:
-                try: return json.loads(cleaned_text[start:end+1])
+                try:
+                    data = json.loads(cleaned_text[start:end+1])
+                    best = find_best_dict(data)
+                    return best or data
                 except json.JSONDecodeError: pass
                 
-            raise ValueError(f"Could not extract valid JSON from LLM response (len: {len(cleaned_text)})")
+            raise ValueError(f"Could not extract valid JSON (len: {len(cleaned_text)})")
+
+    def _find_best_dict(self, obj: Any) -> Optional[Dict]:
+        """Helper to find the most likely data object in a nested structure."""
+        if isinstance(obj, dict):
+            if any(k in obj for k in ["stats", "tier", "winner", "analysis", "abilities"]):
+                return obj
+            for v in obj.values():
+                res = self._find_best_dict(v)
+                if res: return res
+        elif isinstance(obj, list):
+            for item in obj:
+                res = self._find_best_dict(item)
+                if res: return res
+        return None
 
     def _safe_generate_structured(self, prompt: str, system_prompt: str, response_model: Type[T]) -> T:
         """
@@ -170,13 +208,20 @@ class VsBattleService:
         """
         try:
             logger.info(f"Attempting structured generation for {response_model.__name__}")
-            # Even with generate_structured, we handle the raw result to be safe
-            raw_response = self.inference_engine.generate(prompt, system_prompt=system_prompt)
+            # Get RAW response (could be string or dict)
+            raw_response = self.inference_engine.generate(prompt, system_prompt=system_prompt, json_mode=True)
+            
+            # LOG RAW for debugging
+            logger.debug(f"DEBUG RAW LLM RESPONSE: {raw_response}")
+            
+            # Robust extraction
             json_data = self._extract_json(raw_response)
+            
+            logger.info(f"✅ Extracted JSON keys: {list(json_data.keys())}")
             return response_model.model_validate(json_data)
         except Exception as e:
             logger.warning(f"Unified generation failed ({e}), attempting last-resort fallback...")
-            # If everything fails, try one more time without JSON mode if supported
+            # If everything fails, try one more time
             raw_response = self.inference_engine.generate(prompt, system_prompt=system_prompt)
             json_data = self._extract_json(raw_response)
             return response_model.model_validate(json_data)
@@ -204,6 +249,8 @@ class VsBattleService:
             f"{name} profile VS Battles Wiki",
             # Handle cases like Thorfinn Karlsefni -> Thorfinn OR Edward Elric -> Edward
             f"{name.split()[0]} {franchise} VS Battles Wiki" if franchise and len(name.split()) > 1 else None,
+            # Broad search without franchise but with split
+            f"{name.split()[0]} VS Battles Wiki" if len(name.split()) > 1 else None,
             # Broad search without 'profile' suffix
             f"{name} VS Battles Wiki",
             # FINAL FALLBACK: Search for the series Verse page
@@ -255,6 +302,7 @@ class VsBattleService:
                     name=name,
                     franchise=franchise or "Unknown"
                 )
+                # USE THE SAFE METHOD to avoid fusion_id errors
                 synthetic_char = self._safe_generate_structured(
                     prompt=gen_prompt,
                     system_prompt=gen_system,

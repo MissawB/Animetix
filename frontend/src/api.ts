@@ -1,4 +1,7 @@
-import { AkinetixState, AppConfig, ClassicGameState, DailyChallenge, MediaItem, Profile, User, GraphData } from './types';
+import { 
+  AkinetixState, AppConfig, ClassicGameState, DailyChallenge, MediaItem, Profile, User, GraphData,
+  DiscoveryClub, ClubMembership 
+} from './types';
 import { apiClient } from './utils/apiClient';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
@@ -122,6 +125,34 @@ export async function interactWithCompanion(mentorId: string, message: string, c
       user_message: message,
       context_url: contextUrl,
     }),
+  });
+}
+
+// --- Club API ---
+export async function getClubs(): Promise<DiscoveryClub[]> {
+  return apiClient('/api/v1/clubs/');
+}
+
+export async function getClubDetails(id: number): Promise<DiscoveryClub> {
+  return apiClient(`/api/v1/clubs/${id}/`);
+}
+
+export async function createClub(data: Partial<DiscoveryClub>): Promise<DiscoveryClub> {
+  return apiClient('/api/v1/clubs/', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function joinClub(id: number): Promise<{ status: string }> {
+  return apiClient(`/api/v1/clubs/${id}/join/`, {
+    method: 'POST',
+  });
+}
+
+export async function leaveClub(id: number): Promise<{ status: string }> {
+  return apiClient(`/api/v1/clubs/${id}/leave/`, {
+    method: 'POST',
   });
 }
 

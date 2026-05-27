@@ -159,25 +159,26 @@ def patch_get_container(mocker):
     }
     mock_container_instance.vision_quest_service.select_secret.return_value = {'id': 1, 'title': 'Naruto', 'image': 'n.jpg'}
     mock_container_instance.vision_quest_service.start_new_game.return_value = {'id': 1, 'title': 'Naruto', 'image': 'n.jpg'}
-    
     # Force import to ensure attributes exist
     import animetix.containers
     import animetix.services
-    try:
-        import animetix.views.common
-    except ImportError:
-        pass
 
     # Pour les tests E2E, on veut éviter les MagicMocks qui polluent la session Django
     mocker.patch('animetix.containers.get_container', return_value=mock_container_instance)
     mocker.patch('animetix.services.get_container', return_value=mock_container_instance)
-    mocker.patch('animetix.tasks.get_container', return_value=mock_container_instance)
-    
+
+    # Patch tasks ONLY if it has get_container
+    import animetix.tasks
+    if hasattr(animetix.tasks, 'get_container'):
+        mocker.patch('animetix.tasks.get_container', return_value=mock_container_instance)
+
     # Try to patch views if they are reachable, otherwise skip (core tests don't need them)
     try:
         from animetix.views import common
-        mocker.patch.object(common, 'get_container', return_value=mock_container_instance)
-        
+        if hasattr(common, 'get_container'):
+            mocker.patch.object(common, 'get_container', return_value=mock_container_instance)
+    except ImportError:
+        pass
         from animetix.services import AnimetixService
         mock_service = MagicMock(spec=AnimetixService)
         mock_service.load_data = mock_container_instance.catalog_service.load_data

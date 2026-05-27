@@ -10,7 +10,7 @@ from ..models import DailyChallenge
 from ..serializers import DailyChallengeSerializer
 from ..containers import get_container
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("animetix." + __name__)
 
 class DailyChallengeViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = DailyChallenge.objects.all()

@@ -141,8 +141,8 @@ class GraphExtraction(BaseModel):
     relations: List[GraphRelation] = Field(default_factory=list)
 
 # --- VS BATTLE GAME SCHEMAS ---
-
 class CombatStats(BaseModel):
+    model_config = ConfigDict(extra='ignore')
     tier: Optional[str] = Field(default="Unknown", description="Attack Potency Tier (e.g., 2-C)")
     tier_value: int = Field(default=0, description="Normalized power scale (0-100)")
     speed: Optional[str] = Field(default="Unknown", description="Combat and Reaction speed")
@@ -151,6 +151,7 @@ class CombatStats(BaseModel):
     abilities: List[str] = Field(default_factory=list, description="Hax and Special Powers")
 
 class CombatCharacter(BaseModel):
+    model_config = ConfigDict(populate_by_name=True, extra='ignore')
     name: str = Field(alias="Name", description="Name of the character.")
     franchise: Optional[str] = Field(default=None, alias="Franchise", description="The series or universe the character belongs to.")
     image_url: Optional[str] = Field(default=None, alias="Image_URL", description="URL of the character portrait")
