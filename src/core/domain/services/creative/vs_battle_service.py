@@ -134,35 +134,49 @@ class VsBattleService:
 
     def _extract_json(self, text: str) -> Dict[str, Any]:
         """
-        Robustly extracts JSON from LLM output, handling markdown code blocks and garbage.
+        Robustly extracts JSON from LLM output, handling markdown code blocks,
+        redundant metadata (like fusion_id), and garbage.
         """
+        # Cleanup metadata sometimes added by the adapter in certain modes
+        cleaned_text = text.split("---")[0].strip() # If there's a delimiter
+        
+        # Handle cases where the LLM might return an object with a 'data' or 'json' key
         try:
-            return json.loads(text.strip())
+            data = json.loads(cleaned_text)
+            if isinstance(data, dict) and "fusion_id" in data:
+                # If the adapter wrapped the result in a metadata object
+                return data.get("json") or data.get("data") or data
+            return data
         except json.JSONDecodeError:
-            match = _regex_module.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, _regex_module.DOTALL | _regex_module.IGNORECASE)
+            # Fallback to regex for markdown blocks or partial JSON
+            match = _regex_module.search(r"```(?:json)?\s*(\{.*?\})\s*```", cleaned_text, _regex_module.DOTALL | _regex_module.IGNORECASE)
             if match:
                 try: return json.loads(match.group(1))
                 except json.JSONDecodeError: pass
-            start = text.find('{')
-            end = text.rfind('}')
+            
+            # Last ditch: find first { and last }
+            start = cleaned_text.find('{')
+            end = cleaned_text.rfind('}')
             if start != -1 and end != -1:
-                try: return json.loads(text[start:end+1])
+                try: return json.loads(cleaned_text[start:end+1])
                 except json.JSONDecodeError: pass
-            raise ValueError(f"Could not extract valid JSON from LLM response: {text[:200]}...")
+                
+            raise ValueError(f"Could not extract valid JSON from LLM response (len: {len(cleaned_text)})")
 
     def _safe_generate_structured(self, prompt: str, system_prompt: str, response_model: Type[T]) -> T:
         """
-        Tries generate_structured, falls back to generate + manual parse on failure.
+        Tries generate_structured, but ALWAYS applies robust JSON extraction 
+        to handle metadata like 'fusion_id' or markdown formatting.
         """
         try:
             logger.info(f"Attempting structured generation for {response_model.__name__}")
-            return self.inference_engine.generate_structured(
-                prompt=prompt,
-                system_prompt=system_prompt,
-                response_model=response_model
-            )
+            # Even with generate_structured, we handle the raw result to be safe
+            raw_response = self.inference_engine.generate(prompt, system_prompt=system_prompt)
+            json_data = self._extract_json(raw_response)
+            return response_model.model_validate(json_data)
         except Exception as e:
-            logger.warning(f"Structured generation failed ({e}), falling back to manual parsing.")
+            logger.warning(f"Unified generation failed ({e}), attempting last-resort fallback...")
+            # If everything fails, try one more time without JSON mode if supported
             raw_response = self.inference_engine.generate(prompt, system_prompt=system_prompt)
             json_data = self._extract_json(raw_response)
             return response_model.model_validate(json_data)
@@ -180,17 +194,19 @@ class VsBattleService:
     def fetch_character_versions(self, name: str, franchise: Optional[str] = None, loose_pass: bool = False) -> List[CombatCharacter]:
         """
         Fetches ALL valid character versions from Fandom using an escalating multi-pass search.
-        Includes a final fallback to 'Verse' pages and Synthetic AI generation.
         """
         pass_type = "RESCUE (Loose)" if loose_pass else "STRICT"
         logger.info(f"🔍 Finding Wiki versions for: {name} (Franchise: {franchise}, Mode: {pass_type})")
         
+        # Multi-pass search queries: from very specific to broad
         search_queries = [
-            f"{name} {franchise} VS Battles Wiki" if franchise and not loose_pass else f"{name} profile VS Battles Wiki",
-            # Handle cases like Thorfinn Karlsefni -> Thorfinn
+            f"{name} {franchise} VS Battles Wiki" if franchise and not loose_pass else None,
+            f"{name} profile VS Battles Wiki",
+            # Handle cases like Thorfinn Karlsefni -> Thorfinn OR Edward Elric -> Edward
             f"{name.split()[0]} {franchise} VS Battles Wiki" if franchise and len(name.split()) > 1 else None,
+            # Broad search without 'profile' suffix
             f"{name} VS Battles Wiki",
-            # FINAL FALLBACK: Search for the series Verse page if dedicated profile is missing
+            # FINAL FALLBACK: Search for the series Verse page
             f"{franchise} Verse VS Battles Wiki" if loose_pass and franchise else None
         ]
         
@@ -213,14 +229,17 @@ class VsBattleService:
                         # FRANCHISE VALIDATION
                         is_franchise_ok = self._is_franchise_match(franchise, cand.get('categories', []), cand_name)
                         
-                        # Match identity OR allow Verse page in loose mode
+                        # NAME VALIDATION (boosted by franchise)
+                        # We allow first name match if franchise matches
                         if self._is_name_match(name, cand_name, loose=loose_pass, franchise_matched=is_franchise_ok) or (loose_pass and "Verse" in cand_name):
                             if "Verse" in cand_name:
                                 cand['name'] = f"{name} (Verse Estimate)"
                             all_raw_data.append(cand)
                             seen_titles.add(cand_name)
                 
-                if len(all_raw_data) >= 1: break
+                # If we found direct character matches (not just verse), we can potentially stop
+                if len([c for c in all_raw_data if "Verse" not in c['name']]) >= 1:
+                    break
 
         # 2. TRIGGER RESCUE PASS IF NEEDED
         if not all_raw_data and not loose_pass:
@@ -241,12 +260,12 @@ class VsBattleService:
                     system_prompt=gen_system,
                     response_model=CombatCharacter
                 )
-                # Ensure identity
+                # Ensure identity and basic metadata
                 synthetic_char.name = f"{name} (AI Generated)"
                 synthetic_char.franchise = franchise
                 synthetic_char.wiki_url = f"https://vsbattles.fandom.com/wiki/{name.replace(' ', '_')}"
                 
-                # RECOVER IMAGE for synthetic characters
+                # RECOVER IMAGE
                 synthetic_char.image_url = self._recover_image(name, franchise)
                 
                 if synthetic_char.stats:
@@ -257,9 +276,12 @@ class VsBattleService:
             except Exception as e:
                 logger.error(f"❌ Failed to generate synthetic profile for {name}: {e}")
                 return []
+# ... rest of file ...
 
         parsed_versions = []
 
+        import time
+        
         # 4. PARSE ALL CANDIDATES
         for raw_data in all_raw_data:
             wikitext = raw_data.get("wikitext", "")
@@ -268,7 +290,12 @@ class VsBattleService:
             page_title = raw_data.get("name", name)
 
             try:
-                prompt, system = self.prompt_manager.get_prompt("vs_battle_parser", wikitext=wikitext[:5000])
+                # Truncate even more to avoid local LLM context overflow/timeout (3000 chars is plenty for stats)
+                prompt, system = self.prompt_manager.get_prompt("vs_battle_parser", wikitext=wikitext[:3000])
+                
+                # BREATHING ROOM for local server
+                time.sleep(1.0)
+                
                 character = self._safe_generate_structured(
                     prompt=prompt,
                     system_prompt=system,

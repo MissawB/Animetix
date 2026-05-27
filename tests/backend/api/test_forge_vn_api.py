@@ -48,7 +48,7 @@ class TestForgeVNAPI:
         response = api_client.post(url, data, format='json')
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    def test_generate_vn_script_success(self, api_client, mock_user, sample_fusion):
+    def test_generate_vn_script_success(self, api_client, mock_user, sample_fusion, mock_container):
         api_client.force_authenticate(user=mock_user)
         url = reverse('api_forge_vn', kwargs={'fusion_id': sample_fusion.id})
         data = {"action": "generate"}
@@ -57,20 +57,22 @@ class TestForgeVNAPI:
             "title": "Fusion Script",
             "scenes": [{"character": "Protagonist", "text": "Hello world", "mood": "Happy", "bg_prompt": "Forest"}]
         }
-        mock_vn_script = MagicMock()
-        mock_vn_script.model_dump.return_value = mock_script_data
+        
+        # Create a mock that behaves like a Pydantic model
+        class MockScript:
+            def model_dump(self):
+                return mock_script_data
 
-        mock_vn_service = MagicMock()
-        mock_vn_service.generate_script.return_value = mock_vn_script
+        # Configure the global mock_container
+        mock_container.visual_novel_service.return_value.generate_script.return_value = MockScript()
 
-        with container.visual_novel_service.override(providers.Object(mock_vn_service)):
-            response = api_client.post(url, data, format='json')
-            assert response.status_code == status.HTTP_200_OK
-            assert response.data['vn_script']['title'] == "Fusion Script"
-            
-            # Verify persistence
-            sample_fusion.refresh_from_db()
-            assert sample_fusion.vn_script['title'] == "Fusion Script"
+        response = api_client.post(url, data, format='json')
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data['vn_script']['title'] == "Fusion Script"
+        
+        # Verify persistence
+        sample_fusion.refresh_from_db()
+        assert sample_fusion.vn_script['title'] == "Fusion Script"
 
     def test_update_vn_script_success(self, api_client, mock_user, sample_fusion):
         api_client.force_authenticate(user=mock_user)
