@@ -270,3 +270,7 @@ class ChromaRepositoryAdapter(RepositoryPort):
         logger.info(f"Chroma sync_latent_space: Stored {len(data)} items for {media_type}:{vibe_type}.")
         return len(data)
 
+    def get_creative_fusion(self, fusion_id: int) -> Optional[Dict]:
+        """Non implémenté pour Chroma, déléguer à Django."""
+        return None
+

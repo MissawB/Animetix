@@ -176,19 +176,30 @@ class AkinetixEngine:
     def _propose_classical_question(self, items: List[Dict], attributes: List[str], probs: np.ndarray, asked_attrs: set, fine_attributes: Dict = None) -> Optional[str]:
         candidates = [a for a in attributes if a not in asked_attrs]
         if not candidates: return None
-        if len(candidates) > 150:
-            fines = [c for c in candidates if c.startswith('fine:')]
-            generals = [c for c in candidates if not c.startswith('fine:')]
-            candidates = random.sample(fines, min(len(fines), 100)) + random.sample(generals, min(len(generals), 50))
-        best_attr = None
-        best_diff = 1.0
-        for attr in candidates:
+        
+        # 1. Calcul de l'entropie (gain d'information) pour chaque candidat
+        scored_candidates = []
+        for attr in candidates[:200]: # Limite pour la performance
             p_yes = sum(probs[i] for i, item in enumerate(items) if self._check_attribute_instance(item, attr, fine_attributes or {}))
-            diff = abs(p_yes - 0.5)
-            if diff < best_diff:
-                best_diff = diff
-                best_attr = attr
-        return best_attr
+            gain = 1.0 - abs(p_yes - 0.5) * 2 # 1.0 = entropie max, 0.0 = min
+            scored_candidates.append((attr, gain))
+            
+        # Tri par gain d'information décroissant
+        scored_candidates.sort(key=lambda x: x[1], reverse=True)
+        top_candidates = [x[0] for x in scored_candidates[:10]]
+        
+        # 2. Utilisation du solveur CFR pour choisir le chemin optimal parmi les meilleurs
+        if self.cfr_solver:
+            game_state = {
+                "probs": probs.tolist(),
+                "asked_attrs": list(asked_attrs),
+                "items_count": len(items)
+            }
+            best_attr, _ = self.get_next_question(top_candidates, game_state)
+            return best_attr
+
+        # Fallback classique (le meilleur selon l'entropie pure)
+        return top_candidates[0] if top_candidates else None
 
     def _get_classical_best_guess(self, items: List[Dict], probs: np.ndarray) -> Tuple[str, float]:
         if probs.size == 0: return "Inconnu", 0.0

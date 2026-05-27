@@ -71,3 +71,7 @@ class UnifiedRepositoryAdapter(RepositoryPort):
     def sync_latent_space(self, media_type: str, vibe_type: str, data: List[Dict]) -> int:
         """Synchronise l'espace latent vers la DB relationnelle."""
         return self.django.sync_latent_space(media_type, vibe_type, data)
+
+    def get_creative_fusion(self, fusion_id: int) -> Optional[Dict]:
+        """Délègue la récupération de la fusion à l'adaptateur Django."""
+        return self.django.get_creative_fusion(fusion_id)

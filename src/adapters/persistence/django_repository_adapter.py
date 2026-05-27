@@ -143,6 +143,22 @@ class DjangoRepositoryAdapter(RepositoryPort):
         created = LatentSpacePoint.objects.bulk_create(objs, batch_size=500)
         return len(created)
 
+    def get_creative_fusion(self, fusion_id: int) -> Optional[Dict]:
+        """Récupère une fusion créative depuis la DB Django."""
+        from animetix.models import CreativeFusion
+        try:
+            fusion = CreativeFusion.objects.get(id=fusion_id)
+            return {
+                "id": fusion.id,
+                "title": fusion.title,
+                "description": fusion.description,
+                "status": fusion.status,
+                "result_url": fusion.result_url,
+                "metadata": fusion.metadata
+            }
+        except Exception:
+            return None
+
     def _to_dict(self, item: MediaItem) -> Dict:
         data = {
             'id': item.external_id,

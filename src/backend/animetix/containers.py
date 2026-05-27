@@ -469,9 +469,15 @@ class Container(containers.DeclarativeContainer):
         cache_service=providers.Object(__import__('django.core.cache').core.cache)
     )
 
+    cfr_game_solver = providers.Singleton(
+        CFRGameSolver,
+        num_actions=4
+    )
+
     akinetix_engine = providers.Singleton(
         AkinetixEngine,
-        catalog_service=catalog_service
+        catalog_service=catalog_service,
+        cfr_solver=cfr_game_solver
     )
 
     akinetix_service = providers.Singleton(
@@ -590,9 +596,16 @@ class Container(containers.DeclarativeContainer):
     )
 
 
+    liquid_neural_network = providers.Singleton(
+        LiquidNeuralNetworkSimulator,
+        state_dimension=4,
+        input_dimension=2
+    )
+
     voice_cloning_service = providers.Singleton(
         VoiceCloningService,
-        inference_engine=audio_transformers_adapter
+        inference_engine=audio_transformers_adapter,
+        lnn_simulator=liquid_neural_network
     )
 
     native_speech_llm_service = providers.Singleton(
@@ -675,9 +688,6 @@ class Container(containers.DeclarativeContainer):
         inference_engine=inference_engine,
         neo4j_manager=graph_persistence_port
     )
-
-
-
 
     star_mlops_service = providers.Singleton(
         StarMLOpsDomainService,
