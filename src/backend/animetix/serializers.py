@@ -92,3 +92,31 @@ class AIFeedbackSerializer(serializers.ModelSerializer):
         model = AIFeedback
         fields = '__all__'
 
+# --- 🏘️ CLUB SERIALIZERS ---
+from .models import DiscoveryClub, ClubMembership, ClubEvent
+
+class ClubMembershipSerializer(serializers.ModelSerializer):
+    username = serializers.ReadOnlyField(source='user.username')
+    
+    class Meta:
+        model = ClubMembership
+        fields = ['id', 'user', 'username', 'role', 'joined_at']
+
+class ClubEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ClubEvent
+        fields = '__all__'
+
+class DiscoveryClubSerializer(serializers.ModelSerializer):
+    creator_name = serializers.ReadOnlyField(source='creator.username')
+    members_count = serializers.IntegerField(source='members.count', read_only=True)
+    events = ClubEventSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = DiscoveryClub
+        fields = [
+            'id', 'name', 'description', 'creator', 'creator_name', 
+            'members_count', 'image_url', 'is_private', 'events', 
+            'created_at', 'updated_at'
+        ]
+

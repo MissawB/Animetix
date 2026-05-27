@@ -3,6 +3,10 @@ from .. import api_views
 
 urlpatterns = [
     path('fusions/', api_views.CreativeFusionViewSet.as_view({'get': 'list', 'post': 'create'}), name='api-fusions'),
+    path('clubs/', api_views.ClubViewSet.as_view({'get': 'list', 'post': 'create'}), name='api-clubs'),
+    path('clubs/<int:pk>/', api_views.ClubViewSet.as_view({'get': 'retrieve', 'put': 'update', 'patch': 'partial_update', 'delete': 'destroy'}), name='api-club-detail'),
+    path('clubs/<int:pk>/join/', api_views.ClubViewSet.as_view({'post': 'join'}), name='api-club-join'),
+    path('clubs/<int:pk>/leave/', api_views.ClubViewSet.as_view({'post': 'leave'}), name='api-club-leave'),
     path('achievements/', api_views.AchievementViewSet.as_view({'get': 'list'}), name='api-achievements'),
     path('search/', api_views.MediaSearchView.as_view(), name='api_search'),
     path('config/', api_views.ConfigView.as_view(), name='api_config'),

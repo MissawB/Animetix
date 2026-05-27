@@ -282,3 +282,35 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.title} ({self.notification_type})"
+
+# --- 🏘️ CLUBS & SOCIAL GROUPS ---
+class DiscoveryClub(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField()
+    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_clubs')
+    members = models.ManyToManyField(User, through='ClubMembership', related_name='joined_clubs')
+    image_url = models.URLField(max_length=500, null=True, blank=True)
+    is_private = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self): return self.name
+
+class ClubMembership(models.Model):
+    ROLES = [('member', 'Membre'), ('admin', 'Administrateur'), ('owner', 'Propriétaire')]
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    club = models.ForeignKey(DiscoveryClub, on_delete=models.CASCADE)
+    role = models.CharField(max_length=20, choices=ROLES, default='member')
+    joined_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'club')
+
+class ClubEvent(models.Model):
+    club = models.ForeignKey(DiscoveryClub, on_delete=models.CASCADE, related_name='events')
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    event_date = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self): return f"{self.club.name} - {self.title}"
