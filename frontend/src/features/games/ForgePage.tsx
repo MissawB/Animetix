@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, Zap, Flame, Image as ImageIcon, Loader2, ArrowRight, RefreshCw, Heart, Share2, Info, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Sparkles, Zap, Flame, Image as ImageIcon, Loader2, ArrowRight, RefreshCw, Heart, Share2, Info, X, Film } from 'lucide-react';
 import { SearchBar } from '../../components/SearchBar';
 import { startFusion, getFusionStatus, FusionResponse, FusionStatus } from '../../api';
 import { SearchItem } from '../../types';
@@ -14,6 +15,7 @@ const ART_STYLES = [
 ];
 
 const ForgePage: React.FC = () => {
+  const navigate = useNavigate();
   const [itemA, setItemA] = useState<any>(null);
   const [itemB, setItemB] = useState<any>(null);
   const [chaosLevel, setChaosLevel] = useState<number>(50);
@@ -183,6 +185,13 @@ const ForgePage: React.FC = () => {
              </div>
 
              <div className="flex flex-wrap gap-4">
+                <button 
+                   onClick={() => navigate(`/forge/vn/${status.fusion_id}/`)}
+                   className="flex-1 min-w-[200px] bg-anime-accent text-black py-5 px-8 rounded-2xl font-black italic text-lg hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 uppercase shadow-xl"
+                >
+                   <Film className="w-6 h-6" />
+                   Transformer en Visual Novel
+                </button>
                 <button 
                    onClick={resetForge}
                    className="flex-1 min-w-[200px] bg-black text-white dark:bg-white dark:text-black py-5 px-8 rounded-2xl font-black italic text-lg hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 uppercase shadow-xl"
