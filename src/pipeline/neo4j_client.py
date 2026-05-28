@@ -24,7 +24,8 @@ ALLOWED_LABELS = {
 ALLOWED_RELATIONSHIPS = {
     "PRODUCED_BY", "HAS_THEME", "CREATED_BY", "FEATURES", "VOICED_BY", 
     "DIRECTED_BY", "CONTAINS_COMBAT", "PERFORMS", "INVOLVES_TECHNIQUE", 
-    "USES_TECHNIQUE", "CONTAINS_MEDIA", "HAS_THEORY", "INTERACTED_WITH"
+    "USES_TECHNIQUE", "CONTAINS_MEDIA", "HAS_THEORY", "INTERACTED_WITH",
+    "APPEARS_IN"
 }
 
 def sanitize_cypher_identifier(identifier: str, allowed_set: set) -> str:
@@ -38,11 +39,11 @@ def sanitize_cypher_identifier(identifier: str, allowed_set: set) -> str:
     return identifier
 
 class Neo4jManager(GraphDatabasePort):
-    def __init__(self):
+    def __init__(self, uri=None, user=None, password=None):
         self._driver = None
-        self._uri = NEO4J_URI
-        self._user = NEO4J_USER
-        self._password = NEO4J_PASSWORD
+        self._uri = uri or NEO4J_URI
+        self._user = user or NEO4J_USER
+        self._password = password or NEO4J_PASSWORD
 
     @property
     def driver(self):
@@ -70,6 +71,21 @@ class Neo4jManager(GraphDatabasePort):
         if not self.driver: return
         with self.driver.session() as session:
             session.execute_write(self._sync_tx, media_item, media_type)
+
+    def sync_character_to_graph(self, character_item: dict):
+        """Injects a Character node and links it to associated media."""
+        if not self.driver: return
+        with self.driver.session() as session:
+            session.execute_write(self._sync_character_tx, character_item)
+
+    @staticmethod
+    def _sync_character_tx(tx, item):
+        query = "MERGE (c:Character {id: $id}) SET c.name = $name RETURN c"
+        tx.run(query, id=str(item['id']), name=item.get('name'))
+
+        # Link to anime or manga if present in the data
+        for anime_id in item.get('anime_appearances', []):
+             tx.run("MATCH (c:Character {id: $cid}) MATCH (m:Media {id: $mid}) MERGE (c)-[:APPEARS_IN]->(m)", cid=str(item['id']), mid=str(anime_id))
 
     def sync_ai_extracted_graph(self, media_id: str, extracted_data: dict):
         """Injecte les entités et relations extraites par l'IA dans le graphe."""
