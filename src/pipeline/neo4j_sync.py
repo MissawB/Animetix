@@ -12,6 +12,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ANIME_DB = os.path.join(BASE_DIR, 'data', 'processed', 'clean_root_animes.json')
 MANGA_DB = os.path.join(BASE_DIR, 'data', 'processed', 'clean_root_mangas.json')
 CHAR_DB = os.path.join(BASE_DIR, 'data', 'processed', 'filtered_characters.json')
+GAME_DB = os.path.join(BASE_DIR, 'data', 'processed', 'clean_root_games.json')
 from pipeline.neo4j_client import Neo4jManager
 
 def run_sync_type_to_graph(media_type: str, neo4j_res=None):
@@ -35,7 +36,8 @@ def run_sync_type_to_graph(media_type: str, neo4j_res=None):
     file_map = {
         "Anime": ANIME_DB,
         "Manga": MANGA_DB,
-        "Character": CHAR_DB
+        "Character": CHAR_DB,
+        "Game": GAME_DB
     }
 
     db_path = file_map.get(media_type)
