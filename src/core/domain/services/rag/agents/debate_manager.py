@@ -2,6 +2,7 @@ import logging
 import json
 import re
 from typing import Dict, Optional
+from core.domain.exceptions import InferenceError, InfrastructureError
 from core.domain.entities.ai_schemas import (
     JudgeEvaluation, JudgeAction, DebateOutcome
 )
@@ -26,8 +27,8 @@ def robust_json_loads(raw: str) -> dict:
         
     try:
         return json.loads(json_str)
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Initial JSON parse failed: {e}. Attempting recovery...")
         
     try:
         # Basic cleaning
@@ -132,8 +133,11 @@ class DebateManager:
                 except Exception as parse_err:
                     logger.warning(f"Judge {j_key} response parsed with errors: {parse_err}. Raw response: {raw}")
                     return j_key, None
+            except (InferenceError, InfrastructureError) as e:
+                logger.error(f"DebateManager inference/infrastructure error: {e}")
+                return j_key, None
             except Exception as e:
-                logger.error(f"Failed to execute or parse {j_key} response: {e}")
+                logger.error(f"Unexpected error in DebateManager: {e}", exc_info=True)
                 return j_key, None
 
         # Exécuter les 3 juges en parallèle dans des threads distincts

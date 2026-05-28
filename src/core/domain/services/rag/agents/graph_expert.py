@@ -3,6 +3,7 @@ import orjson
 from typing import Dict, Optional
 from core.domain.services.llm_service import LLMService
 from core.domain.services.prompt_manager import PromptManager
+from core.domain.exceptions import InferenceError, InfrastructureError
 
 logger = logging.getLogger("animetix.rag.graph_expert")
 
@@ -28,6 +29,9 @@ class GraphExpert:
             
             logger.warning(f"No JSON found in LLM response: {res_raw}")
             return None
+        except (InferenceError, InfrastructureError) as e:
+            logger.error(f"Graph Expert inference error: {e}")
+            return None
         except Exception as e:
-            logger.error(f"Failed to generate or parse Cypher from LLM: {e}")
+            logger.error(f"Unexpected error in GraphExpert: {e}", exc_info=True)
             return None
