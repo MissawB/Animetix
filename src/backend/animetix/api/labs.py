@@ -3,6 +3,8 @@ import json
 import datetime
 from animetix_project.logging_config import get_logger
 from django.conf import settings
+from django.utils.decorators import method_decorator
+from django_ratelimit.decorators import ratelimit
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -179,6 +181,7 @@ class DPOCurationView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=500)
 
+@method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True), name='dispatch')
 class SpatialLabDataView(APIView):
     """Génère une carte de profondeur pour une image donnée."""
     permission_classes = [permissions.AllowAny]
@@ -216,6 +219,7 @@ class SpatialLabDataView(APIView):
         except Exception as e:
             return Response({'error': str(e)}, status=500)
 
+@method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True), name='dispatch')
 class MangaLabDataView(APIView):
     """Nettoyage et traduction de bulles de manga."""
     permission_classes = [permissions.AllowAny]
@@ -259,6 +263,7 @@ class MangaLabDataView(APIView):
         except Exception as e:
             return Response({'error': str(e)}, status=500)
 
+@method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True), name='dispatch')
 class AudioLabDataView(APIView):
     """Clonage vocal XTTS."""
     permission_classes = [permissions.AllowAny]

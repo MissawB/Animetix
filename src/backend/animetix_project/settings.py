@@ -15,8 +15,9 @@ environ.Env.read_env(os.path.join(Path(__file__).resolve().parent.parent.parent,
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # --- AUTO-DETECTION MODE DEV vs PROD ---
-# Si DJANGO_SECRET_KEY n'est pas dans l'environnement, on est en DEV
-IS_PRODUCTION = os.getenv('DJANGO_SECRET_KEY') is not None
+# Use an explicit environment variable for production detection
+DJANGO_ENV = os.getenv('DJANGO_ENV', 'development').lower()
+IS_PRODUCTION = DJANGO_ENV == 'production'
 
 import logging
 

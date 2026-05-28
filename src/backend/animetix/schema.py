@@ -1,12 +1,13 @@
 import graphene
 from graphene_django import DjangoObjectType
+from graphene_django.views import login_required
 from .models import Profile, DailyChallenge, Achievement
-from .services import AnimetixService
+from .containers import get_container
 
 class ProfileType(DjangoObjectType):
     class Meta:
         model = Profile
-        fields = "__all__"
+        fields = ['id', 'xp', 'current_streak', 'max_streak', 'last_win_date', 'total_wins', 'total_games', 'ranked_points', 'ranked_max_points', 'unlocked_badges', 'custom_username_color', 'tier']
 
 class DailyChallengeType(DjangoObjectType):
     class Meta:
@@ -51,15 +52,17 @@ class Query(graphene.ObjectType):
         import datetime
         return DailyChallenge.objects.filter(date=datetime.date.today()).first()
 
+    @login_required
     def resolve_search_media(self, info, q, media_type="Anime"):
-        service = AnimetixService()
-        data = service.load_data(media_type)
+        container = get_container()
+        data = container.catalog_service().load_data(media_type)
         if not data: return []
         return [item for item in data['lookup'] if q.lower() in item['title'].lower()][:10]
 
+    @login_required
     def resolve_media_details(self, info, id, media_type="Anime"):
-        service = AnimetixService()
-        data = service.load_data(media_type)
+        container = get_container()
+        data = container.catalog_service().load_data(media_type)
         if not data: return None
         # Recherche par ID dans la DB propre
         for item in data['db']:

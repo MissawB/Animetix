@@ -1,5 +1,5 @@
 import logging
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("animetix." + __name__)
 
 import os
 import requests
@@ -76,14 +76,14 @@ def trigger_model_retraining(validated_dpo_dataset, periodic_rag_evaluation, kno
     count = validated_dpo_dataset.get("count", 0)
     # Critère 1 : Volume de nouvelles données
     if count >= 100:
-        print(f"🚀 Triggering Retraining: {count} new samples collected.")
+        logger.info(f"🚀 Triggering Retraining: {count} new samples collected.")
         return "Retraining started."
     # Critère 2 : Baisse de performance détectée par RAGAS
     if periodic_rag_evaluation.get('avg_faithfulness', 1.0) < 0.7:
-        print("🚨 Performance drop detected. Triggering urgent fine-tuning.")
+        logger.warning("🚨 Performance drop detected. Triggering urgent fine-tuning.")
         return "Urgent retraining started."
     # Critère 3 : Dérive détectée
     if knowledge_drift_check:
-        print("🌊 Data drift detected. Triggering preventative retraining.")
+        logger.info("🌊 Data drift detected. Triggering preventative retraining.")
         return "Preventative retraining started."
     return "Retraining not necessary yet."

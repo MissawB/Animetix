@@ -14,10 +14,12 @@ const EmojiPage = lazy(() => import('../EmojiPage'));
 const ForgePage = lazy(() => import('../ForgePage'));
 const ForgeVNPage = lazy(() => import('../ForgeVNPage'));
 const AkinetixRLPage = lazy(() => import('../AkinetixRLPage'));
+const VsBattlePage = lazy(() => import('../VsBattlePage'));
 
 export const GameRoutes = (
   <>
     <Route path="/game/classic/" element={<ClassicGamePage />} />
+    <Route path="/game/vsbattle/" element={<VsBattlePage />} />
     <Route path="/forge/" element={<ForgePage />} />
     <Route path="/forge/vn/:fusionId/" element={<ForgeVNPage />} />
     <Route path="/akinetix/" element={<AkinetixPage />} />

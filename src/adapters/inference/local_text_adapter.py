@@ -7,10 +7,13 @@ from core.utils.lazy_import import lazy_import
 torch = lazy_import('torch')
 transformers = lazy_import('transformers')
 
+from core.ports.usage_port import UsagePort
+
 logger = logging.getLogger("animetix.inference.text")
 
 class LocalTextAdapter(InferencePort):
-    def __init__(self, model_id: str = "Qwen/Qwen2.5-1.5B-Instruct", use_4bit: bool = True):
+    def __init__(self, model_id: str = "Qwen/Qwen2.5-1.5B-Instruct", use_4bit: bool = True, usage_port: Optional[UsagePort] = None):
+        super().__init__(usage_port=usage_port)
         self.model_id = model_id
         self.model = None
         self.tokenizer = None
@@ -38,10 +41,21 @@ class LocalTextAdapter(InferencePort):
             inputs = self.tokenizer(f"{system_prompt}\n\n{prompt}", return_tensors="pt").to(self.model.device)
             input_length = inputs.input_ids.shape[1]
             outputs = self.model.generate(**inputs, max_new_tokens=512 + thinking_budget)
-            return self.tokenizer.decode(outputs[0][input_length:], skip_special_tokens=True).strip()
+            
+            output_tokens = outputs[0][input_length:]
+            text = self.tokenizer.decode(output_tokens, skip_special_tokens=True).strip()
+            
+            self._log_usage(
+                engine=f"local:{self.model_id}",
+                input_tokens=input_length,
+                output_tokens=len(output_tokens)
+            )
+            
+            return text
         except Exception as e:
             logger.error(f"Generation failed: {e}")
             raise InferenceError(f"Text generation failed: {str(e)}")
+
 
     def stream_generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False):
         yield self.generate(prompt, system_prompt, thinking_budget, thinking_mode)

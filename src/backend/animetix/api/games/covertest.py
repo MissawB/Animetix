@@ -1,5 +1,5 @@
 import datetime
-import logging
+from animetix_project.logging_config import get_logger
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -8,7 +8,7 @@ from ...containers import Container
 from animetix.api.dependencies import get_session_service
 from ...models import GameplaySession
 
-logger = logging.getLogger("animetix." + __name__)
+logger = get_logger('animetix.' + __name__)
 
 # --- COVERTEST MODE ---
 
@@ -16,7 +16,7 @@ class CovertestGameStateView(APIView):
     permission_classes = [permissions.AllowAny]
     
     @inject
-    def get(self, request, cover_test_service = Provide[Container.cover_test_service]):
+    def get(self, request, cover_test_service = Provide[Container.core.cover_test_service]):
         session_service = get_session_service(request)
         port = session_service.port
         state = cover_test_service.get_state(port)
@@ -37,7 +37,7 @@ class CovertestGameStartView(APIView):
     permission_classes = [permissions.AllowAny]
     
     @inject
-    def post(self, request, catalog_service = Provide[Container.catalog_service], cover_test_service = Provide[Container.cover_test_service]):
+    def post(self, request, catalog_service = Provide[Container.core.catalog_service], cover_test_service = Provide[Container.core.cover_test_service]):
         session_service = get_session_service(request)
         port = session_service.port
         media_type = "Manga"
@@ -79,7 +79,7 @@ class CovertestGameGuessView(APIView):
     permission_classes = [permissions.AllowAny]
     
     @inject
-    def post(self, request, catalog_service = Provide[Container.catalog_service], cover_test_service = Provide[Container.cover_test_service], game_service = Provide[Container.game_service]):
+    def post(self, request, catalog_service = Provide[Container.core.catalog_service], cover_test_service = Provide[Container.core.cover_test_service], game_service = Provide[Container.core.game_service]):
         session_service = get_session_service(request)
         port = session_service.port
         state = cover_test_service.get_state(port)

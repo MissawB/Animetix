@@ -1,7 +1,7 @@
 import os
 import json
 import argparse
-from backend.animetix.services import AnimetixService
+from animetix.containers import get_container
 from core.domain.services.ragas_eval_service import RagasEvalService
 
 def run_mlops_eval():
@@ -11,8 +11,8 @@ def run_mlops_eval():
     """
     print("🧪 Starting Automated RAG Evaluation (RAGAS)...")
     
-    animetix = AnimetixService()
-    judge = animetix.inference_adapter
+    container = get_container()
+    judge = container.inference_engine()
     eval_service = RagasEvalService(judge_engine=judge)
     
     # Échantillon de test (Golden Dataset simplifié)

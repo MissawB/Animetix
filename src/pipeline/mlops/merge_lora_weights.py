@@ -5,7 +5,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import PeftModel
 
 # Configuration du logger
-logger = logging.getLogger("animetix.pipeline.mlops.merge_lora")
+logger = logging.getLogger("animetix." + __name__)
 
 # Base directory (4 levels up from src/pipeline/mlops/)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -16,10 +16,10 @@ def merge_lora():
     output_path = os.path.join(BASE_DIR, "data", "models", "otaku-qwen-7b-final")
 
     if not os.path.exists(adapter_path):
-        print(f"Error: Adapter not found at {adapter_path}. Please train the model first.")
+        logger.error(f"❌ Error: Adapter not found at {adapter_path}. Please train the model first.")
         return
 
-    print(f"Loading base model: {base_model_name}...")
+    logger.info(f"🚀 Loading base model: {base_model_name}...")
     
     # On charge le modèle en FP16 (ou BF16 si supporté) pour le merge
     # Note: On ne charge PAS en 4-bit pour le merge final car merge_and_unload() ne le supporte pas bien
@@ -32,17 +32,17 @@ def merge_lora():
     
     tokenizer = AutoTokenizer.from_pretrained(base_model_name)
 
-    print(f"Loading adapter from {adapter_path}...")
+    logger.info(f"📦 Loading adapter from {adapter_path}...")
     model = PeftModel.from_pretrained(base_model, adapter_path)
 
-    print("Merging weights...")
+    logger.info("🚀 Merging weights...")
     merged_model = model.merge_and_unload()
 
-    print(f"Saving merged model to {output_path}...")
+    logger.info(f"📦 Saving merged model to {output_path}...")
     merged_model.save_pretrained(output_path)
     tokenizer.save_pretrained(output_path)
 
-    print(f"Successfully merged and saved to {output_path}")
+    logger.info(f"✅ Successfully merged and saved to {output_path}")
 
 if __name__ == "__main__":
     merge_lora()

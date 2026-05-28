@@ -59,15 +59,16 @@ class CinematicVolumetricReconstructionService:
                 pil_img.save(buf, format="PNG")
                 img_bytes = buf.getvalue()
                 
-                # 3. Inférence : Profondeur + Projection 3D
+                # 3. Inférence : Profondeur + Projection 3D (SOTA Gaussian Splatting)
                 depth = self.inference_engine.estimate_depth(img_bytes)
-                scene = self.inference_engine.generate_3d_scene(img_bytes, depth)
+                scene = self.inference_engine.generate_3d_scene(img_bytes, depth, mode="gaussian_splatting")
                 
                 if scene["status"] == "success":
                     frames_3d.append({
                         "timestamp": i / fps,
-                        "ply_url": scene["model_url"],
-                        "point_count": scene.get("point_count", 0)
+                        "model_url": scene["model_url"],
+                        "point_count": scene.get("point_count", 0),
+                        "format": "gaussian_splatting"
                     })
             
             reader.close()

@@ -42,6 +42,7 @@ urlpatterns = [
     path('archetypist/vn/<int:fusion_id>/', api_views.ForgeVNView.as_view(), name='api_forge_vn'),
     
     # ... autres endpoints API
+    path('game/vs_battle/run/', api_views.run_vs_battle, name='api_vs_battle_run'),
     path('game/classic/state/', api_views.ClassicGameStateView.as_view(), name='api_classic_state'),
     path('game/akinetix/state/', api_views.AkinetixGameStateView.as_view(), name='api_akinetix_state'),
     path('game/akinetix-rl/state/', api_views.AkinetixRLStateView.as_view(), name='api_akinetix_rl_state'),

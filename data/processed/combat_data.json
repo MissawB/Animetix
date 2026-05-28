@@ -1,301 +1,388 @@
 [
   {
     "name": "Levi Ackerman",
-    "franchise": null,
+    "franchise": "Shingeki no Kyojin",
     "image_url": "https://static.wikia.nocookie.net/vsbattles/images/3/31/LeviAckerman_%28PreTimeskip%29_%28Anime%29.png/revision/latest?cb=20230910230243",
     "wiki_url": "https://vsbattles.fandom.com/wiki/Levi_Ackerman",
     "stats": {
-      "tier": "At least 9-A physically, likely far higher, at least 8-C with swords, at least 8-B, possibly 8-A with Swords boosted with ODM gear, higher with Thunder Spears",
-      "tier_value": 30,
-      "speed": "",
-      "durability": "",
-      "intelligence": "",
+      "tier": "At least 9-A, likely far higher",
+      "tier_value": 24,
+      "speed": "Subsonic with 3D Maneuver Gear (101 m/s), at least Supersonic combat speed and reactions",
+      "durability": "At least Small Building level, possibly Multi-City Block level",
+      "intelligence": "Not specified, but likely High 6-A or higher based on his abilities and actions",
       "abilities": [
         "Superhuman Physical Characteristics",
-        "Martial Arts Expert Hand-to-Hand Combatant",
-        "Weapon Mastery Master Swordsman",
+        "Martial Arts/Expert Hand-to-Hand Combatant",
+        "Weapon Mastery/Master Swordsman",
         "Acrobatics",
         "Awakened Power",
         "Explosion Manipulation (Via Thunder Spears)",
         "Limited Flight with ODM Gear",
-        "Resistance to Biological Manipulation (Ackermans cannot become mindless titans even if they ingest the Source of all living matter's gas and get willed to become one by the Coordinate)"
+        "Resistance to Biological Manipulation"
       ]
     },
-    "summary": "Levi Ackerman, is the squad captain of the Special Operations Squad within the Survey Corps, and is widely known as humanity's strongest soldier."
+    "summary": "Squad captain of the Special Operations Squad within the Survey Corps, and is widely known as humanity's strongest soldier."
   },
   {
     "name": "Satoru Gojo",
-    "franchise": null,
+    "franchise": "Jujutsu Kaisen",
     "image_url": "https://static.wikia.nocookie.net/vsbattles/images/6/64/SatoruGojoRender.png/revision/latest?cb=20240127030546",
     "wiki_url": "https://vsbattles.fandom.com/wiki/Satoru_Gojo",
     "stats": {
-      "tier": "High 6-A",
-      "tier_value": 42,
-      "speed": "Unknown",
-      "durability": "Unknown",
-      "intelligence": "High",
+      "tier": "Unknown",
+      "tier_value": 0,
+      "speed": "{{High 7-C}} (physically), far higher with Cursed Technique Reversal: Red, {{Low 7-B}} with Hollow Technique: Purple",
+      "durability": "{{High 7-C}} physically, {{Low 7-B}} with Cursed Technique Reversal: Red, {{7-B}} with Hollow Technique: Purple",
+      "intelligence": "...",
       "abilities": [
-        "Limitless",
-        "Six Eyes",
-        "Blindfolded State (allows for increased physical abilities)",
-        "Unblindfolded State (allows for increased magical abilities)"
+        "Cursed Energy Manipulation (Advanced Sorcerer)",
+        "Cursed Technique Reversal: Red",
+        "Hollow Technique: Purple"
       ]
     },
     "summary": "Satoru Gojo is one of the main protagonists of the Jujutsu Kaisen series. He is a Special Grade Jujutsu Sorcerer who is widely recognized as the strongest of the Modern Era."
   },
   {
+    "name": "Killua Zoldyck",
+    "franchise": "HUNTER×HUNTER",
+    "image_url": "https://static.wikia.nocookie.net/vsbattles/images/d/de/Killua_PR_Movie.png/revision/latest?cb=20200509064702",
+    "wiki_url": "https://vsbattles.fandom.com/wiki/Killua_Zoldyck",
+    "stats": {
+      "tier": "9-B to Low 7-C (with Ryu and Ko)",
+      "tier_value": 32,
+      "speed": "Highly accelerated, able to keep up with Gon Freecss and other high-level Nen users. Estimated speed: High 6-A.",
+      "durability": "Highly resilient, able to withstand significant physical punishment. Estimated durability: High 5-C.",
+      "intelligence": "Highly intelligent, able to quickly learn and adapt to new situations. Estimated intelligence: High 4-B.",
+      "abilities": [
+        "Superhuman Physical Characteristics",
+        "Power Reading",
+        "Master Hand-to-Hand Combatant",
+        "Pressure Points",
+        "Acrobatics",
+        "Weapon Mastery",
+        "Stealth Mastery",
+        "Accelerated Development"
+      ]
+    },
+    "summary": "The deuteragonist of the series Hunter × Hunter, Killua is a skilled assassin and Nen practitioner with exceptional physical abilities and intelligence."
+  },
+  {
+    "name": "Monkey D. Luffy (Post-Timeskip)",
+    "franchise": "ONE PIECE",
+    "image_url": "https://static.wikia.nocookie.net/vsbattles/images/b/b5/Luffy_%28PostTimeskip%29_%28Original%29.png/revision/latest?cb=20221115194721",
+    "wiki_url": "https://vsbattles.fandom.com/wiki/Monkey_D._Luffy_(Post-Timeskip)",
+    "stats": {
+      "tier": "High 6-A",
+      "tier_value": 42,
+      "speed": "Highly accelerated speed, capable of keeping up with the likes of [[Trafalgar Law]] and [[Katakuri]]",
+      "durability": "Extremely high durability, able to withstand massive amounts of physical punishment and survive in extreme environments",
+      "intelligence": "Average intelligence, often relying on instinct and creativity rather than strategic thinking",
+      "abilities": [
+        "Gum-Gum Fruit powers (stretching, elasticity)",
+        "Gear 2nd: increased speed",
+        "Gear 3rd: enhanced strength and attack capabilities",
+        "Gear 4th: immense strength and speed at the cost of physical durability"
+      ]
+    },
+    "summary": "Monkey D. Luffy is the main protagonist of the One Piece series, known for his rubber powers, adventurous spirit, and determination to become the Pirate King."
+  },
+  {
     "name": "Monkey D. Luffy (Netflix)",
-    "franchise": null,
+    "franchise": "ONE PIECE",
     "image_url": "https://static.wikia.nocookie.net/vsbattles/images/1/18/Gum_Gum_Pistol_Netflix.gif/revision/latest?cb=20230908203533",
     "wiki_url": "https://vsbattles.fandom.com/wiki/Monkey_D._Luffy_(Netflix)",
     "stats": {
-      "tier": "{{9-A}}",
+      "tier": "9-A",
       "tier_value": 24,
-      "speed": "",
-      "durability": "",
-      "intelligence": "",
+      "speed": "High 6-A",
+      "durability": "High 6-A",
+      "intelligence": "Average to High Average",
       "abilities": [
-        "[[Superhuman Physical Characteristics]]",
-        "[[Body Control]]",
-        "[[Elasticity]] & [[Damage Reduction|Damage Absorption]]",
-        "[[Acrobatics]]",
-        "[[Martial Arts|Expert Hand-to-Hand Combatant]]",
-        "[[Enhanced Senses]]"
+        "Superhuman Physical Characteristics",
+        "Body Control",
+        "Elasticity",
+        "Damage Reduction",
+        "Acrobatics",
+        "Martial Arts/Expert Hand-to-Hand Combatant",
+        "Enhanced Senses",
+        "Damage Boost",
+        "Limited Attack Reflection",
+        "Resistance to Blunt Force Trauma",
+        "Poison Manipulation"
       ]
     },
     "summary": "Monkey D. Luffy, known as 'Straw Hat Luffy', is the main protagonist of the manga, anime, and now live action television series, One Piece."
   },
   {
-    "name": "Monkey D. Luffy (Pre-Timeskip)",
-    "franchise": null,
-    "image_url": "https://static.wikia.nocookie.net/vsbattles/images/4/41/Luffy_%28Pre-Timeskip%29_%28Original%29.png/revision/latest?cb=20240324154648",
-    "wiki_url": "https://vsbattles.fandom.com/wiki/Monkey_D._Luffy_(Pre-Timeskip)",
-    "stats": {
-      "tier": "High 6-A",
-      "tier_value": 42,
-      "speed": "",
-      "durability": "",
-      "intelligence": "",
-      "abilities": [
-        "Gear 2nd",
-        "Gear 3rd"
-      ]
-    },
-    "summary": "Monkey D. Luffy, known as 'Straw Hat Luffy', is the main protagonist of the manga and anime, One Piece. He's the son of Monkey D. Dragon, a revolutionary considered “The World’s Most Dangerous Criminal”; the grandson of [[Monkey D. Garp]], a powerful Marine Vice-Admiral who had cornered the [[Gol D. Roger|late Pirate King]] himself on several occasions; the sworn brother of late 'Fire Fist' [[Portgas D. Ace]] and Revolutionary chief of staff [[Sabo]]; and the foster son of Curly Dadan. He seeks to find One Piece and become the Pirate King; to accomplish this, he founded the Straw Hat Pirates and set out on the high seas at age 17 in search of the elusive treasure, beginning a series of increasingly odd and dangerous adventures."
-  },
-  {
-    "name": "Monkey D. Luffy (Emperor)",
-    "franchise": null,
-    "image_url": "https://static.wikia.nocookie.net/vsbattles/images/e/ee/MonkeyD.LuffyOnigashima_%28Original%29.png/revision/latest?cb=20220402061144",
-    "wiki_url": "https://vsbattles.fandom.com/wiki/Monkey_D._Luffy_(Emperor)",
-    "stats": {
-      "tier": "2-C (High 6-A)",
-      "tier_value": 70,
-      "speed": "",
-      "durability": "",
-      "intelligence": "",
-      "abilities": [
-        "Gear 2nd",
-        "Gear 3rd",
-        "Gear 4th: Boundman",
-        "Gear 4th: Tankman",
-        "Gear 4th: Snakeman",
-        "Gear 5th"
-      ]
-    },
-    "summary": "Monkey D. Luffy, known as 'Straw Hat Luffy', is the main protagonist of the manga and anime, One Piece. He's the son of Monkey D. Dragon, a revolutionary considered 'The World's Most Dangerous Criminal'..."
-  },
-  {
     "name": "Monkey D. Garp",
-    "franchise": null,
+    "franchise": "ONE PIECE",
     "image_url": "https://static.wikia.nocookie.net/vsbattles/images/b/b8/MonkeyD.Garp._%28Original%29.png/revision/latest?cb=20220318210918",
     "wiki_url": "https://vsbattles.fandom.com/wiki/Monkey_D._Garp",
     "stats": {
       "tier": "Low 5-B",
       "tier_value": 46,
-      "speed": "Unknown",
-      "durability": "Unknown",
-      "intelligence": "Unknown",
-      "abilities": []
+      "speed": "High",
+      "durability": "High",
+      "intelligence": "Average",
+      "abilities": [
+        "Superhuman Physical Characteristics",
+        "Martial Arts Expert Hand-to-Hand Combatant",
+        "Vibration Manipulation Shockwave Generation",
+        "Haki Intermediate Observation, Intermediate Armament, Advanced Conqueror's",
+        "Pain Manipulation Extreme Pain Tolerance",
+        "Acrobatics Hypermobility & Self-Momentum",
+        "Statistics Amplification with Soru"
+      ]
     },
-    "summary": "Monkey D. Garp is a Marine vice admiral. He is the father of Monkey D. Dragon, the grandfather of [[Monkey D. Luffy]], and the adoptive grandfather of [[Portgas D. Ace]]."
+    "summary": "Monkey D. Garp is a Marine vice admiral, father of Monkey D. Dragon, and grandfather of Monkey D. Luffy."
+  },
+  {
+    "name": "Monkey D. Luffy (Emperor)",
+    "franchise": "ONE PIECE",
+    "image_url": "https://static.wikia.nocookie.net/vsbattles/images/e/ee/MonkeyD.LuffyOnigashima_%28Original%29.png/revision/latest?cb=20220402061144",
+    "wiki_url": "https://vsbattles.fandom.com/wiki/Monkey_D._Luffy_(Emperor)",
+    "stats": {
+      "tier": "High 6-A",
+      "tier_value": 42,
+      "speed": "High",
+      "durability": "Very High",
+      "intelligence": "Average to Above Average",
+      "abilities": [
+        "Gear 2nd",
+        "Gear 3rd",
+        "Gear 4th (Boundman, Tankman, Snakeman)",
+        "Gear 5th"
+      ]
+    },
+    "summary": "Monkey D. Luffy is the main protagonist of the manga and anime One Piece. He's a rubber-man with stretching powers and seeks to find One Piece and become the Pirate King."
+  },
+  {
+    "name": "Monkey D. Luffy (Pre-Timeskip)",
+    "franchise": "ONE PIECE",
+    "image_url": "https://static.wikia.nocookie.net/vsbattles/images/4/41/Luffy_%28Pre-Timeskip%29_%28Original%29.png/revision/latest?cb=20240324154648",
+    "wiki_url": "https://vsbattles.fandom.com/wiki/Monkey_D._Luffy_(Pre-Timeskip)",
+    "stats": {
+      "tier": "9-B",
+      "tier_value": 22,
+      "speed": "At least 8-A",
+      "durability": "7-C",
+      "intelligence": "N/A",
+      "abilities": [
+        "Gomu Gomu no Mi (stretching powers)",
+        "Gear 2nd",
+        "Gear 3rd",
+        "Bone Balloon",
+        "Shishishishishi~ (signature laughter style)"
+      ]
+    },
+    "summary": "Monkey D. Luffy, known as 'Straw Hat Luffy', is the main protagonist of the manga and anime, One Piece."
   },
   {
     "name": "Eren Yeager",
-    "franchise": null,
+    "franchise": "Shingeki no Kyojin",
     "image_url": "https://static.wikia.nocookie.net/vsbattles/images/1/19/ErenYeager_%28PreTimeskip%29_%28Anime%29.png/revision/latest?cb=20230910230243",
     "wiki_url": "https://vsbattles.fandom.com/wiki/Eren_Yeager",
     "stats": {
       "tier": "9-A",
       "tier_value": 24,
-      "speed": "8-B",
-      "durability": "8-B",
-      "intelligence": "",
+      "speed": "High 8-C",
+      "durability": "At least 8-B, possibly 8-A",
+      "intelligence": "...",
       "abilities": [
-        "Attack Titan",
-        "Founding Titan",
-        "War Hammer Titan (after eating Lara Tybur)"
+        "Superhuman Physical Characteristics",
+        "Regeneration (Low-Mid)",
+        "Martial Arts",
+        "Titan Shifting"
       ]
     },
-    "summary": "The main protagonist of Attack on Titan. He lived a peaceful life in Shiganshina District with his now late parents Grisha and Carla Yeager, and his childhood friend Mikasa Ackerman, until the town was destroyed by Titans during the fall of Wall Maria."
+    "summary": "Main protagonist of Attack on Titan. Vowed to wipe out all Titans in revenge after witnessing the death of his mother."
+  },
+  {
+    "name": "Roronoa Zoro (Pre-Timeskip)",
+    "franchise": "ONE PIECE",
+    "image_url": "https://static.wikia.nocookie.net/vsbattles/images/6/6b/PreTSZororender.png/revision/latest?cb=20220601203238",
+    "wiki_url": "https://vsbattles.fandom.com/wiki/Roronoa_Zoro_(Pre-Timeskip)",
+    "stats": {
+      "tier": "8-A (Low 7-B with Strongest Attacks, even higher with Asura)",
+      "tier_value": 34,
+      "speed": "High 6-C (can consistently react to attacks not in his line of sight)",
+      "durability": "Mid-Low (can survive injuries that would normally kill a human just by his willpower)",
+      "intelligence": "Low (no specific feats mentioned, but likely average or below)",
+      "abilities": [
+        "Superhuman Physical Characteristics",
+        "Enhanced Senses",
+        "Regeneration (Low)",
+        "Martial Arts (Acrobatics, Air Manipulation)",
+        "Master Swordsmanship",
+        "Supernatural Willpower",
+        "Accelerated Development (Battle & Training, Physical Stats)"
+      ]
+    },
+    "summary": "Roronoa Zoro, also known by his epithet “Pirate Hunter”, is the premier swordsman of the Straw Hat Pirates and a member of the Monster Trio."
+  },
+  {
+    "name": "Roronoa Zoro (Post-Timeskip)",
+    "franchise": "ONE PIECE",
+    "image_url": "https://static.wikia.nocookie.net/vsbattles/images/0/06/RoronoaZoro._%28Original%29.png/revision/latest?cb=20220517062641",
+    "wiki_url": "https://vsbattles.fandom.com/wiki/Roronoa_Zoro_(Post-Timeskip)",
+    "stats": {
+      "tier": "High 6-C",
+      "tier_value": 39,
+      "speed": "5-A (estimated)",
+      "durability": "Low 5-B",
+      "intelligence": "3-C (estimated)",
+      "abilities": [
+        "Three-Sword Style",
+        "Armament Haki",
+        "Observation Haki",
+        "Conqueror's Haki Infusion",
+        "Nine-Sword Style",
+        "King of Hell"
+      ]
+    },
+    "summary": "Roronoa Zoro, also known by his former epithet of 'Pirate Hunter' after the Raid his new title of 'The King of Hell', is the premier swordsman of the Straw Hat Pirates and a member of the Monster Trio."
   },
   {
     "name": "Roronoa Zoro (Netflix)",
-    "franchise": null,
+    "franchise": "ONE PIECE",
     "image_url": "https://static.wikia.nocookie.net/vsbattles/images/7/70/Oni_Giri_Netflix.gif/revision/latest?cb=20230915065742",
     "wiki_url": "https://vsbattles.fandom.com/wiki/Roronoa_Zoro_(Netflix)",
     "stats": {
       "tier": "9-A",
       "tier_value": 24,
-      "speed": "",
-      "durability": "",
-      "intelligence": "",
+      "speed": "Supersonic",
+      "durability": "Small Building level",
+      "intelligence": "Superhuman",
       "abilities": [
         "Superhuman Physical Characteristics",
         "Master Swordsmanship",
         "Expert Hand-to-Hand Combatant",
         "Enhanced Senses",
         "Supernatural Willpower",
-        "Regeneration"
+        "Regeneration",
+        "Acrobatics",
+        "Air Manipulation"
       ]
     },
     "summary": "Roronoa Zoro, also known by his epithet “Pirate Hunter”, is the premier swordsman of the Straw Hat Pirates."
   },
   {
-    "name": "Roronoa Zoro (Post-Timeskip)",
-    "franchise": null,
-    "image_url": "https://static.wikia.nocookie.net/vsbattles/images/0/06/RoronoaZoro._%28Original%29.png/revision/latest?cb=20220517062641",
-    "wiki_url": "https://vsbattles.fandom.com/wiki/Roronoa_Zoro_(Post-Timeskip)",
-    "stats": {
-      "tier": "High 6-A",
-      "tier_value": 42,
-      "speed": "Unknown (but extremely fast)",
-      "durability": "High",
-      "intelligence": "Average",
-      "abilities": [
-        "Three-Sword Style",
-        "Haki"
-      ]
-    },
-    "summary": "Roronoa Zoro, also known by his former epithet of 'Pirate Hunter' after the Raid he's new title of 'The King of Hell', is the premier swordsman of the Straw Hat Pirates and a member of the Monster Trio. Recruited as a mildly notorious bounty hunter (hence his “Pirate Hunter” moniker), he is a monstrously powerful man who doesn't wield the power of a Devil Fruit, using a unique Three-Sword Style in a battle of his own creation, wielding a sword in each hand along with one in the mouth."
-  },
-  {
     "name": "Emilia (Re:Zero)",
-    "franchise": null,
+    "franchise": "Re:Zero kara Hajimeru Isekai Seikatsu",
     "image_url": "https://static.wikia.nocookie.net/vsbattles/images/9/92/Emilia_ReZero.png/revision/latest?cb=20210929113712",
     "wiki_url": "https://vsbattles.fandom.com/wiki/Emilia_(Re:Zero)",
     "stats": {
-      "tier": "{{7-B}}, higher with Magic, {{6-C}} with Awakened Power, higher with [[Puck]], {{6-B}} with Starbeast Puck",
-      "tier_value": 50,
-      "speed": "",
-      "durability": "",
-      "intelligence": "",
+      "tier": "7-B (higher with Magic, 6-C with Awakened Power)",
+      "tier_value": 38,
+      "speed": "DÉDUIS (estimation: High 5-A to 6-A due to her physical abilities and magic use)",
+      "durability": "DÉDUIS (estimation: High 6-A to 7-A due to her regenerative abilities and physical strength)",
+      "intelligence": "DÉDUIS (estimation: High 4-C to 5-B due to her magical abilities and strategic thinking)",
       "abilities": [
-        "[[Superhuman Physical Characteristics]]",
-        "[[Statistics Amplification]]",
-        "[[Regeneration]] (Low)",
-        "[[Social Influencing]] and [[Aura]]",
-        "[[Stealth Mastery]]"
+        "Superhuman Physical Characteristics",
+        "Statistics Amplification",
+        "Regeneration (Low)",
+        "Social Influencing and Aura",
+        "Stealth Mastery",
+        "Ice Manipulation",
+        "Healing",
+        "Magic & Law Manipulation"
       ]
     },
-    "summary": "One of the five candidates to lead the kingdom, main female protagonist of Re:Zero kara Hajimeru Isekai Seikatsu and a Half-Elf."
+    "summary": "Emilia, also known as Lia by Puck, is one of the five candidates to lead the kingdom and a Half-Elf."
   },
   {
-    "name": "Gishki Emilia",
-    "franchise": null,
-    "image_url": "https://static.wikia.nocookie.net/vsbattles/images/4/4d/GishkiEmilia-TF06-JP-VG.png/revision/latest?cb=20181015184902",
-    "wiki_url": "https://vsbattles.fandom.com/wiki/Gishki_Emilia",
+    "name": "Rolo Lamperouge",
+    "franchise": "Code Geass: Hangyaku no Lelouch",
+    "image_url": "https://static.wikia.nocookie.net/vsbattles/images/9/9f/Rolo_Lamperouge_%28Genesis_Re%3BCode%29.png/revision/latest?cb=20230704151904",
+    "wiki_url": "https://vsbattles.fandom.com/wiki/Rolo_Lamperouge",
     "stats": {
-      "tier": "{{10-A}}, likely {{9-C}}",
+      "tier": "10-B/9-C (with pistol), higher with Maser Vibration Swords and Needle Blazers",
       "tier_value": 20,
-      "speed": "At least {{High 4-C}} with Nekroz Channeling, {{High 4-C}} with Magic",
-      "durability": "Up to {{High 4-C}} physically, higher with Dragunity Divine Lance",
-      "intelligence": "",
+      "speed": "At least Supersonic",
+      "durability": "Unknown, but likely High Human or above due to his ability to withstand physical punishment as an assassin",
+      "intelligence": "Highly intelligent, able to analyze situations and make strategic decisions",
       "abilities": [
-        "Magic",
-        "Soul Manipulation",
-        "Power Nullification",
-        "Attack Reflection",
-        "Telepathy",
-        "Biological Manipulation",
-        "Water Manipulation",
-        "Curse Manipulation/Rituals",
-        "Transformation",
-        "likely Fusionism",
-        "Mind Manipulation",
-        "Summoning"
+        "Perception Manipulation (Geass)",
+        "Superhuman Physical Characteristics",
+        "Acrobatics",
+        "Enhanced Senses",
+        "Information Analysis with Factsphere Sensors",
+        "Flight with Float System",
+        "Large Size (Type 0)",
+        "Resistance to Technology Manipulation"
       ]
     },
-    "summary": "The daughter of Gishki Noellia, Gishki Emilia is one of the survivors of the first Great War."
-  },
-  {
-    "name": "Lelouch vi Britannia",
-    "franchise": null,
-    "image_url": "https://static.wikia.nocookie.net/vsbattles/images/1/19/LelouchViBritannia_Render.png/revision/latest?cb=20200726202054",
-    "wiki_url": "https://vsbattles.fandom.com/wiki/Lelouch_vi_Britannia",
-    "stats": {
-      "tier": "10-B, 9-C with pistol | 8-C, possibly High 8-C | 8-A, higher with Hadron Cannons | At least 8-A, likely higher with Hadr",
-      "tier_value": 30,
-      "speed": null,
-      "durability": null,
-      "intelligence": null,
-      "abilities": [
-        "Geass",
-        "Hadron Cannons"
-      ]
-    },
-    "summary": "Lelouch Lamperouge is a student at Ashford Academy in Tokyo Settlement, and the Vice President of the student council. He lives with and cares for his younger sister, Nunnally. Truthfully, he is Lelouch vi Britannia, the eleventh prince of the Holy Britannian Empire, who went missing in Japan with his younger sister and was presumed dead."
+    "summary": "Ever since his childhood, Rolo has only ever known a life of violence. After granting him a deadly Geass at a young age, the Geass Order used him as an assassin for years, sending him after high-profile targets - military leaders and politicians, primarily."
   },
   {
     "name": "Mikasa Ackerman",
-    "franchise": null,
+    "franchise": "Shingeki no Kyojin",
     "image_url": "https://static.wikia.nocookie.net/vsbattles/images/9/96/MikasaAckerman_%28PreTimeskip%29_%28Anime%29.png/revision/latest?cb=20230910230243",
     "wiki_url": "https://vsbattles.fandom.com/wiki/Mikasa_Ackerman",
     "stats": {
-      "tier": "At least S-Gg (9-A) physically. At least 8-C with swords, 8-B, possibly 8-A with Swords boosted by ODM gear higher with Thunder Spears",
+      "tier": "At least High 9-A physically, at least 8-C with swords, 8-B possibly 8-A with Swords boosted by ODM gear",
       "tier_value": 30,
-      "speed": "",
-      "durability": "",
-      "intelligence": "",
+      "speed": "Superhuman, Subsonic with 3D Maneuver Gear (101 m/s), Supersonic reactions and combat speed",
+      "durability": "At least Small Building level physically, City Block level+ possibly Multi-City Block level with Swords boosted with ODM gear",
+      "intelligence": "No information found, estimating Average to High due to her skills as a soldier and warrior",
       "abilities": [
         "Superhuman Physical Characteristics",
-        "Martial Arts Expert Hand-to-Hand Combatant",
-        "Weapon Mastery Expert Swordsman",
+        "Martial Arts/Expert Hand-to-Hand Combatant",
+        "Weapon Mastery/Expert Swordsman",
         "Awakened Power",
         "Explosion Manipulation (Via Thunder Spears)",
         "Limited Flight with ODM Gear",
         "Resistance to Biological Manipulation (Ackermans cannot become mindless titans even if they ingest the Source of all living matter's gas and get willed to become one by the Coordinate)"
       ]
     },
-    "summary": "Mikasa Ackerman is the adoptive sister of Eren Yeager. After her biological parents were murdered by human traffickers, she was rescued by Eren and lived with him and his parents, Grisha and Carla, before the fall of Wall Maria."
+    "summary": "Mikasa Ackerman is the adoptive sister of Eren Yeager. She desires only to live a peaceful life with Eren, but chose to follow him into the military—where she is considered the best soldier among the 104th Training Corps."
+  },
+  {
+    "name": "Ken Kaneki",
+    "franchise": "Tokyo Ghoul",
+    "image_url": "https://static.wikia.nocookie.net/vsbattles/images/a/af/PreAogiriColored.png/revision/latest?cb=20251226214145",
+    "wiki_url": "https://vsbattles.fandom.com/wiki/Ken_Kaneki",
+    "stats": {
+      "tier": "High 6-A",
+      "tier_value": 42,
+      "speed": "Average to High",
+      "durability": "High",
+      "intelligence": "High",
+      "abilities": [
+        "Kakuja Form",
+        "Enhanced Strength and Speed",
+        "Regenerative Healing Factor",
+        "Enhanced Senses",
+        "Combat Training"
+      ]
+    },
+    "summary": "Ken Kaneki is the protagonist of Tokyo Ghoul. A former human, he became a half-ghoul after receiving Rize Kamishiro's Kakuhou transplant."
   },
   {
     "name": "Reigen Arataka",
-    "franchise": null,
+    "franchise": "Mob Psycho 100",
     "image_url": "https://static.wikia.nocookie.net/vsbattles/images/7/7b/Person2.png/revision/latest?cb=20190220202857",
     "wiki_url": "https://vsbattles.fandom.com/wiki/Reigen_Arataka",
     "stats": {
-      "tier": "{{9-B}} | {{6-B}}, possibly {{High 6-A}}",
+      "tier": "9-B | 6-B, possibly High 6-A",
       "tier_value": 42,
-      "speed": "",
-      "durability": "",
-      "intelligence": "",
+      "speed": "At least Massively Hypersonic, possibly Massively Hypersonic+",
+      "durability": "Country level+, possibly Multi-Continent level",
+      "intelligence": "High. He is very clever and agile, often taking action at critical moments with his special techniques.",
       "abilities": [
-        "Skilled Hand-to-Hand Combatant",
-        "Extrasensory Perception",
-        "Sleep Manipulation (with Sakurai's cursed perfume)",
-        "Social Influencing",
+        "Martial Arts: Skilled Hand-to-Hand Combatant",
+        "Extrasensory Perception (Gained the ability to see some normally invisible spirits such as Dimple after Mob shared his energy with him)",
+        "Sleep Manipulation (With Sakurai's cursed perfume)",
+        "Social Influencing (Able to make people switch sides by talking about their actions alone)",
+        "Superhuman Physical Characteristics",
         "Telekinesis",
         "Aura",
-        "Power Nullification (Regeneration Negation of Spirits through exorcism)",
+        "Power Nullification: Regeneration Negation (Up to High) of Spirits through exorcism",
         "Forcefield Creation",
         "Flight/Levitation",
-        "Limited Paralysis Inducement",
-        "Psychic Energy Manipulation (allows him to grant it to other people and project it)",
-        "Resistance to Soul Manipulation",
-        "Possession",
-        "Mind Manipulation",
-        "Empathic Manipulation",
+        "Limited Paralysis Inducement (Can immobilize people through telekinesis)",
+        "Psychic Energy Manipulation (Allows him to grant it to other people and project it)",
+        "Resistance: Soul Manipulation (Should be able to survive spiritual attacks like Mob), Possession, Mind Manipulation, Empathic Manipulation",
         "Sleep Inducement and Curse Manipulation"
       ]
     },
@@ -303,258 +390,181 @@
   },
   {
     "name": "Guts",
-    "franchise": null,
+    "franchise": "Kenpuu Denki Berserk",
     "image_url": "https://static.wikia.nocookie.net/vsbattles/images/6/67/Berserk_41_012.png/revision/latest?cb=20201124165854",
     "wiki_url": "https://vsbattles.fandom.com/wiki/Guts",
     "stats": {
-      "tier": "High 6-A",
-      "tier_value": 42,
-      "speed": "",
-      "durability": "",
-      "intelligence": "",
+      "tier": "9-B",
+      "tier_value": 22,
+      "speed": "High 6-A",
+      "durability": "8-A",
+      "intelligence": "Average to High Average",
       "abilities": [
-        "Powers and Abilities: to be filled"
+        "Dragon Slayer",
+        "Hand Cannon",
+        "Berserker Armor"
       ]
     },
-    "summary": "Guts, also known as \"The Black Swordsman\", \"The One Hundred-Man Slayer\" and \"The Struggler\", was the former raid unit leader of a mercenary group known as the Band of the Hawk and is the main protagonist of Berserk."
+    "summary": "Guts, also known as 'The Black Swordsman', is the main protagonist of Berserk. He was once a member of the Band of the Hawk and later became a mercenary leader."
   },
   {
     "name": "Itachi Uchiha",
-    "franchise": null,
+    "franchise": "NARUTO",
     "image_url": "https://static.wikia.nocookie.net/vsbattles/images/7/7e/ItachiUchiha_%28Original%29.png/revision/latest?cb=20220512020149",
     "wiki_url": "https://vsbattles.fandom.com/wiki/Itachi_Uchiha",
     "stats": {
-      "tier": "2-A",
-      "tier_value": 80,
-      "speed": "High speed",
-      "durability": "High durability",
-      "intelligence": "Genius-level intelligence",
+      "tier": "6-B",
+      "tier_value": 40,
+      "speed": "High 7-A",
+      "durability": "6-B",
+      "intelligence": "High 7-A",
       "abilities": [
-        "Sharingan (allows him to read and copy opponents' movements, as well as use it for various other purposes)",
-        "Edo Tensei (allows him to reanimate corpses and control them)",
-        "Susano'o (a powerful, armor-like construct that can be used in combat)"
+        "Sharingan",
+        "Edo Tensei",
+        "Susano'o"
       ]
     },
-    "summary": "Itachi Uchiha is a highly skilled and intelligent ninja from the Hidden Leaf Village. He is known for his exceptional abilities with the Sharingan eye, which allows him to read and copy opponents' movements, as well as use it for various other purposes."
+    "summary": "Itachi Uchiha was a prodigy of Konohagakure's Uchiha clan. He became an international criminal after murdering his entire clan, sparing only his younger brother, Sasuke."
   },
   {
     "name": "Makima",
-    "franchise": null,
+    "franchise": "Chainsaw Man",
     "image_url": "https://static.wikia.nocookie.net/vsbattles/images/3/33/Makima-Reze-Arc-Movie-Render.png/revision/latest?cb=20251010030343",
     "wiki_url": "https://vsbattles.fandom.com/wiki/Makima",
     "stats": {
       "tier": "8-A (physically), Low 7-C with Usage: 1,000 Years, At least 7-C, possibly High 7-C with Telekinesis",
       "tier_value": 32,
-      "speed": "",
-      "durability": "",
-      "intelligence": "",
+      "speed": "Highly likely to be at least High 6-A, possibly higher due to her ability to keep up and overwhelm a weakened clone of Chainsaw Man in hand-to-hand combat.",
+      "durability": "At least 8-B, possibly higher considering she can withstand the power of the Four Horsemen and the Weapon Devils in hell at the same time.",
+      "intelligence": "Highly likely to be at least High 6-A, possibly higher due to her ability to use her social influencing skills effectively and come up with a plan to utilize Chainsaw Man's power.",
       "abilities": [
         "Superhuman Physical Characteristics",
         "General Devil Physiology",
         "Genius Intelligence",
         "Social Influencing",
-        "Martial Arts"
+        "Martial Arts",
+        "Enhanced Senses"
       ]
     },
-    "summary": "Enigmatic leader of Public Safety Devil Extermination Special Division 4 as well as the Chief Cabinet Secretary's Personal Devil Hunter. Her true identity is later revealed to be that of the Control Devil, the fear of control and domination embodied who seeks to utilize the Chainsaw Devil's power to create a new world eradicated of anything she considers a problem and where she could stand equal with others."
-  },
-  {
-    "name": "Future Mai (Anime)",
-    "franchise": null,
-    "image_url": "https://static.wikia.nocookie.net/vsbattles/images/d/d0/Future_Mai.webp/revision/latest?cb=20230405062418",
-    "wiki_url": "https://vsbattles.fandom.com/wiki/Future_Mai_(Anime)",
-    "stats": {
-      "tier": "9-C to 9-B with firearms, far higher via Bulma's Parting Gift",
-      "tier_value": 22,
-      "speed": "Peak Human (is the swiftest human soldier in her group), Superhuman on her motor scooter",
-      "durability": "At least Wall level (survived her own rocket launchers exploding in her face point blank with little pain)",
-      "intelligence": "",
-      "abilities": [
-        "Peak Human Physical Characteristics (Strength, Speed, Stamina and Accuracy)",
-        "Superhuman Physical Characteristics (Durability)",
-        "Skilled in Hand to Hand combat",
-        "Weapon Mastery (Master of Firearms and Explosives)",
-        "Vehicular Mastery",
-        "Supernatural Willpower",
-        "Explosion Manipulation (via Rocket Launchers)",
-        "Poison Manipulation (via Poison Bombs)",
-        "Light Manipulation (via Flash Grenades)",
-        "Smoke Manipulation (via Tear Gas)",
-        "Ki Manipulation (via Shotgun)"
-      ]
-    },
-    "summary": "Alternate universe version of Mai who resides within Future Trunks' timeline. She forms a resistance group to combat Goku Black and is willing to die to ensure the safety of those around her."
+    "summary": "The enigmatic leader of Public Safety Devil Extermination Special Division 4 as well as the Chief Cabinet Secretary's Personal Devil Hunter, seeking to utilize Chainsaw Man's power to create a new world eradicated of anything she considers a problem and where she could stand equal with others."
   },
   {
     "name": "Kakashi Hatake",
-    "franchise": null,
+    "franchise": "NARUTO",
     "image_url": "https://static.wikia.nocookie.net/vsbattles/images/f/f6/Dcqorrx-61f3b455-6261-4155-a6d8-110bfd78897d-1.png/revision/latest?cb=20191101123148",
     "wiki_url": "https://vsbattles.fandom.com/wiki/Kakashi_Hatake",
     "stats": {
-      "tier": "7-B (higher with Mangekyō Sharingan, 7-A with Raikiri)",
+      "tier": "7-B (Base), higher with Mangekyō Sharingan, 7-A with Raikiri",
       "tier_value": 36,
-      "speed": "",
-      "durability": "At least 6-B, far higher with Raikiri",
+      "speed": "At least 6-B, possibly far higher with Susano'o",
+      "durability": "At least 6-B, likely far higher with Raikiri",
       "intelligence": "Genius Intelligence",
       "abilities": [
         "Superhuman Physical Characteristics",
-        "Social Influencing",
+        "Social Influencing (Reputation)",
         "Supernatural Willpower",
-        "Reputation"
+        "Chakra Manipulation",
+        "Statistics Amplification",
+        "Surface Scaling",
+        "Free Movement (Water Walking)",
+        "Martial Arts (Expert Hand-to-Hand Combatant)",
+        "Electricity Manipulation (Lightning Manipulation)"
       ]
     },
-    "summary": "Kakashi Hatake is the Jonin leader of Team 7 in the series Naruto. He is a shinobi of Konohagakure's Hatake clan."
+    "summary": "Kakashi Hatake is the Jonin leader of Team 7 in the series Naruto."
+  },
+  {
+    "name": "Thorfinn",
+    "franchise": "Vinland Saga",
+    "image_url": "https://static.wikia.nocookie.net/vsbattles/images/3/31/DytkYR2UwAAmbvW.png/revision/latest?cb=20190717232701",
+    "wiki_url": "https://vsbattles.fandom.com/wiki/Thorfinn",
+    "stats": {
+      "tier": "9-B",
+      "tier_value": 22,
+      "speed": "High 6-A (estimated)",
+      "durability": "High 5-C (estimated)",
+      "intelligence": "C (estimated)",
+      "abilities": [
+        "Superhuman Physical Characteristics",
+        "Weapon Mastery (Skilled Dual Knife User)",
+        "Martial Arts (Skilled Hand-to-Hand Fighter)",
+        "Acrobatics",
+        "Stealth Mastery",
+        "possibly Information Analysis/Enhanced Senses",
+        "Damage Reduction"
+      ]
+    },
+    "summary": "Thorfinn is a Jomsviking noble and warrior in Askeladd's army. He is the son of Thors, grandson of Sigvaldi, and great-nephew of Thorkell."
+  },
+  {
+    "name": "Yuji Itadori",
+    "franchise": "Jujutsu Kaisen",
+    "image_url": "https://static.wikia.nocookie.net/vsbattles/images/6/67/Yuji-CE-Fist.png/revision/latest?cb=20240223010259",
+    "wiki_url": "https://vsbattles.fandom.com/wiki/Yuji_Itadori",
+    "stats": {
+      "tier": "High 6-A",
+      "tier_value": 42,
+      "speed": "Very Fast (can keep up with Gojo Sensei)",
+      "durability": "Highly Resilient (able to withstand significant physical damage and curses)",
+      "intelligence": "Above Average (strategic thinking and problem-solving skills)",
+      "abilities": [
+        "Cursed Energy Manipulation",
+        "Enhanced Physical Abilities",
+        "Jujutsu Sorcery"
+      ]
+    },
+    "summary": "Yuji Itadori is the main protagonist of Jujutsu Kaisen, a high school student with exceptional physical abilities and a strong sense of justice."
   },
   {
     "name": "Frieren",
-    "franchise": null,
+    "franchise": "Sousou no Frieren",
     "image_url": "https://static.wikia.nocookie.net/vsbattles/images/b/ba/Frieren_anime_profile.webp/revision/latest?cb=20231126134830",
     "wiki_url": "https://vsbattles.fandom.com/wiki/Frieren",
     "stats": {
-      "tier": "10-B (physically), at least Low 7-C with magic, 7-B with Environmental Destruction",
-      "tier_value": 34,
-      "speed": "",
-      "durability": "",
+      "tier": "10-B",
+      "tier_value": 10,
+      "speed": "At least High 6-A (physically); unknown with magic",
+      "durability": "At least Low 7-C; unknown with Environmental Destruction",
       "intelligence": "Extraordinary Genius Intelligence",
       "abilities": [
         "Standard Magical Abilities",
         "Mana Manipulation",
         "Extrasensory Perception",
-        "Healing (at least Low)",
+        "Healing",
         "Limited Enhanced Senses",
         "Information Analysis",
         "Transmutation",
         "Plant Manipulation",
         "Purification",
-        "Stealth Mastery/Invisibility"
+        "Stealth Mastery/Invisibility",
+        "Power Mimicry",
+        "Sealing",
+        "Ice Magic",
+        "Lightning Magic",
+        "Fire Magic",
+        "Power Nullification",
+        "Pocket Reality Manipulation",
+        "Magic Projection & Damage Boost"
       ]
     },
     "summary": "Frieren is the primary protagonist of Frieren: Beyond Journey's End. Eighty years after defeating the demon king as a member of the hero Himmel's party, she travels the world to discover new magic while visiting places where her party traveled during their 10 year voyage to defeat the demon king, in an attempt to relive those past memories, learn more about her past comrades, and discover why such a small time period of her life could have left such a profound impact on her."
   },
   {
     "name": "Frieren: Beyond Journey's End",
-    "franchise": null,
+    "franchise": "Sousou no Frieren",
     "image_url": "https://static.wikia.nocookie.net/vsbattles/images/c/c1/Soul_Track1.jpg/revision/latest?cb=20230126165024",
     "wiki_url": "https://vsbattles.fandom.com/wiki/Frieren:_Beyond_Journey's_End",
     "stats": {
-      "tier": "Not specified, but potentially Small Building level+, building level+ (depending on the context)",
-      "tier_value": 26,
+      "tier": "High 6-A",
+      "tier_value": 42,
       "speed": "Hypersonic",
-      "durability": "Small Building level+ (according to Fern's Durability feat)",
-      "intelligence": "Not specified",
+      "durability": "Small Building level to Large Building Level+",
+      "intelligence": "Not specified, but likely High due to her role as a mage and her ability to collect and use various magic spells.",
       "abilities": [
-        "Magic Visualization",
-        "Standard Offensive Magic"
+        "Magic",
+        "Magic Visualization"
       ]
     },
-    "summary": "Frieren is a mage from the Frieren: Beyond Journey's End series. She was part of the Hero Party that defeated the Demon King and embarks on a journey with her human apprentice Fern to collect magic spells and confront her regrets."
-  },
-  {
-    "name": "Rintarou Okabe",
-    "franchise": null,
-    "image_url": "https://static.wikia.nocookie.net/vsbattles/images/3/33/Rintarou_Okabe.png/revision/latest?cb=20160314185947",
-    "wiki_url": "https://vsbattles.fandom.com/wiki/Rintarou_Okabe",
-    "stats": {
-      "tier": "10-B",
-      "tier_value": 10,
-      "speed": "Average Human",
-      "durability": "Human level",
-      "intelligence": "Gifted",
-      "abilities": [
-        "Genius Intelligence",
-        "Time Manipulation/Time Travel/Timeline Hopping",
-        "Precognition (via World Line Convergence)",
-        "Acausality (Type 1)"
-      ]
-    },
-    "summary": "Self-proclaimed mad scientist and the main protagonist of Steins;Gate."
-  },
-  {
-    "name": "Kaguya Houraisan",
-    "franchise": null,
-    "image_url": "https://static.wikia.nocookie.net/vsbattles/images/6/68/Kaguya_Houraisan.png/revision/latest?cb=20180228182717",
-    "wiki_url": "https://vsbattles.fandom.com/wiki/Kaguya_Houraisan",
-    "stats": {
-      "tier": "2-C",
-      "tier_value": 70,
-      "speed": "",
-      "durability": "",
-      "intelligence": "",
-      "abilities": [
-        "Superhuman Physical Characteristics",
-        "Flight",
-        "Immortality (Types 1, 3, and 5)",
-        "Regeneration (Mid-Godly, possibly High-Godly)",
-        "Power Bestowal",
-        "Danmaku",
-        "Spirit Manipulation"
-      ]
-    },
-    "summary": "Former princess of the Moon, banished to Earth for consuming the Hourai Elixir to become immortal. She dwelt among humans and eventually grew to love her new home."
-  },
-  {
-    "name": "Light Yagami",
-    "franchise": null,
-    "image_url": "https://static.wikia.nocookie.net/vsbattles/images/1/15/DeathNotePin.png/revision/latest?cb=20240412234042",
-    "wiki_url": "https://vsbattles.fandom.com/wiki/Light_Yagami",
-    "stats": {
-      "tier": "9-C",
-      "tier_value": 20,
-      "speed": "",
-      "durability": "",
-      "intelligence": "",
-      "abilities": [
-        "Death Note Wielder",
-        "Serial Killer"
-      ]
-    },
-    "summary": "A high-achieving student with a strong sense of justice, Light discovers the Death Note and, accompanied by the watchful Shinigami Ryuk, embarks on a mission to rid the world of evil by eliminating criminals."
-  },
-  {
-    "name": "Light Turner",
-    "franchise": null,
-    "image_url": "https://static.wikia.nocookie.net/vsbattles/images/7/77/Light_Turner.png/revision/latest?cb=20250904163618",
-    "wiki_url": "https://vsbattles.fandom.com/wiki/Light_Turner",
-    "stats": {
-      "tier": "{{10-B}} physically, {{Unknown}} with [[the Death Note]]",
-      "tier_value": 10,
-      "speed": "Athletic Human",
-      "durability": "Human level ",
-      "intelligence": "Above Average",
-      "abilities": [
-        "[[Death Manipulation]]",
-        "[[Durability Negation]]",
-        "[[Limited Disease Manipulation]]",
-        "[[Fate Manipulation]]",
-        "[[Soul Manipulation]]",
-        "[[Mind Manipulation]]"
-      ]
-    },
-    "summary": "Light Turner is the main protagonist of the 2017 Netflix remake film, Death Note, which is very loosely based on the anime and manga series of the same name by Tsugumi Ohba and Takeshi Obata. He is a teenage student who finds a Death Note and decides to use it to kill criminals and appoints himself the god of a clean world."
-  },
-  {
-    "name": "Mao Mao",
-    "franchise": null,
-    "image_url": "https://static.wikia.nocookie.net/vsbattles/images/4/45/Mao_Mao_Render.png/revision/latest?cb=20190930041641",
-    "wiki_url": "https://vsbattles.fandom.com/wiki/Mao_Mao",
-    "stats": {
-      "tier": "Low 7-C (higher with Statistics Amplification), High 7-C as a giant | At least Low 7-C",
-      "tier_value": 32,
-      "speed": "",
-      "durability": "",
-      "intelligence": "",
-      "abilities": [
-        "[[Superhuman Physical Characteristics]]",
-        "[[Martial Arts]]",
-        "[[Acrobatics]]",
-        "[[Weapon Mastery|Vast Mastery of Multiple Weapons]]",
-        "[[Stealth Mastery]]",
-        "[[Vehicular Mastery|Skilled Aerocycle Driver]]",
-        "[[Social Influencing]]",
-        "[[Toon Force]]",
-        "[[Breaking the Fourth Wall|Fourth Wall Breaking]]"
-      ]
-    },
-    "summary": "Mao Mao, originally a band of rogue heroes trying to defeat the villainous Sky Pirates, later found out the Ruby Pure Heart is a mystical artifact wanted by those seeking glory and recruiting a young girl wishing to be a hero like him named Adorabat. Now defender of the valley, he fights to uphold justice and one day become a legend known and beloved by all."
+    "summary": "Frieren is the main protagonist of Sousou no Frieren. She is an elf mage who embarks on a journey with her human apprentice Fern, revisiting places from their past adventures and confronting her regrets about missed opportunities to form deeper bonds with her now-deceased comrades."
   }
 ]

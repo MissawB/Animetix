@@ -17,7 +17,7 @@ class AkinetixGameStateView(APIView):
     permission_classes = [permissions.AllowAny]
     
     @inject
-    def get(self, request, akinetix_service = Provide[Container.akinetix_service]):
+    def get(self, request, akinetix_service = Provide[Container.core.akinetix_service]):
         session_service = get_session_service(request)
         port = session_service.port
         state = akinetix_service.get_state(port)
@@ -38,7 +38,7 @@ class AkinetixGameStartView(APIView):
     permission_classes = [permissions.AllowAny]
     
     @inject
-    def post(self, request, catalog_service = Provide[Container.catalog_service], akinetix_service = Provide[Container.akinetix_service]):
+    def post(self, request, catalog_service = Provide[Container.core.catalog_service], akinetix_service = Provide[Container.core.akinetix_service]):
         session_service = get_session_service(request)
         port = session_service.port
         media_type = request.data.get('media_type', port.get('media_type', 'Anime'))
@@ -71,7 +71,7 @@ class AkinetixGameAnswerView(APIView):
     permission_classes = [permissions.AllowAny]
     
     @inject
-    def post(self, request, catalog_service = Provide[Container.catalog_service], akinetix_service = Provide[Container.akinetix_service]):
+    def post(self, request, catalog_service = Provide[Container.core.catalog_service], akinetix_service = Provide[Container.core.akinetix_service]):
         session_service = get_session_service(request)
         port = session_service.port
         state = akinetix_service.get_state(port)
@@ -109,11 +109,12 @@ class AkinetixGameAnswerView(APIView):
             'is_daily': new_state.is_daily
         })
 
+@method_decorator(ratelimit(key='user', rate='2/m', method='POST', block=True), name='dispatch')
 class AkinetixGameConfirmView(APIView):
     permission_classes = [permissions.AllowAny]
     
     @inject
-    def post(self, request, akinetix_service = Provide[Container.akinetix_service]):
+    def post(self, request, akinetix_service = Provide[Container.core.akinetix_service]):
         session_service = get_session_service(request)
         port = session_service.port
         state = akinetix_service.get_state(port)

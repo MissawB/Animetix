@@ -40,7 +40,9 @@ def test_fusion_service_uses_prompt_manager(mock_engine, mock_prompt_manager):
 def test_manga_flow_uses_prompt_manager(mock_engine, mock_llm_service, mock_prompt_manager):
     service = MangaFlowService(inference_engine=mock_engine, llm_service=mock_llm_service, prompt_manager=mock_prompt_manager)
     
-    mock_engine.process_manga_page.return_value = {"text": "Original text"}
+    mock_engine.process_manga_page.return_value = {
+        "layout": [{"text": "Original text", "bbox": [0,0,10,10]}]
+    }
     
     service.translate_manga_page(b"fake_image_data", target_lang="English")
     

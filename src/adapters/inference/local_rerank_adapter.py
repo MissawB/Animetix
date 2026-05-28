@@ -3,11 +3,13 @@ import os
 from typing import List, Optional
 from core.ports.inference_port import InferencePort
 from core.domain.exceptions import InferenceError
+from core.ports.usage_port import UsagePort
 
 logger = logging.getLogger("animetix.inference.rerank")
 
 class LocalRerankAdapter(InferencePort):
-    def __init__(self, model_name: Optional[str] = None):
+    def __init__(self, model_name: Optional[str] = None, usage_port: Optional[UsagePort] = None):
+        super().__init__(usage_port=usage_port)
         self.model_name = model_name or os.getenv("RERANKER_MODEL", "cross-encoder/ms-marco-MiniLM-L-6-v2")
         self._cross_encoder = None
 
@@ -36,6 +38,7 @@ class LocalRerankAdapter(InferencePort):
                         idx = item.get("index")
                         if idx is not None and idx < len(scores):
                             scores[idx] = float(item.get("relevance_score", 0.0))
+                    self._log_usage(engine="cohere:rerank", units=len(documents))
                     return scores
             except Exception as e:
                 logger.error(f"❌ Cohere Rerank API connection failed: {e}.")
@@ -50,6 +53,7 @@ class LocalRerankAdapter(InferencePort):
                 
             pairs = [[query, doc] for doc in documents]
             scores = self._cross_encoder.predict(pairs)
+            self._log_usage(engine="local:rerank", units=len(documents))
             return [float(score) for score in scores]
         except Exception as e:
             logger.error(f"❌ Failed to run local reranker: {e}")

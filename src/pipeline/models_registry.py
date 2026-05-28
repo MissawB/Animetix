@@ -1,5 +1,8 @@
 import os
 import json
+import logging
+
+logger = logging.getLogger("animetix." + __name__)
 
 class ModelsRegistry:
     def __init__(self):
@@ -29,7 +32,7 @@ class ModelsRegistry:
         if self._text_model is None:
             from sentence_transformers import SentenceTransformer
             model_name = self.manifest["text"].get(self.active_text_version, "jinaai/jina-embeddings-v3")
-            print(f"📦 Loading text model: {model_name} (version: {self.active_text_version})...")
+            logger.info(f"📦 Loading text model: {model_name} (version: {self.active_text_version})...")
             self._text_model = SentenceTransformer(model_name, device=self.device, trust_remote_code=True)
         return self._text_model
 

@@ -25,8 +25,8 @@ for path in [SRC_DIR, BACKEND_DIR]:
 
 # Initialisation différée
 def get_repo():
-    from backend.animetix.services import AnimetixService
-    return AnimetixService().repository
+    from animetix.containers import get_container
+    return get_container().repository()
 
 def get_pipeline_resources():
     from pipeline.models_registry import models_registry

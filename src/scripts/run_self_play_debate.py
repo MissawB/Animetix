@@ -1,6 +1,6 @@
 import os
 import argparse
-from backend.animetix.services import AnimetixService
+from animetix.containers import get_container
 
 def run_self_play_session(limit: int = 5):
     """
@@ -9,9 +9,9 @@ def run_self_play_session(limit: int = 5):
     """
     print("⚔️ Starting Self-Play Debating Session...")
     
-    animetix = AnimetixService()
-    debate_service = animetix.self_play_debate_service
-    catalog = animetix.load_data('Anime')
+    container = get_container()
+    debate_service = container.self_play_debate_service()
+    catalog = container.repository().load_catalog('Anime')
     
     if not catalog:
         print("❌ Catalog not found.")

@@ -1,11 +1,11 @@
-﻿from celery import shared_task
-import logging
+from celery import shared_task
+from animetix_project.logging_config import get_logger
 
 def get_container():
     from ..containers import get_container as _get_container
     return _get_container()
 
-logger = logging.getLogger('animetix.tasks')
+logger = get_logger('animetix.' + __name__)
 
 @shared_task
 def generate_fusion_scenario_task(media_type, item1, item2, language, chaos_level=50, universe_balance=50, art_style='Cyberpunk'):

@@ -2,8 +2,11 @@ import json
 import os
 import requests
 import re
+import logging
 from typing import List
 from dotenv import load_dotenv
+
+logger = logging.getLogger("animetix." + __name__)
 
 # Détection robuste de la racine du projet
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -37,15 +40,15 @@ class DataIntelligence:
                 tags = [t.strip() for t in text.split(',') if len(t.strip()) > 2]
                 return tags[:10]
         except Exception as e:
-            print(f"⚠️ Error generating tags for {title}: {e}")
+            logger.warning(f"⚠️ Error generating tags for {title}: {e}")
             pass
         return []
 
     def extract_visual_knowledge(self, image_data: bytes) -> List[str]:
         """Extrait des connaissances à partir du visuel (posters/screenshots)."""
         # Utilisation du service de vision centralisé
-        from backend.animetix.services import AnimetixService
-        vision_service = AnimetixService().vision_service
+        from animetix.containers import get_container
+        vision_service = get_container().vision_service()
         return vision_service.detect_visual_attributes(image_data)
 
     def build_relation_graph(self, media_data, media_type):

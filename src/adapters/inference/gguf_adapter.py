@@ -6,7 +6,8 @@ from core.ports.inference_port import InferencePort, InferenceNotImplementedErro
 logger = logging.getLogger("animetix." + __name__)
 
 class GgufAdapter(InferencePort):
-    def __init__(self, model_path: str, clip_model_path: Optional[str] = None):
+    def __init__(self, model_path: str, clip_model_path: Optional[str] = None, usage_port: Optional[Any] = None):
+        super().__init__(usage_port=usage_port)
         self.model_path = model_path
         self.clip_model_path = clip_model_path
         self.llm = None
@@ -55,6 +56,15 @@ class GgufAdapter(InferencePort):
                 messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}],
                 max_tokens=max_tokens
             )
+            
+            # Log usage
+            usage = res.get("usage", {})
+            self._log_usage(
+                engine=f"gguf:{self.model_path}",
+                input_tokens=usage.get("prompt_tokens", 0),
+                output_tokens=usage.get("completion_tokens", 0)
+            )
+
             return res['choices'][0]['message']['content']
         except Exception as e:
             logger.error(f"GGUF Generation Error: {e}")
@@ -82,9 +92,13 @@ class GgufAdapter(InferencePort):
     def generate_image_description(self, image_data: bytes, prompt: str = "Décris cette image d'anime de manière très détaillée.") -> str:
         """Utilise le support Llava de GGUF pour décrire l'image."""
         self._load_model()
-        if not self.llm or not self.clip_model_path:
-            # TODO: configure CLIP/Llava vision support for GgufAdapter
-            pass
+        if not self.llm:
+            raise InferenceNotImplementedError("GGUF model not loaded – cannot generate image description.")
+        if not self.clip_model_path:
+            raise InferenceNotImplementedError(
+                "CLIP/Llava vision support not configured for GgufAdapter. "
+                "Provide 'clip_model_path' at initialization to enable vision capabilities."
+            )
         
         try:
             # Encodage de l'image en base64 pour l'API chat completion

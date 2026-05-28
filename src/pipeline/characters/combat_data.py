@@ -69,8 +69,8 @@ def run_combat_data_ingestion(limit: int = 100):
 
         try:
             logger.info(f"⚔️ Processing combat data for: {name}")
-            # Add franchise if available
-            franchise = char.get('franchise') or char.get('media', {}).get('title')
+            # Add franchise if available (often stored in 'origin' from the LLM extraction)
+            franchise = char.get('origin') or char.get('franchise') or char.get('media', {}).get('title')
             
             # Fetch ALL versions of the character
             combat_versions = vs_service.fetch_character_versions(name, franchise=franchise)

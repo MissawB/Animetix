@@ -98,13 +98,15 @@ class VsBattleService:
                 try:
                     data = json.loads(match.group(1))
                     return self._find_best_dict(data) or data
-                except: pass
+                except Exception as e:
+                    logger.debug(f"JSON extraction fallback 1 failed: {e}")
             start, end = cleaned_text.find('{'), cleaned_text.rfind('}')
             if start != -1 and end != -1:
                 try:
                     data = json.loads(cleaned_text[start:end+1])
                     return self._find_best_dict(data) or data
-                except: pass
+                except Exception as e:
+                    logger.debug(f"JSON extraction fallback 2 failed: {e}")
             raise ValueError(f"Could not extract valid JSON (len: {len(cleaned_text)})")
 
     def _find_best_dict(self, obj: Any) -> Optional[Dict]:
@@ -185,7 +187,25 @@ class VsBattleService:
         parsed_versions = []
         for raw_data in all_raw_data:
             try:
-                prompt, system = self.prompt_manager.get_prompt("vs_battle_parser", wikitext=raw_data.get("wikitext", "")[:3000])
+                wt = raw_data.get("wikitext", "")
+                
+                # Intelligent Wikitext Extraction to capture stats often located deep in the page
+                summary_part = wt[:1000] # Usually enough for the introduction
+                
+                # Look for the start of the stats block (usually begins with Tier:)
+                stats_match = _regex_module.search(r"('''Tier:'''.*?)(?=\n==|\Z)", wt, _regex_module.IGNORECASE | _regex_module.DOTALL)
+                if stats_match:
+                    stats_part = stats_match.group(1)[:3000] # Get up to 3000 chars of stats
+                    focused_wikitext = summary_part + "\n\n--- STATS SECTION ---\n" + stats_part
+                else:
+                    # Fallback to a broader search around "Speed:" or "Durability:" if "Tier:" is missing
+                    alt_match = _regex_module.search(r"('''Speed:'''.*?)(?=\n==|\Z)", wt, _regex_module.IGNORECASE | _regex_module.DOTALL)
+                    if alt_match:
+                        focused_wikitext = summary_part + "\n\n--- STATS SECTION ---\n" + alt_match.group(1)[:3000]
+                    else:
+                        focused_wikitext = wt[:4000]
+
+                prompt, system = self.prompt_manager.get_prompt("vs_battle_parser", wikitext=focused_wikitext)
                 time.sleep(1.0)
                 character = self._safe_generate_structured(prompt=prompt, system_prompt=system, response_model=CombatCharacter)
                 character.name, character.franchise = raw_data.get("name", name), franchise
@@ -202,9 +222,31 @@ class VsBattleService:
     def _map_tier_to_value(self, tier_str: str) -> int:
         if not tier_str: return 0
         t = tier_str.upper()
-        tier_patterns = [(r"\b0\b", 100), (r"BOUNDLESS", 100), (r"\b1-A\b", 95), (r"OUTERVERSAL", 95), (r"HIGH 1-B", 92), (r"\b1-B\b", 90), (r"HYPERVERSAL", 90), (r"HIGH 1-C", 88), (r"\b1-C\b", 85), (r"COMPLEX MULTIVERSAL", 85), (r"HIGH 2-A", 82), (r"\b2-A\b", 80), (r"MULTIVERSAL\+", 80), (r"\b2-B\b", 75), (r"MULTIVERSAL", 75), (r"\b2-C\b", 70), (r"LOW MULTIVERSAL", 70), (r"HIGH 3-A", 68), (r"\b3-A\b", 65), (r"UNIVERSAL", 65), (r"\b3-B\b", 60), (r"MULTI-GALAXY", 60), (r"\b3-C\b", 58), (r"GALAXY", 58), (r"\b4-A\b", 55), (r"MULTI-SOLAR SYSTEM", 55), (r"\b4-B\b", 53), (r"COSMIC", 53), (r"SOLAR SYSTEM", 53), (r"\b4-C\b", 50), (r"STAR", 50), (r"\b5-A\b", 48), (r"LARGE PLANET", 48), (r"\b5-B\b", 46), (r"PLANET", 46), (r"LOW 5-B", 45), (r"\b5-C\b", 44), (r"MOON", 44), (r"\b6-A\b", 42), (r"LARGE CONTINENT", 42), (r"\b6-B\b", 40), (r"CONTINENT", 40), (r"HIGH 6-C", 39), (r"\b6-C\b", 38), (r"ISLAND", 38), (r"HIGH 7-A", 37), (r"\b7-A\b", 36), (r"LARGE MOUNTAIN", 36), (r"\b7-B\b", 34), (r"MOUNTAIN", 34), (r"\b7-C\b", 32), (r"TOWN", 32), (r"LOW 7-C", 31), (r"HIGH 8-A", 31), (r"\b8-A\b", 30), (r"MULTI-CITY BLOCK", 30), (r"\b8-B\b", 28), (r"CITY BLOCK", 28), (r"\b8-C\b", 26), (r"BUILDING", 26), (r"\b9-A\b", 24), (r"SMALL BUILDING", 24), (r"ROOM", 24), (r"\b9-B\b", 22), (r"WALL", 22), (r"\b9-C\b", 20), (r"STREET", 20), (r"10-A", 15), (r"ATHLETE", 15), (r"10-B", 10), (r"HUMAN", 10), (r"10-C", 5)]
+        # Relaxed patterns: remove \b to match fragments in complex sentences
+        tier_patterns = [
+            (r"(?<!\d)0(?!\d)", 100), (r"BOUNDLESS", 100), (r"1-A", 95), (r"OUTERVERSAL", 95),
+            (r"HIGH 1-B", 92), (r"1-B", 90), (r"HYPERVERSAL", 90), (r"HIGH 1-C", 88),
+            (r"1-C", 85), (r"COMPLEX MULTIVERSAL", 85), (r"HIGH 2-A", 82), (r"2-A", 80),
+            (r"MULTIVERSAL\+", 80), (r"2-B", 75), (r"MULTIVERSAL", 75), (r"2-C", 70),
+            (r"LOW MULTIVERSAL", 70), (r"HIGH 3-A", 68), (r"3-A", 65), (r"UNIVERSAL", 65),
+            (r"3-B", 60), (r"MULTI-GALAXY", 60), (r"3-C", 58), (r"GALAXY", 58),
+            (r"4-A", 55), (r"MULTI-SOLAR SYSTEM", 55), (r"4-B", 53), (r"COSMIC", 53),
+            (r"SOLAR SYSTEM", 53), (r"4-C", 50), (r"STAR", 50), (r"5-A", 48),
+            (r"LARGE PLANET", 48), (r"5-B", 46), (r"PLANET", 46), (r"LOW 5-B", 45),
+            (r"5-C", 44), (r"MOON", 44), (r"6-A", 42), (r"LARGE CONTINENT", 42),
+            (r"6-B", 40), (r"CONTINENT", 40), (r"HIGH 6-C", 39), (r"6-C", 38),
+            (r"ISLAND", 38), (r"HIGH 7-A", 37), (r"7-A", 36), (r"LARGE MOUNTAIN", 36),
+            (r"7-B", 34), (r"MOUNTAIN", 34), (r"7-C", 32), (r"TOWN", 32),
+            (r"LOW 7-C", 31), (r"HIGH 8-A", 31), (r"8-A", 30), (r"MULTI-CITY BLOCK", 30),
+            (r"8-B", 28), (r"CITY BLOCK", 28), (r"8-C", 26), (r"BUILDING", 26),
+            (r"9-A", 24), (r"SMALL BUILDING", 24), (r"ROOM", 24), (r"9-B", 22),
+            (r"WALL", 22), (r"9-C", 20), (r"STREET", 20), (r"10-A", 15), (r"ATHLETE", 15),
+            (r"10-B", 10), (r"HUMAN", 10), (r"10-C", 5)
+        ]
         for pattern, value in tier_patterns:
-            if _regex_module.search(pattern, t): return value
+            if _regex_module.search(pattern, t): 
+                logger.debug(f"🎯 Matched tier {pattern} -> {value}")
+                return value
         return 0
 
     def _extract_max_tier(self, tier_str: str) -> str:
@@ -215,9 +257,10 @@ class VsBattleService:
             if val > max_val: max_val, best_tier = val, part
         return best_tier.strip()
 
-    def run_battle(self, char_a_name: str, char_b_name: str, language: str = "Français") -> CombatResult:
+    def run_battle(self, char_a_name: str, char_b_name: str, char_a_franchise: Optional[str] = None, char_b_franchise: Optional[str] = None, language: str = "Français") -> CombatResult:
         logger.info(f"Starting battle: {char_a_name} vs {char_b_name}")
-        char_a, char_b = self.fetch_and_parse_character(char_a_name), self.fetch_and_parse_character(char_b_name)
+        char_a = self.fetch_and_parse_character(char_a_name, franchise=char_a_franchise)
+        char_b = self.fetch_and_parse_character(char_b_name, franchise=char_b_franchise)
         debate_history = []
         for role, c, o in [("Advocate_A", char_a, char_b), ("Advocate_B", char_b, char_a)]:
             p, s = self.prompt_manager.get_prompt("vs_battle_advocate", character_name=c.name, opponent_name=o.name, character_stats=c.stats.model_dump_json(indent=2), opponent_stats=o.stats.model_dump_json(indent=2), language=language)

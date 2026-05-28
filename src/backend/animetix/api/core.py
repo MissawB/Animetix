@@ -12,11 +12,46 @@ import datetime
 import base64
 import hashlib
 import requests
-import logging
+import socket
+import ipaddress
+from urllib.parse import urlparse
+from animetix_project.logging_config import get_logger
 from django.core.cache import cache
 from django.http import HttpResponse
+from django.utils.decorators import method_decorator
+from django_ratelimit.decorators import ratelimit
 
-logger = logging.getLogger('animetix.api')
+logger = get_logger('animetix.api')
+
+def is_safe_url(url):
+    """
+    V├®rifie si une URL est s├╗re pour ├®viter les attaques SSRF.
+    Bloque les adresses priv├®es, loopback, link-local et les protocoles non-HTTP.
+    """
+    try:
+        parsed = urlparse(url)
+        if parsed.scheme not in ('http', 'https'):
+            return False
+
+        hostname = parsed.hostname
+        if not hostname:
+            return False
+
+        # R├®solution DNS pour v├®rifier l'IP r├®elle
+        try:
+            ip_address = socket.gethostbyname(hostname)
+            ip = ipaddress.ip_address(ip_address)
+        except (socket.gaierror, ValueError):
+            return False
+
+        # Bloquer les IPs priv├®es, loopback, etc.
+        if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_multicast or ip.is_unspecified:
+            return False
+
+        return True
+    except Exception as e:
+        logger.error(f"Error in is_safe_url: {e}")
+        return False
 
 def image_proxy_view(request):
 
@@ -29,6 +64,11 @@ def image_proxy_view(request):
     except Exception as e:
         logger.error(f"Failed to decode image proxy URL: {e}")
         return HttpResponse(status=400)
+
+    # Protection SSRF
+    if not is_safe_url(url):
+        logger.warning(f"Blocked unsafe URL in image proxy: {url}")
+        return HttpResponse("Forbidden: Unsafe URL", status=403)
 
     cache_key = f"img_cache_{hashlib.md5(url.encode()).hexdigest()}"
     cached_data = cache.get(cache_key)
@@ -126,6 +166,7 @@ class GameSessionView(APIView):
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 
+@method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True), name='dispatch')
 class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -147,6 +188,7 @@ class LogoutView(APIView):
         return Response({"success": True})
 
 
+@method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True), name='dispatch')
 class RegisterView(APIView):
     permission_classes = [permissions.AllowAny]
 

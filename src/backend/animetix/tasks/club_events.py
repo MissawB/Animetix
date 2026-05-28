@@ -1,9 +1,9 @@
 from celery import shared_task
-import logging
+from animetix_project.logging_config import get_logger
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
-logger = logging.getLogger('animetix.tasks.clubs')
+logger = get_logger('animetix.' + __name__)
 
 @shared_task
 def trigger_club_event(club_id, event_id):

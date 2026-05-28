@@ -15,11 +15,10 @@ if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(os.path.join(BASE_DIR, 'pipeline'))
 
-from backend.animetix.services import AnimetixService
+from animetix.containers import get_container
 from models_registry import models_registry
 
-animetix_service = AnimetixService()
-repo = animetix_service.repository
+repo = get_container().repository()
 
 INPUT_FILE = os.path.join(BASE_DIR, 'data', 'raw', 'raw_vg_characters_db.json')
 LOOKUP_FILE = os.path.join(BASE_DIR, 'data', 'artifacts', 'vg_char_data_for_lookup.json')

@@ -2,6 +2,8 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.utils.decorators import method_decorator
+from django_ratelimit.decorators import ratelimit
 from dependency_injector.wiring import inject, Provide
 from ..models import AIREvalResult, GoldDatasetEntry, AIFeedback
 from ..serializers import AIREvalResultSerializer, GoldDatasetEntrySerializer, AIFeedbackSerializer
@@ -18,7 +20,7 @@ class AIREvaluationViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.IsAdminUser]
 
     @inject
-    def __init__(self, *args, eval_port: EvalResultPort = Provide[Container.eval_adapter], **kwargs):
+    def __init__(self, *args, eval_port: EvalResultPort = Provide[Container.persistence.eval_adapter], **kwargs):
         super().__init__(*args, **kwargs)
         self.eval_port = eval_port
 
@@ -32,7 +34,7 @@ class LatentSpaceAPIView(APIView):
     permission_classes = [permissions.IsAdminUser]
 
     @inject
-    def __init__(self, repository: RepositoryPort = Provide[Container.repository], **kwargs):
+    def __init__(self, repository: RepositoryPort = Provide[Container.persistence.repository], **kwargs):
         super().__init__(**kwargs)
         self.repository = repository
 
@@ -47,12 +49,13 @@ class LatentSpaceAPIView(APIView):
         
         return Response({"error": "Data not found"}, status=status.HTTP_404_NOT_FOUND)
 
+@method_decorator(ratelimit(key='user_or_ip', rate='5/m', method='POST', block=True), name='dispatch')
 class AIFeedbackAPIView(APIView):
     """API for submitting AI feedback."""
     permission_classes = [permissions.AllowAny]
 
     @inject
-    def __init__(self, feedback_port: FeedbackRepositoryPort = Provide[Container.feedback_adapter], **kwargs):
+    def __init__(self, feedback_port: FeedbackRepositoryPort = Provide[Container.persistence.feedback_adapter], **kwargs):
         super().__init__(**kwargs)
         self.feedback_port = feedback_port
 
@@ -80,7 +83,7 @@ class GoldDatasetViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAdminUser]
 
     @inject
-    def __init__(self, *args, gold_port: GoldDatasetPort = Provide[Container.gold_dataset_adapter], **kwargs):
+    def __init__(self, *args, gold_port: GoldDatasetPort = Provide[Container.persistence.gold_dataset_adapter], **kwargs):
         super().__init__(*args, **kwargs)
         self.gold_port = gold_port
 
@@ -104,7 +107,7 @@ class DPOCurationViewSet(viewsets.ViewSet):
     permission_classes = [permissions.IsAdminUser]
 
     @inject
-    def __init__(self, *args, dpo_loop: DPOFeedbackLoop = Provide[Container.dpo_feedback_loop], **kwargs):
+    def __init__(self, *args, dpo_loop: DPOFeedbackLoop = Provide[Container.core.dpo_feedback_loop], **kwargs):
         super().__init__(*args, **kwargs)
         self.dpo_loop = dpo_loop
 

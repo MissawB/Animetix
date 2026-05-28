@@ -1,7 +1,6 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .models import MediaItem, ChallengeResult, GlobalBoss, Friendship
-from .services import AnimetixService
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 

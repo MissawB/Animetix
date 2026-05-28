@@ -5,13 +5,13 @@ class Settings(BaseSettings):
     """Configuration dynamique typée avec Pydantic."""
     
     # DB & Neo4j
-    DATABASE_URL: str = "postgres://animetix:secretpassword@localhost:5432/animetix"
+    DATABASE_URL: Optional[str] = None
     NEO4J_URI: str = "bolt://localhost:7687"
     NEO4J_USER: str = "neo4j"
-    NEO4J_PASSWORD: str
+    NEO4J_PASSWORD: Optional[str] = None
     
     # Apps
-    DJANGO_SECRET_KEY: str = "dev-secret-key"
+    DJANGO_SECRET_KEY: Optional[str] = None
     DJANGO_DEBUG: bool = False
     
     # AI/ML

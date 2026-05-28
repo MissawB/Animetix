@@ -2,6 +2,9 @@ import requests
 import json
 import time
 import os
+import logging
+
+logger = logging.getLogger("animetix." + __name__)
 
 # Détection robuste de la racine du projet
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -21,13 +24,13 @@ def fetch_jikan_details(mal_id, media_type='anime'):
         if response.status_code == 200:
             return response.json().get('data', {})
         elif response.status_code == 429:
-            print(f"⚠️ Rate limit reached for {media_type} {mal_id}. Sleeping 10s...")
+            logger.warning(f"⚠️ Rate limit reached for {media_type} {mal_id}. Sleeping 10s...")
             time.sleep(10)
             return fetch_jikan_details(mal_id, media_type)
         else:
             return {}
     except Exception as e:
-        print(f"❌ Exception for {media_type} {mal_id} details: {e}")
+        logger.error(f"❌ Exception for {media_type} {mal_id} details: {e}")
         return {}
 
 def fetch_jikan_recommendations(mal_id, media_type='anime'):
@@ -41,12 +44,12 @@ def fetch_jikan_recommendations(mal_id, media_type='anime'):
             return fetch_jikan_recommendations(mal_id, media_type)
         return []
     except Exception as e:
-        print(f"⚠️ Error fetching recommendations for {mal_id}: {e}")
+        logger.warning(f"⚠️ Error fetching recommendations for {mal_id}: {e}")
         return []
 
 def enrich_media(input_file, output_file, media_type='anime'):
     if not os.path.exists(input_file):
-        print(f"Skipping {media_type}: {input_file} not found.")
+        logger.info(f"Skipping {media_type}: {input_file} not found.")
         return
 
     with open(input_file, 'r', encoding='utf-8') as f:
@@ -58,10 +61,10 @@ def enrich_media(input_file, output_file, media_type='anime'):
             with open(output_file, 'r', encoding='utf-8') as f:
                 enrichment_data = json.load(f)
         except Exception as e:
-            print(f"⚠️ Erreur lors du chargement de {output_file}: {e}")
+            logger.warning(f"⚠️ Erreur lors du chargement de {output_file}: {e}")
             pass
 
-    print(f"🚀 Enriching {len(data)} {media_type}s using Jikan...")
+    logger.info(f"🚀 Enriching {len(data)} {media_type}s using Jikan...")
     
     count = 0
     # On limite à 1000 items pour éviter de saturer l'API Jikan pendant des heures
@@ -99,7 +102,7 @@ def enrich_media(input_file, output_file, media_type='anime'):
         
         count += 1
         if count % 20 == 0:
-            print(f"✅ Processed {count} items...")
+            logger.info(f"✅ Processed {count} items...")
             with open(output_file, 'w', encoding='utf-8') as f:
                 json.dump(enrichment_data, f, indent=2, ensure_ascii=False)
         
@@ -109,7 +112,7 @@ def enrich_media(input_file, output_file, media_type='anime'):
     with open(output_file, 'w', encoding='utf-8') as f:
         json.dump(enrichment_data, f, indent=2, ensure_ascii=False)
     
-    print(f"✅ Finished enriching {media_type}s!")
+    logger.info(f"✅ Finished enriching {media_type}s!")
 
 def enrich_characters(input_file, output_file):
     if not os.path.exists(input_file): return
@@ -123,10 +126,10 @@ def enrich_characters(input_file, output_file):
             with open(output_file, 'r', encoding='utf-8') as f:
                 enrichment_data = json.load(f)
         except Exception as e:
-            print(f"⚠️ Erreur lors du chargement de {output_file}: {e}")
+            logger.warning(f"⚠️ Erreur lors du chargement de {output_file}: {e}")
             pass
 
-    print(f"🚀 Enriching {len(data)} characters using Jikan...")
+    logger.info(f"🚀 Enriching {len(data)} characters using Jikan...")
     
     count = 0
     for item in data[:500]:
@@ -135,7 +138,7 @@ def enrich_characters(input_file, output_file):
         # Note: L'enrichissement des persos par Jikan est plus complexe car les IDs diffèrent
         continue # Optionnel pour l'instant pour gagner du temps
         
-    print("✅ Character enrichment step completed.")
+    logger.info("✅ Character enrichment step completed.")
 
 if __name__ == "__main__":
     os.makedirs(os.path.join(BASE_DIR, 'data', 'raw'), exist_ok=True)

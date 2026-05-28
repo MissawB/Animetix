@@ -88,3 +88,125 @@ Animetix est désormais conçu et déployé comme une **Pure SPA** (Single Page 
    - Construire le front avec `npm run build` dans le dossier `frontend/`.
    - Servir les fichiers statiques de `dist/` via Nginx ou un service CDN.
    - Configurer le reverse proxy pour diriger `/api/`, `/graphql/` et les connexions WebSocket `/ws/` vers le serveur d'application Django (Gunicorn/Uvicorn).
+
+---
+
+## 7. Écosystème des Adaptateurs d'Inférence
+
+Le projet utilise un **FallbackInferenceAdapter** qui orchestre une chaîne de repli entre les différents moteurs d'inférence :
+
+```mermaid
+graph TD
+    FallbackAdapter["FallbackInferenceAdapter"]
+    
+    subgraph Adaptateurs Texte
+        BrainAPI["BrainAPIAdapter (Cloud)"]
+        VLLM["VLLMAdapter (GPU Server)"]
+        GGUF["GgufAdapter (Local CPU/GPU)"]
+        LocalText["LocalTextAdapter"]
+        Langchain["LangchainAdapter"]
+    end
+    
+    subgraph Adaptateurs Vision
+        VisionTF["VisionTransformersAdapter"]
+        Diffusers["DiffusersAdapter"]
+        Qwen3VL["Qwen3VLAdapter"]
+        Moondream["MoondreamAdapter"]
+    end
+    
+    subgraph Adaptateurs Audio
+        AudioTF["AudioTransformersAdapter"]
+        XTTS["XTTSAdapter"]
+    end
+    
+    FallbackAdapter --> BrainAPI
+    FallbackAdapter --> VLLM
+    FallbackAdapter --> GGUF
+    FallbackAdapter --> VisionTF
+    FallbackAdapter --> Diffusers
+    FallbackAdapter --> AudioTF
+```
+
+Chaque adaptateur implémente un sous-ensemble de l'`InferencePort`. Le `FallbackInferenceAdapter` construit un **cache de capacités** au démarrage pour router chaque appel vers le premier adaptateur capable.
+
+---
+
+## 8. Architecture Mixin de VisionTransformersAdapter
+
+Pour éviter un fichier monolithique, `VisionTransformersAdapter` est décomposé en **4 mixins** spécialisés :
+
+```mermaid
+classDiagram
+    class InferencePort {
+        <<abstract>>
+        +generate()
+        +health_check()
+    }
+    class DepthEstimationMixin {
+        +estimate_depth()
+        +generate_3d_scene()
+    }
+    class MangaOcrMixin {
+        +process_manga_page()
+    }
+    class VideoAnalysisMixin {
+        +get_video_temporal_embeddings()
+        +localize_video_actions()
+        +generate_video_description()
+    }
+    class ClipVisionMixin {
+        +get_image_embedding()
+        +classify_image()
+        +calculate_visual_similarity()
+        +visual_rerank()
+        +get_multimodal_late_interaction()
+    }
+    class VisionTransformersAdapter {
+        +detect_objects()
+        +generate_image_description()
+        +health_check()
+    }
+    
+    InferencePort <|-- VisionTransformersAdapter
+    DepthEstimationMixin <|-- VisionTransformersAdapter
+    MangaOcrMixin <|-- VisionTransformersAdapter
+    VideoAnalysisMixin <|-- VisionTransformersAdapter
+    ClipVisionMixin <|-- VisionTransformersAdapter
+```
+
+---
+
+## 9. Hiérarchie des Exceptions
+
+Toutes les exceptions du projet dérivent de `AnimetixBaseError` :
+
+```mermaid
+classDiagram
+    class AnimetixBaseError {
+        +message: str
+        +context: dict
+    }
+    class DomainError
+    class InfrastructureError
+    class InferenceError
+    class InferenceTimeoutError
+    class SpatialComputingError
+    class MangaProcessingError
+    class VideoProcessingError
+    class ImageGenerationError
+    class AdapterLoadError
+    class ContentModerationError
+    class KnowledgeGraphQueryError
+    
+    AnimetixBaseError <|-- DomainError
+    AnimetixBaseError <|-- InfrastructureError
+    InfrastructureError <|-- InferenceError
+    InferenceError <|-- InferenceTimeoutError
+    InferenceError <|-- SpatialComputingError
+    InferenceError <|-- MangaProcessingError
+    InferenceError <|-- VideoProcessingError
+    InferenceError <|-- ImageGenerationError
+    InfrastructureError <|-- AdapterLoadError
+    InfrastructureError <|-- ContentModerationError
+    InfrastructureError <|-- KnowledgeGraphQueryError
+```

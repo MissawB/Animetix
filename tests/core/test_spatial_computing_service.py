@@ -12,6 +12,11 @@ def spatial_service(mock_engine):
 
 def test_reconstruct_3d_scene_success(spatial_service, mock_engine):
     mock_engine.estimate_depth.return_value = b"depth_map"
+    mock_engine.generate_3d_scene.return_value = {
+        "status": "success",
+        "model_url": "data:application/octet-stream;base64,fake_data",
+        "point_count": 1000
+    }
     
     res = spatial_service.reconstruct_3d_scene(b"img", "Naruto")
     assert res["status"] == "success"

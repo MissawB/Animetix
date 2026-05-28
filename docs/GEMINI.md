@@ -12,7 +12,6 @@ The project MUST follow Hexagonal Architecture principles to ensure decoupling b
 - **[COMPLETED] Codebase Cleanup:** Obsolete legacy HTML view controllers, URL configurations, and related testing files have been successfully purged, establishing a clean Headless API / React SPA boundary.
 
 ### Current Refactoring Priorities (High Priority)
-- **Decoupling of Utils:** Global utility functions in `src/backend/animetix/utils.py` (e.g., session helpers) MUST be moved to dedicated ports/adapters or domain services to improve reusability and testability.
 - **Error Handling Strengthening:** Systematically replace `except: pass` blocks in IA services (especially in `AgenticRAGService`) with explicit exception handling and structured logging.
 
 - **Domain (Core):** Pure business logic, entities, and use cases.

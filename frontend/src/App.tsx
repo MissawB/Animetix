@@ -64,6 +64,16 @@ const App: React.FC = () => {
                   <Brain className="w-8 h-8" />
                   <span className="text-nowrap">{t('home.akinetix_expert')}</span>
               </Button>
+
+              <Button 
+                  as={Link}
+                  to="/game/vsbattle/" 
+                  size="lg"
+                  className="bg-red-500 text-white px-10 py-6 rounded-[2rem] font-black italic text-2xl uppercase shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-4 no-underline border-none"
+              >
+                  <Zap className="w-8 h-8" />
+                  <span className="text-nowrap">VERSUS BATTLE</span>
+              </Button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto pt-24">

@@ -53,7 +53,7 @@ pytest.importorskip("scipy")
 
 from adapters.inference.local_text_adapter import LocalTextAdapter
 from adapters.inference.diffusers_adapter import DiffusersAdapter
-from adapters.inference.xtts_adapter import XTTSAdapter
+from adapters.inference.audio_transformers_adapter import AudioTransformersAdapter
 from adapters.inference.vision_transformers_adapter import VisionTransformersAdapter
 from adapters.inference.fallback_adapter import FallbackInferenceAdapter
 from core.domain.exceptions import InferenceError
@@ -68,7 +68,7 @@ def diffusers_adapter():
 
 @pytest.fixture
 def xtts_adapter():
-    return XTTSAdapter()
+    return AudioTransformersAdapter()
 
 @pytest.fixture
 def vision_adapter():
@@ -162,15 +162,16 @@ def test_generate_soundscape_success(xtts_adapter):
     assert "fake_audio_base64" in res
 
 def test_generate_soundscape_failure(xtts_adapter):
-    """Vérifie que la génération échoue proprement si scipy est manquant."""
+    """Vérifie que la génération lève une InferenceError si scipy est manquant."""
     # Simuler l'absence de scipy enlevant la fonction de sauvegarde
     mock_pipe = MagicMock()
     mock_pipe.return_value = MagicMock(audios=[np.zeros((1, 16000))])
     mock_diffusers.AudioLDMPipeline.from_pretrained.return_value = mock_pipe
 
     with patch("scipy.io.wavfile.write", side_effect=ImportError("No scipy")):
-        res = xtts_adapter.generate_soundscape({"scene": "forest"}, prompt="forest sounds")
-        assert res == ""
+        with pytest.raises(InferenceError) as excinfo:
+            xtts_adapter.generate_soundscape({"scene": "forest"}, prompt="forest sounds")
+        assert "Soundscape generation failed" in str(excinfo.value)
 
 def test_vision_depth_estimation_mocked(vision_adapter):
     """Vérifie l'estimation de profondeur avec un pipeline mocké."""
@@ -183,7 +184,7 @@ def test_vision_depth_estimation_mocked(vision_adapter):
     img.save(buf, format="PNG")
     valid_image_data = buf.getvalue()
     
-    with patch("adapters.inference.vision_transformers_adapter.pipeline", return_value=mock_pipeline):
+    with patch("adapters.inference.depth_estimation.pipeline", return_value=mock_pipeline):
         res = vision_adapter.estimate_depth(valid_image_data)
         
     assert isinstance(res, bytes)
@@ -199,7 +200,7 @@ def test_vision_manga_ocr_mocked(vision_adapter):
     img.save(buf, format="PNG")
     valid_image_data = buf.getvalue()
     
-    with patch("adapters.inference.vision_transformers_adapter.pipeline", return_value=mock_pipeline):
+    with patch("adapters.inference.manga_ocr.pipeline", return_value=mock_pipeline):
         res = vision_adapter.process_manga_page(valid_image_data)
         
     assert res["status"] == "success"
@@ -207,11 +208,20 @@ def test_vision_manga_ocr_mocked(vision_adapter):
     assert len(res["layout"]) > 0
 
 def test_vision_3d_scene_mocked(vision_adapter):
-    """Vérifie la structure de retour de la génération de scène 3D."""
-    res = vision_adapter.generate_3d_scene(b"rgb_data", b"depth_data")
+    """Vérifie la structure de retour de la génération de scène 3D avec des images valides."""
+    import io
+    from PIL import Image as PILImage
+    # Créer des images valides pour le test
+    rgb_img = PILImage.new('RGB', (10, 10), color=(128, 64, 32))
+    depth_img = PILImage.new('L', (10, 10), color=128)
+    rgb_buf = io.BytesIO(); rgb_img.save(rgb_buf, format="PNG"); rgb_data = rgb_buf.getvalue()
+    depth_buf = io.BytesIO(); depth_img.save(depth_buf, format="PNG"); depth_data = depth_buf.getvalue()
+    
+    res = vision_adapter.generate_3d_scene(rgb_data, depth_data)
     assert res["status"] == "success"
     assert "model_url" in res
-    assert res["metadata"]["original_size"] == len(b"rgb_data")
+    assert res["point_count"] > 0
+    assert res["metadata"]["original_size"] == len(rgb_data)
 
 def test_fallback_rerank_documents_chain():
     """Vérifie que FallbackInferenceAdapter essaie plusieurs adaptateurs pour le reranking."""

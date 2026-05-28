@@ -7,3 +7,4 @@ from .blindtest import *
 from .covertest import *
 from .akinetix_rl import *
 from .archetypist import *
+from .vs_battle import *

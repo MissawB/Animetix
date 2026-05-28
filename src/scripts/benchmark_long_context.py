@@ -1,7 +1,7 @@
 import os
 import json
 import argparse
-from backend.animetix.services import AnimetixService
+from animetix.containers import get_container
 from core.domain.services.long_context_service import LongContextDiscoveryService
 
 def run_evaluation(max_size=32000):
@@ -10,8 +10,8 @@ def run_evaluation(max_size=32000):
     """
     print("🚀 Starting Long-Context Memory Evaluation (Animetix RULER-lite)...")
     
-    animetix = AnimetixService()
-    long_ctx_service = LongContextDiscoveryService(inference_engine=animetix.inference_adapter)
+    container = get_container()
+    long_ctx_service = LongContextDiscoveryService(inference_engine=container.inference_engine())
     
     sizes = [2000, 8000, 16000, 32000]
     # Filtrer les tailles qui dépassent la limite du modèle actuel

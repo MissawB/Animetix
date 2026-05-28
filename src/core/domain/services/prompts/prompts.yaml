@@ -639,15 +639,15 @@ vs_battle_parser:
   template: "Tu es un expert en extraction de données structurées pour le site VS\
     \ Battles Wiki.\nExtrais les informations du wikitext suivant pour remplir le\
     \ schéma CombatCharacter.\n\nWIKITEXT :\n{wikitext}\n\nCONSIGNES :\n- Tier : Cherche\
-    \ \"Tier:\" (ex: 2-C, High 6-A).\n- Vitesse : Cherche \"Speed:\".\n- DurabilitÃ©\
-    \ : Cherche \"Durability:\".\n- Intelligence : Cherche \"Intelligence:\".\n- CapacitÃ©s\
-    \ : Liste les \"Powers and Abilities\".\n- RÃ©sumÃ© : Un court paragraphe introductif.\n\
+    \ \"Tier:\" (ex: 2-C, High 6-A).\n- Vitesse : Cherche \"Speed:\". Si non trouvé, DÉDUIS ou GÉNÈRE une estimation cohérente avec le niveau du personnage.\n- Durabilité\
+    \ : Cherche \"Durability:\". Si non trouvé, DÉDUIS ou GÉNÈRE une estimation cohérente.\n- Intelligence : Cherche \"Intelligence:\". Si non trouvé, DÉDUIS ou GÉNÈRE une estimation cohérente.\n- Capacités\
+    \ : Liste les \"Powers and Abilities\".\n- Résumé : Un court paragraphe introductif.\n\
     \nRÉPONDS UNIQUEMENT EN JSON :\n{{\n  \"name\": \"Nom du personnage\",\n  \"stats\"\
     : {{\n    \"tier\": \"...\",\n    \"speed\": \"...\",\n    \"durability\": \"\
     ...\",\n    \"intelligence\": \"...\",\n    \"abilities\": [\"...\", \"...\"]\n\
     \  }},\n  \"summary\": \"...\"\n}}\n"
   system_prompt: Tu es un extracteur de données rigoureux spécialisé dans les wikis
-    de combat.
+    de combat. Si une statistique est manquante dans le texte, tu as l'autorisation de la déduire logiquement.
 vs_battle_ai_generator:
   template: |
     Tu es un expert en Powerscaling et membre éminent de VS Battles Wiki.

@@ -20,7 +20,7 @@ from datasets import load_dataset
 from trl import DPOTrainer, DPOConfig
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
-from backend.animetix.services import AnimetixService
+from animetix.containers import get_container
 
 def run_rl_training_simulation(episodes: int = 100):
     """
@@ -28,8 +28,8 @@ def run_rl_training_simulation(episodes: int = 100):
     L'agent apprend à choisir les attributs qui réduisent le plus l'entropie.
     """
     print("🤖 Initializing Akinetix RL Environment...")
-    animetix = AnimetixService()
-    rl_service = animetix.akinetix_rl_service
+    container = get_container()
+    rl_service = container.akinetix_rl_env_service()
     env = rl_service.create_env("Anime")
     
     # Simple Q-Table mapping State -> Action values

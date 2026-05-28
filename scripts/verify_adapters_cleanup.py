@@ -14,12 +14,12 @@ from adapters.inference.local_llama_adapter import LocalLlamaAdapter
 from adapters.inference.transformers_adapter import TransformersAdapter
 from adapters.inference.moondream_adapter import MoondreamAdapter
 from adapters.inference.qwen3_vl_adapter import Qwen3VLAdapter
-from adapters.inference.xtts_adapter import XTTSAdapter
-from adapters.inference.manga_ocr_adapter import MangaOCRAdapter
+from adapters.inference.transformers_text_adapter import TransformersTextAdapter
+from adapters.inference.audio_transformers_adapter import AudioTransformersAdapter
 
 def test_adapter(adapter: InferencePort, adapter_name: str):
     print(f"\n--- Testing {adapter_name} ---")
-    
+
     # These should be implemented and NOT raise NotImplementedError
     try:
         adapter.health_check()
@@ -40,10 +40,10 @@ if __name__ == "__main__":
     # Disable lazy loading effects if possible or just ignore for instantiation
     adapters = [
         (LocalLlamaAdapter(model_path="mock"), "LocalLlamaAdapter"),
-        (TransformersAdapter(), "TransformersAdapter"),
+        (TransformersTextAdapter(), "TransformersTextAdapter"),
         (MoondreamAdapter(), "MoondreamAdapter"),
         (Qwen3VLAdapter(), "Qwen3VLAdapter"),
-        (XTTSAdapter(), "XTTSAdapter"),
+        (AudioTransformersAdapter(), "AudioTransformersAdapter"),
         (MangaOCRAdapter(), "MangaOCRAdapter"),
     ]
     

@@ -13,7 +13,7 @@ class GraphNeighborsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     @inject
-    def __init__(self, graph_manager: GraphPersistencePort = Provide[Container.graph_persistence_port], **kwargs):
+    def __init__(self, graph_manager: GraphPersistencePort = Provide[Container.persistence.graph_persistence_port], **kwargs):
         super().__init__(**kwargs)
         self.graph_manager = graph_manager
 

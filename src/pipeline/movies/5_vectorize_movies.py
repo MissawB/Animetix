@@ -3,19 +3,22 @@ from sentence_transformers import SentenceTransformer
 import numpy as np
 import os
 import sys
+import logging
+
+logger = logging.getLogger("animetix." + __name__)
 
 # Détection robuste de la racine du projet
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(os.path.join(BASE_DIR, 'pipeline'))
 from chroma_client import chroma_manager
 
-print("🚀 Starting Movie Vectorization (Full Chroma Mode)...")
+logger.info("🚀 Starting Movie Vectorization (Full Chroma Mode)...")
 
 CLEAN_DB = os.path.join(BASE_DIR, 'data', 'processed', 'clean_root_movies.json')
 
 def main():
     if not os.path.exists(CLEAN_DB):
-        print(f"❌ {CLEAN_DB} not found.")
+        logger.error(f"❌ {CLEAN_DB} not found.")
         return
 
     with open(CLEAN_DB, 'r', encoding='utf-8') as f:
@@ -24,7 +27,7 @@ def main():
     # --- RÉCUPÉRATION DES IDS DÉJÀ DANS CHROMA ---
     collection = chroma_manager.get_collection("movie_thematic")
     existing_ids = set(collection.get()['ids'])
-    print(f"📂 {len(existing_ids)} movies already in ChromaDB.")
+    logger.info(f"📂 {len(existing_ids)} movies already in ChromaDB.")
 
     # --- FILTRAGE DU DELTA & DE-DUPLICATION ---
     new_items = []
@@ -37,16 +40,16 @@ def main():
             seen_ids_in_batch.add(item_id)
 
     if not new_items:
-        print("ℹ️ Movie database is up to date.")
+        logger.info("ℹ️ Movie database is up to date.")
         return
 
-    print(f"🚀 Found {len(new_items)} new movies to vectorize.")
+    logger.info(f"🚀 Found {len(new_items)} new movies to vectorize.")
     model = SentenceTransformer('paraphrase-multilingual-mpnet-base-v2')
 
     CHUNK_SIZE = 100
     for i in range(0, len(new_items), CHUNK_SIZE):
         chunk = new_items[i:i + CHUNK_SIZE]
-        print(f"📦 Processing chunk {i//CHUNK_SIZE + 1}/{(len(new_items)-1)//CHUNK_SIZE + 1}...")
+        logger.info(f"📦 Processing chunk {i//CHUNK_SIZE + 1}/{(len(new_items)-1)//CHUNK_SIZE + 1}...")
         
         thematic_corpus, plot_corpus, vibe_corpus, metadatas, ids = [], [], [], [], []
 
@@ -84,9 +87,9 @@ def main():
             chroma_manager.add_to_collection("movie_plot", ids, vec_plot, metadatas)
             chroma_manager.add_to_collection("movie_vibe", ids, vec_vibe, metadatas)
         except Exception as e:
-            print(f"⚠️ ChromaDB sync failed for this chunk: {e}")
+            logger.warning(f"⚠️ ChromaDB sync failed for this chunk: {e}")
 
-    print(f"✅ Movie Chroma Sync Complete!")
+    logger.info(f"✅ Movie Chroma Sync Complete!")
 
 if __name__ == "__main__":
     main()

@@ -40,7 +40,7 @@ def test_frame_sampling_logic(adapter):
     assert len(frames) == 5
     assert isinstance(frames[0], Image.Image)
 
-@patch("src.adapters.inference.vision_transformers_adapter.VisionTransformersAdapter._load_video_vlm", MagicMock())
+@patch("adapters.inference.video_analysis.VideoAnalysisMixin._load_video_vlm", MagicMock())
 def test_get_video_temporal_embeddings_mocked(adapter):
     """Vérifie le workflow de récit temporel avec mocks VLM."""
     adapter._video_processor = MagicMock()
@@ -60,7 +60,7 @@ def test_get_video_temporal_embeddings_mocked(adapter):
     assert len(res) == 1
     assert "Gear 5" in res[0]["summary"]
 
-@patch("src.adapters.inference.vision_transformers_adapter.VisionTransformersAdapter._load_video_vlm", MagicMock())
+@patch("adapters.inference.video_analysis.VideoAnalysisMixin._load_video_vlm", MagicMock())
 def test_video_rag_service_orchestration(video_service):
     """Vérifie que le service de domaine orchestre correctement l'analyse."""
     video_service.inference_engine.get_video_temporal_embeddings = MagicMock(return_value=[{"summary": "test"}])

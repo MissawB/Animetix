@@ -1,7 +1,7 @@
 import os
 import time
 import argparse
-from backend.animetix.services import AnimetixService
+from animetix.containers import get_container
 
 def test_lora_hot_swapping():
     """
@@ -12,8 +12,8 @@ def test_lora_hot_swapping():
     print("🚀 Starting Multi-LoRA Hot-Swapping Benchmark...")
     
     # Initialisation du service (qui charge le LocalLlamaAdapter avec le LoraManager)
-    animetix = AnimetixService()
-    local_adapter = animetix.inference_adapter.adapters[-1] # Récupère le LocalLlamaAdapter
+    container = get_container()
+    local_adapter = container.inference_engine().adapters[-1] # Récupère le LocalLlamaAdapter
     
     if not hasattr(local_adapter, 'lora_manager') or not local_adapter.lora_manager:
         print("❌ Error: MultiLoraManager not initialized on LocalLlamaAdapter.")

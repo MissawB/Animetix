@@ -15,7 +15,7 @@ class ClassicGameStateView(APIView):
     permission_classes = [permissions.AllowAny]
     
     @inject
-    def get(self, request, catalog_service = Provide[Container.catalog_service]):
+    def get(self, request, catalog_service = Provide[Container.core.catalog_service]):
         session_service = get_session_service(request)
         state = session_service.get_classic_state()
         
@@ -52,7 +52,7 @@ class ClassicGameStartView(APIView):
     permission_classes = [permissions.AllowAny]
     
     @inject
-    def post(self, request, catalog_service = Provide[Container.catalog_service], game_service = Provide[Container.game_service]):
+    def post(self, request, catalog_service = Provide[Container.core.catalog_service], game_service = Provide[Container.core.game_service]):
         session_service = get_session_service(request)
         port = session_service.port
         media_type = request.data.get('media_type', 'Anime')
@@ -102,7 +102,7 @@ class ClassicGameGuessView(APIView):
     permission_classes = [permissions.AllowAny]
     
     @inject
-    def post(self, request, catalog_service = Provide[Container.catalog_service], game_service = Provide[Container.game_service]):
+    def post(self, request, catalog_service = Provide[Container.core.catalog_service], game_service = Provide[Container.core.game_service]):
         session_service = get_session_service(request)
         port = session_service.port
         state = {
@@ -215,7 +215,7 @@ class ClassicGameRevealView(APIView):
     permission_classes = [permissions.AllowAny]
     
     @inject
-    def post(self, request, catalog_service = Provide[Container.catalog_service]):
+    def post(self, request, catalog_service = Provide[Container.core.catalog_service]):
         session_service = get_session_service(request)
         port = session_service.port
         secret_title = port.get('secret_title')

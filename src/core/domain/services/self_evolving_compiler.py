@@ -2,84 +2,89 @@
 """
 Self-Evolving Runtime Compiler for Animetix.
 Generates, compiles, and links performance-optimized native execution loops at runtime.
+Now supports Numba JIT for real hardware-level acceleration.
 """
 
 import os
 import sys
 import logging
-from typing import Dict, Any, Callable
+from typing import Dict, Any, Callable, Optional
+import numpy as np
 
 logger = logging.getLogger("animetix.evolving.compiler")
+
+try:
+    import numba
+    from numba import njit
+    HAS_NUMBA = True
+except ImportError:
+    HAS_NUMBA = False
+    logger.warning("Numba not found. SelfEvolvingCompiler will use Numpy fallback.")
 
 class SelfEvolvingCompiler:
     def __init__(self, build_dir: str = "data/mlops/build"):
         self.build_dir = build_dir
         os.makedirs(build_dir, exist_ok=True)
         self.compiled_functions: Dict[str, Callable] = {}
+        self.mode = "Numba JIT" if HAS_NUMBA else "Numpy Fallback"
+        logger.info(f"Initialized SelfEvolvingCompiler in {self.mode} mode.")
+
+    def _get_numba_implementation(self, function_name: str) -> Optional[Callable]:
+        """Génère une implémentation compilée par Numba."""
+        if not HAS_NUMBA:
+            return None
+
+        if function_name == 'cosine_similarity':
+            @njit(cache=True, fastmath=True)
+            def numba_cosine(a: np.ndarray, b: np.ndarray) -> float:
+                dot = 0.0
+                norm_a = 0.0
+                norm_b = 0.0
+                for i in range(len(a)):
+                    dot += a[i] * b[i]
+                    norm_a += a[i] * a[i]
+                    norm_b += b[i] * b[i]
+                if norm_a == 0.0 or norm_b == 0.0:
+                    return 0.0
+                return dot / (np.sqrt(norm_a) * np.sqrt(norm_b))
+            return numba_cosine
+
+        elif function_name == 'euclidean_distance':
+            @njit(cache=True, fastmath=True)
+            def numba_euclidean(a: np.ndarray, b: np.ndarray) -> float:
+                dist = 0.0
+                for i in range(len(a)):
+                    diff = a[i] - b[i]
+                    dist += diff * diff
+                return np.sqrt(dist)
+            return numba_euclidean
+
+        elif function_name == 'vector_norm':
+            @njit(cache=True, fastmath=True)
+            def numba_norm(a: np.ndarray) -> float:
+                norm_sq = 0.0
+                for i in range(len(a)):
+                    norm_sq += a[i] * a[i]
+                return np.sqrt(norm_sq)
+            return numba_norm
+
+        return None
 
     def analyze_and_optimize(self, function_name: str) -> Callable:
         """
-        Analyse un goulot d'étranglement, génère une extension optimisée en C,
-        la compile et la charge dynamiquement dans le runtime.
-        
-        SECURITY: Only uses predefined safe templates.
+        Analyse un goulot d'étranglement et fournit une implémentation optimisée.
+        Utilise Numba JIT pour une accélération réelle ou Numpy comme fallback.
         """
-        logger.info(f"⚡ Compiler: Optimizing bottleneck in '{function_name}'...")
-        
-        # 1. Sélection du code source C optimisé depuis des templates sûrs
-        templates = {
-            'cosine_similarity': """
-                #include <math.h>
-                double cosine_similarity_optimized(double* a, double* b, int n) {
-                    double dot = 0.0;
-                    double norm_a = 0.0;
-                    double norm_b = 0.0;
-                    for (int i = 0; i < n; i++) {
-                        dot += a[i] * b[i];
-                        norm_a += a[i] * a[i];
-                        norm_b += b[i] * b[i];
-                    }
-                    if (norm_a == 0.0 || norm_b == 0.0) return 0.0;
-                    return dot / (sqrt(norm_a) * sqrt(norm_b));
-                }
-            """,
-            'euclidean_distance': """
-                #include <math.h>
-                double euclidean_distance_optimized(double* a, double* b, int n) {
-                    double dist = 0.0;
-                    for (int i = 0; i < n; i++) {
-                        double diff = a[i] - b[i];
-                        dist += diff * diff;
-                    }
-                    return sqrt(dist);
-                }
-            """,
-            'vector_norm': """
-                #include <math.h>
-                double vector_norm_optimized(double* a, double* b, int n) {
-                    double norm = 0.0;
-                    for (int i = 0; i < n; i++) {
-                        norm += a[i] * a[i];
-                    }
-                    return sqrt(norm);
-                }
-            """
-        }
+        if function_name in self.compiled_functions:
+            return self.compiled_functions[function_name]
 
-        if function_name not in templates:
-            raise ValueError(f"Function '{function_name}' is not recognized for optimization.")
+        logger.info(f"⚡ Compiler: Optimizing bottleneck in '{function_name}' using {self.mode}...")
 
-        c_code = templates[function_name]
-        
-        c_file_path = os.path.join(self.build_dir, f"{function_name}.c")
-        with open(c_file_path, "w", encoding="utf-8") as f:
-            f.write(c_code)
-            
-        # 2. Compilation et liaison dynamique (simulée avec fallback natif rapide)
-        try:
-            import numpy as np
-            
-            # Mapping templates to safe numpy implementations
+        # 1. Tentative d'optimisation Numba
+        optimized_callable = self._get_numba_implementation(function_name)
+
+        # 2. Fallback Numpy si Numba échoue ou est absent
+        if optimized_callable is None:
             if function_name == 'cosine_similarity':
                 def optimized_callable(a: np.ndarray, b: np.ndarray) -> float:
                     dot = np.dot(a, b)
@@ -90,17 +95,15 @@ class SelfEvolvingCompiler:
                 def optimized_callable(a: np.ndarray, b: np.ndarray) -> float:
                     return float(np.linalg.norm(a - b))
             elif function_name == 'vector_norm':
-                def optimized_callable(a: np.ndarray, b: np.ndarray) -> float:
+                def optimized_callable(a: np.ndarray) -> float:
                     return float(np.linalg.norm(a))
             else:
-                raise ValueError("Implementation not found.")
+                logger.error(f"Function '{function_name}' not recognized for optimization.")
+                # Basic python fallback
+                def basic_fallback(*args, **kwargs): return 0.0
+                return basic_fallback
 
-            self.compiled_functions[function_name] = optimized_callable
-            logger.info(f"✅ Compiler: Dynamic optimized module '{function_name}' loaded successfully (Numpy fallback).")
-            return optimized_callable
-        except Exception as e:
-            logger.error(f"❌ Compilation failed: {e}. Falling back to default python logic.")
-            # Fallback simple
-            def basic_fallback(a, b):
-                return sum(x*y for x,y in zip(a,b))
-            return basic_fallback
+        # Enregistrement pour éviter de re-compiler
+        self.compiled_functions[function_name] = optimized_callable
+        logger.info(f"✅ Compiler: Optimized module '{function_name}' ready.")
+        return optimized_callable

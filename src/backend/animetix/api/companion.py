@@ -15,8 +15,8 @@ class CompanionInteractView(APIView):
 
     @inject
     def __init__(self, 
-                 companion_service: CompanionService = Provide[Container.companion_service],
-                 usage_port: UsagePort = Provide[Container.usage_port],
+                 companion_service: CompanionService = Provide[Container.core.companion_service],
+                 usage_port: UsagePort = Provide[Container.infrastructure.usage_port],
                  **kwargs):
         super().__init__(**kwargs)
         self.companion_service = companion_service

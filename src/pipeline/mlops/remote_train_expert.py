@@ -19,7 +19,7 @@ from peft import LoraConfig
 import trackio
 
 # Configuration du logger
-logger = logging.getLogger("animetix.pipeline.mlops.remote_train")
+logger = logging.getLogger("animetix." + __name__)
 
 def train():
     # Remplacé Llama-3.2-3B par Qwen2.5-3B-Instruct (SOTA 2026 pour le multilingue / culture japonaise)
@@ -92,7 +92,7 @@ def train():
     
     # 7. Sauvegarde finale
     trainer.push_to_hub()
-    print("🚀 Training complete and pushed to Hub!")
+    logger.info("🚀 Training complete and pushed to Hub!")
 
 if __name__ == "__main__":
     train()

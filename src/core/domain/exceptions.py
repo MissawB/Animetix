@@ -12,5 +12,10 @@ from .entities.exceptions import (
     CatalogNotFoundError,
     GameLogicError,
     AgentLogicalFailure,
-    KnowledgeGraphQueryError
+    KnowledgeGraphQueryError,
+    SpatialComputingError,
+    MangaProcessingError,
+    VideoProcessingError,
+    ImageGenerationError,
+    AdapterLoadError,
 )

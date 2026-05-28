@@ -1,5 +1,5 @@
 from rest_framework import permissions, status
-import logging
+from animetix_project.logging_config import get_logger
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from dependency_injector.wiring import inject, Provide
@@ -8,7 +8,7 @@ from animetix.api.dependencies import get_session_service
 from ...models import GameplaySession
 from ...forms import VisionQuestForm
 
-logger = logging.getLogger("animetix." + __name__)
+logger = get_logger('animetix.' + __name__)
 
 # --- VISION QUEST ---
 
@@ -16,7 +16,7 @@ class VisionGameStateView(APIView):
     permission_classes = [permissions.AllowAny]
     
     @inject
-    def get(self, request, vision_quest_service = Provide[Container.vision_quest_service]):
+    def get(self, request, vision_quest_service = Provide[Container.core.vision_service]):
         session_service = get_session_service(request)
         port = session_service.port
         state = vision_quest_service.get_state(port)
@@ -37,7 +37,7 @@ class VisionGameStartView(APIView):
     permission_classes = [permissions.AllowAny]
     
     @inject
-    def post(self, request, catalog_service = Provide[Container.catalog_service], vision_quest_service = Provide[Container.vision_quest_service]):
+    def post(self, request, catalog_service = Provide[Container.core.catalog_service], vision_quest_service = Provide[Container.core.vision_service]):
         session_service = get_session_service(request)
         port = session_service.port
         media_type = request.data.get('media_type', port.get('media_type', 'Anime'))
@@ -82,7 +82,7 @@ class VisionGameGuessView(APIView):
     permission_classes = [permissions.AllowAny]
     
     @inject
-    def post(self, request, vision_quest_service = Provide[Container.vision_quest_service]):
+    def post(self, request, vision_quest_service = Provide[Container.core.vision_service]):
         session_service = get_session_service(request)
         port = session_service.port
         state = vision_quest_service.get_state(port)

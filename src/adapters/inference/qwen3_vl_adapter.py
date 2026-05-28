@@ -2,12 +2,14 @@ import base64
 import logging
 from typing import List, Dict, Any, Optional
 from core.ports.inference_port import InferencePort
+from core.ports.usage_port import UsagePort
 from huggingface_hub import InferenceClient
 
 logger = logging.getLogger("animetix.inference.qwen3vl")
 
 class Qwen3VLAdapter(InferencePort):
-    def __init__(self, model_id: str = "Qwen/Qwen3-VL-30B-A3B-Instruct", token: str = None):
+    def __init__(self, model_id: str = "Qwen/Qwen3-VL-30B-A3B-Instruct", token: str = None, usage_port: Optional[UsagePort] = None):
+        super().__init__(usage_port=usage_port)
         self.client = InferenceClient(model=model_id, token=token)
 
     def localize_video_actions(self, video_data: bytes, action_queries: List[str]) -> List[Dict[str, Any]]:
@@ -23,7 +25,9 @@ class Qwen3VLAdapter(InferencePort):
             }]
             try:
                 response = self.client.chat_completion(messages=messages, max_tokens=500)
-                results.append({"query": query, "answer": response.choices[0].message.content})
+                content = response.choices[0].message.content
+                self._log_usage(engine="qwen3:video:localize", input_tokens=len(query)//4 + 512, output_tokens=len(content)//4)
+                results.append({"query": query, "answer": content})
             except Exception as e:
                 logger.error(f"Qwen3-VL Video Analysis failed: {e}")
                 results.append({"query": query, "answer": f"Error: {e}"})
@@ -43,7 +47,9 @@ class Qwen3VLAdapter(InferencePort):
             messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}],
             max_tokens=max_tokens
         )
-        return res.choices[0].message.content
+        content = res.choices[0].message.content
+        self._log_usage(engine="qwen3:generate", input_tokens=len(prompt)//4, output_tokens=len(content)//4)
+        return content
 
     def stream_generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False):
         yield self.generate(prompt, system_prompt, thinking_budget, thinking_mode)
@@ -77,6 +83,7 @@ class Qwen3VLAdapter(InferencePort):
             )
             
             text_response = response.choices[0].message.content
+            self._log_usage(engine="qwen3:vision:rerank", units=len(image_urls))
             
             # Extraction JSON robuste
             json_match = re.search(r'\{.*\}', text_response, re.DOTALL)

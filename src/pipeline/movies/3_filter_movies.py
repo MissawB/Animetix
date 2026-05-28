@@ -1,6 +1,9 @@
 import json
 import os
 import sys
+import logging
+
+logger = logging.getLogger("animetix." + __name__)
 
 # Forcer l'encodage UTF-8 pour éviter les erreurs sur Windows avec les emojis
 if hasattr(sys.stdout, 'reconfigure'):
@@ -15,13 +18,13 @@ LOOKUP_FILE = os.path.join(BASE_DIR, 'data', 'artifacts', 'movie_data_for_lookup
 
 def filter_movies():
     if not os.path.exists(RAW_FILE):
-        print(f"❌ {RAW_FILE} not found. Run ingestion first.")
+        logger.error(f"❌ {RAW_FILE} not found. Run ingestion first.")
         return
 
     with open(RAW_FILE, 'r', encoding='utf-8') as f:
         data = json.load(f)
 
-    print(f"🧹 Filtering and cleaning {len(data)} items...")
+    logger.info(f"🧹 Filtering and cleaning {len(data)} items...")
     
     clean_data = []
     lookup_data = []
@@ -53,8 +56,8 @@ def filter_movies():
     with open(CLEAN_DB, 'w', encoding='utf-8') as f:
         json.dump(clean_data, f, indent=2, ensure_ascii=False)
         
-    print(f"✅ Filtered down to {len(clean_data)} high-quality items.")
-    print(f"✅ Created {CLEAN_DB}")
+    logger.info(f"✅ Filtered down to {len(clean_data)} high-quality items.")
+    logger.info(f"✅ Created {CLEAN_DB}")
 
 if __name__ == "__main__":
     filter_movies()

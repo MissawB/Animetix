@@ -117,6 +117,29 @@ export interface CompanionResponse {
   history: { role: string; content: string }[];
 }
 
+// --- VS Battle API ---
+export interface VsBattleRequest {
+  char_a: string;
+  char_b: string;
+  char_a_franchise?: string;
+  char_b_franchise?: string;
+}
+
+export interface VsBattleResult {
+  character_a: any;
+  character_b: any;
+  winner: string;
+  verdict_summary: string;
+  debate_history: any[];
+}
+
+export async function runVsBattle(params: VsBattleRequest): Promise<VsBattleResult> {
+  return apiClient('/api/v1/game/vs_battle/run/', {
+    method: 'POST',
+    body: JSON.stringify(params),
+  });
+}
+
 export async function interactWithCompanion(mentorId: string, message: string, contextUrl: string = ''): Promise<CompanionResponse> {
   return apiClient('/api/v1/companion/interact/', {
     method: 'POST',

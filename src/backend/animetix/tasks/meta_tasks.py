@@ -4,11 +4,11 @@ Meta-AI Celery Tasks for Animetix.
 Automates prompt optimization and cognitive self-correction using DSPy.
 """
 
-import logging
+from animetix_project.logging_config import get_logger
 from celery import shared_task
 from ..containers import get_container
 
-logger = logging.getLogger("animetix.meta.tasks")
+logger = get_logger('animetix.' + __name__)
 
 @shared_task(name="animetix.meta.optimize_prompts")
 def weekly_prompt_optimization():

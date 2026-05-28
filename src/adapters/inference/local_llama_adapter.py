@@ -11,10 +11,13 @@ AutoModelForCausalLM = transformers.AutoModelForCausalLM
 AutoTokenizer = transformers.AutoTokenizer
 BitsAndBytesConfig = transformers.BitsAndBytesConfig
 
+from core.ports.usage_port import UsagePort
+
 logger = logging.getLogger("animetix.inference")
 
 class LocalLlamaAdapter(InferencePort):
-    def __init__(self, model_path: str, hf_token: Optional[str] = None, use_4bit: bool = True, draft_model_path: Optional[str] = None):
+    def __init__(self, model_path: str, hf_token: Optional[str] = None, use_4bit: bool = True, draft_model_path: Optional[str] = None, usage_port: Optional[UsagePort] = None):
+        super().__init__(usage_port=usage_port)
         self.model_path = model_path
         self.model = None
         self.tokenizer = None
@@ -36,7 +39,16 @@ class LocalLlamaAdapter(InferencePort):
         mode_str = " (Thinking Mode ON)" if thinking_mode else ""
         budget_str = f" (Budget: {thinking_budget})" if thinking_budget > 0 else ""
         
-        return f"Réponse du modèle local{mode_str}{budget_str} pour: {prompt[:20]}..."
+        result = f"Réponse du modèle local{mode_str}{budget_str} pour: {prompt[:20]}..."
+        
+        self._log_usage(
+            engine=f"llama:{self.model_path}",
+            input_tokens=len(prompt) // 4,
+            output_tokens=len(result) // 4
+        )
+        
+        return result
+
 
     def stream_generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False):
         yield self.generate(prompt, system_prompt, thinking_budget, thinking_mode)

@@ -1,9 +1,8 @@
-import logging
+from animetix_project.logging_config import get_logger
 from ..containers import get_container
 from animetix.api.dependencies import get_session_service
-from ..services import AnimetixService
 
-logger = logging.getLogger('animetix')
+logger = get_logger('animetix.' + __name__)
 
 def handle_win_achievements(request, unlocked_achievements):
     """Wrapper for GameSessionService.handle_win_achievements."""
@@ -29,7 +28,6 @@ container = get_container()
 
 # Expose services through lazy proxies to maintain dynamic dependency resolution at runtime.
 # This prevents eager loading of heavy adapters/models during Django view imports.
-animetix_service = AnimetixService()
 blindtest_service = LazyServiceProxy('blind_test_service')
 covertest_service = LazyServiceProxy('cover_test_service')
 vision_service = LazyServiceProxy('vision_service')

@@ -1,4 +1,5 @@
 import pytest
+import json
 from unittest.mock import MagicMock, patch
 from src.core.domain.services.creative.vs_battle_service import VsBattleService
 from src.core.domain.entities.ai_schemas import (
@@ -37,20 +38,20 @@ def test_fetch_and_parse_character(vs_battle_service, mock_fandom_port, mock_inf
         "image_url": "https://example.com/naruto.jpg"
     }]
     
-    expected_character = CombatCharacter(
-        name="Naruto Uzumaki",
-        wiki_url="https://vsbattles.fandom.com/wiki/Naruto_Uzumaki",
-        stats=CombatStats(
-            tier="5-B",
-            speed="Sub-Relativistic",
-            durability="Planet level",
-            intelligence="Gifted",
-            abilities=["Shadow Clone", "Rasengan"]
-        ),
-        summary="The Seventh Hokage"
-    )
+    expected_character_data = {
+        "name": "Naruto Uzumaki",
+        "wiki_url": "https://vsbattles.fandom.com/wiki/Naruto_Uzumaki",
+        "stats": {
+            "tier": "5-B",
+            "speed": "Sub-Relativistic",
+            "durability": "Planet level",
+            "intelligence": "Gifted",
+            "abilities": ["Shadow Clone", "Rasengan"]
+        },
+        "summary": "The Seventh Hokage"
+    }
     
-    mock_inference_port.generate_structured.return_value = expected_character
+    mock_inference_port.generate.return_value = json.dumps(expected_character_data)
     mock_prompt_manager.get_prompt.return_value = ("Parser prompt", "Parser system")
     
     # Execute
@@ -58,7 +59,7 @@ def test_fetch_and_parse_character(vs_battle_service, mock_fandom_port, mock_inf
     
     # Verify
     mock_fandom_port.fetch_character_data.assert_any_call("Naruto profile VS Battles Wiki")
-    mock_inference_port.generate_structured.assert_called_once()
+    mock_inference_port.generate.assert_called_once()
     assert result.name == "Naruto Uzumaki"
     assert result.stats.tier == "5-B"
     assert result.stats.tier_value == 46
@@ -116,19 +117,19 @@ def test_run_battle(vs_battle_service, mock_fandom_port, mock_inference_port, mo
             ("Judge prompt", "System Judge")
         ]
         
+        # Verdict data
+        verdict_data = {
+            "analysis": "Analysis...",
+            "verdict": "Verdict...",
+            "winner": "Naruto Uzumaki",
+            "confidence": 0.9
+        }
+
         mock_inference_port.generate.side_effect = [
             "Argument for Naruto",
-            "Argument for Luffy"
+            "Argument for Luffy",
+            json.dumps(verdict_data)
         ]
-        
-        # Judge verdict
-        class MockVerdict:
-            analysis = "Analysis..."
-            verdict = "Verdict..."
-            winner = "Naruto Uzumaki"
-            confidence = 0.9
-
-        mock_inference_port.generate_structured.return_value = MockVerdict()
         
         # Execute
         result = vs_battle_service.run_battle(char_a_name, char_b_name)

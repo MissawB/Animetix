@@ -1,4 +1,10 @@
-import logging
+try:
+    from animetix_project.logging_config import get_logger
+except ImportError:
+    import logging
+    def get_logger(name: str = __name__) -> logging.Logger:
+        return logging.getLogger(name)
+
 import base64
 import os
 import tempfile
@@ -14,7 +20,7 @@ torch = lazy_import('torch')
 np = lazy_import('numpy')
 imageio = lazy_import('imageio')
 
-logger = logging.getLogger("animetix.inference.diffusers")
+logger = get_logger(__name__)
 
 class DiffusersAdapter(InferencePort):
     """
@@ -27,9 +33,9 @@ class DiffusersAdapter(InferencePort):
         use_fp16: bool = True,
         usage_port: Optional[UsagePort] = None
     ):
+        super().__init__(usage_port=usage_port)
         self.model_id = model_id
         self.use_fp16 = use_fp16
-        self.usage_port = usage_port
         self.pipe = None
         self._img2img_pipe = None
         self._depth_pipe = None
@@ -96,11 +102,15 @@ class DiffusersAdapter(InferencePort):
 
     def generate_image(self, prompt: str, style: str = "") -> str:
         self._load_txt2img()
-        raise InferenceError("Model not loaded for txt2img generation.")
+        if not self.pipe:
+            raise InferenceError("Model not loaded for txt2img generation.")
         try:
             num_steps = 1 if "turbo" in self.model_id.lower() else 30
             guidance_scale = 0.0 if "turbo" in self.model_id.lower() else 7.5
             image = self.pipe(prompt=f"{prompt}, {style}", num_inference_steps=num_steps, guidance_scale=guidance_scale).images[0]
+            
+            self._log_usage(engine=f"diffusers:{self.model_id}:txt2img", units=1)
+            
             buffered = BytesIO(); image.save(buffered, format="JPEG", quality=85)
             img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
             return f"data:image/jpeg;base64,{img_str}"
@@ -144,11 +154,15 @@ class DiffusersAdapter(InferencePort):
     def estimate_depth(self, image_data: bytes) -> bytes:
         try:
             from transformers import pipeline
+            model_id = "LiheYoung/depth-anything-small-hf"
             if not self._depth_pipe:
-                logger.info("🏗️ Loading Depth Model: LiheYoung/depth-anything-small-hf")
-                self._depth_pipe = pipeline("depth-estimation", model="LiheYoung/depth-anything-small-hf", device=0 if torch.cuda.is_available() else -1)
+                logger.info(f"🏗️ Loading Depth Model: {model_id}")
+                self._depth_pipe = pipeline("depth-estimation", model=model_id, device=0 if torch.cuda.is_available() else -1)
             img = Image.open(BytesIO(image_data))
             result = self._depth_pipe(img)
+            
+            self._log_usage(engine=f"transformers:{model_id}", units=1)
+            
             buf = BytesIO(); result["depth"].save(buf, format="PNG")
             return buf.getvalue()
         except Exception as e:
@@ -164,6 +178,9 @@ class DiffusersAdapter(InferencePort):
                 strength=0.5, 
                 num_inference_steps=2 if "turbo" in self.model_id.lower() else 20
             ).images[0]
+            
+            self._log_usage(engine=f"diffusers:{self.model_id}:img2img", units=1)
+            
             buf = BytesIO(); res.save(buf, format="JPEG")
             return f"data:image/jpeg;base64,{base64.b64encode(buf.getvalue()).decode('utf-8')}"
         except Exception as e:
@@ -194,6 +211,9 @@ class DiffusersAdapter(InferencePort):
             with open(tmp_out_path, "rb") as f:
                 res_base64 = base64.b64encode(f.read()).decode("utf-8")
             os.unlink(tmp_out_path)
+            
+            self._log_usage(engine=f"diffusers:{self.model_id}:vid2anime", units=1)
+            
             return f"data:video/mp4;base64,{res_base64}"
         except Exception as e:
             logger.error(f"❌ Video to Anime failed: {e}"); return ""
@@ -249,8 +269,7 @@ class DiffusersAdapter(InferencePort):
                     draw_final.text((pos_x, pos_y), text, fill="black", font=font)
 
             # --- Accounting ---
-            if self.usage_port:
-                self.usage_port.log_usage(engine="diffusers-inpaint", units=1)
+            self._log_usage(engine=f"diffusers:{self.model_id}:inpaint", units=1)
 
             buffered = BytesIO()
             inpainted_image.save(buffered, format="JPEG", quality=85)
@@ -260,6 +279,7 @@ class DiffusersAdapter(InferencePort):
         except Exception as e:
             logger.error(f"❌ Inpaint Text Bubbles failed: {e}")
             return f"Erreur: {e}"
+
 
     def health_check(self) -> dict:
         return {"status": "online" if self.pipe or self._img2img_pipe else "offline", "engine": "diffusers", "model": self.model_id}

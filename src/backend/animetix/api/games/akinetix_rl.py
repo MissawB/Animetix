@@ -11,7 +11,7 @@ class AkinetixRLStateView(APIView):
     permission_classes = [permissions.AllowAny]
     
     @inject
-    def get(self, request, akinetix_expert_service = Provide[Container.akinetix_expert_service]):
+    def get(self, request, akinetix_expert_service = Provide[Container.core.akinetix_service]):
         session_service = get_session_service(request)
         port = session_service.port
         state = akinetix_expert_service.get_state(port)
@@ -23,7 +23,7 @@ class AkinetixRLStartView(APIView):
     permission_classes = [permissions.AllowAny]
     
     @inject
-    def post(self, request, catalog_service = Provide[Container.catalog_service], akinetix_expert_service = Provide[Container.akinetix_expert_service]):
+    def post(self, request, catalog_service = Provide[Container.core.catalog_service], akinetix_expert_service = Provide[Container.core.akinetix_service]):
         session_service = get_session_service(request)
         port = session_service.port
         media_type = request.data.get('media_type', port.get('media_type', 'Anime'))
@@ -42,7 +42,7 @@ class AkinetixRLAnswerView(APIView):
     permission_classes = [permissions.AllowAny]
     
     @inject
-    def post(self, request, catalog_service = Provide[Container.catalog_service], akinetix_expert_service = Provide[Container.akinetix_expert_service]):
+    def post(self, request, catalog_service = Provide[Container.core.catalog_service], akinetix_expert_service = Provide[Container.core.akinetix_service]):
         session_service = get_session_service(request)
         port = session_service.port
         state = akinetix_expert_service.get_state(port)

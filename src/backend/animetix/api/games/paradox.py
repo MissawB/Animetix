@@ -1,5 +1,5 @@
 import random
-import logging
+from animetix_project.logging_config import get_logger
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -8,7 +8,7 @@ from ...containers import Container
 from animetix.api.dependencies import get_session_service
 from ...models import GameplaySession
 
-logger = logging.getLogger("animetix." + __name__)
+logger = get_logger('animetix.' + __name__)
 
 # --- PARADOX MODE ---
 
@@ -16,7 +16,7 @@ class ParadoxGameStateView(APIView):
     permission_classes = [permissions.AllowAny]
     
     @inject
-    def get(self, request, catalog_service = Provide[Container.catalog_service], paradox_service = Provide[Container.paradox_service]):
+    def get(self, request, catalog_service = Provide[Container.core.catalog_service], paradox_service = Provide[Container.core.paradox_service]):
         session_service = get_session_service(request)
         port = session_service.port
         state = paradox_service.get_state(port)
@@ -45,7 +45,7 @@ class ParadoxGameStartView(APIView):
     permission_classes = [permissions.AllowAny]
     
     @inject
-    def post(self, request, catalog_service = Provide[Container.catalog_service], paradox_service = Provide[Container.paradox_service]):
+    def post(self, request, catalog_service = Provide[Container.core.catalog_service], paradox_service = Provide[Container.core.paradox_service]):
         session_service = get_session_service(request)
         port = session_service.port
         media_type = request.data.get('media_type', port.get('media_type', 'Anime'))
@@ -104,7 +104,7 @@ class ParadoxGameGuessView(APIView):
     permission_classes = [permissions.AllowAny]
     
     @inject
-    def post(self, request, catalog_service = Provide[Container.catalog_service], paradox_service = Provide[Container.paradox_service]):
+    def post(self, request, catalog_service = Provide[Container.core.catalog_service], paradox_service = Provide[Container.core.paradox_service]):
         session_service = get_session_service(request)
         port = session_service.port
         state = paradox_service.get_state(port)

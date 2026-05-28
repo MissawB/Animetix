@@ -1,5 +1,5 @@
 import random
-import logging
+from animetix_project.logging_config import get_logger
 from celery.result import AsyncResult
 from rest_framework import permissions, status
 from rest_framework.response import Response
@@ -9,7 +9,7 @@ from ...containers import Container
 from animetix.api.dependencies import get_session_service
 from ...models import CreativeFusion
 
-logger = logging.getLogger("animetix." + __name__)
+logger = get_logger("animetix." + __name__)
 
 # --- ARCHETYPIST / CREATIVE FUSION ---
 
@@ -17,7 +17,7 @@ class ArchetypistStartFusionView(APIView):
     permission_classes = [permissions.AllowAny]
     
     @inject
-    def post(self, request, catalog_service = Provide[Container.catalog_service]):
+    def post(self, request, catalog_service = Provide[Container.core.catalog_service]):
         session_service = get_session_service(request)
         port = session_service.port
         media_type = port.get('media_type', 'Anime')

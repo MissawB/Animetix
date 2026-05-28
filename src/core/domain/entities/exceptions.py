@@ -52,5 +52,25 @@ class KnowledgeGraphQueryError(InfrastructureError):
     """Raised when a query to the knowledge graph (Neo4j) fails."""
     pass
 
+class SpatialComputingError(InferenceError):
+    """Raised when depth estimation or 3D scene generation fails."""
+    pass
+
+class MangaProcessingError(InferenceError):
+    """Raised when manga OCR, translation, or text inpainting fails."""
+    pass
+
+class VideoProcessingError(InferenceError):
+    """Raised when video analysis, temporal embeddings, or action localization fails."""
+    pass
+
+class ImageGenerationError(InferenceError):
+    """Raised when image generation or style transfer fails."""
+    pass
+
+class AdapterLoadError(InfrastructureError):
+    """Raised when a model or adapter fails to load (e.g., missing weights, bad config)."""
+    pass
+
 # Compatibility layer for existing code (will be deprecated)
 AnimetixError = AnimetixBaseError

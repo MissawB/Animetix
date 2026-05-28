@@ -1,5 +1,5 @@
 import json
-import logging
+from animetix_project.logging_config import get_logger
 from django.shortcuts import render
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 from ..containers import get_container
 from core.domain.entities.donation import Donation as DomainDonation
 
-logger = logging.getLogger("animetix.donation")
+logger = get_logger('animetix.' + __name__)
 
 
 @csrf_exempt

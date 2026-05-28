@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from animetix.services import AnimetixService
+from animetix.containers import get_container
 import json
 
 class Command(BaseCommand):
@@ -11,11 +11,12 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write(self.style.SUCCESS('🚀 Starting Red-Teaming Session...'))
         
-        animetix = AnimetixService()
-        red_teamer = animetix.red_teaming_agent
+        container = get_container()
+        red_teamer = container.red_teaming_agent()
         
         # 1. Sélection d'un échantillon d'œuvres
-        catalog = animetix.load_data('Anime')
+        catalog_service = container.catalog_service()
+        catalog = catalog_service.load_data('Anime')
         if not catalog:
             self.stdout.write(self.style.ERROR('Catalogue non trouvé.'))
             return
@@ -34,7 +35,8 @@ class Command(BaseCommand):
                 self.stdout.write(f"  🔥 Query: {q}")
                 
                 # 3. Exécution via l'IA normale (Agentic RAG)
-                response = animetix.agentic_rag.plan_and_solve(q, 'Anime')
+                agentic_rag = container.agentic_rag()
+                response = agentic_rag.plan_and_solve(q, 'Anime')
                 
                 # 4. Évaluation de la vulnérabilité
                 eval_res = red_teamer.evaluate_vulnerability(

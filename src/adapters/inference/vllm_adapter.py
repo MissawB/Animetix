@@ -2,11 +2,13 @@ import requests
 import logging
 from typing import Optional, List, Dict, Any
 from core.ports.inference_port import InferencePort
+from core.ports.usage_port import UsagePort
 
 logger = logging.getLogger("animetix.inference")
 
 class VllmAdapter(InferencePort):
-    def __init__(self, api_base: str = "http://localhost:8000/v1", model_name: str = "meta-llama/Llama-3-8B-Instruct"):
+    def __init__(self, api_base: str = "http://localhost:8000/v1", model_name: str = "meta-llama/Llama-3-8B-Instruct", usage_port: Optional[UsagePort] = None):
+        super().__init__(usage_port=usage_port)
         self.api_base = api_base
         self.model_name = model_name
 
@@ -37,7 +39,17 @@ class VllmAdapter(InferencePort):
                 res = requests.post(f"{self.api_base}/chat/completions", json=payload, timeout=30)
                 
             res.raise_for_status()
-            return res.json()['choices'][0]['message']['content']
+            data = res.json()
+            
+            # Log usage
+            usage = data.get("usage", {})
+            self._log_usage(
+                engine=f"vllm:{self.model_name}",
+                input_tokens=usage.get("prompt_tokens", 0),
+                output_tokens=usage.get("completion_tokens", 0)
+            )
+            
+            return data['choices'][0]['message']['content']
         except requests.exceptions.ConnectionError:
             logger.error(f"vLLM server at {self.api_base} is unreachable.")
         except Exception as e:
@@ -64,6 +76,7 @@ class VllmAdapter(InferencePort):
                 res = requests.post(f"{self.api_base}/chat/completions", json=payload, stream=True, timeout=30)
             
             res.raise_for_status()
+            full_content = ""
             for line in res.iter_lines():
                 if line:
                     line_str = line.decode('utf-8')
@@ -73,7 +86,17 @@ class VllmAdapter(InferencePort):
                         import json
                         chunk = json.loads(data_content)
                         delta = chunk['choices'][0].get('delta', {})
-                        if 'content' in delta: yield delta['content']
+                        if 'content' in delta:
+                            content = delta['content']
+                            full_content += content
+                            yield content
+            
+            # Log heuristic usage for streaming
+            self._log_usage(
+                engine=f"vllm:{self.model_name}",
+                input_tokens=len(prompt) // 4,
+                output_tokens=len(full_content) // 4
+            )
         except Exception as e:
             logger.error(f"vLLM Stream Error: {e}")
             yield self.generate(prompt, system_prompt, thinking_budget, thinking_mode)
@@ -100,7 +123,17 @@ class VllmAdapter(InferencePort):
                 "response_format": {"type": "json_object"}
             }, timeout=30)
             res.raise_for_status()
-            return json.loads(res.json()['choices'][0]['message']['content'])
+            data = res.json()
+            
+            # Log usage
+            usage = data.get("usage", {})
+            self._log_usage(
+                engine=f"vllm:{self.model_name}",
+                input_tokens=usage.get("prompt_tokens", 0),
+                output_tokens=usage.get("completion_tokens", 0)
+            )
+            
+            return json.loads(data['choices'][0]['message']['content'])
         except Exception as e:
             logger.error(f"VLM Image Classification error: {e}")
             return {}
@@ -128,13 +161,23 @@ class VllmAdapter(InferencePort):
                 "response_format": {"type": "json_object"}
             }, timeout=30)
             res.raise_for_status()
-            data = res.json()['choices'][0]['message']['content']
+            data = res.json()
+            
+            # Log usage
+            usage = data.get("usage", {})
+            self._log_usage(
+                engine=f"vllm:{self.model_name}",
+                input_tokens=usage.get("prompt_tokens", 0),
+                output_tokens=usage.get("completion_tokens", 0)
+            )
+            
+            content = data['choices'][0]['message']['content']
             
             try:
-                detected = json.loads(data)
+                detected = json.loads(content)
                 return detected.get("objects", [])
             except json.JSONDecodeError as e:
-                logger.error(f"VLM Object Detection JSON decode error: {e}. Output was: {data[:200]}...")
+                logger.error(f"VLM Object Detection JSON decode error: {e}. Output was: {content[:200]}...")
                 return []
             except Exception as e:
                 logger.exception(f"Unexpected error parsing VLM Object Detection: {e}")
@@ -159,7 +202,17 @@ class VllmAdapter(InferencePort):
                 ]
             }, timeout=30)
             res.raise_for_status()
-            return res.json()['choices'][0]['message']['content']
+            data = res.json()
+            
+            # Log usage
+            usage = data.get("usage", {})
+            self._log_usage(
+                engine=f"vllm:{self.model_name}",
+                input_tokens=usage.get("prompt_tokens", 0),
+                output_tokens=usage.get("completion_tokens", 0)
+            )
+            
+            return data['choices'][0]['message']['content']
         except Exception as e:
             logger.error(f"VLM Image Description error: {e}")
             return "[Image description not available]"
@@ -192,16 +245,26 @@ class VllmAdapter(InferencePort):
                 "response_format": {"type": "json_object"}
             }, timeout=60)
             res.raise_for_status()
-            raw_content = res.json()['choices'][0]['message']['content']
+            data = res.json()
+            
+            # Log usage
+            usage = data.get("usage", {})
+            self._log_usage(
+                engine=f"vllm:{self.model_name}",
+                input_tokens=usage.get("prompt_tokens", 0),
+                output_tokens=usage.get("completion_tokens", 0)
+            )
+            
+            raw_content = data['choices'][0]['message']['content']
             
             # Extraction JSON robuste
             json_match = re.search(r'\{.*\}', raw_content, re.DOTALL)
             if json_match:
-                data = json.loads(json_match.group())
+                parsed_data = json.loads(json_match.group())
             else:
-                data = json.loads(raw_content)
+                parsed_data = json.loads(raw_content)
 
-            results = data.get("scores") or data.get("results") or []
+            results = parsed_data.get("scores") or parsed_data.get("results") or []
             
             # Harmonisation : s'assurer qu'on a 'index' et 'score'
             # Si le modèle a retourné 'url', on tente de mapper vers l'index
@@ -249,6 +312,13 @@ class VllmAdapter(InferencePort):
                 mode=instructor.Mode.JSON
             )
             
+            # Log heuristic usage as instructor doesn't easily expose raw usage info here
+            self._log_usage(
+                engine=f"vllm:{self.model_name}:structured",
+                input_tokens=len(prompt) // 4,
+                output_tokens=256 # Average structured response
+            )
+
             return client.chat.completions.create(
                 model=self.model_name,
                 response_model=response_model,
@@ -261,3 +331,4 @@ class VllmAdapter(InferencePort):
         except Exception as e:
             logger.error(f"vLLM Structured Generation failed: {e}")
             raise
+

@@ -1,4 +1,4 @@
-import logging
+from animetix_project.logging_config import get_logger
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -7,7 +7,7 @@ from ...containers import Container
 from animetix.api.dependencies import get_session_service
 from ...models import GameplaySession
 
-logger = logging.getLogger("animetix." + __name__)
+logger = get_logger('animetix.' + __name__)
 
 # --- EMOJI MODE ---
 
@@ -36,7 +36,7 @@ class EmojiGameStartView(APIView):
     permission_classes = [permissions.AllowAny]
     
     @inject
-    def post(self, request, catalog_service = Provide[Container.catalog_service], emoji_service = Provide[Container.emoji_service]):
+    def post(self, request, catalog_service = Provide[Container.core.catalog_service], emoji_service = Provide[Container.core.emoji_service]):
         session_service = get_session_service(request)
         port = session_service.port
         media_type = request.data.get('media_type', port.get('media_type', 'Anime'))
@@ -85,7 +85,7 @@ class EmojiGameGuessView(APIView):
     permission_classes = [permissions.AllowAny]
     
     @inject
-    def post(self, request, catalog_service = Provide[Container.catalog_service], game_service = Provide[Container.game_service]):
+    def post(self, request, catalog_service = Provide[Container.core.catalog_service], game_service = Provide[Container.core.game_service]):
         session_service = get_session_service(request)
         port = session_service.port
         secret = port.get('emoji_secret')

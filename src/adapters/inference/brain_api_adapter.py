@@ -5,10 +5,13 @@ import logging
 from typing import Optional, List, Dict, Any
 from core.ports.inference_port import InferencePort
 
+from core.ports.usage_port import UsagePort
+
 logger = logging.getLogger("animetix.inference")
 
 class BrainAPIAdapter(InferencePort):
-    def __init__(self, brain_api_url: str, max_retries: int = 3):
+    def __init__(self, brain_api_url: str, max_retries: int = 3, usage_port: Optional[UsagePort] = None):
+        super().__init__(usage_port=usage_port)
         self.brain_api_url = brain_api_url
         self.max_retries = max_retries
 
@@ -23,7 +26,18 @@ class BrainAPIAdapter(InferencePort):
                     "thinking_mode": thinking_mode
                 }, timeout=30)
                 res.raise_for_status()
-                return res.json().get("text", "")
+                data = res.json()
+                text = data.get("text", "")
+                
+                # Log usage
+                usage = data.get("usage", {})
+                self._log_usage(
+                    engine="brain:generate",
+                    input_tokens=usage.get("prompt_tokens", len(prompt) // 4),
+                    output_tokens=usage.get("completion_tokens", len(text) // 4)
+                )
+                
+                return text
             except requests.exceptions.RequestException as e:
                 logger.error(f"BrainAPI Request failed (Attempt {attempt+1}/{self.max_retries}): {e}")
                 time.sleep(1)
@@ -40,7 +54,9 @@ class BrainAPIAdapter(InferencePort):
         if not self.brain_api_url: return 0.0
         try:
             res = requests.post(f"{self.brain_api_url}/similarity/visual", json={"query": query, "item_id": item_id, "media_type": media_type}, timeout=10)
-            if res.status_code == 200: return res.json().get("score", 0.0)
+            if res.status_code == 200:
+                self._log_usage(engine="brain:similarity:visual", units=1)
+                return res.json().get("score", 0.0)
         except Exception as e:
             logger.error(f"BrainAPI Visual Similarity error: {e}")
         return 0.0
@@ -51,7 +67,9 @@ class BrainAPIAdapter(InferencePort):
             import base64
             b64 = base64.b64encode(image_data).decode('utf-8')
             res = requests.post(f"{self.brain_api_url}/vision/embedding", json={"image": b64, "model_id": model_id}, timeout=10)
-            if res.status_code == 200: return res.json().get("embedding", [])
+            if res.status_code == 200:
+                self._log_usage(engine="brain:vision:embedding", units=1)
+                return res.json().get("embedding", [])
         except Exception as e:
             logger.error(f"BrainAPI Image Embedding error: {e}")
         return []
@@ -66,7 +84,9 @@ class BrainAPIAdapter(InferencePort):
                 "candidate_labels": candidate_queries,
                 "model_id": model_id
             }, timeout=20)
-            if res.status_code == 200: return res.json().get("objects", [])
+            if res.status_code == 200:
+                self._log_usage(engine="brain:vision:detect", units=1)
+                return res.json().get("objects", [])
         except Exception as e:
             logger.error(f"BrainAPI Object Detection error: {e}")
         return []
@@ -80,7 +100,9 @@ class BrainAPIAdapter(InferencePort):
                 "image": b64, 
                 "prompt": prompt
             }, timeout=30)
-            if res.status_code == 200: return res.json().get("description", "")
+            if res.status_code == 200:
+                self._log_usage(engine="brain:vision:describe", units=1)
+                return res.json().get("description", "")
         except Exception as e:
             logger.error(f"BrainAPI Image Description error: {e}")
         return ""
@@ -92,6 +114,7 @@ class BrainAPIAdapter(InferencePort):
             b64 = base64.b64encode(image_data).decode('utf-8')
             res = requests.post(f"{self.brain_api_url}/vision/depth", json={"image": b64}, timeout=20)
             if res.status_code == 200:
+                self._log_usage(engine="brain:vision:depth", units=1)
                 return base64.b64decode(res.json().get("depth_b64", ""))
         except Exception as e:
             logger.error(f"BrainAPI Depth Estimation error: {e}")
@@ -105,7 +128,9 @@ class BrainAPIAdapter(InferencePort):
                 "image_urls": image_urls,
                 "system_prompt": system_prompt
             }, timeout=30)
-            if res.status_code == 200: return res.json().get("reranked_items", [])
+            if res.status_code == 200:
+                self._log_usage(engine="brain:vision:rerank", units=1)
+                return res.json().get("reranked_items", [])
         except Exception as e:
             logger.error(f"BrainAPI Visual Rerank error: {e}")
         return []
@@ -120,7 +145,9 @@ class BrainAPIAdapter(InferencePort):
                 "candidate_labels": candidate_labels,
                 "model_id": model_id
             }, timeout=20)
-            if res.status_code == 200: return res.json().get("labels", {})
+            if res.status_code == 200:
+                self._log_usage(engine="brain:vision:classify", units=1)
+                return res.json().get("labels", {})
         except Exception as e:
             logger.error(f"BrainAPI Image Classification error: {e}")
         return {}
@@ -131,7 +158,9 @@ class BrainAPIAdapter(InferencePort):
             import base64
             b64 = base64.b64encode(video_data).decode('utf-8')
             res = requests.post(f"{self.brain_api_url}/video/embeddings", json={"video": b64}, timeout=60)
-            if res.status_code == 200: return res.json().get("embeddings", [])
+            if res.status_code == 200:
+                self._log_usage(engine="brain:video:embeddings", units=1)
+                return res.json().get("embeddings", [])
         except Exception as e:
             logger.error(f"BrainAPI Video Temporal Embeddings error: {e}")
         return []
@@ -145,7 +174,9 @@ class BrainAPIAdapter(InferencePort):
                 "video": b64, 
                 "queries": action_queries
             }, timeout=60)
-            if res.status_code == 200: return res.json().get("actions", [])
+            if res.status_code == 200:
+                self._log_usage(engine="brain:video:localize", units=1)
+                return res.json().get("actions", [])
         except Exception as e:
             logger.error(f"BrainAPI Video Action Localization error: {e}")
         return []
@@ -159,7 +190,9 @@ class BrainAPIAdapter(InferencePort):
                 "studio_style": studio_style,
                 "prompt": prompt
             }, timeout=45)
-            if res.status_code == 200: return res.json().get("image_url_or_b64", "")
+            if res.status_code == 200:
+                self._log_usage(engine="brain:vision:transform:anime", units=1)
+                return res.json().get("image_url_or_b64", "")
         except Exception as e:
             logger.error(f"BrainAPI Image to Anime error: {e}")
         return ""
@@ -174,7 +207,9 @@ class BrainAPIAdapter(InferencePort):
                 "studio_style": studio_style,
                 "prompt": prompt
             }, timeout=120)
-            if res.status_code == 200: return res.json().get("video_url_or_b64", "")
+            if res.status_code == 200:
+                self._log_usage(engine="brain:video:transform:anime", units=1)
+                return res.json().get("video_url_or_b64", "")
         except Exception as e:
             logger.error(f"BrainAPI Video to Anime error: {e}")
         return ""
@@ -186,7 +221,9 @@ class BrainAPIAdapter(InferencePort):
                 "video_metadata": video_metadata,
                 "prompt": prompt
             }, timeout=30)
-            if res.status_code == 200: return res.json().get("audio_url_or_b64", "")
+            if res.status_code == 200:
+                self._log_usage(engine="brain:audio:soundscape", units=1)
+                return res.json().get("audio_url_or_b64", "")
         except Exception as e:
             logger.error(f"BrainAPI Soundscape Generation error: {e}")
         return ""
@@ -200,7 +237,9 @@ class BrainAPIAdapter(InferencePort):
                 "reference_audio": b64,
                 "language": language
             }, timeout=30)
-            if res.status_code == 200: return base64.b64decode(res.json().get("audio_b64", ""))
+            if res.status_code == 200:
+                self._log_usage(engine="brain:audio:clone_voice", units=1)
+                return base64.b64decode(res.json().get("audio_b64", ""))
         except Exception as e:
             logger.error(f"BrainAPI Voice Cloning error: {e}")
         return b""
@@ -214,7 +253,9 @@ class BrainAPIAdapter(InferencePort):
                 "audio": b64, 
                 "system_prompt": system_prompt
             }, timeout=30)
-            if res.status_code == 200: return base64.b64decode(res.json().get("audio_b64", ""))
+            if res.status_code == 200:
+                self._log_usage(engine="brain:audio:speech_to_speech", units=1)
+                return base64.b64decode(res.json().get("audio_b64", ""))
         except Exception as e:
             logger.error(f"BrainAPI Speech-to-Speech error: {e}")
         return b""
@@ -224,7 +265,9 @@ class BrainAPIAdapter(InferencePort):
             import base64
             b64 = base64.b64encode(image_data).decode('utf-8')
             res = requests.post(f"{self.brain_api_url}/vision/manga/process", json={"image": b64}, timeout=30)
-            if res.status_code == 200: return res.json()
+            if res.status_code == 200:
+                self._log_usage(engine="brain:vision:manga:process", units=1)
+                return res.json()
         except Exception as e:
             logger.error(f"BrainAPI Manga Process error: {e}")
         return {}
@@ -235,7 +278,9 @@ class BrainAPIAdapter(InferencePort):
             import base64
             b64 = base64.b64encode(image_data).decode('utf-8')
             res = requests.post(f"{self.brain_api_url}/vision/manga/translate", json={"image": b64, "target_lang": target_lang}, timeout=60)
-            if res.status_code == 200: return res.json()
+            if res.status_code == 200:
+                self._log_usage(engine="brain:vision:manga:translate", units=1)
+                return res.json()
         except Exception as e:
             logger.error(f"BrainAPI Manga Translate error: {e}")
         return {}
@@ -248,7 +293,9 @@ class BrainAPIAdapter(InferencePort):
                 "image": b64, 
                 "text_placements": text_placements
             }, timeout=30)
-            if res.status_code == 200: return res.json().get("image_url_or_b64", "")
+            if res.status_code == 200:
+                self._log_usage(engine="brain:vision:manga:inpaint", units=1)
+                return res.json().get("image_url_or_b64", "")
         except Exception as e:
             logger.error(f"BrainAPI Manga Inpaint error: {e}")
         return ""
@@ -259,7 +306,9 @@ class BrainAPIAdapter(InferencePort):
                 "prompt": prompt, 
                 "completion": completion
             }, timeout=10)
-            if res.status_code == 200: return res.json().get("diagnostics", {})
+            if res.status_code == 200:
+                self._log_usage(engine="brain:diagnostics", units=1)
+                return res.json().get("diagnostics", {})
         except Exception as e:
             logger.error(f"BrainAPI Diagnostics error: {e}")
         return {}
@@ -271,7 +320,9 @@ class BrainAPIAdapter(InferencePort):
                 "prompt": prompt, 
                 "completion": completion
             }, timeout=10)
-            if res.status_code == 200: return res.json().get("uncertainty_metrics", {})
+            if res.status_code == 200:
+                self._log_usage(engine="brain:uncertainty", units=1)
+                return res.json().get("uncertainty_metrics", {})
         except Exception as e:
             logger.error(f"BrainAPI Uncertainty calculation error: {e}")
         return {}
@@ -285,7 +336,9 @@ class BrainAPIAdapter(InferencePort):
                 "image": img_b64, 
                 "depth_map": depth_b64
             }, timeout=60)
-            if res.status_code == 200: return res.json().get("scene_data", {})
+            if res.status_code == 200:
+                self._log_usage(engine="brain:vision:generate_3d", units=1)
+                return res.json().get("scene_data", {})
         except Exception as e:
             logger.error(f"BrainAPI 3D Scene Generation error: {e}")
         return {}
@@ -297,7 +350,9 @@ class BrainAPIAdapter(InferencePort):
                 "text": text, 
                 "categories": categories
             }, timeout=10)
-            if res.status_code == 200: return res.json().get("moderation", {})
+            if res.status_code == 200:
+                self._log_usage(engine="brain:moderate", units=1)
+                return res.json().get("moderation", {})
         except Exception as e:
             logger.error(f"BrainAPI Moderation error: {e}")
         return {}
@@ -308,7 +363,9 @@ class BrainAPIAdapter(InferencePort):
             import base64
             b64 = base64.b64encode(image_data).decode('utf-8')
             res = requests.post(f"{self.brain_api_url}/vision/late-interaction", json={"image": b64}, timeout=20)
-            if res.status_code == 200: return res.json().get("embeddings", [])
+            if res.status_code == 200:
+                self._log_usage(engine="brain:vision:late_interaction", units=1)
+                return res.json().get("embeddings", [])
         except Exception as e:
             logger.error(f"BrainAPI Multimodal Late Interaction error: {e}")
         return []
@@ -321,7 +378,9 @@ class BrainAPIAdapter(InferencePort):
                 "prompt": prompt, 
                 "style": style
             }, timeout=45)
-            if res.status_code == 200: return res.json().get("image_url_or_b64", "")
+            if res.status_code == 200:
+                self._log_usage(engine="brain:vision:generate_image", units=1)
+                return res.json().get("image_url_or_b64", "")
         except Exception as e:
             logger.error(f"BrainAPI Image Generation error: {e}")
         return ""
@@ -353,6 +412,13 @@ class BrainAPIAdapter(InferencePort):
                 mode=instructor.Mode.JSON
             )
             
+            # Log heuristic usage
+            self._log_usage(
+                engine="brain:generate:structured",
+                input_tokens=len(prompt) // 4,
+                output_tokens=256
+            )
+
             return client.chat.completions.create(
                 model="brain-default", # Nom du modèle par défaut pour le cerveau
                 response_model=response_model,
@@ -365,3 +431,4 @@ class BrainAPIAdapter(InferencePort):
         except Exception as e:
             logger.error(f"BrainAPI Structured Generation failed: {e}")
             raise
+
