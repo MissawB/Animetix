@@ -6,6 +6,7 @@ from django.conf import settings
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from animetix.api.core import is_safe_url
 from ..models import DailyChallenge
 from ..serializers import DailyChallengeSerializer
 from ..containers import get_container
@@ -196,6 +197,8 @@ class SpatialLabDataView(APIView):
             if uploaded_file:
                 image_data = uploaded_file.read()
             else:
+                if not is_safe_url(image_url):
+                    return Response({'error': 'URL is not allowed for security reasons.'}, status=status.HTTP_403_FORBIDDEN)
                 res = requests.get(image_url, timeout=10)
                 res.raise_for_status()
                 image_data = res.content
@@ -228,6 +231,8 @@ class MangaLabDataView(APIView):
             if uploaded_file:
                 image_data = uploaded_file.read()
             else:
+                if not is_safe_url(image_url):
+                    return Response({'error': 'URL is not allowed for security reasons.'}, status=status.HTTP_403_FORBIDDEN)
                 res = requests.get(image_url, timeout=10)
                 res.raise_for_status()
                 image_data = res.content
