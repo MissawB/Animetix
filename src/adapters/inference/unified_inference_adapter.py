@@ -1,11 +1,13 @@
 import os
 import requests
 import json
+import re
 import time
 import logging
 import base64
 from typing import Optional, List, Dict, Any
-from core.ports.inference_port import InferencePort
+from core.ports.inference_port import InferencePort, InferenceNotImplementedError
+from core.domain.exceptions import InferenceError
 
 logger = logging.getLogger("animetix." + __name__)
 
@@ -20,8 +22,10 @@ class UnifiedInferenceAdapter(InferencePort):
         model_name: Optional[str] = None,
         api_key: Optional[str] = None,
         max_retries: int = 3,
-        timeout: int = 90
+        timeout: int = 90,
+        usage_port: Optional[Any] = None
     ):
+        super().__init__(usage_port=usage_port)
         # Default to local Ollama OpenAI-compatible endpoint
         self.api_base = api_base or os.getenv("LLM_API_BASE") or "http://localhost:11434/v1"
         self.model_name = model_name or os.getenv("LLM_MODEL_NAME") or "llama3"
@@ -62,8 +66,11 @@ class UnifiedInferenceAdapter(InferencePort):
             res = requests.post(direct_url, json=direct_payload, timeout=self.timeout)
             if res.status_code == 200:
                 return res.json().get("embedding", [])
+            
+            res.raise_for_status()
         except Exception as e:
             logger.error(f"Failed to generate text embedding via UnifiedInferenceAdapter: {e}")
+            raise InferenceError(f"Embedding generation failed: {e}")
         return []
 
     def generate(
@@ -84,10 +91,8 @@ class UnifiedInferenceAdapter(InferencePort):
         }
 
         if json_mode:
-            # Standard OpenAI/vLLM/Ollama way to request JSON
             payload["response_format"] = {"type": "json_object"}
 
-        # Handle deep reasoning parameters if requested
         if thinking_mode or thinking_budget > 0:
             payload["extra_body"] = {
                 "thinking_budget": thinking_budget,
@@ -100,13 +105,11 @@ class UnifiedInferenceAdapter(InferencePort):
                 url = f"{self.api_base}/chat/completions"
                 res = requests.post(url, json=payload, headers=self._get_headers(), timeout=self.timeout)
 
-                # Retry without thinking params if bad request
                 if res.status_code == 400 and "extra_body" in payload:
                     logger.warning("Target LLM server rejected thinking parameters, retrying without them.")
                     del payload["extra_body"]
                     res = requests.post(url, json=payload, headers=self._get_headers(), timeout=self.timeout)
                 
-                # Retry without json_mode if 400 (some old Ollama versions might not like response_format)
                 if res.status_code == 400 and json_mode:
                     logger.warning("Target LLM server rejected JSON mode, retrying with raw text.")
                     del payload["response_format"]
@@ -115,22 +118,21 @@ class UnifiedInferenceAdapter(InferencePort):
                 res.raise_for_status()
                 data = res.json()
 
-                # IMPORTANT: Always return a string, never the full dict
+                usage = data.get("usage", {})
+                self._log_usage(
+                    engine=f"unified:{self.model_name}",
+                    input_tokens=usage.get("prompt_tokens", 0),
+                    output_tokens=usage.get("completion_tokens", 0)
+                )
+
                 if isinstance(data, dict) and "choices" in data:
                     raw_content = data["choices"][0]["message"]["content"]
                 else:
-                    # Fallback for unexpected formats
                     raw_content = str(data)
 
-                # CLEANUP metadata sometimes added by the adapter infrastructure
                 if "---" in raw_content:
                     raw_content = raw_content.split("---")[0].strip()
 
-                return raw_content                
-                # CLEANUP metadata sometimes added by the adapter infrastructure
-                if "---" in raw_content:
-                    raw_content = raw_content.split("---")[0].strip()
-                    
                 return raw_content
             except requests.exceptions.RequestException as e:
                 last_error = e
@@ -141,20 +143,11 @@ class UnifiedInferenceAdapter(InferencePort):
                 logger.error(f"Unexpected error in UnifiedInferenceAdapter: {e}")
                 break
 
-        return f"Erreur: Le service d'inférence ({self.model_name}) est indisponible. Erreur: {last_error}"
+        raise InferenceError(f"Le service d'inférence ({self.model_name}) est indisponible. Dernier essai: {last_error}")
 
     def generate_structured(self, prompt: str, response_model: Any, system_prompt: str = "", max_retries: int = 3) -> Any:
-        """
-        Implementation of structured generation for UnifiedInferenceAdapter.
-        Uses JSON mode and manual Pydantic validation.
-        """
         try:
-            # We use the existing generate with json_mode=True
             raw_json = self.generate(prompt, system_prompt=system_prompt, json_mode=True)
-            
-            # Robust extraction in case the model added markdown blocks despite JSON mode
-            import json
-            import re
             
             clean_json = raw_json.strip()
             if "```" in clean_json:
@@ -162,17 +155,18 @@ class UnifiedInferenceAdapter(InferencePort):
                 if match:
                     clean_json = match.group(1)
                 else:
-                    # Try to find first { and last }
                     start = clean_json.find('{')
                     end = clean_json.rfind('}')
                     if start != -1 and end != -1:
                         clean_json = clean_json[start:end+1]
 
             data = json.loads(clean_json)
-            return response_model.model_validate(data)
+            if hasattr(response_model, "model_validate"):
+                return response_model.model_validate(data)
+            return data
         except Exception as e:
             logger.error(f"Failed structured generation in UnifiedInferenceAdapter: {e}")
-            raise
+            raise InferenceError(f"Structured generation failed: {e}")
 
 
     def stream_generate(
@@ -202,7 +196,6 @@ class UnifiedInferenceAdapter(InferencePort):
         try:
             res = requests.post(url, json=payload, headers=self._get_headers(), stream=True, timeout=self.timeout)
 
-            # Retry without extra body
             if res.status_code == 400 and "extra_body" in payload:
                 logger.warning("Target LLM server rejected thinking parameters for streaming, retrying without.")
                 del payload["extra_body"]
@@ -226,81 +219,92 @@ class UnifiedInferenceAdapter(InferencePort):
                             continue
         except Exception as e:
             logger.error(f"Unified Stream Error: {e}")
-            yield self.generate(prompt, system_prompt, thinking_budget, thinking_mode)
+            # Do NOT fallback to generate, it might hide persistent errors
+            raise InferenceError(f"Streaming failed: {e}")
 
-    # --- Fallbacks / Stubs for Other Abstract Methods of InferencePort ---
+    def rerank_documents(self, query: str, documents: List[str]) -> List[float]:
+        """Ré-ordonne les documents via un prompt LLM (fallback)."""
+        if not documents:
+            return []
 
-    def generate_image(self, prompt: str, style: str = "") -> str:
-        logger.warning("generate_image is not natively supported by standard LLM inference. Returning empty URL.")
-        return ""
+        prompt = f"Requête: {query}\n\nDocuments à évaluer:\n"
+        for i, doc in enumerate(documents):
+            prompt += f"ID {i}: {doc[:500]}\n"
 
-    def calculate_visual_similarity(self, query: str, item_id: str, media_type: str) -> float:
-        logger.warning("calculate_visual_similarity is stubbed on UnifiedInferenceAdapter.")
-        return 0.5
+        prompt += "\nPour chaque document, donne un score de pertinence entre 0.0 (inutile) et 1.0 (parfait). Réponds avec une liste de scores JSON: [score0, score1, ...]"
 
-    def get_image_embedding(self, image_data: bytes, model_id: Optional[str] = None) -> List[float]:
-        logger.warning("get_image_embedding is stubbed on UnifiedInferenceAdapter.")
-        return []
+        try:
+            raw = self.generate(prompt, system_prompt="Tu es un système de réordonnancement (reranker) expert.", json_mode=False)
+            match = re.search(r'\[.*\]', raw)
+            if match:
+                scores = json.loads(match.group(0))
+                if len(scores) == len(documents):
+                    return [float(s) for s in scores]
+        except Exception as e:
+            logger.warning(f"Reranking fallback failed: {e}")
 
-    def classify_image(self, image_data: bytes, candidate_labels: List[str], model_id: Optional[str] = None) -> Dict[str, float]:
-        logger.warning("classify_image is stubbed on UnifiedInferenceAdapter.")
-        return {label: 1.0 / len(candidate_labels) for label in candidate_labels}
-
-    def detect_objects(self, image_data: bytes, candidate_queries: List[str], model_id: Optional[str] = None) -> List[Dict]:
-        logger.warning("detect_objects is stubbed on UnifiedInferenceAdapter.")
-        return []
-
-    def get_video_temporal_embeddings(self, video_data: bytes) -> List[Dict[str, Any]]:
-        logger.warning("get_video_temporal_embeddings is stubbed on UnifiedInferenceAdapter.")
-        return []
-
-    def localize_video_actions(self, video_data: bytes, action_queries: List[str]) -> List[Dict[str, Any]]:
-        logger.warning("localize_video_actions is stubbed on UnifiedInferenceAdapter.")
-        return []
-
-    def transform_image_to_anime(self, image_data: bytes, studio_style: str, prompt: str = "") -> str:
-        logger.warning("transform_image_to_anime is stubbed on UnifiedInferenceAdapter.")
-        return ""
-
-    def transform_video_to_anime(self, video_data: bytes, studio_style: str, prompt: str = "") -> str:
-        logger.warning("transform_video_to_anime is stubbed on UnifiedInferenceAdapter.")
-        return ""
-
-    def generate_soundscape(self, video_metadata: Dict[str, Any], prompt: Optional[str] = None) -> str:
-        logger.warning("generate_soundscape is stubbed on UnifiedInferenceAdapter.")
-        return ""
-
-    def clone_voice(self, text: str, reference_audio: bytes, language: str = "fr") -> bytes:
-        logger.warning("clone_voice is stubbed on UnifiedInferenceAdapter.")
-        return b""
-
-    def speech_to_speech(self, audio_input: bytes, system_prompt: str = "") -> bytes:
-        logger.warning("speech_to_speech is stubbed on UnifiedInferenceAdapter.")
-        return b""
-
-    def estimate_depth(self, image_data: bytes) -> bytes:
-        logger.warning("estimate_depth is stubbed on UnifiedInferenceAdapter.")
-        return b""
-
-    def generate_3d_scene(self, image_data: bytes, depth_map: bytes) -> Dict[str, Any]:
-        logger.warning("generate_3d_scene is stubbed on UnifiedInferenceAdapter.")
-        return {}
-
-    def process_manga_page(self, image_data: bytes) -> Dict[str, Any]:
-        logger.warning("process_manga_page is stubbed on UnifiedInferenceAdapter.")
-        return {}
-
-    def translate_manga_page(self, image_data: bytes, target_lang: str = "Français") -> Dict[str, Any]:
-        logger.warning("translate_manga_page is stubbed on UnifiedInferenceAdapter.")
-        return {}
-
-    def inpaint_text_bubbles(self, image_data: bytes, text_placements: List[Dict]) -> str:
-        logger.warning("inpaint_text_bubbles is stubbed on UnifiedInferenceAdapter.")
-        return ""
+        return [0.0] * len(documents)
 
     def moderate_content(self, text: str, categories: List[str]) -> Dict[str, Any]:
-        logger.warning("moderate_content is stubbed on UnifiedInferenceAdapter.")
-        return {"flagged": False, "scores": {}}
+        """Modère le contenu via un prompt LLM."""
+        prompt = f"Texte à analyser: {text}\n\nCatégories à vérifier: {', '.join(categories)}\n\nRéponds au format JSON: {{'is_safe': bool, 'flagged_categories': [str], 'reason': str}}"
+        try:
+            return self.generate_structured(prompt, response_model=dict, system_prompt="Tu es un agent de modération.")
+        except Exception:
+            return {"is_safe": True, "flagged_categories": [], "reason": "Moderation fallback failed."}
+
+    # --- Stubs now raising NotImplementedError ---
+
+    def generate_image(self, prompt: str, style: str = "") -> str:
+        raise InferenceNotImplementedError("generate_image is not natively supported by standard LLM inference.")
+
+    def calculate_visual_similarity(self, query: str, item_id: str, media_type: str) -> float:
+        raise InferenceNotImplementedError()
+
+    def get_image_embedding(self, image_data: bytes, model_id: Optional[str] = None) -> List[float]:
+        raise InferenceNotImplementedError()
+
+    def classify_image(self, image_data: bytes, candidate_labels: List[str], model_id: Optional[str] = None) -> Dict[str, float]:
+        raise InferenceNotImplementedError()
+
+    def detect_objects(self, image_data: bytes, candidate_queries: List[str], model_id: Optional[str] = None) -> List[Dict]:
+        raise InferenceNotImplementedError()
+
+    def get_video_temporal_embeddings(self, video_data: bytes) -> List[Dict[str, Any]]:
+        raise InferenceNotImplementedError()
+
+    def localize_video_actions(self, video_data: bytes, action_queries: List[str]) -> List[Dict[str, Any]]:
+        raise InferenceNotImplementedError()
+
+    def transform_image_to_anime(self, image_data: bytes, studio_style: str, prompt: str = "") -> str:
+        raise InferenceNotImplementedError()
+
+    def transform_video_to_anime(self, video_data: bytes, studio_style: str, prompt: str = "") -> str:
+        raise InferenceNotImplementedError()
+
+    def generate_soundscape(self, video_metadata: Dict[str, Any], prompt: Optional[str] = None) -> str:
+        raise InferenceNotImplementedError()
+
+    def clone_voice(self, text: str, reference_audio: bytes, language: str = "fr") -> bytes:
+        raise InferenceNotImplementedError()
+
+    def speech_to_speech(self, audio_input: bytes, system_prompt: str = "") -> bytes:
+        raise InferenceNotImplementedError()
+
+    def estimate_depth(self, image_data: bytes) -> bytes:
+        raise InferenceNotImplementedError()
+
+    def generate_3d_scene(self, image_data: bytes, depth_map: bytes) -> Dict[str, Any]:
+        raise InferenceNotImplementedError()
+
+    def process_manga_page(self, image_data: bytes) -> Dict[str, Any]:
+        raise InferenceNotImplementedError()
+
+    def translate_manga_page(self, image_data: bytes, target_lang: str = "Français") -> Dict[str, Any]:
+        raise InferenceNotImplementedError()
+
+    def inpaint_text_bubbles(self, image_data: bytes, text_placements: List[Dict]) -> str:
+        raise InferenceNotImplementedError()
 
     def generate_image_description(self, image_data: bytes, prompt: str = "Décris cette image d'anime de manière très détaillée.") -> str:
         """Utilise un VLM si le endpoint d'inférence supporte les requêtes multimodales."""
@@ -325,32 +329,29 @@ class UnifiedInferenceAdapter(InferencePort):
             res.raise_for_status()
             return res.json()["choices"][0]["message"]["content"]
         except Exception as e:
-            logger.error(f"Unified multimodal description failed: {e}. Retrying as pure text generation.")
-            return self.generate(prompt)
+            logger.error(f"Unified multimodal description failed: {e}. Raising InferenceError.")
+            raise InferenceError(f"Multimodal description failed: {e}")
 
     def get_diagnostics(self, prompt: str, completion: str) -> Dict[str, Any]:
-        logger.warning("get_diagnostics is stubbed on UnifiedInferenceAdapter.")
-        return {}
+        raise InferenceNotImplementedError()
 
     def calculate_uncertainty(self, prompt: str, completion: str) -> Dict[str, float]:
-        logger.warning("calculate_uncertainty is stubbed on UnifiedInferenceAdapter.")
-        return {}
+        raise InferenceNotImplementedError()
 
     def health_check(self) -> dict:
         try:
-            # Simple ping to Ollama or target server
             res = requests.get(f"{self.api_base.replace('/v1', '')}/api/tags", timeout=5)
             if res.status_code == 200:
                 return {"status": "online", "engine": "Ollama/Unified", "models": res.json().get("models", [])}
-        except Exception as e:
-            logger.debug(f"Ollama health check failed: {e}")
+        except Exception:
+            pass
 
         try:
             res = requests.get(f"{self.api_base}/models", headers=self._get_headers(), timeout=5)
             if res.status_code == 200:
                 return {"status": "online", "engine": "OpenAI-Compatible/Unified"}
-        except Exception as e:
-            logger.debug(f"OpenAI-compatible health check failed: {e}")
+        except Exception:
+            pass
 
         return {"status": "offline", "engine": "Unified"}
 
@@ -360,9 +361,8 @@ class UnifiedInferenceAdapter(InferencePort):
         image_urls: List[str], 
         system_prompt: str = "Tu es un expert en analyse visuelle d'anime."
     ) -> List[Dict[str, Any]]:
-        logger.warning("visual_rerank is stubbed on UnifiedInferenceAdapter.")
-        return [{"index": i, "image_url": url, "score": 1.0 / len(image_urls)} for i, url in enumerate(image_urls)]
+        raise InferenceNotImplementedError()
 
     def get_multimodal_late_interaction(self, image_data: bytes) -> List[List[float]]:
-        logger.warning("get_multimodal_late_interaction is stubbed on UnifiedInferenceAdapter.")
-        return []
+        raise InferenceNotImplementedError()
+
