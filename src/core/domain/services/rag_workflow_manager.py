@@ -55,7 +55,8 @@ class RAGWorkflowManager:
         rag_service: AdvancedRAGService,
         neo4j_manager: Optional[GraphPersistencePort] = None,
         context_compressor: Optional[ContextCompressor] = None,
-        mlops_port: Optional[MlopsPort] = None
+        mlops_port: Optional[MlopsPort] = None,
+        colbert_adapter: Any = None
     ):
         self.planner = planner
         self.critic = critic
@@ -78,6 +79,7 @@ class RAGWorkflowManager:
         self.rag_service = rag_service
         self.neo4j_manager = neo4j_manager
         self.mlops_port = mlops_port
+        self.colbert_adapter = colbert_adapter
         
         # SOTA 2026 Context Compressor (Task 5.3)
         self.context_compressor = context_compressor or ContextCompressor(self.rag_service.llm_service, self.prompt_manager)
@@ -238,7 +240,7 @@ class RAGWorkflowManager:
         if cypher:
             yield StreamStep(type="thought", content=f"[Graph-Agent] Exécution Cypher : {cypher}").model_dump()
             try:
-                results = self.neo4j_manager.execute_query(cypher)
+                results = self.neo4j_manager.execute_read(cypher)
                 if results:
                     res_str = f"\n[Graph-Agent Results]:\n{results}\n"
                     if ctx.truth_path is None:
@@ -281,9 +283,9 @@ class RAGWorkflowManager:
             """
             try:
                 if ctx.plan.entities:
-                    theories = self.neo4j_manager.execute_query(cypher, parameters={"entities": ctx.plan.entities})
+                    theories = self.neo4j_manager.execute_read(cypher, parameters={"entities": ctx.plan.entities})
                     if not theories:
-                        theories = self.neo4j_manager.execute_query(cypher_fallback, parameters={"entities": ctx.plan.entities})
+                        theories = self.neo4j_manager.execute_read(cypher_fallback, parameters={"entities": ctx.plan.entities})
                     if theories:
                         theory_text = "### CONSENSUS DE FANS (THÉORIES) ###\n"
                         for th in theories:
@@ -567,7 +569,16 @@ class RAGWorkflowManager:
         return expert_injections
 
     def _execute_search(self, plan, media_type: str) -> tuple[List[Dict], str]:
-        local_results = self.rag_service.hybrid_search(plan.optimized_query, media_type)
+        # Fetch a larger pool for reranking
+        local_results = self.rag_service.hybrid_search(plan.optimized_query, media_type, limit=20)
+        
+        # --- RERANKING COLBERT (SOTA 2026 / Task 5.2) ---
+        if self.colbert_adapter and local_results:
+            logger.info(f"🚀 [ColBERT] Reranking {len(local_results)} candidates for query: {plan.optimized_query}")
+            local_results = self.colbert_adapter.rank_documents(plan.optimized_query, local_results)[:10]
+        else:
+            local_results = local_results[:10]
+
         expert_injections = self._get_expert_injections(plan.optimized_query)
         
         local_ctx_list = [f"DB - {r.get('title')}: {r.get('description', '')[:2000]}" for r in local_results]

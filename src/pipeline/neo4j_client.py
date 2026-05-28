@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 from core.ports.graph_database_port import GraphDatabasePort
 
-logger = logging.getLogger("animetix.neo4j")
+logger = logging.getLogger("animetix." + __name__)
 
 # Détection robuste de la racine du projet
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -15,6 +15,27 @@ load_dotenv(os.path.join(BASE_DIR, '.env'))
 NEO4J_URI = os.getenv("NEO4J_URI", "bolt://localhost:7687")
 NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "secretpassword")
+
+ALLOWED_LABELS = {
+    "Media", "Studio", "Person", "MicroTag", "Character", "CombatEvent", 
+    "Saga", "FanTheory", "Entity", "User"
+}
+
+ALLOWED_RELATIONSHIPS = {
+    "PRODUCED_BY", "HAS_THEME", "CREATED_BY", "FEATURES", "VOICED_BY", 
+    "DIRECTED_BY", "CONTAINS_COMBAT", "PERFORMS", "INVOLVES_TECHNIQUE", 
+    "USES_TECHNIQUE", "CONTAINS_MEDIA", "HAS_THEORY", "INTERACTED_WITH"
+}
+
+def sanitize_cypher_identifier(identifier: str, allowed_set: set) -> str:
+    """
+    Sanitizes a Cypher identifier (label or relationship type) against a whitelist.
+    Raises ValueError if the identifier is not in the allowed set.
+    """
+    if identifier not in allowed_set:
+        logger.error(f"❌ Security Alert: Unauthorized Cypher identifier detected: {identifier}")
+        raise ValueError(f"Unauthorized Cypher identifier: {identifier}")
+    return identifier
 
 class Neo4jManager(GraphDatabasePort):
     def __init__(self):
@@ -34,9 +55,9 @@ class Neo4jManager(GraphDatabasePort):
                     max_transaction_retry_time=10.0
                 )
                 self._driver.verify_connectivity()
-                # print(f"✅ Successfully connected to Neo4j at {self._uri}") # Removed print for clean logs
+                logger.info(f"✅ Successfully connected to Neo4j at {self._uri}")
             except Exception as e:
-                # logger.warning(f"⚠️ Neo4j Connection Failed: {e}")
+                logger.warning(f"⚠️ Neo4j Connection Failed: {e}")
                 self._driver = None
         return self._driver
 
@@ -204,9 +225,12 @@ class Neo4jManager(GraphDatabasePort):
         """
         if not self.driver: return ""
         
+        # Whitelist sanitization
+        safe_label = sanitize_cypher_identifier(category_type, ALLOWED_LABELS)
+
         # On agrège les thèmes, les studios et les créateurs dominants de la communauté
         query = f"""
-        MATCH (cat:{category_type} {{name: $name}})<-[:PRODUCED_BY|HAS_THEME|CREATED_BY*1..2]-(m:Media)
+        MATCH (cat:{safe_label} {{name: $name}})<-[:PRODUCED_BY|HAS_THEME|CREATED_BY*1..2]-(m:Media)
         OPTIONAL MATCH (m)-[:HAS_THEME]->(t:MicroTag)
         OPTIONAL MATCH (m)-[:PRODUCED_BY]->(s:Studio)
         RETURN count(DISTINCT m) as total_works,
@@ -230,8 +254,11 @@ class Neo4jManager(GraphDatabasePort):
         """
         if not self.driver or not steps: return ""
         
+        # Whitelist sanitization for each step
+        safe_steps = [sanitize_cypher_identifier(s, ALLOWED_RELATIONSHIPS) for s in steps]
+
         # Construction dynamique du chemin Cypher
-        rel_chain = "-[:" + "]-() -[:".join(steps) + "]-"
+        rel_chain = "-[:" + "]-() -[:".join(safe_steps) + "]-"
         query = f"""
         MATCH (start {{name: $name}}){rel_chain}(target)
         RETURN DISTINCT target.name as name, labels(target)[0] as type
@@ -293,34 +320,71 @@ class Neo4jManager(GraphDatabasePort):
     def verify_claims(self, claims: List[Dict]) -> List[Dict]:
         """
         Vérifie une liste de faits (claims) par rapport au graphe Neo4j.
-        Ex: { "subject": "Naruto", "relation": "STUDIO", "object": "Pierrot" }
+        Ex: { "subject": "Naruto", "relation": "PRODUCED_BY", "object": "Pierrot" }
         """
         results = []
         with self.driver.session() as session:
             for claim in claims:
                 subj = claim.get('subject')
-                rel = claim.get('relation', '').upper()
+                rel_raw = claim.get('relation', '').upper()
                 obj = claim.get('object')
                 
-                # Requête générique pour vérifier un lien
-                query = f"""
-                MATCH (s:Media {{title: $subj}})-[:{rel}]->(o {{name: $obj}})
-                RETURN count(o) > 0 as verified
-                """
-                if rel == "PRODUCED_BY": # Cas spécifique Studio
-                     query = """
-                     MATCH (s:Media {title: $subj})-[:PRODUCED_BY]->(o:Studio {name: $obj})
-                     RETURN count(o) > 0 as verified
-                     """
-                
-                res = session.run(query, {"subj": subj, "obj": obj}).single()
-                verified = res['verified'] if res else False
-                results.append({**claim, "verified": verified})
+                try:
+                    # Whitelist sanitization
+                    safe_rel = sanitize_cypher_identifier(rel_raw, ALLOWED_RELATIONSHIPS)
+                    
+                    # Requête générique pour vérifier un lien
+                    query = f"""
+                    MATCH (s:Media {{title: $subj}})-[:{safe_rel}]->(o {{name: $obj}})
+                    RETURN count(o) > 0 as verified
+                    """
+                    
+                    # Optimization for known labels if possible, but keeping it generic for security demo
+                    # If safe_rel is PRODUCED_BY, we might want to check Studio label, etc.
+                    # For now, generic nodes (o) is fine as long as the relationship is safe.
+
+                    res = session.run(query, {"subj": subj, "obj": obj}).single()
+                    verified = res['verified'] if res else False
+                    results.append({**claim, "verified": verified})
+                except ValueError:
+                    results.append({**claim, "verified": False, "error": "Unauthorized relation type"})
         return results
 
-    def execute_query(self, query: str, parameters: Optional[Dict] = None) -> List[Dict]:
-        """Exécute une requête Cypher brute de manière sécurisée."""
+    @staticmethod
+    def is_safe_read_query(query: str) -> bool:
+        """
+        Vérifie si une requête Cypher est purement informative (Lecture seule).
+        Bloque les mots-clés de modification (CREATE, MERGE, DELETE, etc.).
+        """
+        dangerous_keywords = {"DELETE", "DETACH", "DROP", "CREATE", "MERGE", "SET", "REMOVE", "CALL", "LOAD", "CSV", "PERIODIC", "COMMIT"}
+        import re
+        query_upper = query.upper()
+        for kw in dangerous_keywords:
+            # Recherche du mot-clé en tant que mot entier pour éviter les faux positifs (ex: "settle")
+            if re.search(rf"\b{kw}\b", query_upper):
+                logger.error(f"❌ Security Alert: Dangerous Cypher keyword '{kw}' detected in query.")
+                return False
+        return True
+
+    def execute_read(self, query: str, parameters: Optional[Dict] = None) -> List[Dict]:
+        """Exécute une requête en lecture seule après validation de sécurité."""
+        if not self.is_safe_read_query(query):
+            raise ValueError("Dangerous Cypher query rejected for security reasons.")
+        
         if not self.driver: return []
+        with self.driver.session() as session:
+            try:
+                result = session.run(query, parameters or {})
+                return [record.data() for record in result]
+            except Exception as e:
+                logger.error(f"Cypher Execution Error (Read): {e}\nQuery: {query}")
+                return []
+
+    def execute_query(self, query: str, parameters: Optional[Dict] = None) -> List[Dict]:
+        """Exécute une requête Cypher (doit être utilisée avec prudence)."""
+        if not self.driver: return []
+        # Par défaut, on logue l'exécution brute si elle ne vient pas d'une méthode de confiance
+        logger.debug(f"Executing Cypher: {query}")
         with self.driver.session() as session:
             try:
                 result = session.run(query, parameters or {})

@@ -18,8 +18,7 @@ class Neo4jGraphAdapter(GraphPersistencePort):
         return self._manager.execute_query(query, parameters)
 
     def execute_read(self, query: str, parameters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
-        # Neo4jManager's execute_query is general, we treat it as read here
-        return self._manager.execute_query(query, parameters)
+        return self._manager.execute_read(query, parameters)
 
     def execute_write(self, query: str, parameters: Optional[Dict[str, Any]] = None) -> None:
         self._manager.execute_query(query, parameters)
