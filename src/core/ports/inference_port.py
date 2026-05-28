@@ -138,7 +138,7 @@ class InferencePort(ABC):
         # TODO: implement estimate_depth method for this adapter
         raise InferenceNotImplementedError("estimate_depth not implemented for this adapter")
 
-    def generate_3d_scene(self, image_data: bytes, depth_map: bytes) -> Dict[str, Any]:
+    def generate_3d_scene(self, image_data: bytes, depth_map: bytes, mode: str = "gaussian_splatting") -> Dict[str, Any]:
         """Génère un espace 3D navigable (Gaussian Splatting / NeRF) à partir d'une image et de sa profondeur, avec in-painting 3D."""
         # TODO: implement generate_3d_scene method for this adapter
         raise InferenceNotImplementedError("generate_3d_scene not implemented for this adapter")
