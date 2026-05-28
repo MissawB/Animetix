@@ -1,4 +1,5 @@
 from typing import Optional, List, Dict
+import re
 from .llm_service import LLMService
 from .prompt_manager import PromptManager
 
@@ -36,12 +37,39 @@ class CompanionService:
                 history_str += f"{role.capitalize()}: {content}\n"
         
         # Retrieve and format the prompt
+        # Task 4: Use delimiters and sanitize user input/context
         prompt, system = self.prompt_manager.get_prompt(
             prompt_id,
-            user_msg=user_msg,
-            context=context,
+            user_msg=self._sanitize_and_delimit(user_msg, "user_input"),
+            context=self._sanitize_and_delimit(context, "context"),
             history=history_str
         )
         
         # Call LLM
         return self.llm_service.generate(prompt, system_prompt=system)
+
+    def _sanitize_and_delimit(self, text: str, tag: str) -> str:
+        """
+        Sanitizes input by stripping known prompt injection keywords and wraps it in XML-like tags.
+        """
+        if not text:
+            return ""
+            
+        forbidden = [
+            r"ignore previous instructions",
+            r"ignore all previous",
+            r"system prompt",
+            r"developer mode",
+            r"dan mode",
+            r"you are now",
+            r"act as",
+            r"forget everything",
+            r"reset prompt"
+        ]
+        
+        sanitized = text
+        for kw in forbidden:
+            pattern = re.escape(kw)
+            sanitized = re.sub(pattern, "", sanitized, flags=re.IGNORECASE)
+            
+        return f"<{tag}>{sanitized}</{tag}>"
