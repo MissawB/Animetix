@@ -70,7 +70,7 @@ logger = logging.getLogger('animetix')
 if IS_PRODUCTION:
     SECRET_KEY = env('DJANGO_SECRET_KEY')
     DEBUG = env.bool('DJANGO_DEBUG', default=False)
-    ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[])
+    ALLOWED_HOSTS = ['missawb-animetix-web.hf.space']
 else:
     # Mode Développement Souple
     SECRET_KEY = 'django-insecure-dev-fallback-key-very-secret'
@@ -79,7 +79,9 @@ else:
     logger.info("🛠️  Running in DEVELOPMENT mode (DEBUG=True)")
 
 # --- HUGGING FACE SPACES CONFIG ---
-X_FRAME_OPTIONS = 'ALLOWALL' 
+X_FRAME_OPTIONS = 'DENY'
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
 CSRF_TRUSTED_ORIGINS = [
     "https://*.hf.space",
     "https://*.huggingface.co",
@@ -203,7 +205,12 @@ SPECTACULAR_SETTINGS = {
     'COMPONENT_SPLIT_PATCH': True,
 }
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://missawb-animetix-web.hf.space",
+]
 GRAPHENE = {'SCHEMA': 'animetix.schema.schema'}
 ROOT_URLCONF = 'animetix_project.urls'
 
