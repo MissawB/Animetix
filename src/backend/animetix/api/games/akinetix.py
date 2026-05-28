@@ -1,3 +1,5 @@
+from django.utils.decorators import method_decorator
+from ratelimit.decorators import ratelimit
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -5,9 +7,9 @@ from dependency_injector.wiring import inject, Provide
 from ...containers import Container
 from animetix.api.dependencies import get_session_service
 from ...models import GameplaySession
-import logging
+from animetix_project.logging_config import get_logger
 
-logger = logging.getLogger("animetix." + __name__)
+logger = get_logger("animetix." + __name__)
 
 # --- AKINETIX MODE ---
 
@@ -31,6 +33,7 @@ class AkinetixGameStateView(APIView):
             'is_daily': state.is_daily
         })
 
+@method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True), name='post')
 class AkinetixGameStartView(APIView):
     permission_classes = [permissions.AllowAny]
     
@@ -63,6 +66,7 @@ class AkinetixGameStartView(APIView):
             'is_daily': game_state.is_daily
         })
 
+@method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True), name='post')
 class AkinetixGameAnswerView(APIView):
     permission_classes = [permissions.AllowAny]
     
