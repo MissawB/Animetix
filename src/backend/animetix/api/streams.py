@@ -1,11 +1,14 @@
 import json
 from django.http import JsonResponse, HttpResponse, StreamingHttpResponse
+from django.utils.decorators import method_decorator
+from ratelimit.decorators import ratelimit
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions
 from ..containers import get_container
 from animetix.api.dependencies import get_session_service
 
+@method_decorator(ratelimit(key='user_or_ip', rate='5/m', method='GET', block=True), name='get')
 class EmojiStreamView(APIView):
     """Streams emoji generation events for the UI."""
     permission_classes = [permissions.AllowAny]
@@ -26,6 +29,7 @@ class EmojiStreamView(APIView):
                 yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"
         return StreamingHttpResponse(event_stream(), content_type='text/event-stream')
 
+@method_decorator(ratelimit(key='user_or_ip', rate='5/m', method='GET', block=True), name='get')
 class ParadoxStreamView(APIView):
     """Streams paradox logic generation events."""
     permission_classes = [permissions.AllowAny]
@@ -49,6 +53,7 @@ class ParadoxStreamView(APIView):
                 yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"
         return StreamingHttpResponse(event_stream(), content_type='text/event-stream')
 
+@method_decorator(ratelimit(key='user_or_ip', rate='5/m', method='GET', block=True), name='get')
 class AgenticRAGStreamView(APIView):
     """Streams agentic RAG planning and solving events."""
     permission_classes = [permissions.AllowAny]
@@ -74,6 +79,7 @@ class AgenticRAGStreamView(APIView):
         response['Cache-Control'] = 'no-cache'
         return response
 
+@method_decorator(ratelimit(key='user_or_ip', rate='5/m', method='GET', block=True), name='get')
 class AniminatorStreamView(APIView):
     """Streams the Oracle's response and updates the game state in session."""
     permission_classes = [permissions.AllowAny]
