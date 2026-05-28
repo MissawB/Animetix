@@ -286,8 +286,14 @@ class AgenticRAGService:
             from .complexity_analyser import ComplexityAnalyser
             analyser = ComplexityAnalyser(self.prompt_manager, self.llm_service)
             return analyser.assess_complexity(query)
+        except ImportError as e:
+            logger.error(f"ComplexityAnalyser not available: {e}")
+            return 0, 0
+        except (InferenceError, InfrastructureError) as e:
+            logger.error(f"AI/Infrastructure error in dynamic complexity analysis: {e}")
+            return 0, 0
         except Exception as e:
-            logger.error(f"Error in dynamic complexity analysis: {e}")
+            logger.error(f"Error in dynamic complexity analysis: {e}", exc_info=True)
             return 0, 0
 
 
