@@ -1,4 +1,4 @@
-import logging
+from animetix_project.logging_config import get_logger
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -7,7 +7,7 @@ from ...containers import Container
 from animetix.api.dependencies import get_session_service
 from ...models import GameplaySession
 
-logger = logging.getLogger("animetix." + __name__)
+logger = get_logger('animetix.' + __name__)
 
 # --- CLASSIC MODE ---
 
@@ -65,9 +65,11 @@ class ClassicGameStartView(APIView):
         if not data:
             return Response({"error": "Catalog not found"}, status=status.HTTP_404_NOT_FOUND)
             
-        if override_secret:
+        if override_secret and getattr(request.user, 'is_staff', False):
             secret_title = override_secret
         else:
+            if override_secret:
+                logger.warning(f"User {request.user} tried to override secret without staff permissions.")
             port.update({'is_daily': False, 'is_ranked': False})
             from ...services import DIFFICULTY_SETTINGS
             secret_title = game_service.select_secret(media_type, difficulty, DIFFICULTY_SETTINGS)

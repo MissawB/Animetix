@@ -68,12 +68,15 @@ LOGGING = {
 logger = logging.getLogger('animetix')
 
 if IS_PRODUCTION:
-    SECRET_KEY = env('DJANGO_SECRET_KEY')
+    SECRET_KEY = env('DJANGO_SECRET_KEY', default=None)
+    if not SECRET_KEY:
+        from django.core.exceptions import ImproperlyConfigured
+        raise ImproperlyConfigured("The DJANGO_SECRET_KEY environment variable is required in production.")
     DEBUG = env.bool('DJANGO_DEBUG', default=False)
     ALLOWED_HOSTS = ['missawb-animetix-web.hf.space']
 else:
     # Mode Développement Souple
-    SECRET_KEY = 'django-insecure-dev-fallback-key-very-secret'
+    SECRET_KEY = 'dev-insecure-animetix-2026-v2-not-for-production'
     DEBUG = True
     ALLOWED_HOSTS = ['localhost', '127.0.0.1', '*']
     logger.info("🛠️  Running in DEVELOPMENT mode (DEBUG=True)")

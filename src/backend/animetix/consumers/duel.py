@@ -21,6 +21,13 @@ class DuelConsumer(BaseConsumer):
             await self.close()
             return
 
+        # Sécurité : Vérifier que l'utilisateur est l'un des participants
+        p1 = await sync_to_async(lambda: self.duel.player1)()
+        p2 = await sync_to_async(lambda: self.duel.player2)()
+        if self.user != p1 and self.user != p2:
+            await self.close()
+            return
+
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.accept()
         

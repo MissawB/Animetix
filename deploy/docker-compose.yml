@@ -33,7 +33,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     deploy:
       resources:
         limits:
@@ -43,7 +43,7 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - redis_data:/data
     deploy:
@@ -58,7 +58,7 @@ services:
     volumes:
       - chroma_data:/chroma/chroma
     ports:
-      - "8001:8000"
+      - "127.0.0.1:8001:8000"
     command: "--host 0.0.0.0 --port 8000 --path /chroma/chroma"
     deploy:
       resources:
@@ -71,8 +71,8 @@ services:
     profiles: ["data"]
     image: neo4j:5-community
     ports:
-      - "7474:7474"
-      - "7687:7687"
+      - "127.0.0.1:7474:7474"
+      - "127.0.0.1:7687:7687"
     environment:
       - NEO4J_AUTH=${NEO4J_AUTH}
     volumes:
@@ -90,7 +90,7 @@ services:
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
-      - "9090:9090"
+      - "127.0.0.1:9090:9090"
 
   # Observabilité : Grafana
   grafana:
@@ -99,7 +99,7 @@ services:
     depends_on:
       - prometheus
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=${GF_ADMIN_PASSWORD}
     volumes:
@@ -113,14 +113,14 @@ services:
     volumes:
       - ollama_storage:/root/.ollama
     ports:
-      - "11434:11434"
+      - "127.0.0.1:11434:11434"
 
   # Serveur d'Inférence Hautes Performances (vLLM)
   vllm:
     profiles: ["llm"]
     image: vllm/vllm-openai:latest
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     volumes:
       - vllm_cache:/root/.cache/huggingface
     environment:
