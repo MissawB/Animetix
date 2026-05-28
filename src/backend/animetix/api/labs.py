@@ -1,7 +1,7 @@
 import os
 import json
 import datetime
-import logging
+from animetix_project.logging_config import get_logger
 from django.conf import settings
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
@@ -10,7 +10,7 @@ from ..models import DailyChallenge
 from ..serializers import DailyChallengeSerializer
 from ..containers import get_container
 
-logger = logging.getLogger("animetix." + __name__)
+logger = get_logger('animetix.' + __name__)
 
 class DailyChallengeViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = DailyChallenge.objects.all()
@@ -314,13 +314,14 @@ class SingularityLabDataView(APIView):
 
         if action == 'compile':
             function_name = request.data.get('function_name', 'cosine_similarity').strip()
-            slow_logic_code = request.data.get('slow_logic_code', '').strip()
             
-            if not slow_logic_code:
-                slow_logic_code = "double similarity = compute(a, b);"
+            # Security restriction: only allow specific safe functions
+            allowed_functions = ['cosine_similarity', 'euclidean_distance', 'vector_norm']
+            if function_name not in allowed_functions:
+                return Response({'error': f'Function "{function_name}" is not allowed for optimization.'}, status=400)
                 
             try:
-                optimized_fn = container.self_evolving_compiler.analyze_and_optimize(function_name, slow_logic_code)
+                optimized_fn = container.self_evolving_compiler.analyze_and_optimize(function_name)
                 import numpy as np
                 a = np.array([1.0, 2.0, 3.0])
                 b = np.array([1.0, 2.0, 3.0])
@@ -329,7 +330,7 @@ class SingularityLabDataView(APIView):
                 return Response({
                     'status': 'success',
                     'message': f"Microcode pour '{function_name}' généré et compilé avec succès !",
-                    'test_output': f"Calcul de similarité test : {test_val:.4f}",
+                    'test_output': f"Calcul de {function_name} test : {test_val:.4f}",
                     'c_code_generated': f"double {function_name}_optimized(double* a, double* b, int n) {{ ... }}"
                 })
             except Exception as e:
