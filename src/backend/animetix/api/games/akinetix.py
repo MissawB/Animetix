@@ -1,5 +1,5 @@
 from django.utils.decorators import method_decorator
-from ratelimit.decorators import ratelimit
+from django_ratelimit.decorators import ratelimit
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
