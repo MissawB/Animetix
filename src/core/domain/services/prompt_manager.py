@@ -50,7 +50,8 @@ class PromptManager:
             
         self.few_shot_examples[prompt_key].append({
             "input": bad_input,
-            "expected": good_output
+            "expected": good_output,
+            "verified": False # Sécurité : Nécessite une validation humaine avant activation
         })
         
         # Keep only the last 5 corrections to avoid prompt bloat
@@ -62,7 +63,7 @@ class PromptManager:
             with lock:
                 with open(self.few_shot_file, 'w', encoding='utf-8') as f:
                     json.dump(self.few_shot_examples, f, ensure_ascii=False, indent=2)
-                logger.info(f"🧠 Metacognition: New self-correction saved for {prompt_key}.")
+                logger.info(f"🧠 Metacognition: New self-correction saved for {prompt_key} (Pending Verification).")
         except Timeout:
             logger.error(f"Timeout acquiring lock for {self.few_shot_file}")
         except Exception as e:
@@ -120,9 +121,12 @@ class PromptManager:
         formatted_prompt = template.format(**kwargs)
         
         # --- SELF-EVOLVING: INJECTION DES FEW-SHOTS ---
-        if key in self.few_shot_examples and self.few_shot_examples[key]:
-            few_shot_text = "\n\n--- EXEMPLES À SUIVRE (Apprentissage des erreurs passées) ---\n"
-            for ex in self.few_shot_examples[key]:
+        # Sécurité Phase 2 : On n'injecte que les exemples VÉRIFIÉS
+        verified_examples = [ex for ex in self.few_shot_examples.get(key, []) if ex.get('verified', False)]
+        
+        if verified_examples:
+            few_shot_text = "\n\n--- EXEMPLES À SUIVRE (Validés par les administrateurs) ---\n"
+            for ex in verified_examples:
                 few_shot_text += f"Exemple Input:\n{ex['input']}\nExemple Résultat Attendu:\n{ex['expected']}\n\n"
             system += few_shot_text
             

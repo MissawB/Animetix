@@ -269,9 +269,11 @@ class AudioLabDataView(APIView):
         try:
             ref_audio_bytes = b""
             if voice_source == 'library':
-                voice_id = request.data.get('voice_id')
+                voice_id = request.data.get('voice_id', '')
+                # Sécurité : Empêcher la navigation dans les répertoires via voice_id
+                safe_voice_id = os.path.basename(voice_id)
                 project_root = settings.BASE_DIR.parent.parent
-                path = project_root / "data" / "audio" / "library" / f"{voice_id}.wav"
+                path = project_root / "data" / "audio" / "library" / f"{safe_voice_id}.wav"
                 if os.path.exists(path):
                     with open(path, "rb") as f: ref_audio_bytes = f.read()
             else:

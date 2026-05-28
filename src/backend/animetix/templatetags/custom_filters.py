@@ -57,18 +57,26 @@ from django.utils.safestring import mark_safe
 def sanitize_ai(value):
     """
     Sanitizes LLM generated output to prevent XSS while allowing basic formatting.
+    Uses bleach with a strict allowlist.
     """
     if not value:
         return ""
     
-    # Allowed tags and attributes
-    allowed_tags = ['p', 'b', 'i', 'u', 'em', 'strong', 'br', 'ul', 'ol', 'li', 'code', 'pre']
-    allowed_attrs = {}
+    # Allowed tags and attributes (Strict list)
+    allowed_tags = ['p', 'b', 'i', 'u', 'em', 'strong', 'br', 'ul', 'ol', 'li', 'code', 'pre', 'blockquote']
+    allowed_attrs = {
+        'code': ['class'],
+        'pre': ['class'],
+    }
     
+    # Bleach cleaning
     cleaned = bleach.clean(
         value, 
         tags=allowed_tags, 
         attributes=allowed_attrs, 
-        strip=True
+        strip=True,
+        strip_comments=True
     )
+    
+    # mark_safe should only be used after bleach has cleaned the input
     return mark_safe(cleaned)

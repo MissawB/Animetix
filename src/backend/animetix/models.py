@@ -256,6 +256,7 @@ class CreativeFusion(models.Model):
     parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='remixes')
     likes = models.ManyToManyField(User, related_name='liked_fusions', blank=True)
     vn_script = models.JSONField(null=True, blank=True)
+    is_public = models.BooleanField(default=True)
 
     created_at = models.DateTimeField(auto_now_add=True)    
     def __str__(self):

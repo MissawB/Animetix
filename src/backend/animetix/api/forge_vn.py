@@ -3,9 +3,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from ..models import CreativeFusion
 from ..containers import get_container
-import logging
+from animetix_project.logging_config import get_logger
 
-logger = logging.getLogger('animetix.api.vn')
+logger = get_logger('animetix.api.vn')
 
 class ForgeVNView(APIView):
     """
@@ -17,6 +17,11 @@ class ForgeVNView(APIView):
         """Returns the VN script for a specific fusion."""
         try:
             fusion = CreativeFusion.objects.get(id=fusion_id)
+            
+            # Sécurité : Vérifier que la fusion est publique ou que l'utilisateur en est le créateur
+            if not fusion.is_public and fusion.creator != request.user and not getattr(request.user, 'is_staff', False):
+                 return Response({"error": "Unauthorized access to private fusion"}, status=status.HTTP_403_FORBIDDEN)
+
             return Response({"vn_script": fusion.vn_script})
         except CreativeFusion.DoesNotExist:
             return Response({"error": "Fusion not found"}, status=status.HTTP_404_NOT_FOUND)
