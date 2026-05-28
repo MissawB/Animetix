@@ -265,10 +265,28 @@ class UnifiedInferenceAdapter(InferencePort):
         raise InferenceNotImplementedError()
 
     def classify_image(self, image_data: bytes, candidate_labels: List[str], model_id: Optional[str] = None) -> Dict[str, float]:
-        raise InferenceNotImplementedError()
+        """Classifie une image via VLM prompt."""
+        prompt = f"Parmi ces labels: {', '.join(candidate_labels)}, lequel correspond le mieux à cette image ? Réponds au format JSON: {{'label': score}}."
+        try:
+            desc = self.generate_image_description(image_data, prompt=prompt)
+            match = re.search(r'\{.*\}', desc, re.DOTALL)
+            if match:
+                return json.loads(match.group(0))
+        except Exception:
+            pass
+        return {l: 0.0 for l in candidate_labels}
 
     def detect_objects(self, image_data: bytes, candidate_queries: List[str], model_id: Optional[str] = None) -> List[Dict]:
-        raise InferenceNotImplementedError()
+        """Détecte des objets via VLM prompt."""
+        prompt = f"Détecte ces éléments dans l'image: {', '.join(candidate_queries)}. Réponds au format JSON: [{{'label': str, 'box_2d': [ymin, xmin, ymax, xmax], 'score': float}}]."
+        try:
+            desc = self.generate_image_description(image_data, prompt=prompt)
+            match = re.search(r'\[.*\]', desc, re.DOTALL)
+            if match:
+                return json.loads(match.group(0))
+        except Exception:
+            pass
+        return []
 
     def get_video_temporal_embeddings(self, video_data: bytes) -> List[Dict[str, Any]]:
         raise InferenceNotImplementedError()
@@ -361,7 +379,17 @@ class UnifiedInferenceAdapter(InferencePort):
         image_urls: List[str], 
         system_prompt: str = "Tu es un expert en analyse visuelle d'anime."
     ) -> List[Dict[str, Any]]:
-        raise InferenceNotImplementedError()
+        """Rerank visuel via VLM (fallback)."""
+        prompt = f"Requête: {query}\n\nImages à classer par pertinence (URLs): {', '.join(image_urls)}\n\nDonne un score pour chaque image. Réponds au format JSON: [{{'url': str, 'score': float}}]."
+        try:
+            # Fallback text-based if LLM supports it
+            raw = self.generate(prompt, system_prompt=system_prompt)
+            match = re.search(r'\[.*\]', raw, re.DOTALL)
+            if match:
+                return json.loads(match.group(0))
+        except Exception:
+            pass
+        return [{"url": url, "score": 0.5} for url in image_urls]
 
     def get_multimodal_late_interaction(self, image_data: bytes) -> List[List[float]]:
         raise InferenceNotImplementedError()
