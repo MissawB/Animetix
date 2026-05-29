@@ -1,8 +1,8 @@
 import pytest
 from unittest.mock import MagicMock, patch
-from backend.adapters.inference.vllm_adapter import VllmAdapter
-from backend.adapters.inference.gguf_adapter import GgufAdapter
-from backend.core.domain.services.llm_service import LLMService
+from adapters.inference.vllm_adapter import VllmAdapter
+from adapters.inference.gguf_adapter import GgufAdapter
+from core.domain.services.llm_service import LLMService
 
 @patch('requests.post')
 def test_vllm_adapter_thinking_mode(mock_post):

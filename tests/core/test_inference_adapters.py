@@ -1,12 +1,12 @@
 import pytest
-from backend.adapters.inference.qwen3_vl_adapter import Qwen3VLAdapter
-from backend.adapters.inference.vllm_adapter import VllmAdapter
-from backend.adapters.inference.brain_api_adapter import BrainAPIAdapter
-from backend.adapters.inference.gguf_adapter import GgufAdapter
-from backend.adapters.inference.local_llama_adapter import LocalLlamaAdapter
-from backend.adapters.inference.manga_ocr_adapter import MangaOCRAdapter
-from backend.adapters.inference.local_text_adapter import LocalTextAdapter
-from backend.adapters.inference.local_rerank_adapter import LocalRerankAdapter
+from adapters.inference.qwen3_vl_adapter import Qwen3VLAdapter
+from adapters.inference.vllm_adapter import VllmAdapter
+from adapters.inference.brain_api_adapter import BrainAPIAdapter
+from adapters.inference.gguf_adapter import GgufAdapter
+from adapters.inference.local_llama_adapter import LocalLlamaAdapter
+from adapters.inference.manga_ocr_adapter import MangaOCRAdapter
+from adapters.inference.local_text_adapter import LocalTextAdapter
+from adapters.inference.local_rerank_adapter import LocalRerankAdapter
 
 from core.ports.inference_port import InferenceNotImplementedError
 

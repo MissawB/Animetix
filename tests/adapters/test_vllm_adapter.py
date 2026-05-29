@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock, patch
-from backend.adapters.inference.vllm_adapter import VllmAdapter
+from adapters.inference.vllm_adapter import VllmAdapter
 from pydantic import BaseModel
 
 class UserProfile(BaseModel):
