@@ -11,6 +11,6 @@ Ce document centralise toutes les tâches techniques, d'architecture et de fonct
 ## 🧬 Fonctionnalités Créatives
 
 - [x] **Génération Structurée** : Remplacer l'heuristique de regex de parsing JSON par une validation de schéma native via `Instructor` avec Pydantic dans `UnifiedInferenceAdapter` et `FallbackInferenceAdapter` pour Ollama/OpenAI.
-- [ ] **Modération de contenu sémantique** : Refactoriser `LocalGuardrailAdapter` pour remplacer la liste statique de mots-clés (`bad_words`) par une évaluation sémantique neuronale locale ou un appel structuré.
+- [x] **Modération de contenu sémantique** : Refactoriser `LocalGuardrailAdapter` pour remplacer la liste statique de mots-clés (`bad_words`) par une évaluation sémantique neuronale locale ou un appel structuré.
 - [ ] **Pipeline Manga, Visual Rerank & ColPali** : Compléter et stabiliser les intégrations locales de `process_manga_page`, `translate_manga_page`, `visual_rerank` et `get_multimodal_late_interaction` (ColPali).
 
