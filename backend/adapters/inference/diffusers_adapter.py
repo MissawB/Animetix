@@ -239,40 +239,53 @@ class DiffusersAdapter(InferencePort):
 
     def inpaint_text_bubbles(self, image_data: bytes, bubbles: List[Dict]) -> str:
         """
-        Nettoie les bulles de texte via inpainting et réinscrit le nouveau texte.
+        Nettoie les bulles de texte via inpainting (SDXL) ou par repli algorithmique local (Pillow).
         """
+        import base64
+        from PIL import ImageDraw, ImageFont
         try:
-            self._load_inpainting()
-            if not self._inpaint_pipe: return "Erreur: Modèle d'inpainting non chargé."
-            
             init_image = Image.open(BytesIO(image_data)).convert("RGB")
             width, height = init_image.size
             
-            # 1. Création du masque d'inpainting
-            mask_image = Image.new("L", (width, height), 0)
-            draw_mask = ImageDraw.Draw(mask_image)
-            for bubble in bubbles:
-                bbox = bubble.get('bbox') # [x1, y1, x2, y2]
-                if bbox:
-                    # On ajoute une petite marge pour bien couvrir le texte
-                    draw_mask.rectangle(bbox, fill=255)
+            # Tente de charger le modèle d'inpainting neuronal
+            try:
+                self._load_inpainting()
+            except Exception as load_err:
+                logger.warning(f"⚠️ SDXL Inpainting loading failed: {load_err}. Falling back to Pillow-only rendering.")
             
-            # 2. Inpainting pour effacer le texte existant
-            num_steps = 4 if "turbo" in self.model_id.lower() else 25
-            inpainted_image = self._inpaint_pipe(
-                prompt="clean manga bubble, no text, white background",
-                image=init_image,
-                mask_image=mask_image,
-                num_inference_steps=num_steps
-            ).images[0]
+            # --- Cas 1 : SDXL Inpainting Neuronal Disponible ---
+            if self._inpaint_pipe is not None:
+                mask_image = Image.new("L", (width, height), 0)
+                draw_mask = ImageDraw.Draw(mask_image)
+                for bubble in bubbles:
+                    bbox = bubble.get('bbox')
+                    if bbox:
+                        draw_mask.rectangle(bbox, fill=255)
+                
+                num_steps = 4 if "turbo" in self.model_id.lower() else 25
+                inpainted_image = self._inpaint_pipe(
+                    prompt="clean manga bubble, no text, white background",
+                    image=init_image,
+                    mask_image=mask_image,
+                    num_inference_steps=num_steps
+                ).images[0]
             
-            # 3. Dessin du nouveau texte
+            # --- Cas 2 : Fallback Pillow Algorithmique Local (CUDA indisponible / CPU) ---
+            else:
+                logger.info("🎨 Rendering manga text bubbles using robust Pillow fallback.")
+                inpainted_image = init_image.copy()
+                draw_fallback = ImageDraw.Draw(inpainted_image)
+                for bubble in bubbles:
+                    bbox = bubble.get('bbox') # [x1, y1, x2, y2]
+                    if bbox:
+                        # Dessiner un rectangle blanc opaque pour effacer le texte d'origine
+                        draw_fallback.rectangle(bbox, fill="white")
+            
+            # --- Rendu commun du nouveau texte par-dessus la zone propre ---
             draw_final = ImageDraw.Draw(inpainted_image)
             try:
-                # Tentative de chargement d'une police systeme
                 font = ImageFont.truetype("arial.ttf", 20)
             except Exception:
-                logger.info("System font 'arial.ttf' not found, falling back to default image font.")
                 font = ImageFont.load_default()
 
             for bubble in bubbles:
@@ -280,19 +293,18 @@ class DiffusersAdapter(InferencePort):
                 text = bubble.get('text')
                 if bbox and text:
                     x1, y1, x2, y2 = bbox
-                    # Calcul pour centrer le texte dans la bubble
                     t_bbox = draw_final.textbbox((0, 0), text, font=font)
                     t_w, t_h = t_bbox[2] - t_bbox[0], t_bbox[3] - t_bbox[1]
                     pos_x = (x1 + x2) / 2 - t_w / 2
                     pos_y = (y1 + y2) / 2 - t_h / 2
                     draw_final.text((pos_x, pos_y), text, fill="black", font=font)
 
-            # --- Accounting ---
-            self._log_usage(engine=f"diffusers:{self.model_id}:inpaint", units=1)
-
+            # Enregistrement et encodage base64
             buffered = BytesIO()
             inpainted_image.save(buffered, format="JPEG", quality=85)
             img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+            
+            self._log_usage(engine=f"diffusers:{self.model_id}:inpaint" if self._inpaint_pipe else "pillow:local:inpaint", units=1)
             return f"data:image/jpeg;base64,{img_str}"
 
         except Exception as e:
