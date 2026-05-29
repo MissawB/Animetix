@@ -4,7 +4,7 @@ Ce document centralise toutes les tâches techniques, d'architecture et de fonct
 
 ## 🛠️ Dette Technique & Architecture
 
-- [ ] **Diagnostics & Incertitude** : Implémenter `get_diagnostics` et `calculate_uncertainty` dans `InferencePort` et ses adaptateurs pour permettre une observabilité et un calcul d'incertitude mathématique (entropie, perplexité, logit lens) réels.
+- [x] **Diagnostics & Incertitude** : Implémenter `get_diagnostics` et `calculate_uncertainty` dans `InferencePort` et ses adaptateurs pour permettre une observabilité et un calcul d'incertitude mathématique (entropie, perplexité, logit lens) réels.
 - [ ] **Bulle de Simulation des Modèles Cognitifs** : Interconnecter le `SynapticPlasticitySimulator` et le `QuantumCognitivePreferenceModel` au pipeline de RAG réel pour influencer dynamiquement les scores de pertinence en fonction des sessions de l'utilisateur.
 - [ ] **Génération 3D & Indexation Temporelle** : Implémenter de véritables adaptateurs locaux/cloud pour `generate_3d_scene` (Gaussian Splatting/NeRF) et `get_video_temporal_embeddings` (Video-RAG) à la place des stubs actuels.
 
