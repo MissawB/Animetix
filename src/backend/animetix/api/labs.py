@@ -403,3 +403,61 @@ class SingularityLabDataView(APIView):
         else:
             return Response({'error': 'Action inconnue'}, status=400)
 
+@method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True), name='dispatch')
+class VideoLabDataView(APIView):
+    """Transforme une vidéo avec transfert de style SOTA (FateZero)."""
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        studio_style = request.data.get('studio_style', 'Ghibli')
+        uploaded_file = request.FILES.get('video_file')
+        if not uploaded_file:
+            return Response({'error': 'No video provided'}, status=400)
+
+        try:
+            video_data = uploaded_file.read()
+            service = get_container().studio_transformation_service
+            # the service delegates to inference_engine
+            res = service.transform_video_to_anime_sota(video_data, studio_style)
+            return Response({'status': 'success', 'video_url': res})
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
+
+@method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True), name='dispatch')
+class SoundscapeLabDataView(APIView):
+    """Génère une ambiance sonore via AudioLDM."""
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        uploaded_file = request.FILES.get('video_file')
+        if not uploaded_file:
+            return Response({'error': 'No video provided'}, status=400)
+
+        try:
+            video_data = uploaded_file.read()
+            service = get_container().soundscape_generation_service
+            res = service.generate_soundscape_for_video(video_data)
+            return Response({'status': 'success', 'audio_url': res})
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
+
+@method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True), name='dispatch')
+class SpeechToSpeechLabDataView(APIView):
+    """Native Speech-to-Speech interaction."""
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        import base64
+        uploaded_file = request.FILES.get('audio_file')
+        if not uploaded_file:
+            return Response({'error': 'No audio provided'}, status=400)
+
+        try:
+            audio_data = uploaded_file.read()
+            # Direct adapter call for S2S
+            res_bytes = get_container().inference.audio_transformers_adapter().speech_to_speech(audio_data)
+            res_b64 = base64.b64encode(res_bytes).decode('utf-8')
+            return Response({'status': 'success', 'audio_url': f"data:audio/wav;base64,{res_b64}"})
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
+
