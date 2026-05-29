@@ -109,8 +109,8 @@ class Qwen3VLAdapter(InferencePort):
                     
                     if final_results:
                         return final_results
-                except (json.JSONDecodeError, ValueError):
-                    pass
+                except (json.JSONDecodeError, ValueError) as e:
+                    logger.warning(f"Qwen3-VL rerank JSON parsing failed: {e}")
             
             logger.warning("Qwen3-VL rerank returned malformed JSON or incomplete results. Using fallback.")
             return [{"index": i, "score": 1.0 / len(image_urls)} for i in range(len(image_urls))]
