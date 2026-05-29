@@ -103,7 +103,7 @@ def test_not_implemented_exception_is_silent_and_does_not_log_error():
     
     fallback = FallbackInferenceAdapter(adapters=[adapter1, adapter2], obs_service=mock_obs)
     
-    with patch("src.adapters.inference.fallback_adapter.logger.error") as mock_log_err:
+    with patch("adapters.inference.fallback_adapter.logger.error") as mock_log_err:
         result = fallback.estimate_depth(b"sample_image")
         
         assert result == b"correct_depth_2"

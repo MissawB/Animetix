@@ -10,7 +10,7 @@ class TestMangaOCRAdapter(unittest.TestCase):
                 return {"is_safe": True}
         
         # Mock du pipeline pour éviter le chargement réel du modèle
-        with patch('src.adapters.inference.manga_ocr_adapter.pipeline'):
+        with patch('adapters.inference.manga_ocr_adapter.pipeline'):
             self.adapter = ConcreteMangaOCRAdapter()
         self.adapter.ocr_pipeline = MagicMock()
 
