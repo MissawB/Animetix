@@ -13,7 +13,7 @@
 ### Task 1: Define Entities
 
 **Files:**
-- Modify: `src/core/domain/entities/ai_schemas.py`
+- Modify: `backend/core/domain/entities/ai_schemas.py`
 
 - [ ] **Step 1: Add CombatCharacter and CombatResult schemas**
 
@@ -45,7 +45,7 @@ class CombatResult(BaseModel):
 
 - [ ] **Step 2: Commit Entities**
 ```bash
-git add src/core/domain/entities/ai_schemas.py
+git add backend/core/domain/entities/ai_schemas.py
 git commit -m "feat(domain): add combat entities for vs-battle game"
 ```
 
@@ -54,9 +54,9 @@ git commit -m "feat(domain): add combat entities for vs-battle game"
 ### Task 2: Implement Fandom Adapter
 
 **Files:**
-- Create: `src/core/ports/fandom_port.py`
-- Create: `src/adapters/persistence/fandom_adapter.py`
-- Modify: `src/backend/animetix/containers.py`
+- Create: `backend/core/ports/fandom_port.py`
+- Create: `backend/adapters/persistence/fandom_adapter.py`
+- Modify: `backend/api/animetix/containers.py`
 
 - [ ] **Step 1: Create FandomPort**
 ```python
@@ -77,7 +77,7 @@ Using `requests` to call the MediaWiki API of `vsbattles.fandom.com`.
 
 - [ ] **Step 4: Commit Adapter**
 ```bash
-git add src/core/ports/fandom_port.py src/adapters/persistence/fandom_adapter.py src/backend/animetix/containers.py
+git add backend/core/ports/fandom_port.py backend/adapters/persistence/fandom_adapter.py backend/api/animetix/containers.py
 git commit -m "feat(adapters): add FandomPort and adapter for VS Battles Wiki"
 ```
 
@@ -86,14 +86,14 @@ git commit -m "feat(adapters): add FandomPort and adapter for VS Battles Wiki"
 ### Task 3: Add Battle Prompts
 
 **Files:**
-- Modify: `src/core/domain/services/prompts/prompts.yaml`
+- Modify: `backend/core/domain/services/prompts/prompts.yaml`
 
 - [ ] **Step 1: Add advocate and judge prompts**
 Include specific instructions for "Analytical focus with Hype style".
 
 - [ ] **Step 2: Commit Prompts**
 ```bash
-git add src/core/domain/services/prompts/prompts.yaml
+git add backend/core/domain/services/prompts/prompts.yaml
 git commit -m "feat(prompts): add vs_battle_advocate and vs_battle_judge prompts"
 ```
 
@@ -102,7 +102,7 @@ git commit -m "feat(prompts): add vs_battle_advocate and vs_battle_judge prompts
 ### Task 4: Implement VsBattleService
 
 **Files:**
-- Create: `src/core/domain/services/creative/vs_battle_service.py`
+- Create: `backend/core/domain/services/creative/vs_battle_service.py`
 - Test: `tests/core/domain/services/creative/test_vs_battle_service.py`
 
 - [ ] **Step 1: Write the failing test for battle orchestration**
@@ -117,8 +117,8 @@ git commit -m "feat(prompts): add vs_battle_advocate and vs_battle_judge prompts
 ### Task 5: Backend Integration (View & URL)
 
 **Files:**
-- Modify: `src/backend/animetix/views/media_games.py`
-- Modify: `src/backend/animetix/urls.py`
+- Modify: `backend/api/animetix/views/media_games.py`
+- Modify: `backend/api/animetix/urls.py`
 
 - [ ] **Step 1: Add VS Battle view**
     - Support for manual selection.
@@ -126,6 +126,6 @@ git commit -m "feat(prompts): add vs_battle_advocate and vs_battle_judge prompts
 - [ ] **Step 2: Add URL pattern**
 - [ ] **Step 3: Commit Integration**
 ```bash
-git add src/backend/animetix/views/media_games.py src/backend/animetix/urls.py
+git add backend/api/animetix/views/media_games.py backend/api/animetix/urls.py
 git commit -m "feat(backend): integrate VS Battle game view and URLs"
 ```

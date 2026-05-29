@@ -49,6 +49,8 @@ def test_get_prompt_missing(prompts_dir):
 def test_few_shot_injection(prompts_dir):
     manager = PromptManager(prompts_dir)
     manager.add_few_shot_correction("simple_key", "bad", "good")
+    # Mark as verified — add_few_shot_correction saves with verified=False by design
+    manager.few_shot_examples["simple_key"][0]["verified"] = True
     
     res, sys = manager.get_prompt("simple_key")
     assert "EXEMPLES À SUIVRE" in sys

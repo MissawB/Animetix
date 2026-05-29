@@ -1,6 +1,6 @@
 
-from src.adapters.inference.brain_api_adapter import BrainAPIAdapter
-from src.core.ports.inference_port import InferencePort
+from backend.adapters.inference.brain_api_adapter import BrainAPIAdapter
+from backend.core.ports.inference_port import InferencePort
 
 def verify_adapter():
     adapter = BrainAPIAdapter(brain_api_url="http://localhost:8000")

@@ -27,7 +27,7 @@ def test_chronicler_theories_integration():
     )
 
     # Mock the theory data in Neo4j
-    mock_neo4j.execute_query.return_value = [
+    mock_neo4j.execute_read.return_value = [
         {"title": "Imu is JoyBoy", "desc": "Imu is actually JoyBoy from the past.", "plausibility": 0.8}
     ]
 

@@ -3,7 +3,7 @@ import os
 import logging
 
 # Add src to path
-sys.path.append(os.path.abspath("src/backend"))
+sys.path.append(os.path.abspath("backend/api"))
 
 from animetix.containers import get_container
 

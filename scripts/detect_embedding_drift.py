@@ -5,7 +5,7 @@ import sys
 
 # Ajout du dossier root au path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from src.pipeline.chroma_client import chroma_manager
+from backend.pipeline.chroma_client import chroma_manager
 
 class DriftDetector:
     def __init__(self, baseline_path):

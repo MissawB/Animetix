@@ -11,7 +11,7 @@
   - **Status:** Pending
 
 - [ ] **Task 3: Update Evaluation Metrics for Per-Category Reporting**
-  - **Files:** `src/pipeline/mlops/evaluation_metrics.py`
+  - **Files:** `backend/pipeline/mlops/evaluation_metrics.py`
   - **Status:** Pending
 
 - [ ] **Task 4: Final Validation with Smoke Test**

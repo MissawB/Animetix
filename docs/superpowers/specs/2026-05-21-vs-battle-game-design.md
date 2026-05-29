@@ -6,12 +6,12 @@ Implementation of a new game mode for the Animetix platform that simulates and j
 ## 2. Architecture (Hexagonal)
 
 ### Domain Layer (Core)
-- **Service:** `VsBattleService` in `src/core/domain/services/creative/`.
+- **Service:** `VsBattleService` in `backend/core/domain/services/creative/`.
 - **Logic:**
     - Orchestrates the search for character data via `WebSearchPort`.
     - Triggers a multi-agent debate via `MultiAgentBus`.
     - Manages the state of the match (Character A, Character B, Debate history, Final Verdict).
-- **Entities:** New `CombatCharacter` and `CombatResult` schemas in `src/core/domain/entities/ai_schemas.py`.
+- **Entities:** New `CombatCharacter` and `CombatResult` schemas in `backend/core/domain/entities/ai_schemas.py`.
 
 ### Ports Layer
 - **WebSearchPort:** Used to fetch character profiles from Fandom API (VS Battles Wiki).

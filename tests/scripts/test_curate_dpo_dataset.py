@@ -22,7 +22,7 @@ def test_curate_dpo_dataset_flow(mock_open, mock_loop_class, mock_get_container,
     
     mock_container = MagicMock()
     mock_get_container.return_value = mock_container
-    mock_rag = mock_container.agentic_rag
+    mock_rag = mock_container.agentic_rag.return_value
     mock_rag.plan_and_solve.return_value = "perfect answer"
     
     mock_loop = mock_loop_class.return_value

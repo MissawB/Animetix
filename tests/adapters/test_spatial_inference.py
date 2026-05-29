@@ -2,8 +2,8 @@ import pytest
 from io import BytesIO
 from PIL import Image
 from unittest.mock import MagicMock, patch
-from src.adapters.inference.diffusers_adapter import DiffusersAdapter
-from src.adapters.inference.vision_transformers_adapter import VisionTransformersAdapter
+from backend.adapters.inference.diffusers_adapter import DiffusersAdapter
+from backend.adapters.inference.vision_transformers_adapter import VisionTransformersAdapter
 
 
 

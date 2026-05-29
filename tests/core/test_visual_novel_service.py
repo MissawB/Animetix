@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock
-from src.core.domain.services.creative.visual_novel_service import VisualNovelService
-from src.core.domain.entities.ai_schemas import VNScript, VNScene
+from backend.core.domain.services.creative.visual_novel_service import VisualNovelService
+from backend.core.domain.entities.ai_schemas import VNScript, VNScene
 
 class TestVisualNovelService(unittest.TestCase):
     def setUp(self):

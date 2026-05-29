@@ -13,7 +13,7 @@
 ### Task 1: Update Entities
 
 **Files:**
-- Modify: `src/core/domain/entities/ai_schemas.py`
+- Modify: `backend/core/domain/entities/ai_schemas.py`
 
 - [ ] **Step 1: Add image_url and tier_value to schemas**
 
@@ -26,7 +26,7 @@ class CombatStats(BaseModel):
 
 - [ ] **Step 2: Commit Entities**
 ```bash
-git add src/core/domain/entities/ai_schemas.py
+git add backend/core/domain/entities/ai_schemas.py
 git commit -m "feat(domain): update combat entities for immersion 2.0"
 ```
 
@@ -35,14 +35,14 @@ git commit -m "feat(domain): update combat entities for immersion 2.0"
 ### Task 2: Enhance FandomAdapter (Image Extraction)
 
 **Files:**
-- Modify: `src/adapters/persistence/fandom_adapter.py`
+- Modify: `backend/adapters/persistence/fandom_adapter.py`
 
 - [ ] **Step 1: Implement image URL fetching**
 Use `prop=pageimages` in MediaWiki API to get character portraits.
 
 - [ ] **Step 2: Commit Adapter**
 ```bash
-git add src/adapters/persistence/fandom_adapter.py
+git add backend/adapters/persistence/fandom_adapter.py
 git commit -m "feat(adapters): enhance FandomAdapter with image extraction"
 ```
 
@@ -51,7 +51,7 @@ git commit -m "feat(adapters): enhance FandomAdapter with image extraction"
 ### Task 3: Logic Update (Power Mapping)
 
 **Files:**
-- Modify: `src/core/domain/services/creative/vs_battle_service.py`
+- Modify: `backend/core/domain/services/creative/vs_battle_service.py`
 
 - [ ] **Step 1: Implement `_map_tier_to_value` logic**
 Create a mapping dictionary for VS Battles Wiki tiers (0, 1-A, 1-B, ... 10-C).
@@ -61,7 +61,7 @@ Ensure `tier_value` and `image_url` are populated during character creation.
 
 - [ ] **Step 3: Commit Logic**
 ```bash
-git add src/core/domain/services/creative/vs_battle_service.py
+git add backend/core/domain/services/creative/vs_battle_service.py
 git commit -m "feat(domain): implement tier normalization and image handling in VsBattleService"
 ```
 
@@ -70,7 +70,7 @@ git commit -m "feat(domain): implement tier normalization and image handling in 
 ### Task 4: Frontend Immersion (Gauges & Typewriter)
 
 **Files:**
-- Modify: `src/backend/animetix/templates/animetix/games/vs_battle_result.html`
+- Modify: `backend/api/animetix/templates/animetix/games/vs_battle_result.html`
 
 - [ ] **Step 1: Add dynamic gauges with Tailwind**
 Use the `tier_value` to set the width of progress bars.
@@ -80,6 +80,6 @@ Add a `<script>` section to animate the `debate_history` text.
 
 - [ ] **Step 3: Commit UI**
 ```bash
-git add src/backend/animetix/templates/animetix/games/vs_battle_result.html
+git add backend/api/animetix/templates/animetix/games/vs_battle_result.html
 git commit -m "feat(frontend): add power gauges and typewriter effect to VS Battle results"
 ```

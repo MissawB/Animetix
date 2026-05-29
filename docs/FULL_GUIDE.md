@@ -8,7 +8,7 @@ Ce document constitue la spécification technique exhaustive et le manuel opéra
 Animetix est bâtie sur une **Architecture Atomic & Hexagonal** (Ports & Adapters). Cette structure garantit une isolation stricte entre le domaine métier et les détails techniques.
 
 ### A. Core Domain (Intelligence Pure)
-Le domaine (`src/core/domain`) centralise la logique via :
+Le domaine (`backend/core/domain`) centralise la logique via :
 - **Services (ex: `AgenticRAGService`) :** Machines à états cognitifs (FSM).
 - **InferencePort :** Interface unifiée supportant le streaming SSE, le *Test-Time Compute* (TTC) et le routage multi-modèle. Elle expose désormais `rerank_documents` pour intégrer des Cross-Encoders (BGE-Reranker) lors de la recherche.
 - **PersistencePort (UnifiedRepository) :** Gère la persistance de manière unifiée, avec **PgVector** comme moteur de stockage primaire pour les vecteurs, complété par Neo4j pour les relations.

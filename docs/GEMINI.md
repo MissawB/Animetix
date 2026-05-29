@@ -6,8 +6,9 @@ This file contains foundational mandates for Gemini CLI interventions in this wo
 The project MUST follow Hexagonal Architecture principles to ensure decoupling between core logic and infrastructure. The architecture MUST be atomic: components should be small, single-purpose, and easily swappable.
 
 ### Completed Refactoring Achievements (Recent Milestones)
+- **[COMPLETED] Fullstack Monorepo Restructuring:** Radically reorganized the project structure into a clean `frontend/` (React SPA) and `backend/` (Python Ecosystem) opposition. Renamed `src/` to `backend/` and migrated the legacy `src/backend/` Django application to `backend/api/` to eliminate redundancy and clarify architectural boundaries.
 - **[COMPLETED] Pure SPA Transition & UI Modularization:** The legacy Django template layer (`base.html`, `animinator.html`, `online_room.html`, partials) has been **completely deleted**. Animetix has transitioned fully to a Pure React SPA, decoupled from Django templates.
-- **[COMPLETED] Prompt Externalization:** All creative services prompts have been externalized. Hardcoded prompts have been completely removed from Python files, and they are now managed externally via `PromptManager` and YAML files in `src/core/domain/services/prompts/`.
+- **[COMPLETED] Prompt Externalization:** All creative services prompts have been externalized. Hardcoded prompts have been completely removed from Python files, and they are now managed externally via `PromptManager` and YAML files in `backend/core/domain/services/prompts/`.
 - **[COMPLETED] State Decoupling:** Decoupled game state logic (such as `Akinetix`, `Paradox`, and `CreativeFusion`) and migrated it entirely from Django views to clean **Domain Services** under the hexagonal architecture.
 - **[COMPLETED] Codebase Cleanup:** Obsolete legacy HTML view controllers, URL configurations, and related testing files have been successfully purged, establishing a clean Headless API / React SPA boundary.
 
@@ -15,19 +16,19 @@ The project MUST follow Hexagonal Architecture principles to ensure decoupling b
 - **Error Handling Strengthening:** Systematically replace `except: pass` blocks in IA services (especially in `AgenticRAGService`) with explicit exception handling and structured logging.
 
 - **Domain (Core):** Pure business logic, entities, and use cases.
-    - **Entities:** Located in `src/core/domain/entities/`. Use `Pydantic` or `Dataclasses` for structured data (see `ai_schemas.py`).
-    - **Services:** Located in `src/core/domain/services/`. MUST use the standard `logging` module (no `print`).
-- **Ports (Interfaces):** Located in `src/core/ports/`. Abstract definitions of required external capabilities.
-- **Adapters (Infrastructure):** Located in `src/adapters/`. Concrete implementations of ports.
+    - **Entities:** Located in `backend/core/domain/entities/`. Use `Pydantic` or `Dataclasses` for structured data (see `ai_schemas.py`).
+    - **Services:** Located in `backend/core/domain/services/`. MUST use the standard `logging` module (no `print`).
+- **Ports (Interfaces):** Located in `backend/core/ports/`. Abstract definitions of required external capabilities.
+- **Adapters (Infrastructure):** Located in `backend/adapters/`. Concrete implementations of ports.
     - **Persistence:** Use `UnifiedRepositoryAdapter` as the primary entry point for media data. It handles both PgVector and ChromaDB fallback.
     - **Inference:** Use `FallbackInferenceAdapter` for LLM resilience. Supports real-time SSE streaming via `stream_generate`.
-- **Backend (Driving):** Django application in `src/backend/`. Use `Django Forms` for all user input validation. No raw business logic in views.
+- **Backend (Driving):** Django application in `backend/api/`. Use `Django Forms` for all user input validation. No raw business logic in views.
 
 ## Coding Standards
 - **Language:** Python 3.10+
 - **Typing:** Mandatory strict type annotations. Return `Pydantic` models for complex AI structures to ensure schema validation.
 - **Logging:** Use named loggers (e.g., `animetix.rag`). Standardize on `info`, `warning`, `error`.
-- **Prompts:** NEVER hardcode prompts in services. Use the `PromptManager` and external YAML files in `src/core/domain/services/prompts/`.
+- **Prompts:** NEVER hardcode prompts in services. Use the `PromptManager` and external YAML files in `backend/core/domain/services/prompts/`.
 - **Security:** Sanitize AI outputs using the `sanitize_ai` Django filter (powered by `bleach`).
 
 ## Workspace Specifics

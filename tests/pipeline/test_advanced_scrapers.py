@@ -14,7 +14,7 @@ def mock_django_media_item():
 @patch('src.pipeline.advanced_scrapers.gemini_client')
 @patch('requests.get')
 def test_scraper_d_arcs(mock_get, mock_gemini):
-    from src.pipeline.advanced_scrapers import ScraperD_Arcs
+    from backend.pipeline.advanced_scrapers import ScraperD_Arcs
     
     # Mocking Jikan episodes list
     mock_response = MagicMock()
@@ -45,7 +45,7 @@ def test_scraper_d_arcs(mock_get, mock_gemini):
 
 @patch('requests.post')
 def test_scraper_e_igdb(mock_post):
-    from src.pipeline.advanced_scrapers import ScraperE_IGDB
+    from backend.pipeline.advanced_scrapers import ScraperE_IGDB
     
     # 1. Mock OAuth token request
     mock_oauth_res = MagicMock()
@@ -86,7 +86,7 @@ def test_scraper_e_igdb(mock_post):
 
 @patch('src.pipeline.advanced_scrapers.gemini_client')
 def test_scraper_f_tropes(mock_gemini):
-    from src.pipeline.advanced_scrapers import ScraperF_Tropes
+    from backend.pipeline.advanced_scrapers import ScraperF_Tropes
     
     # Mocking Gemini response with valid JSON
     mock_model_response = MagicMock()
@@ -109,7 +109,7 @@ def test_scraper_f_tropes(mock_gemini):
 @patch('src.pipeline.advanced_scrapers.ScraperF_Tropes.get_narrative_tropes')
 @patch('src.pipeline.advanced_scrapers.update_json_metadata_field')
 def test_run_tripartite_enrichment_flow(mock_update_json, mock_get_tropes, mock_search_games, mock_get_arcs, mock_media_item, mock_django_media_item):
-    from src.pipeline.advanced_scrapers import run_tripartite_enrichment
+    from backend.pipeline.advanced_scrapers import run_tripartite_enrichment
     
     # Mocking Django QuerySet
     mock_media_item.objects.filter.return_value.order_by.return_value = [mock_django_media_item]

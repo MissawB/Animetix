@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from src.core.domain.services.scoring_service import ScoringDomainService
+from backend.core.domain.services.scoring_service import ScoringDomainService
 
 def test_calculate_animetix_ragas_score():
     metrics = {'faithfulness': 0.8, 'answer_relevancy': 0.9, 'context_recall': 1.0}

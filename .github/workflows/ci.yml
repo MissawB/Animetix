@@ -23,7 +23,7 @@ jobs:
         ruff check .
         black --check .
         isort --check .
-        mypy src/
+        mypy backend/
 
   docker-build:
     name: Validate Docker Build

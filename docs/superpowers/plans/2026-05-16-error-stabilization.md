@@ -13,7 +13,7 @@
 ### Task 1: Stabilize AgenticRAGService
 
 **Files:**
-- Modify: `src/core/domain/services/agentic_rag_service.py`
+- Modify: `backend/core/domain/services/agentic_rag_service.py`
 - Test: `tests/core/test_agentic_rag_service.py`
 
 - [ ] **Step 1: Write the failing test for JSON parsing error**
@@ -40,7 +40,7 @@ Run: `pytest tests/core/test_agentic_rag_service.py -v`
 
 - [ ] **Step 3: Implement structured logging and specific catch blocks**
 ```python
-# In src/core/domain/services/agentic_rag_service.py
+# In backend/core/domain/services/agentic_rag_service.py
 
 def _extract_json(self, text: str) -> Dict:
     try:
@@ -59,7 +59,7 @@ Run: `pytest tests/core/test_agentic_rag_service.py -v`
 
 - [ ] **Step 5: Commit**
 ```bash
-git add src/core/domain/services/agentic_rag_service.py
+git add backend/core/domain/services/agentic_rag_service.py
 git commit -m "chore: stabilize JSON extraction in AgenticRAGService"
 ```
 
@@ -68,7 +68,7 @@ git commit -m "chore: stabilize JSON extraction in AgenticRAGService"
 ### Task 2: Stabilize OrchestratorAgentService
 
 **Files:**
-- Modify: `src/core/domain/services/orchestrator_agent_service.py`
+- Modify: `backend/core/domain/services/orchestrator_agent_service.py`
 - Test: `tests/core/test_orchestrator_agent_service.py`
 
 - [ ] **Step 1: Update error handling in agent invocation loop**
@@ -76,7 +76,7 @@ Replace `except: pass` in `_parallel_invoke` or similar methods with logging tha
 
 - [ ] **Step 2: Write minimal implementation**
 ```python
-# In src/core/domain/services/orchestrator_agent_service.py
+# In backend/core/domain/services/orchestrator_agent_service.py
 # (Locate the loop where agents are called)
 try:
     # agent call
@@ -91,7 +91,7 @@ Run: `pytest tests/core/test_orchestrator_agent_service.py`
 
 - [ ] **Step 4: Commit**
 ```bash
-git add src/core/domain/services/orchestrator_agent_service.py
+git add backend/core/domain/services/orchestrator_agent_service.py
 git commit -m "chore: add telemetry to OrchestratorAgentService failures"
 ```
 
@@ -100,12 +100,12 @@ git commit -m "chore: add telemetry to OrchestratorAgentService failures"
 ### Task 3: Robustify Inference Adapters (BrainAPI & vLLM)
 
 **Files:**
-- Modify: `src/adapters/inference/brain_api_adapter.py`
-- Modify: `src/adapters/inference/vllm_adapter.py`
+- Modify: `backend/adapters/inference/brain_api_adapter.py`
+- Modify: `backend/adapters/inference/vllm_adapter.py`
 
 - [ ] **Step 1: Update BrainAPIAdapter to log request failures**
 ```python
-# In src/adapters/inference/brain_api_adapter.py
+# In backend/adapters/inference/brain_api_adapter.py
 try:
     res = requests.post(...)
     res.raise_for_status()
@@ -118,7 +118,7 @@ except Exception as e:
 
 - [ ] **Step 2: Update VllmAdapter to log connection errors**
 ```python
-# In src/adapters/inference/vllm_adapter.py
+# In backend/adapters/inference/vllm_adapter.py
 try:
     res = requests.post(...)
     # ...
@@ -130,6 +130,6 @@ except Exception as e:
 
 - [ ] **Step 3: Commit**
 ```bash
-git add src/adapters/inference/brain_api_adapter.py src/adapters/inference/vllm_adapter.py
+git add backend/adapters/inference/brain_api_adapter.py backend/adapters/inference/vllm_adapter.py
 git commit -m "chore: improve error visibility in inference adapters"
 ```

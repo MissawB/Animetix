@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock
 from pydantic import BaseModel
-from src.adapters.inference.fallback_adapter import FallbackInferenceAdapter
+from backend.adapters.inference.fallback_adapter import FallbackInferenceAdapter
 
 class User(BaseModel):
     name: str

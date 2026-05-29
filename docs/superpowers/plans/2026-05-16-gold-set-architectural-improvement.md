@@ -94,7 +94,7 @@ git commit -m "feat: add expert architectural queries to gold set"
 ### Task 3: Update Evaluation Metrics for Per-Category Reporting
 
 **Files:**
-- Modify: `src/pipeline/mlops/evaluation_metrics.py`
+- Modify: `backend/pipeline/mlops/evaluation_metrics.py`
 
 - [ ] **Step 1: Update `ragas_performance_comparison` to support filtering**
 
@@ -129,7 +129,7 @@ git commit -m "feat: add expert architectural queries to gold set"
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/pipeline/mlops/evaluation_metrics.py
+git add backend/pipeline/mlops/evaluation_metrics.py
 git commit -m "feat: add per-category performance reporting in MLOps pipeline"
 ```
 

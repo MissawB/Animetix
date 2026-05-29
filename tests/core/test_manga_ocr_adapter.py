@@ -20,6 +20,7 @@ class TestMangaOCRAdapter(unittest.TestCase):
         self.assertEqual(result['text'], 'test text')
 
     def test_process_manga_page_error(self):
+        from core.domain.exceptions import InferenceError
         self.adapter.ocr_pipeline.side_effect = Exception("OCR error")
-        result = self.adapter.process_manga_page(b"bad_data")
-        self.assertIn("error", result)
+        with self.assertRaises(InferenceError):
+            self.adapter.process_manga_page(b"bad_data")

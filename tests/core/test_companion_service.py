@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock
-from src.core.domain.services.companion_service import CompanionService
+from backend.core.domain.services.companion_service import CompanionService
 
 @pytest.fixture
 def mock_llm_service():

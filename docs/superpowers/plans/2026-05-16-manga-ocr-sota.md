@@ -16,7 +16,7 @@
 ### Task 1: Create MangaOcrAdapter
 
 **Files:**
-- Create: `src/adapters/inference/manga_ocr_adapter.py`
+- Create: `backend/adapters/inference/manga_ocr_adapter.py`
 - Test: `tests/core/test_manga_ocr_adapter.py`
 
 - [ ] **Step 1: Write the failing test for Manga OCR**
@@ -99,7 +99,7 @@ class MangaOcrAdapter(InferencePort):
 
 - [ ] **Step 3: Commit**
 ```bash
-git add src/adapters/inference/manga_ocr_adapter.py tests/core/test_manga_ocr_adapter.py
+git add backend/adapters/inference/manga_ocr_adapter.py tests/core/test_manga_ocr_adapter.py
 git commit -m "feat: add MangaOcrAdapter with dots.mocr and fallback"
 ```
 
@@ -108,8 +108,8 @@ git commit -m "feat: add MangaOcrAdapter with dots.mocr and fallback"
 ### Task 2: Inject and Connect MangaFlowService
 
 **Files:**
-- Modify: `src/backend/animetix/containers.py`
-- Modify: `src/core/domain/services/creative/manga_flow.py`
+- Modify: `backend/api/animetix/containers.py`
+- Modify: `backend/core/domain/services/creative/manga_flow.py`
 
 - [ ] **Step 1: Register MangaOcrAdapter in Container**
 ```python
@@ -127,6 +127,6 @@ Update `translate_manga_page` in `manga_flow.py` to use the `layout` data from `
 
 - [ ] **Step 4: Commit**
 ```bash
-git add src/backend/animetix/containers.py src/core/domain/services/creative/manga_flow.py
+git add backend/api/animetix/containers.py backend/core/domain/services/creative/manga_flow.py
 git commit -m "chore: connect MangaFlowService to SOTA OCR adapter"
 ```

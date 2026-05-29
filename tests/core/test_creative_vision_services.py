@@ -80,10 +80,18 @@ def test_soundscape_generation(soundscape_service, mock_engine):
     assert soundscape_service.generate_soundscape_for_video(b"data") == "audio_url"
 
 def test_translate_manga_page(manga_service, mock_engine):
+    from io import BytesIO
+    from PIL import Image
+    # Create valid image bytes
+    img = Image.new('RGB', (100, 100))
+    buf = BytesIO()
+    img.save(buf, format='PNG')
+    valid_image_data = buf.getvalue()
+
     mock_engine.process_manga_page.return_value = {
         'text': 'Hello', 'layout': []
     }
     manga_service.llm_service.generate.return_value = "Salut"
     mock_engine.inpaint_text_bubbles.return_value = "new_img_url"
     
-    assert manga_service.translate_manga_page(b"data") == "new_img_url"
+    assert manga_service.translate_manga_page(valid_image_data) == "new_img_url"

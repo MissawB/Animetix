@@ -1,8 +1,8 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    "./src/backend/animetix/templates/**/*.html",
-    "./src/backend/animetix/static/**/*.js",
+    "./backend/api/animetix/templates/**/*.html",
+    "./backend/api/animetix/static/**/*.js",
   ],
   darkMode: ['selector', '[data-bs-theme="dark"]'],
   theme: {

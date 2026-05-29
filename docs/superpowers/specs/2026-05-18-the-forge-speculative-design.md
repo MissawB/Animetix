@@ -12,7 +12,7 @@ Introduce `The Forge` agent. When factual retrieval fails, the system transition
 
 ## 3. Architecture
 
-### A. The Forge Agent (`src/core/domain/services/rag/agents/forge.py`)
+### A. The Forge Agent (`backend/core/domain/services/rag/agents/forge.py`)
 - New agent class.
 - Responsibility: Pattern-based deduction.
 - Logic:

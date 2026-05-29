@@ -1,7 +1,7 @@
 import sqlite3
 import os
 
-db_path = 'src/backend/db.sqlite3'
+db_path = 'backend/api/db.sqlite3'
 conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 cursor.execute("SELECT name FROM django_migrations WHERE app='animetix' ORDER BY id DESC;")

@@ -1,4 +1,4 @@
-from src.core.domain.entities.ai_schemas import CombatStats, CombatCharacter
+from backend.core.domain.entities.ai_schemas import CombatStats, CombatCharacter
 import pytest
 
 def test_combat_stats_tier_value():

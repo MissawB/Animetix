@@ -1,13 +1,13 @@
 import pytest
 import json
 from unittest.mock import MagicMock, patch
-from src.core.domain.services.creative.vs_battle_service import VsBattleService
-from src.core.domain.entities.ai_schemas import (
+from backend.core.domain.services.creative.vs_battle_service import VsBattleService
+from backend.core.domain.entities.ai_schemas import (
     CombatCharacter, CombatStats, CombatResult, DebateTurn
 )
-from src.core.ports.fandom_port import FandomPort
-from src.core.ports.inference_port import InferencePort
-from src.core.domain.services.prompt_manager import PromptManager
+from backend.core.ports.fandom_port import FandomPort
+from backend.core.ports.inference_port import InferencePort
+from backend.core.domain.services.prompt_manager import PromptManager
 
 @pytest.fixture
 def mock_fandom_port():

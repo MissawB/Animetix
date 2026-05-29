@@ -6,9 +6,9 @@ Transitionner l'architecture de l'application Animetix vers un modèle 100% SPA 
 ## 2. Portée du Nettoyage
 
 ### 2.1 Suppression des Fichiers HTML Obsolètes (Dossier `templates/`)
-L'intégralité des dossiers et fichiers de templates legacy Django sous `src/backend/animetix/templates/animetix/` sera supprimée, à l'exception de l'administration.
+L'intégralité des dossiers et fichiers de templates legacy Django sous `backend/api/animetix/templates/animetix/` sera supprimée, à l'exception de l'administration.
 
-**Dossiers à supprimer sous `src/backend/animetix/templates/animetix/` :**
+**Dossiers à supprimer sous `backend/api/animetix/templates/animetix/` :**
 * `akinetix/`
 * `animinator/`
 * `archetypist/`
@@ -27,29 +27,29 @@ L'intégralité des dossiers et fichiers de templates legacy Django sous `src/ba
 * `undercover/`
 * `vision/`
 
-**Fichiers individuels à supprimer sous `src/backend/animetix/templates/animetix/` :**
+**Fichiers individuels à supprimer sous `backend/api/animetix/templates/animetix/` :**
 * `base.html` (layout principal legacy Django)
 * `index.html` (page d'accueil legacy Django)
 
 **Éléments à CONSERVER :**
-* `src/backend/animetix/templates/index.html` : Ce fichier à la racine du dossier templates sert de point d'entrée unique pour la SPA React (chargé par `spa_view`).
-* `src/backend/animetix/templates/animetix/admin/` : Contient les templates personnalisés pour la partie administration (ex: `ai_eval.html`, `health.html`, `gold_curation.html`).
+* `backend/api/animetix/templates/index.html` : Ce fichier à la racine du dossier templates sert de point d'entrée unique pour la SPA React (chargé par `spa_view`).
+* `backend/api/animetix/templates/animetix/admin/` : Contient les templates personnalisés pour la partie administration (ex: `ai_eval.html`, `health.html`, `gold_curation.html`).
 
 ---
 
 ### 2.2 Nettoyage et Simplification des URLs Backend
 Les fichiers de routage d'anciennes pages HTML Django vont être supprimés, et `urls/__init__.py` sera simplifié.
 
-**Fichiers de routage à supprimer (`src/backend/animetix/urls/`) :**
+**Fichiers de routage à supprimer (`backend/api/animetix/urls/`) :**
 * `audio.py` (les fonctionnalités audio-lab sont migrées sur l'API)
 * `emoji.py` (les fonctionnalités emoji-decode sont migrées sur l'API)
 * `games.py` (les fonctionnalités de jeux legacy sont migrées sur l'API)
 * `social.py` (toutes les pages profils et notifications sont migrées sur l'API)
 
 **Fichiers à modifier :**
-* `src/backend/animetix/urls/donation.py` : Retirer la route de la page HTML `transparency/` car cette dernière est gérée par React. Conserver la route `webhook/` qui est un endpoint API pur.
-* `src/backend/animetix/urls/mlops.py` : Conserver uniquement la route POST `feedback/submit/`.
-* `src/backend/animetix/urls/__init__.py` :
+* `backend/api/animetix/urls/donation.py` : Retirer la route de la page HTML `transparency/` car cette dernière est gérée par React. Conserver la route `webhook/` qui est un endpoint API pur.
+* `backend/api/animetix/urls/mlops.py` : Conserver uniquement la route POST `feedback/submit/`.
+* `backend/api/animetix/urls/__init__.py` :
   * Supprimer les imports et inclusions obsolètes (`games`, `social`, `audio`, `emoji`).
   * Rediriger la route racine (`path('', views.index)`) vers `spa_view` pour que l'accueil pointe directement sur la SPA.
   * Conserver l'inclusion de `animetix.urls.api` (`path('api/v1/', ...)`).
@@ -58,7 +58,7 @@ Les fichiers de routage d'anciennes pages HTML Django vont être supprimés, et 
 ---
 
 ### 2.3 Nettoyage des Vues Backend (Python)
-Les fonctions de vues renvoyant des réponses HTML legacy vont être supprimées dans `src/backend/animetix/views/base.py` et autres fichiers associés.
+Les fonctions de vues renvoyant des réponses HTML legacy vont être supprimées dans `backend/api/animetix/views/base.py` et autres fichiers associés.
 
 **Vues à supprimer dans `views/base.py` :**
 * `index`
@@ -76,7 +76,7 @@ Les fonctions de vues renvoyant des réponses HTML legacy vont être supprimées
 ### 3.1 Tests Automatisés
 Nous exécuterons la suite de tests Django existante pour s'assurer que les changements de routage n'introduisent pas de régressions ou d'erreurs d'importation dans les modules Python :
 ```bash
-python src/backend/manage.py test
+python backend/api/manage.py test
 ```
 
 ### 3.2 Vérification Manuelle

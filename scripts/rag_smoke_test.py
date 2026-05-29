@@ -4,7 +4,7 @@ import sys
 
 # Ajout du dossier root au path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from src.pipeline.chroma_client import chroma_manager
+from backend.pipeline.chroma_client import chroma_manager
 
 def run_smoke_test():
     """
@@ -18,7 +18,7 @@ def run_smoke_test():
         baseline = json.load(f)
         
     # 2. Exécuter l'évaluation actuelle
-    from src.scripts.mlops_rag_eval import run_mlops_eval
+    from backend.scripts.mlops_rag_eval import run_mlops_eval
     current_report = run_mlops_eval()
     
     # 3. Comparer (exemple simplifié)

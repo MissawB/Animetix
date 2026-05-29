@@ -12,8 +12,8 @@ from unittest.mock import MagicMock, patch
 # 1. TESTS COGNITION QUANTIQUE (BORN'S RULE & NON-COMMUTATIVITÉ)
 # ==========================================
 def test_quantum_cognitive_model():
-    from src.core.domain.services.quantum_cognitive_model import QuantumCognitivePreferenceModel
-    
+    from backend.core.domain.services.quantum_cognitive_model import QuantumCognitivePreferenceModel
+    np.random.seed(42)
     model = QuantumCognitivePreferenceModel(dimension=4)
     
     # 1. Norme de l'état d'esprit doit être 1.0
@@ -29,8 +29,9 @@ def test_quantum_cognitive_model():
     assert pytest.approx(new_norm) == 1.0
 
 def test_quantum_order_effects():
-    from src.core.domain.services.quantum_cognitive_model import QuantumCognitivePreferenceModel
+    from backend.core.domain.services.quantum_cognitive_model import QuantumCognitivePreferenceModel
     
+    np.random.seed(42)
     model = QuantumCognitivePreferenceModel(dimension=4)
     
     # Démonstration sémantique de non-commutativité (effet d'ordre)
@@ -38,13 +39,13 @@ def test_quantum_order_effects():
     p_ba, p_ab = model.order_effects_demonstration("ghibli", "seinen")
     
     # La non-commutativité implique que l'état d'arrivée et les probabilités dépendent de l'ordre de mesure
-    assert p_ba != p_ab
+    assert not np.isclose(p_ba, p_ab), f"Order effects not demonstrated: p_ba={p_ba}, p_ab={p_ab}"
 
 # ==========================================
 # 2. TESTS SWARM CONSENSUS ORCHESTRATOR (PAXOS)
 # ==========================================
 def test_swarm_consensus_paxos():
-    from src.core.domain.services.swarm_consensus import SwarmConsensusOrchestrator
+    from backend.core.domain.services.swarm_consensus import SwarmConsensusOrchestrator
     
     orchestrator = SwarmConsensusOrchestrator()
     
@@ -73,7 +74,7 @@ def test_swarm_consensus_paxos():
 # 3. TESTS SIMULATEUR CONTREFACTUEL
 # ==========================================
 def test_counterfactual_conversation_simulator():
-    from src.core.domain.services.counterfactual_simulator import CounterfactualConversationSimulator
+    from backend.core.domain.services.counterfactual_simulator import CounterfactualConversationSimulator
     
     mock_engine = MagicMock()
     mock_engine.generate.side_effect = [

@@ -13,7 +13,7 @@ from unittest.mock import MagicMock, patch
 # 1. TESTS ADAPTATEUR COLBERT
 # ==========================================
 def test_colbert_maxsim():
-    from src.adapters.persistence.colbert_adapter import LateInteractionColBERTAdapter
+    from backend.adapters.persistence.colbert_adapter import LateInteractionColBERTAdapter
     adapter = LateInteractionColBERTAdapter(dimension=4)
     
     # 2 tokens pour la requête, dimension=4
@@ -33,7 +33,7 @@ def test_colbert_maxsim():
     assert score == 2.0
 
 def test_colbert_ranking():
-    from src.adapters.persistence.colbert_adapter import LateInteractionColBERTAdapter
+    from backend.adapters.persistence.colbert_adapter import LateInteractionColBERTAdapter
     adapter = LateInteractionColBERTAdapter(dimension=8)
     
     docs = [
@@ -52,7 +52,7 @@ def test_colbert_ranking():
 # ==========================================
 @patch('src.core.domain.services.hierarchical_graph_rag.GraphCommunityPartitioner')
 def test_hierarchical_graph_rag(mock_partitioner):
-    from src.core.domain.services.hierarchical_graph_rag import HierarchicalGraphRAGService
+    from backend.core.domain.services.hierarchical_graph_rag import HierarchicalGraphRAGService
     
     mock_partitioner_instance = MagicMock()
     mock_partitioner_instance.search_communities.return_value = [
@@ -75,7 +75,7 @@ def test_hierarchical_graph_rag(mock_partitioner):
 # 3. TESTS INFERENCE SPECULATIVE
 # ==========================================
 def test_speculative_decoding():
-    from src.adapters.inference.speculative_inference import SpeculativeDecodingInferenceAdapter
+    from backend.adapters.inference.speculative_inference import SpeculativeDecodingInferenceAdapter
     
     mock_verifier = MagicMock()
     mock_verifier.generate.return_value = "L'entraînement est complété."
@@ -100,7 +100,7 @@ def test_speculative_decoding():
 # 4. TESTS ANALYSEUR DE COMPLEXITÉ & TTC
 # ==========================================
 def test_complexity_analyser():
-    from src.core.domain.services.complexity_analyser import ComplexityAnalyser
+    from backend.core.domain.services.complexity_analyser import ComplexityAnalyser
     analyser = ComplexityAnalyser()
     
     # Test simple keyword parsing
@@ -119,7 +119,7 @@ def test_complexity_analyser():
 @patch('django.apps.apps.ready', True)
 @patch('django.setup')
 def test_dpo_sensor_mocked(mock_setup):
-    from src.pipeline.mlops.auto_dpo_trigger import check_dpo_feedback_sensor
+    from backend.pipeline.mlops.auto_dpo_trigger import check_dpo_feedback_sensor
     from dagster import build_sensor_context
     
     context = build_sensor_context(cursor="10")
@@ -142,8 +142,8 @@ def test_dpo_sensor_mocked(mock_setup):
 @patch('imageio.get_reader')
 @patch('subprocess.run')
 def test_spatial_computing_modes(mock_sub, mock_imageio):
-    from src.core.domain.services.static_diorama_3d_service import StaticDiorama3DService
-    from src.core.domain.services.cinematic_volumetric_reconstruction_service import CinematicVolumetricReconstructionService
+    from backend.core.domain.services.static_diorama_3d_service import StaticDiorama3DService
+    from backend.core.domain.services.cinematic_volumetric_reconstruction_service import CinematicVolumetricReconstructionService
     
     # Mock imageio reader
     mock_reader = MagicMock()

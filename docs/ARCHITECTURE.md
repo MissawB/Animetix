@@ -37,7 +37,7 @@ graph TD
 
 ## 2. Structure du Code Source
 
-Le code est organisé sous `src/` :
+Le code est organisé sous `backend/` :
 
 - **`core/ports/`** : Abstractions (ABC) définissant les contrats métier.
   - `InferencePort` : Génération de texte/image, clonage de voix, reranking, et vision avancée.
@@ -47,7 +47,7 @@ Le code est organisé sous `src/` :
 - **`adapters/`** : Implémentations concrètes (Infrastructure).
   - `adapters/persistence/` : Gestion multi-source (PgVector, Neo4j, Fallback ChromaDB).
   - `adapters/inference/` : Supports vLLM, GGUF, Transformers.
-- **`backend/`** : Orchestration Django. Injection via `containers.py`.
+- **`api/`** : Orchestration Django. Injection via `containers/`.
 
 ---
 
@@ -82,7 +82,7 @@ Animetix est désormais conçu et déployé comme une **Pure SPA** (Single Page 
 
 ### Synthèse des flux et découplage
 1. **Communication** : API REST JSON via `/api/v1/` et requêtes GraphQL interactives via `/graphql/` (Knowledge Graph).
-2. **Gestion d'État** : Tout l'état de l'application et les logiques de jeux complexes (Akinetix, Paradox, Forge) ont été déportés de la couche de présentation Django vers des **Domain Services** dans `src/core/domain/services/`.
+2. **Gestion d'État** : Tout l'état de l'application et les logiques de jeux complexes (Akinetix, Paradox, Forge) ont été déportés de la couche de présentation Django vers des **Domain Services** dans `backend/core/domain/services/`.
 3. **Sécurité et Authentification** : L'état d'authentification est centralisé côté React SPA, validé par un endpoint Django dédié (`feat(spa-auth)`).
 4. **Configuration de Production** :
    - Construire le front avec `npm run build` dans le dossier `frontend/`.

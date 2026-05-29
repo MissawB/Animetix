@@ -13,11 +13,11 @@
 ### Task 1: Hardening Django Settings
 
 **Files:**
-- Modify: `src/backend/animetix_project/settings.py`
+- Modify: `backend/api/animetix_project/settings.py`
 
 - [ ] **Step 1: Update CORS and Security Headers**
 
-Modify `src/backend/animetix_project/settings.py` to restrict CORS and enable security headers.
+Modify `backend/api/animetix_project/settings.py` to restrict CORS and enable security headers.
 
 ```python
 # Around line 70-80
@@ -48,13 +48,13 @@ X_FRAME_OPTIONS = 'DENY' # Overriding previous ALLOWALL for security
 
 - [ ] **Step 2: Verify settings load without error**
 
-Run: `python src/backend/manage.py check`
+Run: `python backend/api/manage.py check`
 Expected: System check identified no issues (0 silenced).
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/backend/animetix_project/settings.py
+git add backend/api/animetix_project/settings.py
 git commit -m "security: harden CORS and security headers"
 ```
 
@@ -63,7 +63,7 @@ git commit -m "security: harden CORS and security headers"
 ### Task 2: Fixing SSRF in Image Proxy
 
 **Files:**
-- Modify: `src/backend/animetix/api/core.py`
+- Modify: `backend/api/animetix/api/core.py`
 - Test: `tests/backend/test_security_proxy.py`
 
 - [ ] **Step 1: Write failing SSRF test**
@@ -95,7 +95,7 @@ Expected: FAIL (likely 404 if URL is wrong or 200/500 if it currently allows it)
 
 - [ ] **Step 3: Implement SSRF protection in `image_proxy_view`**
 
-Modify `src/backend/animetix/api/core.py`.
+Modify `backend/api/animetix/api/core.py`.
 
 ```python
 import socket
@@ -148,7 +148,7 @@ Expected: PASS
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/backend/animetix/api/core.py tests/backend/test_security_proxy.py
+git add backend/api/animetix/api/core.py tests/backend/test_security_proxy.py
 git commit -m "security: fix SSRF in image_proxy_view"
 ```
 
@@ -157,12 +157,12 @@ git commit -m "security: fix SSRF in image_proxy_view"
 ### Task 3: Neutralizing RCE in Singularity Lab
 
 **Files:**
-- Modify: `src/backend/animetix/api/labs.py`
-- Modify: `src/core/domain/services/self_evolving_compiler.py`
+- Modify: `backend/api/animetix/api/labs.py`
+- Modify: `backend/core/domain/services/self_evolving_compiler.py`
 
 - [ ] **Step 1: Restrict code submission in `SingularityLabDataView`**
 
-Modify `src/backend/animetix/api/labs.py`. Remove `slow_logic_code` handling or restrict it to predefined function names.
+Modify `backend/api/animetix/api/labs.py`. Remove `slow_logic_code` handling or restrict it to predefined function names.
 
 ```python
 # In SingularityLabDataView.post
@@ -183,7 +183,7 @@ Modify `src/backend/animetix/api/labs.py`. Remove `slow_logic_code` handling or 
 
 - [ ] **Step 2: Update `SelfEvolvingCompiler` to use safe logic**
 
-Modify `src/core/domain/services/self_evolving_compiler.py`.
+Modify `backend/core/domain/services/self_evolving_compiler.py`.
 
 ```python
 class SelfEvolvingCompiler:
@@ -207,7 +207,7 @@ Use a script or `curl` to try and send `slow_logic_code`.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add src/backend/animetix/api/labs.py src/core/domain/services/self_evolving_compiler.py
+git add backend/api/animetix/api/labs.py backend/core/domain/services/self_evolving_compiler.py
 git commit -m "security: neutralize RCE in SingularityLabDataView by removing dynamic code submission"
 ```
 
@@ -216,12 +216,12 @@ git commit -m "security: neutralize RCE in SingularityLabDataView by removing dy
 ### Task 4: Implementing Rate Limiting
 
 **Files:**
-- Modify: `src/backend/animetix/api/streams.py`
-- Modify: `src/backend/animetix/api/games/akinetix.py` (and others if needed)
+- Modify: `backend/api/animetix/api/streams.py`
+- Modify: `backend/api/animetix/api/games/akinetix.py` (and others if needed)
 
 - [ ] **Step 1: Apply `@ratelimit` to AI endpoints**
 
-Modify `src/backend/animetix/api/streams.py`.
+Modify `backend/api/animetix/api/streams.py`.
 
 ```python
 from django_ratelimit.decorators import ratelimit
@@ -239,6 +239,6 @@ Ensure `django-ratelimit` is working by making 6 requests in a minute.
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/backend/animetix/api/streams.py
+git add backend/api/animetix/api/streams.py
 git commit -m "security: add rate limiting to AI stream endpoints"
 ```

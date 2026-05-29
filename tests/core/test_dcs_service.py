@@ -29,4 +29,4 @@ def test_reconstruct_dynamic_cinematic_scene():
     assert res["status"] == "success"
     assert res["viewer_type"] == "dynamic_cinematic_splatting"
     assert len(res["frames"]) > 0
-    assert "ply_url" in res["frames"][0]
+    assert "model_url" in res["frames"][0]

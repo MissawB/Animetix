@@ -8,7 +8,7 @@ def compile_translations():
     Fallback for systems without GNU gettext installed.
     """
     # Project structure: scripts/compile_translations.py
-    # Locale folder is at: src/backend/locale/
+    # Locale folder is at: backend/api/locale/
     script_dir = Path(__file__).resolve().parent
     project_root = script_dir.parent
     locale_dir = project_root / "src" / "backend" / "locale"

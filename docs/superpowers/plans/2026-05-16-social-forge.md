@@ -13,10 +13,10 @@
 ### Task 1: Create `CreativeFusion` Model and API
 
 **Files:**
-- Modify: `src/backend/animetix/models.py`
-- Modify: `src/backend/animetix/api_views.py`
-- Modify: `src/backend/animetix/serializers.py`
-- Create: `src/backend/animetix/migrations/` (via makemigrations)
+- Modify: `backend/api/animetix/models.py`
+- Modify: `backend/api/animetix/api_views.py`
+- Modify: `backend/api/animetix/serializers.py`
+- Create: `backend/api/animetix/migrations/` (via makemigrations)
 
 - [ ] **Step 1: Write the failing test**
 
@@ -24,7 +24,7 @@
 # Create tests/backend/test_forge.py
 import pytest
 from django.contrib.auth.models import User
-from src.backend.animetix.models import CreativeFusion
+from backend.api.animetix.models import CreativeFusion
 
 @pytest.mark.django_db
 def test_creative_fusion_model_creation():
@@ -49,7 +49,7 @@ Expected: FAIL with `ImportError: cannot import name 'CreativeFusion'`
 - [ ] **Step 3: Write minimal implementation in `models.py`**
 
 ```python
-# In src/backend/animetix/models.py (add at the end)
+# In backend/api/animetix/models.py (add at the end)
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -78,13 +78,13 @@ class CreativeFusion(models.Model):
 
 - [ ] **Step 4: Generate and apply migrations**
 
-Run: `python src/backend/manage.py makemigrations animetix`
-Run: `python src/backend/manage.py migrate`
+Run: `python backend/api/manage.py makemigrations animetix`
+Run: `python backend/api/manage.py migrate`
 
 - [ ] **Step 5: Add Serializer and ViewSet for Community Feed**
 
 ```python
-# In src/backend/animetix/serializers.py (add at the end)
+# In backend/api/animetix/serializers.py (add at the end)
 from rest_framework import serializers
 from .models import CreativeFusion
 
@@ -97,7 +97,7 @@ class CreativeFusionSerializer(serializers.ModelSerializer):
         model = CreativeFusion
         fields = '__all__'
 
-# In src/backend/animetix/api_views.py (add at the end)
+# In backend/api/animetix/api_views.py (add at the end)
 from rest_framework import viewsets
 from .models import CreativeFusion
 from .serializers import CreativeFusionSerializer
@@ -106,7 +106,7 @@ class CreativeFusionViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = CreativeFusion.objects.all().order_by('-created_at')
     serializer_class = CreativeFusionSerializer
     
-# In src/backend/animetix/urls.py (add to router)
+# In backend/api/animetix/urls.py (add to router)
 # router.register(r'fusions', api_views.CreativeFusionViewSet)
 ```
 
@@ -118,7 +118,7 @@ Expected: PASS
 - [ ] **Step 7: Commit**
 
 ```bash
-git add src/backend/animetix/models.py src/backend/animetix/migrations/ src/backend/animetix/serializers.py src/backend/animetix/api_views.py src/backend/animetix/urls.py tests/backend/test_forge.py
+git add backend/api/animetix/models.py backend/api/animetix/migrations/ backend/api/animetix/serializers.py backend/api/animetix/api_views.py backend/api/animetix/urls.py tests/backend/test_forge.py
 git commit -m "feat: add CreativeFusion model and API endpoints"
 ```
 
@@ -127,16 +127,16 @@ git commit -m "feat: add CreativeFusion model and API endpoints"
 ### Task 2: Update Generation Tasks with Creative Parameters
 
 **Files:**
-- Modify: `src/backend/animetix/tasks.py`
-- Modify: `src/backend/animetix/creative_tasks.py`
-- Modify: `src/core/domain/services/llm_service.py` (or where the prompt is built)
+- Modify: `backend/api/animetix/tasks.py`
+- Modify: `backend/api/animetix/creative_tasks.py`
+- Modify: `backend/core/domain/services/llm_service.py` (or where the prompt is built)
 
 - [ ] **Step 1: Write the failing test**
 
 ```python
 # In tests/backend/test_forge.py
 from unittest.mock import patch
-from src.backend.animetix.tasks import generate_fusion_scenario_task
+from backend.api.animetix.tasks import generate_fusion_scenario_task
 
 @patch('src.backend.animetix.tasks.get_container')
 def test_generate_fusion_scenario_with_params(mock_get_container):
@@ -163,7 +163,7 @@ Expected: FAIL (unexpected keyword argument)
 - [ ] **Step 3: Update `tasks.py` and `creative_tasks.py` signatures**
 
 ```python
-# In src/backend/animetix/tasks.py (update generate_fusion_scenario_task)
+# In backend/api/animetix/tasks.py (update generate_fusion_scenario_task)
 @shared_task
 def generate_fusion_scenario_task(media_type, item1, item2, language, chaos_level=50, universe_balance=50, art_style="Cyberpunk"):
     try:
@@ -192,7 +192,7 @@ def generate_fusion_image_task(item1, item2, art_style="Cyberpunk"):
 - [ ] **Step 4: Update Domain Services (LLM Prompting)**
 
 ```python
-# In src/core/domain/services/llm_service.py (update generate_fusion_scenario)
+# In backend/core/domain/services/llm_service.py (update generate_fusion_scenario)
     def generate_fusion_scenario(self, media_type: str, item1: Dict, item2: Dict, language: str, chaos_level: int = 50, universe_balance: int = 50, art_style: str = "Cyberpunk") -> str:
         
         balance_instruction = ""
@@ -224,7 +224,7 @@ Expected: PASS
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/backend/animetix/tasks.py src/backend/animetix/creative_tasks.py src/core/domain/services/llm_service.py tests/backend/test_forge.py
+git add backend/api/animetix/tasks.py backend/api/animetix/creative_tasks.py backend/core/domain/services/llm_service.py tests/backend/test_forge.py
 git commit -m "feat: inject creative parameters into fusion generation tasks"
 ```
 
@@ -233,7 +233,7 @@ git commit -m "feat: inject creative parameters into fusion generation tasks"
 ### Task 3: Refactor View and Form Handling
 
 **Files:**
-- Modify: `src/backend/animetix/views/forge.py`
+- Modify: `backend/api/animetix/views/forge.py`
 
 - [ ] **Step 1: Write the failing test**
 
@@ -266,7 +266,7 @@ Expected: FAIL
 - [ ] **Step 3: Update `forge.py` to handle new inputs and save model**
 
 ```python
-# In src/backend/animetix/views/forge.py
+# In backend/api/animetix/views/forge.py
 from ..models import CreativeFusion
 # ... existing imports ...
 
@@ -337,7 +337,7 @@ Expected: PASS
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/backend/animetix/views/forge.py tests/backend/test_forge.py
+git add backend/api/animetix/views/forge.py tests/backend/test_forge.py
 git commit -m "feat: update forge view to process creative parameters and save fusion state"
 ```
 
@@ -346,7 +346,7 @@ git commit -m "feat: update forge view to process creative parameters and save f
 ### Task 4: Frontend UI Refactoring (Cockpit + Background)
 
 **Files:**
-- Modify: `src/backend/animetix/templates/animetix/archetypist/archetypist_form.html`
+- Modify: `backend/api/animetix/templates/animetix/archetypist/archetypist_form.html`
 
 - [ ] **Step 1: Replace form structure with the new Cockpit UI**
 
@@ -449,7 +449,7 @@ Replace the existing `archetypist_form.html` content with a new layout that inte
 - [ ] **Step 2: Commit**
 
 ```bash
-git add src/backend/animetix/templates/animetix/archetypist/archetypist_form.html
+git add backend/api/animetix/templates/animetix/archetypist/archetypist_form.html
 git commit -m "feat: implement new Cockpit UI for Social Forge"
 ```
 
@@ -458,14 +458,14 @@ git commit -m "feat: implement new Cockpit UI for Social Forge"
 ### Task 5: Implement Social Actions (Like & Remix Flow)
 
 **Files:**
-- Modify: `src/backend/animetix/urls.py`
-- Modify: `src/backend/animetix/views/forge.py`
-- Modify: `src/backend/animetix/templates/animetix/archetypist/archetypist_result_fragment.html`
+- Modify: `backend/api/animetix/urls.py`
+- Modify: `backend/api/animetix/views/forge.py`
+- Modify: `backend/api/animetix/templates/animetix/archetypist/archetypist_result_fragment.html`
 
 - [ ] **Step 1: Create `like_fusion` endpoint**
 
 ```python
-# In src/backend/animetix/views/forge.py (add at the end)
+# In backend/api/animetix/views/forge.py (add at the end)
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 
@@ -487,14 +487,14 @@ def like_fusion(request, fusion_id):
     except CreativeFusion.DoesNotExist:
         return HttpResponse("Error", status=404)
 
-# In src/backend/animetix/urls.py (add path)
+# In backend/api/animetix/urls.py (add path)
 # path('fusion/<int:fusion_id>/like/', forge.like_fusion, name='like_fusion'),
 ```
 
 - [ ] **Step 2: Update Result Fragment to include Social Buttons**
 
 ```html
-<!-- In src/backend/animetix/templates/animetix/archetypist/archetypist_result_fragment.html -->
+<!-- In backend/api/animetix/templates/animetix/archetypist/archetypist_result_fragment.html -->
 <!-- Add to the bottom of the result card -->
 <div class="grid grid-cols-3 gap-4 mt-6">
     <button hx-post="{% url 'like_fusion' fusion_id %}" hx-swap="innerHTML" class="glass-forge-card py-3 flex items-center justify-center gap-2 hover:bg-rose-500/20 transition group">
@@ -514,6 +514,6 @@ def like_fusion(request, fusion_id):
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/backend/animetix/views/forge.py src/backend/animetix/urls.py src/backend/animetix/templates/animetix/archetypist/archetypist_result_fragment.html
+git add backend/api/animetix/views/forge.py backend/api/animetix/urls.py backend/api/animetix/templates/animetix/archetypist/archetypist_result_fragment.html
 git commit -m "feat: add like and remix interaction flows"
 ```

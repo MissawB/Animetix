@@ -27,14 +27,14 @@ Commandes pour administrer le serveur backend headless, appliquer les schémas d
 
 | Commande | Répertoire | Description |
 | :--- | :--- | :--- |
-| `python src/backend/manage.py runserver` | Racine | Lance le serveur de développement API (port `8000`). |
-| `python src/backend/manage.py makemigrations` | Racine | Prépare les nouvelles migrations suite à des modifications de modèles. |
-| `python src/backend/manage.py migrate` | Racine | Applique les migrations à la base PostgreSQL (y compris la création des index HNSW vectoriels). |
-| `python src/backend/manage.py createsuperuser` | Racine | Crée un compte super-administrateur pour l'interface Django Admin (`/admin`). |
-| `python src/backend/manage.py seed_achievements` | Racine | Initialise la base de données avec les données prédéfinies de succès (Succès de jeu, défis). |
-| `python src/backend/manage.py sync_catalog` | Racine | Synchronise le catalogue de médias en important les métadonnées SOTA depuis les APIs externes (TMDB, IGDB). |
-| `python src/backend/manage.py show_urls` | Racine | Liste l'ensemble des routes d'API exposées (nécessite django-extensions). |
-| `python src/backend/manage.py shell` | Racine | Démarre un interpréteur Python interactif avec le contexte Django chargé. |
+| `python backend/api/manage.py runserver` | Racine | Lance le serveur de développement API (port `8000`). |
+| `python backend/api/manage.py makemigrations` | Racine | Prépare les nouvelles migrations suite à des modifications de modèles. |
+| `python backend/api/manage.py migrate` | Racine | Applique les migrations à la base PostgreSQL (y compris la création des index HNSW vectoriels). |
+| `python backend/api/manage.py createsuperuser` | Racine | Crée un compte super-administrateur pour l'interface Django Admin (`/admin`). |
+| `python backend/api/manage.py seed_achievements` | Racine | Initialise la base de données avec les données prédéfinies de succès (Succès de jeu, défis). |
+| `python backend/api/manage.py sync_catalog` | Racine | Synchronise le catalogue de médias en important les métadonnées SOTA depuis les APIs externes (TMDB, IGDB). |
+| `python backend/api/manage.py show_urls` | Racine | Liste l'ensemble des routes d'API exposées (nécessite django-extensions). |
+| `python backend/api/manage.py shell` | Racine | Démarre un interpréteur Python interactif avec le contexte Django chargé. |
 
 ---
 
@@ -52,7 +52,7 @@ Commandes pour le cycle de vie du frontend SPA moderne développé en React 19 e
 | `npm run preview` | `frontend/` | Exécute un serveur local pour prévisualiser le bundle de production généré par Vite. |
 | `npm run lint` | `frontend/` | Analyse le code via ESLint pour détecter les violations des standards de style ou d'accessibilité. |
 | `npm run check-types` | `frontend/` | Valide les types TypeScript sur l'ensemble des fichiers sans générer de bundle (`tsc --noEmit`). |
-| `npm run generate:api` | `frontend/` | Génère les définitions de types TypeScript d'API (`src/types/api.d.ts`) à partir du schéma OpenAPI `schema.yaml` du projet. |
+| `npm run generate:api` | `frontend/` | Génère les définitions de types TypeScript d'API (`backend/types/api.d.ts`) à partir du schéma OpenAPI `schema.yaml` du projet. |
 | `npm run storybook` | `frontend/` | Démarre Storybook en mode développement (port `6006`) pour concevoir et tester les composants isolés. |
 | `npm run build-storybook` | `frontend/` | Compiles Storybook sous forme de site statique dans le dossier `storybook-static/` pour déploiement. |
 
@@ -63,9 +63,9 @@ Orchestration du pipeline ETL, de l'indexation multimodale et de la synchronisat
 
 | Commande | Répertoire | Description |
 | :--- | :--- | :--- |
-| `dagster dev -f src/pipeline/dagster_app.py` | Racine | Lance le serveur de développement Dagster pour orchestrer, visualiser et matérialiser les assets du pipeline. |
-| `python src/pipeline/neo4j_sync.py` | Racine | Exécute manuellement la synchronisation des entités et relations de PostgreSQL vers le Knowledge Graph Neo4j. |
-| `python src/pipeline/anime/vectorize_anime.py` | Racine | Déclenche la vectorisation (texte via Jina-v3 et images via SigLIP) et met à jour l'index vectoriel et le graphe. |
+| `dagster dev -f backend/pipeline/dagster_app.py` | Racine | Lance le serveur de développement Dagster pour orchestrer, visualiser et matérialiser les assets du pipeline. |
+| `python backend/pipeline/neo4j_sync.py` | Racine | Exécute manuellement la synchronisation des entités et relations de PostgreSQL vers le Knowledge Graph Neo4j. |
+| `python backend/pipeline/anime/vectorize_anime.py` | Racine | Déclenche la vectorisation (texte via Jina-v3 et images via SigLIP) et met à jour l'index vectoriel et le graphe. |
 | `python scripts/test_graph_logic_isolated.py` | Racine | Exécute des validations isolées sur les requêtes Cypher complexes et la cohérence de la structure Neo4j. |
 
 ---
@@ -76,27 +76,27 @@ Entraînement des modèles, distillation SLM, auto-amélioration des agents (RLH
 ### Évaluation RAG & Alignement (DPO / RL)
 | Commande | Répertoire | Description |
 | :--- | :--- | :--- |
-| `python src/scripts/mlops_rag_eval.py` | Racine | Lance l'évaluation automatique Ragas (Faithfulness, Answer Relevance) sur un échantillon pour détecter toute régression. |
-| `python src/pipeline/mlops/evaluation_metrics.py` | Racine | Calcule les scores globaux d'évaluation RAG (Hit Rate, MRR) sur le "Gold Dataset". |
-| `python src/pipeline/mlops/dpo_feedback_loop.py` | Racine | Récupère et structure les interactions et corrections utilisateur pour exporter un dataset DPO. |
+| `python backend/scripts/mlops_rag_eval.py` | Racine | Lance l'évaluation automatique Ragas (Faithfulness, Answer Relevance) sur un échantillon pour détecter toute régression. |
+| `python backend/pipeline/mlops/evaluation_metrics.py` | Racine | Calcule les scores globaux d'évaluation RAG (Hit Rate, MRR) sur le "Gold Dataset". |
+| `python backend/pipeline/mlops/dpo_feedback_loop.py` | Racine | Récupère et structure les interactions et corrections utilisateur pour exporter un dataset DPO. |
 | `python scripts/curate_dpo_dataset.py` | Racine | Filtre, nettoie et formate le dataset d'interactions pour le fine-tuning DPO final. |
-| `python src/scripts/run_self_play_debate.py` | Racine | Simule des débats synthétiques multi-agents pour générer des données de RAG de qualité supérieure ("Gold" data). |
-| `python src/scripts/train_akinetix_rl.py` | Racine | Entraîne l'agent Akinetix par Apprentissage par Renforcement (RL) dans son propre environnement simulé. |
+| `python backend/scripts/run_self_play_debate.py` | Racine | Simule des débats synthétiques multi-agents pour générer des données de RAG de qualité supérieure ("Gold" data). |
+| `python backend/scripts/train_akinetix_rl.py` | Racine | Entraîne l'agent Akinetix par Apprentissage par Renforcement (RL) dans son propre environnement simulé. |
 
 ### Fine-Tuning, Distillation & Embeddings
 | Commande | Répertoire | Description |
 | :--- | :--- | :--- |
-| `python src/scripts/distill_draft_model.py` | Racine | Lance la distillation : entraîne un Small Language Model (SLM) "Scout" en se basant sur les outputs de Llama 8B+. |
-| `python src/scripts/finetune_clip_lora.py` | Racine | Réalise le fine-tuning LoRA d'un encodeur d'image (CLIP/SigLIP) pour mieux appréhender les tropes visuels d'animes. |
-| `python src/scripts/seed_face_embeddings.py` | Racine | Génère et enregistre les embeddings faciaux de référence des personnages d'animes pour la recherche multimodale. |
+| `python backend/scripts/distill_draft_model.py` | Racine | Lance la distillation : entraîne un Small Language Model (SLM) "Scout" en se basant sur les outputs de Llama 8B+. |
+| `python backend/scripts/finetune_clip_lora.py` | Racine | Réalise le fine-tuning LoRA d'un encodeur d'image (CLIP/SigLIP) pour mieux appréhender les tropes visuels d'animes. |
+| `python backend/scripts/seed_face_embeddings.py` | Racine | Génère et enregistre les embeddings faciaux de référence des personnages d'animes pour la recherche multimodale. |
 
 ### Benchmarks de Performance & Latence
 | Commande | Répertoire | Description |
 | :--- | :--- | :--- |
 | `python scripts/benchmark_latency.py` | Racine | Évalue la latence de traitement des différents adaptateurs d'inférence (vLLM, GGUF local, API distante). |
 | `python scripts/benchmark_quality_v2.py` | Racine | Benchmark de qualité comparative sur les tâches de génération structurée et de recherche. |
-| `python src/scripts/benchmark_long_context.py` | Racine | Mesure la performance et l'intégrité de la RAG sur des contextes extrêmement larges (aiguille dans une botte de foin). |
-| `python src/scripts/benchmark_multi_lora.py` | Racine | Mesure la surcharge et la latence lors de l'activation dynamique de multiples adaptateurs LoRA en simultané. |
+| `python backend/scripts/benchmark_long_context.py` | Racine | Mesure la performance et l'intégrité de la RAG sur des contextes extrêmement larges (aiguille dans une botte de foin). |
+| `python backend/scripts/benchmark_multi_lora.py` | Racine | Mesure la surcharge et la latence lors de l'activation dynamique de multiples adaptateurs LoRA en simultané. |
 
 ---
 
@@ -132,4 +132,4 @@ Scripts utilitaires pour assurer l'intégrité des données, la cohérence des e
 | `python scripts/verify_brain_adapter.py` | Racine | Effectue un test de fumée (Smoke Test) sur l'adaptateur principal de l'API LLM (Brain API / FallbackInference). |
 | `python scripts/rag_smoke_test.py` | Racine | Lance un test de fumée sur l'API de recherche RAG pour s'assurer du bon fonctionnement de la chaîne PgVector -> Rerank. |
 | `python scripts/vision_quest_worker.py` | Racine | Démarre le worker autonome dédié au traitement asynchrone des tâches multimodales de Vision Quest. |
-| `cd src/backend; celery -A animetix_project worker --loglevel=info` | Racine | Démarre les workers Celery pour la gestion asynchrone en arrière-plan (nettoyage de sessions, calculs de fond). |
+| `cd backend/api; celery -A animetix_project worker --loglevel=info` | Racine | Démarre les workers Celery pour la gestion asynchrone en arrière-plan (nettoyage de sessions, calculs de fond). |

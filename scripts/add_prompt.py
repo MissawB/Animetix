@@ -1,6 +1,6 @@
 import os
 
-prompt_path = "src/core/domain/services/prompts/prompts.yaml"
+prompt_path = "backend/core/domain/services/prompts/prompts.yaml"
 with open(prompt_path, "a", encoding="utf-8") as f:
     f.write("""
 vs_battle_ai_generator:

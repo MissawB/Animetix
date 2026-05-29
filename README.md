@@ -47,7 +47,7 @@ Animetix is built on an **Atomic & Hexagonal Architecture** (Ports & Adapters), 
 
 ### Core Technology
 - **Backend:** **Django 5.0** + **Channels** (WebSockets) for real-time interactions.
-- **Dependency Injection:** Custom lazy-loading **DI Container** (`src/backend/animetix/containers.py`).
+- **Dependency Injection:** Custom lazy-loading **DI Container** (`backend/api/animetix/containers.py`).
 - **Orchestration:** **Dagster** manages ETL & ML pipelines.
 - **Vector DB:** **PgVector** (Primary storage) with HNSW indexing + **ChromaDB** (Fallback).
 - **Graph DB:** **Neo4j** for complex relationship modeling.
@@ -89,10 +89,10 @@ source .venv/bin/activate  # Or .venv\Scripts\activate on Windows
 pip install -r requirements.txt
 
 # Run migrations & seed data
-python src/backend/manage.py migrate
-python src/backend/manage.py seed_achievements
-python src/backend/manage.py sync_catalog
-python src/backend/manage.py runserver
+python backend/api/manage.py migrate
+python backend/api/manage.py seed_achievements
+python backend/api/manage.py sync_catalog
+python backend/api/manage.py runserver
 ```
 
 ---
@@ -101,19 +101,20 @@ python src/backend/manage.py runserver
 
 ```text
 Double_scenario_Project/
-├── src/                    # Source Code
+├── backend/                # Backend & Core Logic
 │   ├── core/               # Domain Layer (Entities, Services, Ports)
 │   ├── adapters/           # Infrastructure Layer (Driven Adapters)
 │   │   ├── persistence/    # PgVector, Neo4j, Django DB Adapters
 │   │   └── inference/      # vLLM, GGUF, Brain API Adapters
-│   ├── backend/            # Presentation Layer (Driving Adapters)
+│   ├── api/                # Presentation Layer (Django Headless Server)
 │   │   ├── animetix/
-│   │   │   ├── views/      # Modularized UI & API Views (Classic, Vision, Forge, etc.)
-│   │   │   ├── containers.py # Dependency Injection Container
+│   │   │   ├── views/      # Modularized API Views (Classic, Vision, Forge, etc.)
+│   │   │   ├── containers/ # Dependency Injection Modules
 │   │   │   └── urls.py
 │   │   └── manage.py
 │   └── pipeline/           # Orchestration Layer (Dagster assets & ops)
-├── scripts/                # Maintenance & Sync Utility scripts
+├── frontend/               # React SPA (Client Side)
+├── scripts/                # Root Utility scripts
 ├── data/                   # Persistent storage (Vectors, Artifacts, Models)
 ├── deploy/                 # K8s, Docker & CI/CD configs
 ├── docs/                   # Architecture & Design Docs

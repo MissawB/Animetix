@@ -13,7 +13,7 @@
 ### Task 1: Create Qwen3VLAdapter
 
 **Files:**
-- Create: `src/adapters/inference/qwen3_vl_adapter.py`
+- Create: `backend/adapters/inference/qwen3_vl_adapter.py`
 - Test: `tests/core/test_qwen3_vl_adapter.py`
 
 - [ ] **Step 1: Write the failing test for video analysis**
@@ -78,7 +78,7 @@ class Qwen3VLAdapter(InferencePort):
 
 - [ ] **Step 3: Commit**
 ```bash
-git add src/adapters/inference/qwen3_vl_adapter.py
+git add backend/adapters/inference/qwen3_vl_adapter.py
 git commit -m "feat: add Qwen3-VL-A3B SOTA video adapter"
 ```
 
@@ -87,7 +87,7 @@ git commit -m "feat: add Qwen3-VL-A3B SOTA video adapter"
 ### Task 2: Inject Adapter into Container
 
 **Files:**
-- Modify: `src/backend/animetix/containers.py`
+- Modify: `backend/api/animetix/containers.py`
 
 - [ ] **Step 1: Add qwen3_vl_adapter property to Container**
 ```python
@@ -105,7 +105,7 @@ git commit -m "feat: add Qwen3-VL-A3B SOTA video adapter"
 
 - [ ] **Step 3: Commit**
 ```bash
-git add src/backend/animetix/containers.py
+git add backend/api/animetix/containers.py
 git commit -m "chore: inject Qwen3-VL into VideoQuestService"
 ```
 
@@ -114,13 +114,13 @@ git commit -m "chore: inject Qwen3-VL into VideoQuestService"
 ### Task 3: Enhance VideoQuestService Logic
 
 **Files:**
-- Modify: `src/core/domain/services/creative/video_quest.py`
+- Modify: `backend/core/domain/services/creative/video_quest.py`
 
 - [ ] **Step 1: Implement "Guess the Episode" logic using Qwen3-VL**
 Update `VideoQuestService` to use `localize_video_actions` for pinpointing episode numbers or key plot points.
 
 - [ ] **Step 2: Commit**
 ```bash
-git add src/core/domain/services/creative/video_quest.py
+git add backend/core/domain/services/creative/video_quest.py
 git commit -m "feat: implement episode guessing logic via Qwen3-VL"
 ```

@@ -1,7 +1,7 @@
 import sqlite3
 import os
 
-db_path = 'src/backend/db.sqlite3'
+db_path = 'backend/api/db.sqlite3'
 if not os.path.exists(db_path):
     print(f"Error: {db_path} not found.")
 else:

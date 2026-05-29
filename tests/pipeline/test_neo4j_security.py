@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock, patch
-from src.pipeline.neo4j_client import Neo4jManager
+from backend.pipeline.neo4j_client import Neo4jManager
 
 class TestNeo4jSecurity:
     @pytest.fixture

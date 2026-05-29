@@ -12,7 +12,7 @@ from unittest.mock import MagicMock, patch
 # 1. TESTS DSPY PROMPT OPTIMIZER
 # ==========================================
 def test_dspy_prompt_optimizer():
-    from src.core.domain.services.dspy_prompt_optimizer import DSPyPromptOptimizer
+    from backend.core.domain.services.dspy_prompt_optimizer import DSPyPromptOptimizer
     
     mock_engine = MagicMock()
     # Simuler des retours LLM :
@@ -49,7 +49,7 @@ def test_dspy_prompt_optimizer():
 # 2. TESTS CFR GAME SOLVER
 # ==========================================
 def test_cfr_game_solver():
-    from src.core.domain.services.cfr_game_solver import CFRGameSolver
+    from backend.core.domain.services.cfr_game_solver import CFRGameSolver
     
     solver = CFRGameSolver(num_actions=3)
     
@@ -79,7 +79,7 @@ def test_cfr_game_solver():
 # 3. TESTS LIQUID NEURAL NETWORK (LNN)
 # ==========================================
 def test_liquid_neural_network_simulator():
-    from src.core.domain.services.liquid_neural_network import LiquidNeuralNetworkSimulator
+    from backend.core.domain.services.liquid_neural_network import LiquidNeuralNetworkSimulator
     
     simulator = LiquidNeuralNetworkSimulator(state_dimension=4, input_dimension=2)
     

@@ -32,14 +32,14 @@ ENV PATH="/opt/venv/bin:$PATH"
 COPY --chown=appuser:appuser . .
 
 # Collect static files (assuming settings.py is configured correctly for STATIC_ROOT)
-RUN python backend/manage.py collectstatic --noinput
+RUN python backend/api/manage.py collectstatic --noinput
 
 # Set up data directories with proper permissions
 RUN mkdir -p data/raw data/processed data/models data/artifacts data/chroma_db && chown -R appuser:appuser /app
 
 USER appuser
 
-ENV DAGSTER_HOME=/app/pipeline
+ENV DAGSTER_HOME=/app/backend/pipeline
 
 EXPOSE 7860
 

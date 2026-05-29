@@ -30,13 +30,13 @@ The `Judge` will now output a `next_action`:
 
 ## 4. Implementation Details
 
-### A. Schemas (`src/core/domain/entities/ai_schemas.py`)
+### A. Schemas (`backend/core/domain/entities/ai_schemas.py`)
 - Update `JudgeEvaluation` to include `next_action` (Enum: `APPROVE`, `REWRITE`, `RESEARCH_MORE`, `REPLAN`).
 
-### B. Prompts (`src/core/domain/services/prompts/prompts.yaml`)
+### B. Prompts (`backend/core/domain/services/prompts/prompts.yaml`)
 - Update `answer_judge` to force the `next_action` output based on reasoning.
 
-### C. Orchestrator (`src/core/domain/services/agentic_rag_service.py`)
+### C. Orchestrator (`backend/core/domain/services/agentic_rag_service.py`)
 - Refactor `plan_and_solve_stream` into a `while` loop (max iterations: 5) handling the state transitions.
 
 ## 5. Success Criteria

@@ -36,6 +36,7 @@ def mock_llm_service():
 @pytest.fixture
 def mock_neo4j():
     neo = MagicMock()
+    neo.execute_read.return_value = [{"p.name": "Mamoru Miyano"}]
     neo.execute_query.return_value = [{"p.name": "Mamoru Miyano"}]
     return neo
 
@@ -104,7 +105,7 @@ def test_graph_exploration_flow(agentic_rag, mock_llm_service, mock_neo4j):
     assert any("Exécution Cypher" in t for t in thoughts)
     
     # Verify Neo4j was called
-    mock_neo4j.execute_query.assert_called_once()
+    mock_neo4j.execute_read.assert_called_once()
     
     # Verify final answer
     final_answer = "".join(tokens)

@@ -19,7 +19,7 @@ def mock_django_media_item():
 @patch('src.pipeline.enrich_db_scraper.gemini_client')
 @patch('requests.get')
 def test_jikan_fetching_and_translation(mock_get, mock_gemini, mock_django_media_item):
-    from src.pipeline.enrich_db_scraper import fetch_jikan_details, translate_synopsis_via_gemini
+    from backend.pipeline.enrich_db_scraper import fetch_jikan_details, translate_synopsis_via_gemini
     
     # 1. Test Jikan fetching
     mock_response = MagicMock()
@@ -43,7 +43,7 @@ def test_jikan_fetching_and_translation(mock_get, mock_gemini, mock_django_media
 @patch('src.pipeline.enrich_db_scraper.fetch_jikan_details')
 @patch('src.pipeline.enrich_db_scraper.update_json_file')
 def test_run_enrichment_flow(mock_update_json, mock_fetch_jikan, mock_translate, mock_media_item, mock_django_media_item):
-    from src.pipeline.enrich_db_scraper import run_enrichment
+    from backend.pipeline.enrich_db_scraper import run_enrichment
     
     # Mocking Django querysets
     mock_qs = MagicMock()

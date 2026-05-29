@@ -47,7 +47,7 @@ Testing the robustness of the `Critic` agent and the `Searcher` planner.
 ## 4. Implementation Plan
 1. **Extend Schema**: Add optional `query_type` and `ground_truth` fields to `gold_dataset.json`.
 2. **Add Queries**: Append ~50 manually crafted queries across the 5 categories.
-3. **Update Evaluation Script**: Modify `src/pipeline/mlops/evaluation_metrics.py` to optionally filter by `query_type` and report per-category performance.
+3. **Update Evaluation Script**: Modify `backend/pipeline/mlops/evaluation_metrics.py` to optionally filter by `query_type` and report per-category performance.
 4. **Validation**: Run `rag_smoke_test.py` to ensure the new queries are integrated correctly.
 
 ## 5. Success Criteria
