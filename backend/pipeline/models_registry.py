@@ -17,7 +17,8 @@ class ModelsRegistry:
         try:
             with open(manifest_path, 'r') as f:
                 return json.load(f)
-        except:
+        except Exception as e:
+            logger.warning(f"Failed to load models manifest, using fallback: {e}")
             return {"text": {"v3": "jinaai/jina-embeddings-v3"}}
 
     @property

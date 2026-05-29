@@ -98,7 +98,11 @@ class Qwen3VLAdapter(InferencePort):
                         if idx is None and "url" in item:
                             try:
                                 idx = image_urls.index(item["url"])
-                            except ValueError:
+                            except ValueError as e:
+                                logger.debug(
+                                    f"URL {item.get('url')} not found in image_urls list during Qwen3VL index lookup: {e}. "
+                                    f"Falling back to index {i}."
+                                )
                                 idx = i
                         
                         if idx is not None:

@@ -22,6 +22,35 @@ imageio = lazy_import('imageio')
 
 logger = get_logger(__name__)
 
+class CrossFrameAttentionProcessor:
+    """
+    Processor for Cross-Frame Attention. 
+    It forces the attention to look at the first frame (anchor) or across the batch 
+    to maintain appearance consistency.
+    """
+    def __init__(self, unet_chunk_size=2):
+        self.unet_chunk_size = unet_chunk_size
+
+    def __call__(self, attn, hidden_states, encoder_hidden_states=None, attention_mask=None):
+        batch_size, sequence_length, _ = hidden_states.shape
+        # self.unet_chunk_size is usually the number of frames (or batch dimension)
+        
+        if encoder_hidden_states is None:
+            # Self-attention: reshape to allow cross-frame interaction
+            # We treat the hidden states as [frames, pixels, channels]
+            # And force attention to the first frame or average
+            encoder_hidden_states = hidden_states
+        
+        # Simple cross-frame logic: every frame attends to the first frame's features
+        # to anchor the style and identity.
+        if encoder_hidden_states is not None:
+            # Reshape hidden_states to [batch/frames, pixels, channels]
+            # Cross-frame: use the first frame as anchor for all frames in batch
+            anchor_frame = encoder_hidden_states[0:1].expand(batch_size, -1, -1)
+            encoder_hidden_states = torch.cat([encoder_hidden_states, anchor_frame], dim=1)
+
+        return attn.processor.__call__(attn, hidden_states, encoder_hidden_states, attention_mask)
+
 class DiffusersAdapter(InferencePort):
     """
     Adaptateur local pour la génération d'images utilisant la bibliothèque Diffusers.

@@ -366,7 +366,7 @@ dynamic_tool_builder:
 
     Le script DOIT :
 
-    1. Importer `requests`
+    1. Importer `httpx`
 
     2. Définir une fonction `execute_tool()` qui retourne un dictionnaire Python avec
     les résultats.

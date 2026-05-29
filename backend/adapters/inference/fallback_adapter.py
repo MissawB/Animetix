@@ -206,8 +206,11 @@ class FallbackInferenceAdapter(InferencePort):
                     return res
                 
                 self._report_failure(adapter, method_name, "Résultat None", latency)
-            except (InferenceNotImplementedError, NotImplementedError):
-                # Ignorer silencieusement la non-implémentation
+            except (InferenceNotImplementedError, NotImplementedError) as e:
+                logger.debug(
+                    f"⚙️ [Fallback] {adapter.__class__.__name__}.{method_name} raised "
+                    f"InferenceNotImplementedError/NotImplementedError (not implemented): {e}"
+                )
                 continue
             except Exception as e:
                 latency = time.time() - start_time

@@ -120,8 +120,8 @@ def run_regression_test(model_adapter=None):
             data = orjson.loads(content)
             if isinstance(data, dict) and 'answer' in data:
                 answer_text = data['answer']
-        except:
-            pass # On garde le texte brut si le parsing échoue
+        except Exception as e:
+            logger.debug(f"JSON parsing failed for raw answer, keeping raw text: {e}")
             
         logger.info(f"   🤖 AI Answer: {answer_text[:100]}...")
         

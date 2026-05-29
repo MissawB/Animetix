@@ -3,7 +3,7 @@ import json
 import torch
 import numpy as np
 from PIL import Image
-import requests
+import httpx
 from io import BytesIO
 from transformers import AutoProcessor, AutoModel
 from tqdm import tqdm

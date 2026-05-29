@@ -73,8 +73,11 @@ def run_vectorization(chroma_res=None, neo4j_res=None):
                     img = Image.open(BytesIO(response.content)).convert('RGB')
                     v_emb = vision_model.encode(img, convert_to_numpy=True)
                     v_embeddings.append(v_emb.tolist())
-                else: v_embeddings.append(None)
-            except: v_embeddings.append(None)
+                else:
+                    v_embeddings.append(None)
+            except Exception as e:
+                logger.warning(f"Failed to fetch or encode image for {item.get('title', 'Unknown')}: {e}")
+                v_embeddings.append(None)
 
         # --- PHASE 3 : UPSERT & SYNC ---
         for idx, item in enumerate(batch):

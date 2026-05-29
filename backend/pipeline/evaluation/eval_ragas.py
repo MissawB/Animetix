@@ -44,7 +44,8 @@ class RAGEvaluator:
             results = chroma_manager.query_collection("anime_thematic", query_embedding, n_results=3)
             vector_contexts = [doc for doc in results['documents'][0]]
             media_ids = [res for res in results['ids'][0]]
-        except:
+        except Exception as e:
+            logger.error(f"Failed to query contexts for '{query}': {e}")
             vector_contexts = ["Pas de contexte trouvé."]
             media_ids = []
 

@@ -11,7 +11,7 @@ class CodeSafetyValidator(ast.NodeVisitor):
     """
     AST validator to ensure generated code is safe.
     """
-    ALLOWED_MODULES = {"requests", "json", "math", "datetime", "re"}
+    ALLOWED_MODULES = {"httpx", "json", "math", "datetime", "re"}
 
     def __init__(self):
         self.errors = []

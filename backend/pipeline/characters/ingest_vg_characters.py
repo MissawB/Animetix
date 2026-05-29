@@ -23,7 +23,9 @@ def get_twitch_token():
     try:
         res = httpx.post(url, follow_redirects=True)
         return res.json().get('access_token') if res.status_code == 200 else None
-    except: return None
+    except Exception as e:
+        logger.error(f"Failed to acquire Twitch token: {e}")
+        return None
 
 def fetch_igdb_characters(token):
     url = "https://api.igdb.com/v4/characters"
