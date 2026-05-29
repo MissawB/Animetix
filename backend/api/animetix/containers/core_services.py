@@ -224,7 +224,7 @@ class CoreServicesContainer(containers.DeclarativeContainer):
 
     manga_flow_service = providers.Singleton(
         MangaFlowService,
-        inference_engine=inference.manga_ocr_adapter,
+        inference_engine=inference.inference_engine,
         llm_service=agentic.llm_service,
         prompt_manager=infrastructure.prompt_manager
     )
