@@ -98,3 +98,46 @@ def test_counterfactual_conversation_simulator():
     assert "Steins;Gate" in result["alternative_response"]
     assert result["alternative_utility"] == 0.92
     assert result["counterfactual_regret"] == pytest.approx(0.07) # 0.92 - 0.85 = 0.07
+
+
+def test_swarm_consensus_llm_success():
+    from core.domain.services.swarm_consensus import SwarmConsensusOrchestrator, SwarmConsensusVotes
+    
+    mock_engine = MagicMock()
+    mock_votes = SwarmConsensusVotes(votes={
+        "VisualExpert": 0.85,
+        "AcousticExpert": 0.35,
+        "LoreExpert": 0.90
+    })
+    mock_engine.generate_structured.return_value = mock_votes
+    
+    orchestrator = SwarmConsensusOrchestrator(inference_engine=mock_engine)
+    
+    success, score = orchestrator.propose_fact(
+        proposer="VisualExpert",
+        fact="L'animation est magnifique.",
+        media_title="Bleach"
+    )
+    
+    assert success is True
+    assert score == pytest.approx((1.0 + 0.35 + 0.90) / 3)
+    mock_engine.generate_structured.assert_called_once()
+
+
+def test_swarm_consensus_llm_failure_fallback():
+    from core.domain.services.swarm_consensus import SwarmConsensusOrchestrator
+    
+    mock_engine = MagicMock()
+    mock_engine.generate_structured.side_effect = Exception("LLM connection timed out")
+    
+    orchestrator = SwarmConsensusOrchestrator(inference_engine=mock_engine)
+    
+    success, score = orchestrator.propose_fact(
+        proposer="VisualExpert",
+        fact="La musique de cet anime est magique.",
+        media_title="Bleach"
+    )
+    
+    assert success is True
+    assert score == pytest.approx((1.0 + 0.90 + 0.52) / 3)
+

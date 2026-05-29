@@ -356,7 +356,8 @@ class CoreServicesContainer(containers.DeclarativeContainer):
 
     swarm_consensus_orchestrator = providers.Singleton(
         SwarmConsensusOrchestrator,
-        agent_names=["VisualExpert", "AcousticExpert", "LoreExpert"]
+        agent_names=["VisualExpert", "AcousticExpert", "LoreExpert"],
+        inference_engine=inference.inference_engine
     )
 
     counterfactual_simulator = providers.Singleton(
