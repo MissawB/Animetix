@@ -63,24 +63,24 @@ def sanitize_judge_data(data: dict) -> dict:
             
     # 2. faithfulness_score
     try:
-        data["faithfulness_score"] = float(data.get("faithfulness_score", 1.0))
+        data["faithfulness_score"] = float(data.get("faithfulness_score", 0.0))
         data["faithfulness_score"] = max(0.0, min(1.0, data["faithfulness_score"]))
     except (ValueError, TypeError):
-        data["faithfulness_score"] = 1.0
+        data["faithfulness_score"] = 0.0
         
     # 3. relevancy_score
     try:
-        data["relevancy_score"] = float(data.get("relevancy_score", 1.0))
+        data["relevancy_score"] = float(data.get("relevancy_score", 0.0))
         data["relevancy_score"] = max(0.0, min(1.0, data["relevancy_score"]))
     except (ValueError, TypeError):
-        data["relevancy_score"] = 1.0
+        data["relevancy_score"] = 0.0
         
     # 4. hallucination_detected
     h_detected = data.get("hallucination_detected")
     if isinstance(h_detected, str):
         data["hallucination_detected"] = h_detected.lower() == "true"
     elif h_detected is None:
-        data["hallucination_detected"] = False
+        data["hallucination_detected"] = True # Default to True (pessimistic)
         
     # 5. reasoning
     if "reasoning" not in data or not data["reasoning"]:
@@ -91,7 +91,8 @@ def sanitize_judge_data(data: dict) -> dict:
     if isinstance(is_rel, str):
         data["is_reliable"] = is_rel.lower() == "true"
     elif is_rel is None:
-        data["is_reliable"] = not data["hallucination_detected"]
+        # Reliability depends on hallucination AND scores
+        data["is_reliable"] = (not data["hallucination_detected"]) and (data["faithfulness_score"] > 0.5)
         
     return data
 
