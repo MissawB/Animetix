@@ -12,7 +12,7 @@ def mock_django_media_item():
     return item
 
 @patch('src.pipeline.advanced_scrapers.gemini_client')
-@patch('requests.get')
+@patch('pipeline.advanced_scrapers.httpx.get')
 def test_scraper_d_arcs(mock_get, mock_gemini):
     from pipeline.advanced_scrapers import ScraperD_Arcs
     
@@ -43,7 +43,7 @@ def test_scraper_d_arcs(mock_get, mock_gemini):
     assert data["arcs"][0]["arc_name"] == "Introduction Arc"
     assert len(data["fillers"]) == 0
 
-@patch('requests.post')
+@patch('pipeline.advanced_scrapers.httpx.post')
 def test_scraper_e_igdb(mock_post):
     from pipeline.advanced_scrapers import ScraperE_IGDB
     

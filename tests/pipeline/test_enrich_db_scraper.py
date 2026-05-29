@@ -17,7 +17,7 @@ def mock_django_media_item():
     return item
 
 @patch('src.pipeline.enrich_db_scraper.gemini_client')
-@patch('requests.get')
+@patch('pipeline.enrich_db_scraper.httpx.get')
 def test_jikan_fetching_and_translation(mock_get, mock_gemini, mock_django_media_item):
     from pipeline.enrich_db_scraper import fetch_jikan_details, translate_synopsis_via_gemini
     

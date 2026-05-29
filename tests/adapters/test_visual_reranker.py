@@ -3,12 +3,15 @@ from unittest.mock import MagicMock, patch
 from adapters.inference.vision_transformers_adapter import VisionTransformersAdapter
 
 def test_visual_rerank_success():
-    # Mocking requests.get
     class MockResponse:
         status_code = 200
         content = b"fake_image_data"
 
-    with patch("requests.get", return_value=MockResponse()), \
+    mock_client = MagicMock()
+    mock_client.__enter__.return_value = mock_client
+    mock_client.get.return_value = MockResponse()
+
+    with patch("adapters.inference.clip_vision.httpx.Client", return_value=mock_client), \
          patch("sentence_transformers.SentenceTransformer") as mock_model, \
          patch("sentence_transformers.util.cos_sim") as mock_cos_sim, \
          patch("PIL.Image.open") as mock_image_open:
@@ -33,7 +36,11 @@ def test_visual_rerank_failure():
         status_code = 404
         content = b""
     
-    with patch("requests.get", return_value=MockResponse()):
+    mock_client = MagicMock()
+    mock_client.__enter__.return_value = mock_client
+    mock_client.get.return_value = MockResponse()
+
+    with patch("adapters.inference.clip_vision.httpx.Client", return_value=mock_client):
         adapter = VisionTransformersAdapter()
         results = adapter.visual_rerank(
             query="test query", 

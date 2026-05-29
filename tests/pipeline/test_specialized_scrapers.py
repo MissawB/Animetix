@@ -13,7 +13,7 @@ def mock_django_media_item():
     return item
 
 @patch('src.pipeline.specialized_scrapers.gemini_client')
-@patch('requests.get')
+@patch('pipeline.specialized_scrapers.httpx.get')
 def test_scraper_a_casting(mock_get, mock_gemini):
     from pipeline.specialized_scrapers import ScraperA_Casting
     
@@ -41,7 +41,7 @@ def test_scraper_a_casting(mock_get, mock_gemini):
     assert cast[0]["seiyuu_vo"] == "Masakazu Morita"
     assert cast[0]["doubleur_vf"] == "Vincent de Bouard"
 
-@patch('requests.get')
+@patch('pipeline.specialized_scrapers.httpx.get')
 def test_scraper_b_music(mock_get):
     from pipeline.specialized_scrapers import ScraperB_Music
     

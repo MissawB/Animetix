@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 from adapters.persistence.fandom_adapter import FandomAdapter
 
-@patch('requests.get')
+@patch('adapters.persistence.fandom_adapter.httpx.get')
 def test_fetch_character_data_success(mock_get):
     # Setup search response
     mock_search_res = MagicMock()
@@ -42,7 +42,7 @@ def test_fetch_character_data_success(mock_get):
     assert data[0]["image_url"] == "https://example.com/goku.jpg"
     assert mock_get.call_count == 2
 
-@patch('requests.get')
+@patch('adapters.persistence.fandom_adapter.httpx.get')
 def test_fetch_character_data_missing(mock_get):
     mock_search_res = MagicMock()
     mock_search_res.status_code = 200

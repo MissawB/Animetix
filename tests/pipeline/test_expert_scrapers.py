@@ -30,7 +30,7 @@ def test_scraper_g_streaming(mock_gemini):
     assert data[0]["platform"] == "Netflix"
     assert data[0]["has_vf"] is True
 
-@patch('requests.get')
+@patch('pipeline.expert_scrapers.httpx.get')
 def test_scraper_h_recs(mock_get):
     from pipeline.expert_scrapers import ScraperH_Recs
     
