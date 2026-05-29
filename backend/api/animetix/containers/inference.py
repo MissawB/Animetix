@@ -22,8 +22,6 @@ class InferenceContainer(containers.DeclarativeContainer):
 
     local_rerank_adapter = providers.Singleton(LocalRerankAdapter)
 
-    local_guardrail_adapter = providers.Singleton(LocalGuardrailAdapter)
-
     vision_transformers_adapter = providers.Singleton(
         VisionTransformersAdapter,
         use_4bit=True
@@ -45,6 +43,11 @@ class InferenceContainer(containers.DeclarativeContainer):
         UnifiedInferenceAdapter,
         api_base=os.getenv("LLM_API_BASE", "http://localhost:11434/v1"),
         model_name=os.getenv("LLM_MODEL_NAME", "llama3")
+    )
+
+    local_guardrail_adapter = providers.Singleton(
+        LocalGuardrailAdapter,
+        inference_engine=unified_inference_adapter
     )
 
     brain_api_adapter = providers.Singleton(
