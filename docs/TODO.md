@@ -1,35 +1,31 @@
 # Liste des Tâches (TODO) - Animetix
 
-Ce document centralise toutes les tâches techniques, d'architecture et de fonctionnalités qui restent à implémenter. Les tâches complétées sont cochées ou purgées.
+Ce document centralise toutes les tâches techniques, d'architecture et de fonctionnalités qui restent à implémenter. Les tâches complétées sont cochées ou purgées pour être archivées dans `HISTORY.md` et dans la section des succès.
 
 ## 🛠️ Dette Technique & Architecture
 
-- [x] **Intégration Réelle de la Recherche Web (DuckDuckGo)** : Remplacer l'adaptateur simulé `DuckDuckGoSearchAdapter` dans `backend/adapters/persistence/web_search_adapter.py` par une véritable recherche DuckDuckGo (API libre ou HTML parser résilient).
-- [x] **Gestion des erreurs (Adapteurs d'Inférence - pass silencieux)** : Éliminer les blocs `except: pass` silencieux et ajouter du logging structuré :
-  - Dans `backend/adapters/inference/fallback_adapter.py`
-  - Dans `backend/adapters/inference/qwen3_vl_adapter.py`
-- [x] **Middleware (ASGI)** : Refactoriser ou adapter `UserTrackingMiddleware` et `UserTierMiddleware` dans `backend/api/animetix/middleware.py` pour garantir l'isolation totale via `contextvars` sur les connexions asynchrones (Django Channels / WebSockets).
-- [x] **Rigueur des Agents (Critic & Judge)** : Éliminer les comportements trop permissifs par défaut (ex: `relevance_score=1.0` sur Exception dans `critic.py`) (FAIT, bascule vers un mode pessimiste "Fail-Safe").
-- [x] **Gestion des erreurs (Graph & Debate)** : Éliminer les erreurs silencieuses et structurer les logs dans le Graph Expert, le Debate Manager et le MultiAgentBus (FAIT, suppression des pass silencieux et ajout de logs).
-- [x] **Gestion des erreurs (Pipelines d'Ingestion - pass silencieux)** : Éliminer les blocs `except:` silencieux et ajouter du logging structuré/monitoring dans les pipelines (`vectorize_anime.py`, `ingest_vg_characters.py`, `eval_ragas.py`, `regression_benchmark.py`, `models_registry.py`).
-- [x] **Dégradation élégante (Inférence de Modèles Lourds)** : Détecter dynamiquement la présence de GPU CUDA dans `DiffusersAdapter` et `AudioTransformersAdapter`, et lever des alertes claires (ou fallbacks cloud) au lieu de crashs de mémoire/chargement en cas d'absence de GPU.
-- [x] **Optimisation sémantique (Swarm Consensus)** : Connecter le consensus d'essaim `SwarmConsensusOrchestrator` à de véritables évaluations d'agents sémantiques ou de LLMs au lieu de simples correspondances de mots-clés statiques.
-
-
+*(Toutes les tâches de dette technique identifiées lors de l'audit de mai 2026 ont été entièrement résolues et archivées.)*
 
 ## 🧬 Fonctionnalités Créatives SOTA 2026
 
 - [ ] **Génération Structurée** : Passer du parsing JSON simple à une validation de schéma native plus robuste (via Instructor/Ollama).
 - [ ] **Modération de contenu sémantique** : Étendre l'implémentation par mots-clés actuelle vers une approche sémantique (Llama Guard).
 - [ ] **Diagnostics & Incertitude** : Implémenter `get_diagnostics` et `calculate_uncertainty` dans `InferencePort`.
-- [ ] **Traduction Manga (SDXL Neuronal)** : Améliorer le pipeline manga pour charger et exploiter SDXL-Turbo dans `DiffusersAdapter` (en plus du fallback Pillow déjà mis en place).
-- [x] **Transfert de style vidéo** : Implémenter FateZero / Video-to-Anime pour la cohérence visuelle temporelle via mécanisme de Cross-Frame Attention dans `DiffusersAdapter` (FAIT).
-- [x] **Génération sonore** : Implémenter AudioLDM pour la création de paysages sonores basés sur des vidéos (FAIT).
-- [x] **Clonage Vocal & S2S** : Implémenter Zero-shot RVC et les interactions speech-to-speech natives (FAIT, intégration de XTTS v2 et Kyutai Moshi).
 
-## ✅ Tâches Récemment Complétées
+## ✅ Tâches Récemment Complétées (Archivées)
 
-- [x] **Maintenance des Tests (Imports)** : Résolution des incohérences d'importation (`adapters...` vs `backend.adapters...`) et fiabilisation du `pythonpath` dans `pytest.ini` sous Windows.
-- [x] **Inférence (Simplification)** : Éradication de vLLM, GGUF et Transformers brut pour l'inférence texte. Standardisation sur BrainAPI (Cloud) et Ollama (Local).
-- [x] **Injection DI Manga & Inpainting Résilient** : Câblage de `FallbackInferenceAdapter` dans `MangaFlowService` et implémentation du fallback local Pillow en cas d'absence de GPU.
-- [x] **Stabilisation des Mocks** : Correction des cibles de mock `src.adapters...` dans `test_manga_ocr_adapter.py` et `test_fallback_structured.py`.
+- [x] **Optimisation sémantique (Swarm Consensus)** : Interconnexion de `SwarmConsensusOrchestrator` avec un LLM (`InferencePort`) pour un vote sémantique unifié via Pydantic en un seul appel API, avec repli résilient sur les mots-clés locaux.
+- [x] **Dégradation élégante (Inférence de Modèles Lourds)** : Détection dynamique de CUDA GPU dans `DiffusersAdapter` et `AudioTransformersAdapter` pour bloquer les chargements lourds sur CPU et basculer sur le cloud distant (`BrainAPIAdapter`) de manière transparente.
+- [x] **Gestion des erreurs (Pipelines d'Ingestion - pass silencieux)** : Élimination complète de tous les blocs `except:` anonymes et silencieux dans 5 pipelines (`vectorize_anime.py`, `ingest_vg_characters.py`, `eval_ragas.py`, `regression_benchmark.py`, `models_registry.py`), remplacés par des logs nommés explicites.
+- [x] **Intégration Réelle de la Recherche Web (DuckDuckGo)** : Connexion de l'Agentic RAG à DuckDuckGo Search réel via la bibliothèque `ddgs`.
+- [x] **Gestion des erreurs (Adapteurs d'Inférence - pass silencieux)** : Nettoyage des exceptions silencieuses dans `FallbackInferenceAdapter` et `Qwen3VLAdapter`.
+- [x] **Middleware (ASGI)** : Restructuration synchrone/asynchrone asynchrone des middlewares Django et isolation via `ContextVar`.
+- [x] **Rigueur des Agents (Critic & Judge)** : Durcissement des prompts et mode "Fail-Safe" défensif pour le RAG en cas de crash infrastructure.
+- [x] **Gestion des erreurs (Graph & Debate)** : Clarification des logs dans le MultiAgentBus, le Debate Manager et les pipelines d'entraînement de sentiments de personnages.
+- [x] **Transfert de style vidéo (FateZero)** : Implémentation du `CrossFrameAttentionProcessor` pour la cohérence temporelle video-to-anime.
+- [x] **Génération sonore (AudioLDM)** : Implémentation de la génération de paysages sonores basée sur des métadonnées vidéo.
+- [x] **Clonage Vocal & S2S (XTTS v2 / Moshi)** : Support du clonage voix zéro-shot et speech-to-speech natif Kyutai Moshi.
+- [x] **Maintenance des Tests (Imports)** : Résolution globale du `pythonpath` pytest et des conflits d'importations sous Windows.
+- [x] **Inférence (Simplification)** : Standardisation sur BrainAPI and Ollama, suppression complète de vLLM et GGUF locaux.
+- [x] **Injection DI Manga & Inpainting Résilient** : Câblage DI et fallback local Pillow en cas d'absence de GPU.
+- [x] **Stabilisation des Mocks** : Stabilisation des namespaces mocks `src.adapters` en les associant via meta-path finder dans `conftest.py`.
