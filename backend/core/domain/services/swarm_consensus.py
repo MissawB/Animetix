@@ -6,30 +6,78 @@ Applies a Paxos-style semantic voting consensus protocol to validate sémantique
 
 import logging
 from typing import List, Dict, Any, Tuple, Optional
+from pydantic import BaseModel, Field
 
 
 logger = logging.getLogger("animetix.swarm.consensus")
 
+
+class SwarmConsensusVotes(BaseModel):
+    votes: Dict[str, float] = Field(
+        ..., 
+        description="Dictionnaire associant chaque nom d'agent à son score de confiance (entre 0.0 et 1.0)."
+    )
+
+
 class SwarmConsensusOrchestrator:
-    def __init__(self, agent_names: Optional[List[str]] = None):
+    def __init__(self, agent_names: Optional[List[str]] = None, inference_engine: Optional[Any] = None):
         self.agents = agent_names or ["VisualExpert", "AcousticExpert", "LoreExpert"]
         self.consensus_log: List[Dict[str, Any]] = []
+        self.inference_engine = inference_engine
+
+    def _get_swarm_votes_via_llm(self, fact: str, media: str) -> Dict[str, float]:
+        """
+        Interroge le moteur d'inférence pour obtenir les votes (scores de confiance) 
+        des différents agents de l'essaim pour un fait donné sur un média.
+        """
+        prompt = (
+            f"Tu es l'arbitre d'un essaim d'agents d'IA analysant des faits sur des animés ou mangas.\n"
+            f"Analyse le fait suivant concernant l'œuvre '{media}':\n"
+            f"Fait : \"{fact}\"\n\n"
+            f"Évalue le niveau de confiance de chacun des experts suivants sous la forme d'un score entre 0.0 et 1.0 :\n"
+            f"1. **VisualExpert** : sensible aux aspects visuels (couleurs, animation, style graphique, décors).\n"
+            f"2. **AcousticExpert** : sensible aux aspects sonores (musique, voix, bruitages, doublage/seiyuu, OST, opening/ending).\n"
+            f"3. **LoreExpert** : sensible au scénario, à l'histoire, à la cohérence de l'univers, aux personnages, et aux arcs narratifs.\n\n"
+            f"Retourne un objet JSON contenant les scores pour chaque agent."
+        )
+        try:
+            result = self.inference_engine.generate_structured(
+                prompt=prompt,
+                response_model=SwarmConsensusVotes,
+                system_prompt="Tu es un orchestrateur d'essaim d'agents d'IA de consensus sémantique."
+            )
+            if isinstance(result, dict):
+                return result.get("votes", {})
+            elif result and hasattr(result, "votes"):
+                return result.votes
+            return {}
+        except Exception as e:
+            logger.warning(f"Failed to get swarm votes via LLM: {e}. Falling back to simulations.")
+            return {}
 
     def propose_fact(self, proposer: str, fact: str, media_title: str) -> Tuple[bool, float]:
         """
         Soumet un fait à l'essaim d'agents.
-        Chaque agent vote en fonction d'un score heuristique/sémantique simulé.
+        Chaque agent vote en fonction d'un score heuristique/sémantique simulé ou évalué par un LLM.
         La majorité absolue est nécessaire pour valider le fait.
         """
         logger.info(f"🐝 Swarm: Proposing fact: '{fact}' for media '{media_title}' by agent '{proposer}'...")
         
+        llm_votes = {}
+        if self.inference_engine is not None:
+            llm_votes = self._get_swarm_votes_via_llm(fact, media_title)
+
         votes = {}
         for agent in self.agents:
             if agent == proposer:
                 votes[agent] = 1.0  # Le proposant vote toujours pour
             else:
-                # Simulation de vote sémantique basé sur la sensibilité de l'agent
-                votes[agent] = self._simulate_agent_vote(agent, fact, media_title)
+                # Si l'agent a un score retourné par le LLM, on l'utilise
+                if agent in llm_votes:
+                    votes[agent] = llm_votes[agent]
+                else:
+                    # Sinon, simulation de vote sémantique basé sur la sensibilité de l'agent
+                    votes[agent] = self._simulate_agent_vote(agent, fact, media_title)
                 
         # Calcul du verdict (Majorité absolue s'appuyant sur un seuil de confiance de 0.6)
         positive_votes = sum(1 for a, score in votes.items() if score >= 0.6)

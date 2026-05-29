@@ -148,9 +148,38 @@ class UnifiedInferenceAdapter(InferencePort):
         raise InferenceError(f"Le service d'inférence ({self.model_name}) est indisponible. Dernier essai: {last_error}")
 
     def generate_structured(self, prompt: str, response_model: Any, system_prompt: str = "", max_retries: int = 3) -> Any:
+        # Tente d'utiliser instructor pour une vraie génération structurée
+        try:
+            import instructor
+            from openai import OpenAI
+            import pydantic
+            
+            # Uniquement si on a un modèle pydantic valide
+            if isinstance(response_model, type) and issubclass(response_model, pydantic.BaseModel):
+                client = instructor.from_openai(
+                    OpenAI(base_url=self.api_base, api_key=self.api_key),
+                    mode=instructor.Mode.JSON
+                )
+                
+                self._log_usage(engine=f"unified:{self.model_name}:structured", units=1)
+                
+                return client.chat.completions.create(
+                    model=self.model_name,
+                    response_model=response_model,
+                    messages=[
+                        {"role": "system", "content": system_prompt or "Tu es un expert en extraction de données structurées."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    max_retries=max_retries
+                )
+        except ImportError:
+            logger.debug("Instructor ou OpenAI manquant, fallback vers le parsing JSON manuel.")
+        except Exception as e:
+            logger.warning(f"Echec instructor: {e}. Fallback vers le parsing JSON manuel.")
+
+        # Fallback classique (Regex)
         try:
             raw_json = self.generate(prompt, system_prompt=system_prompt, json_mode=True)
-            
             clean_json = raw_json.strip()
             if "```" in clean_json:
                 match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", clean_json, re.DOTALL | re.IGNORECASE)
