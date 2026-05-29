@@ -4,7 +4,7 @@ Ce document centralise toutes les tâches techniques, d'architecture et de fonct
 
 ## 🛠️ Dette Technique & Architecture
 
-- [ ] **Intégration Réelle de la Recherche Web (DuckDuckGo)** : Remplacer l'adaptateur simulé `DuckDuckGoSearchAdapter` dans `backend/adapters/persistence/web_search_adapter.py` par une véritable recherche DuckDuckGo (API libre ou HTML parser résilient).
+- [x] **Intégration Réelle de la Recherche Web (DuckDuckGo)** : Remplacer l'adaptateur simulé `DuckDuckGoSearchAdapter` dans `backend/adapters/persistence/web_search_adapter.py` par une véritable recherche DuckDuckGo (API libre ou HTML parser résilient).
 - [ ] **Gestion des erreurs (Adapteurs d'Inférence - pass silencieux)** : Éliminer les blocs `except: pass` silencieux et ajouter du logging structuré :
   - Dans `backend/adapters/inference/fallback_adapter.py`
   - Dans `backend/adapters/inference/qwen3_vl_adapter.py`
