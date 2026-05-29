@@ -29,16 +29,14 @@ class ResponseCritic:
             if '{' in crit_raw and '}' in crit_raw:
                 data = orjson.loads(crit_raw[crit_raw.find('{'):crit_raw.rfind('}')+1])
                 return CritiqueResult(**data)
+            else:
+                logger.warning("Critic response did not contain JSON curly braces.")
         except (InferenceError, InfrastructureError) as e:
             logger.error(f"Critic generation failed due to AI/Infrastructure error: {e}")
             return CritiqueResult(is_relevant=False, relevance_score=0.0, suggested_action="PROCEED", missing_info=f"Erreur d'inférence: {str(e)}")
         except Exception as e:
             logger.error(f"Unexpected error in ResponseCritic: {e}", exc_info=True)
+            return CritiqueResult(is_relevant=False, relevance_score=0.0, suggested_action="PROCEED", missing_info=f"Unexpected failure: {str(e)}")
             
-        # Pessimistic fallback: if we failed to evaluate, don't PROCEED blindly.
-        return CritiqueResult(
-            is_relevant=False, 
-            relevance_score=0.0, 
-            suggested_action="RETRY_LOCAL",
-            missing_info="Critical failure during context evaluation."
-        )
+        logger.warning("Critic returned malformed or incomplete output. Using conservative fallback.")
+        return CritiqueResult(is_relevant=False, relevance_score=0.0, suggested_action="PROCEED", missing_info="Malformed critic output")
