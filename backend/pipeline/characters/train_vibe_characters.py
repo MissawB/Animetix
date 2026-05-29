@@ -28,7 +28,7 @@ try:
         from huggingface_hub import login
         login(token=token, add_to_git_credential=False)
 except Exception as e:
-    pass
+    logger.error(f"Vibe character training failed: {e}")
 
 from sentence_transformers import SentenceTransformer, InputExample, losses
 from torch.utils.data import DataLoader

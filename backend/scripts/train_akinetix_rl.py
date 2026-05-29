@@ -13,8 +13,8 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'animetix_project.settings')
 try:
     import django
     django.setup()
-except Exception:
-    pass
+except Exception as e:
+    print(f"RL Training encountered an error: {e}")
 
 from datasets import load_dataset
 from trl import DPOTrainer, DPOConfig
