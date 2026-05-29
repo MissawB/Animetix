@@ -1,3 +1,48 @@
+import sys
+import os
+from importlib.abc import MetaPathFinder, Loader
+import importlib
+from importlib.machinery import ModuleSpec
+
+class AliasLoader(Loader):
+    def __init__(self, real_module):
+        self.real_module = real_module
+
+    def create_module(self, spec):
+        return self.real_module
+
+    def exec_module(self, module):
+        pass
+
+class SrcPipelineMapper(MetaPathFinder):
+    def find_spec(self, fullname, path, target=None):
+        if fullname.startswith("src.pipeline"):
+            real_name = fullname.replace("src.pipeline", "pipeline", 1)
+            try:
+                mod = importlib.import_module(real_name)
+                spec = ModuleSpec(fullname, AliasLoader(mod))
+                return spec
+            except Exception:
+                pass
+        return None
+
+sys.meta_path.insert(0, SrcPipelineMapper())
+
+# Map the parent packages
+try:
+    import src
+except ImportError:
+    import types
+    src = types.ModuleType("src")
+    sys.modules["src"] = src
+
+try:
+    import pipeline
+    src.pipeline = pipeline
+    sys.modules["src.pipeline"] = pipeline
+except Exception:
+    pass
+
 import pytest
 import tracemalloc
 def create_image_bytes(width: int = 256, height: int = 256, mode: str = "RGB", fmt: str = "JPEG") -> bytes:

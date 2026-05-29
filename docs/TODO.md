@@ -11,8 +11,8 @@ Ce document centralise toutes les tâches techniques, d'architecture et de fonct
 - [x] **Middleware (ASGI)** : Refactoriser ou adapter `UserTrackingMiddleware` et `UserTierMiddleware` dans `backend/api/animetix/middleware.py` pour garantir l'isolation totale via `contextvars` sur les connexions asynchrones (Django Channels / WebSockets).
 - [x] **Rigueur des Agents (Critic & Judge)** : Éliminer les comportements trop permissifs par défaut (ex: `relevance_score=1.0` sur Exception dans `critic.py`) (FAIT, bascule vers un mode pessimiste "Fail-Safe").
 - [x] **Gestion des erreurs (Graph & Debate)** : Éliminer les erreurs silencieuses et structurer les logs dans le Graph Expert, le Debate Manager et le MultiAgentBus (FAIT, suppression des pass silencieux et ajout de logs).
-- [ ] **Gestion des erreurs (Pipelines d'Ingestion - pass silencieux)** : Éliminer les blocs `except:` silencieux et ajouter du logging structuré/monitoring dans les pipelines (`vectorize_anime.py`, `ingest_vg_characters.py`, `eval_ragas.py`, `regression_benchmark.py`, `models_registry.py`).
-- [ ] **Dégradation élégante (Inférence de Modèles Lourds)** : Détecter dynamiquement la présence de GPU CUDA dans `DiffusersAdapter` et `AudioTransformersAdapter`, et lever des alertes claires (ou fallbacks cloud) au lieu de crashs de mémoire/chargement en cas d'absence de GPU.
+- [x] **Gestion des erreurs (Pipelines d'Ingestion - pass silencieux)** : Éliminer les blocs `except:` silencieux et ajouter du logging structuré/monitoring dans les pipelines (`vectorize_anime.py`, `ingest_vg_characters.py`, `eval_ragas.py`, `regression_benchmark.py`, `models_registry.py`).
+- [x] **Dégradation élégante (Inférence de Modèles Lourds)** : Détecter dynamiquement la présence de GPU CUDA dans `DiffusersAdapter` et `AudioTransformersAdapter`, et lever des alertes claires (ou fallbacks cloud) au lieu de crashs de mémoire/chargement en cas d'absence de GPU.
 - [ ] **Optimisation sémantique (Swarm Consensus)** : Connecter le consensus d'essaim `SwarmConsensusOrchestrator` à de véritables évaluations d'agents sémantiques ou de LLMs au lieu de simples correspondances de mots-clés statiques.
 
 
@@ -23,13 +23,13 @@ Ce document centralise toutes les tâches techniques, d'architecture et de fonct
 - [ ] **Modération de contenu sémantique** : Étendre l'implémentation par mots-clés actuelle vers une approche sémantique (Llama Guard).
 - [ ] **Diagnostics & Incertitude** : Implémenter `get_diagnostics` et `calculate_uncertainty` dans `InferencePort`.
 - [ ] **Traduction Manga (SDXL Neuronal)** : Améliorer le pipeline manga pour charger et exploiter SDXL-Turbo dans `DiffusersAdapter` (en plus du fallback Pillow déjà mis en place).
-- [ ] **Transfert de style vidéo** : Implémenter FateZero / Video-to-Anime pour la cohérence visuelle.
-- [ ] **Génération sonore** : Implémenter AudioLDM pour la création de paysages sonores basés sur des vidéos.
-- [ ] **Clonage Vocal & S2S** : Implémenter Zero-shot RVC et les interactions speech-to-speech natives.
+- [x] **Transfert de style vidéo** : Implémenter FateZero / Video-to-Anime pour la cohérence visuelle temporelle via mécanisme de Cross-Frame Attention dans `DiffusersAdapter` (FAIT).
+- [x] **Génération sonore** : Implémenter AudioLDM pour la création de paysages sonores basés sur des vidéos (FAIT).
+- [x] **Clonage Vocal & S2S** : Implémenter Zero-shot RVC et les interactions speech-to-speech natives (FAIT, intégration de XTTS v2 et Kyutai Moshi).
 
 ## ✅ Tâches Récemment Complétées
 
 - [x] **Maintenance des Tests (Imports)** : Résolution des incohérences d'importation (`adapters...` vs `backend.adapters...`) et fiabilisation du `pythonpath` dans `pytest.ini` sous Windows.
 - [x] **Inférence (Simplification)** : Éradication de vLLM, GGUF et Transformers brut pour l'inférence texte. Standardisation sur BrainAPI (Cloud) et Ollama (Local).
-- [x] **Injection DI Manga & Inpainting Résilient (Chantier D)** : Câblage de `FallbackInferenceAdapter` dans `MangaFlowService` et implémentation du fallback local Pillow en cas d'absence de GPU.
+- [x] **Injection DI Manga & Inpainting Résilient** : Câblage de `FallbackInferenceAdapter` dans `MangaFlowService` et implémentation du fallback local Pillow en cas d'absence de GPU.
 - [x] **Stabilisation des Mocks** : Correction des cibles de mock `src.adapters...` dans `test_manga_ocr_adapter.py` et `test_fallback_structured.py`.

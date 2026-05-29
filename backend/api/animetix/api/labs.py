@@ -416,7 +416,7 @@ class VideoLabDataView(APIView):
 
         try:
             video_data = uploaded_file.read()
-            service = get_container().studio_transformation_service
+            service = get_container().studio_transform_service()
             # the service delegates to inference_engine
             res = service.transform_video_to_anime_sota(video_data, studio_style)
             return Response({'status': 'success', 'video_url': res})
@@ -435,7 +435,7 @@ class SoundscapeLabDataView(APIView):
 
         try:
             video_data = uploaded_file.read()
-            service = get_container().soundscape_generation_service
+            service = get_container().soundscape_service()
             res = service.generate_soundscape_for_video(video_data)
             return Response({'status': 'success', 'audio_url': res})
         except Exception as e:
