@@ -1,7 +1,10 @@
 import json
+import logging
 from channels.db import database_sync_to_async
 from .base import BaseConsumer
 from ..models import ClubMembership
+
+logger = logging.getLogger(__name__)
 
 class ClubConsumer(BaseConsumer):
     """
@@ -56,8 +59,8 @@ class ClubConsumer(BaseConsumer):
                     }
                 }
             )
-        except json.JSONDecodeError:
-            pass
+        except json.JSONDecodeError as e:
+            logger.warning(f"Consumer JSON decode failed: {e}")
 
     async def event_start(self, event):
         """Handler for 'event_start' group message."""

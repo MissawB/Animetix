@@ -22,7 +22,8 @@ if sys.platform == 'win32':
     try:
         policy = asyncio.WindowsProactorEventLoopPolicy()
         asyncio.set_event_loop_policy(policy)
-    except:
+    except Exception:
+        # Policy might already be set or not supported on this Windows version
         pass
 
 application = ProtocolTypeRouter({
