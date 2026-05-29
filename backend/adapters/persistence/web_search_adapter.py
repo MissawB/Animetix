@@ -2,6 +2,7 @@ import requests
 import logging
 from typing import List, Dict
 from core.ports.web_search_port import WebSearchPort
+from ddgs import DDGS
 
 logger = logging.getLogger("animetix.web")
 
@@ -14,15 +15,25 @@ class DuckDuckGoSearchAdapter(WebSearchPort):
         self.api_url = "https://api.duckduckgo.com"
 
     def search(self, query: str, limit: int = 5) -> List[Dict]:
-        """Simulation d'une recherche DuckDuckGo."""
+        """Recherche DuckDuckGo via DDGS."""
         logger.info(f"🌐 Web Searching for: '{query}'...")
-        return [
-            {
-                "title": f"Result for {query}",
-                "url": "https://example.com/anime-info",
-                "snippet": f"Dernières actualités sur {query} : les fans attendent la saison 2 avec impatience."
-            }
-        ]
+        try:
+            with DDGS() as ddgs:
+                results = ddgs.text(query, max_results=limit)
+                if not results:
+                    return []
+                
+                mapped_results = []
+                for r in results:
+                    mapped_results.append({
+                        "title": r.get("title", ""),
+                        "url": r.get("href", ""),
+                        "snippet": r.get("body", "")
+                    })
+                return mapped_results
+        except Exception as e:
+            logger.error(f"Error during DuckDuckGo search for '{query}': {e}")
+            return []
 
     def get_content(self, url: str) -> str:
         """Récupère le texte brut d'une page."""

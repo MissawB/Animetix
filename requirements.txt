@@ -33,7 +33,6 @@ alembic==1.18.4
 chromadb==1.5.5
 django-redis==6.0.0
 neo4j==6.1.0
-pgvector==0.3.6
 psycopg2-binary==2.9.12
 redis==7.4.0
 SQLAlchemy
@@ -145,6 +144,7 @@ dagster-pipes==1.13.1
 dagster-shared==1.13.1
 dagster-webserver==1.13.1
 dagster==1.13.1
+ddgs==9.14.4
 dataclasses-json==0.6.7
 datasets==4.8.4
 dill==0.4.1
@@ -196,7 +196,6 @@ jsonpointer==3.1.1
 jsonschema-specifications==2025.9.1
 jsonschema==4.26.0
 kombu==5.6.2
-kubernetes==35.0.0
 lomond==0.3.3
 Mako==1.3.11
 manga_ocr
@@ -304,5 +303,5 @@ zipp==3.23.0
 zope.interface==8.4
 zstandard==0.25.0
 dependency-injector==4.49.0
-﻿accelerate==1.13.0
+accelerate==1.13.0
 
