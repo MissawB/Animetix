@@ -35,4 +35,10 @@ class ResponseCritic:
         except Exception as e:
             logger.error(f"Unexpected error in ResponseCritic: {e}", exc_info=True)
             
-        return CritiqueResult(is_relevant=True, relevance_score=1.0, suggested_action="PROCEED")
+        # Pessimistic fallback: if we failed to evaluate, don't PROCEED blindly.
+        return CritiqueResult(
+            is_relevant=False, 
+            relevance_score=0.0, 
+            suggested_action="RETRY_LOCAL",
+            missing_info="Critical failure during context evaluation."
+        )
