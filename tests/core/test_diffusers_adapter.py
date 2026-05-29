@@ -15,6 +15,11 @@ _orig_diffusers = sys.modules.get("diffusers")
 sys.modules["diffusers"] = mock_diffusers
 sys.modules["PIL"] = mock_pil
 
+@pytest.fixture(autouse=True)
+def mock_cuda_available():
+    with patch("torch.cuda.is_available", return_value=True):
+        yield
+
 from adapters.inference.diffusers_adapter import DiffusersAdapter
 
 @pytest.fixture(scope="module", autouse=True)

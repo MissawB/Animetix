@@ -77,6 +77,9 @@ class DiffusersAdapter(InferencePort):
         return "fp16" if self._get_dtype() == torch.float16 else None
 
     def _load_txt2img(self):
+        if not torch.cuda.is_available():
+            logger.warning("⚠️ GPU CUDA non détecté. Chargement local du modèle SDXL désactivé pour éviter un crash CPU/OOM.")
+            raise InferenceError("CUDA GPU is not available. Local SDXL loading is disabled to prevent CPU memory crash.")
         if self.pipe: return
         try:
             from diffusers import AutoPipelineForText2Image
@@ -95,6 +98,9 @@ class DiffusersAdapter(InferencePort):
             logger.error(f"❌ Failed to load txt2img model: {e}")
 
     def _load_img2img(self):
+        if not torch.cuda.is_available():
+            logger.warning("⚠️ GPU CUDA non détecté. Chargement local du modèle SDXL désactivé pour éviter un crash CPU/OOM.")
+            raise InferenceError("CUDA GPU is not available. Local SDXL loading is disabled to prevent CPU memory crash.")
         if self._img2img_pipe: return
         try:
             from diffusers import AutoPipelineForImage2Image
@@ -112,6 +118,9 @@ class DiffusersAdapter(InferencePort):
             logger.error(f"❌ Failed to load img2img model: {e}")
 
     def _load_inpainting(self):
+        if not torch.cuda.is_available():
+            logger.warning("⚠️ GPU CUDA non détecté. Chargement local du modèle SDXL désactivé pour éviter un crash CPU/OOM.")
+            raise InferenceError("CUDA GPU is not available. Local SDXL loading is disabled to prevent CPU memory crash.")
         if self._inpaint_pipe: return
         try:
             from diffusers import AutoPipelineForInpainting
