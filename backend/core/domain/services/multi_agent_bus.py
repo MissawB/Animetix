@@ -98,8 +98,8 @@ class MultiAgentBus:
                 loop = asyncio.get_running_loop()
                 task = loop.create_task(self._listen_loop(agent_id, callback))
                 self._listen_tasks[agent_id] = task
-            except RuntimeError:
-                pass
+            except RuntimeError as e:
+                logger.warning(f"Could not register agent {agent_id} in background: no running event loop. {e}")
 
         logger.info(f"Agent '{agent_id}' registered on MultiAgentBus.", extra={"bus_event": {"type": "registration", "agent_id": agent_id}})
 
