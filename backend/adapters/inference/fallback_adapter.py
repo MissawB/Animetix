@@ -28,8 +28,8 @@ class FallbackInferenceAdapter(InferencePort):
                         self._online_adapters.add(adapter)
                 else:
                     self._online_adapters.add(adapter)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Health check failed for adapter {adapter.__class__.__name__}: {e}")
         # Si tous sont offline (ex: tests hors ligne), on les autorise tous par sécurité
         if not self._online_adapters:
             self._online_adapters.update(self.adapters)
