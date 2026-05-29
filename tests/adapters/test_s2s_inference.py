@@ -18,6 +18,11 @@ mock_moshi_models.Moshi = MagicMock()
 
 # Inject mocks into sys.modules to handle local imports in TransformersAdapter
 @pytest.fixture(autouse=True)
+def mock_cuda_available():
+    with patch("torch.cuda.is_available", return_value=True):
+        yield
+
+@pytest.fixture(autouse=True)
 def mock_dependencies():
     with patch.dict('sys.modules', {
         'moshi': mock_moshi,
@@ -36,7 +41,7 @@ class TestS2SInference:
         adp._moshi_model = None
         return adp
 
-    @patch('torch.cuda.is_available', return_value=False)
+    @patch('torch.cuda.is_available', return_value=True)
     @patch('torch.from_numpy')
     def test_speech_to_speech_success(self, mock_from_numpy, mock_cuda, adapter):
         # Setup Moshi mock
@@ -75,7 +80,7 @@ class TestS2SInference:
         with pytest.raises(InferenceError, match="Audio input is empty"):
             adapter.speech_to_speech(b"")
 
-    @patch('src.adapters.inference.audio_transformers_adapter.AudioTransformersAdapter._load_moshi')
+    @patch('adapters.inference.audio_transformers_adapter.AudioTransformersAdapter._load_moshi')
     def test_speech_to_speech_load_failure(self, mock_load, adapter):
         mock_load.side_effect = InferenceError("Moshi engine loading failed")
         with pytest.raises(InferenceError, match="Moshi engine loading failed"):
@@ -93,7 +98,7 @@ class TestS2SInference:
         # Reset side effect
         mock_pydub_segment.from_file.side_effect = None
 
-    @patch('torch.cuda.is_available', return_value=False)
+    @patch('torch.cuda.is_available', return_value=True)
     @patch('torch.from_numpy')
     def test_speech_to_speech_resampling_normalization(self, mock_from_numpy, mock_cuda, adapter):
         # Setup Moshi mock
@@ -133,3 +138,8 @@ class TestS2SInference:
         with patch.dict('sys.modules', {'moshi.models': None}):
             with pytest.raises(InferenceError, match="Library 'moshi' or dependencies missing"):
                 adapter.speech_to_speech(b"audio")
+
+    def test_speech_to_speech_cuda_not_available(self, adapter):
+        with patch('torch.cuda.is_available', return_value=False):
+            with pytest.raises(InferenceError, match="CUDA GPU is not available"):
+                adapter.speech_to_speech(b"fake audio")

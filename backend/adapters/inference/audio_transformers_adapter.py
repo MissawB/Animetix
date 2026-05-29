@@ -34,6 +34,9 @@ class AudioTransformersAdapter(InferencePort):
         self._moshi_model = None
 
     def _load_xtts(self):
+        if not torch.cuda.is_available():
+            logger.warning("⚠️ GPU CUDA non détecté. Chargement local des modèles audio désactivé pour éviter une surcharge CPU/OOM.")
+            raise InferenceError("CUDA GPU is not available. Local audio models loading is disabled.")
         if self._tts_model: return
         try:
             from TTS.api import TTS
@@ -44,6 +47,9 @@ class AudioTransformersAdapter(InferencePort):
             logger.error(f"❌ Failed to load XTTS: {e}")
 
     def _load_audioldm(self):
+        if not torch.cuda.is_available():
+            logger.warning("⚠️ GPU CUDA non détecté. Chargement local des modèles audio désactivé pour éviter une surcharge CPU/OOM.")
+            raise InferenceError("CUDA GPU is not available. Local audio models loading is disabled.")
         if self._audioldm_pipeline: return
         try:
             from diffusers import AudioLDMPipeline
@@ -57,6 +63,9 @@ class AudioTransformersAdapter(InferencePort):
             logger.error(f"❌ Failed to load AudioLDM: {e}")
 
     def _load_moshi(self):
+        if not torch.cuda.is_available():
+            logger.warning("⚠️ GPU CUDA non détecté. Chargement local des modèles audio désactivé pour éviter une surcharge CPU/OOM.")
+            raise InferenceError("CUDA GPU is not available. Local audio models loading is disabled.")
         if self._moshi_model: return
         try:
             from moshi.models import Moshi
