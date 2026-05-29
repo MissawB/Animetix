@@ -8,6 +8,8 @@ from PIL import Image
 
 # Force modules to exist in sys.modules so they can be imported and patched
 mock_diffusers = MagicMock()
+mock_diffusers_models = MagicMock()
+mock_diffusers_attn = MagicMock()
 mock_imageio = MagicMock()
 mock_tts = MagicMock()
 mock_cv2 = MagicMock()
@@ -18,12 +20,14 @@ mock_scipy = MagicMock()
 mock_pydub = MagicMock()
 
 # Set a mock __spec__ for them to satisfy find_spec and checks
-for m_obj in [mock_diffusers, mock_imageio, mock_tts, mock_cv2, mock_audioldm, mock_transformers, mock_torch, mock_scipy, mock_pydub]:
+for m_obj in [mock_diffusers, mock_diffusers_models, mock_diffusers_attn, mock_imageio, mock_tts, mock_cv2, mock_audioldm, mock_transformers, mock_torch, mock_scipy, mock_pydub]:
     m_obj.__spec__ = MagicMock()
 
 @pytest.fixture(autouse=True)
 def mock_sys_modules(monkeypatch):
     monkeypatch.setitem(sys.modules, "diffusers", mock_diffusers)
+    monkeypatch.setitem(sys.modules, "diffusers.models", mock_diffusers_models)
+    monkeypatch.setitem(sys.modules, "diffusers.models.attention_processor", mock_diffusers_attn)
     monkeypatch.setitem(sys.modules, "imageio", mock_imageio)
     monkeypatch.setitem(sys.modules, "TTS", mock_tts)
     monkeypatch.setitem(sys.modules, "TTS.api", mock_tts)
@@ -226,3 +230,33 @@ def test_fallback_rerank_documents_chain():
     assert scores == [0.9, 0.1]
     assert mock_fail.rerank_documents.called
     assert mock_success.rerank_documents.called
+
+def test_fatezero_video_logic(diffusers_adapter):
+    from unittest.mock import patch, MagicMock
+    from PIL import Image
+    import numpy as np
+    
+    # Mocking a small video buffer
+    dummy_video = b"fake video data"
+    
+    # We patch imageio to avoid actual file read/write
+    with patch('imageio.get_reader') as mock_reader, \
+         patch('imageio.get_writer') as mock_writer, \
+         patch.object(diffusers_adapter, '_load_img2img'):
+        
+        # Setup mock reader
+        mock_reader.return_value.get_meta_data.return_value = {'fps': 24}
+        mock_reader.return_value.__iter__.return_value = [np.zeros((512, 512, 3), dtype=np.uint8)] * 2
+        
+        # Mock pipe
+        mock_pipe = MagicMock()
+        mock_pipe.images = [Image.new('RGB', (512, 512))] * 2
+        diffusers_adapter._img2img_pipe = MagicMock()
+        diffusers_adapter._img2img_pipe.return_value = mock_pipe
+        diffusers_adapter._img2img_pipe.device = "cpu"
+        diffusers_adapter.model_id = "test-model"
+        
+        res = diffusers_adapter.transform_video_to_anime(dummy_video, "Ghibli", "forest")
+        
+        assert res.startswith("data:video/mp4;base64,")
+
