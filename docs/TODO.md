@@ -13,7 +13,7 @@ Ce document centralise toutes les tâches techniques, d'architecture et de fonct
 - [x] **Gestion des erreurs (Graph & Debate)** : Éliminer les erreurs silencieuses et structurer les logs dans le Graph Expert, le Debate Manager et le MultiAgentBus (FAIT, suppression des pass silencieux et ajout de logs).
 - [x] **Gestion des erreurs (Pipelines d'Ingestion - pass silencieux)** : Éliminer les blocs `except:` silencieux et ajouter du logging structuré/monitoring dans les pipelines (`vectorize_anime.py`, `ingest_vg_characters.py`, `eval_ragas.py`, `regression_benchmark.py`, `models_registry.py`).
 - [x] **Dégradation élégante (Inférence de Modèles Lourds)** : Détecter dynamiquement la présence de GPU CUDA dans `DiffusersAdapter` et `AudioTransformersAdapter`, et lever des alertes claires (ou fallbacks cloud) au lieu de crashs de mémoire/chargement en cas d'absence de GPU.
-- [ ] **Optimisation sémantique (Swarm Consensus)** : Connecter le consensus d'essaim `SwarmConsensusOrchestrator` à de véritables évaluations d'agents sémantiques ou de LLMs au lieu de simples correspondances de mots-clés statiques.
+- [x] **Optimisation sémantique (Swarm Consensus)** : Connecter le consensus d'essaim `SwarmConsensusOrchestrator` à de véritables évaluations d'agents sémantiques ou de LLMs au lieu de simples correspondances de mots-clés statiques.
 
 
 
