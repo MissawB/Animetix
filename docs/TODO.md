@@ -1,24 +1,30 @@
 # Liste des Tâches (TODO) - Animetix
 
-Ce document centralise toutes les tâches techniques, d'architecture et de fonctionnalités qui restent à implémenter. Les tâches complétées ont été purgées.
+Ce document centralise toutes les tâches techniques, d'architecture et de fonctionnalités qui restent à implémenter. Les tâches complétées sont cochées ou purgées.
 
-## Dette Technique & Architecture
-- [ ] **Gestion des erreurs (Adapteurs d'Inférence)** : Éliminer les blocs `except: pass` silencieux dans `unified_inference_adapter.py`, `brain_api_adapter.py`, `fallback_adapter.py` et `qwen3_vl_adapter.py`. Ajouter du logging structuré.
-- [ ] **Gestion des erreurs (Agents)** : Éliminer les blocs `except: pass` silencieux et structurer les logs dans les agents Critic et Judge.
+## 🛠️ Dette Technique & Architecture
+
+- [ ] **Intégration Réelle de la Recherche Web (DuckDuckGo)** : Remplacer l'adaptateur simulé `DuckDuckGoSearchAdapter` dans `backend/adapters/persistence/web_search_adapter.py` par une véritable recherche DuckDuckGo (API libre ou HTML parser résilient).
+- [ ] **Gestion des erreurs (Adapteurs d'Inférence - pass silencieux)** : Éliminer les blocs `except: pass` silencieux et ajouter du logging structuré :
+  - Dans `backend/adapters/inference/fallback_adapter.py`
+  - Dans `backend/adapters/inference/qwen3_vl_adapter.py`
+- [ ] **Middleware (ASGI)** : Refactoriser ou adapter `UserTrackingMiddleware` et `UserTierMiddleware` dans `backend/api/animetix/middleware.py` pour garantir l'isolation totale via `contextvars` sur les connexions asynchrones (Django Channels / WebSockets).
+- [ ] **Rigueur des Agents (Critic & Judge)** : Éliminer les comportements trop permissifs par défaut (ex: `relevance_score=1.0` sur Exception dans `critic.py`).
 - [ ] **Gestion des erreurs (Graph & Debate)** : Éliminer les erreurs silencieuses et structurer les logs dans le Graph Expert et le Debate Manager.
-- [ ] **Adaptateurs** : Corriger et optimiser les priorités de fallback dans la sélection des adaptateurs (`FallbackInferenceAdapter`) basées sur la latence et les types d'erreurs.
-- [ ] **Refactoring** : Déconstruire `TransformersAdapter` (s'il reste des composants monolithiques) pour suivre le modèle de mixins déjà mis en place.
-- [ ] **Middleware (ASGI)** : Finaliser la refactorisation de `UserTrackingMiddleware` et `UserTierMiddleware` dans `backend/api/animetix/middleware.py` pour garantir l'isolation totale via `contextvars`.
 
-## Fonctionnalités Créatives SOTA 2026
-- [ ] **Génération Structurée (GGUF)** : Passer du parsing JSON simple à une validation de schéma native plus robuste.
-- [ ] **Modération de contenu** : Étendre l'implémentation par mots-clés actuelle vers une approche sémantique (Llama Guard).
+## 🧬 Fonctionnalités Créatives SOTA 2026
+
+- [ ] **Génération Structurée** : Passer du parsing JSON simple à une validation de schéma native plus robuste (via Instructor/Ollama).
+- [ ] **Modération de contenu sémantique** : Étendre l'implémentation par mots-clés actuelle vers une approche sémantique (Llama Guard).
 - [ ] **Diagnostics & Incertitude** : Implémenter `get_diagnostics` et `calculate_uncertainty` dans `InferencePort`.
-- [ ] **Traduction Manga** : Implémenter `translate_manga_page` (orchestration OCR -> LLM Translation -> Inpainting).
+- [ ] **Traduction Manga (SDXL Neuronal)** : Améliorer le pipeline manga pour charger et exploiter SDXL-Turbo dans `DiffusersAdapter` (en plus du fallback Pillow déjà mis en place).
 - [ ] **Transfert de style vidéo** : Implémenter FateZero / Video-to-Anime pour la cohérence visuelle.
 - [ ] **Génération sonore** : Implémenter AudioLDM pour la création de paysages sonores basés sur des vidéos.
-- [ ] **Clonage Vocal & S2S** : Implémenter Zero-shot RVC et les interactions natives Speech-to-Speech.
-- [ ] **Recherche** : Implémenter le "Advanced Reranking" (potentiellement via ColBERTv2 comme spécifié dans la ROADMAP).
+- [ ] **Clonage Vocal & S2S** : Implémenter Zero-shot RVC et les interactions speech-to-speech natives.
 
-## Tests & MLOps
-- [ ] **Tests automatisés** : Mettre à jour et étendre la suite de tests (`pytest`) pour couvrir les récents changements (Architecture hexagonale, SPA, containers DI modulaires).
+## ✅ Tâches Récemment Complétées
+
+- [x] **Maintenance des Tests (Imports)** : Résolution des incohérences d'importation (`adapters...` vs `backend.adapters...`) et fiabilisation du `pythonpath` dans `pytest.ini` sous Windows.
+- [x] **Inférence (Simplification)** : Éradication de vLLM, GGUF et Transformers brut pour l'inférence texte. Standardisation sur BrainAPI (Cloud) et Ollama (Local).
+- [x] **Injection DI Manga & Inpainting Résilient (Chantier D)** : Câblage de `FallbackInferenceAdapter` dans `MangaFlowService` et implémentation du fallback local Pillow en cas d'absence de GPU.
+- [x] **Stabilisation des Mocks** : Correction des cibles de mock `src.adapters...` dans `test_manga_ocr_adapter.py` et `test_fallback_structured.py`.
