@@ -8,7 +8,7 @@ Ce document centralise toutes les tâches techniques, d'architecture et de fonct
 - [ ] **Gestion des erreurs (Adapteurs d'Inférence - pass silencieux)** : Éliminer les blocs `except: pass` silencieux et ajouter du logging structuré :
   - Dans `backend/adapters/inference/fallback_adapter.py`
   - Dans `backend/adapters/inference/qwen3_vl_adapter.py`
-- [ ] **Middleware (ASGI)** : Refactoriser ou adapter `UserTrackingMiddleware` et `UserTierMiddleware` dans `backend/api/animetix/middleware.py` pour garantir l'isolation totale via `contextvars` sur les connexions asynchrones (Django Channels / WebSockets).
+- [x] **Middleware (ASGI)** : Refactoriser ou adapter `UserTrackingMiddleware` et `UserTierMiddleware` dans `backend/api/animetix/middleware.py` pour garantir l'isolation totale via `contextvars` sur les connexions asynchrones (Django Channels / WebSockets).
 - [ ] **Rigueur des Agents (Critic & Judge)** : Éliminer les comportements trop permissifs par défaut (ex: `relevance_score=1.0` sur Exception dans `critic.py`).
 - [ ] **Gestion des erreurs (Graph & Debate)** : Éliminer les erreurs silencieuses et structurer les logs dans le Graph Expert et le Debate Manager.
 

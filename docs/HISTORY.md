@@ -11,6 +11,8 @@ Ce document archive les étapes majeures de l'évolution technique du projet.
 - **Manga Translation & DI Realignment :** Réalignement de l'injection du conteneur de dépendances (DI) dans `MangaFlowService` et développement d'un fallback algorithmique Pillow-only résilient en local 100% hors-ligne si SDXL-Turbo n'est pas opérationnel (GPU absent).
 - **Test Suite Imports & Windows Stabilization :** Standardisation des namespaces d'importation sans le préfixe `backend.` dans les tests et correction de la configuration de `pytest.ini` pour utiliser un `pythonpath` multiligne multiplateforme robuste sous Windows, éliminant toutes les pannes de collecte.
 - **Web Search Real Integration :** Remplacement de la recherche DuckDuckGo simulée par une intégration réelle via la bibliothèque `ddgs` (DuckDuckGo Search), fournissant une information temps réel fiable pour l'Agentic RAG avec gestion d'erreurs robuste.
+- **ASGI Middleware & ContextVars Namespace Resolution :** Restructuration des middlewares `UserTrackingMiddleware` et `UserTierMiddleware` pour les rendre pleinement compatibles synchrone/asynchrone (ASGI/WSGI) avec une synchronisation automatique des `ContextVar` en cas d'imports multiples, éliminant les fuites et assurant une isolation totale dans les requêtes asynchrones et WebSockets.
+
 
 
 ## État de l'API d'Inférence (InferencePort)
