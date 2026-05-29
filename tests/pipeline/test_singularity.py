@@ -12,7 +12,7 @@ from unittest.mock import MagicMock
 # 1. TESTS AUTO-COMPILATION (SELF-EVOLVING COMPILER)
 # ==========================================
 def test_self_evolving_compiler():
-    from backend.core.domain.services.self_evolving_compiler import SelfEvolvingCompiler
+    from core.domain.services.self_evolving_compiler import SelfEvolvingCompiler
     
     compiler = SelfEvolvingCompiler(build_dir="data/mlops/build_test")
     
@@ -40,7 +40,7 @@ def test_self_evolving_compiler():
 # 2. TESTS PLASTICITÉ SYNAPTIQUE (HEBBIAN & STDP)
 # ==========================================
 def test_synaptic_plasticity_hebbian_and_stdp():
-    from backend.core.domain.services.synaptic_plasticity import SynapticPlasticitySimulator
+    from core.domain.services.synaptic_plasticity import SynapticPlasticitySimulator
     
     simulator = SynapticPlasticitySimulator(num_concepts=5, tau_plus=10.0, tau_minus=10.0)
     
@@ -84,7 +84,7 @@ def test_synaptic_plasticity_hebbian_and_stdp():
 # 3. TESTS SYNTHÉTISEUR DE MULTIVERS AUTONOME (ADMS)
 # ==========================================
 def test_autonomous_domain_synthesizer():
-    from backend.core.domain.services.domain_synthesizer import AutonomousDomainSynthesizer
+    from core.domain.services.domain_synthesizer import AutonomousDomainSynthesizer
     
     # Mocks du moteur d'inférence LLM
     mock_inference = MagicMock()

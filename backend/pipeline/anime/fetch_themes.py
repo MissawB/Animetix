@@ -1,4 +1,4 @@
-import requests
+import httpx
 import json
 import time
 import os
@@ -35,7 +35,7 @@ def fetch_themes_for_anime(mal_id: int) -> dict | None:
         "include": "animethemes.animethemeentries.videos,animethemes.song.artists"
     }
     try:
-        response = requests.get(ANIMETHEMES_API_URL, params=params, timeout=15)
+        response = httpx.get(ANIMETHEMES_API_URL, params=params, timeout=15, follow_redirects=True)
         if response.status_code == 200:
             data = response.json().get('anime', [])
             if data:

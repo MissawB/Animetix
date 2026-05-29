@@ -10,7 +10,7 @@ mock_neo4j = Mock()
 sys.modules['neo4j'] = mock_neo4j
 sys.modules['pipeline.neo4j_client'] = Mock(neo4j_manager=Mock())
 
-from backend.core.domain.services.graph_construction_service import KnowledgeGraphConstructionService
+from core.domain.services.graph_construction_service import KnowledgeGraphConstructionService
 
 @pytest.fixture
 def mock_inference_engine():
@@ -46,7 +46,7 @@ def test_graph_extraction_logic(mock_inference_engine):
 
 @patch('src.pipeline.enrich_graph_ai.neo4j_manager')
 def test_enrichment_pipeline_sync_call(mock_neo4j_mgr, mock_inference_engine):
-    from backend.pipeline.enrich_graph_ai import enrich_media_type
+    from pipeline.enrich_graph_ai import enrich_media_type
     
     # Mocking the container to return our mock service
     mock_container = MagicMock()

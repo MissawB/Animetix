@@ -20,7 +20,7 @@ class LocalRerankAdapter(InferencePort):
         cohere_key = os.getenv("COHERE_API_KEY")
         if cohere_key:
             try:
-                import requests
+                import httpx
                 headers = {
                     "Authorization": f"Bearer {cohere_key}",
                     "Content-Type": "application/json"
@@ -30,7 +30,7 @@ class LocalRerankAdapter(InferencePort):
                     "query": query,
                     "documents": documents
                 }
-                response = requests.post("https://api.cohere.ai/v1/rerank", headers=headers, json=payload, timeout=10)
+                response = httpx.post("https://api.cohere.ai/v1/rerank", headers=headers, json=payload, timeout=10, follow_redirects=True)
                 if response.status_code == 200:
                     data = response.json()
                     scores = [0.0] * len(documents)
@@ -41,7 +41,7 @@ class LocalRerankAdapter(InferencePort):
                     self._log_usage(engine="cohere:rerank", units=len(documents))
                     return scores
             except Exception as e:
-                logger.error(f"❌ Cohere Rerank API connection failed: {e}.")
+                logger.error(f"⚠️ Cohere Rerank API connection failed: {e}.")
 
         try:
             from core.utils.lazy_import import lazy_import

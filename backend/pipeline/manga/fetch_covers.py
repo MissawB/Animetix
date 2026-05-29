@@ -1,4 +1,4 @@
-import requests
+import httpx
 import json
 import time
 import os
@@ -29,7 +29,7 @@ def get_mangadex_id(mal_id: int) -> str | None:
         L'ID MangaDex (UUID) ou None.
     """
     try:
-        response = requests.get(f"{MALSYNC_API_URL}/{mal_id}", timeout=10)
+        response = httpx.get(f"{MALSYNC_API_URL}/{mal_id}", timeout=10, follow_redirects=True)
         if response.status_code == 200:
             data = response.json()
             # Dans MAL-Sync, les sites sont des clés dans un dictionnaire
@@ -59,7 +59,7 @@ def fetch_covers(mangadex_id: str) -> dict:
     }
     covers = {"ja": [], "fr": []}
     try:
-        response = requests.get(f"{MANGADEX_API_URL}/cover", params=params, timeout=10)
+        response = httpx.get(f"{MANGADEX_API_URL}/cover", params=params, timeout=10, follow_redirects=True)
         if response.status_code == 200:
             data = response.json().get('data', [])
             for item in data:

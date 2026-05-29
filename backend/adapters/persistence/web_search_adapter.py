@@ -1,4 +1,4 @@
-import requests
+import httpx
 import logging
 from typing import List, Dict
 from core.ports.web_search_port import WebSearchPort
@@ -38,7 +38,7 @@ class DuckDuckGoSearchAdapter(WebSearchPort):
     def get_content(self, url: str) -> str:
         """Récupère le texte brut d'une page."""
         try:
-            res = requests.get(url, timeout=10)
+            res = httpx.get(url, timeout=10, follow_redirects=True)
             if res.status_code == 200:
                 return res.text[:2000] # Limite pour le contexte LLM
         except Exception as e:

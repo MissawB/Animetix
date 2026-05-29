@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock, patch
-from backend.adapters.inference.vision_transformers_adapter import VisionTransformersAdapter
+from adapters.inference.vision_transformers_adapter import VisionTransformersAdapter
 
 def test_visual_rerank_success():
     # Mocking requests.get

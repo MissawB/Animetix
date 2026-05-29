@@ -11,7 +11,7 @@ import random
 import datetime
 import base64
 import hashlib
-import requests
+import httpx
 import socket
 import ipaddress
 from urllib.parse import urlparse
@@ -77,7 +77,7 @@ def image_proxy_view(request):
         return HttpResponse(cached_data['content'], content_type=cached_data['content_type'])
 
     try:
-        response = requests.get(url, timeout=10)
+        response = httpx.get(url, timeout=10, follow_redirects=True)
         if response.status_code == 200:
             content = response.content
             content_type = response.headers.get('Content-Type', 'image/jpeg')
@@ -130,17 +130,9 @@ class MediaSearchView(APIView):
             return Response({'error': str(e)}, status=500)
 
     def _format_results(self, results):
-        formatted = []
-        for item in results:
-            formatted.append({
-                'id': item.get('id'),
-                'title': item.get('title'),
-                'title_english': item.get('title_english'),
-                'image': item.get('image'),
-                'type': item.get('type'),
-                'score': item.get('score', 1.0)
-            })
-        return formatted
+        # Utilise le serializer pour formater les résultats
+        serializer = MediaItemSerializer(results, many=True)
+        return serializer.data
 
             
         return Response(formatted_results)
@@ -235,11 +227,32 @@ class CurrentUserView(APIView):
 
     def get(self, request):
         if request.user.is_authenticated:
-            return Response({
-                "id": request.user.id,
-                "username": request.user.username,
-                "email": request.user.email
-            })
+            serializer = ProfileSerializer(request.user.profile)
+            return Response(serializer.data)
         return Response({"detail": "Not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+
+class MediaDetailView(APIView):
+    """Détails complets d'une œuvre."""
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get(self, request, media_type, item_id):
+        container = get_container()
+        data = container.catalog_service.load_data(media_type)
+        if not data:
+            return Response({'error': 'Media type not found'}, status=404)
+        
+        # Recherche par ID dans la DB
+        item = next((i for i in data.get('db', []) if str(i.get('id')) == str(item_id)), None)
+        if not item:
+            return Response({'error': 'Item not found'}, status=404)
+            
+        # Enrichissement avec les nœuds du graphe si présents
+        graph_nodes = item.get('graph_nodes', {})
+        item['studios'] = graph_nodes.get('studios', [])
+        item['author'] = graph_nodes.get('author')
+        item['related_items'] = graph_nodes.get('related_items', [])
+
+        serializer = MediaItemSerializer(item)
+        return Response(serializer.data)
 
 

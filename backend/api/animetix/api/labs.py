@@ -188,7 +188,7 @@ class SpatialLabDataView(APIView):
 
     def post(self, request):
         import base64
-        import requests
+        import httpx
         image_url = request.data.get('image_url')
         uploaded_file = request.FILES.get('image_file')
         
@@ -202,7 +202,7 @@ class SpatialLabDataView(APIView):
             else:
                 if not is_safe_url(image_url):
                     return Response({'error': 'URL is not allowed for security reasons.'}, status=status.HTTP_403_FORBIDDEN)
-                res = requests.get(image_url, timeout=10)
+                res = httpx.get(image_url, timeout=10, follow_redirects=True)
                 res.raise_for_status()
                 image_data = res.content
             
@@ -225,7 +225,7 @@ class MangaLabDataView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        import requests
+        import httpx
         image_url = request.data.get('image_url')
         uploaded_file = request.FILES.get('image_file')
         action = request.data.get('action', 'clean')
@@ -237,7 +237,7 @@ class MangaLabDataView(APIView):
             else:
                 if not is_safe_url(image_url):
                     return Response({'error': 'URL is not allowed for security reasons.'}, status=status.HTTP_403_FORBIDDEN)
-                res = requests.get(image_url, timeout=10)
+                res = httpx.get(image_url, timeout=10, follow_redirects=True)
                 res.raise_for_status()
                 image_data = res.content
             

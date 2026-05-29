@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock, patch
-from backend.core.domain.services.llm_service import LLMService
-from backend.core.domain.exceptions import QuotaExceededError, InferenceError
+from core.domain.services.llm_service import LLMService
+from core.domain.exceptions import QuotaExceededError, InferenceError
 
 @pytest.fixture
 def mock_inference_engine():

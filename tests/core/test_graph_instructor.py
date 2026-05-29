@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock
-from backend.core.domain.services.graph_construction_service import KnowledgeGraphConstructionService
-from backend.core.domain.entities.ai_schemas import GraphExtraction, GraphEntity, GraphRelation
+from core.domain.services.graph_construction_service import KnowledgeGraphConstructionService
+from core.domain.entities.ai_schemas import GraphExtraction, GraphEntity, GraphRelation
 
 def test_graph_extraction_instructor():
     """

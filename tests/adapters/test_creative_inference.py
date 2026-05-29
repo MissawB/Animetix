@@ -51,16 +51,11 @@ def mock_sys_modules(monkeypatch):
 
 pytest.importorskip("scipy")
 
-from adapters.inference.local_text_adapter import LocalTextAdapter
 from adapters.inference.diffusers_adapter import DiffusersAdapter
 from adapters.inference.audio_transformers_adapter import AudioTransformersAdapter
 from adapters.inference.vision_transformers_adapter import VisionTransformersAdapter
 from adapters.inference.fallback_adapter import FallbackInferenceAdapter
 from core.domain.exceptions import InferenceError
-
-@pytest.fixture
-def transformers_adapter():
-    return LocalTextAdapter(use_4bit=False)
 
 @pytest.fixture
 def diffusers_adapter():
@@ -75,15 +70,8 @@ def vision_adapter():
     return VisionTransformersAdapter(use_4bit=False)
 
 @pytest.fixture
-def fallback_adapter(transformers_adapter, vision_adapter):
-    return FallbackInferenceAdapter(adapters=[transformers_adapter, vision_adapter])
-
-def test_inference_error_on_failure(transformers_adapter):
-    """Vérifie que l'adaptateur lève une InferenceError en cas de pépin."""
-    with patch.object(transformers_adapter, "_load_model", side_effect=InferenceError("Critical failure during model loading: GPU OOM")):
-        with pytest.raises(InferenceError) as excinfo:
-            transformers_adapter.generate("Hello")
-        assert "Critical failure during model loading: GPU OOM" in str(excinfo.value)
+def fallback_adapter(diffusers_adapter, vision_adapter):
+    return FallbackInferenceAdapter(adapters=[diffusers_adapter, vision_adapter])
 
 def test_generate_3d_scene_logic():
     """Vérifie la logique de projection RGB-D en PLY transférée dans SpatialComputingService."""

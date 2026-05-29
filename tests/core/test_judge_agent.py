@@ -31,7 +31,9 @@ def test_judge_evaluate_parsing_error(mock_llm, mock_pm):
     mock_llm.generate.return_value = "This is not JSON."
     
     res = agent.evaluate("Q", "C", "A")
-    assert res is None
+    assert isinstance(res, JudgeEvaluation)
+    assert res.next_action == "REWRITE"
+    assert "Invalid or empty response" in res.reasoning
 
 def test_judge_evaluate_with_obs_service(mock_llm, mock_pm):
     mock_obs = MagicMock()

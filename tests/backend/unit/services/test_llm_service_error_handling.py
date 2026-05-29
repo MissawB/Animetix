@@ -2,8 +2,8 @@ import pytest
 import logging
 from unittest.mock import MagicMock
 from pydantic import BaseModel
-from backend.core.domain.services.llm_service import LLMService
-from backend.core.domain.exceptions import InferenceError, ParsingError
+from core.domain.services.llm_service import LLMService
+from core.domain.exceptions import InferenceError, ParsingError
 
 class MockSchema(BaseModel):
     name: str

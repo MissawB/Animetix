@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock
-from backend.core.domain.services.akinetix_service import AkinetixDomainService
+from core.domain.services.akinetix_service import AkinetixDomainService
 
 @pytest.fixture
 def sample_db():

@@ -1,4 +1,4 @@
-import requests
+import httpx
 import json
 import os
 import time
@@ -71,7 +71,7 @@ query ($idMal: Int) {
 def fetch_by_mal_id(mal_id: int):
     variables = {'idMal': mal_id}
     try:
-        response = requests.post(ANILIST_URL, json={'query': QUERY_BY_MAL_ID, 'variables': variables}, timeout=30)
+        response = httpx.post(ANILIST_URL, json={'query': QUERY_BY_MAL_ID, 'variables': variables}, timeout=30, follow_redirects=True)
         if response.status_code == 200:
             return response.json().get('data', {}).get('Media')
         else:

@@ -135,7 +135,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'drf_spectacular',
     'corsheaders',
-    'graphene_django',
 
     # ALLAUTH (OAuth)
     'allauth',
@@ -215,7 +214,6 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5173",
     "https://missawb-animetix-web.hf.space",
 ]
-GRAPHENE = {'SCHEMA': 'animetix.schema.schema'}
 ROOT_URLCONF = 'animetix_project.urls'
 
 TEMPLATES = [

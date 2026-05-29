@@ -14,9 +14,10 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = [
-            'user', 'xp', 'current_streak', 'max_streak', 
-            'total_wins', 'total_games', 'ranked_points', 
-            'ranked_max_points', 'rank'
+            'id', 'user', 'xp', 'current_streak', 'max_streak', 
+            'last_win_date', 'total_wins', 'total_games', 'ranked_points', 
+            'ranked_max_points', 'rank', 'unlocked_badges', 
+            'custom_username_color', 'tier'
         ]
 
 class DailyChallengeSerializer(serializers.ModelSerializer):
@@ -33,14 +34,20 @@ class AchievementSerializer(serializers.ModelSerializer):
 class MediaItemSerializer(serializers.Serializer):
     id = serializers.CharField()
     title = serializers.CharField()
-    title_english = serializers.CharField(required=False)
-    title_native = serializers.CharField(required=False)
-    image = serializers.URLField(required=False)
-    year = serializers.IntegerField(required=False)
-    popularity = serializers.IntegerField(required=False)
+    title_english = serializers.CharField(required=False, allow_null=True)
+    title_native = serializers.CharField(required=False, allow_null=True)
+    image = serializers.URLField(required=False, allow_null=True)
+    year = serializers.IntegerField(required=False, allow_null=True)
+    popularity = serializers.IntegerField(required=False, allow_null=True)
     genres = serializers.ListField(child=serializers.CharField(), required=False)
     tags = serializers.ListField(child=serializers.CharField(), required=False)
-    description = serializers.CharField(required=False)
+    micro_tags = serializers.ListField(child=serializers.CharField(), required=False)
+    description = serializers.CharField(required=False, allow_null=True)
+    
+    # Knowledge Graph Nodes
+    studios = serializers.ListField(child=serializers.CharField(), required=False)
+    author = serializers.CharField(required=False, allow_null=True)
+    related_items = serializers.ListField(child=serializers.DictField(), required=False)
 
 from .models import Friendship, Notification
 

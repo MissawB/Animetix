@@ -1,4 +1,4 @@
-import requests
+import httpx
 import json
 import time
 import os
@@ -21,7 +21,7 @@ CLIENT_SECRET = os.getenv("IGDB_CLIENT_SECRET")
 def get_twitch_token():
     url = f"https://id.twitch.tv/oauth2/token?client_id={CLIENT_ID}&client_secret={CLIENT_SECRET}&grant_type=client_credentials"
     try:
-        res = requests.post(url)
+        res = httpx.post(url, follow_redirects=True)
         return res.json().get('access_token') if res.status_code == 200 else None
     except: return None
 
@@ -40,7 +40,7 @@ def fetch_igdb_characters(token):
     """
     
     try:
-        response = requests.post(url, headers=headers, data=query)
+        response = httpx.post(url, headers=headers, content=query, follow_redirects=True)
         if response.status_code == 200:
             return response.json()
     except Exception as e:

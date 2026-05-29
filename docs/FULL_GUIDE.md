@@ -11,11 +11,11 @@ Animetix est bâtie sur une **Architecture Atomic & Hexagonal** (Ports & Adapter
 Le domaine (`backend/core/domain`) centralise la logique via :
 - **Services (ex: `AgenticRAGService`) :** Machines à états cognitifs (FSM).
 - **InferencePort :** Interface unifiée supportant le streaming SSE, le *Test-Time Compute* (TTC) et le routage multi-modèle. Elle expose désormais `rerank_documents` pour intégrer des Cross-Encoders (BGE-Reranker) lors de la recherche.
-- **PersistencePort (UnifiedRepository) :** Gère la persistance de manière unifiée, avec **PgVector** comme moteur de stockage primaire pour les vecteurs, complété par Neo4j pour les relations.
+- **PersistencePort (UnifiedRepository) :** Gère la persistance de manière unifiée, avec **ChromaDB** comme moteur de stockage pour les vecteurs, complété par Neo4j pour les relations.
 
 ### B. Infrastructure (Adapters)
-- **Persistence :** Le `UnifiedRepositoryAdapter` abstrait la complexité du stockage, garantissant une résilience via fallback (PgVector -> ChromaDB).
-- **Inference :** Supporte vLLM, GGUF, et Transformers, avec un système de `lazy_import` pour éviter les overheads inutiles au démarrage.
+- **Persistence :** Le `UnifiedRepositoryAdapter` abstrait la complexité du stockage, garantissant une persistance vectorielle via ChromaDB.
+- **Inference :** Supporte Ollama et BrainAPI, avec un système de `lazy_import` pour éviter les overheads inutiles au démarrage.
 
 
 ---
@@ -116,7 +116,7 @@ Le système s'auto-améliore via les feedbacks :
 
 ## 🚀 7. Roadmap de Déploiement
 
-1.  **Staging :** Déploiement Docker Stack (Postgres, Redis, Neo4j, vLLM, Dagster).
+1.  **Staging :** Déploiement Docker Stack (Postgres, Redis, Neo4j, Ollama, Dagster).
 2.  **Pre-Flight :** Exécution de `scripts/pre_flight_check.py` pour valider les 12 points de contrôle.
 3.  **Production :** Activation du streaming SSE et du monitoring Prometheus/Grafana pour surveiller la latence des agents en temps réel.
 

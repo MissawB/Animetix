@@ -13,7 +13,7 @@ graph TD
     subgraph Frameworks & Adapters (Externe)
         Django[Django Backend & Channels]
         ML_Adapters[Adapteurs d'Inférence: LocalLlama, Diffusers, Transformers]
-        Persistence_Adapters[Adapteurs de Persistance: PgVector (Primaire), Neo4j, ChromaDB]
+        Persistence_Adapters[Adapteurs de Persistance: ChromaDB, Neo4j, Django DB]
     end
 
     subgraph Ports (Interfaces)
@@ -45,15 +45,15 @@ Le code est organisé sous `backend/` :
   - `PersistencePort` : Accès aux données unifié (`UnifiedRepositoryAdapter`).
 - **`core/domain/services/`** : Logique métier pure, sans dépendance infra.
 - **`adapters/`** : Implémentations concrètes (Infrastructure).
-  - `adapters/persistence/` : Gestion multi-source (PgVector, Neo4j, Fallback ChromaDB).
-  - `adapters/inference/` : Supports vLLM, GGUF, Transformers.
+  - `adapters/persistence/` : Gestion multi-source (ChromaDB, Neo4j).
+  - `adapters/inference/` : Supports BrainAPI, Ollama (Unified), Transformers.
 - **`api/`** : Orchestration Django. Injection via `containers/`.
 
 ---
 
-## 3. Stockage & Persistance (Primary: PgVector)
+## 3. Stockage & Persistance (Primary: ChromaDB)
+Le projet utilise **ChromaDB** comme stockage vectoriel exclusif pour la recherche sémantique. L'accès aux données est unifié via `UnifiedRepositoryAdapter`. Neo4j est utilisé en complément pour la persistance des relations complexes du graphe de connaissances.
 
-Le projet utilise **PgVector** comme stockage vectoriel principal. L'accès aux données est unifié via `PersistencePort` qui gère la logique de fallback (ex: utilisation de ChromaDB en cas d'indisponibilité de PgVector). Neo4j est utilisé en complément pour la persistance des relations complexes du graphe de connaissances.
 
 ---
 
@@ -81,13 +81,13 @@ Animetix est désormais conçu et déployé comme une **Pure SPA** (Single Page 
 - **Routage Unifié** : Django configure un routage systématique où la racine et toutes les requêtes de fallback (`re_path(r'^(?!api/|static/|admin/).*$', spa_view)`) redirigent vers `spa_view` pour laisser React gérer le routage côté client via `react-router-dom`.
 
 ### Synthèse des flux et découplage
-1. **Communication** : API REST JSON via `/api/v1/` et requêtes GraphQL interactives via `/graphql/` (Knowledge Graph).
+1. **Communication** : API REST JSON via `/api/v1/`.
 2. **Gestion d'État** : Tout l'état de l'application et les logiques de jeux complexes (Akinetix, Paradox, Forge) ont été déportés de la couche de présentation Django vers des **Domain Services** dans `backend/core/domain/services/`.
 3. **Sécurité et Authentification** : L'état d'authentification est centralisé côté React SPA, validé par un endpoint Django dédié (`feat(spa-auth)`).
 4. **Configuration de Production** :
    - Construire le front avec `npm run build` dans le dossier `frontend/`.
    - Servir les fichiers statiques de `dist/` via Nginx ou un service CDN.
-   - Configurer le reverse proxy pour diriger `/api/`, `/graphql/` et les connexions WebSocket `/ws/` vers le serveur d'application Django (Gunicorn/Uvicorn).
+   - Configurer le reverse proxy pour diriger `/api/` et les connexions WebSocket `/ws/` vers le serveur d'application Django (Gunicorn/Uvicorn).
 
 ---
 
@@ -100,10 +100,8 @@ graph TD
     FallbackAdapter["FallbackInferenceAdapter"]
     
     subgraph Adaptateurs Texte
-        BrainAPI["BrainAPIAdapter (Cloud)"]
-        VLLM["VLLMAdapter (GPU Server)"]
-        GGUF["GgufAdapter (Local CPU/GPU)"]
-        LocalText["LocalTextAdapter"]
+        BrainAPI["BrainAPIAdapter (Cloud - Primaire)"]
+        Ollama["UnifiedInferenceAdapter (Ollama Local - Fallback)"]
         Langchain["LangchainAdapter"]
     end
     
@@ -120,8 +118,7 @@ graph TD
     end
     
     FallbackAdapter --> BrainAPI
-    FallbackAdapter --> VLLM
-    FallbackAdapter --> GGUF
+    FallbackAdapter --> Ollama
     FallbackAdapter --> VisionTF
     FallbackAdapter --> Diffusers
     FallbackAdapter --> AudioTF
@@ -209,4 +206,6 @@ classDiagram
     InfrastructureError <|-- AdapterLoadError
     InfrastructureError <|-- ContentModerationError
     InfrastructureError <|-- KnowledgeGraphQueryError
+```
+or
 ```

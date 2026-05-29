@@ -8,40 +8,25 @@ from typing import List, Optional, Dict, Any
 # Ajout du chemin src pour l'import des adapters et ports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from adapters.inference.local_llama_adapter import LocalLlamaAdapter
-from adapters.inference.vllm_adapter import VllmAdapter
+from adapters.inference.unified_inference_adapter import UnifiedInferenceAdapter
 
 logger = logging.getLogger("animetix.brain")
 
 from contextlib import asynccontextmanager
 
 # Configuration des moteurs d'inférence
-MODELS_DIR = os.getenv("MODELS_DIR", "data/models")
-# On utilise un modèle plus léger et non-gated par défaut pour éviter les erreurs de token/poids
-DEFAULT_MODEL = "Qwen/Qwen2.5-1.5B-Instruct"
-llama_path = os.path.join(MODELS_DIR, "llama-3-8b")
+api_base = os.getenv("LLM_API_BASE", "http://localhost:11434/v1")
+model_name = os.getenv("LLM_MODEL_NAME", "llama3")
 
-# Fallback si le dossier local n'existe pas
-if not os.path.exists(llama_path):
-    logger.info(f"📂 Chemin local {llama_path} non trouvé. Utilisation du modèle distant : {DEFAULT_MODEL}")
-    llama_path = DEFAULT_MODEL
-
-# Initialisation de l'unité de calcul locale
-brain_engine = LocalLlamaAdapter(
-    model_path=llama_path,
-    hf_token=os.getenv("HUGGINGFACE_TOKEN"),
-    use_4bit=True
+# Initialisation de l'unité de calcul locale (Ollama)
+brain_engine = UnifiedInferenceAdapter(
+    api_base=api_base,
+    model_name=model_name
 )
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # CHARGEMENT EAGER : On charge le modèle au démarrage pour éviter les timeouts au premier call
-    logger.info("🧠 Brain API is warming up... Loading models.")
-    try:
-        brain_engine._load_model()
-        logger.info("✅ Brain API is ready. Model loaded.")
-    except Exception as e:
-        logger.error(f"❌ Failed to load model during startup: {e}")
+    logger.info(f"🧠 Brain API is using Ollama at {api_base} with model {model_name}")
     yield
     # Cleanup si besoin
 

@@ -12,7 +12,7 @@ import argparse
 import time
 import json
 import logging
-import requests
+import httpx
 from dotenv import load_dotenv
 
 # Enregistrement des chemins d'importation
@@ -91,7 +91,7 @@ class ScraperA_Casting:
             
         url = f"https://api.jikan.moe/v4/anime/{mal_id}/characters"
         try:
-            response = requests.get(url, timeout=15)
+            response = httpx.get(url, timeout=15, follow_redirects=True)
             if response.status_code == 200:
                 characters_data = response.json().get('data', [])
                 cast_list = []
@@ -143,7 +143,7 @@ class ScraperB_Music:
         # 2. Fallback Jikan API (les anisongs sont incluses dans les détails complets de l'anime)
         url = f"https://api.jikan.moe/v4/anime/{mal_id}/full"
         try:
-            response = requests.get(url, timeout=15)
+            response = httpx.get(url, timeout=15, follow_redirects=True)
             if response.status_code == 200:
                 data = response.json().get('data', {})
                 theme_data = data.get('theme', {})

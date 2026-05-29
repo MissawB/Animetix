@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock, patch
-from backend.core.domain.services.agentic_rag_service import AgenticRAGService
+from core.domain.services.agentic_rag_service import AgenticRAGService
 
 @pytest.fixture
 def mock_dependencies():

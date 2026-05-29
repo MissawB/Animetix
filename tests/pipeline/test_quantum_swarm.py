@@ -12,7 +12,7 @@ from unittest.mock import MagicMock, patch
 # 1. TESTS COGNITION QUANTIQUE (BORN'S RULE & NON-COMMUTATIVITÉ)
 # ==========================================
 def test_quantum_cognitive_model():
-    from backend.core.domain.services.quantum_cognitive_model import QuantumCognitivePreferenceModel
+    from core.domain.services.quantum_cognitive_model import QuantumCognitivePreferenceModel
     np.random.seed(42)
     model = QuantumCognitivePreferenceModel(dimension=4)
     
@@ -29,7 +29,7 @@ def test_quantum_cognitive_model():
     assert pytest.approx(new_norm) == 1.0
 
 def test_quantum_order_effects():
-    from backend.core.domain.services.quantum_cognitive_model import QuantumCognitivePreferenceModel
+    from core.domain.services.quantum_cognitive_model import QuantumCognitivePreferenceModel
     
     np.random.seed(42)
     model = QuantumCognitivePreferenceModel(dimension=4)
@@ -45,7 +45,7 @@ def test_quantum_order_effects():
 # 2. TESTS SWARM CONSENSUS ORCHESTRATOR (PAXOS)
 # ==========================================
 def test_swarm_consensus_paxos():
-    from backend.core.domain.services.swarm_consensus import SwarmConsensusOrchestrator
+    from core.domain.services.swarm_consensus import SwarmConsensusOrchestrator
     
     orchestrator = SwarmConsensusOrchestrator()
     
@@ -74,7 +74,7 @@ def test_swarm_consensus_paxos():
 # 3. TESTS SIMULATEUR CONTREFACTUEL
 # ==========================================
 def test_counterfactual_conversation_simulator():
-    from backend.core.domain.services.counterfactual_simulator import CounterfactualConversationSimulator
+    from core.domain.services.counterfactual_simulator import CounterfactualConversationSimulator
     
     mock_engine = MagicMock()
     mock_engine.generate.side_effect = [

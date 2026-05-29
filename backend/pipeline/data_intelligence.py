@@ -1,6 +1,6 @@
 import json
 import os
-import requests
+import httpx
 import re
 import logging
 from typing import List
@@ -30,10 +30,10 @@ class DataIntelligence:
         """
         
         try:
-            response = requests.post(f"{self.brain_url}/generate", json={
+            response = httpx.post(f"{self.brain_url}/generate", json={
                 "prompt": prompt,
                 "system_prompt": "Tu es un documentaliste expert en culture geek. Tes tags sont précis et utiles pour un moteur de recherche."
-            }, timeout=30)
+            }, timeout=30, follow_redirects=True)
             
             if response.status_code == 200:
                 text = response.json().get("text", "")

@@ -9,9 +9,15 @@ Ce document archive les étapes majeures de l'évolution technique du projet.
 - **State Decoupling :** Migration de la logique de jeu (`Akinetix`, `Paradox`, `CreativeFusion`) des vues Django vers des **Domain Services** purs.
 - **Purge du Legacy :** Suppression des contrôleurs de vue HTML, configurations d'URL obsolètes et tests associés.
 - **Manga Translation & DI Realignment :** Réalignement de l'injection du conteneur de dépendances (DI) dans `MangaFlowService` et développement d'un fallback algorithmique Pillow-only résilient en local 100% hors-ligne si SDXL-Turbo n'est pas opérationnel (GPU absent).
-- **Test Suite Imports & Windows Stabilization :** Standardisation des namespaces d'importation sans le préfixe `backend.` dans les tests et correction de la configuration de `pytest.ini` pour utiliser un `pythonpath` multiligne multiplateforme robuste sous Windows, éliminant toutes les pannes de collecte.
+- **Consolidation Graphes & Bus d'Agents :** Élimination des erreurs silencieuses dans le `MultiAgentBus` et les scripts d'entraînement (`train_vibe_characters.py`, `train_akinetix_rl.py`). Renforcement de la clarté des logs pour l'Expert Graphe.
+- **Agent Rigor & Defensive RAG :** Durcissement des agents `ResponseCritic`, `ResponseJudge` et `DebateManager`. Mise en place d'un mode "Fail-Safe" (scores à 0.0, action REWRITE forcée) en cas de crash infrastructure ou d'erreurs d'inférence, garantissant l'intégrité des réponses RAG.
+- **Test Suite Imports & Infrastructure Purge :** Standardisation globale des namespaces d'importation (sans préfixe `backend.` pour matcher la source) et éradication complète des adaptateurs/tests liés à GGUF et vLLM. Restauration de la collection globale de tests (435 items) via un nettoyage du `pythonpath` dans `pytest.ini`.
 - **Web Search Real Integration :** Remplacement de la recherche DuckDuckGo simulée par une intégration réelle via la bibliothèque `ddgs` (DuckDuckGo Search), fournissant une information temps réel fiable pour l'Agentic RAG avec gestion d'erreurs robuste.
+
+
 - **ASGI Middleware & ContextVars Namespace Resolution :** Restructuration des middlewares `UserTrackingMiddleware` et `UserTierMiddleware` pour les rendre pleinement compatibles synchrone/asynchrone (ASGI/WSGI) avec une synchronisation automatique des `ContextVar` en cas d'imports multiples, éliminant les fuites et assurant une isolation totale dans les requêtes asynchrones et WebSockets.
+- **Inference Adapter Silent Exception Cleanup :** Éradication totale des blocs d'exceptions silencieux (`except: pass` ou fallbacks non loggés) dans `FallbackInferenceAdapter` et `Qwen3VLAdapter`. Introduction de `logger.debug` structurés capturant les détails des exceptions (ex. non-implémentation, échec d'indexation d'URL d'image) avant exécution des replis logiques, garantissant une observabilité parfaite sans altérer les flux de test.
+
 
 
 

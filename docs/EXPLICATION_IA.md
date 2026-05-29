@@ -18,7 +18,7 @@ flowchart TD
         Dagster --> B1[(SQLite DB)]
         Dagster --> B2[(JSON Files)]
         Dagster --> B3[(Neo4j Graph)]
-        Dagster --> B4[(ChromaDB / PgVector)]
+        Dagster --> B4[(ChromaDB)]
     end
 
     subgraph Phase 3 : Recherche Sémantique (RAG)
@@ -69,7 +69,7 @@ Une fois collectées, les données sont persistées de 4 manières complémentai
 * **La Base Relationnelle (SQLite)** : Assure la cohérence transactionnelle pour les sessions utilisateurs, l'authentification et les métadonnées de base structurées.
 * **Les Fichiers JSON de Référence (`clean_root_animes/mangas.json`)** : Versionnent l'état brut nettoyé des données, servant de base fiable pour l'entraînement ou la restauration rapide.
 * **Le Graphe de Connaissances (Neo4j)** : Modélise les liens sémantiques profonds. Les entités (`Media`, `Studio`, `Creator`, `Character`) deviennent des nœuds connectés par des relations typées (`PRODUCED_BY`, `FEATURES`, `INFLUENCED_BY`).
-* **La Base Vectorielle (PgVector / ChromaDB)** : Indexe la représentation mathématique (les embeddings) des descriptions textuelles pour permettre des comparaisons sémantiques ultra-rapides.
+* **La Base Vectorielle (ChromaDB)** : Indexe la représentation mathématique (les embeddings) des descriptions textuelles pour permettre des comparaisons sémantiques ultra-rapides.
 
 ---
 

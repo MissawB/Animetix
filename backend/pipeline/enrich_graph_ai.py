@@ -3,7 +3,7 @@ import os
 import sys
 import logging
 import time
-import requests
+import httpx
 from tqdm import tqdm
 
 # Add src and backend to Python path
@@ -40,7 +40,7 @@ def fetch_jikan_metadata(mal_id, media_type):
     # 1. Fetch exact dates
     try:
         url_full = f"https://api.jikan.moe/v4/anime/{mal_id}/full"
-        res = requests.get(url_full, timeout=10)
+        res = httpx.get(url_full, timeout=10, follow_redirects=True)
         if res.status_code == 200:
             data = res.json().get('data', {})
             aired = data.get('aired', {})
@@ -52,7 +52,7 @@ def fetch_jikan_metadata(mal_id, media_type):
     # 2. Fetch Staff (Directors)
     try:
         url_staff = f"https://api.jikan.moe/v4/anime/{mal_id}/staff"
-        res = requests.get(url_staff, timeout=10)
+        res = httpx.get(url_staff, timeout=10, follow_redirects=True)
         if res.status_code == 200:
             staff = res.json().get('data', [])
             for s in staff:
@@ -70,7 +70,7 @@ def fetch_jikan_metadata(mal_id, media_type):
     # 3. Fetch Cast (Seiyuus)
     try:
         url_chars = f"https://api.jikan.moe/v4/anime/{mal_id}/characters"
-        res = requests.get(url_chars, timeout=10)
+        res = httpx.get(url_chars, timeout=10, follow_redirects=True)
         if res.status_code == 200:
             chars = res.json().get('data', [])
             main_chars = [c for c in chars if c.get('role') == 'Main']

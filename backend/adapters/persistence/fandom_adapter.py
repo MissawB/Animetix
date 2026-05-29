@@ -1,4 +1,4 @@
-import requests
+import httpx
 import logging
 import re
 from typing import List, Dict, Any, Optional
@@ -34,7 +34,7 @@ class FandomAdapter(FandomPort):
         }
         
         try:
-            res = requests.get(self.api_url, params=search_params, timeout=10)
+            res = httpx.get(self.api_url, params=search_params, timeout=10, follow_redirects=True)
             res.raise_for_status()
             search_data = res.json()
             
@@ -60,7 +60,7 @@ class FandomAdapter(FandomPort):
                     "formatversion": 2
                 }
                 
-                res = requests.get(self.api_url, params=fetch_params, timeout=10)
+                res = httpx.get(self.api_url, params=fetch_params, timeout=10, follow_redirects=True)
                 res.raise_for_status()
                 data = res.json()
                 

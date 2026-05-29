@@ -1,4 +1,4 @@
-import requests
+import httpx
 import json
 import time
 import os
@@ -23,7 +23,7 @@ def fetch_tmdb_page(endpoint, page=1, params={}):
     default_params = {"api_key": TMDB_API_KEY, "language": "fr-FR", "page": page}
     default_params.update(params)
     try:
-        response = requests.get(url, params=default_params, timeout=20)
+        response = httpx.get(url, params=default_params, timeout=20, follow_redirects=True)
         if response.status_code == 200:
             return response.json()
         elif response.status_code == 429:
@@ -31,7 +31,7 @@ def fetch_tmdb_page(endpoint, page=1, params={}):
             time.sleep(10)
             return fetch_tmdb_page(endpoint, page, params)
         return None
-    except requests.RequestException as e:
+    except httpx.RequestError as e:
         logger.error(f"❌ TMDB API request failed on {endpoint}: {e}")
         return None
 

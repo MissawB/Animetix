@@ -12,7 +12,7 @@ import argparse
 import time
 import json
 import logging
-import requests
+import httpx
 from dotenv import load_dotenv
 
 # Enregistrement des chemins d'importation
@@ -131,7 +131,7 @@ class ScraperH_Recs:
         url = f"https://api.jikan.moe/v4/{type_path}/{mal_id}/recommendations"
         
         try:
-            response = requests.get(url, timeout=15)
+            response = httpx.get(url, timeout=15, follow_redirects=True)
             if response.status_code == 200:
                 recs_data = response.json().get('data', [])
                 clean_recs = []

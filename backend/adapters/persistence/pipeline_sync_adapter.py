@@ -1,4 +1,4 @@
-import requests
+import httpx
 import os
 import sys
 import logging

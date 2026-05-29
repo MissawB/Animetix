@@ -2,7 +2,7 @@ import json
 import numpy as np
 import os
 import sys
-import requests
+import httpx
 import logging
 from PIL import Image
 from io import BytesIO
@@ -87,7 +87,8 @@ def run_vectorization():
                 # Préparation Vision
                 if m_id not in existing_vision_ids and item['image']:
                     try:
-                        res = requests.get(item['image'], timeout=2) 
+                        res = httpx.get(item['image'], timeout=2, follow_redirects=True)
+ 
                         if res.status_code == 200:
                             img = Image.open(BytesIO(res.content)).convert("RGB")
                             vision_ids.append(m_id)
@@ -128,3 +129,4 @@ def run_vectorization():
 
 if __name__ == "__main__":
     run_vectorization()
+  run_vectorization()

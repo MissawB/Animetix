@@ -28,19 +28,12 @@ def check_env_vars():
     return True
 
 def check_postgres():
-    logger.info("🐘 Checking PostgreSQL & PgVector...")
+    logger.info("🐘 Checking PostgreSQL Connection...")
     try:
         with connection.cursor() as cursor:
             cursor.execute("SELECT version();")
             version = cursor.fetchone()
             logger.info(f"✅ Postgres Connection OK: {version[0]}")
-            
-            # Check for pgvector
-            cursor.execute("SELECT extname FROM pg_extension WHERE extname = 'vector';")
-            if cursor.fetchone():
-                logger.info("✅ pgvector extension is installed.")
-            else:
-                logger.warning("⚠️ pgvector extension NOT FOUND. Vector searches will fail.")
         return True
     except Exception as e:
         logger.error(f"❌ PostgreSQL Connection Failed: {e}")

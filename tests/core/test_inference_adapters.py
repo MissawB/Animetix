@@ -1,9 +1,7 @@
 import pytest
+from unittest.mock import patch, MagicMock
 from adapters.inference.qwen3_vl_adapter import Qwen3VLAdapter
-from adapters.inference.vllm_adapter import VllmAdapter
 from adapters.inference.brain_api_adapter import BrainAPIAdapter
-from adapters.inference.gguf_adapter import GgufAdapter
-from adapters.inference.local_llama_adapter import LocalLlamaAdapter
 from adapters.inference.manga_ocr_adapter import MangaOCRAdapter
 from adapters.inference.local_text_adapter import LocalTextAdapter
 from adapters.inference.local_rerank_adapter import LocalRerankAdapter
@@ -15,26 +13,11 @@ def test_qwen3_vl_not_implemented():
     with pytest.raises(InferenceNotImplementedError):
         adapter.calculate_visual_similarity("test", "1", "image")
 
-def test_vllm_not_implemented():
-    adapter = VllmAdapter()
-    with pytest.raises(InferenceNotImplementedError):
-        adapter.calculate_visual_similarity("test", "1", "image")
-
 def test_brain_api_not_implemented():
     # BrainAPIAdapter return default list when no brain_api_url is provided
     adapter = BrainAPIAdapter(brain_api_url="")
     result = adapter.get_image_embedding(b"")
     assert result == []
-
-def test_gguf_not_implemented():
-    adapter = GgufAdapter(model_path="fake/path")
-    with pytest.raises(InferenceNotImplementedError):
-        adapter.calculate_visual_similarity("test", "1", "image")
-
-def test_local_llama_not_implemented():
-    adapter = LocalLlamaAdapter(model_path="fake/path")
-    with pytest.raises(InferenceNotImplementedError):
-        adapter.calculate_visual_similarity("test", "1", "image")
 
 def test_transformers_not_implemented():
     adapter = LocalTextAdapter(model_id="fake/id")
@@ -42,7 +25,6 @@ def test_transformers_not_implemented():
         adapter.calculate_visual_similarity("test", "1", "image")
 
 def test_inference_not_implemented_error():
-    from core.ports.inference_port import InferenceNotImplementedError
     adapter = Qwen3VLAdapter()
     
     # rerank_documents is defined on InferencePort and raises InferenceNotImplementedError by default
@@ -53,8 +35,7 @@ def test_inference_not_implemented_error():
 
 def test_transformers_rerank_documents():
     adapter = LocalRerankAdapter()
-    from unittest.mock import patch, MagicMock
-    with patch('core.utils.lazy_import.lazy_import') as mock_lazy:
+    with patch('backend.core.utils.lazy_import.lazy_import') as mock_lazy:
         mock_st = MagicMock()
         mock_ce = MagicMock()
         mock_ce.predict.return_value = [0.9, 0.1]
@@ -83,4 +64,3 @@ def test_transformers_text_and_rerank_adapters_instantiation():
     
     rerank_adapter = LocalRerankAdapter()
     assert rerank_adapter.model_name is not None
-

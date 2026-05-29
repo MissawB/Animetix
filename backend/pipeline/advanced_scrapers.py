@@ -12,7 +12,7 @@ import argparse
 import time
 import json
 import logging
-import requests
+import httpx
 from dotenv import load_dotenv
 
 # Enregistrement des chemins d'importation
@@ -89,7 +89,7 @@ class ScraperD_Arcs:
         episode_titles = []
         
         try:
-            res = requests.get(episodes_url, timeout=15)
+            res = httpx.get(episodes_url, timeout=15, follow_redirects=True)
             if res.status_code == 200:
                 episodes = res.json().get('data', [])
                 for ep in episodes[:30]: # Limite à 30 épisodes pour le contexte
@@ -151,7 +151,7 @@ class ScraperE_IGDB:
             "grant_type": "client_credentials"
         }
         try:
-            res = requests.post(url, params=params, timeout=10)
+            res = httpx.post(url, params=params, timeout=10, follow_redirects=True)
             if res.status_code == 200:
                 return res.json().get('access_token', '')
         except Exception as e:
@@ -181,7 +181,7 @@ class ScraperE_IGDB:
         query = f'search "{title}"; fields name, platforms.name, total_rating, first_release_date; limit 5;'
         
         try:
-            res = requests.post(url, headers=headers, data=query, timeout=15)
+            res = httpx.post(url, headers=headers, content=query, timeout=15, follow_redirects=True)
             if res.status_code == 200:
                 games_data = res.json()
                 results = []

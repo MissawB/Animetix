@@ -1,7 +1,7 @@
 import json
 import re
 import os
-import requests
+import httpx
 import logging
 from tqdm import tqdm
 from dotenv import load_dotenv
@@ -39,10 +39,10 @@ def call_brain_for_extraction(name, description):
     """
     
     try:
-        response = requests.post(f"{BRAIN_URL}/generate", json={
+        response = httpx.post(f"{BRAIN_URL}/generate", json={
             "prompt": prompt,
             "system_prompt": "Tu es un expert en analyse de personnages de fiction. Réponds UNIQUEMENT en JSON."
-        }, timeout=45)
+        }, timeout=45, follow_redirects=True)
         
         if response.status_code == 200:
             text = response.json().get("text", "")

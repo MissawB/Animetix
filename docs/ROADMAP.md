@@ -43,7 +43,7 @@ gantt
 *   **A.2 `HierarchicalGraphRAGService`** : Exécute l'algorithme de détection de communautés Leiden sur Neo4j. Les LLMs Scout résument chaque communauté pour répondre à des requêtes holistiques complexes.
 
 #### Phase B : Inférence & Raisonnement (Vitesse & Profondeur)
-*   **B.1 `SpeculativeDecodingInferenceAdapter`** : Accélération de l'inférence locale en combinant un modèle ébaucheur (ex: SmolLM3) et un vérificateur (ex: Llama-3-8B).
+*   **B.1 Inférence Unifiée (Ollama)** : Optimisation de l'inférence locale via Ollama pour garantir des performances sub-secondes sur le matériel grand public.
 *   **B.2 `DynamicBudgetTTCSelector`** : Optimisation de la latence par routage intelligent selon un "score d'ambiguïté", allouant ou non des tokens de réflexion `<thought>` (Test-Time Compute).
 
 #### Phase C : Apprentissage & MLOps

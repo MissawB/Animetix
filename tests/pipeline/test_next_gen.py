@@ -11,7 +11,7 @@ from unittest.mock import MagicMock, patch
 # 1. TESTS TREE-OF-THOUGHTS (MCTS)
 # ==========================================
 def test_tree_of_thoughts_search():
-    from backend.core.domain.services.tree_of_thoughts_service import TreeOfThoughtsSearchService
+    from core.domain.services.tree_of_thoughts_service import TreeOfThoughtsSearchService
     
     mock_engine = MagicMock()
     # Simuler des retours LLM :
@@ -39,7 +39,7 @@ def test_tree_of_thoughts_search():
 # 2. TESTS COMPRESSEUR DE MEMOIRE EPISODIQUE
 # ==========================================
 def test_episodic_memory_compressor():
-    from backend.core.domain.services.episodic_memory_compressor import EpisodicMemoryCompressor
+    from core.domain.services.episodic_memory_compressor import EpisodicMemoryCompressor
     
     mock_chroma = MagicMock()
     # Simuler deux souvenirs vectoriels dans Chroma
@@ -74,7 +74,7 @@ def test_episodic_memory_compressor():
 # 3. TESTS PROFILER NEURO-SYMBOLIQUE (SAT SOLVER)
 # ==========================================
 def test_neuro_symbolic_user_profiler():
-    from backend.core.domain.services.neuro_symbolic_user_profiler import NeuroSymbolicUserProfiler
+    from core.domain.services.neuro_symbolic_user_profiler import NeuroSymbolicUserProfiler
     
     feedbacks = [
         {"input_context": "Recommande un seinen sombre et sanglant.", "is_positive": True},

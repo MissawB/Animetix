@@ -1,6 +1,6 @@
 """CLIP and ColPali vision mixin for VisionTransformersAdapter."""
 import logging
-import aiohttp
+import httpx
 import asyncio
 from typing import Optional, List, Dict, Any
 from core.utils.lazy_import import lazy_import
@@ -86,34 +86,34 @@ class ClipVisionMixin:
         tasks = [self._fetch_single_image(session, url) for url in urls]
         return await asyncio.gather(*tasks)
 
-    async def _fetch_single_image(self, session: aiohttp.ClientSession, url: str) -> Optional[Any]:
+    async def _fetch_single_image(self, client: httpx.AsyncClient, url: str) -> Optional[Any]:
         try:
             from PIL import Image
             from io import BytesIO
-            async with session.get(url, timeout=10) as response:
-                if response.status == 200:
-                    content = await response.read()
-                    return Image.open(BytesIO(content)).convert("RGB")
+            response = await client.get(url, timeout=10, follow_redirects=True)
+            if response.status_code == 200:
+                content = response.content
+                return Image.open(BytesIO(content)).convert("RGB")
         except Exception as e:
             logger.warning(f"Failed to fetch image {url}: {e}")
         return None
 
     def _fetch_images_sync(self, urls: List[str]) -> List[Any]:
-        import requests
         from PIL import Image
         from io import BytesIO
 
         results = []
-        for url in urls:
-            try:
-                res = requests.get(url, timeout=10)
-                if res.status_code == 200:
-                    results.append(Image.open(BytesIO(res.content)).convert("RGB"))
-                else:
+        with httpx.Client(timeout=10, follow_redirects=True) as client:
+            for url in urls:
+                try:
+                    res = client.get(url)
+                    if res.status_code == 200:
+                        results.append(Image.open(BytesIO(res.content)).convert("RGB"))
+                    else:
+                        results.append(None)
+                except Exception as e:
+                    logger.warning(f"Failed to fetch {url}: {e}")
                     results.append(None)
-            except Exception as e:
-                logger.warning(f"Failed to fetch {url}: {e}")
-                results.append(None)
         return results
 
     def visual_rerank(self, query: str, image_urls: List[str], system_prompt: str = "") -> List[Dict[str, Any]]:

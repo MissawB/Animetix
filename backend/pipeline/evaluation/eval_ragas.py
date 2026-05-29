@@ -4,7 +4,7 @@ import logging
 from typing import List, Dict
 from pipeline.chroma_client import chroma_manager
 from pipeline.neo4j_client import neo4j_manager
-import requests
+import httpx
 from ragas import evaluate
 from datasets import Dataset
 from ragas.metrics import faithfulness, answer_relevancy, context_precision, context_recall
@@ -64,10 +64,10 @@ class RAGEvaluator:
         prompt = f"Contexte:\n{context_str}\n\nQuestion: {query}"
         
         try:
-            response = requests.post(self.brain_url, json={
+            response = httpx.post(self.brain_url, json={
                 "prompt": prompt,
                 "system_prompt": "Tu es un expert en Anime/Manga. Utilise le contexte fourni pour répondre de manière précise."
-            }, timeout=60)
+            }, timeout=60, follow_redirects=True)
             if response.status_code == 200:
                 return response.json().get("text", "")
         except Exception as e:

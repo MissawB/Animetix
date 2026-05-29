@@ -9,6 +9,7 @@ urlpatterns = [
     path('clubs/<int:pk>/leave/', api_views.ClubViewSet.as_view({'post': 'leave'}), name='api-club-leave'),
     path('achievements/', api_views.AchievementViewSet.as_view({'get': 'list'}), name='api-achievements'),
     path('search/', api_views.MediaSearchView.as_view(), name='api_search'),
+    path('media/<str:media_type>/<str:item_id>/', api_views.MediaDetailView.as_view(), name='api_media_detail'),
     path('config/', api_views.ConfigView.as_view(), name='api_config'),
     path('auth/login/', api_views.LoginView.as_view(), name='api_auth_login'),
     path('auth/logout/', api_views.LogoutView.as_view(), name='api_auth_logout'),

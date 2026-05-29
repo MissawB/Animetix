@@ -1,5 +1,5 @@
 import pytest
-from backend.core.domain.services.scoring_service import ScoringDomainService
+from core.domain.services.scoring_service import ScoringDomainService
 
 def test_get_gaussian_weights_length():
     weights = ScoringDomainService.get_gaussian_weights(10)

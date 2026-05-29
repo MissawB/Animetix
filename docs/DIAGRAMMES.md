@@ -22,30 +22,32 @@ graph LR
 
     %% Back-End (Serveur)
     subgraph Backend ["Backend Headless (Django / Hexagonal)"]
-        API[API REST JSON & GraphQL]
+        API[API REST JSON]
+
         WS[WebSockets]
         Core[Core Domain (Logique Métier)]
     end
 
     %% Infrastructure de Données
     subgraph Infrastructure ["Persistance & Cache"]
-        PgVector[(PgVector / PostgreSQL)]
+        PostgreSQL[(PostgreSQL)]
         Redis[(Redis)]
         Neo4j[(Neo4j - Graph DB)]
-        Chroma[(ChromaDB - Fallback)]
+        Chroma[(ChromaDB)]
     end
 
     %% Infrastructure IA
     subgraph AI_Ecosystem ["Écosystème IA"]
-        LocalLLM[Modèles Locaux (GGUF, vLLM)]
-        CloudAPI[API Cloud]
+        LocalLLM[Modèles Locaux (Ollama)]
+        CloudAPI[Brain API Cloud]
         Vision[Modèles Vision / Audio]
     end
 
     %% Flux de communication
     User <-->|HTTP / WS| UI
     UI --> State
-    State <-->|Requêtes API / GQL| API
+    State <-->|Requêtes API| API
+
     State <-->|Temps Réel| WS
     
     API --> Core
@@ -56,7 +58,7 @@ graph LR
 ```
 
 **Explication :**
-L'utilisateur n'interagit qu'avec l'application React. Cette dernière communique avec Django via des requêtes JSON (REST/GraphQL) ou des flux en temps réel (WebSockets). Le backend Django n'a aucune interface graphique ; son seul rôle est d'exécuter la logique métier (le "Core") et de discuter avec les bases de données et les modèles d'Intelligence Artificielle.
+L'utilisateur n'interagit qu'avec l'application React. Cette dernière communique avec Django via des requêtes JSON (REST) ou des flux en temps réel (WebSockets). Le backend Django n'a aucune interface graphique ; son seul rôle est d'exécuter la logique métier (le "Core") et de discuter avec les bases de données et les modèles d'Intelligence Artificielle.
 
 ---
 
@@ -67,8 +69,9 @@ Ce schéma détaille le composant "Backend" du schéma précédent. Il montre co
 ```mermaid
 graph TD
     subgraph Adapters ["Adapteurs (Infrastructure - Extérieur)"]
-        DjangoWeb[Django Views / Graphene GraphQL]
-        PgAdapter[UnifiedRepositoryAdapter (PgVector)]
+        DjangoWeb[Django Views / DRF]
+
+        ChromaAdapter[UnifiedRepositoryAdapter (ChromaDB)]
         LLMAdapter[FallbackInferenceAdapter]
     end
 
@@ -92,11 +95,11 @@ graph TD
     
     %% Implémentations
     LLMAdapter -.->|Implémente| InferencePort
-    PgAdapter -.->|Implémente| PersistencePort
+    ChromaAdapter -.->|Implémente| PersistencePort
 ```
 
 **Explication :**
-Le cœur du système (`Core Domain`) est isolé. Les services métier (qui gèrent les règles des jeux ou du RAG) ne savent pas s'ils parlent à PostgreSQL ou à une API Cloud. Ils utilisent des "Ports" (des interfaces abstraites). Les "Adapteurs" (comme Django, PgVector ou les modèles IA locaux) se branchent sur ces ports pour faire le pont avec le monde réel.
+Le cœur du système (`Core Domain`) est isolé. Les services métier (qui gèrent les règles des jeux ou du RAG) ne savent pas s'ils parlent à PostgreSQL ou à une API Cloud. Ils utilisent des "Ports" (des interfaces abstraites). Les "Adapteurs" (comme Django, ChromaDB ou les modèles IA locaux) se branchent sur ces ports pour faire le pont avec le monde réel.
 
 ---
 
@@ -110,9 +113,8 @@ graph TD
     Port --> Fallback[FallbackInferenceAdapter]
     
     subgraph Moteurs_Texte [Génération de Texte & Reranking]
-        VLLM(VLLM GPU Server)
-        GGUF(GGUF Local CPU/GPU)
-        API(API Externe)
+        BrainAPI(Brain API Cloud - Primaire)
+        Ollama(Ollama Local - Fallback)
     end
     
     subgraph Multimodal [Vision & Audio]
@@ -121,19 +123,17 @@ graph TD
         Audio(XTTS / Audio Transformers)
     end
 
-    Fallback -->|1. Tente le plus rapide| VLLM
-    Fallback -->|2. Si VLLM HS| GGUF
-    Fallback -->|3. En dernier recours| API
+    Fallback -->|1. Tente Cloud| BrainAPI
+    Fallback -->|2. Si Cloud KO| Ollama
     
     Fallback -.-> Multimodal
 ```
 
 **Explication :**
-Quand l'application a besoin d'une IA (ex: pour discuter, générer une image, classer des résultats), elle demande au `FallbackInferenceAdapter`. Ce routeur intelligent évalue dynamiquement les adaptateurs disponibles. Pour le texte par exemple, il essaiera d'abord un serveur VLLM puissant, s'il est indisponible, il basculera sur un modèle GGUF local, puis sur une API externe en dernier recours. 
-
+Quand l'application a besoin d'une IA (ex: pour discuter, générer une image, classer des résultats), elle demande au `FallbackInferenceAdapter`. Ce routeur intelligent évalue dynamiquement les adaptateurs disponibles. Pour le texte par exemple, il essaiera d'abord la Brain API Cloud (plus puissante), s'elle est indisponible ou trop lente, il basculera automatiquement sur une instance Ollama locale. 
 ---
 
-## 4. Focus sur l'organisation de la donnée (Persistence & Pipeline MLOps)
+## 4. Focus sur l' organisation de la donnée (Persistence & Pipeline MLOps)
 
 Le système de persistance repose principalement sur la recherche vectorielle (pour faire du RAG - Retrieval-Augmented Generation) et est alimenté par un pipeline de données.
 
@@ -141,7 +141,7 @@ Le système de persistance repose principalement sur la recherche vectorielle (p
 sequenceDiagram
     participant Dagster as Pipeline (Dagster)
     participant Json as Fichiers JSON (raw/processed)
-    participant Db as PgVector / Neo4j
+    participant Db as ChromaDB / Neo4j
     participant RAG as AdvancedRAGService
     participant LLM as InferenceAdapter
 
@@ -158,7 +158,7 @@ sequenceDiagram
 
 **Explication :**
 1. En amont, un outil de Data Engineering (Dagster) traite des fichiers bruts pour les transformer en données propres et en "Vecteurs" (représentation mathématique du texte).
-2. Ces vecteurs sont stockés dans PostgreSQL (PgVector) et Neo4j.
+2. Ces vecteurs sont stockés dans ChromaDB et Neo4j.
 3. Quand un utilisateur pose une question (via le RAG Service), la base de données cherche le contexte le plus proche.
 4. Ce contexte est ajouté à la question et envoyé à l'IA pour garantir une réponse précise et basée sur vos données (et non sur les hallucinations de l'IA).
 

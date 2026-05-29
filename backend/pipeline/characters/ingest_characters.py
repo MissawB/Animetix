@@ -1,4 +1,4 @@
-import requests
+import httpx
 import json
 import time
 import os
@@ -55,7 +55,7 @@ def fetch_page(page, retries=3):
     variables = {'page': page, 'perPage': 50}
     for i in range(retries):
         try:
-            response = requests.post(url, json={'query': query, 'variables': variables}, timeout=30)
+            response = httpx.post(url, json={'query': query, 'variables': variables}, timeout=30, follow_redirects=True)
             if response.status_code == 200:
                 return response.json()
             elif response.status_code == 429:

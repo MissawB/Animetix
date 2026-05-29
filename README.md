@@ -32,7 +32,7 @@
 *   **The Paradox:** Logic test. Identify the "intruder" among titles using LLM thematic analysis.
 
 ### 🔍 Intelligent Discovery
-*   **RAG 2.0 Engine:** Harmonizes **PgVector** (semantic memory) and **Neo4j** (logical graph memory).
+*   **RAG 2.0 Engine:** Harmonizes **ChromaDB** (semantic memory) and **Neo4j** (logical graph memory).
 *   **Multimodal Search:** Explore by plot description, visual "vibes", or complex relations.
 *   **Semantic Interpreters:** Explains *why* works are related (e.g., "Shared existential themes").
 
@@ -49,9 +49,9 @@ Animetix is built on an **Atomic & Hexagonal Architecture** (Ports & Adapters), 
 - **Backend:** **Django 5.0** + **Channels** (WebSockets) for real-time interactions.
 - **Dependency Injection:** Custom lazy-loading **DI Container** (`backend/api/animetix/containers.py`).
 - **Orchestration:** **Dagster** manages ETL & ML pipelines.
-- **Vector DB:** **PgVector** (Primary storage) with HNSW indexing + **ChromaDB** (Fallback).
+- **Vector DB:** **ChromaDB** (Primary storage) with HNSW indexing.
 - **Graph DB:** **Neo4j** for complex relationship modeling.
-- **Inference:** Unified **InferencePort** supporting **vLLM**, **GGUF**, **Transformers** with automated **Cross-Encoder Reranking**.
+- **Inference:** Unified **InferencePort** supporting **BrainAPI** (Cloud) and **Ollama** (Local) with automated **Cross-Encoder Reranking**.
 
 ### Key Design Principles
 - **Atomic Components:** Small, single-purpose modules.
@@ -104,8 +104,8 @@ Double_scenario_Project/
 ├── backend/                # Backend & Core Logic
 │   ├── core/               # Domain Layer (Entities, Services, Ports)
 │   ├── adapters/           # Infrastructure Layer (Driven Adapters)
-│   │   ├── persistence/    # PgVector, Neo4j, Django DB Adapters
-│   │   └── inference/      # vLLM, GGUF, Brain API Adapters
+│   │   ├── persistence/    # ChromaDB, Neo4j, Django DB Adapters
+│   │   └── inference/      # BrainAPI, Ollama, Transformers Adapters
 │   ├── api/                # Presentation Layer (Django Headless Server)
 │   │   ├── animetix/
 │   │   │   ├── views/      # Modularized API Views (Classic, Vision, Forge, etc.)
@@ -116,7 +116,7 @@ Double_scenario_Project/
 ├── frontend/               # React SPA (Client Side)
 ├── scripts/                # Root Utility scripts
 ├── data/                   # Persistent storage (Vectors, Artifacts, Models)
-├── deploy/                 # K8s, Docker & CI/CD configs
+├── deploy/                 # Docker & CI/CD configs
 ├── docs/                   # Architecture & Design Docs
 └── tests/                  # Unified Test Suite (Pytest)
 ```

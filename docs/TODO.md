@@ -5,12 +5,17 @@ Ce document centralise toutes les tâches techniques, d'architecture et de fonct
 ## 🛠️ Dette Technique & Architecture
 
 - [x] **Intégration Réelle de la Recherche Web (DuckDuckGo)** : Remplacer l'adaptateur simulé `DuckDuckGoSearchAdapter` dans `backend/adapters/persistence/web_search_adapter.py` par une véritable recherche DuckDuckGo (API libre ou HTML parser résilient).
-- [ ] **Gestion des erreurs (Adapteurs d'Inférence - pass silencieux)** : Éliminer les blocs `except: pass` silencieux et ajouter du logging structuré :
+- [x] **Gestion des erreurs (Adapteurs d'Inférence - pass silencieux)** : Éliminer les blocs `except: pass` silencieux et ajouter du logging structuré :
   - Dans `backend/adapters/inference/fallback_adapter.py`
   - Dans `backend/adapters/inference/qwen3_vl_adapter.py`
 - [x] **Middleware (ASGI)** : Refactoriser ou adapter `UserTrackingMiddleware` et `UserTierMiddleware` dans `backend/api/animetix/middleware.py` pour garantir l'isolation totale via `contextvars` sur les connexions asynchrones (Django Channels / WebSockets).
-- [ ] **Rigueur des Agents (Critic & Judge)** : Éliminer les comportements trop permissifs par défaut (ex: `relevance_score=1.0` sur Exception dans `critic.py`).
-- [ ] **Gestion des erreurs (Graph & Debate)** : Éliminer les erreurs silencieuses et structurer les logs dans le Graph Expert et le Debate Manager.
+- [x] **Rigueur des Agents (Critic & Judge)** : Éliminer les comportements trop permissifs par défaut (ex: `relevance_score=1.0` sur Exception dans `critic.py`) (FAIT, bascule vers un mode pessimiste "Fail-Safe").
+- [x] **Gestion des erreurs (Graph & Debate)** : Éliminer les erreurs silencieuses et structurer les logs dans le Graph Expert, le Debate Manager et le MultiAgentBus (FAIT, suppression des pass silencieux et ajout de logs).
+- [ ] **Gestion des erreurs (Pipelines d'Ingestion - pass silencieux)** : Éliminer les blocs `except:` silencieux et ajouter du logging structuré/monitoring dans les pipelines (`vectorize_anime.py`, `ingest_vg_characters.py`, `eval_ragas.py`, `regression_benchmark.py`, `models_registry.py`).
+- [ ] **Dégradation élégante (Inférence de Modèles Lourds)** : Détecter dynamiquement la présence de GPU CUDA dans `DiffusersAdapter` et `AudioTransformersAdapter`, et lever des alertes claires (ou fallbacks cloud) au lieu de crashs de mémoire/chargement en cas d'absence de GPU.
+- [ ] **Optimisation sémantique (Swarm Consensus)** : Connecter le consensus d'essaim `SwarmConsensusOrchestrator` à de véritables évaluations d'agents sémantiques ou de LLMs au lieu de simples correspondances de mots-clés statiques.
+
+
 
 ## 🧬 Fonctionnalités Créatives SOTA 2026
 

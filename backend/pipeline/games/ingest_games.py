@@ -1,4 +1,4 @@
-import requests
+import httpx
 import json
 import time
 import os
@@ -21,7 +21,7 @@ def get_twitch_token():
     """Récupère un jeton d'accès Twitch pour l'API IGDB."""
     url = f"https://id.twitch.tv/oauth2/token?client_id={CLIENT_ID}&client_secret={CLIENT_SECRET}&grant_type=client_credentials"
     try:
-        response = requests.post(url)
+        response = httpx.post(url, follow_redirects=True)
         if response.status_code == 200:
             return response.json().get('access_token')
         else:
@@ -39,7 +39,7 @@ def fetch_igdb(query, token):
         'Content-Type': 'text/plain'
     }
     try:
-        response = requests.post(url, headers=headers, data=query)
+        response = httpx.post(url, headers=headers, content=query, follow_redirects=True)
         if response.status_code == 200:
             return response.json()
         elif response.status_code == 429:

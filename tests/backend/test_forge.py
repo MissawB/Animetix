@@ -17,7 +17,7 @@ def test_creative_fusion_model_creation():
     assert remix.chaos_level == 80
 
 from unittest.mock import patch
-from backend.api.animetix.tasks import generate_fusion_scenario_task
+from animetix.tasks import generate_fusion_scenario_task
 
 @patch('src.backend.animetix.tasks.get_container')
 def test_generate_fusion_scenario_with_params(mock_get_container):

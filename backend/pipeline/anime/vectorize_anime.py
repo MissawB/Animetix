@@ -1,4 +1,4 @@
-import requests
+import httpx
 import json
 import time
 import os
@@ -69,7 +69,7 @@ def run_vectorization(chroma_res=None, neo4j_res=None):
             img_url = item.get('image')
             try:
                 if img_url:
-                    response = requests.get(img_url, timeout=10)
+                    response = httpx.get(img_url, timeout=10, follow_redirects=True)
                     img = Image.open(BytesIO(response.content)).convert('RGB')
                     v_emb = vision_model.encode(img, convert_to_numpy=True)
                     v_embeddings.append(v_emb.tolist())

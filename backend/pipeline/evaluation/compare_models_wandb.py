@@ -1,7 +1,7 @@
 import os
 import asyncio
 import time
-import requests
+import httpx
 import wandb
 import logging
 from typing import List, Dict
@@ -83,10 +83,10 @@ async def evaluate_model(engine_name: str, config: Dict):
         
         start_time = time.time()
         try:
-            response = requests.post(BRAIN_URL, json={
+            response = httpx.post(BRAIN_URL, json={
                 "prompt": q,
                 "system_prompt": "Tu es un expert en Anime/Manga."
-            }, timeout=60)
+            }, timeout=60, follow_redirects=True)
             latency = time.time() - start_time
             latencies.append(latency)
             
@@ -145,7 +145,7 @@ async def evaluate_model(engine_name: str, config: Dict):
 async def main():
     # 1. Tester le moteur actuel (Local Expert s'il est chargé)
     # On vérifie quel moteur est actif via le health check
-    res = requests.get("http://127.0.0.1:7860/")
+    res = httpx.get("http://127.0.0.1:7860/", follow_redirects=True)
     engine = res.json().get("engine", "unknown")
     
     await evaluate_model(engine, {"model_type": engine, "task": "comparison"})

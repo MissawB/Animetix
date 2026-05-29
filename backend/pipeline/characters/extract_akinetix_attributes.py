@@ -1,7 +1,7 @@
 import json
 import re
 import os
-import requests
+import httpx
 import logging
 from tqdm import tqdm
 from dotenv import load_dotenv
@@ -49,10 +49,10 @@ def extract_binary_attributes(name, description, metadata):
     """
     
     try:
-        response = requests.post(f"{BRAIN_URL}/generate", json={
+        response = httpx.post(f"{BRAIN_URL}/generate", json={
             "prompt": prompt,
             "system_prompt": "Tu es un expert en caractérisation de personnages. Réponds UNIQUEMENT en JSON."
-        }, timeout=180)
+        }, timeout=180, follow_redirects=True)
         
         if response.status_code == 200:
             text = response.json().get("text", "")

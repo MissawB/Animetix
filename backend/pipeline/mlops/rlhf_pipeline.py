@@ -2,7 +2,7 @@ import logging
 logger = logging.getLogger("animetix." + __name__)
 
 import os
-import requests
+import httpx
 import json
 import time
 import pandas as pd
@@ -24,10 +24,10 @@ def monitor_inference_health():
     start_time = time.time()
     try:
         # On teste une génération simple
-        res = requests.post(f"{brain_url}/generate", json={
+        res = httpx.post(f"{brain_url}/generate", json={
             "prompt": "ping",
             "system_prompt": "Répond uniquement 'pong'"
-        }, timeout=10)
+        }, timeout=10, follow_redirects=True)
         latency = time.time() - start_time
         status = "🟢 Online" if res.status_code == 200 else f"🔴 Error {res.status_code}"
         logger.info(f"Inference Health: {status} | Latency: {latency:.2f}s")
@@ -87,3 +87,4 @@ def trigger_model_retraining(validated_dpo_dataset, periodic_rag_evaluation, kno
         logger.info("🌊 Data drift detected. Triggering preventative retraining.")
         return "Preventative retraining started."
     return "Retraining not necessary yet."
+ng not necessary yet."

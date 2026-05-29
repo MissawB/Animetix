@@ -13,7 +13,7 @@ def mock_django_media_item():
 
 @patch('src.pipeline.expert_scrapers.gemini_client')
 def test_scraper_g_streaming(mock_gemini):
-    from backend.pipeline.expert_scrapers import ScraperG_Streaming
+    from pipeline.expert_scrapers import ScraperG_Streaming
     
     # Mocking Gemini response with valid JSON
     mock_model_response = MagicMock()
@@ -32,7 +32,7 @@ def test_scraper_g_streaming(mock_gemini):
 
 @patch('requests.get')
 def test_scraper_h_recs(mock_get):
-    from backend.pipeline.expert_scrapers import ScraperH_Recs
+    from pipeline.expert_scrapers import ScraperH_Recs
     
     # Mocking Jikan recommendations API response
     mock_response = MagicMock()
@@ -56,7 +56,7 @@ def test_scraper_h_recs(mock_get):
 
 @patch('src.pipeline.expert_scrapers.gemini_client')
 def test_scraper_i_pilgrimage(mock_gemini):
-    from backend.pipeline.expert_scrapers import ScraperI_Pilgrimage
+    from pipeline.expert_scrapers import ScraperI_Pilgrimage
     
     # Mocking Gemini response with valid JSON
     mock_model_response = MagicMock()
@@ -79,7 +79,7 @@ def test_scraper_i_pilgrimage(mock_gemini):
 @patch('src.pipeline.expert_scrapers.ScraperI_Pilgrimage.get_pilgrimage_locations')
 @patch('src.pipeline.expert_scrapers.update_json_metadata_field')
 def test_run_tripartite_enrichment_flow(mock_update_json, mock_get_pilgrimage, mock_get_recs, mock_get_streaming, mock_media_item, mock_django_media_item):
-    from backend.pipeline.expert_scrapers import run_tripartite_enrichment
+    from pipeline.expert_scrapers import run_tripartite_enrichment
     
     # Mocking Django QuerySet
     mock_media_item.objects.filter.return_value.order_by.return_value = [mock_django_media_item]

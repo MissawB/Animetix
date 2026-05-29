@@ -1,7 +1,7 @@
 import json
 import os
 import numpy as np
-import requests
+import httpx
 import wandb
 import logging
 from sentence_transformers import SentenceTransformer
@@ -93,10 +93,10 @@ def ragas_performance_comparison():
             # Generation
             answer = "Erreur"
             try:
-                resp = requests.post(f"{brain_url}/generate", json={
+                resp = httpx.post(f"{brain_url}/generate", json={
                     "prompt": f"Context: {contexts}\n\nQuestion: {q}",
                     "system_prompt": "Expert Anime/Manga précis."
-                }, timeout=40)
+                }, timeout=40, follow_redirects=True)
                 if resp.status_code == 200:
                     answer = resp.json().get("text", "Erreur")
                 else:

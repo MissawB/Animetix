@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock
-from backend.adapters.inference.diffusers_adapter import DiffusersAdapter
+from adapters.inference.diffusers_adapter import DiffusersAdapter
 
 def test_inpaint_text_bubbles_pillow_fallback_when_pipe_none():
     # Instancier DiffusersAdapter sans charger le pipeline neuronal (qui restera à None)

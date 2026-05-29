@@ -26,7 +26,7 @@ def mock_dependencies():
     }):
         yield
 
-from backend.adapters.inference.audio_transformers_adapter import AudioTransformersAdapter
+from adapters.inference.audio_transformers_adapter import AudioTransformersAdapter
 from core.domain.exceptions import InferenceError
 
 class TestS2SInference:

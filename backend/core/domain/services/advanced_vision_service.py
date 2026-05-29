@@ -1,5 +1,5 @@
 import os
-import requests
+import httpx
 import logging
 import numpy as np
 from typing import List, Dict, Optional, Any

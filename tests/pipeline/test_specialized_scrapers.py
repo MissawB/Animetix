@@ -15,7 +15,7 @@ def mock_django_media_item():
 @patch('src.pipeline.specialized_scrapers.gemini_client')
 @patch('requests.get')
 def test_scraper_a_casting(mock_get, mock_gemini):
-    from backend.pipeline.specialized_scrapers import ScraperA_Casting
+    from pipeline.specialized_scrapers import ScraperA_Casting
     
     # Mocking Jikan characters API response
     mock_response = MagicMock()
@@ -43,7 +43,7 @@ def test_scraper_a_casting(mock_get, mock_gemini):
 
 @patch('requests.get')
 def test_scraper_b_music(mock_get):
-    from backend.pipeline.specialized_scrapers import ScraperB_Music
+    from pipeline.specialized_scrapers import ScraperB_Music
     
     # Mocking Jikan full details theme response
     mock_response = MagicMock()
@@ -70,7 +70,7 @@ def test_scraper_b_music(mock_get):
 
 @patch('src.pipeline.specialized_scrapers.gemini_client')
 def test_scraper_c_reviews(mock_gemini):
-    from backend.pipeline.specialized_scrapers import ScraperC_Reviews
+    from pipeline.specialized_scrapers import ScraperC_Reviews
     
     # Mocking Gemini response with valid JSON
     mock_model_response = MagicMock()
@@ -96,7 +96,7 @@ def test_scraper_c_reviews(mock_gemini):
 @patch('src.pipeline.specialized_scrapers.ScraperC_Reviews.synthesize_french_reviews')
 @patch('src.pipeline.specialized_scrapers.update_json_metadata_field')
 def test_run_tripartite_enrichment_flow(mock_update_json, mock_synthesize, mock_get_music, mock_scrape_casting, mock_media_item, mock_django_media_item):
-    from backend.pipeline.specialized_scrapers import run_tripartite_enrichment
+    from pipeline.specialized_scrapers import run_tripartite_enrichment
     
     # Mocking Django QuerySet
     mock_media_item.objects.filter.return_value.order_by.return_value = [mock_django_media_item]

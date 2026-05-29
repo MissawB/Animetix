@@ -11,7 +11,7 @@ mock_imageio = MagicMock()
 sys.modules["imageio"] = mock_imageio
 
 
-from backend.adapters.inference.vision_transformers_adapter import VisionTransformersAdapter
+from adapters.inference.vision_transformers_adapter import VisionTransformersAdapter
 from core.domain.services.rag.video_rag_service import VideoRAGService
 
 @pytest.fixture

@@ -1,6 +1,6 @@
 import json
 import logging
-import requests
+import httpx
 from typing import Dict, Any, Optional
 from core.domain.services.llm_service import LLMService
 from core.domain.services.prompt_manager import PromptManager
@@ -86,7 +86,7 @@ class LibrarianAgent:
         try:
             # Recherche d'anime par défaut. On pourrait étendre à d'autres types (manga, character).
             url = f"https://api.jikan.moe/v4/anime?q={query}&limit=3"
-            response = requests.get(url, timeout=15) # Timeout un peu plus long pour Jikan (parfois lent)
+            response = httpx.get(url, timeout=15, follow_redirects=True) # Timeout un peu plus long pour Jikan (parfois lent)
             response.raise_for_status()
             
             data = response.json()

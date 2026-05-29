@@ -13,7 +13,7 @@ Gestion de l'infrastructure globale de production/staging incluant PostgreSQL, N
 
 | Commande | Répertoire | Description |
 | :--- | :--- | :--- |
-| `python scripts/pre_flight_check.py` | Racine | **(CRITIQUE)** Lance la vérification de production (Variables d'environnement, connexions DB, extensions pgvector). À exécuter impérativement avant tout déploiement. |
+| `python scripts/pre_flight_check.py` | Racine | **(CRITIQUE)** Lance la vérification de production (Variables d'environnement, connexions DB). À exécuter impérativement avant tout déploiement. |
 | `docker-compose -f deploy/docker-compose.yml up -d --build` | Racine | Démarre toute l'infrastructure (DBs, Cache, Workers) en arrière-plan avec reconstruction des images. |
 | `docker-compose -f deploy/docker-compose.yml stop` | Racine | Arrête proprement tous les conteneurs Docker sans détruire les volumes persistants. |
 | `docker-compose -f deploy/docker-compose.yml down` | Racine | Arrête et supprime les conteneurs et les réseaux Docker associés. |
@@ -93,7 +93,7 @@ Entraînement des modèles, distillation SLM, auto-amélioration des agents (RLH
 ### Benchmarks de Performance & Latence
 | Commande | Répertoire | Description |
 | :--- | :--- | :--- |
-| `python scripts/benchmark_latency.py` | Racine | Évalue la latence de traitement des différents adaptateurs d'inférence (vLLM, GGUF local, API distante). |
+| `python scripts/benchmark_latency.py` | Racine | Évalue la latence de traitement des adaptateurs d'inférence (Ollama local, BrainAPI Cloud). |
 | `python scripts/benchmark_quality_v2.py` | Racine | Benchmark de qualité comparative sur les tâches de génération structurée et de recherche. |
 | `python backend/scripts/benchmark_long_context.py` | Racine | Mesure la performance et l'intégrité de la RAG sur des contextes extrêmement larges (aiguille dans une botte de foin). |
 | `python backend/scripts/benchmark_multi_lora.py` | Racine | Mesure la surcharge et la latence lors de l'activation dynamique de multiples adaptateurs LoRA en simultané. |
@@ -130,6 +130,6 @@ Scripts utilitaires pour assurer l'intégrité des données, la cohérence des e
 | `python scripts/generate_offline_db.py` | Racine | Génère et exporte une base de données SQLite statique allégée pour le fonctionnement offline du client. |
 | `python scripts/detect_embedding_drift.py` | Racine | Détecte d'éventuelles dérives de représentation vectorielle suite à des mises à jour de modèles d'embeddings. |
 | `python scripts/verify_brain_adapter.py` | Racine | Effectue un test de fumée (Smoke Test) sur l'adaptateur principal de l'API LLM (Brain API / FallbackInference). |
-| `python scripts/rag_smoke_test.py` | Racine | Lance un test de fumée sur l'API de recherche RAG pour s'assurer du bon fonctionnement de la chaîne PgVector -> Rerank. |
+| `python scripts/rag_smoke_test.py` | Racine | Lance un test de fumée sur l'API de recherche RAG pour s'assurer du bon fonctionnement de la chaîne ChromaDB -> Rerank. |
 | `python scripts/vision_quest_worker.py` | Racine | Démarre le worker autonome dédié au traitement asynchrone des tâches multimodales de Vision Quest. |
 | `cd backend/api; celery -A animetix_project worker --loglevel=info` | Racine | Démarre les workers Celery pour la gestion asynchrone en arrière-plan (nettoyage de sessions, calculs de fond). |

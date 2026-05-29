@@ -5,20 +5,16 @@ Avoids hard-coded magic numbers scattered across adapter implementations.
 
 # --- Depth Estimation & 3D Scene Generation ---
 DEFAULT_FOCAL_LENGTH = 150.0
-GGUF_FOCAL_LENGTH = 200.0
 
 DEFAULT_DEPTH_RESIZE = (128, 128)
-GGUF_DEPTH_RESIZE = (256, 256)
 
 DEFAULT_DEPTH_THRESHOLD = 0.1
-GGUF_DEPTH_THRESHOLD = 0.05
 
 # --- Video Processing ---
 DEFAULT_MAX_FRAMES = 8
 DEFAULT_VIDEO_FPS_FALLBACK = 24
 
-# --- GGUF Adapter ---
-DEFAULT_N_CTX = 4096
+# --- Local Inference ---
 DEFAULT_MAX_TOKENS = 512
 
 # --- Image Processing ---

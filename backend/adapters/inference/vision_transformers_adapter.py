@@ -1,6 +1,6 @@
 """Vision Transformers adapter – composes focused mixins for each capability."""
 import logging
-import aiohttp
+import httpx
 from typing import Optional, List, Dict, Any
 from core.ports.inference_port import InferencePort
 from core.ports.usage_port import UsagePort
@@ -34,12 +34,12 @@ class VisionTransformersAdapter(
     def __init__(self, use_4bit: bool = True, usage_port: Optional[UsagePort] = None):
         super().__init__(usage_port=usage_port)
         self.use_4bit = use_4bit
-        self._http_session: Optional[aiohttp.ClientSession] = None
+        self._http_client: Optional[httpx.AsyncClient] = None
 
-    async def _get_session(self) -> aiohttp.ClientSession:
-        if self._http_session is None or self._http_session.closed:
-            self._http_session = aiohttp.ClientSession()
-        return self._http_session
+    async def _get_session(self) -> httpx.AsyncClient:
+        if self._http_client is None or self._http_client.is_closed:
+            self._http_client = httpx.AsyncClient()
+        return self._http_client
 
     def detect_objects(self, image_data: bytes, candidate_queries: List[str], model_id: Optional[str] = None) -> List[Dict]:
         try:

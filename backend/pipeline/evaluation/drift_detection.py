@@ -1,4 +1,4 @@
-import requests
+import httpx
 import json
 import os
 import logging
@@ -19,7 +19,7 @@ def run_drift_detection(limit=20):
     
     # 1. Récupérer les top animes de la saison via Jikan API
     try:
-        res = requests.get("https://api.jikan.moe/v4/seasons/now", timeout=10)
+        res = httpx.get("https://api.jikan.moe/v4/seasons/now", timeout=10, follow_redirects=True)
         seasonal_animes = res.json().get('data', [])[:limit]
     except Exception as e:
         logger.error(f"❌ Failed to fetch seasonal data: {e}")

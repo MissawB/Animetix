@@ -10,7 +10,7 @@ import argparse
 import time
 import json
 import logging
-import requests
+import httpx
 from dotenv import load_dotenv
 
 # Détection de la racine et configuration des chemins
@@ -51,7 +51,7 @@ def fetch_jikan_details(mal_id: str, media_type: str = 'anime') -> dict:
     url = f"https://api.jikan.moe/v4/{type_path}/{mal_id}/full"
     
     try:
-        response = requests.get(url, timeout=15)
+        response = httpx.get(url, timeout=15, follow_redirects=True)
         if response.status_code == 200:
             return response.json().get('data', {})
         elif response.status_code == 429:

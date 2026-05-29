@@ -1,4 +1,4 @@
-import requests
+import httpx
 import json
 import time
 import os
@@ -20,7 +20,7 @@ CHAR_OUTPUT = os.path.join(BASE_DIR, 'data', 'raw', 'jikan_char_enrichment.json'
 def fetch_jikan_details(mal_id, media_type='anime'):
     url = f"https://api.jikan.moe/v4/{media_type}/{mal_id}/full"
     try:
-        response = requests.get(url, timeout=15)
+        response = httpx.get(url, timeout=15, follow_redirects=True)
         if response.status_code == 200:
             return response.json().get('data', {})
         elif response.status_code == 429:
@@ -36,7 +36,7 @@ def fetch_jikan_details(mal_id, media_type='anime'):
 def fetch_jikan_recommendations(mal_id, media_type='anime'):
     url = f"https://api.jikan.moe/v4/{media_type}/{mal_id}/recommendations"
     try:
-        response = requests.get(url, timeout=15)
+        response = httpx.get(url, timeout=15, follow_redirects=True)
         if response.status_code == 200:
             return response.json().get('data', [])
         elif response.status_code == 429:
