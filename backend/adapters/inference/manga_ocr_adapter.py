@@ -46,10 +46,4 @@ class MangaOCRAdapter(InferencePort):
             logger.error(f"Manga OCR processing failed: {e}")
             raise InferenceError(f"Manga OCR processing failed: {e}")
 
-    def generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False) -> str:
-        raise InferenceNotImplementedError("MangaOCRAdapter only supports OCR.")
-
-    def stream_generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False):
-        raise InferenceNotImplementedError("MangaOCRAdapter only supports OCR.")
-
     def health_check(self) -> dict: return {"status": "online" if self.ocr_pipeline else "offline", "engine": "LightonOCR"}

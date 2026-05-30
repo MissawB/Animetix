@@ -260,3 +260,27 @@ def test_fatezero_video_logic(diffusers_adapter):
         
         assert res.startswith("data:video/mp4;base64,")
 
+def test_video_temporal_embeddings_includes_vectors(vision_adapter):
+    from unittest.mock import patch, MagicMock
+    import numpy as np
+    
+    with patch.object(vision_adapter, '_load_video_vlm'), \
+         patch.object(vision_adapter, '_sample_video_frames') as mock_sample:
+        
+        mock_sample.return_value = ["frame1", "frame2"]
+        vision_adapter._video_processor = MagicMock()
+        vision_adapter._video_vlm = MagicMock()
+        vision_adapter._video_vlm.device = "cpu"
+        vision_adapter._video_processor.batch_decode.return_value = ["A scene with combat"]
+        
+        # Mock CLIP for embedding
+        with patch.object(vision_adapter, '_clip_model', create=True) as mock_clip:
+            mock_clip.encode.return_value = np.array([0.1, 0.2, 0.3])
+            
+            res = vision_adapter.get_video_temporal_embeddings(b"fake_video")
+            
+            assert len(res) == 1
+            assert "summary" in res[0]
+            assert "embedding" in res[0]
+            assert len(res[0]["embedding"]) == 3
+

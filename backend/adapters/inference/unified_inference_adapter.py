@@ -322,42 +322,6 @@ class UnifiedInferenceAdapter(InferencePort):
             logger.warning(f"Object detection failed in unified adapter: {e}")
         return []
 
-    def get_video_temporal_embeddings(self, video_data: bytes) -> List[Dict[str, Any]]:
-        raise InferenceNotImplementedError()
-
-    def localize_video_actions(self, video_data: bytes, action_queries: List[str]) -> List[Dict[str, Any]]:
-        raise InferenceNotImplementedError()
-
-    def transform_image_to_anime(self, image_data: bytes, studio_style: str, prompt: str = "") -> str:
-        raise InferenceNotImplementedError()
-
-    def transform_video_to_anime(self, video_data: bytes, studio_style: str, prompt: str = "") -> str:
-        raise InferenceNotImplementedError()
-
-    def generate_soundscape(self, video_metadata: Dict[str, Any], prompt: Optional[str] = None) -> str:
-        raise InferenceNotImplementedError()
-
-    def clone_voice(self, text: str, reference_audio: bytes, language: str = "fr") -> bytes:
-        raise InferenceNotImplementedError()
-
-    def speech_to_speech(self, audio_input: bytes, system_prompt: str = "") -> bytes:
-        raise InferenceNotImplementedError()
-
-    def estimate_depth(self, image_data: bytes) -> bytes:
-        raise InferenceNotImplementedError()
-
-    def generate_3d_scene(self, image_data: bytes, depth_map: bytes) -> Dict[str, Any]:
-        raise InferenceNotImplementedError()
-
-    def process_manga_page(self, image_data: bytes) -> Dict[str, Any]:
-        raise InferenceNotImplementedError()
-
-    def translate_manga_page(self, image_data: bytes, target_lang: str = "Français") -> Dict[str, Any]:
-        raise InferenceNotImplementedError()
-
-    def inpaint_text_bubbles(self, image_data: bytes, text_placements: List[Dict]) -> str:
-        raise InferenceNotImplementedError()
-
     def generate_image_description(self, image_data: bytes, prompt: str = "Décris cette image d'anime de manière très détaillée.") -> str:
         """Utilise un VLM si le endpoint d'inférence supporte les requêtes multimodales."""
         try:
@@ -386,70 +350,115 @@ class UnifiedInferenceAdapter(InferencePort):
             raise InferenceError(f"Multimodal description failed: {e}")
 
     def get_diagnostics(self, prompt: str, completion: str) -> Dict[str, Any]:
-        """Récupère les données d'activation internes (Logit Lens, Attention) pour l'interprétabilité."""
-        import math
+        """Récupère les données d'activation internes réelles (Logit Lens, Attention) via un modèle d'évaluation."""
         try:
-            words = completion.split()
-            num_tokens = len(words)
+            from transformers import AutoModelForCausalLM, AutoTokenizer
+            import torch
             
-            # Génère des coefficients d'attention simulés de manière déterministe basés sur le texte
-            attention_map = []
-            for i in range(min(num_tokens, 10)):
-                row = []
-                for j in range(min(num_tokens, 10)):
-                    weight = (hash(words[i] + words[j]) % 100) / 100.0
-                    row.append(weight)
-                row_sum = sum(row) or 1.0
-                attention_map.append([round(w / row_sum, 4) for w in row])
+            model_id = "gpt2"
+            tokenizer = AutoTokenizer.from_pretrained(model_id)
+            model = AutoModelForCausalLM.from_pretrained(model_id, output_attentions=True, output_hidden_states=True)
+            model.eval()
+
+            text = completion if len(completion.strip()) > 0 else " "
+            inputs = tokenizer(text, return_tensors="pt")
+            
+            with torch.no_grad():
+                outputs = model(**inputs)
+            
+            # 1. Attention Map
+            # outputs.attentions is a tuple of (batch, num_heads, seq_len, seq_len)
+            # We take the last layer, mean across all heads
+            if outputs.attentions:
+                last_layer_attention = outputs.attentions[-1][0].mean(dim=0) # (seq_len, seq_len)
+                # Take up to 10 tokens to avoid massive JSON
+                seq_len = min(last_layer_attention.size(0), 10)
+                attention_map = last_layer_attention[:seq_len, :seq_len].tolist()
                 
-            layers = ["Layer_0 (Embeddings)", "Layer_8 (Attention)", "Layer_16 (MLP)", "Layer_24 (Output)"]
+                # Format to 4 decimals
+                attention_map = [[round(val, 4) for val in row] for row in attention_map]
+            else:
+                attention_map = []
+
+            # 2. Logit Lens
+            # outputs.hidden_states is a tuple of (batch, seq_len, hidden_size)
+            # We project each hidden state to vocabulary using model.lm_head
             logit_projections = []
-            for layer in layers:
-                layer_confidence = 0.1 + 0.2 * layers.index(layer) + (hash(layer + completion) % 30) / 100.0
-                logit_projections.append({
-                    "layer": layer,
-                    "top_token": words[-1] if words else "unknown",
-                    "confidence": round(min(0.99, layer_confidence), 4)
-                })
+            if outputs.hidden_states:
+                # Select a few representative layers
+                total_layers = len(outputs.hidden_states)
+                layers_to_check = [0, total_layers // 2, total_layers - 1]
+                layer_names = ["Embeddings", "Middle_Layer", "Output_Layer"]
                 
+                for idx, layer_idx in enumerate(layers_to_check):
+                    hidden_state = outputs.hidden_states[layer_idx][0, -1, :] # Last token
+                    # Project to vocab
+                    if hasattr(model, 'lm_head'):
+                        logits = model.lm_head(hidden_state)
+                    else:
+                        # Fallback for models without direct lm_head
+                        logits = torch.nn.functional.linear(hidden_state, model.get_input_embeddings().weight)
+                        
+                    probs = torch.nn.functional.softmax(logits, dim=-1)
+                    
+                    top_prob, top_token_id = torch.max(probs, dim=-1)
+                    top_token = tokenizer.decode([top_token_id.item()])
+                    
+                    logit_projections.append({
+                        "layer": f"Layer_{layer_idx} ({layer_names[idx]})",
+                        "top_token": top_token.strip() or "[SPACE]",
+                        "confidence": round(top_prob.item(), 4)
+                    })
+
             return {
                 "attention_map": attention_map,
                 "logit_lens": logit_projections,
-                "runtime_ms": 15.4,
-                "model_signature": f"unified:{self.model_name}:observability"
+                "runtime_ms": 0.0,
+                "model_signature": f"evaluation_model:{model_id}:observability"
             }
         except Exception as e:
-            logger.error(f"Error in get_diagnostics: {e}")
+            logger.error(f"Error in real get_diagnostics: {e}")
             raise InferenceError(f"Failed to get diagnostics: {e}")
 
     def calculate_uncertainty(self, prompt: str, completion: str) -> Dict[str, float]:
-        """Calcule la certitude mathématique (entropie, perplexité) d'une génération."""
-        import math
+        """Calcule la certitude mathématique réelle (entropie, perplexité) d'une génération via un modèle local."""
         try:
-            words = completion.split()
-            if not words:
-                return {"entropy": 0.0, "perplexity": 1.0, "confidence": 1.0}
+            from transformers import AutoModelForCausalLM, AutoTokenizer
+            import torch
             
-            word_counts = {}
-            for w in words:
-                word_counts[w] = word_counts.get(w, 0) + 1
+            # Utilisation de GPT-2 pour évaluer l'incertitude si le LLM distant ne donne pas les logprobs
+            model_id = "gpt2"
+            tokenizer = AutoTokenizer.from_pretrained(model_id)
+            model = AutoModelForCausalLM.from_pretrained(model_id)
+            model.eval()
+
+            text = prompt + "\n" + completion
+            inputs = tokenizer(text, return_tensors="pt")
             
-            entropy = 0.0
-            total_words = len(words)
-            for w, count in word_counts.items():
-                p = count / total_words
-                entropy -= p * math.log2(p)
+            with torch.no_grad():
+                outputs = model(**inputs, labels=inputs["input_ids"])
+                loss = outputs.loss
+                logits = outputs.logits
             
-            perplexity = math.pow(2, entropy)
-            confidence = max(0.0, min(1.0, 1.0 - (entropy / 10.0)))
+            # Perplexity is exp(loss)
+            perplexity = torch.exp(loss).item()
             
+            # Entropy calculation over the vocabulary for the generated tokens
+            probs = torch.nn.functional.softmax(logits, dim=-1)
+            log_probs = torch.nn.functional.log_softmax(logits, dim=-1)
+            entropy = -(probs * log_probs).sum(dim=-1).mean().item()
+            
+            # Confidence is inversely proportional to normalized entropy
+            # max entropy for GPT-2 vocab (50257) is ln(50257) ~= 10.8
+            confidence = max(0.0, min(1.0, 1.0 - (entropy / 10.8)))
+
             return {
                 "entropy": round(entropy, 4),
                 "perplexity": round(perplexity, 4),
                 "confidence": round(confidence, 4)
             }
         except Exception as e:
-            logger.error(f"Error calculating uncertainty: {e}")
+            logger.error(f"Error calculating real uncertainty: {e}")
             raise InferenceError(f"Failed to calculate uncertainty: {e}")
 
     def health_check(self) -> dict:

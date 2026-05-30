@@ -11,20 +11,17 @@ class DjangoSemanticCacheAdapter(SemanticCachePort):
         return exact.response_text if exact else None
 
     def get_semantic(self, query_embedding: List[float], threshold: float) -> Optional[str]:
-        from animetix.models import SemanticCache
-        from django.db.models import F
-        match = SemanticCache.objects.annotate(
-            sim=1 - F('query_embedding').cosine_distance(query_embedding)
-        ).filter(sim__gte=threshold).order_by('-sim').first()
-        
-        return match.response_text if match else None
+        """
+        Désactivé car pgvector a été supprimé.
+        ChromaDB devrait être utilisé pour le cache sémantique si nécessaire.
+        """
+        return None
 
     def set(self, query: str, query_embedding: List[float], response: str) -> None:
         from animetix.models import SemanticCache
         SemanticCache.objects.update_or_create(
             query_text=query,
             defaults={
-                'query_embedding': query_embedding,
                 'response_text': response
             }
         )

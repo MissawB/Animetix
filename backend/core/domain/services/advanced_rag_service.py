@@ -61,7 +61,7 @@ class AdvancedRAGService:
         # 1. Recherche lexicale brute (TF-IDF/BM25)
         lexical_results = idx.search(query, limit=limit * 2)
         
-        # 2. Recherche sémantique brute (PgVector)
+        # 2. Recherche sémantique brute (ChromaDB)
         semantic_results = []
         try:
             semantic_results = self.repository.search_media_items(query, media_type, limit=limit * 2)

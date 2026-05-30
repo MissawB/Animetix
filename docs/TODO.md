@@ -1,16 +1,16 @@
 # Liste des Tâches (TODO) - Animetix
 
-Ce document centralise toutes les tâches techniques, d'architecture et de fonctionnalités qui restent à implémenter. Les tâches complétées sont cochées ou purgées pour être archivées dans `HISTORY.md` et dans la section des succès.
+Ce document centralise toutes les tâches techniques, d'architecture et de fonctionnalités qui restent à implémenter. Les tâches complétées sont cochées ou purgées pour être archivées dans `HISTORY.md`.
 
-## 🛠️ Dette Technique & Architecture
+## 🛠️ Dette Technique & Architecture (Inférence)
 
-- [x] **Diagnostics & Incertitude** : Implémenter `get_diagnostics` et `calculate_uncertainty` dans `InferencePort` et ses adaptateurs pour permettre une observabilité et un calcul d'incertitude mathématique (entropie, perplexité, logit lens) réels.
-- [ ] **Bulle de Simulation des Modèles Cognitifs** : Interconnecter le `SynapticPlasticitySimulator` et le `QuantumCognitivePreferenceModel` au pipeline de RAG réel pour influencer dynamiquement les scores de pertinence en fonction des sessions de l'utilisateur.
-- [ ] **Génération 3D & Indexation Temporelle** : Implémenter de véritables adaptateurs locaux/cloud pour `generate_3d_scene` (Gaussian Splatting/NeRF) et `get_video_temporal_embeddings` (Video-RAG) à la place des stubs actuels.
+- [ ] **Diagnostics & Incertitude Avancés** : Migrer les calculs d'incertitude (entropie, perplexité) basés sur le texte vers une exploitation réelle des `logprobs` si exposés par les adaptateurs (BrainAPI/Ollama).
+- [ ] **Nettoyage des Bouchons (UnifiedInferenceAdapter)** : Finaliser le remplacement de toutes les méthodes levant encore `InferenceNotImplementedError` par de véritables délégations vers les mixins de vision ou d'audio.
+- [ ] **Modération de contenu (Guardrails)** : Étendre la modération sémantique native à tous les adaptateurs de texte pour garantir une sécurité homogène sur tout le cluster.
 
-## 🧬 Fonctionnalités Créatives
+## 🧬 Fonctionnalités SOTA & Innovations
 
-- [x] **Génération Structurée** : Remplacer l'heuristique de regex de parsing JSON par une validation de schéma native via `Instructor` avec Pydantic dans `UnifiedInferenceAdapter` et `FallbackInferenceAdapter` pour Ollama/OpenAI.
-- [x] **Modération de contenu sémantique** : Refactoriser `LocalGuardrailAdapter` pour remplacer la liste statique de mots-clés (`bad_words`) par une évaluation sémantique neuronale locale ou un appel structuré.
-- [ ] **Pipeline Manga, Visual Rerank & ColPali** : Compléter et stabiliser les intégrations locales de `process_manga_page`, `translate_manga_page`, `visual_rerank` et `get_multimodal_late_interaction` (ColPali).
+- [x] **Simulations Cognitives** : Interconnecter le `SynapticPlasticitySimulator` (Heure de Hebb/STDP) et le `QuantumCognitivePreferenceModel` au pipeline de RAG réel. L'historique conceptuel de l'utilisateur doit influencer dynamiquement les scores de pertinence du reranker. (FAIT, modèles interconnectés via AdvancedRAGService et mis à jour par RAGWorkflowManager).
+- [ ] **Génération 3D & Dioramas** : Remplacer les stubs par une intégration réelle de **Gaussian Splatting** ou de reconstruction volumétrique pour transformer des images d'anime en scènes 3D immersives.
+- [ ] **Vidéo-RAG (Embeddings Temporels)** : Implémenter l'extraction d'embeddings temporels via Qwen2-VL pour permettre une recherche sémantique précise à l'intérieur de clips vidéo.
 

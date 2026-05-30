@@ -26,21 +26,23 @@ class MoondreamAdapter(InferencePort):
             logger.error(f"Failed to load Moondream model {self.model_id}: {e}")
             raise InferenceError(f"Failed to load Moondream model: {e}")
 
-    def generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False) -> str:
-        raise InferenceNotImplementedError("MoondreamAdapter only supports visual tasks.")
-
-    def stream_generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False):
-        raise InferenceNotImplementedError("MoondreamAdapter only supports visual tasks.")
-
-    def generate_image_description(self, image_data: bytes, prompt: str = "Describe this image.") -> str:
+    def generate_image_description(self, image_data: bytes, prompt: str = "Décris cette image d'anime de manière très détaillée.") -> str:
         self._load_model()
-        if not self.model: 
-            raise InferenceError("Moondream model not loaded.")
+        if not self.model or not self.tokenizer:
+            raise InferenceError("Moondream model or tokenizer not loaded.")
 
-        # Real VLM logic would go here
-        # For now, if we don't have the weights/logic, we should raise NotImplemented or provide a real implementation
-        # The audit said it was a stub.
-        raise InferenceNotImplementedError("Moondream visual description logic not fully implemented.")
+        import io
+        from PIL import Image
+
+        try:
+            image = Image.open(io.BytesIO(image_data)).convert("RGB")
+            enc_image = self.model.encode_image(image)
+            description = self.model.answer_question(enc_image, prompt, self.tokenizer)
+            self._log_usage(engine="local:moondream", units=1)
+            return description
+        except Exception as e:
+            logger.error(f"Moondream visual description failed: {e}")
+            raise InferenceError(f"Moondream visual description failed: {e}")
 
     def health_check(self) -> dict:
         return {"status": "online" if self.model else "offline", "engine": "Moondream-VLM"}

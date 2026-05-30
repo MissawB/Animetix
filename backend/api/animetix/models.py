@@ -6,11 +6,6 @@ import datetime
 
 from django.conf import settings
 
-try:
-    from pgvector.django import VectorField
-except ImportError:
-    VectorField = None
-
 # --- 🎭 RELATIONAL CATALOG ---
 class MediaItem(models.Model):
     MEDIA_TYPES = [('Anime', 'Anime'), ('Manga', 'Manga'), ('Character', 'Character'), ('Game', 'Video Game'), ('Actor', 'Actor/Actress'), ('Movie', 'Movie')]
@@ -28,15 +23,6 @@ class MediaItem(models.Model):
     rating = models.FloatField(null=True, blank=True)
     popularity = models.FloatField(default=0.0)
     
-    if VectorField:
-        thematic_embedding = VectorField(dimensions=1024, null=True, blank=True)
-        plot_embedding = VectorField(dimensions=1024, null=True, blank=True)
-        visual_embedding = VectorField(dimensions=512, null=True, blank=True)
-    else:
-        thematic_embedding = models.JSONField(null=True, blank=True)
-        plot_embedding = models.JSONField(null=True, blank=True)
-        visual_embedding = models.JSONField(null=True, blank=True)
-        
     metadata = models.JSONField(default=dict)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -173,10 +159,6 @@ class SemanticCache(models.Model):
     """Cache sémantique pour les réponses LLM."""
     query_text = models.TextField(unique=True)
     response_text = models.TextField()
-    if VectorField:
-        query_embedding = VectorField(dimensions=768, null=True, blank=True) # paraphrase-multilingual-mpnet-base-v2
-    else:
-        query_embedding = models.JSONField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     def __str__(self): return self.query_text[:50]
 

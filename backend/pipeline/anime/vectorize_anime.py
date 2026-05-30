@@ -83,8 +83,7 @@ def run_vectorization(chroma_res=None, neo4j_res=None):
         for idx, item in enumerate(batch):
             ext_id = str(item['id'])
             
-            # Upsert Postgres avec support Matryoshka
-            # On stocke le vecteur complet (1024), pgvector s'occupera du slicing au query time
+            # Upsert ChromaDB
             repo.upsert_items('anime_thematic', [ext_id], [t_embeddings[idx].tolist()], [item])
             if v_embeddings[idx]:
                 repo.upsert_items('character_visual_vibe', [ext_id], [v_embeddings[idx]], [item])
