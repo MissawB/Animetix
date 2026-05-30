@@ -1,18 +1,35 @@
 import os
 import json
 import argparse
+import sys
+from pathlib import Path
+
+# Setup environment for Django-related imports
+base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+project_root = os.path.dirname(base_dir)
+
+sys.path.insert(0, project_root)
+sys.path.insert(0, base_dir)
+sys.path.insert(0, os.path.join(base_dir, "api"))
+sys.path.insert(0, os.path.join(base_dir, "pipeline"))
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'animetix_project.settings')
+
+import django
+django.setup()
+
 from animetix.containers import get_container
 from core.domain.services.ragas_eval_service import RagasEvalService
+from datetime import datetime
 
 def run_mlops_eval():
     """
     Lance une évaluation automatique de la qualité de l'IA sur un échantillon de requêtes.
     Retourne un dictionnaire de stats pour le pipeline MLOps.
     """
-    print("🧪 Starting Automated RAG Evaluation (RAGAS)...")
+    print("Starting Automated RAG Evaluation...")
     
     container = get_container()
-    judge = container.inference_engine()
+    judge = container.inference.inference_engine()
     eval_service = RagasEvalService(judge_engine=judge)
     
     # Échantillon de test (Golden Dataset simplifié)
@@ -24,10 +41,10 @@ def run_mlops_eval():
     all_scores = []
     
     for item in test_queries:
-        print(f"🧐 Evaluating query: '{item['q']}'")
+        print(f"Evaluating query: '{item['q']}'")
         
         # 1. Génération de la réponse
-        response = animetix.agentic_rag.plan_and_solve(item['q'], item['type'])
+        response = container.agentic.agentic_rag().plan_and_solve(item['q'], item['type'])
         
         # 2. Évaluation
         scores = eval_service.evaluate_response(item['q'], item['ctx'], response)
@@ -43,11 +60,11 @@ def run_mlops_eval():
         "timestamp": str(datetime.now())
     }
 
-    print("\n" + "═"*30)
-    print(f"📊 MLOPS REPORT")
-    print(f"✅ Avg Faithfulness: {avg_faith:.2f}")
-    print(f"🎯 Avg Relevancy: {avg_relevancy:.2f}")
-    print("═"*30)
+    print("\n" + "="*30)
+    print(f"MLOPS REPORT")
+    print(f"Avg Faithfulness: {avg_faith:.2f}")
+    print(f"Avg Relevancy: {avg_relevancy:.2f}")
+    print("="*30)
     
     return report
 

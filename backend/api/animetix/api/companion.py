@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import permissions, status
 from dependency_injector.wiring import inject, Provide
 from core.domain.services.companion_service import CompanionService
+from core.domain.services.guardrail_service import GuardrailService
 from core.ports.usage_port import UsagePort
 from ..containers import Container
 
@@ -16,10 +17,12 @@ class CompanionInteractView(APIView):
     @inject
     def __init__(self, 
                  companion_service: CompanionService = Provide[Container.core.companion_service],
+                 guardrail_service: GuardrailService = Provide[Container.core.guardrail_service],
                  usage_port: UsagePort = Provide[Container.infrastructure.usage_port],
                  **kwargs):
         super().__init__(**kwargs)
         self.companion_service = companion_service
+        self.guardrail_service = guardrail_service
         self.usage_port = usage_port
 
     def post(self, request):
@@ -30,6 +33,14 @@ class CompanionInteractView(APIView):
         if not mentor_id or not user_message:
             return Response(
                 {"error": "mentor_id and user_message are required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # 1. Input Guardrail (Anti-Jailbreak, Moderation)
+        guard_input = self.guardrail_service.validate_input(user_message)
+        if not guard_input.get("is_safe", True):
+            return Response(
+                {"error": guard_input.get("reason", "Inappropriate content detected.")},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -53,6 +64,22 @@ class CompanionInteractView(APIView):
                 history=history
             )
 
+            # 2. Output Guardrail (Fact-checking, Hallucination)
+            guard_output = self.guardrail_service.validate_output(
+                response_text, 
+                context=context_url,
+                query=user_message
+            )
+            
+            if not guard_output.get("is_safe", True):
+                if guard_output.get("action") == "mask":
+                    response_text = guard_output.get("warning", response_text)
+                else:
+                    return Response(
+                        {"error": guard_output.get("reason", "Output blocked by security filters.")},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
             # Update history
             history.append({"role": "user", "content": user_message})
             history.append({"role": "assistant", "content": response_text})
@@ -62,6 +89,16 @@ class CompanionInteractView(APIView):
                 history = history[-5:]
             
             request.session['companion_history'] = history
+
+            # Log Usage (Estimating tokens or using units)
+            # In a real 2026 scenario, the service would return token counts.
+            # Here we log generic units for simplicity.
+            self.usage_port.log_usage(
+                engine=mentor_id, 
+                input_tokens=len(user_message) // 4, 
+                output_tokens=len(response_text) // 4, 
+                user_id=request.user.id
+            )
             
             return Response({
                 "response": response_text,

@@ -5,36 +5,23 @@ import httpx
 import wandb
 import logging
 from typing import List, Dict
-from datasets import Dataset
-from ragas import evaluate, RunConfig
-from ragas.metrics import Faithfulness, AnswerRelevancy
-from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
-from ragas.embeddings import LangchainEmbeddingsWrapper
+# --- DJANGO SETUP FOR MLOPS CONTAINERS ---
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
+
+import django
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'animetix_project.settings')
+django.setup()
+
+from animetix.containers import get_container
+from core.domain.services.ragas_eval_service import RagasEvalService, EvaluationResult
+
 from dotenv import load_dotenv
-
-# Logger
-logger = logging.getLogger("animetix." + __name__)
-
 load_dotenv()
-
-# Initialize W&B
-wandb.login(key=os.getenv("WANDB_API_KEY"))
-
-# Configuration for evaluation models
-eval_llm = ChatGoogleGenerativeAI(
-    model="gemini-flash-latest", 
-    google_api_key=os.getenv("GEMINI_API_KEY"),
-    timeout=120,
-    max_retries=3
-)
-eval_embeddings = GoogleGenerativeAIEmbeddings(
-    model="models/gemini-embedding-001",
-    google_api_key=os.getenv("GEMINI_API_KEY")
-)
-ragas_embeddings = LangchainEmbeddingsWrapper(eval_embeddings)
-
-# Limit workers for free tier
-run_config = RunConfig(max_workers=1)
+logger = logging.getLogger("animetix." + __name__)
+if os.getenv("WANDB_API_KEY"):
+    wandb.login(key=os.getenv("WANDB_API_KEY"))
 
 BRAIN_URL = "http://127.0.0.1:7860/generate"
 
@@ -105,15 +92,51 @@ async def evaluate_model(engine_name: str, config: Dict):
         data["ground_truth"].append(gt)
         logger.info(f"✅ Q: {q} | Latency: {latency:.2f}s")
 
-    # Ragas Evaluation
-    dataset = Dataset.from_dict(data)
-    result = evaluate(
-        dataset,
-        metrics=[Faithfulness(), AnswerRelevancy()],
-        llm=eval_llm,
-        embeddings=ragas_embeddings,
-        run_config=run_config
-    )
+    # Setup custom LLM Judge Service
+    eval_service = RagasEvalService(judge_engine=get_container().inference_engine())
+    
+    faith_scores = []
+    relevance_scores = []
+    
+    for i in range(len(data["question"])):
+        q = data["question"][i]
+        a = data["answer"][i]
+        c = "\n".join(data["contexts"][i])
+        gt = data["ground_truth"][i]
+        
+        prompt = f"""
+        Évalue l'interaction RAG ci-dessous en la comparant à la Vérité Terrain (Ground Truth) attendue :
+        
+        Question de l'utilisateur :
+        {q}
+        
+        Contexte de connaissances fourni :
+        {c}
+        
+        Réponse générée par le système :
+        {a}
+        
+        Vérité Terrain attendue (Ground Truth) :
+        {gt}
+        """
+        
+        try:
+            res_obj = eval_service.judge_engine.generate_structured(
+                prompt=prompt,
+                response_model=EvaluationResult,
+                system_prompt="Tu es un juge sémantique d'IA impartial chargé de mesurer la qualité d'une interaction RAG."
+            )
+            faith_scores.append(res_obj.faithfulness)
+            relevance_scores.append(res_obj.answer_relevancy)
+        except Exception as e:
+            logger.error(f"Error judging row in compare_models_wandb: {e}")
+            faith_scores.append(0.0)
+            relevance_scores.append(0.0)
+            
+    result = {
+        "faithfulness": sum(faith_scores) / len(faith_scores) if faith_scores else 0.0,
+        "answer_relevancy": sum(relevance_scores) / len(relevance_scores) if relevance_scores else 0.0
+    }
 
     # Logging results to W&B
     avg_latency = sum(latencies) / len(latencies)

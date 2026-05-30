@@ -349,6 +349,6 @@ if sentry_dsn and not os.environ.get('PYTEST_CURRENT_TEST'):
         before_send=before_send,
         # Capture 100% des erreurs, mais seulement 10% des performances pour économiser le quota gratuit
         traces_sample_rate=0.1,
-        send_default_pii=True, # Utile pour savoir quel utilisateur a eu l'erreur
+        send_default_pii=False, # Sécurité/RGPD : Ne pas envoyer d'infos personnelles identifiables (IP, emails, etc.)
     )
     print("[SUCCESS] Sentry initialized with Django & Celery integrations.")

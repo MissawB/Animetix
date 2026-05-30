@@ -8,19 +8,29 @@ from dependency_injector.wiring import inject, Provide
 from ...containers import Container
 from animetix.api.dependencies import get_session_service
 from ...models import CreativeFusion
+from core.domain.services.guardrail_service import GuardrailService
+from core.ports.usage_port import UsagePort
 
 logger = get_logger("animetix." + __name__)
 
 # --- ARCHETYPIST / CREATIVE FUSION ---
 
 class ArchetypistStartFusionView(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
     
     @inject
-    def post(self, request, catalog_service = Provide[Container.core.catalog_service]):
+    def post(self, request, 
+             catalog_service = Provide[Container.core.catalog_service],
+             guardrail_service: GuardrailService = Provide[Container.core.guardrail_service],
+             usage_port: UsagePort = Provide[Container.infrastructure.usage_port]):
         session_service = get_session_service(request)
         port = session_service.port
         media_type = port.get('media_type', 'Anime')
+
+        # Quota Check
+        tier = getattr(request, 'user_tier', 'free')
+        if not usage_port.check_quota(request.user.id, tier):
+             return Response({"error": "Daily AI quota exceeded."}, status=status.HTTP_403_FORBIDDEN)
         
         title_A = request.data.get('title_A')
         title_B = request.data.get('title_B')
@@ -31,6 +41,15 @@ class ArchetypistStartFusionView(APIView):
         universe_balance = int(request.data.get('universe_balance', 50))
         art_style = request.data.get('art_style', 'Cyberpunk')
         parent_id = request.data.get('parent_id')
+
+        # 1. Guardrail Check on Art Style and Titles
+        check_text = f"Titles: {title_A or ''} x {title_B or ''}. Style: {art_style}"
+        guard_input = guardrail_service.validate_input(check_text)
+        if not guard_input.get("is_safe", True):
+            return Response(
+                {"error": f"Security violation: {guard_input.get('reason')}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
         data = catalog_service.load_data(media_type)
         data_A = catalog_service.load_data(media_A) if media_A != media_type else data
@@ -79,6 +98,9 @@ class ArchetypistStartFusionView(APIView):
             ), 
             generate_fusion_image_task.s(item1, item2, art_style=art_style)
         ).delay()
+
+        # Log Usage (Heavy task trigger)
+        usage_port.log_usage(engine="archetypist-fusion-engine", units=30, user_id=request.user.id)
         
         return Response({
             'fusion_id': fusion.id,

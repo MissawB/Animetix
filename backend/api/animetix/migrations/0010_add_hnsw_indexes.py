@@ -1,34 +1,12 @@
 from django.db import migrations
 
 def create_hnsw_indexes(apps, schema_editor):
-    if schema_editor.connection.vendor != 'postgresql':
-        return
-    
-    with schema_editor.connection.cursor() as cursor:
-        cursor.execute("""
-            CREATE INDEX IF NOT EXISTS media_item_thematic_hnsw_idx ON animetix_mediaitem 
-            USING hnsw (thematic_embedding vector_cosine_ops)
-            WITH (m = 16, ef_construction = 64);
-        """)
-        cursor.execute("""
-            CREATE INDEX IF NOT EXISTS media_item_plot_hnsw_idx ON animetix_mediaitem 
-            USING hnsw (plot_embedding vector_cosine_ops)
-            WITH (m = 16, ef_construction = 64);
-        """)
-        cursor.execute("""
-            CREATE INDEX IF NOT EXISTS media_item_visual_hnsw_idx ON animetix_mediaitem 
-            USING hnsw (visual_embedding vector_cosine_ops)
-            WITH (m = 16, ef_construction = 64);
-        """)
+    """Désactivé : La logique vectorielle a été supprimée du projet."""
+    return
 
 def drop_hnsw_indexes(apps, schema_editor):
-    if schema_editor.connection.vendor != 'postgresql':
-        return
-    
-    with schema_editor.connection.cursor() as cursor:
-        cursor.execute("DROP INDEX IF EXISTS media_item_thematic_hnsw_idx;")
-        cursor.execute("DROP INDEX IF EXISTS media_item_plot_hnsw_idx;")
-        cursor.execute("DROP INDEX IF EXISTS media_item_visual_hnsw_idx;")
+    """Désactivé : La logique vectorielle a été supprimée du projet."""
+    return
 
 class Migration(migrations.Migration):
 

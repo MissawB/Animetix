@@ -5,30 +5,19 @@ from typing import List, Dict
 from pipeline.chroma_client import chroma_manager
 from pipeline.neo4j_client import neo4j_manager
 import httpx
-from ragas import evaluate
-from datasets import Dataset
-from ragas.metrics import faithfulness, answer_relevancy, context_precision, context_recall
-from ragas.embeddings import LangchainEmbeddingsWrapper
-from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+# --- DJANGO SETUP FOR MLOPS CONTAINERS ---
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
+
+import django
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'animetix_project.settings')
+django.setup()
+
+from animetix.containers import get_container
+from core.domain.services.ragas_eval_service import RagasEvalService, EvaluationResult
 from sentence_transformers import SentenceTransformer
-from dotenv import load_dotenv
-
-load_dotenv()
-
 logger = logging.getLogger("animetix." + __name__)
-
-# Configuration de l'LLM de jugement (Gemini)
-eval_llm = ChatGoogleGenerativeAI(
-    model="gemini-1.5-flash", 
-    google_api_key=os.getenv("GEMINI_API_KEY")
-)
-
-# Configuration des embeddings pour RAGAS
-eval_embeddings = GoogleGenerativeAIEmbeddings(
-    model="models/embedding-001",
-    google_api_key=os.getenv("GEMINI_API_KEY")
-)
-ragas_embeddings = LangchainEmbeddingsWrapper(eval_embeddings)
 
 class RAGEvaluator:
     def __init__(self, brain_url: str = "http://127.0.0.1:7860"):
@@ -98,19 +87,58 @@ class RAGEvaluator:
             data["contexts"].append(contexts)
             data["ground_truth"].append(gt)
 
-        dataset = Dataset.from_dict(data)
+        eval_service = RagasEvalService(judge_engine=get_container().inference_engine())
         
-        result = evaluate(
-            dataset,
-            metrics=[
-                faithfulness,
-                answer_relevancy,
-                context_precision,
-                context_recall
-            ],
-            llm=eval_llm,
-            embeddings=ragas_embeddings
-        )
+        faith_scores = []
+        relevance_scores = []
+        precision_scores = []
+        recall_scores = []
+
+        for i in range(len(data["question"])):
+            q = data["question"][i]
+            a = data["answer"][i]
+            c_str = "\n".join(data["contexts"][i])
+            gt = data["ground_truth"][i]
+            
+            prompt = f"""
+            Évalue l'interaction RAG ci-dessous en la comparant à la Vérité Terrain (Ground Truth) attendue :
+            
+            Question de l'utilisateur :
+            {q}
+            
+            Contexte de connaissances fourni :
+            {c_str}
+            
+            Réponse générée par le système :
+            {a}
+            
+            Vérité Terrain attendue (Ground Truth) :
+            {gt}
+            """
+            
+            try:
+                res_obj = eval_service.judge_engine.generate_structured(
+                    prompt=prompt,
+                    response_model=EvaluationResult,
+                    system_prompt="Tu es un juge sémantique d'IA impartial chargé de mesurer la qualité d'une interaction RAG."
+                )
+                faith_scores.append(res_obj.faithfulness)
+                relevance_scores.append(res_obj.answer_relevancy)
+                precision_scores.append(res_obj.context_precision)
+                recall_scores.append(res_obj.context_recall if res_obj.context_recall is not None else 0.0)
+            except Exception as e:
+                logger.error(f"Error judging row in eval_ragas: {e}")
+                faith_scores.append(0.0)
+                relevance_scores.append(0.0)
+                precision_scores.append(0.0)
+                recall_scores.append(0.0)
+
+        result = {
+            "faithfulness": sum(faith_scores) / len(faith_scores) if faith_scores else 0.0,
+            "answer_relevancy": sum(relevance_scores) / len(relevance_scores) if relevance_scores else 0.0,
+            "context_precision": sum(precision_scores) / len(precision_scores) if precision_scores else 0.0,
+            "context_recall": sum(recall_scores) / len(recall_scores) if recall_scores else 0.0
+        }
         
         logger.info(f"📊 Results ({mode}):")
         logger.info(result)

@@ -14,7 +14,7 @@ django-environ==0.13.0
 django-filter==25.2
 django-prometheus==2.4.1
 django-ratelimit==4.1.0
-Django==5.2.13
+Django==5.2.14
 djangorestframework==3.17.1
 environ==1.0
 fastapi==0.135.3
@@ -49,7 +49,6 @@ watchdog==6.0.0
 # --------------------------------------------------------------------------
 # 4. Heavy ML/AI, Deep Learning, NLP & Computer Vision (Loaded Lazily)
 # --------------------------------------------------------------------------
-ragas==0.4.3
 bitsandbytes==0.49.2
 diffusers==0.37.0
 google-ai-generativelanguage==0.11.0
@@ -57,15 +56,6 @@ google-genai==1.75.0
 imageio==2.37.3
 imageio-ffmpeg==0.6.0
 instructor==1.15.1
-langchain==1.2.15
-langchain-community==0.4.1
-langchain-core==1.4.0
-langchain-google-genai==4.2.2
-langchain-huggingface==1.2.2
-langchain-ollama==1.1.0
-langchain-openai==1.2.1
-langchain-text-splitters==1.1.2
-langsmith==0.7.26
 llvmlite==0.47.0
 moshi==0.2.13
 numba==0.65.1

@@ -14,6 +14,8 @@ router.register(r'fusions', api_views.CreativeFusionViewSet)
 
 
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
+from django.contrib.admin.views.decorators import staff_member_required
+from django_prometheus import exports as prometheus_exports
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -26,13 +28,13 @@ urlpatterns = [
     path('api/session/', api_views.GameSessionView.as_view(), name='api_session'),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 
-    # --- DOCUMENTATION API (Spectacular) ---
-    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    # --- DOCUMENTATION API (Spectacular) - Restreint au Staff ---
+    path('api/schema/', staff_member_required(SpectacularAPIView.as_view()), name='schema'),
+    path('api/docs/', staff_member_required(SpectacularSwaggerView.as_view(url_name='schema')), name='swagger-ui'),
+    path('api/redoc/', staff_member_required(SpectacularRedocView.as_view(url_name='schema')), name='redoc'),
     
-    # --- OBSERVABILITÉ : PROMETHEUS ---
-    path('metrics/', include('django_prometheus.urls')),
+    # --- OBSERVABILITÉ : PROMETHEUS - Restreint au Staff ---
+    path('metrics/', staff_member_required(prometheus_exports.ExportToDjangoView), name='prometheus-django-metrics'),
 
     # --- IMAGE PROXY (Global, no i18n) ---
     path('cdn-proxy/', api_views.image_proxy_view, name='cdn_proxy'),

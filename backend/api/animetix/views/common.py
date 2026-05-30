@@ -37,5 +37,5 @@ animinator_service = LazyServiceProxy('animinator_service')
 akinetix_service = LazyServiceProxy('akinetix_service')
 vs_battle_service = LazyServiceProxy('vs_battle_service')
 game_service = LazyServiceProxy('game_service')
-langchain_service = LazyServiceProxy('llm_service')
+
 

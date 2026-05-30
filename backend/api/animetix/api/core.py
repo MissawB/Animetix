@@ -1,11 +1,15 @@
+from django.utils.decorators import method_decorator
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from dependency_injector.wiring import inject, Provide
 from ..models import Profile, DailyChallenge, Achievement, CreativeFusion, GameplaySession
 from ..serializers import (ProfileSerializer, DailyChallengeSerializer, AchievementSerializer, 
                             MediaItemSerializer, CreativeFusionSerializer, FriendshipSerializer)
-from ..containers import get_container
+from ..containers import get_container, Container
+from core.domain.services.guardrail_service import GuardrailService
+from core.ports.usage_port import UsagePort
 from django.contrib.auth.models import User
 import random
 import datetime
@@ -16,42 +20,13 @@ import socket
 import ipaddress
 from urllib.parse import urlparse
 from animetix_project.logging_config import get_logger
+from core.utils.security import is_safe_url
 from django.core.cache import cache
 from django.http import HttpResponse
 from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
 
 logger = get_logger('animetix.api')
-
-def is_safe_url(url):
-    """
-    V├®rifie si une URL est s├╗re pour ├®viter les attaques SSRF.
-    Bloque les adresses priv├®es, loopback, link-local et les protocoles non-HTTP.
-    """
-    try:
-        parsed = urlparse(url)
-        if parsed.scheme not in ('http', 'https'):
-            return False
-
-        hostname = parsed.hostname
-        if not hostname:
-            return False
-
-        # R├®solution DNS pour v├®rifier l'IP r├®elle
-        try:
-            ip_address = socket.gethostbyname(hostname)
-            ip = ipaddress.ip_address(ip_address)
-        except (socket.gaierror, ValueError):
-            return False
-
-        # Bloquer les IPs priv├®es, loopback, etc.
-        if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_multicast or ip.is_unspecified:
-            return False
-
-        return True
-    except Exception as e:
-        logger.error(f"Error in is_safe_url: {e}")
-        return False
 
 def image_proxy_view(request):
 
@@ -94,6 +69,15 @@ class MediaSearchView(APIView):
     """Recherche d'œuvres via SQL ou Multi-Modale (CLIP)."""
     permission_classes = [permissions.AllowAny]
 
+    @inject
+    def __init__(self, 
+                 guardrail_service: GuardrailService = Provide[Container.core.guardrail_service],
+                 usage_port: UsagePort = Provide[Container.infrastructure.usage_port],
+                 **kwargs):
+        super().__init__(**kwargs)
+        self.guardrail_service = guardrail_service
+        self.usage_port = usage_port
+
     def get(self, request):
         media_type = request.query_params.get('media_type')
         query = request.query_params.get('q', '')
@@ -102,11 +86,28 @@ class MediaSearchView(APIView):
         if not query and not media_type:
             return Response([])
 
+        # Input Guardrail (Anti-Jailbreak, Injection)
+        if query:
+            guard_input = self.guardrail_service.validate_input(query)
+            if not guard_input.get("is_safe", True):
+                return Response(
+                    {"error": guard_input.get("reason", "Inappropriate search query.")},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
         results = get_container().catalog_service.search_items(query, media_type, limit)
         return Response(self._format_results(results))
 
     def post(self, request):
-        """Recherche par image (Cross-Modal)."""
+        """Recherche par image (Cross-Modal). Requiert Authentification + Quota."""
+        if not request.user.is_authenticated:
+            return Response({"error": "Authentication required for image search."}, status=status.HTTP_401_UNAUTHORIZED)
+
+        # Quota Check
+        tier = getattr(request, 'user_tier', 'free')
+        if not self.usage_port.check_quota(request.user.id, tier):
+             return Response({"error": "Daily AI quota exceeded."}, status=status.HTTP_403_FORBIDDEN)
+
         image_file = request.FILES.get('image')
         media_type = request.data.get('media_type', 'Anime')
         limit = min(int(request.data.get('limit', 10)), 20)
@@ -124,6 +125,9 @@ class MediaSearchView(APIView):
                 image_data=image_data, 
                 limit=limit
             )
+
+            # Log Usage
+            self.usage_port.log_usage(engine="clip-vit-large-patch14", units=1, user_id=request.user.id)
 
             return Response(self._format_results(results))
         except Exception as e:

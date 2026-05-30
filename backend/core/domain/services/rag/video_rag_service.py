@@ -140,15 +140,64 @@ class VideoRAGService:
 
     def _segment_video(self, video_data: bytes) -> List[bytes]:
         """
-        Découpage physique du flux.
-        NOTE: Prototype demo slicing by bytes. In production, this should be replaced
-        by a proper video library like FFmpeg or PyAV to ensure segment integrity.
+        Découpe la vidéo en segments valides.
+        NOTE: Cette version utilise un ré-encodage via imageio pour garantir 
+        que chaque segment est un fichier MP4 lisible par le VLM.
         """
-        # Pour le prototype industriel, on divise en 4 pour montrer le parallélisme
-        size = len(video_data)
-        return [
-            video_data[0 : size//4],
-            video_data[size//4 : size//2],
-            video_data[size//2 : 3*size//4],
-            video_data[3*size//4 : ]
-        ]
+        import imageio
+        import tempfile
+        import os
+        import numpy as np
+
+        try:
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp_in:
+                tmp_in.write(video_data)
+                tmp_in_path = tmp_in.name
+
+            reader = imageio.get_reader(tmp_in_path)
+            meta = reader.get_meta_data()
+            fps = meta.get('fps', 24)
+
+            # On découpe en 4 segments temporels pour la démo industrielle
+            all_frames = list(reader)
+            reader.close()
+            os.unlink(tmp_in_path)
+
+            num_frames = len(all_frames)
+            if num_frames == 0:
+                return [video_data]
+
+            chunk_size = num_frames // 4
+            chunks = []
+
+            for i in range(4):
+                start = i * chunk_size
+                end = (i + 1) * chunk_size if i < 3 else num_frames
+                segment_frames = all_frames[start:end]
+
+                if not segment_frames:
+                    continue
+
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp_out:
+                    tmp_out_path = tmp_out.name
+                    # Note: we use a standard codec compatible with most VLMs
+                    writer = imageio.get_writer(tmp_out_path, fps=fps, codec='libx264')
+                    for frame in segment_frames:
+                        writer.append_data(frame)
+                    writer.close()
+
+                    with open(tmp_out_path, "rb") as f:
+                        chunks.append(f.read())
+                    os.unlink(tmp_out_path)
+
+            return chunks if chunks else [video_data]
+        except Exception as e:
+            logger.warning(f"Fallback to byte-slicing due to re-encoding failure: {e}")
+            size = len(video_data)
+            if size == 0: return []
+            return [
+                video_data[0 : size//4],
+                video_data[size//4 : size//2],
+                video_data[size//2 : 3*size//4],
+                video_data[3*size//4 : ]
+            ]

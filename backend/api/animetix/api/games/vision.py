@@ -7,6 +7,8 @@ from ...containers import Container
 from animetix.api.dependencies import get_session_service
 from ...models import GameplaySession
 from ...forms import VisionQuestForm
+from core.domain.services.guardrail_service import GuardrailService
+from core.ports.usage_port import UsagePort
 
 logger = get_logger('animetix.' + __name__)
 
@@ -79,10 +81,13 @@ class VisionGameStartView(APIView):
         })
 
 class VisionGameGuessView(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
     
     @inject
-    def post(self, request, vision_quest_service = Provide[Container.core.vision_service]):
+    def post(self, request, 
+             vision_quest_service = Provide[Container.core.vision_service],
+             guardrail_service: GuardrailService = Provide[Container.core.guardrail_service],
+             usage_port: UsagePort = Provide[Container.infrastructure.usage_port]):
         session_service = get_session_service(request)
         port = session_service.port
         state = vision_quest_service.get_state(port)
@@ -91,6 +96,11 @@ class VisionGameGuessView(APIView):
             return Response({"error": "No game in progress"}, status=status.HTTP_400_BAD_REQUEST)
         if state.game_over:
             return Response({"error": "Game already over"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Quota Check
+        tier = getattr(request, 'user_tier', 'free')
+        if not usage_port.check_quota(request.user.id, tier):
+             return Response({"error": "Daily AI quota exceeded."}, status=status.HTTP_403_FORBIDDEN)
             
         form = VisionQuestForm(request.data)
         if not form.is_valid():
@@ -98,7 +108,19 @@ class VisionGameGuessView(APIView):
             
         try:
             query = form.cleaned_data['description']
+
+            # Input Guardrail (Anti-Jailbreak, Moderation)
+            guard_input = guardrail_service.validate_input(query)
+            if not guard_input.get("is_safe", True):
+                return Response(
+                    {"error": guard_input.get("reason", "Inappropriate description.")},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
             score = vision_quest_service.calculate_score(query, state.secret_id, state.secret_title, state.media_type)
+
+            # Log Usage
+            usage_port.log_usage(engine="clip-vit-large-patch14", units=1, user_id=request.user.id)
             
             state.guesses.insert(0, {'text': query, 'score': score})
             

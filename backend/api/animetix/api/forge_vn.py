@@ -1,8 +1,10 @@
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from dependency_injector.wiring import inject, Provide
 from ..models import CreativeFusion
-from ..containers import get_container
+from ..containers import Container, get_container
+from core.domain.services.guardrail_service import GuardrailService
 from animetix_project.logging_config import get_logger
 
 logger = get_logger('animetix.api.vn')
@@ -12,6 +14,15 @@ class ForgeVNView(APIView):
     API for managing Visual Novel scripts associated with Creative Fusions.
     """
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    @inject
+    def __init__(self, 
+                 guardrail_service: GuardrailService = Provide[Container.core.guardrail_service],
+                 usage_port: UsagePort = Provide[Container.infrastructure.usage_port],
+                 **kwargs):
+        super().__init__(**kwargs)
+        self.guardrail_service = guardrail_service
+        self.usage_port = usage_port
 
     def get(self, request, fusion_id):
         """Returns the VN script for a specific fusion."""
@@ -40,12 +51,37 @@ class ForgeVNView(APIView):
                  return Response({"error": "Unauthorized"}, status=status.HTTP_403_FORBIDDEN)
 
             if action == 'generate':
+                # Quota Check
+                tier = getattr(request, 'user_tier', 'free')
+                if not self.usage_port.check_quota(request.user.id, tier):
+                     return Response({"error": "Daily AI quota exceeded."}, status=status.HTTP_403_FORBIDDEN)
+
+                # Guardrail check on fusion metadata
+                check_text = f"{fusion.title_a} x {fusion.title_b}\n{fusion.scenario_text}"
+                guard_input = self.guardrail_service.validate_input(check_text)
+                if not guard_input.get("is_safe", True):
+                    return Response(
+                        {"error": f"Fusion content rejected by security filters: {guard_input.get('reason')}"},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
                 vn_service = get_container().visual_novel_service()
                 script = vn_service.generate_script(fusion_id)
                 if script:
                     # Conversion Pydantic -> Dict pour stockage JSONField
-                    fusion.vn_script = script.model_dump()
+                    script_data = script.model_dump()
+                    
+                    # Output Guardrail (validate the whole script content)
+                    guard_output = self.guardrail_service.validate_output(str(script_data))
+                    if not guard_output.get("is_safe", True):
+                         return Response({"error": "Generated script failed safety validation."}, status=status.HTTP_400_BAD_REQUEST)
+
+                    fusion.vn_script = script_data
                     fusion.save()
+
+                    # Log Usage
+                    self.usage_port.log_usage(engine="vn-script-generator", units=20, user_id=request.user.id)
+
                     return Response({"vn_script": fusion.vn_script})
                 return Response({"error": "Generation failed"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -53,6 +89,12 @@ class ForgeVNView(APIView):
                 new_script = request.data.get('vn_script')
                 if new_script is None:
                     return Response({"error": "vn_script is required"}, status=status.HTTP_400_BAD_REQUEST)
+                
+                # Sanitize user provided script if it's going to be shared
+                guard_input = self.guardrail_service.validate_input(str(new_script))
+                if not guard_input.get("is_safe", True):
+                    return Response({"error": "Provided script rejected by security filters."}, status=status.HTTP_400_BAD_REQUEST)
+
                 fusion.vn_script = new_script
                 fusion.save()
                 return Response({"vn_script": fusion.vn_script})

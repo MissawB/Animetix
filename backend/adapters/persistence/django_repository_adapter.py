@@ -3,30 +3,13 @@ from typing import List, Dict, Optional
 from core.ports.repository_port import RepositoryPort
 from animetix.models import MediaItem
 from django.db.models import Q
-from pgvector.django import CosineDistance
 
 logger = logging.getLogger('animetix')
 
 class DjangoRepositoryAdapter(RepositoryPort):
     def get_nearest_neighbors(self, collection_name: str, item_id: str, n_results: int = 5) -> List[Dict]:
-        """Utilise CosineDistance pour trouver les voisins les plus proches."""
-        try:
-            item = MediaItem.objects.get(external_id=item_id)
-            # Supposons que collection_name mappe vers un champ spécifique, ex: plot_embedding
-            embedding_field = f"{collection_name.lower()}_embedding"
-            if not hasattr(item, embedding_field): return []
-            
-            query_vec = getattr(item, embedding_field)
-            if query_vec is None: return []
-
-            # Recherche des voisins
-            neighbors = MediaItem.objects.exclude(external_id=item_id).annotate(
-                distance=CosineDistance(embedding_field, query_vec)
-            ).order_by('distance')[:n_results]
-            
-            return [self._to_dict(n) for n in neighbors]
-        except MediaItem.DoesNotExist:
-            return []
+        """Désactivé dans l'adaptateur relationnel. Utiliser ChromaDB."""
+        return []
 
     def load_catalog(self, media_type: str) -> Optional[Dict]:
         items = MediaItem.objects.filter(media_type=media_type)
@@ -36,50 +19,34 @@ class DjangoRepositoryAdapter(RepositoryPort):
         }
 
     def load_themes(self) -> Dict:
-        # Implémentation basée sur l'agrégation des tags dans les métadonnées
         return {}
 
     def load_covers(self) -> Dict:
         return {}
 
     def calculate_similarity(self, collection_name: str, item_a_id: str, item_b_id: str) -> float:
-        """Calcule la similarité cosinus entre deux items."""
-        try:
-            item_a = MediaItem.objects.get(external_id=item_a_id)
-            item_b = MediaItem.objects.get(external_id=item_b_id)
-            embedding_field = f"{collection_name.lower()}_embedding"
-            
-            vec_a = getattr(item_a, embedding_field)
-            vec_b = getattr(item_b, embedding_field)
-            
-            if vec_a is None or vec_b is None: return 0.0
-            
-            # Similarité = 1 - Distance
-            dist = MediaItem.objects.filter(id=item_a.id).annotate(
-                d=CosineDistance(embedding_field, vec_b)
-            ).first().d
-            return 1.0 - dist
-        except Exception as e:
-            logger.exception(f"Error calculating similarity in DjangoRepositoryAdapter: {e}")
-            return 0.0
+        """Désactivé dans l'adaptateur relationnel. Utiliser ChromaDB."""
+        return 0.0
 
     def upsert_items(self, collection_name: str, ids: List[str], embeddings: List[List[float]], metadatas: List[Dict]):
-        # Implémentation pour mise à jour par lots via bulk_create avec update_fields
+        """Upsert les items dans Django (ignore les embeddings)."""
         for i, external_id in enumerate(ids):
-            item, _ = MediaItem.objects.update_or_create(
+            MediaItem.objects.update_or_create(
                 external_id=external_id,
-                defaults={f"{collection_name.lower()}_embedding": embeddings[i], "metadata": metadatas[i]}
+                defaults={"metadata": metadatas[i]}
             )
 
     def delete_collection(self, collection_name: str):
-        # Réinitialisation des vecteurs d'une collection spécifique
-        MediaItem.objects.all().update(**{f"{collection_name.lower()}_embedding": None})
+        """Désactivé."""
+        pass
 
     def get_collection_count(self, collection_name: str) -> int:
-        return MediaItem.objects.exclude(**{f"{collection_name.lower()}_embedding": None}).count()
+        """Désactivé."""
+        return 0
 
     def get_all_ids(self, collection_name: str) -> List[str]:
-        return list(MediaItem.objects.exclude(**{f"{collection_name.lower()}_embedding": None}).values_list('external_id', flat=True))
+        """Désactivé."""
+        return []
 
     def get_media_item(self, media_type: str, external_id: str) -> Optional[Dict]:
         try:
@@ -119,11 +86,9 @@ class DjangoRepositoryAdapter(RepositoryPort):
 
     def sync_latent_space(self, media_type: str, vibe_type: str, data: List[Dict]) -> int:
         from animetix.models import LatentSpacePoint
-        count = 0
         media_type = media_type.lower()
         vibe_type = vibe_type.lower()
         
-        # Suppression des anciens points pour ce type
         LatentSpacePoint.objects.filter(media_type=media_type, vibe_type=vibe_type).delete()
         
         objs = []
@@ -144,17 +109,16 @@ class DjangoRepositoryAdapter(RepositoryPort):
         return len(created)
 
     def get_creative_fusion(self, fusion_id: int) -> Optional[Dict]:
-        """Récupère une fusion créative depuis la DB Django."""
         from animetix.models import CreativeFusion
         try:
             fusion = CreativeFusion.objects.get(id=fusion_id)
             return {
                 "id": fusion.id,
-                "title": fusion.title,
-                "description": fusion.description,
-                "status": fusion.status,
-                "result_url": fusion.result_url,
-                "metadata": fusion.metadata
+                "title_a": fusion.title_a,
+                "title_b": fusion.title_b,
+                "scenario": fusion.scenario_text,
+                "image": fusion.image_url,
+                "art_style": fusion.art_style
             }
         except Exception:
             return None

@@ -22,6 +22,7 @@ from core.domain.services.akinetix_rl_service import AkinetixRLDomainService
 from core.domain.services.blind_test_service import BlindTestDomainService
 from core.domain.services.cover_test_service import CoverTestDomainService
 from core.domain.services.creative.video_quest import VideoQuestService
+from core.domain.services.rag.video_rag_service import VideoRAGService
 from core.domain.services.creative.studio_transform import StudioTransformService
 from core.domain.services.creative.manga_flow import MangaFlowService
 from core.domain.services.creative.soundscape import SoundscapeGenerationService
@@ -210,7 +211,7 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         prompt_manager=infrastructure.prompt_manager
     )
 
-    visual_novel_service = providers.Singleton(
+    studio_transform_service = providers.Singleton(
         VisualNovelService,
         llm_service=agentic.llm_service,
         repository=persistence.repository
@@ -349,8 +350,6 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         inference_engine=inference.inference_engine
     )
 
-    quantum_cognitive_model = agentic.quantum_cognitive_model
-
     swarm_consensus_orchestrator = providers.Singleton(
         SwarmConsensusOrchestrator,
         agent_names=["VisualExpert", "AcousticExpert", "LoreExpert"],
@@ -365,8 +364,6 @@ class CoreServicesContainer(containers.DeclarativeContainer):
     self_evolving_compiler = providers.Singleton(
         SelfEvolvingCompiler
     )
-
-    synaptic_plasticity_simulator = agentic.synaptic_plasticity_simulator
 
     autonomous_domain_synthesizer = providers.Singleton(
         AutonomousDomainSynthesizer,

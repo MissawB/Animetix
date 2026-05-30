@@ -4,16 +4,26 @@ import time
 import logging
 from typing import Optional, List, Dict, Any
 from core.ports.inference_port import InferencePort
-
 from core.ports.usage_port import UsagePort
+from core.utils.security import is_safe_url, validate_service_url
 
 logger = logging.getLogger("animetix.inference")
 
 class BrainAPIAdapter(InferencePort):
     def __init__(self, brain_api_url: str, max_retries: int = 3, usage_port: Optional[UsagePort] = None):
         super().__init__(usage_port=usage_port)
+        
+        # Validation de l'URL du service (Protection contre injection de config)
+        # On accepte soit un hostname local (docker/k8s), soit une URL sûre.
         self.brain_api_url = brain_api_url
         self.max_retries = max_retries
+        
+        if self.brain_api_url and not (
+            self.brain_api_url.startswith("http://brain") or 
+            self.brain_api_url.startswith("http://localhost") or
+            is_safe_url(self.brain_api_url)
+        ):
+            logger.warning(f"Potentially unsafe BRAIN_API_URL configured: {self.brain_api_url}")
 
     def generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False) -> str:
         if not self.brain_api_url: return "Erreur: BRAIN_API_URL non configurée."
@@ -122,10 +132,17 @@ class BrainAPIAdapter(InferencePort):
 
     def visual_rerank(self, query: str, image_urls: List[str], system_prompt: str = "") -> List[Dict[str, Any]]:
         if not self.brain_api_url: return []
+        
+        # Sécurité SSRF: Filtrer les URLs d'images non-sûres
+        safe_urls = [url for url in image_urls if is_safe_url(url)]
+        if not safe_urls:
+             logger.warning("No safe URLs provided for visual rerank.")
+             return []
+
         try:
             res = httpx.post(f"{self.brain_api_url}/vision/rerank", json={
                 "query": query, 
-                "image_urls": image_urls,
+                "image_urls": safe_urls,
                 "system_prompt": system_prompt
             }, timeout=30, follow_redirects=True)
             if res.status_code == 200:

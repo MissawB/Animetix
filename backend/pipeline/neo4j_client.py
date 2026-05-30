@@ -16,23 +16,33 @@ NEO4J_URI = os.getenv("NEO4J_URI", "bolt://localhost:7687")
 NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
 
+import re as _regex_module
+
 ALLOWED_LABELS = {
     "Media", "Studio", "Person", "MicroTag", "Character", "CombatEvent", 
-    "Saga", "FanTheory", "Entity", "User"
+    "Saga", "FanTheory", "Entity", "User", "Technique"
 }
 
 ALLOWED_RELATIONSHIPS = {
     "PRODUCED_BY", "HAS_THEME", "CREATED_BY", "FEATURES", "VOICED_BY", 
     "DIRECTED_BY", "CONTAINS_COMBAT", "PERFORMS", "INVOLVES_TECHNIQUE", 
     "USES_TECHNIQUE", "CONTAINS_MEDIA", "HAS_THEORY", "INTERACTED_WITH",
-    "APPEARS_IN"
+    "APPEARS_IN", "AI_RELATION"
 }
 
 def sanitize_cypher_identifier(identifier: str, allowed_set: set) -> str:
     """
     Sanitizes a Cypher identifier (label or relationship type) against a whitelist.
-    Raises ValueError if the identifier is not in the allowed set.
+    Strict regex validation + Whitelist check.
     """
+    if not identifier or not isinstance(identifier, str):
+        raise ValueError("Invalid identifier type")
+        
+    # Strict regex: Only alphanumeric and underscores
+    if not _regex_module.match(r"^[a-zA-Z0-9_]+$", identifier):
+        logger.error(f"❌ Security Alert: Malformed Cypher identifier: {identifier}")
+        raise ValueError(f"Malformed Cypher identifier: {identifier}")
+
     if identifier not in allowed_set:
         logger.error(f"❌ Security Alert: Unauthorized Cypher identifier detected: {identifier}")
         raise ValueError(f"Unauthorized Cypher identifier: {identifier}")
@@ -143,8 +153,17 @@ class Neo4jManager(GraphDatabasePort):
 
     @staticmethod
     def _create_relation_tx(tx, rel):
-        query = "MATCH (a:Entity {name: $source}) MATCH (b:Entity {name: $target}) MERGE (a)-[r:AI_RELATION {type: $rel_type}]->(b) RETURN r"
-        tx.run(query, source=rel['source'], target=rel['target'], rel_type=rel['type'])
+        rel_type_raw = rel['type']
+        try:
+            # Si le type de relation est dans la whitelist, on l'utilise directement comme type de lien Neo4j
+            # Cela améliore les performances du graphe par rapport à une propriété générique
+            safe_type = sanitize_cypher_identifier(rel_type_raw.upper(), ALLOWED_RELATIONSHIPS)
+            query = f"MATCH (a:Entity {{name: $source}}) MATCH (b:Entity {{name: $target}}) MERGE (a)-[r:{safe_type}]->(b) RETURN r"
+            tx.run(query, source=rel['source'], target=rel['target'])
+        except ValueError:
+            # Sinon, on retombe sur la relation générique AI_RELATION avec une propriété
+            query = "MATCH (a:Entity {name: $source}) MATCH (b:Entity {name: $target}) MERGE (a)-[r:AI_RELATION {type: $rel_type}]->(b) RETURN r"
+            tx.run(query, source=rel['source'], target=rel['target'], rel_type=rel_type_raw)
 
     @staticmethod
     def _link_to_parent_tx(tx, media_id, entities):
@@ -154,7 +173,9 @@ class Neo4jManager(GraphDatabasePort):
 
     @staticmethod
     def _sync_tx(tx, item, media_type):
-        query = "MERGE (m:Media {id: $id, type: $type}) SET m.title = $title, m.year = $year RETURN m"
+        # Validation du label media_type avant injection
+        safe_media_label = "Media" # On utilise toujours Media par défaut
+        query = f"MERGE (m:{safe_media_label} {{id: $id, type: $type}}) SET m.title = $title, m.year = $year RETURN m"
         tx.run(query, id=str(item['id']), type=media_type, title=item['title'], year=item.get('year'))
         for studio_name in item.get('studios', []):
             tx.run("MATCH (m:Media {id: $id}) MERGE (s:Studio {name: $studio_name}) MERGE (m)-[:PRODUCED_BY]->(s)", id=str(item['id']), studio_name=studio_name)

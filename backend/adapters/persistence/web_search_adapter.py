@@ -2,6 +2,7 @@ import httpx
 import logging
 from typing import List, Dict
 from core.ports.web_search_port import WebSearchPort
+from core.utils.security import is_safe_url
 from ddgs import DDGS
 
 logger = logging.getLogger("animetix.web")
@@ -25,18 +26,25 @@ class DuckDuckGoSearchAdapter(WebSearchPort):
                 
                 mapped_results = []
                 for r in results:
-                    mapped_results.append({
-                        "title": r.get("title", ""),
-                        "url": r.get("href", ""),
-                        "snippet": r.get("body", "")
-                    })
+                    url = r.get("href", "")
+                    # Sécurité: Ne pas retourner d'URLs non-sûres dans les résultats de recherche
+                    if is_safe_url(url):
+                        mapped_results.append({
+                            "title": r.get("title", ""),
+                            "url": url,
+                            "snippet": r.get("body", "")
+                        })
                 return mapped_results
         except Exception as e:
             logger.error(f"Error during DuckDuckGo search for '{query}': {e}")
             return []
 
     def get_content(self, url: str) -> str:
-        """Récupère le texte brut d'une page."""
+        """Récupère le texte brut d'une page (SSRF protected)."""
+        if not is_safe_url(url):
+            logger.warning(f"Blocked content fetching from unsafe URL: {url}")
+            return ""
+            
         try:
             res = httpx.get(url, timeout=10, follow_redirects=True)
             if res.status_code == 200:

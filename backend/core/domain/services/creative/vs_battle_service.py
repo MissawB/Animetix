@@ -13,6 +13,7 @@ from backend.core.ports.fandom_port import FandomPort
 from backend.core.ports.inference_port import InferencePort
 from backend.core.ports.web_search_port import WebSearchPort
 from backend.core.domain.services.prompt_manager import PromptManager
+from backend.core.utils.security import is_safe_url
 
 logger = logging.getLogger("animetix.vs_battle")
 
@@ -79,7 +80,9 @@ class VsBattleService:
             results = self.web_search_port.search(f"{character_name} {franchise or ''} official portrait anime")
             for res in results[:5]:
                 url = res.get('url', '')
-                if any(ext in url.lower() for ext in ['.jpg', '.png', '.webp', '.jpeg']): return url
+                if any(ext in url.lower() for ext in ['.jpg', '.png', '.webp', '.jpeg']):
+                    if is_safe_url(url):
+                        return url
             return None
         except Exception as e:
             logger.warning(f"⚠️ Image recovery failed: {e}")

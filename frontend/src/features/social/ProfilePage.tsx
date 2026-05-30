@@ -53,9 +53,12 @@ const ProfilePage: React.FC = () => {
             <StatCard label={t('social.profile.collection')} value={profile.collection_count || 0} icon={<User className="text-blue-500" />} />
           </div>
 
-          <div className="flex justify-center mt-8">
+          <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
               <Link to="/social/dashboard/" className="font-black rounded-2xl transition-all shadow-xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 border-2 border-gray-800 dark:border-white/20 hover:bg-gray-800 hover:text-white bg-transparent px-10 py-4 italic no-underline">
                   {t('social.profile.back_dashboard')}
+              </Link>
+              <Link to="/custom-config/" className="font-black rounded-2xl transition-all shadow-xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 bg-brand-primary text-white px-10 py-4 italic no-underline border-none">
+                  <Shield className="w-5 h-5" /> CONFIGURATION IA
               </Link>
           </div>
         </div>

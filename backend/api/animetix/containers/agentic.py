@@ -11,6 +11,7 @@ from core.domain.services.rag.agents.forge import ForgeAgent
 from core.domain.services.rag.agents.saga_agent import SagaAgent
 from core.domain.services.rag.agents.chronicler import ChroniclerAgent
 from core.domain.services.rag.agents.graph_expert import GraphExpert
+from core.domain.services.rag.video_rag_service import VideoRAGService
 from core.domain.services.rag.agents import (
     SearchPlanner, ResponseCritic, ResponseSynthesizer, 
     ResponseJudge, ScoutAgent, SemanticRouter, 
@@ -31,16 +32,6 @@ class AgenticContainer(containers.DeclarativeContainer):
 
     mlops_adapter_factory = providers.Factory(MlopsAdapter)
 
-    quantum_cognitive_model = providers.Singleton(
-        QuantumCognitivePreferenceModel,
-        dimension=4
-    )
-
-    synaptic_plasticity_simulator = providers.Singleton(
-        SynapticPlasticitySimulator,
-        num_concepts=10
-    )
-
     llm_service = providers.Singleton(
         LLMService,
         inference_engine=inference.inference_engine,
@@ -55,9 +46,7 @@ class AgenticContainer(containers.DeclarativeContainer):
         repository=persistence.repository,
         llm_service=llm_service,
         neo4j_manager=persistence.graph_persistence_port,
-        colbert_adapter=persistence.colbert_adapter,
-        quantum_model=quantum_cognitive_model,
-        plasticity_simulator=synaptic_plasticity_simulator
+        colbert_adapter=persistence.colbert_adapter
     )
 
     graph_expert = providers.Singleton(
@@ -164,6 +153,13 @@ class AgenticContainer(containers.DeclarativeContainer):
         prompt_manager=infrastructure.prompt_manager
     )
 
+    video_rag_service = providers.Singleton(
+        VideoRAGService,
+        inference_engine=inference.inference_engine,
+        repository=persistence.repository,
+        prompt_manager=infrastructure.prompt_manager
+    )
+
     rag_workflow_manager = providers.Singleton(
         RAGWorkflowManager,
         planner=planner,
@@ -188,7 +184,8 @@ class AgenticContainer(containers.DeclarativeContainer):
         neo4j_manager=persistence.graph_persistence_port,
         context_compressor=context_compressor,
         mlops_port=mlops_adapter_factory,
-        colbert_adapter=persistence.colbert_adapter
+        colbert_adapter=persistence.colbert_adapter,
+        video_rag_service=video_rag_service
     )
 
     memory_service = providers.Singleton(

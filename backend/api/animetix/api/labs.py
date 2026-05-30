@@ -219,6 +219,41 @@ class SpatialLabDataView(APIView):
         except Exception as e:
             return Response({'error': str(e)}, status=500)
 
+@method_decorator(ratelimit(key='user_or_ip', rate='5/m', method='POST', block=True), name='dispatch')
+class Generate3DDataView(APIView):
+    """Génère un modèle 3D à partir d'une image (Gaussian Splatting/Mesh)."""
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        import base64
+        import httpx
+        image_url = request.data.get('image_url')
+        uploaded_file = request.FILES.get('image_file')
+        mode = request.data.get('mode', 'mesh')
+        
+        if not image_url and not uploaded_file:
+            return Response({'error': 'No image provided'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            image_data = None
+            if uploaded_file:
+                image_data = uploaded_file.read()
+            else:
+                from .utils import is_safe_url
+                if not is_safe_url(image_url):
+                    return Response({'error': 'URL is not allowed for security reasons.'}, status=status.HTTP_403_FORBIDDEN)
+                res = httpx.get(image_url, timeout=10, follow_redirects=True)
+                res.raise_for_status()
+                image_data = res.content
+            
+            # Generate 3D model via Spatial Computing Service
+            result = get_container().spatial_computing_service.generate_3d_scene(image_data, depth_map=None)
+            
+            return Response(result)
+        except Exception as e:
+            logger.error(f"Generate3D API error: {e}")
+            return Response({'error': str(e)}, status=500)
+
 @method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True), name='dispatch')
 class MangaLabDataView(APIView):
     """Nettoyage et traduction de bulles de manga."""
@@ -420,6 +455,48 @@ class VideoLabDataView(APIView):
             # the service delegates to inference_engine
             res = service.transform_video_to_anime_sota(video_data, studio_style)
             return Response({'status': 'success', 'video_url': res})
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
+
+@method_decorator(ratelimit(key='user_or_ip', rate='5/m', method='POST', block=True), name='dispatch')
+class VideoRAGIndexView(APIView):
+    """Analyse et indexe une vidéo pour la recherche sémantique temporelle."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        video_id = request.data.get('video_id')
+        uploaded_file = request.FILES.get('video_file')
+        
+        if not video_id or not uploaded_file:
+            return Response({'error': 'Missing video_id or video_file'}, status=400)
+            
+        try:
+            video_data = uploaded_file.read()
+            service = get_container().video_rag_service()
+            count = service.index_video(video_id, video_data)
+            return Response({
+                'status': 'success', 
+                'message': f'Indexed {count} temporal segments for video {video_id}.'
+            })
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
+
+@method_decorator(ratelimit(key='user_or_ip', rate='20/m', method='GET', block=True), name='dispatch')
+class VideoRAGSearchView(APIView):
+    """Recherche un segment précis dans la base de vidéos indexées."""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        query = request.query_params.get('q', '')
+        limit = min(int(request.query_params.get('limit', 5)), 20)
+        
+        if not query:
+            return Response({'error': 'Missing query'}, status=400)
+            
+        try:
+            service = get_container().video_rag_service()
+            results = service.search_video_segment(query, limit=limit)
+            return Response({'status': 'success', 'results': results})
         except Exception as e:
             return Response({'error': str(e)}, status=500)
 

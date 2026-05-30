@@ -7,6 +7,7 @@ from dependency_injector.wiring import inject, Provide
 from ...containers import Container
 from animetix.api.dependencies import get_session_service
 from ...models import GameplaySession
+from core.ports.usage_port import UsagePort
 
 logger = get_logger('animetix.' + __name__)
 
@@ -42,13 +43,22 @@ class ParadoxGameStateView(APIView):
         })
 
 class ParadoxGameStartView(APIView):
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
     
     @inject
-    def post(self, request, catalog_service = Provide[Container.core.catalog_service], paradox_service = Provide[Container.core.paradox_service]):
+    def post(self, request, 
+             catalog_service = Provide[Container.core.catalog_service], 
+             paradox_service = Provide[Container.core.paradox_service],
+             usage_port: UsagePort = Provide[Container.infrastructure.usage_port]):
         session_service = get_session_service(request)
         port = session_service.port
         media_type = request.data.get('media_type', port.get('media_type', 'Anime'))
+
+        # Quota Check
+        tier = getattr(request, 'user_tier', 'free')
+        if not usage_port.check_quota(request.user.id, tier):
+             return Response({"error": "Daily AI quota exceeded."}, status=status.HTTP_403_FORBIDDEN)
+            
         port.set('media_type', media_type)
         is_daily = request.data.get('is_daily', False)
         
@@ -71,6 +81,9 @@ class ParadoxGameStartView(APIView):
             data['title_to_full_data'][intruder],
             language
         )
+
+        # Log Usage
+        usage_port.log_usage(engine="paradox-reasoning-engine", units=5, user_id=request.user.id)
         
         state = paradox_service.get_state(port)
         state.answer = intruder

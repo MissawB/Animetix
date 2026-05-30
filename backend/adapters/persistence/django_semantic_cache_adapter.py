@@ -12,7 +12,7 @@ class DjangoSemanticCacheAdapter(SemanticCachePort):
 
     def get_semantic(self, query_embedding: List[float], threshold: float) -> Optional[str]:
         """
-        Désactivé car pgvector a été supprimé.
+        Désactivé dans l'adaptateur relationnel.
         ChromaDB devrait être utilisé pour le cache sémantique si nécessaire.
         """
         return None

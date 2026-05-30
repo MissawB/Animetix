@@ -7,11 +7,8 @@ import logging
 from sentence_transformers import SentenceTransformer
 from dagster import asset, Output, AssetObservation
 import pandas as pd
-from ragas import evaluate
-from ragas.metrics import faithfulness, answer_relevancy, context_precision, context_recall
-from ragas.embeddings import LangchainEmbeddingsWrapper
-from datasets import Dataset
-from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+# Ragas & LangChain dependencies removed in favor of local LLM-as-a-judge
+
 
 logger = logging.getLogger("animetix.pipeline." + __name__)
 
@@ -48,12 +45,10 @@ def ragas_performance_comparison():
     sample_size = len(gold_data)
     eval_set = gold_data
 
-    # Setup Models
-    api_key_gemini = os.getenv("GEMINI_API_KEY")
-    JUDGE_MODEL = "gemini-3.1-flash-lite-preview"
-    eval_llm = ChatGoogleGenerativeAI(model=JUDGE_MODEL, google_api_key=api_key_gemini)
-    eval_embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_api_key=api_key_gemini)
-    ragas_embeddings = LangchainEmbeddingsWrapper(eval_embeddings)
+    # Setup custom LLM Judge Service
+    from animetix.containers import get_container
+    from core.domain.services.ragas_eval_service import RagasEvalService, EvaluationResult
+    eval_service = RagasEvalService(judge_engine=get_container().inference_engine())
     
     from pipeline.chroma_client import chroma_manager
     from pipeline.neo4j_client import neo4j_manager
@@ -121,15 +116,52 @@ def ragas_performance_comparison():
             cat_df = df_results[df_results['query_type'] == q_type]
             if cat_df.empty: continue
             
-            dataset = Dataset.from_pandas(cat_df)
             try:
-                result = evaluate(
-                    dataset,
-                    metrics=[faithfulness, answer_relevancy, context_precision, context_recall],
-                    llm=eval_llm,
-                    embeddings=ragas_embeddings
-                )
-                metrics = result.to_pandas().mean().to_dict()
+                faith_scores = []
+                relevance_scores = []
+                precision_scores = []
+                recall_scores = []
+                
+                for _, row in cat_df.iterrows():
+                    q = row['question']
+                    a = row['answer']
+                    c_str = "\n".join(row['contexts'])
+                    gt = row['ground_truth']
+                    
+                    prompt = f"""
+                    Évalue l'interaction RAG ci-dessous en la comparant à la Vérité Terrain (Ground Truth) attendue :
+                    
+                    Question de l'utilisateur :
+                    {q}
+                    
+                    Contexte de connaissances fourni :
+                    {c_str}
+                    
+                    Réponse générée par le système :
+                    {a}
+                    
+                    Vérité Terrain attendue (Ground Truth) :
+                    {gt}
+                    """
+                    
+                    result = eval_service.judge_engine.generate_structured(
+                        prompt=prompt,
+                        response_model=EvaluationResult,
+                        system_prompt="Tu es un juge sémantique d'IA impartial chargé de mesurer la qualité d'une interaction RAG."
+                    )
+                    
+                    faith_scores.append(result.faithfulness)
+                    relevance_scores.append(result.answer_relevancy)
+                    precision_scores.append(result.context_precision)
+                    recall_scores.append(result.context_recall if result.context_recall is not None else 0.0)
+                
+                metrics = {
+                    "faithfulness": float(np.mean(faith_scores)),
+                    "answer_relevancy": float(np.mean(relevance_scores)),
+                    "context_precision": float(np.mean(precision_scores)),
+                    "context_recall": float(np.mean(recall_scores))
+                }
+                
                 animetix_score = calculate_animetix_score(metrics)
                 metrics['animetix_score'] = animetix_score
                 

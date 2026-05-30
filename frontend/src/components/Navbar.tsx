@@ -31,19 +31,30 @@ const Navbar: React.FC = () => {
             <Shield className="w-4 h-4" /> {t('navbar.transparency')}
           </Link>
           
-          <Link to="/experimental/" className="flex items-center gap-2 no-underline text-xs font-black italic text-red-500 hover:scale-105 transition-all uppercase tracking-widest">
-            <FlaskConical className="w-4 h-4" /> {t('navbar.lab')}
+          <Link to="/lab/" className="flex items-center gap-2 no-underline text-xs font-black italic text-red-500 hover:scale-105 transition-all uppercase tracking-widest">
+            <FlaskConical className="w-4 h-4" /> {t('navbar.lab', 'Laboratories')}
           </Link>
 
           {user && (
-            <Link to="/clubs/" className="flex items-center gap-2 no-underline text-xs font-black italic text-gray-500 hover:text-blue-500 transition-all uppercase tracking-widest">
-              <Users className="w-4 h-4 text-blue-500" /> {t('navbar.clubs', 'Clubs')}
-            </Link>
+            <>
+              <Link to="/clubs/" className="flex items-center gap-2 no-underline text-xs font-black italic text-gray-500 hover:text-blue-500 transition-all uppercase tracking-widest">
+                <Users className="w-4 h-4 text-blue-500" /> {t('navbar.clubs', 'Clubs')}
+              </Link>
+              <Link to={`/profile/${user.username}/`} className="flex items-center gap-2 no-underline text-xs font-black italic text-gray-500 hover:text-orange-500 transition-all uppercase tracking-widest">
+                <User className="w-4 h-4 text-orange-500" /> {user.username}
+              </Link>
+            </>
           )}
 
           {user?.tier === 'premium' && (
             <Link to="/graph/" className="flex items-center gap-2 no-underline text-xs font-black italic text-gray-500 hover:text-purple-500 transition-all uppercase tracking-widest">
               <Network className="w-4 h-4 text-purple-500" /> Explore Graph
+            </Link>
+          )}
+
+          {user?.is_staff && (
+            <Link to="/admin/dashboard/" className="flex items-center gap-2 no-underline text-xs font-black italic text-cyan-500 hover:scale-105 transition-all uppercase tracking-widest">
+              <Settings className="w-4 h-4" /> Admin
             </Link>
           )}
         </div>

@@ -225,7 +225,7 @@ class AgenticRAGService:
         if routing_decision == "SIMPLE":
             yield StreamStep(type="thought", content="[Semantic Router] Requête simple détectée. Court-circuitage vers la recherche et synthèse directe en < 2 secondes...").model_dump()
             full_answer = ""
-            for event in self.workflow_manager.handle_fast_rag(query, media_type):
+            for event in self.workflow_manager.handle_fast_rag(query, media_type, user_id=user_id):
                 yield event
                 if event['type'] == 'token':
                     full_answer += event['content']
@@ -342,9 +342,9 @@ class AgenticRAGService:
             logger.error(f"Unexpected error during JSON extraction: {e}")
         return {}
 
-    def _execute_search(self, plan, media_type: str) -> tuple[List[Dict], str]:
+    def _execute_search(self, plan, media_type: str, user_id: Optional[str] = None) -> tuple[List[Dict], str]:
         if self.workflow_manager:
-            return self.workflow_manager._execute_search(plan, media_type)
+            return self.workflow_manager._execute_search(plan, media_type, user_id=user_id)
         return [], ""
 
     def _handle_research(self, ctx) -> Generator[Dict, None, None]:

@@ -37,15 +37,15 @@ def process_video_chunk_task(chunk_data_b64, chunk_index, total_chunks, query=No
     import base64
     container = get_container()
     video_bytes = base64.b64decode(chunk_data_b64)
-    if query: result = container.video_quest_service.find_precise_moment(video_bytes, query)
-    else: result = container.video_quest_service.process_segment(video_bytes)
+    if query: result = container.video_rag_service.find_precise_moment(video_bytes, query)
+    else: result = container.video_rag_service.process_segment(video_bytes)
     return {'index': chunk_index, 'data': result, 'timestamp_start': chunk_index * 30}
 
 @shared_task
 def aggregate_video_results_task(results, original_query=None):
     container = get_container()
     sorted_results = sorted(results, key=lambda x: x['index'])
-    summary = container.video_quest_service.query_long_video(sorted_results, original_query or 'Résumé global')
+    summary = container.video_rag_service.query_long_video(sorted_results, original_query or 'Résumé global')
     return {'summary': summary, 'timeline': sorted_results}
 
 @shared_task

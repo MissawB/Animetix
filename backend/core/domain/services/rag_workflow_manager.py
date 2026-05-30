@@ -56,7 +56,8 @@ class RAGWorkflowManager:
         neo4j_manager: Optional[GraphPersistencePort] = None,
         context_compressor: Optional[ContextCompressor] = None,
         mlops_port: Optional[MlopsPort] = None,
-        colbert_adapter: Any = None
+        colbert_adapter: Any = None,
+        video_rag_service: Any = None
     ):
         self.planner = planner
         self.critic = critic
@@ -80,6 +81,7 @@ class RAGWorkflowManager:
         self.neo4j_manager = neo4j_manager
         self.mlops_port = mlops_port
         self.colbert_adapter = colbert_adapter
+        self.video_rag_service = video_rag_service
         
         # SOTA 2026 Context Compressor (Task 5.3)
         self.context_compressor = context_compressor or ContextCompressor(self.rag_service.llm_service, self.prompt_manager)
@@ -171,7 +173,7 @@ class RAGWorkflowManager:
 
         # Mise à jour des modèles cognitifs de plasticité et de préférence quantique
         if ctx.current_state == RAGState.FINALIZE:
-            self._update_cognitive_state(ctx.query, ctx.full_answer, ctx.candidates)
+            self._update_cognitive_state(ctx.query, ctx.full_answer, ctx.candidates, ctx.user_id)
 
         # Logging DPO asynchrone autonome si une réécriture a eu lieu
         if ctx.current_state == RAGState.FINALIZE and rejected_responses and ctx.full_answer:
@@ -335,6 +337,19 @@ class RAGWorkflowManager:
             except Exception as e:
                 logger.error(f"❌ CRAG Web search failed: {e}")
                 
+        if ctx.plan.is_visual_query and self.video_rag_service:
+            yield StreamStep(type="thought", content="[Video-RAG] Requête visuelle détectée. Recherche de segments vidéo pertinents...").model_dump()
+            try:
+                v_results = self.video_rag_service.search_video_segment(ctx.query, limit=3)
+                if v_results:
+                    v_ctx = "### CONTEXTE VIDÉO (MOMENTS CLÉS) ###\n"
+                    for r in v_results:
+                        v_ctx += f"- Vidéo: {r.get('video_id')} [{r.get('start')}s - {r.get('end')}s]: {r.get('summary')}\n"
+                    ctx.raw_context += f"\n{v_ctx}"
+                    yield StreamStep(type="thought", content=f"[Video-RAG] {len(v_results)} moment(s) vidéo injecté(s).").model_dump()
+            except Exception as e:
+                logger.error(f"❌ Video-RAG search failed: {e}")
+
         yield StreamStep(type="thought", content="[Scout] Distillation du contexte en Chemin de Vérité...").model_dump()
         scout_start = time.time()
         distilled = self.scout.find_truth_path(ctx.query, ctx.plan, ctx.raw_context)
@@ -572,9 +587,9 @@ class RAGWorkflowManager:
 
         return expert_injections
 
-    def _execute_search(self, plan, media_type: str) -> tuple[List[Dict], str]:
+    def _execute_search(self, plan, media_type: str, user_id: Optional[str] = None) -> tuple[List[Dict], str]:
         # Fetch a larger pool for reranking
-        local_results = self.rag_service.hybrid_search(plan.optimized_query, media_type, limit=20)
+        local_results = self.rag_service.hybrid_search(plan.optimized_query, media_type, limit=20, user_id=user_id)
         
         # --- RERANKING COLBERT (SOTA 2026 / Task 5.2) ---
         if self.colbert_adapter and local_results:
@@ -608,11 +623,11 @@ class RAGWorkflowManager:
                 ctx += f"\nGRAPH:\n{graph_ctx}"
         return local_results, ctx
 
-    def handle_fast_rag(self, query: str, media_type: str) -> Generator[Dict, None, None]:
+    def handle_fast_rag(self, query: str, media_type: str, user_id: Optional[str] = None) -> Generator[Dict, None, None]:
         """Mode RAG Rapide ultra-optimisé."""
         yield StreamStep(type="thought", content="[Fast RAG] Récupération directe des documents pertinents...").model_dump()
         start = time.time()
-        results = self.rag_service.hybrid_search(query, media_type)
+        results = self.rag_service.hybrid_search(query, media_type, user_id=user_id)
         local_ctx_list = [f"- {r.get('title')}: {r.get('description', '')[:2000]}" for r in results]
         context_str = "\n".join(local_ctx_list)
         yield StreamStep(type="thought", content=f"[Fast RAG] Recherche terminée en {(time.time() - start)*1000:.2f}ms. Génération de la réponse...").model_dump()
@@ -621,8 +636,12 @@ class RAGWorkflowManager:
         for token in self.inference_engine.stream_generate(prompt, system):
             yield StreamStep(type="token", content=token).model_dump()
 
-    def _update_cognitive_state(self, query: str, answer: str, candidates: List[Dict]):
-        if not self.rag_service.quantum_model and not self.rag_service.plasticity_simulator:
+    def _update_cognitive_state(self, query: str, answer: str, candidates: List[Dict], user_id: Optional[str] = None):
+        if not user_id:
+            return
+            
+        quantum_model, plasticity_simulator = self.rag_service._get_cognitive_models(user_id)
+        if not quantum_model and not plasticity_simulator:
             return
 
         # 1. Identifier les concepts de la requête
@@ -661,12 +680,12 @@ class RAGWorkflowManager:
                 quantum_theme = "comedy"
 
         # --- A. Mise à jour de la Plasticité Synaptique (Hebb & STDP) ---
-        if self.rag_service.plasticity_simulator:
+        if plasticity_simulator:
             active_indices = list(set(query_concepts + candidate_concepts))
             if active_indices:
                 # Hebbian : co-activation de tous les concepts actifs
                 activations = [1.0 if i in active_indices else 0.0 for i in range(10)]
-                self.rag_service.plasticity_simulator.update_hebbian(activations)
+                plasticity_simulator.update_hebbian(activations)
                 
                 # STDP : potentiation (LTP) de la requête (pre) vers les résultats (post)
                 current_time = time.time()
@@ -674,11 +693,14 @@ class RAGWorkflowManager:
                     for post in candidate_concepts:
                         if pre != post:
                             # Pre s'active légèrement avant post
-                            self.rag_service.plasticity_simulator.trigger_spikes([pre], current_time - 0.05)
-                            self.rag_service.plasticity_simulator.trigger_spikes([post], current_time)
-                            self.rag_service.plasticity_simulator.update_stdp(pre, post)
+                            plasticity_simulator.trigger_spikes([pre], current_time - 0.05)
+                            plasticity_simulator.trigger_spikes([post], current_time)
+                            plasticity_simulator.update_stdp(pre, post)
 
         # --- B. Effondrement de l'état quantique ---
-        if self.rag_service.quantum_model and quantum_theme:
+        if quantum_model and quantum_theme:
             # Effectue une mesure projective, effondrant l'état cognitif |psi>
-            self.rag_service.quantum_model.measure_preference(quantum_theme)
+            quantum_model.measure_preference(quantum_theme)
+            
+        # Sauvegarde de l'état cognitif persistant pour l'utilisateur
+        self.rag_service._save_cognitive_models(user_id, quantum_model, plasticity_simulator)

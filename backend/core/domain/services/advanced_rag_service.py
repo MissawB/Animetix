@@ -31,19 +31,40 @@ class AdvancedRAGService:
         llm_service: LLMService,
         neo4j_manager: Optional[GraphPersistencePort] = None,
         prompt_manager: PromptManager = None,
-        colbert_adapter=None,
-        quantum_model: Optional[Any] = None,
-        plasticity_simulator: Optional[Any] = None
+        colbert_adapter=None
     ):
         self.repository = repository
         self.llm_service = llm_service
         self.neo4j_manager = neo4j_manager
         self.prompt_manager = prompt_manager or getattr(llm_service, 'prompt_manager', None)
         self.colbert_adapter = colbert_adapter
-        self.quantum_model = quantum_model
-        self.plasticity_simulator = plasticity_simulator
         self._indices: Dict[str, HybridSearchIndex] = {}
         self.rerank_cache = RerankingCache()
+
+    def _get_cognitive_models(self, user_id: Optional[str] = None):
+        """Charge ou initialise les modèles cognitifs spécifiques à l'utilisateur depuis le cache."""
+        from core.domain.services.synaptic_plasticity import SynapticPlasticitySimulator
+        from core.domain.services.quantum_cognitive_model import QuantumCognitivePreferenceModel
+        
+        if not user_id:
+            # Fallback en mode stateless si aucun utilisateur
+            return QuantumCognitivePreferenceModel(dimension=4), SynapticPlasticitySimulator(num_concepts=10)
+            
+        from django.core.cache import cache
+        state = cache.get(f"cognitive_state_{user_id}")
+        if state:
+            return state.get("quantum"), state.get("plasticity")
+            
+        return QuantumCognitivePreferenceModel(dimension=4), SynapticPlasticitySimulator(num_concepts=10)
+
+    def _save_cognitive_models(self, user_id: str, quantum_model, plasticity_simulator):
+        if not user_id:
+            return
+        from django.core.cache import cache
+        cache.set(f"cognitive_state_{user_id}", {
+            "quantum": quantum_model,
+            "plasticity": plasticity_simulator
+        }, timeout=86400 * 30) # 30 jours de persistance cognitive
 
     def _get_or_create_index(self, media_type: str) -> HybridSearchIndex:
         if media_type not in self._indices:
@@ -54,7 +75,7 @@ class AdvancedRAGService:
             self._indices[media_type] = idx
         return self._indices[media_type]
 
-    def hybrid_search(self, query: str, media_type: str, limit: int = 10) -> List[Dict]:
+    def hybrid_search(self, query: str, media_type: str, limit: int = 10, user_id: Optional[str] = None) -> List[Dict]:
         """Recherche hybride lexicale et sémantique combinée avec Reciprocal Rank Fusion (RRF)."""
         idx = self._get_or_create_index(media_type)
         
@@ -77,7 +98,7 @@ class AdvancedRAGService:
         fused_results = idx.reciprocal_rank_fusion(lexical_results, semantic_results)
         
         # 4. Ajustement cognitif dynamique
-        fused_results = self._adjust_scores_cognitively(fused_results, query)
+        fused_results = self._adjust_scores_cognitively(fused_results, query, user_id=user_id)
         
         return fused_results[:limit]
 
@@ -233,10 +254,12 @@ class AdvancedRAGService:
             logger.warning(f"Self-RAG verification failed: {e}")
             return True # Par défaut on continue si le juge échoue
 
-    def _adjust_scores_cognitively(self, candidates: List[Dict], query: str) -> List[Dict]:
+    def _adjust_scores_cognitively(self, candidates: List[Dict], query: str, user_id: Optional[str] = None) -> List[Dict]:
         if not candidates:
             return candidates
-        if not self.quantum_model and not self.plasticity_simulator:
+        
+        quantum_model, plasticity_simulator = self._get_cognitive_models(user_id)
+        if not quantum_model and not plasticity_simulator:
             return candidates
 
         # 1. Identifier les concepts stimulés par la requête
@@ -262,7 +285,7 @@ class AdvancedRAGService:
 
             # --- A. Partie Plastique (Simulator) ---
             plastic_score = 0.0
-            if self.plasticity_simulator:
+            if plasticity_simulator:
                 candidate_concepts = [self.GENRE_TO_CONCEPT[g] for g in genres if g in self.GENRE_TO_CONCEPT]
                 if candidate_concepts:
                     weights = []
@@ -270,15 +293,15 @@ class AdvancedRAGService:
                         if query_concepts:
                             # Moyenne des poids synaptiques pré-synaptiques (query) vers post-synaptiques (document)
                             for c_q in query_concepts:
-                                weights.append(self.plasticity_simulator.W[c_q, c_d])
+                                weights.append(plasticity_simulator.W[c_q, c_d])
                         else:
                             # Si pas de concept dans la requête, utiliser la moyenne d'attention globale
-                            weights.append(np.mean(self.plasticity_simulator.W[:, c_d]))
+                            weights.append(np.mean(plasticity_simulator.W[:, c_d]))
                     plastic_score = np.mean(weights) if weights else 0.0
 
             # --- B. Partie Quantique (Preference Model) ---
             quantum_score = 0.0
-            if self.quantum_model:
+            if quantum_model:
                 # Mappage des genres aux 4 thèmes quantiques supportés
                 quantum_theme = None
                 if "shonen" in genres or "shounen" in genres:
@@ -292,11 +315,11 @@ class AdvancedRAGService:
 
                 if quantum_theme:
                     # Règle de Born : calcul de la probabilité sans effondrer l'état
-                    P = self.quantum_model.projectors.get(quantum_theme)
+                    P = quantum_model.projectors.get(quantum_theme)
                     if P is not None:
                         # p = <psi| P |psi>
-                        self.quantum_model.state /= np.linalg.norm(self.quantum_model.state)
-                        quantum_score = float(np.real(np.dot(np.conj(self.quantum_model.state), np.dot(P, self.quantum_model.state))))
+                        quantum_model.state /= np.linalg.norm(quantum_model.state)
+                        quantum_score = float(np.real(np.dot(np.conj(quantum_model.state), np.dot(P, quantum_model.state))))
                 else:
                     quantum_score = 0.5 # Neutre
 
@@ -305,7 +328,7 @@ class AdvancedRAGService:
             
             # Ajustement du score du candidat (nous créons ou ajustons la clé 'score')
             base_score = candidate.get("score")
-            # Si le score de base est nul ou absent (ex: PgVector renvoie des distances), on utilise un score neutre de 0.5
+            # Si le score de base est nul ou absent (ex: score non calculé), on utilise un score neutre de 0.5
             if base_score is None:
                 base_score = 0.5
             
