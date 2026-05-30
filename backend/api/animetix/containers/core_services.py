@@ -54,6 +54,7 @@ from core.domain.services.synaptic_plasticity import SynapticPlasticitySimulator
 from core.domain.services.domain_synthesizer import AutonomousDomainSynthesizer
 from core.domain.services.star_mlops_service import StarMLOpsDomainService
 from core.domain.services.drift_service import DriftService
+from core.domain.services.archetype_drift_service import ArchetypeDriftService
 from core.domain.services.dpo_feedback_loop import DPOFeedbackLoop
 from core.domain.services.creative.fusion_service import FusionDomainService
 from core.domain.services.creative.vs_battle_service import VsBattleService
@@ -379,6 +380,12 @@ class CoreServicesContainer(containers.DeclarativeContainer):
     drift_service = providers.Singleton(
         DriftService,
         repository=persistence.repository
+    )
+
+    archetype_drift_service = providers.Singleton(
+        ArchetypeDriftService,
+        feedback_port=persistence.feedback_adapter,
+        memory_service=agentic.memory_service
     )
 
     dpo_feedback_loop = providers.Singleton(
