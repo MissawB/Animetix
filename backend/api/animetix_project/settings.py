@@ -13,6 +13,7 @@ environ.Env.read_env(os.path.join(Path(__file__).resolve().parent.parent.parent,
 
 # Build paths
 BASE_DIR = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = BASE_DIR.parent.parent
 
 # --- AUTO-DETECTION MODE DEV vs PROD ---
 # Use an explicit environment variable for production detection
@@ -221,7 +222,7 @@ ROOT_URLCONF = 'animetix_project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(PROJECT_ROOT, "frontend", "dist")],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -295,6 +296,10 @@ CELERY_BEAT_SCHEDULE = {
 # Static files
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+STATICFILES_DIRS = [
+    os.path.join(PROJECT_ROOT, "frontend", "dist"),
+]
 
 # --- 📁 CENTRALIZED PATHS ---
 PROJECT_ROOT = BASE_DIR.parent.parent
