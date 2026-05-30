@@ -3,6 +3,8 @@ from dependency_injector import containers, providers
 
 from core.domain.services.llm_service import LLMService
 from core.domain.services.advanced_rag_service import AdvancedRAGService
+from core.domain.services.quantum_cognitive_model import QuantumCognitivePreferenceModel
+from core.domain.services.synaptic_plasticity import SynapticPlasticitySimulator
 from core.domain.services.rag.agents.debate_manager import DebateManager
 from core.domain.services.rag.agents.librarian import LibrarianAgent
 from core.domain.services.rag.agents.forge import ForgeAgent
@@ -29,6 +31,16 @@ class AgenticContainer(containers.DeclarativeContainer):
 
     mlops_adapter_factory = providers.Factory(MlopsAdapter)
 
+    quantum_cognitive_model = providers.Singleton(
+        QuantumCognitivePreferenceModel,
+        dimension=4
+    )
+
+    synaptic_plasticity_simulator = providers.Singleton(
+        SynapticPlasticitySimulator,
+        num_concepts=10
+    )
+
     llm_service = providers.Singleton(
         LLMService,
         inference_engine=inference.inference_engine,
@@ -43,7 +55,9 @@ class AgenticContainer(containers.DeclarativeContainer):
         repository=persistence.repository,
         llm_service=llm_service,
         neo4j_manager=persistence.graph_persistence_port,
-        colbert_adapter=persistence.colbert_adapter
+        colbert_adapter=persistence.colbert_adapter,
+        quantum_model=quantum_cognitive_model,
+        plasticity_simulator=synaptic_plasticity_simulator
     )
 
     graph_expert = providers.Singleton(

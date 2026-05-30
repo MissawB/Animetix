@@ -97,3 +97,7 @@ data/mlops/
 
 # Superpowers documentation
 docs/superpowers/
+
+# Node modules at root
+node_modules/
+

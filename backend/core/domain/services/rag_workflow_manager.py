@@ -169,6 +169,10 @@ class RAGWorkflowManager:
                 else:
                     ctx.current_state = RAGState.FAILED
 
+        # Mise à jour des modèles cognitifs de plasticité et de préférence quantique
+        if ctx.current_state == RAGState.FINALIZE:
+            self._update_cognitive_state(ctx.query, ctx.full_answer, ctx.candidates)
+
         # Logging DPO asynchrone autonome si une réécriture a eu lieu
         if ctx.current_state == RAGState.FINALIZE and rejected_responses and ctx.full_answer:
             self._async_log_dpo(ctx.query, ctx.full_answer, rejected_responses[0])
@@ -616,3 +620,65 @@ class RAGWorkflowManager:
         system = "Tu es un assistant expert de l'univers anime/manga. Sois extrêmement précis, direct et factuel. Pas de blabla inutile."
         for token in self.inference_engine.stream_generate(prompt, system):
             yield StreamStep(type="token", content=token).model_dump()
+
+    def _update_cognitive_state(self, query: str, answer: str, candidates: List[Dict]):
+        if not self.rag_service.quantum_model and not self.rag_service.plasticity_simulator:
+            return
+
+        # 1. Identifier les concepts de la requête
+        query_genres = []
+        q_lower = query.lower()
+        for genre, cid in self.rag_service.GENRE_TO_CONCEPT.items():
+            if genre in q_lower:
+                query_genres.append(genre)
+
+        query_concepts = [self.rag_service.GENRE_TO_CONCEPT[g] for g in query_genres]
+
+        # 2. Identifier les concepts du meilleur candidat retourné
+        candidate_concepts = []
+        quantum_theme = None
+        
+        if candidates:
+            top_cand = candidates[0]
+            genres = [g.lower() for g in top_cand.get("genres", [])]
+            # Fallback parsing du titre/description
+            desc_lower = top_cand.get("description", "").lower()
+            title_lower = (top_cand.get("title") or top_cand.get("name") or "").lower()
+            for genre in self.rag_service.GENRE_TO_CONCEPT:
+                if genre not in genres and (genre in desc_lower or genre in title_lower):
+                    genres.append(genre)
+            
+            candidate_concepts = [self.rag_service.GENRE_TO_CONCEPT[g] for g in genres if g in self.rag_service.GENRE_TO_CONCEPT]
+
+            # Mappage pour le modèle quantique
+            if "shonen" in genres or "shounen" in genres:
+                quantum_theme = "shonen"
+            elif "seinen" in genres:
+                quantum_theme = "seinen"
+            elif "ghibli" in genres or "fantasy" in genres:
+                quantum_theme = "ghibli"
+            elif "comedy" in genres or "comédie" in genres:
+                quantum_theme = "comedy"
+
+        # --- A. Mise à jour de la Plasticité Synaptique (Hebb & STDP) ---
+        if self.rag_service.plasticity_simulator:
+            active_indices = list(set(query_concepts + candidate_concepts))
+            if active_indices:
+                # Hebbian : co-activation de tous les concepts actifs
+                activations = [1.0 if i in active_indices else 0.0 for i in range(10)]
+                self.rag_service.plasticity_simulator.update_hebbian(activations)
+                
+                # STDP : potentiation (LTP) de la requête (pre) vers les résultats (post)
+                current_time = time.time()
+                for pre in query_concepts:
+                    for post in candidate_concepts:
+                        if pre != post:
+                            # Pre s'active légèrement avant post
+                            self.rag_service.plasticity_simulator.trigger_spikes([pre], current_time - 0.05)
+                            self.rag_service.plasticity_simulator.trigger_spikes([post], current_time)
+                            self.rag_service.plasticity_simulator.update_stdp(pre, post)
+
+        # --- B. Effondrement de l'état quantique ---
+        if self.rag_service.quantum_model and quantum_theme:
+            # Effectue une mesure projective, effondrant l'état cognitif |psi>
+            self.rag_service.quantum_model.measure_preference(quantum_theme)

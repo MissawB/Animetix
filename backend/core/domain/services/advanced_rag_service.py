@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import logging
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 from core.ports.repository_port import RepositoryPort
 from core.ports.graph_persistence_port import GraphPersistencePort
 from ..exceptions import InfrastructureError, ParsingError, InferenceError
@@ -17,12 +17,31 @@ class AdvancedRAGService:
     Service RAG 2.0 combinant recherche hybride, ré-ordonnancement (Reranking)
     et vérification de cohérence (Self-RAG).
     """
-    def __init__(self, repository: RepositoryPort, llm_service: LLMService, neo4j_manager: Optional[GraphPersistencePort] = None, prompt_manager: PromptManager = None, colbert_adapter=None):
+    GENRE_TO_CONCEPT = {
+        "action": 0, "romance": 1, "sci-fi": 2, "science-fiction": 2,
+        "comedy": 3, "comedie": 3, "drama": 4, "drame": 4,
+        "fantasy": 5, "fantastique": 5, "slice of life": 6, "tranche de vie": 6,
+        "horror": 7, "horreur": 7, "mystery": 8, "mystere": 8,
+        "adventure": 9, "aventure": 9
+    }
+
+    def __init__(
+        self,
+        repository: RepositoryPort,
+        llm_service: LLMService,
+        neo4j_manager: Optional[GraphPersistencePort] = None,
+        prompt_manager: PromptManager = None,
+        colbert_adapter=None,
+        quantum_model: Optional[Any] = None,
+        plasticity_simulator: Optional[Any] = None
+    ):
         self.repository = repository
         self.llm_service = llm_service
         self.neo4j_manager = neo4j_manager
         self.prompt_manager = prompt_manager or getattr(llm_service, 'prompt_manager', None)
         self.colbert_adapter = colbert_adapter
+        self.quantum_model = quantum_model
+        self.plasticity_simulator = plasticity_simulator
         self._indices: Dict[str, HybridSearchIndex] = {}
         self.rerank_cache = RerankingCache()
 
@@ -56,6 +75,9 @@ class AdvancedRAGService:
             
         # 3. Fusion des résultats avec RRF
         fused_results = idx.reciprocal_rank_fusion(lexical_results, semantic_results)
+        
+        # 4. Ajustement cognitif dynamique
+        fused_results = self._adjust_scores_cognitively(fused_results, query)
         
         return fused_results[:limit]
 
@@ -149,11 +171,12 @@ class AdvancedRAGService:
             self.rerank_cache.set_scores(query, scores_to_cache)
             
             # 4. Tri final
-            return sorted(candidates, key=lambda x: final_scores.get(str(x['id']), 0.0), reverse=True)
+            sorted_candidates = sorted(candidates, key=lambda x: final_scores.get(str(x['id']), 0.0), reverse=True)
+            return self._adjust_scores_cognitively(sorted_candidates, query)
             
         except Exception as e:
             logger.error(f"Reranking optimization failed: {e}")
-            return candidates
+            return self._adjust_scores_cognitively(candidates, query)
 
     def generate_advanced_answer(self, query: str, media_type: str) -> str:
         # 1. Fetch wide candidate pool
@@ -209,3 +232,91 @@ class AdvancedRAGService:
         except Exception as e:
             logger.warning(f"Self-RAG verification failed: {e}")
             return True # Par défaut on continue si le juge échoue
+
+    def _adjust_scores_cognitively(self, candidates: List[Dict], query: str) -> List[Dict]:
+        if not candidates:
+            return candidates
+        if not self.quantum_model and not self.plasticity_simulator:
+            return candidates
+
+        # 1. Identifier les concepts stimulés par la requête
+        query_concepts = []
+        q_lower = query.lower()
+        for genre, cid in self.GENRE_TO_CONCEPT.items():
+            if genre in q_lower:
+                query_concepts.append(cid)
+
+        adjusted_candidates = []
+        alpha = 0.3 # Force du biais cognitif
+        beta = 0.5  # Équilibre entre plasticité (0.5) et quantique (0.5)
+
+        for candidate in candidates:
+            # Récupérer les thèmes et genres du candidat
+            genres = [g.lower() for g in candidate.get("genres", [])]
+            # Si "genres" n'est pas fourni, on tente de les extraire de la description ou du titre
+            desc_lower = candidate.get("description", "").lower()
+            title_lower = (candidate.get("title") or candidate.get("name") or "").lower()
+            for genre in self.GENRE_TO_CONCEPT:
+                if genre not in genres and (genre in desc_lower or genre in title_lower):
+                    genres.append(genre)
+
+            # --- A. Partie Plastique (Simulator) ---
+            plastic_score = 0.0
+            if self.plasticity_simulator:
+                candidate_concepts = [self.GENRE_TO_CONCEPT[g] for g in genres if g in self.GENRE_TO_CONCEPT]
+                if candidate_concepts:
+                    weights = []
+                    for c_d in candidate_concepts:
+                        if query_concepts:
+                            # Moyenne des poids synaptiques pré-synaptiques (query) vers post-synaptiques (document)
+                            for c_q in query_concepts:
+                                weights.append(self.plasticity_simulator.W[c_q, c_d])
+                        else:
+                            # Si pas de concept dans la requête, utiliser la moyenne d'attention globale
+                            weights.append(np.mean(self.plasticity_simulator.W[:, c_d]))
+                    plastic_score = np.mean(weights) if weights else 0.0
+
+            # --- B. Partie Quantique (Preference Model) ---
+            quantum_score = 0.0
+            if self.quantum_model:
+                # Mappage des genres aux 4 thèmes quantiques supportés
+                quantum_theme = None
+                if "shonen" in genres or "shounen" in genres:
+                    quantum_theme = "shonen"
+                elif "seinen" in genres:
+                    quantum_theme = "seinen"
+                elif "ghibli" in genres or "fantasy" in genres:
+                    quantum_theme = "ghibli"
+                elif "comedy" in genres or "comédie" in genres:
+                    quantum_theme = "comedy"
+
+                if quantum_theme:
+                    # Règle de Born : calcul de la probabilité sans effondrer l'état
+                    P = self.quantum_model.projectors.get(quantum_theme)
+                    if P is not None:
+                        # p = <psi| P |psi>
+                        self.quantum_model.state /= np.linalg.norm(self.quantum_model.state)
+                        quantum_score = float(np.real(np.dot(np.conj(self.quantum_model.state), np.dot(P, self.quantum_model.state))))
+                else:
+                    quantum_score = 0.5 # Neutre
+
+            # --- C. Combinaison Cognitive ---
+            cog_multiplier = beta * plastic_score + (1.0 - beta) * quantum_score
+            
+            # Ajustement du score du candidat (nous créons ou ajustons la clé 'score')
+            base_score = candidate.get("score")
+            # Si le score de base est nul ou absent (ex: PgVector renvoie des distances), on utilise un score neutre de 0.5
+            if base_score is None:
+                base_score = 0.5
+            
+            # Application de la formule : score_final = score_base * (1.0 + alpha * cog_multiplier)
+            final_score = base_score * (1.0 + alpha * cog_multiplier)
+            
+            # Copie profonde légère pour éviter de modifier le candidat original par effet de bord
+            adjusted_cand = dict(candidate)
+            adjusted_cand["score"] = round(final_score, 4)
+            adjusted_cand["cognitive_boost"] = round(cog_multiplier, 4)
+            adjusted_candidates.append(adjusted_cand)
+
+        # Trier à nouveau les candidats selon le nouveau score cognitif ajusté
+        return sorted(adjusted_candidates, key=lambda x: x.get("score", 0.0), reverse=True)

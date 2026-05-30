@@ -27,7 +27,8 @@ WORKDIR /app
 # Copy venv from builder
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
-ENV PYTHONPATH="/app/backend:/app/backend/api:$PYTHONPATH"
+ENV PYTHONPATH="/app:/app/backend:/app/backend/api:$PYTHONPATH"
+
 
 
 # Copy code and set permissions

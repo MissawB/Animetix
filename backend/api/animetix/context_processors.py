@@ -4,7 +4,7 @@ def translation_processor(request):
     """Injecte les textes traduits dans tous les templates."""
     lang = request.session.get('language', 'Français')
     return {
-        'txt': get_container().translation_service.get_translations(lang),
+        'txt': get_container().infrastructure.translation_service().get_translations(lang),
         'current_lang': lang
     }
 

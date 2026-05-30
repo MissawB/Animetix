@@ -349,10 +349,7 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         inference_engine=inference.inference_engine
     )
 
-    quantum_cognitive_model = providers.Singleton(
-        QuantumCognitivePreferenceModel,
-        dimension=4
-    )
+    quantum_cognitive_model = agentic.quantum_cognitive_model
 
     swarm_consensus_orchestrator = providers.Singleton(
         SwarmConsensusOrchestrator,
@@ -369,10 +366,7 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         SelfEvolvingCompiler
     )
 
-    synaptic_plasticity_simulator = providers.Singleton(
-        SynapticPlasticitySimulator,
-        num_concepts=10
-    )
+    synaptic_plasticity_simulator = agentic.synaptic_plasticity_simulator
 
     autonomous_domain_synthesizer = providers.Singleton(
         AutonomousDomainSynthesizer,

@@ -54,7 +54,8 @@ def run_star_training_cycle_task():
     new_entries = container.star_mlops_service.prepare_star_dataset()
     if new_entries < 1: return 'Insufficient new traces.'
     result = container.star_mlops_service.trigger_finetuning()
-    return f'STaR cycle triggered: {result['status']}'
+    return f"STaR cycle triggered: {result['status']}"
+
 
 @shared_task(bind=True, max_retries=3)
 def sync_media_item_task(self, media_type, item_id, data):
