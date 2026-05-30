@@ -11,8 +11,8 @@ mock_imageio = MagicMock()
 sys.modules["imageio"] = mock_imageio
 
 
-from adapters.inference.vision_transformers_adapter import VisionTransformersAdapter
-from core.domain.services.rag.video_rag_service import VideoRAGService
+from backend.adapters.inference.vision_transformers_adapter import VisionTransformersAdapter
+from backend.core.domain.services.rag.video_rag_service import VideoRAGService
 
 @pytest.fixture
 def adapter():
@@ -40,7 +40,7 @@ def test_frame_sampling_logic(adapter):
     assert len(frames) == 5
     assert isinstance(frames[0], Image.Image)
 
-@patch("adapters.inference.video_analysis.VideoAnalysisMixin._load_video_vlm", MagicMock())
+@patch("backend.adapters.inference.video_analysis.VideoAnalysisMixin._load_video_vlm", MagicMock())
 def test_get_video_temporal_embeddings_mocked(adapter):
     """Vérifie le workflow de récit temporel avec mocks VLM."""
     adapter._video_processor = MagicMock()
@@ -60,7 +60,7 @@ def test_get_video_temporal_embeddings_mocked(adapter):
     assert len(res) == 1
     assert "Gear 5" in res[0]["summary"]
 
-@patch("adapters.inference.video_analysis.VideoAnalysisMixin._load_video_vlm", MagicMock())
+@patch("backend.adapters.inference.video_analysis.VideoAnalysisMixin._load_video_vlm", MagicMock())
 def test_video_rag_service_orchestration(video_service):
     """Vérifie que le service de domaine orchestre correctement l'analyse."""
     video_service.inference_engine.get_video_temporal_embeddings = MagicMock(return_value=[{"summary": "test"}])
@@ -87,7 +87,7 @@ def test_video_rag_indexing_and_search():
     
     # Mock repo search to return the indexed segment
     mock_repo.search_media_items.return_value = [{
-        "id": "vid1_0", "video_id": "vid1", "start": 0, "end": 10, "summary": "A battle scene"
+        "id": "vid1_0_0", "video_id": "vid1", "start": 0, "end": 10, "summary": "A battle scene"
     }]
     
     service = VideoRAGService(inference_engine=mock_engine, repository=mock_repo)
@@ -95,6 +95,11 @@ def test_video_rag_indexing_and_search():
     # Test Indexing
     service.index_video("vid1", b"fake_video")
     mock_repo.upsert_items.assert_called_once()
+    
+    # Check that the ID passed to upsert_items has the sub-index
+    args, kwargs = mock_repo.upsert_items.call_args
+    # args[1] is the list of IDs
+    assert args[1][0] == "vid1_0_0"
     
     # Test Searching
     results = service.search_video_segment("battle")

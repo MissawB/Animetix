@@ -31,8 +31,8 @@ class VideoRAGService:
         
         for i, chunk in enumerate(chunks):
             segments = self.inference_engine.get_video_temporal_embeddings(chunk)
-            for seg in segments:
-                chunk_id = f"{video_id}_{i}"
+            for j, seg in enumerate(segments):
+                chunk_id = f"{video_id}_{i}_{j}"
                 emb = seg.get("embedding", [])
                 
                 # Only index if we have a valid embedding
@@ -42,6 +42,7 @@ class VideoRAGService:
                     metadatas.append({
                         "video_id": video_id,
                         "chunk_index": i,
+                        "segment_index": j,
                         "start": seg.get("start", 0),
                         "end": seg.get("end", -1),
                         "summary": seg.get("summary", "")
@@ -138,7 +139,11 @@ class VideoRAGService:
         }
 
     def _segment_video(self, video_data: bytes) -> List[bytes]:
-        """Découpage physique du flux. (En prod: FFmpeg)"""
+        """
+        Découpage physique du flux.
+        NOTE: Prototype demo slicing by bytes. In production, this should be replaced
+        by a proper video library like FFmpeg or PyAV to ensure segment integrity.
+        """
         # Pour le prototype industriel, on divise en 4 pour montrer le parallélisme
         size = len(video_data)
         return [
