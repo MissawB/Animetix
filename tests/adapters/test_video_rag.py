@@ -72,3 +72,31 @@ def test_video_rag_service_orchestration(video_service):
     assert "actions" in res
     assert res["narrative"][0]["summary"] == "test"
     assert res["actions"][0]["action"] == "combat"
+
+def test_video_rag_indexing_and_search():
+    from unittest.mock import MagicMock
+    from backend.core.domain.services.rag.video_rag_service import VideoRAGService
+    
+    mock_engine = MagicMock()
+    mock_repo = MagicMock()
+    
+    # Mock inference to return a summary with an embedding
+    mock_engine.get_video_temporal_embeddings.return_value = [{
+        "start": 0, "end": 10, "summary": "A battle scene", "embedding": [0.1, 0.2]
+    }]
+    
+    # Mock repo search to return the indexed segment
+    mock_repo.search_media_items.return_value = [{
+        "id": "vid1_0", "video_id": "vid1", "start": 0, "end": 10, "summary": "A battle scene"
+    }]
+    
+    service = VideoRAGService(inference_engine=mock_engine, repository=mock_repo)
+    
+    # Test Indexing
+    service.index_video("vid1", b"fake_video")
+    mock_repo.upsert_items.assert_called_once()
+    
+    # Test Searching
+    results = service.search_video_segment("battle")
+    assert len(results) == 1
+    assert results[0]["video_id"] == "vid1"

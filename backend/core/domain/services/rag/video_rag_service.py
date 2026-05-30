@@ -11,10 +11,54 @@ class VideoRAGService:
     Orchestrateur Video-RAG Industriel.
     Gère l'analyse distribuée de vidéos d'anime via Celery et VLM.
     """
-    def __init__(self, inference_engine: InferencePort, prompt_manager=None):
+    def __init__(self, inference_engine: InferencePort, repository=None, prompt_manager=None):
         self.inference_engine = inference_engine
+        self.repository = repository
         self.prompt_manager = prompt_manager
         self.chunk_duration = 30 # Secondes par segment
+        self.collection_name = "video_temporal"
+
+    def index_video(self, video_id: str, video_data: bytes) -> int:
+        """Découpe, analyse et indexe une vidéo dans ChromaDB."""
+        if not self.repository:
+            logger.error("No repository provided for Video-RAG indexing.")
+            return 0
+            
+        chunks = self._segment_video(video_data)
+        ids = []
+        embeddings = []
+        metadatas = []
+        
+        for i, chunk in enumerate(chunks):
+            segments = self.inference_engine.get_video_temporal_embeddings(chunk)
+            for seg in segments:
+                chunk_id = f"{video_id}_{i}"
+                emb = seg.get("embedding", [])
+                
+                # Only index if we have a valid embedding
+                if emb:
+                    ids.append(chunk_id)
+                    embeddings.append(emb)
+                    metadatas.append({
+                        "video_id": video_id,
+                        "chunk_index": i,
+                        "start": seg.get("start", 0),
+                        "end": seg.get("end", -1),
+                        "summary": seg.get("summary", "")
+                    })
+        
+        if ids:
+            self.repository.upsert_items(self.collection_name, ids, embeddings, metadatas)
+            logger.info(f"Indexed {len(ids)} segments for video {video_id}.")
+            return len(ids)
+        return 0
+
+    def search_video_segment(self, query: str, limit: int = 5) -> List[Dict[str, Any]]:
+        """Recherche sémantique d'un segment vidéo."""
+        if not self.repository:
+            return []
+        # Uses standard collection search
+        return self.repository.search_media_items(query, media_type=self.collection_name, limit=limit)
 
     def start_distributed_analysis(self, video_data: bytes, query: Optional[str] = None) -> Any:
         """
