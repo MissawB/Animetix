@@ -244,6 +244,28 @@ class CreativeFusion(models.Model):
     def __str__(self):
         return f"{self.title_a} x {self.title_b} by {self.creator}"
 
+class VsBattle(models.Model):
+    char_a_name = models.CharField(max_length=255)
+    char_b_name = models.CharField(max_length=255)
+    char_a_franchise = models.CharField(max_length=255, null=True, blank=True)
+    char_b_franchise = models.CharField(max_length=255, null=True, blank=True)
+    
+    char_a_data = models.JSONField() 
+    char_b_data = models.JSONField() 
+    
+    winner = models.CharField(max_length=255)
+    verdict_summary = models.TextField()
+    debate_history = models.JSONField() 
+    
+    creator = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='vs_battles')
+    likes = models.ManyToManyField(User, related_name='liked_vs_battles', blank=True)
+    
+    is_public = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.char_a_name} vs {self.char_b_name}"
+
 class Notification(models.Model):
     TYPES = [
         ('achievement', 'Succès Débloqué'),

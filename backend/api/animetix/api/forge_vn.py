@@ -1,13 +1,28 @@
-from rest_framework import permissions, status
+from rest_framework import permissions, status, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from dependency_injector.wiring import inject, Provide
 from ..models import CreativeFusion
+from ..serializers import CreativeFusionSerializer
 from ..containers import Container, get_container
 from core.domain.services.guardrail_service import GuardrailService
 from animetix_project.logging_config import get_logger
 
 logger = get_logger('animetix.api.vn')
+
+class TheaterListView(APIView):
+    """
+    Returns a list of all public fusions that have a generated Visual Novel script.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        fusions = CreativeFusion.objects.filter(
+            vn_script__isnull=False, 
+            is_public=True
+        ).order_by('-created_at')
+        serializer = CreativeFusionSerializer(fusions, many=True)
+        return Response(serializer.data)
 
 class ForgeVNView(APIView):
     """

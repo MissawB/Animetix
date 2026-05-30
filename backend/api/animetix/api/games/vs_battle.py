@@ -1,18 +1,27 @@
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from ...containers import get_container
+from ...models import VsBattle
+from ...serializers import VsBattleSerializer
 import logging
 
 logger = logging.getLogger(__name__)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def list_vs_battles(request):
+    """Liste les combats publics récents pour l'Arène."""
+    battles = VsBattle.objects.filter(is_public=True).order_by('-created_at')[:20]
+    serializer = VsBattleSerializer(battles, many=True)
+    return Response(serializer.data)
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def run_vs_battle(request):
     """
-    Exécute un combat entre deux personnages.
-    Attends un payload: { "char_a": "...", "char_a_franchise": "...", "char_b": "...", "char_b_franchise": "..." }
+    Exécute un combat entre deux personnages et l'enregistre.
     """
     char_a = request.data.get('char_a')
     char_b = request.data.get('char_b')
@@ -33,7 +42,22 @@ def run_vs_battle(request):
             char_b_franchise=char_b_franchise
         )
 
+        # Enregistrement dans la base de données
+        battle_record = VsBattle.objects.create(
+            char_a_name=char_a,
+            char_b_name=char_b,
+            char_a_franchise=char_a_franchise,
+            char_b_franchise=char_b_franchise,
+            char_a_data=result.character_a.model_dump(),
+            char_b_data=result.character_b.model_dump(),
+            winner=result.winner,
+            verdict_summary=result.verdict_summary,
+            debate_history=[turn.model_dump() for turn in result.debate_history],
+            creator=request.user if request.user.is_authenticated else None
+        )
+
         return Response({
+            "id": battle_record.id,
             "character_a": result.character_a.model_dump(),
             "character_b": result.character_b.model_dump(),
             "winner": result.winner,
@@ -46,3 +70,20 @@ def run_vs_battle(request):
     except Exception as e:
         logger.error(f"VS Battle internal error: {e}", exc_info=True)
         return Response({"error": "Erreur interne lors de la résolution du combat."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def like_vs_battle(request, battle_id):
+    """Aime un combat dans l'Arène."""
+    try:
+        battle = VsBattle.objects.get(id=battle_id)
+        if request.user in battle.likes.all():
+            battle.likes.remove(request.user)
+            liked = False
+        else:
+            battle.likes.add(request.user)
+            liked = True
+        return Response({"status": "success", "liked": liked, "likes_count": battle.likes.count()})
+    except VsBattle.DoesNotExist:
+        return Response({"error": "Combat non trouvé"}, status=status.HTTP_404_NOT_FOUND)
+

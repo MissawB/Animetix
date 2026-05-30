@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { searchMedia } from '../api';
 import { Search, X, Camera, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -20,6 +21,7 @@ interface SearchBarProps {
 
 export const SearchBar: React.FC<SearchBarProps> = ({ onSelect, placeholder }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [query, setQuery] = useState<string>('');
   const [results, setResults] = useState<SearchItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -54,6 +56,13 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSelect, placeholder }) =
     }, 300);
   }, []);
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && query.trim().length >= 2) {
+        setIsOpen(false);
+        navigate(`/search/?q=${encodeURIComponent(query.trim())}`);
+    }
+  };
+
   const handleImageSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -87,7 +96,13 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSelect, placeholder }) =
     setQuery(item.title || item.name || '');
     setIsOpen(false);
     setPreviewUrl(null);
-    if (onSelect) onSelect(item);
+    
+    if (onSelect) {
+        onSelect(item);
+    } else {
+        // Default behavior: go to detail page
+        navigate(`/media/${item.type}/${item.id}/`);
+    }
   };
 
   const clearSearch = () => {
@@ -107,6 +122,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSelect, placeholder }) =
         <Input
           value={query}
           onChange={handleChange}
+          onKeyDown={handleKeyDown}
           placeholder={placeholder || t('search.placeholder')}
           className="pl-12 pr-24"
           autoComplete="off"

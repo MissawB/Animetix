@@ -4,6 +4,9 @@ import Layout from './Layout';
 import { GameRoutes } from '../features/games/routes/GameRoutes';
 import { SocialRoutes } from '../features/social/routes/SocialRoutes';
 import { LabRoutes } from '../features/labs/routes/LabRoutes';
+import { MediaRoutes } from '../features/media/routes/MediaRoutes';
+import { CompanionRoutes } from '../features/companion/routes/CompanionRoutes';
+import { SearchRoutes } from '../features/search/routes/SearchRoutes';
 import { AdminRoutes } from '../features/admin/routes/AdminRoutes';
 import { UtilsRoutes } from '../features/utils/routes/UtilsRoutes';
 
@@ -20,6 +23,9 @@ const AppRouter: React.FC = () => {
           <Routes>
             <Route path="/" element={<App />} />
             {SocialRoutes}
+            {MediaRoutes}
+            {SearchRoutes}
+            {CompanionRoutes}
             {GameRoutes}
             {LabRoutes}
             {UtilsRoutes}

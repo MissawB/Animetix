@@ -52,12 +52,15 @@ def image_proxy_view(request):
         return HttpResponse(cached_data['content'], content_type=cached_data['content_type'])
 
     try:
-        response = httpx.get(url, timeout=10, follow_redirects=True)
+        response = httpx.get(url, timeout=10, follow_redirects=False)
         if response.status_code == 200:
             content = response.content
             content_type = response.headers.get('Content-Type', 'image/jpeg')
             cache.set(cache_key, {'content': content, 'content_type': content_type}, 60*60*24*7)
             return HttpResponse(content, content_type=content_type)
+        elif response.status_code in (301, 302, 303, 307, 308):
+            logger.warning(f"Blocked redirect attempt in image proxy: {url} -> {response.headers.get('Location')}")
+            return HttpResponse("Forbidden: Redirects not allowed", status=403)
     except Exception as e:
         logger.error("Image Proxy Error: %s", e, exc_info=True)
         

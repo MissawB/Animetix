@@ -202,7 +202,9 @@ class SpatialLabDataView(APIView):
             else:
                 if not is_safe_url(image_url):
                     return Response({'error': 'URL is not allowed for security reasons.'}, status=status.HTTP_403_FORBIDDEN)
-                res = httpx.get(image_url, timeout=10, follow_redirects=True)
+                res = httpx.get(image_url, timeout=10, follow_redirects=False)
+                if res.status_code in (301, 302, 303, 307, 308):
+                    return Response({'error': 'Redirects are not allowed for security reasons.'}, status=status.HTTP_403_FORBIDDEN)
                 res.raise_for_status()
                 image_data = res.content
             
@@ -239,10 +241,11 @@ class Generate3DDataView(APIView):
             if uploaded_file:
                 image_data = uploaded_file.read()
             else:
-                from .utils import is_safe_url
                 if not is_safe_url(image_url):
                     return Response({'error': 'URL is not allowed for security reasons.'}, status=status.HTTP_403_FORBIDDEN)
-                res = httpx.get(image_url, timeout=10, follow_redirects=True)
+                res = httpx.get(image_url, timeout=10, follow_redirects=False)
+                if res.status_code in (301, 302, 303, 307, 308):
+                    return Response({'error': 'Redirects are not allowed for security reasons.'}, status=status.HTTP_403_FORBIDDEN)
                 res.raise_for_status()
                 image_data = res.content
             
@@ -272,7 +275,9 @@ class MangaLabDataView(APIView):
             else:
                 if not is_safe_url(image_url):
                     return Response({'error': 'URL is not allowed for security reasons.'}, status=status.HTTP_403_FORBIDDEN)
-                res = httpx.get(image_url, timeout=10, follow_redirects=True)
+                res = httpx.get(image_url, timeout=10, follow_redirects=False)
+                if res.status_code in (301, 302, 303, 307, 308):
+                    return Response({'error': 'Redirects are not allowed for security reasons.'}, status=status.HTTP_403_FORBIDDEN)
                 res.raise_for_status()
                 image_data = res.content
             

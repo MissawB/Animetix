@@ -71,14 +71,37 @@ class SocialUserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'username', 'level']
 
+from .models import CreativeFusion, VsBattle
+
 class CreativeFusionSerializer(serializers.ModelSerializer):
     creator_name = serializers.ReadOnlyField(source='creator.username')
     likes_count = serializers.IntegerField(source='likes.count', read_only=True)
-    is_remix = serializers.SerializerMethodField()
+    is_liked = serializers.SerializerMethodField()
 
     class Meta:
         model = CreativeFusion
         fields = '__all__'
+    
+    def get_is_liked(self, obj):
+        user = self.context['request'].user if 'request' in self.context else None
+        if user and user.is_authenticated:
+            return obj.likes.filter(id=user.id).exists()
+        return False
+
+class VsBattleSerializer(serializers.ModelSerializer):
+    creator_name = serializers.ReadOnlyField(source='creator.username')
+    likes_count = serializers.IntegerField(source='likes.count', read_only=True)
+    is_liked = serializers.SerializerMethodField()
+
+    class Meta:
+        model = VsBattle
+        fields = '__all__'
+    
+    def get_is_liked(self, obj):
+        user = self.context['request'].user if 'request' in self.context else None
+        if user and user.is_authenticated:
+            return obj.likes.filter(id=user.id).exists()
+        return False
 
 from .models import AIREvalResult, GoldDatasetEntry, AIFeedback
 

@@ -8,12 +8,13 @@ const ProfilePage = lazy(() => import('../ProfilePage'));
 const CollectionPage = lazy(() => import('../CollectionPage'));
 const NotificationsPage = lazy(() => import('../NotificationsPage'));
 const TransparencyPage = lazy(() => import('../TransparencyPage'));
+const CommunityFeedPage = lazy(() => import('../CommunityFeedPage'));
 const ClubDiscoveryPage = lazy(() => import('../ClubDiscoveryPage'));
-const ClubDashboard = lazy(() => import('../ClubDashboard'));
 
 export const SocialRoutes = (
   <>
     <Route path="/social/dashboard/" element={<SocialDashboard />} />
+    <Route path="/social/feed/" element={<CommunityFeedPage />} />
     <Route path="/leaderboard/" element={<LeaderboardPage />} />
     <Route path="/profile/:username/" element={<ProfilePage />} />
     <Route path="/achievements/" element={<AchievementsPage />} />

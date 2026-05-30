@@ -1,12 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useCompanionStore } from './companionStore';
-import { Send, Loader2, X, Trash2, User as UserIcon, Bot } from 'lucide-react';
+import { Send, Loader2, X, Trash2, User as UserIcon, Bot, Maximize2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 const CompanionDialogue: React.FC = () => {
-  const { history, isLoading, sendMessage, clearHistory, activeMentor, setMentor } = useCompanionStore();
+  const { history, isLoading, sendMessage, clearHistory, activeMentor, setMentor, toggleOpen } = useCompanionStore();
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+
+  const handleMaximize = () => {
+    toggleOpen();
+    navigate('/companion/chat/');
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -39,6 +46,13 @@ const CompanionDialogue: React.FC = () => {
           </div>
         </div>
         <div className="flex gap-2">
+          <button 
+            onClick={handleMaximize}
+            className="p-1 hover:bg-slate-700 rounded transition-colors text-slate-400 hover:text-blue-400"
+            title="Open Full Hub"
+          >
+            <Maximize2 size={16} />
+          </button>
           <button 
             onClick={clearHistory}
             className="p-1 hover:bg-slate-700 rounded transition-colors text-slate-400 hover:text-red-400"

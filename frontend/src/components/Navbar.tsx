@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useUIStore } from '../store/uiStore';
 import { useAuthStore } from '../store/authStore';
-import { Menu, Shield, Sparkles, Box, FlaskConical, Network, Users } from 'lucide-react';
+import { Menu, Shield, Sparkles, Box, FlaskConical, Network, Users, Radio, Search } from 'lucide-react';
 import { FeatureGate } from './utils/FeatureGate';
 import { useTranslation } from 'react-i18next';
 
@@ -21,8 +21,17 @@ const Navbar: React.FC = () => {
           <span className="font-black text-2xl italic tracking-tighter group-hover:text-blue-500 transition-colors">ANIMETIX</span>
         </Link>
         <div className="hidden md:flex items-center gap-8 ml-12">
-          <Link to="/forge/" className="flex items-center gap-2 no-underline text-xs font-black italic text-gray-500 hover:text-yellow-400 transition-all uppercase tracking-widest">
-            <Sparkles className="w-4 h-4 text-yellow-400" /> {t('navbar.forge')}
+          <Link to="/games/hub/" className="flex items-center gap-2 no-underline text-xs font-black italic text-gray-500 hover:text-blue-500 transition-all uppercase tracking-widest">
+            <Gamepad2 className="w-4 h-4 text-blue-500" /> Games
+          </Link>
+          <Link to="/theater/" className="flex items-center gap-2 no-underline text-xs font-black italic text-gray-500 hover:text-red-500 transition-all uppercase tracking-widest">
+            <Film className="w-4 h-4 text-red-500" /> Theater
+          </Link>
+          <Link to="/search/" className="flex items-center gap-2 no-underline text-xs font-black italic text-gray-500 hover:text-blue-500 transition-all uppercase tracking-widest">
+            <Search className="w-4 h-4 text-blue-500" /> Search
+          </Link>
+          <Link to="/social/feed/" className="flex items-center gap-2 no-underline text-xs font-black italic text-gray-500 hover:text-yellow-400 transition-all uppercase tracking-widest">
+            <Radio className="w-4 h-4 text-yellow-400" /> Community
           </Link>
           <Link to="/latent-space/" className="flex items-center gap-2 no-underline text-xs font-black italic text-gray-500 hover:text-blue-500 transition-all uppercase tracking-widest">
             <Box className="w-4 h-4 text-blue-500" /> {t('navbar.latent')}

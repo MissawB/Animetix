@@ -46,10 +46,13 @@ urlpatterns = [
     # --- ARCHETYPIST (LA FORGE) ---
     path('archetypist/start/', api_views.ArchetypistStartFusionView.as_view(), name='api_archetypist_start'),
     path('archetypist/status/', api_views.ArchetypistTaskStatusView.as_view(), name='api_archetypist_status'),
+    path('archetypist/theater/', api_views.TheaterListView.as_view(), name='api_theater_list'),
     path('archetypist/vn/<int:fusion_id>/', api_views.ForgeVNView.as_view(), name='api_forge_vn'),
     
     # ... autres endpoints API
+    path('game/vs_battle/arena/', api_views.list_vs_battles, name='api_vs_battle_arena'),
     path('game/vs_battle/run/', api_views.run_vs_battle, name='api_vs_battle_run'),
+    path('game/vs_battle/<int:battle_id>/like/', api_views.like_vs_battle, name='api_vs_battle_like'),
     path('game/classic/state/', api_views.ClassicGameStateView.as_view(), name='api_classic_state'),
     path('game/akinetix/state/', api_views.AkinetixGameStateView.as_view(), name='api_akinetix_state'),
     path('game/akinetix-rl/state/', api_views.AkinetixRLStateView.as_view(), name='api_akinetix_rl_state'),

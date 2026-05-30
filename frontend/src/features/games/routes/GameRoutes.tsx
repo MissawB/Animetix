@@ -15,9 +15,13 @@ const ForgePage = lazy(() => import('../ForgePage'));
 const ForgeVNPage = lazy(() => import('../ForgeVNPage'));
 const AkinetixRLPage = lazy(() => import('../AkinetixRLPage'));
 const VsBattlePage = lazy(() => import('../VsBattlePage'));
+const GamesHubPage = lazy(() => import('../GamesHubPage'));
+const TheaterPage = lazy(() => import('../TheaterPage'));
 
 export const GameRoutes = (
   <>
+    <Route path="/games/hub/" element={<GamesHubPage />} />
+    <Route path="/theater/" element={<TheaterPage />} />
     <Route path="/game/classic/" element={<ClassicGamePage />} />
     <Route path="/game/vsbattle/" element={<VsBattlePage />} />
     <Route path="/forge/" element={<ForgePage />} />
