@@ -106,7 +106,24 @@ class VideoAnalysisMixin:
 
             self._log_usage(engine="transformers:Qwen2-VL-2B:temporal", units=1)
 
-            return [{"start": 0, "end": -1, "summary": output_text, "confidence": 0.9}]
+            # --- Extract Text Embedding for RAG ---
+            embedding = []
+            try:
+                # Assuming this mixin is used in an adapter that also has ClipVisionMixin
+                if hasattr(self, '_load_clip_model'):
+                    self._load_clip_model()
+                    if hasattr(self, '_clip_model'):
+                        embedding = self._clip_model.encode(output_text).tolist()
+            except Exception as e:
+                logger.warning(f"Could not generate embedding for video summary: {e}")
+
+            return [{
+                "start": 0, 
+                "end": -1, 
+                "summary": output_text, 
+                "confidence": 0.9,
+                "embedding": embedding
+            }]
 
         except Exception as e:
             logger.error(f"❌ Video temporal analysis failed: {e}")
