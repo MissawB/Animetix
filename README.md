@@ -100,7 +100,7 @@ python backend/api/manage.py runserver
 ## 📂 Project Structure
 
 ```text
-Double_scenario_Project/
+Animetix/
 ├── backend/                # Backend & Core Logic
 │   ├── core/               # Domain Layer (Entities, Services, Ports)
 │   ├── adapters/           # Infrastructure Layer (Driven Adapters)

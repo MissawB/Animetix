@@ -74,7 +74,9 @@ if IS_PRODUCTION:
         from django.core.exceptions import ImproperlyConfigured
         raise ImproperlyConfigured("The DJANGO_SECRET_KEY environment variable is required in production.")
     DEBUG = env.bool('DJANGO_DEBUG', default=False)
-    ALLOWED_HOSTS = ['missawb-animetix-web.hf.space']
+    # Support dynamic ALLOWED_HOSTS via env var in production (e.g. for GCP Cloud Run)
+    ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['missawb-animetix-web.hf.space'])
+
 else:
     # Mode Développement Souple
     SECRET_KEY = 'dev-insecure-animetix-2026-v2-not-for-production'
