@@ -2,6 +2,14 @@
 
 Ce document archive les étapes majeures de l'évolution technique du projet.
 
+## [2026-05-30] Session : Hyper-Personnalisation Graphique 100%
+- **Moteur d'Archetype Drift (Backend) :** Implémentation du `ArchetypeDriftService` analysant les feedbacks (AIFeedback), l'historique de jeu (Akinetix), les fusions créatives (La Forge) et les souvenirs sémantiques (ChromaDB) pour calculer le profil utilisateur dominant parmi 15 archétypes Otaku.
+- **Middleware Visual Meta :** Mise en place d'un middleware Django injectant dynamiquement la configuration visuelle (`VisualConfig`) dans les métadonnées de toutes les réponses API authentifiées.
+- **Infrastructure de Style Dynamique (Frontend) :** Création du `personalizationStore` (Zustand) synchronisant les variables CSS (`--color-accent-drift`) et la typographie globale en temps réel.
+- **Auras et Effets Visuels :** Déploiement du composant `DynamicAuraWrapper` utilisant Framer Motion pour générer des effets visuels thématiques (Feu, Électricité, Ombre, Étincelles) basés sur l'archétype.
+- **Accessibilité & Safe Mode :** Intégration d'un bouton de bascule "Safe Mode" dans la barre de navigation pour désactiver instantanément les effets dynamiques et revenir à une UI standard.
+- **Généralisation UI :** Extension du système d'aura aux avatars utilisateurs, aux cartes de fonctionnalités et au profil global.
+
 ## [2026-05-30] Session : Audit & Renforcement Sécurité 2026
 - **Audit de Sécurité Complet :** Identification et correction de vulnérabilités critiques impactant les APIs publiques, l'infrastructure et la gestion des données.
 - **Remédiation SSRF (Proxy & Labs) :** Désactivation systématique des redirections automatiques (`follow_redirects=False`) dans `httpx` et validation stricte de l'URL finale pour tous les endpoints traitant des ressources externes.
