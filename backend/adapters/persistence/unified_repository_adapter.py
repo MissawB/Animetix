@@ -75,3 +75,11 @@ class UnifiedRepositoryAdapter(RepositoryPort):
     def get_creative_fusion(self, fusion_id: int) -> Optional[Dict]:
         """Délègue la récupération de la fusion à l'adaptateur Django."""
         return self.django.get_creative_fusion(fusion_id)
+
+    def get_user_gameplay_history(self, user_id: int, limit: int = 10) -> List[Dict]:
+        """Récupère l'historique des sessions de jeu via Django."""
+        return self.django.get_user_gameplay_history(user_id, limit)
+
+    def get_user_creative_history(self, user_id: int, limit: int = 10) -> List[Dict]:
+        """Récupère l'historique des fusions créatives via Django."""
+        return self.django.get_user_creative_history(user_id, limit)

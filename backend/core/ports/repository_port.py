@@ -71,3 +71,13 @@ class RepositoryPort(ABC):
     def get_creative_fusion(self, fusion_id: int) -> Optional[Dict]:
         """Récupère une fusion créative par son ID."""
         pass
+
+    @abstractmethod
+    def get_user_gameplay_history(self, user_id: int, limit: int = 10) -> List[Dict]:
+        """Récupère l'historique des sessions de jeu d'un utilisateur."""
+        pass
+
+    @abstractmethod
+    def get_user_creative_history(self, user_id: int, limit: int = 10) -> List[Dict]:
+        """Récupère l'historique des fusions créatives d'un utilisateur."""
+        pass

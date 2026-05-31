@@ -123,6 +123,16 @@ class DjangoRepositoryAdapter(RepositoryPort):
         except Exception:
             return None
 
+    def get_user_gameplay_history(self, user_id: int, limit: int = 10) -> List[Dict]:
+        from animetix.models import GameplaySession
+        sessions = GameplaySession.objects.filter(user_id=user_id).order_by('-created_at')[:limit]
+        return [{"target": s.target_item, "media_type": s.media_type, "won": s.was_won} for s in sessions]
+
+    def get_user_creative_history(self, user_id: int, limit: int = 10) -> List[Dict]:
+        from animetix.models import CreativeFusion
+        fusions = CreativeFusion.objects.filter(creator_id=user_id).order_by('-created_at')[:limit]
+        return [{"art_style": f.art_style, "titles": f"{f.title_a} x {f.title_b}"} for f in fusions]
+
     def _to_dict(self, item: MediaItem) -> Dict:
         data = {
             'id': item.external_id,
