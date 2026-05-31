@@ -212,7 +212,7 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         prompt_manager=infrastructure.prompt_manager
     )
 
-    studio_transform_service = providers.Singleton(
+    visual_novel_service = providers.Singleton(
         VisualNovelService,
         llm_service=agentic.llm_service,
         repository=persistence.repository
@@ -385,7 +385,8 @@ class CoreServicesContainer(containers.DeclarativeContainer):
     archetype_drift_service = providers.Singleton(
         ArchetypeDriftService,
         feedback_port=persistence.feedback_adapter,
-        memory_service=agentic.memory_service
+        memory_service=agentic.memory_service,
+        repository=persistence.repository
     )
 
     dpo_feedback_loop = providers.Singleton(
