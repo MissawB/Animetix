@@ -26,5 +26,65 @@ ARCHETYPE_VISUAL_MAP = {
         "primary_accent": "#00FFFF",
         "aura_type": "electric",
         "font_vibe": "default"
+    },
+    "tsundere": {
+        "primary_accent": "#FF1493",
+        "aura_type": "electric",
+        "font_vibe": "manga"
+    },
+    "kuudere": {
+        "primary_accent": "#00BFFF",
+        "aura_type": "shadow",
+        "font_vibe": "default"
+    },
+    "yandere": {
+        "primary_accent": "#8B0000",
+        "aura_type": "shadow",
+        "font_vibe": "manga"
+    },
+    "shonen": {
+        "primary_accent": "#FFA500",
+        "aura_type": "fire",
+        "font_vibe": "brush"
+    },
+    "seinen": {
+        "primary_accent": "#4682B4",
+        "aura_type": "shadow",
+        "font_vibe": "manga"
+    },
+    "mahou_shoujo": {
+        "primary_accent": "#FF69B4",
+        "aura_type": "sparkles",
+        "font_vibe": "default"
+    },
+    "isekai": {
+        "primary_accent": "#E0FFFF",
+        "aura_type": "sparkles",
+        "font_vibe": "default"
+    },
+    "slice_of_life": {
+        "primary_accent": "#90EE90",
+        "aura_type": "none",
+        "font_vibe": "default"
+    },
+    "mecha": {
+        "primary_accent": "#708090",
+        "aura_type": "electric",
+        "font_vibe": "brush"
+    },
+    "horror": {
+        "primary_accent": "#000000",
+        "aura_type": "shadow",
+        "font_vibe": "brush"
+    },
+    "romance": {
+        "primary_accent": "#FFB6C1",
+        "aura_type": "sparkles",
+        "font_vibe": "default"
+    },
+    "sports": {
+        "primary_accent": "#32CD32",
+        "aura_type": "fire",
+        "font_vibe": "brush"
     }
 }
