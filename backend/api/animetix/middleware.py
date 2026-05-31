@@ -1,7 +1,13 @@
 import contextvars
+import json
 import sys
+import logging
 from typing import Optional, Any
 from asgiref.sync import iscoroutinefunction
+from dependency_injector.wiring import inject, Provide
+from .containers import Container
+
+logger = logging.getLogger('animetix.middleware.personalization')
 
 # Synchronize contextvars across double-import namespaces (e.g. animetix.middleware vs backend.api.animetix.middleware)
 if "animetix.middleware" in sys.modules and __name__ != "animetix.middleware":
@@ -98,3 +104,35 @@ class UserTierMiddleware:
             return await self.get_response(request)
         finally:
             user_tier_var.reset(token)
+
+class PersonalizationMiddleware:
+    """
+    Middleware that injects visual personalization metadata into JSON responses.
+    """
+    sync_capable = True
+    async_capable = False
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    @inject
+    def __call__(self, request, drift_service=Provide[Container.core.archetype_drift_service]):
+        response = self.get_response(request)
+        
+        if response.has_header('Content-Type') and 'application/json' in response['Content-Type']:
+            if request.user.is_authenticated:
+                try:
+                    config = drift_service.calculate_drift(request.user.id)
+                    # config is a VisualConfig Pydantic model
+                    data = json.loads(response.content)
+                    if isinstance(data, dict):
+                        data['meta'] = data.get('meta', {})
+                        data['meta']['visual_config'] = config.model_dump()
+                        response.content = json.dumps(data)
+                        # Update Content-Length if present
+                        if response.has_header('Content-Length'):
+                            response['Content-Length'] = str(len(response.content))
+                except Exception as e:
+                    logger.error(f"PersonalizationMiddleware error: {e}")
+                    pass
+        return response

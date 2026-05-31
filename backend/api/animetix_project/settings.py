@@ -78,12 +78,20 @@ if IS_PRODUCTION:
     # Support dynamic ALLOWED_HOSTS via env var in production (e.g. for GCP Cloud Run)
     ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['missawb-animetix-web.hf.space'])
 
+    # --- SECURITY HARDENING (PROD) ---
+    SECURE_SSL_REDIRECT = env.bool('DJANGO_SECURE_SSL_REDIRECT', default=True)
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    USE_X_FORWARDED_HOST = True
+
 else:
-    # Mode Développement Souple
-    SECRET_KEY = 'dev-insecure-animetix-2026-v2-not-for-production'
+    # Mode Développement Sécurisé (Local uniquement)
+    SECRET_KEY = env('DJANGO_SECRET_KEY', default='dev-insecure-animetix-2026-v2-local-only')
     DEBUG = True
-    ALLOWED_HOSTS = ['localhost', '127.0.0.1', '*']
-    logger.info("🛠️  Running in DEVELOPMENT mode (DEBUG=True)")
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]']
+    logger.info("🛠️  Running in DEVELOPMENT mode (DEBUG=True). Restricted to localhost.")
 
 # --- HUGGING FACE SPACES CONFIG ---
 X_FRAME_OPTIONS = 'DENY'
@@ -187,6 +195,7 @@ MIDDLEWARE = [
     'allauth.account.middleware.AccountMiddleware',
     'animetix.middleware.UserTierMiddleware',
     'animetix.middleware.UserTrackingMiddleware', # Moved after Auth
+    'animetix.middleware.PersonalizationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django_prometheus.middleware.PrometheusAfterMiddleware',
@@ -197,7 +206,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
+        # BasicAuthentication removed for security
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
