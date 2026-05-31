@@ -4,19 +4,21 @@ import { useUIStore } from '../store/uiStore';
 import { useAuthStore } from '../store/authStore';
 import { 
   Menu, Shield, Sparkles, Box, FlaskConical, Network, Users, Radio, Search, 
-  Gamepad2, Film, User, Settings 
+  Gamepad2, Film, User, Settings, Sliders 
 } from 'lucide-react';
 import { FeatureGate } from './utils/FeatureGate';
 import { useTranslation } from 'react-i18next';
 import { DynamicAuraWrapper } from './shared/DynamicAuraWrapper';
 
 import { usePersonalizationStore } from '../store/personalizationStore';
+import { PersonalizationPanel } from './shared/PersonalizationPanel';
 
 const Navbar: React.FC = () => {
   const { t } = useTranslation();
   const toggleSidebar = useUIStore((state) => state.toggleSidebar);
   const { user } = useAuthStore();
-  const { isSafeMode, setSafeMode } = usePersonalizationStore();
+  const { isPersonalizationEnabled, setPersonalizationEnabled } = usePersonalizationStore();
+  const [showPersonalizationPanel, setShowPersonalizationPanel] = React.useState(false);
   
   return (
     <nav className="px-6 md:px-12 py-6 flex items-center justify-between sticky top-0 bg-white/80 dark:bg-navy-950/80 backdrop-blur-md z-50 border-b border-gray-100 dark:border-white/5">
@@ -56,13 +58,39 @@ const Navbar: React.FC = () => {
               <Link to="/clubs/" className="flex items-center gap-2 no-underline text-xs font-black italic text-gray-500 hover:text-blue-500 transition-all uppercase tracking-widest">
                 <Users className="w-4 h-4 text-blue-500" /> {t('navbar.clubs', 'Clubs')}
               </Link>
-              <button 
-                onClick={() => setSafeMode(!isSafeMode)}
-                className={`p-2 rounded-lg transition-all ${isSafeMode ? 'text-gray-400 opacity-50' : 'text-brand-accent animate-pulse'}`}
-                title={isSafeMode ? 'Enable Hyper-Personalization' : 'Disable Dynamic Effects (Safe Mode)'}
-              >
-                <Sparkles className="w-5 h-5" />
-              </button>
+              <div className="relative">
+                <div className="flex items-center bg-gray-50 dark:bg-navy-900 rounded-xl p-1 border border-gray-100 dark:border-white/5 shadow-inner">
+                  <button 
+                    onClick={() => setPersonalizationEnabled(!isPersonalizationEnabled)}
+                    className={`p-1.5 rounded-lg transition-all ${!isPersonalizationEnabled ? 'text-gray-400 opacity-50' : 'text-brand-accent animate-pulse bg-white dark:bg-navy-800 shadow-sm'}`}
+                    title={isPersonalizationEnabled ? 'Disable Hyper-Personalization' : 'Enable Hyper-Personalization'}
+                  >
+                    <Sparkles className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={() => setShowPersonalizationPanel(!showPersonalizationPanel)}
+                    className={`p-1.5 rounded-lg transition-all ${showPersonalizationPanel ? 'text-blue-500 bg-white dark:bg-navy-800 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                    title="Personalization Settings"
+                  >
+                    <Sliders className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {showPersonalizationPanel && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setShowPersonalizationPanel(false)} />
+                    <div className="absolute top-full right-0 mt-4 w-80 bg-white dark:bg-navy-950 rounded-2xl shadow-2xl border border-gray-100 dark:border-white/5 p-6 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                      <div className="flex items-center justify-between mb-6">
+                        <h4 className="text-sm font-black italic uppercase tracking-widest">Hybrid Control</h4>
+                        <button onClick={() => setShowPersonalizationPanel(false)} className="text-gray-400 hover:text-gray-600">
+                          <Box className="w-4 h-4 rotate-45" />
+                        </button>
+                      </div>
+                      <PersonalizationPanel />
+                    </div>
+                  </>
+                )}
+              </div>
               <DynamicAuraWrapper>
                 <Link to={`/profile/${user.username}/`} className="flex items-center gap-2 no-underline text-xs font-black italic text-gray-500 hover:text-orange-500 transition-all uppercase tracking-widest px-2 py-1 rounded-lg">
                   <User className="w-4 h-4 text-orange-500" /> {user.username}

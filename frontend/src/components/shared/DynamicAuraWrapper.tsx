@@ -3,8 +3,9 @@ import { usePersonalizationStore } from '../../store/personalizationStore';
 
 export const DynamicAuraWrapper = ({ children }: { children: React.ReactNode }) => {
   const config = usePersonalizationStore((state) => state.config);
+  const isEnabled = usePersonalizationStore((state) => state.isPersonalizationEnabled);
   
-  if (!config || config.aura_type === 'none') return <>{children}</>;
+  if (!isEnabled || !config || config.aura_type === 'none') return <>{children}</>;
 
   const getAuraAnimation = () => {
     const intensity = config.aura_intensity || 1;

@@ -2,10 +2,35 @@ import socket
 import ipaddress
 import logging
 import httpx
+import filetype
 from urllib.parse import urlparse, urljoin
 from typing import List, Optional
 
 logger = logging.getLogger('animetix.security')
+
+def validate_file_mime_type(file_bytes: bytes, allowed_mime_types: List[str]) -> bool:
+    """
+    Vérifie la véritable signature binaire (Magic Number) d'un fichier 
+    pour s'assurer qu'il correspond bien aux types MIME autorisés.
+    Empêche les attaques par fausse extension (ex: script shell nommé .jpg).
+    """
+    if not file_bytes:
+        return False
+        
+    kind = filetype.guess(file_bytes)
+    
+    if kind is None:
+        logger.warning("Fichier non reconnu ou sans signature magique valide.")
+        # Pour certains fichiers textes ou JSON, filetype peut retourner None,
+        # mais on est strict pour les médias (images/audio/vidéos).
+        return False
+        
+    mime = kind.mime
+    if mime not in allowed_mime_types:
+        logger.warning(f"Type de fichier binaire non autorisé détecté : {mime}. Autorisé : {allowed_mime_types}")
+        return False
+        
+    return True
 
 def is_safe_url(url: str, allowed_schemes: Optional[List[str]] = None, allow_internal: bool = False) -> bool:
     """

@@ -2,7 +2,6 @@ import json
 import numpy as np
 import os
 import sys
-import httpx
 import logging
 from PIL import Image
 from io import BytesIO
@@ -16,6 +15,8 @@ if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
 
 # Détection robuste de la racine du projet
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(os.path.join(BASE_DIR, "backend"))
+from core.utils.security import safe_http_request
 SRC_DIR = os.path.join(BASE_DIR, 'src')
 BACKEND_DIR = os.path.join(SRC_DIR, 'backend')
 
@@ -87,7 +88,7 @@ def run_vectorization():
 
             if c_id not in existing_vision_ids and item['image']:
                 try:
-                    res = httpx.get(item['image'], timeout=5, follow_redirects=True)
+                    res = safe_http_request("GET", item['image'], timeout=5)
                     if res.status_code == 200:
                         img = Image.open(BytesIO(res.content)).convert("RGB")
                         vision_ids.append(c_id)

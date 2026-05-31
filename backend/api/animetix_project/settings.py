@@ -93,6 +93,14 @@ else:
     ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]']
     logger.info("🛠️  Running in DEVELOPMENT mode (DEBUG=True). Restricted to localhost.")
 
+# --- DOS PREVENTION (OOM) ---
+# Limite stricte de 50 Mo par requête pour éviter les payloads massifs
+DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800 
+# Tout fichier > 2.5 Mo est écrit sur disque temporaire au lieu d'utiliser la RAM
+FILE_UPLOAD_MAX_MEMORY_SIZE = 2621440
+# Limite le nombre de champs dans un form-data (mitigation d'attaque Hash Collision)
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 1000
+
 # --- HUGGING FACE SPACES CONFIG ---
 X_FRAME_OPTIONS = 'DENY'
 SECURE_BROWSER_XSS_FILTER = True
@@ -105,12 +113,17 @@ CSRF_TRUSTED_ORIGINS = [
 
 CSRF_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_SECURE = not DEBUG
+# Protection CSRF : SameSite 'None' requiert impérativement un cookie sécurisé (HTTPS).
+# En développement (DEBUG=True), on repasse sur 'Lax' pour éviter que le navigateur rejette le cookie de session non sécurisé.
 CSRF_COOKIE_SAMESITE = 'Lax' if DEBUG else 'None'
 SESSION_COOKIE_SAMESITE = 'Lax' if DEBUG else 'None'
 
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     USE_X_FORWARDED_HOST = True
+    
+# Autoriser les cookies cross-domain (essentiel pour SameSite=None)
+CORS_ALLOW_CREDENTIALS = True
 
 # I18N
 LANGUAGE_CODE = 'fr'
@@ -210,6 +223,14 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/day',
+        'user': '1000/day'
+    }
 }
 
 SPECTACULAR_SETTINGS = {

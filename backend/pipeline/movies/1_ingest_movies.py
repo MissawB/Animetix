@@ -1,4 +1,13 @@
+# Fix path for internal imports
+import sys
+import os
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(CURRENT_DIR)))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, os.path.join(PROJECT_ROOT, "backend"))
+
 import httpx
+from core.utils.security import safe_http_request
 import json
 import time
 import os
@@ -25,7 +34,7 @@ def fetch_tmdb_page(endpoint, page=1, params={}):
     default_params = {"api_key": TMDB_API_KEY, "language": "fr-FR", "page": page}
     default_params.update(params)
     try:
-        response = httpx.get(url, params=default_params, timeout=20, follow_redirects=True)
+        response = safe_http_request("GET", url, params=default_params, timeout=20)
         if response.status_code == 200:
             return response.json()
         elif response.status_code == 429:

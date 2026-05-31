@@ -13,13 +13,16 @@ import time
 import json
 import logging
 import httpx
+from core.utils.security import safe_http_request
 from dotenv import load_dotenv
 
 # Enregistrement des chemins d'importation
 PIPELINE_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(os.path.dirname(PIPELINE_DIR))
-sys.path.insert(0, os.path.join(PROJECT_ROOT, "src"))
-sys.path.insert(0, os.path.join(PROJECT_ROOT, "src", "backend"))
+
+# Fix path for internal imports
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, os.path.join(PROJECT_ROOT, "backend"))
 
 # Chargement de Django
 import django
@@ -131,7 +134,7 @@ class ScraperH_Recs:
         url = f"https://api.jikan.moe/v4/{type_path}/{mal_id}/recommendations"
         
         try:
-            response = httpx.get(url, timeout=15, follow_redirects=True)
+            response = safe_http_request("GET", url, timeout=15)
             if response.status_code == 200:
                 recs_data = response.json().get('data', [])
                 clean_recs = []

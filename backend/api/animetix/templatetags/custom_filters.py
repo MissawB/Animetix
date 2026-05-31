@@ -1,5 +1,6 @@
 from django import template
 import base64
+import urllib.parse
 
 register = template.Library()
 
@@ -33,10 +34,12 @@ def cdn_url(url):
     """Proxy local avec cache pour les images externes."""
     if not url: return ""
     if url.startswith('data:image'): return url
-    # On utilise Weserv pour l'optimisation, mais notre proxy pour le cache local
-    clean_url = url.replace('http://', '').replace('https://', '')
-    weserv_url = f"https://images.weserv.nl/?url={clean_url}&output=webp&q=80"
     
+    # Sécurité : On encode l'URL source avant de la passer à Weserv
+    quoted_url = urllib.parse.quote(url, safe='')
+    weserv_url = f"https://images.weserv.nl/?url={quoted_url}&output=webp&q=80"
+    
+    # Le proxy local décode le base64, puis is_safe_url vérifie la destination finale
     encoded = base64.b64encode(weserv_url.encode()).decode()
     return f"/fr/cdn-proxy/?url={encoded}"
 
@@ -44,8 +47,9 @@ def cdn_url(url):
 def blur_cdn_url(url):
     """Idem cdn_url mais avec un flou de 50% pour les posters de jeux cachés."""
     if not url: return ""
-    clean_url = url.replace('http://', '').replace('https://', '')
-    weserv_url = f"https://images.weserv.nl/?url={clean_url}&blur=50&output=webp&q=60"
+    
+    quoted_url = urllib.parse.quote(url, safe='')
+    weserv_url = f"https://images.weserv.nl/?url={quoted_url}&blur=50&output=webp&q=60"
     
     encoded = base64.b64encode(weserv_url.encode()).decode()
     return f"/fr/cdn-proxy/?url={encoded}"

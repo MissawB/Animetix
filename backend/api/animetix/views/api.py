@@ -117,7 +117,6 @@ def animinator_stream(request):
             yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"
     return StreamingHttpResponse(event_stream(), content_type='text/event-stream')
 
-@csrf_exempt
 def sync_offline_data(request):
     """Synchronizes offline game results with the server profile."""
     if request.method == 'POST':

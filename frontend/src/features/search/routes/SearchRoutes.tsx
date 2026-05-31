@@ -3,10 +3,12 @@ import { lazy } from 'react';
 
 const SearchResultsPage = lazy(() => import('../SearchResultsPage'));
 const ExpertNexusPage = lazy(() => import('../ExpertNexusPage'));
+const CounterfactualSimulatorPage = lazy(() => import('../CounterfactualSimulatorPage'));
 
 export const SearchRoutes = (
   <>
     <Route path="/search/" element={<SearchResultsPage />} />
     <Route path="/search/expert/" element={<ExpertNexusPage />} />
+    <Route path="/search/counterfactual/" element={<CounterfactualSimulatorPage />} />
   </>
 );

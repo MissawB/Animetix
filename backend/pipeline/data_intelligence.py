@@ -1,10 +1,19 @@
 import json
 import os
+import sys
 import httpx
 import re
 import logging
 from typing import List
 from dotenv import load_dotenv
+
+# Fix path for internal imports
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(os.path.dirname(CURRENT_DIR))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, os.path.join(PROJECT_ROOT, "backend"))
+
+from core.utils.security import safe_http_request
 
 logger = logging.getLogger("animetix." + __name__)
 
@@ -30,10 +39,10 @@ class DataIntelligence:
         """
         
         try:
-            response = httpx.post(f"{self.brain_url}/generate", json={
+            response = safe_http_request("POST", f"{self.brain_url}/generate", json={
                 "prompt": prompt,
                 "system_prompt": "Tu es un documentaliste expert en culture geek. Tes tags sont précis et utiles pour un moteur de recherche."
-            }, timeout=30, follow_redirects=True)
+            }, timeout=30, allow_internal=True)
             
             if response.status_code == 200:
                 text = response.json().get("text", "")

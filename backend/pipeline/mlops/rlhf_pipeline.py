@@ -14,6 +14,15 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 FEEDBACK_DATASET_DIR = os.path.join(BASE_DIR, 'data', 'mlops', 'datasets')
 os.makedirs(FEEDBACK_DATASET_DIR, exist_ok=True)
 
+# Fix path for internal imports
+import sys
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(CURRENT_DIR)))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, os.path.join(PROJECT_ROOT, "backend"))
+
+from core.utils.security import safe_http_request
+
 @asset(group_name="mlops")
 def monitor_inference_health():
     """Surveille la latence et la disponibilité de l'API Brain (Inférence)."""
@@ -23,11 +32,11 @@ def monitor_inference_health():
 
     start_time = time.time()
     try:
-        # On teste une génération simple
-        res = httpx.post(f"{brain_url}/generate", json={
+        # On teste une génération simple via safe_http_request
+        res = safe_http_request("POST", f"{brain_url}/generate", json={
             "prompt": "ping",
             "system_prompt": "Répond uniquement 'pong'"
-        }, timeout=10, follow_redirects=True)
+        }, timeout=10, allow_internal=True)
         latency = time.time() - start_time
         status = "🟢 Online" if res.status_code == 200 else f"🔴 Error {res.status_code}"
         logger.info(f"Inference Health: {status} | Latency: {latency:.2f}s")

@@ -17,7 +17,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             'id', 'user', 'xp', 'current_streak', 'max_streak', 
             'last_win_date', 'total_wins', 'total_games', 'ranked_points', 
             'ranked_max_points', 'rank', 'unlocked_badges', 
-            'custom_username_color', 'tier'
+            'custom_username_color', 'tier', 'personalization_settings'
         ]
 
 class DailyChallengeSerializer(serializers.ModelSerializer):

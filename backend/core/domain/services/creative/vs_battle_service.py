@@ -177,7 +177,8 @@ class VsBattleService:
                 gen_prompt, gen_system = self.prompt_manager.get_prompt("vs_battle_ai_generator", name=name, franchise=franchise or "Unknown")
                 synthetic_char = self._safe_generate_structured(prompt=gen_prompt, system_prompt=gen_system, response_model=CombatCharacter)
                 synthetic_char.name, synthetic_char.franchise = f"{name} (AI Generated)", franchise
-                synthetic_char.wiki_url = f"https://vsbattles.fandom.com/wiki/{name.replace(' ', '_')}"
+                from urllib.parse import quote
+                synthetic_char.wiki_url = f"https://vsbattles.fandom.com/wiki/{quote(name.replace(' ', '_'))}"
                 synthetic_char.image_url = self._recover_image(name, franchise)
                 if synthetic_char.stats:
                     best_tier = self._extract_max_tier(synthetic_char.stats.tier)

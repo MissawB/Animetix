@@ -10,7 +10,11 @@ import {
   Activity, 
   RefreshCw, 
   Wrench,
-  BarChart3
+  BarChart3,
+  Cpu,
+  Trophy,
+  ExternalLink,
+  ChevronRight
 } from 'lucide-react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiClient } from '../../utils/apiClient';
@@ -20,6 +24,7 @@ import { Badge } from '../../components/ui/Badge';
 import { CardSkeleton } from '../../components/ui/Skeleton';
 import { useAuthStore } from '../../store/authStore';
 import { useTranslation } from 'react-i18next';
+import { motion } from 'framer-motion';
 
 const TransparencyPage: React.FC = () => {
   const { t } = useTranslation();
@@ -57,22 +62,100 @@ const TransparencyPage: React.FC = () => {
 
   return (
     
-      <div className="max-w-6xl mx-auto px-6 py-16">
+      <div className="max-w-7xl mx-auto px-6 py-16">
         <div className="text-center mb-16">
           <h1 className="text-6xl font-black italic manga-font tracking-tighter uppercase mb-4">
-            OPEN <span className="text-emerald-500">LEDGER</span>
+            OPEN <span className="text-emerald-500 text-glow">LEDGER</span>
           </h1>
           <p className="text-gray-500 font-bold uppercase tracking-widest flex items-center justify-center gap-2">
               <ShieldCheck className="w-5 h-5 text-emerald-500" /> Transparence Totale & Éthique IA
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-12">
           <StatCard title="Donations" value={`${data.total_donations}€`} icon={<Heart className="text-red-500" />} />
           <StatCard title="RAG Fidelity" value={`${(data.rag_fidelity * 100).toFixed(1)}%`} icon={<Zap className="text-blue-500" />} />
           <StatCard title="Inference Latency" value={`${data.average_latency}s`} icon={<Activity className="text-purple-500" />} />
           <StatCard title="Uptime" value={`${data.model_uptime}%`} icon={<ShieldCheck className="text-emerald-500" />} />
           <StatCard title="Balance" value={`${data.balance}€`} icon={<DollarSign className="text-emerald-500" />} />
+        </div>
+
+        {/* SOTA Benchmarks Section */}
+        <div className="mb-12">
+            <header className="flex justify-between items-end mb-8">
+                <div>
+                    <h2 className="text-4xl font-black italic manga-font uppercase mb-1">
+                        SOTA <span className="text-blue-500">BENCHMARKS</span>
+                    </h2>
+                    <p className="text-[10px] font-bold opacity-30 uppercase tracking-[0.3em]">HuggingFace Best Models & Open Source Leaderboard (2026)</p>
+                </div>
+                <div className="flex items-center gap-4">
+                    <Badge variant="neutral" className="bg-blue-500/10 text-blue-500 border-blue-500/20 text-[8px] py-1 px-3">SOTA V4.2</Badge>
+                </div>
+            </header>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {data.sota_benchmarks?.map((model: any, i: number) => (
+                    <motion.div
+                        key={model.model_id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.1 }}
+                    >
+                        <Card padding="none" className="bg-black border-white/5 overflow-hidden group hover:border-blue-500/30 transition-all hover:scale-[1.02]">
+                            <div className="p-6">
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-500">
+                                        <Cpu className="w-5 h-5" />
+                                    </div>
+                                    <Badge variant={model.is_open_source ? 'success' : 'neutral'} className="text-[8px] py-0.5 px-2">
+                                        {model.is_open_source ? 'OPEN SOURCE' : 'PROPRIETARY'}
+                                    </Badge>
+                                </div>
+                                <h3 className="text-lg font-black italic uppercase truncate mb-1" title={model.model_id}>{model.model_id.split('/').pop()}</h3>
+                                <p className="text-[10px] font-bold opacity-30 uppercase mb-6 tracking-widest">{model.provider}</p>
+
+                                <div className="grid grid-cols-2 gap-4 mb-6">
+                                    <div className="p-3 bg-white/5 rounded-2xl border border-white/5">
+                                        <p className="text-[8px] font-black opacity-30 uppercase mb-1 flex items-center gap-1"><Trophy className="w-2 h-2" /> ELO SCORE</p>
+                                        <p className="text-xl font-black italic manga-font text-emerald-500">{model.elo_score}</p>
+                                    </div>
+                                    <div className="p-3 bg-white/5 rounded-2xl border border-white/5">
+                                        <p className="text-[8px] font-black opacity-30 uppercase mb-1 flex items-center gap-1"><Zap className="w-2 h-2" /> MMLU</p>
+                                        <p className="text-xl font-black italic manga-font text-blue-500">{model.mmlu_score}%</p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2 mb-6">
+                                    <div className="flex justify-between items-center text-[9px] font-bold">
+                                        <span className="opacity-40 uppercase">Context Window</span>
+                                        <span className="uppercase">{model.context_window / 1000}K tokens</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-[9px] font-bold">
+                                        <span className="opacity-40 uppercase">License</span>
+                                        <span className="uppercase truncate max-w-[100px]">{model.license}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="p-4 bg-white/5 border-t border-white/5 flex justify-between items-center">
+                                <span className="text-[8px] font-black text-blue-400 opacity-60 uppercase flex items-center gap-1">
+                                    <Activity className="w-2 h-2" /> {model.status}
+                                </span>
+                                {model.huggingface_id && (
+                                    <a 
+                                        href={`https://huggingface.co/${model.huggingface_id}`} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="p-2 bg-white/5 rounded-lg hover:bg-blue-500/20 text-white/40 hover:text-blue-400 transition-all"
+                                    >
+                                        <ExternalLink className="w-3 h-3" />
+                                    </a>
+                                )}
+                            </div>
+                        </Card>
+                    </motion.div>
+                ))}
+            </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12">

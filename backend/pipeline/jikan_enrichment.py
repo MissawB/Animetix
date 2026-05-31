@@ -2,7 +2,16 @@ import httpx
 import json
 import time
 import os
+import sys
 import logging
+
+# Fix path for internal imports
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(os.path.dirname(CURRENT_DIR))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, os.path.join(PROJECT_ROOT, "backend"))
+
+from core.utils.security import safe_http_request
 
 logger = logging.getLogger("animetix." + __name__)
 
@@ -20,7 +29,7 @@ CHAR_OUTPUT = os.path.join(BASE_DIR, 'data', 'raw', 'jikan_char_enrichment.json'
 def fetch_jikan_details(mal_id, media_type='anime'):
     url = f"https://api.jikan.moe/v4/{media_type}/{mal_id}/full"
     try:
-        response = httpx.get(url, timeout=15, follow_redirects=True)
+        response = safe_http_request("GET", url, timeout=15)
         if response.status_code == 200:
             return response.json().get('data', {})
         elif response.status_code == 429:
@@ -36,7 +45,7 @@ def fetch_jikan_details(mal_id, media_type='anime'):
 def fetch_jikan_recommendations(mal_id, media_type='anime'):
     url = f"https://api.jikan.moe/v4/{media_type}/{mal_id}/recommendations"
     try:
-        response = httpx.get(url, timeout=15, follow_redirects=True)
+        response = safe_http_request("GET", url, timeout=15)
         if response.status_code == 200:
             return response.json().get('data', [])
         elif response.status_code == 429:

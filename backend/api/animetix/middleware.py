@@ -122,7 +122,9 @@ class PersonalizationMiddleware:
         if response.has_header('Content-Type') and 'application/json' in response['Content-Type']:
             if request.user.is_authenticated:
                 try:
-                    config = drift_service.calculate_drift(request.user.id)
+                    profile = getattr(request.user, 'profile', None)
+                    settings = profile.personalization_settings if profile else {}
+                    config = drift_service.calculate_drift(request.user.id, settings)
                     # config is a VisualConfig Pydantic model
                     data = json.loads(response.content)
                     if isinstance(data, dict):

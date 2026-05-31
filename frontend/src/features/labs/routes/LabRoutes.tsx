@@ -9,6 +9,7 @@ const VideoLabPage = lazy(() => import('../VideoLabPage'));
 const SoundscapeLabPage = lazy(() => import('../SoundscapeLabPage'));
 const SpeechToSpeechLabPage = lazy(() => import('../SpeechToSpeechLabPage'));
 const SingularityLabPage = lazy(() => import('../SingularityLabPage'));
+const LiquidNeuralNetworkLabPage = lazy(() => import('../LiquidNeuralNetworkLabPage'));
 const VisualNexusPage = lazy(() => import('../VisualNexusPage'));
 const LabHubPage = lazy(() => import('../LabHubPage'));
 
@@ -24,5 +25,6 @@ export const LabRoutes = (
     <Route path="/soundscape-lab/" element={<SoundscapeLabPage />} />
     <Route path="/s2s-lab/" element={<SpeechToSpeechLabPage />} />
     <Route path="/experimental/" element={<SingularityLabPage />} />
+    <Route path="/liquid-nn/" element={<LiquidNeuralNetworkLabPage />} />
   </>
 );

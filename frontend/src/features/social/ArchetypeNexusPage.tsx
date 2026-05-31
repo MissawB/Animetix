@@ -1,4 +1,5 @@
 import React from 'react';
+import Plot from 'react-plotly.js';
 import { 
   Zap, 
   Brain, 
@@ -11,7 +12,8 @@ import {
   Sparkles,
   BarChart3,
   Cpu,
-  Fingerprint
+  Fingerprint,
+  TrendingUp
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../utils/apiClient';
@@ -43,7 +45,28 @@ const ArchetypeNexusPage: React.FC = () => {
     </div>
   );
 
-  const { archetype, logical_rules, recent_signals, cognitive_stats } = data;
+  const { archetype, logical_rules, recent_signals, cognitive_stats, drift_history } = data;
+
+  const driftPlotData = drift_history && drift_history.length > 0 ? [
+    {
+      x: drift_history.map((h: any) => h.date),
+      y: drift_history.map((h: any) => h.shonen),
+      name: 'Shonen',
+      type: 'scatter',
+      mode: 'lines+markers',
+      line: { color: '#f97316', width: 3, shape: 'spline' },
+      marker: { size: 8, color: '#f97316' }
+    },
+    {
+      x: drift_history.map((h: any) => h.date),
+      y: drift_history.map((h: any) => h.seinen),
+      name: 'Seinen',
+      type: 'scatter',
+      mode: 'lines+markers',
+      line: { color: '#a855f7', width: 3, shape: 'spline' },
+      marker: { size: 8, color: '#a855f7' }
+    }
+  ] : [];
 
   return (
     <AnimatedPage>
@@ -63,7 +86,7 @@ const ArchetypeNexusPage: React.FC = () => {
             </p>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
             
             {/* Colonne Gauche: Archétype Dominant & Aura */}
             <div className="lg:col-span-4 space-y-8">
@@ -130,12 +153,57 @@ const ArchetypeNexusPage: React.FC = () => {
                 </Card>
             </div>
 
-            {/* Colonne Droite: Règles Z3 & Timeline */}
-            <div className="lg:col-span-8 space-y-8">
+            {/* Colonne Droite: Graphique de Drift & Z3 Rules */}
+            <div className="lg:col-span-8 space-y-8 flex flex-col">
                 
+                {/* Archetype Drift Evolution (Le Graphique) */}
+                <Card padding="lg" className="bg-black border-white/5 overflow-hidden flex-grow flex flex-col">
+                    <header className="flex justify-between items-center mb-6">
+                        <h3 className="text-xl font-black italic manga-font uppercase flex items-center gap-3">
+                            <TrendingUp className="w-5 h-5 text-emerald-500" /> Archetype Drift Evolution
+                        </h3>
+                        <Badge variant="neutral" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[8px]">TIME-SERIES ALPHA</Badge>
+                    </header>
+                    
+                    <div className="flex-grow min-h-[300px] relative">
+                        {drift_history && drift_history.length > 0 ? (
+                            <Plot
+                                data={driftPlotData as any}
+                                layout={{
+                                    autosize: true,
+                                    height: 300,
+                                    paper_bgcolor: 'rgba(0,0,0,0)',
+                                    plot_bgcolor: 'rgba(0,0,0,0)',
+                                    margin: { l: 40, r: 20, b: 40, t: 10 },
+                                    showlegend: true,
+                                    legend: { font: { color: '#64748b', size: 10 }, orientation: 'h', y: -0.2 },
+                                    xaxis: {
+                                        gridcolor: 'rgba(255,255,255,0.05)',
+                                        tickfont: { color: '#475569', size: 8 },
+                                        showgrid: true,
+                                    },
+                                    yaxis: {
+                                        gridcolor: 'rgba(255,255,255,0.05)',
+                                        tickfont: { color: '#475569', size: 8 },
+                                        range: [0, 1.1],
+                                        showgrid: true,
+                                    }
+                                }}
+                                config={{ responsive: true, displayModeBar: false }}
+                                style={{ width: '100%' }}
+                            />
+                        ) : (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center text-center opacity-20 border-2 border-dashed border-white/5 rounded-3xl">
+                                <TrendingUp className="w-12 h-12 mb-4" />
+                                <p className="text-[10px] font-black uppercase tracking-widest">Historique insuffisant pour projection</p>
+                            </div>
+                        )}
+                    </div>
+                </Card>
+
                 {/* Z3 Deduced Rules */}
                 <Card padding="lg" className="bg-black border-blue-500/20 shadow-[0_0_40px_rgba(59,130,246,0.1)]">
-                    <header className="flex justify-between items-start mb-10">
+                    <header className="flex justify-between items-start mb-6">
                         <div>
                             <h3 className="text-2xl font-black italic manga-font uppercase mb-1 flex items-center gap-3">
                                 <Cpu className="w-6 h-6 text-blue-500" /> Modèle Logique SAT (Z3)
@@ -161,17 +229,14 @@ const ArchetypeNexusPage: React.FC = () => {
                             </motion.div>
                         ))}
                     </div>
-
-                    <div className="mt-10 p-6 bg-blue-500/5 rounded-3xl border border-blue-500/10 flex items-center gap-6">
-                        <Sparkles className="w-8 h-8 text-blue-400 opacity-40 shrink-0" />
-                        <p className="text-[10px] font-bold leading-relaxed opacity-50 uppercase italic">
-                            Ces règles servent de filtres sémantiques prioritaires pour le moteur RAG. Elles garantissent que les recommandations et les réponses d'Expert Nexus respectent votre structure de préférence formelle.
-                        </p>
-                    </div>
                 </Card>
+            </div>
+        </div>
 
-                {/* Recent Signals (Memory Timeline) */}
-                <Card padding="lg" className="bg-navy-900/40 border-white/5 flex-grow">
+        {/* Bottom Section: Signals */}
+        <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
+             {/* Recent Signals (Memory Timeline) */}
+             <Card padding="lg" className="bg-navy-900/40 border-white/5">
                     <h3 className="text-xs font-black uppercase opacity-40 mb-10 tracking-widest flex items-center gap-2">
                         <Clock className="w-4 h-4 text-emerald-500" /> Signaux de Mémoire Épisodique
                     </h3>
@@ -203,14 +268,7 @@ const ArchetypeNexusPage: React.FC = () => {
                             </div>
                         )}
                     </div>
-                    
-                    <div className="mt-12 pt-8 border-t border-white/5 flex justify-center">
-                        <button className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-500 hover:text-blue-400 transition-colors">
-                            Exploration complète du Graphe de Mémoire <ChevronRight className="w-3 h-3" />
-                        </button>
-                    </div>
                 </Card>
-            </div>
         </div>
 
         {/* Global Warning / Alpha Status */}

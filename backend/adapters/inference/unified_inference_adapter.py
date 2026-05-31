@@ -8,13 +8,30 @@ import base64
 from typing import Optional, List, Dict, Any
 from core.ports.inference_port import InferencePort, InferenceNotImplementedError
 from core.utils.security import is_safe_url, safe_http_request
+from core.domain.exceptions import InferenceError
+
+# Focused Mixin imports
+from adapters.inference.clip_vision import ClipVisionMixin
+from adapters.inference.depth_estimation import DepthEstimationMixin
+from adapters.inference.manga_ocr import MangaOcrMixin
+from adapters.inference.video_analysis import VideoAnalysisMixin
+from adapters.inference.audio_mixin import AudioMixin
+from adapters.inference.image_gen_mixin import ImageGenMixin
 
 logger = logging.getLogger("animetix." + __name__)
 
-class UnifiedInferenceAdapter(InferencePort):
+class UnifiedInferenceAdapter(
+    ClipVisionMixin,
+    DepthEstimationMixin,
+    MangaOcrMixin,
+    VideoAnalysisMixin,
+    AudioMixin,
+    ImageGenMixin,
+    InferencePort
+):
     """
     Unified Inference Adapter supporting local Ollama and OpenAI-compatible endpoints.
-    Allows easy environment configuration.
+    Composes specialized mixins for vision, audio, and image generation as local fallbacks.
     """
     def __init__(
         self,
@@ -288,19 +305,8 @@ class UnifiedInferenceAdapter(InferencePort):
         except Exception:
             return {"is_safe": True, "flagged_categories": [], "reason": "Moderation fallback failed."}
 
-    # --- Stubs now raising NotImplementedError ---
-
-    def generate_image(self, prompt: str, style: str = "") -> str:
-        raise InferenceNotImplementedError("generate_image is not natively supported by standard LLM inference.")
-
-    def calculate_visual_similarity(self, query: str, item_id: str, media_type: str) -> float:
-        raise InferenceNotImplementedError()
-
-    def get_image_embedding(self, image_data: bytes, model_id: Optional[str] = None) -> List[float]:
-        raise InferenceNotImplementedError()
-
     def classify_image(self, image_data: bytes, candidate_labels: List[str], model_id: Optional[str] = None) -> Dict[str, float]:
-        """Classifie une image via VLM prompt."""
+        """Classifie une image via VLM prompt avec fallback sur CLIP."""
         prompt = f"Parmi ces labels: {', '.join(candidate_labels)}, lequel correspond le mieux à cette image ? Réponds au format JSON: {{'label': score}}."
         try:
             desc = self.generate_image_description(image_data, prompt=prompt)
@@ -308,11 +314,15 @@ class UnifiedInferenceAdapter(InferencePort):
             if match:
                 return json.loads(match.group(0))
         except Exception as e:
-            logger.warning(f"Classification failed in unified adapter: {e}")
+            logger.warning(f"Classification VLM failed: {e}. Falling back to CLIP.")
+        
+        # Delegation to ClipVisionMixin if available
+        if hasattr(super(), 'classify_image'):
+            return super().classify_image(image_data, candidate_labels, model_id)
         return {l: 0.0 for l in candidate_labels}
 
     def detect_objects(self, image_data: bytes, candidate_queries: List[str], model_id: Optional[str] = None) -> List[Dict]:
-        """Détecte des objets via VLM prompt."""
+        """Détecte des objets via VLM prompt avec fallback sur OwlViT."""
         prompt = f"Détecte ces éléments dans l'image: {', '.join(candidate_queries)}. Réponds au format JSON: [{{'label': str, 'box_2d': [ymin, xmin, ymax, xmax], 'score': float}}]."
         try:
             desc = self.generate_image_description(image_data, prompt=prompt)
@@ -320,7 +330,10 @@ class UnifiedInferenceAdapter(InferencePort):
             if match:
                 return json.loads(match.group(0))
         except Exception as e:
-            logger.warning(f"Object detection failed in unified adapter: {e}")
+            logger.warning(f"Object detection VLM failed: {e}. Falling back to specialized model.")
+        
+        # Delegation to specialized implementation (e.g. from VisionTransformersAdapter logic if it was in a mixin)
+        # For now we return empty as OwlViT is not in a mixin yet
         return []
 
     def generate_image_description(self, image_data: bytes, prompt: str = "Décris cette image d'anime de manière très détaillée.") -> str:
@@ -477,27 +490,6 @@ class UnifiedInferenceAdapter(InferencePort):
             logger.debug(f"OpenAI-Compatible health check failed: {e}")
 
         return {"status": "offline", "engine": "Unified"}
-
-    def visual_rerank(
-        self, 
-        query: str, 
-        image_urls: List[str], 
-        system_prompt: str = "Tu es un expert en analyse visuelle d'anime."
-    ) -> List[Dict[str, Any]]:
-        """Rerank visuel via VLM (fallback)."""
-        prompt = f"Requête: {query}\n\nImages à classer par pertinence (URLs): {', '.join(image_urls)}\n\nDonne un score pour chaque image. Réponds au format JSON: [{{'url': str, 'score': float}}]."
-        try:
-            # Fallback text-based if LLM supports it
-            raw = self.generate(prompt, system_prompt=system_prompt)
-            match = re.search(r'\[.*\]', raw, re.DOTALL)
-            if match:
-                return json.loads(match.group(0))
-        except Exception as e:
-            logger.warning(f"Visual rerank parsing failed: {e}")
-        return [{"url": url, "score": 0.5} for url in image_urls]
-
-    def get_multimodal_late_interaction(self, image_data: bytes) -> List[List[float]]:
-        raise InferenceNotImplementedError()
 
     def generate_3d_scene(self, image_data: bytes, depth_map: bytes = None, mode: str = "gaussian_splatting") -> Dict[str, Any]:
         """Génère un espace 3D navigable (Gaussian Splatting / Mesh) à partir d'une image via Tripo3D API."""

@@ -1,7 +1,7 @@
-import httpx
 import json
 import time
 import os
+import sys
 import logging
 from dotenv import load_dotenv
 
@@ -10,6 +10,8 @@ logger = logging.getLogger("animetix." + __name__)
 
 # Détection robuste de la racine du projet
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.join(BASE_DIR, "backend"))
+from core.utils.security import safe_http_request
 load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 OUTPUT_FILE = os.path.join(BASE_DIR, 'data', 'raw', 'raw_vg_characters_db.json')
@@ -21,7 +23,7 @@ CLIENT_SECRET = os.getenv("IGDB_CLIENT_SECRET")
 def get_twitch_token():
     url = f"https://id.twitch.tv/oauth2/token?client_id={CLIENT_ID}&client_secret={CLIENT_SECRET}&grant_type=client_credentials"
     try:
-        res = httpx.post(url, follow_redirects=True)
+        res = safe_http_request("POST", url)
         return res.json().get('access_token') if res.status_code == 200 else None
     except Exception as e:
         logger.error(f"Failed to acquire Twitch token: {e}")
@@ -42,7 +44,7 @@ def fetch_igdb_characters(token):
     """
     
     try:
-        response = httpx.post(url, headers=headers, content=query, follow_redirects=True)
+        response = safe_http_request("POST", url, headers=headers, content=query)
         if response.status_code == 200:
             return response.json()
     except Exception as e:

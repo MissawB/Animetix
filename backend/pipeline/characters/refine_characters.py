@@ -1,7 +1,7 @@
 import json
 import re
 import os
-import httpx
+import sys
 import logging
 from tqdm import tqdm
 from dotenv import load_dotenv
@@ -11,6 +11,8 @@ logger = logging.getLogger("animetix." + __name__)
 
 # Détection robuste de la racine du projet
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.join(BASE_DIR, "backend"))
+from core.utils.security import safe_http_request
 load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 INPUT_FILE = os.path.join(BASE_DIR, 'data', 'raw', 'raw_characters_db.json')
@@ -39,10 +41,10 @@ def call_brain_for_extraction(name, description):
     """
     
     try:
-        response = httpx.post(f"{BRAIN_URL}/generate", json={
+        response = safe_http_request("POST", f"{BRAIN_URL}/generate", json={
             "prompt": prompt,
             "system_prompt": "Tu es un expert en analyse de personnages de fiction. Réponds UNIQUEMENT en JSON."
-        }, timeout=45, follow_redirects=True)
+        }, timeout=45, allow_internal=True)
         
         if response.status_code == 200:
             text = response.json().get("text", "")

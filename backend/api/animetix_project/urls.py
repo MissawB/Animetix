@@ -23,9 +23,9 @@ urlpatterns = [
     path('i18n/', include('django.conf.urls.i18n')), # Permet le switch de langue via POST
     
     # --- PROFESSIONNALISATION : API REST (Headless) ---
-    path('api/', include(router.urls)),
-    path('api/search/', api_views.MediaSearchView.as_view(), name='api_search'),
-    path('api/session/', api_views.GameSessionView.as_view(), name='api_session'),
+    path('api/v1/', include(router.urls)),
+    path('api/v1/search/', api_views.MediaSearchView.as_view(), name='api_search'),
+    path('api/v1/session/', api_views.GameSessionView.as_view(), name='api_session'),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 
     # --- DOCUMENTATION API (Spectacular) - Restreint au Staff ---

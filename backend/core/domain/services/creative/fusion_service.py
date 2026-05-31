@@ -29,7 +29,9 @@ class FusionDomainService:
         
         # 1. Gestion du LoRA de style artistique
         if self.lora_manager:
-            adapter_name = f"style_{art_style.lower().replace(' ', '_')}"
+            # Sécurité : On enlève tout caractère suspect pour éviter le path traversal
+            safe_style = art_style.lower().replace(' ', '_').replace('.', '').replace('/', '').replace('\\', '')
+            adapter_name = f"style_{safe_style}"
             adapter_path = os.path.join(self.lora_base_path, adapter_name)
             
             if os.path.exists(adapter_path):

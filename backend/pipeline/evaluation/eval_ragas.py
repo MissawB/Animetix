@@ -17,6 +17,7 @@ django.setup()
 from animetix.containers import get_container
 from core.domain.services.ragas_eval_service import RagasEvalService, EvaluationResult
 from sentence_transformers import SentenceTransformer
+from core.utils.security import safe_http_request
 logger = logging.getLogger("animetix." + __name__)
 
 class RAGEvaluator:
@@ -54,11 +55,12 @@ class RAGEvaluator:
         prompt = f"Contexte:\n{context_str}\n\nQuestion: {query}"
         
         try:
-            response = httpx.post(self.brain_url, json={
+            response = safe_http_request("POST", self.brain_url, json={
                 "prompt": prompt,
                 "system_prompt": "Tu es un expert en Anime/Manga. Utilise le contexte fourni pour répondre de manière précise."
-            }, timeout=60, follow_redirects=True)
+            }, timeout=60, allow_internal=True)
             if response.status_code == 200:
+
                 return response.json().get("text", "")
         except Exception as e:
             logger.error(f"Error generating answer: {e}")

@@ -1,9 +1,18 @@
 import httpx
 import json
 import os
+import sys
 import logging
 from typing import List, Dict
 from datetime import datetime
+
+# Fix path for internal imports
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(CURRENT_DIR)))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, os.path.join(PROJECT_ROOT, "backend"))
+
+from core.utils.security import safe_http_request
 
 logger = logging.getLogger("animetix." + __name__)
 
@@ -19,7 +28,7 @@ def run_drift_detection(limit=20):
     
     # 1. Récupérer les top animes de la saison via Jikan API
     try:
-        res = httpx.get("https://api.jikan.moe/v4/seasons/now", timeout=10, follow_redirects=True)
+        res = safe_http_request("GET", "https://api.jikan.moe/v4/seasons/now", timeout=10)
         seasonal_animes = res.json().get('data', [])[:limit]
     except Exception as e:
         logger.error(f"❌ Failed to fetch seasonal data: {e}")

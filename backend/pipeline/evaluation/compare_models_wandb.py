@@ -19,6 +19,7 @@ from core.domain.services.ragas_eval_service import RagasEvalService, Evaluation
 
 from dotenv import load_dotenv
 load_dotenv()
+from core.utils.security import safe_http_request
 logger = logging.getLogger("animetix." + __name__)
 if os.getenv("WANDB_API_KEY"):
     wandb.login(key=os.getenv("WANDB_API_KEY"))
@@ -70,10 +71,10 @@ async def evaluate_model(engine_name: str, config: Dict):
         
         start_time = time.time()
         try:
-            response = httpx.post(BRAIN_URL, json={
+            response = safe_http_request("POST", BRAIN_URL, json={
                 "prompt": q,
                 "system_prompt": "Tu es un expert en Anime/Manga."
-            }, timeout=60, follow_redirects=True)
+            }, timeout=60, allow_internal=True)
             latency = time.time() - start_time
             latencies.append(latency)
             
@@ -168,7 +169,7 @@ async def evaluate_model(engine_name: str, config: Dict):
 async def main():
     # 1. Tester le moteur actuel (Local Expert s'il est chargé)
     # On vérifie quel moteur est actif via le health check
-    res = httpx.get("http://127.0.0.1:7860/", follow_redirects=True)
+    res = safe_http_request("GET", "http://127.0.0.1:7860/", allow_internal=True)
     engine = res.json().get("engine", "unknown")
     
     await evaluate_model(engine, {"model_type": engine, "task": "comparison"})

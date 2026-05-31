@@ -1,4 +1,13 @@
+# Fix path for internal imports
+import sys
+import os
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(CURRENT_DIR)))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, os.path.join(PROJECT_ROOT, "backend"))
+
 import httpx
+from core.utils.security import safe_http_request
 import json
 import time
 import os
@@ -82,7 +91,7 @@ def fetch_page(page):
         'perPage': 50
     }
     try:
-        response = httpx.post(url, json={'query': query, 'variables': variables}, timeout=30, follow_redirects=True)
+        response = safe_http_request("POST", url, json={'query': query, 'variables': variables}, timeout=30)
         if response.status_code == 200:
             return response.json()
         else:

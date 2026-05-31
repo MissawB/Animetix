@@ -12,40 +12,20 @@ Ce document centralise toutes les tâches techniques, d'architecture et de fonct
 - [ ] **Stabilisation de la recherche Web (DuckDuckGo ➡️ Gemini Grounding / Tavily)** : Remplacer le scraping DuckDuckGo instable par l'outil natif de Google Search Grounding (Gemini) ou une API structurée comme Tavily.
 - [ ] **Simplification d'état Frontend (XState ➡️ Zustand)** : Refactoriser les machines d'état simples du dossier `/machines` en stores Zustand plus légers et fluides, réduisant la taille du bundle et le boilerplate.
 
-## 🧬 Fonctionnalités Non Implémentées
-
-- [ ] **Visualisation du Drift** : Ajouter une vue graphique de l'évolution du profil utilisateur dans l'Archetype Nexus.
-
-## 🎨 UX & Interfaces de Nouvelle Génération (Nexus Series)
-
-- [x] **Expert Nexus (Raisonnement Arborescent)** : Créer une page dédiée visualisant l'arbre de pensée (MCTS/Tree of Thoughts) lors des recherches de lore complexes pour une transparence totale de l'inférence.
-- [ ] **Amélioration Expert Nexus** : Passer d'une timeline linéaire à une véritable visualisation arborescente (Graphe/Arbre) pour le raisonnement multi-agents.
-- [x] **Archetype Nexus (Mémoire Épisodique & Logique)** : Interface permettant à l'utilisateur de visualiser son profil cognitif et les règles logiques formelles (Z3) déduites de ses préférences.
-- [x] **AI Debate Arena (Théorie des Jeux)** : Interface pour orchestrer des débats sémantiques entre agents IA (ex: Goku vs Saitama) basés sur les faits du Knowledge Graph (Self-play/CFR).
-- [x] **Visual Nexus (Search Vidéo Sémantique)** : Page de recherche sémantique spécialisée dans l'indexation temporelle des scènes d'anime via Video-LLaVA.
-- [x] **Lore World Map (Graph Clustering)** : Visualisation macroscopique des communautés de lore (Leiden) pour explorer la base par thématiques globales plutôt que par titres.
-- [x] **Quantum & Swarm Labs** : Étendre le Singularity Lab avec des interfaces pour la modélisation cognitive quantique et le consensus d'essaims d'agents.
-- [x] **Live Transparency Dashboard** : Exposer publiquement les métriques de fidélité RAG, la latence réelle et les benchmarks de modèles SOTA (HuggingFace Best).
-- [ ] **Benchmarks SOTA (Transparency)** : Implémenter l'affichage réel des benchmarks "HuggingFace Best" dans le Dashboard de Transparence (actuellement absent du composant).
-
 ## 🚀 Intégrations & Pages Manquantes
 
-- [ ] **Counterfactual Simulator UI** : Créer une page dédiée pour simuler et visualiser les timelines conversationnelles alternatives ("mondes possibles") basées sur `counterfactual_simulator.py`.
-- [ ] **Liquid Neural Network Lab** : Interface pour interagir avec les simulations neuromorphiques dynamiques de flux continus (`liquid_neural_network.py`).
-- [ ] **DSPy Optimizer Dashboard** : Interface d'administration pour piloter et visualiser la mutation sémantique des prompts en boucle fermée.
+- [ ] **World Boss / Global Boss UI** : Créer l'interface épique (`/game/world-boss/`) pour afficher les boss globaux, leurs phases, et permettre la participation communautaire.
+- [ ] **Page de Soutien / Wall of Fame** : Ajouter une page (`/support/` ou `/donate/`) pour valoriser les donateurs, expliquer le modèle économique et lier les plateformes (Patreon/Ko-fi).
+- [ ] **Lobby de Duel (Matchmaking & Ranked)** : Implémenter un hub de duel (`/duel/lobby/`) pour créer des salons 1v1, rejoindre via code, ou lancer du matchmaking classé.
+- [ ] **Explorateur de Catalogue (Media Browser)** : Créer une interface "Netflix-like" (`/explore/`) pour parcourir les œuvres par popularité, année ou recommandations, au-delà de la simple recherche.
+- [ ] **Dashboard de Curation des Données (Admin)** : Ajouter une interface dans la section Admin pour gérer, valider ou rejeter les `DataCurationTickets` générés par l'IA.
 - [ ] **Restauration de la Navigation (Hubs)** :
-    - [ ] Réintégrer **Soundscape Lab** et **Speech-to-Speech Lab** dans le `LabHubPage`.
     - [ ] Réintégrer **Animinator**, **Undercover** et **Akinetix Classic** dans le `GamesHubPage`.
 
+## 🛡️ Sécurité & Fiabilité (Audit Avancé)
 
-## 🛡️ Sécurité & Résilience
-
-- [ ] **Audit de Dépendances Continu** : Automatiser le scan des vulnérabilités (Snyk/GitHub Dependabot) pour maintenir le socle technique à jour après le passage à Django 5.2.14.
-- [x] **Sécurisation du Déploiement** : Remplacer les identifiants par défaut (Postgres, Neo4j, Chroma) dans `docker-compose.yml` par des variables d'environnement (`.env`) non commitées. (Terminé : Template .env.example créé, Docker Compose paramétré, Client ChromaDB sécurisé).
-- [/] **Protection SSRF (High)** : Désactiver `follow_redirects=True` in `web_search_adapter.py` et les autres adaptateurs effectuant des requêtes externes. Implémenter une validation stricte du saut de redirection. (En cours : Adaptateurs critiques sécurisés via `safe_http_request` - Web, Brain, Jikan, Fandom, Cohere. Reste à harmoniser les scrapers de pipeline secondaires).
-
-- [ ] **Renforcement des Guardrails** : Migrer la détection de jailbreak basique vers un modèle de modération dédié (ex: Llama-Guard ou NeMo Guardrails) pour une protection robuste.
-- [ ] **Contrôle d'accès aux Labs** : Restreindre les endpoints coûteux en GPU (Generate3D, Depth Estimation) aux utilisateurs authentifiés et appliquer des quotas stricts par utilisateur/tier.
-- [ ] **Assainissement des requêtes externes IA** : Encoder strictement toutes les entrées utilisateur insérées dans des URLs d'APIs tierces (ex: Jikan) pour prévenir toute manipulation de paramètres.
-- [ ] **Suppression du code dormant risqué** : Supprimer ou isoler strictement l'exécution `exec()` dans `DynamicToolAgent` pour éviter tout risque de RCE.
-- [ ] **Masquage des données de transparence** : Restreindre l'accès aux métriques techniques détaillées de `TransparencyDataView` aux administrateurs uniquement.
+- [x] **Prévention DoS (OOM)** : Configurer `DATA_UPLOAD_MAX_MEMORY_SIZE` dans Django et implémenter un traitement par chunks pour les uploads lourds dans les Labs (Génération 3D, Vidéo). (Terminé : Limite fixée à 50 Mo, fichier > 2.5 Mo sur disque, et utilisation systématique de `.chunks()` au lieu de `.read()`).
+- [x] **Validation stricte des fichiers (MIME-Type)** : Vérifier la signature binaire ("Magic Number") des fichiers uploadés (images/vidéos/audio) avant transmission aux moteurs d'inférence pour prévenir les injections malveillantes. (Terminé : Intégration de `filetype` et filtrage strict dans `labs.py` et `core.py`).
+- [x] **Protection CSRF (SameSite=None)** : Sécuriser les API REST cross-domain en s'assurant de la validation systématique des tokens CSRF ou en migrant vers une authentification Stateless (JWT) pour pallier les risques liés aux cookies SameSite=None. (Terminé : Suppression de `@csrf_exempt` et activation stricte des Trusted Origins).
+- [x] **Sanitization du JSON (XSS/NoSQL)** : Définir un schéma Pydantic ou un Serializer strict pour la validation de `personalization_settings` (Social API) afin de bloquer les payloads malformés ou les injections de scripts. (Terminé : Validation Pydantic stricte avec `extra = "forbid"` sur l'endpoint `update_personalization`).
+- [x] **Prévention IDOR (Fusions)** : S'assurer que le queryset global de `CreativeFusionViewSet.remix` empêche l'accès et le "clonage" des fusions privées d'autres utilisateurs. (Terminé : Implémentation d'un `get_queryset` dynamique basé sur `is_public` et le propriétaire).

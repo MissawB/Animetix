@@ -47,7 +47,18 @@ class LongTermMemoryService:
             logger.error(f"❌ Failed to store memory: {e}")
 
     def retrieve_relevant_memories(self, user_id: str, current_query: str, limit: int = 3) -> str:
-        # ... existing ...
+        try:
+            coll = self._get_collection()
+            results = coll.query(
+                query_texts=[current_query],
+                n_results=limit,
+                where={"user_id": str(user_id)}
+            )
+            docs = results.get('documents', [[]])[0]
+            return "\n".join(docs) if docs else ""
+        except Exception as e:
+            logger.error(f"❌ Failed to retrieve memories: {e}")
+            return ""
 
     def get_user_memories(self, user_id: str, limit: int = 10) -> List[str]:
         """

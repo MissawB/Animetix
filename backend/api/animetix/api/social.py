@@ -8,6 +8,17 @@ from ..serializers import (ProfileSerializer, CreativeFusionSerializer, Achievem
                             DiscoveryClubSerializer, ClubMembershipSerializer, ClubEventSerializer)
 from django.contrib.auth.models import User
 from django.db.models import F
+from pydantic import BaseModel, Field, ValidationError
+
+class PersonalizationSchema(BaseModel):
+    """Schéma strict pour empêcher les XSS et les injections de JSON volumineux."""
+    theme: str = Field(default="auto", pattern="^(auto|dark|light)$")
+    accent_color: str = Field(default="blue", pattern="^[a-zA-Z0-9_-]{3,20}$")
+    animations_enabled: bool = Field(default=True)
+    sound_enabled: bool = Field(default=False)
+    # On interdit explicitement les clés non définies pour bloquer le stockage NoSQL
+    class Config:
+        extra = "forbid"
 
 class ClubViewSet(viewsets.ModelViewSet):
     """API endpoint pour gérer les clubs de découverte."""
@@ -72,15 +83,46 @@ class ProfileViewSet(viewsets.ReadOnlyModelViewSet):
         serializer = self.get_serializer(request.user.profile)
         return Response(serializer.data)
 
+    @action(detail=False, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def update_personalization(self, request):
+        try:
+            # Validation stricte du JSON entrant via Pydantic
+            validated_data = PersonalizationSchema(**request.data).model_dump()
+            
+            profile = request.user.profile
+            profile.personalization_settings = validated_data
+            profile.save()
+            return Response({'status': 'updated', 'settings': profile.personalization_settings})
+        except ValidationError as e:
+            # En cas de payload non conforme (clés interdites, valeurs erronées), on bloque
+            return Response({'error': 'Invalid personalization settings.', 'details': e.errors()}, status=status.HTTP_400_BAD_REQUEST)
+
 class CreativeFusionViewSet(viewsets.ModelViewSet):
     """API endpoint pour visualiser, créer, liker et remixer des fusions créatives."""
-    queryset = CreativeFusion.objects.all().order_by('-created_at')
     serializer_class = CreativeFusionSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
+    def get_queryset(self):
+        """
+        Prévention IDOR : Un utilisateur ne peut voir que les fusions publiques
+        ou ses propres fusions privées.
+        """
+        from django.db.models import Q
+        user = self.request.user
+        
+        # Base : on prend toutes les fusions triées
+        base_qs = CreativeFusion.objects.all().order_by('-created_at')
+        
+        if user.is_authenticated:
+            # L'utilisateur voit les fusions publiques ET ses propres fusions
+            return base_qs.filter(Q(is_public=True) | Q(creator=user))
+        else:
+            # Un anonyme ne voit que les fusions publiques
+            return base_qs.filter(is_public=True)
+
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def like(self, request, pk=None):
-        fusion = self.get_object()
+        fusion = self.get_object() # get_object utilise get_queryset, la sécurité IDOR est donc automatique
         if request.user in fusion.likes.all():
             fusion.likes.remove(request.user)
             return Response({'status': 'unliked', 'likes_count': fusion.likes.count()})
@@ -90,7 +132,7 @@ class CreativeFusionViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def remix(self, request, pk=None):
-        parent = self.get_object()
+        parent = self.get_object() # Sécurité IDOR automatique via get_queryset()
         remix = CreativeFusion.objects.create(
             title_a=parent.title_a,
             title_b=parent.title_b,
@@ -101,7 +143,8 @@ class CreativeFusionViewSet(viewsets.ModelViewSet):
             art_style=request.data.get('art_style', parent.art_style),
             creator=request.user,
             parent=parent,
-            scenario_text="Remix en cours..."
+            scenario_text="Remix en cours...",
+            is_public=request.data.get('is_public', True)
         )
         serializer = self.get_serializer(remix)
         return Response(serializer.data, status=status.HTTP_201_CREATED)

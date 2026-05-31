@@ -2,6 +2,27 @@
 
 Ce document archive les étapes majeures de l'évolution technique du projet.
 
+## [2026-05-31] Session : Audit Avancé de Sécurité
+- **Prévention DoS (OOM)** : Configuration de `DATA_UPLOAD_MAX_MEMORY_SIZE` (50Mo) dans Django pour bloquer les requêtes massives. Remplacement des appels `uploaded_file.read()` par `uploaded_file.chunks()` dans les API Labs (Génération 3D, Vidéo, Audio, Manga) pour un traitement en flux sans saturer la RAM.
+- **Validation MIME-Type Stricte** : Intégration de la librairie `filetype` pour vérifier la signature binaire réelle ("Magic Number") des uploads médias (images, vidéos, audio), empêchant l'injection d'exécutables déguisés.
+- **Protection CSRF Cross-Domain** : Résolution de la vulnérabilité liée au cookie `SameSite=None`. Suppression du décorateur `@csrf_exempt` sur le webhook de synchronisation offline (`sync_offline_data`) et application du flag HTTPS `Secure` obligatoire pour les cookies de session.
+- **Sanitization JSON (Anti-XSS/NoSQL)** : Protection du profil utilisateur (`personalization_settings`) via un schéma Pydantic strict (`PersonalizationSchema`). L'option `extra = "forbid"` rejette tout payload contenant des clés non autorisées.
+- **Prévention IDOR sur les Fusions** : Modification dynamique du `get_queryset` de `CreativeFusionViewSet`. Les utilisateurs ne peuvent désormais interagir (remixer/liker) qu'avec les fusions publiques ou leurs propres créations privées, prévenant le "clonage" non autorisé de brouillons.
+
+## [2026-05-31] Session : Sécurité Complète et Intégrations SOTA
+- **Audit de Dépendances Continu** : Automatisation du scan de vulnérabilités via Dependabot, et intégration de `safety` et `npm audit` dans les workflows CI GitHub Actions. Résolution de failles (ReDoS/RCE) sur `transformers` et `torch`.
+- **Sécurisation du Déploiement** : Remplacement de tous les mots de passe par défaut dans `docker-compose.yml` par des variables d'environnement sécurisées.
+- **Protection SSRF** : Remplacement massif de l'usage direct de `httpx` par l'utilitaire `safe_http_request` pour empêcher les attaques de falsification de requêtes (SSRF) sur les API tierces et validations DNS proactives.
+- **Renforcement des Guardrails IA** : Mise en place de sentinelles Input/Output, vérification de la factualité via Graphe et prévention de fuite de prompts système (Fingerprinting).
+- **Contrôle d'accès aux Labs (GPU)** : Sécurisation des endpoints de calcul intensif avec l'exigence d'authentification et mise en place de quotas anti-abus via DRF Throttling.
+- **Assainissement des Entrées** : Encodage d'URL strict pour prévenir le path traversal et les injections dans des services tiers (ex: Weserv, Jikan).
+- **Suppression de RCE potentielle** : Éradication de la fonction d'exécution dynamique `exec()` dans l'agent `DynamicToolAgent`.
+- **Confidentialité des Métriques** : Les données techniques de transparence (`TransparencyDataView`) sont désormais exclusives aux administrateurs.
+- **Visualisation du Drift** : Intégration d'une vue graphique de l'évolution du profil utilisateur dans l'Archetype Nexus.
+- **Nouvelles Interfaces SOTA (Nexus Series)** : Déploiement de multiples UI expertes incluant le Raisonnement Arborescent (MCTS), la Mémoire Épisodique (Règles logiques Z3), la Débat Arena (Self-play), la Vidéo Sémantique (Video-LLaVA), la Lore World Map, et les labos Quantum & Swarm.
+- **Simulateurs et Dashboards Avancés** : Implémentation du Counterfactual Simulator UI, du Liquid Neural Network Lab et du DSPy Optimizer Dashboard.
+- **Restauration de Hubs** : Réintégration de Soundscape Lab et Speech-to-Speech Lab dans le LabHubPage.
+
 ## [2026-05-30] Session : Hyper-Personnalisation Graphique 100%
 - **Moteur d'Archetype Drift (Backend) :** Implémentation du `ArchetypeDriftService` analysant les feedbacks (AIFeedback), l'historique de jeu (Akinetix), les fusions créatives (La Forge) et les souvenirs sémantiques (ChromaDB) pour calculer le profil utilisateur dominant parmi 15 archétypes Otaku.
 - **Middleware Visual Meta :** Mise en place d'un middleware Django injectant dynamiquement la configuration visuelle (`VisualConfig`) dans les métadonnées de toutes les réponses API authentifiées.

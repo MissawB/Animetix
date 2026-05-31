@@ -11,14 +11,16 @@ import time
 import json
 import logging
 import httpx
+from core.utils.security import safe_http_request
 from dotenv import load_dotenv
 
 # Détection de la racine et configuration des chemins
 PIPELINE_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(os.path.dirname(PIPELINE_DIR))
 
-sys.path.insert(0, os.path.join(PROJECT_ROOT, "src"))
-sys.path.insert(0, os.path.join(PROJECT_ROOT, "src", "backend"))
+# Fix path for internal imports
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, os.path.join(PROJECT_ROOT, "backend"))
 
 # Configuration Django
 import django
@@ -51,7 +53,7 @@ def fetch_jikan_details(mal_id: str, media_type: str = 'anime') -> dict:
     url = f"https://api.jikan.moe/v4/{type_path}/{mal_id}/full"
     
     try:
-        response = httpx.get(url, timeout=15, follow_redirects=True)
+        response = safe_http_request("GET", url, timeout=15)
         if response.status_code == 200:
             return response.json().get('data', {})
         elif response.status_code == 429:

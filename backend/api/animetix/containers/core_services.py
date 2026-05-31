@@ -59,6 +59,7 @@ from core.domain.services.dpo_feedback_loop import DPOFeedbackLoop
 from core.domain.services.creative.fusion_service import FusionDomainService
 from core.domain.services.creative.vs_battle_service import VsBattleService
 from core.domain.services.health_dashboard_service import HealthDashboardService
+from core.domain.services.sota_benchmark_service import SOTABenchmarkService
 from core.domain.services.game_session_service import GameSessionService
 
 # Adapters imports
@@ -240,12 +241,16 @@ class CoreServicesContainer(containers.DeclarativeContainer):
 
     guardrail_service = providers.Singleton(
         GuardrailService,
-        inference_engine=inference.inference_engine
+        inference_engine=inference.inference_engine,
+        prompt_manager=infrastructure.prompt_manager,
+        neo4j_manager=persistence.graph_persistence_port,
+        safety_engine=inference.local_guardrail_adapter
     )
 
     red_teaming_agent = providers.Singleton(
         RedTeamingAgent,
-        inference_engine=inference.inference_engine
+        inference_engine=inference.inference_engine,
+        prompt_manager=infrastructure.prompt_manager
     )
 
     akinetix_rl_env_service = providers.Singleton(
@@ -409,8 +414,14 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         web_search_port=infrastructure.web_search
     )
 
+    sota_benchmark_service = providers.Singleton(
+        SOTABenchmarkService
+    )
+
     health_dashboard_service = providers.Singleton(
         HealthDashboardService,
         donation_port=providers.Factory(DjangoDonationAdapter),
-        usage_port=infrastructure.usage_port
+        usage_port=infrastructure.usage_port,
+        sota_service=sota_benchmark_service
     )
+

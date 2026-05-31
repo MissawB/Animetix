@@ -9,9 +9,12 @@ from tqdm import tqdm
 # Add src and backend to Python path
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(os.path.dirname(SCRIPT_DIR))
-sys.path.append(os.path.join(PROJECT_ROOT, "src"))
-sys.path.append(os.path.join(PROJECT_ROOT, "src", "backend"))
 
+# Fix path for internal imports
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, os.path.join(PROJECT_ROOT, "backend"))
+
+from core.utils.security import safe_http_request
 import django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'animetix_project.settings')
 django.setup()
@@ -40,7 +43,7 @@ def fetch_jikan_metadata(mal_id, media_type):
     # 1. Fetch exact dates
     try:
         url_full = f"https://api.jikan.moe/v4/anime/{mal_id}/full"
-        res = httpx.get(url_full, timeout=10, follow_redirects=True)
+        res = safe_http_request("GET", url_full, timeout=10)
         if res.status_code == 200:
             data = res.json().get('data', {})
             aired = data.get('aired', {})
@@ -52,7 +55,7 @@ def fetch_jikan_metadata(mal_id, media_type):
     # 2. Fetch Staff (Directors)
     try:
         url_staff = f"https://api.jikan.moe/v4/anime/{mal_id}/staff"
-        res = httpx.get(url_staff, timeout=10, follow_redirects=True)
+        res = safe_http_request("GET", url_staff, timeout=10)
         if res.status_code == 200:
             staff = res.json().get('data', [])
             for s in staff:
@@ -70,7 +73,7 @@ def fetch_jikan_metadata(mal_id, media_type):
     # 3. Fetch Cast (Seiyuus)
     try:
         url_chars = f"https://api.jikan.moe/v4/anime/{mal_id}/characters"
-        res = httpx.get(url_chars, timeout=10, follow_redirects=True)
+        res = safe_http_request("GET", url_chars, timeout=10)
         if res.status_code == 200:
             chars = res.json().get('data', [])
             main_chars = [c for c in chars if c.get('role') == 'Main']

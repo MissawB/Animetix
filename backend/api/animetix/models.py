@@ -49,6 +49,7 @@ class Profile(models.Model):
     collected_fusions = models.ManyToManyField('CreativeFusion', related_name='collected_by_profiles', blank=True)
     tier = models.CharField(max_length=20, choices=TIERS, default='free')
     api_key_hash = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    personalization_settings = models.JSONField(default=dict, blank=True)
     
     def set_api_key(self, raw_key: str):
         """Hashes the raw API key and stores it."""
@@ -322,6 +323,28 @@ class ClubMembership(models.Model):
 
     class Meta:
         unique_together = ('user', 'club')
+
+class ArchetypeDriftSnapshot(models.Model):
+    """Snapshot historique du profil cognitif de l'utilisateur."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='archetype_snapshots')
+    archetype_id = models.CharField(max_length=100)
+    intensity = models.FloatField()
+    
+    # Statistiques cognitives au moment du snapshot
+    shonen_affinity = models.FloatField()
+    seinen_affinity = models.FloatField()
+    logic_consistency = models.FloatField()
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+        indexes = [
+            models.Index(fields=['user', 'created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} - {self.archetype_id} ({self.created_at.date()})"
 
 class ClubEvent(models.Model):
     club = models.ForeignKey(DiscoveryClub, on_delete=models.CASCADE, related_name='events')

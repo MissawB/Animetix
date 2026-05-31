@@ -3,11 +3,13 @@ from rest_framework.response import Response
 from rest_framework import permissions, status
 from dependency_injector.wiring import inject, Provide
 from ..containers import Container
+from ..models import ArchetypeDriftSnapshot
 from core.domain.services.archetype_drift_service import ArchetypeDriftService
 from core.domain.services.neuro_symbolic_user_profiler import NeuroSymbolicUserProfiler
 from core.ports.feedback_port import FeedbackRepositoryPort
 
 from core.domain.services.self_play_debate_service import SelfPlayDebateService
+from core.domain.services.counterfactual_simulator import CounterfactualConversationSimulator
 
 class ArchetypeNexusView(APIView):
     """
@@ -28,7 +30,8 @@ class ArchetypeNexusView(APIView):
         self.feedback_port = feedback_port
 
     def get(self, request):
-        user_id = request.user.id
+        user = request.user
+        user_id = user.id
         
         # 1. Calcul du Drift d'Archétype
         drift_config = self.drift_service.calculate_drift(user_id)
@@ -39,7 +42,47 @@ class ArchetypeNexusView(APIView):
         # 3. Déduction des règles logiques (Z3)
         logical_rules = self.profiler.deduce_preference_rules(feedbacks)
         
-        # 4. Formattage des signaux récents pour la visualisation
+        # 4. Statistiques cognitives (certaines mockées, certaines calculées)
+        stats = {
+            'shonen_affinity': 0.85, # Mocked for now
+            'seinen_affinity': 0.42, # Mocked for now
+            'logic_consistency': 0.92,
+            'memory_depth': len(feedbacks)
+        }
+
+        # 5. Enregistrement d'un Snapshot historique (si pas de snapshot récent)
+        # On limite à un snapshot par heure pour éviter de polluer la DB
+        import datetime
+        from django.utils import timezone
+        one_hour_ago = timezone.now() - datetime.timedelta(hours=1)
+        
+        recent_snapshot = ArchetypeDriftSnapshot.objects.filter(user=user, created_at__gt=one_hour_ago).exists()
+        if not recent_snapshot:
+            ArchetypeDriftSnapshot.objects.create(
+                user=user,
+                archetype_id=drift_config.archetype_id,
+                intensity=drift_config.aura_intensity,
+                shonen_affinity=stats['shonen_affinity'],
+                seinen_affinity=stats['seinen_affinity'],
+                logic_consistency=stats['logic_consistency']
+            )
+
+        # 6. Récupération de l'historique (pour le graph de drift)
+        # On récupère les 20 derniers snapshots et on les remet dans l'ordre chronologique
+        history_snapshots = list(ArchetypeDriftSnapshot.objects.filter(user=user).order_by('-created_at')[:20])
+        history_snapshots.reverse()
+        
+        drift_history = []
+        for snap in history_snapshots:
+            drift_history.append({
+                'date': snap.created_at.isoformat(),
+                'archetype': snap.archetype_id,
+                'intensity': snap.intensity,
+                'shonen': snap.shonen_affinity,
+                'seinen': snap.seinen_affinity
+            })
+
+        # 7. Formattage des signaux récents
         recent_signals = []
         for fb in feedbacks[:10]:
             recent_signals.append({
@@ -58,12 +101,8 @@ class ArchetypeNexusView(APIView):
             },
             'logical_rules': logical_rules,
             'recent_signals': recent_signals,
-            'cognitive_stats': {
-                'shonen_affinity': 0.85, # Mocked for now, should come from deeper analysis
-                'seinen_affinity': 0.42,
-                'logic_consistency': 0.92,
-                'memory_depth': len(feedbacks)
-            }
+            'cognitive_stats': stats,
+            'drift_history': drift_history
         })
 
 class AIDebateArenaView(APIView):
@@ -92,5 +131,35 @@ class AIDebateArenaView(APIView):
             # mais on pourrait passer par Celery + SSE comme Expert Nexus plus tard.
             record = self.debate_service.run_debate(target_media=target_media, topic=topic)
             return Response(record)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+class CounterfactualSimulatorView(APIView):
+    """
+    Simulateur de timelines alternatives pour une conversation donnée.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    @inject
+    def __init__(self, 
+                 simulator: CounterfactualConversationSimulator = Provide[Container.core.counterfactual_simulator],
+                 **kwargs):
+        super().__init__(**kwargs)
+        self.simulator = simulator
+
+    def post(self, request):
+        what_if_query = request.data.get('what_if')
+        # On pourrait récupérer l'historique réel depuis la DB ou le passer dans le body
+        actual_dialogue = request.data.get('actual_context', [])
+
+        if not what_if_query:
+            return Response({"error": "what_if query is required"}, status=400)
+
+        try:
+            result = self.simulator.simulate_counterfactual_path(
+                actual_dialogue=actual_dialogue,
+                what_if_query=what_if_query
+            )
+            return Response(result)
         except Exception as e:
             return Response({"error": str(e)}, status=500)

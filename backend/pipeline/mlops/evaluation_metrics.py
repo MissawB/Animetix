@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import numpy as np
 import httpx
 import wandb
@@ -7,8 +8,14 @@ import logging
 from sentence_transformers import SentenceTransformer
 from dagster import asset, Output, AssetObservation
 import pandas as pd
-# Ragas & LangChain dependencies removed in favor of local LLM-as-a-judge
 
+# Fix path for internal imports
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(CURRENT_DIR)))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, os.path.join(PROJECT_ROOT, "backend"))
+
+from core.utils.security import safe_http_request
 
 logger = logging.getLogger("animetix.pipeline." + __name__)
 
@@ -88,10 +95,10 @@ def ragas_performance_comparison():
             # Generation
             answer = "Erreur"
             try:
-                resp = httpx.post(f"{brain_url}/generate", json={
+                resp = safe_http_request("POST", f"{brain_url}/generate", json={
                     "prompt": f"Context: {contexts}\n\nQuestion: {q}",
                     "system_prompt": "Expert Anime/Manga précis."
-                }, timeout=40, follow_redirects=True)
+                }, timeout=40, allow_internal=True)
                 if resp.status_code == 200:
                     answer = resp.json().get("text", "Erreur")
                 else:

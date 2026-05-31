@@ -14,7 +14,10 @@ import {
   ArrowRight,
   Flame,
   Star,
-  Calendar
+  Calendar,
+  User,
+  ShieldCheck,
+  Search
 } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
@@ -111,6 +114,36 @@ const GamesHubPage: React.FC = () => {
       bg: "bg-gray-400/10",
       difficulty: "Technique",
       reward: "250 XP"
+    },
+    {
+      title: "Animinator",
+      desc: "Le génie omniscient capable de deviner n'importe quelle œuvre en un clin d'œil.",
+      icon: Sparkles,
+      path: "/animinator/",
+      color: "text-blue-400",
+      bg: "bg-blue-400/10",
+      difficulty: "Mystique",
+      reward: "150 XP"
+    },
+    {
+      title: "Undercover",
+      desc: "Infiltrez-vous dans un groupe de fans d'anime et débusquez l'intrus.",
+      icon: ShieldCheck,
+      path: "/undercover/room/lobby/",
+      color: "text-red-400",
+      bg: "bg-red-400/10",
+      difficulty: "Social",
+      reward: "300 XP"
+    },
+    {
+      title: "Akinetix Classic",
+      desc: "Le jeu de devinette original, optimisé pour une expérience rapide.",
+      icon: Search,
+      path: "/akinetix/",
+      color: "text-orange-400",
+      bg: "bg-orange-400/10",
+      difficulty: "Standard",
+      reward: "100 XP"
     }
   ];
 

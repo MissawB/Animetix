@@ -1,4 +1,13 @@
+# Fix path for internal imports
+import sys
+import os
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(CURRENT_DIR)))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, os.path.join(PROJECT_ROOT, "backend"))
+
 import httpx
+from core.utils.security import safe_http_request
 import json
 import time
 import os
@@ -21,7 +30,7 @@ def get_twitch_token():
     """Récupère un jeton d'accès Twitch pour l'API IGDB."""
     url = f"https://id.twitch.tv/oauth2/token?client_id={CLIENT_ID}&client_secret={CLIENT_SECRET}&grant_type=client_credentials"
     try:
-        response = httpx.post(url, follow_redirects=True)
+        response = safe_http_request("POST", url)
         if response.status_code == 200:
             return response.json().get('access_token')
         else:
@@ -39,7 +48,7 @@ def fetch_igdb(query, token):
         'Content-Type': 'text/plain'
     }
     try:
-        response = httpx.post(url, headers=headers, content=query, follow_redirects=True)
+        response = safe_http_request("POST", url, headers=headers, content=query)
         if response.status_code == 200:
             return response.json()
         elif response.status_code == 429:

@@ -1,4 +1,13 @@
+# Fix path for internal imports
+import sys
+import os
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(CURRENT_DIR)))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, os.path.join(PROJECT_ROOT, "backend"))
+
 import httpx
+from core.utils.security import safe_http_request
 import json
 import time
 import os
@@ -29,7 +38,8 @@ def get_mangadex_id(mal_id: int) -> str | None:
         L'ID MangaDex (UUID) ou None.
     """
     try:
-        response = httpx.get(f"{MALSYNC_API_URL}/{mal_id}", timeout=10, follow_redirects=True)
+        url = f"{MALSYNC_API_URL}/{mal_id}"
+        response = safe_http_request("GET", url, timeout=10)
         if response.status_code == 200:
             data = response.json()
             # Dans MAL-Sync, les sites sont des clés dans un dictionnaire
@@ -59,7 +69,8 @@ def fetch_covers(mangadex_id: str) -> dict:
     }
     covers = {"ja": [], "fr": []}
     try:
-        response = httpx.get(f"{MANGADEX_API_URL}/cover", params=params, timeout=10, follow_redirects=True)
+        url = f"{MANGADEX_API_URL}/cover"
+        response = safe_http_request("GET", url, params=params, timeout=10)
         if response.status_code == 200:
             data = response.json().get('data', [])
             for item in data:

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import ForceGraph2D from 'react-force-graph-2d';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
@@ -28,6 +29,23 @@ interface Step {
   content: any;
   timestamp: number;
   agent?: string;
+  parentId?: string; // Add parent tracking for graph
+}
+
+// Interfaces for ForceGraph
+interface GraphNode {
+  id: string;
+  label: string;
+  agent: string;
+  type: string;
+  val: number; // size
+  color: string;
+}
+
+interface GraphLink {
+  source: string;
+  target: string;
+  color: string;
 }
 
 const ExpertNexusPage: React.FC = () => {
@@ -38,8 +56,12 @@ const ExpertNexusPage: React.FC = () => {
   const [steps, setSteps] = useState<Step[]>([]);
   const [finalAnswer, setFinalAnswer] = useState('');
   const [error, setError] = useState<string | null>(null);
+  
+  // Graph state
+  const [graphData, setGraphData] = useState<{ nodes: GraphNode[], links: GraphLink[] }>({ nodes: [], links: [] });
+  const graphRef = useRef<any>(null);
+
   const eventSourceRef = useRef<EventSource | null>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (initialQuery) {
@@ -48,18 +70,25 @@ const ExpertNexusPage: React.FC = () => {
     return () => stopStreaming();
   }, []);
 
-  useEffect(() => {
-    if (scrollRef.current) {
-        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [steps, finalAnswer]);
-
   const stopStreaming = () => {
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
     }
     setIsStreaming(false);
+  };
+
+  const getAgentColorCode = (agent?: string) => {
+    switch (agent) {
+      case 'Semantic Router': return '#3b82f6'; // blue-500
+      case 'State Machine': return '#a855f7'; // purple-500
+      case 'TTC': return '#ef4444'; // red-500
+      case 'Graph User Memory': return '#10b981'; // emerald-500
+      case 'Judge': return '#10b981'; // emerald-500
+      case 'Synthesizer': return '#eab308'; // yellow-500
+      case 'Root': return '#ffffff';
+      default: return '#64748b'; // slate-500
+    }
   };
 
   const handleSearch = (searchQuery: string) => {
@@ -71,9 +100,23 @@ const ExpertNexusPage: React.FC = () => {
     setError(null);
     setIsStreaming(true);
 
+    // Initialize Root node
+    const rootId = 'root';
+    const initNodes: GraphNode[] = [{
+        id: rootId,
+        label: "Question",
+        agent: 'Root',
+        type: 'root',
+        val: 20,
+        color: '#ffffff'
+    }];
+    setGraphData({ nodes: initNodes, links: [] });
+
     const url = `/api/v1/stream/agentic-rag/?q=${encodeURIComponent(searchQuery)}`;
     const eventSource = new EventSource(url);
     eventSourceRef.current = eventSource;
+
+    let lastNodeId = rootId;
 
     eventSource.onmessage = (event) => {
       try {
@@ -82,26 +125,73 @@ const ExpertNexusPage: React.FC = () => {
         if (data.type === 'token') {
           setFinalAnswer(prev => prev + data.content);
         } else if (data.type === 'thought') {
-          // Extract agent tag if present: [Agent Name] ...
           const agentMatch = data.content.match(/^\[(.*?)\]/);
           const agent = agentMatch ? agentMatch[1] : 'System';
           const content = agentMatch ? data.content.replace(/^\[.*?\]\s*/, '') : data.content;
+          const newId = Math.random().toString(36).substr(2, 9);
 
           setSteps(prev => [...prev, {
-            id: Math.random().toString(36).substr(2, 9),
+            id: newId,
             type: 'thought',
             content,
             agent,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            parentId: lastNodeId
           }]);
+
+          setGraphData(prev => {
+              const newNode = {
+                  id: newId,
+                  label: content,
+                  agent: agent,
+                  type: 'thought',
+                  val: 10,
+                  color: getAgentColorCode(agent)
+              };
+              const newLink = {
+                  source: lastNodeId,
+                  target: newId,
+                  color: 'rgba(255, 255, 255, 0.2)'
+              };
+              return {
+                  nodes: [...prev.nodes, newNode],
+                  links: [...prev.links, newLink]
+              };
+          });
+          lastNodeId = newId;
+
         } else if (data.type === 'eval') {
+          const newId = Math.random().toString(36).substr(2, 9);
           setSteps(prev => [...prev, {
-            id: Math.random().toString(36).substr(2, 9),
+            id: newId,
             type: 'eval',
             content: data.content,
             agent: 'Judge',
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            parentId: lastNodeId
           }]);
+
+          setGraphData(prev => {
+              const newNode = {
+                  id: newId,
+                  label: "Évaluation",
+                  agent: 'Judge',
+                  type: 'eval',
+                  val: 12,
+                  color: getAgentColorCode('Judge')
+              };
+              const newLink = {
+                  source: lastNodeId,
+                  target: newId,
+                  color: 'rgba(255, 255, 255, 0.2)'
+              };
+              return {
+                  nodes: [...prev.nodes, newNode],
+                  links: [...prev.links, newLink]
+              };
+          });
+          lastNodeId = newId;
+
         } else if (data.type === 'error') {
           setError(data.content);
           stopStreaming();
@@ -114,9 +204,6 @@ const ExpertNexusPage: React.FC = () => {
     };
 
     eventSource.onerror = () => {
-      // In many implementations, Done is signified by connection close
-      // but if we have an error type we use that.
-      // Usually browser reconnects on error, so we might want to stop if it's intentional
       stopStreaming();
     };
   };
@@ -124,31 +211,6 @@ const ExpertNexusPage: React.FC = () => {
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     handleSearch(query);
-  };
-
-  const getAgentIcon = (agent?: string) => {
-    switch (agent) {
-      case 'Semantic Router': return <Network className="w-4 h-4 text-blue-400" />;
-      case 'State Machine': return <Layers className="w-4 h-4 text-purple-400" />;
-      case 'TTC': return <Cpu className="w-4 h-4 text-red-400" />;
-      case 'Graph User Memory': return <Database className="w-4 h-4 text-emerald-400" />;
-      case 'Search Planner': return <Search className="w-4 h-4 text-blue-500" />;
-      case 'Synthesizer': return <Sparkles className="w-4 h-4 text-yellow-400" />;
-      case 'Judge': return <ShieldCheck className="w-4 h-4 text-emerald-500" />;
-      default: return <Bot className="w-4 h-4 text-gray-400" />;
-    }
-  };
-
-  const getAgentColor = (agent?: string) => {
-    switch (agent) {
-      case 'Semantic Router': return 'border-blue-500/30 bg-blue-500/5';
-      case 'State Machine': return 'border-purple-500/30 bg-purple-500/5';
-      case 'TTC': return 'border-red-500/30 bg-red-500/5';
-      case 'Graph User Memory': return 'border-emerald-500/30 bg-emerald-500/5';
-      case 'Judge': return 'border-emerald-500/30 bg-emerald-500/5';
-      case 'Synthesizer': return 'border-yellow-500/30 bg-yellow-500/5';
-      default: return 'border-white/5 bg-white/5';
-    }
   };
 
   return (
@@ -194,61 +256,53 @@ const ExpertNexusPage: React.FC = () => {
         {/* Content Area */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 flex-grow">
             
-            {/* Thought Stream (Timeline) */}
-            <div className="lg:col-span-4 flex flex-col h-full">
+            {/* Tree of Thoughts (Graph) */}
+            <div className="lg:col-span-5 flex flex-col h-full min-h-[500px]">
                 <div className="flex items-center justify-between mb-6 px-4">
                     <h3 className="text-xs font-black uppercase opacity-40 tracking-widest flex items-center gap-2">
-                        <Layers className="w-4 h-4" /> Arbre de Pensée
+                        <Network className="w-4 h-4" /> Arbre de Pensée (MCTS)
                     </h3>
                     {isStreaming && (
                         <Badge variant="primary" className="bg-blue-600 animate-pulse text-[8px]">ACTIVE REASONING</Badge>
                     )}
                 </div>
 
-                <div ref={scrollRef} className="flex-grow overflow-y-auto space-y-4 no-scrollbar max-h-[600px] lg:max-h-none pr-2">
-                    <AnimatePresence mode="popLayout">
-                        {steps.map((step, idx) => (
-                            <motion.div
-                                key={step.id}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ duration: 0.4 }}
-                                className={`p-4 rounded-2xl border ${getAgentColor(step.agent)} relative overflow-hidden group`}
-                            >
-                                <div className="absolute top-0 right-0 w-24 h-24 opacity-[0.03] -mr-8 -mt-8 rotate-12 group-hover:opacity-[0.08] transition-opacity">
-                                    {getAgentIcon(step.agent)}
-                                </div>
-                                
-                                <div className="flex items-center gap-3 mb-2">
-                                    <div className="p-1.5 rounded-lg bg-black/40 border border-white/5">
-                                        {getAgentIcon(step.agent)}
-                                    </div>
-                                    <span className="text-[10px] font-black uppercase tracking-widest opacity-60">
-                                        {step.agent}
-                                    </span>
-                                    <span className="text-[8px] opacity-20 font-mono ml-auto">
-                                        +{Math.round((step.timestamp - (steps[0]?.timestamp || step.timestamp)) / 100) / 10}s
-                                    </span>
-                                </div>
-
-                                <p className="text-xs font-bold leading-relaxed opacity-90 italic">
-                                    {step.content}
-                                </p>
-                            </motion.div>
-                        ))}
-                    </AnimatePresence>
-                    
-                    {!isStreaming && steps.length === 0 && (
-                        <div className="h-full flex flex-col items-center justify-center opacity-10 text-center py-24 border-2 border-dashed border-white/5 rounded-[3rem]">
+                <Card padding="none" className="flex-grow bg-black border-white/5 rounded-[2.5rem] overflow-hidden relative">
+                    {graphData.nodes.length > 0 ? (
+                        <div className="absolute inset-0">
+                            <ForceGraph2D
+                                ref={graphRef}
+                                graphData={graphData}
+                                nodeLabel="agent"
+                                nodeColor="color"
+                                nodeVal="val"
+                                linkColor="color"
+                                linkWidth={2}
+                                backgroundColor="#000000"
+                                onEngineStop={() => graphRef.current?.zoomToFit(400, 20)}
+                                nodeCanvasObjectMode={() => 'after'}
+                                nodeCanvasObject={(node: any, ctx, globalScale) => {
+                                    const label = node.agent;
+                                    const fontSize = 12/globalScale;
+                                    ctx.font = `${fontSize}px Sans-Serif`;
+                                    ctx.textAlign = 'center';
+                                    ctx.textBaseline = 'middle';
+                                    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'; // Text color
+                                    ctx.fillText(label, node.x, node.y + 12);
+                                }}
+                            />
+                        </div>
+                    ) : (
+                        <div className="h-full flex flex-col items-center justify-center opacity-10 text-center py-24">
                             <Network className="w-16 h-16 mb-4" />
                             <p className="text-xs font-black uppercase tracking-widest">En attente d'une requête complexe</p>
                         </div>
                     )}
-                </div>
+                </Card>
             </div>
 
             {/* Answer Display */}
-            <div className="lg:col-span-8 flex flex-col h-full">
+            <div className="lg:col-span-7 flex flex-col h-full">
                 <div className="flex items-center gap-4 mb-6 px-4">
                     <h3 className="text-xs font-black uppercase opacity-40 tracking-widest flex items-center gap-2">
                         <Sparkles className="w-4 h-4 text-yellow-400" /> Synthèse Expert

@@ -1,8 +1,15 @@
+# Fix path for internal imports
+import sys
+import os
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(CURRENT_DIR)))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, os.path.join(PROJECT_ROOT, "backend"))
+
 import json
 import numpy as np
-import os
-import sys
 import httpx
+from core.utils.security import safe_http_request
 import logging
 from PIL import Image
 from io import BytesIO
@@ -87,7 +94,7 @@ def run_vectorization():
                 # Préparation Vision
                 if m_id not in existing_vision_ids and item['image']:
                     try:
-                        res = httpx.get(item['image'], timeout=2, follow_redirects=True)
+                        res = safe_http_request("GET", item['image'], timeout=2)
  
                         if res.status_code == 200:
                             img = Image.open(BytesIO(res.content)).convert("RGB")

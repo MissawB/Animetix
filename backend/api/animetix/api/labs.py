@@ -9,6 +9,11 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from animetix.api.core import is_safe_url
+from core.utils.security import validate_file_mime_type
+
+ALLOWED_IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp']
+ALLOWED_VIDEO_MIMES = ['video/mp4', 'video/webm', 'video/x-msvideo']
+ALLOWED_AUDIO_MIMES = ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/x-wav']
 from ..models import DailyChallenge
 from ..serializers import DailyChallengeSerializer
 from ..containers import get_container
@@ -92,8 +97,8 @@ class CustomConfigDataView(APIView):
         return Response({})
 
 class TransparencyDataView(APIView):
-    """Données sur l'intégrité de l'IA et du Knowledge Graph (Public/Admin)."""
-    permission_classes = [permissions.AllowAny]
+    """Données sur l'intégrité de l'IA et du Knowledge Graph (Admin uniquement)."""
+    permission_classes = [permissions.IsAdminUser]
 
     def get(self, request):
         container = get_container()
@@ -184,7 +189,8 @@ class DPOCurationView(APIView):
 @method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True), name='dispatch')
 class SpatialLabDataView(APIView):
     """Génère une carte de profondeur pour une image donnée."""
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
+    throttle_scope = 'gpu'
 
     def post(self, request):
         import base64
@@ -198,7 +204,10 @@ class SpatialLabDataView(APIView):
         try:
             image_data = None
             if uploaded_file:
-                image_data = uploaded_file.read()
+                # Streaming read to prevent OOM
+                image_data = b""
+                for chunk in uploaded_file.chunks():
+                    image_data += chunk
             else:
                 if not is_safe_url(image_url):
                     return Response({'error': 'URL is not allowed for security reasons.'}, status=status.HTTP_403_FORBIDDEN)
@@ -207,6 +216,9 @@ class SpatialLabDataView(APIView):
                     return Response({'error': 'Redirects are not allowed for security reasons.'}, status=status.HTTP_403_FORBIDDEN)
                 res.raise_for_status()
                 image_data = res.content
+                
+            if not validate_file_mime_type(image_data, ALLOWED_IMAGE_MIMES):
+                return Response({'error': 'Invalid image format. Allowed formats: JPEG, PNG, WEBP.'}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
             
             depth_map_bytes = get_container().spatial_computing_service.inference_engine.estimate_depth(image_data)
             
@@ -224,7 +236,9 @@ class SpatialLabDataView(APIView):
 @method_decorator(ratelimit(key='user_or_ip', rate='5/m', method='POST', block=True), name='dispatch')
 class Generate3DDataView(APIView):
     """Génère un modèle 3D à partir d'une image (Gaussian Splatting/Mesh)."""
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
+    throttle_scope = 'gpu'
+
 
     def post(self, request):
         import base64
@@ -239,7 +253,10 @@ class Generate3DDataView(APIView):
         try:
             image_data = None
             if uploaded_file:
-                image_data = uploaded_file.read()
+                # Streaming read to prevent OOM
+                image_data = b""
+                for chunk in uploaded_file.chunks():
+                    image_data += chunk
             else:
                 if not is_safe_url(image_url):
                     return Response({'error': 'URL is not allowed for security reasons.'}, status=status.HTTP_403_FORBIDDEN)
@@ -248,6 +265,9 @@ class Generate3DDataView(APIView):
                     return Response({'error': 'Redirects are not allowed for security reasons.'}, status=status.HTTP_403_FORBIDDEN)
                 res.raise_for_status()
                 image_data = res.content
+                
+            if not validate_file_mime_type(image_data, ALLOWED_IMAGE_MIMES):
+                return Response({'error': 'Invalid image format. Allowed formats: JPEG, PNG, WEBP.'}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
             
             # Generate 3D model via Spatial Computing Service
             result = get_container().spatial_computing_service.generate_3d_scene(image_data, depth_map=None)
@@ -260,7 +280,8 @@ class Generate3DDataView(APIView):
 @method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True), name='dispatch')
 class MangaLabDataView(APIView):
     """Nettoyage et traduction de bulles de manga."""
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
+    throttle_scope = 'gpu'
 
     def post(self, request):
         import httpx
@@ -271,7 +292,10 @@ class MangaLabDataView(APIView):
         try:
             image_data = None
             if uploaded_file:
-                image_data = uploaded_file.read()
+                # Streaming read to prevent OOM
+                image_data = b""
+                for chunk in uploaded_file.chunks():
+                    image_data += chunk
             else:
                 if not is_safe_url(image_url):
                     return Response({'error': 'URL is not allowed for security reasons.'}, status=status.HTTP_403_FORBIDDEN)
@@ -280,6 +304,9 @@ class MangaLabDataView(APIView):
                     return Response({'error': 'Redirects are not allowed for security reasons.'}, status=status.HTTP_403_FORBIDDEN)
                 res.raise_for_status()
                 image_data = res.content
+                
+            if not validate_file_mime_type(image_data, ALLOWED_IMAGE_MIMES):
+                return Response({'error': 'Invalid image format. Allowed formats: JPEG, PNG, WEBP.'}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
             
             if action == 'translate':
                 target_lang = request.data.get('language', 'Français')
@@ -306,7 +333,8 @@ class MangaLabDataView(APIView):
 @method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True), name='dispatch')
 class AudioLabDataView(APIView):
     """Clonage vocal XTTS."""
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
+    throttle_scope = 'gpu'
 
     def post(self, request):
         import base64
@@ -333,6 +361,9 @@ class AudioLabDataView(APIView):
             if not ref_audio_bytes:
                 return Response({'error': 'Échantillon vocal manquant'}, status=400)
 
+            if voice_source == 'upload' and not validate_file_mime_type(ref_audio_bytes, ALLOWED_AUDIO_MIMES):
+                return Response({'error': 'Invalid audio format.'}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
             cloned_wav = get_container().voice_cloning_service.generate_character_voice(
                 text=text, 
                 character_audio_sample=ref_audio_bytes
@@ -358,7 +389,8 @@ class AudioLabDataView(APIView):
 
 class SingularityLabDataView(APIView):
     """Interact with fifth generation Evolving AI and Singularity services (SOTA 2035+)."""
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
+    throttle_scope = 'gpu'
 
     def post(self, request):
         action = request.data.get('action', '')
@@ -489,7 +521,8 @@ class SingularityLabDataView(APIView):
 @method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True), name='dispatch')
 class VideoLabDataView(APIView):
     """Transforme une vidéo avec transfert de style SOTA (FateZero)."""
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
+    throttle_scope = 'gpu'
 
     def post(self, request):
         studio_style = request.data.get('studio_style', 'Ghibli')
@@ -498,7 +531,10 @@ class VideoLabDataView(APIView):
             return Response({'error': 'No video provided'}, status=400)
 
         try:
-            video_data = uploaded_file.read()
+            video_data = b"".join(chunk for chunk in uploaded_file.chunks())
+            if not validate_file_mime_type(video_data, ALLOWED_VIDEO_MIMES):
+                return Response({'error': 'Invalid video format. Allowed formats: MP4, WEBM, AVI.'}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
             service = get_container().studio_transform_service()
             # the service delegates to inference_engine
             res = service.transform_video_to_anime_sota(video_data, studio_style)
@@ -519,7 +555,10 @@ class VideoRAGIndexView(APIView):
             return Response({'error': 'Missing video_id or video_file'}, status=400)
             
         try:
-            video_data = uploaded_file.read()
+            video_data = b"".join(chunk for chunk in uploaded_file.chunks())
+            if not validate_file_mime_type(video_data, ALLOWED_VIDEO_MIMES):
+                return Response({'error': 'Invalid video format. Allowed formats: MP4, WEBM, AVI.'}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
             service = get_container().video_rag_service()
             count = service.index_video(video_id, video_data)
             return Response({
@@ -551,7 +590,8 @@ class VideoRAGSearchView(APIView):
 @method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True), name='dispatch')
 class SoundscapeLabDataView(APIView):
     """Génère une ambiance sonore via AudioLDM."""
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
+    throttle_scope = 'gpu'
 
     def post(self, request):
         uploaded_file = request.FILES.get('video_file')
@@ -559,7 +599,10 @@ class SoundscapeLabDataView(APIView):
             return Response({'error': 'No video provided'}, status=400)
 
         try:
-            video_data = uploaded_file.read()
+            video_data = b"".join(chunk for chunk in uploaded_file.chunks())
+            if not validate_file_mime_type(video_data, ALLOWED_VIDEO_MIMES):
+                return Response({'error': 'Invalid video format. Allowed formats: MP4, WEBM, AVI.'}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
             service = get_container().soundscape_service()
             res = service.generate_soundscape_for_video(video_data)
             return Response({'status': 'success', 'audio_url': res})
@@ -569,7 +612,8 @@ class SoundscapeLabDataView(APIView):
 @method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True), name='dispatch')
 class SpeechToSpeechLabDataView(APIView):
     """Native Speech-to-Speech interaction."""
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
+    throttle_scope = 'gpu'
 
     def post(self, request):
         import base64
@@ -578,11 +622,36 @@ class SpeechToSpeechLabDataView(APIView):
             return Response({'error': 'No audio provided'}, status=400)
 
         try:
-            audio_data = uploaded_file.read()
+            audio_data = b"".join(chunk for chunk in uploaded_file.chunks())
+            if not validate_file_mime_type(audio_data, ALLOWED_AUDIO_MIMES):
+                return Response({'error': 'Invalid audio format.'}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
             # Direct adapter call for S2S
             res_bytes = get_container().inference.audio_transformers_adapter().speech_to_speech(audio_data)
             res_b64 = base64.b64encode(res_bytes).decode('utf-8')
             return Response({'status': 'success', 'audio_url': f"data:audio/wav;base64,{res_b64}"})
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
+
+class LiquidNeuralNetworkLabView(APIView):
+    """Simulateur neuromorphique de réseaux de neurones liquides (LNN)."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        container = get_container()
+        input_signal = request.data.get('signal', [[0.5, 0.2]])
+        dt = float(request.data.get('dt', 0.05))
+        
+        try:
+            simulator = container.core.liquid_neural_network()
+            state_history = simulator.process_continuous_signal(input_signal, dt=dt)
+            
+            return Response({
+                'status': 'success',
+                'state_history': state_history,
+                'state_dimension': simulator.state_dimension,
+                'input_dimension': simulator.input_dimension
+            })
         except Exception as e:
             return Response({'error': str(e)}, status=500)
 

@@ -11,7 +11,9 @@ import {
   ArrowRight,
   ShieldAlert,
   Cpu,
-  Eye
+  Eye,
+  TrendingUp,
+  Split
 } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
@@ -81,6 +83,42 @@ const LabHubPage: React.FC = () => {
         color: "text-red-600",
         bg: "bg-red-600/10",
         tier: "Experimental"
+      },
+      {
+        title: "Liquid Lab",
+        desc: "Simulation de réseaux de neurones liquides (LNN) résolvant des ODEs en temps réel pour signaux continus.",
+        icon: TrendingUp,
+        path: "/liquid-nn/",
+        color: "text-blue-400",
+        bg: "bg-blue-400/10",
+        tier: "Neuromorphic"
+      },
+      {
+        title: "Soundscape Lab",
+        desc: "Génération d'ambiances sonores immersives via AudioLDM 2. Création de décors audio par IA.",
+        icon: Volume2,
+        path: "/soundscape-lab/",
+        color: "text-cyan-400",
+        bg: "bg-cyan-400/10",
+        tier: "Beta"
+      },
+      {
+        title: "S2S Lab",
+        desc: "Interaction Speech-to-Speech native. Parlez directement avec l'IA avec une latence sub-seconde.",
+        icon: Zap,
+        path: "/s2s-lab/",
+        color: "text-amber-500",
+        bg: "bg-amber-500/10",
+        tier: "Alpha"
+      },
+      {
+        title: "Counterfactual",
+        desc: "Simulation de trajectoires de dialogue alternatives pour mesurer le regret décisionnel de l'IA.",
+        icon: Split,
+        path: "/search/counterfactual/",
+        color: "text-purple-500",
+        bg: "bg-purple-500/10",
+        tier: "Logic"
       }
   ];
 

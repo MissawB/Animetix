@@ -2,11 +2,13 @@ from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
 from core.ports.donation_port import DonationPort
 from core.ports.usage_port import UsagePort
+from .sota_benchmark_service import SOTABenchmarkService
 
 class HealthDashboardService:
-    def __init__(self, donation_port: DonationPort, usage_port: UsagePort):
+    def __init__(self, donation_port: DonationPort, usage_port: UsagePort, sota_service: SOTABenchmarkService = None):
         self.donation_port = donation_port
         self.usage_port = usage_port
+        self.sota_service = sota_service or SOTABenchmarkService()
 
     def get_health_stats(self) -> Dict[str, Any]:
         """
@@ -53,6 +55,7 @@ class HealthDashboardService:
             "balance": round(basic_stats["total_donations"] - basic_stats["total_costs"], 2),
             "api_costs": basic_stats["total_costs"] * 0.7,
             "server_costs": basic_stats["total_costs"] * 0.3,
+            "sota_benchmarks": self.sota_service.get_all_benchmarks()
         })
         
         return basic_stats

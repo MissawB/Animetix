@@ -6,6 +6,7 @@ from ..models import CreativeFusion
 from ..serializers import CreativeFusionSerializer
 from ..containers import Container, get_container
 from core.domain.services.guardrail_service import GuardrailService
+from core.ports.usage_port import UsagePort
 from animetix_project.logging_config import get_logger
 
 logger = get_logger('animetix.api.vn')

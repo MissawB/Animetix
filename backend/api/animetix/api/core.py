@@ -20,7 +20,9 @@ import socket
 import ipaddress
 from urllib.parse import urlparse
 from animetix_project.logging_config import get_logger
-from core.utils.security import is_safe_url
+from core.utils.security import is_safe_url, validate_file_mime_type
+
+ALLOWED_IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp']
 from django.core.cache import cache
 from django.http import HttpResponse
 from django.utils.decorators import method_decorator
@@ -120,7 +122,10 @@ class MediaSearchView(APIView):
 
         try:
             container = get_container()
-            image_data = image_file.read()
+            image_data = b"".join(chunk for chunk in image_file.chunks())
+
+            if not validate_file_mime_type(image_data, ALLOWED_IMAGE_MIMES):
+                return Response({'error': 'Invalid image format. Allowed formats: JPEG, PNG, WEBP.'}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
             # Appel au service Cross-Modal
             results = container.cross_modal_search.deep_multimodal_search(
