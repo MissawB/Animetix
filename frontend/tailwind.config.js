@@ -19,6 +19,7 @@ export default {
         'brand-danger': 'rgb(var(--color-danger) / <alpha-value>)',
         'brand-warning': 'rgb(var(--color-warning) / <alpha-value>)',
         'brand-accent': 'rgb(var(--color-accent) / <alpha-value>)',
+        'brand-drift': 'var(--color-accent-drift)',
         'surface-bg': 'rgb(var(--color-bg) / <alpha-value>)',
         'surface-text': 'rgb(var(--color-text) / <alpha-value>)',
         'surface-card': 'rgb(var(--color-card) / <alpha-value>)',

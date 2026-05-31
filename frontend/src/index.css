@@ -12,6 +12,7 @@
     --color-danger: 239, 68, 68;
     --color-warning: 234, 179, 8;
     --color-accent: 253, 185, 19;   /* #fdb913 */
+    --color-accent-drift: #fdb913;
     
     /* Surface Tokens */
     --color-bg: 241, 243, 245;
