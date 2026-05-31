@@ -47,23 +47,19 @@ class LongTermMemoryService:
             logger.error(f"❌ Failed to store memory: {e}")
 
     def retrieve_relevant_memories(self, user_id: str, current_query: str, limit: int = 3) -> str:
+        # ... existing ...
+
+    def get_user_memories(self, user_id: str, limit: int = 10) -> List[str]:
         """
-        Récupère les souvenirs les plus pertinents par rapport au contexte actuel.
+        Récupère les derniers souvenirs d'un utilisateur.
         """
         try:
             coll = self._get_collection()
-            # Filtrage par user_id
-            results = coll.query(
-                query_texts=[current_query],
-                n_results=limit,
-                where={"user_id": user_id}
+            results = coll.get(
+                where={"user_id": str(user_id)},
+                limit=limit
             )
-            
-            memories = results.get('documents', [[]])[0]
-            if not memories: return ""
-            
-            context = "\n- ".join(memories)
-            return f"\nSouvenirs de vos échanges passés :\n- {context}\n"
+            return results.get('documents', [])
         except Exception as e:
-            logger.error(f"❌ Failed to retrieve memories: {e}")
-            return ""
+            logger.error(f"❌ Failed to fetch user memories: {e}")
+            return []

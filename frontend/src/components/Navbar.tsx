@@ -10,10 +10,13 @@ import { FeatureGate } from './utils/FeatureGate';
 import { useTranslation } from 'react-i18next';
 import { DynamicAuraWrapper } from './shared/DynamicAuraWrapper';
 
+import { usePersonalizationStore } from '../store/personalizationStore';
+
 const Navbar: React.FC = () => {
   const { t } = useTranslation();
   const toggleSidebar = useUIStore((state) => state.toggleSidebar);
   const { user } = useAuthStore();
+  const { isSafeMode, setSafeMode } = usePersonalizationStore();
   
   return (
     <nav className="px-6 md:px-12 py-6 flex items-center justify-between sticky top-0 bg-white/80 dark:bg-navy-950/80 backdrop-blur-md z-50 border-b border-gray-100 dark:border-white/5">
@@ -53,6 +56,13 @@ const Navbar: React.FC = () => {
               <Link to="/clubs/" className="flex items-center gap-2 no-underline text-xs font-black italic text-gray-500 hover:text-blue-500 transition-all uppercase tracking-widest">
                 <Users className="w-4 h-4 text-blue-500" /> {t('navbar.clubs', 'Clubs')}
               </Link>
+              <button 
+                onClick={() => setSafeMode(!isSafeMode)}
+                className={`p-2 rounded-lg transition-all ${isSafeMode ? 'text-gray-400 opacity-50' : 'text-brand-accent animate-pulse'}`}
+                title={isSafeMode ? 'Enable Hyper-Personalization' : 'Disable Dynamic Effects (Safe Mode)'}
+              >
+                <Sparkles className="w-5 h-5" />
+              </button>
               <DynamicAuraWrapper>
                 <Link to={`/profile/${user.username}/`} className="flex items-center gap-2 no-underline text-xs font-black italic text-gray-500 hover:text-orange-500 transition-all uppercase tracking-widest px-2 py-1 rounded-lg">
                   <User className="w-4 h-4 text-orange-500" /> {user.username}

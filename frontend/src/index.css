@@ -42,6 +42,14 @@
     --shadow-card: 0 10px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
+.font-vibe-manga {
+  font-family: 'Montserrat', sans-serif !important;
+}
+
+.font-vibe-brush {
+  font-family: 'Permanent Marker', cursive !important;
+}
+
 /* Theme Presets */
 .theme-naruto {
     --color-primary: 249, 115, 22;   /* Orange */

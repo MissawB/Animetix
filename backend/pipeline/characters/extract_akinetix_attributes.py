@@ -53,10 +53,10 @@ def extract_binary_attributes(name, description, metadata):
     """
     
     try:
-        response = httpx.post(f"{BRAIN_URL}/generate", json={
+        response = safe_http_request("POST", f"{BRAIN_URL}/generate", json={
             "prompt": prompt,
             "system_prompt": "Tu es un expert en caractérisation de personnages. Réponds UNIQUEMENT en JSON."
-        }, timeout=180, follow_redirects=True)
+        }, timeout=180, allow_internal=True)
         
         if response.status_code == 200:
             text = response.json().get("text", "")

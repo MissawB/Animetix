@@ -49,7 +49,15 @@ class ArchetypeDriftService:
                 if arch in art_style:
                     scores[arch] += 1.0
 
-        # 4. Select dominant archetype
+        # 4. Fetch Semantic Memories (The missing deep signal)
+        memories = self.memory_service.get_user_memories(user_id)
+        for summary in memories:
+            summary_low = summary.lower()
+            for arch in scores.keys():
+                if arch in summary_low:
+                    scores[arch] += 1.5  # Memories have high weight
+
+        # 5. Select dominant archetype
         total_score = sum(scores.values())
         if total_score == 0:
             return default_config
