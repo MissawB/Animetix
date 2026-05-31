@@ -1,4 +1,3 @@
-import httpx
 import json
 import time
 import os
@@ -16,8 +15,11 @@ logger = logging.getLogger("animetix." + __name__)
 if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-# Chemins
+# Détection robuste de la racine du projet
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.join(BASE_DIR, "backend"))
+from core.utils.security import safe_http_request
+
 INPUT_FILE = os.path.join(BASE_DIR, 'data', 'processed', 'clean_root_animes.json')
 
 # Initialisation différée
@@ -69,7 +71,7 @@ def run_vectorization(chroma_res=None, neo4j_res=None):
             img_url = item.get('image')
             try:
                 if img_url:
-                    response = httpx.get(img_url, timeout=10, follow_redirects=True)
+                    response = safe_http_request("GET", img_url, timeout=10)
                     img = Image.open(BytesIO(response.content)).convert('RGB')
                     v_emb = vision_model.encode(img, convert_to_numpy=True)
                     v_embeddings.append(v_emb.tolist())

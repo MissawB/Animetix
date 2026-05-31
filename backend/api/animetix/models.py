@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.contrib.auth.hashers import make_password, check_password
 import datetime
 
 from django.conf import settings
@@ -47,7 +48,17 @@ class Profile(models.Model):
     custom_username_color = models.CharField(max_length=20, null=True, blank=True)
     collected_fusions = models.ManyToManyField('CreativeFusion', related_name='collected_by_profiles', blank=True)
     tier = models.CharField(max_length=20, choices=TIERS, default='free')
-    api_key = models.CharField(max_length=100, unique=True, null=True, blank=True)
+    api_key_hash = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    
+    def set_api_key(self, raw_key: str):
+        """Hashes the raw API key and stores it."""
+        self.api_key_hash = make_password(raw_key)
+
+    def check_api_key(self, raw_key: str) -> bool:
+        """Verifies a raw API key against the stored hash."""
+        if not self.api_key_hash:
+            return False
+        return check_password(raw_key, self.api_key_hash)
     
     @property
     def level(self): return (self.xp // 500) + 1

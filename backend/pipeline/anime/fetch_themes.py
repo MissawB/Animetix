@@ -1,4 +1,3 @@
-import httpx
 import json
 import time
 import os
@@ -14,6 +13,9 @@ if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
 
 # Détection robuste de la racine du projet
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.join(BASE_DIR, "backend"))
+from core.utils.security import safe_http_request
+
 INPUT_FILE = os.path.join(BASE_DIR, 'data', 'processed', 'clean_root_animes.json')
 OUTPUT_FILE = os.path.join(BASE_DIR, 'data', 'processed', 'anime_themes.json')
 
@@ -35,7 +37,7 @@ def fetch_themes_for_anime(mal_id: int) -> dict | None:
         "include": "animethemes.animethemeentries.videos,animethemes.song.artists"
     }
     try:
-        response = httpx.get(ANIMETHEMES_API_URL, params=params, timeout=15, follow_redirects=True)
+        response = safe_http_request("GET", ANIMETHEMES_API_URL, params=params, timeout=15)
         if response.status_code == 200:
             data = response.json().get('anime', [])
             if data:

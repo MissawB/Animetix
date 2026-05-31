@@ -7,7 +7,7 @@ import logging
 import base64
 from typing import Optional, List, Dict, Any
 from core.ports.inference_port import InferencePort, InferenceNotImplementedError
-from core.domain.exceptions import InferenceError
+from core.utils.security import is_safe_url, safe_http_request
 
 logger = logging.getLogger("animetix." + __name__)
 
@@ -33,6 +33,9 @@ class UnifiedInferenceAdapter(InferencePort):
         self.max_retries = max_retries
         self.timeout = timeout
 
+        if not is_safe_url(self.api_base, allow_internal=True):
+            logger.warning(f"UnifiedInferenceAdapter: API base URL might be unsafe: {self.api_base}")
+
         logger.info(f"Initialized UnifiedInferenceAdapter for {self.model_name} at {self.api_base}")
 
     def _get_headers(self) -> Dict[str, str]:
@@ -49,26 +52,26 @@ class UnifiedInferenceAdapter(InferencePort):
                 "model": self.model_name,
                 "input": text
             }
-            with httpx.Client(timeout=self.timeout, follow_redirects=True) as client:
-                res = client.post(url, json=payload, headers=self._get_headers())
-                if res.status_code == 200:
-                    data = res.json()
-                    if "data" in data and len(data["data"]) > 0:
-                        return data["data"][0]["embedding"]
-                    elif "embedding" in data:
-                        return data["embedding"]
-                
-                # Fallback to direct Ollama api
-                direct_url = f"{self.api_base.replace('/v1', '')}/api/embeddings"
-                direct_payload = {
-                    "model": self.model_name,
-                    "prompt": text
-                }
-                res = client.post(direct_url, json=direct_payload)
-                if res.status_code == 200:
-                    return res.json().get("embedding", [])
-                
-                res.raise_for_status()
+            # Utilisation de safe_http_request avec allow_internal=True car api_base est configuré
+            res = safe_http_request("POST", url, json=payload, headers=self._get_headers(), timeout=self.timeout, allow_internal=True)
+            if res.status_code == 200:
+                data = res.json()
+                if "data" in data and len(data["data"]) > 0:
+                    return data["data"][0]["embedding"]
+                elif "embedding" in data:
+                    return data["embedding"]
+            
+            # Fallback to direct Ollama api
+            direct_url = f"{self.api_base.replace('/v1', '')}/api/embeddings"
+            direct_payload = {
+                "model": self.model_name,
+                "prompt": text
+            }
+            res = safe_http_request("POST", direct_url, json=direct_payload, timeout=self.timeout, allow_internal=True)
+            if res.status_code == 200:
+                return res.json().get("embedding", [])
+            
+            res.raise_for_status()
         except Exception as e:
             logger.error(f"Failed to generate text embedding via UnifiedInferenceAdapter: {e}")
             raise InferenceError(f"Embedding generation failed: {e}")
@@ -104,21 +107,20 @@ class UnifiedInferenceAdapter(InferencePort):
         for attempt in range(self.max_retries):
             try:
                 url = f"{self.api_base}/chat/completions"
-                with httpx.Client(timeout=self.timeout, follow_redirects=True) as client:
-                    res = client.post(url, json=payload, headers=self._get_headers())
+                res = safe_http_request("POST", url, json=payload, headers=self._get_headers(), timeout=self.timeout, allow_internal=True)
 
-                    if res.status_code == 400 and "extra_body" in payload:
-                        logger.warning("Target LLM server rejected thinking parameters, retrying without them.")
-                        del payload["extra_body"]
-                        res = client.post(url, json=payload, headers=self._get_headers())
-                    
-                    if res.status_code == 400 and json_mode:
-                        logger.warning("Target LLM server rejected JSON mode, retrying with raw text.")
-                        del payload["response_format"]
-                        res = client.post(url, json=payload, headers=self._get_headers())
+                if res.status_code == 400 and "extra_body" in payload:
+                    logger.warning("Target LLM server rejected thinking parameters, retrying without them.")
+                    del payload["extra_body"]
+                    res = safe_http_request("POST", url, json=payload, headers=self._get_headers(), timeout=self.timeout, allow_internal=True)
+                
+                if res.status_code == 400 and json_mode:
+                    logger.warning("Target LLM server rejected JSON mode, retrying with raw text.")
+                    del payload["response_format"]
+                    res = safe_http_request("POST", url, json=payload, headers=self._get_headers(), timeout=self.timeout, allow_internal=True)
 
-                    res.raise_for_status()
-                    data = res.json()
+                res.raise_for_status()
+                data = res.json()
 
                 usage = data.get("usage", {})
                 self._log_usage(
@@ -225,15 +227,15 @@ class UnifiedInferenceAdapter(InferencePort):
 
         url = f"{self.api_base}/chat/completions"
         try:
-            with httpx.Client(timeout=self.timeout, follow_redirects=True) as client:
+            # Sécurité SSRF: On valide l'URL avant le stream
+            if not is_safe_url(url, allow_internal=True):
+                 raise ValueError(f"Unsafe stream URL: {url}")
+
+            with httpx.Client(timeout=self.timeout, follow_redirects=False) as client:
                 with client.stream("POST", url, json=payload, headers=self._get_headers()) as res:
                     if res.status_code == 400 and "extra_body" in payload:
                         logger.warning("Target LLM server rejected thinking parameters for streaming, retrying without.")
-                        del payload["extra_body"]
-                        # We need to re-open the stream for retry
-                        # Simplified: just raise and let the retry mechanism handle it if possible, 
-                        # but here we are in a generator.
-                        # For simplicity, I'll just skip the retry in the stream for now or refactor.
+                        # Retrying in a stream is complex, here we just return the error for now or would need to restart the loop
                         pass
 
                     res.raise_for_status()
@@ -253,7 +255,6 @@ class UnifiedInferenceAdapter(InferencePort):
                                     continue
         except Exception as e:
             logger.error(f"Unified Stream Error: {e}")
-            # Do NOT fallback to generate, it might hide persistent errors
             raise InferenceError(f"Streaming failed: {e}")
 
     def rerank_documents(self, query: str, documents: List[str]) -> List[float]:
@@ -341,10 +342,9 @@ class UnifiedInferenceAdapter(InferencePort):
                     }
                 ]
             }
-            with httpx.Client(timeout=self.timeout, follow_redirects=True) as client:
-                res = client.post(f"{self.api_base}/chat/completions", json=payload, headers=self._get_headers())
-                res.raise_for_status()
-                return res.json()["choices"][0]["message"]["content"]
+            res = safe_http_request("POST", f"{self.api_base}/chat/completions", json=payload, headers=self._get_headers(), timeout=self.timeout, allow_internal=True)
+            res.raise_for_status()
+            return res.json()["choices"][0]["message"]["content"]
         except Exception as e:
             logger.error(f"Unified multimodal description failed: {e}. Raising InferenceError.")
             raise InferenceError(f"Multimodal description failed: {e}")
@@ -462,20 +462,19 @@ class UnifiedInferenceAdapter(InferencePort):
             raise InferenceError(f"Failed to calculate uncertainty: {e}")
 
     def health_check(self) -> dict:
-        with httpx.Client(timeout=5, follow_redirects=True) as client:
-            try:
-                res = client.get(f"{self.api_base.replace('/v1', '')}/api/tags")
-                if res.status_code == 200:
-                    return {"status": "online", "engine": "Ollama/Unified", "models": res.json().get("models", [])}
-            except Exception as e:
-                logger.debug(f"Ollama health check failed: {e}")
+        try:
+            res = safe_http_request("GET", f"{self.api_base.replace('/v1', '')}/api/tags", timeout=5, allow_internal=True)
+            if res.status_code == 200:
+                return {"status": "online", "engine": "Ollama/Unified", "models": res.json().get("models", [])}
+        except Exception as e:
+            logger.debug(f"Ollama health check failed: {e}")
 
-            try:
-                res = client.get(f"{self.api_base}/models", headers=self._get_headers())
-                if res.status_code == 200:
-                    return {"status": "online", "engine": "OpenAI-Compatible/Unified"}
-            except Exception as e:
-                logger.debug(f"OpenAI-Compatible health check failed: {e}")
+        try:
+            res = safe_http_request("GET", f"{self.api_base}/models", headers=self._get_headers(), timeout=5, allow_internal=True)
+            if res.status_code == 200:
+                return {"status": "online", "engine": "OpenAI-Compatible/Unified"}
+        except Exception as e:
+            logger.debug(f"OpenAI-Compatible health check failed: {e}")
 
         return {"status": "offline", "engine": "Unified"}
 

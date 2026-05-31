@@ -8,6 +8,9 @@ from core.ports.web_search_port import WebSearchPort
 
 logger = logging.getLogger("animetix.rag.librarian")
 
+from core.utils.security import safe_http_request
+from urllib.parse import quote
+
 class LibrarianAgent:
     """
     Agent responsable de l'identification des lacunes de connaissances
@@ -84,9 +87,12 @@ class LibrarianAgent:
         Appelle l'API Jikan (V4) pour obtenir des informations sur les anime.
         """
         try:
-            # Recherche d'anime par défaut. On pourrait étendre à d'autres types (manga, character).
-            url = f"https://api.jikan.moe/v4/anime?q={query}&limit=3"
-            response = httpx.get(url, timeout=15, follow_redirects=True) # Timeout un peu plus long pour Jikan (parfois lent)
+            # Encodage strict du paramètre de recherche
+            safe_query = quote(query)
+            url = f"https://api.jikan.moe/v4/anime?q={safe_query}&limit=3"
+            
+            # Utilisation de safe_http_request pour validation SSRF des redirections
+            response = safe_http_request("GET", url, timeout=15)
             response.raise_for_status()
             
             data = response.json()

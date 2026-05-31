@@ -10,5 +10,13 @@ export const socialService = {
 
   toggleFollow: async (userId: number): Promise<void> => {
     return apiClient(`${API_BASE}/${userId}/toggle_follow/`, { method: 'POST' });
+  },
+
+  createClub: async (data: { name: string, description: string, theme: string, is_private: boolean }): Promise<any> => {
+    return apiClient('/api/v1/clubs/', {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: { 'Content-Type': 'application/json' }
+    });
   }
 };

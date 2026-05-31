@@ -70,17 +70,27 @@ ARCHETYPE_VISUAL_MAP = {
     "mecha": {
         "primary_accent": "#708090",
         "aura_type": "electric",
-        "font_vibe": "brush"
+        "font_vibe": "default"
     },
     "horror": {
         "primary_accent": "#000000",
         "aura_type": "shadow",
         "font_vibe": "brush"
     },
+    "fantasy": {
+        "primary_accent": "#DAA520",
+        "aura_type": "sparkles",
+        "font_vibe": "brush"
+    },
     "romance": {
         "primary_accent": "#FFB6C1",
         "aura_type": "sparkles",
         "font_vibe": "default"
+    },
+    "psychological": {
+        "primary_accent": "#4B0082",
+        "aura_type": "shadow",
+        "font_vibe": "manga"
     },
     "sports": {
         "primary_accent": "#32CD32",

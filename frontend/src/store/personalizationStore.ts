@@ -17,7 +17,7 @@ export const usePersonalizationStore = create<PersonalizationState>((set) => ({
   config: null,
   updateConfig: (config) => {
     // Sync CSS variables
-    document.documentElement.style.setProperty('--color-primary-drift', config.primary_accent);
+    document.documentElement.style.setProperty('--color-accent-drift', config.primary_accent);
     set({ config });
   },
 }));

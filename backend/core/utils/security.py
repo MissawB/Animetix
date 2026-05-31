@@ -1,22 +1,16 @@
 import socket
 import ipaddress
 import logging
-from urllib.parse import urlparse
+import httpx
+from urllib.parse import urlparse, urljoin
 from typing import List, Optional
 
 logger = logging.getLogger('animetix.security')
 
-def is_safe_url(url: str, allowed_schemes: Optional[List[str]] = None) -> bool:
+def is_safe_url(url: str, allowed_schemes: Optional[List[str]] = None, allow_internal: bool = False) -> bool:
     """
     Vérifie si une URL est sûre pour éviter les attaques SSRF.
-    Bloque les adresses privées, loopback, link-local et les protocoles non-autorisés.
-    
-    Args:
-        url: L'URL à vérifier.
-        allowed_schemes: Liste des protocoles autorisés (défaut: http, https).
-        
-    Returns:
-        bool: True si l'URL est jugée sûre.
+    Bloque les adresses privées par défaut, sauf si allow_internal est True.
     """
     if allowed_schemes is None:
         allowed_schemes = ['http', 'https']
@@ -31,32 +25,89 @@ def is_safe_url(url: str, allowed_schemes: Optional[List[str]] = None) -> bool:
         if not hostname:
             return False
 
-        # 1. Vérification par résolution DNS (Protection contre bypass par IP ou hostname interne)
+        # Cas particulier pour Docker/Localhost si explicitement autorisé
+        if allow_internal:
+            if hostname in ['localhost', '127.0.0.1', 'brain', 'db', 'redis', 'chromadb', 'neo4j']:
+                return True
+
+        # 1. Vérification par résolution DNS
         try:
-            # Note: En production, il est recommandé d'utiliser un resolver qui ne suit pas les CNAME 
-            # pointant vers des IPs internes, ou de valider l'IP finale juste avant la requête.
             ip_addresses = socket.getaddrinfo(hostname, None)
             for addr in ip_addresses:
                 ip_str = addr[4][0]
                 ip = ipaddress.ip_address(ip_str)
                 
-                if (ip.is_private or 
+                if not allow_internal and (
+                    ip.is_private or 
                     ip.is_loopback or 
                     ip.is_link_local or 
                     ip.is_multicast or 
-                    ip.is_unspecified):
+                    ip.is_unspecified
+                ):
                     logger.warning(f"Blocked request to internal/private IP: {ip_str} (hostname: {hostname})")
                     return False
         except (socket.gaierror, ValueError) as e:
-            logger.debug(f"DNS Resolution failed for {hostname}: {e}")
-            # Si on ne peut pas résoudre, on bloque par prudence si on soupçonne une attaque, 
-            # ou on laisse passer si c'est un hostname valide. Ici, on bloque.
+            # Si on ne peut pas résoudre, on bloque si ce n'est pas un hostname interne connu
+            if allow_internal:
+                return hostname in ['brain', 'db', 'redis', 'chromadb', 'neo4j']
             return False
 
         return True
     except Exception as e:
         logger.error(f"Error in is_safe_url: {e}")
         return False
+
+def safe_http_request(method: str, url: str, max_redirects: int = 3, allow_internal: bool = False, **kwargs) -> httpx.Response:
+    """
+    Effectue une requête HTTP en validant manuellement chaque redirection.
+    Utilise is_safe_url à chaque étape pour prévenir les attaques SSRF.
+    """
+    current_url = url
+    for _ in range(max_redirects + 1):
+        if not is_safe_url(current_url, allow_internal=allow_internal):
+            logger.warning(f"Blocked request to unsafe URL: {current_url}")
+            raise ValueError(f"Unsafe URL detected: {current_url}")
+
+        # On désactive le suivi automatique des redirections de httpx
+        res = httpx.request(method, current_url, follow_redirects=False, **kwargs)
+
+        if res.is_redirect:
+            location = res.headers.get("Location")
+            if not location:
+                return res
+            # Gérer les URLs relatives
+            current_url = urljoin(str(res.url), location)
+            method = "GET" # Les redirections 301/302 transforment souvent le POST en GET
+            continue
+        
+        return res
+
+    raise ValueError("Too many redirects")
+
+async def safe_http_request_async(method: str, url: str, max_redirects: int = 3, allow_internal: bool = False, **kwargs) -> httpx.Response:
+    """
+    Version asynchrone de safe_http_request.
+    """
+    current_url = url
+    async with httpx.AsyncClient(follow_redirects=False) as client:
+        for _ in range(max_redirects + 1):
+            if not is_safe_url(current_url, allow_internal=allow_internal):
+                logger.warning(f"Blocked request to unsafe URL: {current_url}")
+                raise ValueError(f"Unsafe URL detected: {current_url}")
+
+            res = await client.request(method, current_url, **kwargs)
+
+            if res.is_redirect:
+                location = res.headers.get("Location")
+                if not location:
+                    return res
+                current_url = urljoin(str(res.url), location)
+                method = "GET"
+                continue
+            
+            return res
+
+    raise ValueError("Too many redirects")
 
 def validate_service_url(url: str, expected_prefix: str) -> bool:
     """

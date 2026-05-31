@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Plot from 'react-plotly.js';
-import { Box, Sliders, Info } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Box, Sliders, Info, Globe, ArrowRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../utils/apiClient';
 import { Card } from '../../components/ui/Card';
@@ -114,10 +115,17 @@ const LatentSpacePage: React.FC = () => {
               <Card padding="lg" className="bg-brand-primary text-white border-none relative overflow-hidden shadow-brand-primary/20">
                   <Info className="w-20 h-20 absolute -right-4 -bottom-4 opacity-10" />
                   <h3 className="text-2xl font-black italic mb-4 uppercase">Comprendre l'Espace Latent</h3>
-                  <p className="opacity-90 leading-relaxed text-sm font-bold italic">
+                  <p className="opacity-90 leading-relaxed text-sm font-bold italic mb-6">
                       Chaque point représente une œuvre convertie en vecteur mathématique par nos modèles de Deep Learning. 
                       Plus deux points sont proches, plus l'IA considère que ces œuvres partagent des similarités profondes.
                   </p>
+                  <Button 
+                    as={Link} 
+                    to="/graph/world-map/" 
+                    className="bg-black/20 hover:bg-black/30 border-none text-white rounded-xl py-3 px-6 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 w-fit no-underline"
+                  >
+                    <Globe className="w-3 h-3" /> Passer en Vue Macro Atlas <ArrowRight className="w-3 h-3" />
+                  </Button>
               </Card>
               <Card padding="lg">
                   <h3 className="text-2xl font-black italic mb-6 uppercase manga-font">Navigation Tactique</h3>

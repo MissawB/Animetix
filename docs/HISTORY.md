@@ -3,18 +3,22 @@
 Ce document archive les étapes majeures de l'évolution technique du projet.
 
 ## [2026-05-30] Session : Audit & Renforcement Sécurité 2026
-- **Audit de Sécurité Complet :** Identification et correction de 7 vulnérabilités majeures impactant les APIs publiques, l'infrastructure et la gestion des données.
-- **Déploiement des Guardrails :** Intégration systématique du `GuardrailService` sur tous les endpoints API critiques (`Companion`, `Search`, `Games`). Protection proactive contre les injections de prompt et validation de sécurité des sorties IA.
-- **Protection contre l'Inference Abuse :** Implémentation d'une authentification obligatoire et de quotas journaliers (`UsagePort`) sur toutes les fonctionnalités d'IA lourdes (CLIP, RL, Fusions). Journalisation granulaire de la consommation par utilisateur.
-- **Sécurisation Anti-SSRF :** Centralisation de la validation d'URL via `is_safe_url` (résolution DNS + filtrage IP privées). Sécurisation du proxy d'images, de la recherche Web et des communications Backend-to-BrainAPI.
-- **Durcissement Neo4j (Anti-Injection Cypher) :** Renforcement de `sanitize_cypher_identifier` avec validation par Regex et Whitelist stricte. Gestion sécurisée des types de relations dynamiques extraits par l'IA.
-- **Cloisonnement de l'Observabilité :** Restriction de l'accès aux métriques Prometheus et à la documentation Swagger/OpenAPI aux seuls membres du staff technique (`staff_member_required`).
-- **Conformité RGPD & PII :** Désactivation de la transmission automatique des informations personnelles identifiables (PII) vers Sentry pour garantir la confidentialité des données utilisateurs.
-- **Maintenance Sécurité (Dépendances) :** Mise à jour critique de **Django** (de 5.2.13 à **5.2.14**) pour corriger les vulnérabilités CVE-2026-5766 et CVE-2026-6907 impactant le noyau de l'application.
-- **Simulations Cognitives & RAG :** Interconnexion réussie du `SynapticPlasticitySimulator` et du `QuantumCognitivePreferenceModel` au pipeline de RAG. L'historique conceptuel influence désormais dynamiquement les scores de pertinence.
-- **Génération 3D & Dioramas :** Intégration réelle de l'API Tripo3D et déploiement du viewer React pour la reconstruction de scènes 3D à partir d'images d'anime.
-- **Vidéo-RAG (Embeddings Temporels) :** Finalisation de l'infrastructure Celery pour l'indexation par segments temporels via Qwen2-VL, permettant une recherche sémantique précise "à l'intérieur" des clips.
-- **Lab & MLOps UX :** Déploiement du `LabHubPage` et intégration du dashboard de curation DPO et du tableau de bord de transparence (Drift/Graph Health).
+- **Audit de Sécurité Complet :** Identification et correction de vulnérabilités critiques impactant les APIs publiques, l'infrastructure et la gestion des données.
+- **Remédiation SSRF (Proxy & Labs) :** Désactivation systématique des redirections automatiques (`follow_redirects=False`) dans `httpx` et validation stricte de l'URL finale pour tous les endpoints traitant des ressources externes.
+- **Sécurisation des Clés API Utilisateur :** Migration du stockage des clés API dans le modèle `Profile` vers un format haché cryptographiquement (`PBKDF2/Argon2`) via `make_password`. Renommage du champ en `api_key_hash`.
+- **Renforcement du Sandboxing IA :** Durcissement du `CodeSafetyValidator` AST pour bloquer la réflexion Python (`__subclasses__`, `getattr`, etc.) et les lambdas. Ajout d'un timeout d'exécution strict (5s) via `ThreadPoolExecutor` pour prévenir les DoS.
+- **Durcissement des Headers & SSL :** Activation forcée de HSTS (1 an), redirection SSL et Referrer Policy en production. Suppression de `BasicAuthentication` dans Django Rest Framework au profit de sessions sécurisées.
+- **Sécurisation du Mode Développement :** Restriction drastique de `ALLOWED_HOSTS` à localhost uniquement. Chargement sécurisé de la `SECRET_KEY` via variables d'environnement même en environnement local.
+- **Déploiement des Guardrails :** Intégration systématique du `GuardrailService` sur tous les endpoints API critiques. Protection proactive contre les injections de prompt et validation de sécurité des sorties IA.
+- **Protection contre l'Inference Abuse :** Implémenter d'une authentification obligatoire et de quotas journaliers (`UsagePort`) sur toutes les fonctionnalités d'IA lourdes.
+- **Audit d'Injection Cypher (Neo4j) :** Extension de la validation `sanitize_cypher_identifier` à l'ensemble des propriétés dynamiques injectées.
+- **Cloisonnement de l'Observabilité :** Restriction de l'accès aux métriques Prometheus et à la documentation Swagger aux administrateurs.
+- **Conformité RGPD & PII :** Désactivation de `send_default_pii` dans la configuration Sentry.
+- **Maintenance Sécurité (Dépendances) :** Mise à jour critique de **Django** vers **5.2.14** (CVE-2026-5766).
+- **Simulations Cognitives & RAG :** Interconnexion du `SynapticPlasticitySimulator` et du `QuantumCognitivePreferenceModel` au pipeline de RAG.
+- **Génération 3D & Dioramas :** Intégration réelle de l'API Tripo3D et déploiement du viewer React.
+- **Vidéo-RAG (Embeddings Temporels) :** Finalisation de l'infrastructure Celery pour l'indexation par segments temporels via Qwen2-VL.
+- **Lab & MLOps UX :** Déploiement du `LabHubPage` et intégration du dashboard de curation DPO.
 
 ## [2026-05-29] Session Intensive : Robustesse & Innovation SOTA
 - **Vidéo-RAG (Intégration E2E) :** Finalisation complète de la boucle de recherche sémantique intra-vidéo. Les endpoints `/api/v1/labs/video/index/` et `/search/` sont désormais exposés. Le service `VideoRAGService` a été intégré au workflow principal `AgenticRAGService`, permettant à l'assistant de répondre à des questions visuelles complexes en fouillant dans les timelines indexées. Le frontend `VideoLabPage` a été enrichi d'une interface de recherche temporelle active.

@@ -1,15 +1,19 @@
 import json
 import re
 import os
-import httpx
+import sys
 import logging
 from tqdm import tqdm
 from dotenv import load_dotenv
 
+# Setup logging
 logger = logging.getLogger("animetix." + __name__)
 
 # Détection robuste de la racine du projet
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(os.path.join(BASE_DIR, "backend"))
+from core.utils.security import safe_http_request
+
 load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 INPUT_FILE = os.path.join(BASE_DIR, 'data', 'processed', 'refined_characters.json')

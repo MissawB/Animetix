@@ -1,6 +1,6 @@
-import httpx
 import json
 import os
+import sys
 import time
 import logging
 from typing import List, Dict
@@ -10,6 +10,9 @@ logger = logging.getLogger("animetix." + __name__)
 
 # Configuration
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(os.path.join(BASE_DIR, "backend"))
+from core.utils.security import safe_http_request
+
 DRIFT_REPORT = os.path.join(BASE_DIR, 'data', 'mlops', 'drift_report_latest.json')
 RAW_DB = os.path.join(BASE_DIR, 'data', 'raw', 'raw_anilist_db.json')
 ANILIST_URL = 'https://graphql.anilist.co'
@@ -71,7 +74,7 @@ query ($idMal: Int) {
 def fetch_by_mal_id(mal_id: int):
     variables = {'idMal': mal_id}
     try:
-        response = httpx.post(ANILIST_URL, json={'query': QUERY_BY_MAL_ID, 'variables': variables}, timeout=30, follow_redirects=True)
+        response = safe_http_request("POST", ANILIST_URL, json={'query': QUERY_BY_MAL_ID, 'variables': variables}, timeout=30)
         if response.status_code == 200:
             return response.json().get('data', {}).get('Media')
         else:

@@ -44,12 +44,28 @@ const MLOpsDashboard: React.FC = () => {
       status: "Active"
     },
     {
+      title: "Gold Dataset",
+      desc: "Édition et validation des données d'entraînement haute fidélité (SOTA).",
+      icon: Database,
+      path: "/admin/gold-dataset/",
+      color: "text-amber-500",
+      status: "Actif"
+    },
+    {
       title: "Knowledge Graph",
       desc: "Gestion de Neo4j, résolution de conflits et audit de relations.",
-      icon: Database,
+      icon: Zap,
       path: "/graph/",
-      color: "text-amber-500",
+      color: "text-purple-500",
       status: "Maintenance"
+    },
+    {
+      title: "Open Ledger",
+      desc: "Dashboard de transparence publique, éthique et coûts IA.",
+      icon: ShieldCheck,
+      path: "/transparency/",
+      color: "text-emerald-500",
+      status: "Public"
     }
   ];
 

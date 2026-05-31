@@ -13,7 +13,8 @@ import {
   Trophy,
   ArrowRight,
   Flame,
-  Star
+  Star,
+  Calendar
 } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
@@ -51,6 +52,16 @@ const GamesHubPage: React.FC = () => {
         difficulty: "Mental",
         reward: "450 XP"
       },
+    {
+      title: "Daily Challenge",
+      desc: "Un défi unique chaque jour. Testez vos connaissances et gardez votre série active !",
+      icon: Calendar,
+      path: "/daily-challenge/",
+      color: "text-amber-500",
+      bg: "bg-amber-500/10",
+      difficulty: "Variable",
+      reward: "🔥 Bonus Streak"
+    },
     {
       title: "Vision Quest",
       desc: "Identifiez les animés et personnages à partir de fragments d'images générés.",

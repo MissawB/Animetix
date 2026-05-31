@@ -15,7 +15,7 @@ class UserProfile:
     ranked_points: int = 0
     ranked_max_points: int = 0
     tier: str = 'free'
-    api_key: Optional[str] = None
+    api_key: Optional[str] = None # Stores the raw key on creation, or hash when loaded from DB
 
     @property
     def rank_label(self) -> str:

@@ -51,3 +51,17 @@ class DjangoFeedbackAdapter(FeedbackRepositoryPort):
             "total": total,
             "top_failures": top_failures
         }
+
+    def get_user_feedback(self, user_id: Any, limit: int = 100) -> List[Dict[str, Any]]:
+        from animetix.models import AIFeedback
+        feedbacks = AIFeedback.objects.filter(user_id=user_id).order_by('-created_at')[:limit]
+        return [
+            {
+                'id': fb.id,
+                'input_context': fb.input_context,
+                'output_text': fb.output_text,
+                'is_positive': fb.is_positive,
+                'created_at': fb.created_at,
+                'feedback_type': fb.feedback_type
+            } for fb in feedbacks
+        ]

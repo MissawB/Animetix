@@ -53,12 +53,66 @@ const ProfilePage: React.FC = () => {
             <StatCard label={t('social.profile.collection')} value={profile.collection_count || 0} icon={<User className="text-blue-500" />} />
           </div>
 
-          <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mt-16">
+            {/* Latest Achievements */}
+            <Card padding="lg" className="bg-navy-900/40 border-white/5">
+                <h3 className="text-xs font-black uppercase opacity-40 mb-8 tracking-widest flex items-center gap-2">
+                    <Award className="w-4 h-4 text-yellow-500" /> Succès Récents
+                </h3>
+                <div className="space-y-4">
+                    {profile.recent_achievements?.map((ach: any, i: number) => (
+                        <div key={i} className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/5 group hover:border-yellow-500/30 transition-all">
+                            <div className="w-10 h-10 bg-yellow-500/10 rounded-xl flex items-center justify-center text-yellow-500 group-hover:scale-110 transition-transform">
+                                <Award className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-black italic uppercase">{ach.name}</p>
+                                <p className="text-[10px] opacity-40 uppercase font-bold">{ach.description}</p>
+                            </div>
+                        </div>
+                    ))}
+                    {(!profile.recent_achievements || profile.recent_achievements.length === 0) && (
+                        <p className="text-center py-8 opacity-20 italic">Aucun succès débloqué pour le moment.</p>
+                    )}
+                </div>
+                <div className="mt-8 pt-8 border-t border-white/5">
+                    <Link to="/achievements/" className="text-[10px] font-black uppercase tracking-widest text-blue-500 hover:text-blue-400 no-underline">
+                        Voir tous les succès <ArrowRight className="inline w-3 h-3 ml-1" />
+                    </Link>
+                </div>
+            </Card>
+
+            {/* Favorite Fusions */}
+            <Card padding="lg" className="bg-navy-900/40 border-white/5">
+                <h3 className="text-xs font-black uppercase opacity-40 mb-8 tracking-widest flex items-center gap-2">
+                    <Zap className="w-4 h-4 text-blue-500" /> Fusions Favorites
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                    {profile.top_fusions?.map((fusion: any, i: number) => (
+                        <div key={i} className="aspect-video rounded-xl overflow-hidden relative group cursor-pointer border border-white/5 hover:border-blue-500/30 transition-all">
+                            <img src={fusion.image_url} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                            <p className="absolute bottom-3 left-3 text-[8px] font-black uppercase text-white truncate w-[80%]">{fusion.title_a} x {fusion.title_b}</p>
+                        </div>
+                    ))}
+                </div>
+                {(!profile.top_fusions || profile.top_fusions.length === 0) && (
+                    <p className="text-center py-8 opacity-20 italic">La collection est vide.</p>
+                )}
+                <div className="mt-8 pt-8 border-t border-white/5">
+                    <Link to="/social/collection/" className="text-[10px] font-black uppercase tracking-widest text-blue-500 hover:text-blue-400 no-underline">
+                        Accéder à la collection <ArrowRight className="inline w-3 h-3 ml-1" />
+                    </Link>
+                </div>
+            </Card>
+        </div>
+
+          <div className="flex flex-col sm:flex-row justify-center gap-4 mt-16">
               <Link to="/social/dashboard/" className="font-black rounded-2xl transition-all shadow-xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 border-2 border-gray-800 dark:border-white/20 hover:bg-gray-800 hover:text-white bg-transparent px-10 py-4 italic no-underline">
                   {t('social.profile.back_dashboard')}
               </Link>
-              <Link to="/custom-config/" className="font-black rounded-2xl transition-all shadow-xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 bg-brand-primary text-white px-10 py-4 italic no-underline border-none">
-                  <Shield className="w-5 h-5" /> CONFIGURATION IA
+              <Link to="/social/archetype-nexus/" className="font-black rounded-2xl transition-all shadow-xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 bg-blue-600 text-white px-10 py-4 italic no-underline border-none shadow-blue-500/20">
+                  <Brain className="w-5 h-5" /> ARCHETYPE NEXUS
               </Link>
           </div>
         </div>

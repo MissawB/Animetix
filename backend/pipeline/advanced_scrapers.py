@@ -13,6 +13,7 @@ import time
 import json
 import logging
 import httpx
+from core.utils.security import safe_http_request
 from dotenv import load_dotenv
 
 # Enregistrement des chemins d'importation
@@ -89,7 +90,7 @@ class ScraperD_Arcs:
         episode_titles = []
         
         try:
-            res = httpx.get(episodes_url, timeout=15, follow_redirects=True)
+            res = safe_http_request("GET", episodes_url, timeout=15)
             if res.status_code == 200:
                 episodes = res.json().get('data', [])
                 for ep in episodes[:30]: # Limite à 30 épisodes pour le contexte
@@ -151,7 +152,7 @@ class ScraperE_IGDB:
             "grant_type": "client_credentials"
         }
         try:
-            res = httpx.post(url, params=params, timeout=10, follow_redirects=True)
+            res = safe_http_request("POST", url, params=params, timeout=10)
             if res.status_code == 200:
                 return res.json().get('access_token', '')
         except Exception as e:
@@ -181,7 +182,7 @@ class ScraperE_IGDB:
         query = f'search "{title}"; fields name, platforms.name, total_rating, first_release_date; limit 5;'
         
         try:
-            res = httpx.post(url, headers=headers, content=query, timeout=15, follow_redirects=True)
+            res = safe_http_request("POST", url, headers=headers, content=query, timeout=15)
             if res.status_code == 200:
                 games_data = res.json()
                 results = []

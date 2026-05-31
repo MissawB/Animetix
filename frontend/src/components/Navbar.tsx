@@ -2,9 +2,13 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useUIStore } from '../store/uiStore';
 import { useAuthStore } from '../store/authStore';
-import { Menu, Shield, Sparkles, Box, FlaskConical, Network, Users, Radio, Search } from 'lucide-react';
+import { 
+  Menu, Shield, Sparkles, Box, FlaskConical, Network, Users, Radio, Search, 
+  Gamepad2, Film, User, Settings 
+} from 'lucide-react';
 import { FeatureGate } from './utils/FeatureGate';
 import { useTranslation } from 'react-i18next';
+import { DynamicAuraWrapper } from './shared/DynamicAuraWrapper';
 
 const Navbar: React.FC = () => {
   const { t } = useTranslation();
@@ -49,9 +53,11 @@ const Navbar: React.FC = () => {
               <Link to="/clubs/" className="flex items-center gap-2 no-underline text-xs font-black italic text-gray-500 hover:text-blue-500 transition-all uppercase tracking-widest">
                 <Users className="w-4 h-4 text-blue-500" /> {t('navbar.clubs', 'Clubs')}
               </Link>
-              <Link to={`/profile/${user.username}/`} className="flex items-center gap-2 no-underline text-xs font-black italic text-gray-500 hover:text-orange-500 transition-all uppercase tracking-widest">
-                <User className="w-4 h-4 text-orange-500" /> {user.username}
-              </Link>
+              <DynamicAuraWrapper>
+                <Link to={`/profile/${user.username}/`} className="flex items-center gap-2 no-underline text-xs font-black italic text-gray-500 hover:text-orange-500 transition-all uppercase tracking-widest px-2 py-1 rounded-lg">
+                  <User className="w-4 h-4 text-orange-500" /> {user.username}
+                </Link>
+              </DynamicAuraWrapper>
             </>
           )}
 

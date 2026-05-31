@@ -19,9 +19,20 @@ class ChromaManager:
         chroma_host = os.getenv("CHROMA_HOST", "localhost")
         chroma_port = int(os.getenv("CHROMA_PORT", "8000"))
         
+        # Authentification ChromaDB
+        auth_provider = os.getenv("CHROMA_CLIENT_AUTH_PROVIDER")
+        auth_credentials = os.getenv("CHROMA_CLIENT_AUTH_CREDENTIALS")
+        
+        settings = Settings()
+        if auth_provider and auth_credentials:
+            settings = Settings(
+                chroma_client_auth_provider=auth_provider,
+                chroma_client_auth_credentials=auth_credentials
+            )
+
         try:
-            # On tente de se connecter au serveur HTTP (lancé par Supervisor)
-            self.client = chromadb.HttpClient(host=chroma_host, port=chroma_port)
+            # On tente de se connecter au serveur HTTP (lancé par Supervisor ou Docker)
+            self.client = chromadb.HttpClient(host=chroma_host, port=chroma_port, settings=settings)
             # Test de connexion simple
             self.client.heartbeat()
             logger.info(f"[OK] Connected to ChromaDB Server at {chroma_host}:{chroma_port}")

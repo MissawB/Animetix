@@ -35,6 +35,9 @@ urlpatterns = [
     path('labs/s2s/', api_views.SpeechToSpeechLabDataView.as_view(), name='api_s2s_lab'),
     path('mlops/dpo/curation/', api_views.DPOCurationView.as_view(), name='api_dpo_curation'),
     path('graph/neighbors/', api_views.GraphNeighborsView.as_view(), name='api_graph_neighbors'),
+    path('graph/world-map/', api_views.GraphWorldMapView.as_view(), name='api_graph_world_map'),
+    path('cognition/archetype-nexus/', api_views.ArchetypeNexusView.as_view(), name='api_archetype_nexus'),
+    path('cognition/debate-arena/', api_views.AIDebateArenaView.as_view(), name='api_debate_arena'),
     path('companion/interact/', api_views.CompanionInteractView.as_view(), name='api_companion_interact'),
     
     # --- STREAMING IA ---

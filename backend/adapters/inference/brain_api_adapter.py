@@ -5,7 +5,7 @@ import logging
 from typing import Optional, List, Dict, Any
 from core.ports.inference_port import InferencePort
 from core.ports.usage_port import UsagePort
-from core.utils.security import is_safe_url, validate_service_url
+from core.utils.security import is_safe_url, validate_service_url, safe_http_request
 
 logger = logging.getLogger("animetix.inference")
 
@@ -21,7 +21,7 @@ class BrainAPIAdapter(InferencePort):
         if self.brain_api_url and not (
             self.brain_api_url.startswith("http://brain") or 
             self.brain_api_url.startswith("http://localhost") or
-            is_safe_url(self.brain_api_url)
+            is_safe_url(self.brain_api_url, allow_internal=True)
         ):
             logger.warning(f"Potentially unsafe BRAIN_API_URL configured: {self.brain_api_url}")
 
@@ -29,12 +29,13 @@ class BrainAPIAdapter(InferencePort):
         if not self.brain_api_url: return "Erreur: BRAIN_API_URL non configurée."
         for attempt in range(self.max_retries):
             try:
-                res = httpx.post(f"{self.brain_api_url}/generate", json={
+                # Utilisation de safe_http_request pour valider les redirections (en autorisant l'interne)
+                res = safe_http_request("POST", f"{self.brain_api_url}/generate", json={
                     "prompt": prompt, 
                     "system_prompt": system_prompt,
                     "thinking_budget": thinking_budget,
                     "thinking_mode": thinking_mode
-                }, timeout=30, follow_redirects=True)
+                }, timeout=30, allow_internal=True)
                 res.raise_for_status()
                 data = res.json()
                 text = data.get("text", "")
@@ -63,7 +64,7 @@ class BrainAPIAdapter(InferencePort):
     def calculate_visual_similarity(self, query: str, item_id: str, media_type: str) -> float:
         if not self.brain_api_url: return 0.0
         try:
-            res = httpx.post(f"{self.brain_api_url}/similarity/visual", json={"query": query, "item_id": item_id, "media_type": media_type}, timeout=10, follow_redirects=True)
+            res = safe_http_request("POST", f"{self.brain_api_url}/similarity/visual", json={"query": query, "item_id": item_id, "media_type": media_type}, timeout=10, allow_internal=True)
             if res.status_code == 200:
                 self._log_usage(engine="brain:similarity:visual", units=1)
                 return res.json().get("score", 0.0)
@@ -76,7 +77,7 @@ class BrainAPIAdapter(InferencePort):
         try:
             import base64
             b64 = base64.b64encode(image_data).decode('utf-8')
-            res = httpx.post(f"{self.brain_api_url}/vision/embedding", json={"image": b64, "model_id": model_id}, timeout=10, follow_redirects=True)
+            res = safe_http_request("POST", f"{self.brain_api_url}/vision/embedding", json={"image": b64, "model_id": model_id}, timeout=10, allow_internal=True)
             if res.status_code == 200:
                 self._log_usage(engine="brain:vision:embedding", units=1)
                 return res.json().get("embedding", [])
@@ -89,11 +90,11 @@ class BrainAPIAdapter(InferencePort):
         try:
             import base64
             b64 = base64.b64encode(image_data).decode('utf-8')
-            res = httpx.post(f"{self.brain_api_url}/vision/detect", json={
+            res = safe_http_request("POST", f"{self.brain_api_url}/vision/detect", json={
                 "image": b64, 
                 "candidate_labels": candidate_queries,
                 "model_id": model_id
-            }, timeout=20, follow_redirects=True)
+            }, timeout=20, allow_internal=True)
             if res.status_code == 200:
                 self._log_usage(engine="brain:vision:detect", units=1)
                 return res.json().get("objects", [])
@@ -106,10 +107,10 @@ class BrainAPIAdapter(InferencePort):
         try:
             import base64
             b64 = base64.b64encode(image_data).decode('utf-8')
-            res = httpx.post(f"{self.brain_api_url}/vision/describe", json={
+            res = safe_http_request("POST", f"{self.brain_api_url}/vision/describe", json={
                 "image": b64, 
                 "prompt": prompt
-            }, timeout=30, follow_redirects=True)
+            }, timeout=30, allow_internal=True)
             if res.status_code == 200:
                 self._log_usage(engine="brain:vision:describe", units=1)
                 return res.json().get("description", "")
@@ -122,7 +123,7 @@ class BrainAPIAdapter(InferencePort):
         try:
             import base64
             b64 = base64.b64encode(image_data).decode('utf-8')
-            res = httpx.post(f"{self.brain_api_url}/vision/depth", json={"image": b64}, timeout=20, follow_redirects=True)
+            res = safe_http_request("POST", f"{self.brain_api_url}/vision/depth", json={"image": b64}, timeout=20, allow_internal=True)
             if res.status_code == 200:
                 self._log_usage(engine="brain:vision:depth", units=1)
                 return base64.b64decode(res.json().get("depth_b64", ""))
@@ -140,11 +141,11 @@ class BrainAPIAdapter(InferencePort):
              return []
 
         try:
-            res = httpx.post(f"{self.brain_api_url}/vision/rerank", json={
+            res = safe_http_request("POST", f"{self.brain_api_url}/vision/rerank", json={
                 "query": query, 
                 "image_urls": safe_urls,
                 "system_prompt": system_prompt
-            }, timeout=30, follow_redirects=True)
+            }, timeout=30, allow_internal=True)
             if res.status_code == 200:
                 self._log_usage(engine="brain:vision:rerank", units=1)
                 return res.json().get("reranked_items", [])
@@ -157,11 +158,11 @@ class BrainAPIAdapter(InferencePort):
         try:
             import base64
             b64 = base64.b64encode(image_data).decode('utf-8')
-            res = httpx.post(f"{self.brain_api_url}/vision/classify", json={
+            res = safe_http_request("POST", f"{self.brain_api_url}/vision/classify", json={
                 "image": b64, 
                 "candidate_labels": candidate_labels,
                 "model_id": model_id
-            }, timeout=20, follow_redirects=True)
+            }, timeout=20, allow_internal=True)
             if res.status_code == 200:
                 self._log_usage(engine="brain:vision:classify", units=1)
                 return res.json().get("labels", {})
@@ -174,7 +175,7 @@ class BrainAPIAdapter(InferencePort):
         try:
             import base64
             b64 = base64.b64encode(video_data).decode('utf-8')
-            res = httpx.post(f"{self.brain_api_url}/video/embeddings", json={"video": b64}, timeout=60, follow_redirects=True)
+            res = safe_http_request("POST", f"{self.brain_api_url}/video/embeddings", json={"video": b64}, timeout=60, allow_internal=True)
             if res.status_code == 200:
                 self._log_usage(engine="brain:video:embeddings", units=1)
                 return res.json().get("embeddings", [])
@@ -187,10 +188,10 @@ class BrainAPIAdapter(InferencePort):
         try:
             import base64
             b64 = base64.b64encode(video_data).decode('utf-8')
-            res = httpx.post(f"{self.brain_api_url}/video/localize", json={
+            res = safe_http_request("POST", f"{self.brain_api_url}/video/localize", json={
                 "video": b64, 
                 "queries": action_queries
-            }, timeout=60, follow_redirects=True)
+            }, timeout=60, allow_internal=True)
             if res.status_code == 200:
                 self._log_usage(engine="brain:video:localize", units=1)
                 return res.json().get("actions", [])
@@ -202,11 +203,11 @@ class BrainAPIAdapter(InferencePort):
         try:
             import base64
             b64 = base64.b64encode(image_data).decode('utf-8')
-            res = httpx.post(f"{self.brain_api_url}/vision/transform/anime", json={
+            res = safe_http_request("POST", f"{self.brain_api_url}/vision/transform/anime", json={
                 "image": b64, 
                 "studio_style": studio_style,
                 "prompt": prompt
-            }, timeout=45, follow_redirects=True)
+            }, timeout=45, allow_internal=True)
             if res.status_code == 200:
                 self._log_usage(engine="brain:vision:transform:anime", units=1)
                 return res.json().get("image_url_or_b64", "")
@@ -219,11 +220,11 @@ class BrainAPIAdapter(InferencePort):
         try:
             import base64
             b64 = base64.b64encode(video_data).decode('utf-8')
-            res = httpx.post(f"{self.brain_api_url}/video/transform/anime", json={
+            res = safe_http_request("POST", f"{self.brain_api_url}/video/transform/anime", json={
                 "video": b64, 
                 "studio_style": studio_style,
                 "prompt": prompt
-            }, timeout=120, follow_redirects=True)
+            }, timeout=120, allow_internal=True)
             if res.status_code == 200:
                 self._log_usage(engine="brain:video:transform:anime", units=1)
                 return res.json().get("video_url_or_b64", "")
@@ -234,10 +235,10 @@ class BrainAPIAdapter(InferencePort):
     def generate_soundscape(self, video_metadata: Dict[str, Any], prompt: Optional[str] = None) -> str:
         if not self.brain_api_url: return ""
         try:
-            res = httpx.post(f"{self.brain_api_url}/audio/generate/soundscape", json={
+            res = safe_http_request("POST", f"{self.brain_api_url}/audio/generate/soundscape", json={
                 "video_metadata": video_metadata,
                 "prompt": prompt
-            }, timeout=30, follow_redirects=True)
+            }, timeout=30, allow_internal=True)
             if res.status_code == 200:
                 self._log_usage(engine="brain:audio:soundscape", units=1)
                 return res.json().get("audio_url_or_b64", "")
@@ -249,11 +250,11 @@ class BrainAPIAdapter(InferencePort):
         try:
             import base64
             b64 = base64.b64encode(reference_audio).decode('utf-8')
-            res = httpx.post(f"{self.brain_api_url}/audio/clone-voice", json={
+            res = safe_http_request("POST", f"{self.brain_api_url}/audio/clone-voice", json={
                 "text": text, 
                 "reference_audio": b64,
                 "language": language
-            }, timeout=30, follow_redirects=True)
+            }, timeout=30, allow_internal=True)
             if res.status_code == 200:
                 self._log_usage(engine="brain:audio:clone_voice", units=1)
                 return base64.b64decode(res.json().get("audio_b64", ""))
@@ -266,10 +267,10 @@ class BrainAPIAdapter(InferencePort):
         try:
             import base64
             b64 = base64.b64encode(audio_input).decode('utf-8')
-            res = httpx.post(f"{self.brain_api_url}/audio/speech-to-speech", json={
+            res = safe_http_request("POST", f"{self.brain_api_url}/audio/speech-to-speech", json={
                 "audio": b64, 
                 "system_prompt": system_prompt
-            }, timeout=30, follow_redirects=True)
+            }, timeout=30, allow_internal=True)
             if res.status_code == 200:
                 self._log_usage(engine="brain:audio:speech_to_speech", units=1)
                 return base64.b64decode(res.json().get("audio_b64", ""))
@@ -281,7 +282,7 @@ class BrainAPIAdapter(InferencePort):
         try:
             import base64
             b64 = base64.b64encode(image_data).decode('utf-8')
-            res = httpx.post(f"{self.brain_api_url}/vision/manga/process", json={"image": b64}, timeout=30, follow_redirects=True)
+            res = safe_http_request("POST", f"{self.brain_api_url}/vision/manga/process", json={"image": b64}, timeout=30, allow_internal=True)
             if res.status_code == 200:
                 self._log_usage(engine="brain:vision:manga:process", units=1)
                 return res.json()
@@ -294,7 +295,7 @@ class BrainAPIAdapter(InferencePort):
         try:
             import base64
             b64 = base64.b64encode(image_data).decode('utf-8')
-            res = httpx.post(f"{self.brain_api_url}/vision/manga/translate", json={"image": b64, "target_lang": target_lang}, timeout=60, follow_redirects=True)
+            res = safe_http_request("POST", f"{self.brain_api_url}/vision/manga/translate", json={"image": b64, "target_lang": target_lang}, timeout=60, allow_internal=True)
             if res.status_code == 200:
                 self._log_usage(engine="brain:vision:manga:translate", units=1)
                 return res.json()
@@ -306,10 +307,10 @@ class BrainAPIAdapter(InferencePort):
         try:
             import base64
             b64 = base64.b64encode(image_data).decode('utf-8')
-            res = httpx.post(f"{self.brain_api_url}/vision/manga/inpaint", json={
+            res = safe_http_request("POST", f"{self.brain_api_url}/vision/manga/inpaint", json={
                 "image": b64, 
                 "text_placements": text_placements
-            }, timeout=30, follow_redirects=True)
+            }, timeout=30, allow_internal=True)
             if res.status_code == 200:
                 self._log_usage(engine="brain:vision:manga:inpaint", units=1)
                 return res.json().get("image_url_or_b64", "")
@@ -319,10 +320,10 @@ class BrainAPIAdapter(InferencePort):
     def get_diagnostics(self, prompt: str, completion: str) -> Dict[str, Any]:
         if not self.brain_api_url: return {}
         try:
-            res = httpx.post(f"{self.brain_api_url}/diagnostics", json={
+            res = safe_http_request("POST", f"{self.brain_api_url}/diagnostics", json={
                 "prompt": prompt, 
                 "completion": completion
-            }, timeout=10, follow_redirects=True)
+            }, timeout=10, allow_internal=True)
             if res.status_code == 200:
                 self._log_usage(engine="brain:diagnostics", units=1)
                 return res.json().get("diagnostics", {})
@@ -333,10 +334,10 @@ class BrainAPIAdapter(InferencePort):
     def calculate_uncertainty(self, prompt: str, completion: str) -> Dict[str, float]:
         if not self.brain_api_url: return {}
         try:
-            res = httpx.post(f"{self.brain_api_url}/uncertainty", json={
+            res = safe_http_request("POST", f"{self.brain_api_url}/uncertainty", json={
                 "prompt": prompt, 
                 "completion": completion
-            }, timeout=10, follow_redirects=True)
+            }, timeout=10, allow_internal=True)
             if res.status_code == 200:
                 self._log_usage(engine="brain:uncertainty", units=1)
                 return res.json().get("uncertainty_metrics", {})
@@ -349,10 +350,10 @@ class BrainAPIAdapter(InferencePort):
             import base64
             img_b64 = base64.b64encode(image_data).decode('utf-8')
             depth_b64 = base64.b64encode(depth_map).decode('utf-8')
-            res = httpx.post(f"{self.brain_api_url}/vision/generate-3d", json={
+            res = safe_http_request("POST", f"{self.brain_api_url}/vision/generate-3d", json={
                 "image": img_b64, 
                 "depth_map": depth_b64
-            }, timeout=60, follow_redirects=True)
+            }, timeout=60, allow_internal=True)
             if res.status_code == 200:
                 self._log_usage(engine="brain:vision:generate_3d", units=1)
                 return res.json().get("scene_data", {})
@@ -363,10 +364,10 @@ class BrainAPIAdapter(InferencePort):
     def moderate_content(self, text: str, categories: List[str]) -> Dict[str, Any]:
         if not self.brain_api_url: return {}
         try:
-            res = httpx.post(f"{self.brain_api_url}/moderate", json={
+            res = safe_http_request("POST", f"{self.brain_api_url}/moderate", json={
                 "text": text, 
                 "categories": categories
-            }, timeout=10, follow_redirects=True)
+            }, timeout=10, allow_internal=True)
             if res.status_code == 200:
                 self._log_usage(engine="brain:moderate", units=1)
                 return res.json().get("moderation", {})
@@ -379,7 +380,7 @@ class BrainAPIAdapter(InferencePort):
         try:
             import base64
             b64 = base64.b64encode(image_data).decode('utf-8')
-            res = httpx.post(f"{self.brain_api_url}/vision/late-interaction", json={"image": b64}, timeout=20, follow_redirects=True)
+            res = safe_http_request("POST", f"{self.brain_api_url}/vision/late-interaction", json={"image": b64}, timeout=20, allow_internal=True)
             if res.status_code == 200:
                 self._log_usage(engine="brain:vision:late_interaction", units=1)
                 return res.json().get("embeddings", [])
@@ -391,10 +392,10 @@ class BrainAPIAdapter(InferencePort):
     def generate_image(self, prompt: str, style: str = "") -> str:
         if not self.brain_api_url: return ""
         try:
-            res = httpx.post(f"{self.brain_api_url}/vision/generate", json={
+            res = safe_http_request("POST", f"{self.brain_api_url}/vision/generate", json={
                 "prompt": prompt, 
                 "style": style
-            }, timeout=45, follow_redirects=True)
+            }, timeout=45, allow_internal=True)
             if res.status_code == 200:
                 self._log_usage(engine="brain:vision:generate_image", units=1)
                 return res.json().get("image_url_or_b64", "")
@@ -405,7 +406,7 @@ class BrainAPIAdapter(InferencePort):
     def health_check(self) -> dict:
         if not self.brain_api_url: return {"status": "offline", "reason": "No URL"}
         try:
-            res = httpx.get(f"{self.brain_api_url}/health", timeout=5, follow_redirects=True)
+            res = safe_http_request("GET", f"{self.brain_api_url}/health", timeout=5, allow_internal=True)
             if res.status_code == 200: return {"status": "online", "engine": "Brain-API"}
         except Exception as e:
             logger.error(f"BrainAPI Health check failed: {e}")

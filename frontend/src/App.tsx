@@ -76,21 +76,31 @@ const App: React.FC = () => {
                     <Zap className="w-8 h-8" />
                     <span className="text-nowrap">VERSUS BATTLE</span>
                 </Button>
+
+                <Button 
+                    as={Link}
+                    to="/search/expert/" 
+                    size="lg"
+                    className="bg-blue-600 text-white px-10 py-6 rounded-[2rem] font-black italic text-2xl uppercase shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-4 no-underline border-none"
+                >
+                    <Brain className="w-8 h-8" />
+                    <span className="text-nowrap">EXPERT NEXUS</span>
+                </Button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto pt-24">
-                <Card className="group hover:-translate-y-2 transition-transform text-left" padding="lg">
+                <Card hasAura className="group hover:-translate-y-2 transition-transform text-left" padding="lg">
                     <Brain className="w-10 h-10 text-brand-primary mb-6" />
                     <h3 className="text-lg font-black italic manga-font mb-2 uppercase">{t('home.features.cognition.title')}</h3>
                     <p className="text-[10px] font-bold opacity-30 uppercase leading-loose">{t('home.features.cognition.desc')}</p>
                 </Card>
-                <Card className="group hover:-translate-y-2 transition-transform text-left" padding="lg">
+                <Card hasAura className="group hover:-translate-y-2 transition-transform text-left" padding="lg">
                     <Sparkles className="w-10 h-10 text-brand-accent mb-6" />
                     <h3 className="text-lg font-black italic manga-font mb-2 uppercase">{t('home.features.synthesis.title')}</h3>
                     <p className="text-[10px] font-bold opacity-30 uppercase leading-loose">{t('home.features.synthesis.desc')}</p>
                 </Card>
                 <Link to="/latent-space/" className="no-underline">
-                  <Card className="group hover:-translate-y-2 transition-transform text-left h-full" padding="lg">
+                  <Card hasAura className="group hover:-translate-y-2 transition-transform text-left h-full" padding="lg">
                       <Zap className="w-10 h-10 text-blue-400 mb-6" />
                       <h3 className="text-lg font-black italic manga-font mb-2 uppercase">{t('home.features.latent.title')}</h3>
                       <p className="text-[10px] font-bold opacity-30 uppercase leading-loose text-surface-text">{t('home.features.latent.desc')}</p>

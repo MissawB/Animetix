@@ -13,3 +13,7 @@ class FeedbackRepositoryPort(ABC):
     @abstractmethod
     def get_feedback_stats(self) -> Dict[str, Any]:
         pass
+
+    @abstractmethod
+    def get_user_feedback(self, user_id: Any, limit: int = 100) -> List[Dict[str, Any]]:
+        pass

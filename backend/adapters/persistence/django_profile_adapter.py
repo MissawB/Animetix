@@ -17,7 +17,7 @@ class DjangoProfileAdapter:
             ranked_points=django_profile.ranked_points,
             ranked_max_points=django_profile.ranked_max_points,
             tier=django_profile.tier,
-            api_key=django_profile.api_key
+            api_key=django_profile.api_key_hash
         )
 
     @staticmethod
@@ -31,5 +31,9 @@ class DjangoProfileAdapter:
         django_profile.ranked_points = domain_profile.ranked_points
         django_profile.ranked_max_points = domain_profile.ranked_max_points
         django_profile.tier = domain_profile.tier
-        django_profile.api_key = domain_profile.api_key
+        
+        # If the domain api_key is different from current hash, it's likely a new raw key
+        if domain_profile.api_key and domain_profile.api_key != django_profile.api_key_hash:
+            django_profile.set_api_key(domain_profile.api_key)
+        
         django_profile.save()

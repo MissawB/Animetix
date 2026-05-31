@@ -5,6 +5,7 @@ import asyncio
 from typing import Optional, List, Dict, Any
 from core.utils.lazy_import import lazy_import
 from core.domain.exceptions import InferenceError
+from core.utils.security import is_safe_url, safe_http_request, safe_http_request_async
 
 torch = lazy_import('torch')
 
@@ -82,15 +83,15 @@ class ClipVisionMixin:
             raise InferenceError(f"Critical failure during CLIP loading: {str(e)}")
 
     async def _fetch_images(self, urls: List[str]) -> List[Any]:
-        session = await self._get_session()
-        tasks = [self._fetch_single_image(session, url) for url in urls]
+        tasks = [self._fetch_single_image(None, url) for url in urls]
         return await asyncio.gather(*tasks)
 
-    async def _fetch_single_image(self, client: httpx.AsyncClient, url: str) -> Optional[Any]:
+    async def _fetch_single_image(self, client: Optional[httpx.AsyncClient], url: str) -> Optional[Any]:
         try:
             from PIL import Image
             from io import BytesIO
-            response = await client.get(url, timeout=10, follow_redirects=True)
+            # Utilisation de safe_http_request_async pour validation SSRF des redirections
+            response = await safe_http_request_async("GET", url, timeout=10)
             if response.status_code == 200:
                 content = response.content
                 return Image.open(BytesIO(content)).convert("RGB")
@@ -103,17 +104,17 @@ class ClipVisionMixin:
         from io import BytesIO
 
         results = []
-        with httpx.Client(timeout=10, follow_redirects=True) as client:
-            for url in urls:
-                try:
-                    res = client.get(url)
-                    if res.status_code == 200:
-                        results.append(Image.open(BytesIO(res.content)).convert("RGB"))
-                    else:
-                        results.append(None)
-                except Exception as e:
-                    logger.warning(f"Failed to fetch {url}: {e}")
+        for url in urls:
+            try:
+                # Utilisation de safe_http_request pour validation SSRF des redirections
+                res = safe_http_request("GET", url, timeout=10)
+                if res.status_code == 200:
+                    results.append(Image.open(BytesIO(res.content)).convert("RGB"))
+                else:
                     results.append(None)
+            except Exception as e:
+                logger.warning(f"Failed to fetch {url}: {e}")
+                results.append(None)
         return results
 
     def visual_rerank(self, query: str, image_urls: List[str], system_prompt: str = "") -> List[Dict[str, Any]]:
@@ -124,7 +125,8 @@ class ClipVisionMixin:
         images = self._fetch_images_sync(image_urls)
 
         valid_images = [img for img in images if img is not None]
-        valid_urls = [url for url, img in zip(image_urls, images) if img is not None]
+        # Image URLs mapping
+        valid_idx_to_orig_idx = [i for i, img in enumerate(images) if img is not None]
 
         if not valid_images:
             return []
@@ -137,12 +139,9 @@ class ClipVisionMixin:
         self._log_usage(engine="transformers:clip:visual_rerank", units=1)
 
         results = []
-        valid_idx = 0
-        for orig_idx, img in enumerate(images):
-            if img is not None:
-                score = float(scores[valid_idx])
-                results.append({"index": orig_idx, "url": image_urls[orig_idx], "score": score})
-                valid_idx += 1
+        for i, score_tensor in enumerate(scores):
+            orig_idx = valid_idx_to_orig_idx[i]
+            results.append({"index": orig_idx, "url": image_urls[orig_idx], "score": float(score_tensor)})
 
         return sorted(results, key=lambda x: x["score"], reverse=True)
 

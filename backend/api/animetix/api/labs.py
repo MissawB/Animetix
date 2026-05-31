@@ -440,6 +440,49 @@ class SingularityLabDataView(APIView):
             except Exception as e:
                 return Response({'error': str(e)}, status=500)
 
+        elif action == 'quantum':
+            theme = request.data.get('theme', 'shonen').lower()
+            try:
+                # On utilise un modèle par défaut s'il n'existe pas en session
+                from core.domain.services.quantum_cognitive_model import QuantumCognitivePreferenceModel
+                model = QuantumCognitivePreferenceModel(dimension=4)
+                
+                # Simulation d'une mesure de Born
+                prob, outcome = model.measure_preference(theme)
+                
+                # On récupère l'état du vecteur (pour visualisation complexe)
+                state_vec = model.state.tolist()
+                
+                return Response({
+                    'status': 'success',
+                    'theme': theme,
+                    'probability': float(prob),
+                    'outcome': outcome,
+                    'state_vector': [str(x) for x in state_vec], # Complex to string
+                    'message': f"Mesure quantique effectuée sur l'observable '{theme}'."
+                })
+            except Exception as e:
+                return Response({'error': str(e)}, status=500)
+
+        elif action == 'swarm':
+            fact = request.data.get('fact', 'Luffy est plus fort que Naruto.')
+            media = request.data.get('media', 'One Piece')
+            try:
+                orchestrator = container.swarm_consensus_orchestrator
+                # Simulation d'un consensus d'essaim
+                result = orchestrator.propose_fact_for_consensus(fact, media, proposer="User_Lab")
+                
+                return Response({
+                    'status': 'success',
+                    'fact': fact,
+                    'consensus_score': result.get('consensus_score', 0.0),
+                    'is_recorded': result.get('is_recorded', False),
+                    'votes': result.get('votes', {}),
+                    'message': "Consensus d'essaim multi-agents calculé."
+                })
+            except Exception as e:
+                return Response({'error': str(e)}, status=500)
+
         else:
             return Response({'error': 'Action inconnue'}, status=400)
 

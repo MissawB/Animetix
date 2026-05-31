@@ -2,10 +2,7 @@ import httpx
 import logging
 from typing import List, Dict
 from core.ports.web_search_port import WebSearchPort
-from core.utils.security import is_safe_url
-from ddgs import DDGS
-
-logger = logging.getLogger("animetix.web")
+from core.utils.security import is_safe_url, safe_http_request
 
 class DuckDuckGoSearchAdapter(WebSearchPort):
     """
@@ -19,6 +16,8 @@ class DuckDuckGoSearchAdapter(WebSearchPort):
         """Recherche DuckDuckGo via DDGS."""
         logger.info(f"🌐 Web Searching for: '{query}'...")
         try:
+            # Note: DDGS effectue ses propres requêtes. 
+            # On valide uniquement les URLs de sortie pour l'instant.
             with DDGS() as ddgs:
                 results = ddgs.text(query, max_results=limit)
                 if not results:
@@ -40,13 +39,10 @@ class DuckDuckGoSearchAdapter(WebSearchPort):
             return []
 
     def get_content(self, url: str) -> str:
-        """Récupère le texte brut d'une page (SSRF protected)."""
-        if not is_safe_url(url):
-            logger.warning(f"Blocked content fetching from unsafe URL: {url}")
-            return ""
-            
+        """Récupère le texte brut d'une page (SSRF protected with manual redirect validation)."""
+        # safe_http_request s'occupe déjà de is_safe_url pour chaque étape
         try:
-            res = httpx.get(url, timeout=10, follow_redirects=True)
+            res = safe_http_request("GET", url, timeout=10)
             if res.status_code == 200:
                 return res.text[:2000] # Limite pour le contexte LLM
         except Exception as e:

@@ -1,27 +1,83 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Users, UserMinus, Heart } from 'lucide-react';
+import { Users, UserMinus, Heart, Brain, Swords, Layers, Activity, Zap } from 'lucide-react';
 import { useSocialDashboard } from './hooks/useSocialDashboard';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useTranslation } from 'react-i18next';
 import { CardSkeleton } from '../../components/ui/Skeleton';
 
+const DashboardLinkCard: React.FC<{ title: string; desc: string; icon: React.ReactNode; to: string; accent: string }> = ({ title, desc, icon, to, accent }) => (
+    <Link to={to} className="no-underline group">
+        <Card padding="lg" className={`h-full border-white/5 hover:border-${accent}-500/30 transition-all hover:-translate-y-1 bg-navy-900/40`}>
+            <div className={`w-12 h-12 rounded-2xl bg-${accent}-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
+                {icon}
+            </div>
+            <h4 className="font-black italic uppercase manga-font text-lg mb-2">{title}</h4>
+            <p className="text-[10px] font-bold opacity-30 uppercase leading-relaxed">{desc}</p>
+        </Card>
+    </Link>
+);
+
 const SocialDashboard: React.FC = () => {
   const { t } = useTranslation();
   const { data, isLoading, isError, toggleFollow } = useSocialDashboard();
 
   if (isLoading) return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-      <CardSkeleton />
-      <CardSkeleton />
+    <div className="space-y-12">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <CardSkeleton /><CardSkeleton /><CardSkeleton /><CardSkeleton />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <CardSkeleton />
+        <CardSkeleton />
+      </div>
     </div>
   );
-  
+
   if (isError || !data) return <div className="text-center py-20 text-red-500 font-bold">{t('common.error')}</div>;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div className="space-y-12">
+      {/* NEXUS TOOLS */}
+      <section>
+        <h3 className="text-xs font-black uppercase opacity-40 mb-8 tracking-[0.3em] flex items-center gap-2 px-4">
+            <Zap className="w-4 h-4 text-blue-500" /> Nexus Cognitive Suite
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <DashboardLinkCard 
+                title="Archetype Nexus" 
+                desc="Votre profil neuronal." 
+                icon={<Brain className="text-blue-500" />} 
+                to="/social/archetype-nexus/"
+                accent="blue"
+            />
+            <DashboardLinkCard 
+                title="AI Debate Arena" 
+                desc="Duels sémantiques." 
+                icon={<Swords className="text-red-500" />} 
+                to="/social/debate-arena/"
+                accent="red"
+            />
+            <DashboardLinkCard 
+                title="Ma Collection" 
+                desc="Fusions & Favoris." 
+                icon={<Layers className="text-yellow-500" />} 
+                to="/social/collection/"
+                accent="yellow"
+            />
+            <DashboardLinkCard 
+                title="Clubs" 
+                desc="Communautés actives." 
+                icon={<Users className="text-emerald-500" />} 
+                to="/clubs/"
+                accent="emerald"
+            />
+        </div>
+      </section>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+
       {/* ABONNEMENTS */}
       <Card padding="lg">
         <h3 className="manga-font text-xl mb-6 flex items-center gap-3">

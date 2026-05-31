@@ -5,6 +5,8 @@ from core.ports.inference_port import InferencePort
 from core.domain.exceptions import InferenceError
 from core.ports.usage_port import UsagePort
 
+from core.utils.security import safe_http_request
+
 logger = logging.getLogger("animetix.inference.rerank")
 
 class LocalRerankAdapter(InferencePort):
@@ -20,7 +22,6 @@ class LocalRerankAdapter(InferencePort):
         cohere_key = os.getenv("COHERE_API_KEY")
         if cohere_key:
             try:
-                import httpx
                 headers = {
                     "Authorization": f"Bearer {cohere_key}",
                     "Content-Type": "application/json"
@@ -30,7 +31,8 @@ class LocalRerankAdapter(InferencePort):
                     "query": query,
                     "documents": documents
                 }
-                response = httpx.post("https://api.cohere.ai/v1/rerank", headers=headers, json=payload, timeout=10, follow_redirects=True)
+                # Utilisation de safe_http_request pour validation SSRF des redirections
+                response = safe_http_request("POST", "https://api.cohere.ai/v1/rerank", headers=headers, json=payload, timeout=10)
                 if response.status_code == 200:
                     data = response.json()
                     scores = [0.0] * len(documents)

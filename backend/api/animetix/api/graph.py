@@ -51,3 +51,19 @@ class GraphNeighborsView(APIView):
                 {"error": f"Failed to retrieve graph data: {str(e)}"}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+class GraphWorldMapView(APIView):
+    """
+    Vue macroscopique du Knowledge Graph.
+    Expose les communautés sémantiques (Leiden/Louvain) et leurs résumés.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    @inject
+    def __init__(self, partitioner=Provide[Container.agentic.community_partitioner], **kwargs):
+        super().__init__(**kwargs)
+        self.partitioner = partitioner
+
+    def get(self, request):
+        communities = self.partitioner.run_partitioning()
+        return Response(communities)

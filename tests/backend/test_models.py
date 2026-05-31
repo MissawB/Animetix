@@ -13,7 +13,17 @@ class TestProfileModel:
 
     def test_profile_api_key_is_none_by_default(self):
         user = User.objects.create_user(username="testuser_key")
-        assert user.profile.api_key is None
+        assert user.profile.api_key_hash is None
+
+    def test_profile_api_key_hashing(self):
+        user = User.objects.create_user(username="testuser_hash")
+        user.profile.set_api_key("my-secret-key")
+        user.profile.save()
+        
+        assert user.profile.api_key_hash is not None
+        assert user.profile.api_key_hash != "my-secret-key"
+        assert user.profile.check_api_key("my-secret-key") is True
+        assert user.profile.check_api_key("wrong-key") is False
 
     def test_profile_tier_choices(self):
         user = User.objects.create_user(username="testuser_choices")
@@ -30,11 +40,11 @@ class TestProfileModel:
 
     def test_profile_api_key_uniqueness(self):
         user1 = User.objects.create_user(username="user1")
-        user1.profile.api_key = "secret_key_123"
+        user1.profile.set_api_key("secret_key_123")
         user1.profile.save()
 
         user2 = User.objects.create_user(username="user2")
-        user2.profile.api_key = "secret_key_123"
+        user2.profile.set_api_key("secret_key_123")
         
         from django.db import IntegrityError
         with pytest.raises(IntegrityError):
@@ -47,7 +57,7 @@ class TestDjangoProfileAdapter:
         profile = user.profile
         profile.xp = 100
         profile.tier = 'premium'
-        profile.api_key = "test_api_key"
+        profile.set_api_key("test_api_key")
         profile.save()
 
         domain_profile = DjangoProfileAdapter.to_domain(profile)
@@ -56,7 +66,8 @@ class TestDjangoProfileAdapter:
         assert domain_profile.username == "adapter_user"
         assert domain_profile.xp == 100
         assert domain_profile.tier == 'premium'
-        assert domain_profile.api_key == "test_api_key"
+        # In domain, api_key now holds the hash when coming from DB
+        assert domain_profile.api_key == profile.api_key_hash
 
     def test_update_django_mapping(self):
         user = User.objects.create_user(username="update_user")
@@ -76,4 +87,4 @@ class TestDjangoProfileAdapter:
         updated_profile = Profile.objects.get(id=profile.id)
         assert updated_profile.xp == 500
         assert updated_profile.tier == 'pro'
-        assert updated_profile.api_key == 'new_key'
+        assert updated_profile.check_api_key('new_key') is True

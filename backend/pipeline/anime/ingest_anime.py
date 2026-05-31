@@ -1,4 +1,3 @@
-import httpx
 import json
 import time
 import os
@@ -14,6 +13,9 @@ if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
 
 # Détection robuste de la racine du projet
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.join(BASE_DIR, "backend"))
+from core.utils.security import safe_http_request
+
 OUTPUT_FILE = os.path.join(BASE_DIR, 'data', 'raw', 'raw_anilist_db.json')
 
 url = 'https://graphql.anilist.co'
@@ -83,7 +85,7 @@ def fetch_page(page):
         'perPage': 50
     }
     try:
-        response = httpx.post(url, json={'query': query, 'variables': variables}, timeout=30, follow_redirects=True)
+        response = safe_http_request("POST", url, json={'query': query, 'variables': variables}, timeout=30)
         if response.status_code == 200:
             return response.json()
         else:

@@ -159,9 +159,17 @@ const SearchResultsPage: React.FC = () => {
             </div>
             <div>
                 <h4 className="text-3xl font-black italic manga-font uppercase mb-4 tracking-tighter text-white">IA Deep RAG Enabled</h4>
-                <p className="text-sm font-bold opacity-40 uppercase leading-relaxed max-w-3xl italic">
+                <p className="text-sm font-bold opacity-40 uppercase leading-relaxed max-w-3xl italic mb-6">
                     La recherche sémantique analyse non seulement les titres, mais aussi les thèmes profonds, les relations entre personnages et les arcs narratifs indexés dans le Knowledge Graph.
                 </p>
+                <Button 
+                    as={Link} 
+                    to={`/search/expert/?q=${encodeURIComponent(query)}`}
+                    variant="primary" 
+                    className="bg-blue-600 border-none px-8 rounded-2xl"
+                >
+                    PASSER EN MODE EXPERT
+                </Button>
             </div>
         </div>
       </div>

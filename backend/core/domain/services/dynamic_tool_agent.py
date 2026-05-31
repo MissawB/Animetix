@@ -1,6 +1,7 @@
 import logging
 import ast
 import traceback
+import concurrent.futures
 from typing import Dict, Any, List, Set
 from core.ports.inference_port import InferencePort
 from .prompt_manager import PromptManager
@@ -12,6 +13,15 @@ class CodeSafetyValidator(ast.NodeVisitor):
     AST validator to ensure generated code is safe.
     """
     ALLOWED_MODULES = {"httpx", "json", "math", "datetime", "re"}
+    FORBIDDEN_CALLS = {
+        "eval", "exec", "open", "input", "getattr", "setattr", "delattr", "hasattr",
+        "help", "copyright", "credits", "license", "dir", "vars", "locals", "globals",
+        "compile", "breakpoint", "memoryview", "property", "classmethod", "staticmethod"
+    }
+    FORBIDDEN_ATTRS = {
+        "__subclasses__", "__mro__", "__base__", "__globals__", "__builtins__", 
+        "__code__", "__func__", "__self__", "__dict__", "__class__"
+    }
 
     def __init__(self):
         self.errors = []
@@ -30,14 +40,14 @@ class CodeSafetyValidator(ast.NodeVisitor):
     def visit_Call(self, node: ast.Call):
         # Forbidden builtins
         if isinstance(node.func, ast.Name):
-            if node.func.id in {"eval", "exec", "open", "input", "getattr", "setattr", "delattr", "help", "copyright", "credits", "license"}:
+            if node.func.id in self.FORBIDDEN_CALLS:
                 self.errors.append(f"Call to function '{node.func.id}' forbidden.")
         self.generic_visit(node)
 
     def visit_Attribute(self, node: ast.Attribute):
-        # Block access to ALL attributes starting with _
-        if node.attr.startswith("_"):
-            self.errors.append(f"Access to private/internal attribute '{node.attr}' forbidden.")
+        # Block access to ALL attributes starting with _ or in forbidden list
+        if node.attr.startswith("_") or node.attr in self.FORBIDDEN_ATTRS:
+            self.errors.append(f"Access to attribute '{node.attr}' forbidden.")
         self.generic_visit(node)
 
     def visit_Name(self, node: ast.Name):
@@ -46,13 +56,18 @@ class CodeSafetyValidator(ast.NodeVisitor):
              self.errors.append(f"Access to internal identifier '{node.id}' forbidden.")
         self.generic_visit(node)
 
+    def visit_Lambda(self, node: ast.Lambda):
+        self.errors.append("Lambda functions are forbidden.")
+        self.generic_visit(node)
+
 class DynamicToolAgent:
     """
     Agent capable of creating its own tools.
     """
-    def __init__(self, inference_engine: InferencePort, prompt_manager: PromptManager):
+    def __init__(self, inference_engine: InferencePort, prompt_manager: PromptManager, timeout_seconds: int = 5):
         self.inference_engine = inference_engine
         self.prompt_manager = prompt_manager
+        self.timeout_seconds = timeout_seconds
 
     def build_and_execute_tool(self, api_documentation: str, task: str) -> Dict[str, Any]:
         """
@@ -74,7 +89,7 @@ class DynamicToolAgent:
         elif "```" in generated_code:
             generated_code = generated_code.split("```")[1].split("```")[0].strip()
 
-        logger.info("💻 Generated Code:")
+        logger.info("💻 Generated Code (first 200 chars):")
         logger.info(generated_code[:200] + "...")
 
         # Safety validation
@@ -120,6 +135,15 @@ class DynamicToolAgent:
                 "KeyError": KeyError,
                 "IndexError": IndexError,
                 "StopIteration": StopIteration,
+                "abs": abs,
+                "round": round,
+                "min": min,
+                "max": max,
+                "sum": sum,
+                "any": any,
+                "all": all,
+                "enumerate": enumerate,
+                "zip": zip,
             }
         }
         local_scope = {}
@@ -131,10 +155,17 @@ class DynamicToolAgent:
             if 'execute_tool' not in local_scope:
                 return {"status": "error", "error": "Function 'execute_tool' not defined by the LLM."}
 
-            # Execute the generated tool
-            logger.info("🚀 Executing dynamic tool...")
-            result = local_scope['execute_tool']()
-            return {"status": "success", "data": result}
+            # Execute the generated tool with timeout
+            logger.info(f"🚀 Executing dynamic tool (timeout={self.timeout_seconds}s)...")
+            
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(local_scope['execute_tool'])
+                try:
+                    result = future.result(timeout=self.timeout_seconds)
+                    return {"status": "success", "data": result}
+                except concurrent.futures.TimeoutError:
+                    logger.error("❌ Dynamic Tool Execution Timed Out")
+                    return {"status": "error", "error": "Execution timed out."}
 
         except Exception as e:
             error_msg = traceback.format_exc()

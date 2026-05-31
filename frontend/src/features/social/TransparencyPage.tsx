@@ -67,10 +67,12 @@ const TransparencyPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-          <StatCard title="Donations Totales" value={`${data.total_donations}€`} icon={<Heart className="text-red-500" />} />
-          <StatCard title="Coûts IA / Serveurs" value={`${data.api_costs + data.server_costs}€`} icon={<TrendingUp className="text-orange-500" />} />
-          <StatCard title="Project Balance" value={`${data.balance}€`} icon={<DollarSign className="text-emerald-500" />} />
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-8 mb-12">
+          <StatCard title="Donations" value={`${data.total_donations}€`} icon={<Heart className="text-red-500" />} />
+          <StatCard title="RAG Fidelity" value={`${(data.rag_fidelity * 100).toFixed(1)}%`} icon={<Zap className="text-blue-500" />} />
+          <StatCard title="Inference Latency" value={`${data.average_latency}s`} icon={<Activity className="text-purple-500" />} />
+          <StatCard title="Uptime" value={`${data.model_uptime}%`} icon={<ShieldCheck className="text-emerald-500" />} />
+          <StatCard title="Balance" value={`${data.balance}€`} icon={<DollarSign className="text-emerald-500" />} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12">

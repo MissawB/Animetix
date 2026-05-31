@@ -1,12 +1,15 @@
-import httpx
 import json
 import time
 import os
+import sys
 import logging
 from dotenv import load_dotenv
 
 # Détection robuste de la racine du projet
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.join(BASE_DIR, "backend"))
+from core.utils.security import safe_http_request
+
 load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 logger = logging.getLogger('animetix')
@@ -23,7 +26,7 @@ def fetch_tmdb_page(endpoint, page=1, params={}):
     default_params = {"api_key": TMDB_API_KEY, "language": "fr-FR", "page": page}
     default_params.update(params)
     try:
-        response = httpx.get(url, params=default_params, timeout=20, follow_redirects=True)
+        response = safe_http_request("GET", url, params=default_params, timeout=20)
         if response.status_code == 200:
             return response.json()
         elif response.status_code == 429:
@@ -31,7 +34,7 @@ def fetch_tmdb_page(endpoint, page=1, params={}):
             time.sleep(10)
             return fetch_tmdb_page(endpoint, page, params)
         return None
-    except httpx.RequestError as e:
+    except Exception as e:
         logger.error(f"❌ TMDB API request failed on {endpoint}: {e}")
         return None
 

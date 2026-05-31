@@ -10,7 +10,8 @@ import {
   Database,
   ArrowRight,
   ShieldAlert,
-  Cpu
+  Cpu,
+  Eye
 } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
@@ -18,6 +19,15 @@ import { AnimatedPage } from '../../components/ui/AnimatedPage';
 
 const LabHubPage: React.FC = () => {
   const labs = [
+    {
+      title: "Visual Nexus",
+      desc: "Recherche sémantique temporelle dans les épisodes. Trouvez n'importe quel moment via une simple description.",
+      icon: Eye,
+      path: "/visual-nexus/",
+      color: "text-purple-400",
+      bg: "bg-purple-400/10",
+      tier: "Alpha"
+    },
     {
       title: "Video Lab",
       desc: "Transfert de style temporel SOTA FateZero. Transformez vos vidéos en chefs-d'œuvre d'animation.",

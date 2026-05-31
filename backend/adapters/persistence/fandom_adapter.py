@@ -6,6 +6,8 @@ from core.ports.fandom_port import FandomPort
 
 logger = logging.getLogger("animetix.fandom")
 
+from core.utils.security import safe_http_request
+
 class FandomAdapter(FandomPort):
     """
     Robust Fandom adapter using search-then-fetch strategy.
@@ -34,7 +36,7 @@ class FandomAdapter(FandomPort):
         }
         
         try:
-            res = httpx.get(self.api_url, params=search_params, timeout=10, follow_redirects=True)
+            res = safe_http_request("GET", self.api_url, params=search_params, timeout=10)
             res.raise_for_status()
             search_data = res.json()
             
@@ -60,7 +62,7 @@ class FandomAdapter(FandomPort):
                     "formatversion": 2
                 }
                 
-                res = httpx.get(self.api_url, params=fetch_params, timeout=10, follow_redirects=True)
+                res = safe_http_request("GET", self.api_url, params=fetch_params, timeout=10)
                 res.raise_for_status()
                 data = res.json()
                 
