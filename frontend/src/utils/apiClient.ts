@@ -1,4 +1,5 @@
 import { useToastStore } from '../store/toastStore';
+import { usePersonalizationStore } from '../store/personalizationStore';
 
 export const apiClient = async (url: string, options: RequestInit = {}) => {
   const defaultHeaders: HeadersInit = {
@@ -33,7 +34,15 @@ export const apiClient = async (url: string, options: RequestInit = {}) => {
     // Gérer les retours 204 No Content
     if (response.status === 204) return null;
 
-    return await response.json();
+    const data = await response.json();
+
+    // Personalization Interceptor
+    const visualConfig = data?.meta?.visual_config;
+    if (visualConfig) {
+      usePersonalizationStore.getState().updateConfig(visualConfig);
+    }
+
+    return data;
   } catch (error: any) {
     if (error.name === 'TypeError') {
       // Erreur de réseau (API injoignable, CORS, etc.)
