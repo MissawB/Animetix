@@ -8,7 +8,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('animetix', '0017_donation'),
+        ('animetix', '0016_alter_mediaitem_visual_embedding'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
