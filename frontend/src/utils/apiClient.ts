@@ -1,7 +1,8 @@
 import { useToastStore } from '../store/toastStore';
 import { usePersonalizationStore } from '../store/personalizationStore';
 
-export const apiClient = async (url: string, options: RequestInit = {}) => {
+export const apiClient = async (url: string, options: RequestInit & { skipToast?: boolean } = {}) => {
+  const { skipToast, ...fetchOptions } = options;
   const defaultHeaders: HeadersInit = {
     'Content-Type': 'application/json',
     'X-Requested-With': 'XMLHttpRequest',
@@ -14,8 +15,8 @@ export const apiClient = async (url: string, options: RequestInit = {}) => {
   }
 
   const config: RequestInit = {
-    ...options,
-    headers: { ...defaultHeaders, ...options.headers },
+    ...fetchOptions,
+    headers: { ...defaultHeaders, ...fetchOptions.headers },
   };
 
   try {
@@ -26,7 +27,9 @@ export const apiClient = async (url: string, options: RequestInit = {}) => {
       const errorMessage = errorData?.message || `Erreur ${response.status}: Impossible de récupérer les données.`;
       
       // Déclenchement global du Toast
-      useToastStore.getState().addToast(errorMessage, 'error');
+      if (!skipToast) {
+        useToastStore.getState().addToast(errorMessage, 'error');
+      }
       
       throw new Error(errorMessage);
     }
@@ -46,7 +49,9 @@ export const apiClient = async (url: string, options: RequestInit = {}) => {
   } catch (error: any) {
     if (error.name === 'TypeError') {
       // Erreur de réseau (API injoignable, CORS, etc.)
-      useToastStore.getState().addToast('Serveur injoignable. Vérifiez votre connexion.', 'error');
+      if (!skipToast) {
+        useToastStore.getState().addToast('Serveur injoignable. Vérifiez votre connexion.', 'error');
+      }
     }
     throw error;
   }

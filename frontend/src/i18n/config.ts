@@ -9,6 +9,7 @@ i18n
   .use(initReactI18next) // Liaison avec React
   .init({
     fallbackLng: 'en',
+    load: 'languageOnly',
     debug: false,
     interpolation: {
       escapeValue: false, // React gère déjà l'échappement XSS

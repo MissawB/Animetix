@@ -56,6 +56,25 @@ export async function getProfile(username: string): Promise<Profile> {
   return apiClient(`/api/v1/profile/${username}/`);
 }
 
+export async function updateAccountSettings(data: { tier?: string }): Promise<{ status: string; tier: string }> {
+  return apiClient('/api/v1/profiles/update_settings/', {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function generateApiKey(): Promise<{ api_key: string; message: string }> {
+  return apiClient('/api/v1/profiles/generate_api_key/', {
+    method: 'POST',
+  });
+}
+
+export async function revokeApiKey(): Promise<{ status: string }> {
+  return apiClient('/api/v1/profiles/revoke_api_key/', {
+    method: 'POST',
+  });
+}
+
 // --- Daily Challenge ---
 export async function getDailyChallenge(): Promise<DailyChallenge> {
   return apiClient('/api/v1/daily-challenge/');
@@ -103,7 +122,38 @@ export async function getFusionStatus(taskId: string, fusionId: number): Promise
 }
 
 export async function getAuthUser(): Promise<User> {
-  return apiClient('/api/v1/auth/me/');
+  const profile = await apiClient('/api/v1/auth/me/', { skipToast: true });
+  return {
+    id: profile.user.id,
+    username: profile.user.username,
+    email: profile.user.email,
+    is_authenticated: true,
+    xp: profile.xp,
+    tier: profile.tier,
+    has_api_key: profile.has_api_key,
+  };
+}
+
+export async function loginUser(data: Record<string, any>): Promise<User> {
+  await apiClient('/api/v1/auth/login/', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+  return getAuthUser();
+}
+
+export async function registerUser(data: Record<string, any>): Promise<User> {
+  await apiClient('/api/v1/auth/register/', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+  return getAuthUser();
+}
+
+export async function logoutUser(): Promise<void> {
+  return apiClient('/api/v1/auth/logout/', {
+    method: 'POST',
+  });
 }
 
 // --- Graph API ---

@@ -17,7 +17,8 @@ import {
   Calendar,
   User,
   ShieldCheck,
-  Search
+  Search,
+  Swords
 } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
@@ -48,7 +49,7 @@ const GamesHubPage: React.FC = () => {
     {
       title: "Duel Arena",
       desc: "Affrontez d'autres joueurs en 1vs1 temps réel dans des duels de culture anime.",
-      icon: Sword,
+      icon: Swords,
       path: "/game/duel/lobby/",
       color: "text-blue-500",
       bg: "bg-blue-500/10",
