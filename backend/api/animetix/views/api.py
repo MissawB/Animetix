@@ -1,7 +1,10 @@
 import json
+import datetime
 from django.shortcuts import render
 from django.http import JsonResponse, HttpResponse, StreamingHttpResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.core.cache import cache
+from django_ratelimit.decorators import ratelimit
 from celery.result import AsyncResult
 from .common import logger
 from ..containers import get_container
@@ -117,21 +120,73 @@ def animinator_stream(request):
             yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"
     return StreamingHttpResponse(event_stream(), content_type='text/event-stream')
 
+@ratelimit(key='user', rate='1/5m', block=True)
 def sync_offline_data(request):
-    """Synchronizes offline game results with the server profile."""
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            if request.user.is_authenticated:
-                xp_gained = 0
-                for game in data:
-                    if game.get('score', 0) == 100:
-                        request.user.profile.add_win(is_daily=False, game_mode=game.get('game_mode', 'classic'), media_type=game.get('media_type', 'Anime'), attempts=game.get('attempts', 1))
-                        xp_gained += 10
-                if xp_gained > 0:
-                    request.user.profile.xp += xp_gained
-                    request.user.profile.save()
-            return JsonResponse({'status': 'success', 'synced_items': len(data)})
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=400)
-    return HttpResponse(status=405)
+    """
+    Synchronizes offline game results with the server profile.
+    Secured with rate limiting and daily XP caps to prevent abuse.
+    """
+    if request.method != 'POST':
+        return HttpResponse(status=405)
+        
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Authentication required'}, status=401)
+
+    try:
+        data = json.loads(request.body)
+        if not isinstance(data, list):
+            return JsonResponse({'error': 'Invalid data format'}, status=400)
+            
+        # Hard cap on number of items per sync
+        if len(data) > 50:
+            return JsonResponse({'error': 'Too many items in one sync (max 50)'}, status=400)
+
+        # Track daily gain in cache (persistence = 24h)
+        today = datetime.date.today().isoformat()
+        cache_key = f"offline_xp_limit_{request.user.id}_{today}"
+        daily_gain = cache.get(cache_key, 0)
+        
+        MAX_DAILY_OFFLINE_XP = 200 # Limite de 200 XP (~20 victoires) par jour via offline sync
+        
+        if daily_gain >= MAX_DAILY_OFFLINE_XP:
+            return JsonResponse({'error': 'Daily offline XP limit reached. Play online for more!'}, status=403)
+
+        xp_gained = 0
+        synced_count = 0
+        
+        for game in data:
+            if daily_gain + xp_gained >= MAX_DAILY_OFFLINE_XP:
+                break # On arrête l'attribution si le plafond est atteint
+                
+            if game.get('score', 0) == 100:
+                # Validation du mode de jeu pour éviter l'injection de modes fictifs
+                mode = game.get('game_mode', 'classic')
+                valid_modes = ['classic', 'emoji', 'animinator', 'paradox', 'vision_quest', 'blindtest', 'covertest']
+                if mode not in valid_modes:
+                    continue
+                    
+                request.user.profile.add_win(
+                    is_daily=False, 
+                    game_mode=mode, 
+                    media_type=game.get('media_type', 'Anime'), 
+                    attempts=game.get('attempts', 1)
+                )
+                xp_gained += 10
+                synced_count += 1
+
+        if xp_gained > 0:
+            request.user.profile.xp += xp_gained
+            request.user.profile.save()
+            # On met à jour le cache avec le nouveau total
+            cache.set(cache_key, daily_gain + xp_gained, 60*60*24)
+
+        return JsonResponse({
+            'status': 'success', 
+            'synced_items': synced_count,
+            'xp_gained': xp_gained,
+            'daily_total': daily_gain + xp_gained
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Offline Sync Error: {e}")
+        return JsonResponse({'error': 'An internal error occurred during synchronization.'}, status=400)

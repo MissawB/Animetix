@@ -7,12 +7,14 @@ Ce document centralise toutes les tâches techniques, d'architecture et de fonct
 - [ ] **Diagnostics & Incertitude Avancés** : Migrer les calculs d'incertitude (entropie, perplexité) basés sur le texte vers une exploitation réelle des `logprobs` si exposés par les adaptateurs (BrainAPI/Ollama).
 - [ ] **Nettoyage des Bouchons (UnifiedInferenceAdapter)** : Finaliser le remplacement de toutes les méthodes levant encore `InferenceNotImplementedError` par de véritables délégations vers les mixins de vision ou d'audio.
 - [ ] **Modération de contenu (Guardrails)** : Étendre la modération sémantique native à tous les adaptateurs de texte pour garantir une sécurité homogène sur tout le cluster.
+- [x] **Suppression de la dépendance LangChain** : Supprimer ou bypasser LangChain via l'héritage direct de `BaseRagasLLM` pour Ragas. Permet d'alléger l'environnement virtuel et d'éliminer les conflits de versions. (Terminé : Suppression complète de LangChain/Ragas, implémentation d'un juge LLM autonome structuré avec Pydantic et Instructor).
+- [x] **Migration Dagster ➡️ Celery** : Migrer le DAG de données (`dagster_app.py`) vers des workflows Celery (Chains/Groups) et Celery Beat pour fermer le serveur et le démon Dagster, libérant ainsi de la RAM. (Terminé : Code source, configurations Docker/supervisord et requirements épurés à 100% de Dagster; orchestrateurs et sensors LoRA/DPO migrés vers Celery et le cache Django).
 - [ ] **Stabilisation de la recherche Web (DuckDuckGo ➡️ Gemini Grounding / Tavily)** : Remplacer le scraping DuckDuckGo instable par l'outil natif de Google Search Grounding (Gemini) ou une API structurée comme Tavily.
 - [ ] **Simplification d'état Frontend (XState ➡️ Zustand)** : Refactoriser les machines d'état simples du dossier `/machines` en stores Zustand plus légers et fluides, réduisant la taille du bundle et le boilerplate.
 
 ## 🚀 Intégrations & Pages Manquantes
 
-- [ ] **World Boss / Global Boss UI** : Créer l'interface épique (`/game/world-boss/`) pour afficher les boss globaux, leurs phases, et permettre la participation communautaire.
+- [x] **World Boss / Global Boss UI** : Créer l'interface épique (`/game/world-boss/`) pour afficher les boss globaux, leurs phases, et permettre la participation communautaire. (FAIT : API Backend et UI Frontend implémentées).
 - [ ] **Page de Soutien / Wall of Fame** : Ajouter une page (`/support/` ou `/donate/`) pour valoriser les donateurs, expliquer le modèle économique et lier les plateformes (Patreon/Ko-fi).
 - [ ] **Lobby de Duel (Matchmaking & Ranked)** : Implémenter un hub de duel (`/duel/lobby/`) pour créer des salons 1v1, rejoindre via code, ou lancer du matchmaking classé.
 - [ ] **Explorateur de Catalogue (Media Browser)** : Créer une interface "Netflix-like" (`/explore/`) pour parcourir les œuvres par popularité, année ou recommandations, au-delà de la simple recherche.

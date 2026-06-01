@@ -37,6 +37,5 @@ RUN python backend/api/manage.py collectstatic --noinput
 
 RUN mkdir -p data/raw data/processed data/models data/artifacts data/chroma_db && chown -R appuser:appuser /app
 USER appuser
-ENV DAGSTER_HOME=/app/backend/pipeline
 EXPOSE 7860
 CMD ["supervisord", "-c", "deploy/supervisord.conf"]

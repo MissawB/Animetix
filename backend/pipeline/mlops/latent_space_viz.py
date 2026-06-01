@@ -3,15 +3,13 @@ import json
 import logging
 import numpy as np
 from sklearn.manifold import TSNE
-from dagster import asset
 from pipeline.chroma_client import chroma_manager
 
 logger = logging.getLogger("animetix.mlops.viz")
 
 ARTIFACTS_DIR = os.path.join("data", "artifacts")
 
-@asset
-def latent_space_data_multi():
+def run_visualization():
     """
     Génère les projections 3D pour TOUTES les collections ChromaDB.
     """
@@ -82,4 +80,4 @@ def latent_space_data_multi():
     return True
 
 if __name__ == "__main__":
-    latent_space_data_multi()
+    run_visualization()

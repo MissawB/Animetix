@@ -17,6 +17,8 @@ from adapters.inference.manga_ocr import MangaOcrMixin
 from adapters.inference.video_analysis import VideoAnalysisMixin
 from adapters.inference.audio_mixin import AudioMixin
 from adapters.inference.image_gen_mixin import ImageGenMixin
+from adapters.inference.vlm_mixin import VlmMixin
+from adapters.inference.rerank_mixin import RerankMixin
 
 logger = logging.getLogger("animetix." + __name__)
 
@@ -27,6 +29,8 @@ class UnifiedInferenceAdapter(
     VideoAnalysisMixin,
     AudioMixin,
     ImageGenMixin,
+    VlmMixin,
+    RerankMixin,
     InferencePort
 ):
     """
@@ -332,12 +336,13 @@ class UnifiedInferenceAdapter(
         except Exception as e:
             logger.warning(f"Object detection VLM failed: {e}. Falling back to specialized model.")
         
-        # Delegation to specialized implementation (e.g. from VisionTransformersAdapter logic if it was in a mixin)
-        # For now we return empty as OwlViT is not in a mixin yet
+        # Delegation to VlmMixin
+        if hasattr(super(), 'detect_objects'):
+            return super().detect_objects(image_data, candidate_queries, model_id)
         return []
 
     def generate_image_description(self, image_data: bytes, prompt: str = "Décris cette image d'anime de manière très détaillée.") -> str:
-        """Utilise un VLM si le endpoint d'inférence supporte les requêtes multimodales."""
+        """Utilise un VLM si le endpoint d'inférence supporte les requêtes multimodales. Fallback sur Moondream2."""
         try:
             base64_image = base64.b64encode(image_data).decode('utf-8')
             payload = {
@@ -356,11 +361,47 @@ class UnifiedInferenceAdapter(
                 ]
             }
             res = safe_http_request("POST", f"{self.api_base}/chat/completions", json=payload, headers=self._get_headers(), timeout=self.timeout, allow_internal=True)
-            res.raise_for_status()
-            return res.json()["choices"][0]["message"]["content"]
+            if res.status_code == 200:
+                return res.json()["choices"][0]["message"]["content"]
         except Exception as e:
-            logger.error(f"Unified multimodal description failed: {e}. Raising InferenceError.")
-            raise InferenceError(f"Multimodal description failed: {e}")
+            logger.warning(f"Unified multimodal description failed: {e}. Falling back to local VLM.")
+
+        # Delegation to VlmMixin
+        if hasattr(super(), 'generate_image_description'):
+            return super().generate_image_description(image_data, prompt)
+        
+        raise InferenceError(f"Multimodal description failed and no fallback available.")
+
+    def translate_manga_page(self, image_data: bytes, target_lang: str = "Français") -> Dict[str, Any]:
+        """Détecte, OCR, traduit et redessine le texte dans les bulles d'une page de manga."""
+        try:
+            # 1. OCR
+            ocr_res = self.process_manga_page(image_data)
+            if ocr_res["status"] != "success":
+                raise InferenceError("OCR failed during manga translation.")
+            
+            layout = ocr_res["layout"]
+            
+            # 2. Translation
+            for entry in layout:
+                orig_text = entry.get("text", "")
+                if orig_text:
+                    prompt = f"Traduis ce texte de manga en {target_lang}: {orig_text}. Réponds UNIQUEMENT avec le texte traduit."
+                    translated = self.generate(prompt, system_prompt="Tu es un traducteur expert de manga.")
+                    entry["text"] = translated
+            
+            # 3. Inpainting (Redessiner)
+            text_placements = [{"bbox": e.get("box", e.get("bbox")), "text": e["text"]} for e in layout]
+            final_image_url = self.inpaint_text_bubbles(image_data, text_placements)
+            
+            return {
+                "translated_image": final_image_url,
+                "layout": layout,
+                "status": "success"
+            }
+        except Exception as e:
+            logger.error(f"Translate manga page failed: {e}")
+            raise InferenceError(f"Manga translation failed: {e}")
 
     def get_diagnostics(self, prompt: str, completion: str) -> Dict[str, Any]:
         """Récupère les données d'activation internes réelles (Logit Lens, Attention) via un modèle d'évaluation."""

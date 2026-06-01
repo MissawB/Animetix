@@ -9,7 +9,7 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from animetix.api.core import is_safe_url
-from core.utils.security import validate_file_mime_type
+from core.utils.security import validate_file_mime_type, safe_http_request
 
 ALLOWED_IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp']
 ALLOWED_VIDEO_MIMES = ['video/mp4', 'video/webm', 'video/x-msvideo']
@@ -194,7 +194,6 @@ class SpatialLabDataView(APIView):
 
     def post(self, request):
         import base64
-        import httpx
         image_url = request.data.get('image_url')
         uploaded_file = request.FILES.get('image_file')
         
@@ -209,13 +208,12 @@ class SpatialLabDataView(APIView):
                 for chunk in uploaded_file.chunks():
                     image_data += chunk
             else:
-                if not is_safe_url(image_url):
-                    return Response({'error': 'URL is not allowed for security reasons.'}, status=status.HTTP_403_FORBIDDEN)
-                res = httpx.get(image_url, timeout=10, follow_redirects=False)
-                if res.status_code in (301, 302, 303, 307, 308):
-                    return Response({'error': 'Redirects are not allowed for security reasons.'}, status=status.HTTP_403_FORBIDDEN)
-                res.raise_for_status()
-                image_data = res.content
+                try:
+                    res = safe_http_request("GET", image_url, timeout=10)
+                    res.raise_for_status()
+                    image_data = res.content
+                except ValueError as ve:
+                    return Response({'error': f'Unsafe URL: {str(ve)}'}, status=status.HTTP_403_FORBIDDEN)
                 
             if not validate_file_mime_type(image_data, ALLOWED_IMAGE_MIMES):
                 return Response({'error': 'Invalid image format. Allowed formats: JPEG, PNG, WEBP.'}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
@@ -242,7 +240,6 @@ class Generate3DDataView(APIView):
 
     def post(self, request):
         import base64
-        import httpx
         image_url = request.data.get('image_url')
         uploaded_file = request.FILES.get('image_file')
         mode = request.data.get('mode', 'mesh')
@@ -258,13 +255,12 @@ class Generate3DDataView(APIView):
                 for chunk in uploaded_file.chunks():
                     image_data += chunk
             else:
-                if not is_safe_url(image_url):
-                    return Response({'error': 'URL is not allowed for security reasons.'}, status=status.HTTP_403_FORBIDDEN)
-                res = httpx.get(image_url, timeout=10, follow_redirects=False)
-                if res.status_code in (301, 302, 303, 307, 308):
-                    return Response({'error': 'Redirects are not allowed for security reasons.'}, status=status.HTTP_403_FORBIDDEN)
-                res.raise_for_status()
-                image_data = res.content
+                try:
+                    res = safe_http_request("GET", image_url, timeout=10)
+                    res.raise_for_status()
+                    image_data = res.content
+                except ValueError as ve:
+                    return Response({'error': f'Unsafe URL: {str(ve)}'}, status=status.HTTP_403_FORBIDDEN)
                 
             if not validate_file_mime_type(image_data, ALLOWED_IMAGE_MIMES):
                 return Response({'error': 'Invalid image format. Allowed formats: JPEG, PNG, WEBP.'}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
@@ -284,7 +280,6 @@ class MangaLabDataView(APIView):
     throttle_scope = 'gpu'
 
     def post(self, request):
-        import httpx
         image_url = request.data.get('image_url')
         uploaded_file = request.FILES.get('image_file')
         action = request.data.get('action', 'clean')
@@ -297,13 +292,12 @@ class MangaLabDataView(APIView):
                 for chunk in uploaded_file.chunks():
                     image_data += chunk
             else:
-                if not is_safe_url(image_url):
-                    return Response({'error': 'URL is not allowed for security reasons.'}, status=status.HTTP_403_FORBIDDEN)
-                res = httpx.get(image_url, timeout=10, follow_redirects=False)
-                if res.status_code in (301, 302, 303, 307, 308):
-                    return Response({'error': 'Redirects are not allowed for security reasons.'}, status=status.HTTP_403_FORBIDDEN)
-                res.raise_for_status()
-                image_data = res.content
+                try:
+                    res = safe_http_request("GET", image_url, timeout=10)
+                    res.raise_for_status()
+                    image_data = res.content
+                except ValueError as ve:
+                    return Response({'error': f'Unsafe URL: {str(ve)}'}, status=status.HTTP_403_FORBIDDEN)
                 
             if not validate_file_mime_type(image_data, ALLOWED_IMAGE_MIMES):
                 return Response({'error': 'Invalid image format. Allowed formats: JPEG, PNG, WEBP.'}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)

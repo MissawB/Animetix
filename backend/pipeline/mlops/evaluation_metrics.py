@@ -6,7 +6,6 @@ import httpx
 import wandb
 import logging
 from sentence_transformers import SentenceTransformer
-from dagster import asset, Output, AssetObservation
 import pandas as pd
 
 # Fix path for internal imports
@@ -28,11 +27,10 @@ def calculate_animetix_score(metrics):
     from core.domain.services.scoring_service import ScoringDomainService
     return ScoringDomainService.calculate_animetix_ragas_score(metrics)
 
-@asset(group_name="mlops", deps=["anime_artifacts", "manga_artifacts"])
 def ragas_performance_comparison():
     """Évaluation et comparaison RAGAS (OFFICIELLE) avec W&B par catégorie."""
     if not os.path.exists(GOLD_DATASET):
-        return Output(value={}, metadata={"error": "Gold dataset missing"})
+        return {"error": "Gold dataset missing"}
 
     # Initialisation W&B
     api_key_wandb = os.getenv("WANDB_API_KEY")
@@ -181,17 +179,12 @@ def ragas_performance_comparison():
     wandb.log({"Official Comparison": summary_table})
     run.finish()
 
-    return Output(
-        value={"status": "completed"},
-        metadata={
-            "Dataset Size": sample_size,
-            "W&B Report": run.url if api_key_wandb else "Local"
-        }
-    )
+    return {"status": "completed"}
 
-@asset(group_name="mlops", deps=["anime_artifacts"])
 def legacy_retrieval_metrics():
     """Métriques simples de recherche (Hit Rate, MRR)."""
+    # Importation différée pour éviter des dépendances circulaires
+    from pipeline.mlops.evaluation_metrics_evaluator import RAGEvaluator
     evaluator = RAGEvaluator()
     metrics = evaluator.calculate_retrieval_metrics("anime_thematic")
-    return Output(value=metrics, metadata=metrics)
+    return metrics

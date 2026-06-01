@@ -20,7 +20,7 @@ import socket
 import ipaddress
 from urllib.parse import urlparse
 from animetix_project.logging_config import get_logger
-from core.utils.security import is_safe_url, validate_file_mime_type
+from core.utils.security import is_safe_url, validate_file_mime_type, safe_http_request
 
 ALLOWED_IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp']
 from django.core.cache import cache
@@ -42,11 +42,6 @@ def image_proxy_view(request):
         logger.error(f"Failed to decode image proxy URL: {e}")
         return HttpResponse(status=400)
 
-    # Protection SSRF
-    if not is_safe_url(url):
-        logger.warning(f"Blocked unsafe URL in image proxy: {url}")
-        return HttpResponse("Forbidden: Unsafe URL", status=403)
-
     cache_key = f"img_cache_{hashlib.md5(url.encode()).hexdigest()}"
     cached_data = cache.get(cache_key)
     
@@ -54,15 +49,16 @@ def image_proxy_view(request):
         return HttpResponse(cached_data['content'], content_type=cached_data['content_type'])
 
     try:
-        response = httpx.get(url, timeout=10, follow_redirects=False)
+        # safe_http_request gère la validation DNS et les sauts de redirection en toute sécurité
+        response = safe_http_request("GET", url, timeout=10)
         if response.status_code == 200:
             content = response.content
             content_type = response.headers.get('Content-Type', 'image/jpeg')
             cache.set(cache_key, {'content': content, 'content_type': content_type}, 60*60*24*7)
             return HttpResponse(content, content_type=content_type)
-        elif response.status_code in (301, 302, 303, 307, 308):
-            logger.warning(f"Blocked redirect attempt in image proxy: {url} -> {response.headers.get('Location')}")
-            return HttpResponse("Forbidden: Redirects not allowed", status=403)
+    except ValueError as ve:
+        logger.warning(f"Blocked unsafe request in image proxy: {ve}")
+        return HttpResponse("Forbidden: Unsafe request detected", status=403)
     except Exception as e:
         logger.error("Image Proxy Error: %s", e, exc_info=True)
         

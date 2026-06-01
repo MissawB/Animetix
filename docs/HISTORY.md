@@ -2,12 +2,19 @@
 
 Ce document archive les étapes majeures de l'évolution technique du projet.
 
+## [2026-06-01] Session : World Boss UI Implementation
+- **World Boss API :** Création des vues `ActiveWorldBossView` et `WorldBossAttackView` gérant le cycle de vie des boss globaux et la participation communautaire.
+- **Système de Participation :** Implémentation du modèle `BossParticipation` et de la logique de dégâts basée sur les "Guesses" des utilisateurs.
+- **Frontend World Boss :** Déploiement d'une interface immersive (`WorldBossPage.tsx`) avec barre de vie en temps réel, indicateurs de phases et affichage dynamique des indices déchiffrés.
+- **Tests World Boss :** Ajout d'une suite de tests backend (`test_world_boss.py`) et mise à jour des tests frontend pour supporter `TanStack Query`.
+
 ## [2026-05-31] Session : Audit Avancé de Sécurité
 - **Prévention DoS (OOM)** : Configuration de `DATA_UPLOAD_MAX_MEMORY_SIZE` (50Mo) dans Django pour bloquer les requêtes massives. Remplacement des appels `uploaded_file.read()` par `uploaded_file.chunks()` dans les API Labs (Génération 3D, Vidéo, Audio, Manga) pour un traitement en flux sans saturer la RAM.
 - **Validation MIME-Type Stricte** : Intégration de la librairie `filetype` pour vérifier la signature binaire réelle ("Magic Number") des uploads médias (images, vidéos, audio), empêchant l'injection d'exécutables déguisés.
 - **Protection CSRF Cross-Domain** : Résolution de la vulnérabilité liée au cookie `SameSite=None`. Suppression du décorateur `@csrf_exempt` sur le webhook de synchronisation offline (`sync_offline_data`) et application du flag HTTPS `Secure` obligatoire pour les cookies de session.
 - **Sanitization JSON (Anti-XSS/NoSQL)** : Protection du profil utilisateur (`personalization_settings`) via un schéma Pydantic strict (`PersonalizationSchema`). L'option `extra = "forbid"` rejette tout payload contenant des clés non autorisées.
 - **Prévention IDOR sur les Fusions** : Modification dynamique du `get_queryset` de `CreativeFusionViewSet`. Les utilisateurs ne peuvent désormais interagir (remixer/liker) qu'avec les fusions publiques ou leurs propres créations privées, prévenant le "clonage" non autorisé de brouillons.
+- **Migration Dagster ➡️ Celery** : Migrer le DAG de données (`dagster_app.py`) vers des workflows Celery (Chains/Groups) et Celery Beat pour fermer le serveur et le démon Dagster, libérant ainsi de la RAM. (Terminé : Code source, configurations Docker/supervisord et requirements épurés à 100% de Dagster; orchestrateurs et sensors LoRA/DPO migrés vers Celery et le cache Django).
 
 ## [2026-05-31] Session : Sécurité Complète et Intégrations SOTA
 - **Audit de Dépendances Continu** : Automatisation du scan de vulnérabilités via Dependabot, et intégration de `safety` et `npm audit` dans les workflows CI GitHub Actions. Résolution de failles (ReDoS/RCE) sur `transformers` et `torch`.
@@ -22,6 +29,7 @@ Ce document archive les étapes majeures de l'évolution technique du projet.
 - **Nouvelles Interfaces SOTA (Nexus Series)** : Déploiement de multiples UI expertes incluant le Raisonnement Arborescent (MCTS), la Mémoire Épisodique (Règles logiques Z3), la Débat Arena (Self-play), la Vidéo Sémantique (Video-LLaVA), la Lore World Map, et les labos Quantum & Swarm.
 - **Simulateurs et Dashboards Avancés** : Implémentation du Counterfactual Simulator UI, du Liquid Neural Network Lab et du DSPy Optimizer Dashboard.
 - **Restauration de Hubs** : Réintégration de Soundscape Lab et Speech-to-Speech Lab dans le LabHubPage.
+- **Suppression de la dépendance LangChain** : Supprimer ou bypasser LangChain via l'héritage direct de `BaseRagasLLM` pour Ragas. Permet d'alléger l'environnement virtuel et d'éliminer les conflits de versions. (Terminé : Suppression complète de LangChain/Ragas, implémentation d'un juge LLM autonome structuré avec Pydantic et Instructor).
 
 ## [2026-05-30] Session : Hyper-Personnalisation Graphique 100%
 - **Moteur d'Archetype Drift (Backend) :** Implémentation du `ArchetypeDriftService` analysant les feedbacks (AIFeedback), l'historique de jeu (Akinetix), les fusions créatives (La Forge) et les souvenirs sémantiques (ChromaDB) pour calculer le profil utilisateur dominant parmi 15 archétypes Otaku.
@@ -48,15 +56,15 @@ Ce document archive les étapes majeures de l'évolution technique du projet.
 - **Génération 3D & Dioramas :** Intégration réelle de l'API Tripo3D et déploiement du viewer React.
 - **Vidéo-RAG (Embeddings Temporels) :** Finalisation de l'infrastructure Celery pour l'indexation par segments temporels via Qwen2-VL.
 - **Lab & MLOps UX :** Déploiement du `LabHubPage` et intégration du dashboard de curation DPO.
-- **Protection Anti-Triche XP :** Sécurisation de l'endpoint de synchronisation offline avec un rate-limit strict (1 appel / 5 min) et un plafond journalier de 200 XP par utilisateur.
-- **Généralisation Anti-SSRF :** Refactorisation complète des services consommant des ressources externes pour utiliser l'utilitaire `safe_http_request` (protection DNS Rebinding).
+- **Protection Anti-Triche XP :** Sécurisation de l'endpoint de synchronisation offline avec un rate-limit strict (1 appel / 5 min) et un plafond journalier de 200 XP par utilisateur, préservant l'intégrité du leaderboard.
+- **Généralisation Anti-SSRF :** Refactorisation complète des services consommant des ressources externes pour utiliser l'utilitaire `safe_http_request` (protection DNS Rebinding). Cette mesure garantit une protection contre le DNS Rebinding et valide chaque saut de redirection contre une blacklist d'IPs privées.
 - **Politique de Sécurité du Contenu (CSP) :** Configuration de `django-csp` pour restreindre les sources de ressources (scripts, styles, images) aux seuls domaines de confiance, neutralisant ainsi les vecteurs d'attaque XSS.
 
 ## [2026-05-29] Session Intensive : Robustesse & Innovation SOTA
 - **Vidéo-RAG (Intégration E2E) :** Finalisation complète de la boucle de recherche sémantique intra-vidéo. Les endpoints `/api/v1/labs/video/index/` et `/search/` sont désormais exposés. Le service `VideoRAGService` a été intégré au workflow principal `AgenticRAGService`, permettant à l'assistant de répondre à des questions visuelles complexes en fouillant dans les timelines indexées. Le frontend `VideoLabPage` a été enrichi d'une interface de recherche temporelle active.
 - **Vidéo-RAG (Intégration Industrielle) :** Finalisation du câblage de l'infrastructure Video-RAG. Enregistrement du `VideoRAGService` dans le conteneur DI et correction des tâches Celery pour une orchestration distribuée fluide. Implémentation d'une segmentation vidéo robuste par ré-encodage de frames via `imageio`, éliminant la corruption des fichiers par découpage brut d'octets.
 - **Vidéo-RAG (Recherche Intra-Clip) :** Activation de l'extraction d'embeddings temporels via Qwen2-VL (résumés narratifs) et CLIP (vecteurs denses). Implémentation du service `VideoRAGService` gérant le découpage, l'analyse et l'indexation dans une collection ChromaDB `video_temporal`. Correction d'un bug de collision d'ID et fiabilisation de la recherche sémantique segmentée.
-- **FateZero (Consistance Temporelle Vidéo) :** Implémentation du `CrossFrameAttentionProcessor` dans `DiffusersAdapter`. Transformation Video-to-Anime avec consistance temporelle Zero-Shot via traitement par lots et attention croisée sur frame d'ancrage.
+- **FateZero (Consistance Temporelle Vidéo) :** Implémentation du `CrossFrameAttentionProcessor` dans `DiffusersAdapter`. Transformation Video-to-Anime with consistance temporelle Zero-Shot via traitement par lots et attention croisée sur frame d'ancrage.
 - **AudioLDM & Soundscapes :** Activation du pipeline de génération d'ambiances sonores basées sur le contexte visuel. Correction des injections de services dans l'API Labs.
 - **Clonage Vocal & S2S Natif :** Activation de `VoiceCloningService` (XTTS v2) et de `NativeSpeechLLMService` (Kyutai Moshi) pour des interactions vocales temps réel sans latence TTS.
 - **Génération Structurée Native (Instructor) :** Migration des adaptateurs `BrainAPI` et `Unified` vers `instructor`. Validation native des schémas Pydantic avec fallback regex ultra-résilient.

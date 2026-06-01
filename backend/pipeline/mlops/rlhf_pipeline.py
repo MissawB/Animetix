@@ -7,7 +7,6 @@ import json
 import time
 import pandas as pd
 from datetime import datetime
-from dagster import asset, Output, AssetMaterialization
 
 # Paths
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -23,7 +22,6 @@ if PROJECT_ROOT not in sys.path:
 
 from core.utils.security import safe_http_request
 
-@asset(group_name="mlops")
 def monitor_inference_health():
     """Surveille la latence et la disponibilité de l'API Brain (Inférence)."""
     brain_url = os.getenv("BRAIN_API_URL")
@@ -44,7 +42,6 @@ def monitor_inference_health():
     except Exception as e:
         return {"status": "🔴 Offline", "error": str(e)}
 
-@asset(group_name="mlops", compute_kind="django_db")
 def exported_user_feedback():
     """Exporte les feedbacks RLHF et les sessions de jeu depuis la base de données Django."""
     manage_py = os.path.join(BASE_DIR, 'backend', 'manage.py')
@@ -61,7 +58,6 @@ def exported_user_feedback():
 
 from .dpo_feedback_loop import DPOFeedbackLoop
 
-@asset(group_name="mlops", deps=[exported_user_feedback])
 def validated_dpo_dataset(exported_user_feedback):
     """Transforme l'export en dataset DPO validé et nettoyé."""
     if not exported_user_feedback:
@@ -72,14 +68,12 @@ def validated_dpo_dataset(exported_user_feedback):
     count = loop.process_and_export(feedback_path, dataset_path)
     return {"path": dataset_path, "count": count}
 
-@asset(group_name="mlops", compute_kind="ragas")
 def periodic_rag_evaluation():
     """Lance une évaluation Ragas sur un Golden Dataset pour détecter les régressions."""
     from scripts.mlops_rag_eval import run_mlops_eval
     report = run_mlops_eval()
     return report
 
-@asset(group_name="mlops", deps=[validated_dpo_dataset, periodic_rag_evaluation])
 def trigger_model_retraining(validated_dpo_dataset, periodic_rag_evaluation, knowledge_drift_check=False):
     """Déclenche le ré‑entraînement si les données sont suffisantes, si la qualité baisse, ou en cas de dérive."""
     count = validated_dpo_dataset.get("count", 0)

@@ -2,7 +2,6 @@ import pytest
 import os
 import json
 from pipeline.mlops.rlhf_pipeline import validated_dpo_dataset
-from dagster import build_asset_context
 
 def test_validated_dpo_dataset_transformation(tmp_path):
     """Vérifie que l'asset Dagster transforme correctement les fichiers JSONL."""

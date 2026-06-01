@@ -322,6 +322,26 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'animetix.tasks.scheduled_dpo_optimization',
         'schedule': crontab(hour=3, minute=0),
     },
+    'daily-data-ingestion': {
+        'task': 'animetix.pipeline.run_daily_ingestion_workflow',
+        'schedule': crontab(hour=3, minute=0),
+    },
+    'daily-maintenance-mlops': {
+        'task': 'animetix.pipeline.run_daily_maintenance_workflow',
+        'schedule': crontab(hour=5, minute=0),
+    },
+    'hourly-health-monitoring': {
+        'task': 'animetix.pipeline.run_hourly_monitoring_workflow',
+        'schedule': crontab(minute=0),
+    },
+    'gold-dataset-lora-sensor': {
+        'task': 'animetix.pipeline.check_gold_dataset_sensor_task',
+        'schedule': crontab(minute='*/10'),
+    },
+    'gold-dataset-dpo-sensor': {
+        'task': 'animetix.pipeline.check_dpo_feedback_sensor_task',
+        'schedule': crontab(minute='*/10'),
+    },
 }
 
 # Static files

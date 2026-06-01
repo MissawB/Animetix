@@ -90,7 +90,7 @@ def run_vectorization(chroma_res=None, neo4j_res=None):
             if v_embeddings[idx]:
                 repo.upsert_items('character_visual_vibe', [ext_id], [v_embeddings[idx]], [item])
             
-            # SYNC NEO4J AUTOMATIQUE (Dagster Flow)
+            # SYNC NEO4J AUTOMATIQUE (Celery Pipeline)
             try:
                 neo4j_manager.sync_media_to_graph(item, "Anime")
             except Exception as e:
