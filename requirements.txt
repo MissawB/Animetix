@@ -73,7 +73,7 @@ scipy==1.17.1
 sentence-transformers==3.3.1
 sentencepiece==0.2.1
 soundfile
-tokenizers==0.20.3
+tokenizers==0.21.0
 torch==2.5.1
 torchvision==0.20.1
 transformer-lens==2.15.0
