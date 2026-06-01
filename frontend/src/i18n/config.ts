@@ -14,7 +14,7 @@ i18n
       escapeValue: false, // React gère déjà l'échappement XSS
     },
     backend: {
-      loadPath: '/locales/{{lng}}/translation.json',
+      loadPath: '/static/locales/{{lng}}/translation.json',
     },
   });
 
