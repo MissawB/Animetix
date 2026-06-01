@@ -9,11 +9,15 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from animetix.api.core import is_safe_url
-from core.utils.security import validate_file_mime_type, safe_http_request
+from core.utils.security import validate_file_mime_type, safe_http_request, validate_file_size
 
 ALLOWED_IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp']
 ALLOWED_VIDEO_MIMES = ['video/mp4', 'video/webm', 'video/x-msvideo']
 ALLOWED_AUDIO_MIMES = ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/x-wav']
+
+MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10 Mo
+MAX_VIDEO_SIZE = 50 * 1024 * 1024  # 50 Mo
+MAX_AUDIO_SIZE = 15 * 1024 * 1024  # 15 Mo
 from ..models import DailyChallenge
 from ..serializers import DailyChallengeSerializer
 from ..containers import get_container
@@ -92,9 +96,24 @@ class CustomConfigDataView(APIView):
 
     def get(self, request):
         if request.user.is_authenticated:
-            config = getattr(request.user.profile, 'custom_config', {})
+            profile = request.user.profile
+            config = getattr(profile, 'custom_config', {})
+            if not config:
+                if not isinstance(profile.personalization_settings, dict):
+                    profile.personalization_settings = {}
+                config = profile.personalization_settings.get('custom_config', {})
             return Response(config)
         return Response({})
+
+    def post(self, request):
+        if request.user.is_authenticated:
+            profile = request.user.profile
+            if not isinstance(profile.personalization_settings, dict):
+                profile.personalization_settings = {}
+            profile.personalization_settings['custom_config'] = request.data
+            profile.save()
+            return Response(request.data)
+        return Response({"error": "Not authenticated"}, status=401)
 
 class TransparencyDataView(APIView):
     """Données sur l'intégrité de l'IA et du Knowledge Graph (Admin uniquement)."""
@@ -203,6 +222,9 @@ class SpatialLabDataView(APIView):
         try:
             image_data = None
             if uploaded_file:
+                if not validate_file_size(uploaded_file.size, MAX_IMAGE_SIZE):
+                    return Response({'error': f'Image is too large (Max: {MAX_IMAGE_SIZE/1024/1024}MB)'}, status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
+                
                 # Streaming read to prevent OOM
                 image_data = b""
                 for chunk in uploaded_file.chunks():
@@ -212,6 +234,8 @@ class SpatialLabDataView(APIView):
                     res = safe_http_request("GET", image_url, timeout=10)
                     res.raise_for_status()
                     image_data = res.content
+                    if not validate_file_size(len(image_data), MAX_IMAGE_SIZE):
+                        return Response({'error': 'Remote image is too large'}, status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
                 except ValueError as ve:
                     return Response({'error': f'Unsafe URL: {str(ve)}'}, status=status.HTTP_403_FORBIDDEN)
                 
@@ -250,6 +274,9 @@ class Generate3DDataView(APIView):
         try:
             image_data = None
             if uploaded_file:
+                if not validate_file_size(uploaded_file.size, MAX_IMAGE_SIZE):
+                    return Response({'error': f'Image is too large (Max: {MAX_IMAGE_SIZE/1024/1024}MB)'}, status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
+                
                 # Streaming read to prevent OOM
                 image_data = b""
                 for chunk in uploaded_file.chunks():
@@ -259,6 +286,8 @@ class Generate3DDataView(APIView):
                     res = safe_http_request("GET", image_url, timeout=10)
                     res.raise_for_status()
                     image_data = res.content
+                    if not validate_file_size(len(image_data), MAX_IMAGE_SIZE):
+                        return Response({'error': 'Remote image is too large'}, status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
                 except ValueError as ve:
                     return Response({'error': f'Unsafe URL: {str(ve)}'}, status=status.HTTP_403_FORBIDDEN)
                 
@@ -287,6 +316,9 @@ class MangaLabDataView(APIView):
         try:
             image_data = None
             if uploaded_file:
+                if not validate_file_size(uploaded_file.size, MAX_IMAGE_SIZE):
+                    return Response({'error': f'Image is too large (Max: {MAX_IMAGE_SIZE/1024/1024}MB)'}, status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
+                
                 # Streaming read to prevent OOM
                 image_data = b""
                 for chunk in uploaded_file.chunks():
@@ -296,6 +328,8 @@ class MangaLabDataView(APIView):
                     res = safe_http_request("GET", image_url, timeout=10)
                     res.raise_for_status()
                     image_data = res.content
+                    if not validate_file_size(len(image_data), MAX_IMAGE_SIZE):
+                        return Response({'error': 'Remote image is too large'}, status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
                 except ValueError as ve:
                     return Response({'error': f'Unsafe URL: {str(ve)}'}, status=status.HTTP_403_FORBIDDEN)
                 
@@ -350,7 +384,10 @@ class AudioLabDataView(APIView):
                     with open(path, "rb") as f: ref_audio_bytes = f.read()
             else:
                 audio_file = request.FILES.get('audio_data')
-                if audio_file: ref_audio_bytes = audio_file.read()
+                if audio_file:
+                    if not validate_file_size(audio_file.size, MAX_AUDIO_SIZE):
+                        return Response({'error': f'Audio is too large (Max: {MAX_AUDIO_SIZE/1024/1024}MB)'}, status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
+                    ref_audio_bytes = audio_file.read()
 
             if not ref_audio_bytes:
                 return Response({'error': 'Échantillon vocal manquant'}, status=400)
@@ -525,6 +562,9 @@ class VideoLabDataView(APIView):
             return Response({'error': 'No video provided'}, status=400)
 
         try:
+            if not validate_file_size(uploaded_file.size, MAX_VIDEO_SIZE):
+                return Response({'error': f'Video is too large (Max: {MAX_VIDEO_SIZE/1024/1024}MB)'}, status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
+            
             video_data = b"".join(chunk for chunk in uploaded_file.chunks())
             if not validate_file_mime_type(video_data, ALLOWED_VIDEO_MIMES):
                 return Response({'error': 'Invalid video format. Allowed formats: MP4, WEBM, AVI.'}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
@@ -549,6 +589,9 @@ class VideoRAGIndexView(APIView):
             return Response({'error': 'Missing video_id or video_file'}, status=400)
             
         try:
+            if not validate_file_size(uploaded_file.size, MAX_VIDEO_SIZE):
+                return Response({'error': f'Video is too large (Max: {MAX_VIDEO_SIZE/1024/1024}MB)'}, status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
+            
             video_data = b"".join(chunk for chunk in uploaded_file.chunks())
             if not validate_file_mime_type(video_data, ALLOWED_VIDEO_MIMES):
                 return Response({'error': 'Invalid video format. Allowed formats: MP4, WEBM, AVI.'}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
@@ -593,6 +636,9 @@ class SoundscapeLabDataView(APIView):
             return Response({'error': 'No video provided'}, status=400)
 
         try:
+            if not validate_file_size(uploaded_file.size, MAX_VIDEO_SIZE):
+                return Response({'error': f'Video is too large (Max: {MAX_VIDEO_SIZE/1024/1024}MB)'}, status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
+            
             video_data = b"".join(chunk for chunk in uploaded_file.chunks())
             if not validate_file_mime_type(video_data, ALLOWED_VIDEO_MIMES):
                 return Response({'error': 'Invalid video format. Allowed formats: MP4, WEBM, AVI.'}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
@@ -616,6 +662,9 @@ class SpeechToSpeechLabDataView(APIView):
             return Response({'error': 'No audio provided'}, status=400)
 
         try:
+            if not validate_file_size(uploaded_file.size, MAX_AUDIO_SIZE):
+                return Response({'error': f'Audio is too large (Max: {MAX_AUDIO_SIZE/1024/1024}MB)'}, status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
+            
             audio_data = b"".join(chunk for chunk in uploaded_file.chunks())
             if not validate_file_mime_type(audio_data, ALLOWED_AUDIO_MIMES):
                 return Response({'error': 'Invalid audio format.'}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)

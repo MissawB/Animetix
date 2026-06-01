@@ -8,7 +8,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     checkAuth().then(() => {
-      fetchPersonalizationSettings();
+      if (useAuthStore.getState().isAuthenticated) {
+        fetchPersonalizationSettings();
+      }
     });
   }, [checkAuth, fetchPersonalizationSettings]);
 
