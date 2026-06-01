@@ -4,7 +4,7 @@ import { useUIStore } from '../store/uiStore';
 import { useAuthStore } from '../store/authStore';
 import { 
   Menu, Shield, Sparkles, Box, FlaskConical, Network, Users, Radio, Search, 
-  Gamepad2, Film, User, Settings, Sliders 
+  Gamepad2, Film, User, Settings, Sliders, Heart 
 } from 'lucide-react';
 import { FeatureGate } from './utils/FeatureGate';
 import { useTranslation } from 'react-i18next';
@@ -47,6 +47,12 @@ const Navbar: React.FC = () => {
           </Link>
           <Link to="/transparency/" className="flex items-center gap-2 no-underline text-xs font-black italic text-gray-500 hover:text-yellow-600 transition-all uppercase tracking-widest">
             <Shield className="w-4 h-4" /> {t('navbar.transparency')}
+          </Link>
+          <Link to="/explore/" className="flex items-center gap-2 no-underline text-xs font-black italic text-cyan-400 hover:scale-105 transition-all uppercase tracking-widest">
+            <Search className="w-4 h-4" /> Explore
+          </Link>
+          <Link to="/support/" className="flex items-center gap-2 no-underline text-xs font-black italic text-pink-500 hover:scale-105 transition-all uppercase tracking-widest">
+            <Heart className="w-4 h-4" /> Support
           </Link>
           
           <Link to="/lab/" className="flex items-center gap-2 no-underline text-xs font-black italic text-red-500 hover:scale-105 transition-all uppercase tracking-widest">
