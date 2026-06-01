@@ -7,10 +7,10 @@ from django.views.generic.base import RedirectView
 
 # REST Router
 router = routers.DefaultRouter()
-router.register(r'profiles', api_views.ProfileViewSet)
-router.register(r'daily-challenges', api_views.DailyChallengeViewSet)
-router.register(r'achievements', api_views.AchievementViewSet)
-router.register(r'fusions', api_views.CreativeFusionViewSet)
+router.register(r'profiles', api_views.ProfileViewSet, basename='profiles')
+router.register(r'daily-challenges', api_views.DailyChallengeViewSet, basename='daily-challenges')
+router.register(r'achievements', api_views.AchievementViewSet, basename='achievements')
+router.register(r'fusions', api_views.CreativeFusionViewSet, basename='fusions')
 
 
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView

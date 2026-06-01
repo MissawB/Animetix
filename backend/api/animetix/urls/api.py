@@ -71,4 +71,6 @@ urlpatterns = [
     path('game/vision/state/', api_views.VisionGameStateView.as_view(), name='api_vision_state'),
     path('game/blindtest/state/', api_views.BlindtestGameStateView.as_view(), name='api_blindtest_state'),
     path('game/covertest/state/', api_views.CovertestGameStateView.as_view(), name='api_covertest_state'),
+    path('game/world-boss/active/', api_views.ActiveWorldBossView.as_view(), name='api_world_boss_active'),
+    path('game/world-boss/attack/', api_views.WorldBossAttackView.as_view(), name='api_world_boss_attack'),
 ]

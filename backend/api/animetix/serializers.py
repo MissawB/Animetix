@@ -148,3 +148,21 @@ class DiscoveryClubSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at'
         ]
         read_only_fields = ['creator']
+
+from .models import GlobalBoss, BossParticipation
+
+class GlobalBossSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GlobalBoss
+        fields = [
+            'id', 'title', 'media_type', 'total_hp', 'current_hp', 
+            'community_hints', 'is_active', 'start_date', 'end_date', 
+            'reward_xp', 'current_phase', 'phase_modifiers'
+        ]
+
+class BossParticipationSerializer(serializers.ModelSerializer):
+    username = serializers.ReadOnlyField(source='user.username')
+    
+    class Meta:
+        model = BossParticipation
+        fields = ['id', 'user', 'username', 'points_contributed', 'last_participation']
