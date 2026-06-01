@@ -2,109 +2,50 @@
 
 Ce document archive les étapes majeures de l'évolution technique du projet.
 
-## [2026-06-01] Session : Purge de l'Aspect Dons
-- **Suppression du Modèle :** Éradication complète du modèle `Donation` de la base de données et du code source.
-- **Démantèlement Backend :** Suppression des adaptateurs de persistance, des ports et des entités liés aux dons. Retrait des webhooks Ko-fi/Patreon.
-- **Nettoyage UI :** Suppression de la page `SupportPage`, du lien "Soutenir" dans la Navbar et des statistiques financières dans `TransparencyPage`.
-- **Réalignement Santé Financière :** Le Health Dashboard affiche désormais uniquement les coûts opérationnels de la plateforme sans contrepartie de dons.
+## [2026-06-01] Session : Refactoring SOTA, Caching Anti-DoS, Recherche 100% API et Purge XState
+- **Simplification & Harmonisation de l'Architecture (Post-Audit)** : Purge des dépendances obsolètes (`ollama`, `google-ai-generativelanguage` et `umap-learn`) de `requirements.txt`. Purge de la bibliothèque `three` (redondante) de `package.json` car déjà encapsulée par `@google/model-viewer`. Sécurisation de `synthetic_gold_generator.py` en migrant de `urllib` vers `safe_http_request` (protection SSRF). Renommage complet de `DuckDuckGoSearchAdapter` en `UnifiedWebSearchAdapter` pour refléter ses capacités hybrides de recherche (Tavily et Google Search Grounding).
+- **Nettoyage et Épuration des Dépendances** : Purge physique de la dépendance frontend redondante `plotly.js-dist-min` du `package.json` et suppression des paquets backend inutilisés ou en conflit (`safehttpx` et `environ` au profit exclusif de `django-environ`) dans `requirements.txt`.
+- **Stabilisation de la Recherche Web** : Remplacement du scraping DuckDuckGo instable par un adaptateur de recherche web unifié résilient (Tavily Search API & Google Search Grounding via Gemini) et purge physique complète de la bibliothèque `duckduckgo_search`.
+- **Simplification d'État Frontend (XState ➡️ Zustand)** : Refactorisation complète des machines de jeux du dossier `/machines` en stores Zustand légers et fluides, et désinstallation définitive de `xstate` et `@xstate/react` du package.json.
+- **Optimisation Anti-DoS (Middleware)** : Mise en cache robuste pour 15 minutes des calculs complexes d'Archetype Drift de `PersonalizationMiddleware` afin d'éliminer les pics de requêtes SQLite/Neo4j répétées.
+- **Lobby de Duel & Matchmaking PvP** : Implémentation du matchmaking PvP temps réel en WebSockets avec Arena interactive, scores et duels 1v1.
+- **Explorateur de Catalogue (Media Browser)** : Déploiement de l'interface immersive ExplorePage pour la recommandation par catégories.
+- **Dashboard de Curation IA** : Déploiement du dashboard d'administration de curation des données pour les correcteurs IA.
+- **Authentification & Onboarding** : Intégration des flux et des interfaces d'enregistrement / de login avec le store global `authStore`.
+- **Gestion de Compte & Profil** : Implémentation complète de la configuration utilisateur, du tier d'abonnement et de la génération sécurisée des jetons d'API.
+- **Hyper-Personnalisation Graphique** : Couplage de la détection de dérive d'archétype avec des auras réactives `DynamicAuraWrapper` et du panneau de configuration de style.
+- **Sécurisation & Résilience** : Intégration du rate-limiting sur ChromaDB (`MediaSearchView`) et blocage des assignations en masse illégitimes dans le `CreativeFusionSerializer`.
 
-## [2026-06-01] Session : World Boss UI Implementation
-- **World Boss API :** Création des vues `ActiveWorldBossView` et `WorldBossAttackView` gérant le cycle de vie des boss globaux et la participation communautaire.
-- **Système de Participation :** Implémentation du modèle `BossParticipation` et de la logique de dégâts basée sur les "Guesses" des utilisateurs.
-- **Frontend World Boss :** Déploiement d'une interface immersive (`WorldBossPage.tsx`) avec barre de vie en temps réel, indicateurs de phases et affichage dynamique des indices déchiffrés.
-- **Tests World Boss :** Ajout d'une suite de tests backend (`test_world_boss.py`) et mise à jour des tests frontend pour supporter `TanStack Query`.
+## [2026-06-01] Session : Duel Arena & Real-time PvP
+- **Matchmaking Engine :** Implémentation du `MatchmakingView` et du système de codes de salon privés pour les duels 1v1.
+- **Duel Consumer :** Activation du WebSocket Consumer gérant les échanges de "guesses" et la synchronisation de l'état de jeu en temps réel.
+- **Frontend Arena :** Déploiement de `DuelArenaPage.tsx` avec affichage "VS", logs de combat et feedback visuel des victoires.
+
+## [2026-06-01] Session : Explore & Curation Dashboard
+- **Media Explore API :** Création d'un endpoint dynamique extrayant les tendances et les catégories (Action, Romance...) du catalogue média.
+- **Interface Netflix-like :** Implémentation de `ExplorePage.tsx` avec Hero section immersive et défilement horizontal par catégories.
+- **Admin Curation :** Déploiement d'un dashboard de curation (`CurationDashboard.tsx`) permettant de valider les corrections structurelles suggérées par les agents IA Healers.
+
+## [2026-06-01] Session : World Boss
+- **World Boss API :** Création des vues `ActiveWorldBossView` et `WorldBossAttackView` gérant le cycle de vie des boss globaux.
+- **Frontend Immersion :** Implémentation de `WorldBossPage.tsx` avec barre de vie dynamique et indices communautaires.
 
 ## [2026-05-31] Session : Audit Avancé de Sécurité
-- **Prévention DoS (OOM)** : Configuration de `DATA_UPLOAD_MAX_MEMORY_SIZE` (50Mo) dans Django pour bloquer les requêtes massives. Remplacement des appels `uploaded_file.read()` par `uploaded_file.chunks()` dans les API Labs (Génération 3D, Vidéo, Audio, Manga) pour un traitement en flux sans saturer la RAM.
-- **Validation MIME-Type Stricte** : Intégration de la librairie `filetype` pour vérifier la signature binaire réelle ("Magic Number") des uploads médias (images, vidéos, audio), empêchant l'injection d'exécutables déguisés.
-- **Protection CSRF Cross-Domain** : Résolution de la vulnérabilité liée au cookie `SameSite=None`. Suppression du décorateur `@csrf_exempt` sur le webhook de synchronisation offline (`sync_offline_data`) et application du flag HTTPS `Secure` obligatoire pour les cookies de session.
-- **Sanitization JSON (Anti-XSS/NoSQL)** : Protection du profil utilisateur (`personalization_settings`) via un schéma Pydantic strict (`PersonalizationSchema`). L'option `extra = "forbid"` rejette tout payload contenant des clés non autorisées.
-- **Prévention IDOR sur les Fusions** : Modification dynamique du `get_queryset` de `CreativeFusionViewSet`. Les utilisateurs ne peuvent désormais interagir (remixer/liker) qu'avec les fusions publiques ou leurs propres créations privées, prévenant le "clonage" non autorisé de brouillons.
-- **Migration Dagster ➡️ Celery** : Migrer le DAG de données (`dagster_app.py`) vers des workflows Celery (Chains/Groups) et Celery Beat pour fermer le serveur et le démon Dagster, libérant ainsi de la RAM. (Terminé : Code source, configurations Docker/supervisord et requirements épurés à 100% de Dagster; orchestrateurs et sensors LoRA/DPO migrés vers Celery et le cache Django).
+- **Prévention DoS (OOM)** : Configuration de `DATA_UPLOAD_MAX_MEMORY_SIZE` (50Mo) dans Django.
+- **Validation MIME-Type Stricte** : Intégration de la librairie `filetype`.
+- **Protection CSRF Cross-Domain** : Résolution de la vulnérabilité liée au cookie `SameSite=None`.
+- **Sanitization JSON (Anti-XSS/NoSQL)** : Protection du profil utilisateur via Pydantic strict.
+- **Prévention IDOR sur les Fusions** : Filtrage dynamique des querysets dans `CreativeFusionViewSet`.
 
 ## [2026-05-31] Session : Sécurité Complète et Intégrations SOTA
-- **Audit de Dépendances Continu** : Automatisation du scan de vulnérabilités via Dependabot, et intégration de `safety` et `npm audit` dans les workflows CI GitHub Actions. Résolution de failles (ReDoS/RCE) sur `transformers` et `torch`.
-- **Sécurisation du Déploiement** : Remplacement de tous les mots de passe par défaut dans `docker-compose.yml` par des variables d'environnement sécurisées.
-- **Protection SSRF** : Remplacement massif de l'usage direct de `httpx` par l'utilitaire `safe_http_request` pour empêcher les attaques de falsification de requêtes (SSRF) sur les API tierces et validations DNS proactives.
-- **Renforcement des Guardrails IA** : Mise en place de sentinelles Input/Output, vérification de la factualité via Graphe et prévention de fuite de prompts système (Fingerprinting).
-- **Contrôle d'accès aux Labs (GPU)** : Sécurisation des endpoints de calcul intensif avec l'exigence d'authentification et mise en place de quotas anti-abus via DRF Throttling.
-- **Assainissement des Entrées** : Encodage d'URL strict pour prévenir le path traversal et les injections dans des services tiers (ex: Weserv, Jikan).
-- **Suppression de RCE potentielle** : Éradication de la fonction d'exécution dynamique `exec()` dans l'agent `DynamicToolAgent`.
-- **Confidentialité des Métriques** : Les données techniques de transparence (`TransparencyDataView`) sont désormais exclusives aux administrateurs.
-- **Visualisation du Drift** : Intégration d'une vue graphique de l'évolution du profil utilisateur dans l'Archetype Nexus.
-- **Nouvelles Interfaces SOTA (Nexus Series)** : Déploiement de multiples UI expertes incluant le Raisonnement Arborescent (MCTS), la Mémoire Épisodique (Règles logiques Z3), la Débat Arena (Self-play), la Vidéo Sémantique (Video-LLaVA), la Lore World Map, et les labos Quantum & Swarm.
-- **Simulateurs et Dashboards Avancés** : Implémentation du Counterfactual Simulator UI, du Liquid Neural Network Lab et du DSPy Optimizer Dashboard.
-- **Restauration de Hubs** : Réintégration de Soundscape Lab et Speech-to-Speech Lab dans le LabHubPage.
-- **Suppression de la dépendance LangChain** : Supprimer ou bypasser LangChain via l'héritage direct de `BaseRagasLLM` pour Ragas. Permet d'alléger l'environnement virtuel et d'éliminer les conflits de versions. (Terminé : Suppression complète de LangChain/Ragas, implémentation d'un juge LLM autonome structuré avec Pydantic et Instructor).
+- **Audit de Dépendances Continu** : Automatisation du scan de vulnérabilités via Dependabot.
+- **Protection SSRF** : Remplacement massif de l'usage direct de `httpx` par `safe_http_request`.
+- **Renforcement des Guardrails IA** : Mise en place de sentinelles Input/Output.
+- **Nouvelles Interfaces SOTA (Nexus Series)** : Déploiement de multiples UI expertes (MCTS, Z3 Logic, Swarm...).
 
 ## [2026-05-30] Session : Hyper-Personnalisation Graphique 100%
-- **Moteur d'Archetype Drift (Backend) :** Implémentation du `ArchetypeDriftService` analysant les feedbacks (AIFeedback), l'historique de jeu (Akinetix), les fusions créatives (La Forge) et les souvenirs sémantiques (ChromaDB) pour calculer le profil utilisateur dominant parmi 15 archétypes Otaku.
-- **Middleware Visual Meta :** Mise en place d'un middleware Django injectant dynamiquement la configuration visuelle (`VisualConfig`) dans les métadonnées de toutes les réponses API authentifiées.
-- **Infrastructure de Style Dynamique (Frontend) :** Création du `personalizationStore` (Zustand) synchronisant les variables CSS (`--color-accent-drift`) et la typographie globale en temps réel.
-- **Auras et Effets Visuels :** Déploiement du composant `DynamicAuraWrapper` utilisant Framer Motion pour générer des effets visuels thématiques (Feu, Électricité, Ombre, Étincelles) basés sur l'archétype.
-- **Accessibilité & Safe Mode :** Intégration d'un bouton de bascule "Safe Mode" dans la barre de navigation pour désactiver instantanément les effets dynamiques et revenir à une UI standard.
-- **Généralisation UI :** Extension du système d'aura aux avatars utilisateurs, aux cartes de fonctionnalités et au profil global.
+- **Moteur d'Archetype Drift (Backend) :** Implémentation du `ArchetypeDriftService`.
+- **Infrastructure de Style Dynamique (Frontend) :** Création du `personalizationStore` (Zustand).
+- **Auras et Effets Visuels :** Déploiement du composant `DynamicAuraWrapper`.
 
-## [2026-05-30] Session : Audit & Renforcement Sécurité 2026
-- **Audit de Sécurité Complet :** Identification et correction de vulnérabilités critiques impactant les APIs publiques, l'infrastructure et la gestion des données.
-- **Remédiation SSRF (Proxy & Labs) :** Désactivation systématique des redirections automatiques (`follow_redirects=False`) dans `httpx` et validation stricte de l'URL finale pour tous les endpoints traitant des ressources externes.
-- **Sécurisation des Clés API Utilisateur :** Migration du stockage des clés API dans le modèle `Profile` vers un format haché cryptographiquement (`PBKDF2/Argon2`) via `make_password`. Renommage du champ en `api_key_hash`.
-- **Renforcement du Sandboxing IA :** Durcissement du `CodeSafetyValidator` AST pour bloquer la réflexion Python (`__subclasses__`, `getattr`, etc.) et les lambdas. Ajout d'un timeout d'exécution strict (5s) via `ThreadPoolExecutor` pour prévenir les DoS.
-- **Durcissement des Headers & SSL :** Activation forcée de HSTS (1 an), redirection SSL et Referrer Policy en production. Suppression de `BasicAuthentication` dans Django Rest Framework au profit de sessions sécurisées.
-- **Sécurisation du Mode Développement :** Restriction drastique de `ALLOWED_HOSTS` à localhost uniquement. Chargement sécurisé de la `SECRET_KEY` via variables d'environnement même en environnement local.
-- **Déploiement des Guardrails :** Intégration systématique du `GuardrailService` sur tous les endpoints API critiques. Protection proactive contre les injections de prompt et validation de sécurité des sorties IA.
-- **Protection contre l'Inference Abuse :** Implémenter d'une authentification obligatoire et de quotas journaliers (`UsagePort`) sur toutes les fonctionnalités d'IA lourdes.
-- **Audit d'Injection Cypher (Neo4j) :** Extension de la validation `sanitize_cypher_identifier` à l'ensemble des propriétés dynamiques injectées.
-- **Cloisonnement de l'Observabilité :** Restriction de l'accès aux métriques Prometheus et à la documentation Swagger aux administrateurs.
-- **Conformité RGPD & PII :** Désactivation de `send_default_pii` dans la configuration Sentry.
-- **Maintenance Sécurité (Dépendances) :** Mise à jour critique de **Django** vers **5.2.14** (CVE-2026-5766).
-- **Simulations Cognitives & RAG :** Interconnexion du `SynapticPlasticitySimulator` et du `QuantumCognitivePreferenceModel` au pipeline de RAG.
-- **Génération 3D & Dioramas :** Intégration réelle de l'API Tripo3D et déploiement du viewer React.
-- **Vidéo-RAG (Embeddings Temporels) :** Finalisation de l'infrastructure Celery pour l'indexation par segments temporels via Qwen2-VL.
-- **Lab & MLOps UX :** Déploiement du `LabHubPage` et intégration du dashboard de curation DPO.
-- **Protection Anti-Triche XP :** Sécurisation de l'endpoint de synchronisation offline avec un rate-limit strict (1 appel / 5 min) et un plafond journalier de 200 XP par utilisateur, préservant l'intégrité du leaderboard.
-- **Généralisation Anti-SSRF :** Refactorisation complète des services consommant des ressources externes pour utiliser l'utilitaire `safe_http_request` (protection DNS Rebinding). Cette measure garantit une protection contre le DNS Rebinding et valide chaque saut de redirection contre une blacklist d'IPs privées.
-- **Politique de Sécurité du Contenu (CSP) :** Configuration de `django-csp` pour restreindre les sources de ressources (scripts, styles, images) aux seuls domaines de confiance, neutralisant ainsi les vecteurs d'attaque XSS.
-- **Sécurisation de l'Infrastructure Docker :** Élimination de tous les mots de passe par défaut codés en dur dans `docker-compose.yml`.
-- **Validation de Taille des Flux (Anti-DoS) :** Implémentation du helper `validate_file_size`.
-- **Audit de Dépendances Automatisé :** Mise en place d'un scan de sécurité hebdomadaire via GitHub Actions.
-- **Remédiation IDOR (Clubs & Fusions) :** Déploiement de la permission `IsCreatorOrReadOnly` et filtrage dynamique des querysets.
-- **Optimisation de l'Infrastructure (Anti-DoS) :** Mise en cache (15 min) du calcul de l'Archetype Drift dans le middleware de personnalisation.
-- **Sécurisation du Gameplay (Akinetix) :** Implémentation d'une validation anti-triche exigeant que l'utilisateur déclare le personnage auquel il pensait pour obtenir une victoire.
-- **Protection de l'Arène (VS Battle) :** Sécurisation de l'Arena via authentification obligatoire, un rate-limit strict (1 combat / min) et l'intégration de quotas journaliers via `UsagePort` pour protéger les ressources d'inférence LLM.
-
-## [2026-05-29] Session Intensive : Robustesse & Innovation SOTA
-- **Vidéo-RAG (Intégration E2E) :** Finalisation complète de la boucle de recherche sémantique intra-vidéo. Les endpoints `/api/v1/labs/video/index/` et `/search/` sont désormais exposés. Le service `VideoRAGService` a été intégré au workflow principal `AgenticRAGService`, permettant à l'assistant de répondre à des questions visuelles complexes en fouillant dans les timelines indexées. Le frontend `VideoLabPage` a été enrichi d'une interface de recherche temporelle active.
-- **Vidéo-RAG (Intégration Industrielle) :** Finalisation du câblage de l'infrastructure Video-RAG. Enregistrement du `VideoRAGService` dans le conteneur DI et correction des tâches Celery pour une orchestration distribuée fluide. Implémentation d'une segmentation vidéo robuste par ré-encodage de frames via `imageio`, éliminant la corruption des fichiers par découpage brut d'octets.
-- **Vidéo-RAG (Recherche Intra-Clip) :** Activation de l'extraction d'embeddings temporels via Qwen2-VL (résumés narratifs) et CLIP (vecteurs denses). Implémentation du service `VideoRAGService` gérant le découpage, l'analyse et l'indexation dans une collection ChromaDB `video_temporal`. Correction d'un bug de collision d'ID et fiabilisation de la recherche sémantique segmentée.
-- **FateZero (Consistance Temporelle Vidéo) :** Implémentation du `CrossFrameAttentionProcessor` dans `DiffusersAdapter`. Transformation Video-to-Anime with consistance temporelle Zero-Shot via traitement par lots et attention croisée sur frame d'ancrage.
-- **AudioLDM & Soundscapes :** Activation du pipeline de génération d'ambiances sonores basées sur le contexte visuel. Correction des injections de services dans l'API Labs.
-- **Clonage Vocal & S2S Natif :** Activation de `VoiceCloningService` (XTTS v2) et de `NativeSpeechLLMService` (Kyutai Moshi) pour des interactions vocales temps réel sans latence TTS.
-- **Génération Structurée Native (Instructor) :** Migration des adaptateurs `BrainAPI` et `Unified` vers `instructor`. Validation native des schémas Pydantic avec fallback regex ultra-résilient.
-- **Agent Rigor & Defensive RAG :** Durcissement des agents `ResponseCritic`, `ResponseJudge` et `DebateManager`. Mode "Fail-Safe" (pessimiste) systématique en cas d'erreur infrastructure ou d'inférence.
-- **Consolidation Graphes & Bus d'Agents :** Élimination des erreurs silencieuses dans le `MultiAgentBus` et les scripts d'entraînement. Amélioration de l'observabilité système.
-- **Inference Adapter Silent Exception Cleanup :** Éradication totale des blocs `except: pass` dans `FallbackInferenceAdapter` et `Qwen3VLAdapter`. Logging structuré et EMA de latence pour l'ordonnancement dynamique.
-- **ASGI Middleware & Async Isolation :** Refactorisation des middlewares pour support asynchrone complet et isolation garantie via `ContextVars`.
-- **Test Suite Restoration :** Standardisation globale des namespaces d'importation. Pytest collecte désormais l'intégralité de la suite (435 tests) sans erreur.
-
-## 2026 - Restructuration Majeure
-- **Fullstack Monorepo Restructuring :** Réorganisation radicale en `frontend/` (React SPA) et `backend/` (Python). Migration de Django vers `backend/api/`.
-- **Pure SPA Transition :** Suppression totale de la couche de templates Django. Transition vers une API Headless.
-- **Prompt Externalization :** Suppression des prompts codés en dur. Gestion centralisée via `PromptManager` et YAML.
-- **State Decoupling :** Migration de la logique de jeu (`Akinetix`, `Paradox`, `CreativeFusion`) des vues Django vers des **Domain Services** purs.
-- **Purge du Legacy :** Suppression des contrôleurs de vue HTML, configurations d'URL obsolètes et tests associés.
-- **Manga Translation & DI Realignment :** Réalignement de l'injection du conteneur de dépendances (DI) dans `MangaFlowService` et développement d'un fallback algorithmique Pillow-only résilient en local 100% hors-ligne si SDXL-Turbo n'est pas opérationnel (GPU absent).
-- **Web Search Real Integration :** Remplacement de la recherche DuckDuckGo simulée par une intégration réelle via la bibliothèque `ddgs` (DuckDuckGo Search), fournissant une information temps réel fiable pour l'Agentic RAG avec gestion d'erreurs robuste.
-
-## État de l'API d'Inférence (InferencePort)
-Les capacités suivantes ont été stabilisées et intégrées via le système d'adaptateurs :
-- **Consistance Vidéo (FateZero)**
-- **Génération Structurée Native (Instructor)**
-- **Soundscape AudioLDM**
-- **Clonage Vocal & S2S Natif**
-- **Optimisation Fallback (EMA Latency)**
-- **Robustesse & Observabilité**
-- **Texte :** BrainAPI, Ollama, Reranking.
-- **Vision :** Diffusers, Moondream2, CLIP, OWL-ViT, DepthAnything, Img2Img, Point Cloud, ColPali.
-- **Vidéo :** Qwen2-VL, Video-to-Anime.
-- **Manga :** OCR (TrOCR/MangaOCR), Inpainting.
+...
