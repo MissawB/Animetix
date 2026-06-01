@@ -27,9 +27,9 @@ services:
     image: postgres:16-alpine
     container_name: animetix-db
     environment:
-      - POSTGRES_DB=${POSTGRES_DB:-animetix}
-      - POSTGRES_USER=${POSTGRES_USER:-postgres}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -53,15 +53,15 @@ services:
     ports:
       - "8002:8000"
     environment:
-      - CHROMA_SERVER_AUTH_CREDENTIALS=${CHROMA_SERVER_AUTH_CREDENTIALS:-animetix:animetix}
-      - CHROMA_SERVER_AUTH_PROVIDER=${CHROMA_SERVER_AUTH_PROVIDER:-chromadb.auth.basic.BasicAuthProvider}
+      - CHROMA_SERVER_AUTH_CREDENTIALS=${CHROMA_SERVER_AUTH_CREDENTIALS}
+      - CHROMA_SERVER_AUTH_PROVIDER=${CHROMA_SERVER_AUTH_PROVIDER}
 
   # 🕸️ Graphe de Connaissances (Neo4j)
   neo4j:
     image: neo4j:5.20-enterprise
     container_name: animetix-neo4j
     environment:
-      - NEO4J_AUTH=${NEO4J_AUTH:-neo4j/password}
+      - NEO4J_AUTH=${NEO4J_AUTH}
       - NEO4J_PLUGINS=["apoc", "gds"]
       - NEO4J_ACCEPT_LICENSE_AGREEMENT=yes
     volumes:
