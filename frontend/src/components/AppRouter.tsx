@@ -15,9 +15,14 @@ const App = React.lazy(() => import('../App'));
 const Loading: React.FC = () => <div className="p-20 text-center text-white font-black animate-pulse uppercase tracking-[0.3em]">Initialisation du système...</div>;
 
 
+const getBasename = () => {
+  const match = window.location.pathname.match(/^\/(fr|en)(\/|$)/);
+  return match ? match[0].replace(/\/$/, '') : '';
+};
+
 const AppRouter: React.FC = () => {
   return (
-    <Router>
+    <Router basename={getBasename()}>
       <Layout>
         <Suspense fallback={<Loading />}>
           <Routes>
