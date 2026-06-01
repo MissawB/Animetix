@@ -274,3 +274,11 @@ class ChromaRepositoryAdapter(RepositoryPort):
         """Non implémenté pour Chroma, déléguer à Django."""
         return None
 
+    def get_user_gameplay_history(self, user_id: int, limit: int = 10) -> List[Dict]:
+        """Non implémenté pour Chroma, déléguer à Django."""
+        return []
+
+    def get_user_creative_history(self, user_id: int, limit: int = 10) -> List[Dict]:
+        """Non implémenté pour Chroma, déléguer à Django."""
+        return []
+

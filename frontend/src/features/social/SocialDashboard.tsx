@@ -130,6 +130,7 @@ const SocialDashboard: React.FC = () => {
         </div>
       </Card>
     </div>
+  </div>
   );
 };
 
