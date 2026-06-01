@@ -13,4 +13,3 @@ from .api.games.world_boss import ActiveWorldBossView, WorldBossAttackView
 from .api.explore import MediaExploreView
 from .api.admin_api import DataCurationTicketViewSet
 from .api.games.duel import CreateDuelRoomView, JoinDuelRoomView, MatchmakingView
-from .api.support import SupportStatsView, WallOfFameView
