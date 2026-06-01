@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 from pipeline.mlops.trl_ops import trl_ready_dataset, DPOConfig
 
 def test_trl_ready_dataset_op():
-    # Mock context to be Dagster-free
+    # Mock context for standard execution
     context = MagicMock()
     
     # Mocking the internal DPOFeedbackLoop to avoid DB/filesystem logic

@@ -3,7 +3,6 @@ import {
   ShieldCheck, 
   TrendingUp, 
   DollarSign, 
-  Heart, 
   AlertCircle, 
   PieChart, 
   Zap, 
@@ -72,12 +71,11 @@ const TransparencyPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-12">
-          <StatCard title="Donations" value={`${data.total_donations}€`} icon={<Heart className="text-red-500" />} />
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-12">
           <StatCard title="RAG Fidelity" value={`${(data.rag_fidelity * 100).toFixed(1)}%`} icon={<Zap className="text-blue-500" />} />
           <StatCard title="Inference Latency" value={`${data.average_latency}s`} icon={<Activity className="text-purple-500" />} />
           <StatCard title="Uptime" value={`${data.model_uptime}%`} icon={<ShieldCheck className="text-emerald-500" />} />
-          <StatCard title="Balance" value={`${data.balance}€`} icon={<DollarSign className="text-emerald-500" />} />
+          <StatCard title="Platform Cost" value={`${data.total_costs}€`} icon={<DollarSign className="text-red-500" />} />
         </div>
 
         {/* SOTA Benchmarks Section */}
@@ -158,26 +156,7 @@ const TransparencyPage: React.FC = () => {
             </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12">
-          {/* Recent Activity */}
-          <Card padding="lg">
-              <h3 className="text-xs font-black uppercase opacity-40 mb-8 tracking-[0.2em] flex items-center gap-2">
-                  <PieChart className="w-4 h-4" /> Activité Financière Récente
-              </h3>
-              <div className="space-y-6">
-                  {data.recent_donations.map((d: any, i: number) => (
-                      <div key={i} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-navy-900 rounded-2xl border border-gray-100 dark:border-white/5 shadow-inner">
-                          <div>
-                              <div className="font-black italic uppercase text-sm">{d.user}</div>
-                              <div className="text-[10px] opacity-40">{d.date}</div>
-                          </div>
-                          <div className="text-emerald-500 font-black">+{d.amount}€</div>
-                      </div>
-                  ))}
-                  {data.recent_donations.length === 0 && <p className="text-center opacity-20 italic">Aucune transaction.</p>}
-              </div>
-          </Card>
-
+        <div className="mb-12">
           {/* Embedding Drift Report */}
           <Card padding="lg" className="relative overflow-hidden">
               <div className="flex justify-between items-start mb-8">
@@ -197,7 +176,7 @@ const TransparencyPage: React.FC = () => {
                 )}
               </div>
 
-              <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {data.embedding_drift && Object.entries(data.embedding_drift).map(([key, info]: [string, any]) => (
                       <div key={key} className="p-5 bg-gray-50 dark:bg-navy-900 rounded-3xl border border-white/5 shadow-inner group hover:border-blue-500/30 transition-colors">
                           <div className="flex justify-between items-center mb-3">
@@ -239,7 +218,7 @@ const TransparencyPage: React.FC = () => {
                   <div className="space-y-6 opacity-90 font-bold text-sm italic uppercase tracking-wider">
                       <p className="flex items-center gap-3"><ShieldCheck className="w-4 h-4 text-emerald-300" /> Aucune donnée utilisateur n'est revendue.</p>
                       <p className="flex items-center gap-3"><ShieldCheck className="w-4 h-4 text-emerald-300" /> Modèles IA prioritairement Open Source.</p>
-                      <p className="flex items-center gap-3"><ShieldCheck className="w-4 h-4 text-emerald-300" /> 100% des fonds pour l'infrastructure.</p>
+                      <p className="flex items-center gap-3"><ShieldCheck className="w-4 h-4 text-emerald-300" /> Infrastructure 100% transparente.</p>
                   </div>
               </div>
               <div className="mt-12 pt-8 border-t border-white/20">

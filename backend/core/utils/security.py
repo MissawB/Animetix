@@ -32,6 +32,16 @@ def validate_file_mime_type(file_bytes: bytes, allowed_mime_types: List[str]) ->
         
     return True
 
+def validate_file_size(file_size: int, max_size: int) -> bool:
+    """
+    Vérifie si la taille d'un fichier dépasse la limite autorisée.
+    Prévient les attaques par déni de service (DoS) par saturation mémoire/disque.
+    """
+    if file_size > max_size:
+        logger.warning(f"Tentative d'upload d'un fichier trop volumineux : {file_size} octets (Max: {max_size}).")
+        return False
+    return True
+
 def is_safe_url(url: str, allowed_schemes: Optional[List[str]] = None, allow_internal: bool = False) -> bool:
     """
     Vérifie si une URL est sûre pour éviter les attaques SSRF.

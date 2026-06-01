@@ -11,6 +11,7 @@ router.register(r'profiles', api_views.ProfileViewSet, basename='profiles')
 router.register(r'daily-challenges', api_views.DailyChallengeViewSet, basename='daily-challenges')
 router.register(r'achievements', api_views.AchievementViewSet, basename='achievements')
 router.register(r'fusions', api_views.CreativeFusionViewSet, basename='fusions')
+router.register(r'curation', api_views.DataCurationTicketViewSet, basename='curation')
 
 
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView

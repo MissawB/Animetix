@@ -16,6 +16,8 @@ class AkinetixGameState(BaseModel):
     current_attr: Optional[str] = None
     game_over: bool = False
     ai_guess: Optional[str] = None
+    user_target_id: Optional[str] = None
+    user_target_name: Optional[str] = None
     probs: List[float] = Field(default_factory=list)
     asked_attrs: List[str] = Field(default_factory=list)
     is_daily: bool = False

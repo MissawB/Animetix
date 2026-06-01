@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from dependency_injector.wiring import inject, Provide
 from ..models import Profile, DailyChallenge, Achievement, CreativeFusion, GameplaySession
+
 from ..serializers import (ProfileSerializer, DailyChallengeSerializer, AchievementSerializer, 
                             MediaItemSerializer, CreativeFusionSerializer, FriendshipSerializer)
 from ..containers import get_container, Container
@@ -20,9 +21,10 @@ import socket
 import ipaddress
 from urllib.parse import urlparse
 from animetix_project.logging_config import get_logger
-from core.utils.security import is_safe_url, validate_file_mime_type, safe_http_request
+from core.utils.security import is_safe_url, validate_file_mime_type, safe_http_request, validate_file_size
 
 ALLOWED_IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp']
+MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10 Mo
 from django.core.cache import cache
 from django.http import HttpResponse
 from django.utils.decorators import method_decorator
@@ -117,6 +119,9 @@ class MediaSearchView(APIView):
             return Response({'error': 'No image provided'}, status=400)
 
         try:
+            if not validate_file_size(image_file.size, MAX_IMAGE_SIZE):
+                return Response({'error': f'Image is too large (Max: {MAX_IMAGE_SIZE/1024/1024}MB)'}, status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
+            
             container = get_container()
             image_data = b"".join(chunk for chunk in image_file.chunks())
 
@@ -244,23 +249,31 @@ class MediaDetailView(APIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def get(self, request, media_type, item_id):
+        from ..models import MediaItem
+        from ..serializers import MediaItemSerializer
+        
+        # 1. Tentative via SQL direct (Source of Truth)
+        try:
+            item_obj = MediaItem.objects.get(media_type=media_type, external_id=item_id)
+            serializer = MediaItemSerializer(item_obj)
+            return Response(serializer.data)
+        except MediaItem.DoesNotExist:
+            pass
+            
+        # 2. Fallback via Catalog Service (si non synchronisé en SQL)
         container = get_container()
         data = container.catalog_service.load_data(media_type)
-        if not data:
-            return Response({'error': 'Media type not found'}, status=404)
-        
-        # Recherche par ID dans la DB
-        item = next((i for i in data.get('db', []) if str(i.get('id')) == str(item_id)), None)
-        if not item:
-            return Response({'error': 'Item not found'}, status=404)
-            
-        # Enrichissement avec les nœuds du graphe si présents
-        graph_nodes = item.get('graph_nodes', {})
-        item['studios'] = graph_nodes.get('studios', [])
-        item['author'] = graph_nodes.get('author')
-        item['related_items'] = graph_nodes.get('related_items', [])
+        if data:
+            item = next((i for i in data.get('db', []) if str(i.get('id')) == str(item_id)), None)
+            if item:
+                # Enrichissement avec les nœuds du graphe si présents
+                graph_nodes = item.get('graph_nodes', {})
+                item['studios'] = graph_nodes.get('studios', [])
+                item['author'] = graph_nodes.get('author')
+                item['related_items'] = graph_nodes.get('related_items', [])
+                
+                return Response(item)
 
-        serializer = MediaItemSerializer(item)
-        return Response(serializer.data)
+        return Response({'error': 'Item not found'}, status=404)
 
 

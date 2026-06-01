@@ -65,7 +65,6 @@ from core.domain.services.game_session_service import GameSessionService
 # Adapters imports
 from adapters.persistence.pipeline_sync_adapter import PipelineSyncAdapter
 from adapters.persistence.django_achievement_adapter import DjangoAchievementAdapter
-from adapters.persistence.django_donation_adapter import DjangoDonationAdapter
 from adapters.infrastructure.django_notification_adapter import DjangoNotificationAdapter
 
 class CoreServicesContainer(containers.DeclarativeContainer):
@@ -165,7 +164,7 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         CatalogService,
         repository=persistence.repository,
         sql_repository=persistence.django_repository,
-        cache_service=providers.Object(__import__('django.core.cache').core.cache)
+        cache_service=providers.Object(__import__('django.core.cache', fromlist=['cache']).cache)
     )
 
     cfr_game_solver = providers.Singleton(
@@ -420,7 +419,6 @@ class CoreServicesContainer(containers.DeclarativeContainer):
 
     health_dashboard_service = providers.Singleton(
         HealthDashboardService,
-        donation_port=providers.Factory(DjangoDonationAdapter),
         usage_port=infrastructure.usage_port,
         sota_service=sota_benchmark_service
     )

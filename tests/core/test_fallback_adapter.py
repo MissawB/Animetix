@@ -3,6 +3,8 @@ from unittest.mock import MagicMock
 from adapters.inference.fallback_adapter import FallbackInferenceAdapter
 from core.ports.inference_port import InferencePort
 
+from core.domain.entities.ai_schemas import InferenceResponse, InferenceMetadata
+
 @pytest.fixture
 def mock_adapter_1():
     adapter = MagicMock(spec=InferencePort)
@@ -20,15 +22,17 @@ def fallback_adapter(mock_adapter_1, mock_adapter_2):
     return FallbackInferenceAdapter(adapters=[mock_adapter_1, mock_adapter_2])
 
 def test_generate_success_first(fallback_adapter, mock_adapter_1, mock_adapter_2):
-    mock_adapter_1.generate.return_value = "Result 1"
-    assert fallback_adapter.generate("prompt") == "Result 1"
+    mock_adapter_1.generate.return_value = InferenceResponse(text="Result 1")
+    response = fallback_adapter.generate("prompt")
+    assert response.text == "Result 1"
     mock_adapter_1.generate.assert_called_once()
     mock_adapter_2.generate.assert_not_called()
 
 def test_generate_fallback_success(fallback_adapter, mock_adapter_1, mock_adapter_2):
     mock_adapter_1.generate.side_effect = Exception("Fail 1")
-    mock_adapter_2.generate.return_value = "Result 2"
-    assert fallback_adapter.generate("prompt") == "Result 2"
+    mock_adapter_2.generate.return_value = InferenceResponse(text="Result 2")
+    response = fallback_adapter.generate("prompt")
+    assert response.text == "Result 2"
     mock_adapter_1.generate.assert_called_once()
     mock_adapter_2.generate.assert_called_once()
 
@@ -36,8 +40,8 @@ def test_generate_all_fail(fallback_adapter, mock_adapter_1, mock_adapter_2):
     mock_adapter_1.generate.side_effect = Exception("Fail 1")
     mock_adapter_2.generate.side_effect = Exception("Fail 2")
     res = fallback_adapter.generate("prompt")
-    assert "Tous les moteurs LLM ont échoué" in res
-    assert "Fail 2" in res
+    assert "Tous les moteurs LLM ont échoué" in res.text
+    assert "Fail 2" in res.text
 
 def test_health_check(fallback_adapter):
     res = fallback_adapter.health_check()

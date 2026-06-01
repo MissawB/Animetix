@@ -73,4 +73,8 @@ urlpatterns = [
     path('game/covertest/state/', api_views.CovertestGameStateView.as_view(), name='api_covertest_state'),
     path('game/world-boss/active/', api_views.ActiveWorldBossView.as_view(), name='api_world_boss_active'),
     path('game/world-boss/attack/', api_views.WorldBossAttackView.as_view(), name='api_world_boss_attack'),
+    path('game/duel/create/', api_views.CreateDuelRoomView.as_view(), name='api_duel_create'),
+    path('game/duel/join/', api_views.JoinDuelRoomView.as_view(), name='api_duel_join'),
+    path('game/duel/matchmaking/', api_views.MatchmakingView.as_view(), name='api_duel_matchmaking'),
+    path('explore/', api_views.MediaExploreView.as_view(), name='api_explore'),
 ]

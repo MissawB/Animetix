@@ -52,6 +52,14 @@ const MLOpsDashboard: React.FC = () => {
       status: "Actif"
     },
     {
+      title: "Curation IA",
+      desc: "Validez les corrections structurelles suggérées par les agents de guérison (Graph Healers).",
+      icon: LayoutGrid,
+      path: "/admin/curation/",
+      color: "text-cyan-500",
+      status: "IA-Guérison"
+    },
+    {
       title: "Knowledge Graph",
       desc: "Gestion de Neo4j, résolution de conflits et audit de relations.",
       icon: Zap,

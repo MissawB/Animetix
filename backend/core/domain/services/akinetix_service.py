@@ -38,6 +38,8 @@ class AkinetixDomainService:
             current_attr=port.get('akinetix_current_attr'),
             game_over=port.get('akinetix_game_over', False),
             ai_guess=port.get('akinetix_ai_guess'),
+            user_target_id=port.get('akinetix_user_target_id'),
+            user_target_name=port.get('akinetix_user_target_name'),
             probs=port.get('akinetix_probs', []),
             asked_attrs=port.get('akinetix_asked_attrs', []),
             is_daily=port.get('is_daily', False)
@@ -51,6 +53,8 @@ class AkinetixDomainService:
             'akinetix_current_attr': state.current_attr,
             'akinetix_game_over': state.game_over,
             'akinetix_ai_guess': state.ai_guess,
+            'akinetix_user_target_id': state.user_target_id,
+            'akinetix_user_target_name': state.user_target_name,
             'akinetix_probs': state.probs,
             'akinetix_asked_attrs': state.asked_attrs,
             'is_daily': state.is_daily
@@ -64,6 +68,8 @@ class AkinetixDomainService:
             'akinetix_current_attr': None,
             'akinetix_game_over': False,
             'akinetix_ai_guess': None,
+            'akinetix_user_target_id': None,
+            'akinetix_user_target_name': None,
             'akinetix_probs': [],
             'akinetix_asked_attrs': [],
             'is_daily': False

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Profile, DailyChallenge, ChallengeResult, Achievement, UserAchievement, CreativeFusion, DiscoveryClub, ClubMembership, ClubEvent
+from .models import Profile, DailyChallenge, ChallengeResult, Achievement, UserAchievement, CreativeFusion, DiscoveryClub, ClubMembership, ClubEvent, GlobalBoss, BossParticipation, DataCurationTicket
 from django.contrib.auth.models import User
 
 class UserSerializer(serializers.ModelSerializer):
@@ -71,8 +71,6 @@ class SocialUserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'username', 'level']
 
-from .models import CreativeFusion, VsBattle
-
 class CreativeFusionSerializer(serializers.ModelSerializer):
     creator_name = serializers.ReadOnlyField(source='creator.username')
     likes_count = serializers.IntegerField(source='likes.count', read_only=True)
@@ -87,6 +85,8 @@ class CreativeFusionSerializer(serializers.ModelSerializer):
         if user and user.is_authenticated:
             return obj.likes.filter(id=user.id).exists()
         return False
+
+from .models import VsBattle
 
 class VsBattleSerializer(serializers.ModelSerializer):
     creator_name = serializers.ReadOnlyField(source='creator.username')
@@ -149,8 +149,6 @@ class DiscoveryClubSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['creator']
 
-from .models import GlobalBoss, BossParticipation
-
 class GlobalBossSerializer(serializers.ModelSerializer):
     class Meta:
         model = GlobalBoss
@@ -166,3 +164,8 @@ class BossParticipationSerializer(serializers.ModelSerializer):
     class Meta:
         model = BossParticipation
         fields = ['id', 'user', 'username', 'points_contributed', 'last_participation']
+
+class DataCurationTicketSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DataCurationTicket
+        fields = '__all__'

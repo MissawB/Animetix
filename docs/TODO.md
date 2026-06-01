@@ -7,15 +7,11 @@ Ce document centralise toutes les tâches techniques, d'architecture et de fonct
 - [ ] **Diagnostics & Incertitude Avancés** : Migrer les calculs d'incertitude (entropie, perplexité) basés sur le texte vers une exploitation réelle des `logprobs` si exposés par les adaptateurs (BrainAPI/Ollama).
 - [ ] **Nettoyage des Bouchons (UnifiedInferenceAdapter)** : Finaliser le remplacement de toutes les méthodes levant encore `InferenceNotImplementedError` par de véritables délégations vers les mixins de vision ou d'audio.
 - [ ] **Modération de contenu (Guardrails)** : Étendre la modération sémantique native à tous les adaptateurs de texte pour garantir une sécurité homogène sur tout le cluster.
-- [x] **Suppression de la dépendance LangChain** : Supprimer ou bypasser LangChain via l'héritage direct de `BaseRagasLLM` pour Ragas. Permet d'alléger l'environnement virtuel et d'éliminer les conflits de versions. (Terminé : Suppression complète de LangChain/Ragas, implémentation d'un juge LLM autonome structuré avec Pydantic et Instructor).
-- [x] **Migration Dagster ➡️ Celery** : Migrer le DAG de données (`dagster_app.py`) vers des workflows Celery (Chains/Groups) et Celery Beat pour fermer le serveur et le démon Dagster, libérant ainsi de la RAM. (Terminé : Code source, configurations Docker/supervisord et requirements épurés à 100% de Dagster; orchestrateurs et sensors LoRA/DPO migrés vers Celery et le cache Django).
 - [ ] **Stabilisation de la recherche Web (DuckDuckGo ➡️ Gemini Grounding / Tavily)** : Remplacer le scraping DuckDuckGo instable par l'outil natif de Google Search Grounding (Gemini) ou une API structurée comme Tavily.
 - [ ] **Simplification d'état Frontend (XState ➡️ Zustand)** : Refactoriser les machines d'état simples du dossier `/machines` en stores Zustand plus légers et fluides, réduisant la taille du bundle et le boilerplate.
 
 ## 🚀 Intégrations & Pages Manquantes
 
-- [x] **World Boss / Global Boss UI** : Créer l'interface épique (`/game/world-boss/`) pour afficher les boss globaux, leurs phases, et permettre la participation communautaire. (FAIT : API Backend et UI Frontend implémentées).
-- [ ] **Page de Soutien / Wall of Fame** : Ajouter une page (`/support/` ou `/donate/`) pour valoriser les donateurs, expliquer le modèle économique et lier les plateformes (Patreon/Ko-fi).
 - [ ] **Lobby de Duel (Matchmaking & Ranked)** : Implémenter un hub de duel (`/duel/lobby/`) pour créer des salons 1v1, rejoindre via code, ou lancer du matchmaking classé.
 - [ ] **Explorateur de Catalogue (Media Browser)** : Créer une interface "Netflix-like" (`/explore/`) pour parcourir les œuvres par popularité, année ou recommandations, au-delà de la simple recherche.
 - [ ] **Dashboard de Curation des Données (Admin)** : Ajouter une interface dans la section Admin pour gérer, valider ou rejeter les `DataCurationTickets` générés par l'IA.
@@ -26,11 +22,13 @@ Ce document centralise toutes les tâches techniques, d'architecture et de fonct
 
 - [ ] **Hyper-Personnalisation Graphique** : Implémenter une personnalisation dynamique de l'interface basée sur le "Archetype Drift" de l'utilisateur (couleurs et thèmes changeant selon les affinités détectées).
 
-## 🛡️ Sécurité & Résilience (Post-Audit 2026)
+## 🛡️ Sécurité & Résilience (Post-Audit Deep-Dive)
 
-- [x] **Protection contre la Triche XP (Offline Sync)** : Sécuriser l'endpoint `sync_offline_data` en ajoutant une signature cryptographique (HMAC) sur les scores ou en limitant drastiquement le gain d'XP journalier synchronisable. (FAIT - Rate limiting 1/5m et plafond journalier de 200 XP appliqués).
-- [x] **Généralisation du Helper Anti-SSRF** : Refactoriser `image_proxy_view` et les vues du laboratoire IA pour utiliser systématiquement `safe_http_request` (qui protège contre le DNS Rebinding) au lieu de `httpx` direct. (FAIT - Utilisation systématique du helper sécurisé avec validation des redirections).
-- [x] **Implémentation d'une CSP (Content Security Policy)** : Configurer `django-csp` pour limiter les sources de scripts et de ressources, réduisant l'impact potentiel des failles XSS. (FAIT - Politique CSP stricte configurée).
-- [ ] **Gestion des Secrets d'Infra** : Supprimer les mots de passe par défaut dans `deploy/docker-compose.yml` et migrer vers une injection systématique via variables d'environnement sécurisées.
-- [ ] **Validation de la taille des uploads** : Ajouter une vérification `Content-Length` sur tous les endpoints acceptant des fichiers (Images/Audio/Vidéo) pour prévenir les attaques DoS.
+- [x] **Remédiation IDOR (Clubs)** : Restreindre la modification et suppression des clubs aux créateurs (`IsCreatorOrReadOnly`) et masquer les clubs privés dans le `get_queryset` global. (FAIT - Permission IsCreatorOrReadOnly et filtrage du queryset implémentés).
+- [x] **Optimisation du Middleware (Anti-DoS)** : Mettre en cache le calcul de l'Archetype Drift dans `PersonalizationMiddleware` (ex: cache 15 min par utilisateur) pour éviter de saturer la DB/CPU à chaque requête. (FAIT - Cache de 15 minutes implémenté via django-redis).
+- [x] **Sécurisation des Victoires (Akinetix)** : Implémenter une validation croisée entre le choix de l'utilisateur et l'item cible stocké en session pour empêcher le farming d'XP frauduleux. (FAIT - Déclaration obligatoire du personnage cible en cas de victoire utilisateur et blocage des faux négatifs).
+- [x] **Quota LLM Arena (VS Battle)** : Appliquer un rate-limit strict et exiger l'authentification pour les combats VS afin de protéger les ressources d'inférence coûteuses. (FAIT - Authentification obligatoire, rate-limit 1/min et quotas journaliers appliqués).
+- [ ] **Durcissement du Proxy d'Images** : Intégrer la validation du type MIME binaire (`validate_file_mime_type`) et le contrôle de taille (`MAX_IMAGE_SIZE`) dans `image_proxy_view` pour bloquer les fichiers malveillants masqués.
+- [ ] **Rate Limiting sur la Recherche** : Appliquer un rate-limit via `@ratelimit` sur `MediaSearchView` pour protéger ChromaDB et les ressources CPU/GPU contre le scraping intensif.
+- [ ] **Protection contre le Mass Assignment (Fusions)** : Sécuriser le `CreativeFusionSerializer` pour empêcher un utilisateur de s'attribuer une fusion créée par un tiers ou de modifier le créateur original via l'API.
 - [ ] **Audit de Dépendances Continu** : Automatiser le scan des vulnérabilités (Snyk/GitHub Dependabot) pour maintenir le socle technique à jour après le passage à Django 5.2.14.

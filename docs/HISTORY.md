@@ -2,6 +2,12 @@
 
 Ce document archive les étapes majeures de l'évolution technique du projet.
 
+## [2026-06-01] Session : Purge de l'Aspect Dons
+- **Suppression du Modèle :** Éradication complète du modèle `Donation` de la base de données et du code source.
+- **Démantèlement Backend :** Suppression des adaptateurs de persistance, des ports et des entités liés aux dons. Retrait des webhooks Ko-fi/Patreon.
+- **Nettoyage UI :** Suppression de la page `SupportPage`, du lien "Soutenir" dans la Navbar et des statistiques financières dans `TransparencyPage`.
+- **Réalignement Santé Financière :** Le Health Dashboard affiche désormais uniquement les coûts opérationnels de la plateforme sans contrepartie de dons.
+
 ## [2026-06-01] Session : World Boss UI Implementation
 - **World Boss API :** Création des vues `ActiveWorldBossView` et `WorldBossAttackView` gérant le cycle de vie des boss globaux et la participation communautaire.
 - **Système de Participation :** Implémentation du modèle `BossParticipation` et de la logique de dégâts basée sur les "Guesses" des utilisateurs.
@@ -57,8 +63,15 @@ Ce document archive les étapes majeures de l'évolution technique du projet.
 - **Vidéo-RAG (Embeddings Temporels) :** Finalisation de l'infrastructure Celery pour l'indexation par segments temporels via Qwen2-VL.
 - **Lab & MLOps UX :** Déploiement du `LabHubPage` et intégration du dashboard de curation DPO.
 - **Protection Anti-Triche XP :** Sécurisation de l'endpoint de synchronisation offline avec un rate-limit strict (1 appel / 5 min) et un plafond journalier de 200 XP par utilisateur, préservant l'intégrité du leaderboard.
-- **Généralisation Anti-SSRF :** Refactorisation complète des services consommant des ressources externes pour utiliser l'utilitaire `safe_http_request` (protection DNS Rebinding). Cette mesure garantit une protection contre le DNS Rebinding et valide chaque saut de redirection contre une blacklist d'IPs privées.
+- **Généralisation Anti-SSRF :** Refactorisation complète des services consommant des ressources externes pour utiliser l'utilitaire `safe_http_request` (protection DNS Rebinding). Cette measure garantit une protection contre le DNS Rebinding et valide chaque saut de redirection contre une blacklist d'IPs privées.
 - **Politique de Sécurité du Contenu (CSP) :** Configuration de `django-csp` pour restreindre les sources de ressources (scripts, styles, images) aux seuls domaines de confiance, neutralisant ainsi les vecteurs d'attaque XSS.
+- **Sécurisation de l'Infrastructure Docker :** Élimination de tous les mots de passe par défaut codés en dur dans `docker-compose.yml`.
+- **Validation de Taille des Flux (Anti-DoS) :** Implémentation du helper `validate_file_size`.
+- **Audit de Dépendances Automatisé :** Mise en place d'un scan de sécurité hebdomadaire via GitHub Actions.
+- **Remédiation IDOR (Clubs & Fusions) :** Déploiement de la permission `IsCreatorOrReadOnly` et filtrage dynamique des querysets.
+- **Optimisation de l'Infrastructure (Anti-DoS) :** Mise en cache (15 min) du calcul de l'Archetype Drift dans le middleware de personnalisation.
+- **Sécurisation du Gameplay (Akinetix) :** Implémentation d'une validation anti-triche exigeant que l'utilisateur déclare le personnage auquel il pensait pour obtenir une victoire.
+- **Protection de l'Arène (VS Battle) :** Sécurisation de l'Arena via authentification obligatoire, un rate-limit strict (1 combat / min) et l'intégration de quotas journaliers via `UsagePort` pour protéger les ressources d'inférence LLM.
 
 ## [2026-05-29] Session Intensive : Robustesse & Innovation SOTA
 - **Vidéo-RAG (Intégration E2E) :** Finalisation complète de la boucle de recherche sémantique intra-vidéo. Les endpoints `/api/v1/labs/video/index/` et `/search/` sont désormais exposés. Le service `VideoRAGService` a été intégré au workflow principal `AgenticRAGService`, permettant à l'assistant de répondre à des questions visuelles complexes en fouillant dans les timelines indexées. Le frontend `VideoLabPage` a été enrichi d'une interface de recherche temporelle active.

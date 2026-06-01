@@ -7,6 +7,7 @@ const AdminDPOPage = lazy(() => import('../AdminDPOPage'));
 const MLOpsDashboard = lazy(() => import('../MLOpsDashboard'));
 const AdminDSPyDashboard = lazy(() => import('../AdminDSPyDashboard'));
 const AdminGoldDatasetPage = lazy(() => import('../AdminGoldDatasetPage'));
+const CurationDashboard = lazy(() => import('../CurationDashboard'));
 
 export const AdminRoutes = (
   <>
@@ -16,5 +17,6 @@ export const AdminRoutes = (
     <Route path="/admin/health/" element={<HealthPage />} />
     <Route path="/admin/dpo-curation/" element={<AdminDPOPage />} />
     <Route path="/admin/gold-dataset/" element={<AdminGoldDatasetPage />} />
+    <Route path="/admin/curation/" element={<CurationDashboard />} />
   </>
 );

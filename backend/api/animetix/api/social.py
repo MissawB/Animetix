@@ -20,11 +20,31 @@ class PersonalizationSchema(BaseModel):
     class Config:
         extra = "forbid"
 
+class IsCreatorOrReadOnly(permissions.BasePermission):
+    """Permission personnalisée pour autoriser uniquement les créateurs à modifier ou supprimer un objet."""
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return obj.creator == request.user
+
 class ClubViewSet(viewsets.ModelViewSet):
     """API endpoint pour gérer les clubs de découverte."""
-    queryset = DiscoveryClub.objects.all().prefetch_related('members')
     serializer_class = DiscoveryClubSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsCreatorOrReadOnly]
+
+    def get_queryset(self):
+        """
+        Sécurisation IDOR & Privacy :
+        - Les anonymes voient uniquement les clubs publics.
+        - Les authentifiés voient les clubs publics + ceux dont ils sont membres ou créateurs.
+        """
+        from django.db.models import Q
+        user = self.request.user
+        base_qs = DiscoveryClub.objects.all().prefetch_related('members', 'events')
+        
+        if user.is_authenticated:
+            return base_qs.filter(Q(is_private=False) | Q(members=user) | Q(creator=user)).distinct()
+        return base_qs.filter(is_private=False)
 
     def perform_create(self, serializer):
         # Restriction Premium pour la création
@@ -100,7 +120,7 @@ class ProfileViewSet(viewsets.ReadOnlyModelViewSet):
 class CreativeFusionViewSet(viewsets.ModelViewSet):
     """API endpoint pour visualiser, créer, liker et remixer des fusions créatives."""
     serializer_class = CreativeFusionSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsCreatorOrReadOnly]
 
     def get_queryset(self):
         """

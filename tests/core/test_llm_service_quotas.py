@@ -3,10 +3,12 @@ from unittest.mock import MagicMock, patch
 from core.domain.services.llm_service import LLMService
 from core.domain.exceptions import QuotaExceededError, InferenceError
 
+from core.domain.entities.ai_schemas import InferenceResponse
+
 @pytest.fixture
 def mock_inference_engine():
     engine = MagicMock()
-    engine.generate.return_value = "Normal response"
+    engine.generate.return_value = InferenceResponse(text="Normal response")
     return engine
 
 @pytest.fixture

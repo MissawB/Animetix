@@ -5,6 +5,7 @@ import logging
 from typing import Optional, Any
 from asgiref.sync import iscoroutinefunction
 from dependency_injector.wiring import inject, Provide
+from django.core.cache import cache
 from .containers import Container
 
 logger = logging.getLogger('animetix.middleware.personalization')
@@ -122,14 +123,23 @@ class PersonalizationMiddleware:
         if response.has_header('Content-Type') and 'application/json' in response['Content-Type']:
             if request.user.is_authenticated:
                 try:
-                    profile = getattr(request.user, 'profile', None)
-                    settings = profile.personalization_settings if profile else {}
-                    config = drift_service.calculate_drift(request.user.id, settings)
-                    # config is a VisualConfig Pydantic model
+                    cache_key = f"personalization_drift_user_{request.user.id}"
+                    cached_config = cache.get(cache_key)
+                    
+                    if cached_config is not None:
+                        config_dict = cached_config
+                    else:
+                        profile = getattr(request.user, 'profile', None)
+                        settings = profile.personalization_settings if profile else {}
+                        config = drift_service.calculate_drift(request.user.id, settings)
+                        config_dict = config.model_dump()
+                        # Cache for 15 minutes (900 seconds)
+                        cache.set(cache_key, config_dict, 900)
+                        
                     data = json.loads(response.content)
                     if isinstance(data, dict):
                         data['meta'] = data.get('meta', {})
-                        data['meta']['visual_config'] = config.model_dump()
+                        data['meta']['visual_config'] = config_dict
                         response.content = json.dumps(data)
                         # Update Content-Length if present
                         if response.has_header('Content-Length'):

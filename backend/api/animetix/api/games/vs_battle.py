@@ -2,6 +2,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
+from django_ratelimit.decorators import ratelimit
 from ...containers import get_container
 from ...models import VsBattle
 from ...serializers import VsBattleSerializer
@@ -18,10 +19,12 @@ def list_vs_battles(request):
     return Response(serializer.data)
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
+@ratelimit(key='user', rate='1/m', block=True)
 def run_vs_battle(request):
     """
     Exécute un combat entre deux personnages et l'enregistre.
+    Sécurisé par authentification, rate-limit et quotas.
     """
     char_a = request.data.get('char_a')
     char_b = request.data.get('char_b')
@@ -33,6 +36,12 @@ def run_vs_battle(request):
 
     container = get_container()
     vs_service = container.core.vs_battle_service()
+    usage_port = container.infrastructure.usage_port()
+
+    # Quota Check (Inférence coûteuse)
+    tier = getattr(request, 'user_tier', 'free')
+    if not usage_port.check_quota(request.user.id, tier):
+        return Response({"error": "Quota d'IA journalier atteint. Revenez demain !"}, status=status.HTTP_403_FORBIDDEN)
 
     try:
         result = vs_service.run_battle(
@@ -53,8 +62,11 @@ def run_vs_battle(request):
             winner=result.winner,
             verdict_summary=result.verdict_summary,
             debate_history=[turn.model_dump() for turn in result.debate_history],
-            creator=request.user if request.user.is_authenticated else None
+            creator=request.user
         )
+
+        # Log usage (10 unités par combat Arena)
+        usage_port.log_usage(engine="arena-vs-battle", units=10, user_id=request.user.id)
 
         return Response({
             "id": battle_record.id,

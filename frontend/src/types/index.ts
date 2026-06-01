@@ -74,12 +74,14 @@ export interface CreativeFusion {
 }
 
 export interface TransparencyData {
-  total_donations: number;
+  total_costs: number;
+  monthly_costs: number;
   api_costs: number;
   server_costs: number;
-  balance: number;
-  recent_donations: Array<{ user: string; amount: number; date: string }>;
   ethics_score: number;
+  rag_fidelity: number;
+  average_latency: number;
+  model_uptime: number;
 }
 
 export interface GameState {
@@ -241,5 +243,3 @@ export interface ClubMembership {
   role: 'member' | 'admin' | 'owner';
   joined_at: string;
 }
-
-

@@ -13,6 +13,7 @@ const ClubDiscoveryPage = lazy(() => import('../ClubDiscoveryPage'));
 const ClubDashboard = lazy(() => import('../ClubDashboard'));
 const ArchetypeNexusPage = lazy(() => import('../ArchetypeNexusPage'));
 const AIDebateArenaPage = lazy(() => import('../AIDebateArenaPage'));
+const ExplorePage = lazy(() => import('../../explore/ExplorePage'));
 
 export const SocialRoutes = (
   <>
@@ -26,6 +27,7 @@ export const SocialRoutes = (
     <Route path="/transparency/" element={<TransparencyPage />} />
     <Route path="/social/archetype-nexus/" element={<ArchetypeNexusPage />} />
     <Route path="/social/debate-arena/" element={<AIDebateArenaPage />} />
+    <Route path="/explore/" element={<ExplorePage />} />
     <Route path="/clubs/" element={<ClubDiscoveryPage />} />
     <Route path="/clubs/:id/" element={<ClubDashboard />} />
   </>

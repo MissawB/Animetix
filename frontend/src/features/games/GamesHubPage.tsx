@@ -46,6 +46,16 @@ const GamesHubPage: React.FC = () => {
       reward: "300 XP"
     },
     {
+      title: "Duel Arena",
+      desc: "Affrontez d'autres joueurs en 1vs1 temps réel dans des duels de culture anime.",
+      icon: Sword,
+      path: "/game/duel/lobby/",
+      color: "text-blue-500",
+      bg: "bg-blue-500/10",
+      difficulty: "Compétitif",
+      reward: "600 XP"
+    },
+    {
         title: "Akinetix Expert",
         desc: "L'IA tente de deviner votre personnage pendant que vous l'entraînez par RL.",
         icon: Brain,

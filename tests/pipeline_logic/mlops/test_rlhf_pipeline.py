@@ -4,7 +4,7 @@ import json
 from pipeline.mlops.rlhf_pipeline import validated_dpo_dataset
 
 def test_validated_dpo_dataset_transformation(tmp_path):
-    """Vérifie que l'asset Dagster transforme correctement les fichiers JSONL."""
+    """Vérifie que la fonction de transformation du dataset de feedback valide correctement les fichiers JSONL."""
     
     # 1. Créer des données simulées d'export (JSONL)
     feedback_file = tmp_path / "ai_feedback.jsonl"
@@ -17,7 +17,7 @@ def test_validated_dpo_dataset_transformation(tmp_path):
         "is_positive": True
     }) + "\n")
     
-    # 2. Configurer le contexte et les entrées pour Dagster
+    # 2. Configurer le contexte et les entrées pour la fonction
     exported_data = {
         "feedback": str(feedback_file),
         "sessions": str(session_file)

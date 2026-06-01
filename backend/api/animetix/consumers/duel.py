@@ -51,12 +51,12 @@ class DuelConsumer(BaseConsumer):
 
         # On charge les data pour la similarité
         container = get_container()
-        data = await sync_to_async(container.catalog_service.load_data)(duel.media_type)
+        data = await sync_to_async(container.core.catalog_service.load_data)(duel.media_type)
         secret = duel.secret_title
         
         # Vérification match direct
         secret_item = data['title_to_full_data'].get(secret)
-        is_correct = await sync_to_async(container.game_service.check_title_match)(guess, secret_item)
+        is_correct = await sync_to_async(container.core.game_service.check_title_match)(guess, secret_item)
         
         if is_correct:
             duel.is_finished = True
@@ -77,7 +77,7 @@ class DuelConsumer(BaseConsumer):
             })
         else:
             # Similarité pour feedback (facultatif mais fun en 1vs1)
-            raw_sim = await sync_to_async(container.game_service.calculate_raw_similarity)(
+            raw_sim = await sync_to_async(container.core.game_service.calculate_raw_similarity)(
                 duel.media_type, secret, guess, data
             )
             score = round(raw_sim * 100, 1)

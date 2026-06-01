@@ -18,6 +18,8 @@ const VsBattlePage = lazy(() => import('../VsBattlePage'));
 const GamesHubPage = lazy(() => import('../GamesHubPage'));
 const TheaterPage = lazy(() => import('../TheaterPage'));
 const WorldBossPage = lazy(() => import('../WorldBossPage'));
+const DuelLobbyPage = lazy(() => import('../DuelLobbyPage'));
+const DuelArenaPage = lazy(() => import('../DuelArenaPage'));
 
 export const GameRoutes = (
   <>
@@ -26,6 +28,8 @@ export const GameRoutes = (
     <Route path="/game/classic/" element={<ClassicGamePage />} />
     <Route path="/game/vsbattle/" element={<VsBattlePage />} />
     <Route path="/game/world-boss/" element={<WorldBossPage />} />
+    <Route path="/game/duel/lobby/" element={<DuelLobbyPage />} />
+    <Route path="/game/duel/arena/:roomCode/" element={<DuelArenaPage />} />
     <Route path="/forge/" element={<ForgePage />} />
     <Route path="/forge/vn/:fusionId/" element={<ForgeVNPage />} />
     <Route path="/akinetix/" element={<AkinetixPage />} />

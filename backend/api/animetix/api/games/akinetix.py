@@ -134,7 +134,26 @@ class AkinetixGameConfirmView(APIView):
         media_type = port.get('media_type', 'Anime')
         unlocked_achievements = []
         
+        # --- ANTI-CHEAT VALIDATION ---
         if not is_correct:
+            actual_target = request.data.get('actual_target')
+            if not actual_target:
+                return Response({
+                    "error": "You must specify the character you were thinking of to claim a victory."
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Simple normalization for comparison
+            normalized_guess = (state.ai_guess or "").lower().strip()
+            normalized_actual = str(actual_target).lower().strip()
+            
+            if normalized_actual == normalized_guess:
+                logger.warning(f"🚩 Potential cheat detected: User {request.user} claimed AI was wrong, but provided the same target: {normalized_guess}")
+                return Response({
+                    "error": "Cheat detected: The character you provided is the same as the AI guess!",
+                    "is_cheat": True
+                }, status=status.HTTP_403_FORBIDDEN)
+
+            # Award XP only if validation passes
             if request.user.is_authenticated:
                 try:
                     newly_unlocked = request.user.profile.add_win(
@@ -157,7 +176,7 @@ class AkinetixGameConfirmView(APIView):
             user=request.user if request.user.is_authenticated else None,
             game_mode='akinetix',
             media_type=media_type,
-            target_item=state.ai_guess or "Unknown",
+            target_item=request.data.get('actual_target', state.ai_guess or "Unknown"),
             history=[q.model_dump() if hasattr(q, 'model_dump') else q for q in state.history],
             was_won=is_correct
         )
