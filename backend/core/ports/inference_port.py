@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional, List, Dict, Any
 from .usage_port import UsagePort
+from ..domain.entities.ai_schemas import InferenceResponse
 
 class InferenceNotImplementedError(NotImplementedError):
     """Exception levée lorsqu'une fonctionnalité d'inférence n'est pas supportée par un adaptateur."""
@@ -19,8 +20,9 @@ class InferencePort(ABC):
         prompt: str, 
         system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.",
         thinking_budget: int = 0,
-        thinking_mode: bool = False
-    ) -> str:
+        thinking_mode: bool = False,
+        include_logprobs: bool = False
+    ) -> InferenceResponse:
         """Génère du texte à partir d'un prompt. thinking_budget > 0 ou thinking_mode=True active le raisonnement approfondi."""
         # TODO: implement generate method for this adapter
         raise InferenceNotImplementedError("generate not implemented for this adapter")
@@ -30,7 +32,8 @@ class InferencePort(ABC):
         prompt: str, 
         system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.",
         thinking_budget: int = 0,
-        thinking_mode: bool = False
+        thinking_mode: bool = False,
+        include_logprobs: bool = False
     ):
         """Génère du texte en flux (streaming) à partir d'un prompt. thinking_budget > 0 ou thinking_mode=True active le raisonnement approfondi."""
         # TODO: implement stream_generate method for this adapter
@@ -51,7 +54,8 @@ class InferencePort(ABC):
                 # Ajoute une instruction de formatage au système si ce n'est pas déjà fait
                 format_instruction = "\nRéponds UNIQUEMENT avec un objet JSON valide."
                 response = self.generate(prompt, system_prompt + format_instruction)
-                match = re.search(r'\{.*\}', response, re.DOTALL)
+                # response est maintenant un InferenceResponse, on utilise response.text
+                match = re.search(r'\{.*\}', response.text, re.DOTALL)
                 if match:
                     data = json.loads(match.group(0))
                     if hasattr(response_model, "model_validate"):

@@ -92,7 +92,7 @@ class RAGState(str, Enum):
 
 class RAGContext(BaseModel):
     """Contexte de la session RAG agentique."""
-    model_config = {"arbitrary_types_allowed": True}
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     query: str
     media_type: str
@@ -159,8 +159,6 @@ class CombatCharacter(BaseModel):
     stats: CombatStats = Field(default_factory=CombatStats, alias="Stats", description="Structured combat statistics and abilities.")
     summary: str = Field(default="No summary available.", alias="Summary", description="Brief summary of the character's background and powers.")
 
-    model_config = ConfigDict(populate_by_name=True, extra='ignore')
-
 class DebateTurn(BaseModel):
     agent: str = Field(description="Role: 'Advocate_A', 'Advocate_B', or 'Judge'")
     content: str = Field(description="The actual argument or verdict text provided by the agent.")
@@ -187,16 +185,19 @@ class VNScript(BaseModel):
 # --- INFERENCE & DIAGNOSTICS SCHEMAS ---
 
 class TokenLogProb(BaseModel):
+    """Log-probability information for a single token."""
     token: str
     logprob: float
     top_logprobs: Optional[List[Dict[str, float]]] = None
 
 class InferenceMetadata(BaseModel):
+    """Metadata for an inference call, including token logprobs and usage statistics."""
     logprobs: Optional[List[TokenLogProb]] = None
     usage: Optional[Dict[str, int]] = None
     thinking: Optional[str] = None
     diagnostics: Optional[Dict[str, Any]] = None
 
 class InferenceResponse(BaseModel):
+    """Full response from an inference call, including the generated text and metadata."""
     text: str
-    metadata: InferenceMetadata = Field(default_factory=lambda: InferenceMetadata())
+    metadata: InferenceMetadata = Field(default_factory=InferenceMetadata)
