@@ -74,7 +74,7 @@ sentence-transformers==3.3.1
 sentencepiece==0.2.1
 soundfile
 tokenizers==0.20.3
-torch==2.6.0
+torch==2.5.1
 torchvision==0.20.1
 transformer-lens==2.15.0
 transformers==4.53.0
@@ -114,11 +114,6 @@ click==8.4.1
 colorama==0.4.6
 constantly==23.10.4
 cryptography==46.0.7
-dagster-graphql==1.13.1
-dagster-pipes==1.13.1
-dagster-shared==1.13.1
-dagster-webserver==1.13.1
-dagster==1.13.1
 ddgs==9.14.4
 dataclasses-json==0.6.7
 datasets==4.8.4
