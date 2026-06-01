@@ -6,6 +6,7 @@ from typing import Optional, List, Dict, Any
 from core.ports.inference_port import InferencePort
 from core.ports.usage_port import UsagePort
 from core.utils.security import is_safe_url, validate_service_url, safe_http_request
+from core.domain.entities.ai_schemas import InferenceResponse, InferenceMetadata, TokenLogProb
 
 logger = logging.getLogger("animetix.inference")
 
@@ -25,8 +26,17 @@ class BrainAPIAdapter(InferencePort):
         ):
             logger.warning(f"Potentially unsafe BRAIN_API_URL configured: {self.brain_api_url}")
 
-    def generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False) -> str:
-        if not self.brain_api_url: return "Erreur: BRAIN_API_URL non configurée."
+    def generate(
+        self, 
+        prompt: str, 
+        system_prompt: str = "", 
+        thinking_budget: int = 0, 
+        thinking_mode: bool = False,
+        include_logprobs: bool = False
+    ) -> InferenceResponse:
+        if not self.brain_api_url: 
+            return InferenceResponse(text="Erreur: BRAIN_API_URL non configurée.")
+            
         for attempt in range(self.max_retries):
             try:
                 # Utilisation de safe_http_request pour valider les redirections (en autorisant l'interne)
@@ -34,7 +44,8 @@ class BrainAPIAdapter(InferencePort):
                     "prompt": prompt, 
                     "system_prompt": system_prompt,
                     "thinking_budget": thinking_budget,
-                    "thinking_mode": thinking_mode
+                    "thinking_mode": thinking_mode,
+                    "include_logprobs": include_logprobs
                 }, timeout=30, allow_internal=True)
                 res.raise_for_status()
                 data = res.json()
@@ -47,19 +58,51 @@ class BrainAPIAdapter(InferencePort):
                     input_tokens=usage.get("prompt_tokens", len(prompt) // 4),
                     output_tokens=usage.get("completion_tokens", len(text) // 4)
                 )
+
+                # Parse logprobs if present
+                parsed_logprobs = None
+                if include_logprobs and "logprobs" in data:
+                    parsed_logprobs = []
+                    for lp in data["logprobs"]:
+                        parsed_logprobs.append(TokenLogProb(
+                            token=lp.get("token", ""),
+                            logprob=lp.get("logprob", 0.0),
+                            top_logprobs=lp.get("top_logprobs")
+                        ))
                 
-                return text
+                return InferenceResponse(
+                    text=text,
+                    metadata=InferenceMetadata(
+                        logprobs=parsed_logprobs,
+                        usage=usage,
+                        thinking=data.get("thinking")
+                    )
+                )
             except httpx.RequestError as e:
                 logger.error(f"BrainAPI Request failed (Attempt {attempt+1}/{self.max_retries}): {e}")
                 time.sleep(1)
             except Exception as e:
                 logger.error(f"Unexpected BrainAPI error: {e}")
                 break
-        return "Erreur: Le cerveau distant ne répond pas."
+        return InferenceResponse(text="Erreur: Le cerveau distant ne répond pas.")
 
-    def stream_generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False):
+    def stream_generate(
+        self, 
+        prompt: str, 
+        system_prompt: str = "", 
+        thinking_budget: int = 0, 
+        thinking_mode: bool = False,
+        include_logprobs: bool = False
+    ):
         # Implementation of streaming depends on brain_api capability
-        yield self.generate(prompt, system_prompt, thinking_budget, thinking_mode)
+        # For now, fallback to yielding a single InferenceResponse from generate
+        yield self.generate(
+            prompt, 
+            system_prompt, 
+            thinking_budget, 
+            thinking_mode, 
+            include_logprobs=include_logprobs
+        )
 
     def calculate_visual_similarity(self, query: str, item_id: str, media_type: str) -> float:
         if not self.brain_api_url: return 0.0

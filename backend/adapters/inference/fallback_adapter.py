@@ -2,6 +2,7 @@ import logging
 import time
 from typing import List, Optional, Dict, Any
 from core.ports.inference_port import InferencePort, InferenceNotImplementedError
+from core.domain.entities.ai_schemas import InferenceResponse
 
 logger = logging.getLogger('animetix.inference.fallback')
 
@@ -99,7 +100,14 @@ class FallbackInferenceAdapter(InferencePort):
                 metadata={"status": "failed", "method": method, "error": error[:100]}
             )
 
-    def generate(self, prompt: str, system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.", thinking_budget: int = 0, thinking_mode: bool = False, json_mode: bool = False) -> str:
+    def generate(
+        self, 
+        prompt: str, 
+        system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.", 
+        thinking_budget: int = 0, 
+        thinking_mode: bool = False, 
+        include_logprobs: bool = False
+    ) -> InferenceResponse:
         last_error = ""
         capable_adapters = self._capability_cache.get("generate", [])
         if not capable_adapters:
@@ -114,26 +122,30 @@ class FallbackInferenceAdapter(InferencePort):
             try:
                 logger.info(f"🔄 [Fallback] Trying {adapter_name}...")
                 
-                # Check if the adapter supports json_mode
+                # Signature check for backward compatibility (optional but safer)
                 import inspect
                 sig = inspect.signature(adapter.generate)
-                if 'json_mode' in sig.parameters:
-                    result = adapter.generate(prompt, system_prompt, thinking_budget, thinking_mode, json_mode=json_mode)
-                else:
-                    result = adapter.generate(prompt, system_prompt, thinking_budget, thinking_mode)
+                kwargs = {
+                    "thinking_budget": thinking_budget,
+                    "thinking_mode": thinking_mode
+                }
+                if 'include_logprobs' in sig.parameters:
+                    kwargs["include_logprobs"] = include_logprobs
                 
+                result = adapter.generate(prompt, system_prompt, **kwargs)
                 latency = time.time() - start_time
                 
-                # CRITIQUE : Si le résultat est nul ou commence par "Erreur", on considère ça comme un échec
-                if not result or str(result).strip().startswith("Erreur"):
-                    last_error = str(result) if result else "Résultat vide"
+                # CRITIQUE : Si le résultat est nul ou si le texte commence par "Erreur", on considère ça comme un échec
+                if not result or result.text.strip().startswith("Erreur"):
+                    last_error = result.text if result else "Résultat vide"
                     self._report_failure(adapter, "generate", last_error, latency, prompt)
                     continue # On passe au suivant
                 
                 # Si on est ici, on a un succès !
                 logger.info(f"✅ [Fallback] {adapter_name} success in {latency:.2f}s!")
                 if self.obs_service:
-                    self.obs_service.log_inference(model_id=adapter_name, latency=latency, tokens=len(result)//4)
+                    total_tokens = result.metadata.usage.get("total_tokens", 0) if result.metadata.usage else len(result.text)//4
+                    self.obs_service.log_inference(model_id=adapter_name, latency=latency, tokens=total_tokens)
                 return result
                 
             except Exception as e:
@@ -142,9 +154,16 @@ class FallbackInferenceAdapter(InferencePort):
                 self._report_failure(adapter, "generate", f"CRASH: {last_error}", latency, prompt)
                 continue
                 
-        return f"Échec critique : Tous les moteurs LLM ont échoué. Dernière erreur: {last_error}"
+        return InferenceResponse(text=f"Échec critique : Tous les moteurs LLM ont échoué. Dernière erreur: {last_error}")
 
-    def stream_generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False):
+    def stream_generate(
+        self, 
+        prompt: str, 
+        system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.", 
+        thinking_budget: int = 0, 
+        thinking_mode: bool = False, 
+        include_logprobs: bool = False
+    ):
         """Streaming avec repli intelligent."""
         capable_adapters = self._capability_cache.get("stream_generate", [])
         if not capable_adapters:
@@ -156,20 +175,30 @@ class FallbackInferenceAdapter(InferencePort):
                 continue
             start_time = time.time()
             try:
+                # Signature check for backward compatibility
+                import inspect
+                sig = inspect.signature(adapter.stream_generate)
+                kwargs = {
+                    "thinking_budget": thinking_budget,
+                    "thinking_mode": thinking_mode
+                }
+                if 'include_logprobs' in sig.parameters:
+                    kwargs["include_logprobs"] = include_logprobs
+                
                 # Tentative de premier token pour valider l'adaptateur
-                gen = adapter.stream_generate(prompt, system_prompt, thinking_budget, thinking_mode)
+                gen = adapter.stream_generate(prompt, system_prompt, **kwargs)
                 first_chunk = next(gen)
                 latency = time.time() - start_time
                 
-                # Validation du premier chunk
-                if first_chunk and not str(first_chunk).strip().startswith("Erreur"):
+                # Validation du premier chunk (InferenceResponse)
+                if first_chunk and not first_chunk.text.strip().startswith("Erreur"):
                     def success_gen():
                         yield first_chunk
                         yield from gen
                     logger.info(f"✅ [Stream Fallback] {adapter.__class__.__name__} success in {latency:.2f}s")
                     return success_gen()
                 
-                error_hint = str(first_chunk) if first_chunk else "Premier chunk vide"
+                error_hint = first_chunk.text if first_chunk else "Premier chunk vide"
                 self._report_failure(adapter, "stream_generate", error_hint, latency, prompt)
             except StopIteration:
                 self._report_failure(adapter, "stream_generate", "StopIteration (Pas de réponse)", time.time() - start_time, prompt)
@@ -179,7 +208,8 @@ class FallbackInferenceAdapter(InferencePort):
                 continue
         
         # Fallback final vers generate standard (qui a sa propre logique de repli)
-        def error_gen(): yield self.generate(prompt, system_prompt, thinking_budget, thinking_mode)
+        def error_gen(): 
+            yield self.generate(prompt, system_prompt, thinking_budget, thinking_mode, include_logprobs)
         return error_gen()
 
     def generate_image(self, prompt: str, style: str = "") -> str:

@@ -47,3 +47,23 @@ def test_generate_fusion_scenario(llm_service, mock_engine):
 def test_get_status(llm_service, mock_engine):
     mock_engine.health_check.return_value = {"status": "ok"}
     assert llm_service.get_status() == {"status": "ok"}
+
+def test_generate_logs_usage_correctly(llm_service, mock_engine):
+    from core.ports.usage_port import UsagePort
+    from core.domain.entities.ai_schemas import InferenceResponse, InferenceMetadata
+    from unittest.mock import MagicMock
+    
+    usage_port = MagicMock(spec=UsagePort)
+    llm_service.usage_port = usage_port
+    
+    mock_engine.generate.return_value = InferenceResponse(
+        text="Response",
+        metadata=InferenceMetadata(usage={"prompt_tokens": 10, "completion_tokens": 5})
+    )
+    
+    llm_service.generate("Prompt", "System")
+    
+    usage_port.log_usage.assert_called_once()
+    args, kwargs = usage_port.log_usage.call_args
+    assert kwargs['input_tokens'] == 10
+    assert kwargs['output_tokens'] == 5

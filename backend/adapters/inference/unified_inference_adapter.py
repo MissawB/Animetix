@@ -5,10 +5,12 @@ import re
 import time
 import logging
 import base64
+import functools
 from typing import Optional, List, Dict, Any
 from core.ports.inference_port import InferencePort, InferenceNotImplementedError
 from core.utils.security import is_safe_url, safe_http_request
 from core.domain.exceptions import InferenceError
+from core.domain.entities.ai_schemas import InferenceResponse, InferenceMetadata, TokenLogProb
 
 # Focused Mixin imports
 from adapters.inference.clip_vision import ClipVisionMixin
@@ -21,6 +23,18 @@ from adapters.inference.vlm_mixin import VlmMixin
 from adapters.inference.rerank_mixin import RerankMixin
 
 logger = logging.getLogger("animetix." + __name__)
+
+@functools.lru_cache(maxsize=1)
+def _get_evaluation_resources():
+    """Charge de manière paresseuse et met en cache le modèle d'évaluation pour les diagnostics."""
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+    import torch
+    model_id = "gpt2"
+    logger.info(f"Loading evaluation model {model_id} for observability...")
+    tokenizer = AutoTokenizer.from_pretrained(model_id)
+    model = AutoModelForCausalLM.from_pretrained(model_id, output_attentions=True, output_hidden_states=True)
+    model.eval()
+    return model, tokenizer, torch
 
 class UnifiedInferenceAdapter(
     ClipVisionMixin,
@@ -104,8 +118,9 @@ class UnifiedInferenceAdapter(
         system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.",
         thinking_budget: int = 0,
         thinking_mode: bool = False,
+        include_logprobs: bool = False,
         json_mode: bool = False
-    ) -> str:
+    ) -> InferenceResponse:
         payload = {
             "model": self.model_name,
             "messages": [
@@ -123,6 +138,10 @@ class UnifiedInferenceAdapter(
                 "thinking_budget": thinking_budget,
                 "thinking_mode": thinking_mode
             }
+
+        if include_logprobs:
+            payload["logprobs"] = True
+            payload["top_logprobs"] = 5
 
         last_error = None
         for attempt in range(self.max_retries):
@@ -151,14 +170,38 @@ class UnifiedInferenceAdapter(
                 )
 
                 if isinstance(data, dict) and "choices" in data:
-                    raw_content = data["choices"][0]["message"]["content"]
+                    choice = data["choices"][0]
+                    raw_content = choice["message"]["content"]
+                    
+                    # Extraction des logprobs si présentes
+                    parsed_logprobs = None
+                    if "logprobs" in choice and choice["logprobs"] and "content" in choice["logprobs"]:
+                        parsed_logprobs = []
+                        for lp in choice["logprobs"]["content"]:
+                            top_lp = None
+                            if "top_logprobs" in lp and lp["top_logprobs"]:
+                                # Conversion vers List[Dict[str, float]] attendue par le schéma
+                                top_lp = [{item["token"]: item["logprob"]} for item in lp["top_logprobs"]]
+                            
+                            parsed_logprobs.append(TokenLogProb(
+                                token=lp["token"],
+                                logprob=lp["logprob"],
+                                top_logprobs=top_lp
+                            ))
                 else:
                     raw_content = str(data)
+                    parsed_logprobs = None
 
                 if "---" in raw_content:
                     raw_content = raw_content.split("---")[0].strip()
 
-                return raw_content
+                return InferenceResponse(
+                    text=raw_content,
+                    metadata=InferenceMetadata(
+                        logprobs=parsed_logprobs,
+                        usage=usage
+                    )
+                )
             except httpx.RequestError as e:
                 last_error = e
                 logger.error(f"Inference attempt {attempt+1}/{self.max_retries} failed: {e}")
@@ -202,8 +245,8 @@ class UnifiedInferenceAdapter(
 
         # Fallback classique (Regex)
         try:
-            raw_json = self.generate(prompt, system_prompt=system_prompt, json_mode=True)
-            clean_json = raw_json.strip()
+            response = self.generate(prompt, system_prompt=system_prompt, json_mode=True)
+            clean_json = response.text.strip()
             if "```" in clean_json:
                 match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", clean_json, re.DOTALL | re.IGNORECASE)
                 if match:
@@ -228,7 +271,8 @@ class UnifiedInferenceAdapter(
         prompt: str,
         system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.",
         thinking_budget: int = 0,
-        thinking_mode: bool = False
+        thinking_mode: bool = False,
+        include_logprobs: bool = False
     ):
         payload = {
             "model": self.model_name,
@@ -245,6 +289,10 @@ class UnifiedInferenceAdapter(
                 "thinking_budget": thinking_budget,
                 "thinking_mode": thinking_mode
             }
+
+        if include_logprobs:
+            payload["logprobs"] = True
+            payload["top_logprobs"] = 5
 
         url = f"{self.api_base}/chat/completions"
         try:
@@ -268,9 +316,33 @@ class UnifiedInferenceAdapter(
                                     break
                                 try:
                                     chunk = json.loads(data_content)
-                                    delta = chunk['choices'][0].get('delta', {})
+                                    choice = chunk['choices'][0]
+                                    delta = choice.get('delta', {})
+                                    
+                                    # Extraction des logprobs par token si présentes dans le chunk
+                                    parsed_logprobs = None
+                                    if "logprobs" in choice and choice["logprobs"] and "content" in choice["logprobs"]:
+                                        parsed_logprobs = []
+                                        for lp in choice["logprobs"]["content"]:
+                                            top_lp = None
+                                            if "top_logprobs" in lp and lp["top_logprobs"]:
+                                                # Conversion vers List[Dict[str, float]] attendue par le schéma
+                                                top_lp = [{item["token"]: item["logprob"]} for item in lp["top_logprobs"]]
+
+                                            parsed_logprobs.append(TokenLogProb(
+                                                token=lp["token"],
+                                                logprob=lp["logprob"],
+                                                top_logprobs=top_lp
+                                            ))
+
                                     if 'content' in delta:
-                                        yield delta['content']
+                                        yield InferenceResponse(
+                                            text=delta['content'],
+                                            metadata=InferenceMetadata(
+                                                logprobs=parsed_logprobs,
+                                                usage=chunk.get("usage")
+                                            )
+                                        )
                                 except Exception as e:
                                     logger.warning(f"Error parsing stream chunk: {e}")
                                     continue
@@ -290,7 +362,8 @@ class UnifiedInferenceAdapter(
         prompt += "\nPour chaque document, donne un score de pertinence entre 0.0 (inutile) et 1.0 (parfait). Réponds avec une liste de scores JSON: [score0, score1, ...]"
 
         try:
-            raw = self.generate(prompt, system_prompt="Tu es un système de réordonnancement (reranker) expert.", json_mode=False)
+            response = self.generate(prompt, system_prompt="Tu es un système de réordonnancement (reranker) expert.", json_mode=False)
+            raw = response.text
             match = re.search(r'\[.*\]', raw)
             if match:
                 scores = json.loads(match.group(0))
@@ -387,8 +460,9 @@ class UnifiedInferenceAdapter(
                 orig_text = entry.get("text", "")
                 if orig_text:
                     prompt = f"Traduis ce texte de manga en {target_lang}: {orig_text}. Réponds UNIQUEMENT avec le texte traduit."
-                    translated = self.generate(prompt, system_prompt="Tu es un traducteur expert de manga.")
-                    entry["text"] = translated
+                    response = self.generate(prompt, system_prompt="Tu es un traducteur expert de manga.")
+                    entry["text"] = response.text
+
             
             # 3. Inpainting (Redessiner)
             text_placements = [{"bbox": e.get("box", e.get("bbox")), "text": e["text"]} for e in layout]
@@ -406,13 +480,7 @@ class UnifiedInferenceAdapter(
     def get_diagnostics(self, prompt: str, completion: str) -> Dict[str, Any]:
         """Récupère les données d'activation internes réelles (Logit Lens, Attention) via un modèle d'évaluation."""
         try:
-            from transformers import AutoModelForCausalLM, AutoTokenizer
-            import torch
-            
-            model_id = "gpt2"
-            tokenizer = AutoTokenizer.from_pretrained(model_id)
-            model = AutoModelForCausalLM.from_pretrained(model_id, output_attentions=True, output_hidden_states=True)
-            model.eval()
+            model, tokenizer, torch = _get_evaluation_resources()
 
             text = completion if len(completion.strip()) > 0 else " "
             inputs = tokenizer(text, return_tensors="pt")
@@ -468,7 +536,7 @@ class UnifiedInferenceAdapter(
                 "attention_map": attention_map,
                 "logit_lens": logit_projections,
                 "runtime_ms": 0.0,
-                "model_signature": f"evaluation_model:{model_id}:observability"
+                "model_signature": "evaluation_model:gpt2:observability"
             }
         except Exception as e:
             logger.error(f"Error in real get_diagnostics: {e}")
@@ -477,14 +545,7 @@ class UnifiedInferenceAdapter(
     def calculate_uncertainty(self, prompt: str, completion: str) -> Dict[str, float]:
         """Calcule la certitude mathématique réelle (entropie, perplexité) d'une génération via un modèle local."""
         try:
-            from transformers import AutoModelForCausalLM, AutoTokenizer
-            import torch
-            
-            # Utilisation de GPT-2 pour évaluer l'incertitude si le LLM distant ne donne pas les logprobs
-            model_id = "gpt2"
-            tokenizer = AutoTokenizer.from_pretrained(model_id)
-            model = AutoModelForCausalLM.from_pretrained(model_id)
-            model.eval()
+            model, tokenizer, torch = _get_evaluation_resources()
 
             text = prompt + "\n" + completion
             inputs = tokenizer(text, return_tensors="pt")

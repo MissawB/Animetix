@@ -80,31 +80,24 @@ class LLMService:
                 span.end()
                 span = None
             
+            # --- TOKEN CALCULATION ---
+            in_tokens, out_tokens, total_tokens = self._get_token_usage(response_obj, prompt, system_prompt)
+
             # --- W&B OBSERVABILITY ---
             if self.obs_service:
-                # Use metadata usage if available, else use heuristic
-                usage = response_obj.metadata.usage if response_obj.metadata else None
-                if usage:
-                    tokens = usage.get("total_tokens", usage.get("prompt_tokens", 0) + usage.get("completion_tokens", 0))
-                else:
-                    tokens = (len(prompt) + len(system_prompt) + len(res)) // 4
-                
                 model_id = getattr(engine, 'model_name', 'local-llama')
-                self.obs_service.log_inference(model_id, latency, tokens, metadata={"slm": use_slm})
+                self.obs_service.log_inference(model_id, latency, total_tokens, metadata={"slm": use_slm})
 
             # --- TOKEN TRACKING ---
             if self.usage_port:
-                usage = response_obj.metadata.usage if response_obj.metadata else None
-                if usage:
-                    in_tokens = usage.get("prompt_tokens", (len(prompt) + len(system_prompt)) // 4)
-                    out_tokens = usage.get("completion_tokens", len(res) // 4)
-                else:
-                    in_tokens = (len(prompt) + len(system_prompt)) // 4
-                    out_tokens = len(res) // 4
-                
                 engine_name = getattr(engine, 'model_name', 'brain-api')
                 if use_slm: engine_name += "-slm"
-                self.usage_port.log_usage(engine_name, in_tokens, out_tokens, user_id=user_id)
+                self.usage_port.log_usage(
+                    engine=engine_name, 
+                    input_tokens=in_tokens, 
+                    output_tokens=out_tokens, 
+                    user_id=user_id
+                )
 
             # --- LLM GUARDRAILS (Sanitization) ---
             if forbidden_terms:
@@ -224,3 +217,18 @@ class LLMService:
 
     def get_status(self) -> dict:
         return self.inference_engine.health_check()
+
+    def _get_token_usage(self, response_obj: Any, prompt: str, system_prompt: str) -> tuple[int, int, int]:
+        """Extrait l'usage des tokens depuis les métadonnées ou utilise une heuristique."""
+        if hasattr(response_obj, 'metadata') and response_obj.metadata.usage:
+            usage = response_obj.metadata.usage
+            in_t = usage.get('prompt_tokens', 0)
+            out_t = usage.get('completion_tokens', 0)
+            total = usage.get('total_tokens', in_t + out_t)
+            if in_t > 0 or out_t > 0:
+                return in_t, out_t, total
+
+        # Heuristique fallback
+        in_t = (len(prompt) + len(system_prompt)) // 4
+        out_t = len(response_obj.text) // 4
+        return in_t, out_t, in_t + out_t

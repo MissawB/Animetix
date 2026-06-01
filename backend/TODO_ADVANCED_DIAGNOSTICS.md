@@ -1,8 +1,8 @@
 - [x] Task 1: Update Domain Schemas
 - [x] Task 2: Update InferencePort Interface
-- [ ] Task 3: Update LLMService (The Consumer)
-- [ ] Task 4: Support Logprobs in UnifiedInferenceAdapter
-- [ ] Task 5: Support Logprobs in BrainAPIAdapter
-- [ ] Task 6: Update FallbackInferenceAdapter
-- [ ] Task 7: Finalize UncertaintyService (Real Logprobs Logic)
-- [ ] Task 8: Verification & Regression Testing
+- [x] Task 3: Update LLMService (The Consumer)
+- [x] Task 4: Support Logprobs in UnifiedInferenceAdapter
+- [x] Task 5: Support Logprobs in BrainAPIAdapter
+- [x] Task 6: Update FallbackInferenceAdapter
+- [x] Task 7: Finalize UncertaintyService (Real Logprobs Logic)
+- [x] Task 8: Verification & Regression Testing
