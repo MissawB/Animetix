@@ -73,11 +73,11 @@ scipy==1.17.1
 sentence-transformers==3.3.1
 sentencepiece==0.2.1
 soundfile
-tokenizers==0.21.0
+tokenizers>=0.21.0
 torch==2.5.1
 torchvision==0.20.1
 transformer-lens==2.15.0
-transformers==4.53.0
+transformers>=4.57.0
 trl==0.12.1
 coqui-tts==0.27.5
 ultralytics==8.4.51
