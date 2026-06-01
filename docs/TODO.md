@@ -7,8 +7,6 @@ Ce document centralise toutes les tâches techniques, d'architecture et de fonct
 - [ ] **Diagnostics & Incertitude Avancés** : Migrer les calculs d'incertitude (entropie, perplexité) basés sur le texte vers une exploitation réelle des `logprobs` si exposés par les adaptateurs (BrainAPI/Ollama).
 - [ ] **Nettoyage des Bouchons (UnifiedInferenceAdapter)** : Finaliser le remplacement de toutes les méthodes levant encore `InferenceNotImplementedError` par de véritables délégations vers les mixins de vision ou d'audio.
 - [ ] **Modération de contenu (Guardrails)** : Étendre la modération sémantique native à tous les adaptateurs de texte pour garantir une sécurité homogène sur tout le cluster.
-- [x] **Suppression de la dépendance LangChain** : Supprimer ou bypasser LangChain via l'héritage direct de `BaseRagasLLM` pour Ragas. Permet d'alléger l'environnement virtuel et d'éliminer les conflits de versions. (Terminé : Suppression complète de LangChain/Ragas, implémentation d'un juge LLM autonome structuré avec Pydantic et Instructor).
-- [ ] **Migration Dagster ➡️ Celery** : Migrer le DAG de données (`dagster_app.py`) vers des workflows Celery (Chains/Groups) et Celery Beat pour fermer le serveur et le démon Dagster, libérant ainsi de la RAM.
 - [ ] **Stabilisation de la recherche Web (DuckDuckGo ➡️ Gemini Grounding / Tavily)** : Remplacer le scraping DuckDuckGo instable par l'outil natif de Google Search Grounding (Gemini) ou une API structurée comme Tavily.
 - [ ] **Simplification d'état Frontend (XState ➡️ Zustand)** : Refactoriser les machines d'état simples du dossier `/machines` en stores Zustand plus légers et fluides, réduisant la taille du bundle et le boilerplate.
 
@@ -22,10 +20,15 @@ Ce document centralise toutes les tâches techniques, d'architecture et de fonct
 - [ ] **Restauration de la Navigation (Hubs)** :
     - [ ] Réintégrer **Animinator**, **Undercover** et **Akinetix Classic** dans le `GamesHubPage`.
 
-## 🛡️ Sécurité & Fiabilité (Audit Avancé)
+## 🧬 Fonctionnalités SOTA & Innovations
 
-- [x] **Prévention DoS (OOM)** : Configurer `DATA_UPLOAD_MAX_MEMORY_SIZE` dans Django et implémenter un traitement par chunks pour les uploads lourds dans les Labs (Génération 3D, Vidéo). (Terminé : Limite fixée à 50 Mo, fichier > 2.5 Mo sur disque, et utilisation systématique de `.chunks()` au lieu de `.read()`).
-- [x] **Validation stricte des fichiers (MIME-Type)** : Vérifier la signature binaire ("Magic Number") des fichiers uploadés (images/vidéos/audio) avant transmission aux moteurs d'inférence pour prévenir les injections malveillantes. (Terminé : Intégration de `filetype` et filtrage strict dans `labs.py` et `core.py`).
-- [x] **Protection CSRF (SameSite=None)** : Sécuriser les API REST cross-domain en s'assurant de la validation systématique des tokens CSRF ou en migrant vers une authentification Stateless (JWT) pour pallier les risques liés aux cookies SameSite=None. (Terminé : Suppression de `@csrf_exempt` et activation stricte des Trusted Origins).
-- [x] **Sanitization du JSON (XSS/NoSQL)** : Définir un schéma Pydantic ou un Serializer strict pour la validation de `personalization_settings` (Social API) afin de bloquer les payloads malformés ou les injections de scripts. (Terminé : Validation Pydantic stricte avec `extra = "forbid"` sur l'endpoint `update_personalization`).
-- [x] **Prévention IDOR (Fusions)** : S'assurer que le queryset global de `CreativeFusionViewSet.remix` empêche l'accès et le "clonage" des fusions privées d'autres utilisateurs. (Terminé : Implémentation d'un `get_queryset` dynamique basé sur `is_public` et le propriétaire).
+- [ ] **Hyper-Personnalisation Graphique** : Implémenter une personnalisation dynamique de l'interface basée sur le "Archetype Drift" de l'utilisateur (couleurs et thèmes changeant selon les affinités détectées).
+
+## 🛡️ Sécurité & Résilience (Post-Audit 2026)
+
+- [x] **Protection contre la Triche XP (Offline Sync)** : Sécuriser l'endpoint `sync_offline_data` en ajoutant une signature cryptographique (HMAC) sur les scores ou en limitant drastiquement le gain d'XP journalier synchronisable. (FAIT - Rate limiting 1/5m et plafond journalier de 200 XP appliqués).
+- [x] **Généralisation du Helper Anti-SSRF** : Refactoriser `image_proxy_view` et les vues du laboratoire IA pour utiliser systématiquement `safe_http_request` (qui protège contre le DNS Rebinding) au lieu de `httpx` direct. (FAIT - Utilisation systématique du helper sécurisé avec validation des redirections).
+- [x] **Implémentation d'une CSP (Content Security Policy)** : Configurer `django-csp` pour limiter les sources de scripts et de ressources, réduisant l'impact potentiel des failles XSS. (FAIT - Politique CSP stricte configurée).
+- [ ] **Gestion des Secrets d'Infra** : Supprimer les mots de passe par défaut dans `deploy/docker-compose.yml` et migrer vers une injection systématique via variables d'environnement sécurisées.
+- [ ] **Validation de la taille des uploads** : Ajouter une vérification `Content-Length` sur tous les endpoints acceptant des fichiers (Images/Audio/Vidéo) pour prévenir les attaques DoS.
+- [ ] **Audit de Dépendances Continu** : Automatiser le scan des vulnérabilités (Snyk/GitHub Dependabot) pour maintenir le socle technique à jour après le passage à Django 5.2.14.

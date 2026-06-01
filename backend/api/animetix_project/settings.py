@@ -201,6 +201,7 @@ MIDDLEWARE = [
     'django_prometheus.middleware.PrometheusBeforeMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'csp.middleware.CSPMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
@@ -382,3 +383,20 @@ if sentry_dsn and not os.environ.get('PYTEST_CURRENT_TEST'):
         send_default_pii=False, # Sécurité/RGPD : Ne pas envoyer d'infos personnelles identifiables (IP, emails, etc.)
     )
     print("[SUCCESS] Sentry initialized with Django & Celery integrations.")
+
+# --- 🛡️ CONTENT SECURITY POLICY (CSP) ---
+CSP_DEFAULT_SRC = ("'self'",)
+CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net")
+CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net", "https://huggingface.co")
+CSP_IMG_SRC = ("'self'", "data:", "blob:", "https://*.hf.space", "https://*.huggingface.co", "https://cdn.myanimelist.net", "https://m.media-amazon.com")
+CSP_FONT_SRC = ("'self'", "https://fonts.gstatic.com", "https://cdn.jsdelivr.net")
+CSP_CONNECT_SRC = ("'self'", "https://*.hf.space", "https://*.huggingface.co", "https://huggingface.co")
+CSP_FRAME_SRC = ("'self'", "https://*.hf.space", "https://*.huggingface.co")
+CSP_MEDIA_SRC = ("'self'", "data:", "blob:", "https://*.hf.space", "https://*.huggingface.co")
+CSP_OBJECT_SRC = ("'none'",)
+CSP_BASE_URI = ("'self'",)
+CSP_FRAME_ANCESTORS = ("'self'", "https://*.hf.space", "https://huggingface.co")
+
+# Report-only mode is useful for testing without blocking
+CSP_REPORT_ONLY = env.bool('DJANGO_CSP_REPORT_ONLY', default=False)
+
