@@ -48,6 +48,9 @@ Ce document archive les étapes majeures de l'évolution technique du projet.
 - **Génération 3D & Dioramas :** Intégration réelle de l'API Tripo3D et déploiement du viewer React.
 - **Vidéo-RAG (Embeddings Temporels) :** Finalisation de l'infrastructure Celery pour l'indexation par segments temporels via Qwen2-VL.
 - **Lab & MLOps UX :** Déploiement du `LabHubPage` et intégration du dashboard de curation DPO.
+- **Protection Anti-Triche XP :** Sécurisation de l'endpoint de synchronisation offline avec un rate-limit strict (1 appel / 5 min) et un plafond journalier de 200 XP par utilisateur.
+- **Généralisation Anti-SSRF :** Refactorisation complète des services consommant des ressources externes pour utiliser l'utilitaire `safe_http_request` (protection DNS Rebinding).
+- **Politique de Sécurité du Contenu (CSP) :** Configuration de `django-csp` pour restreindre les sources de ressources (scripts, styles, images) aux seuls domaines de confiance, neutralisant ainsi les vecteurs d'attaque XSS.
 
 ## [2026-05-29] Session Intensive : Robustesse & Innovation SOTA
 - **Vidéo-RAG (Intégration E2E) :** Finalisation complète de la boucle de recherche sémantique intra-vidéo. Les endpoints `/api/v1/labs/video/index/` et `/search/` sont désormais exposés. Le service `VideoRAGService` a été intégré au workflow principal `AgenticRAGService`, permettant à l'assistant de répondre à des questions visuelles complexes en fouillant dans les timelines indexées. Le frontend `VideoLabPage` a été enrichi d'une interface de recherche temporelle active.

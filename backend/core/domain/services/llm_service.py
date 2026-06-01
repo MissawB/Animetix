@@ -66,7 +66,8 @@ class LLMService:
 
         try:
             engine = self.slm_engine if use_slm else self.inference_engine
-            res = engine.generate(prompt, system_prompt, thinking_budget=thinking_budget, thinking_mode=thinking_mode)
+            response_obj = engine.generate(prompt, system_prompt, thinking_budget=thinking_budget, thinking_mode=thinking_mode)
+            res = response_obj.text
             latency = time.time() - start_time
             
             if not res:
@@ -81,14 +82,25 @@ class LLMService:
             
             # --- W&B OBSERVABILITY ---
             if self.obs_service:
-                tokens = (len(prompt) + len(system_prompt) + len(res)) // 4
+                # Use metadata usage if available, else use heuristic
+                usage = response_obj.metadata.usage if response_obj.metadata else None
+                if usage:
+                    tokens = usage.get("total_tokens", usage.get("prompt_tokens", 0) + usage.get("completion_tokens", 0))
+                else:
+                    tokens = (len(prompt) + len(system_prompt) + len(res)) // 4
+                
                 model_id = getattr(engine, 'model_name', 'local-llama')
                 self.obs_service.log_inference(model_id, latency, tokens, metadata={"slm": use_slm})
 
             # --- TOKEN TRACKING ---
             if self.usage_port:
-                in_tokens = (len(prompt) + len(system_prompt)) // 4
-                out_tokens = len(res) // 4
+                usage = response_obj.metadata.usage if response_obj.metadata else None
+                if usage:
+                    in_tokens = usage.get("prompt_tokens", (len(prompt) + len(system_prompt)) // 4)
+                    out_tokens = usage.get("completion_tokens", len(res) // 4)
+                else:
+                    in_tokens = (len(prompt) + len(system_prompt)) // 4
+                    out_tokens = len(res) // 4
                 
                 engine_name = getattr(engine, 'model_name', 'brain-api')
                 if use_slm: engine_name += "-slm"
