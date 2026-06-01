@@ -21,7 +21,7 @@ class HealthDashboardService:
             "total_costs": round(total_costs, 2),
             "monthly_costs": round(monthly_costs, 2),
             "health_percentage": 100.0,
-            "is_sustainable": False # Donations removed
+            "is_sustainable": False
         }
 
     def get_global_health(self) -> Dict[str, Any]:

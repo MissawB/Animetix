@@ -193,6 +193,7 @@ class AITokenUsage(models.Model):
     cost_estimate = models.FloatField(default=0.0) # In USD or native currency
     created_at = models.DateTimeField(auto_now_add=True)
     def __str__(self): return f"{self.engine} usage by {self.user.username if self.user else 'Guest'}"
+
 # --- 🏆 ACHIEVEMENTS & FEEDBACK ---
 
 @receiver(post_save, sender=User)
