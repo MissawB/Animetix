@@ -183,3 +183,20 @@ class VNScene(BaseModel):
 class VNScript(BaseModel):
     title: str
     scenes: List[VNScene]
+
+# --- INFERENCE & DIAGNOSTICS SCHEMAS ---
+
+class TokenLogProb(BaseModel):
+    token: str
+    logprob: float
+    top_logprobs: Optional[List[Dict[str, float]]] = None
+
+class InferenceMetadata(BaseModel):
+    logprobs: Optional[List[TokenLogProb]] = None
+    usage: Optional[Dict[str, int]] = None
+    thinking: Optional[str] = None
+    diagnostics: Optional[Dict[str, Any]] = None
+
+class InferenceResponse(BaseModel):
+    text: str
+    metadata: InferenceMetadata = Field(default_factory=lambda: InferenceMetadata())
