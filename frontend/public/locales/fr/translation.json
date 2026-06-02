@@ -34,7 +34,7 @@
       "achievements": "Succès",
       "collection": "Collection",
       "sync": "Synchronisation du profil...",
-      "back_dashboard": "Retour au dashboard"
+      "back_dashboard": "Retour au tableau de bord"
     }
   },
   "labs": {
@@ -143,7 +143,7 @@
     },
     "config": {
       "title": "CONFIGURATION PERSONNALISÉE",
-      "loading": "CHARGEMENT DE TES PRÉFÉRENCES...",
+      "loading": "CHARGEMENT DE VOS PRÉFÉRENCES...",
       "sections": {
         "difficulty": "Niveau de Défi",
         "interface": "Interface",
