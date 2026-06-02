@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { motion } from 'framer-motion';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
 import { RelicItem } from './components/RelicItem';
 import { LabListOverlay } from './components/LabListOverlay';
@@ -39,6 +40,18 @@ const ForgeHubPage: React.FC = () => {
   return (
     <AnimatedPage>
       <div className="min-h-screen flex flex-col items-center justify-center px-6 py-20 relative overflow-hidden bg-[#020202]">
+        {/* Particles */}
+        <div className="fixed inset-0 pointer-events-none z-0">
+          {[...Array(20)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 bg-white rounded-full"
+              initial={{ x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1000), y: Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 1000) }}
+              animate={{ y: [0, -500], opacity: [0, 0.5, 0] }}
+              transition={{ duration: 10 + Math.random() * 10, repeat: Infinity }}
+            />
+          ))}
+        </div>
         {/* Ambient Glows */}
         <div className="fixed inset-0 pointer-events-none z-0 opacity-10">
           <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-red-600/20 blur-[150px] rounded-full" />
@@ -58,18 +71,23 @@ const ForgeHubPage: React.FC = () => {
 
         <div className="flex flex-wrap gap-12 justify-center items-center z-10 max-w-7xl">
           {categories.map((cat) => (
-            <RelicItem
+            <motion.div
               key={cat.id}
-              id={cat.id}
-              title={t(`forge_hub.categories.${cat.id}.title`)}
-              sub={t(`forge_hub.categories.${cat.id}.sub`)}
-              desc={t(`forge_hub.categories.${cat.id}.desc`)}
-              color={cat.color}
-              glowColor={cat.glow}
-              onClick={() => setSelectedCategory(cat.id)}
+              animate={{ y: [0, -10, 0] }}
+              transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
             >
-              <cat.icon className="w-full h-full stroke-[0.5]" />
-            </RelicItem>
+              <RelicItem
+                id={cat.id}
+                title={t(`forge_hub.categories.${cat.id}.title`)}
+                sub={t(`forge_hub.categories.${cat.id}.sub`)}
+                desc={t(`forge_hub.categories.${cat.id}.desc`)}
+                color={cat.color}
+                glowColor={cat.glow}
+                onClick={() => setSelectedCategory(cat.id)}
+              >
+                <cat.icon className="w-full h-full stroke-[0.5]" />
+              </RelicItem>
+            </motion.div>
           ))}
         </div>
 
