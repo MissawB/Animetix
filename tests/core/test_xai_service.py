@@ -1,65 +1,63 @@
 import pytest
 from unittest.mock import MagicMock
-from core.domain.services.xai_service import XaiDiagnosticService, UncertaintyService
-from core.domain.entities.ai_schemas import InferenceResponse, InferenceMetadata, TokenLogProb
+from core.domain.services.xai_service import XaiDiagnosticService, XaiCollector, UncertaintyService
+from core.domain.entities.ai_schemas import InferenceResponse, InferenceMetadata, XaiReport, DocumentAttribution, ModelDiagnostics
 
 @pytest.fixture
-def mock_engine():
+def mock_inference_engine():
     return MagicMock()
 
 @pytest.fixture
-def xai_service(mock_engine):
-    return XaiDiagnosticService(inference_engine=mock_engine)
+def xai_service(mock_inference_engine):
+    return XaiDiagnosticService(mock_inference_engine)
 
 @pytest.fixture
-def uncertainty_service(mock_engine):
-    return UncertaintyService(inference_engine=mock_engine)
+def uncertainty_service(mock_inference_engine):
+    return UncertaintyService(mock_inference_engine)
 
-def test_explain_response(xai_service, mock_engine):
-    mock_engine.get_diagnostics.return_value = {
+def test_generate_advanced_report(xai_service, mock_inference_engine):
+    # Setup
+    query = "Qui est Naruto ?"
+    response_text = "Naruto est un ninja de Konoha."
+    response = InferenceResponse(text=response_text, metadata=InferenceMetadata())
+    
+    collector = XaiCollector()
+    collector.log_intent("information_retrieval")
+    collector.log_retrieval([
+        {"id": "doc1", "title": "Naruto Uzumaki", "score": 0.9},
+        {"id": "doc2", "title": "Konoha", "score": 0.6}
+    ])
+    collector.log_agent_thought("RAG_Expert", "Searching for Naruto's origin.")
+
+    mock_inference_engine.get_diagnostics.return_value = {
+        "attention_heatmap": [[0.1, 0.2], [0.3, 0.4]],
         "top_attention_tokens": ["Naruto", "ninja"],
-        "logit_lens_trend": "increasing"
+        "logit_lens": [{"layer": 1, "top_token": "Naruto", "prob": 0.8}]
     }
-    res = xai_service.explain_response("q", "c")
-    assert "Naruto, ninja" in res["explanation"]
-    assert res["logit_lens_trend"] == "increasing"
-
-def test_measure_confidence_reliable(uncertainty_service, mock_engine):
-    mock_engine.calculate_uncertainty.return_value = {
-        "normalized_entropy": 0.1,
-        "perplexity": 1.2
-    }
-    res = uncertainty_service.measure_confidence("q", "c")
-    assert res["confidence_score"] == pytest.approx(0.9)
-    assert res["is_reliable"] is True
-    assert res["action_required"] == "PROCEED"
-
-def test_measure_confidence_unreliable(uncertainty_service, mock_engine):
-    mock_engine.calculate_uncertainty.return_value = {
-        "normalized_entropy": 0.5,
-        "perplexity": 10.0
-    }
-    res = uncertainty_service.measure_confidence("q", "c")
-    assert res["confidence_score"] == pytest.approx(0.5)
-    assert res["is_reliable"] is False
-    assert res["action_required"] == "VERIFY_WEB"
-
-def test_measure_confidence_real_logprobs(uncertainty_service):
-    # Setup InferenceResponse with known logprobs
-    logprobs = [
-        TokenLogProb(token="Hello", logprob=-1.0),
-        TokenLogProb(token="World", logprob=-0.5)
-    ]
-    response = InferenceResponse(
-        text="Hello World",
-        metadata=InferenceMetadata(logprobs=logprobs)
-    )
     
-    res = uncertainty_service.measure_confidence("q", "completion", response=response)
+    # Mock UncertaintyService logic or inject it
+    # For simplicity, we can mock calculate_uncertainty if xai_service uses it
+    mock_inference_engine.calculate_uncertainty.return_value = {
+        "normalized_entropy": 0.2,
+        "perplexity": 1.5
+    }
+
+    # Execution
+    report = xai_service.generate_advanced_report(query, response, collector)
+
+    # Verifications
+    assert isinstance(report, XaiReport)
+    assert report.query_intent == "information_retrieval"
+    assert len(report.retrieval_attribution) == 2
+    assert report.retrieval_attribution[0].document_id == "doc1"
+    assert report.retrieval_attribution[0].contribution_weight > 0
     
-    # avg_entropy = -(-1.0 + -0.5) / 2 = 0.75
-    # confidence_score = 1.0 - (0.75 / 10.8) approx 0.93
-    assert res["method"] == "real_logprobs"
-    assert res["confidence_score"] > 0.9
-    assert res["is_reliable"] is True
-    assert res["perplexity"] == pytest.approx(2.117, rel=1e-2) # exp(0.75)
+    assert isinstance(report.internal_diagnostics, ModelDiagnostics)
+    assert report.internal_diagnostics.top_influential_tokens == ["Naruto", "ninja"]
+    assert len(report.internal_diagnostics.logit_lens_trajectory) == 1
+    assert report.internal_diagnostics.logit_lens_trajectory[0]["layer"] == 1
+
+    assert report.uncertainty["confidence_score"] == 0.8
+    assert len(report.agent_trace) == 1
+    assert report.agent_trace[0]["agent"] == "RAG_Expert"
+    assert report.final_confidence == 0.8

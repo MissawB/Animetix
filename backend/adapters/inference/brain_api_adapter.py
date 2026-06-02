@@ -11,14 +11,14 @@ from core.domain.entities.ai_schemas import InferenceResponse, InferenceMetadata
 logger = logging.getLogger("animetix.inference")
 
 class BrainAPIAdapter(InferencePort):
-    def __init__(self, brain_api_url: str, max_retries: int = 3, usage_port: Optional[UsagePort] = None):
+    def __init__(self, brain_api_url: str, brain_api_key: str, max_retries: int = 3, usage_port: Optional[UsagePort] = None):
         super().__init__(usage_port=usage_port)
         
         # Validation de l'URL du service (Protection contre injection de config)
         # On accepte soit un hostname local (docker/k8s), soit une URL sûre.
         self.brain_api_url = brain_api_url
         self.max_retries = max_retries
-        self.brain_api_key = os.getenv("BRAIN_API_KEY", "dev-secret-key")
+        self.brain_api_key = brain_api_key
         
         # Cache for diagnostics & advanced uncertainty
         self._last_completion = None

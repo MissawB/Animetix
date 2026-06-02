@@ -135,6 +135,14 @@ if not DEBUG:
 # Autoriser les cookies cross-domain (essentiel pour SameSite=None)
 CORS_ALLOW_CREDENTIALS = True
 
+# --- EXTERNAL APIs & SERVICES ---
+BRAIN_API_KEY = env('BRAIN_API_KEY', default='dev-insecure-key-animetix-2026')
+
+if IS_PRODUCTION:
+    if not BRAIN_API_KEY or BRAIN_API_KEY == 'dev-insecure-key-animetix-2026':
+        from django.core.exceptions import ImproperlyConfigured
+        raise ImproperlyConfigured("BRAIN_API_KEY est obligatoire et doit être sécurisée en production.")
+
 # I18N
 LANGUAGE_CODE = 'fr'
 TIME_ZONE = 'UTC'

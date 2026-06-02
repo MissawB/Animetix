@@ -16,7 +16,14 @@ logger = logging.getLogger("animetix.brain")
 # --- AUTHENTICATION ---
 API_KEY_NAME = "X-API-Key"
 api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
-EXPECTED_API_KEY = os.getenv("BRAIN_API_KEY", "dev-secret-key")
+
+# On impose une clé sécurisée au démarrage
+EXPECTED_API_KEY = os.getenv("BRAIN_API_KEY")
+DEV_INSECURE_KEY = "dev-insecure-key-animetix-2026"
+
+if not EXPECTED_API_KEY or EXPECTED_API_KEY == DEV_INSECURE_KEY:
+    logger.critical("FATAL: BRAIN_API_KEY non configurée ou non sécurisée. Le cerveau ne peut pas démarrer.")
+    sys.exit(1)
 
 async def verify_api_key(api_key: str = Depends(api_key_header)):
     if not api_key or api_key != EXPECTED_API_KEY:

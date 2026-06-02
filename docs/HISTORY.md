@@ -18,6 +18,7 @@ Ce document archive les étapes majeures de l'évolution technique du projet.
     - Déploiement du Visual Graph Debugger pour la correction manuelle des conflits de lore Neo4j via `GraphHealerService`.
     - Implémentation de la page de gestion Neuro-Symbolique de la mémoire (règles Z3 déduites du profil).
 - **Sécurité et Résilience** : 
+    - **Suppression des Secrets par Défaut (Hardened)** : Élimination de tous les fallbacks de clés API en dur dans le code. Validation centralisée dans `settings.py` via `ImproperlyConfigured` en production et blocage du démarrage du service Brain API sans clé sécurisée.
     - Sécurisation de la Brain API via `X-API-Key` et renforcement du réseau Docker (isolation localhost pour les DB).
     - Mitigation Prompt Injection et affinage de la CSP (retrait de `'unsafe-eval'`).
     - Systématisation de la sanitisation des sorties IA (`sanitize_ai`/`bleach`).

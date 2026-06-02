@@ -2,7 +2,12 @@ import numpy as np
 import logging
 from typing import Dict, List, Any, Optional
 from core.ports.inference_port import InferencePort
-from core.domain.entities.ai_schemas import InferenceResponse
+from core.domain.entities.ai_schemas import (
+    InferenceResponse, 
+    XaiReport, 
+    DocumentAttribution, 
+    ModelDiagnostics
+)
 
 logger = logging.getLogger("animetix.xai")
 
@@ -10,17 +15,17 @@ class XaiDiagnosticService:
     """
     Service d'Analyse d'Interprétabilité (Explainable AI).
     """
-    def __init__(self, inference_engine: InferencePort):
+    def __init__(self, inference_engine: InferencePort, uncertainty_service: Optional['UncertaintyService'] = None):
         self.inference_engine = inference_engine
+        self.uncertainty_service = uncertainty_service or UncertaintyService(inference_engine)
 
     def explain_response(self, prompt: str, completion: str) -> Dict[str, Any]:
         """
-        Génère une explication technique de la réponse.
+        Génère une explication technique de la réponse (Legacy).
         """
         logger.info("🔍 XAI: Analyzing internal model activations...")
         diagnostics = self.inference_engine.get_diagnostics(prompt, completion)
         
-        # ... (rest of formatting)
         top_influencers = diagnostics.get("top_attention_tokens", [])
         
         return {
@@ -28,6 +33,51 @@ class XaiDiagnosticService:
             "logit_lens_trend": diagnostics.get("logit_lens_trend"),
             "attention_map_summary": "L'attention est concentrée sur les entités nommées du contexte."
         }
+
+    def generate_advanced_report(self, query: str, response: InferenceResponse, collector: 'XaiCollector') -> XaiReport:
+        """
+        Génère un rapport XAI complet hybridant diagnostics internes et traces agentiques.
+        """
+        logger.info(f"📊 XAI: Generating advanced diagnostic report for query: {query[:50]}...")
+        
+        # 1. Extraction des diagnostics internes (activations du cerveau)
+        raw_diagnostics = self.inference_engine.get_diagnostics(query, response.text)
+        
+        model_diagnostics = ModelDiagnostics(
+            attention_heatmap=raw_diagnostics.get("attention_heatmap", []),
+            top_influential_tokens=raw_diagnostics.get("top_attention_tokens", []),
+            logit_lens_trajectory=raw_diagnostics.get("logit_lens", [])
+        )
+        
+        # 2. Attribution documentaire (RAG)
+        attributions = []
+        total_score = sum(doc.get("score", 0.0) for doc in collector.retrieved_docs)
+        
+        for doc in collector.retrieved_docs:
+            score = doc.get("score", 0.0)
+            weight = score / total_score if total_score > 0 else 1.0 / len(collector.retrieved_docs) if collector.retrieved_docs else 0.0
+            
+            attributions.append(DocumentAttribution(
+                document_id=doc.get("id", "unknown"),
+                title=doc.get("title", "Untitled"),
+                relevance_score=float(score),
+                contribution_weight=float(weight)
+            ))
+            
+        # 3. Calcul de l'incertitude
+        uncertainty = self.uncertainty_service.measure_confidence(query, response.text, response)
+        
+        # 4. Assemblage du rapport final
+        report = XaiReport(
+            query_intent=collector.intent,
+            retrieval_attribution=attributions,
+            internal_diagnostics=model_diagnostics,
+            uncertainty=uncertainty,
+            agent_trace=collector.steps,
+            final_confidence=uncertainty.get("confidence_score", 0.0)
+        )
+        
+        return report
 
 class UncertaintyService:
     """
