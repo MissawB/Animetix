@@ -11,23 +11,26 @@ class TestSSRFProtection:
         self.url_name = 'cdn_proxy'
 
     def _get_proxy_url(self, target_url):
+        from core.utils.security import sign_proxy_url
         encoded = base64.b64encode(target_url.encode()).decode()
-        return f"{reverse(self.url_name)}?url={encoded}"
+        sig = sign_proxy_url(target_url)
+        return f"{reverse(self.url_name)}?url={encoded}&sig={sig}"
 
-    @patch('requests.get')
+    @patch('core.utils.security.safe_http_request')
     def test_proxy_allows_external_url(self, mock_get):
         # Setup mock
         mock_response = MagicMock()
         mock_response.status_code = 200
-        mock_response.content = b'fake image data'
-        mock_response.headers = {'Content-Type': 'image/png'}
+        # 1x1 transparent GIF bytes to pass validate_file_mime_type
+        mock_response.content = b'GIF89a\x01\x00\x01\x00\x80\x00\x00\xff\xff\xff\x00\x00\x00!\xf9\x04\x01\x00\x00\x00\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;'
+        mock_response.headers = {'Content-Type': 'image/gif'}
         mock_get.return_value = mock_response
 
-        target = "https://example.com/image.png"
+        target = "https://example.com/image.gif"
         response = self.client.get(self._get_proxy_url(target))
 
         assert response.status_code == 200
-        assert response.content == b'fake image data'
+        assert response.content == mock_response.content
         mock_get.assert_called_once()
 
     @patch('requests.get')
