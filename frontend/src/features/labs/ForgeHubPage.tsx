@@ -2,7 +2,28 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
 import { RelicItem } from './components/RelicItem';
+import { LabListOverlay } from './components/LabListOverlay';
 import { Book, Frame, Headphones, FlaskConical as Flask } from 'lucide-react';
+
+const categoryLabs: Record<string, { id: string, title: string, url: string, desc: string }[]> = {
+  narrative: [
+    { id: 'forge', title: 'Forge de Réalité', url: '/forge/', desc: 'Fusionnez univers et scénarios.' },
+  ],
+  visual: [
+    { id: 'manga', title: 'Manga Lab', url: '/manga_lab/', desc: 'Rendu Manga par IA.' },
+    { id: 'video', title: 'Video Lab', url: '/video-lab/', desc: 'Analyse et indexation vidéo.' },
+    { id: 'nexus', title: 'Visual Nexus', url: '/visual-nexus/', desc: 'Exploration d\'embeddings visuels.' },
+    { id: 'reconstruction', title: 'Cinematic Reconstruction', url: '/cinematic-reconstruction/', desc: '3D de scènes animées.' },
+  ],
+  audio: [
+    { id: 'audio', title: 'Audio Lab', url: '/audio_lab/', desc: 'Clonage vocal et synthèse.' },
+    { id: 'soundscape', title: 'Soundscape Lab', url: '/soundscape-lab/', desc: 'Génération d\'ambiances sonores.' },
+    { id: 'speech', title: 'Speech-to-Speech', url: '/s2s-lab/', desc: 'Transformation vocale temps-réel.' },
+  ],
+  experimental: [
+    { id: 'singularity', title: 'Singularity Hub', url: '/lab/', desc: 'Accès aux modules de recherche Omega.' },
+  ]
+};
 
 const ForgeHubPage: React.FC = () => {
   const { t } = useTranslation();
@@ -58,6 +79,12 @@ const ForgeHubPage: React.FC = () => {
           </p>
         </footer>
       </div>
+
+      <LabListOverlay 
+        category={selectedCategory} 
+        labs={selectedCategory ? categoryLabs[selectedCategory] || [] : []} 
+        onClose={() => setSelectedCategory(null)} 
+      />
     </AnimatedPage>
   );
 };
