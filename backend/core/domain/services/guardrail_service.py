@@ -1,11 +1,24 @@
 import json
 import logging
+import re
+import base64
+import binascii
 from typing import List, Dict, Any, Optional
 from ...ports.inference_port import InferencePort
 from .prompt_manager import PromptManager
 from ..exceptions import InferenceError, ParsingError, ContentModerationError
 
 logger = logging.getLogger('animetix.guardrail')
+
+# SOTA Jailbreak Detection Patterns (Compiled for performance)
+JAILBREAK_REGEX = re.compile(
+    r"ignore\s+(all\s+)?previous\s+instructions|"
+    r"system\s+prompt|dan\s+mode|dev\s+mode|"
+    r"as\s+a\s+hacker|unlock\s+all\s+features|"
+    r"stay\s+in\s+character|echo\s+back|"
+    r"you\s+are\s+now|forget\s+your\s+rules|pwned|payload",
+    re.IGNORECASE
+)
 
 class GuardrailService:
     """
@@ -99,24 +112,12 @@ class GuardrailService:
         return self._llm_moderate(text, categories)
 
     def _is_potential_jailbreak(self, text: str) -> bool:
-        import re
-        import base64
-        
-        text_lower = text.lower()
-        jailbreak_patterns = [
-            r"ignore\s+(all\s+)?previous\s+instructions", 
-            r"system\s+prompt", r"dan\s+mode", r"dev\s+mode", 
-            r"as\s+a\s+hacker", r"unlock\s+all\s+features", 
-            r"stay\s+in\s+character", r"echo\s+back",
-            r"you\s+are\s+now", r"forget\s+your\s+rules", r"pwned", r"payload"
-        ]
-        
         # 1. Regex Pattern Matching
-        if any(re.search(p, text_lower) for p in jailbreak_patterns):
+        if JAILBREAK_REGEX.search(text):
             return True
             
         # 2. Structural anomalies
-        if text.count("{") > 5 or text.count("[") > 5:
+        if text.count("{") > 8 or text.count("[") > 8:
             return True
             
         # 3. Base64 Detection (Simple heuristic for long continuous strings)
@@ -125,9 +126,9 @@ class GuardrailService:
             if len(word) > 20 and re.match(r'^[A-Za-z0-9+/]+={0,2}$', word):
                 try:
                     decoded = base64.b64decode(word).decode('utf-8').lower()
-                    if any(re.search(p, decoded) for p in jailbreak_patterns):
+                    if JAILBREAK_REGEX.search(decoded):
                         return True
-                except Exception:
+                except (binascii.Error, UnicodeDecodeError):
                     pass
 
         return False
@@ -152,7 +153,6 @@ class GuardrailService:
                 return None
 
             # Recherche d'entités candidates capitalisées dans le texte
-            import re
             words = re.findall(r'[A-Z][a-z]+', text)
             mentioned_entities = list(set([w for w in words if len(w) > 3]))
             
@@ -203,7 +203,6 @@ class GuardrailService:
             response = response.strip()
             if not response.startswith("{"):
                  # Tentative d'extraction du premier JSON trouvé
-                 import re
                  match = re.search(r'\{.*\}', response, re.DOTALL)
                  if match:
                      response = match.group(0)
