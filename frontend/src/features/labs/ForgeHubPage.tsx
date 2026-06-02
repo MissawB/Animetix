@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
@@ -37,18 +37,28 @@ const ForgeHubPage: React.FC = () => {
     { id: 'experimental', icon: Flask, color: 'text-red-600', glow: 'bg-red-600' }
   ];
 
+  const particleConfig = useMemo(() => [...Array(20)].map(() => ({
+    left: Math.random() * 100,
+    top: Math.random() * 100,
+    duration: 10 + Math.random() * 10,
+    delay: Math.random() * 10
+  })), []);
+
   return (
     <AnimatedPage>
       <div className="min-h-screen flex flex-col items-center justify-center px-6 py-20 relative overflow-hidden bg-[#020202]">
         {/* Particles */}
         <div className="fixed inset-0 pointer-events-none z-0">
-          {[...Array(20)].map((_, i) => (
-            <motion.div
+          {particleConfig.map((p, i) => (
+            <div
               key={i}
-              className="absolute w-1 h-1 bg-white rounded-full"
-              initial={{ x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1000), y: Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 1000) }}
-              animate={{ y: [0, -500], opacity: [0, 0.5, 0] }}
-              transition={{ duration: 10 + Math.random() * 10, repeat: Infinity }}
+              className="absolute w-1 h-1 bg-white rounded-full particle"
+              style={{
+                left: `${p.left}%`,
+                top: `${p.top}%`,
+                animationDuration: `${p.duration}s`,
+                animationDelay: `${p.delay}s`,
+              }}
             />
           ))}
         </div>

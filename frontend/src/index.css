@@ -93,6 +93,15 @@
     100% { background-position: -200% 0; }
 }
 
+@keyframes float-particle {
+    0% { transform: translateY(0); opacity: 0; }
+    50% { opacity: 0.5; }
+    100% { transform: translateY(-500px); opacity: 0; }
+}
+.particle {
+    animation: float-particle linear infinite;
+}
+
 /* CORE STYLES */
 body { 
     font-family: 'Inter', sans-serif; 
@@ -127,7 +136,7 @@ body {
 
   body {
     @apply font-sans antialiased;
-    background-image: url("/img/background.png");
+    background-image: url("/static/img/background.png");
     background-attachment: fixed;
     background-size: cover;
     background-position: center;
