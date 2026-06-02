@@ -229,4 +229,29 @@ export async function leaveClub(id: number): Promise<{ status: string }> {
   });
 }
 
+export interface ClubEvent {
+  id: number;
+  club: number;
+  title: string;
+  description: string;
+  event_date: string;
+  created_at: string;
+}
+
+export async function getClubEvents(clubId: number): Promise<ClubEvent[]> {
+  return apiClient(`/api/v1/club-events/?club=${clubId}`);
+}
+
+export async function getClubEventDetails(eventId: number): Promise<ClubEvent> {
+  return apiClient(`/api/v1/club-events/${eventId}/`);
+}
+
+export async function createClubEvent(data: Partial<ClubEvent>): Promise<ClubEvent> {
+  return apiClient('/api/v1/club-events/', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+
 
