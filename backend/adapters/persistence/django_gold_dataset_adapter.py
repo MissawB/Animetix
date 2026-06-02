@@ -39,6 +39,31 @@ class DjangoGoldDatasetAdapter(GoldDatasetPort):
         except GoldDatasetEntry.DoesNotExist:
             return None
 
+    def save_star_trace(self, instruction: str, input_text: str, output_text: str) -> None:
+        from animetix.models import GoldDatasetEntry
+        GoldDatasetEntry.objects.create(
+            instruction=instruction,
+            context=input_text, # On utilise context pour l'input de l'énigme
+            response=output_text,
+            is_validated=False
+        )
+
+    def get_unprocessed_validated_entries(self) -> List[Dict[str, Any]]:
+        from animetix.models import GoldDatasetEntry
+        # Pour simplifier et éviter une migration DB, les entrées exportées
+        # seront supprimées via mark_entries_as_processed.
+        # Ainsi, tout ce qui est is_validated=True est en attente d'export.
+        entries = GoldDatasetEntry.objects.filter(is_validated=True).order_by('created_at')
+        return [self._to_dict(e) for e in entries]
+        
+    def mark_entries_as_processed(self, entry_ids: List[int]) -> None:
+        from animetix.models import GoldDatasetEntry
+        # Une fois exportées dans le JSONL, on les supprime de la table
+        # pour éviter qu'elles ne soient ré-exportées au prochain cycle,
+        # agissant ainsi comme une queue de curation.
+        if entry_ids:
+            GoldDatasetEntry.objects.filter(id__in=entry_ids).delete()
+
     def _to_dict(self, entry) -> Dict[str, Any]:
         return {
             'id': entry.id,

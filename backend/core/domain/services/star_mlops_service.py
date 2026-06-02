@@ -5,6 +5,7 @@ import subprocess
 from typing import List, Dict, Any
 from core.ports.inference_port import InferencePort
 from core.domain.services.prompt_manager import PromptManager
+from core.ports.gold_dataset_port import GoldDatasetPort
 
 logger = logging.getLogger("animetix.mlops.star")
 
@@ -15,49 +16,51 @@ class StarMLOpsDomainService:
     """
     def __init__(self, 
                  prompt_manager: PromptManager,
-                 traces_path: str = "data/mlops/datasets/star_reasoning_traces.jsonl",
+                 gold_dataset_port: GoldDatasetPort,
+                 eval_service=None,
                  main_dataset_path: str = "data/mlops/datasets/animetix_expert_ft.jsonl"):
         self.prompt_manager = prompt_manager
+        self.gold_dataset_port = gold_dataset_port
+        self.eval_service = eval_service
         # Chemins absolus
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-        self.traces_path = os.path.join(base_dir, traces_path)
         self.main_dataset_path = os.path.join(base_dir, main_dataset_path)
 
     def prepare_star_dataset(self) -> int:
         """
-        Convertit les traces STaR brutes en format d'instruction et les fusionne
-        au dataset principal de fine-tuning.
+        Récupère les traces STaR validées par un humain depuis la DB 
+        et les exporte vers le dataset principal de fine-tuning.
         """
-        if not os.path.exists(self.traces_path):
-            logger.warning("No STaR traces found to prepare.")
+        entries = self.gold_dataset_port.get_unprocessed_validated_entries()
+        
+        if not entries:
+            logger.info("No new validated STaR traces found for export.")
             return 0
 
-        new_entries = []
+        new_entries_formatted = []
+        entry_ids = []
+        
         try:
-            with open(self.traces_path, 'r', encoding='utf-8') as f:
-                for line in f:
-                    trace = json.loads(line)
-                    # Conversion au format instruction/input/output
-                    new_entries.append({
-                        "instruction": f"Résous cette énigme sur l'univers anime/manga en détaillant ton raisonnement.",
-                        "input": trace.get("prompt", ""),
-                        "output": trace.get("completion", "")
-                    })
-            
-            if not new_entries:
-                return 0
+            for entry in entries:
+                # Conversion au format instruction/input/output
+                new_entries_formatted.append({
+                    "instruction": entry.get("instruction", "Résous cette énigme."),
+                    "input": entry.get("context", ""), # Le context contient le riddle
+                    "output": entry.get("response", "") # La response contient le raisonnement complet
+                })
+                entry_ids.append(entry["id"])
 
             # Ajout au dataset principal (Append)
             os.makedirs(os.path.dirname(self.main_dataset_path), exist_ok=True)
             with open(self.main_dataset_path, 'a', encoding='utf-8') as f:
-                for entry in new_entries:
-                    f.write(json.dumps(entry, ensure_ascii=False) + '\n')
+                for entry_data in new_entries_formatted:
+                    f.write(json.dumps(entry_data, ensure_ascii=False) + '\n')
             
-            # Nettoyage des traces traitées pour éviter les doublons au prochain cycle
-            # os.remove(self.traces_path) # Optionnel: on peut aussi archiver
+            # Nettoyage des entrées traitées (retrait de la DB)
+            self.gold_dataset_port.mark_entries_as_processed(entry_ids)
             
-            logger.info(f"✅ STaR: {len(new_entries)} reasoning traces integrated into main dataset.")
-            return len(new_entries)
+            logger.info(f"✅ STaR: {len(new_entries_formatted)} human-validated reasoning traces exported to FT dataset.")
+            return len(new_entries_formatted)
             
         except Exception as e:
             logger.error(f"Failed to prepare STaR dataset: {e}")

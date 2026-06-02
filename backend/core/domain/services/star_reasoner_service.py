@@ -4,6 +4,7 @@ import logging
 from typing import List, Dict, Optional
 from core.ports.inference_port import InferencePort
 from core.domain.services.prompt_manager import PromptManager
+from core.ports.gold_dataset_port import GoldDatasetPort
 
 logger = logging.getLogger("animetix.mlops")
 
@@ -11,10 +12,10 @@ class StarReasonerService:
     """
     Implémentation de STaR (Self-Taught Reasoner).
     """
-    def __init__(self, inference_engine: InferencePort, prompt_manager: PromptManager, training_data_path: str = "data/mlops/datasets/star_reasoning_traces.jsonl"):
+    def __init__(self, inference_engine: InferencePort, prompt_manager: PromptManager, gold_dataset_port: GoldDatasetPort):
         self.inference_engine = inference_engine
         self.prompt_manager = prompt_manager
-        self.training_data_path = training_data_path
+        self.gold_dataset_port = gold_dataset_port
 
     def solve_riddle_with_star(self, riddle: str, expected_answer: str, num_attempts: int = 3) -> Dict:
         """
@@ -50,14 +51,14 @@ class StarReasonerService:
                 successful_paths.append(path_data)
                 best_answer = response
                 
-        # Sauvegarde des traces correctes pour l'auto-amélioration
+        # Sauvegarde des traces correctes pour validation humaine (et auto-amélioration future)
         if successful_paths:
             self._save_traces(successful_paths)
-            logger.info(f"✅ STaR: Found {len(successful_paths)} correct reasoning paths. Traces saved for Fine-Tuning.")
+            logger.info(f"✅ STaR: Found {len(successful_paths)} correct reasoning paths. Traces saved for human validation.")
             
             # Déclenchement automatique de la boucle MLOps (via Celery)
             try:
-                from backend.animetix.tasks import run_star_training_cycle_task
+                from backend.api.animetix.tasks import run_star_training_cycle_task
                 # On déclenche la tâche si on vient d'ajouter des traces
                 run_star_training_cycle_task.delay()
             except ImportError:
@@ -72,13 +73,10 @@ class StarReasonerService:
         }
 
     def _save_traces(self, paths: List[Dict]):
-        """Sauvegarde les traces de raisonnement correctes pour un futur fine-tuning."""
-        os.makedirs(os.path.dirname(self.training_data_path), exist_ok=True)
-        with open(self.training_data_path, 'a', encoding='utf-8') as f:
-            for path in paths:
-                # Format compatible avec TRL SFTTrainer
-                training_example = {
-                    "prompt": path["riddle"],
-                    "completion": path["reasoning_trace"]
-                }
-                f.write(json.dumps(training_example) + "\n")
+        """Sauvegarde les traces de raisonnement correctes pour validation humaine via la BD."""
+        for path in paths:
+            self.gold_dataset_port.save_star_trace(
+                instruction="Résous cette énigme sur l'univers anime/manga en détaillant ton raisonnement.",
+                input_text=path["riddle"],
+                output_text=path["reasoning_trace"]
+            )

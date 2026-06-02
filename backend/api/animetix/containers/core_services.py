@@ -328,8 +328,9 @@ class CoreServicesContainer(containers.DeclarativeContainer):
 
     star_reasoner_service = providers.Singleton(
         StarReasonerService,
-        llm_service=agentic.llm_service,
-        prompt_manager=infrastructure.prompt_manager
+        inference_engine=inference.inference_engine,
+        prompt_manager=infrastructure.prompt_manager,
+        gold_dataset_port=persistence.gold_dataset_adapter
     )
 
     tree_of_thoughts_service = providers.Singleton(
@@ -378,6 +379,8 @@ class CoreServicesContainer(containers.DeclarativeContainer):
 
     star_mlops_service = providers.Singleton(
         StarMLOpsDomainService,
+        prompt_manager=infrastructure.prompt_manager,
+        gold_dataset_port=persistence.gold_dataset_adapter,
         eval_service=ragas_eval_service
     )
 
