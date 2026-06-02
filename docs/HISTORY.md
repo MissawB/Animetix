@@ -20,6 +20,7 @@ Ce document archive les étapes majeures de l'évolution technique du projet.
 - **Sécurité et Résilience** : 
     - **Suppression des Secrets par Défaut (Hardened)** : Élimination de tous les fallbacks de clés API en dur dans le code. Validation centralisée dans `settings.py` via `ImproperlyConfigured` en production et blocage du démarrage du service Brain API sans clé sécurisée.
     - **Isolation Réseau SOTA** : Retrait total de l'exposition des ports de base de données (Postgres, Redis, Chroma, Neo4j) et d'inférence (Ollama) sur l'hôte host. Les services communiquent désormais exclusivement via le réseau virtuel Docker, éliminant les vecteurs d'accès direct non autorisés.
+    - **Durcissement SSRF Interne** : Refactorisation de `is_safe_url` pour imposer une liste blanche stricte (`ALLOWED_INTERNAL_HOSTS`) des services Docker autorisés. Même avec `allow_internal=True`, l'accès direct aux IPs privées non-résolues via hostname autorisé est désormais bloqué, empêchant le scan du réseau interne.
     - Sécurisation de la Brain API via `X-API-Key`.
     - Mitigation Prompt Injection et affinage de la CSP (retrait de `'unsafe-eval'`).
     - Systématisation de la sanitisation des sorties IA (`sanitize_ai`/`bleach`).

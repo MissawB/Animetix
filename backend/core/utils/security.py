@@ -59,10 +59,15 @@ def validate_file_size(file_size: int, max_size: int) -> bool:
         return False
     return True
 
+# --- SSRF PROTECTION ---
+# Liste blanche des services internes autorisés via Docker ou localhost.
+ALLOWED_INTERNAL_HOSTS = ['brain', 'db', 'redis', 'chromadb', 'neo4j', 'localhost', '127.0.0.1']
+
 def is_safe_url(url: str, allowed_schemes: Optional[List[str]] = None, allow_internal: bool = False) -> bool:
     """
     Vérifie si une URL est sûre pour éviter les attaques SSRF.
-    Bloque les adresses privées par défaut, sauf si allow_internal est True.
+    Si allow_internal est True, autorise UNIQUEMENT les hôtes dans ALLOWED_INTERNAL_HOSTS.
+    Bloque systématiquement les adresses privées/réservées si l'hôte n'est pas dans la liste blanche.
     """
     if allowed_schemes is None:
         allowed_schemes = ['http', 'https']
@@ -77,19 +82,26 @@ def is_safe_url(url: str, allowed_schemes: Optional[List[str]] = None, allow_int
         if not hostname:
             return False
 
-        # Cas particulier pour Docker/Localhost si explicitement autorisé
-        if allow_internal:
-            if hostname in ['localhost', '127.0.0.1', 'brain', 'db', 'redis', 'chromadb', 'neo4j']:
+        # 1. Vérification de la liste blanche interne
+        is_whitelisted = hostname in ALLOWED_INTERNAL_HOSTS
+        
+        if is_whitelisted:
+            if allow_internal:
                 return True
+            else:
+                logger.warning(f"Blocked internal host access (allow_internal=False): {hostname}")
+                return False
 
-        # 1. Vérification par résolution DNS
+        # 2. Vérification par résolution DNS (Pour les URLs externes ou tentatives de contournement)
         try:
             ip_addresses = socket.getaddrinfo(hostname, None)
             for addr in ip_addresses:
                 ip_str = addr[4][0]
                 ip = ipaddress.ip_address(ip_str)
                 
-                if not allow_internal and (
+                # Bloquer les plages privées même si allow_internal=True
+                # On veut forcer l'usage des noms symboliques (ex: 'db') et non des IPs directes.
+                if (
                     ip.is_private or 
                     ip.is_loopback or 
                     ip.is_link_local or 
@@ -99,9 +111,8 @@ def is_safe_url(url: str, allowed_schemes: Optional[List[str]] = None, allow_int
                     logger.warning(f"Blocked request to internal/private IP: {ip_str} (hostname: {hostname})")
                     return False
         except (socket.gaierror, ValueError) as e:
-            # Si on ne peut pas résoudre, on bloque si ce n'est pas un hostname interne connu
-            if allow_internal:
-                return hostname in ['brain', 'db', 'redis', 'chromadb', 'neo4j']
+            # Si on ne peut pas résoudre, on bloque systématiquement 
+            # (les hôtes internes autorisés ont été gérés au point 1)
             return False
 
         return True
