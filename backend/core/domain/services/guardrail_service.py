@@ -99,23 +99,37 @@ class GuardrailService:
         return self._llm_moderate(text, categories)
 
     def _is_potential_jailbreak(self, text: str) -> bool:
-        """Heuristique renforcée pour détecter les tentatives de détournement."""
-        jailbreak_patterns = [
-            "ignore previous instructions", "system prompt", "dan mode", 
-            "dev mode", "as a hacker", "unlock all features", "stay in character",
-            "base64", "rot13", "translate the following into", "echo back",
-            "you are now", "forget your rules", "pwned", "payload"
-        ]
-        text_lower = text.lower()
+        import re
+        import base64
         
-        # 1. Recherche de patterns
-        if any(p in text_lower for p in jailbreak_patterns):
+        text_lower = text.lower()
+        jailbreak_patterns = [
+            r"ignore\s+(all\s+)?previous\s+instructions", 
+            r"system\s+prompt", r"dan\s+mode", r"dev\s+mode", 
+            r"as\s+a\s+hacker", r"unlock\s+all\s+features", 
+            r"stay\s+in\s+character", r"echo\s+back",
+            r"you\s+are\s+now", r"forget\s+your\s+rules", r"pwned", r"payload"
+        ]
+        
+        # 1. Regex Pattern Matching
+        if any(re.search(p, text_lower) for p in jailbreak_patterns):
             return True
             
-        # 2. Détection de structures suspectes (ex: trop de répétitions de caractères spéciaux)
-        if text.count("{") > 10 or text.count("[") > 10:
+        # 2. Structural anomalies
+        if text.count("{") > 5 or text.count("[") > 5:
             return True
             
+        # 3. Base64 Detection (Simple heuristic for long continuous strings)
+        words = text.split()
+        for word in words:
+            if len(word) > 20 and re.match(r'^[A-Za-z0-9+/]+={0,2}$', word):
+                try:
+                    decoded = base64.b64decode(word).decode('utf-8').lower()
+                    if any(re.search(p, decoded) for p in jailbreak_patterns):
+                        return True
+                except Exception:
+                    pass
+
         return False
 
     def _detect_system_leak(self, text: str) -> bool:
