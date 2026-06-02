@@ -119,6 +119,12 @@ class PromptManager:
         system = prompt_template.get("system_prompt", "") if isinstance(prompt_template, dict) else ""
         
         formatted_prompt = template.format(**kwargs)
+        if system:
+            try:
+                system = system.format(**kwargs)
+            except KeyError:
+                # Fallback if some keys are missing, keep original system prompt
+                pass
         
         # --- SELF-EVOLVING: INJECTION DES FEW-SHOTS ---
         # Sécurité Phase 2 : On n'injecte que les exemples VÉRIFIÉS
