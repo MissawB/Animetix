@@ -24,7 +24,8 @@ class CoveOracleService:
         
         # Étape 1 : Générer une réponse initiale (Baseline)
         baseline_prompt = self.prompt_manager.get_prompt("cove_baseline", media_type=media_type, question=question)
-        baseline_response = self.inference_engine.generate(baseline_prompt)
+        baseline_res = self.inference_engine.generate(baseline_prompt)
+        baseline_response = baseline_res.text
         
         # Étape 2 : Planification des vérifications (Deconstruct claims)
         plan_prompt, plan_system = self.prompt_manager.get_prompt("cove_plan", baseline_response=baseline_response)
@@ -47,7 +48,8 @@ class CoveOracleService:
         for v_question in verification_questions:
             # On demande au LLM d'extraire les entités de la question de vérification
             ent_prompt = self.prompt_manager.get_prompt("cove_entities", v_question=v_question)
-            entities = [e.strip() for e in self.inference_engine.generate(ent_prompt).split(',')]
+            ent_res = self.inference_engine.generate(ent_prompt)
+            entities = [e.strip() for e in ent_res.text.split(',')]
             
             # Interrogation de Neo4j (GraphRAG)
             graph_context = ""
@@ -59,20 +61,22 @@ class CoveOracleService:
             
             # Évaluation du fait avec le contexte vérifié
             eval_prompt = self.prompt_manager.get_prompt("cove_eval", v_question=v_question, graph_context=graph_context)
-            fact_check = self.inference_engine.generate(eval_prompt)
-            verified_facts.append(f"Fait vérifié ({v_question}) : {fact_check}")
+            eval_res = self.inference_engine.generate(eval_prompt)
+            verified_facts.append(f"Fait vérifié ({v_question}) : {eval_res.text}")
 
         # Étape 4 : Génération de la réponse finale révisée
         final_prompt, final_system = self.prompt_manager.get_prompt("cove_final", question=question, baseline_response=baseline_response, verified_facts=" ".join(verified_facts))
         
         logger.info("✅ CoVe: Generating final verified response.")
-        return self.inference_engine.generate(final_prompt, system_prompt=final_system)
+        final_res = self.inference_engine.generate(final_prompt, system_prompt=final_system)
+        return final_res.text
 
     def _safe_json_generate(self, prompt: str, system_prompt: str = "Réponds UNIQUEMENT en JSON.") -> Dict:
         res = self.inference_engine.generate(prompt, system_prompt=system_prompt)
+        text = res.text
         try:
-            if '{' in res and '}' in res:
-                return orjson.loads(res[res.find('{'):res.rfind('}')+1])
+            if '{' in text and '}' in text:
+                return orjson.loads(text[text.find('{'):text.rfind('}')+1])
         except Exception as e:
             logger.warning(f"CoVe JSON Parsing Error: {e}")
         return {}

@@ -179,7 +179,8 @@ class GuardrailService:
                     categories=", ".join(categories)
                 )
             
-            response = self.inference_engine.generate(prompt, system_prompt=system)
+            inference_res = self.inference_engine.generate(prompt, system_prompt=system)
+            response = inference_res.text
             
             if "```json" in response:
                 response = response.split("```json")[1].split("```")[0].strip()
@@ -242,11 +243,12 @@ class RedTeamingAgent:
             title=media_item.get('title'), 
             description=media_item.get('description', '')[:500]
         )
-        response = self.inference_engine.generate(prompt, system_prompt=system)
-        return [q.strip() for q in response.split('\n') if len(q.strip()) > 5]
+        inference_res = self.inference_engine.generate(prompt, system_prompt=system)
+        return [q.strip() for q in inference_res.text.split('\n') if len(q.strip()) > 5]
 
     def evaluate_vulnerability(self, query: str, response: str, ground_truth: str) -> dict:
         prompt = f"Query: {query}\nResponse: {response}\nGround Truth: {ground_truth}"
-        evaluation = self.inference_engine.generate(prompt)
-        is_vulnerable = "halluciné" in evaluation.lower() or "oui" in evaluation.lower()
-        return {"is_vulnerable": is_vulnerable, "analysis": evaluation}
+        inference_res = self.inference_engine.generate(prompt)
+        evaluation_text = inference_res.text
+        is_vulnerable = "halluciné" in evaluation_text.lower() or "oui" in evaluation_text.lower()
+        return {"is_vulnerable": is_vulnerable, "analysis": evaluation_text}

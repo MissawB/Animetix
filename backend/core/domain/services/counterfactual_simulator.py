@@ -33,10 +33,11 @@ class CounterfactualConversationSimulator:
         )
         
         try:
-            alternative_response = self.inference_engine.generate(
+            inference_res = self.inference_engine.generate(
                 prompt=simulated_prompt,
                 system_prompt="Tu es le Simulateur de Dialogue Contrefactuel."
             )
+            alternative_response = inference_res.text
         except Exception as e:
             logger.error(f"Error during counterfactual generation: {e}")
             alternative_response = "Réponse alternative simulée."
@@ -54,10 +55,11 @@ class CounterfactualConversationSimulator:
         )
         
         try:
-            score_text = self.inference_engine.generate(
+            inference_res_judge = self.inference_engine.generate(
                 prompt=judge_prompt,
                 system_prompt="Tu es l'Évaluateur d'Utilité Contrefactuelle."
-            ).strip()
+            )
+            score_text = inference_res_judge.text.strip()
             import re
             match = re.search(r"\d+\.\d+", score_text)
             alternative_utility = float(match.group(0)) if match else 0.70

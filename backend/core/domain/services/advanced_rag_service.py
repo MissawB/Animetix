@@ -224,7 +224,8 @@ class AdvancedRAGService:
             # Ici on pourrait ajouter une logique de recherche web fallback
             
         prompt, system_prompt = self.prompt_manager.get_prompt("advanced_rag_generate", context=context, query=query)
-        return self.llm_service.inference_engine.generate(prompt, system_prompt=system_prompt)
+        inference_res = self.llm_service.inference_engine.generate(prompt, system_prompt=system_prompt)
+        return inference_res.text
 
     def generate_holistic_answer(self, query: str, media_type: str, category_name: str) -> str:
         """
@@ -242,14 +243,15 @@ class AdvancedRAGService:
         context = f"[Community Summary: {category_name}]\n{community_summary}\n"
         
         prompt, system_prompt = self.prompt_manager.get_prompt("advanced_rag_generate", context=context, query=query)
-        return self.llm_service.inference_engine.generate(prompt, system_prompt=system_prompt)
+        inference_res = self.llm_service.inference_engine.generate(prompt, system_prompt=system_prompt)
+        return inference_res.text
 
     def self_rag_verify(self, query: str, context: str) -> bool:
         """Vérifie si le contexte fourni permet de répondre à la question (évite les hallucinations)."""
         prompt, _ = self.prompt_manager.get_prompt("self_rag_verify", context=context, query=query)
         try:
-            res = self.llm_service.inference_engine.generate(prompt)
-            return "OUI" in res.upper()
+            inference_res = self.llm_service.inference_engine.generate(prompt)
+            return "OUI" in inference_res.text.upper()
         except Exception as e:
             logger.warning(f"Self-RAG verification failed: {e}")
             return True # Par défaut on continue si le juge échoue
