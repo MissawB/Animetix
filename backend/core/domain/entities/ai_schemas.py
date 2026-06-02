@@ -201,3 +201,27 @@ class InferenceResponse(BaseModel):
     """Full response from an inference call, including the generated text and metadata."""
     text: str
     metadata: InferenceMetadata = Field(default_factory=InferenceMetadata)
+
+# --- XAI & ADVANCED DIAGNOSTICS SCHEMAS ---
+
+class DocumentAttribution(BaseModel):
+    """Attribution metadata for a specific document in the RAG context."""
+    document_id: str
+    title: str
+    relevance_score: float
+    contribution_weight: float = 0.0
+
+class ModelDiagnostics(BaseModel):
+    """Internal model diagnostics, such as attention patterns and logit trajectories."""
+    attention_heatmap: List[List[float]] = Field(default_factory=list)
+    top_influential_tokens: List[str] = Field(default_factory=list)
+    logit_lens_trajectory: List[Dict[str, Any]] = Field(default_factory=list)
+
+class XaiReport(BaseModel):
+    """Comprehensive XAI report for a RAG inference, combining attribution and diagnostics."""
+    query_intent: str = ""
+    retrieval_attribution: List[DocumentAttribution] = Field(default_factory=list)
+    internal_diagnostics: Optional[ModelDiagnostics] = None
+    uncertainty: Dict[str, Any] = Field(default_factory=dict)
+    agent_trace: List[Dict[str, Any]] = Field(default_factory=list)
+    final_confidence: float = 0.0
