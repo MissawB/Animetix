@@ -24,7 +24,7 @@ class TestSSRFProtection:
         mock_response.content = b'GIF89a\x01\x00\x01\x00\x80\x00\x00\xff\xff\xff\x00\x00\x00!\xf9\x04\x01\x00\x00\x00\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;'
         mock_response.headers = {'Content-Type': 'image/gif'}
 
-        with patch('backend.api.animetix.api.core.safe_http_request') as mock_get:
+        with patch('animetix.api.core.safe_http_request') as mock_get:
             mock_get.return_value = mock_response
 
             target = "https://example.com/image.gif"
