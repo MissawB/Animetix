@@ -81,6 +81,33 @@
       }
     }
   },
+  "forge_hub": {
+    "title": "Forge of Worlds",
+    "subtitle": "Omega Access Protocol",
+    "description": "Select a relic to initialize the laboratory",
+    "categories": {
+      "narrative": {
+        "title": "Narrative",
+        "sub": "Reality Synthesis",
+        "desc": "Scenario Forge"
+      },
+      "visual": {
+        "title": "Visual",
+        "sub": "Visual Labs",
+        "desc": "Manga & Video Lab"
+      },
+      "audio": {
+        "title": "Audio",
+        "sub": "Aural Nexus",
+        "desc": "Voice & Soundscape"
+      },
+      "experimental": {
+        "title": "Lab",
+        "sub": "Singularity Lab",
+        "desc": "Quantum & Swarm"
+      }
+    }
+  },
   "admin": {
     "eval": {
       "title": "IA QUALITY CONTROL",
