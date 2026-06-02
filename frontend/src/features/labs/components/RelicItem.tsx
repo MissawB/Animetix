@@ -13,12 +13,14 @@ interface RelicItemProps {
 }
 
 export const RelicItem: React.FC<RelicItemProps> = ({ 
-  title, sub, desc, color, glowColor, children, onClick 
+  id, title, sub, desc, color, glowColor, children, onClick 
 }) => {
   return (
-    <motion.div 
+    <motion.button 
+      id={id}
       onClick={onClick}
-      className="flex flex-col items-center justify-center cursor-pointer group"
+      aria-label={title}
+      className="flex flex-col items-center justify-center cursor-pointer group bg-transparent border-none outline-none p-0 text-inherit font-inherit"
       whileHover={{ y: -20, scale: 1.05 }}
       transition={{ type: "spring", stiffness: 300, damping: 20 }}
     >
@@ -33,6 +35,6 @@ export const RelicItem: React.FC<RelicItemProps> = ({
         <h2 className="text-5xl font-black italic manga-font uppercase leading-none">{title}</h2>
         <p className="mt-4 text-[10px] font-bold opacity-30 uppercase tracking-widest">{desc}</p>
       </div>
-    </motion.div>
+    </motion.button>
   );
 };
