@@ -19,10 +19,10 @@ export const akinetixService = {
     });
   },
 
-  submitConfirmation: async (isCorrect: boolean): Promise<void> => {
+  submitConfirmation: async (isCorrect: boolean, actualTarget?: string): Promise<void> => {
     return apiClient(`${API_BASE}/confirm/`, {
       method: 'POST',
-      body: JSON.stringify({ correct: isCorrect })
+      body: JSON.stringify({ correct: isCorrect, actual_target: actualTarget })
     });
   }
 };

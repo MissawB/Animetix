@@ -125,7 +125,7 @@ const VisualNexusPage: React.FC = () => {
                         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
                     >
                         {[1, 2, 3].map(i => (
-                            <Card key={i} className="aspect-video bg-white/5 border-white/5 animate-pulse rounded-3xl" />
+                            <Card key={i} className="aspect-video bg-white/5 border-white/5 animate-pulse rounded-3xl"><></></Card>
                         ))}
                     </motion.div>
                 ) : searchResults.length > 0 ? (

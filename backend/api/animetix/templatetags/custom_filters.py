@@ -29,9 +29,11 @@ def modulo(value, arg):
     except (ValueError, TypeError, ZeroDivisionError):
         return 0
 
+from core.utils.security import sign_proxy_url
+
 @register.filter
 def cdn_url(url):
-    """Proxy local avec cache pour les images externes."""
+    """Proxy local avec cache pour les images externes. Sécurisé par HMAC."""
     if not url: return ""
     if url.startswith('data:image'): return url
     
@@ -39,20 +41,24 @@ def cdn_url(url):
     quoted_url = urllib.parse.quote(url, safe='')
     weserv_url = f"https://images.weserv.nl/?url={quoted_url}&output=webp&q=80"
     
-    # Le proxy local décode le base64, puis is_safe_url vérifie la destination finale
+    # Signature cryptographique pour empêcher l'usage du proxy pour d'autres URLs
+    sig = sign_proxy_url(weserv_url)
     encoded = base64.b64encode(weserv_url.encode()).decode()
-    return f"/fr/cdn-proxy/?url={encoded}"
+    
+    return f"/fr/cdn-proxy/?url={encoded}&sig={sig}"
 
 @register.filter
 def blur_cdn_url(url):
-    """Idem cdn_url mais avec un flou de 50% pour les posters de jeux cachés."""
+    """Idem cdn_url mais avec un flou de 50%. Sécurisé par HMAC."""
     if not url: return ""
     
     quoted_url = urllib.parse.quote(url, safe='')
     weserv_url = f"https://images.weserv.nl/?url={quoted_url}&blur=50&output=webp&q=60"
     
+    sig = sign_proxy_url(weserv_url)
     encoded = base64.b64encode(weserv_url.encode()).decode()
-    return f"/fr/cdn-proxy/?url={encoded}"
+    
+    return f"/fr/cdn-proxy/?url={encoded}&sig={sig}"
 
 import bleach
 from django.utils.safestring import mark_safe

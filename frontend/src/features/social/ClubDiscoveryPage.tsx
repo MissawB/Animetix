@@ -6,6 +6,7 @@ import { apiClient } from '../../utils/apiClient';
 import { socialService } from './services/socialService';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
+import { Badge } from '../../components/ui/Badge';
 import { queryClient } from '../../utils/queryClient';
 
 interface Club {

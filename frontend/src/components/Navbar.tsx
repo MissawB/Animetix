@@ -4,7 +4,7 @@ import { useUIStore } from '../store/uiStore';
 import { useAuthStore } from '../store/authStore';
 import { 
   Menu, Shield, Sparkles, Box, FlaskConical, Network, Users, Radio, Search, 
-  Gamepad2, Film, User, Settings, Sliders, Heart 
+  Gamepad2, Film, User, Settings, Sliders, LogOut, LogIn, UserPlus 
 } from 'lucide-react';
 import { FeatureGate } from './utils/FeatureGate';
 import { useTranslation } from 'react-i18next';
@@ -16,7 +16,7 @@ import { PersonalizationPanel } from './shared/PersonalizationPanel';
 const Navbar: React.FC = () => {
   const { t } = useTranslation();
   const toggleSidebar = useUIStore((state) => state.toggleSidebar);
-  const { user } = useAuthStore();
+  const { user, logout } = useAuthStore();
   const { isPersonalizationEnabled, setPersonalizationEnabled } = usePersonalizationStore();
   const [showPersonalizationPanel, setShowPersonalizationPanel] = React.useState(false);
   
@@ -99,7 +99,21 @@ const Navbar: React.FC = () => {
                   <User className="w-4 h-4 text-orange-500" /> {user.username}
                 </Link>
               </DynamicAuraWrapper>
+              <button onClick={() => logout()} className="flex items-center gap-2 text-xs font-black italic text-red-500 opacity-60 hover:opacity-100 hover:text-red-500 transition-all uppercase tracking-widest">
+                <LogOut className="w-4 h-4" />
+              </button>
             </>
+          )}
+
+          {!user && (
+            <div className="flex items-center gap-4 ml-4">
+              <Link to="/login" className="flex items-center gap-2 no-underline text-xs font-black italic text-gray-500 hover:text-blue-500 transition-all uppercase tracking-widest">
+                <LogIn className="w-4 h-4 text-blue-500" /> Connexion
+              </Link>
+              <Link to="/register" className="flex items-center gap-2 no-underline text-xs font-black italic bg-brand-primary text-white hover:scale-105 transition-all uppercase tracking-widest px-4 py-2 rounded-xl">
+                <UserPlus className="w-4 h-4" /> S'inscrire
+              </Link>
+            </div>
           )}
 
           {user?.tier === 'premium' && (

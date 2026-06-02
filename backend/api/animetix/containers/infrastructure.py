@@ -7,7 +7,7 @@ from core.domain.services.translation_service import TranslationService
 from core.domain.services.observability_service import ObservabilityService
 from core.domain.services.pricing_service import PricingService
 from adapters.persistence.django_usage_adapter import DjangoUsageAdapter
-from adapters.persistence.web_search_adapter import DuckDuckGoSearchAdapter
+from adapters.persistence.web_search_adapter import UnifiedWebSearchAdapter
 from adapters.infrastructure.django_notification_adapter import DjangoNotificationAdapter
 
 class InfrastructureContainer(containers.DeclarativeContainer):
@@ -36,4 +36,4 @@ class InfrastructureContainer(containers.DeclarativeContainer):
         DjangoNotificationAdapter
     )
 
-    web_search = providers.Singleton(DuckDuckGoSearchAdapter)
+    web_search = providers.Singleton(UnifiedWebSearchAdapter)

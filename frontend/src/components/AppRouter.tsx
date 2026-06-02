@@ -9,6 +9,7 @@ import { CompanionRoutes } from '../features/companion/routes/CompanionRoutes';
 import { SearchRoutes } from '../features/search/routes/SearchRoutes';
 import { AdminRoutes } from '../features/admin/routes/AdminRoutes';
 import { UtilsRoutes } from '../features/utils/routes/UtilsRoutes';
+import { AuthRoutes } from '../features/auth/routes/AuthRoutes';
 
 const App = React.lazy(() => import('../App'));
 
@@ -27,6 +28,7 @@ const AppRouter: React.FC = () => {
         <Suspense fallback={<Loading />}>
           <Routes>
             <Route path="/" element={<App />} />
+            {AuthRoutes}
             {SocialRoutes}
             {MediaRoutes}
             {SearchRoutes}

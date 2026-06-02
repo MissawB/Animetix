@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Swords, Trophy, Loader2, AlertCircle, Heart, Share2, TrendingUp, Clock, History, Flame } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Card } from '../../components/ui/Card';
+import { CardSkeleton } from '../../components/ui/Skeleton';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Badge } from '../../components/ui/Badge';
@@ -90,7 +91,7 @@ const VsBattlePage: React.FC = () => {
                             </div>
 
                             {/* Fighter A */}
-                            <Card padding="xl" className="border-2 border-red-500/10 bg-red-500/5 rounded-[3rem]">
+                            <Card padding="lg" className="border-2 border-red-500/10 bg-red-500/5 rounded-[3rem]">
                                 <h2 className="text-2xl font-black uppercase italic mb-8 text-red-500">Challenger A</h2>
                                 <div className="space-y-6">
                                     <Input 
@@ -110,7 +111,7 @@ const VsBattlePage: React.FC = () => {
                             </Card>
 
                             {/* Fighter B */}
-                            <Card padding="xl" className="border-2 border-blue-500/10 bg-blue-500/5 rounded-[3rem]">
+                            <Card padding="lg" className="border-2 border-blue-500/10 bg-blue-500/5 rounded-[3rem]">
                                 <h2 className="text-2xl font-black uppercase italic mb-8 text-blue-500 text-right">Challenger B</h2>
                                 <div className="space-y-6">
                                     <Input 
@@ -193,7 +194,7 @@ const VsBattlePage: React.FC = () => {
                         </div>
 
                         {/* Verdict Final */}
-                        <Card padding="xl" className="border-4 border-red-600/50 bg-navy-900 rounded-[4rem] relative overflow-hidden">
+                        <Card padding="lg" className="border-4 border-red-600/50 bg-navy-900 rounded-[4rem] relative overflow-hidden">
                             <div className="absolute top-0 right-0 p-8 opacity-5">
                                 <Trophy className="w-40 h-40" />
                             </div>

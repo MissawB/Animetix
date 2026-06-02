@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
+import { Button } from '../../components/ui/Button';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
 
 const GamesHubPage: React.FC = () => {

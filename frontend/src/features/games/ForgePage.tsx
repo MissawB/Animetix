@@ -186,7 +186,7 @@ const ForgePage: React.FC = () => {
 
              <div className="flex flex-wrap gap-4">
                 <button 
-                   onClick={() => navigate(`/forge/vn/${status.fusion_id}/`)}
+                   onClick={() => navigate(`/forge/vn/${fusionData?.fusion_id}/`)}
                    className="flex-1 min-w-[200px] bg-anime-accent text-black py-5 px-8 rounded-2xl font-black italic text-lg hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 uppercase shadow-xl"
                 >
                    <Film className="w-6 h-6" />

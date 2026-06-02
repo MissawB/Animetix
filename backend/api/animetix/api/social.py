@@ -46,6 +46,11 @@ class ClubViewSet(viewsets.ModelViewSet):
             return base_qs.filter(Q(is_private=False) | Q(members=user) | Q(creator=user)).distinct()
         return base_qs.filter(is_private=False)
 
+    def get_permissions(self):
+        if self.action in ['join', 'leave', 'trigger_event']:
+            return [permissions.IsAuthenticated()]
+        return super().get_permissions()
+
     def perform_create(self, serializer):
         # Restriction Premium pour la création
         if self.request.user.profile.tier != 'premium':

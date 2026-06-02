@@ -29,7 +29,7 @@ export const useAkinetix = () => {
 
   // Confirmer si la prédiction de l'IA est bonne
   const confirmMutation = useMutation({
-    mutationFn: akinetixService.submitConfirmation,
+    mutationFn: (isCorrect: boolean) => akinetixService.submitConfirmation(isCorrect),
     onSuccess: () => {
       // Invalider pour forcer un rechargement propre
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });

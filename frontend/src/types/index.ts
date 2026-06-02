@@ -7,6 +7,7 @@ export interface User {
   xp?: number;
   tier?: string;
   has_api_key?: boolean;
+  is_staff?: boolean;
 }
 
 export interface AppConfig {
@@ -31,6 +32,8 @@ export interface Profile {
   rank?: string;
   achievements_count?: number;
   collection_count?: number;
+  recent_achievements?: any[];
+  top_fusions?: any[];
 }
 
 export interface UserConfig {

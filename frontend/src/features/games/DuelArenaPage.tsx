@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sword, User, Zap, Trophy, Timer, XCircle } from 'lucide-react';
+import { Sword, User, Zap, Trophy, Timer, XCircle, Users, Radio } from 'lucide-react';
 
 const DuelArenaPage: React.FC = () => {
   const { roomCode } = useParams<{ roomCode: string }>();
@@ -225,5 +225,4 @@ const DuelArenaPage: React.FC = () => {
   );
 };
 
-import { Radio } from 'lucide-react';
 export default DuelArenaPage;

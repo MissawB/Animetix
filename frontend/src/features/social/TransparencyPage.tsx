@@ -165,7 +165,7 @@ const TransparencyPage: React.FC = () => {
                 </h3>
                 {user?.is_staff && (
                     <Button 
-                        size="xs" 
+                        size="sm" 
                         variant="outline" 
                         className="text-[8px] font-black"
                         onClick={() => adminActionMutation.mutate('drift_baseline')}
@@ -237,7 +237,7 @@ const TransparencyPage: React.FC = () => {
                 </h3>
                 {user?.is_staff && (
                     <Button 
-                        size="xs" 
+                        size="sm" 
                         variant="outline" 
                         className="text-[8px] font-black border-white/20 hover:bg-white/10"
                         onClick={() => adminActionMutation.mutate('graph_cleanup')}

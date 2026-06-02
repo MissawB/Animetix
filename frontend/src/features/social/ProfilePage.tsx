@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { User, Shield, Zap, Award } from 'lucide-react';
+import { User, Shield, Zap, Award, ArrowRight, Brain } from 'lucide-react';
 import { useProfile } from './hooks/useProfile';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';

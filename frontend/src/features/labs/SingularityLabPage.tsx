@@ -15,7 +15,8 @@ import {
   Users,
   Target,
   BarChart3,
-  Search
+  Search,
+  Film
 } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { apiClient } from '../../utils/apiClient';

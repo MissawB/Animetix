@@ -10,7 +10,8 @@ import {
   ArrowRight,
   Brain,
   Zap,
-  Terminal
+  Terminal,
+  LayoutGrid
 } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';

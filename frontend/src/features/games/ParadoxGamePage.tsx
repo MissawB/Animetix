@@ -1,26 +1,26 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Target, Trophy, RotateCcw, AlertTriangle } from 'lucide-react';
-import { useMachine } from '@xstate/react';
-import { paradoxMachine } from './machines/paradoxMachine';
+import { useParadoxStore } from './stores/paradoxStore';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 
 const ParadoxGamePage: React.FC = () => {
-  const [state, send] = useMachine(paradoxMachine);
-  const { gameState } = state.context;
+  const { gameState, isLoading, error, loadGame, submitGuess } = useParadoxStore();
 
-  const isLoading = state.matches('initializing') || state.matches('submitting');
+  useEffect(() => {
+    loadGame();
+  }, [loadGame]);
 
   if (isLoading) return <div className="text-center py-20 text-white font-black animate-pulse uppercase tracking-[0.3em]">Ouverture d'une faille temporelle...</div>;
   
-  if (state.matches('error')) {
+  if (error) {
     return (
       <div className="flex justify-center items-center py-20">
         <Card padding="lg" className="text-center border-red-500/50">
            <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-6" />
            <h2 className="text-2xl font-black text-red-500 mb-4 italic">PARADOXE INSTABLE</h2>
-           <p className="mb-8 opacity-60 font-bold">La connexion au flux sémantique a été rompue.</p>
-           <Button variant="danger" onClick={() => send({ type: 'RESTART' })}>RÉINITIALISER LE FLUX</Button>
+           <p className="mb-8 opacity-60 font-bold">{error}</p>
+           <Button variant="danger" onClick={loadGame}>RÉINITIALISER LE FLUX</Button>
         </Card>
       </div>
     );
@@ -35,13 +35,13 @@ const ParadoxGamePage: React.FC = () => {
       </h1>
       <p className="text-center text-gray-500 font-bold uppercase tracking-widest mb-12">Démasquez l'anomalie sémantique</p>
 
-      {state.matches('gameOver') ? (
+      {gameState.gameOver ? (
         <div className="max-w-2xl mx-auto text-center">
           <Card padding="lg" className="border-4 border-green-500">
             <Trophy className="w-20 h-20 text-green-500 mx-auto mb-6 animate-bounce" />
             <h2 className="text-4xl font-black mb-4">ANOMALIE RÉSOLUE !</h2>
             <p className="text-xl mb-8 opacity-70">Vous avez démasqué l'intrus avec une précision chirurgicale.</p>
-            <Button variant="success" size="lg" className="mx-auto" onClick={() => send({ type: 'RESTART' })}>
+            <Button variant="success" size="lg" className="mx-auto" onClick={loadGame}>
                 <RotateCcw className="w-5 h-5" /> REJOUER
             </Button>
           </Card>
@@ -51,7 +51,7 @@ const ParadoxGamePage: React.FC = () => {
           {gameState.items.map((item: any) => (
             <div 
                 key={item.id} 
-                onClick={() => send({ type: 'GUESS', itemId: item.id })}
+                onClick={() => submitGuess(item.id)}
                 className="group relative bg-white dark:bg-navy-800 rounded-[2.5rem] overflow-hidden shadow-xl cursor-pointer transition-all hover:scale-105 hover:shadow-2xl border-4 border-transparent hover:border-red-500/50"
             >
                 <img src={item.image} className="w-full h-80 object-cover grayscale group-hover:grayscale-0 transition-all duration-700" alt={item.title} />

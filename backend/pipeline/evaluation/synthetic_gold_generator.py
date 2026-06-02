@@ -112,26 +112,35 @@ FACTS = [
 OLLAMA_URL = "http://localhost:11434/v1/chat/completions"
 
 def ask_ollama(prompt: str) -> str:
-    payload = {
-        "model": "llama3",
-        "messages": [
-            {"role": "system", "content": "Tu es un assistant expert en structuration de données de pop culture japonaise. Réponds exclusivement en JSON valide."},
-            {"role": "user", "content": prompt}
-        ],
-        "temperature": 0.1,
-        "response_format": {"type": "json_object"}
-    }
-    
-    headers = {"Content-Type": "application/json"}
-    req = urllib.request.Request(OLLAMA_URL, data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST")
-    
     try:
-        with urllib.request.urlopen(req, timeout=15) as response:
-            res_data = json.loads(response.read().decode("utf-8"))
+        # Dynamically inject backend path to import safe_http_request securely
+        import os
+        import sys
+        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+        backend_path = os.path.join(base_dir, "backend")
+        if backend_path not in sys.path:
+            sys.path.insert(0, backend_path)
+            
+        from core.utils.security import safe_http_request
+
+        payload = {
+            "model": "llama3",
+            "messages": [
+                {"role": "system", "content": "Tu es un assistant expert en structuration de données de pop culture japonaise. Réponds exclusivement en JSON valide."},
+                {"role": "user", "content": prompt}
+            ],
+            "temperature": 0.1,
+            "response_format": {"type": "json_object"}
+        }
+        
+        # Localhost/Ollama calls are internal, so allow_internal=True is required
+        response = safe_http_request("POST", OLLAMA_URL, json=payload, timeout=15, allow_internal=True)
+        if response.status_code == 200:
+            res_data = response.json()
             return res_data["choices"][0]["message"]["content"]
     except Exception as e:
         logger.error(f"Ollama API Error or Timeout: {e}")
-        return ""
+    return ""
 
 synthetic_gold_dataset = []
 

@@ -8,6 +8,23 @@ from typing import List, Optional
 
 logger = logging.getLogger('animetix.security')
 
+import hmac
+import hashlib
+from django.conf import settings
+
+def sign_proxy_url(url: str) -> str:
+    """Génère une signature HMAC pour une URL de proxy."""
+    secret = settings.SECRET_KEY.encode()
+    signature = hmac.new(secret, url.encode(), hashlib.sha256).hexdigest()
+    return signature
+
+def verify_proxy_signature(url: str, signature: str) -> bool:
+    """Vérifie si la signature fournie correspond à l'URL."""
+    if not signature:
+        return False
+    expected = sign_proxy_url(url)
+    return hmac.compare_digest(expected, signature)
+
 def validate_file_mime_type(file_bytes: bytes, allowed_mime_types: List[str]) -> bool:
     """
     Vérifie la véritable signature binaire (Magic Number) d'un fichier 

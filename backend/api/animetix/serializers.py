@@ -10,6 +10,7 @@ class UserSerializer(serializers.ModelSerializer):
 class ProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     rank = serializers.ReadOnlyField()
+    has_api_key = serializers.SerializerMethodField()
     
     class Meta:
         model = Profile
@@ -17,8 +18,12 @@ class ProfileSerializer(serializers.ModelSerializer):
             'id', 'user', 'xp', 'current_streak', 'max_streak', 
             'last_win_date', 'total_wins', 'total_games', 'ranked_points', 
             'ranked_max_points', 'rank', 'unlocked_badges', 
-            'custom_username_color', 'tier', 'personalization_settings'
+            'custom_username_color', 'tier', 'personalization_settings',
+            'has_api_key'
         ]
+
+    def get_has_api_key(self, obj):
+        return bool(obj.api_key_hash)
 
 class DailyChallengeSerializer(serializers.ModelSerializer):
     class Meta:

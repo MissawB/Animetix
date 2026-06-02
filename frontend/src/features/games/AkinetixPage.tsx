@@ -1,7 +1,6 @@
-import React from 'react';
-import { Brain, History, Check, X, HelpCircle } from 'lucide-react';
-import { useMachine } from '@xstate/react';
-import { akinetixMachine } from './machines/akinetixMachine';
+import React, { useState, useEffect } from 'react';
+import { Brain, History, Check, X, HelpCircle, ArrowRight } from 'lucide-react';
+import { useAkinetixStore } from './stores/akinetixStore';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 
@@ -9,15 +8,15 @@ import { CardSkeleton } from '../../components/ui/Skeleton';
 
 import { useTranslation } from 'react-i18next';
 
-
-
 const AkinetixPage: React.FC = () => {
   const { t } = useTranslation();
-  const [state, send] = useMachine(akinetixMachine);
-  const { gameState } = state.context;
+  const { gameState, isLoading, error, loadGame, restartGame, submitAnswer, submitConfirmation } = useAkinetixStore();
+  const [showActualTargetInput, setShowActualTargetInput] = useState(false);
+  const [actualTarget, setActualTarget] = useState('');
 
-  // Gestion des états de chargement basée sur la machine
-  const isLoading = state.matches('initializing') || state.matches('submittingAnswer') || state.matches('confirming');
+  useEffect(() => {
+    loadGame();
+  }, [loadGame]);
 
   if (isLoading) return (
     <div className="flex justify-center items-center py-12 px-6">
@@ -25,17 +24,15 @@ const AkinetixPage: React.FC = () => {
     </div>
   );
   
-  if (state.matches('error')) {
+  if (error) {
     return (
-      
         <div className="flex justify-center items-center py-20">
           <Card padding="lg" className="text-center border-red-500/50">
              <h2 className="text-2xl font-black text-red-500 mb-4 tracking-tighter italic">CRITICAL ERROR</h2>
-             <p className="mb-8 opacity-60 font-bold">L'IA du devin semble avoir perdu le contact.</p>
-             <Button variant="danger" onClick={() => send({ type: 'RESTART' })}>RÉINITIALISER LE NOYAU</Button>
+             <p className="mb-8 opacity-60 font-bold">{error}</p>
+             <Button variant="danger" onClick={restartGame}>RÉINITIALISER LE NOYAU</Button>
           </Card>
         </div>
-      
     );
   }
 
@@ -62,27 +59,45 @@ const AkinetixPage: React.FC = () => {
             </div>
 
             <div className="text-2xl md:text-4xl mb-10 font-black text-blue-600 dark:text-blue-400 leading-tight">
-              {gameState.gameOver ? t('games.akinetix.game_over', { guess: gameState.aiGuess }) : gameState.currentQuestion}
+              {gameState.gameOver && !showActualTargetInput ? t('games.akinetix.game_over', { guess: gameState.aiGuess }) : 
+               showActualTargetInput ? "À qui pensiez-vous réellement ?" :
+               gameState.currentQuestion}
             </div>
 
             {!gameState.gameOver ? (
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Button variant="success" onClick={() => send({ type: 'ANSWER', answer: 'OUI' })}>
+                <Button variant="success" onClick={() => submitAnswer('OUI')}>
                   <Check className="w-5 h-5" /> {t('common.yes')}
                 </Button>
-                <Button variant="danger" onClick={() => send({ type: 'ANSWER', answer: 'NON' })}>
+                <Button variant="danger" onClick={() => submitAnswer('NON')}>
                   <X className="w-5 h-5" /> {t('common.no')}
                 </Button>
-                <Button variant="secondary" onClick={() => send({ type: 'ANSWER', answer: 'PEUT-ÊTRE' })}>
+                <Button variant="secondary" onClick={() => submitAnswer('PEUT-ÊTRE')}>
                   <HelpCircle className="w-5 h-5" /> PEUT-ÊTRE
+                </Button>
+              </div>
+            ) : showActualTargetInput ? (
+              <div className="flex flex-col gap-4 max-w-md mx-auto">
+                <input 
+                  type="text" 
+                  value={actualTarget} 
+                  onChange={(e) => setActualTarget(e.target.value)}
+                  className="w-full p-4 rounded-2xl bg-gray-50 dark:bg-navy-900 border-2 border-transparent focus:border-yellow-400 outline-none font-bold" 
+                  placeholder="Nom du personnage..."
+                />
+                <Button variant="primary" onClick={() => submitConfirmation(false, actualTarget)}>
+                  CONFIRMER MA VICTOIRE <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+                <Button variant="outline" onClick={() => setShowActualTargetInput(false)}>
+                  Annuler
                 </Button>
               </div>
             ) : (
               <div className="flex flex-col sm:flex-row justify-center gap-4">
-                <Button variant="primary" onClick={() => send({ type: 'CONFIRM', isCorrect: true })}>
+                <Button variant="primary" onClick={() => submitConfirmation(true)}>
                   {t('common.yes')}, BIEN JOUÉ !
                 </Button>
-                <Button variant="outline" onClick={() => send({ type: 'CONFIRM', isCorrect: false })}>
+                <Button variant="outline" onClick={() => setShowActualTargetInput(true)}>
                   {t('common.no')}, ÉCHEC DE L'IA
                 </Button>
               </div>

@@ -6,10 +6,10 @@ from core.utils.security import is_safe_url, safe_http_request
 
 logger = logging.getLogger("animetix.persistence.web_search")
 
-class DuckDuckGoSearchAdapter(WebSearchPort):
+class UnifiedWebSearchAdapter(WebSearchPort):
     """
     Unified Web Search Adapter that acts as a real-time information retriever for Agentic RAG.
-    Supports Tavily Search API, Google Search Grounding (Gemini), and DuckDuckGo (Free fallback).
+    Supports Tavily Search API and Google Search Grounding (Gemini).
     """
     def __init__(self):
         # Read API keys from environment
@@ -21,7 +21,6 @@ class DuckDuckGoSearchAdapter(WebSearchPort):
         Routes the search query to the best available search engine:
         1. Tavily Search API (if TAVILY_API_KEY is present)
         2. Gemini Search Grounding (if GEMINI_API_KEY is present)
-        3. DuckDuckGo (Free fallback)
         """
         if self.tavily_api_key:
             results = self._search_tavily(query, limit)
@@ -35,9 +34,8 @@ class DuckDuckGoSearchAdapter(WebSearchPort):
                 logger.info(f"🚀 [Gemini Grounding] Search successful for: '{query}' ({len(results)} results)")
                 return results
 
-        # DuckDuckGo fallback
-        logger.info(f"🌐 [DuckDuckGo] Falling back to free search for: '{query}'")
-        return self._search_duckduckgo(query, limit)
+        logger.warning(f"⚠️ [WebSearch] No active search credentials found for: '{query}'")
+        return []
 
     def _search_tavily(self, query: str, limit: int = 5) -> List[Dict]:
         """Performs search using Tavily API."""
@@ -104,29 +102,6 @@ class DuckDuckGoSearchAdapter(WebSearchPort):
                     return mapped_results
         except Exception as e:
             logger.error(f"❌ Error during Gemini Grounding search: {e}")
-        return []
-
-    def _search_duckduckgo(self, query: str, limit: int = 5) -> List[Dict]:
-        """Performs search using DuckDuckGo scraping via ddgs library."""
-        try:
-            from duckduckgo_search import DDGS
-            with DDGS() as ddgs:
-                results = ddgs.text(query, max_results=limit)
-                if not results:
-                    return []
-                
-                mapped_results = []
-                for r in results:
-                    url_val = r.get("href", "")
-                    if is_safe_url(url_val):
-                        mapped_results.append({
-                            "title": r.get("title", ""),
-                            "url": url_val,
-                            "snippet": r.get("body", "")
-                        })
-                return mapped_results
-        except Exception as e:
-            logger.error(f"❌ Error during DuckDuckGo search: {e}")
         return []
 
     def get_content(self, url: str) -> str:

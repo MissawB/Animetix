@@ -1,10 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Search, Eye, Trophy } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useMachine } from '@xstate/react';
-import { visionMachine } from './machines/visionMachine';
+import { useVisionStore } from './stores/visionStore';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -17,29 +16,31 @@ const visionSchema = z.object({
 type VisionFormValues = z.infer<typeof visionSchema>;
 
 const VisionPage: React.FC = () => {
-  const [state, send] = useMachine(visionMachine);
-  const { gameState } = state.context;
+  const { gameState, isLoading, error, loadGame, restartGame, submitGuess } = useVisionStore();
   
+  useEffect(() => {
+    loadGame();
+  }, [loadGame]);
+
   const { register, handleSubmit, reset, formState: { errors } } = useForm<VisionFormValues>({
     resolver: zodResolver(visionSchema),
     defaultValues: { description: '' }
   });
 
   const onSubmit = async (data: VisionFormValues) => {
-    send({ type: 'GUESS', description: data.description });
+    submitGuess(data.description);
     reset();
   };
 
-  const isLoading = state.matches('initializing') || state.matches('submitting') || state.matches('restarting');
-
   if (isLoading) return <div className="text-center py-20 text-white font-black animate-pulse">ANALYSE VISIONNAIRE EN COURS...</div>;
   
-  if (state.matches('error')) {
+  if (error) {
     return (
       <div className="flex justify-center items-center py-20">
         <Card padding="lg" className="text-center border-red-500/50">
            <h2 className="text-2xl font-black text-red-500 mb-4 italic">SYSTÈME OPTIQUE DÉFAILLANT</h2>
-           <Button variant="danger" onClick={() => send({ type: 'RESTART' })}>RÉINITIALISER LE SCAN</Button>
+           <p className="mb-8 opacity-60 font-bold">{error}</p>
+           <Button variant="danger" onClick={restartGame}>RÉINITIALISER LE SCAN</Button>
         </Card>
       </div>
     );
@@ -72,7 +73,7 @@ const VisionPage: React.FC = () => {
             <div className="mt-8 text-center bg-green-500 text-white p-8 rounded-[2.5rem] shadow-xl border-4 border-white/20 animate-bounce">
                 <Trophy className="w-12 h-12 mx-auto mb-3" />
                 <h3 className="text-2xl font-black">{gameState.secret_title}</h3>
-                <Button variant="outline" className="mt-4 bg-white text-green-600 border-none" onClick={() => send({ type: 'RESTART' })}>REJOUER</Button>
+                <Button variant="outline" className="mt-4 bg-white text-green-600 border-none" onClick={restartGame}>REJOUER</Button>
             </div>
           )}
         </div>

@@ -21,9 +21,9 @@ import socket
 import ipaddress
 from urllib.parse import urlparse
 from animetix_project.logging_config import get_logger
-from core.utils.security import is_safe_url, validate_file_mime_type, safe_http_request, validate_file_size
+from core.utils.security import is_safe_url, validate_file_mime_type, safe_http_request, validate_file_size, verify_proxy_signature
 
-ALLOWED_IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp']
+ALLOWED_IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10 Mo
 from django.core.cache import cache
 from django.http import HttpResponse
@@ -32,17 +32,29 @@ from django_ratelimit.decorators import ratelimit
 
 logger = get_logger('animetix.api')
 
+@method_decorator(ratelimit(key='ip', rate='30/m', method='GET', block=True), name='dispatch')
 def image_proxy_view(request):
 
-    """Proxy pour les images externes avec cache local."""
+    """
+    Proxy pour les images externes avec cache local. 
+    Sécurisé par signature HMAC, Rate Limiting et validation binaire.
+    """
     encoded_url = request.GET.get('url')
-    if not encoded_url: return HttpResponse(status=400)
+    signature = request.GET.get('sig')
+    
+    if not encoded_url or not signature: 
+        return HttpResponse("Missing parameters", status=400)
     
     try:
         url = base64.b64decode(encoded_url).decode('utf-8')
     except Exception as e:
         logger.error(f"Failed to decode image proxy URL: {e}")
         return HttpResponse(status=400)
+
+    # 1. Vérification de la signature cryptographique (Prévention Open Proxy)
+    if not verify_proxy_signature(url, signature):
+        logger.warning(f"🚩 Invalid proxy signature detected for URL: {url}")
+        return HttpResponse("Forbidden: Invalid signature", status=403)
 
     cache_key = f"img_cache_{hashlib.md5(url.encode()).hexdigest()}"
     cached_data = cache.get(cache_key)
@@ -53,11 +65,23 @@ def image_proxy_view(request):
     try:
         # safe_http_request gère la validation DNS et les sauts de redirection en toute sécurité
         response = safe_http_request("GET", url, timeout=10)
+        
         if response.status_code == 200:
             content = response.content
+            
+            # 2. Validation de la taille (DoS Protection)
+            if not validate_file_size(len(content), MAX_IMAGE_SIZE):
+                 return HttpResponse("Entity Too Large", status=413)
+
+            # 3. Validation du type MIME réel (Magic Number)
+            if not validate_file_mime_type(content, ALLOWED_IMAGE_MIMES):
+                logger.warning(f"🚩 Non-image content detected in proxy for URL: {url}")
+                return HttpResponse("Forbidden: Content type not allowed", status=403)
+
             content_type = response.headers.get('Content-Type', 'image/jpeg')
             cache.set(cache_key, {'content': content, 'content_type': content_type}, 60*60*24*7)
             return HttpResponse(content, content_type=content_type)
+            
     except ValueError as ve:
         logger.warning(f"Blocked unsafe request in image proxy: {ve}")
         return HttpResponse("Forbidden: Unsafe request detected", status=403)
@@ -68,6 +92,8 @@ def image_proxy_view(request):
 
 from ..serializers import CreativeFusionSerializer, FriendshipSerializer, SocialUserSerializer
 
+@method_decorator(ratelimit(key='ip', rate='20/m', method='GET', block=True), name='dispatch')
+@method_decorator(ratelimit(key='user', rate='5/m', method='POST', block=True), name='dispatch')
 class MediaSearchView(APIView):
     """Recherche d'œuvres via SQL ou Multi-Modale (CLIP)."""
     permission_classes = [permissions.AllowAny]

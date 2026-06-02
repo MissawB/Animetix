@@ -20,6 +20,19 @@ declare global {
       }, HTMLElement>;
     }
   }
+  namespace React {
+    namespace JSX {
+      interface IntrinsicElements {
+        'model-viewer': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & {
+          src?: string;
+          alt?: string;
+          'auto-rotate'?: boolean;
+          'camera-controls'?: boolean;
+          style?: React.CSSProperties;
+        }, HTMLElement>;
+      }
+    }
+  }
 }
 
 interface SpatialResult {

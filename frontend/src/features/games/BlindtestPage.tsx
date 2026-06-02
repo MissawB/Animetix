@@ -1,32 +1,32 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Play, Check, X, Music } from 'lucide-react';
-import { useMachine } from '@xstate/react';
-import { blindtestMachine } from './machines/blindtestMachine';
+import { useBlindtestStore } from './stores/blindtestStore';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 
 const BlindtestPage: React.FC = () => {
-  const [state, send] = useMachine(blindtestMachine);
-  const { gameState } = state.context;
+  const { gameState, isLoading, error, loadGame, restartGame, submitGuess } = useBlindtestStore();
   const [guess, setGuess] = useState<string>('');
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  useEffect(() => {
+    loadGame();
+  }, [loadGame]);
+
   const onSubmit = async () => {
-    send({ type: 'GUESS', guess });
+    submitGuess(guess);
     setGuess('');
   };
 
-  const isLoading = state.matches('initializing') || state.matches('submitting') || state.matches('restarting');
-
   if (isLoading) return <div className="text-center py-20 text-white font-black animate-pulse uppercase tracking-widest">Récupération de l'audio...</div>;
   
-  if (state.matches('error')) {
+  if (error) {
     return (
       <div className="flex justify-center items-center py-20">
         <Card padding="lg" className="text-center border-red-500/50">
            <h2 className="text-2xl font-black text-red-500 mb-4 italic">SIGNAL PERDU</h2>
-           <p className="mb-8 opacity-60 font-bold">Impossible de charger le Blindtest.</p>
-           <Button variant="danger" onClick={() => send({ type: 'RESTART' })}>RECONNEXION</Button>
+           <p className="mb-8 opacity-60 font-bold">{error}</p>
+           <Button variant="danger" onClick={restartGame}>RECONNEXION</Button>
         </Card>
       </div>
     );
@@ -75,7 +75,7 @@ const BlindtestPage: React.FC = () => {
             <div className="bg-green-500/10 border-2 border-green-500 p-6 rounded-2xl text-center">
                 <p className="text-green-500 font-black text-2xl animate-bounce">🎉 BIEN JOUÉ !</p>
                 <p className="text-xl font-bold mt-2">C'était : <span className="text-yellow-500">{gameState.secret_title}</span></p>
-                <Button variant="success" className="mt-6" onClick={() => send({ type: 'RESTART' })}>
+                <Button variant="success" className="mt-6" onClick={restartGame}>
                     REJOUER
                 </Button>
             </div>

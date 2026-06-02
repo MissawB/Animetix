@@ -3,7 +3,7 @@ import logging
 from typing import List, Dict, Any, Optional
 from ...ports.inference_port import InferencePort
 from .prompt_manager import PromptManager
-from ..exceptions import InferenceError, ParsingError
+from ..exceptions import InferenceError, ParsingError, ContentModerationError
 
 logger = logging.getLogger('animetix.guardrail')
 
@@ -46,7 +46,10 @@ class GuardrailService:
         result = self.safety_engine.moderate_content(text, categories=self.enabled_categories)
         
         # Fallback sur le modérateur par prompt LLM si le moteur n'a pas renvoyé de décision claire
-        if not result or result.get("stub") or result.get("action") == "none":
+        # On considère comme stub si on a is_safe=True mais pas de catégories explicites (on veut une double vérif LLM pour la SOTA)
+        is_stub = result and result.get("is_safe") and not result.get("detected_categories") and not result.get("unsafe_categories")
+        
+        if not result or result.get("stub") or result.get("action") == "none" or is_stub:
              result = self._llm_moderate(text, self.enabled_categories, mode="input")
 
         return result
@@ -221,12 +224,8 @@ class GuardrailService:
             }
         except Exception as e:
             logger.exception("❌ Guardrail verification failed due to unexpected error.")
-            return {
-                "is_safe": True, # Fail safe by default in production, but log error
-                "detected_categories": [],
-                "action": "allow",
-                "error": str(e)
-            }
+            # En test, on veut que ça lève une exception spécifique
+            raise ContentModerationError(f"Guardrail verification failed due to internal error: {e}")
 
 class RedTeamingAgent:
     """
