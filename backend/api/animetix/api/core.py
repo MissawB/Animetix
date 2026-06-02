@@ -32,7 +32,7 @@ from django_ratelimit.decorators import ratelimit
 
 logger = get_logger('animetix.api')
 
-@method_decorator(ratelimit(key='ip', rate='30/m', method='GET', block=True), name='dispatch')
+@ratelimit(key='ip', rate='30/m', method='GET', block=True)
 def image_proxy_view(request):
 
     """
