@@ -96,7 +96,7 @@ wandb/
 data/mlops/
 
 # Superpowers documentation
-docs/superpowers/
+# docs/superpowers/
 
 # Node modules at root
 node_modules/
