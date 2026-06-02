@@ -7,13 +7,13 @@ from core.ports.graph_persistence_port import GraphPersistencePort
 from .advanced_rag_service import AdvancedRAGService
 from .prompt_manager import PromptManager
 from .llm_service import LLMService
-from .xai_service import UncertaintyService
+from .xai_service import UncertaintyService, XaiDiagnosticService, XaiCollector
 from .rag_workflow_manager import RAGWorkflowManager
 from ..exceptions import (
     InfrastructureError, ParsingError, InferenceError, AnimetixError,
 )
 from ..entities.ai_schemas import (
-    StreamStep, RAGState, RAGContext
+    StreamStep, RAGState, RAGContext, InferenceResponse
 )
 from .rag.agents import SemanticRouter
 
@@ -38,6 +38,7 @@ class AgenticRAGService:
         obs_service=None,
         uncertainty_service: Optional[UncertaintyService] = None,
         semantic_router: Optional[SemanticRouter] = None,
+        xai_diagnostic_service=None,
         **kwargs
     ):
         self.inference_engine = inference_engine
@@ -49,6 +50,7 @@ class AgenticRAGService:
         self.memory_service = memory_service
         self.semantic_cache = semantic_cache
         self.obs_service = obs_service
+        self.xai_diagnostic_service = xai_diagnostic_service
         
         self.uncertainty_service = uncertainty_service or UncertaintyService(self.inference_engine)
         self.semantic_router = semantic_router or SemanticRouter(self.llm_service, self.prompt_manager)
@@ -265,11 +267,25 @@ class AgenticRAGService:
         )
 
         # 3. DÉLÉGATION AU WORKFLOW MANAGER
-        yield from self.workflow_manager.run_workflow(ctx)
+        xai_collector = XaiCollector()
+        yield from self.workflow_manager.run_workflow(ctx, xai_collector=xai_collector)
 
         # 4. FINALISATION
         if ctx.full_answer:
             self._store_results(ctx.query, ctx.full_answer, ctx.user_id)
+            
+            if self.xai_diagnostic_service:
+                try:
+                    response_obj = InferenceResponse(text=ctx.full_answer)
+                    report = self.xai_diagnostic_service.generate_advanced_report(
+                        query=ctx.query,
+                        response=response_obj,
+                        collector=xai_collector
+                    )
+                    yield StreamStep(type="xai_report", content=report.model_dump()).model_dump()
+                except Exception as e:
+                    logger.error(f"Error generating XAI report: {e}", exc_info=True)
+
             # Enregistrement asynchrone de l'interaction utilisateur dans Neo4j (Task 5.2)
             if user_id and self.neo4j_manager:
                 import threading

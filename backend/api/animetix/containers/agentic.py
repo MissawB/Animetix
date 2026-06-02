@@ -214,5 +214,6 @@ class AgenticContainer(containers.DeclarativeContainer):
         semantic_cache=semantic_cache_service,
         obs_service=infrastructure.obs_service,
         uncertainty_service=uncertainty_service,
-        semantic_router=semantic_router
+        semantic_router=semantic_router,
+        xai_diagnostic_service=xai_diagnostic_service
     )
