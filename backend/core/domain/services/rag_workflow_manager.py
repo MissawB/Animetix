@@ -9,7 +9,7 @@ from core.ports.graph_persistence_port import GraphPersistencePort
 from core.ports.mlops_port import MlopsPort
 from .prompt_manager import PromptManager
 from .llm_service import LLMService
-from .xai_service import UncertaintyService
+from .xai_service import UncertaintyService, XaiCollector
 from .advanced_rag_service import AdvancedRAGService
 from ..exceptions import (
     InfrastructureError, InferenceError, AnimetixError,
@@ -111,7 +111,7 @@ class RAGWorkflowManager:
             logger.warning("💾 [DPO Logging] MlopsPort not available. Skipping log.")
 
 
-    def run_workflow(self, ctx: RAGContext) -> Generator[Dict, None, None]:
+    def run_workflow(self, ctx: RAGContext, xai_collector: Optional[XaiCollector] = None) -> Generator[Dict, None, None]:
         """Exécute la boucle de la machine à états."""
         rejected_responses = []
         while ctx.current_state not in [RAGState.FINALIZE, RAGState.FAILED] and ctx.iteration < ctx.max_iterations:
@@ -120,27 +120,27 @@ class RAGWorkflowManager:
 
             try:
                 if ctx.current_state == RAGState.PLAN:
-                    yield from self._handle_plan(ctx)
+                    yield from self._handle_plan(ctx, xai_collector)
                 elif ctx.current_state == RAGState.SAGA_LOOKUP:
-                    yield from self._handle_saga_lookup(ctx)
+                    yield from self._handle_saga_lookup(ctx, xai_collector)
                 elif ctx.current_state == RAGState.GRAPH_EXPLORE:
-                    yield from self._handle_graph_explore(ctx)
+                    yield from self._handle_graph_explore(ctx, xai_collector)
                 elif ctx.current_state == RAGState.RESEARCH:
-                    yield from self._handle_research(ctx)
+                    yield from self._handle_research(ctx, xai_collector)
                 elif ctx.current_state == RAGState.ACQUIRE_KNOWLEDGE:
-                    yield from self._handle_acquire_knowledge(ctx)
+                    yield from self._handle_acquire_knowledge(ctx, xai_collector)
                 elif ctx.current_state == RAGState.SPECULATE:
-                    yield from self._handle_speculate(ctx)
+                    yield from self._handle_speculate(ctx, xai_collector)
                 elif ctx.current_state == RAGState.VLM_RERANK:
-                    yield from self._handle_vlm_rerank(ctx)
+                    yield from self._handle_vlm_rerank(ctx, xai_collector)
                 elif ctx.current_state == RAGState.SYNTHESIZE:
-                    yield from self._handle_synthesize(ctx)
+                    yield from self._handle_synthesize(ctx, xai_collector)
                 elif ctx.current_state == RAGState.JUDGE:
-                    yield from self._handle_judge(ctx)
+                    yield from self._handle_judge(ctx, xai_collector)
                     if ctx.current_state == RAGState.SYNTHESIZE and ctx.full_answer:
                         rejected_responses.append(ctx.full_answer)
                 elif ctx.current_state == RAGState.FALLBACK_RAG:
-                    yield from self._handle_fallback_rag(ctx)
+                    yield from self._handle_fallback_rag(ctx, xai_collector)
                 else:
                     ctx.current_state = RAGState.FINALIZE
             except (InferenceTimeoutError, AgentLogicalFailure) as e:
@@ -179,7 +179,7 @@ class RAGWorkflowManager:
         if ctx.current_state == RAGState.FINALIZE and rejected_responses and ctx.full_answer:
             self._async_log_dpo(ctx.query, ctx.full_answer, rejected_responses[0])
 
-    def _handle_plan(self, ctx: RAGContext) -> Generator[Dict, None, None]:
+    def _handle_plan(self, ctx: RAGContext, xai_collector: Optional[XaiCollector] = None) -> Generator[Dict, None, None]:
         yield StreamStep(type="thought", content="[Planner] Établissement du plan de recherche...").model_dump()
         start = time.time()
         ctx.plan = self.planner.plan(
@@ -188,6 +188,9 @@ class RAGWorkflowManager:
             thinking_budget=ctx.thinking_budget // 2, 
             thinking_mode=ctx.thinking_mode
         )
+        if xai_collector:
+            xai_collector.log_intent(ctx.plan.reasoning)
+            
         logger.info(f"PERF: Planner took {(time.time() - start)*1000:.2f}ms")
         
         if ctx.plan.requires_saga:
@@ -197,11 +200,13 @@ class RAGWorkflowManager:
         else:
             ctx.current_state = RAGState.RESEARCH
 
-    def _handle_saga_lookup(self, ctx: RAGContext) -> Generator[Dict, None, None]:
+    def _handle_saga_lookup(self, ctx: RAGContext, xai_collector: Optional[XaiCollector] = None) -> Generator[Dict, None, None]:
         yield StreamStep(type="thought", content="[World-Brain] Analyse globale de la saga...").model_dump()
         
         saga_name = self.saga_agent.lookup_saga(ctx.query)
         if saga_name:
+            if xai_collector:
+                xai_collector.log_agent_thought("SagaAgent", f"Saga détectée : {saga_name}")
             ctx.saga_name = saga_name
             yield StreamStep(type="thought", content=f"[World-Brain] Saga détectée : {saga_name}. Récupération du résumé exécutif...").model_dump()
             
@@ -219,7 +224,7 @@ class RAGWorkflowManager:
         else:
             ctx.current_state = RAGState.RESEARCH
 
-    def _handle_graph_explore(self, ctx: RAGContext) -> Generator[Dict, None, None]:
+    def _handle_graph_explore(self, ctx: RAGContext, xai_collector: Optional[XaiCollector] = None) -> Generator[Dict, None, None]:
         if not ctx.plan:
             ctx.current_state = RAGState.PLAN
             return
@@ -244,6 +249,8 @@ class RAGWorkflowManager:
         cypher = self.graph_expert.generate_cypher(ctx.query, ctx.plan.reasoning)
         
         if cypher:
+            if xai_collector:
+                xai_collector.log_agent_thought("GraphExpert", f"Requête Cypher générée : {cypher}")
             yield StreamStep(type="thought", content=f"[Graph-Agent] Exécution Cypher : {cypher}").model_dump()
             try:
                 results = self.neo4j_manager.execute_read(cypher)
@@ -265,7 +272,7 @@ class RAGWorkflowManager:
         
         ctx.current_state = RAGState.RESEARCH
 
-    def _handle_research(self, ctx: RAGContext) -> Generator[Dict, None, None]:
+    def _handle_research(self, ctx: RAGContext, xai_collector: Optional[XaiCollector] = None) -> Generator[Dict, None, None]:
         if not ctx.plan:
             ctx.current_state = RAGState.PLAN
             return
@@ -312,6 +319,9 @@ class RAGWorkflowManager:
         results, ctx_str = self._execute_search(ctx.plan, ctx.media_type)
         ctx.candidates = results
         ctx.raw_context = ctx_str
+        if xai_collector:
+            xai_collector.log_retrieval(ctx.candidates)
+            
         logger.info(f"PERF: Searcher ({source}) took {(time.time() - search_start)*1000:.2f}ms")
         
         # --- COMPRESSION DE CONTEXTE SÉMANTIQUE (SOTA 2026 / Task 5.3) ---
@@ -366,11 +376,13 @@ class RAGWorkflowManager:
         else:
             ctx.current_state = RAGState.SYNTHESIZE
 
-    def _handle_acquire_knowledge(self, ctx: RAGContext) -> Generator[Dict, None, None]:
+    def _handle_acquire_knowledge(self, ctx: RAGContext, xai_collector: Optional[XaiCollector] = None) -> Generator[Dict, None, None]:
         yield StreamStep(type="thought", content="[Librarian] Analyse des lacunes de connaissances...").model_dump()
         gap = self.librarian.identify_gap(ctx.query, ctx.truth_path)
         
         if gap and gap.get("query"):
+            if xai_collector:
+                xai_collector.log_agent_thought("LibrarianAgent", f"Lacune de connaissance identifiée : {gap.get('query')}")
             yield StreamStep(type="thought", content=f"[Librarian] Recherche active sur {gap.get('source_type', 'Web')} : {gap['query']}").model_dump()
             fresh_data = self.librarian.fetch_data(gap)
             
@@ -385,11 +397,13 @@ class RAGWorkflowManager:
             yield StreamStep(type="thought", content="[Librarian] Aucune lacune critique identifiée.").model_dump()
             ctx.current_state = RAGState.SYNTHESIZE
 
-    def _handle_speculate(self, ctx: RAGContext) -> Generator[Dict, None, None]:
+    def _handle_speculate(self, ctx: RAGContext, xai_collector: Optional[XaiCollector] = None) -> Generator[Dict, None, None]:
         yield StreamStep(type="thought", content="[The Forge] Lancement du moteur de spéculation logique...").model_dump()
         res = self.forge.generate_hypothesis(ctx.query, ctx.truth_path)
         
         if res and res.hypothesis:
+            if xai_collector:
+                xai_collector.log_agent_thought("ForgeAgent", f"Hypothèse générée : {res.hypothesis}")
             yield StreamStep(type="thought", content=f"[The Forge] Hypothèse générée : {res.hypothesis} (Basé sur : {res.rationale})").model_dump()
             speculation_block = f"\n\n### HYPOTHÈSE LOGIQUE (DÉDUCTION) ###\n"
             speculation_block += f"DÉDUCTION : {res.hypothesis}\n"
@@ -401,7 +415,7 @@ class RAGWorkflowManager:
             
         ctx.current_state = RAGState.SYNTHESIZE
 
-    def _handle_vlm_rerank(self, ctx: RAGContext) -> Generator[Dict, None, None]:
+    def _handle_vlm_rerank(self, ctx: RAGContext, xai_collector: Optional[XaiCollector] = None) -> Generator[Dict, None, None]:
         yield StreamStep(type="thought", content="[VLM-Reranker] Analyse visuelle des images candidates...").model_dump()
         image_urls = []
         valid_candidates = []
@@ -434,6 +448,8 @@ class RAGWorkflowManager:
                 vlm_context += f"{i+1}. {c.get('title')} (Score Visuel: {c.get('visual_score', 0.0):.2f})\n"
                 vlm_context += f"   - Description: {c.get('description', '')[:300]}...\n"
             ctx.truth_path += f"\n{vlm_context}"
+            if xai_collector:
+                xai_collector.log_agent_thought("VLMReranker", "Analyse visuelle terminée pour le reranking des candidats")
             yield StreamStep(type="thought", content=f"[VLM-Reranker] Classement visuel terminé. Top match : {top_5[0].get('title')}").model_dump()
         except InferenceError as e:
             logger.error(f"VLM Rerank error: {e}")
@@ -444,7 +460,7 @@ class RAGWorkflowManager:
             
         ctx.current_state = RAGState.SYNTHESIZE
 
-    def _handle_synthesize(self, ctx: RAGContext) -> Generator[Dict, None, None]:
+    def _handle_synthesize(self, ctx: RAGContext, xai_collector: Optional[XaiCollector] = None) -> Generator[Dict, None, None]:
         if ctx.correction_feedback:
             yield StreamStep(type="thought", content="[Synthesizer] Tentative d'auto-correction...").model_dump()
         else:
@@ -502,7 +518,7 @@ class RAGWorkflowManager:
 
         ctx.current_state = RAGState.JUDGE
 
-    def _handle_judge(self, ctx: RAGContext) -> Generator[Dict, None, None]:
+    def _handle_judge(self, ctx: RAGContext, xai_collector: Optional[XaiCollector] = None) -> Generator[Dict, None, None]:
         yield StreamStep(type="thought", content="[Swarm] Début du débat multi-agents...").model_dump()
         judge_start = time.time()
         outcome = self.debate_manager.conduct_debate(
@@ -513,6 +529,9 @@ class RAGWorkflowManager:
             thinking_mode=ctx.thinking_mode
         )
         ctx.debate_outcome = outcome
+        if xai_collector:
+            xai_collector.log_agent_thought("ResponseJudge", f"Consensus : {outcome.consensus_action}. Raisonnement : {outcome.final_reasoning}")
+            
         logger.info(f"PERF: Multi-Agent Debate took {(time.time() - judge_start)*1000:.2f}ms")
         yield StreamStep(
             type="thought", 
@@ -541,7 +560,7 @@ class RAGWorkflowManager:
         else:
             ctx.current_state = RAGState.FINALIZE
 
-    def _handle_fallback_rag(self, ctx: RAGContext) -> Generator[Dict, None, None]:
+    def _handle_fallback_rag(self, ctx: RAGContext, xai_collector: Optional[XaiCollector] = None) -> Generator[Dict, None, None]:
         """Mode de secours : RAG classique simplifié sans agents complexes."""
         yield StreamStep(type="thought", content="[Fallback] Exécution d'une recherche hybride standard...").model_dump()
         
