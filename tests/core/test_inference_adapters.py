@@ -35,7 +35,7 @@ def test_inference_not_implemented_error():
 
 def test_transformers_rerank_documents():
     adapter = LocalRerankAdapter()
-    with patch('backend.core.utils.lazy_import.lazy_import') as mock_lazy:
+    with patch('adapters.inference.rerank_mixin.lazy_import') as mock_lazy:
         mock_st = MagicMock()
         mock_ce = MagicMock()
         mock_ce.predict.return_value = [0.9, 0.1]

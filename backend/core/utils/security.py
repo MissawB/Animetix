@@ -161,6 +161,72 @@ async def safe_http_request_async(method: str, url: str, max_redirects: int = 3,
 
     raise ValueError("Too many redirects")
 
+import re
+import bleach
+
+def sanitize_html_content(value: str) -> str:
+    """
+    Sanitise le contenu HTML (généré par l'IA ou saisi par l'utilisateur) 
+    pour prévenir les attaques XSS tout en autorisant un formatage de base.
+    Utilise bleach avec une liste blanche stricte.
+    """
+    if not value:
+        return ""
+
+    # Liste blanche des tags et attributs autorisés (Formatage riche minimal)
+    allowed_tags = [
+        'p', 'b', 'i', 'u', 'em', 'strong', 'br', 'ul', 'ol', 'li', 
+        'code', 'pre', 'blockquote', 'h3', 'h4', 'span'
+    ]
+    allowed_attrs = {
+        'code': ['class'],
+        'pre': ['class'],
+        'span': ['class', 'style'],
+    }
+
+    # Nettoyage via bleach
+    cleaned = bleach.clean(
+        value,
+        tags=allowed_tags,
+        attributes=allowed_attrs,
+        strip=True,
+        strip_comments=True
+    )
+    
+    return cleaned
+
+def sanitize_for_prompt(text: str, max_length: int = 2000) -> str:
+    """
+    Sanitise les entrées utilisateur pour limiter les risques d'injection de prompt (Prompt Injection).
+    Approche hybride : filtrage de patterns + échappement de délimiteurs.
+    """
+    if not text:
+        return ""
+        
+    # 1. Troncature pour éviter les DoS par dépassement de contexte
+    text = text[:max_length]
+    
+    # 2. Filtrage des patterns d'injection connus (insensible à la casse)
+    injection_patterns = [
+        r"(?i)ignore\s+previous",
+        r"(?i)system\s+prompt",
+        r"(?i)tu\s+es\s+maintenant",
+        r"(?i)you\s+are\s+now",
+        r"(?i)réponds\s+uniquement",
+        r"(?i)output\s+only",
+        r"(?i)forget\s+all",
+        r"(?i)override",
+    ]
+    
+    for pattern in injection_patterns:
+        text = re.sub(pattern, "[FILTERED]", text)
+        
+    # 3. Échappement des délimiteurs potentiels (triples quotes, balises XML internes)
+    text = text.replace('"""', "'''")
+    text = text.replace("<", "&lt;").replace(">", "&gt;")
+    
+    return text.strip()
+
 def validate_service_url(url: str, expected_prefix: str) -> bool:
     """
     Vérifie si une URL de service interne (ex: BRAIN_API_URL) commence par un préfixe attendu.

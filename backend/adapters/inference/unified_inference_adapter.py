@@ -67,6 +67,10 @@ class UnifiedInferenceAdapter(
         self.api_key = api_key or os.getenv("LLM_API_KEY") or "ollama"
         self.max_retries = max_retries
         self.timeout = timeout
+        
+        # Cache for diagnostics & advanced uncertainty
+        self._last_completion = None
+        self._last_logprobs = None
 
         if not is_safe_url(self.api_base, allow_internal=True):
             logger.warning(f"UnifiedInferenceAdapter: API base URL might be unsafe: {self.api_base}")
@@ -195,6 +199,9 @@ class UnifiedInferenceAdapter(
                 if "---" in raw_content:
                     raw_content = raw_content.split("---")[0].strip()
 
+                self._last_completion = raw_content
+                self._last_logprobs = parsed_logprobs
+
                 return InferenceResponse(
                     text=raw_content,
                     metadata=InferenceMetadata(
@@ -246,7 +253,7 @@ class UnifiedInferenceAdapter(
         # Fallback classique (Regex)
         try:
             response = self.generate(prompt, system_prompt=system_prompt, json_mode=True)
-            clean_json = response.text.strip()
+            clean_json = response.text.strip() if hasattr(response, "text") else response.strip()
             if "```" in clean_json:
                 match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", clean_json, re.DOTALL | re.IGNORECASE)
                 if match:
@@ -274,6 +281,8 @@ class UnifiedInferenceAdapter(
         thinking_mode: bool = False,
         include_logprobs: bool = False
     ):
+        self._last_completion = ""
+        self._last_logprobs = []
         payload = {
             "model": self.model_name,
             "messages": [
@@ -336,6 +345,9 @@ class UnifiedInferenceAdapter(
                                             ))
 
                                     if 'content' in delta:
+                                        self._last_completion += delta['content']
+                                        if parsed_logprobs:
+                                            self._last_logprobs.extend(parsed_logprobs)
                                         yield InferenceResponse(
                                             text=delta['content'],
                                             metadata=InferenceMetadata(
@@ -375,12 +387,8 @@ class UnifiedInferenceAdapter(
         return [0.0] * len(documents)
 
     def moderate_content(self, text: str, categories: List[str]) -> Dict[str, Any]:
-        """Modère le contenu via un prompt LLM."""
-        prompt = f"Texte à analyser: {text}\n\nCatégories à vérifier: {', '.join(categories)}\n\nRéponds au format JSON: {{'is_safe': bool, 'flagged_categories': [str], 'reason': str}}"
-        try:
-            return self.generate_structured(prompt, response_model=dict, system_prompt="Tu es un agent de modération.")
-        except Exception:
-            return {"is_safe": True, "flagged_categories": [], "reason": "Moderation fallback failed."}
+        """Modère le contenu via le service de modération parent."""
+        return super().moderate_content(text, categories)
 
     def classify_image(self, image_data: bytes, candidate_labels: List[str], model_id: Optional[str] = None) -> Dict[str, float]:
         """Classifie une image via VLM prompt avec fallback sur CLIP."""
@@ -545,6 +553,21 @@ class UnifiedInferenceAdapter(
     def calculate_uncertainty(self, prompt: str, completion: str) -> Dict[str, float]:
         """Calcule la certitude mathématique réelle (entropie, perplexité) d'une génération via un modèle local."""
         try:
+            # Check if we have cached real logprobs for this completion
+            if getattr(self, "_last_completion", None) == completion and getattr(self, "_last_logprobs", None):
+                logprobs = [lp.logprob for lp in self._last_logprobs if lp.logprob is not None]
+                if logprobs:
+                    import math
+                    avg_entropy = -sum(logprobs) / len(logprobs)
+                    confidence = max(0.0, min(1.0, 1.0 - (avg_entropy / 10.8)))
+                    perplexity = float(math.exp(avg_entropy))
+                    logger.info("📊 UnifiedInferenceAdapter: Using real logprobs from cache.")
+                    return {
+                        "entropy": round(avg_entropy, 4),
+                        "perplexity": round(perplexity, 4),
+                        "confidence": round(confidence, 4)
+                    }
+
             model, tokenizer, torch = _get_evaluation_resources()
 
             text = prompt + "\n" + completion

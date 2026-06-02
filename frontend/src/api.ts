@@ -52,6 +52,20 @@ export async function getLeaderboard(): Promise<Profile[]> {
   return apiClient('/api/v1/leaderboard/');
 }
 
+export async function getSocialDashboard(): Promise<SocialDashboardData> {
+  return apiClient('/api/v1/social/dashboard/');
+}
+
+export async function searchUsers(query: string): Promise<(User & { is_following: boolean })[]> {
+  return apiClient(`/api/v1/social/search/?q=${encodeURIComponent(query)}`);
+}
+
+export async function toggleFollow(userId: number): Promise<{ status: string }> {
+  return apiClient(`/api/v1/social/toggle_follow/${userId}/`, {
+    method: 'POST',
+  });
+}
+
 export async function getProfile(username: string): Promise<Profile> {
   return apiClient(`/api/v1/profile/${username}/`);
 }
@@ -73,6 +87,10 @@ export async function revokeApiKey(): Promise<{ status: string }> {
   return apiClient('/api/v1/profiles/revoke_api_key/', {
     method: 'POST',
   });
+}
+
+export async function getAIFeedbackHistory(): Promise<AIFeedback[]> {
+  return apiClient('/api/v1/mlops/feedback/submit/');
 }
 
 // --- Daily Challenge ---
@@ -244,6 +262,12 @@ export async function getClubEvents(clubId: number): Promise<ClubEvent[]> {
 
 export async function getClubEventDetails(eventId: number): Promise<ClubEvent> {
   return apiClient(`/api/v1/club-events/${eventId}/`);
+}
+
+export async function toggleEventParticipation(eventId: number): Promise<{ status: string; participants_count: number }> {
+  return apiClient(`/api/v1/club-events/${eventId}/join/`, {
+    method: 'POST',
+  });
 }
 
 export async function createClubEvent(data: Partial<ClubEvent>): Promise<ClubEvent> {

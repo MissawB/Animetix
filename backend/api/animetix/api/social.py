@@ -151,6 +151,26 @@ class ProfileViewSet(viewsets.ModelViewSet):
         profile.save()
         return Response({'status': 'revoked'})
 
+class UserSearchView(APIView):
+    """Recherche d'utilisateurs par pseudo."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        query = request.query_params.get('q', '')
+        if len(query) < 2:
+            return Response([])
+            
+        users = User.objects.filter(username__icontains=query).exclude(id=request.user.id)[:20]
+        serializer = SocialUserSerializer(users, many=True)
+        
+        # Ajouter l'info si on le suit déjà
+        data = serializer.data
+        following_ids = request.user.following.values_list('to_user_id', flat=True)
+        for item in data:
+            item['is_following'] = item['id'] in following_ids
+            
+        return Response(data)
+
 class CreativeFusionViewSet(viewsets.ModelViewSet):
     """API endpoint pour visualiser, créer, liker et remixer des fusions créatives."""
     serializer_class = CreativeFusionSerializer
@@ -307,6 +327,22 @@ class NotificationListView(APIView):
         notifs.update(is_read=True)
         return Response(NotificationSerializer(notifs, many=True).data)
 
+    def post(self, request):
+        notifs = Notification.objects.filter(user=request.user).order_by('-created_at')[:50]
+        notifs.update(is_read=True)
+        return Response({'status': 'success'})
+
+class GameplaySessionListView(APIView):
+    """Liste l'historique des sessions de jeu de l'utilisateur connecté."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        limit = int(request.GET.get('limit', 50))
+        from ..models import GameplaySession
+        from ..serializers import GameplaySessionSerializer
+        sessions = GameplaySession.objects.filter(user=request.user).order_by('-created_at')[:limit]
+        return Response(GameplaySessionSerializer(sessions, many=True).data)
+
 class ClubEventViewSet(viewsets.ModelViewSet):
     """API endpoint pour gérer les événements de clubs."""
     serializer_class = ClubEventSerializer
@@ -330,4 +366,20 @@ class ClubEventViewSet(viewsets.ModelViewSet):
             from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied("Vous n'êtes pas membre de ce club.")
         serializer.save()
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def join(self, request, pk=None):
+        event = self.get_object()
+        # Vérifier si l'utilisateur est membre du club
+        try:
+            ClubMembership.objects.get(user=request.user, club=event.club)
+        except ClubMembership.DoesNotExist:
+            return Response({"error": "Vous devez être membre du club pour participer à cet événement."}, status=status.HTTP_403_FORBIDDEN)
+            
+        if request.user in event.participants.all():
+            event.participants.remove(request.user)
+            return Response({'status': 'left', 'participants_count': event.participants.count()})
+        else:
+            event.participants.add(request.user)
+            return Response({'status': 'joined', 'participants_count': event.participants.count()})
 

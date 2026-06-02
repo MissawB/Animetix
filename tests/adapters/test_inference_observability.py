@@ -54,3 +54,17 @@ def test_fallback_observability_routing():
     diagnostics = fallback.get_diagnostics("prompt", "completion")
     assert diagnostics["model_signature"] == "mock:signature"
     mock_adapter.get_diagnostics.assert_called_once_with("prompt", "completion")
+
+
+def test_unified_uncertainty_cache():
+    from core.domain.entities.ai_schemas import TokenLogProb
+    adapter = UnifiedInferenceAdapter()
+    adapter._last_completion = "Test answer"
+    adapter._last_logprobs = [
+        TokenLogProb(token="Test", logprob=-0.5),
+        TokenLogProb(token="answer", logprob=-0.2)
+    ]
+    res = adapter.calculate_uncertainty("prompt", "Test answer")
+    assert res["confidence"] > 0.9
+    assert res["entropy"] == pytest.approx(0.35)
+    assert res["perplexity"] == pytest.approx(1.419, rel=1e-2)

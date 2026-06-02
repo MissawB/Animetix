@@ -75,6 +75,22 @@ const MLOpsDashboard: React.FC = () => {
       path: "/transparency/",
       color: "text-emerald-500",
       status: "Public"
+    },
+    {
+      title: "Benchmarks SOTA",
+      desc: "Suivi des performances mondiales des modèles (ELO score, MMLU accuracy).",
+      icon: Trophy,
+      path: "/admin/sota-benchmarks/",
+      color: "text-cyan-500",
+      status: "Global"
+    },
+    {
+      title: "Graph Healer",
+      desc: "Analyse et résolution des conflits de lore dans Neo4j.",
+      icon: Network,
+      path: "/admin/graph-debugger/",
+      color: "text-purple-500",
+      status: "Beta"
     }
   ];
 

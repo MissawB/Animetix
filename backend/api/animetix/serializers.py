@@ -35,6 +35,8 @@ class AchievementSerializer(serializers.ModelSerializer):
         model = Achievement
         fields = '__all__'
 
+from core.utils.security import sanitize_html_content
+
 # Serializers pour les données chargées dynamiquement (JSON/Chroma)
 class MediaItemSerializer(serializers.Serializer):
     id = serializers.CharField()
@@ -53,6 +55,19 @@ class MediaItemSerializer(serializers.Serializer):
     studios = serializers.ListField(child=serializers.CharField(), required=False)
     author = serializers.CharField(required=False, allow_null=True)
     related_items = serializers.ListField(child=serializers.DictField(), required=False)
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        # Sécurisation des contenus potentiellement générés par l'IA ou utilisateurs
+        if ret.get('description'):
+            ret['description'] = sanitize_html_content(ret['description'])
+        
+        # Sanitisation des listes de tags (même si normalement c'est du texte brut, on est prudent)
+        for key in ['tags', 'micro_tags', 'genres']:
+            if ret.get(key):
+                ret[key] = [sanitize_html_content(t) for t in ret[key]]
+                
+        return ret
 
 from .models import Friendship, Notification
 
@@ -108,7 +123,12 @@ class VsBattleSerializer(serializers.ModelSerializer):
             return obj.likes.filter(id=user.id).exists()
         return False
 
-from .models import AIREvalResult, GoldDatasetEntry, AIFeedback
+from .models import (
+    AIREvalResult, 
+    GoldDatasetEntry, 
+    AIFeedback,
+    GameplaySession
+)
 
 class AIREvalResultSerializer(serializers.ModelSerializer):
     class Meta:
@@ -127,6 +147,12 @@ class AIFeedbackSerializer(serializers.ModelSerializer):
         model = AIFeedback
         fields = '__all__'
 
+class GameplaySessionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GameplaySession
+        fields = ['id', 'game_mode', 'media_type', 'target_item', 'history', 'was_won', 'created_at']
+        read_only_fields = fields
+
 # --- 🏘️ CLUB SERIALIZERS ---
 class ClubMembershipSerializer(serializers.ModelSerializer):
     username = serializers.ReadOnlyField(source='user.username')
@@ -136,9 +162,18 @@ class ClubMembershipSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'username', 'role', 'joined_at']
 
 class ClubEventSerializer(serializers.ModelSerializer):
+    participants_count = serializers.IntegerField(source='participants.count', read_only=True)
+    is_participant = serializers.SerializerMethodField()
+
     class Meta:
         model = ClubEvent
-        fields = '__all__'
+        fields = ['id', 'club', 'title', 'description', 'event_date', 'created_at', 'participants_count', 'is_participant']
+    
+    def get_is_participant(self, obj):
+        user = self.context['request'].user if 'request' in self.context else None
+        if user and user.is_authenticated:
+            return obj.participants.filter(id=user.id).exists()
+        return False
 
 class DiscoveryClubSerializer(serializers.ModelSerializer):
     creator_name = serializers.ReadOnlyField(source='creator.username')
@@ -153,6 +188,14 @@ class DiscoveryClubSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at'
         ]
         read_only_fields = ['creator']
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        if ret.get('description'):
+            ret['description'] = sanitize_html_content(ret['description'])
+        if ret.get('name'):
+            ret['name'] = sanitize_html_content(ret['name'])
+        return ret
 
 class GlobalBossSerializer(serializers.ModelSerializer):
     class Meta:

@@ -25,16 +25,19 @@ from core.utils.security import safe_http_request
 def monitor_inference_health():
     """Surveille la latence et la disponibilité de l'API Brain (Inférence)."""
     brain_url = os.getenv("BRAIN_API_URL")
+    brain_api_key = os.getenv("BRAIN_API_KEY", "dev-secret-key")
     if not brain_url:
         return "⚠️ BRAIN_API_URL non configuré."
 
     start_time = time.time()
     try:
         # On teste une génération simple via safe_http_request
-        res = safe_http_request("POST", f"{brain_url}/generate", json={
+        # Assurez-vous que l'URL se termine par /generate
+        actual_url = f"{brain_url}/generate" if not brain_url.endswith("/generate") else brain_url
+        res = safe_http_request("POST", actual_url, json={
             "prompt": "ping",
             "system_prompt": "Répond uniquement 'pong'"
-        }, timeout=10, allow_internal=True)
+        }, headers={"X-API-Key": brain_api_key}, timeout=10, allow_internal=True)
         latency = time.time() - start_time
         status = "🟢 Online" if res.status_code == 200 else f"🔴 Error {res.status_code}"
         logger.info(f"Inference Health: {status} | Latency: {latency:.2f}s")

@@ -5,13 +5,13 @@ class DjangoEvalAdapter(EvalResultPort):
     def save_result(self, query: str, context: str, answer: str, metrics: Dict[str, float]) -> None:
         from animetix.models import AIREvalResult
         AIREvalResult.objects.create(
-            query=query,
-            context=context,
-            answer=answer,
+            game_mode='classic',
+            input_context=f"Query: {query}\nContext: {context}",
+            output_text=answer,
             faithfulness=metrics.get('faithfulness', 0.0),
-            answer_relevance=metrics.get('answer_relevance', 0.0),
-            context_precision=metrics.get('context_precision', 0.0),
-            context_recall=metrics.get('context_recall', 0.0)
+            relevancy=metrics.get('answer_relevance', 0.0),
+            precision=metrics.get('context_precision', 0.0),
+            hallucination_detected=metrics.get('hallucination', False)
         )
 
     def get_evaluation_stats(self) -> Dict[str, Any]:
@@ -20,8 +20,8 @@ class DjangoEvalAdapter(EvalResultPort):
         
         stats = AIREvalResult.objects.aggregate(
             avg_faith=Avg('faithfulness'), 
-            avg_rel=Avg('answer_relevance'), 
-            avg_prec=Avg('context_precision'), 
+            avg_rel=Avg('relevancy'), 
+            avg_prec=Avg('precision'), 
             total=Count('id')
         )
         hallucinations = AIREvalResult.objects.filter(hallucination_detected=True).count()

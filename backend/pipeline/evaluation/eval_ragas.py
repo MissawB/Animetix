@@ -21,8 +21,13 @@ from core.utils.security import safe_http_request
 logger = logging.getLogger("animetix." + __name__)
 
 class RAGEvaluator:
-    def __init__(self, brain_url: str = "http://127.0.0.1:7860"):
-        self.brain_url = f"{brain_url}/generate"
+    def __init__(self, brain_url: Optional[str] = None):
+        self.brain_url = brain_url or os.getenv("BRAIN_API_URL", "http://127.0.0.1:7861")
+        # Assurez-vous que l'URL se termine par /generate
+        if not self.brain_url.endswith("/generate"):
+            self.brain_url = f"{self.brain_url}/generate"
+            
+        self.brain_api_key = os.getenv("BRAIN_API_KEY", "dev-secret-key")
         self.embed_model = SentenceTransformer('paraphrase-multilingual-mpnet-base-v2')
 
     def get_contexts(self, query: str, mode: str = "vector") -> List[str]:
@@ -58,7 +63,7 @@ class RAGEvaluator:
             response = safe_http_request("POST", self.brain_url, json={
                 "prompt": prompt,
                 "system_prompt": "Tu es un expert en Anime/Manga. Utilise le contexte fourni pour répondre de manière précise."
-            }, timeout=60, allow_internal=True)
+            }, headers={"X-API-Key": self.brain_api_key}, timeout=60, allow_internal=True)
             if response.status_code == 200:
 
                 return response.json().get("text", "")

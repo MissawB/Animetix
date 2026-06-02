@@ -1,8 +1,32 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from .models import MediaItem, ChallengeResult, GlobalBoss, Friendship
+from .models import MediaItem, ChallengeResult, GlobalBoss, Friendship, Notification
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+
+@receiver(post_save, sender=Notification)
+def broadcast_notification(sender, instance, created, **kwargs):
+    """
+    Pousse la notification en temps réel vers le client via WebSocket.
+    """
+    if created:
+        channel_layer = get_channel_layer()
+        group_name = f"user_notifications_{instance.user.id}"
+        async_to_sync(channel_layer.group_send)(
+            group_name,
+            {
+                "type": "send_notification",
+                "data": {
+                    "id": instance.id,
+                    "title": instance.title,
+                    "message": instance.message,
+                    "type": instance.notification_type,
+                    "link": instance.link,
+                    "created_at": instance.created_at.isoformat(),
+                    "is_read": instance.is_read
+                }
+            }
+        )
 
 @receiver(post_save, sender=ChallengeResult)
 def broadcast_challenge_result(sender, instance, created, **kwargs):

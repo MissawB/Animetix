@@ -24,7 +24,8 @@ logger = logging.getLogger("animetix." + __name__)
 if os.getenv("WANDB_API_KEY"):
     wandb.login(key=os.getenv("WANDB_API_KEY"))
 
-BRAIN_URL = "http://127.0.0.1:7860/generate"
+BRAIN_URL = os.getenv("BRAIN_API_URL", "http://127.0.0.1:7861")
+BRAIN_API_KEY = os.getenv("BRAIN_API_KEY", "dev-secret-key")
 
 # Test set extracted from dataset
 TEST_SET = [
@@ -71,10 +72,12 @@ async def evaluate_model(engine_name: str, config: Dict):
         
         start_time = time.time()
         try:
-            response = safe_http_request("POST", BRAIN_URL, json={
+            # Assurez-vous que l'URL se termine par /generate
+            actual_url = BRAIN_URL if BRAIN_URL.endswith("/generate") else f"{BRAIN_URL}/generate"
+            response = safe_http_request("POST", actual_url, json={
                 "prompt": q,
                 "system_prompt": "Tu es un expert en Anime/Manga."
-            }, timeout=60, allow_internal=True)
+            }, headers={"X-API-Key": BRAIN_API_KEY}, timeout=60, allow_internal=True)
             latency = time.time() - start_time
             latencies.append(latency)
             
@@ -169,7 +172,11 @@ async def evaluate_model(engine_name: str, config: Dict):
 async def main():
     # 1. Tester le moteur actuel (Local Expert s'il est chargé)
     # On vérifie quel moteur est actif via le health check
-    res = safe_http_request("GET", "http://127.0.0.1:7860/", allow_internal=True)
+    health_url = BRAIN_URL.replace("/generate", "") if "/generate" in BRAIN_URL else BRAIN_URL
+    if not health_url.endswith("/health"):
+        health_url = f"{health_url}/health"
+        
+    res = safe_http_request("GET", health_url, headers={"X-API-Key": BRAIN_API_KEY}, allow_internal=True)
     engine = res.json().get("engine", "unknown")
     
     await evaluate_model(engine, {"model_type": engine, "task": "comparison"})

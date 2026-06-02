@@ -1,7 +1,8 @@
 import os
 import sys
 import logging
-from fastapi import FastAPI, HTTPException, Request, UploadFile, File
+from fastapi import FastAPI, HTTPException, Request, UploadFile, File, Depends, status
+from fastapi.security import APIKeyHeader
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 
@@ -11,6 +12,19 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 from adapters.inference.unified_inference_adapter import UnifiedInferenceAdapter
 
 logger = logging.getLogger("animetix.brain")
+
+# --- AUTHENTICATION ---
+API_KEY_NAME = "X-API-Key"
+api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
+EXPECTED_API_KEY = os.getenv("BRAIN_API_KEY", "dev-secret-key")
+
+async def verify_api_key(api_key: str = Depends(api_key_header)):
+    if not api_key or api_key != EXPECTED_API_KEY:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or missing API Key",
+        )
+    return api_key
 
 from contextlib import asynccontextmanager
 
@@ -47,7 +61,7 @@ class SimilarityRequest(BaseModel):
 def health():
     return brain_engine.health_check()
 
-@app.post("/generate")
+@app.post("/generate", dependencies=[Depends(verify_api_key)])
 def generate(req: GenerateRequest):
     try:
         res = brain_engine.generate(
@@ -60,7 +74,7 @@ def generate(req: GenerateRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/similarity/visual")
+@app.post("/similarity/visual", dependencies=[Depends(verify_api_key)])
 def visual_similarity(req: SimilarityRequest):
     try:
         score = brain_engine.calculate_visual_similarity(req.query, req.item_id, req.media_type)
@@ -68,7 +82,7 @@ def visual_similarity(req: SimilarityRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/vision/embed")
+@app.post("/vision/embed", dependencies=[Depends(verify_api_key)])
 async def embed_image(image: UploadFile = File(...), model_id: Optional[str] = None):
     try:
         data = await image.read()

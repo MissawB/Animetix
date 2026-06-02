@@ -8,6 +8,8 @@ from ...containers import Container
 from animetix.api.dependencies import get_session_service
 from ...models import GameplaySession
 
+from core.utils.security import sanitize_html_content
+
 class AniminatorAskView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -37,8 +39,11 @@ class AniminatorAskView(APIView):
             for token in animinator_service.ask_oracle_stream(media_type, secret, question):
                 full_response += token
                 
+            # Sécurisation de la réponse générée par l'IA
+            sanitized_response = sanitize_html_content(full_response)
+                
             chat = session.get('animinator_chat', [])
-            chat.append({'q': question, 'a': full_response})
+            chat.append({'q': question, 'a': sanitized_response})
             session.set('animinator_chat', chat)
             
             q_left = session.get('animinator_questions_left', 20) - 1
@@ -52,6 +57,6 @@ class AniminatorAskView(APIView):
                     target_item=secret, history=chat, was_won=False
                 )
             
-            return Response({"answer": full_response, "questions_left": q_left})
+            return Response({"answer": sanitized_response, "questions_left": q_left})
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

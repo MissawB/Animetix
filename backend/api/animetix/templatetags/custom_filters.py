@@ -29,7 +29,7 @@ def modulo(value, arg):
     except (ValueError, TypeError, ZeroDivisionError):
         return 0
 
-from core.utils.security import sign_proxy_url
+from core.utils.security import sign_proxy_url, sanitize_html_content
 
 @register.filter
 def cdn_url(url):
@@ -60,33 +60,11 @@ def blur_cdn_url(url):
     
     return f"/fr/cdn-proxy/?url={encoded}&sig={sig}"
 
-import bleach
-from django.utils.safestring import mark_safe
-
 @register.filter
 def sanitize_ai(value):
     """
     Sanitizes LLM generated output to prevent XSS while allowing basic formatting.
-    Uses bleach with a strict allowlist.
+    Uses centralized security utility.
     """
-    if not value:
-        return ""
-    
-    # Allowed tags and attributes (Strict list)
-    allowed_tags = ['p', 'b', 'i', 'u', 'em', 'strong', 'br', 'ul', 'ol', 'li', 'code', 'pre', 'blockquote']
-    allowed_attrs = {
-        'code': ['class'],
-        'pre': ['class'],
-    }
-    
-    # Bleach cleaning
-    cleaned = bleach.clean(
-        value, 
-        tags=allowed_tags, 
-        attributes=allowed_attrs, 
-        strip=True,
-        strip_comments=True
-    )
-    
-    # mark_safe should only be used after bleach has cleaned the input
+    cleaned = sanitize_html_content(value)
     return mark_safe(cleaned)

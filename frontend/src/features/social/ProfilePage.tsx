@@ -7,6 +7,7 @@ import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { useTranslation } from 'react-i18next';
 import { CardSkeleton } from '../../components/ui/Skeleton';
+import { GameHistoryPanel } from './components/GameHistoryPanel';
 
 const ProfilePage: React.FC = () => {
   const { t } = useTranslation();
@@ -105,6 +106,11 @@ const ProfilePage: React.FC = () => {
                     </Link>
                 </div>
             </Card>
+        </div>
+
+        {/* Game History Panel */}
+        <div className="mt-12">
+            <GameHistoryPanel />
         </div>
 
           <div className="flex flex-col sm:flex-row justify-center gap-4 mt-16">

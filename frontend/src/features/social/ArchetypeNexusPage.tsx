@@ -210,7 +210,17 @@ const ArchetypeNexusPage: React.FC = () => {
                             </h3>
                             <p className="text-[10px] font-bold opacity-30 uppercase tracking-widest">Contraintes formelles déduites de vos interactions.</p>
                         </div>
-                        <Badge variant="neutral" className="bg-blue-500/10 text-blue-500 border-blue-500/20">RESOLVED</Badge>
+                        <div className="flex gap-2">
+                            <Button 
+                                as={Link}
+                                to="/social/neuro-memory/"
+                                variant="outline"
+                                className="border-blue-500/30 text-blue-400 hover:bg-blue-500/10 py-1 px-4 rounded-xl text-[8px] font-black uppercase tracking-widest h-auto"
+                            >
+                                Gérer <ChevronRight className="ml-1 w-3 h-3" />
+                            </Button>
+                            <Badge variant="neutral" className="bg-blue-500/10 text-blue-500 border-blue-500/20">RESOLVED</Badge>
+                        </div>
                     </header>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

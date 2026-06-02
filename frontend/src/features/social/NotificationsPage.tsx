@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BellOff, Info, CheckCircle2, AlertTriangle, Star } from 'lucide-react';
 import { Notification } from '../../types';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -7,12 +7,14 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { CardSkeleton } from '../../components/ui/Skeleton';
+import { useNotificationStore } from '../../store/notificationStore';
 
 import { useTranslation } from 'react-i18next';
 
 const NotificationsPage: React.FC = () => {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { clearUnread } = useNotificationStore();
 
   const { data: notifications, isLoading } = useQuery<Notification[]>({
     queryKey: ['notifications'],
@@ -23,8 +25,20 @@ const NotificationsPage: React.FC = () => {
     mutationFn: () => apiClient('/api/v1/social/notifications/', { method: 'POST' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      clearUnread();
     },
   });
+
+  useEffect(() => {
+    const handleNewNotification = () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    };
+
+    window.addEventListener('animetix:new_notification', handleNewNotification);
+    return () => {
+      window.removeEventListener('animetix:new_notification', handleNewNotification);
+    };
+  }, [queryClient]);
 
   if (isLoading) return (
     <div className="max-w-4xl mx-auto px-6 py-16">

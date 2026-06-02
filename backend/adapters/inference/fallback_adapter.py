@@ -17,6 +17,11 @@ class FallbackInferenceAdapter(InferencePort):
         self.obs_service = obs_service
         self._capability_cache = {}
         self._online_adapters = set()
+        
+        # Cache for diagnostics & advanced uncertainty
+        self._last_completion = None
+        self._last_logprobs = None
+        
         self._check_initial_health()
         self._build_capability_cache()
 
@@ -143,6 +148,8 @@ class FallbackInferenceAdapter(InferencePort):
                 
                 # Si on est ici, on a un succès !
                 logger.info(f"✅ [Fallback] {adapter_name} success in {latency:.2f}s!")
+                self._last_completion = result.text
+                self._last_logprobs = result.metadata.logprobs if result.metadata else None
                 if self.obs_service:
                     total_tokens = result.metadata.usage.get("total_tokens", 0) if result.metadata.usage else len(result.text)//4
                     self.obs_service.log_inference(model_id=adapter_name, latency=latency, tokens=total_tokens)
@@ -299,6 +306,19 @@ class FallbackInferenceAdapter(InferencePort):
         return self._fallback_call("get_diagnostics", prompt, completion) or {}
 
     def calculate_uncertainty(self, prompt: str, completion: str) -> Dict[str, float]:
+        if getattr(self, "_last_completion", None) == completion and getattr(self, "_last_logprobs", None):
+            logprobs = [lp.logprob for lp in self._last_logprobs if lp.logprob is not None]
+            if logprobs:
+                import numpy as np
+                avg_entropy = -sum(logprobs) / len(logprobs)
+                confidence = max(0.0, min(1.0, 1.0 - (avg_entropy / 10.8)))
+                perplexity = float(np.exp(avg_entropy))
+                logger.info("📊 FallbackInferenceAdapter: Using real logprobs from cache.")
+                return {
+                    "entropy": round(avg_entropy, 4),
+                    "perplexity": round(perplexity, 4),
+                    "confidence": round(confidence, 4)
+                }
         return self._fallback_call("calculate_uncertainty", prompt, completion) or {}
 
     def clone_voice(self, text: str, reference_audio: bytes, language: str = "fr") -> bytes:

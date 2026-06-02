@@ -4,8 +4,9 @@ import { updateAccountSettings, generateApiKey, revokeApiKey } from '../../api';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useTranslation } from 'react-i18next';
-import { Settings, Key, ShieldAlert, Star, AlertTriangle, Eye, EyeOff } from 'lucide-react';
+import { Settings, Key, ShieldAlert, Star, AlertTriangle, Eye, EyeOff, MessageSquare, ChevronRight } from 'lucide-react';
 import { useToastStore } from '../../store/toastStore';
+import { Link } from 'react-router-dom';
 
 const AccountSettingsPage: React.FC = () => {
   const { t } = useTranslation();
@@ -117,6 +118,23 @@ const AccountSettingsPage: React.FC = () => {
               </button>
             ))}
           </div>
+        </Card>
+
+        {/* Historique IA */}
+        <Card padding="lg" className="md:col-span-2 space-y-6">
+          <h2 className="text-xl font-bold uppercase tracking-widest border-b border-gray-100 dark:border-white/5 pb-4 mb-4 flex items-center gap-2">
+            <MessageSquare className="w-5 h-5 text-purple-500" /> Vos Contributions IA
+          </h2>
+          <p className="text-sm opacity-60">
+            Retrouvez l'historique de vos feedbacks et aidez l'intelligence d'Animetix à s'améliorer.
+          </p>
+          <Link 
+            to="/social/ai-feedback-history/" 
+            className="flex items-center justify-between bg-gray-50 dark:bg-navy-900 p-4 rounded-xl border border-gray-100 dark:border-white/5 hover:border-brand-primary transition-all no-underline text-surface-text group"
+          >
+            <span className="font-bold uppercase tracking-widest text-xs">Accéder à l'historique complet</span>
+            <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-brand-primary group-hover:translate-x-1 transition-all" />
+          </Link>
         </Card>
 
         {/* Clé API */}

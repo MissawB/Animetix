@@ -54,8 +54,11 @@ class InferencePort(ABC):
                 # Ajoute une instruction de formatage au système si ce n'est pas déjà fait
                 format_instruction = "\nRéponds UNIQUEMENT avec un objet JSON valide."
                 response = self.generate(prompt, system_prompt + format_instruction)
-                # response est maintenant un InferenceResponse, on utilise response.text
-                match = re.search(r'\{.*\}', response.text, re.DOTALL)
+                # response can be a string or an InferenceResponse object
+                response_text = response.text if hasattr(response, "text") else response
+                if not isinstance(response_text, str):
+                    response_text = str(response_text)
+                match = re.search(r'\{.*\}', response_text, re.DOTALL)
                 if match:
                     data = json.loads(match.group(0))
                     if hasattr(response_model, "model_validate"):
@@ -164,8 +167,42 @@ class InferencePort(ABC):
 
     def moderate_content(self, text: str, categories: List[str]) -> Dict[str, Any]:
         """Analyse le texte pour détecter du contenu inapproprié ou des spoilers (Guardrail)."""
-        # TODO: implement moderate_content method for this adapter
-        raise InferenceNotImplementedError("moderate_content not implemented for this adapter")
+        categories_str = ", ".join(categories)
+        prompt = (
+            f"Analyse le texte suivant pour détecter s'il contient du contenu inapproprié "
+            f"ou s'il correspond à l'une des catégories suivantes : {categories_str}.\n"
+            f"Texte : \"{text}\"\n"
+            f"Réponds UNIQUEMENT sous la forme d'un objet JSON contenant ces clés :\n"
+            f'{{"is_safe": bool, "detected_categories": [str], "reason": str}}'
+        )
+        try:
+            res = self.generate_structured(
+                prompt=prompt,
+                response_model=dict,
+                system_prompt="Tu es un agent de modération sémantique expert pour une plateforme Anime/Manga."
+            )
+            is_safe = res.get("is_safe", True)
+            detected = res.get("detected_categories", [])
+            if not isinstance(detected, list):
+                detected = []
+            
+            return {
+                "is_safe": is_safe,
+                "detected_categories": detected,
+                "action": "block" if not is_safe else "allow",
+                "reason": res.get("reason", "Vérification sémantique effectuée.")
+            }
+        except Exception as e:
+            # Fallback par mots-clés de base si le LLM n'est pas configuré, hors ligne ou échoue
+            bad_words = ["hentai", "nsfw", "porn", "sex", "gore", "violence extreme"]
+            found = [w for w in bad_words if w in text.lower()]
+            is_safe = len(found) == 0
+            return {
+                "is_safe": is_safe,
+                "detected_categories": found,
+                "action": "block" if not is_safe else "allow",
+                "reason": f"Vérification par mots-clés effectuée (Échec LLM: {str(e)})."
+            }
 
     def generate_image_description(self, image_data: bytes, prompt: str = "Décris cette image d'anime de manière très détaillée.") -> str:
         """Utilise un VLM (Visual Language Model) pour générer une description narrative d'une image."""

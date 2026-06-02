@@ -58,7 +58,8 @@ def ragas_performance_comparison():
     from pipeline.chroma_client import chroma_manager
     from pipeline.neo4j_client import neo4j_manager
     embed_model = SentenceTransformer('paraphrase-multilingual-mpnet-base-v2')
-    brain_url = os.getenv("BRAIN_API_URL", "http://127.0.0.1:7860")
+    brain_url = os.getenv("BRAIN_API_URL", "http://127.0.0.1:7861")
+    brain_api_key = os.getenv("BRAIN_API_KEY", "dev-secret-key")
 
     comparison_results = {}
     summary_table = wandb.Table(columns=["Mode", "QueryType", "Faithfulness", "Relevancy", "Context Recall", "Animetix Score"])
@@ -93,10 +94,12 @@ def ragas_performance_comparison():
             # Generation
             answer = "Erreur"
             try:
-                resp = safe_http_request("POST", f"{brain_url}/generate", json={
+                # Assurez-vous que l'URL se termine par /generate
+                actual_url = f"{brain_url}/generate" if not brain_url.endswith("/generate") else brain_url
+                resp = safe_http_request("POST", actual_url, json={
                     "prompt": f"Context: {contexts}\n\nQuestion: {q}",
                     "system_prompt": "Expert Anime/Manga précis."
-                }, timeout=40, allow_internal=True)
+                }, headers={"X-API-Key": brain_api_key}, timeout=40, allow_internal=True)
                 if resp.status_code == 200:
                     answer = resp.json().get("text", "Erreur")
                 else:

@@ -67,3 +67,33 @@ class GraphWorldMapView(APIView):
     def get(self, request):
         communities = self.partitioner.run_partitioning()
         return Response(communities)
+
+class GraphDebuggerView(APIView):
+    """
+    Interface avancée pour le GraphHealerService.
+    Permet de visualiser et corriger les conflits de lore.
+    """
+    permission_classes = [permissions.IsAdminUser]
+
+    @inject
+    def __init__(self, healer=Provide[Container.core.graph_healer_service], **kwargs):
+        super().__init__(**kwargs)
+        self.healer = healer
+
+    def get(self, request):
+        audit = self.healer.audit_graph_quality()
+        return Response(audit)
+
+    def post(self, request):
+        action = request.data.get('action')
+        media_id = request.data.get('media_id')
+        
+        if action == 'cleanup':
+            self.healer.check_and_fix_broken_relations()
+            return Response({"status": "success", "message": "Global cleanup cycle executed."})
+        
+        if action == 'heal' and media_id:
+            self.healer.heal_node(media_id)
+            return Response({"status": "success", "message": f"Node {media_id} healed."})
+            
+        return Response({"error": "Invalid action or missing media_id"}, status=400)

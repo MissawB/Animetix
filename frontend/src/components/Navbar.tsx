@@ -4,13 +4,14 @@ import { useUIStore } from '../store/uiStore';
 import { useAuthStore } from '../store/authStore';
 import { 
   Menu, Shield, Sparkles, Box, FlaskConical, Network, Users, Radio, Search, 
-  Gamepad2, Film, User, Settings, Sliders, LogOut, LogIn, UserPlus 
+  Gamepad2, Film, User, Settings, Sliders, LogOut, LogIn, UserPlus, Bell 
 } from 'lucide-react';
 import { FeatureGate } from './utils/FeatureGate';
 import { useTranslation } from 'react-i18next';
 import { DynamicAuraWrapper } from './shared/DynamicAuraWrapper';
 
 import { usePersonalizationStore } from '../store/personalizationStore';
+import { useNotificationStore } from '../store/notificationStore';
 import { PersonalizationPanel } from './shared/PersonalizationPanel';
 
 const Navbar: React.FC = () => {
@@ -18,6 +19,7 @@ const Navbar: React.FC = () => {
   const toggleSidebar = useUIStore((state) => state.toggleSidebar);
   const { user, logout } = useAuthStore();
   const { isPersonalizationEnabled, setPersonalizationEnabled } = usePersonalizationStore();
+  const { unreadCount, clearUnread } = useNotificationStore();
   const [showPersonalizationPanel, setShowPersonalizationPanel] = React.useState(false);
   
   return (
@@ -41,6 +43,9 @@ const Navbar: React.FC = () => {
           </Link>
           <Link to="/social/feed/" className="flex items-center gap-2 no-underline text-xs font-black italic text-gray-500 hover:text-yellow-400 transition-all uppercase tracking-widest">
             <Radio className="w-4 h-4 text-yellow-400" /> Community
+          </Link>
+          <Link to="/social/hub/" className="flex items-center gap-2 no-underline text-xs font-black italic text-gray-500 hover:text-yellow-500 transition-all uppercase tracking-widest">
+            <Users className="w-4 h-4 text-yellow-500" /> Friends
           </Link>
           <Link to="/latent-space/" className="flex items-center gap-2 no-underline text-xs font-black italic text-gray-500 hover:text-blue-500 transition-all uppercase tracking-widest">
             <Box className="w-4 h-4 text-blue-500" /> {t('navbar.latent')}
@@ -94,11 +99,22 @@ const Navbar: React.FC = () => {
                   </>
                 )}
               </div>
+              <Link to="/notifications" className="relative text-gray-400 hover:text-blue-500 transition-colors mx-2">
+                <Bell className="w-5 h-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-black text-white">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </Link>
               <DynamicAuraWrapper>
                 <Link to={`/profile/${user.username}/`} className="flex items-center gap-2 no-underline text-xs font-black italic text-gray-500 hover:text-orange-500 transition-all uppercase tracking-widest px-2 py-1 rounded-lg">
                   <User className="w-4 h-4 text-orange-500" /> {user.username}
                 </Link>
               </DynamicAuraWrapper>
+              <Link to="/settings" title="Paramètres" className="text-gray-400 hover:text-blue-500 transition-colors">
+                <Settings className="w-4 h-4" />
+              </Link>
               <button onClick={() => logout()} className="flex items-center gap-2 text-xs font-black italic text-red-500 opacity-60 hover:opacity-100 hover:text-red-500 transition-all uppercase tracking-widest">
                 <LogOut className="w-4 h-4" />
               </button>

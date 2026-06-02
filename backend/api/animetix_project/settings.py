@@ -105,11 +105,21 @@ DATA_UPLOAD_MAX_NUMBER_FIELDS = 1000
 X_FRAME_OPTIONS = 'DENY'
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
-CSRF_TRUSTED_ORIGINS = [
-    "https://*.hf.space",
-    "https://*.huggingface.co",
-    "https://missawb-animetix-web.hf.space"
-]
+
+# Configuration dynamique du CSRF (Option B: Dynamique/Inconnu)
+CSRF_TRUSTED_ORIGINS = env.list('EXTRA_CSRF_TRUSTED_ORIGINS', default=[])
+
+if not IS_PRODUCTION:
+    # En développement ou staging, on autorise les wildcards pour les Spaces Hugging Face
+    CSRF_TRUSTED_ORIGINS += [
+        "https://*.hf.space",
+        "https://*.huggingface.co",
+    ]
+else:
+    # En production stricte, on ne devrait utiliser que des URLs explicites
+    # On garde une fallback sécurisée si aucune n'est fournie via ENV
+    if not CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS = ["https://missawb-animetix-web.hf.space"]
 
 CSRF_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_SECURE = not DEBUG
@@ -407,15 +417,46 @@ if sentry_dsn and not os.environ.get('PYTEST_CURRENT_TEST'):
 # --- 🛡️ CONTENT SECURITY POLICY (CSP) ---
 CSP_DEFAULT_SRC = ("'self'",)
 CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net")
-CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net", "https://huggingface.co")
-CSP_IMG_SRC = ("'self'", "data:", "blob:", "https://*.hf.space", "https://*.huggingface.co", "https://cdn.myanimelist.net", "https://m.media-amazon.com")
+
+# En production, on retire 'unsafe-eval' pour bloquer les exécutions de scripts non sécurisées.
+# On autorise uniquement si nécessaire via env.
+_ALLOW_UNSAFE_EVAL = env.bool('DJANGO_CSP_ALLOW_UNSAFE_EVAL', default=not IS_PRODUCTION)
+CSP_SCRIPT_SRC = ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://huggingface.co"]
+if _ALLOW_UNSAFE_EVAL:
+    CSP_SCRIPT_SRC.append("'unsafe-eval'")
+CSP_SCRIPT_SRC = tuple(CSP_SCRIPT_SRC)
+
+_EXTRA_IMG = env.list('EXTRA_CSP_IMG_SRC', default=[])
+CSP_IMG_SRC = ["'self'", "data:", "blob:", "https://*.huggingface.co", "https://cdn.myanimelist.net", "https://m.media-amazon.com"]
+if not IS_PRODUCTION:
+    CSP_IMG_SRC.append("https://*.hf.space")
+CSP_IMG_SRC = tuple(CSP_IMG_SRC + _EXTRA_IMG)
+
 CSP_FONT_SRC = ("'self'", "https://fonts.gstatic.com", "https://cdn.jsdelivr.net")
-CSP_CONNECT_SRC = ("'self'", "https://*.hf.space", "https://*.huggingface.co", "https://huggingface.co")
-CSP_FRAME_SRC = ("'self'", "https://*.hf.space", "https://*.huggingface.co")
-CSP_MEDIA_SRC = ("'self'", "data:", "blob:", "https://*.hf.space", "https://*.huggingface.co")
+
+_EXTRA_CONNECT = env.list('EXTRA_CSP_CONNECT_SRC', default=[])
+CSP_CONNECT_SRC = ["'self'", "https://*.huggingface.co", "https://huggingface.co"]
+if not IS_PRODUCTION:
+    CSP_CONNECT_SRC.append("https://*.hf.space")
+CSP_CONNECT_SRC = tuple(CSP_CONNECT_SRC + _EXTRA_CONNECT)
+
+CSP_FRAME_SRC = ["'self'", "https://*.huggingface.co"]
+if not IS_PRODUCTION:
+    CSP_FRAME_SRC.append("https://*.hf.space")
+CSP_FRAME_SRC = tuple(CSP_FRAME_SRC)
+
+CSP_MEDIA_SRC = ["'self'", "data:", "blob:", "https://*.huggingface.co"]
+if not IS_PRODUCTION:
+    CSP_MEDIA_SRC.append("https://*.hf.space")
+CSP_MEDIA_SRC = tuple(CSP_MEDIA_SRC)
+
 CSP_OBJECT_SRC = ("'none'",)
 CSP_BASE_URI = ("'self'",)
-CSP_FRAME_ANCESTORS = ("'self'", "https://*.hf.space", "https://huggingface.co")
+
+CSP_FRAME_ANCESTORS = ["'self'", "https://huggingface.co"]
+if not IS_PRODUCTION:
+    CSP_FRAME_ANCESTORS.append("https://*.hf.space")
+CSP_FRAME_ANCESTORS = tuple(CSP_FRAME_ANCESTORS)
 
 # Report-only mode is useful for testing without blocking
 CSP_REPORT_ONLY = env.bool('DJANGO_CSP_REPORT_ONLY', default=False)

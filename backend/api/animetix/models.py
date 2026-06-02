@@ -341,6 +341,7 @@ class ClubEvent(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()
     event_date = models.DateTimeField()
+    participants = models.ManyToManyField(User, related_name='event_participations', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self): return f"{self.club.name} - {self.title}"

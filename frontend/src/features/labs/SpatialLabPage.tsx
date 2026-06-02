@@ -161,6 +161,15 @@ const SpatialLabPage: React.FC = () => {
                   <p className="text-xs font-bold leading-relaxed italic text-purple-400">
                       NEW: La "Génération Modèle 3D" utilise l'IA Gaussian Splatting pour créer un objet complet manipulable.
                   </p>
+                  <Button 
+                      as={Link}
+                      to="/cinematic-reconstruction/"
+                      variant="outline"
+                      fullWidth
+                      className="mt-6 border-purple-500/30 text-purple-400 hover:bg-purple-500/10 text-[10px] font-black uppercase tracking-widest"
+                  >
+                      DÉCOUVRIR LE DCS (3D VIDÉO) <ArrowRight className="ml-2 w-3 h-3" />
+                  </Button>
               </Card>
           </div>
 

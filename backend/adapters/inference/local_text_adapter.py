@@ -33,7 +33,7 @@ class LocalTextAdapter(InferencePort):
             logger.error(f"❌ Failed to load local text model: {e}")
             raise InferenceError(f"Critical failure during text model loading: {str(e)}")
 
-    def generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False) -> str:
+    def generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False, include_logprobs: bool = False, **kwargs) -> str:
         self._load_model()
         try:
             if thinking_mode or thinking_budget > 0:

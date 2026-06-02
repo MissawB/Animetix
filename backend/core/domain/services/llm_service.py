@@ -66,7 +66,13 @@ class LLMService:
 
         try:
             engine = self.slm_engine if use_slm else self.inference_engine
-            response_obj = engine.generate(prompt, system_prompt, thinking_budget=thinking_budget, thinking_mode=thinking_mode)
+            response_obj = engine.generate(
+                prompt, 
+                system_prompt, 
+                thinking_budget=thinking_budget, 
+                thinking_mode=thinking_mode,
+                include_logprobs=True
+            )
             res = response_obj.text
             latency = time.time() - start_time
             

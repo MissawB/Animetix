@@ -9,7 +9,7 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from animetix.api.core import is_safe_url
-from core.utils.security import validate_file_mime_type, safe_http_request, validate_file_size
+from core.utils.security import validate_file_mime_type, safe_http_request, validate_file_size, sanitize_html_content
 
 ALLOWED_IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp']
 ALLOWED_VIDEO_MIMES = ['video/mp4', 'video/webm', 'video/x-msvideo']
@@ -491,6 +491,25 @@ class SingularityLabDataView(APIView):
                 synthesizer = container.autonomous_domain_synthesizer
                 universe = synthesizer.synthesize_multiverse(universe_name, genre)
                 
+                # Sécurisation des contenus narratifs générés
+                if isinstance(universe, dict):
+                    if universe.get('description'):
+                        universe['description'] = sanitize_html_content(universe['description'])
+                    if universe.get('cosmology'):
+                        universe['cosmology'] = sanitize_html_content(universe['cosmology'])
+                    
+                    if universe.get('factions'):
+                        for f in universe['factions']:
+                            f['description'] = sanitize_html_content(f.get('description', ''))
+                            
+                    if universe.get('characters'):
+                        for c in universe['characters']:
+                            c['role'] = sanitize_html_content(c.get('role', ''))
+                            
+                    if universe.get('episodes'):
+                        for ep in universe['episodes']:
+                            ep['summary'] = sanitize_html_content(ep.get('summary', ''))
+                
                 evaluation = synthesizer.evaluate_coherence_and_interest(universe)
                 persisted = synthesizer.persist_universe_to_graph(universe)
                 
@@ -696,5 +715,40 @@ class LiquidNeuralNetworkLabView(APIView):
                 'input_dimension': simulator.input_dimension
             })
         except Exception as e:
+            return Response({'error': str(e)}, status=500)
+
+@method_decorator(ratelimit(key='user_or_ip', rate='2/m', method='POST', block=True), name='dispatch')
+class CinematicReconstructionView(APIView):
+    """Reconstruction 3D volumétrique temporelle (Dynamic Cinematic Splatting)."""
+    permission_classes = [permissions.IsAuthenticated]
+    throttle_scope = 'gpu'
+
+    def post(self, request):
+        uploaded_file = request.FILES.get('video_file')
+        title = request.data.get('title', 'Reconstruction Animée')
+        
+        if not uploaded_file:
+            return Response({'error': 'No video provided'}, status=400)
+            
+        try:
+            if not validate_file_size(uploaded_file.size, MAX_VIDEO_SIZE):
+                return Response({'error': f'Video is too large (Max: {MAX_VIDEO_SIZE/1024/1024}MB)'}, status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
+            
+            video_data = b"".join(chunk for chunk in uploaded_file.chunks())
+            if not validate_file_mime_type(video_data, ALLOWED_VIDEO_MIMES):
+                return Response({'error': 'Invalid video format. Allowed formats: MP4, WEBM, AVI.'}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
+            container = get_container()
+            service = container.core.cinematic_volumetric_reconstruction_service()
+            
+            # Reconstruction via DCS Service
+            result = service.reconstruct_dynamic_cinematic_scene(video_data, title)
+            
+            if result["status"] == "error":
+                return Response(result, status=500)
+                
+            return Response(result)
+        except Exception as e:
+            logger.error(f"Cinematic Reconstruction API error: {e}")
             return Response({'error': str(e)}, status=500)
 

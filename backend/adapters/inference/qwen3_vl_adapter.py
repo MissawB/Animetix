@@ -34,7 +34,7 @@ class Qwen3VLAdapter(InferencePort):
         return results
 
     # Required Port methods (minimal implementation for now)
-    def generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False) -> str:
+    def generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False, include_logprobs: bool = False, **kwargs) -> str:
         # Injection de la réflexion si activée
         if thinking_mode:
             thinking_instruction = "\n<think>\nAnalyse la requête en profondeur, explore plusieurs pistes et vérifie tes hypothèses avant de répondre.\n</think>"

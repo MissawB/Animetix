@@ -248,3 +248,14 @@ export interface ClubMembership {
   role: 'member' | 'admin' | 'owner';
   joined_at: string;
 }
+
+export interface AIFeedback {
+  id: number;
+  user: number;
+  username: string;
+  feedback_type: string;
+  input_context: string;
+  output_text: string;
+  is_positive: boolean;
+  created_at: string;
+}

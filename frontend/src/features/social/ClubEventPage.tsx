@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ChevronLeft, Calendar, Clock, MapPin, Users, Send, CheckCircle } from 'lucide-react';
-import { getClubEventDetails, getClubDetails, ClubEvent } from '../../api';
+import { getClubEventDetails, getClubDetails, toggleEventParticipation, ClubEvent } from '../../api';
 import { useToastStore } from '../../store/toastStore';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
@@ -13,27 +13,29 @@ const ClubEventPage: React.FC = () => {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [isEventPast, setIsEventPast] = useState(false);
   const [isParticipating, setIsParticipating] = useState(false);
-  const [participants, setParticipants] = useState<string[]>(['MissawB', 'Alice', 'Charlie']);
+  const [participantsCount, setParticipantsCount] = useState(0);
   const [chatMessages, setChatMessages] = useState<{ sender: string; text: string; time: string }[]>([
-    { sender: 'Alice', text: "Trop hâte pour ce soir ! J'apporte mes théories sur le chapitre 25.", time: "18:45" },
-    { sender: 'Charlie', text: "Moi aussi ! Je pense que le combat final va commencer.", time: "19:02" }
+    { sender: 'IA Guide', text: "Bienvenue dans l'événement ! N'hésitez pas à poser vos questions ici.", time: "Système" },
   ]);
   const [newMessage, setNewMessage] = useState('');
 
-  useEffect(() => {
-    const fetchEventData = async () => {
-      if (!eventId || !id) return;
-      try {
-        const eventData = await getClubEventDetails(Number(eventId));
-        setEvent(eventData);
+  const fetchEventData = async () => {
+    if (!eventId || !id) return;
+    try {
+      const eventData = await getClubEventDetails(Number(eventId));
+      setEvent(eventData);
+      setIsParticipating(!!eventData.is_participant);
+      setParticipantsCount(eventData.participants_count || 0);
 
-        const clubData = await getClubDetails(Number(id));
-        setClubName(clubData.name);
-      } catch (err) {
-        console.error("Erreur de récupération :", err);
-        useToastStore.getState().addToast("Impossible de récupérer l'événement.", "error");
-      }
-    };
+      const clubData = await getClubDetails(Number(id));
+      setClubName(clubData.name);
+    } catch (err) {
+      console.error("Erreur de récupération :", err);
+      useToastStore.getState().addToast("Impossible de récupérer l'événement.", "error");
+    }
+  };
+
+  useEffect(() => {
     fetchEventData();
   }, [id, eventId]);
 
@@ -60,15 +62,19 @@ const ClubEventPage: React.FC = () => {
     return () => clearInterval(timer);
   }, [event]);
 
-  const handleToggleParticipation = () => {
-    if (isParticipating) {
-      setParticipants(prev => prev.filter(p => p !== 'Moi'));
-      useToastStore.getState().addToast("Vous ne participez plus à cet événement.", "info");
-    } else {
-      setParticipants(prev => [...prev, 'Moi']);
-      useToastStore.getState().addToast("Votre inscription a été enregistrée !", "success");
+  const handleToggleParticipation = async () => {
+    if (!eventId) return;
+    try {
+      const response = await toggleEventParticipation(Number(eventId));
+      setIsParticipating(response.status === 'joined');
+      setParticipantsCount(response.participants_count);
+      useToastStore.getState().addToast(
+        response.status === 'joined' ? "Votre inscription a été enregistrée !" : "Vous ne participez plus à cet événement.",
+        response.status === 'joined' ? "success" : "info"
+      );
+    } catch (err: any) {
+      useToastStore.getState().addToast(err.error || "Action impossible. Êtes-vous membre du club ?", "error");
     }
-    setIsParticipating(!isParticipating);
   };
 
   const handleSendMessage = (e: React.FormEvent) => {
@@ -130,7 +136,7 @@ const ClubEventPage: React.FC = () => {
                 <MapPin className="w-4 h-4 text-brand-primary" /> Salon Vocal de l'App
               </span>
               <span className="flex items-center gap-1.5">
-                <Users className="w-4 h-4 text-brand-primary" /> {participants.length} inscrits
+                <Users className="w-4 h-4 text-brand-primary" /> {participantsCount} inscrits
               </span>
             </div>
           </div>
@@ -242,24 +248,21 @@ const ClubEventPage: React.FC = () => {
             </form>
           </div>
 
-          {/* Right Column: Participants List */}
+          {/* Right Column: Info & Status */}
           <div className="bg-white dark:bg-navy-900 border border-gray-100 dark:border-white/5 rounded-3xl p-6 space-y-6">
             <h3 className="text-sm font-black uppercase tracking-wider text-gray-400 flex items-center gap-2 pb-4 border-b border-gray-100 dark:border-white/5">
-              Participants ({participants.length})
+              Statistiques de l'IA
             </h3>
             
-            <div className="space-y-3">
-              {participants.map((participant, index) => (
-                <div key={index} className="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-navy-800 transition-colors">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-primary to-brand-accent flex items-center justify-center text-white text-xs font-bold">
-                    {participant[0]}
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold">{participant}</p>
-                    <p className="text-[8px] font-black uppercase tracking-widest text-green-500">Inscrit(e)</p>
-                  </div>
-                </div>
-              ))}
+            <div className="space-y-4">
+              <div className="p-4 bg-gray-50 dark:bg-navy-800 rounded-2xl">
+                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Impact prévu</p>
+                <p className="text-lg font-black text-brand-primary">+250 XP</p>
+              </div>
+              <div className="p-4 bg-gray-50 dark:bg-navy-800 rounded-2xl">
+                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Vibe détectée</p>
+                <p className="text-lg font-black text-purple-500">Social / Débat</p>
+              </div>
             </div>
           </div>
         </div>
@@ -270,3 +273,4 @@ const ClubEventPage: React.FC = () => {
 };
 
 export default ClubEventPage;
+

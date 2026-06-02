@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { getAuthUser, loginUser, registerUser, logoutUser } from '../api';
 import { User } from '../types';
+import { useNotificationStore } from './notificationStore';
 
 interface AuthState {
   user: User | null;
@@ -20,6 +21,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const user = await getAuthUser();
       set({ user, isAuthenticated: true, isLoading: false });
+      useNotificationStore.getState().connect();
     } catch {
       set({ user: null, isAuthenticated: false, isLoading: false });
     }
@@ -29,6 +31,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const user = await loginUser(data);
       set({ user, isAuthenticated: true, isLoading: false });
+      useNotificationStore.getState().connect();
     } catch (error) {
       set({ isLoading: false });
       throw error;
@@ -39,6 +42,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const user = await registerUser(data);
       set({ user, isAuthenticated: true, isLoading: false });
+      useNotificationStore.getState().connect();
     } catch (error) {
       set({ isLoading: false });
       throw error;
@@ -49,6 +53,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       await logoutUser();
       set({ user: null, isAuthenticated: false, isLoading: false });
+      useNotificationStore.getState().disconnect();
     } catch (error) {
       set({ isLoading: false });
       throw error;

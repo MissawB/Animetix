@@ -83,6 +83,28 @@ const App: React.FC = () => {
       gradient: 'from-cyan-400 to-blue-600 dark:from-cyan-500/80 dark:to-blue-700/80',
       url: '/animinator/',
     },
+    {
+      titre: 'Blindtest',
+      titre_brush_1: 'ANIME',
+      titre_brush_2: 'BLINDTEST',
+      description: isEn 
+        ? 'Recognize legendary OSTs transformed or filtered by AI.' 
+        : "Reconnaissez les OST mythiques transformées ou filtrées par l'IA.",
+      icon_url: '/img/modes/blindTest.png',
+      gradient: 'from-emerald-400 to-green-600 dark:from-emerald-500/80 dark:to-green-700/80',
+      url: '/blindtest/',
+    },
+    {
+      titre: 'VsBattle',
+      titre_brush_1: 'ARENA',
+      titre_brush_2: 'ULTIMATUM',
+      description: isEn 
+        ? 'Trans-dimensional duels moderated by AI.' 
+        : "Duels trans-dimensionnels arbitrés par l'IA.",
+      icon_url: '/img/modes/VSBattle.png',
+      gradient: 'from-red-500 to-red-900 dark:from-red-600/80 dark:to-red-950/80',
+      url: '/game/vsbattle/',
+    },
   ];
 
   // Multiplayer modes list
@@ -266,6 +288,36 @@ const App: React.FC = () => {
             </div>
           </section>
 
+          {/* SECTION WORLD BOSS (EVENT BANNER STYLE) */}
+          <section className="mb-16">
+            <Link to="/game/world-boss/active/" className="block no-underline group">
+              <div className="relative w-full h-[280px] bg-gradient-to-r from-red-950 to-black rounded-[3rem] overflow-hidden shadow-2xl border-4 border-red-600/20 group-hover:border-red-600/50 transition-all duration-500 flex items-center p-8 md:p-16">
+                
+                {/* Visual Background Decoration */}
+                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay"></div>
+                <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-red-600/10 to-transparent"></div>
+
+                <div className="relative z-10 max-w-2xl">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-600 text-white text-[10px] font-black uppercase tracking-widest mb-6 animate-pulse">
+                    <span className="w-2 h-2 rounded-full bg-white"></span> EVENT EN COURS
+                  </div>
+                  <h2 className="text-4xl md:text-6xl font-black italic manga-font tracking-tighter uppercase text-white mb-4 leading-none">
+                    WORLD <span className="text-red-600 text-glow">BOSS</span>
+                  </h2>
+                  <p className="text-sm md:text-lg font-bold text-white/60 uppercase tracking-[0.2em] leading-relaxed italic">
+                    {isEn ? 'Join the global community to take down the legendary Titan.' : "Rejoignez la communauté mondiale pour terrasser le Titan légendaire."}
+                  </p>
+                </div>
+
+                <img 
+                  src="/img/modes/worldboss.png" 
+                  className="absolute right-0 bottom-0 h-[110%] md:h-[130%] object-contain drop-shadow-[0_20px_50px_rgba(220,38,38,0.5)] group-hover:scale-110 group-hover:-rotate-3 transition-all duration-700 z-20 pointer-events-none" 
+                  alt="World Boss" 
+                />
+              </div>
+            </Link>
+          </section>
+
           {/* SECTION MODES MULTI */}
           <section className="px-6 md:px-10 py-16 bg-gray-50 dark:bg-navy-900/30 rounded-[3rem] border border-black/5 dark:border-white/5 text-left">
             <h2 className="text-3xl font-black mb-12 flex items-baseline text-black dark:text-white uppercase italic manga-font">
@@ -335,6 +387,27 @@ const App: React.FC = () => {
                 </div>
               </Link>
             ))}
+          </section>
+
+          {/* SECTION EXPERIMENTAL (SINGULARITY LAB) */}
+          <section className="py-24 text-center border-t border-black/5 dark:border-white/5">
+              <div className="max-w-4xl mx-auto space-y-8">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-600/10 text-red-500 text-[10px] font-black uppercase tracking-widest mb-4">
+                      <Zap className="w-3 h-3" /> NIVEAU OMEGA
+                  </div>
+                  <h2 className="text-5xl md:text-7xl font-black italic manga-font tracking-tighter uppercase text-black dark:text-white leading-none">
+                      SINGULARITY <span className="text-red-600 text-glow">LABS</span>
+                  </h2>
+                  <p className="text-lg md:text-xl font-bold opacity-40 uppercase tracking-[0.3em] leading-relaxed italic">
+                      {isEn ? 'Explore the boundaries of generative AI and pure cognition.' : "Explorez la frontière entre l'IA générative et la cognition pure."}
+                  </p>
+                  <Link 
+                    to="/lab/" 
+                    className="mt-12 group bg-black text-white hover:bg-red-600 py-6 px-16 rounded-[2rem] font-black italic text-xl uppercase shadow-2xl hover:scale-105 active:scale-95 transition-all inline-flex items-center gap-4 no-underline"
+                  >
+                    INITIALISER L'ACCÈS <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
+                  </Link>
+              </div>
           </section>
         </div>
 

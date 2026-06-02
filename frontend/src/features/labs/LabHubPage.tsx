@@ -1,190 +1,192 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  FlaskConical, 
-  Video, 
-  Volume2, 
-  Layers, 
-  Zap, 
-  Layout, 
-  Database,
+  Cpu, 
+  Activity, 
+  Globe, 
+  Atom,
+  Users,
+  Zap,
   ArrowRight,
-  ShieldAlert,
-  Cpu,
-  Eye,
-  TrendingUp,
-  Split
+  ShieldCheck,
+  Terminal,
+  Layers,
+  Sparkles,
+  Bot
 } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
+import { motion } from 'framer-motion';
+
+const labs = [
+    {
+        id: 'quantum',
+        title: 'Quantum Cognition',
+        desc: 'Modélisation des préférences par superposition d\'états et effondrement SAT.',
+        icon: Atom,
+        url: '/lab/quantum/',
+        color: 'text-purple-500',
+        bg: 'from-purple-500/20 to-transparent',
+        badge: 'Theoretical AI',
+        status: 'Operational'
+    },
+    {
+        id: 'swarm',
+        title: 'Swarm Intelligence',
+        desc: 'Validation décentralisée des faits de lore par consensus multi-agents IA.',
+        icon: Users,
+        url: '/lab/swarm/',
+        color: 'text-emerald-500',
+        bg: 'from-emerald-500/20 to-transparent',
+        badge: 'Multi-Agent',
+        status: 'Operational'
+    },
+    {
+        id: 'plasticity',
+        title: 'Synaptic Plasticity',
+        desc: 'Évolution dynamique des liens sémantiques via simulation bio-inspirée.',
+        icon: Activity,
+        url: '/lab/synaptic/',
+        color: 'text-red-500',
+        bg: 'from-red-500/20 to-transparent',
+        badge: 'Neural Sim',
+        status: 'Beta'
+    },
+    {
+        id: 'compiler',
+        title: 'JIT Optimizer',
+        desc: 'Génération et injection temps-réel de microcode C optimisé par l\'IA.',
+        icon: Cpu,
+        url: '/lab/compiler/',
+        color: 'text-blue-500',
+        bg: 'from-blue-500/20 to-transparent',
+        badge: 'Performance',
+        status: 'JIT SOTA'
+    },
+    {
+        id: 'multiverse',
+        title: 'Multiverse Genesis',
+        desc: 'Génération autonome de segments de lore auto-cohérents (ADMS).',
+        icon: Globe,
+        url: '/lab/multiverse/',
+        color: 'text-amber-500',
+        bg: 'from-amber-500/20 to-transparent',
+        badge: 'Generative',
+        status: 'Neo4j Sync'
+    }
+];
 
 const LabHubPage: React.FC = () => {
-  const labs = [
-    {
-      title: "Visual Nexus",
-      desc: "Recherche sémantique temporelle dans les épisodes. Trouvez n'importe quel moment via une simple description.",
-      icon: Eye,
-      path: "/visual-nexus/",
-      color: "text-purple-400",
-      bg: "bg-purple-400/10",
-      tier: "Alpha"
-    },
-    {
-      title: "Video Lab",
-      desc: "Transfert de style temporel SOTA FateZero. Transformez vos vidéos en chefs-d'œuvre d'animation.",
-      icon: Video,
-      path: "/video-lab/",
-      color: "text-red-500",
-      bg: "bg-red-500/10",
-      tier: "Premium"
-    },
-    {
-      title: "Spatial Lab",
-      desc: "Reconstruction 3D Gaussian Splatting & Depth Estimation. Créez des dioramas immersifs.",
-      icon: Layers,
-      path: "/spatial-lab/",
-      color: "text-blue-500",
-      bg: "bg-blue-500/10",
-      tier: "Premium"
-    },
-    {
-      title: "Manga Lab",
-      desc: "OCR & In-painting pour planches de manga. Nettoyage et traduction automatique par IA.",
-      icon: Layout,
-      path: "/manga_lab/",
-      color: "text-yellow-500",
-      bg: "bg-yellow-500/10",
-      tier: "Beta"
-    },
-    {
-      title: "Audio Lab",
-      desc: "Clonage vocal Zero-Shot & Synthèse de Soundscapes. Donnez une voix à vos personnages.",
-      icon: Volume2,
-      path: "/audio_lab/",
-      color: "text-emerald-500",
-      bg: "bg-emerald-500/10",
-      tier: "Pro"
-    },
-    {
-      title: "Latent Space",
-      desc: "Navigation vectorielle 3D dans le Lore. Explorez les connexions sémantiques infinies.",
-      icon: Database,
-      path: "/latent-space/",
-      color: "text-purple-500",
-      bg: "bg-purple-500/10",
-      tier: "Public"
-    },
-    {
-        title: "Singularity",
-        desc: "Modules IA de 5ème génération. Méta-compilation, Plasticité synaptique et Multivers.",
-        icon: Cpu,
-        path: "/experimental/",
-        color: "text-red-600",
-        bg: "bg-red-600/10",
-        tier: "Experimental"
-      },
-      {
-        title: "Liquid Lab",
-        desc: "Simulation de réseaux de neurones liquides (LNN) résolvant des ODEs en temps réel pour signaux continus.",
-        icon: TrendingUp,
-        path: "/liquid-nn/",
-        color: "text-blue-400",
-        bg: "bg-blue-400/10",
-        tier: "Neuromorphic"
-      },
-      {
-        title: "Soundscape Lab",
-        desc: "Génération d'ambiances sonores immersives via AudioLDM 2. Création de décors audio par IA.",
-        icon: Volume2,
-        path: "/soundscape-lab/",
-        color: "text-cyan-400",
-        bg: "bg-cyan-400/10",
-        tier: "Beta"
-      },
-      {
-        title: "S2S Lab",
-        desc: "Interaction Speech-to-Speech native. Parlez directement avec l'IA avec une latence sub-seconde.",
-        icon: Zap,
-        path: "/s2s-lab/",
-        color: "text-amber-500",
-        bg: "bg-amber-500/10",
-        tier: "Alpha"
-      },
-      {
-        title: "Counterfactual",
-        desc: "Simulation de trajectoires de dialogue alternatives pour mesurer le regret décisionnel de l'IA.",
-        icon: Split,
-        path: "/search/counterfactual/",
-        color: "text-purple-500",
-        bg: "bg-purple-500/10",
-        tier: "Logic"
-      }
-  ];
-
   return (
     <AnimatedPage>
       <div className="max-w-7xl mx-auto px-6 py-16">
-        <header className="mb-16 text-center md:text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-gray-500 mb-4">
-                <FlaskConical className="w-3 h-3" /> Experimental Division
+        
+        {/* Header Ultra-Moderne */}
+        <header className="mb-24 relative">
+            <div className="absolute -top-32 -left-32 w-[600px] h-[600px] bg-red-600/5 blur-[150px] rounded-full -z-10" />
+            
+            <div className="flex flex-col md:flex-row justify-between items-end gap-12">
+                <div className="max-w-3xl">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-[0.3em] text-red-500 mb-6 shadow-[0_0_20px_rgba(220,38,38,0.1)]">
+                        <Terminal className="w-3 h-3" /> Singularity Access Protocol v5.2
+                    </div>
+                    <h1 className="text-8xl font-black italic manga-font tracking-tighter uppercase mb-6 leading-[0.9]">
+                        SINGULARITY <span className="text-red-600 text-glow">LABS</span>
+                    </h1>
+                    <p className="text-2xl font-bold opacity-30 uppercase tracking-[0.2em] leading-relaxed">
+                        Explorez la frontière entre l'IA générative et la cognition pure.
+                    </p>
+                </div>
+                
+                <div className="flex gap-4">
+                    <Card padding="lg" className="bg-black/40 border-white/5 text-center min-w-[160px]">
+                        <p className="text-[10px] font-black uppercase opacity-30 mb-2">SOTA Status</p>
+                        <Badge variant="success" className="bg-emerald-500/10 text-emerald-500 border-none uppercase font-black italic">CONNECTED</Badge>
+                    </Card>
+                </div>
             </div>
-            <h1 className="text-7xl font-black italic manga-font tracking-tighter uppercase mb-4">
-                AI <span className="text-red-500 text-glow">LABORATORIES</span>
-            </h1>
-            <p className="text-xl font-bold opacity-30 uppercase tracking-[0.3em] max-w-2xl leading-relaxed">
-                Accédez aux moteurs d'inférence de pointe et aux protocoles expérimentaux d'Animetix.
-            </p>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {labs.map((lab) => (
-            <Link key={lab.title} to={lab.path} className="no-underline group">
-              <Card 
-                padding="lg" 
-                className="h-full border-white/5 bg-navy-900/50 hover:bg-white/5 hover:border-white/10 transition-all duration-500 hover:-translate-y-2 relative overflow-hidden"
-              >
-                {/* Background Decoration */}
-                <lab.icon className={`absolute -right-8 -bottom-8 w-48 h-48 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity ${lab.color}`} />
-                
-                <div className="relative z-10 space-y-6">
-                  <div className="flex justify-between items-start">
-                    <div className={`p-4 rounded-2xl ${lab.bg}`}>
-                        <lab.icon className={`w-8 h-8 ${lab.color}`} />
-                    </div>
-                    <Badge variant="neutral" className="bg-white/5 border-white/10 text-[10px] tracking-widest font-black italic">{lab.tier}</Badge>
-                  </div>
+        {/* Labs Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-24">
+            {labs.map((lab, i) => (
+                <Link key={lab.id} to={lab.url} className="no-underline group">
+                    <Card padding="none" className="h-full bg-navy-950/40 border-white/5 hover:border-red-600/30 transition-all duration-500 overflow-hidden relative group shadow-2xl">
+                        {/* Interactive BG hover effect */}
+                        <div className={`absolute inset-0 bg-gradient-to-br ${lab.bg} opacity-0 group-hover:opacity-100 transition-opacity duration-700`} />
+                        
+                        <div className="p-10 relative z-10 flex flex-col h-full justify-between">
+                            <div>
+                                <div className="flex justify-between items-start mb-10">
+                                    <div className={`p-4 rounded-2xl bg-white/5 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 ${lab.color}`}>
+                                        <lab.icon className="w-8 h-8" />
+                                    </div>
+                                    <Badge variant="neutral" className="bg-white/5 border-none text-[8px] font-black italic uppercase tracking-widest">{lab.badge}</Badge>
+                                </div>
+                                <h3 className="text-3xl font-black italic manga-font uppercase mb-4 tracking-tighter group-hover:text-white transition-colors">{lab.title}</h3>
+                                <p className="text-xs font-bold opacity-40 uppercase leading-relaxed tracking-wider mb-10 group-hover:opacity-60 transition-opacity">
+                                    {lab.desc}
+                                </p>
+                            </div>
+                            
+                            <div className="flex items-center justify-between mt-auto pt-8 border-t border-white/5">
+                                <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${lab.color} opacity-0 group-hover:opacity-100 transition-all transform translate-x-[-10px] group-hover:translate-x-0 duration-500`}>
+                                    INITIALIZE <ArrowRight className="inline w-3 h-3 ml-2" />
+                                </span>
+                                <span className="text-[9px] font-bold opacity-20 uppercase">{lab.status}</span>
+                            </div>
+                        </div>
+                    </Card>
+                </Link>
+            ))}
 
-                  <div>
-                    <h3 className="text-2xl font-black italic manga-font uppercase mb-2 group-hover:text-red-500 transition-colors">
-                        {lab.title}
-                    </h3>
-                    <p className="text-xs font-bold leading-relaxed opacity-40 uppercase tracking-wider">
-                        {lab.desc}
-                    </p>
-                  </div>
+            {/* Coming Soon / Experimental Slot */}
+            <Card padding="lg" className="bg-black/20 border-white/5 border-dashed flex flex-col items-center justify-center text-center opacity-30 group hover:opacity-50 transition-opacity">
+                <Sparkles className="w-12 h-12 mb-6 text-gray-500 group-hover:animate-spin-slow" />
+                <h4 className="text-xl font-black italic manga-font uppercase mb-2">Module [REDACTED]</h4>
+                <p className="text-[10px] font-bold uppercase tracking-widest">En cours de dé-silotage</p>
+            </Card>
+        </div>
 
-                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-red-500 opacity-0 group-hover:opacity-100 translate-x-[-10px] group-hover:translate-x-0 transition-all">
-                      Initialiser le protocole <ArrowRight className="w-3 h-3" />
-                  </div>
+        {/* Global Tech Stats */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <Card padding="lg" className="bg-navy-900 border-white/5 flex items-center gap-8 shadow-xl">
+                <div className="p-4 bg-white/5 rounded-2xl text-blue-400">
+                    <Layers className="w-8 h-8" />
                 </div>
-              </Card>
-            </Link>
-          ))}
+                <div>
+                    <p className="text-[10px] font-black uppercase opacity-30 mb-1">Architecture</p>
+                    <p className="text-lg font-black italic uppercase manga-font">Neuro-Symbolic V5</p>
+                </div>
+            </Card>
+            <Card padding="lg" className="bg-navy-900 border-white/5 flex items-center gap-8 shadow-xl">
+                <div className="p-4 bg-white/5 rounded-2xl text-purple-400">
+                    <Bot className="w-8 h-8" />
+                </div>
+                <div>
+                    <p className="text-[10px] font-black uppercase opacity-30 mb-1">Compute Power</p>
+                    <p className="text-lg font-black italic uppercase manga-font">H100 Distributed</p>
+                </div>
+            </Card>
+            <Card padding="lg" className="bg-navy-900 border-white/5 flex items-center gap-8 shadow-xl">
+                <div className="p-4 bg-white/5 rounded-2xl text-orange-400">
+                    <Zap className="w-8 h-8" />
+                </div>
+                <div>
+                    <p className="text-[10px] font-black uppercase opacity-30 mb-1">Latency</p>
+                    <p className="text-lg font-black italic uppercase manga-font">Sub-Temporal 12ms</p>
+                </div>
+            </Card>
         </div>
 
-        {/* Info Box */}
-        <div className="mt-24 p-12 rounded-[3rem] bg-gradient-to-br from-red-500/20 to-transparent border border-red-500/20 flex flex-col md:flex-row items-center gap-8">
-            <div className="p-6 bg-red-500 rounded-3xl shadow-[0_0_30px_rgba(239,68,68,0.5)]">
-                <ShieldAlert className="w-12 h-12 text-white" />
-            </div>
-            <div className="text-center md:text-left">
-                <h4 className="text-2xl font-black italic manga-font uppercase mb-2">Avertissement de Sécurité</h4>
-                <p className="text-sm font-bold opacity-50 uppercase leading-relaxed tracking-wide max-w-3xl">
-                    Les modules de laboratoire utilisent des clusters de calcul H100 à haute intensité. Toute utilisation abusive ou tentative d'injection de prompt sera automatiquement tracée par le <b>Guardrail v4.2</b>.
-                </p>
-            </div>
-        </div>
+        {/* Alpha Footer */}
+        <footer className="mt-32 pt-16 border-t border-white/5 text-center">
+            <p className="text-[9px] font-bold uppercase tracking-[0.5em] opacity-20 italic max-w-4xl mx-auto leading-relaxed">
+                Le Singularity Lab est un environnement de recherche de niveau Omega. <br />
+                Toutes les simulations de multivers et de plasticité sont exécutées sur des cœurs tensoriels isolés pour prévenir toute fuite de conscience artificielle.
+            </p>
+        </footer>
       </div>
     </AnimatedPage>
   );

@@ -51,13 +51,23 @@ class LatentSpaceAPIView(APIView):
 
 @method_decorator(ratelimit(key='user_or_ip', rate='5/m', method='POST', block=True), name='dispatch')
 class AIFeedbackAPIView(APIView):
-    """API for submitting AI feedback."""
-    permission_classes = [permissions.AllowAny]
+    """API for submitting and retrieving AI feedback."""
+    
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [permissions.IsAuthenticated()]
+        return [permissions.AllowAny()]
 
     @inject
     def __init__(self, feedback_port: FeedbackRepositoryPort = Provide[Container.persistence.feedback_adapter], **kwargs):
         super().__init__(**kwargs)
         self.feedback_port = feedback_port
+
+    def get(self, request):
+        """Récupère l'historique des feedbacks de l'utilisateur connecté."""
+        feedbacks = AIFeedback.objects.filter(user=request.user).order_by('-created_at')[:100]
+        serializer = AIFeedbackSerializer(feedbacks, many=True)
+        return Response(serializer.data)
 
     def post(self, request):
         is_pos = request.data.get('is_positive') == True or request.data.get('is_positive') == 'true'
@@ -174,3 +184,23 @@ class DSPyOptimizerView(APIView):
             })
         except Exception as e:
             return Response({'error': str(e)}, status=500)
+
+class SOTABenchmarkListView(APIView):
+    """Récupère les benchmarks SOTA (State of the Art) pour les modèles IA."""
+    permission_classes = [permissions.AllowAny] # Public pour la transparence
+
+    def get(self, request):
+        container = get_container()
+        service = container.core.sota_benchmark_service()
+        
+        benchmarks = service.get_all_benchmarks()
+        best_elo = service.get_best_model("elo_score")
+        best_os = service.get_open_source_best()
+        
+        return Response({
+            "status": "success",
+            "timestamp": datetime.datetime.now().isoformat(),
+            "benchmarks": benchmarks,
+            "top_model": best_elo,
+            "best_open_source": best_os[0] if best_os else None
+        })

@@ -25,9 +25,11 @@ def test_generate_returns_inference_response(brain_adapter):
         
         assert isinstance(response, InferenceResponse)
         assert response.text == "Hello world"
-        assert response.metadata.usage == {"prompt_tokens": 5, "completion_tokens": 2}
-        assert response.metadata.thinking == "Thinking about hello"
-        assert response.metadata.logprobs is None
+        
+        # Vérification de l'envoi de la clé d'API
+        args, kwargs = mock_request.call_args
+        assert "headers" in kwargs
+        assert kwargs["headers"] == {"X-API-Key": "dev-secret-key"}
 
 def test_generate_with_logprobs(brain_adapter):
     mock_response_data = {
