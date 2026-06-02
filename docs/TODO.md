@@ -21,7 +21,7 @@ Ce document centralise toutes les tâches techniques, d'architecture et de fonct
 ## 🛡️ Sécurité & Résilience
 
 - [x] **Suppression des Secrets par Défaut** (CRITIQUE) : Retirer les fallbacks en dur pour les clés API (ex: `dev-secret-key` dans `BrainAPIAdapter`) et lever une `ImproperlyConfigured` si absentes.
-- [ ] **Isolation Réseau des Services** (HAUTE) : Supprimer l'exposition des ports PostgreSQL, Redis, Neo4j et ChromaDB sur l'hôte dans `docker-compose.yml` (utiliser uniquement le réseau interne Docker).
+- [x] **Isolation Réseau des Services** (HAUTE) : Supprimer l'exposition des ports PostgreSQL, Redis, Neo4j et ChromaDB sur l'hôte dans `docker-compose.yml` (utiliser uniquement le réseau interne Docker).
 - [ ] **Durcissement SSRF Interne** (MOYENNE) : Restreindre `allow_internal=True` dans `safe_http_request` aux seuls noms de services Docker autorisés.
 - [ ] **Audit Humain Dataset STaR** (MOYENNE) : Implémenter un système de validation humaine pour les entrées `GoldDataset` afin de prévenir l'empoisonnement du modèle IA.
 - [ ] **Audit de Dépendances Continu** : Automatisation du scan des vulnérabilités (Snyk/GitHub Dependabot) pour maintenir le socle technique à jour après le passage à Django 5.2.14.

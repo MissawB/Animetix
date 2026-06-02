@@ -19,7 +19,8 @@ Ce document archive les étapes majeures de l'évolution technique du projet.
     - Implémentation de la page de gestion Neuro-Symbolique de la mémoire (règles Z3 déduites du profil).
 - **Sécurité et Résilience** : 
     - **Suppression des Secrets par Défaut (Hardened)** : Élimination de tous les fallbacks de clés API en dur dans le code. Validation centralisée dans `settings.py` via `ImproperlyConfigured` en production et blocage du démarrage du service Brain API sans clé sécurisée.
-    - Sécurisation de la Brain API via `X-API-Key` et renforcement du réseau Docker (isolation localhost pour les DB).
+    - **Isolation Réseau SOTA** : Retrait total de l'exposition des ports de base de données (Postgres, Redis, Chroma, Neo4j) et d'inférence (Ollama) sur l'hôte host. Les services communiquent désormais exclusivement via le réseau virtuel Docker, éliminant les vecteurs d'accès direct non autorisés.
+    - Sécurisation de la Brain API via `X-API-Key`.
     - Mitigation Prompt Injection et affinage de la CSP (retrait de `'unsafe-eval'`).
     - Systématisation de la sanitisation des sorties IA (`sanitize_ai`/`bleach`).
     - Rate limiting sur `MediaSearchView` et protection contre le Mass Assignment dans `CreativeFusionSerializer`.
