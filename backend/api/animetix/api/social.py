@@ -92,11 +92,12 @@ class ClubViewSet(viewsets.ModelViewSet):
         trigger_club_event.delay(club.id, event_id)
         return Response({'status': 'event triggered'})
 
-class ProfileViewSet(viewsets.ReadOnlyModelViewSet):
-    """API endpoint pour visualiser les profils utilisateurs."""
+class ProfileViewSet(viewsets.ModelViewSet):
+    """API endpoint pour visualiser et modifier les profils utilisateurs."""
     queryset = Profile.objects.all().select_related('user')
     serializer_class = ProfileSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    lookup_field = 'user__username'
 
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
     def me(self, request):
@@ -108,7 +109,7 @@ class ProfileViewSet(viewsets.ReadOnlyModelViewSet):
         try:
             # Validation stricte du JSON entrant via Pydantic
             validated_data = PersonalizationSchema(**request.data).model_dump()
-            
+
             profile = request.user.profile
             profile.personalization_settings = validated_data
             profile.save()
@@ -117,10 +118,42 @@ class ProfileViewSet(viewsets.ReadOnlyModelViewSet):
             # En cas de payload non conforme (clés interdites, valeurs erronées), on bloque
             return Response({'error': 'Invalid personalization settings.', 'details': e.errors()}, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(detail=False, methods=['patch'], permission_classes=[permissions.IsAuthenticated])
+    def update_settings(self, request):
+        profile = request.user.profile
+
+        # Autoriser uniquement la mise à jour du tier (en environnement de démo) et des infos liées
+        tier = request.data.get('tier')
+        if tier in dict(Profile.TIERS).keys():
+            profile.tier = tier
+
+        profile.save()
+        return Response({'status': 'updated', 'tier': profile.tier})
+
+    @action(detail=False, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def generate_api_key(self, request):
+        import uuid
+        profile = request.user.profile
+        new_key = f"atx_{uuid.uuid4().hex}"
+        profile.set_api_key(new_key)
+        profile.save()
+        return Response({'api_key': new_key, 'message': 'Store this key safely. It will not be shown again.'})
+
+    @action(detail=False, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def revoke_api_key(self, request):
+        profile = request.user.profile
+        profile.api_key_hash = None
+        profile.save()
+        return Response({'status': 'revoked'})
+
 class CreativeFusionViewSet(viewsets.ModelViewSet):
     """API endpoint pour visualiser, créer, liker et remixer des fusions créatives."""
     serializer_class = CreativeFusionSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsCreatorOrReadOnly]
+
+    def perform_create(self, serializer):
+        """Assigne automatiquement le créateur à l'utilisateur connecté."""
+        serializer.save(creator=self.request.user)
 
     def get_queryset(self):
         """
@@ -268,3 +301,28 @@ class NotificationListView(APIView):
         # Marquer comme lues
         notifs.update(is_read=True)
         return Response(NotificationSerializer(notifs, many=True).data)
+
+class ClubEventViewSet(viewsets.ModelViewSet):
+    """API endpoint pour gérer les événements de clubs."""
+    serializer_class = ClubEventSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        queryset = ClubEvent.objects.all().order_by('event_date')
+        club_id = self.request.query_params.get('club')
+        if club_id:
+            queryset = queryset.filter(club_id=club_id)
+        return queryset
+
+    def perform_create(self, serializer):
+        club = serializer.validated_data['club']
+        try:
+            membership = ClubMembership.objects.get(user=self.request.user, club=club)
+            if membership.role != 'Officer':
+                from rest_framework.exceptions import PermissionDenied
+                raise PermissionDenied("Seuls les officiers peuvent créer des événements.")
+        except ClubMembership.DoesNotExist:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Vous n'êtes pas membre de ce club.")
+        serializer.save()
+
