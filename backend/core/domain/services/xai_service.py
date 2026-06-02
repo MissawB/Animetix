@@ -109,3 +109,24 @@ class UncertaintyService:
             "action_required": "PROCEED" if is_reliable else "VERIFY_WEB",
             "method": "gpt2_proxy"
         }
+
+class XaiCollector:
+    """
+    Collecteur de métriques et pensées pour le rapport XAI final.
+    """
+    def __init__(self):
+        self.steps = []
+        self.retrieved_docs = []
+        self.intent = ""
+
+    def log_intent(self, intent: str):
+        """Enregistre l'intention détectée."""
+        self.intent = intent
+
+    def log_retrieval(self, docs: List[Dict]):
+        """Enregistre les documents récupérés."""
+        self.retrieved_docs = docs
+
+    def log_agent_thought(self, agent: str, thought: str):
+        """Enregistre une étape de réflexion d'un agent."""
+        self.steps.append({"agent": agent, "thought": thought})
