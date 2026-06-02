@@ -542,7 +542,7 @@ class UnifiedInferenceAdapter(
 
             return {
                 "attention_map": attention_map,
-                "logit_lens": logit_projections,
+                "logit_lens_trajectory": logit_projections,
                 "runtime_ms": 0.0,
                 "model_signature": "evaluation_model:gpt2:observability"
             }

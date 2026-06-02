@@ -32,7 +32,7 @@ def test_generate_advanced_report(xai_service, mock_inference_engine):
     mock_inference_engine.get_diagnostics.return_value = {
         "attention_heatmap": [[0.1, 0.2], [0.3, 0.4]],
         "top_attention_tokens": ["Naruto", "ninja"],
-        "logit_lens": [{"layer": 1, "top_token": "Naruto", "prob": 0.8}]
+        "logit_lens_trajectory": [{"layer": 1, "top_token": "Naruto", "prob": 0.8}]
     }
     
     # Mock UncertaintyService logic or inject it

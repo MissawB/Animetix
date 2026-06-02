@@ -24,11 +24,11 @@ def test_unified_observability_success():
     diagnostics = adapter.get_diagnostics(prompt, completion)
     
     assert "attention_map" in diagnostics
-    assert "logit_lens" in diagnostics
+    assert "logit_lens_trajectory" in diagnostics
     assert "model_signature" in diagnostics
     assert isinstance(diagnostics["attention_map"], list)
-    assert len(diagnostics["logit_lens"]) > 0
-    assert "Layer" in diagnostics["logit_lens"][0]["layer"]
+    assert len(diagnostics["logit_lens_trajectory"]) > 0
+    assert "Layer" in diagnostics["logit_lens_trajectory"][0]["layer"]
 
 def test_fallback_observability_routing():
     mock_adapter = MagicMock()
@@ -39,7 +39,7 @@ def test_fallback_observability_routing():
     }
     mock_adapter.get_diagnostics.return_value = {
         "attention_map": [[0.5, 0.5]],
-        "logit_lens": [{"layer": "MockLayer", "confidence": 0.95}],
+        "logit_lens_trajectory": [{"layer": "MockLayer", "confidence": 0.95}],
         "model_signature": "mock:signature"
     }
     

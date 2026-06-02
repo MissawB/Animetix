@@ -380,7 +380,10 @@ class BrainAPIAdapter(InferencePort):
             }, headers=self._get_headers(), timeout=10, allow_internal=True)
             if res.status_code == 200:
                 self._log_usage(engine="brain:diagnostics", units=1)
-                return res.json().get("diagnostics", {})
+                diagnostics = res.json().get("diagnostics", {})
+                if "logit_lens" in diagnostics:
+                    diagnostics["logit_lens_trajectory"] = diagnostics.pop("logit_lens")
+                return diagnostics
         except Exception as e:
             logger.error(f"BrainAPI Diagnostics error: {e}")
         return {}

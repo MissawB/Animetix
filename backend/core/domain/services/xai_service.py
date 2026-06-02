@@ -46,7 +46,7 @@ class XaiDiagnosticService:
         model_diagnostics = ModelDiagnostics(
             attention_heatmap=raw_diagnostics.get("attention_heatmap", []),
             top_influential_tokens=raw_diagnostics.get("top_attention_tokens", []),
-            logit_lens_trajectory=raw_diagnostics.get("logit_lens", [])
+            logit_lens_trajectory=raw_diagnostics.get("logit_lens_trajectory", [])
         )
         
         # 2. Attribution documentaire (RAG)
