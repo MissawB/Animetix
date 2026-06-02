@@ -6,6 +6,7 @@ export interface User {
   avatar?: string;
   xp?: number;
   tier?: string;
+  has_api_key?: boolean;
 }
 
 export interface AppConfig {
@@ -230,6 +231,7 @@ export interface DiscoveryClub {
   members_count: number;
   image_url?: string;
   is_private: boolean;
+  theme?: string;
   events: ClubEvent[];
   created_at: string;
   updated_at: string;

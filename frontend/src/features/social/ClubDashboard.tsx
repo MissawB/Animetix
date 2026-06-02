@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { ChevronLeft, Users, Settings, Bell, Info, Calendar, Plus, Clock, FileText } from 'lucide-react';
 import ClubChat from './components/ClubChat';
 import { getClubDetails, createClubEvent, getClubEvents, ClubEvent } from '../../api';
-import { toast } from 'react-toastify';
+import { useToastStore } from '../../store/toastStore';
 
 interface Member {
   id: string;
@@ -33,7 +33,7 @@ const ClubDashboard: React.FC = () => {
       const club = await getClubDetails(Number(id));
       setClubName(club.name);
       setDescription(club.description);
-      setTheme(club.theme);
+      setTheme(club.theme || '');
       
       const eventList = await getClubEvents(Number(id));
       setEvents(eventList);
@@ -56,7 +56,7 @@ const ClubDashboard: React.FC = () => {
   const handleCreateEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newEventTitle || !newEventDate || !newEventDescription) {
-      toast.error("Veuillez remplir tous les champs.");
+      useToastStore.getState().addToast("Veuillez remplir tous les champs.", "error");
       return;
     }
     
@@ -68,7 +68,7 @@ const ClubDashboard: React.FC = () => {
         description: newEventDescription,
         event_date: newEventDate,
       });
-      toast.success("Événement créé avec succès !");
+      useToastStore.getState().addToast("Événement créé avec succès !", "success");
       setNewEventTitle('');
       setNewEventDescription('');
       setNewEventDate('');
@@ -76,7 +76,7 @@ const ClubDashboard: React.FC = () => {
       fetchClubData(); // Rafraîchir la liste
     } catch (err: any) {
       console.error(err);
-      toast.error(err?.error || err?.message || "Erreur lors de la création de l'événement.");
+      useToastStore.getState().addToast(err?.error || err?.message || "Erreur lors de la création de l'événement.", "error");
     } finally {
       setIsSubmitting(false);
     }

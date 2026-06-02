@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ChevronLeft, Calendar, Clock, MapPin, Users, Send, CheckCircle } from 'lucide-react';
 import { getClubEventDetails, getClubDetails, ClubEvent } from '../../api';
-import { toast } from 'react-toastify';
+import { useToastStore } from '../../store/toastStore';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 
@@ -31,7 +31,7 @@ const ClubEventPage: React.FC = () => {
         setClubName(clubData.name);
       } catch (err) {
         console.error("Erreur de récupération :", err);
-        toast.error("Impossible de récupérer l'événement.");
+        useToastStore.getState().addToast("Impossible de récupérer l'événement.", "error");
       }
     };
     fetchEventData();
@@ -63,10 +63,10 @@ const ClubEventPage: React.FC = () => {
   const handleToggleParticipation = () => {
     if (isParticipating) {
       setParticipants(prev => prev.filter(p => p !== 'Moi'));
-      toast.info("Vous ne participez plus à cet événement.");
+      useToastStore.getState().addToast("Vous ne participez plus à cet événement.", "info");
     } else {
       setParticipants(prev => [...prev, 'Moi']);
-      toast.success("Votre inscription a été enregistrée !");
+      useToastStore.getState().addToast("Votre inscription a été enregistrée !", "success");
     }
     setIsParticipating(!isParticipating);
   };
