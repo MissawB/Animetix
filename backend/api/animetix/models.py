@@ -345,3 +345,56 @@ class ClubEvent(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self): return f"{self.club.name} - {self.title}"
+
+import json
+
+class PGVectorField(models.Field):
+    description = "Vector representation compatible with pgvector (PostgreSQL) and JSON strings (SQLite)"
+
+    def db_type(self, connection):
+        if connection.vendor == 'postgresql':
+            return 'vector'
+        return 'text'
+
+    def from_db_value(self, value, expression, connection):
+        if value is None:
+            return value
+        if isinstance(value, str):
+            try:
+                return json.loads(value)
+            except json.JSONDecodeError:
+                return value
+        return value
+
+    def to_python(self, value):
+        if isinstance(value, str):
+            try:
+                return json.loads(value)
+            except json.JSONDecodeError:
+                return value
+        return value
+
+    def get_prep_value(self, value):
+        if value is None:
+            return value
+        if isinstance(value, list):
+            return "[" + ",".join(map(str, value)) + "]"
+        return value
+
+class VectorRecord(models.Model):
+    collection_name = models.CharField(max_length=100, db_index=True)
+    item_id = models.CharField(max_length=100, db_index=True)
+    embedding = PGVectorField()
+    metadata = models.JSONField(default=dict, blank=True)
+    document = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('collection_name', 'item_id')
+        indexes = [
+            models.Index(fields=['collection_name', 'item_id']),
+        ]
+
+    def __str__(self):
+        return f"{self.collection_name} - {self.item_id}"
+
