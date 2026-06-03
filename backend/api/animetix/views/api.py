@@ -11,12 +11,12 @@ from ..containers import get_container
 from animetix.api.dependencies import get_session_service
 
 def get_task_status(request, task_id):
-    """Checks the status of a Celery task and returns a result fragment if ready."""
+    """Checks the status of a task from cache and returns a result fragment if ready."""
     session = get_session_service(request)
     try:
-        res = AsyncResult(task_id)
-        if res.ready():
-            result = res.result
+        task_data = cache.get(f"task_result:{task_id}")
+        if task_data and task_data.get("ready"):
+            result = task_data.get("result")
             if isinstance(result, dict) and 'scenario' in result:
                 return render(request, 'animetix/archetypist/archetypist_result_fragment.html', {
                     'reasoning': result.get('reasoning'), 
@@ -28,7 +28,7 @@ def get_task_status(request, task_id):
                 })
             return JsonResponse({'ready': True, 'result': result})
     except Exception as e:
-        logger.error(f"⚠️ Celery Result Backend Error: {e}")
+        logger.error(f"⚠️ Tasks Cache Status Error: {e}")
         return HttpResponse(status=204)
     return HttpResponse(status=204)
 

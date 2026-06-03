@@ -5,12 +5,14 @@ Automates prompt optimization and cognitive self-correction using DSPy.
 """
 
 from animetix_project.logging_config import get_logger
+from animetix.tasks_registry import register_task
 from celery import shared_task
 from ..containers import get_container
 
 logger = get_logger('animetix.' + __name__)
 
 @shared_task(name="animetix.meta.optimize_prompts")
+@register_task("weekly_prompt_optimization")
 def weekly_prompt_optimization():
     """
     Tâche hebdomadaire qui optimise les prompts systèmes en fonction des retours négatifs.
@@ -18,9 +20,9 @@ def weekly_prompt_optimization():
     logger.info("🧬 Starting Weekly DSPy Prompt Optimization...")
     container = get_container()
     
-    dspy_optimizer = container.dspy_prompt_optimizer()
-    dpo_loop = container.dpo_feedback_loop()
-    prompt_manager = container.prompt_manager()
+    dspy_optimizer = container.core.dspy_prompt_optimizer()
+    dpo_loop = container.core.dpo_feedback_loop()
+    prompt_manager = container.infrastructure.prompt_manager()
     
     # 1. Identifier les prompts les plus "critiqués"
     rejected_feedbacks = dpo_loop.get_rejected_for_curation(limit=50)
@@ -53,3 +55,52 @@ def weekly_prompt_optimization():
         return f"OPTIMIZED_{prompt_key}"
         
     return "NO_IMPROVEMENT"
+
+
+@shared_task(name="animetix.tasks.scheduled_dpo_optimization")
+@register_task("scheduled_dpo_optimization")
+def scheduled_dpo_optimization():
+    """
+    Tâche périodique pour optimiser les prompts à partir des feedbacks négatifs accumulés.
+    """
+    from animetix.models import AIFeedback
+    from django.db.models import Count
+    from django.core.cache import cache
+
+    lock_id = "scheduled_dpo_optimization_lock"
+    if not cache.add(lock_id, "true", 3600):
+        logger.warning("🤖 [DPO Task] Already running. Skipping.")
+        return "Task already running."
+    
+    try:
+        container = get_container()
+        dpo_loop = container.core.dpo_feedback_loop()
+        prompt_manager = container.infrastructure.prompt_manager()
+        
+        logger.info("🤖 [DPO Task] Starting automated prompt optimization cycle...")
+        
+        MIN_REJECTED_THRESHOLD = 5
+        stats = AIFeedback.objects.filter(is_positive=False).values('feedback_type').annotate(
+            rejected_count=Count('id')
+        ).filter(rejected_count__gte=MIN_REJECTED_THRESHOLD)
+        
+        optimized_categories = []
+        for stat in stats:
+            prompt_key = stat['feedback_type']
+            if hasattr(prompt_manager, 'prompts') and prompt_key in prompt_manager.prompts:
+                logger.info(f"✨ [DPO Task] Optimizing prompt '{prompt_key}' (Rejected count: {stat['rejected_count']})")
+                try:
+                    new_prompt = dpo_loop.optimize_prompt_from_feedback(prompt_key, limit=50)
+                    if new_prompt:
+                        logger.info(f"✅ [DPO Task] Success: Prompt '{prompt_key}' updated.")
+                        optimized_categories.append(prompt_key)
+                except Exception as e:
+                    logger.error(f"❌ [DPO Task] Error optimizing '{prompt_key}': {e}")
+        
+        if not optimized_categories:
+            return "No prompts needed optimization today."
+            
+        return f"Optimization cycle complete. Categories updated: {', '.join(optimized_categories)}"
+    finally:
+        cache.delete(lock_id)
+

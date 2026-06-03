@@ -57,6 +57,10 @@ const Navbar: React.FC = () => {
             <Search className="w-4 h-4" /> Explore
           </Link>
           
+          <Link to="/forge-hub/" className="flex items-center gap-2 no-underline text-xs font-black italic text-purple-500 hover:scale-105 transition-all uppercase tracking-widest">
+            <Sparkles className="w-4 h-4" /> Forge Créative
+          </Link>
+
           <Link to="/lab/" className="flex items-center gap-2 no-underline text-xs font-black italic text-red-500 hover:scale-105 transition-all uppercase tracking-widest">
             <FlaskConical className="w-4 h-4" /> {t('navbar.lab', 'Laboratories')}
           </Link>

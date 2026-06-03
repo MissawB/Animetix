@@ -3,8 +3,8 @@ import sys
 import re
 import json
 import logging
-import urllib.request
 from typing import List, Dict, Optional
+
 try:
     from bs4 import BeautifulSoup
 except ImportError:
@@ -14,6 +14,8 @@ except ImportError:
 BASE_DIR = r"C:\Users\bahma\PycharmProjects\Projet solo\Double_scenario_Project"
 sys.path.insert(0, os.path.join(BASE_DIR, "src"))
 sys.path.insert(0, os.path.join(BASE_DIR, "src", "backend"))
+
+from core.utils.security import safe_http_request
 
 # Configuration Django
 import django
@@ -94,20 +96,17 @@ class FandomLoreScraper:
         """Scrape une URL poliment et en extrait le contenu textuel sémantique."""
         logger.info(f"🕸️ Scraping: {url} ...")
         try:
-            req = urllib.request.Request(
-                url, 
-                headers={
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-                    'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
-                    'Cache-Control': 'max-age=0',
-                    'Connection': 'keep-alive',
-                    'Upgrade-Insecure-Requests': '1'
-                }
-            )
-            with urllib.request.urlopen(req, timeout=10) as response:
-                html = response.read()
-                
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
+                'Cache-Control': 'max-age=0',
+                'Connection': 'keep-alive',
+                'Upgrade-Insecure-Requests': '1'
+            }
+            response = safe_http_request("GET", url, headers=headers, timeout=10)
+            html = response.content
+            
             if BeautifulSoup:
                 soup = BeautifulSoup(html, 'html.parser')
                 # Nettoyage du bruit HTML typique de Fandom (pubs, menus, scripts, asides)

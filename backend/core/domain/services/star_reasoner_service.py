@@ -56,13 +56,13 @@ class StarReasonerService:
             self._save_traces(successful_paths)
             logger.info(f"✅ STaR: Found {len(successful_paths)} correct reasoning paths. Traces saved for human validation.")
             
-            # Déclenchement automatique de la boucle MLOps (via Celery)
+            # Déclenchement automatique de la boucle MLOps (via Cloud Tasks)
             try:
-                from backend.api.animetix.tasks import run_star_training_cycle_task
+                from animetix.tasks_client import enqueue_task
                 # On déclenche la tâche si on vient d'ajouter des traces
-                run_star_training_cycle_task.delay()
-            except ImportError:
-                logger.warning("Celery task run_star_training_cycle_task not available.")
+                enqueue_task("run_star_training_cycle_task")
+            except Exception as e:
+                logger.warning(f"Failed to enqueue run_star_training_cycle_task: {e}")
         else:
             logger.info("❌ STaR: Failed to find the correct answer in all attempts.")
             

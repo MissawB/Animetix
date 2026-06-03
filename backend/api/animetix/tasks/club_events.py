@@ -3,9 +3,12 @@ from animetix_project.logging_config import get_logger
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
+from animetix.tasks_registry import register_task
+
 logger = get_logger('animetix.' + __name__)
 
 @shared_task
+@register_task("trigger_club_event")
 def trigger_club_event(club_id, event_id):
     """
     Signals all members of a club via WebSocket that an event has started.

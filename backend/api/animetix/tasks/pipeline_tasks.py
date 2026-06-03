@@ -9,6 +9,8 @@ import sys
 from pathlib import Path
 from celery import shared_task
 from animetix_project.logging_config import get_logger
+from animetix.tasks_registry import register_task
+from animetix.tasks_client import enqueue_task
 
 logger = get_logger('animetix.' + __name__)
 
@@ -21,6 +23,7 @@ for path in [str(PIPELINE_DIR), str(PIPELINE_DIR / "mlops"), str(PIPELINE_DIR / 
         sys.path.insert(0, path)
 
 @shared_task(name="animetix.pipeline.run_daily_ingestion_workflow")
+@register_task("run_daily_ingestion_workflow")
 def run_daily_ingestion_workflow():
     """
     Orchestration globale de l'ingestion quotidienne de données (3h00).
@@ -157,6 +160,7 @@ def run_daily_ingestion_workflow():
     return "SUCCESS"
 
 @shared_task(name="animetix.pipeline.run_daily_maintenance_workflow")
+@register_task("run_daily_maintenance_workflow")
 def run_daily_maintenance_workflow():
     """
     Orchestration globale de la maintenance MLOps quotidienne (5h00).
@@ -227,6 +231,7 @@ def run_daily_maintenance_workflow():
     return "SUCCESS"
 
 @shared_task(name="animetix.pipeline.run_hourly_monitoring_workflow")
+@register_task("run_hourly_monitoring_workflow")
 def run_hourly_monitoring_workflow():
     """
     Monitoring de santé et détection de dérive (Toutes les heures).
@@ -261,6 +266,7 @@ def run_hourly_monitoring_workflow():
     return "SUCCESS"
 
 @shared_task(name="animetix.pipeline.check_gold_dataset_sensor_task")
+@register_task("check_gold_dataset_sensor_task")
 def check_gold_dataset_sensor_task():
     """
     Sensor périodique qui vérifie s'il y a 100+ nouvelles entrées GoldDataset validées.
@@ -279,9 +285,8 @@ def check_gold_dataset_sensor_task():
         
         # Déclenche l'entraînement
         try:
-            from backend.api.animetix.tasks import run_star_training_cycle_task
-            run_star_training_cycle_task.delay()
-            logger.info("✅ LoRA training task queued via Celery.")
+            enqueue_task("run_star_training_cycle_task")
+            logger.info("✅ LoRA training task queued via Cloud Tasks.")
         except Exception as e:
             logger.error(f"❌ Error triggering training from sensor: {e}")
         return "TRIGGERED"
@@ -290,6 +295,7 @@ def check_gold_dataset_sensor_task():
     return "NO_TRIGGER"
 
 @shared_task(name="animetix.pipeline.check_dpo_feedback_sensor_task")
+@register_task("check_dpo_feedback_sensor_task")
 def check_dpo_feedback_sensor_task():
     """
     Sensor périodique qui vérifie s'il y a 100+ nouvelles entrées DPO.

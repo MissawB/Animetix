@@ -68,20 +68,7 @@ services:
       - redis
       - neo4j
 
-  # ⏱️ Celery Beat Scheduler
-  celery_beat:
-    build:
-      context: ..
-      dockerfile: deploy/Dockerfile
-    container_name: animetix-celery-beat
-    command: celery -A animetix_project beat --loglevel=info
-    volumes:
-      - ..:/app
-    env_file:
-      - ../.env
-    depends_on:
-      - db
-      - redis
+
 
   # 🐏 Serveur d'Inférence Local (Ollama)
   ollama:

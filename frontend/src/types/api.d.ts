@@ -686,6 +686,34 @@ export interface components {
              */
             email?: string;
         };
+        DocumentAttribution: {
+            document_id: string;
+            title: string;
+            /** Format: float */
+            relevance_score: number;
+            /** Format: float */
+            contribution_weight: number;
+        };
+        ModelDiagnostics: {
+            attention_heatmap: number[][];
+            top_influential_tokens: string[];
+            logit_lens_trajectory: {
+                [key: string]: unknown;
+            }[];
+        };
+        XaiReport: {
+            query_intent: string;
+            retrieval_attribution: components["schemas"]["DocumentAttribution"][];
+            internal_diagnostics?: components["schemas"]["ModelDiagnostics"] | null;
+            uncertainty: {
+                [key: string]: unknown;
+            };
+            agent_trace: {
+                [key: string]: unknown;
+            }[];
+            /** Format: float */
+            final_confidence: number;
+        };
     };
     responses: never;
     parameters: never;

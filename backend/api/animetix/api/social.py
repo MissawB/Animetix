@@ -93,8 +93,8 @@ class ClubViewSet(viewsets.ModelViewSet):
             return Response({"error": "Vous n'êtes pas membre de ce club."}, status=status.HTTP_403_FORBIDDEN)
 
         event_id = request.data.get('event_id')
-        from ..tasks.club_events import trigger_club_event
-        trigger_club_event.delay(club.id, event_id)
+        from animetix.tasks_client import enqueue_task
+        enqueue_task("trigger_club_event", club.id, event_id)
         return Response({'status': 'event triggered'})
 
 class ProfileViewSet(viewsets.ModelViewSet):

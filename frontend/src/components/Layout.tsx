@@ -13,7 +13,7 @@ import { useAuthStore } from '../store/authStore';
 import { useTranslation } from 'react-i18next';
 import { 
   Menu, X, Home, Zap, Trophy, BookOpen, Settings, Sun, Moon, Monitor, 
-  CheckCircle2, Shield, User, Globe
+  CheckCircle2, Shield, User, Globe, Sparkles
 } from 'lucide-react';
 
 const Footer: React.FC = () => {
@@ -173,6 +173,16 @@ const LayoutContent: React.FC<{ children: ReactNode }> = ({ children }) => {
             }`}
           >
             <BookOpen className="w-5 h-5 text-xl text-blue-400" /> {t('nav.grimoire', 'Grimoire')}
+          </Link>
+
+          <Link 
+            to="/forge-hub/" 
+            onClick={() => toggleSidebar(true)}
+            className={`nav-link-manga flex items-center gap-4 p-4 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${
+              location.pathname === '/forge-hub/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black' : ''
+            }`}
+          >
+            <Sparkles className="w-5 h-5 text-xl text-purple-400" /> Forge Créative
           </Link>
           
           <div className="pt-8">

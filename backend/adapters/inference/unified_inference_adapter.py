@@ -656,7 +656,10 @@ class UnifiedInferenceAdapter(
             }
             
             logger.info("Uploading image to Tripo3D...")
-            with httpx.Client(timeout=30) as client:
+            if not is_safe_url(upload_url):
+                raise ValueError(f"Unsafe upload URL: {upload_url}")
+
+            with httpx.Client(timeout=30, follow_redirects=False) as client:
                 upload_res = client.post(upload_url, headers=headers, files=files)
                 upload_res.raise_for_status()
                 file_token = upload_res.json()["data"]["image_token"]
@@ -672,10 +675,9 @@ class UnifiedInferenceAdapter(
             }
             
             logger.info("Creating Tripo3D task...")
-            with httpx.Client(timeout=30) as client:
-                task_res = client.post(task_url, headers={"Authorization": f"Bearer {tripo_api_key}", "Content-Type": "application/json"}, json=task_payload)
-                task_res.raise_for_status()
-                task_id = task_res.json()["data"]["task_id"]
+            task_res = safe_http_request("POST", task_url, headers={"Authorization": f"Bearer {tripo_api_key}", "Content-Type": "application/json"}, json=task_payload, timeout=30)
+            task_res.raise_for_status()
+            task_id = task_res.json()["data"]["task_id"]
             
             # Étape 3 : Polling du résultat
             logger.info(f"Polling Tripo3D task: {task_id}...")
@@ -683,18 +685,18 @@ class UnifiedInferenceAdapter(
             attempt = 0
             model_url = None
             
+            poll_url = f"https://api.tripo3d.ai/v2/openapi/task/{task_id}"
             while attempt < max_attempts:
-                with httpx.Client(timeout=10) as client:
-                    status_res = client.get(f"https://api.tripo3d.ai/v2/openapi/task/{task_id}", headers=headers)
-                    status_res.raise_for_status()
-                    data = status_res.json()["data"]
-                    
-                    status = data["status"]
-                    if status == "success":
-                        model_url = data["output"].get("model")
-                        break
-                    elif status in ["failed", "cancelled", "timeout"]:
-                        raise InferenceError(f"Tripo3D Task failed with status: {status}")
+                status_res = safe_http_request("GET", poll_url, headers=headers, timeout=10)
+                status_res.raise_for_status()
+                data = status_res.json()["data"]
+                
+                status = data["status"]
+                if status == "success":
+                    model_url = data["output"].get("model")
+                    break
+                elif status in ["failed", "cancelled", "timeout"]:
+                    raise InferenceError(f"Tripo3D Task failed with status: {status}")
                 
                 time.sleep(3)
                 attempt += 1

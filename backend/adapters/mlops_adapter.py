@@ -6,5 +6,5 @@ class MlopsAdapter(MlopsPort):
         """
         Appelle la tâche Celery pour journaliser les préférences DPO de manière asynchrone.
         """
-        from animetix.tasks import log_dpo_preference_task
-        log_dpo_preference_task.delay(query, chosen, rejected, project_root)
+        from animetix.tasks_client import enqueue_task
+        enqueue_task("log_dpo_preference_task", query, chosen, rejected, project_root)

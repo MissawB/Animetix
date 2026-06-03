@@ -130,10 +130,10 @@ const App: React.FC = () => {
   // Creative modes list
   const modesCreative = [
     {
-      titre: isEn ? 'THE FORGE OF REALITY' : 'LA FORGE DE RÉALITÉ',
-      titre_sub: isEn ? 'FUSE TWO UNIVERSES AND TWO SCENARIOS' : 'FUSIONNEZ DEUX UNIVERS ET DEUX SCÉNARIOS',
+      titre: isEn ? 'CREATIVE FORGE' : 'FORGE CRÉATIVE',
+      titre_sub: isEn ? 'ACCESS THE AI MEDIA LABORATORIES' : 'ACCÉDEZ AUX LABORATOIRES DE MÉDIAS IA',
       fusion_image: '/img/modes/fusion.png',
-      url: '/forge/',
+      url: '/forge-hub/',
     },
   ];
 

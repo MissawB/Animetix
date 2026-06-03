@@ -2,8 +2,6 @@
 import os
 import sys
 import json
-import urllib.request
-import urllib.error
 import logging
 
 # Force UTF-8 for console output on Windows

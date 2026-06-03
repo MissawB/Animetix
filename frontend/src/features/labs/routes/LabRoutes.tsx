@@ -17,10 +17,12 @@ const SwarmLabPage = lazy(() => import('../SwarmLabPage'));
 const SynapticLabPage = lazy(() => import('../SynapticLabPage'));
 const CompilerLabPage = lazy(() => import('../CompilerLabPage'));
 const MultiverseLabPage = lazy(() => import('../MultiverseLabPage'));
+const ForgeHubPage = lazy(() => import('../ForgeHubPage'));
 
 export const LabRoutes = (
   <>
     <Route path="/lab/" element={<LabHubPage />} />
+    <Route path="/forge-hub/" element={<ForgeHubPage />} />
     <Route path="/manga_lab/" element={<MangaLabPage />} />
     <Route path="/audio_lab/" element={<AudioLabPage />} />
     <Route path="/latent-space/" element={<LatentSpacePage />} />

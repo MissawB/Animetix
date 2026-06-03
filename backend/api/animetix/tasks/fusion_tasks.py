@@ -1,9 +1,11 @@
 from celery import shared_task
+from animetix.tasks_registry import register_task
 
 from ..containers import get_container
 
 
 @shared_task(name="animetix.tasks.generate_fusion_scenario_task")
+@register_task("legacy_generate_fusion_scenario_task")
 def generate_fusion_scenario_task(media_type: str, item1: dict, item2: dict, language: str) -> dict:
     """Celery task that generates a fusion scenario via LLMService.
     Returns the raw dict returned by ``generate_fusion_scenario``.
@@ -16,6 +18,7 @@ def generate_fusion_scenario_task(media_type: str, item1: dict, item2: dict, lan
 
 
 @shared_task(name="animetix.tasks.generate_fusion_image_task")
+@register_task("legacy_generate_fusion_image_task")
 def generate_fusion_image_task(fusion_data: dict, item1: dict, item2: dict, art_style: str = "Cyberpunk") -> dict:
     """Celery task that generates a fusion image URL.
     ``fusion_data`` is expected to contain the scenario dict, but is not used directly.

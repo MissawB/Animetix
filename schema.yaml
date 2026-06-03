@@ -1059,6 +1059,77 @@ components:
       required:
       - id
       - username
+    DocumentAttribution:
+      type: object
+      properties:
+        document_id:
+          type: string
+        title:
+          type: string
+        relevance_score:
+          type: number
+          format: float
+        contribution_weight:
+          type: number
+          format: float
+      required:
+      - document_id
+      - title
+      - relevance_score
+      - contribution_weight
+    ModelDiagnostics:
+      type: object
+      properties:
+        attention_heatmap:
+          type: array
+          items:
+            type: array
+            items:
+              type: number
+              format: float
+        top_influential_tokens:
+          type: array
+          items:
+            type: string
+        logit_lens_trajectory:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+      required:
+      - attention_heatmap
+      - top_influential_tokens
+      - logit_lens_trajectory
+    XaiReport:
+      type: object
+      properties:
+        query_intent:
+          type: string
+        retrieval_attribution:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentAttribution'
+        internal_diagnostics:
+          allOf:
+          - $ref: '#/components/schemas/ModelDiagnostics'
+          nullable: true
+        uncertainty:
+          type: object
+          additionalProperties: {}
+        agent_trace:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        final_confidence:
+          type: number
+          format: float
+      required:
+      - query_intent
+      - retrieval_attribution
+      - uncertainty
+      - agent_trace
+      - final_confidence
   securitySchemes:
     basicAuth:
       type: http

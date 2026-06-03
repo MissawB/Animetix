@@ -3,7 +3,9 @@ import os
 import textwrap
 
 api = HfApi()
-token = os.environ['HF_TOKEN']
+token = os.environ.get('HF_SPACES') or os.environ.get('HF_TOKEN')
+if not token:
+    raise ValueError("Neither HF_SPACES nor HF_TOKEN environment variables are set.")
 
 def deploy_space(repo_id, docker_content, readme_content, ignore):
     print(f'🚀 Syncing {repo_id}...')
@@ -73,5 +75,5 @@ sdk: docker
 """
 
 # EXÉCUTION
-deploy_space('MissawB/animetix-web', web_docker, web_readme, ['.venv/*', '.env', 'data/models/*', 'data/raw/*', 'core/brain.py', 'pipeline/*', '.github/*', 'node_modules/*', 'frontend/node_modules/*', 'frontend/dist/*'])
-deploy_space('MissawB/animetix-brain', brain_docker, brain_readme, ['.venv/*', '.env', 'backend/*', 'data/raw/*', 'data/processed/*', '.github/*', 'pipeline/*', 'core/__init__.py', 'node_modules/*', 'frontend/node_modules/*'])
+deploy_space('MissawB/animetix-web', web_docker, web_readme, ['.venv/*', '.env', 'data/models/*', 'data/raw/*', 'core/brain.py', 'pipeline/*', '.github/*', 'node_modules/*', 'frontend/node_modules/*', 'frontend/dist/*', 'checkpoints/*', 'data/chroma_db/*', 'backend/api/db.sqlite3', '**/db.sqlite3', '**/*.pyc', '**/__pycache__/*', 'scripts/*', 'wandb/*'])
+deploy_space('MissawB/animetix-brain', brain_docker, brain_readme, ['.venv/*', '.env', 'backend/*', 'data/raw/*', 'data/processed/*', '.github/*', 'pipeline/*', 'core/__init__.py', 'node_modules/*', 'frontend/node_modules/*', 'checkpoints/*', 'data/chroma_db/*', 'backend/api/db.sqlite3', '**/db.sqlite3', '**/*.pyc', '**/__pycache__/*', 'scripts/*', 'data/models/*', 'frontend/*', 'wandb/*'])

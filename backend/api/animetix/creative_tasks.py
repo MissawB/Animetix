@@ -1,10 +1,12 @@
 from celery import shared_task
 import time
 from animetix_project.logging_config import get_logger
+from animetix.tasks_registry import register_task
 
 logger = get_logger('animetix.' + __name__)
 
 @shared_task
+@register_task("process_video_search_task")
 def process_video_search_task(video_data_b64, query):
     """Tâche asynchrone pour Video-RAG."""
     import base64
@@ -20,6 +22,7 @@ def process_video_search_task(video_data_b64, query):
     return result
 
 @shared_task
+@register_task("transform_user_image_task")
 def transform_user_image_task(image_data_b64, studio_name):
     """Tâche asynchrone pour Anime-to-Real transformation."""
     import base64
@@ -31,6 +34,7 @@ def transform_user_image_task(image_data_b64, studio_name):
     return {"image_url": image_url}
 
 @shared_task
+@register_task("translate_manga_page_task")
 def translate_manga_page_task(image_data_b64, target_lang):
     """Tâche asynchrone pour le pipeline Manga Flow."""
     import base64
@@ -42,6 +46,7 @@ def translate_manga_page_task(image_data_b64, target_lang):
     return {"translated_image_url": translated_image_url}
 
 @shared_task
+@register_task("localize_video_action_task")
 def localize_video_action_task(video_data_b64, actions):
     """Tâche asynchrone pour la Temporal Action Localization (TAL)."""
     import base64
@@ -54,6 +59,7 @@ def localize_video_action_task(video_data_b64, actions):
     return {"actions_found": action_boundaries}
 
 @shared_task
+@register_task("transform_video_task")
 def transform_video_task(video_data_b64, studio_name):
     """Tâche asynchrone pour le Neural Style Transfer sur vidéo avec consistance temporelle."""
     import base64
@@ -65,6 +71,7 @@ def transform_video_task(video_data_b64, studio_name):
     return {"video_url": video_url}
 
 @shared_task
+@register_task("generate_video_soundscape_task")
 def generate_video_soundscape_task(video_data_b64):
     """Tâche asynchrone pour générer une ambiance sonore à partir d'une vidéo."""
     import base64
@@ -76,6 +83,7 @@ def generate_video_soundscape_task(video_data_b64):
     return {"audio_url": audio_url}
 
 @shared_task
+@register_task("generate_3d_scene_task")
 def generate_3d_scene_task(image_data_b64, title):
     """Tâche asynchrone pour la reconstruction de scène 3D (Spatial Computing)."""
     import base64

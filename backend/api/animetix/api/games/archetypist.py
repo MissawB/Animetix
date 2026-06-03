@@ -84,32 +84,28 @@ class ArchetypistStartFusionView(APIView):
             parent=parent_fusion,
             scenario_text="Génération en cours..."
         )
-        
-        from ...tasks import generate_fusion_scenario_task, generate_fusion_image_task
-        from celery import chain
+        from animetix.tasks_client import enqueue_task
         
         language = port.get('language', 'Français')
         
-        task = chain(
-            generate_fusion_scenario_task.s(
-                media_type, item1, item2, 
-                language, 
-                chaos_level=chaos_level, universe_balance=universe_balance, art_style=art_style
-            ), 
-            generate_fusion_image_task.s(item1, item2, art_style=art_style)
-        ).delay()
+        task_id = enqueue_task(
+            "generate_fusion_flow_task",
+            media_type, item1, item2, language,
+            chaos_level=chaos_level, universe_balance=universe_balance, art_style=art_style
+        )
 
         # Log Usage (Heavy task trigger)
         usage_port.log_usage(engine="archetypist-fusion-engine", units=30, user_id=request.user.id)
         
         return Response({
             'fusion_id': fusion.id,
-            'task_id': task.id,
+            'task_id': task_id,
             'title_a': t1,
             'title_b': t2,
             'item_a_image': item1.get('image'),
             'item_b_image': item2.get('image')
         })
+
 
 class ArchetypistTaskStatusView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -120,27 +116,36 @@ class ArchetypistTaskStatusView(APIView):
         if not task_id or not fusion_id:
             return Response({"error": "task_id and fusion_id required"}, status=status.HTTP_400_BAD_REQUEST)
             
-        task = AsyncResult(task_id)
-        status_msg = "En cours..."
+        from django.core.cache import cache
+        task_data = cache.get(f"task_result:{task_id}")
         
-        if task.state == 'PENDING':
-            status_msg = "En attente de traitement..."
-        elif task.state != 'FAILURE':
-            if task.info and isinstance(task.info, dict):
-                status_msg = task.info.get('status', status_msg)
+        status_msg = "En cours..."
+        state = "PENDING"
+        ready = False
+        result = None
+        
+        if task_data:
+            state = task_data.get("state", "PENDING")
+            ready = task_data.get("ready", False)
+            result = task_data.get("result")
+            if state == 'PENDING':
+                status_msg = "En attente de traitement..."
+            elif state == 'FAILURE':
+                status_msg = "Erreur de traitement"
+                if isinstance(result, dict) and "error" in result:
+                    status_msg = result["error"]
                 
         response_data = {
-            'state': task.state,
+            'state': state,
             'status': status_msg
         }
         
-        if task.ready():
+        if ready:
             try:
                 fusion = CreativeFusion.objects.get(id=fusion_id)
                 
                 # Enregistrement des résultats de la tâche asynchrone dans la BDD
                 if fusion.scenario_text == "Génération en cours..." or not fusion.image_url:
-                    result = task.result
                     if isinstance(result, dict):
                         scenario = result.get('scenario') or result.get('content', {}).get('scenario')
                         image_url_val = result.get('fusion_image') or result.get('image_url')
