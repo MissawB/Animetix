@@ -22,5 +22,5 @@ def test_custom_wrapper_generates_token(mock_auth, settings):
         
         # Verify password got replaced by the refreshed token
         mock_credentials.refresh.assert_called_once()
-        assert conn_params['password'] == "mock-oauth2-access-token-123"
-        mock_super_conn.assert_called_once_with(conn_params)
+        called_args, _ = mock_super_conn.call_args
+        assert called_args[0]['password'] == "mock-oauth2-access-token-123"
