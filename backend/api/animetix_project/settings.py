@@ -291,6 +291,8 @@ TEMPLATES = [
 WSGI_APPLICATION = 'animetix_project.wsgi.application'
 
 # Database
+DJANGO_DB_USE_IAM = env.bool('DJANGO_DB_USE_IAM', default=IS_PRODUCTION)
+
 if os.getenv('DATABASE_URL'):
     DATABASES = {'default': env.db('DATABASE_URL')}
     db_host = DATABASES['default'].get('HOST', '') or DATABASES['default'].get('OPTIONS', {}).get('host', '')
@@ -305,6 +307,12 @@ if os.getenv('DATABASE_URL'):
         if 'OPTIONS' not in DATABASES['default']:
             DATABASES['default']['OPTIONS'] = {}
         DATABASES['default']['OPTIONS']['sslmode'] = 'require'
+        
+    if DJANGO_DB_USE_IAM:
+        DATABASES['default']['ENGINE'] = 'animetix.db.postgresql'
+        # In Cloud SQL IAM, the user is the service account email address
+        DATABASES['default']['USER'] = env('GCP_TASKS_SERVICE_ACCOUNT', default='animetix-tasks-invoker@animetix.iam.gserviceaccount.com')
+        DATABASES['default']['PASSWORD'] = ''  # Will be dynamically set by wrapper
 else:
     DATABASES = {
         'default': {
