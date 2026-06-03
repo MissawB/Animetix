@@ -1,22 +1,22 @@
 import logging
 from typing import List, Dict, Optional
 from core.ports.repository_port import RepositoryPort
-from .chroma_repository_adapter import ChromaRepositoryAdapter
+from .pgvector_repository_adapter import PGVectorRepositoryAdapter
 from .django_repository_adapter import DjangoRepositoryAdapter
 
 logger = logging.getLogger('animetix')
 
 class UnifiedRepositoryAdapter(RepositoryPort):
     """
-    Unified adapter focusing on ChromaDB for vector operations.
-    Primary: ChromaDB (Local/Fast)
+    Unified adapter focusing on pgvector for vector operations.
+    Primary: pgvector (Local/Fast)
     Relational: Django ORM (PostgreSQL)
     """
     def __init__(self, chroma_db_path: str, project_root: str):
         self.project_root = project_root
-        self.chroma = ChromaRepositoryAdapter(db_path=chroma_db_path, project_root=project_root)
+        self.chroma = PGVectorRepositoryAdapter(project_root=project_root)
         self.django = DjangoRepositoryAdapter()
-        logger.info("Using ChromaDB as primary vector repository adapter.")
+        logger.info("Using PGVector as primary vector repository adapter.")
 
     def _get_primary(self) -> RepositoryPort:
         return self.chroma
