@@ -35,7 +35,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl build-esse
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt gunicorn supervisor
 COPY . .
-RUN mkdir -p data/artifacts data/processed data/chroma_db
+RUN mkdir -p data/artifacts data/processed
 EXPOSE 7860
 CMD ["supervisord", "-c", "infra/supervisord.conf"]
 """
