@@ -39,7 +39,18 @@ urlpatterns = [
 
     # --- IMAGE PROXY (Global, no i18n) ---
     path('cdn-proxy/', api_views.image_proxy_view, name='cdn_proxy'),
+
+    # --- CLOUD TASKS WORKER VIEW ---
+    path('api/tasks/run/', include([
+        path('', RedirectView.as_view(url='/'), name='run_task_view_redirect'), # fallback
+    ])),
 ]
+
+from animetix.tasks_views import run_task_view
+urlpatterns += [
+    path('api/tasks/run/', run_task_view, name='run_task_view'),
+]
+
 
 # URLs traduites
 urlpatterns += i18n_patterns(
