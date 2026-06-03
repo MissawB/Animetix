@@ -3,9 +3,12 @@ import json
 from django.core.management.base import BaseCommand
 from animetix.models import MediaItem
 
+from django.db import transaction
+
 class Command(BaseCommand):
     help = 'Syncs processed JSON files to the Django relational catalog.'
 
+    @transaction.atomic
     def handle(self, *args, **options):
         # Correctly find project root from backend/animetix/management/commands/sync_catalog.py
         # 1: commands, 2: management, 3: animetix, 4: backend, 5: project_root

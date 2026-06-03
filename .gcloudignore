@@ -12,7 +12,13 @@ __pycache__/
 .pytest_cache/
 wandb/
 checkpoints/
-data/
+# Dossiers de données - we unignore data but ignore heavy subdirs
+!data/
+data/raw/
+data/models/
+data/chroma_db/
+data/mlops/
+data/audio/
 .tmp_dagster_home_*
 frontend/dist/
 frontend/node_modules/

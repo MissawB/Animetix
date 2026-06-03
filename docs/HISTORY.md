@@ -1,6 +1,14 @@
 # Animetix - Historique des Refactorisations et Succès
 
 Ce document archive les étapes majeures de l'évolution technique du projet.
+
+## [2026-06-03] Session : Tâches planifiées avec Cloud Run Jobs & Cloud Scheduler
+- **Automatisation & ETL** : Création et configuration d'un job Cloud Run (`animetix-sync-catalog`) exécutant la commande de maintenance `python backend/api/manage.py sync_catalog` en production.
+- **Planification Temporelle** : Mise en place d'un déclencheur Cloud Scheduler (`animetix-sync-catalog-trigger`) déployé en région proche (`europe-west1`) configuré pour invoquer le job via une requête HTTP POST authentifiée par OIDC/OAuth chaque jour à 2h00 du matin (Heure de Paris).
+- **Script de Déploiement** : Écriture d'un script d'automatisation Python résilient (`scripts/deploy/deploy_jobs.py`) qui active les API nécessaires, configure le job (variables d'environnement, secrets GCP Secret Manager, connecteur VPC pour l'accès privé Cloud SQL/Redis) et crée le scheduler de manière idempotente.
+- **Optimisation de Performance (Transactions)** : Optimisation de la commande Django `sync_catalog` en décorant la méthode `handle` avec `@transaction.atomic`. La synchronisation de ~45 000 éléments médias passe d'un comportement d'auto-commit unitaire (qui provoquait des timeouts après 10 minutes) à une transaction unique, exécutée et validée avec succès en 7 minutes et 2 secondes.
+- **Intégration du Contexte Docker** : Ajustement de `.gcloudignore` pour lever l'ignorance sur `data/processed` et `data/artifacts`, permettant d'inclure correctement les fichiers de données JSON compilés dans le conteneur de production lors des builds GCP Cloud Build.
+
 ## [2026-06-03] Session : Intégration GCS & Persistance de la Forge & Migration BDD Cloud SQL
 - **Stockage Cloud (Google Cloud Storage)** : Configuration de `django-storages` avec le backend `GoogleCloudStorage` en production (activé dynamiquement via la variable d'environnement `GS_BUCKET_NAME`) et maintien du stockage local `FileSystemStorage` pour le développement local.
 - **Persistance Creative Fusion** : Résolution du bug où les résultats asynchrones des fusions (les images encodées en base64 Data URIs) n'étaient pas persistés dans la base de données. Implémentation du décodage base64 et de la sauvegarde des images sous forme de fichiers via l'API unifiée `default_storage`.
