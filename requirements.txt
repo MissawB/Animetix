@@ -27,7 +27,6 @@ whitenoise==6.7.0
 # --------------------------------------------------------------------------
 # 2. Databases, Vector Stores, Caches & ORM Clients (Neo4j, Redis, Chroma)
 # --------------------------------------------------------------------------
-chromadb==1.5.5
 django-redis==6.0.0
 neo4j==6.1.0
 psycopg2-binary==2.9.12

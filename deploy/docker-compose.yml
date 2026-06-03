@@ -19,12 +19,11 @@ services:
     depends_on:
       - db
       - redis
-      - chromadb
       - neo4j
 
-  # 🐘 Base de données Relationnelle (PostgreSQL)
+  # 🐘 Base de données Relationnelle (PostgreSQL avec pgvector)
   db:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16
     container_name: animetix-db
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
@@ -40,15 +39,7 @@ services:
     volumes:
       - redis_data:/data
 
-  # 🔎 Base de données Vectorielle (ChromaDB)
-  chromadb:
-    image: chromadb/chroma:latest
-    container_name: animetix-chroma
-    volumes:
-      - chroma_data:/chroma/chroma
-    environment:
-      - CHROMA_SERVER_AUTH_CREDENTIALS=${CHROMA_SERVER_AUTH_CREDENTIALS}
-      - CHROMA_SERVER_AUTH_PROVIDER=${CHROMA_SERVER_AUTH_PROVIDER}
+
 
   # 🕸️ Graphe de Connaissances (Neo4j)
   neo4j:
@@ -75,7 +66,6 @@ services:
     depends_on:
       - db
       - redis
-      - chromadb
       - neo4j
 
   # ⏱️ Celery Beat Scheduler
@@ -112,6 +102,5 @@ volumes:
   data_volume:
   postgres_data:
   redis_data:
-  chroma_data:
   neo4j_data:
   ollama_storage:
