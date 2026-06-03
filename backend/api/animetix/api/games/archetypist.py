@@ -137,6 +137,40 @@ class ArchetypistTaskStatusView(APIView):
         if task.ready():
             try:
                 fusion = CreativeFusion.objects.get(id=fusion_id)
+                
+                # Enregistrement des résultats de la tâche asynchrone dans la BDD
+                if fusion.scenario_text == "Génération en cours..." or not fusion.image_url:
+                    result = task.result
+                    if isinstance(result, dict):
+                        scenario = result.get('scenario') or result.get('content', {}).get('scenario')
+                        image_url_val = result.get('fusion_image') or result.get('image_url')
+                        
+                        if scenario:
+                            fusion.scenario_text = scenario
+                            
+                        if image_url_val:
+                            if image_url_val.startswith("data:image/"):
+                                try:
+                                    import base64
+                                    import time
+                                    from django.core.files.storage import default_storage
+                                    from django.core.files.base import ContentFile
+                                    
+                                    header, base64_data = image_url_val.split(";base64,")
+                                    ext = header.split("/")[-1]
+                                    image_bytes = base64.b64decode(base64_data)
+                                    
+                                    file_name = f"fusions/fusion_{fusion_id}_{int(time.time())}.{ext}"
+                                    saved_path = default_storage.save(file_name, ContentFile(image_bytes))
+                                    fusion.image_url = default_storage.url(saved_path)
+                                except Exception as upload_err:
+                                    logger.error(f"Failed to upload fusion image to storage: {upload_err}")
+                                    fusion.image_url = image_url_val[:500]
+                            else:
+                                fusion.image_url = image_url_val
+                        
+                        fusion.save()
+
                 response_data['scenario'] = fusion.scenario_text
                 response_data['image_url'] = fusion.image_url
                 response_data['completed'] = True

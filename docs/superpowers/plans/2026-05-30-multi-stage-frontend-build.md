@@ -146,7 +146,7 @@
   
   Run:
   ```powershell
-  gcloud run deploy animetix-web --image europe-west9-docker.pkg.dev/animetix/animetix-repo/web:latest --region europe-west9 --allow-unauthenticated --port 7860 --memory 4Gi --cpu 2
+  gcloud run deploy animetix-web --image europe-west9-docker.pkg.dev/animetix/animetix-repo/web:latest --region europe-west9 --allow-unauthenticated --port 7860 --memory 4Gi --cpu 2 --update-env-vars DJANGO_ENV=production --set-secrets="DJANGO_SECRET_KEY=DJANGO_SECRET_KEY:latest,BRAIN_API_KEY=BRAIN_API_KEY:latest,TMDB_API_KEY=TMDB_API_KEY:latest,DATABASE_URL=DATABASE_URL:latest,REDIS_URL=REDIS_URL:latest,IGDB_CLIENT_ID=IGDB_CLIENT_ID:latest,GEMINI_API_KEY=GEMINI_API_KEY:latest,HF_TOKEN=HF_TOKEN:latest,IGDB_CLIENT_SECRET=IGDB_CLIENT_SECRET:latest,WANDB_API_KEY=WANDB_API_KEY:latest"
   ```
   Expected output:
   `Service [animetix-web] revision [...] has been deployed and is serving 100 percent of traffic.`

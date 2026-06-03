@@ -1,8 +1,16 @@
 # Animetix - Historique des Refactorisations et Succès
 
 Ce document archive les étapes majeures de l'évolution technique du projet.
+## [2026-06-03] Session : Intégration GCS & Persistance de la Forge & Migration BDD Cloud SQL
+- **Stockage Cloud (Google Cloud Storage)** : Configuration de `django-storages` avec le backend `GoogleCloudStorage` en production (activé dynamiquement via la variable d'environnement `GS_BUCKET_NAME`) et maintien du stockage local `FileSystemStorage` pour le développement local.
+- **Persistance Creative Fusion** : Résolution du bug où les résultats asynchrones des fusions (les images encodées en base64 Data URIs) n'étaient pas persistés dans la base de données. Implémentation du décodage base64 et de la sauvegarde des images sous forme de fichiers via l'API unifiée `default_storage`.
+- **Intégration Google Cloud SQL (PostgreSQL)** : Configuration dynamique des paramètres de base de données dans `settings.py` pour détecter automatiquement les connexions par socket Unix (propres à GCP Cloud SQL sur Cloud Run) et désactiver l'application de `sslmode='require'` (incompatible avec les sockets Unix) tout en la maintenant pour les connexions TCP standard.
+- **Tests d'Intégration** :
+  - Création et passage de tests d'intégration dans `test_gcs_integration.py` pour le cycle de vie d'écriture/lecture de fichiers et le comportement de la vue de statut d'Archetypist.
+  - Création et passage de tests unitaires dans `test_db_config.py` validant le comportement de parsing dynamique de `DATABASE_URL` pour les configurations TCP et Unix.
 
 ## [2026-06-02] Session : Inférence SOTA, Nettoyage des Bouchons, Guardrails Homogènes et Curation IA
+- **Migration Google GenAI (Gemini 3.5 Flash / Vertex AI)** : Création de `GoogleGenAIAdapter` implémentant `InferencePort` avec support d'authentification hybride (Developer API et Vertex AI ADC), gestion native des réponses structurées Pydantic, extraction des logprobs depuis `logprobs_result` pour la perplexité, et intégration multimodale (génération de description d'image et visual rerank) avec tests unitaires complets.
 - **Diagnostics & Incertitude Avancés (Logprobs)** : Migration des calculs d'incertitude (Shannon entropy, perplexité, confiance) basés sur le texte vers une exploitation réelle en O(1) des `logprobs` réels en cache fournis par la BrainAPI et Ollama.
 - **Nettoyage des Bouchons (UnifiedInferenceAdapter)** : Suppression complète de `InferenceNotImplementedError` sur les 29 endpoints d' `InferencePort` en orchestrant et en résolvant proprement les mixins de vision et d'audio via la Method Resolution Order (MRO).
 - **Modération de Contenu Homogène (Guardrails)** : Généralisation de la modération sémantique s'exécutant sur le LLM à tous les adaptateurs de texte (`LocalTextAdapter`, `Qwen3VLAdapter`, `UnifiedInferenceAdapter`) via le port parent, intégrant un fallback par mots-clés performant en cas de défaillance.

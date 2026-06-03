@@ -8,6 +8,7 @@ from core.domain.services.similarity_service import SimilarityService
 from core.domain.services.undercover_service import UndercoverService
 from core.domain.services.advanced_vision_service import AdvancedVisionService
 from core.domain.services.graph_construction_service import KnowledgeGraphConstructionService
+from core.domain.services.graph_healer_service import GraphHealerService
 from core.domain.services.reasoning_agent_service import ReasoningAgentService
 from core.domain.services.media_sync_service import MediaSyncService
 from core.domain.services.achievement_service import AchievementDomainService, GameEventListener
@@ -103,6 +104,14 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         KnowledgeGraphConstructionService,
         inference_engine=inference.inference_engine,
         prompt_manager=infrastructure.prompt_manager
+    )
+
+    graph_healer_service = providers.Singleton(
+        GraphHealerService,
+        neo4j_manager=persistence.graph_persistence_port,
+        construction_service=graph_builder,
+        repository=persistence.repository,
+        inference_engine=inference.inference_engine
     )
 
     vision_quest_service = providers.Singleton(

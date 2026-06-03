@@ -184,6 +184,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.discord',
     'allauth.socialaccount.providers.google',
+    'storages',
 ]
 
 SITE_ID = 1
@@ -292,7 +293,18 @@ WSGI_APPLICATION = 'animetix_project.wsgi.application'
 # Database
 if os.getenv('DATABASE_URL'):
     DATABASES = {'default': env.db('DATABASE_URL')}
-    DATABASES['default']['OPTIONS'] = {'sslmode': 'require'}
+    db_host = DATABASES['default'].get('HOST', '') or DATABASES['default'].get('OPTIONS', {}).get('host', '')
+    if db_host.startswith('/') or 'cloudsql' in db_host:
+        # Unix socket connection (GCP Cloud SQL). Do not set sslmode='require' as it is not supported/needed over Unix sockets.
+        if 'OPTIONS' not in DATABASES['default']:
+            DATABASES['default']['OPTIONS'] = {}
+        if 'sslmode' in DATABASES['default']['OPTIONS']:
+            del DATABASES['default']['OPTIONS']['sslmode']
+    else:
+        # Standard TCP connection, enforce SSL
+        if 'OPTIONS' not in DATABASES['default']:
+            DATABASES['default']['OPTIONS'] = {}
+        DATABASES['default']['OPTIONS']['sslmode'] = 'require'
 else:
     DATABASES = {
         'default': {
@@ -378,12 +390,34 @@ ARTIFACTS_DIR = os.path.join(DATA_DIR, "artifacts")
 MODELS_DIR = os.path.join(DATA_DIR, "models")
 PROCESSED_DATA_DIR = os.path.join(DATA_DIR, "processed")
 
-STORAGES = {
-    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
-    'staticfiles': {
-        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage' if not DEBUG else 'django.contrib.staticfiles.storage.StaticFilesStorage',
-    },
-}
+# Media files (uploads, generated images, etc.)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+GS_BUCKET_NAME = env('GS_BUCKET_NAME', default=None)
+
+if IS_PRODUCTION or GS_BUCKET_NAME:
+    STORAGES = {
+        'default': {
+            'BACKEND': 'storages.backends.gcloud.GoogleCloudStorage',
+            'OPTIONS': {
+                'bucket_name': GS_BUCKET_NAME,
+                'project_id': env('GOOGLE_CLOUD_PROJECT', default='animetix'),
+            }
+        },
+        'staticfiles': {
+            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage' if not DEBUG else 'django.contrib.staticfiles.storage.StaticFilesStorage',
+        }
+    }
+else:
+    STORAGES = {
+        'default': {
+            'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        },
+        'staticfiles': {
+            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage' if not DEBUG else 'django.contrib.staticfiles.storage.StaticFilesStorage',
+        },
+    }
 
 # --- FEATURE FLAGS ---
 FEATURE_FLAGS = {
