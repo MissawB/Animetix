@@ -346,6 +346,13 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
 
+# Google Cloud Tasks Configuration
+GCP_PROJECT_ID = env('GOOGLE_CLOUD_PROJECT', default='animetix')
+GCP_TASKS_QUEUE_NAME = env('GCP_TASKS_QUEUE_NAME', default='animetix-queue')
+GCP_TASKS_LOCATION = env('GCP_TASKS_LOCATION', default='europe-west1')
+GCP_TASKS_WORKER_URL = env('GCP_TASKS_WORKER_URL', default='https://missawb-animetix-web.hf.space/api/tasks/run/')
+GCP_TASKS_SERVICE_ACCOUNT = env('GCP_TASKS_SERVICE_ACCOUNT', default='animetix-tasks-invoker@animetix.iam.gserviceaccount.com')
+
 # CELERY_BEAT_SCHEDULE has been decommissioned in favor of serverless Google Cloud Run Jobs
 # and Cloud Scheduler triggers.
 # The recurring tasks are mapped to the django management command:
