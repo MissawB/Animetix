@@ -8,27 +8,25 @@ Ce document centralise toutes les tâches techniques, d'architecture et de fonct
 
 ## 🚀 Intégrations & Pages Manquantes (Frontend)
 
-- [ ] **Hub "Forge Créative"** : Centraliser l'accès aux laboratoires de médias (Manga Lab, Audio Lab, Spatial Lab, Video Lab, Visual Nexus) orphelins.
-- [ ] **Hub "Cognition & Social"** : Regrouper l'Archetype Nexus, la Gestion Neuro-Memory et le Counterfactual Simulator dans une vue unifiée.
-- [ ] **Exposition Publique des Outils Expert** : Créer des versions "Read-only" du SOTA Benchmarking et du Graph Debugger pour les utilisateurs avancés.
+- [ ] **Hub "Forge Créative" (Routing)** : La page `ForgeHubPage.tsx` a été développée mais est orpheline. Il faut l'ajouter au routeur (ex: `LabRoutes.tsx` ou `AppRouter.tsx`) pour centraliser l'accès aux laboratoires de médias.
+- [ ] **Hub "Cognition & Social"** : Créer une vue unifiée pour regrouper l'Archetype Nexus, la Gestion Neuro-Memory et le Counterfactual Simulator (actuellement éparpillés entre `SocialRoutes` et `SearchRoutes`).
+- [ ] **Exposition Publique des Outils Expert** : Créer des versions "Read-only" (publiques) du SOTA Benchmarking et du Graph Debugger pour les utilisateurs avancés (actuellement limités aux routes `/admin/`).
 
 ## 🧬 Innovations SOTA & Curation
 
-- [ ] **Expliquabilité Avancée (XAI)** : Tableau de bord détaillant les scores de confiance, les poids sémantiques et les sources RAG pour chaque réponse de l'IA (Modularisation complète).
-- [ ] **Dashboard "Mon Empreinte IA"** : Interface permettant à l'utilisateur de visualiser les règles logiques (Z3) et les vecteurs de préférence qui définissent son profil.
-- [ ] **Modularisation du Singularity Lab** : Isoler les 5 modules (Quantum, Swarm, Plasticity, Compiler, Multiverse) dans des vues immersives distinctes pour améliorer l'UX.
+- [ ] **Expliquabilité Avancée (XAI)** : Développer le composant/dashboard frontend détaillant les scores de confiance, les logprobs, les poids sémantiques et les sources RAG pour chaque réponse de l'IA (le backend l'expose déjà).
+- [ ] **Dashboard "Mon Empreinte IA"** : Créer une interface unifiée permettant à l'utilisateur de visualiser les règles logiques (Z3) et les vecteurs de préférence qui définissent son profil.
+- [x] **Modularisation du Singularity Lab** : Isoler les 5 modules (Quantum, Swarm, Plasticity, Compiler, Multiverse) dans des vues immersives distinctes pour améliorer l'UX.
 
 ## 🛡️ Sécurité & Résilience
 
-- [x] **Suppression des Secrets par Défaut** (CRITIQUE) : Retirer les fallbacks en dur pour les clés API (ex: `dev-secret-key` dans `BrainAPIAdapter`) et lever une `ImproperlyConfigured` si absentes.
-- [x] **Isolation Réseau des Services** (HAUTE) : Supprimer l'exposition des ports PostgreSQL, Redis, Neo4j et ChromaDB sur l'hôte dans `docker-compose.yml` (utiliser uniquement le réseau interne Docker).
-- [x] **Durcissement SSRF Interne** (MOYENNE) : Restreindre `allow_internal=True` dans `safe_http_request` aux seuls noms de services Docker autorisés.
-- [x] **Audit Humain Dataset STaR** (MOYENNE) : Implémenter un système de validation humaine pour les entrées `GoldDataset` afin de prévenir l'empoisonnement du modèle IA.
 - [ ] **Audit de Dépendances Continu** : Automatisation du scan des vulnérabilités (Snyk/GitHub Dependabot) pour maintenir le socle technique à jour après le passage à Django 5.2.14.
+- [ ] **Protection contre les Injections de Prompts** (Priorité : HAUTE) : Remplacer l'approche par liste noire (Regex) dans `sanitize_for_prompt` (`backend/core/utils/security.py`) par des délimiteurs stricts (ex: balises XML) et un modèle de classification secondaire (Guardrail) pour une meilleure robustesse face aux LLMs.
+- [ ] **Mitigation SSRF dans les Scrapers MLOps** (Priorité : CRITIQUE) : Remplacer l'utilisation directe de `urllib.request.urlopen()` par la fonction sécurisée interne `safe_http_request()` dans `fandom_lore_scraper.py` et autres scripts de la pipeline afin d'éviter toute faille SSRF si l'entrée d'URLs devient dynamique.
 
 ## ☁️ Déploiement & Intégration Google Cloud (GCP)
-- [x] **Sécurisation via Google Secret Manager** (Priorité : CRITIQUE) : Configurer Cloud Run pour injecter les secrets et clés d'API (TMDB, IGDB, Hugging Face, Django Secret Key) depuis Secret Manager au lieu d'utiliser des fichiers `.env` en production.
-- [x] **Migration vers Vertex AI (Gemini 3.5 Flash)** (Priorité : HAUTE) : Adapter l'InferencePort pour consommer les modèles de Vertex AI / Gemini Enterprise Agent Platform via le SDK Google GenAI.
-- [x] **Configuration de Google Cloud Storage (GCS)** (Priorité : MOYENNE) : Configurer `django-storages` avec le driver GCS pour stocker de manière persistante les fichiers statiques, médias et les images générées par le mode "La Forge".
-- [x] **Migration de la BDD vers Google Cloud SQL** (Priorité : MOYENNE) : Provisionner une instance managée PostgreSQL sur Cloud SQL pour remplacer la base de données relationnelle locale en production.
-- [x] **Tâches planifiées avec Cloud Run Jobs & Cloud Scheduler** (Priorité : BASSE) : Déporter les scripts de maintenance et d'ETL (comme la commande Django `sync_catalog`) vers des Jobs Cloud Run éphémères déclenchés par Cloud Scheduler.
+- [x] **Migration ChromaDB vers pgvector (Cloud SQL)** (Priorité : CRITIQUE) : Déplacer le stockage d'embeddings local vers l'extension pgvector de l'instance PostgreSQL managée pour assurer la persistance RAG en environnement serverless stateless.
+- [ ] **Décommissionnement Celery Beat vers Cloud Run Jobs** (Priorité : HAUTE) : Migrer l'ensemble des tâches récurrentes planifiées (optimisation DPO, ingestion de données, maintenance MLOps) vers des Jobs Cloud Run éphémères configurés avec Cloud Scheduler.
+- [ ] **Migration de la file asynchrone vers Google Cloud Tasks** (Priorité : MOYENNE) : Remplacer l'architecture Celery Worker + Redis par une file HTTP gérée par Cloud Tasks pour exécuter de manière serverless les tâches utilisateur asynchrones (ex: génération d'images).
+- [ ] **Authentification IAM Directe PostgreSQL (Passwordless)** (Priorité : MOYENNE) : Configurer la connexion Django à Cloud SQL en s'authentifiant par jetons IAM associés au compte de service plutôt que par identifiants statiques.
+- [ ] **Inférence ML Lourde sur Cloud Run GPU Serverless** (Priorité : BASSE) : Déployer la Brain API (FastAPI, modèles TTS/OCR) sur Cloud Run avec GPU Nvidia (L4) serverless pour un auto-scaling complet à 0.

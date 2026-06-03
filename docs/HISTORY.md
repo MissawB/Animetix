@@ -2,7 +2,14 @@
 
 Ce document archive les étapes majeures de l'évolution technique du projet.
 
+## [2026-06-03] Session : Migration vectorielle ChromaDB vers pgvector (Cloud SQL)
+- **Migration PostgreSQL pgvector** : Remplacement de ChromaDB par l'extension native `pgvector` de PostgreSQL (Cloud SQL) pour centraliser la persistance RAG en environnement serverless.
+- **Approche hybride (SQLite Fallback)** : Développement d'un adaptateur et d'un client `PGVectorField` / `VectorRecord` personnalisés basculant de pgvector (PostgreSQL) en production vers un stockage texte + calcul de similarité NumPy en local et pendant les tests.
+- **Client compatible** : Réécriture de `pipeline/chroma_client.py` pour émuler le client ChromaDB, assurant la compatibilité immédiate et sans modification de l'ensemble des scripts de pipeline d'ingestion.
+- **Nettoyage architectural** : Suppression complète du conteneur et de la dépendance `chromadb` de `requirements.txt` et `docker-compose.yml`. Mise à niveau de l'image Postgres vers `pgvector/pgvector:pg16` en développement local.
+
 ## [2026-06-03] Session : Tâches planifiées avec Cloud Run Jobs & Cloud Scheduler
+- **Sécurisation via Google Secret Manager** : Configuration de Cloud Run pour injecter les secrets et clés d'API (TMDB, IGDB, Hugging Face, Django Secret Key) depuis Secret Manager au lieu d'utiliser des fichiers `.env` en production.
 - **Automatisation & ETL** : Création et configuration d'un job Cloud Run (`animetix-sync-catalog`) exécutant la commande de maintenance `python backend/api/manage.py sync_catalog` en production.
 - **Planification Temporelle** : Mise en place d'un déclencheur Cloud Scheduler (`animetix-sync-catalog-trigger`) déployé en région proche (`europe-west1`) configuré pour invoquer le job via une requête HTTP POST authentifiée par OIDC/OAuth chaque jour à 2h00 du matin (Heure de Paris).
 - **Script de Déploiement** : Écriture d'un script d'automatisation Python résilient (`scripts/deploy/deploy_jobs.py`) qui active les API nécessaires, configure le job (variables d'environnement, secrets GCP Secret Manager, connecteur VPC pour l'accès privé Cloud SQL/Redis) et crée le scheduler de manière idempotente.
