@@ -8,6 +8,7 @@ class DatabaseWrapper(PostgresDatabaseWrapper):
         use_iam = getattr(settings, 'DJANGO_DB_USE_IAM', False)
         
         if use_iam:
+            conn_params = conn_params.copy()
             try:
                 # Retrieve the Google OAuth2 access token for IAM auth
                 scopes = ["https://www.googleapis.com/auth/sqlservice.admin", "https://www.googleapis.com/auth/cloud-platform"]
