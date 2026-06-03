@@ -2,6 +2,11 @@
 
 Ce document archive les étapes majeures de l'évolution technique du projet.
 
+## [2026-06-04] Session : Expliquabilité Avancée (XAI) & Documentation
+- **Composant XaiReportViewer** : Finalisation du composant frontend `XaiReportViewer` permettant de visualiser l'intention de la requête, la confiance, les traces de l'agent, l'attribution des sources et les jetons influents.
+- **Tests Unitaires** : Mise en place d'une suite de tests Vitest complète pour `XaiReportViewer` validant le rendu correct des différentes sections (Header, Trace, Attribution, Tokens).
+- **Mise à jour de la documentation** : Actualisation de `TODO.md` et `HISTORY.md` pour refléter l'achèvement de la tâche d'expliquabilité.
+
 ## [2026-06-03] Session : Migration vectorielle ChromaDB vers pgvector (Cloud SQL)
 - **Migration PostgreSQL pgvector** : Remplacement de ChromaDB par l'extension native `pgvector` de PostgreSQL (Cloud SQL) pour centraliser la persistance RAG en environnement serverless.
 - **Approche hybride (SQLite Fallback)** : Développement d'un adaptateur et d'un client `PGVectorField` / `VectorRecord` personnalisés basculant de pgvector (PostgreSQL) en production vers un stockage texte + calcul de similarité NumPy en local et pendant les tests.

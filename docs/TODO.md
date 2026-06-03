@@ -14,7 +14,7 @@ Ce document centralise toutes les tâches techniques, d'architecture et de fonct
 
 ## 🧬 Innovations SOTA & Curation
 
-- [ ] **Expliquabilité Avancée (XAI)** : Développer le composant/dashboard frontend détaillant les scores de confiance, les logprobs, les poids sémantiques et les sources RAG pour chaque réponse de l'IA (le backend l'expose déjà).
+- [x] **Expliquabilité Avancée (XAI)** : Développer le composant/dashboard frontend détaillant les scores de confiance, les logprobs, les poids sémantiques et les sources RAG pour chaque réponse de l'IA (le backend l'expose déjà).
 - [ ] **Dashboard "Mon Empreinte IA"** : Créer une interface unifiée permettant à l'utilisateur de visualiser les règles logiques (Z3) et les vecteurs de préférence qui définissent son profil.
 - [x] **Modularisation du Singularity Lab** : Isoler les 5 modules (Quantum, Swarm, Plasticity, Compiler, Multiverse) dans des vues immersives distinctes pour améliorer l'UX.
 
