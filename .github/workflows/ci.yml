@@ -13,7 +13,7 @@ jobs:
     name: Lint & Format Check
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v6
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
@@ -31,7 +31,7 @@ jobs:
     name: Dependency Security Audit
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v6
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
@@ -55,7 +55,7 @@ jobs:
     needs: security-audit
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v6
     - name: Build Image
       run: docker build -t test-build -f deploy/Dockerfile .
 
@@ -67,7 +67,7 @@ jobs:
       # We now use the specialized test composition
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v6
     - name: Start Services
       run: docker-compose -f deploy/docker-compose.test.yml up -d
     - name: Set up Python
@@ -95,7 +95,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v6
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
