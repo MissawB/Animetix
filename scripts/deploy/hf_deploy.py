@@ -73,5 +73,5 @@ sdk: docker
 """
 
 # EXÉCUTION
-deploy_space('MissawB/animetix-web', web_docker, web_readme, ['.venv/*', '.env', 'data/models/*', 'data/raw/*', 'core/brain.py', 'pipeline/*', '.github/*'])
-deploy_space('MissawB/animetix-brain', brain_docker, brain_readme, ['.venv/*', '.env', 'backend/*', 'data/raw/*', 'data/processed/*', '.github/*', 'pipeline/*', 'core/__init__.py'])
+deploy_space('MissawB/animetix-web', web_docker, web_readme, ['.venv/*', '.env', 'data/models/*', 'data/raw/*', 'core/brain.py', 'pipeline/*', '.github/*', 'node_modules/*', 'frontend/node_modules/*', 'frontend/dist/*'])
+deploy_space('MissawB/animetix-brain', brain_docker, brain_readme, ['.venv/*', '.env', 'backend/*', 'data/raw/*', 'data/processed/*', '.github/*', 'pipeline/*', 'core/__init__.py', 'node_modules/*', 'frontend/node_modules/*'])
