@@ -1,0 +1,77 @@
+main:
+  params: [args]
+  steps:
+    - init:
+        assign:
+          - brain_url: ${args.brain_url}
+          - api_key: ${args.api_key}
+          - target_lang: ${default(map.get(args, "target_lang"), "French")}
+          - gcs_bucket: ${args.gcs_bucket}
+          - filename: ${args.filename}
+
+    - run_ocr:
+        call: http.post
+        args:
+          url: ${brain_url + "/vision/manga/process"}
+          headers:
+            X-API-Key: ${api_key}
+            Content-Type: "application/json"
+          body:
+            image: ${args.image}
+        result: ocr_response
+
+    - extract_text:
+        assign:
+          - extracted_text: ${ocr_response.body.text}
+
+    - check_text:
+        switch:
+          - condition: ${len(extracted_text) == 0}
+            next: return_empty
+
+    - run_translation:
+        call: http.post
+        args:
+          url: ${brain_url + "/generate"}
+          headers:
+            X-API-Key: ${api_key}
+            Content-Type: "application/json"
+          body:
+            prompt: ${"Translate the following text from manga bubbles to " + target_lang + ": " + extracted_text}
+            system_prompt: "You are a professional manga translator. Output only the translated text."
+        result: translation_response
+
+    - run_tts:
+        call: http.post
+        args:
+          url: ${brain_url + "/audio/clone-voice"}
+          headers:
+            X-API-Key: ${api_key}
+            Content-Type: "application/json"
+          body:
+            text: ${translation_response.body.text}
+            reference_audio: ${args.reference_audio}
+            language: "fr"
+        result: tts_response
+
+    - upload_to_gcs:
+        call: googleapis.storage.v1.objects.insert
+        args:
+          bucket: ${gcs_bucket}
+          name: ${filename}
+          body: ${tts_response.body.audio_b64}
+        result: gcs_response
+
+    - return_result:
+        return:
+          status: "success"
+          extracted_text: ${extracted_text}
+          translated_text: ${translation_response.body.text}
+          audio_url: ${"https://storage.googleapis.com/" + gcs_bucket + "/" + filename}
+
+    - return_empty:
+        return:
+          status: "empty"
+          extracted_text: ""
+          translated_text: ""
+          audio_url: ""
