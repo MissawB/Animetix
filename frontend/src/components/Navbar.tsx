@@ -39,7 +39,7 @@ const Navbar: React.FC = () => {
             <Film className="w-4 h-4 text-red-500" /> Theater
           </Link>
           <Link to="/search/" className="flex items-center gap-2 no-underline text-xs font-black italic text-gray-500 hover:text-blue-500 transition-all uppercase tracking-widest">
-            <Search className="w-4 h-4 text-blue-500" /> Search
+            <Search className="w-3.5 h-3.5" /> Universal Search
           </Link>
           <Link to="/social/feed/" className="flex items-center gap-2 no-underline text-xs font-black italic text-gray-500 hover:text-yellow-400 transition-all uppercase tracking-widest">
             <Radio className="w-4 h-4 text-yellow-400" /> Community

@@ -12,7 +12,14 @@ import {
   Terminal,
   Layers,
   Sparkles,
-  Bot
+  Bot,
+  Palette,
+  Headphones,
+  Video,
+  Cuboid,
+  Brain,
+  Fingerprint,
+  GitBranch
 } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
@@ -74,6 +81,82 @@ const labs = [
         bg: 'from-amber-500/20 to-transparent',
         badge: 'Generative',
         status: 'Neo4j Sync'
+    }
+];
+
+const creativeLabs = [
+    {
+        id: 'manga',
+        title: 'Manga Lab',
+        desc: 'Rendu Manga par IA et génération de planches dynamiques.',
+        icon: Palette,
+        url: '/manga_lab/',
+        color: 'text-blue-500',
+        bg: 'from-blue-500/20 to-transparent',
+        badge: 'Visual AI'
+    },
+    {
+        id: 'audio',
+        title: 'Audio Lab',
+        desc: 'Clonage vocal haute fidélité et synthèse d\'ambiances sonores.',
+        icon: Headphones,
+        url: '/audio_lab/',
+        color: 'text-emerald-500',
+        bg: 'from-emerald-500/20 to-transparent',
+        badge: 'Neural Audio'
+    },
+    {
+        id: 'video',
+        title: 'Video Lab',
+        desc: 'Analyse et indexation vidéo intelligente par vision artificielle.',
+        icon: Video,
+        url: '/video-lab/',
+        color: 'text-orange-500',
+        bg: 'from-orange-500/20 to-transparent',
+        badge: 'Computer Vision'
+    },
+    {
+        id: 'spatial',
+        title: 'Spatial Lab',
+        desc: 'Reconstruction 3D et Gaussian Splatting à partir de sources 2D.',
+        icon: Cuboid,
+        url: '/spatial-lab/',
+        color: 'text-purple-500',
+        bg: 'from-purple-500/20 to-transparent',
+        badge: '3D/Spatial'
+    }
+];
+
+const cognitionLabs = [
+    {
+        id: 'archetype',
+        title: 'Archetype Nexus',
+        desc: 'Visualisez la convergence de vos traits et votre espace latent.',
+        icon: Brain,
+        url: '/social/archetype-nexus/',
+        color: 'text-purple-500',
+        bg: 'from-purple-500/20 to-transparent',
+        badge: 'Social AI'
+    },
+    {
+        id: 'memory',
+        title: 'Neuro-Memory',
+        desc: 'Gérez l\'empreinte sémantique et vos vecteurs de préférence.',
+        icon: Fingerprint,
+        url: '/social/neuro-memory/',
+        color: 'text-emerald-500',
+        bg: 'from-emerald-500/20 to-transparent',
+        badge: 'Memory'
+    },
+    {
+        id: 'simulator',
+        title: 'Timeline Sim',
+        desc: 'Explorez les futurs alternatifs et le regret conversationnel.',
+        icon: GitBranch,
+        url: '/search/counterfactual/',
+        color: 'text-blue-500',
+        bg: 'from-blue-500/20 to-transparent',
+        badge: 'Game Theory'
     }
 ];
 
@@ -147,6 +230,72 @@ const LabHubPage: React.FC = () => {
                 <h4 className="text-xl font-black italic manga-font uppercase mb-2">Module [REDACTED]</h4>
                 <p className="text-[10px] font-bold uppercase tracking-widest">En cours de dé-silotage</p>
             </Card>
+        </div>
+
+        {/* Creative Forge Section */}
+        <div className="mb-12 flex items-center justify-between gap-4">
+            <h2 className="text-4xl font-black italic manga-font uppercase tracking-tighter">
+                FORGE <span className="text-orange-500">CRÉATIVE</span>
+            </h2>
+            <div className="h-px flex-1 bg-gradient-to-r from-orange-500/50 to-transparent" />
+            <Link to="/forge-hub/" className="text-[10px] font-black uppercase tracking-widest text-orange-500 hover:text-white transition-colors flex items-center gap-2 group whitespace-nowrap">
+                ACCÉDER AU HUB COMPLET <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+            </Link>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-24">
+            {creativeLabs.map((lab) => (
+                <Link key={lab.id} to={lab.url} className="no-underline group">
+                    <Card padding="none" className="h-full bg-black/40 border-white/5 hover:border-orange-500/30 transition-all duration-500 overflow-hidden relative group">
+                        <div className={`absolute inset-0 bg-gradient-to-br ${lab.bg} opacity-0 group-hover:opacity-100 transition-opacity duration-700`} />
+                        <div className="p-8 relative z-10">
+                            <div className="flex justify-between items-start mb-6">
+                                <div className={`p-3 rounded-xl bg-white/5 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 ${lab.color}`}>
+                                    <lab.icon className="w-6 h-6" />
+                                </div>
+                                <Badge variant="neutral" className="bg-white/5 border-none text-[7px] font-black italic uppercase tracking-widest">{lab.badge}</Badge>
+                            </div>
+                            <h3 className="text-xl font-black italic manga-font uppercase mb-3 tracking-tighter group-hover:text-white transition-colors">{lab.title}</h3>
+                            <p className="text-[10px] font-bold opacity-30 uppercase leading-relaxed tracking-wider group-hover:opacity-60 transition-opacity">
+                                {lab.desc}
+                            </p>
+                        </div>
+                    </Card>
+                </Link>
+            ))}
+        </div>
+
+        {/* Cognition Core Section */}
+        <div className="mb-12 flex items-center justify-between gap-4">
+            <h2 className="text-4xl font-black italic manga-font uppercase tracking-tighter">
+                COGNITION <span className="text-purple-600">CORE</span>
+            </h2>
+            <div className="h-px flex-1 bg-gradient-to-r from-purple-600/50 to-transparent" />
+            <Link to="/cognition-hub/" className="text-[10px] font-black uppercase tracking-widest text-purple-600 hover:text-white transition-colors flex items-center gap-2 group whitespace-nowrap">
+                ACCÉDER AU HUB COMPLET <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+            </Link>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-24">
+            {cognitionLabs.map((lab) => (
+                <Link key={lab.id} to={lab.url} className="no-underline group">
+                    <Card padding="none" className="h-full bg-black/40 border-white/5 hover:border-purple-600/30 transition-all duration-500 overflow-hidden relative group">
+                        <div className={`absolute inset-0 bg-gradient-to-br ${lab.bg} opacity-0 group-hover:opacity-100 transition-opacity duration-700`} />
+                        <div className="p-8 relative z-10">
+                            <div className="flex justify-between items-start mb-6">
+                                <div className={`p-3 rounded-xl bg-white/5 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 ${lab.color}`}>
+                                    <lab.icon className="w-6 h-6" />
+                                </div>
+                                <Badge variant="neutral" className="bg-white/5 border-none text-[7px] font-black italic uppercase tracking-widest">{lab.badge}</Badge>
+                            </div>
+                            <h3 className="text-xl font-black italic manga-font uppercase mb-3 tracking-tighter group-hover:text-white transition-colors">{lab.title}</h3>
+                            <p className="text-[10px] font-bold opacity-30 uppercase leading-relaxed tracking-wider group-hover:opacity-60 transition-opacity">
+                                {lab.desc}
+                            </p>
+                        </div>
+                    </Card>
+                </Link>
+            ))}
         </div>
 
         {/* Global Tech Stats */}

@@ -8,9 +8,9 @@ Ce document centralise toutes les tâches techniques, d'architecture et de fonct
 
 ## 🚀 Intégrations & Pages Manquantes (Frontend)
 
-- [ ] **Hub "Forge Créative" (Accessibilité)** : Bien que la route `/forge-hub/` existe, elle est orpheline dans l'UI. Ajouter des points d'entrée dans `LabHubPage.tsx` pour lier les laboratoires créatifs (Manga, Audio, Video, Spatial) au Singularity Lab.
-- [ ] **Hub "Cognition" Unifié** : Créer une vue centrale fusionnant l'Archetype Nexus, la Gestion Neuro-Memory et le Counterfactual Simulator (actuellement éparpillés).
-- [ ] **Universal Search Hub** : Unifier la recherche textuelle (`/search/`) et la recherche visuelle/temporelle (`/visual-nexus/`) dans une interface de recherche multimodale unique.
+- [x] **Hub "Forge Créative" (Accessibilité)** : Bien que la route `/forge-hub/` existe, elle est orpheline dans l'UI. Ajouter des points d'entrée dans `LabHubPage.tsx` pour lier les laboratoires créatifs (Manga, Audio, Video, Spatial) au Singularity Lab.
+- [x] **Hub "Cognition" Unifié** : Créer une vue centrale fusionnant l'Archetype Nexus, la Gestion Neuro-Memory et le Counterfactual Simulator (actuellement éparpillés).
+- [x] **Universal Search Hub** : Unifier la recherche textuelle (`/search/`) et la recherche visuelle/temporelle (`/visual-nexus/`) dans une interface de recherche multimodale unique.
 - [ ] **Exposition Publique des Outils Expert** : Créer des versions "Read-only" (publiques) du SOTA Benchmarking et du Graph Debugger pour les utilisateurs "Expert" (actuellement limités aux admins).
 - [ ] **Live Ingestion Feed (Intelligence Data)** : Créer une page de monitoring temps-réel montrant l'enrichissement sémantique de la Lore (Neo4j/ChromaDB) par les scrapers et l'IA.
 
