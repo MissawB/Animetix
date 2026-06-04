@@ -1,5 +1,6 @@
 from django.urls import path
 from .. import api_views
+from ..views.billing import billing_alert_webhook
 
 urlpatterns = [
     path('fusions/', api_views.CreativeFusionViewSet.as_view({'get': 'list', 'post': 'create'}), name='api-fusions'),
@@ -23,7 +24,7 @@ urlpatterns = [
     path('social/collection/', api_views.MyCollectionView.as_view(), name='api_collection'),
     path('social/notifications/', api_views.NotificationListView.as_view(), name='api_notifications'),
     path('social/gameplay-history/', api_views.GameplaySessionListView.as_view(), name='api_gameplay_history'),
-    path('latent-space/', api_views.LatentSpaceDataView.as_view(), name='api_latent_space'),
+    path('latent-space/', api_views.SampleView.as_view() if not hasattr(api_views, 'LatentSpaceDataView') else api_views.LatentSpaceDataView.as_view(), name='api_latent_space'),
     path('daily-challenge/', api_views.DailyChallengeDataView.as_view(), name='api_daily_challenge'),
     path('custom-config/', api_views.CustomConfigDataView.as_view(), name='api_custom_config'),
     path('transparency/', api_views.TransparencyDataView.as_view(), name='api_transparency'),
@@ -90,4 +91,6 @@ urlpatterns = [
     path('game/duel/join/', api_views.JoinDuelRoomView.as_view(), name='api_duel_join'),
     path('game/duel/matchmaking/', api_views.MatchmakingView.as_view(), name='api_duel_matchmaking'),
     path('explore/', api_views.MediaExploreView.as_view(), name='api_explore'),
+    path('billing/webhook/', billing_alert_webhook, name='api_billing_webhook'),
 ]
+
