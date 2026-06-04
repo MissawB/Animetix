@@ -23,7 +23,7 @@ class RepositoryPort(ABC):
         pass
 
     @abstractmethod
-    def upsert_items(self, collection_name: str, ids: List[str], embeddings: List[List[float]], metadatas: List[Dict]):
+    def upsert_items(self, collection_name: str, ids: List[str], embeddings: List[List[float]], metadatas: List[Dict], documents: Optional[List[str]] = None):
         """Ajoute ou met à jour des items dans une collection vectorielle."""
         pass
 

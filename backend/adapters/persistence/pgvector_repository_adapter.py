@@ -43,6 +43,9 @@ class PGVectorRepositoryAdapter(RepositoryPort):
             )
         return self._embedding_fn
 
+    def get_collection(self, collection_name: str):
+        return self.manager.get_collection(collection_name)
+
     def get_nearest_neighbors(self, collection_name: str, item_id: str, n_results: int = 5) -> Optional[Dict]:
         try:
             coll = self.manager.get_collection(name=collection_name)
@@ -106,10 +109,10 @@ class PGVectorRepositoryAdapter(RepositoryPort):
             logger.error(f"Catalog Load Error for {media_type}: {e}")
             return None
 
-    def upsert_items(self, collection_name: str, ids: List[str], embeddings: List[List[float]], metadatas: List[Dict]):
+    def upsert_items(self, collection_name: str, ids: List[str], embeddings: List[List[float]], metadatas: List[Dict], documents: Optional[List[str]] = None):
         try:
-            coll = self.manager.get_collection(name=collection_name)
-            coll.upsert(ids=ids, embeddings=embeddings, metadatas=metadatas)
+            coll = self.manager.get_collection(collection_name)
+            coll.upsert(ids=ids, embeddings=embeddings, metadatas=metadatas, documents=documents)
         except Exception as e:
             logger.error(f"PGVector Upsert Error in {collection_name}: {e}")
 
@@ -170,20 +173,26 @@ class PGVectorRepositoryAdapter(RepositoryPort):
             
         try:
             coll = self.manager.get_collection(name=coll_name)
-            expected_dim = 768
-            test_res = coll.get(limit=1, include=['embeddings'])
-            if test_res and test_res.get('embeddings') is not None and len(test_res['embeddings']) > 0:
-                expected_dim = len(test_res['embeddings'][0])
             
-            query_vector = self.embedding_fn([query])[0]
-            
-            if len(query_vector) != expected_dim:
-                if len(query_vector) > expected_dim:
-                    query_vector = query_vector[:expected_dim]
-                else:
-                    query_vector = list(query_vector) + [0.0] * (expected_dim - len(query_vector))
-            
-            res = coll.query(query_embeddings=[query_vector], n_results=limit, offset=offset)
+            from pipeline.chroma_client import is_alloydb_ai_supported
+            if is_alloydb_ai_supported():
+                res = coll.query(query_texts=[query], n_results=limit, offset=offset)
+            else:
+                expected_dim = 768
+                test_res = coll.get(limit=1, include=['embeddings'])
+                if test_res and test_res.get('embeddings') is not None and len(test_res['embeddings']) > 0:
+                    expected_dim = len(test_res['embeddings'][0])
+                
+                query_vector = self.embedding_fn([query])[0]
+                
+                if len(query_vector) != expected_dim:
+                    if len(query_vector) > expected_dim:
+                        query_vector = query_vector[:expected_dim]
+                    else:
+                        query_vector = list(query_vector) + [0.0] * (expected_dim - len(query_vector))
+                
+                res = coll.query(query_embeddings=[query_vector], n_results=limit, offset=offset)
+                
             results = []
             if res and res.get('metadatas') and res['metadatas'][0]:
                 for meta, doc_id in zip(res['metadatas'][0], res['ids'][0]):

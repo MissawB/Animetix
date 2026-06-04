@@ -28,7 +28,7 @@ class DjangoRepositoryAdapter(RepositoryPort):
         """Désactivé dans l'adaptateur relationnel. Utiliser ChromaDB."""
         return 0.0
 
-    def upsert_items(self, collection_name: str, ids: List[str], embeddings: List[List[float]], metadatas: List[Dict]):
+    def upsert_items(self, collection_name: str, ids: List[str], embeddings: List[List[float]], metadatas: List[Dict], documents: Optional[List[str]] = None):
         """Upsert les items dans Django (ignore les embeddings)."""
         for i, external_id in enumerate(ids):
             MediaItem.objects.update_or_create(

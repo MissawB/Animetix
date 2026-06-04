@@ -21,6 +21,9 @@ class UnifiedRepositoryAdapter(RepositoryPort):
     def _get_primary(self) -> RepositoryPort:
         return self.chroma
 
+    def get_collection(self, collection_name: str):
+        return self.chroma.get_collection(collection_name)
+
     def get_nearest_neighbors(self, collection_name: str, item_id: str, n_results: int = 5) -> Optional[Dict]:
         """Recherche par similarité optimisée sur ChromaDB."""
         return self.chroma.get_nearest_neighbors(collection_name, item_id, n_results)
@@ -46,8 +49,8 @@ class UnifiedRepositoryAdapter(RepositoryPort):
             return results
         return self.django.search_media_items(query, media_type, limit, offset)
 
-    def upsert_items(self, collection_name: str, ids: List[str], embeddings: List[List[float]], metadatas: List[Dict]):
-        self.chroma.upsert_items(collection_name, ids, embeddings, metadatas)
+    def upsert_items(self, collection_name: str, ids: List[str], embeddings: List[List[float]], metadatas: List[Dict], documents: Optional[List[str]] = None):
+        self.chroma.upsert_items(collection_name, ids, embeddings, metadatas, documents)
 
     def delete_collection(self, collection_name: str):
         self.chroma.delete_collection(collection_name)
