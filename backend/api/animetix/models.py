@@ -398,3 +398,18 @@ class VectorRecord(models.Model):
     def __str__(self):
         return f"{self.collection_name} - {self.item_id}"
 
+
+class UserRecommendation(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='recommendations')
+    media_item = models.ForeignKey(MediaItem, on_delete=models.CASCADE)
+    score = models.FloatField()
+    rank = models.IntegerField()
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['rank']
+        unique_together = ('user', 'media_item')
+
+    def __str__(self):
+        return f"Rec for {self.user.username}: {self.media_item.title} (Rank {self.rank})"
+

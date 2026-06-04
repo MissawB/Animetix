@@ -40,11 +40,11 @@ class TestProfileModel:
 
     def test_profile_api_key_uniqueness(self):
         user1 = User.objects.create_user(username="user1")
-        user1.profile.set_api_key("secret_key_123")
+        user1.profile.api_key_hash = "same_hash_123"
         user1.profile.save()
 
         user2 = User.objects.create_user(username="user2")
-        user2.profile.set_api_key("secret_key_123")
+        user2.profile.api_key_hash = "same_hash_123"
         
         from django.db import IntegrityError
         with pytest.raises(IntegrityError):
@@ -88,3 +88,23 @@ class TestDjangoProfileAdapter:
         assert updated_profile.xp == 500
         assert updated_profile.tier == 'pro'
         assert updated_profile.check_api_key('new_key') is True
+
+
+@pytest.mark.django_db
+def test_user_recommendation_creation():
+    from animetix.models import UserRecommendation, MediaItem
+    user = User.objects.create_user(username="rec_tester", password="pwd")
+    media = MediaItem.objects.create(external_id="123", media_type="Anime", title="Death Note")
+    
+    rec = UserRecommendation.objects.create(
+        user=user,
+        media_item=media,
+        score=4.85,
+        rank=1
+    )
+    
+    assert rec.id is not None
+    assert rec.score == 4.85
+    assert rec.rank == 1
+    assert str(rec) == "Rec for rec_tester: Death Note (Rank 1)"
+
