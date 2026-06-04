@@ -7,6 +7,31 @@ import numpy as np
 
 logger = logging.getLogger("animetix." + __name__)
 
+_alloydb_ai_supported = None
+
+def is_alloydb_ai_supported():
+    global _alloydb_ai_supported
+    if _alloydb_ai_supported is not None:
+        return _alloydb_ai_supported
+        
+    from django.db import connection
+    if connection.vendor != 'postgresql':
+        _alloydb_ai_supported = False
+        return False
+        
+    try:
+        from django.conf import settings
+        model_name = getattr(settings, 'ALLOYDB_EMBEDDING_MODEL', 'text-embedding-005')
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT embedding(%s, 'test');", [model_name])
+            cursor.fetchone()
+        _alloydb_ai_supported = True
+        logger.info(f"[AlloyDB AI] google_ml_integration is supported with model {model_name}.")
+    except Exception as e:
+        _alloydb_ai_supported = False
+        logger.info(f"[AlloyDB AI] google_ml_integration is not active or failed: {e}. Falling back to local embeddings.")
+    return _alloydb_ai_supported
+
 class PGVectorCollectionWrapper:
     def __init__(self, name):
         self.name = name
@@ -31,7 +56,8 @@ class PGVectorCollectionWrapper:
             qs = qs[:limit]
 
         ids_list, embeddings_list, metadatas_list, documents_list = [], [], [], []
-        include = include or []
+        if include is None:
+            include = ["metadatas", "documents"]
 
         for record in qs:
             ids_list.append(record.item_id)
@@ -56,6 +82,8 @@ class PGVectorCollectionWrapper:
 
     def upsert(self, ids, embeddings=None, metadatas=None, documents=None):
         from animetix.models import VectorRecord
+        from django.conf import settings
+        model_name = getattr(settings, 'ALLOYDB_EMBEDDING_MODEL', 'text-embedding-005')
         
         # SOTA sanitization: convert list/dicts in metadata to strings
         clean_metas = []
@@ -75,8 +103,36 @@ class PGVectorCollectionWrapper:
             clean_metas = [{} for _ in ids]
 
         documents = documents or [None] * len(ids)
-        embeddings = embeddings or [None] * len(ids)
+        
+        if connection.vendor == 'postgresql' and is_alloydb_ai_supported():
+            with transaction.atomic():
+                with connection.cursor() as cursor:
+                    for i, item_id in enumerate(ids):
+                        doc = documents[i]
+                        if doc:
+                            sql = """
+                                INSERT INTO animetix_vectorrecord (collection_name, item_id, embedding, metadata, document, created_at)
+                                VALUES (%s, %s, embedding(%s, %s), %s, %s, NOW())
+                                ON CONFLICT (collection_name, item_id)
+                                DO UPDATE SET
+                                    embedding = embedding(%s, EXCLUDED.document),
+                                    metadata = EXCLUDED.metadata,
+                                    document = EXCLUDED.document;
+                            """
+                            cursor.execute(sql, [self.name, str(item_id), model_name, doc, json.dumps(clean_metas[i]), doc, model_name])
+                        else:
+                            sql = """
+                                INSERT INTO animetix_vectorrecord (collection_name, item_id, embedding, metadata, document, created_at)
+                                VALUES (%s, %s, NULL, %s, NULL, NOW())
+                                ON CONFLICT (collection_name, item_id)
+                                DO UPDATE SET
+                                    metadata = EXCLUDED.metadata;
+                            """
+                            cursor.execute(sql, [self.name, str(item_id), json.dumps(clean_metas[i])])
+            return
 
+        # Fallback local SQLite / standard Postgres logic
+        embeddings = embeddings or [None] * len(ids)
         with transaction.atomic():
             for i, item_id in enumerate(ids):
                 VectorRecord.objects.update_or_create(
@@ -91,30 +147,47 @@ class PGVectorCollectionWrapper:
 
     def query(self, query_embeddings=None, query_texts=None, n_results=10, where=None, offset=0):
         from animetix.models import VectorRecord
+        from django.conf import settings
+        model_name = getattr(settings, 'ALLOYDB_EMBEDDING_MODEL', 'text-embedding-005')
         
-        # Handle simple string embeddings fallback if embedding function is missing
-        if query_embeddings is None:
+        if query_embeddings is None and query_texts is None:
             return {"ids": [[]], "metadatas": [[]], "distances": [[]], "documents": [[]]}
 
         results_ids, results_metas, results_docs, results_distances = [], [], [], []
+        use_alloydb = connection.vendor == 'postgresql' and is_alloydb_ai_supported()
+        
+        loop_vals = query_texts if (use_alloydb and query_texts) else (query_embeddings or [])
 
-        for q_vec in query_embeddings:
+        for q_val in loop_vals:
             if connection.vendor == 'postgresql':
-                # Native pgvector cosine distance query
-                # <=> operator is Cosine Distance. Score is 1 - Cosine Distance.
-                sql = """
-                    SELECT item_id, metadata, document, (embedding <=> %s::vector) as distance
-                    FROM animetix_vectorrecord
-                    WHERE collection_name = %s
-                """
-                params = [q_vec, self.name]
-                if where:
-                    # Simple where constraint mapping to JSONB contains
-                    for k, v in where.items():
-                        sql += " AND metadata @> %s"
-                        params.append(json.dumps({k: v}))
-                sql += " ORDER BY embedding <=> %s::vector LIMIT %s OFFSET %s"
-                params.extend([q_vec, n_results, offset])
+                if use_alloydb and query_texts:
+                    # Native AlloyDB AI vectorization query
+                    sql = """
+                        SELECT item_id, metadata, document, (embedding <=> embedding(%s, %s)::vector) as distance
+                        FROM animetix_vectorrecord
+                        WHERE collection_name = %s
+                    """
+                    params = [model_name, q_val, self.name]
+                    if where:
+                        for k, v in where.items():
+                            sql += " AND metadata @> %s"
+                            params.append(json.dumps({k: v}))
+                    sql += " ORDER BY embedding <=> embedding(%s, %s)::vector LIMIT %s OFFSET %s"
+                    params.extend([model_name, q_val, n_results, offset])
+                else:
+                    # Native pgvector cosine distance query
+                    sql = """
+                        SELECT item_id, metadata, document, (embedding <=> %s::vector) as distance
+                        FROM animetix_vectorrecord
+                        WHERE collection_name = %s
+                    """
+                    params = [q_val, self.name]
+                    if where:
+                        for k, v in where.items():
+                            sql += " AND metadata @> %s"
+                            params.append(json.dumps({k: v}))
+                    sql += " ORDER BY embedding <=> %s::vector LIMIT %s OFFSET %s"
+                    params.extend([q_val, n_results, offset])
 
                 with connection.cursor() as cursor:
                     cursor.execute(sql, params)
@@ -132,7 +205,7 @@ class PGVectorCollectionWrapper:
                 results_docs.append(docs)
                 results_distances.append(dists)
             else:
-                # SQLite fallback: calculate similarity in Python
+                # SQLite fallback logic
                 qs = VectorRecord.objects.filter(collection_name=self.name)
                 if where:
                     for k, v in where.items():
@@ -152,7 +225,7 @@ class PGVectorCollectionWrapper:
                 clean_embeddings = []
                 clean_records = []
                 for idx, emb in enumerate(record_embeddings):
-                    if emb is not None and len(emb) == len(q_vec):
+                    if emb is not None and len(emb) == len(q_val):
                         clean_embeddings.append(emb)
                         clean_records.append(records[idx])
                 
@@ -163,11 +236,10 @@ class PGVectorCollectionWrapper:
                     results_distances.append([])
                     continue
 
-                q_vec_arr = np.array(q_vec).reshape(1, -1)
+                q_vec_arr = np.array(q_val).reshape(1, -1)
                 matrix = np.array(clean_embeddings)
                 
                 similarities = cosine_similarity(q_vec_arr, matrix)[0]
-                # Distance = 1 - similarity
                 distances = 1.0 - similarities
                 
                 sorted_indices = np.argsort(distances)[offset:offset+n_results]
