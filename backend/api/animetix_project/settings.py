@@ -192,6 +192,7 @@ SITE_ID = 1
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
+    'backend.api.animetix.auth.IAPRemoteUserBackend',
 ]
 
 # ALLAUTH CONFIG
@@ -225,6 +226,7 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'backend.api.animetix.auth.IAPRemoteUserMiddleware',
     'allauth.account.middleware.AccountMiddleware',
     'animetix.middleware.UserTierMiddleware',
     'animetix.middleware.UserTrackingMiddleware', # Moved after Auth
@@ -532,5 +534,10 @@ GCP_PROJECT_ID = env('GCP_PROJECT_ID', default='animetix')
 GCP_BRAIN_SERVICE_NAME = env('GCP_BRAIN_SERVICE_NAME', default='animetix-brain')
 GCP_BRAIN_REGION = env('GCP_BRAIN_REGION', default='europe-west1')
 GCP_BILLING_WEBHOOK_URL = env('GCP_BILLING_WEBHOOK_URL', default='https://animetix-web-836616987676.europe-west9.run.app/api/billing/webhook/')
+
+# GCP Identity-Aware Proxy (IAP) Configuration
+GCP_IAP_AUDIENCE = env('GCP_IAP_AUDIENCE', default=None)
+IAP_APPROVED_ADMIN_EMAILS = env.list('IAP_APPROVED_ADMIN_EMAILS', default=[])
+
 
 
