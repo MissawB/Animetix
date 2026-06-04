@@ -2,6 +2,21 @@ import pytest
 from unittest.mock import MagicMock, patch
 
 @pytest.fixture
+def mock_animetix_service():
+    mock_service = MagicMock()
+    mock_service.load_data.return_value = {'titles': ['Naruto']}
+    
+    mock_blind = MagicMock()
+    mock_blind.get_random_theme.return_value = {'anime_title': 'A'}
+    mock_service.blind_test_service = mock_blind
+    
+    mock_cover = MagicMock()
+    mock_cover.get_random_cover.return_value = {'manga_title': 'M'}
+    mock_service.cover_test_service = mock_cover
+    
+    return mock_service
+
+@pytest.fixture
 def animetix_service(mock_animetix_service):
     return mock_animetix_service
 

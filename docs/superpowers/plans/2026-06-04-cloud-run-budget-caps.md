@@ -149,7 +149,7 @@ def test_restore_brain_service_success(mock_patch, mock_default):
 Run: `pytest tests/adapters/test_gcp_services.py -v`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add backend/api/animetix_project/settings.py backend/api/animetix/services.py tests/adapters/test_gcp_services.py

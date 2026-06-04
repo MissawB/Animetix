@@ -72,6 +72,10 @@ class GoogleGenAIAdapter(InferencePort):
         except Exception as e:
             logger.error(f"Failed to initialize google-genai Client: {e}")
             self.client = None
+            
+        self._context_caches = {}
+        self.cache_ttl_seconds = int(os.getenv("GEMINI_CACHE_TTL", "300"))
+        self.cache_threshold_chars = int(os.getenv("GEMINI_CACHE_THRESHOLD", "120000"))
 
     def health_check(self) -> dict:
         """Vérifie l'état de l'unité de calcul."""
@@ -142,6 +146,60 @@ class GoogleGenAIAdapter(InferencePort):
             "total_tokens": (default_prompt_len + default_text_len) // 4
         }
 
+    def _get_or_create_cache(self, system_prompt: str) -> Optional[str]:
+        """Gère la création et la réutilisation de cache de contexte sur Vertex AI / Gemini."""
+        if not self.client or not system_prompt:
+            return None
+            
+        # Le cache de contexte n'est supporté que sur les modèles Gemini
+        if "gemini" not in self.model_name.lower():
+            return None
+            
+        if len(system_prompt) < self.cache_threshold_chars:
+            return None
+            
+        import hashlib
+        import time
+        
+        context_hash = hashlib.sha256(system_prompt.encode("utf-8")).hexdigest()
+        current_time = time.time()
+        
+        if context_hash in self._context_caches:
+            cache_name, expire_time = self._context_caches[context_hash]
+            if current_time < expire_time:
+                logger.debug(f"Reusing existing context cache: {cache_name}")
+                return cache_name
+            else:
+                # Supprimer le cache expiré
+                try:
+                    self.client.caches.delete(name=cache_name)
+                    logger.debug(f"Deleted expired context cache: {cache_name}")
+                except Exception as e:
+                    logger.warning(f"Failed to delete expired remote cache {cache_name}: {e}")
+                del self._context_caches[context_hash]
+                
+        try:
+            logger.info(
+                f"Creating new context cache on Gemini/Vertex AI for prompt of length {len(system_prompt)} characters..."
+            )
+            ttl_str = f"{self.cache_ttl_seconds}s"
+            cache_config = types.CreateCachedContentConfig(
+                display_name=f"animetix_ctx_{context_hash[:8]}",
+                system_instruction=system_prompt,
+                ttl=ttl_str
+            )
+            cache = self.client.caches.create(
+                model=self.model_name,
+                config=cache_config
+            )
+            expire_time = current_time + self.cache_ttl_seconds
+            self._context_caches[context_hash] = (cache.name, expire_time)
+            logger.info(f"Successfully created context cache: {cache.name} (TTL: {ttl_str})")
+            return cache.name
+        except Exception as e:
+            logger.error(f"Failed to create Gemini context cache: {e}")
+            return None
+
     def generate(
         self, 
         prompt: str, 
@@ -155,9 +213,15 @@ class GoogleGenAIAdapter(InferencePort):
             
         # Configuration des paramètres de génération
         config_args = {
-            "system_instruction": system_prompt,
             "temperature": 0.7
         }
+        
+        # Gestion du cache de contexte
+        cache_name = self._get_or_create_cache(system_prompt)
+        if cache_name:
+            config_args["cached_content"] = cache_name
+        else:
+            config_args["system_instruction"] = system_prompt
         
         # Gestion du mode raisonnement (thinking)
         if thinking_mode or thinking_budget > 0:
@@ -220,9 +284,15 @@ class GoogleGenAIAdapter(InferencePort):
             raise InferenceNotImplementedError("Google GenAI client is not initialized.")
             
         config_args = {
-            "system_instruction": system_prompt,
             "temperature": 0.7
         }
+        
+        # Gestion du cache de contexte
+        cache_name = self._get_or_create_cache(system_prompt)
+        if cache_name:
+            config_args["cached_content"] = cache_name
+        else:
+            config_args["system_instruction"] = system_prompt
         
         if thinking_mode or thinking_budget > 0:
             if "3." in self.model_name:

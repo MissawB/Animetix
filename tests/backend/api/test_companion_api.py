@@ -10,6 +10,14 @@ from dependency_injector import providers
 def api_client():
     return APIClient()
 
+@pytest.fixture(autouse=True)
+def mock_guardrail_service():
+    mock_guard = MagicMock()
+    mock_guard.validate_input.return_value = {"is_safe": True}
+    mock_guard.validate_output.return_value = {"is_safe": True}
+    with container.core.guardrail_service.override(providers.Object(mock_guard)):
+        yield mock_guard
+
 @pytest.fixture
 def mock_user(db):
     from django.contrib.auth.models import User
@@ -40,8 +48,8 @@ class TestCompanionAPI:
         mock_usage_port = MagicMock()
         mock_usage_port.check_quota.return_value = True
         
-        with container.companion_service.override(providers.Object(mock_companion_service)), \
-             container.usage_port.override(providers.Object(mock_usage_port)):
+        with container.core.companion_service.override(providers.Object(mock_companion_service)), \
+             container.infrastructure.usage_port.override(providers.Object(mock_usage_port)):
             
             response = api_client.post(url, data, format='json')
             
@@ -58,7 +66,7 @@ class TestCompanionAPI:
         mock_usage_port = MagicMock()
         mock_usage_port.check_quota.return_value = False
         
-        with container.usage_port.override(providers.Object(mock_usage_port)):
+        with container.infrastructure.usage_port.override(providers.Object(mock_usage_port)):
             response = api_client.post(url, {"mentor_id": "sensei", "user_message": "msg"}, format='json')
             assert response.status_code == status.HTTP_403_FORBIDDEN
             assert "quota" in response.data['error'].lower()

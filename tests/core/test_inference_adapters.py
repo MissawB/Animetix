@@ -15,7 +15,7 @@ def test_qwen3_vl_not_implemented():
 
 def test_brain_api_not_implemented():
     # BrainAPIAdapter return default list when no brain_api_url is provided
-    adapter = BrainAPIAdapter(brain_api_url="")
+    adapter = BrainAPIAdapter(brain_api_url="", brain_api_key="")
     result = adapter.get_image_embedding(b"")
     assert result == []
 

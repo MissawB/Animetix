@@ -4,7 +4,8 @@ from .consumers import (
     CodeMangaConsumer, 
     NotificationConsumer, 
     DuelConsumer,
-    ClubConsumer
+    ClubConsumer,
+    SpeechToSpeechLiveConsumer
 )
 
 websocket_urlpatterns = [
@@ -13,4 +14,5 @@ websocket_urlpatterns = [
     re_path(r'ws/notifications/$', NotificationConsumer.as_asgi()),
     re_path(r'ws/duel/(?P<lobby_id>\w+)/$', DuelConsumer.as_asgi()),
     re_path(r'ws/club/(?P<club_id>\d+)/$', ClubConsumer.as_asgi()),
+    re_path(r'ws/labs/s2s/live/$', SpeechToSpeechLiveConsumer.as_asgi()),
 ]

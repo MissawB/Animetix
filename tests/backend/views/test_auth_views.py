@@ -24,6 +24,6 @@ def test_auth_me_authenticated(client):
     
     assert response.status_code == 200
     data = response.json()
-    assert data["id"] == user.id
-    assert data["username"] == "testuser"
-    assert data["email"] == "test@example.com"
+    assert data["user"]["id"] == user.id
+    assert data["user"]["username"] == "testuser"
+    assert data["user"]["email"] == "test@example.com"

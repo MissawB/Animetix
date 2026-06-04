@@ -31,6 +31,8 @@ def main():
     scheduler_region = "europe-west1"  # Cloud Scheduler is not available in europe-west9, using europe-west1
     service_account = f"836616987676-compute@developer.gserviceaccount.com"
     image = f"{region}-docker.pkg.dev/{project_id}/animetix-repo/web:latest"
+    vpc_network = os.getenv("GCP_VPC_NETWORK", "default")
+    vpc_subnet = os.getenv("GCP_VPC_SUBNET", "default")
     
     # Configuration for all 7 serverless periodic jobs
     jobs_config = [
@@ -138,7 +140,8 @@ def main():
                 f"--args={job['args']}",
                 f"--region={region}",
                 f"--service-account={service_account}",
-                "--vpc-connector=animetix-vpc-conn",
+                f"--network={vpc_network}",
+                f"--subnet={vpc_subnet}",
                 "--vpc-egress=private-ranges-only",
                 f"--memory={job['memory']}",
                 f"--cpu={job['cpu']}",

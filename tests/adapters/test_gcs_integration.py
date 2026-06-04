@@ -55,6 +55,14 @@ def test_archetypist_task_status_view_saves_to_storage(mock_async_result, client
     }
     mock_async_result.return_value = mock_task
     
+    # Set the mocked task data in Django cache since the view reads from cache
+    from django.core.cache import cache
+    cache.set("task_result:mock-task-id", {
+        "state": "SUCCESS",
+        "ready": True,
+        "result": mock_task.result
+    })
+    
     # Make GET request to the ArchetypistTaskStatusView using the correct prefix path /api/v1/
     response = client.get(
         f"/fr/api/v1/archetypist/status/?task_id=mock-task-id&fusion_id={fusion.id}"
@@ -75,3 +83,7 @@ def test_archetypist_task_status_view_saves_to_storage(mock_async_result, client
     file_name = updated_fusion.image_url.split("/media/")[-1]
     if default_storage.exists(file_name):
         default_storage.delete(file_name)
+    
+    # Clear cache
+    cache.delete("task_result:mock-task-id")
+
