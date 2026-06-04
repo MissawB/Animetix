@@ -46,3 +46,11 @@ Ce document centralise toutes les tâches techniques, d'architecture et de fonct
 - [x] **Observabilité avec Cloud Trace & Profiler** (Priorité : MOYENNE) : Mettre en place un traçage distribué des requêtes de bout-en-bout (Django Web -> Cloud Tasks -> FastAPI Brain -> AlloyDB/Vertex AI) afin d'isoler les goulots d'étranglement de performance.
 - [X] **BigQuery & BigQuery ML** (Priorité : BASSE) : Ingestion des données de télémétrie utilisateur (duels PvP, drift d'archétypes) pour l'analyse historique et génération de recommandations personnalisées d'œuvres directement en SQL.
 - [X] **Architecture événementielle (Pub/Sub & Dataflow)** (Priorité : BASSE) : Publier les événements majeurs sur des topics Pub/Sub pour découpler le traitement analytique secondaire, et orchestrer l'ingestion de lore en temps réel avec Dataflow.
+- [ ] **Vertex AI Pipelines (MLOps)** (Priorité : MOYENNE) : Automatiser et orchestrer les pipelines de ré-entraînement de modèles (DPO/RAG) avec suivi de lignage.
+- [ ] **Vertex AI Feature Store** (Priorité : MOYENNE) : Stocker et servir les vecteurs de préférences utilisateur en temps réel et à très basse latence pour la personnalisation.
+- [X] **Cloud Workflows** (Priorité : HAUTE) : Coordonner de manière fiable et résiliente les scénarios à étapes multiples (OCR -> Traduction -> Voix) sans surcharger Django.
+- [ ] **Eventarc (Déclenchement événementiel)** (Priorité : BASSE) : Automatiser le traitement d'images/mangas dès leur téléversement sur Cloud Storage en déclenchant directement des instances Cloud Run.
+- [ ] **Google Identity Platform (Auth externe)** (Priorité : BASSE) : Déléguer la gestion sécurisée des identités utilisateurs, des réseaux sociaux et de la double authentification à un service externe managé.
+- [ ] **Cloud KMS & CMEK (Chiffrement géré)** (Priorité : BASSE) : Protéger les assets sensibles générés (voix et images utilisateurs) avec des clés de chiffrement personnalisées stockées dans KMS.
+- [ ] **Fallback d'APIs d'IA Google** (Priorité : BASSE) : Configurer des replis vers Google Translate API et Cloud TTS/STT en cas d'indisponibilité ou de temps de démarrage long des instances GPU de la Brain API.
+

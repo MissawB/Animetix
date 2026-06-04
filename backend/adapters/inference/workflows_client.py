@@ -51,3 +51,54 @@ class GCPWorkflowsClient:
             status_info["result"] = json.loads(execution.result)
 
         return status_info
+
+    def enqueue_polling_task(self, execution_name: str, task_id: str):
+        """
+        Enqueues a GCP Cloud Task to poll the workflow execution at the dedicated url.
+        """
+        is_prod = os.getenv("DJANGO_ENV", "development").lower() == "production"
+        if not is_prod:
+            return
+
+        from google.cloud import tasks_v2
+        
+        project = os.getenv("GCP_PROJECT_ID", "animetix-prod")
+        queue = os.getenv("GCP_TASKS_QUEUE_NAME", "animetix-queue")
+        location = os.getenv("GCP_TASKS_LOCATION", "europe-west1")
+        
+        # Build the exact url for poll-workflow view
+        base_worker_url = os.getenv("GCP_TASKS_WORKER_URL", "https://missawb-animetix-web.hf.space/api/tasks/run/")
+        url = base_worker_url.replace("/api/tasks/run/", "/api/tasks/poll-workflow/")
+        service_account = os.getenv("GCP_TASKS_SERVICE_ACCOUNT", "animetix-tasks-invoker@animetix.iam.gserviceaccount.com")
+        
+        client = tasks_v2.CloudTasksClient()
+        parent = client.queue_path(project, location, queue)
+        
+        payload = {
+            "execution_name": execution_name,
+            "task_id": task_id
+        }
+        
+        task_headers = {"Content-type": "application/json"}
+        try:
+            from animetix.telemetry import inject_trace_context
+            inject_trace_context(task_headers)
+        except ImportError:
+            pass
+            
+        task = {
+            "http_request": {
+                "http_method": tasks_v2.HttpMethod.POST,
+                "url": url,
+                "headers": task_headers,
+                "body": json.dumps(payload).encode("utf-8"),
+                "oidc_token": {
+                    "service_account_email": service_account,
+                    "audience": url
+                }
+            }
+        }
+        
+        logger.info(f"Enqueuing polling task for {execution_name} to URL: {url}")
+        client.create_task(request={"parent": parent, "task": task})
+
