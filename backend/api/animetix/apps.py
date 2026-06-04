@@ -32,4 +32,5 @@ class AnimetixConfig(AppConfig):
         ])
         from animetix.telemetry import init_telemetry
         init_telemetry("animetix-web")
+        import animetix.signals  # noqa
 

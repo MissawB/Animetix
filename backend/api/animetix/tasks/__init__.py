@@ -86,3 +86,7 @@ def trigger_club_event(club_id, event_id):
         async_to_sync(channel_layer.group_send)(f'club_{club_id}', {'type': 'event_start', 'event_id': event_id})
 
 
+from . import telemetry_tasks
+
+
+

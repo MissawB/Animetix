@@ -1,8 +1,10 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from .models import MediaItem, ChallengeResult, GlobalBoss, Friendship, Notification
+from .models import MediaItem, ChallengeResult, GlobalBoss, Friendship, Notification, ArchetypeDriftSnapshot, DuelRoom
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+
+# ... [existing signal handlers are unmodified] ...
 
 @receiver(post_save, sender=Notification)
 def broadcast_notification(sender, instance, created, **kwargs):
@@ -102,3 +104,18 @@ def sync_media_on_save(sender, instance, created, **kwargs):
         instance.external_id,
         data
     )
+
+
+@receiver(post_save, sender=ArchetypeDriftSnapshot)
+def trigger_drift_telemetry(sender, instance, created, **kwargs):
+    if created:
+        from animetix.tasks_client import enqueue_task
+        enqueue_task("ingest_drift_telemetry", instance.id)
+
+
+@receiver(post_save, sender=DuelRoom)
+def trigger_duel_telemetry(sender, instance, created, **kwargs):
+    if instance.is_finished:
+        from animetix.tasks_client import enqueue_task
+        enqueue_task("ingest_duel_telemetry", instance.id)
+
