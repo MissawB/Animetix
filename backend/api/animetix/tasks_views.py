@@ -78,3 +78,52 @@ def run_task_view(request):
             # Return 500 so Google Cloud Tasks knows to retry
             return JsonResponse({"error": str(run_err)}, status=500)
 
+
+from django.http import HttpResponse
+from adapters.inference.workflows_client import GCPWorkflowsClient
+
+@csrf_exempt
+def poll_workflow_view(request):
+    if request.method != 'POST':
+        return HttpResponse("Method not allowed", status=405)
+        
+    try:
+        data = json.loads(request.body)
+        execution_name = data.get('execution_name')
+        task_id = data.get('task_id')
+    except (ValueError, KeyError):
+        return JsonResponse({"error": "Invalid payload"}, status=400)
+        
+    if not execution_name or not task_id:
+        return JsonResponse({"error": "Missing execution_name or task_id"}, status=400)
+        
+    client = GCPWorkflowsClient()
+    status = client.get_execution_status(execution_name)
+    
+    state = status.get("state")
+    if state == "ACTIVE":
+        # Cloud Tasks will retry automatically upon receiving 503
+        return HttpResponse("Workflow is still active", status=503)
+        
+    elif state == "SUCCEEDED":
+        result = status.get("result", {})
+        cache.set(f"task_result:{task_id}", {
+            "ready": True,
+            "status": "success",
+            "result": {
+                "translated_text": result.get("translated_text", ""),
+                "audio_url": result.get("audio_url", "")
+            }
+        }, timeout=3600)
+        return JsonResponse({"status": "completed"})
+        
+    else:
+        # FAILED or CANCELLED
+        cache.set(f"task_result:{task_id}", {
+            "ready": True,
+            "status": "failed",
+            "error": status.get("error", "Workflow execution failed")
+        }, timeout=3600)
+        return JsonResponse({"status": "failed"})
+
+

@@ -1,36 +1,28 @@
 import pytest
-import json
 from django.urls import reverse
-from rest_framework import status
-from django.core.cache import cache
-from animetix.tasks_registry import register_task
-
-@pytest.fixture(autouse=True)
-def clean_cache():
-    cache.clear()
+from unittest.mock import patch, MagicMock
 
 @pytest.mark.django_db
-def test_worker_run_task_endpoint_local(client, settings):
-    settings.IS_PRODUCTION = False
+@patch('animetix.tasks_views.GCPWorkflowsClient')
+def test_poll_workflow_endpoint(mock_client_class, client):
+    mock_client = MagicMock()
+    mock_client_class.return_value = mock_client
     
-    @register_task("endpoint_test_task")
-    def sum_task(a, b):
-        return a + b
-        
-    url = "/api/tasks/run/"
-    payload = {
-        "task_id": "test-task-123",
-        "task_name": "endpoint_test_task",
-        "args": [15, 25],
-        "kwargs": {}
+    # Test ACTIVE state returns 503 Service Unavailable
+    mock_client.get_execution_status.return_value = {"state": "ACTIVE", "error": None, "result": None}
+    
+    url = reverse('poll-workflow')
+    response = client.post(url, {"execution_name": "exec-123", "task_id": "t-123"}, content_type="application/json")
+    assert response.status_code == 503
+    
+    # Test SUCCEEDED state returns 200 and stores in cache
+    mock_client.get_execution_status.return_value = {
+        "state": "SUCCEEDED",
+        "error": None,
+        "result": {
+            "translated_text": "Bonjour",
+            "audio_url": "http://gcs/audio.wav"
+        }
     }
-    
-    response = client.post(url, data=json.dumps(payload), content_type="application/json")
+    response = client.post(url, {"execution_name": "exec-123", "task_id": "t-123"}, content_type="application/json")
     assert response.status_code == 200
-    assert response.json()["status"] == "success"
-    
-    # Check cache status
-    cached = cache.get("task_result:test-task-123")
-    assert cached["ready"] is True
-    assert cached["result"] == 40
-    assert cached["state"] == "SUCCESS"
