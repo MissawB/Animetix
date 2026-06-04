@@ -29,9 +29,18 @@ class AudioMixin:
         if hasattr(self, '_tts_model') and self._tts_model: return
         try:
             from TTS.api import TTS
-            model_name = "tts_models/multilingual/multi-dataset/xtts_v2"
-            logger.info(f"🎙️ Loading XTTS Model: {model_name}")
-            self._tts_model = TTS(model_name)
+            
+            # Check for mounted local volume
+            mount_path = os.getenv("GCP_MODELS_MOUNT_PATH", "/mnt/models")
+            local_model_path = os.path.join(mount_path, "xtts_v2")
+            if os.path.exists(local_model_path):
+                logger.info(f"🎙️ Loading XTTS Model from local FUSE path: {local_model_path}")
+                self._tts_model = TTS(model_path=local_model_path)
+            else:
+                model_name = "tts_models/multilingual/multi-dataset/xtts_v2"
+                logger.info(f"🎙️ Loading XTTS Model from Hugging Face: {model_name}")
+                self._tts_model = TTS(model_name)
+                
             if torch.cuda.is_available(): self._tts_model.to("cuda")
         except Exception as e:
             logger.error(f"❌ Failed to load XTTS: {e}")

@@ -35,8 +35,7 @@ def main():
     print("\n--- Step 1: Building Brain API image with Google Cloud Build ---")
     build_cmd = [
         "gcloud", "builds", "submit",
-        f"--tag={image_tag}",
-        "--file=deploy/Dockerfile.brain",
+        "--config=deploy/cloudbuild.brain.yaml",
         f"--project={project_id}",
         "."
     ]
@@ -49,13 +48,22 @@ def main():
         "HF_TOKEN=HF_TOKEN:latest"
     )
     
+    # Configuration du réseau pour Direct VPC Egress
+    vpc_network = os.getenv("GCP_VPC_NETWORK", "default")
+    vpc_subnet = os.getenv("GCP_VPC_SUBNET", "default")
+    models_bucket = f"{project_id}-models"
+
     deploy_cmd = [
         "gcloud", "beta", "run", "deploy", "animetix-brain",
         f"--image={image_tag}",
         f"--region={brain_region}",
         f"--service-account={service_account}",
-        "--vpc-connector=animetix-vpc-conn",
+        f"--network={vpc_network}",
+        f"--subnet={vpc_subnet}",
         "--vpc-egress=private-ranges-only",
+        # GCS FUSE Volume mount configuration:
+        f"--add-volume=name=models-vol,type=cloud-storage,bucket={models_bucket}",
+        "--add-volume-mount=volume=models-vol,mount-path=/mnt/models",
         # Configurations GPU requises :
         "--gpu=1",
         "--gpu-type=nvidia-l4",
@@ -63,7 +71,7 @@ def main():
         "--memory=16Gi",
         "--no-cpu-throttling",  # Requis pour garder le CPU alloué avec GPU
         f"--set-secrets={secrets}",
-        "--set-env-vars=DJANGO_ENV=production,LLM_API_BASE=http://localhost:11434/v1,LLM_MODEL_NAME=llama3",
+        "--set-env-vars=DJANGO_ENV=production,LLM_API_BASE=http://localhost:11434/v1,LLM_MODEL_NAME=llama3,GCP_MODELS_MOUNT_PATH=/mnt/models",
         "--port=7861",
         "--allow-unauthenticated", # L'authentification est gérée par X-API-Key au niveau applicatif
         f"--project={project_id}"

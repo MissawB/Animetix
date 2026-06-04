@@ -21,9 +21,18 @@ class MangaOcrMixin:
             from io import BytesIO
             img = Image.open(BytesIO(image_data)).convert("RGB")
 
+            import os
             model_id = "microsoft/trocr-base-handwritten"
             if not hasattr(self, '_manga_ocr_pipeline'):
                 logger.info("🏗️ Loading Manga OCR (fallback to generic OCR if specialized unavailable)...")
+                
+                # Check for mounted local volume
+                mount_path = os.getenv("GCP_MODELS_MOUNT_PATH", "/mnt/models")
+                local_model_path = os.path.join(mount_path, "manga-ocr")
+                if os.path.exists(local_model_path):
+                    logger.info(f"📚 Loading Manga OCR from local FUSE path: {local_model_path}")
+                    model_id = local_model_path
+                
                 self._manga_ocr_pipeline = pipeline(
                     "image-to-text",
                     model=model_id,
