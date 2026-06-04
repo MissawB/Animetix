@@ -26,3 +26,19 @@ def test_poll_workflow_endpoint(mock_client_class, client):
     }
     response = client.post(url, {"execution_name": "exec-123", "task_id": "t-123"}, content_type="application/json")
     assert response.status_code == 200
+
+@patch('animetix.containers.get_container')
+def test_process_gcs_upload_task_dev_mode(mock_get_container):
+    from animetix.creative_tasks import process_gcs_upload_task
+    mock_manga_flow = MagicMock()
+    mock_manga_flow.translate_manga_page.return_value = "data:image/jpeg;base64,/9j/4AAQSkZJRg=="
+    
+    mock_container = MagicMock()
+    mock_container.manga_flow_service.return_value = mock_manga_flow
+    mock_get_container.return_value = mock_container
+
+    res = process_gcs_upload_task(bucket="test-bucket", name="raw-manga/page_01.png")
+    assert res["status"] == "success"
+    assert "translated-manga/page_01.png" in res["processed_path"]
+    mock_manga_flow.translate_manga_page.assert_called_once()
+

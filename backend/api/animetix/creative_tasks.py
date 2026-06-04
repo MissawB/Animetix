@@ -99,3 +99,67 @@ def generate_fusion_image(item1, item2, art_style="Cyberpunk"):
     from .containers import get_container
     container = get_container()
     return container.fusion_service().generate_fusion_image(item1, item2, art_style=art_style)
+
+@shared_task
+@register_task("process_gcs_upload_task")
+def process_gcs_upload_task(bucket, name):
+    """
+    Asynchronously processes a raw manga page uploaded to GCS.
+    Downloads the image, translates it via MangaFlowService, and uploads the result back.
+    """
+    import os
+    import base64
+    from django.conf import settings
+    from .containers import get_container
+    
+    logger.info(f"Processing GCS upload event: gs://{bucket}/{name}")
+    container = get_container()
+    is_prod = getattr(settings, 'IS_PRODUCTION', False)
+
+    if not is_prod:
+        logger.info("Local development fallback active. Simulating image retrieval.")
+        from PIL import Image as PILImage
+        from io import BytesIO
+        img = PILImage.new('RGB', (100, 100), color='white')
+        buf = BytesIO()
+        img.save(buf, format='JPEG')
+        image_bytes = buf.getvalue()
+    else:
+        from storages.backends.gcloud import GoogleCloudStorage
+        try:
+            gcs_storage = GoogleCloudStorage(bucket_name=bucket)
+            with gcs_storage.open(name) as f:
+                image_bytes = f.read()
+        except Exception as download_err:
+            logger.error(f"GCS download failed for gs://{bucket}/{name}: {download_err}")
+            raise download_err
+
+    try:
+        translated_b64 = container.manga_flow_service().translate_manga_page(image_bytes, target_lang="French")
+        if not translated_b64.startswith("data:image/"):
+            raise ValueError("Invalid output format from MangaFlowService")
+        
+        header, encoded = translated_b64.split(",", 1)
+        processed_bytes = base64.b64decode(encoded)
+    except Exception as translate_err:
+        logger.error(f"Manga translation failed for gs://{bucket}/{name}: {translate_err}")
+        raise translate_err
+
+    processed_name = name.replace("raw-manga/", "translated-manga/").replace("raw/", "processed/")
+    if processed_name == name:
+        processed_name = f"processed/{os.path.basename(name)}"
+
+    if not is_prod:
+        logger.info(f"Local development: would save translated image to GCS at: {processed_name}")
+    else:
+        from django.core.files.base import ContentFile
+        from storages.backends.gcloud import GoogleCloudStorage
+        try:
+            gcs_storage = GoogleCloudStorage(bucket_name=bucket)
+            gcs_storage.save(processed_name, ContentFile(processed_bytes))
+            logger.info(f"Successfully processed and uploaded to GCS at gs://{bucket}/{processed_name}")
+        except Exception as upload_err:
+            logger.error(f"GCS upload failed for gs://{bucket}/{processed_name}: {upload_err}")
+            raise upload_err
+
+    return {"status": "success", "processed_path": processed_name}
