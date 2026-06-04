@@ -540,5 +540,11 @@ GCP_BILLING_WEBHOOK_URL = env('GCP_BILLING_WEBHOOK_URL', default='https://animet
 GCP_IAP_AUDIENCE = env('GCP_IAP_AUDIENCE', default=None)
 IAP_APPROVED_ADMIN_EMAILS = env.list('IAP_APPROVED_ADMIN_EMAILS', default=[])
 
+# GCP Workflows Configuration
+GCP_WORKFLOW_ID = env('GCP_WORKFLOW_ID', default='manga-voice-pipeline')
+GCP_LOCATION = env('GCP_LOCATION', default='europe-west1')
+GCS_MEDIA_BUCKET = env('GCS_MEDIA_BUCKET', default='animetix-media-bucket')
+
+
 
 
