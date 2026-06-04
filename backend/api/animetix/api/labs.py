@@ -3,6 +3,8 @@ import json
 import datetime
 from animetix_project.logging_config import get_logger
 from django.conf import settings
+from animetix.tasks_client import enqueue_task
+from adapters.inference.workflows_client import GCPWorkflowsClient
 from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
 from rest_framework import viewsets, permissions, status
@@ -751,4 +753,55 @@ class CinematicReconstructionView(APIView):
         except Exception as e:
             logger.error(f"Cinematic Reconstruction API error: {e}")
             return Response({'error': str(e)}, status=500)
+
+
+@method_decorator(ratelimit(key='user_or_ip', rate='5/m', method='POST', block=True), name='dispatch')
+class MangaVoiceLabView(APIView):
+    """Traduction de manga + synthèse vocale orchestrée via GCP Workflows."""
+    permission_classes = [permissions.IsAuthenticated]
+    throttle_scope = 'gpu'
+
+    def post(self, request):
+        import uuid
+        from django.core.cache import cache
+        from adapters.inference.workflows_client import GCPWorkflowsClient
+        from animetix.tasks_client import enqueue_task
+
+        image = request.data.get('image')
+        reference_audio = request.data.get('reference_audio')
+        target_lang = request.data.get('target_lang', 'French')
+        
+        if not image or not reference_audio:
+            return Response({'error': 'Missing image or reference_audio in payload'}, status=400)
+            
+        task_id = str(uuid.uuid4())
+        filename = f"manga_voice_{task_id}.wav"
+        
+        # Initialisation du cache
+        cache.set(f"task_result:{task_id}", {"ready": False, "status": "pending"}, timeout=3600)
+        
+        is_prod = getattr(settings, 'IS_PRODUCTION', False)
+        if is_prod:
+            try:
+                client = GCPWorkflowsClient()
+                execution_name = client.trigger_pipeline(image, reference_audio, target_lang, filename)
+                
+                # Cloud Task pour le polling
+                client.enqueue_polling_task(execution_name, task_id)
+                return Response({"task_id": task_id}, status=202)
+            except Exception as e:
+                cache.set(f"task_result:{task_id}", {"ready": True, "status": "failed", "error": str(e)}, timeout=3600)
+                return Response({"error": f"Failed to start workflow: {str(e)}"}, status=500)
+        else:
+            # Fallback local dev synchrone simulé
+            cache.set(f"task_result:{task_id}", {
+                "ready": True,
+                "status": "success",
+                "result": {
+                    "translated_text": "[Local Dev Fallback] Traduction simulée.",
+                    "audio_url": f"http://localhost:8000/media/mock_{filename}"
+                }
+            }, timeout=3600)
+            return Response({"task_id": task_id}, status=202)
+
 
