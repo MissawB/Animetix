@@ -111,6 +111,20 @@ def trigger_drift_telemetry(sender, instance, created, **kwargs):
     if created:
         from animetix.tasks_client import enqueue_task
         enqueue_task("ingest_drift_telemetry", instance.id)
+        
+        # Publish to Pub/Sub
+        from animetix.pubsub_service import PubSubPublisherService
+        pubsub = PubSubPublisherService()
+        pubsub.publish_event("animetix-events-topic", {
+            "event_type": "archetype_drift_created",
+            "snapshot_id": instance.id,
+            "user_id": instance.user.id,
+            "archetype_id": instance.archetype_id,
+            "intensity": float(instance.intensity),
+            "shonen_affinity": float(instance.shonen_affinity),
+            "seinen_affinity": float(instance.seinen_affinity),
+            "logic_consistency": float(instance.logic_consistency)
+        })
 
 
 @receiver(post_save, sender=DuelRoom)
@@ -118,4 +132,17 @@ def trigger_duel_telemetry(sender, instance, created, **kwargs):
     if instance.is_finished:
         from animetix.tasks_client import enqueue_task
         enqueue_task("ingest_duel_telemetry", instance.id)
+        
+        # Publish to Pub/Sub
+        from animetix.pubsub_service import PubSubPublisherService
+        pubsub = PubSubPublisherService()
+        pubsub.publish_event("animetix-events-topic", {
+            "event_type": "duel_completed",
+            "room_id": instance.id,
+            "player1_id": instance.player1.id if instance.player1 else None,
+            "player2_id": instance.player2.id if instance.player2 else None,
+            "winner_id": instance.winner.id if instance.winner else None,
+            "secret_title": instance.secret_title,
+            "media_type": instance.media_type
+        })
 
