@@ -1,0 +1,10 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: [
+    'build',
+    '-t', 'europe-west9-docker.pkg.dev/animetix/animetix-repo/brain:latest',
+    '-f', 'deploy/Dockerfile.brain',
+    '.'
+  ]
+images:
+- 'europe-west9-docker.pkg.dev/animetix/animetix-repo/brain:latest'
