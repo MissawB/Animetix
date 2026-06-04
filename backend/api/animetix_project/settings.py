@@ -446,6 +446,8 @@ FEATURE_FLAGS = {
     'AI_DEBUG_DASHBOARD': env.bool('FEATURE_AI_DEBUG', default=not IS_PRODUCTION),
 }
 
+ALLOYDB_EMBEDDING_MODEL = env('ALLOYDB_EMBEDDING_MODEL', default='text-embedding-005')
+
 # Sentry
 import sentry_sdk
 import asyncio
@@ -522,4 +524,11 @@ CSP_FRAME_ANCESTORS = tuple(CSP_FRAME_ANCESTORS)
 
 # Report-only mode is useful for testing without blocking
 CSP_REPORT_ONLY = env.bool('DJANGO_CSP_REPORT_ONLY', default=False)
+
+# GCP Cloud Run & Billing Configuration
+GCP_PROJECT_ID = env('GCP_PROJECT_ID', default='animetix')
+GCP_BRAIN_SERVICE_NAME = env('GCP_BRAIN_SERVICE_NAME', default='animetix-brain')
+GCP_BRAIN_REGION = env('GCP_BRAIN_REGION', default='europe-west1')
+GCP_BILLING_WEBHOOK_URL = env('GCP_BILLING_WEBHOOK_URL', default='https://animetix-web-836616987676.europe-west9.run.app/api/billing/webhook/')
+
 

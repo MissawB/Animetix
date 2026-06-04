@@ -1,5 +1,8 @@
 from animetix_project.logging_config import get_logger
 from .containers import get_container
+import google.auth
+from google.auth.transport.requests import AuthorizedSession
+from django.conf import settings
 
 logger = get_logger('animetix.' + __name__)
 
@@ -11,3 +14,78 @@ DIFFICULTY_SETTINGS = {
 }
 
 # Legacy bridges removed. Directly use the DI Container (get_container()) for all domain services.
+
+def shutdown_brain_service():
+    """
+    Shuts down the animetix-brain Cloud Run GPU service by setting maxInstanceCount to 0.
+    """
+    project_id = getattr(settings, 'GCP_PROJECT_ID', 'animetix')
+    service_name = getattr(settings, 'GCP_BRAIN_SERVICE_NAME', 'animetix-brain')
+    region = getattr(settings, 'GCP_BRAIN_REGION', 'europe-west1')
+    
+    logger.info(f"Initiating programmatic shutdown for Cloud Run service {service_name} in {region}...")
+    
+    try:
+        credentials, project = google.auth.default(scopes=['https://www.googleapis.com/auth/cloud-platform'])
+        session = AuthorizedSession(credentials)
+        
+        url = f"https://{region}-run.googleapis.com/v2/projects/{project_id}/locations/{region}/services/{service_name}"
+        params = {"updateMask": "template.scaling.maxInstanceCount"}
+        data = {
+            "template": {
+                "scaling": {
+                    "maxInstanceCount": 0
+                }
+            }
+        }
+        
+        response = session.patch(url, params=params, json=data)
+        if response.status_code == 200:
+            logger.info(f"Successfully scaled service {service_name} to 0 instances. Budget Cap enforced.")
+            return True, response.json()
+        else:
+            error_detail = response.text
+            logger.error(f"Failed to shutdown Cloud Run service. Status code: {response.status_code}. Response: {error_detail}")
+            return False, error_detail
+            
+    except Exception as e:
+        logger.exception(f"Error during programmatic shutdown of service {service_name}: {e}")
+        return False, str(e)
+
+def restore_brain_service(max_instances=10):
+    """
+    Restores the animetix-brain Cloud Run GPU service by resetting maxInstanceCount to a positive value.
+    """
+    project_id = getattr(settings, 'GCP_PROJECT_ID', 'animetix')
+    service_name = getattr(settings, 'GCP_BRAIN_SERVICE_NAME', 'animetix-brain')
+    region = getattr(settings, 'GCP_BRAIN_REGION', 'europe-west1')
+    
+    logger.info(f"Restoring Cloud Run service {service_name} to maxInstanceCount={max_instances}...")
+    
+    try:
+        credentials, project = google.auth.default(scopes=['https://www.googleapis.com/auth/cloud-platform'])
+        session = AuthorizedSession(credentials)
+        
+        url = f"https://{region}-run.googleapis.com/v2/projects/{project_id}/locations/{region}/services/{service_name}"
+        params = {"updateMask": "template.scaling.maxInstanceCount"}
+        data = {
+            "template": {
+                "scaling": {
+                    "maxInstanceCount": max_instances
+                }
+            }
+        }
+        
+        response = session.patch(url, params=params, json=data)
+        if response.status_code == 200:
+            logger.info(f"Successfully restored service {service_name} to {max_instances} instances.")
+            return True, response.json()
+        else:
+            error_detail = response.text
+            logger.error(f"Failed to restore Cloud Run service. Status: {response.status_code}. Response: {error_detail}")
+            return False, error_detail
+            
+    except Exception as e:
+        logger.exception(f"Error during restoration of service {service_name}: {e}")
+        return False, str(e)
+
