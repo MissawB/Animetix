@@ -34,6 +34,8 @@ redis==7.4.0
 sqlparse==0.5.5
 django-storages==1.14.6
 google-cloud-storage==3.10.1
+google-cloud-workflows==1.22.0
+
 
 # --------------------------------------------------------------------------
 # 3. Testing, Dev Tools, Automation & Sentry MLOps (Pytest, Playwright)
