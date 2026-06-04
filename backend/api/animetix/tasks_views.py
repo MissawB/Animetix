@@ -6,6 +6,11 @@ from django.conf import settings
 from animetix.tasks_registry import get_registered_task
 from animetix_project.logging_config import get_logger
 
+# Eventarc imports
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
+from animetix.tasks_client import enqueue_task
+
 logger = get_logger("animetix." + __name__)
 
 @csrf_exempt
@@ -125,5 +130,47 @@ def poll_workflow_view(request):
             "error": status.get("error", "Workflow execution failed")
         }, timeout=3600)
         return JsonResponse({"status": "failed"})
+
+
+@csrf_exempt
+def eventarc_gcs_upload_view(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
+    is_prod = getattr(settings, 'IS_PRODUCTION', False)
+    if is_prod:
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            return JsonResponse({"error": "Missing or invalid authorization header"}, status=401)
+        
+        token = auth_header.split(" ")[1]
+        try:
+            audience = getattr(settings, 'EVENTARC_RECEIVER_URL', request.build_absolute_uri())
+            id_token.verify_oauth2_token(token, google_requests.Request(), audience=audience)
+        except Exception as e:
+            logger.error(f"OIDC token verification failed for Eventarc: {e}")
+            return JsonResponse({"error": "Invalid OIDC token"}, status=403)
+
+    try:
+        body = json.loads(request.body)
+    except Exception as e:
+        return JsonResponse({"error": f"Invalid JSON body: {e}"}, status=400)
+
+    bucket = body.get("bucket")
+    name = body.get("name")
+
+    if not bucket or not name:
+        return JsonResponse({"error": "Missing bucket or name in payload"}, status=400)
+
+    # Automate processing if object path indicates raw manga images
+    if "manga" in name.lower() and (name.lower().endswith(".png") or name.lower().endswith(".jpg") or name.lower().endswith(".jpeg") or name.lower().endswith(".webp")):
+        logger.info(f"Triggering automated manga processing for GCS upload: gs://{bucket}/{name}")
+        try:
+            enqueue_task("process_gcs_upload_task", bucket=bucket, name=name)
+        except Exception as enqueue_err:
+            logger.error(f"Failed to enqueue GCS upload task: {enqueue_err}")
+            return JsonResponse({"error": f"Failed to enqueue task: {enqueue_err}"}, status=500)
+
+    return JsonResponse({"status": "event processed", "bucket": bucket, "name": name})
 
 

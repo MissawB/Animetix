@@ -46,10 +46,11 @@ urlpatterns = [
     ])),
 ]
 
-from animetix.tasks_views import run_task_view, poll_workflow_view
+from animetix.tasks_views import run_task_view, poll_workflow_view, eventarc_gcs_upload_view
 urlpatterns += [
     path('api/tasks/run/', run_task_view, name='run_task_view'),
     path('api/tasks/poll-workflow/', poll_workflow_view, name='poll-workflow'),
+    path('api/events/gcs-upload/', eventarc_gcs_upload_view, name='eventarc-gcs-upload'),
 ]
 
 

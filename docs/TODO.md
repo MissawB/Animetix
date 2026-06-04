@@ -4,27 +4,40 @@ Ce document centralise toutes les tâches techniques, d'architecture et de fonct
 
 ## 🛠️ Dette Technique & Architecture
 
-*Aucune tâche pendante dans cette section.*
+- [ ] **Complétion des Adapteurs d'Inférence** : Implémenter les méthodes manquantes (Vidéo, 3D, Audio, Manga) dans `UnifiedInferenceAdapter` et `BrainAPIAdapter` pour satisfaire les contrats de `InferencePort`.
+- [ ] **Nettoyage des Logs (Mandat "Zero Print")** : Remplacer les `print()` par des loggers structurés dans `backend/scripts/` et `backend/api/animetix/migrations/`.
+- [ ] **Migration Vectorielle Critique** : Basculer de ChromaDB vers `pgvector` (Cloud SQL/AlloyDB) pour garantir la persistance sémantique en déploiement éphémère.
+- [ ] **Couverture de Tests Use Cases** : Augmenter la couverture `pytest` sur les services de domaine (`backend/core/domain/services/`) pour garantir l'étanchéité hexagonale.
 
 ## 🚀 Intégrations & Pages Manquantes (Frontend)
 
 - [x] **Hub "Forge Créative" (Accessibilité)** : Bien que la route `/forge-hub/` existe, elle est orpheline dans l'UI. Ajouter des points d'entrée dans `LabHubPage.tsx` pour lier les laboratoires créatifs (Manga, Audio, Video, Spatial) au Singularity Lab.
 - [x] **Hub "Cognition" Unifié** : Créer une vue centrale fusionnant l'Archetype Nexus, la Gestion Neuro-Memory et le Counterfactual Simulator (actuellement éparpillés).
 - [x] **Universal Search Hub** : Unifier la recherche textuelle (`/search/`) et la recherche visuelle/temporelle (`/visual-nexus/`) dans une interface de recherche multimodale unique.
-- [ ] **Exposition Publique des Outils Expert** : Créer des versions "Read-only" (publiques) du SOTA Benchmarking et du Graph Debugger pour les utilisateurs "Expert" (actuellement limités aux admins).
-- [ ] **Live Ingestion Feed (Intelligence Data)** : Créer une page de monitoring temps-réel montrant l'enrichissement sémantique de la Lore (Neo4j/ChromaDB) par les scrapers et l'IA.
+- [x] **Exposition Publique des Outils Expert** : Créer des versions "Read-only" (publiques) du SOTA Benchmarking et du Graph Debugger pour les utilisateurs "Expert" (actuellement limités aux admins).
+- [x] **Live Ingestion Feed (Intelligence Data)** : Créer une page de monitoring temps-réel montrant l'enrichissement sémantique de la Lore (Neo4j/Vecteurs) par les scrapers et l'IA.
+- [x] **Manga Voice Lab (SOTA)** : Créer une interface permettant d'associer une planche de manga à un échantillon vocal (XTTS) pour générer des planches "parlantes" traduites.
+- [x] **DSPy Prompt Optimizer UI** : Dashboard expert pour orchestrer l'optimisation automatique des prompts via les pipelines MLOps.
+- [ ] **AI Safety & Guardrails Observer** : Vue de transparence affichant les métriques de sécurité (injections bloquées, scores de toxicité) du Guardrail Service.
+- [ ] **Multi-Agent Trace Viewer** : Visualisation de la "Chaîne de Pensée" (Chain-of-Thought) de l'Agentic RAG pour l'explication des raisonnements complexes.
+- [ ] **Visualisation de Timeline Contrefactuelle** : Améliorer le Counterfactual Simulator avec une vue en arbre des mondes possibles et des embranchements de lore.
 
-## 🧬 Innovations SOTA & Curation
+## 🧬 Innovations SOTA & Curation (IA Avancée)
 
 - [x] **Expliquabilité Avancée (XAI)** : Développer le composant/dashboard frontend détaillant les scores de confiance, les logprobs, les poids sémantiques et les sources RAG pour chaque réponse de l'IA (le backend l'expose déjà).
-- [ ] **Dashboard "Mon Empreinte IA" (Vecteurs de Préférence)** : Étendre la page Neuro-Memory pour inclure une visualisation spatiale des vecteurs de préférence (goûts utilisateur) déduits par l'IA.
+- [x] **Dashboard "Mon Empreinte IA" (Vecteurs de Préférence)** : Étendre la page Neuro-Memory pour inclure une visualisation spatiale des vecteurs de préférence (goûts utilisateur) déduits par l'IA.
 - [x] **Modularisation du Singularity Lab** : Isoler les 5 modules (Quantum, Swarm, Plasticity, Compiler, Multiverse) dans des vues immersives distinctes pour améliorer l'UX.
+- [ ] **Manga Expertise Pipeline** : Implémenter l'OCR spécialisé, la segmentation de bulles et l'inpainting de texte pour la traduction de planches.
+- [ ] **Multimodalité Vidéo** : Activer l'analyse temporelle (`Video-LLaVA`) et la génération de descriptions de séquences animées.
+- [ ] **Audio & Voice Lab** : Finaliser le Speech-to-Speech et le clonage de voix XTTS pour les avatars d'archétypes.
+- [ ] **Spatial Computing** : Implémenter la génération de scènes 3D (Gaussian Splatting) à partir de décors 2D.
 
 ## 🛡️ Sécurité & Résilience
 
 - [ ] **Audit de Dépendances Continu** : Automatisation du scan des vulnérabilités (Snyk/GitHub Dependabot) pour maintenir le socle technique à jour après le passage à Django 5.2.14.
-- [ ] **Protection contre les Injections de Prompts** (Priorité : HAUTE) : Remplacer l'approche par liste noire (Regex) dans `sanitize_for_prompt` (`backend/core/utils/security.py`) par des délimiteurs stricts (ex: balises XML) et un modèle de classification secondaire (Guardrail) pour une meilleure robustesse face aux LLMs.
-- [ ] **Mitigation SSRF dans les Scrapers MLOps** (Priorité : CRITIQUE) : Remplacer l'utilisation directe de `urllib.request.urlopen()` par la fonction sécurisée interne `safe_http_request()` dans `fandom_lore_scraper.py` et autres scripts de la pipeline afin d'éviter toute faille SSRF si l'entrée d'URLs devient dynamique.
+- [ ] **Refonte de la Protection contre les Injections** (Priorité : HAUTE) : Remplacer le filtrage par liste noire dans `sanitize_for_prompt` par des délimiteurs stricts (balises XML) et un modèle de classification secondaire (Guardrail).
+- [ ] **Audit SSRF Systématique** : Vérifier que tous les scrapers (`fandom_lore_scraper.py`, etc.) utilisent exclusivement `safe_http_request` pour les appels externes.
+- [x] **Mitigation SSRF dans les Scrapers MLOps** (Priorité : CRITIQUE) : Remplacer l'utilisation directe de `urllib.request.urlopen()` par la fonction sécurisée interne `safe_http_request()` dans `fandom_lore_scraper.py` et autres scripts de la pipeline afin d'éviter toute faille SSRF si l'entrée d'URLs devient dynamique.
 
 ## ☁️ Déploiement & Intégration Google Cloud (GCP)
 
@@ -49,7 +62,7 @@ Ce document centralise toutes les tâches techniques, d'architecture et de fonct
 - [ ] **Vertex AI Pipelines (MLOps)** (Priorité : MOYENNE) : Automatiser et orchestrer les pipelines de ré-entraînement de modèles (DPO/RAG) avec suivi de lignage.
 - [ ] **Vertex AI Feature Store** (Priorité : MOYENNE) : Stocker et servir les vecteurs de préférences utilisateur en temps réel et à très basse latence pour la personnalisation.
 - [X] **Cloud Workflows** (Priorité : HAUTE) : Coordonner de manière fiable et résiliente les scénarios à étapes multiples (OCR -> Traduction -> Voix) sans surcharger Django.
-- [ ] **Eventarc (Déclenchement événementiel)** (Priorité : BASSE) : Automatiser le traitement d'images/mangas dès leur téléversement sur Cloud Storage en déclenchant directement des instances Cloud Run.
+- [X] **Eventarc (Déclenchement événementiel)** (Priorité : BASSE) : Automatiser le traitement d'images/mangas dès leur téléversement sur Cloud Storage en déclenchant directement des instances Cloud Run.
 - [ ] **Google Identity Platform (Auth externe)** (Priorité : BASSE) : Déléguer la gestion sécurisée des identités utilisateurs, des réseaux sociaux et de la double authentification à un service externe managé.
 - [ ] **Cloud KMS & CMEK (Chiffrement géré)** (Priorité : BASSE) : Protéger les assets sensibles générés (voix et images utilisateurs) avec des clés de chiffrement personnalisées stockées dans KMS.
 - [ ] **Fallback d'APIs d'IA Google** (Priorité : BASSE) : Configurer des replis vers Google Translate API et Cloud TTS/STT en cas d'indisponibilité ou de temps de démarrage long des instances GPU de la Brain API.

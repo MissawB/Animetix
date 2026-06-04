@@ -804,4 +804,29 @@ class MangaVoiceLabView(APIView):
             }, timeout=3600)
             return Response({"task_id": task_id}, status=202)
 
+from core.ports.safety_port import SafetyPort
+from ..permissions import IsAdminOrReadOnlyExpert
+from dependency_injector.wiring import inject, Provide
+from ..containers import Container
+
+class AISafetyObserverView(APIView):
+    """Vue de transparence sur les Guardrails et la sécurité IA."""
+    permission_classes = [IsAdminOrReadOnlyExpert]
+
+    @inject
+    def __init__(self, safety_port: SafetyPort = Provide[Container.persistence.safety_adapter], **kwargs):
+        super().__init__(**kwargs)
+        self.safety_port = safety_port
+
+    def get(self, request):
+        stats = self.safety_port.get_safety_stats()
+        recent_events = self.safety_port.get_recent_events(limit=20)
+        
+        return Response({
+            "status": "success",
+            "stats": stats,
+            "recent_events": recent_events
+        })
+
+
 
