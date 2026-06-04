@@ -9,6 +9,7 @@ from typing import List, Optional, Dict, Any
 
 # Ajout du chemin src pour l'import des adapters et ports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'api'))
 
 from adapters.inference.unified_inference_adapter import UnifiedInferenceAdapter
 
@@ -47,6 +48,12 @@ brain_engine = UnifiedInferenceAdapter(
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    logger.info("Initializing telemetry for brain-api...")
+    try:
+        from animetix.telemetry import init_telemetry
+        init_telemetry("animetix-brain")
+    except Exception as e:
+        logger.warning(f"Could not initialize telemetry: {e}")
     logger.info(f"🧠 Brain API running with engine {model_name}")
     yield
 
@@ -148,6 +155,40 @@ class ImageGenerateRequest(BaseModel):
     style: str = ""
 
 # --- ENDPOINTS ---
+
+@app.middleware("http")
+async def add_process_trace_context(request: Request, call_next):
+    # Extract trace context from request headers
+    headers = {k.lower(): v for k, v in request.headers.items()}
+    
+    try:
+        from animetix.telemetry import extract_trace_context
+        from opentelemetry import trace
+        from opentelemetry.trace import Status, StatusCode
+        
+        context = extract_trace_context(headers)
+        tracer = trace.get_tracer("animetix.brain.request")
+        span_name = f"HTTP {request.method} {request.url.path}"
+        
+        with tracer.start_as_current_span(span_name, context=context) as span:
+            span.set_attribute("http.method", request.method)
+            span.set_attribute("http.url", str(request.url))
+            
+            try:
+                response = await call_next(request)
+                span.set_attribute("http.status_code", response.status_code)
+                if response.status_code >= 400:
+                    span.set_status(Status(StatusCode.ERROR, description=f"HTTP {response.status_code}"))
+                else:
+                    span.set_status(Status(StatusCode.OK))
+                return response
+            except Exception as e:
+                span.record_exception(e)
+                span.set_status(Status(StatusCode.ERROR, description=str(e)))
+                raise e
+    except ImportError:
+        # Fallback if telemetry libraries are not available
+        return await call_next(request)
 
 @app.get("/health")
 def health():

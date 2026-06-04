@@ -218,6 +218,7 @@ else:
     CHANNEL_LAYERS = {'default': {'BACKEND': 'channels.layers.InMemoryChannelLayer'}}
 
 MIDDLEWARE = [
+    'animetix.middleware.TracingMiddleware',  # Tracing at the very beginning of the stack
     'django_prometheus.middleware.PrometheusBeforeMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',

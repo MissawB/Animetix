@@ -54,12 +54,27 @@ def run_task_view(request):
     logger.info(f"Running task {task_name} (ID: {task_id}) via worker endpoint.")
     cache.set(f"task_result:{task_id}", {"ready": False, "result": None, "state": "RUNNING"}, timeout=86400)
 
-    try:
-        res = task_func(*args, **kwargs)
-        cache.set(f"task_result:{task_id}", {"ready": True, "result": res, "state": "SUCCESS"}, timeout=86400)
-        return JsonResponse({"status": "success", "task_id": task_id})
-    except Exception as run_err:
-        logger.exception(f"Error running task {task_name} (ID: {task_id})")
-        cache.set(f"task_result:{task_id}", {"ready": True, "result": {"error": str(run_err)}, "state": "FAILURE"}, timeout=86400)
-        # Return 500 so Google Cloud Tasks knows to retry
-        return JsonResponse({"error": str(run_err)}, status=500)
+    from animetix.telemetry import extract_trace_context
+    from opentelemetry import trace
+    from opentelemetry.trace import Status, StatusCode
+
+    headers = {k.lower(): v for k, v in request.headers.items()}
+    context = extract_trace_context(headers)
+    tracer = trace.get_tracer("animetix.tasks.worker")
+
+    with tracer.start_as_current_span(f"Task {task_name}", context=context) as span:
+        span.set_attribute("task.id", task_id)
+        span.set_attribute("task.name", task_name)
+        try:
+            res = task_func(*args, **kwargs)
+            cache.set(f"task_result:{task_id}", {"ready": True, "result": res, "state": "SUCCESS"}, timeout=86400)
+            span.set_status(Status(StatusCode.OK))
+            return JsonResponse({"status": "success", "task_id": task_id})
+        except Exception as run_err:
+            logger.exception(f"Error running task {task_name} (ID: {task_id})")
+            cache.set(f"task_result:{task_id}", {"ready": True, "result": {"error": str(run_err)}, "state": "FAILURE"}, timeout=86400)
+            span.record_exception(run_err)
+            span.set_status(Status(StatusCode.ERROR, description=str(run_err)))
+            # Return 500 so Google Cloud Tasks knows to retry
+            return JsonResponse({"error": str(run_err)}, status=500)
+

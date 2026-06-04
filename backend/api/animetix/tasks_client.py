@@ -53,11 +53,15 @@ def enqueue_task(task_name, *args, **kwargs):
             "kwargs": kwargs
         }
         
+        from animetix.telemetry import inject_trace_context
+        task_headers = {"Content-type": "application/json"}
+        inject_trace_context(task_headers)
+        
         task = {
             "http_request": {
                 "http_method": tasks_v2.HttpMethod.POST,
                 "url": url,
-                "headers": {"Content-type": "application/json"},
+                "headers": task_headers,
                 "body": json.dumps(payload).encode("utf-8"),
                 "oidc_token": {
                     "service_account_email": service_account,

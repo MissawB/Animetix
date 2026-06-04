@@ -30,3 +30,6 @@ class AnimetixConfig(AppConfig):
             "animetix.middleware",
             "animetix.views.common"
         ])
+        from animetix.telemetry import init_telemetry
+        init_telemetry("animetix-web")
+

@@ -148,3 +148,51 @@ class PersonalizationMiddleware:
                     logger.error(f"PersonalizationMiddleware error: {e}")
                     pass
         return response
+
+
+class TracingMiddleware:
+    """
+    Middleware that wraps incoming HTTP requests in an OpenTelemetry span.
+    Propagates trace contexts if headers are present (e.g. from Cloud Tasks).
+    """
+    sync_capable = True
+    async_capable = False
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+        from opentelemetry import trace
+        self.tracer = trace.get_tracer("animetix.web.request")
+
+    def __call__(self, request):
+        from animetix.telemetry import extract_trace_context
+        from opentelemetry.trace import Status, StatusCode
+        
+        # Convert request META headers to dictionary for extraction
+        headers = {}
+        for key, value in request.META.items():
+            if key.startswith('HTTP_'):
+                header_name = key[5:].replace('_', '-').lower()
+                headers[header_name] = value
+            elif key in ('CONTENT_TYPE', 'CONTENT_LENGTH'):
+                headers[key.replace('_', '-').lower()] = value
+
+        context = extract_trace_context(headers)
+        span_name = f"HTTP {request.method} {request.path}"
+        
+        with self.tracer.start_as_current_span(span_name, context=context) as span:
+            span.set_attribute("http.method", request.method)
+            span.set_attribute("http.url", request.build_absolute_uri())
+            
+            try:
+                response = self.get_response(request)
+                span.set_attribute("http.status_code", response.status_code)
+                if response.status_code >= 400:
+                    span.set_status(Status(StatusCode.ERROR, description=f"HTTP {response.status_code}"))
+                else:
+                    span.set_status(Status(StatusCode.OK))
+                return response
+            except Exception as e:
+                span.record_exception(e)
+                span.set_status(Status(StatusCode.ERROR, description=str(e)))
+                raise e
+
