@@ -104,8 +104,8 @@ class GenerateEmbeddingsDoFn(beam.DoFn):
         embedding_fn = None
         if self.container:
             try:
-                repo = self.container.repository()
-                embedding_fn = repo.embedding_fn
+                repo = self.container.persistence.repository()
+                embedding_fn = repo.chroma.embedding_fn
             except Exception as e:
                 logger.error(f"Failed to get embedding function: {e}")
                 
@@ -161,14 +161,14 @@ class WriteToVectorDBDoFn(beam.DoFn):
             
         if self.container:
             try:
-                repo = self.container.repository()
-                collection_name = repo.coll_names.get('Anime', 'anime_thematic')
+                repo = self.container.persistence.repository()
+                collection_name = repo.chroma.coll_names.get('Anime', 'anime_thematic')
                 
                 ids = [x["doc_id"] for x in items]
                 embeddings = [x["vector"] for x in items]
                 metadatas = [x["metadata"] for x in items]
                 
-                repo.upsert_items(collection_name, ids, embeddings, metadatas)
+                repo.chroma.upsert_items(collection_name, ids, embeddings, metadatas)
                 logger.info(f"Beam: Successfully upserted {len(items)} items to Vector DB")
             except Exception as e:
                 logger.error(f"Beam: Error upserting items to Vector DB: {e}")
