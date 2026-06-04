@@ -59,3 +59,26 @@ def test_signals_trigger_tasks():
         mock_enqueue.assert_called_once_with("ingest_duel_telemetry", room.id)
 
 
+@pytest.mark.django_db
+def test_sync_recommendations_command():
+    from django.core.management import call_command
+    from animetix.models import UserRecommendation, MediaItem
+    from django.contrib.auth.models import User
+    
+    user = User.objects.create_user(username="command_tester", password="pwd")
+    media = MediaItem.objects.create(external_id="456", media_type="Anime", title="Naruto")
+    
+    # Assert table starts empty
+    assert UserRecommendation.objects.count() == 0
+    
+    # Call the Django management command
+    call_command("sync_bigquery_recommendations")
+    
+    # Assert recommendations are generated and synced (fallback mock recommendations)
+    assert UserRecommendation.objects.filter(user=user).exists()
+    rec = UserRecommendation.objects.get(user=user, media_item=media)
+    assert rec.rank == 1
+    assert rec.score == 4.5
+
+
+
