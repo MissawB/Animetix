@@ -415,6 +415,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 GS_BUCKET_NAME = env('GS_BUCKET_NAME', default=None)
+GS_CUSTOM_ENDPOINT = env('GS_CUSTOM_ENDPOINT', default=None)
 
 if IS_PRODUCTION or GS_BUCKET_NAME:
     STORAGES = {
@@ -423,6 +424,7 @@ if IS_PRODUCTION or GS_BUCKET_NAME:
             'OPTIONS': {
                 'bucket_name': GS_BUCKET_NAME,
                 'project_id': env('GOOGLE_CLOUD_PROJECT', default='animetix'),
+                'custom_endpoint': GS_CUSTOM_ENDPOINT,
             }
         },
         'staticfiles': {
