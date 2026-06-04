@@ -545,6 +545,9 @@ GCP_WORKFLOW_ID = env('GCP_WORKFLOW_ID', default='manga-voice-pipeline')
 GCP_LOCATION = env('GCP_LOCATION', default='europe-west1')
 GCS_MEDIA_BUCKET = env('GCS_MEDIA_BUCKET', default='animetix-media-bucket')
 
+# GCP Eventarc Configuration
+EVENTARC_RECEIVER_URL = env('EVENTARC_RECEIVER_URL', default='http://localhost:8000/api/events/gcs-upload/')
+
 
 
 
