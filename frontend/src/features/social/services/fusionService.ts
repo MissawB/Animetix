@@ -3,7 +3,8 @@ import { CreativeFusion } from '../../../types';
 
 export const fusionService = {
   getFeed: async (): Promise<CreativeFusion[]> => {
-    return apiClient('/api/v1/fusions/');
+    const data = await apiClient('/api/v1/fusions/');
+    return Array.isArray(data) ? data : data.results || [];
   },
   
   likeFusion: async (id: number): Promise<{ status: string, likes_count: number }> => {

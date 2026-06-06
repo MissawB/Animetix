@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Plot from 'react-plotly.js';
+import _Plot from 'react-plotly.js';
 import { 
   Cpu, 
   Activity, 
@@ -18,6 +18,8 @@ import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
 import { motion } from 'framer-motion';
+
+const Plot = (_Plot as any).default || _Plot;
 
 const LiquidNeuralNetworkLabPage: React.FC = () => {
   const [signal, setSignal] = useState<number[][]>([[0.5, 0.2], [0.8, 0.4], [0.3, 0.9], [0.6, 0.1], [0.9, 0.7]]);

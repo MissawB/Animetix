@@ -221,7 +221,8 @@ export async function interactWithCompanion(mentorId: string, message: string, c
 
 // --- Club API ---
 export async function getClubs(): Promise<DiscoveryClub[]> {
-  return apiClient('/api/v1/clubs/');
+  const data = await apiClient('/api/v1/clubs/');
+  return Array.isArray(data) ? data : data.results || [];
 }
 
 export async function getClubDetails(id: number): Promise<DiscoveryClub> {
@@ -257,7 +258,8 @@ export interface ClubEvent {
 }
 
 export async function getClubEvents(clubId: number): Promise<ClubEvent[]> {
-  return apiClient(`/api/v1/club-events/?club=${clubId}`);
+  const data = await apiClient(`/api/v1/club-events/?club=${clubId}`);
+  return Array.isArray(data) ? data : data.results || [];
 }
 
 export async function getClubEventDetails(eventId: number): Promise<ClubEvent> {

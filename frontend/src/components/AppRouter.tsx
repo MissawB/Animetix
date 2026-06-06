@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './Layout';
 import { GameRoutes } from '../features/games/routes/GameRoutes';
 import { SocialRoutes } from '../features/social/routes/SocialRoutes';
@@ -15,10 +15,19 @@ const App = React.lazy(() => import('../App'));
 
 const Loading: React.FC = () => <div className="p-20 text-center text-white font-black animate-pulse uppercase tracking-[0.3em]">Initialisation du système...</div>;
 
-
 const getBasename = () => {
-  const match = window.location.pathname.match(/^\/(fr|en)(\/|$)/);
-  return match ? match[0].replace(/\/$/, '') : '';
+  const path = window.location.pathname;
+
+  // Handle /static/ or /static prefix
+  if (path === '/static' || path.startsWith('/static/')) {
+    const subPath = path.startsWith('/static/') ? path.substring(8) : '';
+    const languageMatch = subPath.match(/^(fr|en)(\/|$)/);
+    return languageMatch ? `/static/${languageMatch[1]}` : '/static';
+  }
+
+  // Handle root language prefix
+  const languageMatch = path.match(/^\/(fr|en)(\/|$)/);
+  return languageMatch ? languageMatch[0].replace(/\/$/, '') : '';
 };
 
 const AppRouter: React.FC = () => {
@@ -37,6 +46,7 @@ const AppRouter: React.FC = () => {
             {LabRoutes}
             {UtilsRoutes}
             {AdminRoutes}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
       </Layout>

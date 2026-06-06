@@ -24,15 +24,30 @@ class TreeOfThoughtsSearchService:
         logger.info(f"🌳 ToT: Starting Tree-of-Thoughts search for query: '{query}'")
         
         # Racine de l'arbre
-        current_paths = [{"thought_path": [], "score": 1.0, "text": "Start"}]
+        full_tree = {
+            "nodes": [{
+                "id": "node_0_0",
+                "label": "Start",
+                "full_text": "Point de départ de la réflexion.",
+                "score": 1.0,
+                "status": "root"
+            }],
+            "links": []
+        }
+        
+        current_paths = [{"thought_path": [], "score": 1.0, "text": "Start", "node_id": "node_0_0"}]
         
         for step in range(1, depth + 1):
             logger.info(f"🪜 ToT: Processing Depth Level {step}/{depth}...")
             new_paths = []
             
-            for path in current_paths:
+            for path_idx, path in enumerate(current_paths):
+                parent_id = path["node_id"]
+                
                 # Génération de branches alternatives (breadth)
                 for branch_idx in range(breadth):
+                    node_id = f"node_{step}_{path_idx}_{branch_idx}"
+                    
                     thought_prompt = (
                         f"Requête : {query}\n"
                         f"Étapes de raisonnement passées : {' -> '.join(path['thought_path'])}\n"
@@ -52,13 +67,25 @@ class TreeOfThoughtsSearchService:
                     # Évaluation par le modèle critique
                     score = self._evaluate_thought_node(query, path["thought_path"], next_thought)
                     
+                    # Ajout du nœud au graphe complet (qu'il soit élagué ou non)
+                    status = "selected" if score >= 0.5 else "pruned"
+                    full_tree["nodes"].append({
+                        "id": node_id,
+                        "label": f"E{step} - O{branch_idx+1}",
+                        "full_text": next_thought,
+                        "score": score,
+                        "status": status
+                    })
+                    full_tree["links"].append({"source": parent_id, "target": node_id})
+                    
                     # Seuil d'élagage cognitif (pruning)
                     if score >= 0.5:
                         updated_path = list(path["thought_path"]) + [next_thought]
                         new_paths.append({
                             "thought_path": updated_path,
                             "score": path["score"] * score,
-                            "text": next_thought
+                            "text": next_thought,
+                            "node_id": node_id
                         })
             
             # Si toutes les branches ont été élaguées, on conserve les meilleures du niveau précédent
@@ -71,7 +98,7 @@ class TreeOfThoughtsSearchService:
             current_paths = new_paths[:breadth]
             
         # Sélection de la meilleure trace de raisonnement
-        best_path = current_paths[0] if current_paths else {"thought_path": ["Calcul direct"], "score": 0.5}
+        best_path = current_paths[0] if current_paths else {"thought_path": ["Calcul direct"], "score": 0.5, "node_id": "node_0_0"}
         
         # Synthèse finale
         synthesis_prompt = (
@@ -90,11 +117,23 @@ class TreeOfThoughtsSearchService:
             logger.error(f"Synthesis failed in ToT: {e}")
             final_answer = "Désolé, la synthèse arborescente a échoué."
             
+        # Ajouter le nœud de synthèse finale
+        final_node_id = "node_final"
+        full_tree["nodes"].append({
+            "id": final_node_id,
+            "label": "CONCLUSION",
+            "full_text": final_answer,
+            "score": 1.0,
+            "status": "final"
+        })
+        full_tree["links"].append({"source": best_path["node_id"], "target": final_node_id})
+            
         return {
             "query": query,
             "best_thought_path": best_path["thought_path"],
             "path_score": best_path["score"],
-            "final_answer": final_answer
+            "final_answer": final_answer,
+            "full_tree": full_tree
         }
 
     def _evaluate_thought_node(self, query: str, history: List[str], next_thought: str) -> float:

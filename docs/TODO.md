@@ -4,7 +4,7 @@ Ce document centralise toutes les tâches techniques, d'architecture et de fonct
 
 ## 🛠️ Dette Technique & Architecture
 
-- [ ] **Standardisation de la validation API (Django Forms)** : Finaliser la refactorisation des vues dans `backend/api/animetix/views/api.py` pour utiliser systématiquement les Django Forms. (Actuellement : plusieurs accès directs à `request.GET/POST` persistent).
+- [X] **Standardisation de la validation API (Django Forms)** : Finaliser la refactorisation des vues dans `backend/api/animetix/views/api.py` pour utiliser systématiquement les Django Forms. (Actuellement : plusieurs accès directs à `request.GET/POST` persistent).
 - [ ] **Complétude de l'InferencePort** : Supprimer les stubs restants dans `backend/core/ports/inference_port.py`. (Plusieurs méthodes lèvent encore `InferenceNotImplementedError` sans implémentation réelle).
 - [ ] **Refactorisation de `App.tsx`** : Découper ce fichier monolithique (21 KB) en composants atomiques et services dédiés.
 - [ ] **Modularisation Frontend** : Créer un répertoire `src/pages/` pour isoler les vues des composants de fonctionnalités (`features/`).
@@ -14,7 +14,7 @@ Ce document centralise toutes les tâches techniques, d'architecture et de fonct
 
 ## 🚀 Intégrations & Pages Manquantes (Frontend)
 
-- [ ] **Page "Plans & Tarifs" (`/pricing/`)** : Créer une interface pour comparer les offres (Explorateur vs Premium) et gérer les abonnements.
+- [X] **Page "Plans & Tarifs" (`/pricing/`)** : Créer une interface pour comparer les offres (Explorateur vs Premium) et gérer les abonnements.
 - [ ] **Visualisation "Tree of Thoughts" (Expert)** : Créer une page de visualisation d'arbre (MCTS) pour explorer les branches de réflexion du `TreeOfThoughtsSearchService`.
 - [ ] **Monitoring "Dynamic Budget TTC"** : Dashboard d'administration pour suivre l'allocation du budget de pensée en temps réel.
 - [ ] **Galerie des Multivers** : Interface de type "catalogue" pour parcourir les segments de multivers synthétiques générés par la communauté.

@@ -19,11 +19,11 @@ class EmojiStreamView(APIView):
         if not secret: return HttpResponse(status=400)
         
         container = get_container()
-        data = container.catalog_service.load_data(media_type)
+        data = container.core.catalog_service.load_data(media_type)
         
         def event_stream():
             try:
-                for event in container.emoji_service.generate_emojis_stream(media_type, secret, data['title_to_full_data'][secret].get('description', '')):
+                for event in container.core.emoji_service.generate_emojis_stream(media_type, secret, data['title_to_full_data'][secret].get('description', '')):
                     yield f"data: {json.dumps(event)}\n\n"
             except Exception as e:
                 yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"
@@ -38,14 +38,14 @@ class ParadoxStreamView(APIView):
         session = get_session_service(request)
         container = get_container()
         media_type = session.get_current_mode()
-        data = container.catalog_service.load_data(media_type)
+        data = container.core.catalog_service.load_data(media_type)
         t1, t2, intruder = request.GET.get('t1'), request.GET.get('t2'), request.GET.get('intruder')
         if not all([t1, t2, intruder]): return HttpResponse(status=400)
         
         def event_stream():
             item_a, item_b, item_i = data['title_to_full_data'][t1], data['title_to_full_data'][t2], data['title_to_full_data'][intruder]
             try:
-                for event in container.paradox_service.generate_logic_stream(media_type, item_a, item_b, item_i, session.get('language', 'Français')):
+                for event in container.core.paradox_service.generate_logic_stream(media_type, item_a, item_b, item_i, session.get('language', 'Français')):
                     if event['type'] == 'result': 
                         event['content'] = {'reasoning': event['content'].reasoning, 'scenario': event['content'].scenario}
                     yield f"data: {json.dumps(event)}\n\n"
@@ -67,7 +67,7 @@ class AgenticRAGStreamView(APIView):
             return JsonResponse({'error': 'No query provided'}, status=400)
             
         def event_stream():
-            agent = get_container().agentic_rag
+            agent = get_container().agentic.agentic_rag
             user_id = str(request.user.id) if request.user.is_authenticated else None
             try:
                 for event in agent.plan_and_solve_stream(query, media_type, user_id=user_id):
@@ -95,7 +95,7 @@ class AniminatorStreamView(APIView):
         def event_stream():
             full_response = ""
             try:
-                for token in container.animinator_service.ask_oracle_stream(media_type, secret, question):
+                for token in container.core.animinator_service.ask_oracle_stream(media_type, secret, question):
                     full_response += token
                     yield f"data: {json.dumps({'type': 'token', 'content': token})}\n\n"
                 

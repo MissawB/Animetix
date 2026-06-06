@@ -1,14 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { utilsService } from '../services/utilsService';
 import { useToastStore } from '../../../store/toastStore';
+import { useAuthStore } from '../../../store/authStore';
 
 export const useCustomConfig = () => {
   const queryClient = useQueryClient();
   const { addToast } = useToastStore();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   const query = useQuery({
     queryKey: ['custom-config'],
     queryFn: utilsService.getConfig,
+    enabled: isAuthenticated,
   });
 
   const mutation = useMutation({

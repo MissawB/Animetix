@@ -303,8 +303,10 @@ class MediaDetailView(APIView):
         return Response({'error': 'Item not found'}, status=404)
 
 class CustomConfigDataView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     def get(self, request):
+        if not request.user.is_authenticated:
+            return Response({"status": "guest", "visual_theme": "default"})
         return Response({"status": "stub"})
 
 class TransparencyDataView(APIView):

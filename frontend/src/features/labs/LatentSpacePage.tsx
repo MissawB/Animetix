@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Plot from 'react-plotly.js';
+import _Plot from 'react-plotly.js';
 import { Link } from 'react-router-dom';
 import { Box, Sliders, Info, Globe, ArrowRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -7,8 +7,11 @@ import { apiClient } from '../../utils/apiClient';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
+import { AnimatedPage } from '../../components/ui/AnimatedPage';
 
 import { useTranslation } from 'react-i18next';
+
+const Plot = (_Plot as any).default || _Plot;
 
 interface LatentPoint {
   x: number;
@@ -47,11 +50,11 @@ const LatentSpacePage: React.FC = () => {
   ] : [];
 
   return (
-    
+    <AnimatedPage>
       <div className="max-w-[1600px] mx-auto px-6 py-12">
         <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
           <div>
-              <h1 className="text-6xl font-black italic manga-font tracking-tighter uppercase">
+              <h1 className="text-6xl font-black italic manga-font tracking-tighter uppercase text-black dark:text-white">
               LATENT <span className="text-blue-500">SPACE</span>
               </h1>
               <p className="text-gray-500 font-bold uppercase tracking-widest mt-2 flex items-center gap-2">
@@ -63,7 +66,7 @@ const LatentSpacePage: React.FC = () => {
               <select 
                   value={media} 
                   onChange={(e) => setMedia(e.target.value)}
-                  className="bg-gray-50 dark:bg-navy-900 border-0 rounded-xl px-6 py-3 font-black text-xs uppercase outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+                  className="bg-gray-50 dark:bg-navy-900 border-0 rounded-xl px-6 py-3 font-black text-xs uppercase outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer text-black dark:text-white"
               >
                   <option value="anime">Anime</option>
                   <option value="manga">Manga</option>
@@ -72,7 +75,7 @@ const LatentSpacePage: React.FC = () => {
               <select 
                   value={type} 
                   onChange={(e) => setType(e.target.value)}
-                  className="bg-gray-50 dark:bg-navy-900 border-0 rounded-xl px-6 py-3 font-black text-xs uppercase outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+                  className="bg-gray-50 dark:bg-navy-900 border-0 rounded-xl px-6 py-3 font-black text-xs uppercase outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer text-black dark:text-white"
               >
                   <option value="thematic">Thématique</option>
                   <option value="visual">Visuel</option>
@@ -128,25 +131,25 @@ const LatentSpacePage: React.FC = () => {
                   </Button>
               </Card>
               <Card padding="lg">
-                  <h3 className="text-2xl font-black italic mb-6 uppercase manga-font">Navigation Tactique</h3>
+                  <h3 className="text-2xl font-black italic mb-6 uppercase manga-font text-black dark:text-white">Navigation Tactique</h3>
                   <ul className="space-y-4">
                       <li className="flex items-center gap-4">
                           <Badge variant="neutral" className="p-2 rounded-xl"><Sliders className="w-4 h-4" /></Badge>
-                          <span className="text-xs font-black uppercase opacity-60">Clic-Droit : Rotation de la sphère</span>
+                          <span className="text-xs font-black uppercase opacity-60 text-black dark:text-white">Clic-Droit : Rotation de la sphère</span>
                       </li>
                       <li className="flex items-center gap-4">
                           <Badge variant="neutral" className="p-2 rounded-xl"><Sliders className="w-4 h-4" /></Badge>
-                          <span className="text-xs font-black uppercase opacity-60">Molette : Zoom spatial</span>
+                          <span className="text-xs font-black uppercase opacity-60 text-black dark:text-white">Molette : Zoom spatial</span>
                       </li>
                       <li className="flex items-center gap-4">
                           <Badge variant="neutral" className="p-2 rounded-xl"><Sliders className="w-4 h-4" /></Badge>
-                          <span className="text-xs font-black uppercase opacity-60">Clic-Gauche : Déplacement de la grille</span>
+                          <span className="text-xs font-black uppercase opacity-60 text-black dark:text-white">Clic-Gauche : Déplacement de la grille</span>
                       </li>
                   </ul>
               </Card>
         </div>
       </div>
-    
+    </AnimatedPage>
   );
 };
 

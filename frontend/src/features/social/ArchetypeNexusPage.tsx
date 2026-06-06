@@ -1,5 +1,5 @@
 import React from 'react';
-import Plot from 'react-plotly.js';
+import _Plot from 'react-plotly.js';
 import { 
   Zap, 
   Brain, 
@@ -18,10 +18,12 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../utils/apiClient';
 import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
-import { CardSkeleton } from '../../components/ui/Skeleton';
 import { motion } from 'framer-motion';
+
+const Plot = (_Plot as any).default || _Plot;
 
 const ArchetypeNexusPage: React.FC = () => {
   const { data, isLoading, isError } = useQuery<any>({

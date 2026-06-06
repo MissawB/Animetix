@@ -81,6 +81,17 @@ const labs = [
         bg: 'from-amber-500/20 to-transparent',
         badge: 'Generative',
         status: 'Neo4j Sync'
+    },
+    {
+        id: 'tot',
+        title: 'Tree of Thoughts',
+        desc: 'Visualisez le raisonnement multi-branches (MCTS) de l\'IA en temps réel.',
+        icon: GitBranch,
+        url: '/lab/tot/',
+        color: 'text-emerald-500',
+        bg: 'from-emerald-500/20 to-transparent',
+        badge: 'Recursive AI',
+        status: 'Operational'
     }
 ];
 

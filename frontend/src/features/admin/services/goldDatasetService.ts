@@ -2,7 +2,8 @@ import { apiClient } from '../../../utils/apiClient';
 
 export const goldDatasetService = {
   getList: async () => {
-    return apiClient('/api/v1/mlops/gold-dataset/');
+    const data = await apiClient('/api/v1/mlops/gold-dataset/');
+    return data.results || data;
   },
   
   validateEntry: async (id: number) => {
