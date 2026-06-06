@@ -126,6 +126,17 @@ class BrainAPIAdapter(InferencePort):
             logger.error(f"BrainAPI Visual Similarity error: {e}")
         return 0.0
 
+    def get_text_embedding(self, text: str) -> List[float]:
+        if not self.brain_api_url: return []
+        try:
+            res = safe_http_request("POST", f"{self.brain_api_url}/text/embedding", json={"text": text}, headers=self._get_headers(), timeout=10, allow_internal=True)
+            if res.status_code == 200:
+                self._log_usage(engine="brain:text:embedding", units=1)
+                return res.json().get("embedding", [])
+        except Exception as e:
+            logger.error(f"BrainAPI Text Embedding error: {e}")
+        return []
+
     def get_image_embedding(self, image_data: bytes, model_id: Optional[str] = None) -> List[float]:
         if not self.brain_api_url: return []
         try:
