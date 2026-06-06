@@ -11,6 +11,8 @@ from adapters.persistence.colbert_adapter import LateInteractionColBERTAdapter
 from adapters.persistence.fandom_adapter import FandomAdapter
 from adapters.persistence.session_state_adapter import DjangoSessionStateAdapter
 
+from adapters.persistence.django_safety_adapter import DjangoSafetyAdapter
+
 class PersistenceContainer(containers.DeclarativeContainer):
     repository = providers.Singleton(
         UnifiedRepositoryAdapter,
@@ -32,6 +34,8 @@ class PersistenceContainer(containers.DeclarativeContainer):
     colbert_adapter = providers.Singleton(LateInteractionColBERTAdapter)
     fandom_adapter = providers.Singleton(FandomAdapter)
     
+    safety_adapter = providers.Singleton(DjangoSafetyAdapter)
+
     session_state_adapter_factory = providers.Factory(
         DjangoSessionStateAdapter
     )

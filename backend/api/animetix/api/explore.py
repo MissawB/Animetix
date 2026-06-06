@@ -2,10 +2,10 @@ from rest_framework import views, response, status, permissions
 from ..containers import Container
 from dependency_injector.wiring import inject, Provide
 from ..serializers import MediaItemSerializer
-from ..models import MediaItem
-import logging
+from ..models import MediaItem, UserRecommendation
+from animetix_project.logging_config import get_logger
 
-logger = logging.getLogger('animetix')
+logger = get_logger('animetix.explore')
 
 class MediaExploreView(views.APIView):
     """Explore le catalogue par popularité et catégories."""
@@ -15,13 +15,30 @@ class MediaExploreView(views.APIView):
     def get(self, request, catalog_service = Provide[Container.core.catalog_service]):
         media_type = request.query_params.get('media_type', 'Anime')
         limit = int(request.query_params.get('limit', 20))
-        
+
         try:
             catalog = catalog_service.get_catalog(media_type)
             items = catalog.get('db', [])[:limit]
-            
-            # Catégories populaires (ex: Action, Romance, etc.)
-            # On extrait ça des métadonnées des items chargés
+
+            # 1. Recommandations personnalisées (IA)
+            recommendations = []
+            if request.user.is_authenticated:
+                user_recs = UserRecommendation.objects.filter(
+                    user=request.user, 
+                    media_item__media_type=media_type
+                ).select_related('media_item').order_by('rank')[:10]
+
+                recommendations = [
+                    {
+                        "id": rec.media_item.external_id,
+                        "title": rec.media_item.title,
+                        "image": rec.media_item.image_url,
+                        "synopsis_fr": rec.media_item.synopsis_fr,
+                        "is_recommendation": True
+                    } for rec in user_recs
+                ]
+
+            # 2. Catégories populaires (ex: Action, Romance, etc.)
             categories = {}
             for item in catalog.get('db', []):
                 genres = item.get('genres', [])
@@ -30,15 +47,17 @@ class MediaExploreView(views.APIView):
                         categories[g] = []
                     if len(categories[g]) < 10:
                         categories[g].append(item)
-            
+
             return response.Response({
                 "trending": items,
+                "recommendations": recommendations,
                 "categories": [
                     {"name": name, "items": items[:limit]} 
                     for name, items in categories.items() 
                     if len(items) >= 5
                 ][:10]
             })
+
         except Exception as e:
             logger.error(f"Error in MediaExploreView: {e}", exc_info=True)
             return response.Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

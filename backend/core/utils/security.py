@@ -3,14 +3,16 @@ import ipaddress
 import logging
 import httpx
 import filetype
+import contextlib
+import re
 from urllib.parse import urlparse, urljoin
-from typing import List, Optional
+from typing import List, Optional, Any, Dict
+from django.conf import settings
 
 logger = logging.getLogger('animetix.security')
 
 import hmac
 import hashlib
-from django.conf import settings
 
 def sign_proxy_url(url: str) -> str:
     """Génère une signature HMAC pour une URL de proxy."""
@@ -38,8 +40,6 @@ def validate_file_mime_type(file_bytes: bytes, allowed_mime_types: List[str]) ->
     
     if kind is None:
         logger.warning("Fichier non reconnu ou sans signature magique valide.")
-        # Pour certains fichiers textes ou JSON, filetype peut retourner None,
-        # mais on est strict pour les médias (images/audio/vidéos).
         return False
         
     mime = kind.mime
@@ -52,7 +52,6 @@ def validate_file_mime_type(file_bytes: bytes, allowed_mime_types: List[str]) ->
 def validate_file_size(file_size: int, max_size: int) -> bool:
     """
     Vérifie si la taille d'un fichier dépasse la limite autorisée.
-    Prévient les attaques par déni de service (DoS) par saturation mémoire/disque.
     """
     if file_size > max_size:
         logger.warning(f"Tentative d'upload d'un fichier trop volumineux : {file_size} octets (Max: {max_size}).")
@@ -60,14 +59,11 @@ def validate_file_size(file_size: int, max_size: int) -> bool:
     return True
 
 # --- SSRF PROTECTION ---
-# Liste blanche des services internes autorisés via Docker ou localhost.
 ALLOWED_INTERNAL_HOSTS = ['brain', 'db', 'redis', 'chromadb', 'neo4j', 'localhost', '127.0.0.1']
 
 def is_safe_url(url: str, allowed_schemes: Optional[List[str]] = None, allow_internal: bool = False) -> bool:
     """
     Vérifie si une URL est sûre pour éviter les attaques SSRF.
-    Si allow_internal est True, autorise UNIQUEMENT les hôtes dans ALLOWED_INTERNAL_HOSTS.
-    Bloque systématiquement les adresses privées/réservées si l'hôte n'est pas dans la liste blanche.
     """
     if allowed_schemes is None:
         allowed_schemes = ['http', 'https']
@@ -82,7 +78,6 @@ def is_safe_url(url: str, allowed_schemes: Optional[List[str]] = None, allow_int
         if not hostname:
             return False
 
-        # 1. Vérification de la liste blanche interne
         is_whitelisted = hostname in ALLOWED_INTERNAL_HOSTS
         
         if is_whitelisted:
@@ -92,15 +87,12 @@ def is_safe_url(url: str, allowed_schemes: Optional[List[str]] = None, allow_int
                 logger.warning(f"Blocked internal host access (allow_internal=False): {hostname}")
                 return False
 
-        # 2. Vérification par résolution DNS (Pour les URLs externes ou tentatives de contournement)
         try:
             ip_addresses = socket.getaddrinfo(hostname, None)
             for addr in ip_addresses:
                 ip_str = addr[4][0]
                 ip = ipaddress.ip_address(ip_str)
                 
-                # Bloquer les plages privées même si allow_internal=True
-                # On veut forcer l'usage des noms symboliques (ex: 'db') et non des IPs directes.
                 if (
                     ip.is_private or 
                     ip.is_loopback or 
@@ -110,9 +102,7 @@ def is_safe_url(url: str, allowed_schemes: Optional[List[str]] = None, allow_int
                 ):
                     logger.warning(f"Blocked request to internal/private IP: {ip_str} (hostname: {hostname})")
                     return False
-        except (socket.gaierror, ValueError) as e:
-            # Si on ne peut pas résoudre, on bloque systématiquement 
-            # (les hôtes internes autorisés ont été gérés au point 1)
+        except (socket.gaierror, ValueError):
             return False
 
         return True
@@ -123,7 +113,6 @@ def is_safe_url(url: str, allowed_schemes: Optional[List[str]] = None, allow_int
 def safe_http_request(method: str, url: str, max_redirects: int = 3, allow_internal: bool = False, **kwargs) -> httpx.Response:
     """
     Effectue une requête HTTP en validant manuellement chaque redirection.
-    Utilise is_safe_url à chaque étape pour prévenir les attaques SSRF.
     """
     current_url = url
     for _ in range(max_redirects + 1):
@@ -131,16 +120,14 @@ def safe_http_request(method: str, url: str, max_redirects: int = 3, allow_inter
             logger.warning(f"Blocked request to unsafe URL: {current_url}")
             raise ValueError(f"Unsafe URL detected: {current_url}")
 
-        # On désactive le suivi automatique des redirections de httpx
         res = httpx.request(method, current_url, follow_redirects=False, **kwargs)
 
         if res.is_redirect:
             location = res.headers.get("Location")
             if not location:
                 return res
-            # Gérer les URLs relatives
             current_url = urljoin(str(res.url), location)
-            method = "GET" # Les redirections 301/302 transforment souvent le POST en GET
+            method = "GET"
             continue
         
         return res
@@ -172,19 +159,59 @@ async def safe_http_request_async(method: str, url: str, max_redirects: int = 3,
 
     raise ValueError("Too many redirects")
 
-import re
+@contextlib.contextmanager
+def stream_safe_http_request(method: str, url: str, max_redirects: int = 3, allow_internal: bool = False, **kwargs):
+    """Context manager pour des requêtes HTTP streamées sécurisées."""
+    current_url = url
+    for _ in range(max_redirects + 1):
+        if not is_safe_url(current_url, allow_internal=allow_internal):
+            raise ValueError(f"Unsafe URL detected: {current_url}")
+        
+        with httpx.stream(method, current_url, follow_redirects=False, **kwargs) as response:
+            if response.is_redirect:
+                location = response.headers.get("Location")
+                if not location:
+                    yield response
+                    return
+                current_url = urljoin(str(response.url), location)
+                method = "GET"
+                continue
+            yield response
+            return
+    raise ValueError("Too many redirects")
+
+@contextlib.asynccontextmanager
+async def async_stream_safe_http_request(method: str, url: str, max_redirects: int = 3, allow_internal: bool = False, **kwargs):
+    """Version asynchrone du context manager de stream."""
+    current_url = url
+    async with httpx.AsyncClient(follow_redirects=False) as client:
+        for _ in range(max_redirects + 1):
+            if not is_safe_url(current_url, allow_internal=allow_internal):
+                raise ValueError(f"Unsafe URL detected: {current_url}")
+            
+            async with client.stream(method, current_url, **kwargs) as response:
+                if response.is_redirect:
+                    location = response.headers.get("Location")
+                    if not location:
+                        yield response
+                        return
+                    current_url = urljoin(str(response.url), location)
+                    method = "GET"
+                    continue
+                yield response
+                return
+    raise ValueError("Too many redirects")
+
+
 import bleach
 
 def sanitize_html_content(value: str) -> str:
     """
-    Sanitise le contenu HTML (généré par l'IA ou saisi par l'utilisateur) 
-    pour prévenir les attaques XSS tout en autorisant un formatage de base.
-    Utilise bleach avec une liste blanche stricte.
+    Sanitise le contenu HTML pour prévenir les attaques XSS.
     """
     if not value:
         return ""
 
-    # Liste blanche des tags et attributs autorisés (Formatage riche minimal)
     allowed_tags = [
         'p', 'b', 'i', 'u', 'em', 'strong', 'br', 'ul', 'ol', 'li', 
         'code', 'pre', 'blockquote', 'h3', 'h4', 'span'
@@ -195,7 +222,6 @@ def sanitize_html_content(value: str) -> str:
         'span': ['class', 'style'],
     }
 
-    # Nettoyage via bleach
     cleaned = bleach.clean(
         value,
         tags=allowed_tags,
@@ -206,20 +232,27 @@ def sanitize_html_content(value: str) -> str:
     
     return cleaned
 
-def sanitize_for_prompt(text: str, max_length: int = 2000) -> str:
+def sanitize_for_prompt(text: Any, max_length: int = 5000) -> Any:
     """
-    Sanitise les entrées utilisateur pour limiter les risques d'injection de prompt (Prompt Injection).
-    Approche hybride : filtrage de patterns + échappement de délimiteurs.
+    Sanitise les données pour limiter les risques d'injection de prompt.
+    Supporte les chaînes, listes et dictionnaires de manière récursive.
     """
-    if not text:
+    if text is None:
         return ""
         
-    # 1. Troncature pour éviter les DoS par dépassement de contexte
+    if isinstance(text, list):
+        return [sanitize_for_prompt(item, max_length) for item in text]
+        
+    if isinstance(text, dict):
+        return {k: sanitize_for_prompt(v, max_length) for k, v in text.items()}
+        
+    if not isinstance(text, str):
+        return text
+
     text = text[:max_length]
     
-    # 2. Filtrage des patterns d'injection connus (insensible à la casse)
     injection_patterns = [
-        r"(?i)ignore\s+previous",
+        r"(?i)ignore\s+(all\s+)?previous",
         r"(?i)system\s+prompt",
         r"(?i)tu\s+es\s+maintenant",
         r"(?i)you\s+are\s+now",
@@ -227,12 +260,15 @@ def sanitize_for_prompt(text: str, max_length: int = 2000) -> str:
         r"(?i)output\s+only",
         r"(?i)forget\s+all",
         r"(?i)override",
+        r"(?i)disregard",
+        r"(?i)assistant\s+must",
+        r"(?i)new\s+role",
+        r"(?i)DAN\s+mode",
     ]
     
     for pattern in injection_patterns:
-        text = re.sub(pattern, "[FILTERED]", text)
+        text = re.sub(pattern, "[PROMPT_INJECTION_FILTERED]", text)
         
-    # 3. Échappement des délimiteurs potentiels (triples quotes, balises XML internes)
     text = text.replace('"""', "'''")
     text = text.replace("<", "&lt;").replace(">", "&gt;")
     
@@ -240,9 +276,49 @@ def sanitize_for_prompt(text: str, max_length: int = 2000) -> str:
 
 def validate_service_url(url: str, expected_prefix: str) -> bool:
     """
-    Vérifie si une URL de service interne (ex: BRAIN_API_URL) commence par un préfixe attendu.
-    Utile pour empêcher le détournement de configuration.
+    Vérifie si une URL de service interne commence par un préfixe attendu.
     """
     if not url:
         return False
     return url.startswith(expected_prefix)
+
+class InternalServiceClient:
+    """
+    Client HTTP dédié aux communications entre services internes.
+    """
+    def __init__(self, base_url: str):
+        self.base_url = base_url.rstrip('/')
+
+    def _resolve_url(self, path: str) -> str:
+        return f"{self.base_url}/{path.lstrip('/')}"
+
+    def request(self, method: str, path: str, **kwargs) -> httpx.Response:
+        return safe_http_request(method, self._resolve_url(path), allow_internal=True, **kwargs)
+
+    @contextlib.contextmanager
+    def stream_request(self, method: str, path: str, **kwargs):
+        with stream_safe_http_request(method, self._resolve_url(path), allow_internal=True, **kwargs) as response:
+            yield response
+
+class InternalAsyncServiceClient:
+    """Version asynchrone du client interne."""
+    def __init__(self, base_url: str):
+        self.base_url = base_url.rstrip('/')
+
+    def _resolve_url(self, path: str) -> str:
+        return f"{self.base_url}/{path.lstrip('/')}"
+
+    async def request(self, method: str, path: str, **kwargs) -> httpx.Response:
+        return await safe_http_request_async(method, self._resolve_url(path), allow_internal=True, **kwargs)
+
+    @contextlib.asynccontextmanager
+    async def stream_request(self, method: str, path: str, **kwargs):
+        async with async_stream_safe_http_request(method, self._resolve_url(path), allow_internal=True, **kwargs) as response:
+            yield response
+
+def sanitize_cypher_identifier(identifier: str, allowed_list: List[str]) -> str:
+    """Sanitise un identifiant Cypher (label ou relation) par rapport à une liste blanche."""
+    if identifier in allowed_list:
+        return identifier
+    logger.warning(f"Blocked unsafe Cypher identifier: {identifier}")
+    raise ValueError(f"Unsafe Cypher identifier: {identifier}")

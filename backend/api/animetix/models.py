@@ -167,6 +167,25 @@ class GoldDatasetEntry(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     def __str__(self): return f"Gold Entry {self.id} - {self.instruction[:30]}..."
 
+class AISafetyEvent(models.Model):
+    """Journal des événements de sécurité LLM (Guardrail)."""
+    EVENT_TYPES = [('input', 'Entrée Utilisateur'), ('output', 'Sortie Assistant'), ('system', 'Système')]
+    ACTIONS = [('block', 'Bloqué'), ('warn', 'Avertissement'), ('rewrite', 'Réécriture'), ('none', 'Aucune')]
+
+    event_type = models.CharField(max_length=20, choices=EVENT_TYPES)
+    action = models.CharField(max_length=20, choices=ACTIONS)
+    detected_categories = models.JSONField(default=list)
+
+    input_text = models.TextField(null=True, blank=True)
+    output_text = models.TextField(null=True, blank=True)
+    reasoning = models.TextField(null=True, blank=True)
+
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Safety {self.event_type} - {self.action} ({self.created_at})"
+
 class SemanticCache(models.Model):
     """Cache sémantique pour les réponses LLM."""
     query_text = models.TextField(unique=True)
