@@ -126,6 +126,39 @@ const ExplorePage: React.FC = () => {
 
         {/* Categories Rows */}
         <section className="space-y-12">
+            {/* Recommendations Row */}
+            {data?.recommendations?.length > 0 && (
+                <div className="space-y-4">
+                    <h2 className="text-2xl font-black italic uppercase tracking-widest flex items-center gap-3">
+                        Choisi pour vous
+                        <span className="text-xs bg-blue-500 text-white px-2 py-1 rounded font-normal not-italic ml-2">IA : SUGGESTION</span>
+                        <span className="h-px bg-blue-500/30 flex-1" />
+                    </h2>
+                    <div className="relative group">
+                        <button 
+                            onClick={() => scrollLeft('recs-row')}
+                            className="absolute left-0 top-0 bottom-0 w-12 z-30 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                        >
+                            <ChevronLeft size={32} />
+                        </button>
+                        <div 
+                            id="recs-row"
+                            className="flex gap-6 overflow-x-auto no-scrollbar pb-4"
+                        >
+                            {data.recommendations.map((item: any) => (
+                                <MediaCard key={item.id} item={item} />
+                            ))}
+                        </div>
+                        <button 
+                            onClick={() => scrollRight('recs-row')}
+                            className="absolute right-0 top-0 bottom-0 w-12 z-30 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                        >
+                            <ChevronRight size={32} />
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <div className="space-y-4">
                 <h2 className="text-2xl font-black italic uppercase tracking-widest flex items-center gap-3">
                     Tendances Actuelles
