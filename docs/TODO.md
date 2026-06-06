@@ -4,66 +4,35 @@ Ce document centralise toutes les tâches techniques, d'architecture et de fonct
 
 ## 🛠️ Dette Technique & Architecture
 
-- [ ] **Complétion des Adapteurs d'Inférence** : Implémenter les méthodes manquantes (Vidéo, 3D, Audio, Manga) dans `UnifiedInferenceAdapter` et `BrainAPIAdapter` pour satisfaire les contrats de `InferencePort`.
-- [ ] **Nettoyage des Logs (Mandat "Zero Print")** : Remplacer les `print()` par des loggers structurés dans `backend/scripts/` et `backend/api/animetix/migrations/`.
-- [ ] **Migration Vectorielle Critique** : Basculer de ChromaDB vers `pgvector` (Cloud SQL/AlloyDB) pour garantir la persistance sémantique en déploiement éphémère.
-- [ ] **Couverture de Tests Use Cases** : Augmenter la couverture `pytest` sur les services de domaine (`backend/core/domain/services/`) pour garantir l'étanchéité hexagonale.
+- [ ] **Standardisation de la validation API (Django Forms)** : Finaliser la refactorisation des vues dans `backend/api/animetix/views/api.py` pour utiliser systématiquement les Django Forms. (Actuellement : plusieurs accès directs à `request.GET/POST` persistent).
+- [ ] **Complétude de l'InferencePort** : Supprimer les stubs restants dans `backend/core/ports/inference_port.py`. (Plusieurs méthodes lèvent encore `InferenceNotImplementedError` sans implémentation réelle).
+- [ ] **Refactorisation de `App.tsx`** : Découper ce fichier monolithique (21 KB) en composants atomiques et services dédiés.
+- [ ] **Modularisation Frontend** : Créer un répertoire `src/pages/` pour isoler les vues des composants de fonctionnalités (`features/`).
+- [ ] **Intégration réelle du `SelfEvolvingCompiler`** : Remplacer les `NotImplementedError` dans le proxy d'évolution LLM par une intégration effective.
+- [ ] **Amélioration des diagnostics IA** : Migrer de la simulation `gpt2` dans `UnifiedInferenceAdapter` vers des mécanismes de diagnostics natifs aux modèles de production.
+- [x] **Optimisation du Chargement IA (Lazy Loading)** : Garantir que tous les adaptateurs et modèles lourds sont chargés uniquement lors de leur première utilisation pour accélérer le démarrage du container. Refactorisation de `FallbackInferenceAdapter` (cache et health lazy) et `GoogleGenAIAdapter` (client lazy).
 
 ## 🚀 Intégrations & Pages Manquantes (Frontend)
 
-- [x] **Hub "Forge Créative" (Accessibilité)** : Bien que la route `/forge-hub/` existe, elle est orpheline dans l'UI. Ajouter des points d'entrée dans `LabHubPage.tsx` pour lier les laboratoires créatifs (Manga, Audio, Video, Spatial) au Singularity Lab.
-- [x] **Hub "Cognition" Unifié** : Créer une vue centrale fusionnant l'Archetype Nexus, la Gestion Neuro-Memory et le Counterfactual Simulator (actuellement éparpillés).
-- [x] **Universal Search Hub** : Unifier la recherche textuelle (`/search/`) et la recherche visuelle/temporelle (`/visual-nexus/`) dans une interface de recherche multimodale unique.
-- [x] **Exposition Publique des Outils Expert** : Créer des versions "Read-only" (publiques) du SOTA Benchmarking et du Graph Debugger pour les utilisateurs "Expert" (actuellement limités aux admins).
-- [x] **Live Ingestion Feed (Intelligence Data)** : Créer une page de monitoring temps-réel montrant l'enrichissement sémantique de la Lore (Neo4j/Vecteurs) par les scrapers et l'IA.
-- [x] **Manga Voice Lab (SOTA)** : Créer une interface permettant d'associer une planche de manga à un échantillon vocal (XTTS) pour générer des planches "parlantes" traduites.
-- [x] **DSPy Prompt Optimizer UI** : Dashboard expert pour orchestrer l'optimisation automatique des prompts via les pipelines MLOps.
-- [ ] **AI Safety & Guardrails Observer** : Vue de transparence affichant les métriques de sécurité (injections bloquées, scores de toxicité) du Guardrail Service.
-- [ ] **Multi-Agent Trace Viewer** : Visualisation de la "Chaîne de Pensée" (Chain-of-Thought) de l'Agentic RAG pour l'explication des raisonnements complexes.
-- [ ] **Visualisation de Timeline Contrefactuelle** : Améliorer le Counterfactual Simulator avec une vue en arbre des mondes possibles et des embranchements de lore.
-
-## 🧬 Innovations SOTA & Curation (IA Avancée)
-
-- [x] **Expliquabilité Avancée (XAI)** : Développer le composant/dashboard frontend détaillant les scores de confiance, les logprobs, les poids sémantiques et les sources RAG pour chaque réponse de l'IA (le backend l'expose déjà).
-- [x] **Dashboard "Mon Empreinte IA" (Vecteurs de Préférence)** : Étendre la page Neuro-Memory pour inclure une visualisation spatiale des vecteurs de préférence (goûts utilisateur) déduits par l'IA.
-- [x] **Modularisation du Singularity Lab** : Isoler les 5 modules (Quantum, Swarm, Plasticity, Compiler, Multiverse) dans des vues immersives distinctes pour améliorer l'UX.
-- [ ] **Manga Expertise Pipeline** : Implémenter l'OCR spécialisé, la segmentation de bulles et l'inpainting de texte pour la traduction de planches.
-- [ ] **Multimodalité Vidéo** : Activer l'analyse temporelle (`Video-LLaVA`) et la génération de descriptions de séquences animées.
-- [ ] **Audio & Voice Lab** : Finaliser le Speech-to-Speech et le clonage de voix XTTS pour les avatars d'archétypes.
-- [ ] **Spatial Computing** : Implémenter la génération de scènes 3D (Gaussian Splatting) à partir de décors 2D.
+- [ ] **Page "Plans & Tarifs" (`/pricing/`)** : Créer une interface pour comparer les offres (Explorateur vs Premium) et gérer les abonnements.
+- [ ] **Visualisation "Tree of Thoughts" (Expert)** : Créer une page de visualisation d'arbre (MCTS) pour explorer les branches de réflexion du `TreeOfThoughtsSearchService`.
+- [ ] **Monitoring "Dynamic Budget TTC"** : Dashboard d'administration pour suivre l'allocation du budget de pensée en temps réel.
+- [ ] **Galerie des Multivers** : Interface de type "catalogue" pour parcourir les segments de multivers synthétiques générés par la communauté.
+- [ ] **Centre d'Aide & Support** : Implémenter une page pour le support technique connectée au `dpo_feedback_loop.py`.
+- [X] **Finalisation Intégration Explorer** : Désorpheliniser la page `/explore/` en l'intégrant plus profondément dans les flux de recommandation et de navigation contextuelle.
 
 ## 🛡️ Sécurité & Résilience
 
-- [ ] **Audit de Dépendances Continu** : Automatisation du scan des vulnérabilités (Snyk/GitHub Dependabot) pour maintenir le socle technique à jour après le passage à Django 5.2.14.
-- [ ] **Refonte de la Protection contre les Injections** (Priorité : HAUTE) : Remplacer le filtrage par liste noire dans `sanitize_for_prompt` par des délimiteurs stricts (balises XML) et un modèle de classification secondaire (Guardrail).
-- [ ] **Audit SSRF Systématique** : Vérifier que tous les scrapers (`fandom_lore_scraper.py`, etc.) utilisent exclusivement `safe_http_request` pour les appels externes.
-- [x] **Mitigation SSRF dans les Scrapers MLOps** (Priorité : CRITIQUE) : Remplacer l'utilisation directe de `urllib.request.urlopen()` par la fonction sécurisée interne `safe_http_request()` dans `fandom_lore_scraper.py` et autres scripts de la pipeline afin d'éviter toute faille SSRF si l'entrée d'URLs devient dynamique.
+- [ ] **Signature des modèles IA** : Mettre en place une procédure de vérification des signatures pour les modèles chargés depuis Hugging Face.
+- [x] **Audit des paramètres CSRF (SameSite)** : Réévaluer `CSRF_COOKIE_SAMESITE = 'None'`. Passer à `'Lax'` si possible.
+- [x] **Migration complète vers `nh3`** : Finaliser le remplacement de `bleach` pour la sanitisation HTML.
+- [x] **Quotas de Budget de Pensée (TDoS)** : Implémenter des limites strictes sur le coût des réflexions par utilisateur/session.
+- [x] **Audit SSRF & `allow_internal=True`** : Réduire drastiquement l'usage de `allow_internal=True` dans les adaptateurs d'inférence. Mettre en place une segmentation réseau stricte (VPC/Firewalls) pour isoler les services internes. (Complété le 2026-06-05)
+- [x] **Renforcement OIDC/Authentification Webhooks** : Auditer tous les endpoints `@csrf_exempt` (Tasks, Eventarc, Billing). Garantir que l'audience OIDC est une valeur statique, non modifiable, et spécifique au endpoint. Éviter `request.build_absolute_uri()`. (Complété le 2026-06-05)
+- [x] **Sanitisation des données ingestées (Prompt Injection)** : Étendre `sanitize_for_prompt` pour protéger les données avant insertion dans ChromaDB ou Neo4j (protection contre l'injection indirecte). (Complété le 2026-06-05)
+- [x] **Scan de dépendances (Supply Chain)** : Intégrer un outil de scan de vulnérabilités (ex: `safety` ou `snyk`) dans le pipeline CI (`.github/workflows/security_audit.yml`). (Complété le 2026-06-05)
 
 ## ☁️ Déploiement & Intégration Google Cloud (GCP)
 
-- [X] **Réseautage Direct VPC Egress** (Priorité : CRITIQUE) : Remplacer l'usage des connecteurs Serverless VPC Access (`animetix-vpc-conn`) par Direct VPC Egress pour éliminer les coûts fixes des VMs de connexion et réduire la latence réseau vers Cloud SQL/Redis.
-- [X] **Tests & Validation Déploiement Google Cloud** (Priorité : HAUTE) : Mettre en place une suite de tests d'intégration complète pour valider les configurations GCP : connexion Cloud SQL (socket Unix & IAM), persistance des données (GCS), authentications secrètes (Secret Manager) et exécution des jobs planifiés (Cloud Scheduler/Cloud Run). Inclure des scénarios de failover et de persistance post-redeployment.
-- [X] **Mise en cache du contexte (Vertex AI Context Caching)** (Priorité : HAUTE) : Implémenter le cache de contexte Vertex AI pour le RAG et les requêtes répétitives sur le Lore dans `google_genai_adapter.py`, permettant d'économiser jusqu'à 75% des coûts de tokens d'entrée et de réduire la latence.
-- [X] **Protection Edge (Cloud Armor WAF LLM)** (Priorité : HAUTE) : Configurer les règles d'inspection et de WAF de Google Cloud Armor spécifiques aux LLMs pour filtrer les injections de prompts et atténuer les attaques par déni de service de tokens.
-- [X] **Gemini Multimodal Live API** (Priorité : MOYENNE) : Évaluer et intégrer l'API Live bidirectionnelle sur WebSockets pour les interactions vocales temps réel, éliminant le besoin de faire tourner des modèles de TTS lourds (`coqui-tts`) sur serveurs GPU.
-- [X] **AlloyDB AI & Vector Search (ScaNN)** (Priorité : MOYENNE) : Migrer de Cloud SQL Postgres vers AlloyDB pour exploiter l'indexation ScaNN d'AlloyDB AI (recherche vectorielle 100x plus rapide) et la vectorisation à la source via `google_ml_integration`.
-- [X] **Plafonds budgétaires Cloud Run** (Priorité : BASSE) : Définir des limites de budget mensuel (Budget Caps) au niveau des services Cloud Run (notamment pour l'inférence GPU L4) afin de bloquer les dérives de facturation accidentelles ou malveillantes.
-- [X] **Inférence ML Lourde sur Cloud Run GPU Serverless** (Priorité : BASSE) : Déployer la Brain API (FastAPI, modèles TTS/OCR) sur Cloud Run avec GPU Nvidia (L4) serverless pour un auto-scaling complet à 0.
-- [X] **Migration ChromaDB vers pgvector (Cloud SQL)** (Priorité : CRITIQUE) : Déplacer le stockage d'embeddings local vers l'extension pgvector de l'instance PostgreSQL managée pour assurer la persistance RAG en environnement serverless stateless.
-- [X] **Décommissionnement Celery Beat vers Cloud Run Jobs** (Priorité : HAUTE) : Migrer l'ensemble des tâches récurrentes planifiées (optimisation DPO, ingestion de données, maintenance MLOps) vers des Jobs Cloud Run éphémères configurés avec Cloud Scheduler.
-- [X] **Migration de la file asynchrone vers Google Cloud Tasks** (Priorité : MOYENNE) : Remplacer l'architecture Celery Worker + Redis par une file HTTP gérée par Cloud Tasks pour exécuter de manière serverless les tâches utilisateur asynchrones (ex: génération d'images).
-- [X] **Authentification IAM Directe PostgreSQL (Passwordless)** (Priorité : MOYENNE) : Configurer la connexion Django à Cloud SQL en s'authentifiant par jetons IAM associés au compte de service plutôt que par identifiants statiques.
-- [X] **Mise en cache via Cloud CDN** (Priorité : HAUTE) : Mettre en cache les assets statiques et les médias générés (Forge, manga, audio) stockés sur GCS au plus proche des utilisateurs pour réduire la latence réseau et économiser la bande passante d'egress.
-- [X] **Sécurisation via Identity-Aware Proxy (IAP)** (Priorité : MOYENNE) : Protéger les accès aux dashboards sensibles (Curation, Visual Graph Debugger, SOTA Benchmarking) en s'appuyant sur l'authentification Google native sans exposer publiquement ces routes d'administration.
-- [X] **Vertex AI Model Registry** (Priorité : MOYENNE) : Versionner et héberger les modèles lourds d'inférence (MangaOCR, XTTS) sur Vertex AI pour optimiser le temps de cold start lors du scaling des instances GPU L4 de la Brain API.
-- [x] **Observabilité avec Cloud Trace & Profiler** (Priorité : MOYENNE) : Mettre en place un traçage distribué des requêtes de bout-en-bout (Django Web -> Cloud Tasks -> FastAPI Brain -> AlloyDB/Vertex AI) afin d'isoler les goulots d'étranglement de performance.
-- [X] **BigQuery & BigQuery ML** (Priorité : BASSE) : Ingestion des données de télémétrie utilisateur (duels PvP, drift d'archétypes) pour l'analyse historique et génération de recommandations personnalisées d'œuvres directement en SQL.
-- [X] **Architecture événementielle (Pub/Sub & Dataflow)** (Priorité : BASSE) : Publier les événements majeurs sur des topics Pub/Sub pour découpler le traitement analytique secondaire, et orchestrer l'ingestion de lore en temps réel avec Dataflow.
-- [ ] **Vertex AI Pipelines (MLOps)** (Priorité : MOYENNE) : Automatiser et orchestrer les pipelines de ré-entraînement de modèles (DPO/RAG) avec suivi de lignage.
-- [ ] **Vertex AI Feature Store** (Priorité : MOYENNE) : Stocker et servir les vecteurs de préférences utilisateur en temps réel et à très basse latence pour la personnalisation.
-- [X] **Cloud Workflows** (Priorité : HAUTE) : Coordonner de manière fiable et résiliente les scénarios à étapes multiples (OCR -> Traduction -> Voix) sans surcharger Django.
-- [X] **Eventarc (Déclenchement événementiel)** (Priorité : BASSE) : Automatiser le traitement d'images/mangas dès leur téléversement sur Cloud Storage en déclenchant directement des instances Cloud Run.
-- [ ] **Google Identity Platform (Auth externe)** (Priorité : BASSE) : Déléguer la gestion sécurisée des identités utilisateurs, des réseaux sociaux et de la double authentification à un service externe managé.
-- [ ] **Cloud KMS & CMEK (Chiffrement géré)** (Priorité : BASSE) : Protéger les assets sensibles générés (voix et images utilisateurs) avec des clés de chiffrement personnalisées stockées dans KMS.
-- [ ] **Fallback d'APIs d'IA Google** (Priorité : BASSE) : Configurer des replis vers Google Translate API et Cloud TTS/STT en cas d'indisponibilité ou de temps de démarrage long des instances GPU de la Brain API.
-
+- [ ] **Google Identity Platform** : Migration de l'authentification vers le service géré GCP.
+- [ ] **Cloud KMS** : Chiffrement CMEK pour les images et voix générées.

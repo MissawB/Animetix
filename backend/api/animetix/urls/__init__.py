@@ -3,7 +3,6 @@ from ..views.spa import spa_view
 
 urlpatterns = [
     path('', spa_view, name='index'),
-    path('api/v1/', include('animetix.urls.api')),
     path('mlops/', include('animetix.urls.mlops')),
     
     # Règle catch-all pour React SPA

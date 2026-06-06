@@ -1,0 +1,64 @@
+name: Animetix Security Audit
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Run daily at midnight
+  workflow_dispatch: # Allow manual trigger
+  push:
+    paths:
+      - 'requirements.txt'
+      - 'frontend/package-lock.json'
+      - '.github/workflows/security_audit.yml'
+
+jobs:
+  python-security:
+    name: Backend Security Audit
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install Security Tools
+      run: pip install safety bandit
+
+    - name: Check Dependencies (Safety)
+      run: safety check -r requirements.txt
+      continue-on-error: true # Let's not block the whole workflow if vulnerabilities are found, but report them
+
+    - name: Static Analysis (Bandit)
+      run: bandit -r backend/ -ll -ii
+      # -ll: logical lines
+      # -ii: include low confidence
+
+  frontend-security:
+    name: Frontend Security Audit
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: 'frontend/package-lock.json'
+
+    - name: Run NPM Audit
+      working-directory: ./frontend
+      run: npm audit --audit-level=high
+      continue-on-error: true
+
+  container-security:
+    name: Container Image Audit
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Scan Dockerfile
+      uses: hadolint/hadolint-action@v3.1.0
+      with:
+        dockerfile: deploy/Dockerfile

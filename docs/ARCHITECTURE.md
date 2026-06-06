@@ -195,17 +195,40 @@ classDiagram
     class ContentModerationError
     class KnowledgeGraphQueryError
     
-    AnimetixBaseError <|-- DomainError
-    AnimetixBaseError <|-- InfrastructureError
-    InfrastructureError <|-- InferenceError
-    InferenceError <|-- InferenceTimeoutError
-    InferenceError <|-- SpatialComputingError
-    InferenceError <|-- MangaProcessingError
-    InferenceError <|-- VideoProcessingError
-    InferenceError <|-- ImageGenerationError
-    InfrastructureError <|-- AdapterLoadError
-    InfrastructureError <|-- ContentModerationError
-    InfrastructureError <|-- KnowledgeGraphQueryError
+    AnimetixBaseError <|-- InfrastructureError --|> AdapterLoadError
+    AnimetixBaseError <|-- InfrastructureError --|> ContentModerationError
+    AnimetixBaseError <|-- InfrastructureError --|> KnowledgeGraphQueryError
 ```
-or
-```
+
+---
+
+## 10. Accès & Modes de Déploiement
+
+### A. Environnement Local (Développement manuel)
+Dans cet environnement, le frontend et le backend tournent séparément pour permettre le *Hot Module Replacement* (HMR).
+
+- **Backend (Django)** : 
+  - URL : `http://localhost:8000`
+  - Commande : `python backend/api/manage.py runserver`
+- **Frontend (React/Vite)** : 
+  - URL : `http://localhost:5173`
+  - Commande : `cd frontend && npm run dev`
+  - *Note* : Le serveur Vite proxyfie automatiquement `/api/*` et `/ws/*` vers Django.
+
+### B. Environnement Dev / Staging (Docker)
+L'utilisation de Docker regroupe tout dans des conteneurs isolés. Le frontend est pré-construit et servi par le backend.
+
+- **Docker Standard** :
+  - URL : `http://localhost:8000`
+  - Commande : `docker-compose -f deploy/docker-compose.yml up`
+- **Docker Staging** (avec modes expérimentaux & debug) :
+  - URL : `http://localhost:8080`
+  - Commande : `docker-compose -f deploy/docker-compose.yml -f deploy/docker-compose.staging.yml up`
+
+### C. Environnement de Production (Hugging Face)
+Animetix est optimisé pour un déploiement sur **Hugging Face Spaces**.
+
+- **URL** : `https://huggingface.co/spaces/MissawB/Animetix` (ou URL personnalisée).
+- **Port Interne** : Le conteneur expose le port `7860`.
+- **Pipeline** : Déploiement automatisé via GitHub Actions (`deploy_to_hf.yml`).
+

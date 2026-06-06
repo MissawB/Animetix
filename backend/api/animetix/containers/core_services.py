@@ -46,12 +46,12 @@ from core.domain.services.episodic_memory_compressor import EpisodicMemoryCompre
 from core.domain.services.neuro_symbolic_user_profiler import NeuroSymbolicUserProfiler
 from core.domain.services.dspy_prompt_optimizer import DSPyPromptOptimizer
 from core.domain.services.cfr_game_solver import CFRGameSolver
-from core.domain.services.liquid_neural_network import LiquidNeuralNetworkSimulator
-from core.domain.services.quantum_cognitive_model import QuantumCognitivePreferenceModel
+from core.domain.services.neuromorphic_lnn_service import LiquidNeuralNetworkService
+from core.domain.services.quantum_cognitive_service import QuantumCognitiveService
 from core.domain.services.swarm_consensus import SwarmConsensusOrchestrator
 from core.domain.services.counterfactual_simulator import CounterfactualConversationSimulator
 from core.domain.services.self_evolving_compiler import SelfEvolvingCompiler
-from core.domain.services.synaptic_plasticity import SynapticPlasticitySimulator
+from core.domain.services.neuromorphic_plasticity_service import SynapticPlasticityService
 from core.domain.services.domain_synthesizer import AutonomousDomainSynthesizer
 from core.domain.services.star_mlops_service import StarMLOpsDomainService
 from core.domain.services.drift_service import DriftService
@@ -97,7 +97,7 @@ class CoreServicesContainer(containers.DeclarativeContainer):
 
     vision_service = providers.Singleton(
         AdvancedVisionService,
-        inference_engine=inference.vision_transformers_adapter
+        inference_engine=inference.inference_engine
     )
 
     graph_builder = providers.Singleton(
@@ -174,6 +174,11 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         repository=persistence.repository,
         sql_repository=persistence.django_repository,
         cache_service=providers.Object(__import__('django.core.cache', fromlist=['cache']).cache)
+    )
+
+    similarity_service = providers.Singleton(
+        SimilarityService,
+        repository=persistence.repository
     )
 
     cfr_game_solver = providers.Singleton(
@@ -313,14 +318,14 @@ class CoreServicesContainer(containers.DeclarativeContainer):
 
 
     liquid_neural_network = providers.Singleton(
-        LiquidNeuralNetworkSimulator,
+        LiquidNeuralNetworkService,
         state_dimension=4,
         input_dimension=2
     )
 
     voice_cloning_service = providers.Singleton(
         VoiceCloningService,
-        inference_engine=inference.audio_transformers_adapter,
+        inference_engine=inference.inference_engine,
         lnn_simulator=liquid_neural_network
     )
 
@@ -435,3 +440,12 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         sota_service=sota_benchmark_service
     )
 
+    quantum_cognitive_model = providers.Singleton(
+        QuantumCognitiveService,
+        dimension=4
+    )
+
+    synaptic_plasticity_simulator = providers.Singleton(
+        SynapticPlasticityService,
+        num_concepts=10
+    )

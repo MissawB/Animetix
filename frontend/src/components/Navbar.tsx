@@ -4,7 +4,7 @@ import { useUIStore } from '../store/uiStore';
 import { useAuthStore } from '../store/authStore';
 import { 
   Menu, Shield, Sparkles, Box, FlaskConical, Network, Users, Radio, Search, 
-  Gamepad2, Film, User, Settings, Sliders, LogOut, LogIn, UserPlus, Bell 
+  Gamepad2, Film, User, Settings, Sliders, LogOut, LogIn, UserPlus, Bell, Zap
 } from 'lucide-react';
 import { FeatureGate } from './utils/FeatureGate';
 import { useTranslation } from 'react-i18next';
@@ -63,6 +63,14 @@ const Navbar: React.FC = () => {
 
           <Link to="/lab/" className="flex items-center gap-2 no-underline text-xs font-black italic text-red-500 hover:scale-105 transition-all uppercase tracking-widest">
             <FlaskConical className="w-4 h-4" /> {t('navbar.lab', 'Laboratories')}
+          </Link>
+
+          <Link 
+            to="/pricing/" 
+            className="flex items-center gap-2 px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 rounded-xl transition-all group"
+          >
+            <Zap className="w-4 h-4 group-hover:fill-current" />
+            <span className="text-[10px] font-black uppercase tracking-widest hidden md:block">Nexus Pro</span>
           </Link>
 
           {user && (

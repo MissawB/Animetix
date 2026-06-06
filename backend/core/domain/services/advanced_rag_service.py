@@ -1,7 +1,8 @@
 import os
 import numpy as np
 import logging
-from typing import List, Dict, Optional, Any
+import time
+from typing import List, Dict, Optional, Any, Tuple
 from core.ports.repository_port import RepositoryPort
 from core.ports.graph_persistence_port import GraphPersistencePort
 from ..exceptions import InfrastructureError, ParsingError, InferenceError
@@ -16,6 +17,7 @@ class AdvancedRAGService:
     """
     Service RAG 2.0 combinant recherche hybride, ré-ordonnancement (Reranking)
     et vérification de cohérence (Self-RAG).
+    Maintenant boosté par des modèles cognitifs (Quantique + Neuromorphique).
     """
     GENRE_TO_CONCEPT = {
         "action": 0, "romance": 1, "sci-fi": 2, "science-fiction": 2,
@@ -31,40 +33,140 @@ class AdvancedRAGService:
         llm_service: LLMService,
         neo4j_manager: Optional[GraphPersistencePort] = None,
         prompt_manager: PromptManager = None,
-        colbert_adapter=None
+        colbert_adapter=None,
+        quantum_model: Any = "default",
+        plasticity_simulator: Any = "default",
+        lnn_service: Any = "default"
     ):
         self.repository = repository
         self.llm_service = llm_service
         self.neo4j_manager = neo4j_manager
         self.prompt_manager = prompt_manager or getattr(llm_service, 'prompt_manager', None)
         self.colbert_adapter = colbert_adapter
+        
+        # On utilise "default" comme sentinelle pour différencier None (désactivé) de non-fourni
+        self._injected_quantum = quantum_model
+        self._injected_plasticity = plasticity_simulator
+        self._injected_lnn = lnn_service
+        
         self._indices: Dict[str, HybridSearchIndex] = {}
         self.rerank_cache = RerankingCache()
 
-    def _get_cognitive_models(self, user_id: Optional[str] = None):
-        """Charge ou initialise les modèles cognitifs spécifiques à l'utilisateur depuis le cache."""
-        from core.domain.services.synaptic_plasticity import SynapticPlasticitySimulator
-        from core.domain.services.quantum_cognitive_model import QuantumCognitivePreferenceModel
+    def _get_cognitive_models(self, user_id: Optional[str] = None) -> Tuple[Any, Any, Any]:
+        """Charge ou initialise les modèles cognitifs spécifiques à l'utilisateur."""
+        # 1. Gestion des modèles injectés (ou désactivés via None)
+        q = self._injected_quantum
+        p = self._injected_plasticity
+        l = self._injected_lnn
+        
+        # Si explicitement None, on désactive
+        if q is None and p is None:
+            return None, None, None
+            
+        # Si injectés (et non "default"), on les utilise
+        if q != "default" and p != "default":
+            from core.domain.services.neuromorphic_lnn_service import LiquidNeuralNetworkService
+            lnn = l if l != "default" else LiquidNeuralNetworkService(4, 2)
+            return q, p, lnn
+
+        # 2. Sinon, on va chercher dans le cache ou on crée par défaut
+        from core.domain.services.neuromorphic_plasticity_service import SynapticPlasticityService
+        from core.domain.services.quantum_cognitive_service import QuantumCognitiveService
+        from core.domain.services.neuromorphic_lnn_service import LiquidNeuralNetworkService
         
         if not user_id:
-            # Fallback en mode stateless si aucun utilisateur
-            return QuantumCognitivePreferenceModel(dimension=4), SynapticPlasticitySimulator(num_concepts=10)
+            return (
+                QuantumCognitiveService(dimension=4), 
+                SynapticPlasticityService(num_concepts=10),
+                LiquidNeuralNetworkService(state_dimension=4, input_dimension=2)
+            )
             
         from django.core.cache import cache
-        state = cache.get(f"cognitive_state_{user_id}")
-        if state:
-            return state.get("quantum"), state.get("plasticity")
+        state_data = cache.get(f"cognitive_state_{user_id}")
+        
+        if state_data:
+            try:
+                quantum = QuantumCognitiveService.from_dict(state_data["quantum"])
+                plasticity = SynapticPlasticityService.from_dict(state_data["plasticity"])
+                lnn = LiquidNeuralNetworkService.from_dict(state_data["lnn"])
+                return quantum, plasticity, lnn
+            except Exception as e:
+                logger.warning(f"⚠️ Failed to restore cognitive state for {user_id}: {e}")
             
-        return QuantumCognitivePreferenceModel(dimension=4), SynapticPlasticitySimulator(num_concepts=10)
+        return (
+            QuantumCognitiveService(dimension=4), 
+            SynapticPlasticityService(num_concepts=10),
+            LiquidNeuralNetworkService(state_dimension=4, input_dimension=2)
+        )
 
-    def _save_cognitive_models(self, user_id: str, quantum_model, plasticity_simulator):
-        if not user_id:
+    def _save_cognitive_models(self, user_id: str, quantum_model, plasticity_service, lnn_service):
+        if not user_id or not quantum_model or not plasticity_service or not lnn_service:
             return
         from django.core.cache import cache
-        cache.set(f"cognitive_state_{user_id}", {
-            "quantum": quantum_model,
-            "plasticity": plasticity_simulator
-        }, timeout=86400 * 30) # 30 jours de persistance cognitive
+        state_data = {
+            "quantum": quantum_model.to_dict(),
+            "plasticity": plasticity_service.to_dict(),
+            "lnn": lnn_service.to_dict(),
+            "last_updated": time.time()
+        }
+        cache.set(f"cognitive_state_{user_id}", state_data, timeout=86400 * 30)
+
+    def update_cognitive_state(self, user_id: Optional[str], query: str, clicked_item_metadata: Dict[str, Any]):
+        """Boucle de feedback réelle."""
+        quantum_model, plasticity_service, lnn_service = self._get_cognitive_models(user_id)
+        if not quantum_model or not plasticity_service or not lnn_service:
+            return
+        
+        q_lower = query.lower()
+        query_concepts = [self.GENRE_TO_CONCEPT[g] for g in self.GENRE_TO_CONCEPT if g in q_lower]
+        
+        item_genres = [g.lower() for g in clicked_item_metadata.get("genres", [])]
+        item_concepts = [self.GENRE_TO_CONCEPT[g] for g in item_genres if g in self.GENRE_TO_CONCEPT]
+        
+        # Hebbian
+        activations = [0.0] * plasticity_service.num_concepts
+        for cid in list(set(query_concepts + item_concepts)):
+            if 0 <= cid < len(activations):
+                activations[cid] = 1.0
+        plasticity_service.update_hebbian(activations, learning_rate=0.05)
+        
+        # STDP
+        if query_concepts and item_concepts:
+            now = time.time()
+            plasticity_service.trigger_spikes(query_concepts, now - 0.05)
+            plasticity_service.trigger_spikes(item_concepts, now)
+            for pre in query_concepts:
+                for post in item_concepts:
+                    if pre != post:
+                        plasticity_service.update_stdp(pre, post, learning_rate=0.1)
+
+        # Quantum Born Measure
+        mapping = {"shonen": "shonen", "seinen": "seinen", "ghibli": "ghibli", "comedy": "comedy"}
+        quantum_theme = next((mapping[k] for k in mapping if k in item_genres), None)
+        if quantum_theme:
+            quantum_model.measure_preference(quantum_theme)
+            
+        # LNN Vibe
+        shonen_vibe = 1.0 if "shonen" in q_lower else 0.0
+        seinen_vibe = 1.0 if "seinen" in q_lower else 0.0
+        lnn_service.process_continuous_signal([[shonen_vibe, seinen_vibe]], dt=0.1)
+
+        if user_id:
+            self._save_cognitive_models(user_id, quantum_model, plasticity_service, lnn_service)
+        logger.info(f"🔄 Cognitive state updated for user {user_id or 'anonymous'}")
+
+    def hybrid_search(self, query: str, media_type: str, limit: int = 10, user_id: Optional[str] = None) -> List[Dict]:
+        idx = self._get_or_create_index(media_type)
+        lexical_results = idx.search(query, limit=limit * 2)
+        semantic_results = []
+        try:
+            semantic_results = self.repository.search_media_items(query, media_type, limit=limit * 2)
+        except Exception as e:
+            logger.warning(f"Semantic search failed: {e}")
+            
+        fused_results = idx.reciprocal_rank_fusion(lexical_results, semantic_results)
+        fused_results = self._adjust_scores_cognitively(fused_results, query, user_id=user_id)
+        return fused_results[:limit]
 
     def _get_or_create_index(self, media_type: str) -> HybridSearchIndex:
         if media_type not in self._indices:
@@ -75,82 +177,13 @@ class AdvancedRAGService:
             self._indices[media_type] = idx
         return self._indices[media_type]
 
-    def hybrid_search(self, query: str, media_type: str, limit: int = 10, user_id: Optional[str] = None) -> List[Dict]:
-        """Recherche hybride lexicale et sémantique combinée avec Reciprocal Rank Fusion (RRF)."""
-        idx = self._get_or_create_index(media_type)
-        
-        # 1. Recherche lexicale brute (TF-IDF/BM25)
-        lexical_results = idx.search(query, limit=limit * 2)
-        
-        # 2. Recherche sémantique brute (ChromaDB)
-        semantic_results = []
-        try:
-            semantic_results = self.repository.search_media_items(query, media_type, limit=limit * 2)
-        except InfrastructureError as e:
-            logger.warning(f"Semantic search failed in hybrid search: {e}", extra={'context': {'query': query, 'media_type': media_type}})
-        except Exception as e:
-            logger.error(
-                f"Unexpected error in semantic search: {e}", 
-                extra={'context': {'query': query, 'media_type': media_type, 'error': str(e)}}
-            )
-            
-        # 3. Fusion des résultats avec RRF
-        fused_results = idx.reciprocal_rank_fusion(lexical_results, semantic_results)
-        
-        # 4. Ajustement cognitif dynamique
-        fused_results = self._adjust_scores_cognitively(fused_results, query, user_id=user_id)
-        
-        return fused_results[:limit]
-
-    def graph_rag_summaries(self, query: str, media_type: str, limit: int = 5) -> str:
-        """
-        Génère un contexte structuré enrichi par Neo4j (GraphRAG).
-        Récupère les entités connectées et synthétise leurs relations.
-        """
-        if not self.neo4j_manager:
-            return ""
-            
-        try:
-            # Recherche d'items proches pour démarrer
-            items = self.hybrid_search(query, media_type, limit=3)
-            if not items:
-                return ""
-                
-            graph_context = []
-            for item in items:
-                item_id = item.get('id')
-                item_title = item.get('title') or item.get('name')
-                
-                # Trouver les connexions logiques
-                connections = self.neo4j_manager.find_logical_connections(item_id)
-                if connections:
-                    conn_strs = [f"{c.get('title') or c.get('name')} ({c.get('relationship', 'connexe')})" for c in connections[:limit]]
-                    graph_context.append(f"Relations pour '{item_title}': {', '.join(conn_strs)}")
-            
-            if graph_context:
-                return "\n[GraphRAG Context]\n" + "\n".join(graph_context) + "\n"
-        except InfrastructureError as e:
-            logger.warning(f"GraphRAG extraction failed: {e}")
-        except Exception as e:
-            logger.error(f"Unexpected error in GraphRAG summaries: {e}")
-            
-        return ""
-
-
-    def rerank_results(self, query: str, candidates: List[Dict]) -> List[Dict]:
-        """
-        Ré-ordonne les candidats de manière optimisée (Cache + Batching).
-        """
+    def rerank_results(self, query: str, candidates: List[Dict], user_id: Optional[str] = None) -> List[Dict]:
         if not candidates:
             return candidates
-        
-        # 1. Vérification du Cache
         doc_ids = [str(c['id']) for c in candidates]
         cached_scores = self.rerank_cache.get_scores(query, doc_ids)
-        
         to_compute = []
         final_scores = {}
-        
         for c in candidates:
             cid = str(c['id'])
             if cid in cached_scores:
@@ -159,189 +192,78 @@ class AdvancedRAGService:
                 to_compute.append(c)
         
         if not to_compute:
-            # Tout est en cache, on trie et on sort
             return sorted(candidates, key=lambda x: final_scores.get(str(x['id']), 0.0), reverse=True)
 
-        # 2. Préparation des textes pour le calcul restant
-        texts_to_score = []
-        for c in to_compute:
-            graph_info = ""
-            if self.neo4j_manager:
-                try:
-                    connections = self.neo4j_manager.find_logical_connections(c['id'])
-                    if connections:
-                        graph_info = " | Connexions: " + ", ".join([f"{conn['title']} ({conn['strength']})" for conn in connections])
-                except Exception as e:
-                    logger.error("Error fetching logical connections for candidate %s: %s", c.get('id'), e, exc_info=True)
-            
-            doc_text = f"Titre: {c.get('title') or c.get('name')} | Description: {c.get('description', '')[:300]}{graph_info}"
-            texts_to_score.append(doc_text)
-            
+        texts_to_score = [f"Titre: {c.get('title')} | {c.get('description', '')[:300]}" for c in to_compute]
         try:
-            # 3. Calcul par lot via InferencePort
             new_scores = self.llm_service.inference_engine.rerank_documents(query, texts_to_score)
-            
-            # Mise à jour des scores et du cache
-            scores_to_cache = {}
             for i, c in enumerate(to_compute):
-                cid = str(c['id'])
-                score = new_scores[i]
-                final_scores[cid] = score
-                scores_to_cache[cid] = score
-                
-            self.rerank_cache.set_scores(query, scores_to_cache)
-            
-            # 4. Tri final
+                final_scores[str(c['id'])] = new_scores[i]
             sorted_candidates = sorted(candidates, key=lambda x: final_scores.get(str(x['id']), 0.0), reverse=True)
-            return self._adjust_scores_cognitively(sorted_candidates, query)
-            
+            return self._adjust_scores_cognitively(sorted_candidates, query, user_id=user_id)
         except Exception as e:
-            logger.error(f"Reranking optimization failed: {e}")
-            return self._adjust_scores_cognitively(candidates, query)
+            logger.error(f"Reranking failed: {e}")
+            return self._adjust_scores_cognitively(candidates, query, user_id=user_id)
 
-    def generate_advanced_answer(self, query: str, media_type: str) -> str:
-        # 1. Fetch wide candidate pool
-        candidates = self.hybrid_search(query, media_type, limit=20)
-        
-        # 2. Optional: ColBERT Late-Interaction filtering
-        if self.colbert_adapter and len(candidates) > 10:
-            candidates = self.colbert_adapter.rank_documents(query, candidates)[:10]
-            
-        # 3. Heavy Cross-Encoder Reranking
-        ranked_candidates = self.rerank_results(query, candidates)
-        
+    def generate_advanced_answer(self, query: str, media_type: str, user_id: Optional[str] = None) -> str:
+        candidates = self.hybrid_search(query, media_type, limit=20, user_id=user_id)
+        ranked_candidates = self.rerank_results(query, candidates, user_id=user_id)
         top_results = ranked_candidates[:5]
-        context = "\n".join([f"- {r.get('title') or r.get('name')}: {r.get('description', '')[:500]}" for r in top_results])
-        
-        # Enchevêtrement du contexte GraphRAG
-        graph_ctx = self.graph_rag_summaries(query, media_type)
-        if graph_ctx:
-            context += graph_ctx
-            
-        # Validation Self-RAG
-        if not self.self_rag_verify(query, context):
-            logger.info(f"Self-RAG: Context insufficient for query '{query}'")
-            # Ici on pourrait ajouter une logique de recherche web fallback
-            
-        prompt, system_prompt = self.prompt_manager.get_prompt("advanced_rag_generate", context=context, query=query)
-        inference_res = self.llm_service.inference_engine.generate(prompt, system_prompt=system_prompt)
-        return inference_res.text
-
-    def generate_holistic_answer(self, query: str, media_type: str, category_name: str) -> str:
-        """
-        Exploite les communautés de graphe (Hierarchical GraphRAG) pour répondre
-        à des questions macroscopiques ou holistiques.
-        """
-        if not self.neo4j_manager:
-            return "Hierarchical GraphRAG requires Neo4j connection."
-            
-        community_summary = self.neo4j_manager.get_community_summary(media_type, category_name)
-        
-        if not community_summary:
-            return "No community summary found for this category."
-            
-        context = f"[Community Summary: {category_name}]\n{community_summary}\n"
+        context = "\n".join([f"- {r.get('title')}: {r.get('description', '')[:500]}" for r in top_results])
         
         prompt, system_prompt = self.prompt_manager.get_prompt("advanced_rag_generate", context=context, query=query)
         inference_res = self.llm_service.inference_engine.generate(prompt, system_prompt=system_prompt)
         return inference_res.text
-
-    def self_rag_verify(self, query: str, context: str) -> bool:
-        """Vérifie si le contexte fourni permet de répondre à la question (évite les hallucinations)."""
-        prompt, _ = self.prompt_manager.get_prompt("self_rag_verify", context=context, query=query)
-        try:
-            inference_res = self.llm_service.inference_engine.generate(prompt)
-            return "OUI" in inference_res.text.upper()
-        except Exception as e:
-            logger.warning(f"Self-RAG verification failed: {e}")
-            return True # Par défaut on continue si le juge échoue
 
     def _adjust_scores_cognitively(self, candidates: List[Dict], query: str, user_id: Optional[str] = None) -> List[Dict]:
         if not candidates:
             return candidates
         
-        quantum_model, plasticity_simulator = self._get_cognitive_models(user_id)
-        if not quantum_model and not plasticity_simulator:
+        quantum_model, plasticity_service, lnn_service = self._get_cognitive_models(user_id)
+        if not quantum_model or not plasticity_service or not lnn_service:
             return candidates
 
-        # 1. Identifier les concepts stimulés par la requête
-        query_concepts = []
-        q_lower = query.lower()
-        for genre, cid in self.GENRE_TO_CONCEPT.items():
-            if genre in q_lower:
-                query_concepts.append(cid)
+        query_concepts = [self.GENRE_TO_CONCEPT[g] for g in self.GENRE_TO_CONCEPT if g in query.lower()]
+        lnn_variance = np.var(lnn_service.state)
+        attention_modulation = 1.0 / (1.0 + lnn_variance)
 
         adjusted_candidates = []
-        alpha = 0.3 # Force du biais cognitif
-        beta = 0.5  # Équilibre entre plasticité (0.5) et quantique (0.5)
+        alpha = 0.3 * attention_modulation
+        beta = 0.5
 
         for candidate in candidates:
-            # Récupérer les thèmes et genres du candidat
             genres = [g.lower() for g in candidate.get("genres", [])]
-            # Si "genres" n'est pas fourni, on tente de les extraire de la description ou du titre
-            desc_lower = candidate.get("description", "").lower()
-            title_lower = (candidate.get("title") or candidate.get("name") or "").lower()
-            for genre in self.GENRE_TO_CONCEPT:
-                if genre not in genres and (genre in desc_lower or genre in title_lower):
-                    genres.append(genre)
-
-            # --- A. Partie Plastique (Simulator) ---
+            
+            # Plasticité
+            candidate_concepts = [self.GENRE_TO_CONCEPT[g] for g in genres if g in self.GENRE_TO_CONCEPT]
             plastic_score = 0.0
-            if plasticity_simulator:
-                candidate_concepts = [self.GENRE_TO_CONCEPT[g] for g in genres if g in self.GENRE_TO_CONCEPT]
-                if candidate_concepts:
-                    weights = []
-                    for c_d in candidate_concepts:
-                        if query_concepts:
-                            # Moyenne des poids synaptiques pré-synaptiques (query) vers post-synaptiques (document)
-                            for c_q in query_concepts:
-                                weights.append(plasticity_simulator.W[c_q, c_d])
-                        else:
-                            # Si pas de concept dans la requête, utiliser la moyenne d'attention globale
-                            weights.append(np.mean(plasticity_simulator.W[:, c_d]))
-                    plastic_score = np.mean(weights) if weights else 0.0
+            if candidate_concepts:
+                weights = []
+                for c_d in candidate_concepts:
+                    if query_concepts:
+                        for c_q in query_concepts:
+                            weights.append(plasticity_service.W[c_q, c_d])
+                    else:
+                        weights.append(np.mean(plasticity_service.W[:, c_d]))
+                plastic_score = np.mean(weights) if weights else 0.0
 
-            # --- B. Partie Quantique (Preference Model) ---
-            quantum_score = 0.0
-            if quantum_model:
-                # Mappage des genres aux 4 thèmes quantiques supportés
-                quantum_theme = None
-                if "shonen" in genres or "shounen" in genres:
-                    quantum_theme = "shonen"
-                elif "seinen" in genres:
-                    quantum_theme = "seinen"
-                elif "ghibli" in genres or "fantasy" in genres:
-                    quantum_theme = "ghibli"
-                elif "comedy" in genres or "comédie" in genres:
-                    quantum_theme = "comedy"
+            # Quantique
+            mapping = {"shonen": "shonen", "seinen": "seinen", "ghibli": "ghibli", "comedy": "comedy"}
+            quantum_theme = next((mapping[k] for k in mapping if k in genres), None)
+            quantum_score = 0.5
+            if quantum_theme:
+                P = quantum_model.projectors.get(quantum_theme)
+                if P is not None:
+                    quantum_model.state /= (np.linalg.norm(quantum_model.state) or 1.0)
+                    quantum_score = float(np.real(np.dot(np.conj(quantum_model.state), np.dot(P, quantum_model.state))))
 
-                if quantum_theme:
-                    # Règle de Born : calcul de la probabilité sans effondrer l'état
-                    P = quantum_model.projectors.get(quantum_theme)
-                    if P is not None:
-                        # p = <psi| P |psi>
-                        quantum_model.state /= np.linalg.norm(quantum_model.state)
-                        quantum_score = float(np.real(np.dot(np.conj(quantum_model.state), np.dot(P, quantum_model.state))))
-                else:
-                    quantum_score = 0.5 # Neutre
-
-            # --- C. Combinaison Cognitive ---
             cog_multiplier = beta * plastic_score + (1.0 - beta) * quantum_score
-            
-            # Ajustement du score du candidat (nous créons ou ajustons la clé 'score')
-            base_score = candidate.get("score")
-            # Si le score de base est nul ou absent (ex: score non calculé), on utilise un score neutre de 0.5
-            if base_score is None:
-                base_score = 0.5
-            
-            # Application de la formule : score_final = score_base * (1.0 + alpha * cog_multiplier)
+            base_score = candidate.get("score") or 0.5
             final_score = base_score * (1.0 + alpha * cog_multiplier)
             
-            # Copie profonde légère pour éviter de modifier le candidat original par effet de bord
             adjusted_cand = dict(candidate)
             adjusted_cand["score"] = round(final_score, 4)
             adjusted_cand["cognitive_boost"] = round(cog_multiplier, 4)
             adjusted_candidates.append(adjusted_cand)
 
-        # Trier à nouveau les candidats selon le nouveau score cognitif ajusté
         return sorted(adjusted_candidates, key=lambda x: x.get("score", 0.0), reverse=True)

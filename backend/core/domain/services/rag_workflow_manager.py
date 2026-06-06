@@ -656,70 +656,8 @@ class RAGWorkflowManager:
             yield StreamStep(type="token", content=token).model_dump()
 
     def _update_cognitive_state(self, query: str, answer: str, candidates: List[Dict], user_id: Optional[str] = None):
-        if not user_id:
-            return
-            
-        quantum_model, plasticity_simulator = self.rag_service._get_cognitive_models(user_id)
-        if not quantum_model and not plasticity_simulator:
-            return
+        """Met à jour le profil cognitif via le service RAG centralisé."""
+        # On délègue la boucle de feedback réelle au service RAG qui possède la logique
+        top_item = candidates[0] if candidates else {}
+        self.rag_service.update_cognitive_state(user_id, query, top_item)
 
-        # 1. Identifier les concepts de la requête
-        query_genres = []
-        q_lower = query.lower()
-        for genre, cid in self.rag_service.GENRE_TO_CONCEPT.items():
-            if genre in q_lower:
-                query_genres.append(genre)
-
-        query_concepts = [self.rag_service.GENRE_TO_CONCEPT[g] for g in query_genres]
-
-        # 2. Identifier les concepts du meilleur candidat retourné
-        candidate_concepts = []
-        quantum_theme = None
-        
-        if candidates:
-            top_cand = candidates[0]
-            genres = [g.lower() for g in top_cand.get("genres", [])]
-            # Fallback parsing du titre/description
-            desc_lower = top_cand.get("description", "").lower()
-            title_lower = (top_cand.get("title") or top_cand.get("name") or "").lower()
-            for genre in self.rag_service.GENRE_TO_CONCEPT:
-                if genre not in genres and (genre in desc_lower or genre in title_lower):
-                    genres.append(genre)
-            
-            candidate_concepts = [self.rag_service.GENRE_TO_CONCEPT[g] for g in genres if g in self.rag_service.GENRE_TO_CONCEPT]
-
-            # Mappage pour le modèle quantique
-            if "shonen" in genres or "shounen" in genres:
-                quantum_theme = "shonen"
-            elif "seinen" in genres:
-                quantum_theme = "seinen"
-            elif "ghibli" in genres or "fantasy" in genres:
-                quantum_theme = "ghibli"
-            elif "comedy" in genres or "comédie" in genres:
-                quantum_theme = "comedy"
-
-        # --- A. Mise à jour de la Plasticité Synaptique (Hebb & STDP) ---
-        if plasticity_simulator:
-            active_indices = list(set(query_concepts + candidate_concepts))
-            if active_indices:
-                # Hebbian : co-activation de tous les concepts actifs
-                activations = [1.0 if i in active_indices else 0.0 for i in range(10)]
-                plasticity_simulator.update_hebbian(activations)
-                
-                # STDP : potentiation (LTP) de la requête (pre) vers les résultats (post)
-                current_time = time.time()
-                for pre in query_concepts:
-                    for post in candidate_concepts:
-                        if pre != post:
-                            # Pre s'active légèrement avant post
-                            plasticity_simulator.trigger_spikes([pre], current_time - 0.05)
-                            plasticity_simulator.trigger_spikes([post], current_time)
-                            plasticity_simulator.update_stdp(pre, post)
-
-        # --- B. Effondrement de l'état quantique ---
-        if quantum_model and quantum_theme:
-            # Effectue une mesure projective, effondrant l'état cognitif |psi>
-            quantum_model.measure_preference(quantum_theme)
-            
-        # Sauvegarde de l'état cognitif persistant pour l'utilisateur
-        self.rag_service._save_cognitive_models(user_id, quantum_model, plasticity_simulator)

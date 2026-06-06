@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, Shield, Zap, Terminal, Cpu, ArrowRight, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { updateAccountSettings } from '../../api';
 import { useToastStore } from '../../store/toastStore';
 import { Button } from '../../components/ui/Button';
+import { NexusGatewayModal } from './components/NexusGatewayModal';
 
 const TIERS = [
   {
@@ -39,7 +41,29 @@ const TIERS = [
 
 const PricingPage: React.FC = () => {
   const { user, checkAuth } = useAuthStore();
+  const navigate = useNavigate();
   const [selectedTier, setSelectedTier] = useState<any>(null);
+
+  const handleConfirm = async () => {
+    if (!selectedTier) return;
+    try {
+      await updateAccountSettings({ tier: selectedTier.id });
+      await checkAuth();
+    } catch (error) {
+      console.error('Failed to update tier:', error);
+      throw error;
+    }
+  };
+
+  const handleSelectTier = (tier: any) => {
+    if (!user) {
+      navigate('/login?redirect=/pricing/');
+      return;
+    }
+    if (tier.id !== 'pro') {
+      setSelectedTier(tier);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#050505] text-white pt-24 pb-32 px-6">
@@ -100,7 +124,7 @@ const PricingPage: React.FC = () => {
                   variant={tier.id === 'premium' ? 'primary' : 'outline'}
                   fullWidth
                   className="py-6 font-black uppercase italic tracking-widest"
-                  onClick={() => tier.id !== 'pro' && setSelectedTier(tier)}
+                  onClick={() => handleSelectTier(tier)}
                   disabled={user?.tier === tier.id}
                 >
                   {user?.tier === tier.id ? 'ACTIF' : tier.id === 'pro' ? 'CONTACTER' : 'SÉLECTIONNER'}
@@ -110,6 +134,16 @@ const PricingPage: React.FC = () => {
           ))}
         </div>
       </div>
+
+      <AnimatePresence>
+        {selectedTier && (
+          <NexusGatewayModal
+            tier={selectedTier}
+            onClose={() => setSelectedTier(null)}
+            onConfirm={handleConfirm}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

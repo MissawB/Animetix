@@ -25,6 +25,7 @@ urlpatterns = [
     
     # --- PROFESSIONNALISATION : API REST (Headless) ---
     path('api/v1/', include(router.urls)),
+    path('api/v1/', include('animetix.urls.api')),
     path('api/v1/search/', api_views.MediaSearchView.as_view(), name='api_search'),
     path('api/v1/session/', api_views.GameSessionView.as_view(), name='api_session'),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),

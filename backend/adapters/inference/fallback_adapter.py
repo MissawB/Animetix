@@ -302,6 +302,9 @@ class FallbackInferenceAdapter(InferencePort):
     def generate_image_description(self, image_data: bytes, prompt: str = "") -> str:
         return self._fallback_call("generate_image_description", image_data, prompt) or ""
 
+    def generate_video_description(self, video_data: bytes, prompt: str = "") -> str:
+        return self._fallback_call("generate_video_description", video_data, prompt) or ""
+
     def get_diagnostics(self, prompt: str, completion: str) -> Dict[str, Any]:
         return self._fallback_call("get_diagnostics", prompt, completion) or {}
 

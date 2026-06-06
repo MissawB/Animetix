@@ -27,11 +27,11 @@ def billing_alert_webhook(request):
         try:
             from google.oauth2 import id_token
             from google.auth.transport import requests
-            # Verify token signature against the exact webhook URL audience
-            audience = getattr(settings, 'GCP_BILLING_WEBHOOK_URL', 'https://animetix-web-836616987676.europe-west9.run.app/api/billing/webhook/')
+            # Verify token signature against the exact webhook URL audience (STATIC from settings)
+            audience = settings.GCP_BILLING_WEBHOOK_URL
             id_token.verify_oauth2_token(token, requests.Request(), audience=audience)
         except Exception as e:
-            logger.error(f"OIDC token verification failed: {e}")
+            logger.error(f"OIDC token verification failed for Billing Webhook: {e}")
             return JsonResponse({"error": "Invalid OIDC token"}, status=403)
 
     try:

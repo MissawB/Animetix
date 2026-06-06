@@ -4,6 +4,7 @@ import json
 from django.db import connection, transaction
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
+from core.utils.security import sanitize_for_prompt
 
 logger = logging.getLogger("animetix." + __name__)
 
@@ -46,7 +47,6 @@ class PGVectorCollectionWrapper:
         if ids:
             qs = qs.filter(item_id__in=[str(x) for x in ids])
         if where:
-            # Simple metadata filter support (e.g. user_id: X)
             for k, v in where.items():
                 qs = qs.filter(metadata__contains={k: v})
                 
@@ -85,10 +85,15 @@ class PGVectorCollectionWrapper:
         from django.conf import settings
         model_name = getattr(settings, 'ALLOYDB_EMBEDDING_MODEL', 'text-embedding-005')
         
-        # SOTA sanitization: convert list/dicts in metadata to strings
+        # SOTA sanitization: Proactive prompt injection defense on all ingested data
+        if documents:
+            documents = [sanitize_for_prompt(doc, max_length=10000) for doc in documents]
+
         clean_metas = []
         if metadatas:
             for meta in metadatas:
+                # Recursive sanitization of metadata values
+                meta = sanitize_for_prompt(meta)
                 clean_meta = {}
                 for k, v in meta.items():
                     if isinstance(v, (list, dict)):

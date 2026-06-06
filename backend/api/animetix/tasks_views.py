@@ -29,11 +29,11 @@ def run_task_view(request):
         try:
             from google.oauth2 import id_token
             from google.auth.transport import requests
-            # Verify the token against Google
+            # Verify the token against Google with STATIC audience
             audience = settings.GCP_TASKS_WORKER_URL
             id_token.verify_oauth2_token(token, requests.Request(), audience=audience)
         except Exception as e:
-            logger.error(f"OIDC token verification failed: {e}")
+            logger.error(f"OIDC token verification failed for Cloud Tasks: {e}")
             return JsonResponse({"error": "Invalid OIDC token"}, status=403)
 
     try:
@@ -92,6 +92,22 @@ def poll_workflow_view(request):
     if request.method != 'POST':
         return HttpResponse("Method not allowed", status=405)
         
+    # Security: Require OIDC token from Cloud Tasks / Scheduler in Prod
+    is_prod = getattr(settings, 'IS_PRODUCTION', False)
+    if is_prod:
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            return JsonResponse({"error": "Unauthorized"}, status=401)
+        
+        token = auth_header.split(" ")[1]
+        try:
+            # STATIC audience for workflow polling
+            audience = settings.GCP_WORKFLOW_POLL_URL
+            id_token.verify_oauth2_token(token, google_requests.Request(), audience=audience)
+        except Exception as e:
+            logger.error(f"OIDC token verification failed for Workflow Polling: {e}")
+            return JsonResponse({"error": "Forbidden"}, status=403)
+
     try:
         data = json.loads(request.body)
         execution_name = data.get('execution_name')
@@ -145,7 +161,8 @@ def eventarc_gcs_upload_view(request):
         
         token = auth_header.split(" ")[1]
         try:
-            audience = getattr(settings, 'EVENTARC_RECEIVER_URL', request.build_absolute_uri())
+            # STATIC audience for Eventarc (No more dynamic build_absolute_uri fallback)
+            audience = settings.EVENTARC_RECEIVER_URL
             id_token.verify_oauth2_token(token, google_requests.Request(), audience=audience)
         except Exception as e:
             logger.error(f"OIDC token verification failed for Eventarc: {e}")
