@@ -124,7 +124,7 @@ class MediaSearchView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-        results = get_container().catalog_service.search_items(query, media_type, limit)
+        results = get_container().core.catalog_service.search_items(query, media_type, limit)
         return Response(self._format_results(results))
 
     def post(self, request):
@@ -147,7 +147,7 @@ class MediaSearchView(APIView):
         try:
             if not validate_file_size(image_file.size, MAX_IMAGE_SIZE):
                 return Response({'error': f'Image is too large (Max: {MAX_IMAGE_SIZE/1024/1024}MB)'}, status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)
-            
+
             container = get_container()
             image_data = b"".join(chunk for chunk in image_file.chunks())
 
@@ -155,9 +155,9 @@ class MediaSearchView(APIView):
                 return Response({'error': 'Invalid image format. Allowed formats: JPEG, PNG, WEBP.'}, status=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
             # Appel au service Cross-Modal
-            results = container.cross_modal_search.deep_multimodal_search(
-                text_query="", 
-                image_data=image_data, 
+            results = container.core.cross_modal_search_service.deep_multimodal_search(
+                text_query="",
+                image_data=image_data,
                 limit=limit
             )
 
@@ -288,7 +288,7 @@ class MediaDetailView(APIView):
             
         # 2. Fallback via Catalog Service (si non synchronisé en SQL)
         container = get_container()
-        data = container.catalog_service.load_data(media_type)
+        data = container.core.catalog_service.load_data(media_type)
         if data:
             item = next((i for i in data.get('db', []) if str(i.get('id')) == str(item_id)), None)
             if item:
