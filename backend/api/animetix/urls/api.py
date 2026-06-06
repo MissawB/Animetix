@@ -42,6 +42,7 @@ urlpatterns = [
     # path('labs/soundscape/', api_views.SoundscapeLabDataView.as_view(), name='api_soundscape_lab'),
     # path('labs/s2s/', api_views.SpeechToSpeechLabDataView.as_view(), name='api_s2s_lab'),
     path('labs/liquid-nn/', api_views.LiquidNeuralNetworkLabView.as_view(), name='api_liquid_nn_lab'),
+    path('labs/tot/', api_views.TreeOfThoughtsLabView.as_view(), name='api_tot_lab'),
     # path('mlops/dpo/curation/', api_views.DPOCurationView.as_view(), name='api_dpo_curation'),
     # path('mlops/sota/benchmarks/', api_views.SOTABenchmarkListView.as_view(), name='api_sota_benchmarks'),
     # path('mlops/dspy/optimizer/', api_views.DSPyOptimizerView.as_view(), name='api_dspy_optimizer'),

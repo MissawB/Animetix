@@ -25,7 +25,8 @@ MAX_AUDIO_SIZE = 15 * 1024 * 1024
 
 from ..models import DailyChallenge
 from ..serializers import DailyChallengeSerializer
-from ..containers import get_container
+from ..containers import get_container, Container
+from dependency_injector.wiring import inject, Provide
 
 logger = get_logger('animetix.' + __name__)
 
@@ -70,19 +71,47 @@ class DailyChallengeDataView(APIView):
         challenge, created = DailyChallenge.objects.get_or_create(
             date=today,
             defaults={
-                'title': f"Défi du {today}",
                 'media_type': 'Anime',
-                'difficulty': 'Normal',
-                'description': "Le défi quotidien d'Animetix."
+                'secret_title': f"Cible du {today}",
+                'game_mode': 'classic'
             }
         )
         return Response({
             'id': challenge.id,
             'date': challenge.date,
             'media_type': challenge.media_type,
-            'difficulty': challenge.difficulty,
+            'difficulty': 'Normal',
             'is_completed': False,
-            'reward_xp': 500
+            'reward_xp': 500,
+            'modes': [
+                {
+                    'id': 'classic',
+                    'brush1': 'MODE',
+                    'brush2': 'CLASSIQUE',
+                    'description': 'Devinez le titre via des indices textuels.',
+                    'gradient': 'from-blue-600 to-indigo-900',
+                    'icon': '/static/animetix/img/modes/classic.png',
+                    'completed': False
+                },
+                {
+                    'id': 'vision',
+                    'brush1': 'VISION',
+                    'brush2': 'QUEST',
+                    'description': 'Identifiez l\'œuvre à partir d\'une image générée.',
+                    'gradient': 'from-purple-600 to-pink-900',
+                    'icon': '/static/animetix/img/modes/vision.png',
+                    'completed': False
+                },
+                {
+                    'id': 'emoji',
+                    'brush1': 'EMOJI',
+                    'brush2': 'PUZZLE',
+                    'description': 'Décryptez le titre caché derrière des emojis.',
+                    'gradient': 'from-yellow-400 to-orange-600',
+                    'icon': '/static/animetix/img/modes/emoji.png',
+                    'completed': False
+                }
+            ]
         })
 
 class TransparencyDataView(APIView):
@@ -208,3 +237,22 @@ class AudioLabDataView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     def post(self, request):
         return Response({"status": "not_implemented_in_this_cleanup"}, status=501)
+
+class TreeOfThoughtsLabView(APIView):
+    permission_classes = [permissions.AllowAny]
+    
+    @inject
+    def __init__(self, tot_service=Provide[Container.core.tree_of_thoughts_service], **kwargs):
+        super().__init__(**kwargs)
+        self.tot_service = tot_service
+
+    def post(self, request):
+        query = request.data.get('query')
+        if not query:
+            return Response({"error": "Query required"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            result = self.tot_service.solve_with_tree_of_thoughts(query)
+            return Response(result)
+        except Exception as e:
+            logger.error(f"Error in TreeOfThoughtsLabView: {e}", exc_info=True)
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
