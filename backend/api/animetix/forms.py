@@ -27,8 +27,63 @@ class VisionQuestForm(BaseGameForm):
     def clean_description(self):
         return self.clean_text('description', 200)
 
+class EmojiStreamForm(BaseGameForm):
+    target_secret = forms.CharField(max_length=150, required=True)
+    
+    def __init__(self, *args, **kwargs):
+        if args and 'secret' in args[0]:
+            data = args[0].copy() if hasattr(args[0], 'copy') else args[0]
+            data['target_secret'] = data.pop('secret')
+            args = (data,) + args[1:]
+        super().__init__(*args, **kwargs)
+
+    def clean_target_secret(self):
+        return self.clean_text('target_secret', 150)
+
+class ParadoxStreamForm(BaseGameForm):
+    item_a = forms.CharField(max_length=150, required=True)
+    item_b = forms.CharField(max_length=150, required=True)
+    intruder = forms.CharField(max_length=150, required=True)
+    
+    def __init__(self, *args, **kwargs):
+        if args:
+            data = args[0].copy() if hasattr(args[0], 'copy') else args[0]
+            if 't1' in data: data['item_a'] = data.pop('t1')
+            if 't2' in data: data['item_b'] = data.pop('t2')
+            args = (data,) + args[1:]
+        super().__init__(*args, **kwargs)
+
+    def clean_item_a(self):
+        return self.clean_text('item_a', 150)
+
+    def clean_item_b(self):
+        return self.clean_text('item_b', 150)
+
+    def clean_intruder(self):
+        return self.clean_text('intruder', 150)
+
+class AgenticRagForm(BaseGameForm):
+    query = forms.CharField(max_length=200, required=True)
+    
+    def __init__(self, *args, **kwargs):
+        if args and 'q' in args[0]:
+            data = args[0].copy() if hasattr(args[0], 'copy') else args[0]
+            data['query'] = data.pop('q')
+            args = (data,) + args[1:]
+        super().__init__(*args, **kwargs)
+
+    def clean_query(self):
+        return self.clean_text('query', 200)
+
 class AniminatorForm(BaseGameForm):
     question = forms.CharField(max_length=150, required=True, label="Votre question")
+    
+    def __init__(self, *args, **kwargs):
+        if args and 'q' in args[0]:
+            data = args[0].copy() if hasattr(args[0], 'copy') else args[0]
+            data['question'] = data.pop('q')
+            args = (data,) + args[1:]
+        super().__init__(*args, **kwargs)
     
     def clean_question(self):
         return self.clean_text('question', 150)
