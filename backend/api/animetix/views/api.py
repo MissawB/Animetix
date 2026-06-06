@@ -7,6 +7,7 @@ from django.core.cache import cache
 from django_ratelimit.decorators import ratelimit
 from celery.result import AsyncResult
 from .common import logger
+from ..forms import EmojiStreamForm, ParadoxStreamForm, AgenticRagForm, AniminatorForm
 from ..containers import get_container
 from animetix.api.dependencies import get_session_service
 
@@ -34,9 +35,13 @@ def get_task_status(request, task_id):
 
 def emoji_decode_stream(request):
     """Streams emoji generation events for the UI."""
+    form = EmojiStreamForm(request.GET)
+    if not form.is_valid():
+        return JsonResponse({'error': form.errors}, status=400)
+        
+    secret = form.cleaned_data['target_secret']
     session = get_session_service(request)
-    media_type, secret = session.get_current_mode(), request.GET.get('secret')
-    if not secret: return HttpResponse(status=400)
+    media_type = session.get_current_mode()
     
     container = get_container()
     data = container.catalog_service.load_data(media_type)
@@ -51,17 +56,23 @@ def emoji_decode_stream(request):
 
 def paradox_stream(request):
     """Streams paradox logic generation events."""
+    form = ParadoxStreamForm(request.GET)
+    if not form.is_valid():
+        return JsonResponse({'error': form.errors}, status=400)
+        
+    item_a = form.cleaned_data['item_a']
+    item_b = form.cleaned_data['item_b']
+    intruder_item = form.cleaned_data['intruder']
+
     session = get_session_service(request)
     container = get_container()
     media_type = session.get_current_mode()
     data = container.catalog_service.load_data(media_type)
-    t1, t2, intruder = request.GET.get('t1'), request.GET.get('t2'), request.GET.get('intruder')
-    if not all([t1, t2, intruder]): return HttpResponse(status=400)
     
     def event_stream():
-        item_a, item_b, item_i = data['title_to_full_data'][t1], data['title_to_full_data'][t2], data['title_to_full_data'][intruder]
+        item_a_data, item_b_data, item_i_data = data['title_to_full_data'][item_a], data['title_to_full_data'][item_b], data['title_to_full_data'][intruder_item]
         try:
-            for event in container.paradox_service.generate_logic_stream(media_type, item_a, item_b, item_i, session.get('language', 'Français')):
+            for event in container.paradox_service.generate_logic_stream(media_type, item_a_data, item_b_data, item_i_data, session.get('language', 'Français')):
                 if event['type'] == 'result': 
                     event['content'] = {'reasoning': event['content'].reasoning, 'scenario': event['content'].scenario}
                 yield f"data: {json.dumps(event)}\n\n"
@@ -71,9 +82,14 @@ def paradox_stream(request):
 
 def agentic_rag_stream(request):
     """Streams agentic RAG planning and solving events."""
+    form = AgenticRagForm(request.GET)
+    if not form.is_valid():
+        return JsonResponse({'error': form.errors}, status=400)
+        
+    query = form.cleaned_data['query']
     session = get_session_service(request)
-    query, media_type = request.GET.get('q', ''), session.get_current_mode()
-    if not query: return JsonResponse({'error': 'No query provided'}, status=400)
+    media_type = session.get_current_mode()
+    
     def event_stream():
         agent, user_id = get_container().agentic_rag, str(request.user.id) if request.user.is_authenticated else None
         try:
@@ -87,12 +103,16 @@ def agentic_rag_stream(request):
 
 def animinator_stream(request):
     """Streams the Oracle's response and updates the game state in session."""
+    form = AniminatorForm(request.GET)
+    if not form.is_valid():
+        return JsonResponse({'error': form.errors}, status=400)
+        
+    question = form.cleaned_data['question']
     session = get_session_service(request)
     container = get_container()
     media_type = session.get('media_type', 'Anime')
     secret = session.get('animinator_secret')
-    question = request.GET.get('q')
-    if not secret or not question: return HttpResponse(status=400)
+    if not secret: return HttpResponse(status=400)
     
     def event_stream():
         full_response = ""
