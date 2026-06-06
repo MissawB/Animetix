@@ -18,6 +18,7 @@ const ArchetypeNexusPage = lazy(() => import('../ArchetypeNexusPage'));
 const AIDebateArenaPage = lazy(() => import('../AIDebateArenaPage'));
 const ExplorePage = lazy(() => import('../../explore/ExplorePage'));
 const NeuroMemoryPage = lazy(() => import('../NeuroMemoryPage'));
+const PricingPage = lazy(() => import('../../billing/PricingPage'));
 
 export const SocialRoutes = (
   <>
@@ -35,6 +36,7 @@ export const SocialRoutes = (
     <Route path="/social/debate-arena/" element={<AIDebateArenaPage />} />
     <Route path="/social/ai-feedback-history/" element={<AIFeedbackHistoryPage />} />
     <Route path="/explore/" element={<ExplorePage />} />
+    <Route path="/pricing/" element={<PricingPage />} />
     <Route path="/clubs/" element={<ClubDiscoveryPage />} />
     <Route path="/clubs/:id/" element={<ClubDashboard />} />
     <Route path="/clubs/:id/events/:eventId/" element={<ClubEventPage />} />
