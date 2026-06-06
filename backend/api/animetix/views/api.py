@@ -6,8 +6,10 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.cache import cache
 from django_ratelimit.decorators import ratelimit
 from celery.result import AsyncResult
+from pydantic import ValidationError
 from .common import logger
 from ..forms import EmojiStreamForm, ParadoxStreamForm, AgenticRagForm, AniminatorForm
+from ..schemas import OfflineSyncSchema
 from ..containers import get_container
 from animetix.api.dependencies import get_session_service
 
@@ -153,13 +155,13 @@ def sync_offline_data(request):
         return JsonResponse({'error': 'Authentication required'}, status=401)
 
     try:
-        data = json.loads(request.body)
-        if not isinstance(data, list):
-            return JsonResponse({'error': 'Invalid data format'}, status=400)
-            
-        # Hard cap on number of items per sync
-        if len(data) > 50:
-            return JsonResponse({'error': 'Too many items in one sync (max 50)'}, status=400)
+        # Pydantic validation
+        try:
+            schema = OfflineSyncSchema.model_validate(json.loads(request.body))
+        except ValidationError as ve:
+            return JsonResponse({'error': ve.errors()}, status=400)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
         # Track daily gain in cache (persistence = 24h)
         today = datetime.date.today().isoformat()
@@ -174,22 +176,16 @@ def sync_offline_data(request):
         xp_gained = 0
         synced_count = 0
         
-        for game in data:
+        for game in schema.root:
             if daily_gain + xp_gained >= MAX_DAILY_OFFLINE_XP:
                 break # On arrête l'attribution si le plafond est atteint
                 
-            if game.get('score', 0) == 100:
-                # Validation du mode de jeu pour éviter l'injection de modes fictifs
-                mode = game.get('game_mode', 'classic')
-                valid_modes = ['classic', 'emoji', 'animinator', 'paradox', 'vision_quest', 'blindtest', 'covertest']
-                if mode not in valid_modes:
-                    continue
-                    
+            if game.score == 100:
                 request.user.profile.add_win(
                     is_daily=False, 
-                    game_mode=mode, 
-                    media_type=game.get('media_type', 'Anime'), 
-                    attempts=game.get('attempts', 1)
+                    game_mode=game.game_mode, 
+                    media_type=game.media_type, 
+                    attempts=game.attempts
                 )
                 xp_gained += 10
                 synced_count += 1
