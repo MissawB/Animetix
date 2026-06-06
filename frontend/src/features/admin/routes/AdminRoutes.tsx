@@ -22,5 +22,6 @@ export const AdminRoutes = (
     <Route path="/admin/curation/" element={<CurationDashboard />} />
     <Route path="/admin/sota-benchmarks/" element={<SOTABenchmarkPage />} />
     <Route path="/admin/graph-debugger/" element={<GraphDebuggerPage />} />
+    <Route path="/admin/ttc-monitoring/" element={<TTCMonitoringPage />} />
   </>
 );

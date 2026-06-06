@@ -91,6 +91,14 @@ const MLOpsDashboard: React.FC = () => {
       path: "/admin/graph-debugger/",
       color: "text-purple-500",
       status: "Beta"
+    },
+    {
+      title: "Dynamic Budget TTC",
+      desc: "Monitoring de la consommation et de l'efficacité cognitive (Test-Time Compute).",
+      icon: Brain,
+      path: "/admin/ttc-monitoring/",
+      color: "text-yellow-500",
+      status: "Actif"
     }
   ];
 
