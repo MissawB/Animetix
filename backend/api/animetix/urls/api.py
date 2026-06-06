@@ -95,5 +95,6 @@ urlpatterns = [
     path('game/duel/matchmaking/', api_views.MatchmakingView.as_view(), name='api_duel_matchmaking'),
     path('explore/', api_views.MediaExploreView.as_view(), name='api_explore'),
     path('billing/webhook/', billing_alert_webhook, name='api_billing_webhook'),
+    path('admin/ttc-monitoring/', api_views.TTCMonitoringAPIView.as_view(), name='api_ttc_monitoring'),
 ]
 
