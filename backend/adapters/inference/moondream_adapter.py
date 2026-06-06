@@ -2,6 +2,7 @@ import logging
 from typing import Optional, List, Dict, Any
 from core.ports.inference_port import InferencePort, InferenceNotImplementedError
 from core.ports.usage_port import UsagePort
+from core.domain.entities.ai_schemas import InferenceResponse
 from core.utils.lazy_import import lazy_import
 from core.domain.exceptions import InferenceError
 
@@ -15,6 +16,7 @@ class MoondreamAdapter(InferencePort):
         self.model_id = model_id
         self.model = None
         self.tokenizer = None
+        self._last_image_data: Optional[bytes] = None
 
     def _load_model(self):
         if self.model: return
@@ -26,7 +28,39 @@ class MoondreamAdapter(InferencePort):
             logger.error(f"Failed to load Moondream model {self.model_id}: {e}")
             raise InferenceError(f"Failed to load Moondream model: {e}")
 
+    def generate(
+        self, 
+        prompt: str, 
+        system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.",
+        thinking_budget: int = 0,
+        thinking_mode: bool = False,
+        include_logprobs: bool = False
+    ) -> InferenceResponse:
+        """Génère du texte. Nécessite une image préalablement fournie ou cachée."""
+        if self._last_image_data:
+            text = self.generate_image_description(self._last_image_data, prompt)
+            return InferenceResponse(text=text)
+        
+        # Moondream est un VLM et ne supporte pas la génération de texte pur sans image
+        raise InferenceNotImplementedError("MoondreamAdapter requires an image context. No image cached.")
+
+    def stream_generate(
+        self, 
+        prompt: str, 
+        system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.",
+        thinking_budget: int = 0,
+        thinking_mode: bool = False,
+        include_logprobs: bool = False
+    ):
+        """Streaming non supporté nativement, on yield un seul bloc."""
+        yield self.generate(prompt, system_prompt, thinking_budget, thinking_mode, include_logprobs)
+
+    def get_text_embedding(self, text: str) -> List[float]:
+        """Moondream n'est pas un modèle d'embedding."""
+        raise InferenceNotImplementedError("MoondreamAdapter does not support text embeddings.")
+
     def generate_image_description(self, image_data: bytes, prompt: str = "Décris cette image d'anime de manière très détaillée.") -> str:
+        self._last_image_data = image_data
         self._load_model()
         if not self.model or not self.tokenizer:
             raise InferenceError("Moondream model or tokenizer not loaded.")
