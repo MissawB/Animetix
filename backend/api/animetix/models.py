@@ -209,6 +209,7 @@ class AITokenUsage(models.Model):
     input_tokens = models.IntegerField(default=0)
     output_tokens = models.IntegerField(default=0)
     total_tokens = models.IntegerField(default=0)
+    allocated_budget = models.IntegerField(default=0)
     cost_estimate = models.FloatField(default=0.0) # In USD or native currency
     created_at = models.DateTimeField(auto_now_add=True)
     def __str__(self): return f"{self.engine} usage by {self.user.username if self.user else 'Guest'}"
