@@ -228,8 +228,8 @@ const App: React.FC = () => {
           </section>
         </div>
 
-        {/* CONTENT WRAPPER MATCHING HERO BACKGROUND */}
-        <div className="max-w-[1600px] mx-auto px-6 md:px-10 pb-20 mt-12 bg-transparent rounded-[3rem] transition-colors duration-500">
+        {/* CONTENT WRAPPER MATCHING HERO THEME */}
+        <div className="max-w-[1600px] mx-auto px-6 md:px-10 pb-20 mt-12 bg-[#fffcf0] dark:bg-[#1a1a2e] rounded-[3rem] shadow-xl border border-gray-100 dark:border-white/5 transition-colors duration-500">
           
           {/* SECTION MODES SOLO (CHARACTER CARDS STYLE) */}
           <section className="py-16 text-left">
@@ -318,7 +318,7 @@ const App: React.FC = () => {
           </section>
 
           {/* SECTION MODES MULTI */}
-          <section className="px-6 md:px-10 py-16 bg-gray-50 dark:bg-navy-900/30 rounded-[3rem] border border-black/5 dark:border-white/5 text-left">
+          <section className="px-6 md:px-10 py-16 bg-[#f1f3f5] dark:bg-[#0f0f1a] rounded-[3rem] border border-black/5 dark:border-white/5 text-left">
             <h2 className="text-3xl font-black mb-12 flex items-baseline text-black dark:text-white uppercase italic manga-font">
               {isEn ? 'With Friends' : 'Entre Amis'}
               <span className="text-yellow-400 text-3xl leading-none ml-1">.</span>
@@ -332,7 +332,7 @@ const App: React.FC = () => {
                 >
                   <div className="z-10 max-w-[60%]">
                     <h3 className="text-black text-4xl font-black italic tracking-tighter manga-font leading-none">{mode.titre}</h3>
-                    <p className="text-white/80 text-xs font-bold uppercase tracking-widest mt-4 leading-relaxed">{mode.description}</p>
+                    <p className="text-black/70 text-xs font-bold uppercase tracking-widest mt-4 leading-relaxed">{mode.description}</p>
                   </div>
                   <img 
                     src={mode.icon_url} 

@@ -30,7 +30,7 @@ export const useUIStore = create<UIState>((set, get) => ({
     soundManager.play('click');
     set((state) => ({ 
       isSidebarOpen: forceClose !== undefined ? !forceClose : !state.isSidebarOpen,
-      isSettingsOpen: forceClose ? false : state.isSettingsOpen 
+      isSettingsOpen: forceClose === true ? false : state.isSettingsOpen 
     }));
   },
   
@@ -38,7 +38,7 @@ export const useUIStore = create<UIState>((set, get) => ({
     soundManager.play('click');
     set((state) => ({ 
       isSettingsOpen: forceClose !== undefined ? !forceClose : !state.isSettingsOpen,
-      isSidebarOpen: forceClose ? false : state.isSidebarOpen
+      isSidebarOpen: forceClose === true ? false : state.isSidebarOpen
     }));
   },
   

@@ -48,7 +48,7 @@ class Qwen3VLAdapter(InferencePort):
             max_tokens=max_tokens
         )
         content = res.choices[0].message.content
-        self._log_usage(engine="qwen3:generate", input_tokens=len(prompt)//4, output_tokens=len(content)//4)
+        self._log_usage(engine="qwen3:generate", input_tokens=len(prompt)//4, output_tokens=len(content)//4, allocated_budget=thinking_budget)
         return content
 
     def stream_generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False):

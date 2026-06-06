@@ -11,10 +11,11 @@ class InferencePort(ABC):
     def __init__(self, usage_port: Optional[UsagePort] = None):
         self.usage_port = usage_port
 
-    def _log_usage(self, engine: str, input_tokens: int = 0, output_tokens: int = 0, units: int = 0):
+    def _log_usage(self, engine: str, input_tokens: int = 0, output_tokens: int = 0, units: int = 0, allocated_budget: int = 0):
         if self.usage_port:
-            self.usage_port.log_usage(engine, input_tokens, output_tokens, units)
+            self.usage_port.log_usage(engine, input_tokens, output_tokens, units, allocated_budget=allocated_budget)
 
+    @abstractmethod
     def generate(
         self, 
         prompt: str, 
@@ -24,9 +25,9 @@ class InferencePort(ABC):
         include_logprobs: bool = False
     ) -> InferenceResponse:
         """Génère du texte à partir d'un prompt. thinking_budget > 0 ou thinking_mode=True active le raisonnement approfondi."""
-        # TODO: implement generate method for this adapter
-        raise InferenceNotImplementedError("generate not implemented for this adapter")
+        pass
 
+    @abstractmethod
     def stream_generate(
         self, 
         prompt: str, 
@@ -36,8 +37,7 @@ class InferencePort(ABC):
         include_logprobs: bool = False
     ):
         """Génère du texte en flux (streaming) à partir d'un prompt. thinking_budget > 0 ou thinking_mode=True active le raisonnement approfondi."""
-        # TODO: implement stream_generate method for this adapter
-        raise InferenceNotImplementedError("stream_generate not implemented for this adapter")
+        pass
 
     def generate_structured(
         self, 
@@ -71,12 +71,10 @@ class InferencePort(ABC):
 
     def rerank_documents(self, query: str, documents: List[str]) -> List[float]:
         """Évalue la pertinence de plusieurs documents par rapport à une requête (Cross-Encoder)."""
-        # TODO: implement rerank_documents method for this adapter
         raise InferenceNotImplementedError("rerank_documents not implemented for this adapter")
 
     def generate_image(self, prompt: str, style: str = "") -> str:
         """Génère une image à partir d'un prompt et retourne une URL ou Base64."""
-        # TODO: implement generate_image method for this adapter
         raise InferenceNotImplementedError("generate_image not implemented for this adapter")
 
     def generate_sprite(self, prompt: str, style: str = "") -> str:
@@ -95,92 +93,73 @@ class InferencePort(ABC):
                 return 0.5
                 
             # On tente de récupérer l'image via le repository si item_id est fourni
-            # Note: Cette implémentation dépend de la capacité de l'adaptateur à accéder aux données.
-            # Pour un fallback générique, on peut souvent déléguer à une méthode de recherche visuelle.
-            return 0.5 # Valeur neutre par défaut si non surchargeable sans accès repo
+            return 0.5 
         except Exception:
             return 0.5
 
+    @abstractmethod
     def get_text_embedding(self, text: str) -> List[float]:
         """Génère un embedding vectoriel pour un texte donné."""
-        # Base stub
-        raise InferenceNotImplementedError("get_text_embedding not implemented")
+        pass
 
     def get_image_embedding(self, image_data: bytes, model_id: Optional[str] = None) -> List[float]:
         """Génère un embedding vectoriel à partir d'une image."""
-        # Base stub - override in adapters supporting vision embeddings
         raise InferenceNotImplementedError("get_image_embedding not implemented")
 
     def classify_image(self, image_data: bytes, candidate_labels: List[str], model_id: Optional[str] = None) -> Dict[str, float]:
         """Réalise une classification zero-shot d'une image."""
-        # Base stub - override in adapters supporting zero-shot vision classification
         raise InferenceNotImplementedError("classify_image not implemented")
 
     def detect_objects(self, image_data: bytes, candidate_queries: List[str], model_id: Optional[str] = None) -> List[Dict]:
         """Détecte des objets ou attributs dans une image (Open-World Detection)."""
-        # Base stub - override in adapters supporting open-world detection
         raise InferenceNotImplementedError("detect_objects not implemented")
-
-    # --- New Methods for Creative Modes ---
 
     def get_video_temporal_embeddings(self, video_data: bytes) -> List[Dict[str, Any]]:
         """Génère des embeddings pour chaque segment d'une vidéo (Video-RAG)."""
-        # TODO: implement get_video_temporal_embeddings method for this adapter
         raise InferenceNotImplementedError("get_video_temporal_embeddings not implemented for this adapter")
 
     def localize_video_actions(self, video_data: bytes, action_queries: List[str]) -> List[Dict[str, Any]]:
         """Détecte dynamiquement le début et la fin d'actions spécifiques (TAL - Temporal Action Localization)."""
-        # Base stub - override in adapters supporting video action localization
         raise InferenceNotImplementedError("localize_video_actions not implemented")
 
     def transform_image_to_anime(self, image_data: bytes, studio_style: str, prompt: str = "") -> str:
         """Transforme une image réelle en anime via Diffusion + IP-Adapter."""
-        # Base stub - override in adapters supporting image-to-anime transformation
         raise InferenceNotImplementedError("transform_image_to_anime not implemented")
 
     def transform_video_to_anime(self, video_data: bytes, studio_style: str, prompt: str = "") -> str:
         """Applique un Neural Style Transfer SOTA (type FateZero) sur une vidéo avec consistance par attention."""
-        # TODO: implement transform_video_to_anime method for this adapter
         raise InferenceNotImplementedError("transform_video_to_anime not implemented for this adapter")
 
     def generate_soundscape(self, video_metadata: Dict[str, Any], prompt: Optional[str] = None) -> str:
         """Génère une ambiance sonore ou une musique (type AudioLDM) basée sur le contenu d'une vidéo."""
-        # TODO: implement generate_soundscape method for this adapter
         raise InferenceNotImplementedError("generate_soundscape not implemented for this adapter")
 
     def clone_voice(self, text: str, reference_audio: bytes, language: str = "fr") -> bytes:
         """Utilise le Zero-Shot Voice Cloning (RVC) pour synthétiser du texte avec la voix de référence."""
-        # TODO: implement clone_voice method for this adapter
         raise InferenceNotImplementedError("clone_voice not implemented for this adapter")
 
     def speech_to_speech(self, audio_input: bytes, system_prompt: str = "") -> bytes:
         """Passe par un LLM natif multimodal (ex: Qwen2-Audio) pour une interaction End-to-End Voice sans latence TTS."""
-        # TODO: implement speech_to_speech method for this adapter
         raise InferenceNotImplementedError("speech_to_speech not implemented for this adapter")
 
     def estimate_depth(self, image_data: bytes) -> bytes:
         """Estime la carte de profondeur (Depth Map) d'une image 2D (type DepthAnything)."""
-        # TODO: implement estimate_depth method for this adapter
         raise InferenceNotImplementedError("estimate_depth not implemented for this adapter")
 
     def generate_3d_scene(self, image_data: bytes, depth_map: bytes, mode: str = "gaussian_splatting") -> Dict[str, Any]:
         """Génère un espace 3D navigable (Gaussian Splatting / NeRF) à partir d'une image et de sa profondeur, avec in-painting 3D."""
-        # TODO: implement generate_3d_scene method for this adapter
         raise InferenceNotImplementedError("generate_3d_scene not implemented for this adapter")
 
     def process_manga_page(self, image_data: bytes) -> Dict[str, Any]:
         """Segmente les cases et extrait le texte d'une planche de manga (OCR)."""
-        # TODO: implement process_manga_page method for this adapter
         raise InferenceNotImplementedError("process_manga_page not implemented for this adapter")
 
     def translate_manga_page(self, image_data: bytes, target_lang: str = "Français") -> Dict[str, Any]:
         """Détecte, OCR, traduit et redessine le texte dans les bulles d'une page de manga."""
-        # TODO: implement translate_manga_page method for this adapter
         raise InferenceNotImplementedError("translate_manga_page not implemented for this adapter")
 
     def inpaint_text_bubbles(self, image_data: bytes, text_placements: List[Dict]) -> str:
         """Réincruste du texte traduit dans les bulles d'une image (In-painting)."""
-        # TODO: implement inpaint_text_bubbles method for this adapter
         raise InferenceNotImplementedError("inpaint_text_bubbles not implemented for this adapter")
 
     def moderate_content(self, text: str, categories: List[str]) -> Dict[str, Any]:
@@ -224,22 +203,18 @@ class InferencePort(ABC):
 
     def generate_image_description(self, image_data: bytes, prompt: str = "Décris cette image d'anime de manière très détaillée.") -> str:
         """Utilise un VLM (Visual Language Model) pour générer une description narrative d'une image."""
-        # TODO: implement generate_image_description method for this adapter
         raise InferenceNotImplementedError("generate_image_description not implemented for this adapter")
 
     def generate_video_description(self, video_data: bytes, prompt: str = "Décris cette vidéo d'anime de manière très détaillée.") -> str:
         """Utilise un VLM Vidéo (ex: Video-LLaVA) pour générer une description narrative d'une vidéo."""
-        # TODO: implement generate_video_description method for this adapter
         raise InferenceNotImplementedError("generate_video_description not implemented for this adapter")
 
     def get_diagnostics(self, prompt: str, completion: str) -> Dict[str, Any]:
         """Récupère les données d'activation internes (Logit Lens, Attention) pour l'interprétabilité."""
-        # TODO: implement get_diagnostics method for this adapter
         raise InferenceNotImplementedError("get_diagnostics not implemented for this adapter")
 
     def calculate_uncertainty(self, prompt: str, completion: str) -> Dict[str, float]:
         """Calcule la certitude mathématique (entropie, perplexité) d'une génération."""
-        # TODO: implement calculate_uncertainty method for this adapter
         raise InferenceNotImplementedError("calculate_uncertainty not implemented for this adapter")
 
     @abstractmethod
@@ -254,10 +229,8 @@ class InferencePort(ABC):
         system_prompt: str = "Tu es un expert en analyse visuelle d'anime."
     ) -> List[Dict[str, Any]]:
         """Utilise un VLM pour classer une liste d'images par pertinence visuelle."""
-        # TODO: implement visual_rerank method for this adapter
         raise InferenceNotImplementedError("visual_rerank not implemented for this adapter")
 
     def get_multimodal_late_interaction(self, image_data: bytes) -> List[List[float]]:
         """Génère des embeddings multi-vecteurs (type ColBERT/ColEmbed) pour une image."""
-        # TODO: implement get_multimodal_late_interaction method for this adapter
         raise InferenceNotImplementedError("get_multimodal_late_interaction not implemented for this adapter")

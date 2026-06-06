@@ -49,7 +49,8 @@ class LocalTextAdapter(InferencePort):
             self._log_usage(
                 engine=f"local:{self.model_id}",
                 input_tokens=input_length,
-                output_tokens=len(output_tokens)
+                output_tokens=len(output_tokens),
+                allocated_budget=thinking_budget
             )
             
             return text

@@ -10,7 +10,8 @@ class UsagePort(ABC):
         input_tokens: int = 0, 
         output_tokens: int = 0, 
         units: int = 0,
-        user_id: Optional[int] = None
+        user_id: Optional[int] = None,
+        allocated_budget: int = 0
     ):
         """Logs AI usage (tokens or units)."""
         pass

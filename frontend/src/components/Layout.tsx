@@ -13,7 +13,8 @@ import { useAuthStore } from '../store/authStore';
 import { useTranslation } from 'react-i18next';
 import { 
   Menu, X, Home, Zap, Trophy, BookOpen, Settings, Sun, Moon, Monitor, 
-  CheckCircle2, Shield, User, Globe, Sparkles
+  CheckCircle2, Shield, User, Globe, Sparkles, Gamepad2, Search, Compass, 
+  Network, Film, Users, UserPlus, FlaskConical, BrainCircuit, Eye, LogIn
 } from 'lucide-react';
 
 const Footer: React.FC = () => {
@@ -88,7 +89,7 @@ const LayoutContent: React.FC<{ children: ReactNode }> = ({ children }) => {
       {/* SIDEBAR (DRAWER - LEFT) */}
       <aside 
         id="manga-sidebar" 
-        className={`fixed left-0 top-0 h-screen w-[300px] bg-white dark:bg-navy-800 z-[2000] flex flex-col p-8 overflow-y-auto transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[20px_0_50px_rgba(0,0,0,0.1)] border-r border-gray-100 dark:border-white/5 ${
+        className={`fixed left-0 top-0 h-screen w-[300px] bg-[#fffcf0] dark:bg-[#1a1a2e] z-[2000] flex flex-col p-8 overflow-y-auto transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[20px_0_50px_rgba(0,0,0,0.1)] border-r border-gray-100 dark:border-white/5 ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -107,7 +108,7 @@ const LayoutContent: React.FC<{ children: ReactNode }> = ({ children }) => {
         </div>
 
         {isAuthenticated && user && (
-          <div className="mb-10 bg-gray-50 dark:bg-navy-700 p-5 rounded-3xl shadow-xl border border-gray-100 dark:border-white/5">
+          <div className="mb-10 bg-white/50 dark:bg-black/20 p-5 rounded-3xl shadow-xl border border-gray-100 dark:border-white/5">
             <div className="flex items-center gap-4 mb-4">
               <div className="w-12 h-12 bg-yellow-400 text-black rounded-2xl flex items-center justify-center font-black italic border-2 border-black transform rotate-3 text-xl shadow-md">
                 {user.username?.[0]?.toUpperCase()}
@@ -132,62 +133,74 @@ const LayoutContent: React.FC<{ children: ReactNode }> = ({ children }) => {
           </div>
         )}
 
-        <nav className="flex-grow space-y-3">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-4">Navigation</p>
-          
-          <Link 
-            to="/" 
-            onClick={() => toggleSidebar(true)}
-            className={`nav-link-manga flex items-center gap-4 p-4 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${
-              location.pathname === '/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black' : ''
-            }`}
-          >
-            <Home className="w-5 h-5 text-xl" /> {t('nav.home', 'Accueil')}
+        <nav className="flex-grow space-y-1 pb-10">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2 mt-4">Principal</p>
+          <Link to="/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
+            <Home className="w-4 h-4" /> Accueil
           </Link>
-          
-          <Link 
-            to="/daily-challenge/" 
-            onClick={() => toggleSidebar(true)}
-            className={`nav-link-manga flex items-center gap-4 p-4 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${
-              location.pathname === '/daily-challenge/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black' : ''
-            }`}
-          >
-            <Zap className="w-5 h-5 text-xl text-yellow-400 fill-current animate-pulse" /> {t('nav.daily', 'Défi Quotidien')}
+          <Link to="/daily-challenge/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/daily-challenge/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
+            <Zap className="w-4 h-4 text-yellow-400 fill-current animate-pulse" /> Défi Quotidien
           </Link>
-          
-          <Link 
-            to="/leaderboard/" 
-            onClick={() => toggleSidebar(true)}
-            className={`nav-link-manga flex items-center gap-4 p-4 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${
-              location.pathname === '/leaderboard/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black' : ''
-            }`}
-          >
-            <Trophy className="w-5 h-5 text-xl text-orange-400 fill-current" /> {t('nav.leaderboard', 'Classement')}
+          <Link to="/games/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname.startsWith('/game') ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
+            <Gamepad2 className="w-4 h-4 text-blue-400" /> Games
           </Link>
-          
-          <Link 
-            to="/achievements/" 
-            onClick={() => toggleSidebar(true)}
-            className={`nav-link-manga flex items-center gap-4 p-4 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${
-              location.pathname === '/achievements/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black' : ''
-            }`}
-          >
-            <BookOpen className="w-5 h-5 text-xl text-blue-400" /> {t('nav.grimoire', 'Grimoire')}
+          <Link to="/theater/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/theater/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
+            <Film className="w-4 h-4 text-rose-400" /> Theater
           </Link>
 
-          <Link 
-            to="/forge-hub/" 
-            onClick={() => toggleSidebar(true)}
-            className={`nav-link-manga flex items-center gap-4 p-4 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${
-              location.pathname === '/forge-hub/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black' : ''
-            }`}
-          >
-            <Sparkles className="w-5 h-5 text-xl text-purple-400" /> Forge Créative
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2 mt-6">Exploration</p>
+          <Link to="/search/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/search/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
+            <Search className="w-4 h-4 text-cyan-400" /> Universal Search
           </Link>
+          <Link to="/explore/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/explore/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
+            <Compass className="w-4 h-4 text-emerald-400" /> Explore
+          </Link>
+          <Link to="/latent-space/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/latent-space/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
+            <Network className="w-4 h-4 text-indigo-400" /> Latent Space
+          </Link>
+
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2 mt-6">Communauté</p>
+          <Link to="/social/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/social/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
+            <Users className="w-4 h-4 text-orange-400" /> Community
+          </Link>
+          {isAuthenticated && (
+            <Link to="/friends/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/friends/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
+              <UserPlus className="w-4 h-4 text-pink-400" /> Friends
+            </Link>
+          )}
+          <Link to="/leaderboard/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/leaderboard/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
+            <Trophy className="w-4 h-4 text-yellow-500" /> Classement
+          </Link>
+
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2 mt-6">Labs & Création</p>
+          <Link to="/forge-hub/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/forge-hub/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
+            <Sparkles className="w-4 h-4 text-purple-400" /> Forge Créative
+          </Link>
+          <Link to="/lab/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname.startsWith('/lab') ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
+            <FlaskConical className="w-4 h-4 text-green-400" /> Beta Lab
+          </Link>
+          <Link to="/social/nexus/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/social/nexus/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
+            <BrainCircuit className="w-4 h-4 text-fuchsia-400" /> Nexus Pro
+          </Link>
+          <Link to="/transparence/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/transparence/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
+            <Eye className="w-4 h-4 text-slate-400" /> Transparence
+          </Link>
+
+          {!isAuthenticated && (
+            <>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2 mt-6">Compte</p>
+              <Link to="/auth/login/" onClick={() => toggleSidebar(true)} className="nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-blue-500/10 dark:hover:bg-blue-500/20">
+                <LogIn className="w-4 h-4 text-blue-500" /> Connexion
+              </Link>
+              <Link to="/auth/register/" onClick={() => toggleSidebar(true)} className="nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-green-500/10 dark:hover:bg-green-500/20">
+                <UserPlus className="w-4 h-4 text-green-500" /> S'inscrire
+              </Link>
+            </>
+          )}
           
           <div className="pt-8">
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-4">{t('nav.univers', 'Univers')}</p>
-            <div className="grid grid-cols-3 gap-2 p-1 bg-gray-100 dark:bg-navy-900 rounded-2xl border border-gray-100 dark:border-white/5">
+            <div className="grid grid-cols-3 gap-2 p-1 bg-white/50 dark:bg-black/20 rounded-2xl border border-gray-100 dark:border-white/5">
               {(['Anime', 'Manga', 'Character'] as const).map(mode => (
                 <button 
                   key={mode} 
@@ -206,7 +219,7 @@ const LayoutContent: React.FC<{ children: ReactNode }> = ({ children }) => {
 
           <div className="pt-8">
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-4">{t('nav.difficulty', 'Difficulté')}</p>
-            <div className="grid grid-cols-5 gap-2 bg-gray-50 dark:bg-navy-900/50 p-2 rounded-2xl border border-gray-100 dark:border-white/5">
+            <div className="grid grid-cols-5 gap-2 bg-white/50 dark:bg-black/20 p-2 rounded-2xl border border-gray-100 dark:border-white/5">
               {(['Easy', 'Normal', 'Hard', 'Impossible'] as const).map((diff, idx) => {
                 const bgColors = {
                   Easy: 'bg-green-500',
@@ -251,7 +264,7 @@ const LayoutContent: React.FC<{ children: ReactNode }> = ({ children }) => {
              <Link 
                to="/admin/dashboard/" 
                onClick={() => toggleSidebar(true)}
-               className="w-full py-3 rounded-2xl bg-gray-100 dark:bg-navy-700 flex items-center justify-center gap-3 no-underline text-black dark:text-white font-black italic text-xs hover:bg-yellow-400 dark:hover:bg-yellow-400 hover:text-black dark:hover:text-black transition-all"
+               className="w-full py-3 rounded-2xl bg-white/50 dark:bg-black/20 flex items-center justify-center gap-3 no-underline text-black dark:text-white font-black italic text-xs hover:bg-yellow-400 dark:hover:bg-yellow-400 hover:text-black dark:hover:text-black transition-all"
              >
                 <Shield className="w-4 h-4" /> {t('nav.admin', 'ADMINISTRATION')}
              </Link>
@@ -262,7 +275,7 @@ const LayoutContent: React.FC<{ children: ReactNode }> = ({ children }) => {
       {/* SETTINGS DRAWER (RIGHT) */}
       <aside 
         id="settings-drawer" 
-        className={`fixed right-0 top-0 h-screen w-80 bg-white dark:bg-navy-800 z-[2000] flex flex-col p-8 overflow-y-auto transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[-20px_0_50px_rgba(0,0,0,0.1)] border-l border-gray-100 dark:border-white/5 ${
+        className={`fixed right-0 top-0 h-screen w-80 bg-[#fffcf0] dark:bg-[#1a1a2e] z-[2000] flex flex-col p-8 overflow-y-auto transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[-20px_0_50px_rgba(0,0,0,0.1)] border-l border-gray-100 dark:border-white/5 ${
           isSettingsOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
@@ -297,7 +310,7 @@ const LayoutContent: React.FC<{ children: ReactNode }> = ({ children }) => {
                   <button 
                     key={tName} 
                     onClick={() => setTheme(tName)}
-                    className={`flex flex-col items-center gap-2 p-3 rounded-2xl bg-gray-50 dark:bg-navy-700 border-2 transition-all ${
+                    className={`flex flex-col items-center gap-2 p-3 rounded-2xl bg-white/50 dark:bg-black/20 border-2 transition-all ${
                       theme === tName ? 'border-yellow-400 bg-yellow-400/10' : 'border-transparent hover:border-gray-200'
                     }`}
                   >
@@ -318,7 +331,7 @@ const LayoutContent: React.FC<{ children: ReactNode }> = ({ children }) => {
                 <button 
                   key={lang} 
                   onClick={() => setCurrentLang(lang)}
-                  className="w-full flex items-center justify-between p-4 rounded-2xl text-black dark:text-white hover:bg-gray-50 dark:hover:bg-navy-700 transition-all text-left"
+                  className="w-full flex items-center justify-between p-4 rounded-2xl text-black dark:text-white hover:bg-white/50 dark:hover:bg-black/20 transition-all text-left"
                 >
                   <span className="manga-font text-xs">{lang}</span>
                   {currentLang === lang && <CheckCircle2 className="w-4 h-4 text-green-500 fill-current" />}

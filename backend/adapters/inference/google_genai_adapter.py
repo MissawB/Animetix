@@ -155,7 +155,7 @@ class GoogleGenAIAdapter(InferencePort):
             text = response.text or ""
             candidate = response.candidates[0] if response.candidates else None
             usage = self._get_usage_dict(response, len(prompt), len(text))
-            self._log_usage(engine=f"google_genai:{self.model_name}", input_tokens=usage.get("prompt_tokens", 0), output_tokens=usage.get("completion_tokens", 0))
+            self._log_usage(engine=f"google_genai:{self.model_name}", input_tokens=usage.get("prompt_tokens", 0), output_tokens=usage.get("completion_tokens", 0), allocated_budget=thinking_budget)
             
             parsed_logprobs = self._parse_logprobs(candidate) if candidate else None
             thoughts = self._extract_thoughts(response)

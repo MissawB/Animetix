@@ -16,7 +16,8 @@ class DjangoUsageAdapter(UsagePort):
         input_tokens: int = 0, 
         output_tokens: int = 0, 
         units: int = 0,
-        user_id: Optional[int] = None
+        user_id: Optional[int] = None,
+        allocated_budget: int = 0
     ):
         """
         Saves usage to Django database.
@@ -35,7 +36,8 @@ class DjangoUsageAdapter(UsagePort):
             input_tokens=input_tokens,
             output_tokens=output_tokens,
             total_tokens=input_tokens + output_tokens + units,
-            cost_estimate=cost
+            cost_estimate=cost,
+            allocated_budget=allocated_budget
         )
 
     def get_total_cost(self, since: Optional[datetime] = None) -> float:
