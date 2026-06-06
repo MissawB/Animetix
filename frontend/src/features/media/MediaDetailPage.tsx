@@ -34,7 +34,7 @@ const MediaDetailPage: React.FC = () => {
       <div className="max-w-7xl mx-auto px-6 py-32 text-center">
           <h2 className="text-4xl font-black italic manga-font text-red-500 mb-6 uppercase">Œuvre introuvable</h2>
           <p className="text-gray-500 font-bold uppercase tracking-widest mb-12">Le Nexus s'est peut-être effondré...</p>
-          <Button as={Link} to="/" variant="outline">RETOURNER AU LOBBY</Button>
+          <Button as={Link} to="/explore/" variant="outline">RETOURNER AU NEXUS</Button>
       </div>
   );
 
@@ -48,8 +48,8 @@ const MediaDetailPage: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-6 py-16 relative z-10">
         {/* Navigation */}
-        <Link to="/" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-white transition-colors mb-12 no-underline group">
-            <ArrowLeft className="w-3 h-3 group-hover:-translate-x-1 transition-transform" /> Retour à l'exploration
+        <Link to="/explore/" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-white transition-colors mb-12 no-underline group">
+            <ArrowLeft className="w-3 h-3 group-hover:-translate-x-1 transition-transform" /> Retour au Nexus
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
