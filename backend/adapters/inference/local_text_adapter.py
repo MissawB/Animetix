@@ -17,6 +17,7 @@ class LocalTextAdapter(InferencePort):
         self.model_id = model_id
         self.model = None
         self.tokenizer = None
+        self._embedding_model = None
         self.use_4bit = use_4bit
 
     def _load_model(self):
@@ -60,5 +61,18 @@ class LocalTextAdapter(InferencePort):
     def stream_generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False):
         yield self.generate(prompt, system_prompt, thinking_budget, thinking_mode)
 
+    def get_text_embedding(self, text: str) -> List[float]:
+        """Génère un embedding local via SentenceTransformer."""
+        if not self._embedding_model:
+            from sentence_transformers import SentenceTransformer
+            logger.info("🏗️ Loading Local Embedding Model: all-MiniLM-L6-v2")
+            self._embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+            
+        embedding = self._embedding_model.encode(text)
+        
+        self._log_usage(engine="local:all-MiniLM-L6-v2", units=1)
+        
+        return embedding.tolist()
+
     def health_check(self) -> dict:
-        return {"status": "online" if self.model else "offline", "engine": "local_text"}
+        return {"status": "online" if self.model or self._embedding_model else "offline", "engine": "local_text"}
