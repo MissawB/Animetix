@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Play, Check, X, Music } from 'lucide-react';
 import { useBlindtestStore } from '../../features/games/stores/blindtestStore';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
 
 const BlindtestPage: React.FC = () => {
   const { gameState, isLoading, error, loadGame, restartGame, submitGuess } = useBlindtestStore();
@@ -97,4 +97,5 @@ const BlindtestPage: React.FC = () => {
 };
 
 export default BlindtestPage;
+
 

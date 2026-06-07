@@ -18,10 +18,10 @@ import {
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import ForceGraph2D from 'react-force-graph-2d';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
-import { Badge } from '../../../components/ui/Badge';
-import { AnimatedPage } from '../../../components/ui/AnimatedPage';
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { Badge } from "../../components/ui/Badge";
+import { AnimatedPage } from "../../components/ui/AnimatedPage";
 
 interface Step {
   id: string;
@@ -373,4 +373,5 @@ const ExpertNexusPage: React.FC = () => {
 };
 
 export default ExpertNexusPage;
+
 

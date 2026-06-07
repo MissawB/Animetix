@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Brain, Zap, History, Loader2, Sparkles, Check, X, Info, LayoutDashboard, Target, Cpu, TrendingUp } from 'lucide-react';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
-import { Badge } from '../../../components/ui/Badge';
-import { AnimatedPage } from '../../../components/ui/AnimatedPage';
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { Badge } from "../../components/ui/Badge";
+import { AnimatedPage } from "../../components/ui/AnimatedPage";
 
 interface RLState {
     current_q: string;
@@ -263,4 +263,5 @@ const AkinetixRLPage: React.FC = () => {
 };
 
 export default AkinetixRLPage;
+
 

@@ -35,3 +35,6 @@ describe('CurationDashboard', () => {
     expect(screen.getByText(/Select a ticket to inspect/i)).toBeInTheDocument();
   });
 });
+
+
+

@@ -5,11 +5,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useTranslation } from 'react-i18next';
 import { useAudioLab } from '../../features/labs/hooks/useAudioLab';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
-import { Input } from '../../../components/ui/Input';
-import { Badge } from '../../../components/ui/Badge';
-import { CardSkeleton } from '../../../components/ui/Skeleton';
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { Input } from "../../components/ui/Input";
+import { Badge } from "../../components/ui/Badge";
+import { CardSkeleton } from "../../components/ui/Skeleton";
 
 const audioSchema = z.object({
   text: z.string().min(10, "Veuillez entrer au moins 10 caractères pour la synthèse.").max(500, "Le texte est trop long."),
@@ -183,4 +183,5 @@ const AudioLabPage: React.FC = () => {
 };
 
 export default AudioLabPage;
+
 

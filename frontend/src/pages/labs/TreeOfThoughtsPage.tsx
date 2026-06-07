@@ -12,11 +12,11 @@ import {
 import { useMutation } from '@tanstack/react-query';
 import _ForceGraph2D from 'react-force-graph-2d';
 const ForceGraph2D = (_ForceGraph2D as any).default || _ForceGraph2D;
-import { apiClient } from '../../../utils/apiClient';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
-import { Badge } from '../../../components/ui/Badge';
-import { AnimatedPage } from '../../../components/ui/AnimatedPage';
+import { apiClient } from "../../utils/apiClient";
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { Badge } from "../../components/ui/Badge";
+import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface ToTNode {
@@ -289,4 +289,5 @@ const TreeOfThoughtsPage: React.FC = () => {
 };
 
 export default TreeOfThoughtsPage;
+
 

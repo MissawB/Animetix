@@ -1,11 +1,11 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, Mock } from 'vitest';
-import { useSocialDashboard } from '../hooks/useSocialDashboard';
-import { socialService } from '../services/socialService';
+import { useSocialDashboard } from '../../../features/social/hooks/useSocialDashboard';
+import { socialService } from '../../../features/social/services/socialService';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 
-vi.mock('../services/socialService');
+vi.mock('../../../features/social/services/socialService');
 
 const queryClient = new QueryClient();
 const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -23,3 +23,6 @@ describe('useSocialDashboard Hook', () => {
     expect(result.current.data).toEqual(mockData);
   });
 });
+
+
+

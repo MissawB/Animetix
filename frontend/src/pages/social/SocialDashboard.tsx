@@ -2,10 +2,10 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Users, UserMinus, Heart, Brain, Swords, Layers, Activity, Zap } from 'lucide-react';
 import { useSocialDashboard } from '../../features/social/hooks/useSocialDashboard';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
 import { useTranslation } from 'react-i18next';
-import { CardSkeleton } from '../../../components/ui/Skeleton';
+import { CardSkeleton } from "../../components/ui/Skeleton";
 
 const DashboardLinkCard: React.FC<{ title: string; desc: string; icon: React.ReactNode; to: string; accent: string }> = ({ title, desc, icon, to, accent }) => (
     <Link to={to} className="no-underline group">
@@ -135,4 +135,5 @@ const SocialDashboard: React.FC = () => {
 };
 
 export default SocialDashboard;
+
 

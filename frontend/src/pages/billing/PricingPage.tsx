@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, Shield, Zap, Terminal, Cpu, ArrowRight, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../../../store/authStore';
+import { useAuthStore } from "../../store/authStore";
 import { updateAccountSettings } from '../../api';
-import { useToastStore } from '../../../store/toastStore';
-import { Button } from '../../../components/ui/Button';
+import { useToastStore } from "../../store/toastStore";
+import { Button } from "../../components/ui/Button";
 import { NexusGatewayModal } from '../../features/billing/components/NexusGatewayModal';
 
 const TIERS = [
@@ -149,4 +149,5 @@ const PricingPage: React.FC = () => {
 };
 
 export default PricingPage;
+
 

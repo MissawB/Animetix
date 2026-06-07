@@ -14,11 +14,11 @@ import {
   Share2
 } from 'lucide-react';
 import { useMediaDetail } from '../../features/media/hooks/useMediaDetail';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
-import { Badge } from '../../../components/ui/Badge';
-import { AnimatedPage } from '../../../components/ui/AnimatedPage';
-import { CardSkeleton } from '../../../components/ui/Skeleton';
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { Badge } from "../../components/ui/Badge";
+import { AnimatedPage } from "../../components/ui/AnimatedPage";
+import { CardSkeleton } from "../../components/ui/Skeleton";
 
 const MediaDetailPage: React.FC = () => {
   const { mediaType, itemId } = useParams<{ mediaType: string; itemId: string }>();
@@ -194,4 +194,5 @@ const MediaDetailPage: React.FC = () => {
 };
 
 export default MediaDetailPage;
+
 

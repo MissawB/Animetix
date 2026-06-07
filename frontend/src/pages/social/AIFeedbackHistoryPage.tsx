@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getAIFeedbackHistory, AIFeedback } from '../../api';
-import { Card } from '../../../components/ui/Card';
+import { Card } from "../../components/ui/Card";
 import { useTranslation } from 'react-i18next';
 import { MessageSquare, ThumbsUp, ThumbsDown, Calendar, Clock, ChevronLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -114,4 +114,5 @@ const AIFeedbackHistoryPage: React.FC = () => {
 };
 
 export default AIFeedbackHistoryPage;
+
 

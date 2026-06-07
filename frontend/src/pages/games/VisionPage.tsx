@@ -4,10 +4,10 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useVisionStore } from '../../features/games/stores/visionStore';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
-import { Input } from '../../../components/ui/Input';
-import { Badge } from '../../../components/ui/Badge';
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { Input } from "../../components/ui/Input";
+import { Badge } from "../../components/ui/Badge";
 
 const visionSchema = z.object({
   description: z.string().min(3, "Veuillez entrer au moins 3 caractères pour l'analyse.").max(200, "La description est trop longue."),
@@ -115,4 +115,5 @@ const VisionPage: React.FC = () => {
 };
 
 export default VisionPage;
+
 

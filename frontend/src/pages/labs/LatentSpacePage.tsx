@@ -3,11 +3,11 @@ import _Plot from 'react-plotly.js';
 import { Link } from 'react-router-dom';
 import { Box, Sliders, Info, Globe, ArrowRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '../../../utils/apiClient';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
-import { Badge } from '../../../components/ui/Badge';
-import { AnimatedPage } from '../../../components/ui/AnimatedPage';
+import { apiClient } from "../../utils/apiClient";
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { Badge } from "../../components/ui/Badge";
+import { AnimatedPage } from "../../components/ui/AnimatedPage";
 
 import { useTranslation } from 'react-i18next';
 
@@ -154,4 +154,5 @@ const LatentSpacePage: React.FC = () => {
 };
 
 export default LatentSpacePage;
+
 

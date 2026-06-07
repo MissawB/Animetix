@@ -13,13 +13,13 @@ import {
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { fusionService } from '../../features/social/services/fusionService';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
-import { Badge } from '../../../components/ui/Badge';
-import { AnimatedPage } from '../../../components/ui/AnimatedPage';
-import { CardSkeleton } from '../../../components/ui/Skeleton';
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { Badge } from "../../components/ui/Badge";
+import { AnimatedPage } from "../../components/ui/AnimatedPage";
+import { CardSkeleton } from "../../components/ui/Skeleton";
 import { useTranslation } from 'react-i18next';
-import { queryClient } from '../../../utils/queryClient';
+import { queryClient } from "../../utils/queryClient";
 
 const CommunityFeedPage: React.FC = () => {
   const { t } = useTranslation();
@@ -167,4 +167,5 @@ const CommunityFeedPage: React.FC = () => {
 };
 
 export default CommunityFeedPage;
+
 

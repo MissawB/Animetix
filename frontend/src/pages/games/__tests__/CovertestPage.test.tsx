@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom';
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeAll } from 'vitest';
-import AchievementsPage from '../AchievementsPage';
+import CovertestPage from '../CovertestPage';
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
@@ -13,19 +13,27 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
   <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 );
 
-describe('AchievementsPage', () => {
+describe('CovertestPage', () => {
   beforeAll(() => {
     global.fetch = vi.fn(() =>
       Promise.resolve({
         ok: true,
-        json: () => Promise.resolve([]),
+        json: () => Promise.resolve({ 
+            cover_url: '', 
+            gameOver: false, 
+            guesses: [], 
+            best_score: 0 
+        }),
       }) as Promise<Response>
     );
   });
 
-  it('affiche le titre du grimoire', async () => {
-    render(<AchievementsPage />, { wrapper });
-    const titleElement = await screen.findByText(/Grimoire des Hauts Faits/i);
-    expect(titleElement).toBeInTheDocument();
+  it('affiche le titre du jeu', async () => {
+    render(<CovertestPage />, { wrapper });
+    const title = await screen.findByText(/DEVINER/i);
+    expect(title).toBeInTheDocument();
   });
 });
+
+
+

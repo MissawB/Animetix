@@ -12,12 +12,12 @@ import {
 } from 'lucide-react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { goldDatasetService } from '../../features/admin/services/goldDatasetService';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
-import { Badge } from '../../../components/ui/Badge';
-import { AnimatedPage } from '../../../components/ui/AnimatedPage';
-import { CardSkeleton } from '../../../components/ui/Skeleton';
-import { queryClient } from '../../../utils/queryClient';
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { Badge } from "../../components/ui/Badge";
+import { AnimatedPage } from "../../components/ui/AnimatedPage";
+import { CardSkeleton } from "../../components/ui/Skeleton";
+import { queryClient } from "../../utils/queryClient";
 
 const AdminGoldDatasetPage: React.FC = () => {
   const { data: entries, isLoading, refetch } = useQuery<any[]>({
@@ -164,4 +164,5 @@ const AdminGoldDatasetPage: React.FC = () => {
 };
 
 export default AdminGoldDatasetPage;
+
 

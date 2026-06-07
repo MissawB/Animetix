@@ -1,8 +1,8 @@
 import React from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { GraphExplorer } from './GraphExplorer';
-import { SearchBar } from '../../../components/SearchBar';
-import { AnimatedPage } from '../../../components/ui/AnimatedPage';
+import { GraphExplorer } from "../../features/graph/GraphExplorer";
+import { SearchBar } from "../../components/SearchBar";
+import { AnimatedPage } from "../../components/ui/AnimatedPage";
 
 const GraphPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -55,4 +55,5 @@ const GraphPage: React.FC = () => {
 };
 
 export default GraphPage;
+
 

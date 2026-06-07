@@ -16,11 +16,11 @@ import {
   TrendingUp
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '../../../utils/apiClient';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
-import { Badge } from '../../../components/ui/Badge';
-import { AnimatedPage } from '../../../components/ui/AnimatedPage';
+import { apiClient } from "../../utils/apiClient";
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { Badge } from "../../components/ui/Badge";
+import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion } from 'framer-motion';
 
 const Plot = (_Plot as any).default || _Plot;
@@ -319,4 +319,5 @@ const StatBar: React.FC<StatBarProps> = ({ label, value, color }) => (
 );
 
 export default ArchetypeNexusPage;
+
 

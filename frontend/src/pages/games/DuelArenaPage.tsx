@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../../../store/authStore';
-import { AnimatedPage } from '../../../components/ui/AnimatedPage';
+import { useAuthStore } from "../../store/authStore";
+import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sword, User, Zap, Trophy, Timer, XCircle, Users, Radio } from 'lucide-react';
 
@@ -226,4 +226,5 @@ const DuelArenaPage: React.FC = () => {
 };
 
 export default DuelArenaPage;
+
 

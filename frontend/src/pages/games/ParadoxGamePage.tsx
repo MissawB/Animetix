@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import { Target, Trophy, RotateCcw, AlertTriangle } from 'lucide-react';
 import { useParadoxStore } from '../../features/games/stores/paradoxStore';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
 
 const ParadoxGamePage: React.FC = () => {
   const { gameState, isLoading, error, loadGame, submitGuess } = useParadoxStore();
@@ -72,4 +72,5 @@ const ParadoxGamePage: React.FC = () => {
 };
 
 export default ParadoxGamePage;
+
 

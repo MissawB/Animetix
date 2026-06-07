@@ -1,9 +1,9 @@
 import React from 'react';
 import { Cpu, Database, Settings, Server, Activity } from 'lucide-react';
 import { useHealth } from '../../features/admin/hooks/useHealth';
-import { Card } from '../../../components/ui/Card';
-import { Badge } from '../../../components/ui/Badge';
-import { Skeleton } from '../../../components/ui/Skeleton';
+import { Card } from "../../components/ui/Card";
+import { Badge } from "../../components/ui/Badge";
+import { Skeleton } from "../../components/ui/Skeleton";
 import { useTranslation } from 'react-i18next';
 
 const HealthPage: React.FC = () => {
@@ -52,4 +52,5 @@ const HealthCard: React.FC<HealthCardProps> = ({ title, status, Icon, color, loa
 );
 
 export default HealthPage;
+
 

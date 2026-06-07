@@ -14,10 +14,10 @@ import {
   Sparkles
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '../../../utils/apiClient';
-import { Card } from '../../../components/ui/Card';
-import { Badge } from '../../../components/ui/Badge';
-import { AnimatedPage } from '../../../components/ui/AnimatedPage';
+import { apiClient } from "../../utils/apiClient";
+import { Card } from "../../components/ui/Card";
+import { Badge } from "../../components/ui/Badge";
+import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion } from 'framer-motion';
 
 const SOTABenchmarkPage: React.FC = () => {
@@ -194,4 +194,5 @@ const SOTABenchmarkPage: React.FC = () => {
 };
 
 export default SOTABenchmarkPage;
+
 

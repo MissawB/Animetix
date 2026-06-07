@@ -21,9 +21,9 @@ import {
   Fingerprint,
   GitBranch
 } from 'lucide-react';
-import { Card } from '../../../components/ui/Card';
-import { Badge } from '../../../components/ui/Badge';
-import { AnimatedPage } from '../../../components/ui/AnimatedPage';
+import { Card } from "../../components/ui/Card";
+import { Badge } from "../../components/ui/Badge";
+import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion } from 'framer-motion';
 
 const labs = [
@@ -353,4 +353,5 @@ const LabHubPage: React.FC = () => {
 };
 
 export default LabHubPage;
+
 

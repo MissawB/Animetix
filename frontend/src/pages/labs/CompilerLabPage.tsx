@@ -11,11 +11,11 @@ import {
   Code
 } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
-import { apiClient } from '../../../utils/apiClient';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
-import { Badge } from '../../../components/ui/Badge';
-import { AnimatedPage } from '../../../components/ui/AnimatedPage';
+import { apiClient } from "../../utils/apiClient";
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { Badge } from "../../components/ui/Badge";
+import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion, AnimatePresence } from 'framer-motion';
 
 const CompilerLabPage: React.FC = () => {
@@ -172,4 +172,5 @@ const CompilerLabPage: React.FC = () => {
 };
 
 export default CompilerLabPage;
+
 

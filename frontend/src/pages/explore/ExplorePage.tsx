@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { AnimatedPage } from '../../../components/ui/AnimatedPage';
+import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion } from 'framer-motion';
 import { Search, Filter, TrendingUp, Play, Info, Plus, ChevronRight, ChevronLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -235,4 +235,5 @@ const ExplorePage: React.FC = () => {
 };
 
 export default ExplorePage;
+
 

@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { ShieldAlert, Edit3, Save, X, Info, Check } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { useDPO } from '../../features/admin/hooks/useDPO';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
-import { Input } from '../../../components/ui/Input';
-import { Badge } from '../../../components/ui/Badge';
-import { CardSkeleton } from '../../../components/ui/Skeleton';
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { Input } from "../../components/ui/Input";
+import { Badge } from "../../components/ui/Badge";
+import { CardSkeleton } from "../../components/ui/Skeleton";
 
 import { useTranslation } from 'react-i18next';
 
@@ -114,4 +114,5 @@ const AdminDPOPage: React.FC = () => {
 };
 
 export default AdminDPOPage;
+
 

@@ -1,26 +1,26 @@
 import { Route } from 'react-router-dom';
 import { lazy } from 'react';
 
-const SocialDashboard = lazy(() => import('../SocialDashboard'));
-const AchievementsPage = lazy(() => import('../AchievementsPage'));
-const LeaderboardPage = lazy(() => import('../LeaderboardPage'));
-const ProfilePage = lazy(() => import('../ProfilePage'));
-const CollectionPage = lazy(() => import('../CollectionPage'));
-const NotificationsPage = lazy(() => import('../NotificationsPage'));
-const TransparencyPage = lazy(() => import('../TransparencyPage'));
-const CommunityFeedPage = lazy(() => import('../CommunityFeedPage'));
-const ClubDiscoveryPage = lazy(() => import('../ClubDiscoveryPage'));
-const ClubDashboard = lazy(() => import('../ClubDashboard'));
-const ClubEventPage = lazy(() => import('../ClubEventPage'));
-const AIFeedbackHistoryPage = lazy(() => import('../AIFeedbackHistoryPage'));
-const SocialHubPage = lazy(() => import('../SocialHubPage'));
-const ArchetypeNexusPage = lazy(() => import('../ArchetypeNexusPage'));
-const AIDebateArenaPage = lazy(() => import('../AIDebateArenaPage'));
-const ExplorePage = lazy(() => import('../../explore/ExplorePage'));
-const NeuroMemoryPage = lazy(() => import('../NeuroMemoryPage'));
-const PricingPage = lazy(() => import('../../billing/PricingPage'));
-const TreeOfThoughtsPage = lazy(() => import('../../labs/TreeOfThoughtsPage'));
-const MultiverseGalleryPage = lazy(() => import('../../labs/MultiverseGalleryPage'));
+const SocialDashboard = lazy(() => import('../../../pages/social/SocialDashboard'));
+const AchievementsPage = lazy(() => import('../../../pages/social/AchievementsPage'));
+const LeaderboardPage = lazy(() => import('../../../pages/social/LeaderboardPage'));
+const ProfilePage = lazy(() => import('../../../pages/social/ProfilePage'));
+const CollectionPage = lazy(() => import('../../../pages/social/CollectionPage'));
+const NotificationsPage = lazy(() => import('../../../pages/social/NotificationsPage'));
+const TransparencyPage = lazy(() => import('../../../pages/social/TransparencyPage'));
+const CommunityFeedPage = lazy(() => import('../../../pages/social/CommunityFeedPage'));
+const ClubDiscoveryPage = lazy(() => import('../../../pages/social/ClubDiscoveryPage'));
+const ClubDashboard = lazy(() => import('../../../pages/social/ClubDashboard'));
+const ClubEventPage = lazy(() => import('../../../pages/social/ClubEventPage'));
+const AIFeedbackHistoryPage = lazy(() => import('../../../pages/social/AIFeedbackHistoryPage'));
+const SocialHubPage = lazy(() => import('../../../pages/social/SocialHubPage'));
+const ArchetypeNexusPage = lazy(() => import('../../../pages/social/ArchetypeNexusPage'));
+const AIDebateArenaPage = lazy(() => import('../../../pages/social/AIDebateArenaPage'));
+const ExplorePage = lazy(() => import('../../../pages/explore/ExplorePage'));
+const NeuroMemoryPage = lazy(() => import('../../../pages/social/NeuroMemoryPage'));
+const PricingPage = lazy(() => import('../../../pages/billing/PricingPage'));
+const TreeOfThoughtsPage = lazy(() => import('../../../pages/labs/TreeOfThoughtsPage'));
+const MultiverseGalleryPage = lazy(() => import('../../../pages/labs/MultiverseGalleryPage'));
 
 export const SocialRoutes = (
   <>

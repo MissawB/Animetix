@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { useAuthStore } from '../../../store/authStore';
+import { useAuthStore } from "../../store/authStore";
 import { updateAccountSettings, generateApiKey, revokeApiKey } from '../../api';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
 import { useTranslation } from 'react-i18next';
 import { Settings, Key, ShieldAlert, Star, AlertTriangle, Eye, EyeOff, MessageSquare, ChevronRight } from 'lucide-react';
-import { useToastStore } from '../../../store/toastStore';
+import { useToastStore } from "../../store/toastStore";
 import { Link } from 'react-router-dom';
 
 const AccountSettingsPage: React.FC = () => {
@@ -200,3 +200,4 @@ const AccountSettingsPage: React.FC = () => {
 };
 
 export default AccountSettingsPage;
+

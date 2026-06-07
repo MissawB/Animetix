@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { ChevronLeft, Users, Settings, Bell, Info, Calendar, Plus, Clock, FileText } from 'lucide-react';
 import ClubChat from '../../features/social/components/ClubChat';
 import { getClubDetails, createClubEvent, getClubEvents, ClubEvent } from '../../api';
-import { useToastStore } from '../../../store/toastStore';
+import { useToastStore } from "../../store/toastStore";
 
 interface Member {
   id: string;
@@ -333,4 +333,5 @@ const ClubDashboard: React.FC = () => {
 };
 
 export default ClubDashboard;
+
 

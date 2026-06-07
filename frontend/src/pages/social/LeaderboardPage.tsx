@@ -2,10 +2,10 @@ import React from 'react';
 import { Trophy, Medal } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLeaderboard } from '../../features/social/hooks/useLeaderboard';
-import { Card } from '../../../components/ui/Card';
-import { Badge } from '../../../components/ui/Badge';
+import { Card } from "../../components/ui/Card";
+import { Badge } from "../../components/ui/Badge";
 import { useTranslation } from 'react-i18next';
-import { CardSkeleton } from '../../../components/ui/Skeleton';
+import { CardSkeleton } from "../../components/ui/Skeleton";
 
 const LeaderboardPage: React.FC = () => {
   const { t } = useTranslation();
@@ -73,4 +73,5 @@ const LeaderboardPage: React.FC = () => {
 };
 
 export default LeaderboardPage;
+
 

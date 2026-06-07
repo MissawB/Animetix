@@ -1,8 +1,8 @@
 import React from 'react';
 import { useAdminEval } from '../../features/admin/hooks/useAdminEval';
 import { useTranslation } from 'react-i18next';
-import { Card } from '../../../components/ui/Card';
-import { CardSkeleton } from '../../../components/ui/Skeleton';
+import { Card } from "../../components/ui/Card";
+import { CardSkeleton } from "../../components/ui/Skeleton";
 import { Brain, Activity, Target } from 'lucide-react';
 
 interface Stats {
@@ -129,4 +129,5 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color }) => {
 };
 
 export default AdminEvalPage;
+
 

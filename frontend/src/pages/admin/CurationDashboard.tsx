@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { AnimatedPage } from '../../../components/ui/AnimatedPage';
+import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldCheck, AlertCircle, CheckCircle2, XCircle, Database, LayoutGrid, Clock, ChevronRight } from 'lucide-react';
 
@@ -166,4 +166,5 @@ const CurationDashboard: React.FC = () => {
 };
 
 export default CurationDashboard;
+
 

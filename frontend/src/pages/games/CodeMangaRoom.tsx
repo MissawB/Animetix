@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import useSocket from "../../hooks/useSocket";
 import { Code2, Send, Users, Sparkles } from 'lucide-react';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
-import { Input } from '../../../components/ui/Input';
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { Input } from "../../components/ui/Input";
 
 import { useTranslation } from 'react-i18next';
 
@@ -103,4 +103,5 @@ const CodeMangaRoom: React.FC = () => {
 };
 
 export default CodeMangaRoom;
+
 

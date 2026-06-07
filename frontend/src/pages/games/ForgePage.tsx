@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, Zap, Flame, Image as ImageIcon, Loader2, ArrowRight, RefreshCw, Heart, Share2, Info, X, Film } from 'lucide-react';
-import { SearchBar } from '../../../components/SearchBar';
+import { SearchBar } from "../../components/SearchBar";
 import { startFusion, getFusionStatus, FusionResponse, FusionStatus } from '../../api';
-import { SearchItem } from '../../../types';
+import { SearchItem } from "../../types";
 
 const ART_STYLES = [
   { id: 'Cyberpunk', name: 'Cyberpunk', desc: 'Néons et technologie futuriste', color: 'bg-purple-500' },
@@ -394,4 +394,5 @@ const ForgePage: React.FC = () => {
 };
 
 export default ForgePage;
+
 

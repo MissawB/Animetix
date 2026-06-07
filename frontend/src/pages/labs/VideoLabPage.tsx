@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Video, Wand2, Upload, Play, Film, Sparkles } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
-import { apiClient } from '../../../utils/apiClient';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
-import { Badge } from '../../../components/ui/Badge';
+import { apiClient } from "../../utils/apiClient";
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { Badge } from "../../components/ui/Badge";
 import { useTranslation } from 'react-i18next';
 
 interface VideoLabResult {
@@ -215,4 +215,5 @@ const VideoLabPage: React.FC = () => {
 };
 
 export default VideoLabPage;
+
 

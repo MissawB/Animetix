@@ -1,10 +1,10 @@
 import React from 'react';
 import { CheckCircle2, Trophy } from 'lucide-react';
 import { useAchievements } from '../../features/social/hooks/useAchievements';
-import { Card } from '../../../components/ui/Card';
-import { Badge } from '../../../components/ui/Badge';
+import { Card } from "../../components/ui/Card";
+import { Badge } from "../../components/ui/Badge";
 import { useTranslation } from 'react-i18next';
-import { CardSkeleton } from '../../../components/ui/Skeleton';
+import { CardSkeleton } from "../../components/ui/Skeleton";
 
 interface Achievement {
   id: number;
@@ -66,4 +66,5 @@ const AchievementsPage: React.FC = () => {
 };
 
 export default AchievementsPage;
+
 

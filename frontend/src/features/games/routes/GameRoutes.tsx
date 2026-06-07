@@ -1,25 +1,25 @@
 import { Route } from 'react-router-dom';
 import { lazy } from 'react';
 
-const AkinetixPage = lazy(() => import('../AkinetixPage'));
-const BlindtestPage = lazy(() => import('../BlindtestPage'));
-const ClassicGamePage = lazy(() => import('../ClassicGamePage'));
-const ParadoxGamePage = lazy(() => import('../ParadoxGamePage'));
-const UndercoverRoom = lazy(() => import('../UndercoverRoom'));
-const CodeMangaRoom = lazy(() => import('../CodeMangaRoom'));
-const AniminatorPage = lazy(() => import('../AniminatorPage'));
-const CovertestPage = lazy(() => import('../CovertestPage'));
-const VisionPage = lazy(() => import('../VisionPage'));
-const EmojiPage = lazy(() => import('../EmojiPage'));
-const ForgePage = lazy(() => import('../ForgePage'));
-const ForgeVNPage = lazy(() => import('../ForgeVNPage'));
-const AkinetixRLPage = lazy(() => import('../AkinetixRLPage'));
-const VsBattlePage = lazy(() => import('../VsBattlePage'));
-const GamesHubPage = lazy(() => import('../GamesHubPage'));
-const TheaterPage = lazy(() => import('../TheaterPage'));
-const WorldBossPage = lazy(() => import('../WorldBossPage'));
-const DuelLobbyPage = lazy(() => import('../DuelLobbyPage'));
-const DuelArenaPage = lazy(() => import('../DuelArenaPage'));
+const AkinetixPage = lazy(() => import('../../../pages/games/AkinetixPage'));
+const BlindtestPage = lazy(() => import('../../../pages/games/BlindtestPage'));
+const ClassicGamePage = lazy(() => import('../../../pages/games/ClassicGamePage'));
+const ParadoxGamePage = lazy(() => import('../../../pages/games/ParadoxGamePage'));
+const UndercoverRoom = lazy(() => import('../../../pages/games/UndercoverRoom'));
+const CodeMangaRoom = lazy(() => import('../../../pages/games/CodeMangaRoom'));
+const AniminatorPage = lazy(() => import('../../../pages/games/AniminatorPage'));
+const CovertestPage = lazy(() => import('../../../pages/games/CovertestPage'));
+const VisionPage = lazy(() => import('../../../pages/games/VisionPage'));
+const EmojiPage = lazy(() => import('../../../pages/games/EmojiPage'));
+const ForgePage = lazy(() => import('../../../pages/games/ForgePage'));
+const ForgeVNPage = lazy(() => import('../../../pages/games/ForgeVNPage'));
+const AkinetixRLPage = lazy(() => import('../../../pages/games/AkinetixRLPage'));
+const VsBattlePage = lazy(() => import('../../../pages/games/VsBattlePage'));
+const GamesHubPage = lazy(() => import('../../../pages/games/GamesHubPage'));
+const TheaterPage = lazy(() => import('../../../pages/games/TheaterPage'));
+const WorldBossPage = lazy(() => import('../../../pages/games/WorldBossPage'));
+const DuelLobbyPage = lazy(() => import('../../../pages/games/DuelLobbyPage'));
+const DuelArenaPage = lazy(() => import('../../../pages/games/DuelArenaPage'));
 
 export const GameRoutes = (
   <>

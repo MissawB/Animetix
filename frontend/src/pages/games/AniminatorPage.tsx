@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Sparkles, Send, Brain, Bot, User } from 'lucide-react';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
-import { Input } from '../../../components/ui/Input';
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { Input } from "../../components/ui/Input";
 
 import { useTranslation } from 'react-i18next';
-import { apiClient } from '../../../utils/apiClient';
+import { apiClient } from "../../utils/apiClient";
 
 interface Message {
   role: 'ai' | 'user';
@@ -125,4 +125,5 @@ const AniminatorPage: React.FC = () => {
 };
 
 export default AniminatorPage;
+
 

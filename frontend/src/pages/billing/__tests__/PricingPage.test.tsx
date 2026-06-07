@@ -64,3 +64,6 @@ describe('PricingPage', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/login?redirect=/pricing/');
   });
 });
+
+
+

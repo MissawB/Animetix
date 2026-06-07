@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { ImageIcon, Send, RotateCcw } from 'lucide-react';
 import { useCovertest } from '../../features/games/hooks/useCovertest';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
-import { Input } from '../../../components/ui/Input';
-import { Badge } from '../../../components/ui/Badge';
-import { CardSkeleton } from '../../../components/ui/Skeleton';
-import { CovertestState } from '../../../types';
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { Input } from "../../components/ui/Input";
+import { Badge } from "../../components/ui/Badge";
+import { CardSkeleton } from "../../components/ui/Skeleton";
+import { CovertestState } from "../../types";
 
 import { useTranslation } from 'react-i18next';
 
@@ -93,4 +93,5 @@ const CovertestPage: React.FC = () => {
 };
 
 export default CovertestPage;
+
 

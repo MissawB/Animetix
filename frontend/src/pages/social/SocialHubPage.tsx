@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Users, UserPlus, Search, UserMinus, Shield, MessageCircle, Star, ChevronRight } from 'lucide-react';
 import { getSocialDashboard, searchUsers, toggleFollow } from '../../api';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
 import { Link } from 'react-router-dom';
-import { Friendship, User } from '../../../types';
-import { useToastStore } from '../../../store/toastStore';
+import { Friendship, User } from "../../types";
+import { useToastStore } from "../../store/toastStore";
 
 const SocialHubPage: React.FC = () => {
   const { t } = useTranslation();
@@ -196,4 +196,5 @@ const SocialHubPage: React.FC = () => {
 };
 
 export default SocialHubPage;
+
 

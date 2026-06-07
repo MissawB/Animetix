@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { Send, Trophy, Sparkles } from 'lucide-react';
 import { useEmoji } from '../../features/games/hooks/useEmoji';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
-import { Input } from '../../../components/ui/Input';
-import { Badge } from '../../../components/ui/Badge';
-import { CardSkeleton } from '../../../components/ui/Skeleton';
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { Input } from "../../components/ui/Input";
+import { Badge } from "../../components/ui/Badge";
+import { CardSkeleton } from "../../components/ui/Skeleton";
 
 import { useTranslation } from 'react-i18next';
-import { EmojiState } from '../../../types';
+import { EmojiState } from "../../types";
 
 const EmojiPage: React.FC = () => {
   const { t } = useTranslation();
@@ -93,4 +93,5 @@ const EmojiPage: React.FC = () => {
 };
 
 export default EmojiPage;
+
 

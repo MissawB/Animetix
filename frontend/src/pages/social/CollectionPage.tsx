@@ -1,13 +1,13 @@
 import React from 'react';
 import { Bookmark, Sparkles, Image as ImageIcon, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { CreativeFusion } from '../../../types';
+import { CreativeFusion } from "../../types";
 import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '../../../utils/apiClient';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
-import { Badge } from '../../../components/ui/Badge';
-import { CardSkeleton } from '../../../components/ui/Skeleton';
+import { apiClient } from "../../utils/apiClient";
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { Badge } from "../../components/ui/Badge";
+import { CardSkeleton } from "../../components/ui/Skeleton";
 
 import { useTranslation } from 'react-i18next';
 
@@ -86,4 +86,5 @@ const CollectionPage: React.FC = () => {
 };
 
 export default CollectionPage;
+
 

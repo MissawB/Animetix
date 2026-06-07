@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Layers, Wand2, ArrowRight, Image as ImageIcon, Box, Cuboid } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
-import { apiClient } from '../../../utils/apiClient';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
-import { Badge } from '../../../components/ui/Badge';
+import { apiClient } from "../../utils/apiClient";
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { Badge } from "../../components/ui/Badge";
 import { useTranslation } from 'react-i18next';
 import '@google/model-viewer';
 
@@ -234,4 +234,5 @@ const SpatialLabPage: React.FC = () => {
 };
 
 export default SpatialLabPage;
+
 

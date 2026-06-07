@@ -1,10 +1,10 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { AnimatedPage } from '../../../components/ui/AnimatedPage';
-import { Card } from '../../../components/ui/Card';
+import { AnimatedPage } from "../../components/ui/AnimatedPage";
+import { Card } from "../../components/ui/Card";
 import { Brain, ArrowLeft, AlertTriangle, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { apiClient } from '../../../utils/apiClient';
+import { apiClient } from "../../utils/apiClient";
 
 // Create a small helper to fetch
 const fetchTTCStats = async () => {
@@ -86,4 +86,5 @@ const TTCMonitoringPage = () => {
 };
 
 export default TTCMonitoringPage;
+
 

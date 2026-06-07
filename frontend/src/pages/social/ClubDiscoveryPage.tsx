@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Users, Search, Plus, Loader2, X, Shield, Layout, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { apiClient } from '../../../utils/apiClient';
+import { apiClient } from "../../utils/apiClient";
 import { socialService } from '../../features/social/services/socialService';
-import { Button } from '../../../components/ui/Button';
-import { Card } from '../../../components/ui/Card';
-import { Badge } from '../../../components/ui/Badge';
-import { queryClient } from '../../../utils/queryClient';
+import { Button } from "../../components/ui/Button";
+import { Card } from "../../components/ui/Card";
+import { Badge } from "../../components/ui/Badge";
+import { queryClient } from "../../utils/queryClient";
 
 interface Club {
   id: string;
@@ -226,4 +226,5 @@ const ClubDiscoveryPage: React.FC = () => {
 };
 
 export default ClubDiscoveryPage;
+
 

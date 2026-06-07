@@ -2,10 +2,10 @@ import React from 'react';
 import { Calendar, Layers, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useDailyChallenge } from '../../features/utils/hooks/useDailyChallenge';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
-import { Badge } from '../../../components/ui/Badge';
-import { Skeleton } from '../../../components/ui/Skeleton';
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { Badge } from "../../components/ui/Badge";
+import { Skeleton } from "../../components/ui/Skeleton";
 import { useTranslation } from 'react-i18next';
 
 const DailyChallengePage: React.FC = () => {
@@ -101,4 +101,5 @@ const DailyChallengePage: React.FC = () => {
 };
 
 export default DailyChallengePage;
+
 

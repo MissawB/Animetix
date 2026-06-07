@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import useSocket from "../../hooks/useSocket";
 import { Users, Send, ShieldAlert } from 'lucide-react';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
-import { Input } from '../../../components/ui/Input';
-import { Badge } from '../../../components/ui/Badge';
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { Input } from "../../components/ui/Input";
+import { Badge } from "../../components/ui/Badge";
 
 import { useTranslation } from 'react-i18next';
 
@@ -85,4 +85,5 @@ const UndercoverRoom: React.FC = () => {
 };
 
 export default UndercoverRoom;
+
 

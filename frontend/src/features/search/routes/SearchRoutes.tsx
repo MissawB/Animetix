@@ -1,10 +1,10 @@
 import { Route } from 'react-router-dom';
 import { lazy } from 'react';
 
-const SearchResultsPage = lazy(() => import('../SearchResultsPage'));
-const ExpertNexusPage = lazy(() => import('../ExpertNexusPage'));
-const CounterfactualSimulatorPage = lazy(() => import('../CounterfactualSimulatorPage'));
-const UniversalSearchHubPage = lazy(() => import('../UniversalSearchHubPage'));
+const SearchResultsPage = lazy(() => import('../../../pages/search/SearchResultsPage'));
+const ExpertNexusPage = lazy(() => import('../../../pages/search/ExpertNexusPage'));
+const CounterfactualSimulatorPage = lazy(() => import('../../../pages/search/CounterfactualSimulatorPage'));
+const UniversalSearchHubPage = lazy(() => import('../../../pages/search/UniversalSearchHubPage'));
 
 export const SearchRoutes = (
   <>

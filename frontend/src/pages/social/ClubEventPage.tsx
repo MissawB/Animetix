@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ChevronLeft, Calendar, Clock, MapPin, Users, Send, CheckCircle } from 'lucide-react';
 import { getClubEventDetails, getClubDetails, toggleEventParticipation, ClubEvent } from '../../api';
-import { useToastStore } from '../../../store/toastStore';
-import { Button } from '../../../components/ui/Button';
-import { Card } from '../../../components/ui/Card';
+import { useToastStore } from "../../store/toastStore";
+import { Button } from "../../components/ui/Button";
+import { Card } from "../../components/ui/Card";
 
 const ClubEventPage: React.FC = () => {
   const { id, eventId } = useParams<{ id: string; eventId: string }>();
@@ -273,5 +273,6 @@ const ClubEventPage: React.FC = () => {
 };
 
 export default ClubEventPage;
+
 
 

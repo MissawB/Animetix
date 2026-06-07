@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Search, Zap, Trophy, HelpCircle, History } from 'lucide-react';
 import { useClassicGame } from '../../features/games/hooks/useClassicGame';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
-import { Input } from '../../../components/ui/Input';
-import { Badge } from '../../../components/ui/Badge';
-import { CardSkeleton } from '../../../components/ui/Skeleton';
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { Input } from "../../components/ui/Input";
+import { Badge } from "../../components/ui/Badge";
+import { CardSkeleton } from "../../components/ui/Skeleton";
 
 import { useTranslation } from 'react-i18next';
 
@@ -108,4 +108,5 @@ const ClassicGamePage: React.FC = () => {
 };
 
 export default ClassicGamePage;
+
 

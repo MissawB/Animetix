@@ -12,11 +12,11 @@ import {
   Settings
 } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
-import { apiClient } from '../../../utils/apiClient';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
-import { Badge } from '../../../components/ui/Badge';
-import { AnimatedPage } from '../../../components/ui/AnimatedPage';
+import { apiClient } from "../../utils/apiClient";
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { Badge } from "../../components/ui/Badge";
+import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion } from 'framer-motion';
 
 const Plot = (_Plot as any).default || _Plot;
@@ -238,4 +238,5 @@ const LiquidNeuralNetworkLabPage: React.FC = () => {
 };
 
 export default LiquidNeuralNetworkLabPage;
+
 

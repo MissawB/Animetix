@@ -14,12 +14,12 @@ import {
   Film
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '../../../utils/apiClient';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
-import { Badge } from '../../../components/ui/Badge';
-import { AnimatedPage } from '../../../components/ui/AnimatedPage';
-import { CardSkeleton } from '../../../components/ui/Skeleton';
+import { apiClient } from "../../utils/apiClient";
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { Badge } from "../../components/ui/Badge";
+import { AnimatedPage } from "../../components/ui/AnimatedPage";
+import { CardSkeleton } from "../../components/ui/Skeleton";
 import { useTranslation } from 'react-i18next';
 
 const SearchResultsPage: React.FC = () => {
@@ -178,4 +178,5 @@ const SearchResultsPage: React.FC = () => {
 };
 
 export default SearchResultsPage;
+
 

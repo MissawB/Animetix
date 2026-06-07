@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { AnimatedPage } from '../../../components/ui/AnimatedPage';
-import { Card } from '../../../components/ui/Card';
-import { Badge } from '../../../components/ui/Badge';
+import { AnimatedPage } from "../../components/ui/AnimatedPage";
+import { Card } from "../../components/ui/Card";
+import { Badge } from "../../components/ui/Badge";
 import { Link } from 'react-router-dom';
 import { 
   Brain, 
@@ -181,4 +181,5 @@ const CognitionHubPage: React.FC = () => {
 };
 
 export default CognitionHubPage;
+
 

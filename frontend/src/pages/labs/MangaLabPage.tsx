@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Upload, Wand2, Languages, Image as ImageIcon } from 'lucide-react';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
-import { Badge } from '../../../components/ui/Badge';
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { Badge } from "../../components/ui/Badge";
 import { useTranslation } from 'react-i18next';
-import { apiClient } from '../../../utils/apiClient';
+import { apiClient } from "../../utils/apiClient";
 
 interface MangaLabResult {
   original: string;
@@ -147,4 +147,5 @@ const MangaLabPage: React.FC = () => {
 };
 
 export default MangaLabPage;
+
 

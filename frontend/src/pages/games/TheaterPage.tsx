@@ -12,12 +12,12 @@ import {
   Library
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '../../../utils/apiClient';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
-import { Badge } from '../../../components/ui/Badge';
-import { AnimatedPage } from '../../../components/ui/AnimatedPage';
-import { CardSkeleton } from '../../../components/ui/Skeleton';
+import { apiClient } from "../../utils/apiClient";
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { Badge } from "../../components/ui/Badge";
+import { AnimatedPage } from "../../components/ui/AnimatedPage";
+import { CardSkeleton } from "../../components/ui/Skeleton";
 import { useTranslation } from 'react-i18next';
 
 const TheaterPage: React.FC = () => {
@@ -152,4 +152,5 @@ const TheaterPage: React.FC = () => {
 };
 
 export default TheaterPage;
+
 

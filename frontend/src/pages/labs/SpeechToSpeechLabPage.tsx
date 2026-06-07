@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Mic, Square, Volume2, Sparkles, Radio, Loader2, RefreshCw, MessageSquare } from 'lucide-react';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
-import { Badge } from '../../../components/ui/Badge';
-import { AnimatedPage } from '../../../components/ui/AnimatedPage';
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { Badge } from "../../components/ui/Badge";
+import { AnimatedPage } from "../../components/ui/AnimatedPage";
 
 const SpeechToSpeechLabPage: React.FC = () => {
   const [status, setStatus] = useState<'connecting' | 'ready' | 'recording' | 'thinking' | 'playing' | 'error'>('connecting');
@@ -321,4 +321,5 @@ const SpeechToSpeechLabPage: React.FC = () => {
 };
 
 export default SpeechToSpeechLivePage;
+
 

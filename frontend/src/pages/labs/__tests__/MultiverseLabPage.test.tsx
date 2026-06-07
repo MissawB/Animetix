@@ -77,3 +77,6 @@ describe('MultiverseLabPage', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/multiverse/gallery/');
   });
 });
+
+
+

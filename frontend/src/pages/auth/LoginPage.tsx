@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { useAuthStore } from '../../../store/authStore';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
+import { useAuthStore } from "../../store/authStore";
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
 import { useTranslation } from 'react-i18next';
 import { LogIn } from 'lucide-react';
 
@@ -98,4 +98,5 @@ const LoginPage: React.FC = () => {
 };
 
 export default LoginPage;
+
 

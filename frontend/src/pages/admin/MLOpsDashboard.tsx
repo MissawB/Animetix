@@ -13,9 +13,9 @@ import {
   Terminal,
   LayoutGrid
 } from 'lucide-react';
-import { Card } from '../../../components/ui/Card';
-import { Badge } from '../../../components/ui/Badge';
-import { AnimatedPage } from '../../../components/ui/AnimatedPage';
+import { Card } from "../../components/ui/Card";
+import { Badge } from "../../components/ui/Badge";
+import { AnimatedPage } from "../../components/ui/AnimatedPage";
 
 const MLOpsDashboard: React.FC = () => {
   const adminModules = [
@@ -211,4 +211,5 @@ const MLOpsDashboard: React.FC = () => {
 };
 
 export default MLOpsDashboard;
+
 

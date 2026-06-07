@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Brain, History, Check, X, HelpCircle, ArrowRight } from 'lucide-react';
 import { useAkinetixStore } from '../../features/games/stores/akinetixStore';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
 
-import { CardSkeleton } from '../../../components/ui/Skeleton';
+import { CardSkeleton } from "../../components/ui/Skeleton";
 
 import { useTranslation } from 'react-i18next';
 
@@ -110,4 +110,5 @@ const AkinetixPage: React.FC = () => {
 };
 
 export default AkinetixPage;
+
 

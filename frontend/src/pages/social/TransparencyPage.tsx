@@ -16,12 +16,12 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { apiClient } from '../../../utils/apiClient';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
-import { Badge } from '../../../components/ui/Badge';
-import { CardSkeleton } from '../../../components/ui/Skeleton';
-import { useAuthStore } from '../../../store/authStore';
+import { apiClient } from "../../utils/apiClient";
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { Badge } from "../../components/ui/Badge";
+import { CardSkeleton } from "../../components/ui/Skeleton";
+import { useAuthStore } from "../../store/authStore";
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 
@@ -305,4 +305,5 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon }) => (
 );
 
 export default TransparencyPage;
+
 

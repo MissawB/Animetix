@@ -15,11 +15,11 @@ import {
   Loader2
 } from 'lucide-react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { apiClient } from '../../../utils/apiClient';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
-import { Badge } from '../../../components/ui/Badge';
-import { AnimatedPage } from '../../../components/ui/AnimatedPage';
+import { apiClient } from "../../utils/apiClient";
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { Badge } from "../../components/ui/Badge";
+import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion, AnimatePresence } from 'framer-motion';
 
 const NeuroMemoryPage: React.FC = () => {
@@ -168,4 +168,5 @@ const NeuroMemoryPage: React.FC = () => {
 };
 
 export default NeuroMemoryPage;
+
 

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { AnimatedPage } from '../../../components/ui/AnimatedPage';
+import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { RelicItem } from '../../features/labs/components/RelicItem';
 import { LabListOverlay } from '../../features/labs/components/LabListOverlay';
 import { Book, Frame, Headphones, FlaskConical as Flask } from 'lucide-react';
@@ -118,4 +118,5 @@ const ForgeHubPage: React.FC = () => {
 };
 
 export default ForgeHubPage;
+
 

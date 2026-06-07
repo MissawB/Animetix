@@ -11,11 +11,11 @@ import {
   ShieldCheck,
   Bot
 } from 'lucide-react';
-import { useCompanionStore } from './companionStore';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
-import { Badge } from '../../../components/ui/Badge';
-import { AnimatedPage } from '../../../components/ui/AnimatedPage';
+import { useCompanionStore } from "../../features/companion/companionStore";
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { Badge } from "../../components/ui/Badge";
+import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { useTranslation } from 'react-i18next';
 
 const CompanionChatPage: React.FC = () => {
@@ -220,4 +220,5 @@ const Loader2: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 export default CompanionChatPage;
+
 

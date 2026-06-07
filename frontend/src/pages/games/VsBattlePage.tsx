@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { Swords, Trophy, Loader2, AlertCircle, Heart, Share2, TrendingUp, Clock, History, Flame } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Card } from '../../../components/ui/Card';
-import { CardSkeleton } from '../../../components/ui/Skeleton';
-import { Button } from '../../../components/ui/Button';
-import { Input } from '../../../components/ui/Input';
-import { Badge } from '../../../components/ui/Badge';
-import { AnimatedPage } from '../../../components/ui/AnimatedPage';
+import { Card } from "../../components/ui/Card";
+import { CardSkeleton } from "../../components/ui/Skeleton";
+import { Button } from "../../components/ui/Button";
+import { Input } from "../../components/ui/Input";
+import { Badge } from "../../components/ui/Badge";
+import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { vsBattleService } from '../../features/games/services/vsBattleService';
-import { queryClient } from '../../../utils/queryClient';
+import { queryClient } from "../../utils/queryClient";
 
 const VsBattlePage: React.FC = () => {
   const { t } = useTranslation();
@@ -274,4 +274,5 @@ const VsBattlePage: React.FC = () => {
 };
 
 export default VsBattlePage;
+
 

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Save, Moon, Sun, Bot, Award, Sparkles } from 'lucide-react';
 import { useCustomConfig } from '../../features/utils/hooks/useCustomConfig';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
 import { useTranslation } from 'react-i18next';
-import { CardSkeleton } from '../../../components/ui/Skeleton';
+import { CardSkeleton } from "../../components/ui/Skeleton";
 
 const CustomConfigPage: React.FC = () => {
   const { t } = useTranslation();
@@ -139,4 +139,5 @@ const CustomConfigPage: React.FC = () => {
 };
 
 export default CustomConfigPage;
+
 

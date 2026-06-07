@@ -1,13 +1,13 @@
 import React, { useEffect } from 'react';
 import { BellOff, Info, CheckCircle2, AlertTriangle, Star } from 'lucide-react';
-import { Notification } from '../../../types';
+import { Notification } from "../../types";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '../../../utils/apiClient';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
-import { Badge } from '../../../components/ui/Badge';
-import { CardSkeleton } from '../../../components/ui/Skeleton';
-import { useNotificationStore } from '../../../store/notificationStore';
+import { apiClient } from "../../utils/apiClient";
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { Badge } from "../../components/ui/Badge";
+import { CardSkeleton } from "../../components/ui/Skeleton";
+import { useNotificationStore } from "../../store/notificationStore";
 
 import { useTranslation } from 'react-i18next';
 
@@ -115,4 +115,5 @@ const getNotificationIcon = (type: string) => {
 };
 
 export default NotificationsPage;
+
 

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuthStore } from '../../../store/authStore';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
+import { useAuthStore } from "../../store/authStore";
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
 import { useTranslation } from 'react-i18next';
 import { UserPlus } from 'lucide-react';
 
@@ -109,4 +109,5 @@ const RegisterPage: React.FC = () => {
 };
 
 export default RegisterPage;
+
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
-import { AnimatedPage } from '../../../components/ui/AnimatedPage';
+import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion } from 'framer-motion';
 import { Sword, Users, Hash, Zap, Trophy, ShieldAlert } from 'lucide-react';
 
@@ -155,4 +155,5 @@ const DuelLobbyPage: React.FC = () => {
 };
 
 export default DuelLobbyPage;
+
 

@@ -13,11 +13,11 @@ import {
   Maximize2
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '../../../utils/apiClient';
-import { Card } from '../../../components/ui/Card';
-import { Badge } from '../../../components/ui/Badge';
-import { AnimatedPage } from '../../../components/ui/AnimatedPage';
-import { CardSkeleton } from '../../../components/ui/Skeleton';
+import { apiClient } from "../../utils/apiClient";
+import { Card } from "../../components/ui/Card";
+import { Badge } from "../../components/ui/Badge";
+import { AnimatedPage } from "../../components/ui/AnimatedPage";
+import { CardSkeleton } from "../../components/ui/Skeleton";
 import { motion } from 'framer-motion';
 
 const LoreWorldMapPage: React.FC = () => {
@@ -186,4 +186,5 @@ const LoreWorldMapPage: React.FC = () => {
 };
 
 export default LoreWorldMapPage;
+
 

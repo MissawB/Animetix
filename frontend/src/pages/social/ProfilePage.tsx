@@ -2,11 +2,11 @@ import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { User, Shield, Zap, Award, ArrowRight, Brain } from 'lucide-react';
 import { useProfile } from '../../features/social/hooks/useProfile';
-import { Card } from '../../../components/ui/Card';
-import { Button } from '../../../components/ui/Button';
-import { Badge } from '../../../components/ui/Badge';
+import { Card } from "../../components/ui/Card";
+import { Button } from "../../components/ui/Button";
+import { Badge } from "../../components/ui/Badge";
 import { useTranslation } from 'react-i18next';
-import { CardSkeleton } from '../../../components/ui/Skeleton';
+import { CardSkeleton } from "../../components/ui/Skeleton";
 import { GameHistoryPanel } from '../../features/social/components/GameHistoryPanel';
 
 const ProfilePage: React.FC = () => {
@@ -144,4 +144,5 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, icon }) => (
 );
 
 export default ProfilePage;
+
 

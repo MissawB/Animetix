@@ -1,8 +1,8 @@
 import { Route } from 'react-router-dom';
 import { lazy } from 'react';
 
-const DailyChallengePage = lazy(() => import('../DailyChallengePage'));
-const CustomConfigPage = lazy(() => import('../CustomConfigPage'));
+const DailyChallengePage = lazy(() => import('../../../pages/utils/DailyChallengePage'));
+const CustomConfigPage = lazy(() => import('../../../pages/utils/CustomConfigPage'));
 
 export const UtilsRoutes = (
   <>
