@@ -9,6 +9,7 @@ from .api.graph import *
 from .api.companion import *
 from .api.forge_vn import *
 from .api.cognition import *
+from .api.multiverse import MultiverseGalleryView
 from .api.games.world_boss import ActiveWorldBossView, WorldBossAttackView
 from .api.games.animinator import AniminatorAskView
 from .api.explore import MediaExploreView
