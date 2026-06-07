@@ -35,6 +35,39 @@ def test_self_evolving_compiler():
     ortho_sim = optimized_fn(c, d)
     assert pytest.approx(ortho_sim) == 0.0
 
+def test_self_evolving_compiler_llm_evolution():
+    from core.domain.services.self_evolving_compiler import SelfEvolvingCompiler
+    
+    compiler = SelfEvolvingCompiler(build_dir="data/mlops/build_test")
+    
+    # Mock du LLM proxy
+    mock_llm = MagicMock()
+    mock_code = """
+```python
+def matrix_row_norm(x):
+    res = np.zeros(x.shape[0])
+    for i in range(x.shape[0]):
+        row_sum = 0.0
+        for j in range(x.shape[1]):
+            row_sum += x[i, j] ** 2
+        res[i] = np.sqrt(row_sum)
+    return res
+```
+"""
+    mock_llm.generate.return_value = mock_code
+    
+    # Évolution du runtime
+    fn = compiler.evolve_with_llm("Calculate norm of each row in a matrix", mock_llm)
+    
+    assert callable(fn)
+    assert fn.__name__ == "matrix_row_norm"
+    
+    # Test d'exécution
+    mat = np.array([[3.0, 4.0], [1.0, 0.0]])
+    norms = fn(mat)
+    
+    assert np.allclose(norms, [5.0, 1.0])
+
 
 # ==========================================
 # 2. TESTS PLASTICITÉ SYNAPTIQUE (HEBBIAN & STDP)

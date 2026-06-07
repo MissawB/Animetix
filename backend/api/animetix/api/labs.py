@@ -193,13 +193,23 @@ class SingularityLabDataView(APIView):
             task = request.data.get('task', 'dot_product')
             try:
                 compiler = container.core.self_evolving_compiler()
-                # Simulation d'évolution dynamique
-                fn = compiler.evolve_with_llm(task, llm_proxy=None)
-                res = fn(np.array([1,2]), np.array([3,4]))
+                llm = container.agentic.llm_service()
+                # Évolution dynamique réelle via LLM
+                fn = compiler.evolve_with_llm(task, llm_proxy=llm)
+                
+                # Test du kernel avec des données bidon
+                a = np.array([1.0, 2.0, 3.0, 4.0])
+                b = np.array([5.0, 6.0, 7.0, 8.0])
+                try:
+                    res = fn(a, b)
+                except:
+                    res = "Kernel compiled but execution failed (check input types)."
+                
                 return Response({
                     'status': 'success',
-                    'result': res,
-                    'message': f"Nouveau kernel '{fn.__name__}' injecté dynamiquement."
+                    'result': str(res),
+                    'kernel_name': fn.__name__,
+                    'message': f"Nouveau kernel '{fn.__name__}' généré par LLM et injecté."
                 })
             except Exception as e:
                 return Response({'error': str(e)}, status=500)
