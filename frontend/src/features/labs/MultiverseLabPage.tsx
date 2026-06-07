@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Globe,
   Loader2,
@@ -20,6 +21,7 @@ import { AnimatedPage } from '../../components/ui/AnimatedPage';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const MultiverseLabPage: React.FC = () => {
+  const navigate = useNavigate();
   const [universeName, setUniverseName] = useState('ShinSekai');
   const [genre, setGenre] = useState('Cyberpunk');
   const [synthesizedResult, setSynthesizedResult] = useState<any | null>(null);
@@ -89,13 +91,23 @@ const MultiverseLabPage: React.FC = () => {
                             </div>
                         </div>
 
-                        <Button 
-                            onClick={() => synthesizeMutation.mutate({ action: 'synthesize', universe_name: universeName, genre: genre })} 
-                            disabled={synthesizeMutation.isPending} 
-                            className="w-full bg-red-600 hover:bg-red-500 text-white py-6 rounded-2xl font-black italic text-lg uppercase shadow-xl hover:scale-105 active:scale-95 transition-all border-none"
-                        >
-                            {synthesizeMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : "GÉNÉRER LE MONDE"}
-                        </Button>
+                        <div className="space-y-4">
+                          <Button 
+                              onClick={() => synthesizeMutation.mutate({ action: 'synthesize', universe_name: universeName, genre: genre })} 
+                              disabled={synthesizeMutation.isPending} 
+                              className="w-full bg-red-600 hover:bg-red-500 text-white py-6 rounded-2xl font-black italic text-lg uppercase shadow-xl hover:scale-105 active:scale-95 transition-all border-none"
+                          >
+                              {synthesizeMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : "GÉNÉRER LE MONDE"}
+                          </Button>
+
+                          <Button 
+                            variant="outline"
+                            onClick={() => navigate('/multiverse/gallery/')}
+                            className="w-full border-red-500/30 text-red-400 hover:bg-red-500/10"
+                          >
+                            CONSULTER LA GALERIE <Globe className="ml-2 w-4 h-4" />
+                          </Button>
+                        </div>
                     </div>
                 </Card>
 
