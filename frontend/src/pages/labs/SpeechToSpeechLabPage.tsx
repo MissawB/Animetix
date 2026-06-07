@@ -263,7 +263,7 @@ const SpeechToSpeechLabPage: React.FC = () => {
               {/* Top Status Badge */}
               <div className="flex justify-between items-center w-full mb-6 border-b border-white/5 pb-4">
                 <span className="text-xs font-black uppercase tracking-widest opacity-40">Transcription en Direct</span>
-                <Badge variant={status === 'playing' ? 'primary' : 'secondary'}>
+                <Badge variant={status === 'playing' ? 'primary' : 'neutral'}>
                   {status.toUpperCase()}
                 </Badge>
               </div>
@@ -320,6 +320,6 @@ const SpeechToSpeechLabPage: React.FC = () => {
   );
 };
 
-export default SpeechToSpeechLivePage;
+export default SpeechToSpeechLabPage;
 
 

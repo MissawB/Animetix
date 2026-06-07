@@ -1,7 +1,11 @@
 import { 
   AkinetixState, AppConfig, ClassicGameState, DailyChallenge, MediaItem, Profile, User, GraphData,
-  DiscoveryClub, ClubMembership 
+  DiscoveryClub, ClubMembership, AIFeedback, SocialDashboardData 
 } from './types';
+export type { 
+  AkinetixState, AppConfig, ClassicGameState, DailyChallenge, MediaItem, Profile, User, GraphData,
+  DiscoveryClub, ClubMembership, AIFeedback, SocialDashboardData 
+};
 import { apiClient } from './utils/apiClient';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';

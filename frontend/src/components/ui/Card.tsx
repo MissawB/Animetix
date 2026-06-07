@@ -10,6 +10,7 @@ interface CardProps {
   padding?: 'none' | 'sm' | 'md' | 'lg';
   animate?: boolean;
   hasAura?: boolean;
+  onClick?: () => void;
 }
 
 export const Card: React.FC<CardProps> = ({ 
@@ -17,7 +18,8 @@ export const Card: React.FC<CardProps> = ({
   className = '', 
   padding = 'lg',
   animate = true,
-  hasAura = false
+  hasAura = false,
+  onClick
 }) => {
   const paddings = {
     none: 'p-0',
@@ -27,7 +29,10 @@ export const Card: React.FC<CardProps> = ({
   };
 
   let content = (
-    <div className={`bg-surface-card rounded-token-card shadow-token-card border-token-card border-surface-text/[var(--opacity-card-border)] ${paddings[padding]} ${className}`}>
+    <div 
+      className={`bg-surface-card rounded-token-card shadow-token-card border-token-card border-surface-text/[var(--opacity-card-border)] ${paddings[padding]} ${className}`}
+      onClick={onClick}
+    >
       {children}
     </div>
   );

@@ -5,7 +5,7 @@ import { useAuthStore } from '../store/authStore';
 import { 
   Menu, Shield, Sparkles, Box, FlaskConical, Network, Users, Radio, Search, 
   Gamepad2, Film, User, Settings, Sliders, LogOut, LogIn, UserPlus, Bell, Zap,
-  Compass, BrainCircuit, Eye
+  Compass, BrainCircuit, Eye, HelpCircle
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { DynamicAuraWrapper } from './shared/DynamicAuraWrapper';
@@ -97,6 +97,10 @@ const Navbar: React.FC = () => {
                     {unreadCount > 99 ? '99+' : unreadCount}
                   </span>
                 )}
+              </Link>
+
+              <Link to="/support" className="text-gray-400 hover:text-cyan-500 transition-colors hidden sm:block" title="Support Technique">
+                <HelpCircle className="w-5 h-5" />
               </Link>
               
               <DynamicAuraWrapper>

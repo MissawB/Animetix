@@ -43,7 +43,7 @@ const TreeOfThoughtsPage: React.FC = () => {
   const [query, setQuery] = useState('');
   const [selectedNode, setSelectedNode] = useState<ToTNode | null>(null);
   const [graphData, setGraphData] = useState<ToTGraphData | null>(null);
-  const fgRef = useRef<any>();
+  const fgRef = useRef<any>(null);
 
   const totMutation = useMutation({
     mutationFn: (body: { query: string }) => apiClient('/api/v1/labs/tot/', { 
@@ -165,7 +165,7 @@ const TreeOfThoughtsPage: React.FC = () => {
               nodeLabel={(node: any) => `${node.type.toUpperCase()} | Score: ${node.score}`}
               nodeColor={(node: any) => getNodeColor(node.type)}
               nodeRelSize={1}
-              nodeCanvasObject={(node: any, ctx, globalScale) => {
+              nodeCanvasObject={(node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
                 const size = getNodeSize(node.type);
                 const color = getNodeColor(node.type);
                 

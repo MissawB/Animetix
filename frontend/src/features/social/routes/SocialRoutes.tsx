@@ -20,7 +20,7 @@ const ExplorePage = lazy(() => import('../../../pages/explore/ExplorePage'));
 const NeuroMemoryPage = lazy(() => import('../../../pages/social/NeuroMemoryPage'));
 const PricingPage = lazy(() => import('../../../pages/billing/PricingPage'));
 const TreeOfThoughtsPage = lazy(() => import('../../../pages/labs/TreeOfThoughtsPage'));
-const MultiverseGalleryPage = lazy(() => import('../../../pages/labs/MultiverseGalleryPage'));
+const SupportDashboardPage = lazy(() => import('../../../pages/support/SupportDashboardPage'));
 
 export const SocialRoutes = (
   <>
@@ -40,7 +40,7 @@ export const SocialRoutes = (
     <Route path="/explore/" element={<ExplorePage />} />
     <Route path="/pricing/" element={<PricingPage />} />
     <Route path="/lab/tot/" element={<TreeOfThoughtsPage />} />
-    <Route path="/multiverse/gallery/" element={<MultiverseGalleryPage />} />
+    <Route path="/support/" element={<SupportDashboardPage />} />
     <Route path="/clubs/" element={<ClubDiscoveryPage />} />
     <Route path="/clubs/:id/" element={<ClubDashboard />} />
     <Route path="/clubs/:id/events/:eventId/" element={<ClubEventPage />} />
