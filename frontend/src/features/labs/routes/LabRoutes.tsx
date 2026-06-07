@@ -1,47 +1,48 @@
 import { Route } from 'react-router-dom';
 import { lazy } from 'react';
 
-const MangaLabPage = lazy(() => import('../MangaLabPage'));
-const AudioLabPage = lazy(() => import('../AudioLabPage'));
-const LatentSpacePage = lazy(() => import('../LatentSpacePage'));
-const SpatialLabPage = lazy(() => import('../SpatialLabPage'));
-const VideoLabPage = lazy(() => import('../VideoLabPage'));
-const SoundscapeLabPage = lazy(() => import('../SoundscapeLabPage'));
-const SpeechToSpeechLabPage = lazy(() => import('../SpeechToSpeechLabPage'));
-const LiquidNeuralNetworkLabPage = lazy(() => import('../LiquidNeuralNetworkLabPage'));
-const VisualNexusPage = lazy(() => import('../VisualNexusPage'));
-const LabHubPage = lazy(() => import('../LabHubPage'));
-const CinematicReconstructionPage = lazy(() => import('../CinematicReconstructionPage'));
-const QuantumLabPage = lazy(() => import('../QuantumLabPage'));
-const SwarmLabPage = lazy(() => import('../SwarmLabPage'));
-const SynapticLabPage = lazy(() => import('../SynapticLabPage'));
-const CompilerLabPage = lazy(() => import('../CompilerLabPage'));
-const MultiverseLabPage = lazy(() => import('../MultiverseLabPage'));
-const ForgeHubPage = lazy(() => import('../ForgeHubPage'));
-const CognitionHubPage = lazy(() => import('../CognitionHubPage'));
+const LabHubPage = lazy(() => import('../../../pages/labs/LabHubPage'));
+const AudioLabPage = lazy(() => import('../../../pages/labs/AudioLabPage'));
+const VideoLabPage = lazy(() => import('../../../pages/labs/VideoLabPage'));
+const MangaLabPage = lazy(() => import('../../../pages/labs/MangaLabPage'));
+const QuantumLabPage = lazy(() => import('../../../pages/labs/QuantumLabPage'));
+const SynapticLabPage = lazy(() => import('../../../pages/labs/SynapticLabPage'));
+const SwarmLabPage = lazy(() => import('../../../pages/labs/SwarmLabPage'));
+const VisualNexusPage = lazy(() => import('../../../pages/labs/VisualNexusPage'));
+const LatentSpacePage = lazy(() => import('../../../pages/labs/LatentSpacePage'));
+const SpatialLabPage = lazy(() => import('../../../pages/labs/SpatialLabPage'));
+const SoundscapeLabPage = lazy(() => import('../../../pages/labs/SoundscapeLabPage'));
+const SpeechToSpeechLabPage = lazy(() => import('../../../pages/labs/SpeechToSpeechLabPage'));
+const CinematicReconstructionPage = lazy(() => import('../../../pages/labs/CinematicReconstructionPage'));
+const CompilerLabPage = lazy(() => import('../../../pages/labs/CompilerLabPage'));
+const ForgeHubPage = lazy(() => import('../../../pages/labs/ForgeHubPage'));
+const LiquidNeuralNetworkLabPage = lazy(() => import('../../../pages/labs/LiquidNeuralNetworkLabPage'));
+const TreeOfThoughtsPage = lazy(() => import('../../../pages/labs/TreeOfThoughtsPage'));
+const MultiverseLabPage = lazy(() => import('../../../pages/labs/MultiverseLabPage'));
+const MultiverseGalleryPage = lazy(() => import('../../../pages/labs/MultiverseGalleryPage'));
+const CognitionHubPage = lazy(() => import('../../../pages/labs/CognitionHubPage'));
 
 export const LabRoutes = (
   <>
     <Route path="/lab/" element={<LabHubPage />} />
-    <Route path="/forge-hub/" element={<ForgeHubPage />} />
-    <Route path="/cognition-hub/" element={<CognitionHubPage />} />
-    <Route path="/manga_lab/" element={<MangaLabPage />} />
-    <Route path="/audio_lab/" element={<AudioLabPage />} />
-    <Route path="/latent-space/" element={<LatentSpacePage />} />
-    <Route path="/spatial-lab/" element={<SpatialLabPage />} />
-    <Route path="/cinematic-reconstruction/" element={<CinematicReconstructionPage />} />
-    <Route path="/video-lab/" element={<VideoLabPage />} />
-    <Route path="/visual-nexus/" element={<VisualNexusPage />} />
-    <Route path="/soundscape-lab/" element={<SoundscapeLabPage />} />
-    <Route path="/s2s-lab/" element={<SpeechToSpeechLabPage />} />
-    <Route path="/experimental/" element={<LabHubPage />} />
-    <Route path="/liquid-nn/" element={<LiquidNeuralNetworkLabPage />} />
-    
-    {/* Specialized Singularity Lab Modules */}
+    <Route path="/lab/audio/" element={<AudioLabPage />} />
+    <Route path="/lab/video/" element={<VideoLabPage />} />
+    <Route path="/lab/manga/" element={<MangaLabPage />} />
     <Route path="/lab/quantum/" element={<QuantumLabPage />} />
-    <Route path="/lab/swarm/" element={<SwarmLabPage />} />
     <Route path="/lab/synaptic/" element={<SynapticLabPage />} />
+    <Route path="/lab/swarm/" element={<SwarmLabPage />} />
+    <Route path="/lab/visual-nexus/" element={<VisualNexusPage />} />
+    <Route path="/lab/latent-space/" element={<LatentSpacePage />} />
+    <Route path="/lab/spatial/" element={<SpatialLabPage />} />
+    <Route path="/lab/soundscape/" element={<SoundscapeLabPage />} />
+    <Route path="/lab/speech-to-speech/" element={<SpeechToSpeechLabPage />} />
+    <Route path="/lab/cinematic/" element={<CinematicReconstructionPage />} />
     <Route path="/lab/compiler/" element={<CompilerLabPage />} />
-    <Route path="/lab/multiverse/" element={<MultiverseLabPage />} />
+    <Route path="/lab/forge-hub/" element={<ForgeHubPage />} />
+    <Route path="/lab/liquid-neural-networks/" element={<LiquidNeuralNetworkLabPage />} />
+    <Route path="/lab/tree-of-thoughts/" element={<TreeOfThoughtsPage />} />
+    <Route path="/lab/multiverse-generator/" element={<MultiverseLabPage />} />
+    <Route path="/lab/multiverse-gallery/" element={<MultiverseGalleryPage />} />
+    <Route path="/lab/cognition-hub/" element={<CognitionHubPage />} />
   </>
 );

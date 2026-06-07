@@ -1,10 +1,10 @@
 import { Route } from 'react-router-dom';
 import { lazy } from 'react';
 
-const MediaDetailPage = lazy(() => import('../MediaDetailPage'));
+const MediaDetailPage = lazy(() => import('../../../pages/media/MediaDetailPage'));
 
 export const MediaRoutes = (
   <>
-    <Route path="/media/:mediaType/:itemId/" element={<MediaDetailPage />} />
+    <Route path="/media/:mediaId/" element={<MediaDetailPage />} />
   </>
 );

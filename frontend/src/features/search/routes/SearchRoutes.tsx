@@ -10,7 +10,7 @@ export const SearchRoutes = (
   <>
     <Route path="/search/" element={<UniversalSearchHubPage />} />
     <Route path="/search/results/" element={<SearchResultsPage />} />
-    <Route path="/search/expert/" element={<ExpertNexusPage />} />
+    <Route path="/search/expert-nexus/" element={<ExpertNexusPage />} />
     <Route path="/search/counterfactual/" element={<CounterfactualSimulatorPage />} />
   </>
 );

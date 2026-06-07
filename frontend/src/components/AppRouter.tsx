@@ -10,6 +10,7 @@ import { SearchRoutes } from '../features/search/routes/SearchRoutes';
 import { AdminRoutes } from '../features/admin/routes/AdminRoutes';
 import { UtilsRoutes } from '../features/utils/routes/UtilsRoutes';
 import { AuthRoutes } from '../features/auth/routes/AuthRoutes';
+import { GraphRoutes } from '../features/graph/routes/GraphRoutes';
 
 const App = React.lazy(() => import('../App'));
 
@@ -42,6 +43,7 @@ const AppRouter: React.FC = () => {
             {MediaRoutes}
             {SearchRoutes}
             {CompanionRoutes}
+            {GraphRoutes}
             {GameRoutes}
             {LabRoutes}
             {UtilsRoutes}
