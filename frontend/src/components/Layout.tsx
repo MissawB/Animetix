@@ -348,7 +348,7 @@ const LayoutContent: React.FC<{ children: ReactNode }> = ({ children }) => {
 
       {/* SETTINGS FLOATING BUTTON */}
       <button 
-        className="fixed bottom-6 left-6 w-14 h-14 bg-black text-yellow-400 dark:bg-white dark:text-black rounded-2xl shadow-2xl flex items-center justify-center text-3xl rotate-45 hover:rotate-0 transition-all duration-500 z-[800] group border border-yellow-400/10" 
+        className="fixed bottom-6 left-6 w-14 h-14 bg-black text-yellow-400 dark:bg-[#0f0f1a] dark:text-white rounded-2xl shadow-2xl flex items-center justify-center text-3xl rotate-45 hover:rotate-0 transition-all duration-500 z-[800] group border border-black/10 dark:border-white/10" 
         onClick={() => toggleSettings()}
       >
         <Settings className="w-6 h-6 -rotate-45 group-hover:rotate-90 transition-transform duration-700" />
