@@ -1,5 +1,4 @@
 import React from 'react';
-import { HomeNav } from './features/home/components/HomeNav';
 import { HeroSection } from './features/home/components/HeroSection';
 import { SoloChallenges } from './features/home/components/SoloChallenges';
 import { WorldBossBanner } from './features/home/components/WorldBossBanner';
@@ -12,7 +11,6 @@ const App: React.FC = () => {
   return (
     <div className="w-full bg-transparent transition-colors duration-500 bg-manga-overlay">
         <div className="hero-bg w-full transition-all duration-500 shadow-sm border-b border-gray-100/10 dark:border-navy-950/10">
-          <HomeNav />
           <HeroSection />
         </div>
         <div className="max-w-[1600px] mx-auto px-6 md:px-10 pb-20 mt-12 bg-[#fffcf0] dark:bg-[#1a1a2e] rounded-[3rem] shadow-xl border border-gray-100 dark:border-white/5 transition-colors duration-500">

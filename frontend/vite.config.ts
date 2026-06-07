@@ -86,12 +86,13 @@ export default defineConfig({
     chunkSizeWarningLimit: 1000
   },
   test: {
+    exclude: ['node_modules/**', 'dist/**', '.git/**', '.cache/**', 'e2e/**'],
     projects: [{
       extends: true,
       test: {
         globals: true,
         environment: 'jsdom',
-        setupFiles: './src/test/setup.js'
+        setupFiles: './src/test/setup.ts'
       }
     }, {
       extends: true,

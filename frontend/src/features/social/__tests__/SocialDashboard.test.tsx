@@ -27,7 +27,7 @@ global.fetch = vi.fn(() =>
 describe('SocialDashboard', () => {
   it('affiche le titre du dashboard', async () => {
     render(<SocialDashboard />, { wrapper });
-    const title = await screen.findByText(/Mes Abonnements/i);
+    const title = await screen.findByText('social.dashboard.following_title');
     expect(title).toBeInTheDocument();
   });
 });

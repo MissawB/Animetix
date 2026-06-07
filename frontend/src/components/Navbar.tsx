@@ -23,51 +23,35 @@ const Navbar: React.FC = () => {
   const [showPersonalizationPanel, setShowPersonalizationPanel] = React.useState(false);
   
   return (
-    <nav className="px-6 md:px-12 py-4 flex items-center justify-between sticky top-0 bg-white/80 dark:bg-navy-950/80 backdrop-blur-md z-50 border-b border-gray-100 dark:border-white/5">
+    <nav className="px-6 md:px-12 py-4 flex items-center justify-between sticky top-0 bg-[#fffcf0] dark:bg-[#1a1a2e] z-[1000] border-b border-black/5 dark:border-white/5 transition-colors duration-500">
       <div className="flex items-center gap-6">
-        <button className="bg-black text-white p-2 rounded-xl hover:scale-110 active:scale-95 transition shadow-lg lg:hidden" onClick={() => toggleSidebar()}>
-          <Menu className="w-5 h-5" />
+        <button 
+          className="bg-black text-white p-3 rounded-2xl hover:scale-110 active:scale-95 transition shadow-lg" 
+          onClick={() => toggleSidebar()}
+        >
+          <Menu className="w-6 h-6" />
         </button>
-        <Link to="/" className="flex items-center no-underline group">
-          <span className="font-black text-2xl italic tracking-tighter manga-font text-black dark:text-white group-hover:text-blue-500 transition-colors">ANIMETIX</span>
+        <Link to="/" className="flex items-center no-underline">
+          <img src="/static/img/logo/white_logo.png" alt="Logo" className="h-8 dark:hidden" />
+          <img src="/static/img/logo/logo.png" alt="Logo" className="h-8 hidden dark:block" />
         </Link>
       </div>
 
-      <div className="hidden lg:flex flex-wrap items-center justify-center gap-x-6 gap-y-2 flex-grow mx-8">
-          <Link to="/games/" className="flex items-center gap-2 no-underline text-[11px] font-black italic text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition-all uppercase tracking-widest">
+      <div className="hidden lg:flex flex-wrap items-center justify-center gap-x-8 gap-y-2 flex-grow mx-8">
+          <Link to="/games/" className="flex items-center gap-2 no-underline text-xs font-black italic text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition-all uppercase tracking-widest">
             <Gamepad2 className="w-4 h-4" /> Games
           </Link>
-          <Link to="/theater/" className="flex items-center gap-2 no-underline text-[11px] font-black italic text-gray-500 dark:text-gray-400 hover:text-rose-500 dark:hover:text-rose-400 transition-all uppercase tracking-widest">
-            <Film className="w-4 h-4" /> Theater
+          <Link to="/search/" className="flex items-center gap-2 no-underline text-xs font-black italic text-gray-500 dark:text-gray-400 hover:text-cyan-500 dark:hover:text-cyan-400 transition-all uppercase tracking-widest">
+            <Search className="w-4 h-4" /> Search
           </Link>
-          <Link to="/search/" className="flex items-center gap-2 no-underline text-[11px] font-black italic text-gray-500 dark:text-gray-400 hover:text-cyan-500 dark:hover:text-cyan-400 transition-all uppercase tracking-widest">
-            <Search className="w-4 h-4" /> Universal Search
-          </Link>
-          <Link to="/explore/" className="flex items-center gap-2 no-underline text-[11px] font-black italic text-gray-500 dark:text-gray-400 hover:text-emerald-500 dark:hover:text-emerald-400 transition-all uppercase tracking-widest">
-            <Compass className="w-4 h-4" /> Explore
-          </Link>
-          <Link to="/social/" className="flex items-center gap-2 no-underline text-[11px] font-black italic text-gray-500 dark:text-gray-400 hover:text-orange-500 dark:hover:text-orange-400 transition-all uppercase tracking-widest">
+          <Link to="/social/" className="flex items-center gap-2 no-underline text-xs font-black italic text-gray-500 dark:text-gray-400 hover:text-orange-500 dark:hover:text-orange-400 transition-all uppercase tracking-widest">
             <Users className="w-4 h-4" /> Community
           </Link>
-          {user && (
-            <Link to="/social/friends/" className="flex items-center gap-2 no-underline text-[11px] font-black italic text-gray-500 dark:text-gray-400 hover:text-pink-500 dark:hover:text-pink-400 transition-all uppercase tracking-widest">
-              <UserPlus className="w-4 h-4" /> Friends
-            </Link>
-          )}
-          <Link to="/latent-space/" className="flex items-center gap-2 no-underline text-[11px] font-black italic text-gray-500 dark:text-gray-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-all uppercase tracking-widest">
+          <Link to="/latent-space/" className="flex items-center gap-2 no-underline text-xs font-black italic text-gray-500 dark:text-gray-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-all uppercase tracking-widest">
             <Network className="w-4 h-4" /> Latent Space
           </Link>
-          <Link to="/forge-hub/" className="flex items-center gap-2 no-underline text-[11px] font-black italic text-gray-500 dark:text-gray-400 hover:text-purple-500 dark:hover:text-purple-400 transition-all uppercase tracking-widest">
+          <Link to="/forge-hub/" className="flex items-center gap-2 no-underline text-xs font-black italic text-gray-500 dark:text-gray-400 hover:text-purple-500 dark:hover:text-purple-400 transition-all uppercase tracking-widest">
             <Sparkles className="w-4 h-4" /> Forge Créative
-          </Link>
-          <Link to="/lab/" className="flex items-center gap-2 no-underline text-[11px] font-black italic text-gray-500 dark:text-gray-400 hover:text-green-500 dark:hover:text-green-400 transition-all uppercase tracking-widest">
-            <FlaskConical className="w-4 h-4" /> Beta Lab
-          </Link>
-          <Link to="/social/nexus/" className="flex items-center gap-2 no-underline text-[11px] font-black italic text-gray-500 dark:text-gray-400 hover:text-fuchsia-500 dark:hover:text-fuchsia-400 transition-all uppercase tracking-widest">
-            <BrainCircuit className="w-4 h-4" /> Nexus Pro
-          </Link>
-          <Link to="/transparence/" className="flex items-center gap-2 no-underline text-[11px] font-black italic text-gray-500 dark:text-gray-400 hover:text-slate-500 dark:hover:text-slate-400 transition-all uppercase tracking-widest">
-            <Eye className="w-4 h-4" /> Transparence
           </Link>
       </div>
 

@@ -43,7 +43,7 @@ describe('AkinetixPage', () => {
         })
     } as Response);
 
-    const yesButton = screen.getByText('OUI');
+    const yesButton = screen.getByText('common.yes');
     fireEvent.click(yesButton);
 
     await waitFor(() => {

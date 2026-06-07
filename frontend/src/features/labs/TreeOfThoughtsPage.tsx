@@ -10,7 +10,8 @@ import {
   Network
 } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
-import { ForceGraph2D } from 'react-force-graph-2d';
+import _ForceGraph2D from 'react-force-graph-2d';
+const ForceGraph2D = (_ForceGraph2D as any).default || _ForceGraph2D;
 import { apiClient } from '../../utils/apiClient';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';

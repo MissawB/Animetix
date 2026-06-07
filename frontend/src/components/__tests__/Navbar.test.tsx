@@ -41,15 +41,15 @@ describe('Navbar', () => {
     vi.clearAllMocks();
   });
 
-  it('renders the "Nexus Pro" link', () => {
+  it('renders the Games link', () => {
     render(
       <MemoryRouter>
         <Navbar />
       </MemoryRouter>
     );
     
-    const nexusProLink = screen.getByText(/Nexus Pro/i);
-    expect(nexusProLink).toBeInTheDocument();
-    expect(nexusProLink.closest('a')).toHaveAttribute('href', '/pricing/');
+    const gamesLink = screen.getByText(/Games/i);
+    expect(gamesLink).toBeInTheDocument();
+    expect(gamesLink.closest('a')).toHaveAttribute('href', '/games/');
   });
 });

@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useUIStore } from '../../../../store/uiStore';
-import { useAuthStore } from '../../../../store/authStore';
+import { useUIStore } from '../../../store/uiStore';
+import { useAuthStore } from '../../../store/authStore';
 import { Menu } from 'lucide-react';
 
 export const HomeNav: React.FC = () => {

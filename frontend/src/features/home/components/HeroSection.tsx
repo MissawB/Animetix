@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { DynamicAuraWrapper } from '../../../../components/shared/DynamicAuraWrapper';
+import { DynamicAuraWrapper } from '../../../components/shared/DynamicAuraWrapper';
 import { useGameModes } from '../data/useGameModes';
 
 export const HeroSection: React.FC = () => {

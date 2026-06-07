@@ -10,6 +10,7 @@ const AdminGoldDatasetPage = lazy(() => import('../AdminGoldDatasetPage'));
 const CurationDashboard = lazy(() => import('../CurationDashboard'));
 const SOTABenchmarkPage = lazy(() => import('../SOTABenchmarkPage'));
 const GraphDebuggerPage = lazy(() => import('../GraphDebuggerPage'));
+const TTCMonitoringPage = lazy(() => import('../TTCMonitoringPage'));
 
 export const AdminRoutes = (
   <>
