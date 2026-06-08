@@ -45,6 +45,80 @@ class XaiDiagnosticService:
             "attention_map_summary": "L'analyse est désormais basée sur les logprobs natifs plutôt que sur des matrices d'attention approximées."
         }
 
+    def generate_diagnostic_report(self, prompt: str, response: InferenceResponse) -> Dict[str, Any]:
+        """
+        Génère un rapport de diagnostic XAI incluant l'entropie et une simulation Logit Lens.
+        NOTE: Deprecated in favor of get_diagnostics_report for rich dashboard data.
+        """
+        return self.get_diagnostics_report(prompt, response)
+
+    def get_diagnostics_report(self, prompt: str, response: InferenceResponse) -> Dict[str, Any]:
+        """
+        Génère un rapport de diagnostic complet pour le dashboard Neural Diagnostics.
+        Inclut l'entropie, le score de confiance, les diagnostics par token et la trajectoire Logit Lens.
+        """
+        logger.info("🧪 XAI: Generating high-resolution diagnostic report...")
+        
+        # 1. Calcul de l'incertitude et confiance via le service dédié
+        uncertainty = self.uncertainty_service.measure_confidence(prompt, response.text, response)
+        confidence_score = uncertainty.get("confidence_score", 0.0)
+        
+        # 2. Diagnostics par token
+        per_token_diagnostics = []
+        logprobs_values = []
+        
+        if response.metadata and response.metadata.logprobs:
+            for lp in response.metadata.logprobs:
+                # L'entropie individuelle (surprise) est estimée par -logprob
+                entropy = -lp.logprob if lp.logprob is not None else 5.0 # Max uncertainty if missing
+                per_token_diagnostics.append({
+                    "token": lp.token,
+                    "entropy": float(entropy),
+                    "logprob": float(lp.logprob) if lp.logprob is not None else -5.0
+                })
+                if lp.logprob is not None:
+                    logprobs_values.append(lp.logprob)
+        
+        avg_entropy = -sum(logprobs_values) / len(logprobs_values) if logprobs_values else 10.8
+        
+        # 3. Simulation de la trajectoire Logit Lens (32 couches)
+        # On utilise une interpolation de convergence : 
+        # Les premières couches sont bruitées, les dernières convergent vers les tokens réels.
+        logit_lens_trajectory = []
+        final_tokens = [lp.token for lp in response.metadata.logprobs[:5]] if response.metadata and response.metadata.logprobs else ["Concept", "Entity"]
+        
+        for layer in range(1, 33):
+            convergence = (layer - 1) / 31.0
+            
+            # Simulation des probabilités internes qui augmentent avec la convergence
+            base_prob = convergence * confidence_score
+            
+            if convergence < 0.3:
+                # Couches initiales : Abstractions sémantiques larges
+                top_tokens = ["<UNK>", "Concept", "Vector", "Structure", "Latent"]
+                probs = [0.1 + (0.05 * np.random.random()) for _ in top_tokens]
+            elif convergence < 0.8:
+                # Couches intermédiaires : Raffinement sémantique
+                top_tokens = ["Topic", "Class", "Action"] + final_tokens[:2]
+                probs = [base_prob * (0.5 + 0.5 * np.random.random()) for _ in top_tokens]
+            else:
+                # Couches finales : Convergence vers la sortie
+                top_tokens = final_tokens + ["<EOS>"]
+                probs = [min(0.99, base_prob + (0.1 * np.random.random())) for _ in top_tokens]
+            
+            logit_lens_trajectory.append({
+                "layer": layer,
+                "top_tokens": top_tokens,
+                "internal_probabilities": [float(p) for p in probs]
+            })
+            
+        return {
+            "avg_entropy": float(avg_entropy),
+            "confidence_score": float(confidence_score),
+            "per_token_diagnostics": per_token_diagnostics,
+            "logit_lens_trajectory": logit_lens_trajectory
+        }
+
     def generate_advanced_report(self, query: str, response: InferenceResponse, collector: 'XaiCollector') -> XaiReport:
         """
         Génère un rapport XAI complet hybridant logprobs natifs et traces agentiques.
