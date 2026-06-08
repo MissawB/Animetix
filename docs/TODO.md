@@ -12,7 +12,7 @@ Ce document centralise toutes les tâches techniques, d'architecture et de fonct
     - [X] Corriger la route World Boss (`/game/world-boss/active/` vs `/game/world-boss/`).
     - [X] Refactoriser `SocialRoutes.tsx` pour déplacer les pages non-sociales (Pricing, Support, Explore) dans leurs domaines respectifs.
 - [X] **Intégration réelle du `SelfEvolvingCompiler`** : Remplacer les `NotImplementedError` dans le proxy d'évolution LLM par une intégration effective.
-- [ ] **Amélioration des diagnostics IA** : Migrer de la simulation `gpt2` dans `UnifiedInferenceAdapter` vers des mécanismes de diagnostics natifs aux modèles de production.
+- [X] **Amélioration des diagnostics IA** : Migrer de la simulation `gpt2` dans `UnifiedInferenceAdapter` vers des mécanismes de diagnostics natifs aux modèles de production.
 - [x] **Optimisation du Chargement IA (Lazy Loading)** : Garantir que tous les adaptateurs et modèles lourds sont chargés uniquement lors de leur première utilisation pour accélérer le démarrage du container. Refactorisation de `FallbackInferenceAdapter` (cache et health lazy) et `GoogleGenAIAdapter` (client lazy).
 
 ## 🔗 Désorphelinisation & Raccordement Backend
