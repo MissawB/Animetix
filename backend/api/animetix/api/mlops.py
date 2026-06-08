@@ -11,7 +11,8 @@ from core.ports.feedback_port import FeedbackRepositoryPort
 from core.ports.eval_port import EvalResultPort
 from core.ports.repository_port import RepositoryPort
 from core.ports.gold_dataset_port import GoldDatasetPort
-from ..containers import Container
+from ..containers import Container, get_container
+import datetime
 
 class AIREvaluationViewSet(viewsets.ReadOnlyModelViewSet):
     """API for AI Evaluation results and stats."""
@@ -113,38 +114,30 @@ class GoldDatasetViewSet(viewsets.ModelViewSet):
 from core.domain.services.dpo_feedback_loop import DPOFeedbackLoop
 from core.domain.services.dspy_prompt_optimizer import DSPyPromptOptimizer
 
-class DPOCurationViewSet(viewsets.ViewSet):
-    """API for DPO Curation and Prompt Optimization."""
+class DPOCurationView(APIView):
+    """API for DPO Curation (List and Post)."""
     permission_classes = [permissions.IsAdminUser]
 
-    @inject
-    def __init__(self, *args, dpo_loop: DPOFeedbackLoop = Provide[Container.core.dpo_feedback_loop], **kwargs):
-        super().__init__(*args, **kwargs)
-        self.dpo_loop = dpo_loop
-
-    @action(detail=False, methods=['post'])
-    def optimize_prompt(self, request):
-        prompt_key = request.data.get('prompt_key')
-        if not prompt_key:
-            return Response({'error': 'prompt_key is required'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        limit = int(request.data.get('limit', 20))
-        new_prompt = self.dpo_loop.optimize_prompt_from_feedback(prompt_key, limit=limit)
-        
-        if new_prompt:
-            return Response({
-                'status': 'success', 
-                'prompt_key': prompt_key,
-                'optimized_system_prompt': new_prompt
-            })
-        
-        return Response({'error': 'Optimization failed or not enough feedback'}, status=status.HTTP_400_BAD_REQUEST)
-
-    @action(detail=False, methods=['get'])
-    def rejected_samples(self, request):
+    def get(self, request):
+        container = get_container()
+        dpo_loop = container.core.dpo_feedback_loop()
         limit = int(request.GET.get('limit', 50))
-        samples = self.dpo_loop.get_rejected_for_curation(limit=limit)
+        samples = dpo_loop.get_rejected_for_curation(limit=limit)
         return Response(samples)
+
+    def post(self, request):
+        container = get_container()
+        dpo_loop = container.core.dpo_feedback_loop()
+        feedback_id = request.data.get('feedback_id')
+        chosen_text = request.data.get('chosen_text')
+        
+        if not feedback_id or not chosen_text:
+            return Response({'error': 'feedback_id and chosen_text are required'}, status=400)
+            
+        success = dpo_loop.curate_feedback(feedback_id, chosen_text)
+        if success:
+            return Response({'status': 'success', 'message': 'Feedback successfully curated.'})
+        return Response({'error': 'Curation failed'}, status=500)
 
 class DSPyOptimizerView(APIView):
     """
