@@ -32,7 +32,8 @@ urlpatterns = [
     # path('spatial-lab/generate-3d/', api_views.Generate3DDataView.as_view(), name='api_generate_3d'),
     # path('spatial-lab/cinematic-reconstruction/', api_views.CinematicReconstructionView.as_view(), name='api_cinematic_reconstruction'),
 
-    # path('manga-lab/', api_views.MangaLabDataView.as_view(), name='api_manga_lab'),
+    path('manga-lab/clean/', api_views.MangaCleanLabView.as_view(), name='api_manga_clean_lab'),
+    path('manga-lab/translate/', api_views.MangaTranslateLabView.as_view(), name='api_manga_translate_lab'),
     # path('manga-voice/', api_views.MangaVoiceLabView.as_view(), name='manga-voice'),
     path('audio-lab/', api_views.AudioLabDataView.as_view(), name='api_audio_lab'),
     path('singularity-lab/', api_views.SingularityLabDataView.as_view(), name='api_singularity_lab'),
@@ -43,6 +44,7 @@ urlpatterns = [
     # path('labs/s2s/', api_views.SpeechToSpeechLabDataView.as_view(), name='api_s2s_lab'),
     path('labs/liquid-nn/', api_views.LiquidNeuralNetworkLabView.as_view(), name='api_liquid_nn_lab'),
     path('labs/tot/', api_views.TreeOfThoughtsLabView.as_view(), name='api_tot_lab'),
+    path('labs/voice-cloning/', api_views.VoiceCloningLabView.as_view(), name='api_voice_cloning'),
     # path('mlops/dpo/curation/', api_views.DPOCurationView.as_view(), name='api_dpo_curation'),
     # path('mlops/sota/benchmarks/', api_views.SOTABenchmarkListView.as_view(), name='api_sota_benchmarks'),
     # path('mlops/dspy/optimizer/', api_views.DSPyOptimizerView.as_view(), name='api_dspy_optimizer'),
