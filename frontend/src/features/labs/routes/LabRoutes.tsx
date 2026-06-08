@@ -41,6 +41,7 @@ export const LabRoutes = (
     <Route path="/lab/forge-hub/" element={<ForgeHubPage />} />
     <Route path="/lab/liquid-neural-networks/" element={<LiquidNeuralNetworkLabPage />} />
     <Route path="/lab/tree-of-thoughts/" element={<TreeOfThoughtsPage />} />
+    <Route path="/lab/tot/" element={<TreeOfThoughtsPage />} />
     <Route path="/lab/multiverse-generator/" element={<MultiverseLabPage />} />
     <Route path="/lab/multiverse-gallery/" element={<MultiverseGalleryPage />} />
     <Route path="/lab/cognition-hub/" element={<CognitionHubPage />} />

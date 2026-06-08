@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion, AnimatePresence } from 'framer-motion';
 import { Skull, Shield, Zap, Info, Target, Trophy } from 'lucide-react';
+import { apiClient } from '../../utils/apiClient';
 
 const WorldBossPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -12,22 +13,17 @@ const WorldBossPage: React.FC = () => {
   const { data: boss, isLoading, error } = useQuery({
     queryKey: ['world-boss', 'active'],
     queryFn: async () => {
-      const res = await fetch('/api/game/world-boss/active/');
-      if (!res.ok) throw new Error('No active boss');
-      return res.json();
+      return apiClient('/api/v1/game/world-boss/active/');
     },
     refetchInterval: 10000, // Refresh every 10s to see global progress
   });
 
   const attackMutation = useMutation({
     mutationFn: async (guess: string) => {
-        const res = await fetch('/api/game/world-boss/attack/', {
+        return apiClient('/api/v1/game/world-boss/attack/', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ boss_id: boss?.id, guess })
         });
-        if (!res.ok) throw new Error('Attack failed');
-        return res.json();
     },
     onSuccess: (data) => {
         setFeedback({ is_correct: data.is_correct, damage: data.damage_dealt });

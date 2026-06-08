@@ -11,29 +11,40 @@ import { AdminRoutes } from '../features/admin/routes/AdminRoutes';
 import { UtilsRoutes } from '../features/utils/routes/UtilsRoutes';
 import { AuthRoutes } from '../features/auth/routes/AuthRoutes';
 import { GraphRoutes } from '../features/graph/routes/GraphRoutes';
-
-const App = React.lazy(() => import('../App'));
+import { BillingRoutes } from '../features/billing/routes/BillingRoutes';
+import { ExploreRoutes } from '../features/explore/routes/ExploreRoutes';
+import { SupportRoutes } from '../features/support/routes/SupportRoutes';
+import App from '../App';
 
 const Loading: React.FC = () => <div className="p-20 text-center text-white font-black animate-pulse uppercase tracking-[0.3em]">Initialisation du système...</div>;
 
+/**
+ * Determine the app basename based on URL structure.
+ * Handles /static/ prefix from Django/Vite and potential language prefixes.
+ */
 const getBasename = () => {
   const path = window.location.pathname;
-
-  // Handle /static/ or /static prefix
-  if (path === '/static' || path.startsWith('/static/')) {
-    const subPath = path.startsWith('/static/') ? path.substring(8) : '';
-    const languageMatch = subPath.match(/^(fr|en)(\/|$)/);
-    return languageMatch ? `/static/${languageMatch[1]}` : '/static';
+  
+  // Dev mode with Vite often uses /static/ as base
+  if (path.startsWith('/static')) {
+    const parts = path.split('/');
+    // Check if next part is a language code (fr/en)
+    if (parts.length > 2 && ['fr', 'en'].includes(parts[2])) {
+      return `/static/${parts[2]}`;
+    }
+    return '/static';
   }
-
-  // Handle root language prefix
-  const languageMatch = path.match(/^\/(fr|en)(\/|$)/);
-  return languageMatch ? languageMatch[0].replace(/\/$/, '') : '';
+  
+  // Production or direct root access
+  const match = path.match(/^\/(fr|en)(\/|$)/);
+  return match ? match[0].replace(/\/$/, '') : '';
 };
 
 const AppRouter: React.FC = () => {
+  const basename = React.useMemo(() => getBasename(), []);
+
   return (
-    <Router basename={getBasename()}>
+    <Router basename={basename}>
       <Layout>
         <Suspense fallback={<Loading />}>
           <Routes>
@@ -48,7 +59,10 @@ const AppRouter: React.FC = () => {
             {LabRoutes}
             {UtilsRoutes}
             {AdminRoutes}
-            <Route path="*" element={<Navigate to="/" replace />} />
+            {BillingRoutes}
+            {ExploreRoutes}
+            {SupportRoutes}
+            {/* Catch-all is removed for debugging if it causes loops */}
           </Routes>
         </Suspense>
       </Layout>

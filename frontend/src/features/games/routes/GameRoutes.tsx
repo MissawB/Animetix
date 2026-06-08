@@ -27,7 +27,7 @@ export const GameRoutes = (
     <Route path="/theater/" element={<TheaterPage />} />
     <Route path="/game/classic/" element={<ClassicGamePage />} />
     <Route path="/game/vsbattle/" element={<VsBattlePage />} />
-    <Route path="/game/world-boss/" element={<WorldBossPage />} />
+    <Route path="/game/world-boss/active/" element={<WorldBossPage />} />
     <Route path="/game/duel/lobby/" element={<DuelLobbyPage />} />
     <Route path="/game/duel/arena/:roomCode/" element={<DuelArenaPage />} />
     <Route path="/forge/" element={<ForgePage />} />
