@@ -92,6 +92,17 @@ const labs = [
         bg: 'from-emerald-500/20 to-transparent',
         badge: 'Recursive AI',
         status: 'Operational'
+    },
+    {
+        id: 'diagnostics',
+        title: 'Neural Diagnostics',
+        desc: 'Analyse d\'entropie et cartographie de confiance cognitive des réseaux.',
+        icon: Brain,
+        url: '/lab/diagnostics/',
+        color: 'text-blue-500',
+        bg: 'from-blue-500/20 to-transparent',
+        badge: 'Diagnostics',
+        status: 'Beta'
     }
 ];
 
