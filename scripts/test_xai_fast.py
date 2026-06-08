@@ -32,9 +32,22 @@ def main():
     
     # Mocking dependencies
     mock_engine = MagicMock()
-    mock_engine.get_diagnostics.side_effect = mock_get_diagnostics
-    mock_engine.calculate_uncertainty.return_value = {"normalized_entropy": 0.2, "perplexity": 1.5}
-    mock_engine.stream_generate.return_value = ["Le ", "Nen ", "est ", "l'énergie ", "vitale."]
+    # We no longer mock get_diagnostics and calculate_uncertainty since we rely on native logprobs
+    
+    logprobs_data = [
+        TokenLogProb(token="Le", logprob=-0.05, top_logprobs=[{"Le": -0.05}]),
+        TokenLogProb(token=" Nen", logprob=-0.1, top_logprobs=[{" Nen": -0.1}]),
+        TokenLogProb(token=" est", logprob=-0.02, top_logprobs=[{" est": -0.02}]),
+        TokenLogProb(token=" l'énergie", logprob=-0.08, top_logprobs=[{" l'énergie": -0.08}]),
+    ]
+    
+    mock_engine.stream_generate.return_value = [
+        InferenceResponse(text="Le ", metadata=InferenceMetadata(logprobs=[logprobs_data[0]])),
+        InferenceResponse(text="Nen ", metadata=InferenceMetadata(logprobs=[logprobs_data[1]])),
+        InferenceResponse(text="est ", metadata=InferenceMetadata(logprobs=[logprobs_data[2]])),
+        InferenceResponse(text="l'énergie ", metadata=InferenceMetadata(logprobs=[logprobs_data[3]])),
+        InferenceResponse(text="vitale.", metadata=InferenceMetadata(logprobs=[]))
+    ]
     
     mock_workflow = MagicMock()
     

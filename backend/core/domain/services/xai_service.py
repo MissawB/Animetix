@@ -19,34 +19,51 @@ class XaiDiagnosticService:
         self.inference_engine = inference_engine
         self.uncertainty_service = uncertainty_service or UncertaintyService(inference_engine)
 
-    def explain_response(self, prompt: str, completion: str) -> Dict[str, Any]:
+    def explain_response(self, prompt: str, completion: str, response: Optional[InferenceResponse] = None) -> Dict[str, Any]:
         """
-        Génère une explication technique de la réponse (Legacy).
+        Génère une explication technique de la réponse basée sur les logprobs réels.
         """
-        logger.info("🔍 XAI: Analyzing internal model activations...")
-        diagnostics = self.inference_engine.get_diagnostics(prompt, completion)
+        logger.info("🔍 XAI: Analyzing native model logprobs...")
         
-        top_influencers = diagnostics.get("top_attention_tokens", [])
+        top_influencers = []
+        if response and response.metadata and response.metadata.logprobs:
+            # Récupérer les tokens avec les logprobs les plus bas (plus grande surprise/attention)
+            sorted_logprobs = sorted(
+                [lp for lp in response.metadata.logprobs if lp.logprob is not None], 
+                key=lambda x: x.logprob
+            )
+            top_influencers = [lp.token for lp in sorted_logprobs[:5]]
+
+        if top_influencers:
+            explanation = f"L'attention native du modèle indique une forte pondération ou surprise sur les tokens : {', '.join(top_influencers)}."
+        else:
+            explanation = "Analyse des tokens non disponible. Veuillez activer 'include_logprobs=True' lors de l'inférence."
         
         return {
-            "explanation": f"Le modèle s'est principalement focalisé sur : {', '.join(top_influencers)}.",
-            "logit_lens_trend": diagnostics.get("logit_lens_trend"),
-            "attention_map_summary": "L'attention est concentrée sur les entités nommées du contexte."
+            "explanation": explanation,
+            "logit_lens_trend": [],
+            "attention_map_summary": "L'analyse est désormais basée sur les logprobs natifs plutôt que sur des matrices d'attention approximées."
         }
 
     def generate_advanced_report(self, query: str, response: InferenceResponse, collector: 'XaiCollector') -> XaiReport:
         """
-        Génère un rapport XAI complet hybridant diagnostics internes et traces agentiques.
+        Génère un rapport XAI complet hybridant logprobs natifs et traces agentiques.
         """
         logger.info(f"📊 XAI: Generating advanced diagnostic report for query: {query[:50]}...")
         
-        # 1. Extraction des diagnostics internes (activations du cerveau)
-        raw_diagnostics = self.inference_engine.get_diagnostics(query, response.text)
-        
+        # 1. Extraction des diagnostics natifs (logprobs)
+        top_influential_tokens = []
+        if response.metadata and response.metadata.logprobs:
+            sorted_logprobs = sorted(
+                [lp for lp in response.metadata.logprobs if lp.logprob is not None], 
+                key=lambda x: x.logprob
+            )
+            top_influential_tokens = [lp.token for lp in sorted_logprobs[:10]]
+            
         model_diagnostics = ModelDiagnostics(
-            attention_heatmap=raw_diagnostics.get("attention_heatmap", []),
-            top_influential_tokens=raw_diagnostics.get("top_attention_tokens", []),
-            logit_lens_trajectory=raw_diagnostics.get("logit_lens_trajectory", [])
+            attention_heatmap=[],  # Deprecated with native logprobs
+            top_influential_tokens=top_influential_tokens,
+            logit_lens_trajectory=[] # Deprecated with native logprobs
         )
         
         # 2. Attribution documentaire (RAG)
@@ -81,7 +98,7 @@ class XaiDiagnosticService:
 
 class UncertaintyService:
     """
-    Service de Quantification de l'Incertitude.
+    Service de Quantification de l'Incertitude utilisant exclusivement des mécanismes natifs.
     """
     def __init__(self, inference_engine: InferencePort):
         self.inference_engine = inference_engine
@@ -89,9 +106,10 @@ class UncertaintyService:
 
     def measure_confidence(self, prompt: str, completion: str, response: Optional[InferenceResponse] = None) -> Dict[str, Any]:
         """
-        Calcule les métriques d'incertitude.
+        Calcule les métriques d'incertitude. Utilise les logprobs si disponibles, 
+        sinon assume une incertitude maximale par sécurité (Secure by Default).
         """
-        # 1. Utilisation des logprobs réels si disponibles (InferenceResponse)
+        # Utilisation des logprobs réels si disponibles (InferenceResponse)
         if response and response.metadata and response.metadata.logprobs:
             logger.info("📊 Uncertainty: Using real logprobs from inference response.")
             logprobs = [lp.logprob for lp in response.metadata.logprobs if lp.logprob is not None]
@@ -101,7 +119,7 @@ class UncertaintyService:
                 # L'entropie moyenne est -sum(logprobs) / len(logprobs)
                 avg_entropy = -sum(logprobs) / len(logprobs)
                 
-                # Normalisation (constante 10.8 cohérente avec le proxy GPT-2)
+                # Normalisation (constante 10.8 empirique)
                 confidence_score = max(0.0, min(1.0, 1.0 - (avg_entropy / 10.8)))
                 
                 # Perplexité = exp(entropie moyenne)
@@ -117,47 +135,19 @@ class UncertaintyService:
                     "method": "real_logprobs"
                 }
 
-        # 2. Fallback sur le proxy GPT-2 (via inference_engine.calculate_uncertainty)
-        logger.info("⚠️ Uncertainty: Falling back to GPT-2 proxy for confidence measurement.")
-        try:
-            metrics = self.inference_engine.calculate_uncertainty(prompt, completion)
-        except Exception as e:
-            logger.warning(f"❌ Uncertainty fallback failed: {e}")
-            metrics = {}
+        # Fallback de sécurité (Secure by Default) si aucun logprob n'est fourni.
+        # On ne charge PLUS de modèles lourds locaux comme gpt2.
+        logger.warning("⚠️ Uncertainty: No native logprobs provided. Defaulting to high uncertainty.")
         
-        entropy = 1.0 # Default to max uncertainty if no data
-        perplexity = None
-        
-        if hasattr(metrics, "get"):
-            try:
-                e_val = metrics.get("normalized_entropy", 1.0)
-                if hasattr(e_val, "_mock_return_value") or type(e_val).__name__ in ("MagicMock", "Mock"):
-                    entropy = 1.0
-                else:
-                    entropy = float(e_val)
-            except (TypeError, ValueError):
-                entropy = 1.0
-                
-            try:
-                p_val = metrics.get("perplexity")
-                if hasattr(p_val, "_mock_return_value") or type(p_val).__name__ in ("MagicMock", "Mock"):
-                    perplexity = None
-                else:
-                    perplexity = float(p_val) if p_val is not None else None
-            except (TypeError, ValueError):
-                perplexity = None
-        
-        # L'entropie mesure le 'désordre' des probabilités de tokens.
-        confidence_score = float(max(0.0, min(1.0, 1.0 - entropy)))
-        
-        is_reliable = bool(confidence_score >= self.uncertainty_threshold)
+        confidence_score = 0.0
+        is_reliable = False
         
         return {
             "confidence_score": confidence_score,
             "is_reliable": is_reliable,
-            "perplexity": perplexity,
-            "action_required": "PROCEED" if is_reliable else "VERIFY_WEB",
-            "method": "gpt2_proxy"
+            "perplexity": None,
+            "action_required": "VERIFY_WEB",
+            "method": "default_fallback"
         }
 
 class XaiCollector:
@@ -180,3 +170,4 @@ class XaiCollector:
     def log_agent_thought(self, agent: str, thought: str):
         """Enregistre une étape de réflexion d'un agent."""
         self.steps.append({"agent": agent, "thought": thought})
+
