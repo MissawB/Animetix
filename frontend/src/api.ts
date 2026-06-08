@@ -293,7 +293,7 @@ export async function cloneVoice(text: string, audioFile: File, pitch: number): 
   return apiClient('/api/v1/labs/voice-cloning/', {
     method: 'POST',
     body: formData,
-    headers: {} // Let browser set Content-Type for FormData
+    isFormData: true,
   });
 }
 

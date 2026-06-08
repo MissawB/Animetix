@@ -9,7 +9,7 @@ export const useVoiceCloning = () => {
 
   return {
     clone: mutation.mutateAsync,
-    isLoading: mutation.isPending,
+    loading: mutation.isPending,
     result: mutation.data,
     error: mutation.error
   };

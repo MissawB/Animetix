@@ -1,12 +1,15 @@
 import { useToastStore } from '../store/toastStore';
 import { usePersonalizationStore } from '../store/personalizationStore';
 
-export const apiClient = async (url: string, options: RequestInit & { skipToast?: boolean } = {}) => {
-  const { skipToast, ...fetchOptions } = options;
-  const defaultHeaders: HeadersInit = {
-    'Content-Type': 'application/json',
+export const apiClient = async (url: string, options: RequestInit & { skipToast?: boolean; isFormData?: boolean } = {}) => {
+  const { skipToast, isFormData, ...fetchOptions } = options;
+  const defaultHeaders: Record<string, string> = {
     'X-Requested-With': 'XMLHttpRequest',
   };
+
+  if (!isFormData) {
+    defaultHeaders['Content-Type'] = 'application/json';
+  }
 
   // Récupération du CSRF Token
   const match = document.cookie.match(new RegExp('(^| )csrftoken=([^;]+)'));
