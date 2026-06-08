@@ -33,7 +33,7 @@ def test_generate_3d_data_view(dummy_image):
         mock_container.core.spatial_computing_service.return_value = mock_service
         mock_get_container.return_value = mock_container
         
-        view = Generate3DDataView.as_view()
+        view = Generate3DDataView.as_view(permission_classes=[])
         response = view(request)
         assert response.status_code == 200
         assert response.data['model_url'] == "http://storage.com/model.ply"
@@ -51,7 +51,7 @@ def test_cinematic_reconstruction_view(dummy_video):
         mock_container.core.cinematic_volumetric_reconstruction_service.return_value = mock_service
         mock_get_container.return_value = mock_container
         
-        view = CinematicReconstructionView.as_view()
+        view = CinematicReconstructionView.as_view(permission_classes=[])
         response = view(request)
         assert response.status_code == 200
         assert len(response.data['frames']) > 0

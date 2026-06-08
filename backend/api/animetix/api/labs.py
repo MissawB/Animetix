@@ -302,14 +302,6 @@ class VideoLabDataView(APIView):
             ]
         })
 
-# Les autres vues restent inchangées ou simplifiées pour brièveté si nécessaire
-# (Je garde les classes essentielles pour ne pas casser l'API)
-@method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True), name='dispatch')
-class SpatialLabDataView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-    def post(self, request):
-        return Response({"status": "not_implemented_in_this_cleanup"}, status=501)
-
 class AudioLabDataView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     def post(self, request):
