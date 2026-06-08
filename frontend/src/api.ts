@@ -283,5 +283,19 @@ export async function createClubEvent(data: Partial<ClubEvent>): Promise<ClubEve
   });
 }
 
+// --- Labs API ---
+export async function cloneVoice(text: string, audioFile: File, pitch: number): Promise<{ audio_data: string }> {
+  const formData = new FormData();
+  formData.append('target_text', text);
+  formData.append('reference_audio', audioFile);
+  formData.append('pitch', pitch.toString());
+
+  return apiClient('/api/v1/labs/voice-cloning/', {
+    method: 'POST',
+    body: formData,
+    headers: {} // Let browser set Content-Type for FormData
+  });
+}
+
 
 
