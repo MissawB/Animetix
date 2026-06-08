@@ -49,6 +49,7 @@ urlpatterns = [
     path('labs/liquid-nn/', api_views.LiquidNeuralNetworkLabView.as_view(), name='api_liquid_nn_lab'),
     path('labs/tot/', api_views.TreeOfThoughtsLabView.as_view(), name='api_tot_lab'),
     path('labs/voice-cloning/', api_views.VoiceCloningLabView.as_view(), name='api_voice_cloning'),
+    path('labs/diagnostics/', api_views.NeuralDiagnosticsLabView.as_view(), name='api_neural_diagnostics'),
     # path('mlops/dpo/curation/', api_views.DPOCurationView.as_view(), name='api_dpo_curation'),
     # path('mlops/sota/benchmarks/', api_views.SOTABenchmarkListView.as_view(), name='api_sota_benchmarks'),
     # path('mlops/dspy/optimizer/', api_views.DSPyOptimizerView.as_view(), name='api_dspy_optimizer'),
@@ -58,7 +59,7 @@ urlpatterns = [
     # path('cognition/archetype-nexus/', api_views.ArchetypeNexusView.as_view(), name='api_archetype_nexus'),
     # path('cognition/neuro-memory/', api_views.NeuroMemoryManagementView.as_view(), name='api_neuro_memory'),
     # path('cognition/debate-arena/', api_views.AIDebateArenaView.as_view(), name='api_debate_arena'),
-    # path('companion/interact/', api_views.CompanionInteractView.as_view(), name='api_companion_interact'),
+    path('companion/interact/', api_views.CompanionInteractView.as_view(), name='api_companion_interact'),
     
     # --- STREAMING IA ---
     path('stream/emoji/', api_views.EmojiStreamView.as_view(), name='api_emoji_stream'),

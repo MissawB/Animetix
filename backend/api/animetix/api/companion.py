@@ -5,7 +5,7 @@ from dependency_injector.wiring import inject, Provide
 from core.domain.services.companion_service import CompanionService
 from core.domain.services.guardrail_service import GuardrailService
 from core.ports.usage_port import UsagePort
-from ..containers import Container
+from ..containers import Container, get_container
 
 class CompanionInteractView(APIView):
     """
@@ -14,18 +14,12 @@ class CompanionInteractView(APIView):
     """
     permission_classes = [permissions.IsAuthenticated]
 
-    @inject
-    def __init__(self, 
-                 companion_service: CompanionService = Provide[Container.core.companion_service],
-                 guardrail_service: GuardrailService = Provide[Container.core.guardrail_service],
-                 usage_port: UsagePort = Provide[Container.infrastructure.usage_port],
-                 **kwargs):
-        super().__init__(**kwargs)
-        self.companion_service = companion_service
-        self.guardrail_service = guardrail_service
-        self.usage_port = usage_port
-
     def post(self, request):
+        container = get_container()
+        companion_service = container.core.companion_service()
+        guardrail_service = container.core.guardrail_service()
+        usage_port = container.infrastructure.usage_port()
+
         mentor_id = request.data.get('mentor_id')
         user_message = request.data.get('user_message')
         context_url = request.data.get('context_url', '')
@@ -37,7 +31,7 @@ class CompanionInteractView(APIView):
             )
 
         # 1. Input Guardrail (Anti-Jailbreak, Moderation)
-        guard_input = self.guardrail_service.validate_input(user_message)
+        guard_input = guardrail_service.validate_input(user_message)
         if not guard_input.get("is_safe", True):
             return Response(
                 {"error": guard_input.get("reason", "Inappropriate content detected.")},
@@ -46,7 +40,7 @@ class CompanionInteractView(APIView):
 
         # Check quota
         tier = getattr(request, 'user_tier', 'free')
-        if not self.usage_port.check_quota(request.user.id, tier):
+        if not usage_port.check_quota(request.user.id, tier):
             return Response(
                 {"error": "AI usage quota exceeded for your tier."},
                 status=status.HTTP_403_FORBIDDEN
@@ -57,7 +51,7 @@ class CompanionInteractView(APIView):
         
         try:
             # Generate response
-            response_text = self.companion_service.generate_response(
+            response_text = companion_service.generate_response(
                 mentor_id=mentor_id,
                 user_msg=user_message,
                 context=context_url,
@@ -65,7 +59,7 @@ class CompanionInteractView(APIView):
             )
 
             # 2. Output Guardrail (Fact-checking, Hallucination)
-            guard_output = self.guardrail_service.validate_output(
+            guard_output = guardrail_service.validate_output(
                 response_text, 
                 context=context_url,
                 query=user_message
@@ -91,9 +85,7 @@ class CompanionInteractView(APIView):
             request.session['companion_history'] = history
 
             # Log Usage (Estimating tokens or using units)
-            # In a real 2026 scenario, the service would return token counts.
-            # Here we log generic units for simplicity.
-            self.usage_port.log_usage(
+            usage_port.log_usage(
                 engine=mentor_id, 
                 input_tokens=len(user_message) // 4, 
                 output_tokens=len(response_text) // 4, 
