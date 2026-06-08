@@ -266,3 +266,90 @@ class TreeOfThoughtsLabView(APIView):
         except Exception as e:
             logger.error(f"Error in TreeOfThoughtsLabView: {e}", exc_info=True)
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+import base64
+
+class MangaCleanLabView(APIView):
+    """Nettoie (inpaint) les bulles de texte d'une planche de manga."""
+    permission_classes = [permissions.AllowAny] # Change to IsAuthenticated if needed in production
+
+    def post(self, request):
+        container = get_container()
+        image_file = request.FILES.get('image')
+        
+        if not image_file:
+            return Response({'error': 'Image file is required.'}, status=400)
+            
+        try:
+            image_bytes = image_file.read()
+            inference_engine = container.inference.primary()
+            
+            # Un nettoyage simple équivaut à un inpainting avec une liste de bulles vide.
+            cleaned_bytes = inference_engine.inpaint_text_bubbles(image_bytes, [])
+            
+            b64_img = base64.b64encode(cleaned_bytes).decode('utf-8')
+            return Response({
+                'status': 'success',
+                'image': b64_img
+            })
+        except Exception as e:
+            logger.error(f"Error in MangaCleanLabView: {e}")
+            return Response({'error': str(e)}, status=500)
+
+class MangaTranslateLabView(APIView):
+    """Traduit les bulles de texte d'une planche de manga."""
+    permission_classes = [permissions.AllowAny] # Change to IsAuthenticated if needed in production
+
+    def post(self, request):
+        container = get_container()
+        image_file = request.FILES.get('image')
+        target_lang = request.data.get('target_lang', 'French')
+        
+        if not image_file:
+            return Response({'error': 'Image file is required.'}, status=400)
+            
+        try:
+            image_bytes = image_file.read()
+            manga_flow_service = container.core.manga_flow_service()
+            
+            translated_bytes = manga_flow_service.translate_manga_page(image_bytes, target_lang)
+            
+            b64_img = base64.b64encode(translated_bytes).decode('utf-8')
+            return Response({
+                'status': 'success',
+                'image': b64_img
+            })
+        except Exception as e:
+            logger.error(f"Error in MangaTranslateLabView: {e}")
+            return Response({'error': str(e)}, status=500)
+
+class VoiceCloningLabView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        target_text = request.data.get('target_text')
+        # Handle file upload or base64
+        ref_audio_file = request.FILES.get('reference_audio')
+        
+        if not target_text or not ref_audio_file:
+            return Response({"error": "Missing text or audio"}, status=400)
+            
+        container = get_container()
+        service = container.core.voice_cloning_service()
+        
+        try:
+            audio_bytes = ref_audio_file.read()
+            result_audio = service.clone(
+                reference_audio=audio_bytes,
+                target_text=target_text,
+                pitch=int(request.data.get('pitch', 0))
+            )
+            # Return as base64 for pure SPA handling
+            import base64
+            encoded = base64.b64encode(result_audio).decode('utf-8')
+            return Response({
+                "status": "success",
+                "audio_data": f"data:audio/wav;base64,{encoded}"
+            })
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
