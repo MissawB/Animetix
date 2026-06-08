@@ -166,3 +166,27 @@ Réponds UNIQUEMENT avec le nouveau System Prompt, sans explications.
             return {"satisfaction_rate": 0, "total": 0}
             
         return self.feedback_port.get_feedback_stats()
+
+    def curate_feedback(self, feedback_id: int, chosen_text: str) -> bool:
+        """
+        Manually validates a rejected feedback by providing the 'Chosen' alternative.
+        Persists as a GoldDatasetEntry.
+        """
+        from animetix.models import AIFeedback, GoldDatasetEntry
+        try:
+            fb = AIFeedback.objects.get(id=feedback_id)
+            # Create or update gold entry
+            GoldDatasetEntry.objects.update_or_create(
+                source_feedback=fb,
+                defaults={
+                    "context": fb.input_context,
+                    "instruction": "Generate high quality response",
+                    "response": chosen_text,
+                    "is_validated": True
+                }
+            )
+            logger.info(f"✅ Feedback {feedback_id} curated into Gold Dataset.")
+            return True
+        except Exception as e:
+            logger.error(f"❌ Curation failed for feedback {feedback_id}: {e}")
+            return False
