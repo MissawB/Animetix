@@ -436,3 +436,67 @@ class VoiceCloningLabView(APIView):
         except Exception as e:
             logger.error(f"Voice Cloning Error: {e}", exc_info=True)
             return Response({"error": str(e)}, status=500)
+
+class SpatialLabDataView(APIView):
+    """Métadonnées pour les outils de Calcul Spatial."""
+    permission_classes = [permissions.AllowAny]
+    def get(self, request):
+        return Response({
+            'status': 'active',
+            'tools': [
+                {
+                    'id': 'generate-3d',
+                    'name': 'Image-to-3D',
+                    'description': 'Generate a navigable 3D scene from a single image (Gaussian Splatting).',
+                    'endpoint': '/api/v1/labs/spatial/generate-3d/'
+                },
+                {
+                    'id': 'cinematic',
+                    'name': 'Cinematic Reconstruction',
+                    'description': 'Reconstruct dynamic volumetric 3D scenes from video clips.',
+                    'endpoint': '/api/v1/labs/spatial/cinematic/'
+                }
+            ]
+        })
+
+class Generate3DDataView(APIView):
+    """Génère une scène 3D (PLY) à partir d'une image."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        container = get_container()
+        image_file = request.FILES.get('image')
+        title = request.data.get('title', 'Poster 3D')
+        
+        if not image_file:
+            return Response({'error': 'Image file is required.'}, status=400)
+            
+        try:
+            image_bytes = image_file.read()
+            service = container.core.spatial_computing_service()
+            result = service.reconstruct_3d_scene(image_bytes, title)
+            return Response(result)
+        except Exception as e:
+            logger.error(f"Error in Generate3DDataView: {e}")
+            return Response({'error': str(e)}, status=500)
+
+class CinematicReconstructionView(APIView):
+    """Génère une séquence de scènes 3D à partir d'une vidéo."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        container = get_container()
+        video_file = request.FILES.get('video')
+        title = request.data.get('title', 'Cinematic 3D')
+        
+        if not video_file:
+            return Response({'error': 'Video file is required.'}, status=400)
+            
+        try:
+            video_bytes = video_file.read()
+            service = container.core.cinematic_volumetric_reconstruction_service()
+            result = service.reconstruct_dynamic_cinematic_scene(video_bytes, title)
+            return Response(result)
+        except Exception as e:
+            logger.error(f"Error in CinematicReconstructionView: {e}")
+            return Response({'error': str(e)}, status=500)
