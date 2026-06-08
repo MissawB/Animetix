@@ -5,12 +5,26 @@ Ce document centralise toutes les tâches techniques, d'architecture et de fonct
 ## 🛠️ Dette Technique & Architecture
 
 - [X] **Standardisation de la validation API (Django Forms)** : Finaliser la refactorisation des vues dans `backend/api/animetix/views/api.py` pour utiliser systématiquement les Django Forms. (Actuellement : plusieurs accès directs à `request.GET/POST` persistent).
-- [ ] **Complétude de l'InferencePort** : Supprimer les stubs restants dans `backend/core/ports/inference_port.py`. (Plusieurs méthodes lèvent encore `InferenceNotImplementedError` sans implémentation réelle).
-- [ ] **Refactorisation de `App.tsx`** : Découper ce fichier monolithique (21 KB) en composants atomiques et services dédiés.
-- [ ] **Modularisation Frontend** : Créer un répertoire `src/pages/` pour isoler les vues des composants de fonctionnalités (`features/`).
-- [ ] **Intégration réelle du `SelfEvolvingCompiler`** : Remplacer les `NotImplementedError` dans le proxy d'évolution LLM par une intégration effective.
+- [X] **Complétude de l'InferencePort** : Supprimer les stubs restants dans `backend/core/ports/inference_port.py`. (Plusieurs méthodes lèvent encore `InferenceNotImplementedError` sans implémentation réelle).
+- [X] **Refactorisation de `App.tsx`** : Découper ce fichier monolithique (21 KB) en composants atomiques et services dédiés.
+- [X] **Modularisation Frontend** : Créer un répertoire `src/pages/` pour isoler les vues des composants de fonctionnalités (`features/`).
+- [ ] **Cohérence du Routage & Navigation** :
+    - [X] Corriger la route World Boss (`/game/world-boss/active/` vs `/game/world-boss/`).
+    - [X] Refactoriser `SocialRoutes.tsx` pour déplacer les pages non-sociales (Pricing, Support, Explore) dans leurs domaines respectifs.
+- [X] **Intégration réelle du `SelfEvolvingCompiler`** : Remplacer les `NotImplementedError` dans le proxy d'évolution LLM par une intégration effective.
 - [ ] **Amélioration des diagnostics IA** : Migrer de la simulation `gpt2` dans `UnifiedInferenceAdapter` vers des mécanismes de diagnostics natifs aux modèles de production.
 - [x] **Optimisation du Chargement IA (Lazy Loading)** : Garantir que tous les adaptateurs et modèles lourds sont chargés uniquement lors de leur première utilisation pour accélérer le démarrage du container. Refactorisation de `FallbackInferenceAdapter` (cache et health lazy) et `GoogleGenAIAdapter` (client lazy).
+
+## 🔗 Désorphelinisation & Raccordement Backend
+
+- [ ] **Réactivation des Laboratoires (Ghost Labs)** : Décommenter et tester les endpoints backend pour :
+    - [ ] **Manga Lab** (Nettoyage & Traduction).
+    - [ ] **Video Lab** (Transfert de style FateZero).
+    - [ ] **Spatial Lab** (Estimation de profondeur & 3D).
+    - [ ] **Soundscape & Speech-to-Speech** (Génération sonore et voix E2E).
+- [ ] **Rétablissement du Nexus Companion** : Connecter l'interface de chat à l'endpoint `companion/interact/`.
+- [ ] **Finalisation des Outils d'Admin** : Raccorder les pages de monitoring (`Admin DPO`, `SOTA Benchmarks`, `Graph Debugger`) aux services backend correspondants.
+- [ ] **Activation des Services Cognitifs** : Déployer les endpoints pour `Archetype Nexus`, `Neuro Memory` et `AIDebate Arena`.
 
 ## 🚀 Intégrations & Pages Manquantes (Frontend)
 
@@ -18,8 +32,10 @@ Ce document centralise toutes les tâches techniques, d'architecture et de fonct
 - [X] **Visualisation "Tree of Thoughts" (Expert)** : Créer une page de visualisation d'arbre (MCTS) pour explorer les branches de réflexion du `TreeOfThoughtsSearchService`.
 - [X] **Monitoring "Dynamic Budget TTC"** : Dashboard d'administration pour suivre l'allocation du budget de pensée en temps réel.
 - [X] **Galerie des Multivers** : Interface de type "catalogue" pour parcourir les segments de multivers synthétiques générés par la communauté.
-- [ ] **Centre d'Aide & Support** : Implémenter une page pour le support technique connectée au `dpo_feedback_loop.py`.
+- [X] **Centre d'Aide & Support** : Implémenter une page pour le support technique connectée au `dpo_feedback_loop.py`.
 - [X] **Finalisation Intégration Explorer** : Désorpheliniser la page `/explore/` en l'intégrant plus profondément dans les flux de recommandation et de navigation contextuelle.
+- [ ] **Interface "Voice Cloning" (RVC)** : Créer un laboratoire dédié pour le clonage de voix zero-shot.
+- [ ] **Dashboard "Neural Diagnostics"** : Interface pour visualiser l'incertitude (entropie) et les activations internes (Logit Lens) des générations.
 
 ## 🛡️ Sécurité & Résilience
 
