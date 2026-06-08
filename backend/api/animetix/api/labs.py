@@ -235,6 +235,73 @@ class LiquidNeuralNetworkLabView(APIView):
         except Exception as e:
             return Response({'error': str(e)}, status=500)
 
+class MangaLabDataView(APIView):
+    """Metadata for the Manga Lab tools."""
+    permission_classes = [permissions.AllowAny]
+    def get(self, request):
+        return Response({
+            'status': 'active',
+            'tools': [
+                {
+                    'id': 'clean',
+                    'name': 'Manga Cleaner',
+                    'description': 'Remove text bubbles from manga pages.',
+                    'endpoint': '/api/v1/manga-lab/clean/'
+                },
+                {
+                    'id': 'translate',
+                    'name': 'Manga Translator',
+                    'description': 'Translate manga bubbles to target language.',
+                    'endpoint': '/api/v1/manga-lab/translate/'
+                }
+            ]
+        })
+
+class VideoFateZeroLabView(APIView):
+    """Transforme une vidéo avec transfert de style SOTA (FateZero)."""
+    permission_classes = [permissions.IsAuthenticated]
+    throttle_scope = 'gpu'
+
+    def post(self, request):
+        container = get_container()
+        video_file = request.FILES.get('video')
+        studio_style = request.data.get('studio_style', 'Ufotable')
+        
+        if not video_file:
+            return Response({'error': 'Video file is required.'}, status=400)
+            
+        try:
+            video_bytes = video_file.read()
+            service = container.core.studio_transform_service()
+            
+            result_url = service.transform_video_to_anime_sota(video_bytes, studio_style)
+            
+            return Response({
+                'status': 'success',
+                'video_url': result_url,
+                'message': f"Transformation {studio_style} (FateZero) réussie."
+            })
+        except Exception as e:
+            logger.error(f"Error in VideoFateZeroLabView: {e}")
+            return Response({'error': str(e)}, status=500)
+
+class VideoLabDataView(APIView):
+    """Métadonnées pour les outils du Video Lab."""
+    permission_classes = [permissions.AllowAny]
+    def get(self, request):
+        return Response({
+            'status': 'active',
+            'tools': [
+                {
+                    'id': 'fatezero',
+                    'name': 'FateZero Style Transfer',
+                    'description': 'Temporally consistent anime style transfer for real videos.',
+                    'endpoint': '/api/v1/labs/video/fatezero/',
+                    'supported_styles': ['Shaft', 'Ufotable', 'Kyoto', 'Ghibli']
+                }
+            ]
+        })
+
 # Les autres vues restent inchangées ou simplifiées pour brièveté si nécessaire
 # (Je garde les classes essentielles pour ne pas casser l'API)
 @method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True), name='dispatch')
@@ -328,21 +395,36 @@ class VoiceCloningLabView(APIView):
 
     def post(self, request):
         target_text = request.data.get('target_text')
-        # Handle file upload or base64
         ref_audio_file = request.FILES.get('reference_audio')
         
         if not target_text or not ref_audio_file:
             return Response({"error": "Missing text or audio"}, status=400)
+
+        # Validation: Pitch must be an integer
+        try:
+            pitch = int(request.data.get('pitch', 0))
+        except (ValueError, TypeError):
+            return Response({"error": "Invalid pitch value. Must be an integer."}, status=400)
+
+        # Validation: File size (Max 5MB as per review)
+        MAX_VOICE_AUDIO_SIZE = 5 * 1024 * 1024
+        if not validate_file_size(ref_audio_file.size, MAX_VOICE_AUDIO_SIZE):
+            return Response({"error": "Reference audio file too large (Max 5MB)."}, status=400)
             
         container = get_container()
         service = container.core.voice_cloning_service()
         
         try:
             audio_bytes = ref_audio_file.read()
+            
+            # Validation: MIME Type
+            if not validate_file_mime_type(audio_bytes, ALLOWED_AUDIO_MIMES):
+                return Response({"error": "Invalid file type. Only wav and mp3 are allowed."}, status=400)
+
             result_audio = service.clone(
                 reference_audio=audio_bytes,
                 target_text=target_text,
-                pitch=int(request.data.get('pitch', 0))
+                pitch=pitch
             )
             # Return as base64 for pure SPA handling
             import base64
@@ -352,4 +434,5 @@ class VoiceCloningLabView(APIView):
                 "audio_data": f"data:audio/wav;base64,{encoded}"
             })
         except Exception as e:
+            logger.error(f"Voice Cloning Error: {e}", exc_info=True)
             return Response({"error": str(e)}, status=500)
