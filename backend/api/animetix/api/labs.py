@@ -303,9 +303,79 @@ class VideoLabDataView(APIView):
         })
 
 class AudioLabDataView(APIView):
+    """Metadata for the Audio Lab tools."""
+    permission_classes = [permissions.AllowAny]
+    def get(self, request):
+        return Response({
+            'status': 'active',
+            'tools': [
+                {
+                    'id': 'soundscape',
+                    'name': 'Soundscape Generator',
+                    'description': 'Generate immersive ambient soundscapes for your video clips.',
+                    'endpoint': '/api/v1/labs/audio/soundscape/'
+                },
+                {
+                    'id': 's2s',
+                    'name': 'Voice Interaction (S2S)',
+                    'description': 'Direct speech-to-speech interaction with anime personas.',
+                    'endpoint': '/api/v1/labs/audio/s2s/'
+                }
+            ]
+        })
+
+class SoundscapeGenerationView(APIView):
+    """Génère un soundscape ambiant pour une vidéo."""
     permission_classes = [permissions.IsAuthenticated]
+
     def post(self, request):
-        return Response({"status": "not_implemented_in_this_cleanup"}, status=501)
+        container = get_container()
+        video_file = request.FILES.get('video')
+        
+        if not video_file:
+            return Response({'error': 'Video file is required.'}, status=400)
+            
+        try:
+            video_bytes = video_file.read()
+            service = container.core.soundscape_service()
+            result_url = service.generate_soundscape_for_video(video_bytes)
+            return Response({
+                'status': 'success',
+                'audio_url': result_url
+            })
+        except Exception as e:
+            logger.error(f"Error in SoundscapeGenerationView: {e}")
+            return Response({'error': str(e)}, status=500)
+
+class SpeechToSpeechLabView(APIView):
+    """Interaction directe voix-à-voix (S2S)."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        container = get_container()
+        audio_file = request.FILES.get('audio')
+        persona = request.data.get('persona', 'Standard')
+        
+        if not audio_file:
+            return Response({'error': 'Audio file is required.'}, status=400)
+            
+        try:
+            audio_bytes = audio_file.read()
+            service = container.core.native_speech_llm_service()
+            result = service.process_voice_interaction(audio_bytes, persona=persona)
+            
+            if result.get('status') == 'success':
+                # Convert audio bytes to base64 for JSON transport
+                import base64
+                encoded_audio = base64.b64encode(result['audio_data']).decode('utf-8')
+                return Response({
+                    'status': 'success',
+                    'audio_data': encoded_audio
+                })
+            return Response(result, status=400)
+        except Exception as e:
+            logger.error(f"Error in SpeechToSpeechLabView: {e}")
+            return Response({'error': str(e)}, status=500)
 
 class TreeOfThoughtsLabView(APIView):
     permission_classes = [permissions.AllowAny]
