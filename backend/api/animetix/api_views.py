@@ -4,6 +4,7 @@ from .api.social import *
 from .api.games import *
 from .api.labs import *
 from .api.labs import MangaCleanLabView, MangaTranslateLabView
+from .api.labs import AudioLabDataView, SoundscapeGenerationView, SpeechToSpeechLabView
 from .api.labs import VideoFateZeroLabView, VideoLabDataView
 from .api.labs import SpatialLabDataView, Generate3DDataView, CinematicReconstructionView
 from .api.streams import *
