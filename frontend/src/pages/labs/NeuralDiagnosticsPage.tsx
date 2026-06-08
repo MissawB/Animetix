@@ -5,6 +5,8 @@ import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { useNeuralDiagnostics } from '../../features/labs/hooks/useNeuralDiagnostics';
+import EntropyBarChart from '../../features/labs/components/EntropyBarChart';
+import LogitLensHeatmap from '../../features/labs/components/LogitLensHeatmap';
 
 const NeuralDiagnosticsPage: React.FC = () => {
   const [prompt, setPrompt] = useState('');
@@ -126,10 +128,8 @@ const NeuralDiagnosticsPage: React.FC = () => {
                   </div>
                 )}
                 {data && (
-                  <div className="p-6 w-full h-full flex items-center justify-center">
-                    <div className="w-full h-48 bg-white/5 rounded-xl border border-dashed border-white/10 flex items-center justify-center">
-                      <span className="text-[10px] font-bold italic text-gray-500">[ BarChart Component Placeholder ]</span>
-                    </div>
+                  <div className="w-full h-full">
+                    <EntropyBarChart data={data.per_token_diagnostics} />
                   </div>
                 )}
               </div>
@@ -155,10 +155,8 @@ const NeuralDiagnosticsPage: React.FC = () => {
                   </div>
                 )}
                 {data && (
-                   <div className="p-6 w-full h-full flex items-center justify-center">
-                    <div className="w-full h-48 bg-white/5 rounded-xl border border-dashed border-white/10 flex items-center justify-center">
-                      <span className="text-[10px] font-bold italic text-gray-500">[ Heatmap Component Placeholder ]</span>
-                    </div>
+                   <div className="w-full h-full">
+                    <LogitLensHeatmap trajectory={data.logit_lens_trajectory} />
                   </div>
                 )}
               </div>
