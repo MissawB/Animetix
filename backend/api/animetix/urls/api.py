@@ -28,9 +28,9 @@ urlpatterns = [
     path('daily-challenge/', api_views.DailyChallengeDataView.as_view(), name='api_daily_challenge'),
     path('custom-config/', api_views.CustomConfigDataView.as_view(), name='api_custom_config'),
     path('transparency/', api_views.TransparencyDataView.as_view(), name='api_transparency'),
-    path('spatial-lab/', api_views.SpatialLabDataView.as_view(), name='api_spatial_lab'),
-    # path('spatial-lab/generate-3d/', api_views.Generate3DDataView.as_view(), name='api_generate_3d'),
-    # path('spatial-lab/cinematic-reconstruction/', api_views.CinematicReconstructionView.as_view(), name='api_cinematic_reconstruction'),
+    path('labs/spatial/', api_views.SpatialLabDataView.as_view(), name='api_spatial_lab'),
+    path('labs/spatial/generate-3d/', api_views.Generate3DDataView.as_view(), name='api_generate_3d'),
+    path('labs/spatial/cinematic/', api_views.CinematicReconstructionView.as_view(), name='api_cinematic_reconstruction'),
 
     path('manga-lab/', api_views.MangaLabDataView.as_view(), name='api_manga_lab'),
     path('manga-lab/clean/', api_views.MangaCleanLabView.as_view(), name='api_manga_clean_lab'),
@@ -101,5 +101,8 @@ urlpatterns = [
     path('multiverse/gallery/', api_views.MultiverseGalleryView.as_view(), name='api_multiverse_gallery'),
     path('billing/webhook/', billing_alert_webhook, name='api_billing_webhook'),
     path('admin/ttc-monitoring/', api_views.TTCMonitoringAPIView.as_view(), name='api_ttc_monitoring'),
+    path('admin/users/', api_views.UserManagementViewSet.as_view({'get': 'list'}), name='api_admin_users'),
+    path('admin/users/<int:pk>/toggle-staff/', api_views.UserManagementViewSet.as_view({'post': 'toggle_staff'}), name='api_admin_toggle_staff'),
+    path('admin/users/<int:pk>/toggle-active/', api_views.UserManagementViewSet.as_view({'post': 'toggle_active'}), name='api_admin_toggle_active'),
 ]
 
