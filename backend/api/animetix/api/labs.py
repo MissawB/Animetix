@@ -562,3 +562,31 @@ class CinematicReconstructionView(APIView):
         except Exception as e:
             logger.error(f"Error in CinematicReconstructionView: {e}")
             return Response({'error': str(e)}, status=500)
+
+class NeuralDiagnosticsLabView(APIView):
+    """
+    Expose AI diagnostics for the Neural Diagnostics Dashboard.
+    Uses native logprobs and XAI service.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        prompt = request.data.get('prompt')
+        if not prompt:
+            return Response({"error": "Prompt is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        container = get_container()
+        try:
+            inference_engine = container.inference.inference_engine()
+            xai_service = container.core.xai_service()
+
+            # 1. Generate response with logprobs
+            response = inference_engine.generate(prompt, include_logprobs=True)
+
+            # 2. Get rich diagnostics report
+            report = xai_service.get_diagnostics_report(prompt, response)
+
+            return Response(report)
+        except Exception as e:
+            logger.error(f"Neural Diagnostics Error: {e}", exc_info=True)
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
