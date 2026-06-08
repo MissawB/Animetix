@@ -21,6 +21,7 @@ const TreeOfThoughtsPage = lazy(() => import('../../../pages/labs/TreeOfThoughts
 const MultiverseLabPage = lazy(() => import('../../../pages/labs/MultiverseLabPage'));
 const MultiverseGalleryPage = lazy(() => import('../../../pages/labs/MultiverseGalleryPage'));
 const CognitionHubPage = lazy(() => import('../../../pages/labs/CognitionHubPage'));
+const VoiceLabPage = lazy(() => import('../../../pages/labs/VoiceLabPage'));
 
 export const LabRoutes = (
   <>
@@ -45,5 +46,6 @@ export const LabRoutes = (
     <Route path="/lab/multiverse-generator/" element={<MultiverseLabPage />} />
     <Route path="/lab/multiverse-gallery/" element={<MultiverseGalleryPage />} />
     <Route path="/lab/cognition-hub/" element={<CognitionHubPage />} />
+    <Route path="/lab/voice/" element={<VoiceLabPage />} />
   </>
 );
