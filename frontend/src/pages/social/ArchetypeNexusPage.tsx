@@ -16,10 +16,12 @@ import {
   TrendingUp
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import { apiClient } from "../../utils/apiClient";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
+import { CardSkeleton } from "../../components/ui/Skeleton";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion } from 'framer-motion';
 
@@ -32,16 +34,16 @@ const ArchetypeNexusPage: React.FC = () => {
   });
 
   if (isLoading) return (
-    <div className="max-w-7xl mx-auto px-6 py-16">
+    <div className="min-h-screen w-full bg-[#0a0a12] flex flex-col items-center justify-center">
       <CardSkeleton />
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12 w-full max-w-7xl px-6">
           <CardSkeleton /><CardSkeleton /><CardSkeleton />
       </div>
     </div>
   );
 
   if (isError) return (
-    <div className="max-w-7xl mx-auto px-6 py-32 text-center">
+    <div className="min-h-screen w-full bg-[#0a0a12] flex flex-col items-center justify-center text-center">
         <h2 className="text-3xl font-black text-red-500 italic uppercase">Défaillance Cognitive</h2>
         <p className="text-white/40 mt-4 uppercase font-bold tracking-widest">Impossible de synchroniser le profil neuronal.</p>
     </div>
@@ -71,10 +73,11 @@ const ArchetypeNexusPage: React.FC = () => {
   ] : [];
 
   return (
-    <AnimatedPage>
-      <div className="max-w-7xl mx-auto px-6 py-12">
-        
-        {/* Header Profil Neuronal */}
+    <div className="min-h-screen w-full bg-[#0a0a12] text-white pt-20">
+      <AnimatedPage>
+        <div className="max-w-7xl mx-auto px-6 py-12 relative z-10">
+          
+          {/* Header Profil Neuronal */}
         <header className="mb-16 relative">
             <div className="absolute -top-24 -left-24 w-96 h-96 bg-blue-500/10 blur-[120px] rounded-full -z-10" />
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-gray-500 mb-4">
@@ -292,6 +295,7 @@ const ArchetypeNexusPage: React.FC = () => {
         </div>
       </div>
     </AnimatedPage>
+    </div>
   );
 };
 
