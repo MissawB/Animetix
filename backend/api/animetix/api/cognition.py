@@ -1,15 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions, status
-from dependency_injector.wiring import inject, Provide
-from ..containers import Container
+from ..containers import Container, get_container
 from ..models import ArchetypeDriftSnapshot
-from core.domain.services.archetype_drift_service import ArchetypeDriftService
-from core.domain.services.neuro_symbolic_user_profiler import NeuroSymbolicUserProfiler
-from core.ports.feedback_port import FeedbackRepositoryPort
-
-from core.domain.services.self_play_debate_service import SelfPlayDebateService
-from core.domain.services.counterfactual_simulator import CounterfactualConversationSimulator
 
 class ArchetypeNexusView(APIView):
     """
@@ -18,29 +11,23 @@ class ArchetypeNexusView(APIView):
     """
     permission_classes = [permissions.IsAuthenticated]
 
-    @inject
-    def __init__(self, 
-                 drift_service: ArchetypeDriftService = Provide[Container.core.archetype_drift_service],
-                 profiler: NeuroSymbolicUserProfiler = Provide[Container.core.neuro_symbolic_user_profiler],
-                 feedback_port: FeedbackRepositoryPort = Provide[Container.persistence.feedback_adapter],
-                 **kwargs):
-        super().__init__(**kwargs)
-        self.drift_service = drift_service
-        self.profiler = profiler
-        self.feedback_port = feedback_port
-
     def get(self, request):
+        container = get_container()
+        drift_service = container.core.archetype_drift_service()
+        profiler = container.core.neuro_symbolic_user_profiler()
+        feedback_port = container.persistence.feedback_adapter()
+        
         user = request.user
         user_id = user.id
         
         # 1. Calcul du Drift d'Archétype
-        drift_config = self.drift_service.calculate_drift(user_id)
+        drift_config = drift_service.calculate_drift(user_id)
         
         # 2. Récupération des feedbacks pour le profiler
-        feedbacks = self.feedback_port.get_user_feedback(user_id, limit=50)
+        feedbacks = feedback_port.get_user_feedback(user_id, limit=50)
         
         # 3. Déduction des règles logiques (Z3)
-        logical_rules = self.profiler.deduce_preference_rules(feedbacks)
+        logical_rules = profiler.deduce_preference_rules(feedbacks)
         
         # 4. Statistiques cognitives (certaines mockées, certaines calculées)
         stats = {
@@ -112,14 +99,9 @@ class AIDebateArenaView(APIView):
     """
     permission_classes = [permissions.IsAuthenticated]
 
-    @inject
-    def __init__(self, 
-                 debate_service: SelfPlayDebateService = Provide[Container.core.self_play_debate_service],
-                 **kwargs):
-        super().__init__(**kwargs)
-        self.debate_service = debate_service
-
     def post(self, request):
+        container = get_container()
+        debate_service = container.core.self_play_debate_service()
         target_media = request.data.get('media_title')
         topic = request.data.get('topic')
 
@@ -129,7 +111,7 @@ class AIDebateArenaView(APIView):
         try:
             # Pour l'instant, on exécute de manière synchrone (bloquant) 
             # mais on pourrait passer par Celery + SSE comme Expert Nexus plus tard.
-            record = self.debate_service.run_debate(target_media=target_media, topic=topic)
+            record = debate_service.run_debate(target_media=target_media, topic=topic)
             return Response(record)
         except Exception as e:
             return Response({"error": str(e)}, status=500)
@@ -141,19 +123,13 @@ class NeuroMemoryManagementView(APIView):
     """
     permission_classes = [permissions.IsAuthenticated]
 
-    @inject
-    def __init__(self, 
-                 profiler: NeuroSymbolicUserProfiler = Provide[Container.core.neuro_symbolic_user_profiler],
-                 feedback_port: FeedbackRepositoryPort = Provide[Container.persistence.feedback_adapter],
-                 **kwargs):
-        super().__init__(**kwargs)
-        self.profiler = profiler
-        self.feedback_port = feedback_port
-
     def get(self, request):
+        container = get_container()
+        profiler = container.core.neuro_symbolic_user_profiler()
+        feedback_port = container.persistence.feedback_adapter()
         user_id = request.user.id
-        feedbacks = self.feedback_port.get_user_feedback(user_id, limit=100)
-        rules = self.profiler.deduce_preference_rules(feedbacks)
+        feedbacks = feedback_port.get_user_feedback(user_id, limit=100)
+        rules = profiler.deduce_preference_rules(feedbacks)
         
         return Response({
             "status": "success",
@@ -179,14 +155,9 @@ class CounterfactualSimulatorView(APIView):
     """
     permission_classes = [permissions.IsAuthenticated]
 
-    @inject
-    def __init__(self, 
-                 simulator: CounterfactualConversationSimulator = Provide[Container.core.counterfactual_simulator],
-                 **kwargs):
-        super().__init__(**kwargs)
-        self.simulator = simulator
-
     def post(self, request):
+        container = get_container()
+        simulator = container.core.counterfactual_simulator()
         what_if_query = request.data.get('what_if')
         # On pourrait récupérer l'historique réel depuis la DB ou le passer dans le body
         actual_dialogue = request.data.get('actual_context', [])
@@ -195,7 +166,7 @@ class CounterfactualSimulatorView(APIView):
             return Response({"error": "what_if query is required"}, status=400)
 
         try:
-            result = self.simulator.simulate_counterfactual_path(
+            result = simulator.simulate_counterfactual_path(
                 actual_dialogue=actual_dialogue,
                 what_if_query=what_if_query
             )
@@ -203,41 +174,3 @@ class CounterfactualSimulatorView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=500)
 
-class NeuroMemoryManagementView(APIView):
-    """
-    Gestion fine des règles logiques déduites (Neuro-Symbolique).
-    Permet à l'utilisateur de révoquer ce que l'IA a 'compris'.
-    """
-    permission_classes = [permissions.IsAuthenticated]
-
-    @inject
-    def __init__(self, 
-                 profiler: NeuroSymbolicUserProfiler = Provide[Container.core.neuro_symbolic_user_profiler],
-                 feedback_port: FeedbackRepositoryPort = Provide[Container.persistence.feedback_adapter],
-                 **kwargs):
-        super().__init__(**kwargs)
-        self.profiler = profiler
-        self.feedback_port = feedback_port
-
-    def get(self, request):
-        user_id = request.user.id
-        feedbacks = self.feedback_port.get_user_feedback(user_id, limit=100)
-        rules = self.profiler.deduce_preference_rules(feedbacks)
-        
-        return Response({
-            "status": "success",
-            "deduced_rules": [
-                {"id": i, "rule": r, "confidence": 0.95, "source": "Z3 Theorem Prover"} 
-                for i, r in enumerate(rules)
-            ],
-            "total_signals": len(feedbacks)
-        })
-
-    def post(self, request):
-        """Révoquer une règle ou réinitialiser le profil logique."""
-        action = request.data.get('action')
-        if action == 'reset':
-            # Simulation d'un reset (on supprimerait les feedbacks en prod)
-            return Response({"status": "success", "message": "Neuro-Symbolic profile reset."})
-            
-        return Response({"error": "Invalid action"}, status=400)
