@@ -6,6 +6,7 @@ import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import '@google/model-viewer';
 
 declare global {

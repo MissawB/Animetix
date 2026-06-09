@@ -259,6 +259,8 @@ export interface ClubEvent {
   description: string;
   event_date: string;
   created_at: string;
+  is_participant?: boolean;
+  participants_count?: number;
 }
 
 export async function getClubEvents(clubId: number): Promise<ClubEvent[]> {

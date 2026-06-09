@@ -5,6 +5,7 @@ export interface User {
   is_authenticated: boolean;
   avatar?: string;
   xp?: number;
+  level?: number;
   tier?: string;
   has_api_key?: boolean;
   is_staff?: boolean;
@@ -223,6 +224,8 @@ export interface ClubEvent {
   description: string;
   event_date: string;
   created_at: string;
+  is_participant?: boolean;
+  participants_count?: number;
 }
 
 export interface DiscoveryClub {

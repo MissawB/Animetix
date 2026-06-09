@@ -131,7 +131,7 @@ const SocialHubPage: React.FC = () => {
                   <span className="text-[10px] bg-gray-100 dark:bg-navy-800 px-2 py-0.5 rounded text-gray-500 font-black uppercase">Niv. {item.level}</span>
                 </div>
               </div>
-              <Button variant="outline" size="small" onClick={() => handleToggleFollow(item.to_user)} className="text-red-500 border-red-500/20 hover:bg-red-500 hover:text-white">
+              <Button variant="outline" size="sm" onClick={() => handleToggleFollow(item.to_user)} className="text-red-500 border-red-500/20 hover:bg-red-500 hover:text-white">
                 <UserMinus className="w-4 h-4" />
               </Button>
             </div>
@@ -171,7 +171,7 @@ const SocialHubPage: React.FC = () => {
               </div>
               <Button 
                 variant={user.is_following ? "outline" : "primary"} 
-                size="small" 
+                size="sm" 
                 onClick={() => handleToggleFollow(user.id)}
               >
                 {user.is_following ? <UserMinus className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}

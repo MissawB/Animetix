@@ -1,15 +1,12 @@
 import React from 'react';
 import _Plot from 'react-plotly.js';
+import { Data } from 'plotly.js';
 import { 
-  Zap, 
-  Brain, 
-  Shield, 
   Layers, 
   Activity, 
   Clock, 
   ChevronRight, 
   Target,
-  Sparkles,
   BarChart3,
   Cpu,
   Fingerprint,
@@ -25,10 +22,67 @@ import { CardSkeleton } from "../../components/ui/Skeleton";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion } from 'framer-motion';
 
-const Plot = (_Plot as any).default || _Plot;
+// Fix for react-plotly.js type/import compatibility
+const Plot = (_Plot as unknown as { default: React.ComponentType<Record<string, unknown>> }).default || (_Plot as React.ComponentType<Record<string, unknown>>);
+
+interface StatBarProps {
+  label: string;
+  value: number;
+  color: string;
+}
+
+const StatBar: React.FC<StatBarProps> = ({ label, value, color }) => (
+  <div className="space-y-2">
+    <div className="flex justify-between items-end">
+      <span className="text-[9px] font-black uppercase tracking-widest opacity-40">{label}</span>
+      <span className="text-xs font-black italic">{Math.round(value * 100)}%</span>
+    </div>
+    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+      <motion.div 
+        initial={{ width: 0 }}
+        animate={{ width: `${value * 100}%` }}
+        transition={{ duration: 1, ease: "easeOut" }}
+        className={`h-full ${color}`} 
+      />
+    </div>
+  </div>
+);
+
+interface ArchetypeData {
+  id: string;
+  aura_type: string;
+  intensity: number;
+  accent: string;
+}
+
+interface CognitiveStats {
+  shonen_affinity: number;
+  seinen_affinity: number;
+  logic_consistency: number;
+  memory_depth: number;
+}
+
+interface RecentSignal {
+  context: string;
+  is_positive: boolean;
+}
+
+interface DriftHistoryEntry {
+  date: string;
+  shonen: number;
+  seinen: number;
+}
+
+interface ArchetypeNexusResponse {
+  archetype: ArchetypeData;
+  logical_rules: string[];
+  recent_signals: RecentSignal[];
+  cognitive_stats: CognitiveStats;
+  drift_history: DriftHistoryEntry[];
+}
 
 const ArchetypeNexusPage: React.FC = () => {
-  const { data, isLoading, isError } = useQuery<any>({
+  const { data, isLoading, isError } = useQuery<ArchetypeNexusResponse>({
     queryKey: ['archetype-nexus'],
     queryFn: () => apiClient('/api/v1/cognition/archetype-nexus/'),
   });
@@ -42,7 +96,7 @@ const ArchetypeNexusPage: React.FC = () => {
     </div>
   );
 
-  if (isError) return (
+  if (isError || !data) return (
     <div className="min-h-screen w-full bg-[#0a0a12] flex flex-col items-center justify-center text-center">
         <h2 className="text-3xl font-black text-red-500 italic uppercase">Défaillance Cognitive</h2>
         <p className="text-white/40 mt-4 uppercase font-bold tracking-widest">Impossible de synchroniser le profil neuronal.</p>
@@ -53,8 +107,8 @@ const ArchetypeNexusPage: React.FC = () => {
 
   const driftPlotData = drift_history && drift_history.length > 0 ? [
     {
-      x: drift_history.map((h: any) => h.date),
-      y: drift_history.map((h: any) => h.shonen),
+      x: drift_history.map((h) => h.date),
+      y: drift_history.map((h) => h.shonen),
       name: 'Shonen',
       type: 'scatter',
       mode: 'lines+markers',
@@ -62,8 +116,8 @@ const ArchetypeNexusPage: React.FC = () => {
       marker: { size: 8, color: '#f97316' }
     },
     {
-      x: drift_history.map((h: any) => h.date),
-      y: drift_history.map((h: any) => h.seinen),
+      x: drift_history.map((h) => h.date),
+      y: drift_history.map((h) => h.seinen),
       name: 'Seinen',
       type: 'scatter',
       mode: 'lines+markers',
@@ -173,7 +227,7 @@ const ArchetypeNexusPage: React.FC = () => {
                     <div className="flex-grow min-h-[300px] relative">
                         {drift_history && drift_history.length > 0 ? (
                             <Plot
-                                data={driftPlotData as any}
+                                data={driftPlotData as unknown as Data[]}
                                 layout={{
                                     autosize: true,
                                     height: 300,
@@ -258,7 +312,7 @@ const ArchetypeNexusPage: React.FC = () => {
                     <div className="space-y-6 relative">
                         <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-white/5" />
                         
-                        {recent_signals.map((sig: any, i: number) => (
+                        {recent_signals.map((sig, i) => (
                             <div key={i} className="flex gap-6 relative group">
                                 <div className={`w-10 h-10 rounded-2xl shrink-0 flex items-center justify-center relative z-10 transition-transform group-hover:scale-110 ${
                                     sig.is_positive ? 'bg-emerald-500/20 text-emerald-500' : 'bg-red-500/20 text-red-500'
@@ -293,34 +347,11 @@ const ArchetypeNexusPage: React.FC = () => {
                 Le drift d'archétype est recalculé après chaque session de forge ou de débat.
             </p>
         </div>
-      </div>
-    </AnimatedPage>
+        </div>
+      </AnimatedPage>
     </div>
   );
 };
-
-interface StatBarProps {
-  label: string;
-  value: number;
-  color: string;
-}
-
-const StatBar: React.FC<StatBarProps> = ({ label, value, color }) => (
-  <div className="space-y-2">
-    <div className="flex justify-between items-end">
-      <span className="text-[9px] font-black uppercase tracking-widest opacity-40">{label}</span>
-      <span className="text-xs font-black italic">{Math.round(value * 100)}%</span>
-    </div>
-    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-      <motion.div 
-        initial={{ width: 0 }}
-        animate={{ width: `${value * 100}%` }}
-        transition={{ duration: 1, ease: "easeOut" }}
-        className={`h-full ${color}`} 
-      />
-    </div>
-  </div>
-);
 
 export default ArchetypeNexusPage;
 
