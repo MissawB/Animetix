@@ -19,7 +19,17 @@ import {
   Cuboid,
   Brain,
   Fingerprint,
-  GitBranch
+  GitBranch,
+  Mic,
+  Waves,
+  Music,
+  MessageSquare,
+  Eye,
+  Film,
+  Binary,
+  Swords,
+  Map,
+  Target
 } from 'lucide-react';
 import { Card } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
@@ -76,7 +86,7 @@ const labs = [
         title: 'Multiverse Genesis',
         desc: 'Génération autonome de segments de lore auto-cohérents (ADMS).',
         icon: Globe,
-        url: '/lab/multiverse/',
+        url: '/lab/multiverse-generator/',
         color: 'text-amber-500',
         bg: 'from-amber-500/20 to-transparent',
         badge: 'Generative',
@@ -103,6 +113,28 @@ const labs = [
         bg: 'from-blue-500/20 to-transparent',
         badge: 'Diagnostics',
         status: 'Beta'
+    },
+    {
+        id: 'liquid',
+        title: 'Liquid Neural Networks',
+        desc: 'Traitement adaptatif de flux continus via équations différentielles neuronales.',
+        icon: Waves,
+        url: '/lab/liquid-neural-networks/',
+        color: 'text-cyan-400',
+        bg: 'from-cyan-400/20 to-transparent',
+        badge: 'Neural ODE',
+        status: 'Experimental'
+    },
+    {
+        id: 'cove',
+        title: 'CoVe Oracle',
+        desc: 'Réduction des hallucinations via protocole Chain-of-Verification.',
+        icon: ShieldCheck,
+        url: '/lab/cove-oracle/',
+        color: 'text-blue-400',
+        bg: 'from-blue-400/20 to-transparent',
+        badge: 'Reasoning',
+        status: 'Operational'
     }
 ];
 
@@ -112,17 +144,27 @@ const creativeLabs = [
         title: 'Manga Lab',
         desc: 'Rendu Manga par IA et génération de planches dynamiques.',
         icon: Palette,
-        url: '/manga_lab/',
+        url: '/lab/manga/',
         color: 'text-blue-500',
         bg: 'from-blue-500/20 to-transparent',
         badge: 'Visual AI'
+    },
+    {
+        id: 'manga-voice',
+        title: 'Manga Voice',
+        desc: 'Doublage IA zero-shot et clonage vocal pour vos personnages.',
+        icon: Mic,
+        url: '/lab/manga-voice/',
+        color: 'text-orange-500',
+        bg: 'from-orange-500/20 to-transparent',
+        badge: 'Neural Dubbing'
     },
     {
         id: 'audio',
         title: 'Audio Lab',
         desc: 'Clonage vocal haute fidélité et synthèse d\'ambiances sonores.',
         icon: Headphones,
-        url: '/audio_lab/',
+        url: '/lab/audio/',
         color: 'text-emerald-500',
         bg: 'from-emerald-500/20 to-transparent',
         badge: 'Neural Audio'
@@ -132,7 +174,7 @@ const creativeLabs = [
         title: 'Video Lab',
         desc: 'Analyse et indexation vidéo intelligente par vision artificielle.',
         icon: Video,
-        url: '/video-lab/',
+        url: '/lab/video/',
         color: 'text-orange-500',
         bg: 'from-orange-500/20 to-transparent',
         badge: 'Computer Vision'
@@ -142,10 +184,60 @@ const creativeLabs = [
         title: 'Spatial Lab',
         desc: 'Reconstruction 3D et Gaussian Splatting à partir de sources 2D.',
         icon: Cuboid,
-        url: '/spatial-lab/',
+        url: '/lab/spatial/',
         color: 'text-purple-500',
         bg: 'from-purple-500/20 to-transparent',
         badge: '3D/Spatial'
+    },
+    {
+        id: 'soundscape',
+        title: 'Soundscape Lab',
+        desc: 'Génération procédurale d\'environnements sonores immersifs et spatialisés.',
+        icon: Music,
+        url: '/lab/soundscape/',
+        color: 'text-emerald-400',
+        bg: 'from-emerald-400/20 to-transparent',
+        badge: 'Generative Audio'
+    },
+    {
+        id: 'speech-to-speech',
+        title: 'Speech-to-Speech',
+        desc: 'Traduction vocale temps-réel préservant l\'émotion et le timbre original.',
+        icon: MessageSquare,
+        url: '/lab/speech-to-speech/',
+        color: 'text-blue-400',
+        bg: 'from-blue-400/20 to-transparent',
+        badge: 'Voice Conversion'
+    },
+    {
+        id: 'voice-lab',
+        title: 'Voice Lab',
+        desc: 'Synthèse vocale avancée et modulation de paramètres prosodiques fins.',
+        icon: Mic,
+        url: '/lab/voice/',
+        color: 'text-orange-400',
+        bg: 'from-orange-400/20 to-transparent',
+        badge: 'TTS SOTA'
+    },
+    {
+        id: 'visual-nexus',
+        title: 'Visual Nexus',
+        desc: 'Interconnexion de modèles de vision pour une compréhension holistique.',
+        icon: Eye,
+        url: '/lab/visual-nexus/',
+        color: 'text-purple-400',
+        bg: 'from-purple-400/20 to-transparent',
+        badge: 'Vision-Language'
+    },
+    {
+        id: 'cinematic',
+        title: 'Cinematic Reconstruction',
+        desc: 'Génération de séquences cinématographiques à partir de narrations.',
+        icon: Film,
+        url: '/lab/cinematic/',
+        color: 'text-red-400',
+        bg: 'from-red-400/20 to-transparent',
+        badge: 'Generative Video'
     }
 ];
 
@@ -179,15 +271,56 @@ const cognitionLabs = [
         color: 'text-blue-500',
         bg: 'from-blue-500/20 to-transparent',
         badge: 'Game Theory'
+    },
+    {
+        id: 'latent',
+        title: 'Latent Space',
+        desc: 'Exploration géométrique des représentations vectorielles de haute dimension.',
+        icon: Binary,
+        url: '/lab/latent-space/',
+        color: 'text-indigo-400',
+        bg: 'from-indigo-400/20 to-transparent',
+        badge: 'Vector Geometry'
+    },
+    {
+        id: 'debate',
+        title: 'AI Debate Arena',
+        desc: 'Confrontations sémantiques entre agents basées sur le Knowledge Graph.',
+        icon: Swords,
+        url: '/social/debate-arena/',
+        color: 'text-red-400',
+        bg: 'from-red-400/20 to-transparent',
+        badge: 'Game Theory'
+    },
+    {
+        id: 'graph-map',
+        title: 'Lore World Map',
+        desc: 'Visualisation des clusters de connaissances détectés par l\'algorithme de Leiden.',
+        icon: Map,
+        url: '/graph/map/',
+        color: 'text-emerald-400',
+        bg: 'from-emerald-400/20 to-transparent',
+        badge: 'Graph RAG'
+    },
+    {
+        id: 'strategy',
+        title: 'Strategy Lab',
+        desc: 'Interface de simulation CFR pour l\'optimisation des arbres de décision.',
+        icon: Target,
+        url: '/lab/strategy/',
+        color: 'text-red-500',
+        bg: 'from-red-500/20 to-transparent',
+        badge: 'Nash Equil.'
     }
 ];
 
 const LabHubPage: React.FC = () => {
   return (
-    <AnimatedPage>
-      <div className="max-w-7xl mx-auto px-6 py-16">
-        
-        {/* Header Ultra-Moderne */}
+    <div className="min-h-screen w-full bg-[#0a0a12] text-white absolute left-0 top-0 pt-24 pb-20 z-0">
+      <AnimatedPage>
+        <div className="max-w-7xl mx-auto px-6 py-16 relative z-10">
+          
+          {/* Header Ultra-Moderne */}
         <header className="mb-24 relative">
             <div className="absolute -top-32 -left-32 w-[600px] h-[600px] bg-red-600/5 blur-[150px] rounded-full -z-10" />
             
@@ -298,7 +431,7 @@ const LabHubPage: React.FC = () => {
             </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-24">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-24">
             {cognitionLabs.map((lab) => (
                 <Link key={lab.id} to={lab.url} className="no-underline group">
                     <Card padding="none" className="h-full bg-black/40 border-white/5 hover:border-purple-600/30 transition-all duration-500 overflow-hidden relative group">
@@ -360,6 +493,7 @@ const LabHubPage: React.FC = () => {
         </footer>
       </div>
     </AnimatedPage>
+    </div>
   );
 };
 
