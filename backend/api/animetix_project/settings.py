@@ -114,6 +114,9 @@ if not IS_PRODUCTION:
     CSRF_TRUSTED_ORIGINS += [
         "https://*.hf.space",
         "https://*.huggingface.co",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://[::1]:5173",
     ]
 else:
     # En production stricte, on ne devrait utiliser que des URLs explicites
@@ -545,6 +548,10 @@ GCP_LOCATION = env('GCP_LOCATION', default='europe-west1')
 GCS_MEDIA_BUCKET = env('GCS_MEDIA_BUCKET', default='animetix-media-bucket')
 EVENTARC_RECEIVER_URL = env('EVENTARC_RECEIVER_URL', default='https://missawb-animetix-web.hf.space/api/events/gcs-upload/')
 GCP_WORKFLOW_POLL_URL = env('GCP_WORKFLOW_POLL_URL', default='https://missawb-animetix-web.hf.space/api/tasks/workflow/poll/')
+
+# --- SECURITY ---
+STRICT_MODEL_VERIFICATION = False
+
 
 
 
