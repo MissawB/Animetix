@@ -277,10 +277,11 @@ const ClubDashboard: React.FC = () => {
             
             <form onSubmit={handleCreateEvent} className="space-y-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+                <label htmlFor="event-title" className="text-[10px] font-black uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
                   <FileText className="w-3 h-3" /> Titre de l'événement
                 </label>
                 <input
+                  id="event-title"
                   type="text"
                   required
                   placeholder="Ex : Soirée analyse Scan Shonen Jump 125"
@@ -291,10 +292,11 @@ const ClubDashboard: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+                <label htmlFor="event-description" className="text-[10px] font-black uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
                   <Info className="w-3 h-3" /> Description de l'activité
                 </label>
                 <textarea
+                  id="event-description"
                   required
                   rows={4}
                   placeholder="Expliquez le concept, le déroulement, ou les prérequis pour cet événement..."
@@ -305,10 +307,11 @@ const ClubDashboard: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+                <label htmlFor="event-date" className="text-[10px] font-black uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
                   <Clock className="w-3 h-3" /> Date et Heure
                 </label>
                 <input
+                  id="event-date"
                   type="datetime-local"
                   required
                   value={newEventDate}

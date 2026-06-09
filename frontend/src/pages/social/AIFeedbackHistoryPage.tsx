@@ -78,13 +78,13 @@ const AIFeedbackHistoryPage: React.FC = () => {
                 <div className="flex-1 space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="text-[9px] font-black uppercase opacity-40 tracking-widest block">Votre Requête / Contexte</label>
+                      <span className="text-[9px] font-black uppercase opacity-40 tracking-widest block">Votre Requête / Contexte</span>
                       <div className="bg-gray-50 dark:bg-navy-950 p-3 rounded-lg text-xs font-bold italic line-clamp-3">
                         {fb.input_context || 'N/A'}
                       </div>
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[9px] font-black uppercase opacity-40 tracking-widest block">Réponse de l'IA</label>
+                      <span className="text-[9px] font-black uppercase opacity-40 tracking-widest block">Réponse de l'IA</span>
                       <div className="bg-gray-50 dark:bg-navy-950 p-3 rounded-lg text-xs font-bold opacity-80 line-clamp-3">
                         {fb.output_text || 'N/A'}
                       </div>

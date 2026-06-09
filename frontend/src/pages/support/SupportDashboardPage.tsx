@@ -111,8 +111,9 @@ const SupportDashboardPage: React.FC = () => {
                 <h2 className="manga-font text-2xl mb-8 uppercase italic italic text-white font-black">Initialiser Nouveau Diagnostic</h2>
                 <div className="space-y-6">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase opacity-40 tracking-widest ml-1">Sujet de la transmission</label>
+                    <label htmlFor="ticket-subject" className="text-[10px] font-black uppercase opacity-40 tracking-widest ml-1">Sujet de la transmission</label>
                     <input 
+                        id="ticket-subject"
                         type="text" 
                         placeholder="EX: PROBLÈME DE SYNCHRONISATION..." 
                         className="w-full bg-black/40 border border-white/10 p-4 rounded-xl focus:border-blue-500 outline-none text-sm font-bold uppercase tracking-tight transition-all text-white"
@@ -121,8 +122,9 @@ const SupportDashboardPage: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase opacity-40 tracking-widest ml-1">Données de la requête</label>
+                    <label htmlFor="ticket-query" className="text-[10px] font-black uppercase opacity-40 tracking-widest ml-1">Données de la requête</label>
                     <textarea 
+                        id="ticket-query"
                         placeholder="DÉCRIVEZ VOTRE SITUATION ICI..." 
                         rows={8}
                         className="w-full bg-black/40 border border-white/10 p-4 rounded-xl focus:border-blue-500 outline-none text-sm font-bold tracking-tight transition-all text-white"
