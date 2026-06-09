@@ -1,10 +1,12 @@
 import base64
 import logging
+import os
 from typing import List, Dict, Any, Optional
 from core.ports.inference_port import InferencePort, InferenceNotImplementedError
 from core.ports.usage_port import UsagePort
 from core.domain.entities.ai_schemas import InferenceResponse
 from huggingface_hub import InferenceClient
+from core.utils.model_security import get_verified_revision
 
 logger = logging.getLogger("animetix.inference.qwen3vl")
 
@@ -12,14 +14,17 @@ class Qwen3VLAdapter(InferencePort):
     def __init__(self, model_id: str = "Qwen/Qwen3-VL-30B-A3B-Instruct", token: str = None, usage_port: Optional[UsagePort] = None):
         super().__init__(usage_port=usage_port)
         self.model_id = model_id
-        from core.utils.model_security import get_verified_revision
-        import os
         revision = get_verified_revision(self.model_id)
-        # We also want to use the HuggingFace API key from environment if token is None,
-        # but the prompt says: token=os.getenv("HUGGINGFACE_API_KEY") 
-        # so let's stick to the prompt's instruction.
+        
         actual_token = token or os.getenv("HUGGINGFACE_API_KEY")
-        self.client = InferenceClient(model=self.model_id, token=actual_token, revision=revision)
+        
+        # InferenceClient from huggingface_hub does not take a 'revision' param in __init__.
+        # We pass it via headers for the Inference API to pin the version if available.
+        headers = {}
+        if revision:
+            headers["X-HuggingFace-Revision"] = revision
+            
+        self.client = InferenceClient(model=self.model_id, token=actual_token, headers=headers)
 
     def generate(
         self, 

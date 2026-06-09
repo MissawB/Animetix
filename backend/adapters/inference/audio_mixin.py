@@ -8,6 +8,7 @@ import base64
 from typing import Optional, List, Dict, Any
 from core.utils.lazy_import import lazy_import
 from core.domain.exceptions import InferenceError
+from core.utils.model_security import get_verified_revision
 
 torch = lazy_import('torch')
 np = lazy_import('numpy')
@@ -53,8 +54,11 @@ class AudioMixin:
         try:
             from diffusers import AudioLDMPipeline
             logger.info("🎧 Loading AudioLDM for Soundscapes...")
+            model_id = "cvssp/audioldm-s-full-v2"
+            revision = get_verified_revision(model_id)
             self._audioldm_pipeline = AudioLDMPipeline.from_pretrained(
-                "cvssp/audioldm-s-full-v2", 
+                model_id, 
+                revision=revision,
                 torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32
             )
             if torch.cuda.is_available(): self._audioldm_pipeline.to("cuda")
@@ -69,7 +73,9 @@ class AudioMixin:
         try:
             from moshi.models import Moshi
             logger.info("🗣️ Loading Kyutai Moshi (S2S)...")
-            self._moshi_model = Moshi.from_pretrained("kyutai/moshi-1b-preview")
+            model_id = "kyutai/moshi-1b-preview"
+            revision = get_verified_revision(model_id)
+            self._moshi_model = Moshi.from_pretrained(model_id, revision=revision)
             if torch.cuda.is_available(): self._moshi_model.to("cuda")
         except Exception as e:
             logger.error(f"❌ Failed to load Moshi: {e}")
