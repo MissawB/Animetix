@@ -114,18 +114,18 @@ class GoldDatasetViewSet(viewsets.ModelViewSet):
 from core.domain.services.dpo_feedback_loop import DPOFeedbackLoop
 from core.domain.services.dspy_prompt_optimizer import DSPyPromptOptimizer
 
-class DPOCurationView(APIView):
+class DPOCurationViewSet(viewsets.ViewSet):
     """API for DPO Curation (List and Post)."""
     permission_classes = [permissions.IsAdminUser]
 
-    def get(self, request):
+    def list(self, request):
         container = get_container()
         dpo_loop = container.core.dpo_feedback_loop()
         limit = int(request.GET.get('limit', 50))
         samples = dpo_loop.get_rejected_for_curation(limit=limit)
         return Response(samples)
 
-    def post(self, request):
+    def create(self, request):
         container = get_container()
         dpo_loop = container.core.dpo_feedback_loop()
         feedback_id = request.data.get('feedback_id')
