@@ -72,8 +72,9 @@ const ClubDiscoveryPage: React.FC = () => {
                   </div>
                   <form className="p-10 space-y-8" onSubmit={(e) => { e.preventDefault(); createMutation.mutate(newClub); }}>
                       <div className="space-y-2">
-                          <label className="text-[10px] font-black uppercase opacity-40 tracking-widest ml-1">Nom du Club</label>
+                          <label htmlFor="club-name" className="text-[10px] font-black uppercase opacity-40 tracking-widest ml-1">Nom du Club</label>
                           <input 
+                            id="club-name"
                             required
                             type="text" 
                             className="w-full bg-black border-2 border-white/5 rounded-2xl py-4 px-6 text-sm font-bold focus:border-blue-500 outline-none transition-all"
@@ -84,8 +85,9 @@ const ClubDiscoveryPage: React.FC = () => {
                       </div>
                       <div className="grid grid-cols-2 gap-6">
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase opacity-40 tracking-widest ml-1">Thème Principal</label>
+                            <label htmlFor="club-theme" className="text-[10px] font-black uppercase opacity-40 tracking-widest ml-1">Thème Principal</label>
                             <select 
+                                id="club-theme"
                                 className="w-full bg-black border-2 border-white/5 rounded-2xl py-4 px-6 text-sm font-bold focus:border-blue-500 outline-none transition-all appearance-none"
                                 value={newClub.theme}
                                 onChange={e => setNewClub({...newClub, theme: e.target.value})}
@@ -94,7 +96,7 @@ const ClubDiscoveryPage: React.FC = () => {
                             </select>
                         </div>
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase opacity-40 tracking-widest ml-1">Confidentialité</label>
+                            <span className="text-[10px] font-black uppercase opacity-40 tracking-widest ml-1 block">Confidentialité</span>
                             <div className="flex bg-black rounded-2xl p-1 border-2 border-white/5">
                                 <button 
                                     type="button"
@@ -110,8 +112,9 @@ const ClubDiscoveryPage: React.FC = () => {
                         </div>
                       </div>
                       <div className="space-y-2">
-                          <label className="text-[10px] font-black uppercase opacity-40 tracking-widest ml-1">Description (Lore)</label>
+                          <label htmlFor="club-description" className="text-[10px] font-black uppercase opacity-40 tracking-widest ml-1">Description (Lore)</label>
                           <textarea 
+                            id="club-description"
                             required
                             rows={4}
                             className="w-full bg-black border-2 border-white/5 rounded-3xl py-4 px-6 text-sm font-bold focus:border-blue-500 outline-none transition-all resize-none"
@@ -142,15 +145,19 @@ const ClubDiscoveryPage: React.FC = () => {
               <Search className="w-4 h-4" /> Nexus Filter
             </h3>
             <div className="space-y-8">
-              <input 
-                type="text" 
-                placeholder="Rechercher un club..."
-                className="w-full bg-gray-100 dark:bg-black/40 border-none rounded-xl px-4 py-4 text-xs font-bold focus:ring-2 ring-blue-500/20"
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-              />
+              <div className="space-y-2">
+                <label htmlFor="nexus-search" className="sr-only">Rechercher un club</label>
+                <input 
+                  id="nexus-search"
+                  type="text" 
+                  placeholder="Rechercher un club..."
+                  className="w-full bg-gray-100 dark:bg-black/40 border-none rounded-xl px-4 py-4 text-xs font-bold focus:ring-2 ring-blue-500/20"
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value)}
+                />
+              </div>
               <div className="space-y-4">
-                <label className="text-[8px] font-black text-gray-400 uppercase tracking-[0.2em]">Secteur Thématique</label>
+                <span className="text-[8px] font-black text-gray-400 uppercase tracking-[0.2em] block">Secteur Thématique</span>
                 <div className="flex flex-col gap-2">
                   {themes.map(theme => (
                     <button
