@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
-import { Mic, Play, Save, User, MessageSquare, Wand2, ShieldAlert } from 'lucide-react';
+import { Mic, Play, Save, User, MessageSquare, Wand2 } from 'lucide-react';
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
-import { useTranslation } from 'react-i18next';
 import { apiClient } from "../../utils/apiClient";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion, AnimatePresence } from 'framer-motion';
 
 const MangaVoicePage: React.FC = () => {
-  const { t } = useTranslation();
   const [loading, setLoading] = useState<boolean>(false);
   const [text, setText] = useState<string>('');
   const [character, setCharacter] = useState<string>('Naruto');
@@ -152,7 +150,9 @@ const MangaVoicePage: React.FC = () => {
                                 <p className="text-xs font-bold opacity-50 uppercase tracking-widest">Le personnage de {character} est prêt à parler.</p>
                             </div>
 
-                            <audio controls src={audioUrl} className="w-full max-w-xl accent-orange-500" />
+                            <audio controls src={audioUrl} className="w-full max-w-xl accent-orange-500">
+                                <track kind="captions" />
+                            </audio>
                             
                             <div className="flex gap-4">
                                 <Button variant="outline" className="border-white/10 hover:bg-white/5 rounded-xl px-8">
