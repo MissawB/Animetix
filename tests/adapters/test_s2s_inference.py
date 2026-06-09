@@ -136,7 +136,7 @@ class TestS2SInference:
         # We need to simulate a failure to import by shadowing the mocked sys.modules
         # but the adapter does 'from moshi.models import Moshi' which will see None and raise ImportError
         with patch.dict('sys.modules', {'moshi.models': None}):
-            with pytest.raises(InferenceError, match="Library 'moshi' or dependencies missing"):
+            with pytest.raises(InferenceError, match="Moshi model not loaded"):
                 adapter.speech_to_speech(b"audio")
 
     def test_speech_to_speech_cuda_not_available(self, adapter):

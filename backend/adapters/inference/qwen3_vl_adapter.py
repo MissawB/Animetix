@@ -1,8 +1,9 @@
 import base64
 import logging
 from typing import List, Dict, Any, Optional
-from core.ports.inference_port import InferencePort
+from core.ports.inference_port import InferencePort, InferenceNotImplementedError
 from core.ports.usage_port import UsagePort
+from core.domain.entities.ai_schemas import InferenceResponse
 from huggingface_hub import InferenceClient
 
 logger = logging.getLogger("animetix.inference.qwen3vl")
@@ -10,7 +11,58 @@ logger = logging.getLogger("animetix.inference.qwen3vl")
 class Qwen3VLAdapter(InferencePort):
     def __init__(self, model_id: str = "Qwen/Qwen3-VL-30B-A3B-Instruct", token: str = None, usage_port: Optional[UsagePort] = None):
         super().__init__(usage_port=usage_port)
-        self.client = InferenceClient(model=model_id, token=token)
+        self.model_id = model_id
+        from core.utils.model_security import get_verified_revision
+        import os
+        revision = get_verified_revision(self.model_id)
+        # We also want to use the HuggingFace API key from environment if token is None,
+        # but the prompt says: token=os.getenv("HUGGINGFACE_API_KEY") 
+        # so let's stick to the prompt's instruction.
+        actual_token = token or os.getenv("HUGGINGFACE_API_KEY")
+        self.client = InferenceClient(model=self.model_id, token=actual_token, revision=revision)
+
+    def generate(
+        self, 
+        prompt: str, 
+        system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.", 
+        thinking_budget: int = 0, 
+        thinking_mode: bool = False, 
+        include_logprobs: bool = False,
+        **kwargs
+    ) -> InferenceResponse:
+        # Injection de la réflexion si activée
+        if thinking_mode:
+            thinking_instruction = "\n<think>\nAnalyse la requête en profondeur, explore plusieurs pistes et vérifie tes hypothèses avant de répondre.\n</think>"
+            system_prompt = f"{system_prompt}{thinking_instruction}"
+
+        # Le budget peut être utilisé pour max_tokens si supporté par l'endpoint
+        max_tokens = 500 + (thinking_budget if thinking_budget > 0 else 0)
+        
+        try:
+            res = self.client.chat_completion(
+                messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}],
+                max_tokens=max_tokens
+            )
+            content = res.choices[0].message.content
+            self._log_usage(engine="qwen3:generate", input_tokens=len(prompt)//4, output_tokens=len(content)//4, allocated_budget=thinking_budget)
+            return InferenceResponse(text=content)
+        except Exception as e:
+            logger.error(f"Qwen3-VL generate failed: {e}")
+            raise e
+
+    def stream_generate(
+        self, 
+        prompt: str, 
+        system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.", 
+        thinking_budget: int = 0, 
+        thinking_mode: bool = False, 
+        include_logprobs: bool = False,
+        **kwargs
+    ):
+        yield self.generate(prompt, system_prompt, thinking_budget, thinking_mode, include_logprobs)
+
+    def get_text_embedding(self, text: str) -> List[float]:
+        raise InferenceNotImplementedError("Text embedding not supported by Qwen3VLAdapter")
 
     def localize_video_actions(self, video_data: bytes, action_queries: List[str]) -> List[Dict[str, Any]]:
         video_b64 = base64.b64encode(video_data).decode("utf-8")
@@ -32,27 +84,6 @@ class Qwen3VLAdapter(InferencePort):
                 logger.error(f"Qwen3-VL Video Analysis failed: {e}")
                 results.append({"query": query, "answer": f"Error: {e}"})
         return results
-
-    # Required Port methods (minimal implementation for now)
-    def generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False, include_logprobs: bool = False, **kwargs) -> str:
-        # Injection de la réflexion si activée
-        if thinking_mode:
-            thinking_instruction = "\n<think>\nAnalyse la requête en profondeur, explore plusieurs pistes et vérifie tes hypothèses avant de répondre.\n</think>"
-            system_prompt = f"{system_prompt}{thinking_instruction}"
-
-        # Le budget peut être utilisé pour max_tokens si supporté par l'endpoint
-        max_tokens = 500 + (thinking_budget if thinking_budget > 0 else 0)
-        
-        res = self.client.chat_completion(
-            messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": prompt}],
-            max_tokens=max_tokens
-        )
-        content = res.choices[0].message.content
-        self._log_usage(engine="qwen3:generate", input_tokens=len(prompt)//4, output_tokens=len(content)//4, allocated_budget=thinking_budget)
-        return content
-
-    def stream_generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False):
-        yield self.generate(prompt, system_prompt, thinking_budget, thinking_mode)
 
     def visual_rerank(self, query: str, image_urls: List[str], system_prompt: str = "Tu es un expert en analyse visuelle d'anime.") -> List[Dict[str, Any]]:
         """Utilise Qwen3-VL pour classer une liste d'images par pertinence visuelle."""
@@ -99,10 +130,6 @@ class Qwen3VLAdapter(InferencePort):
                             try:
                                 idx = image_urls.index(item["url"])
                             except ValueError as e:
-                                logger.debug(
-                                    f"URL {item.get('url')} not found in image_urls list during Qwen3VL index lookup: {e}. "
-                                    f"Falling back to index {i}."
-                                )
                                 idx = i
                         
                         if idx is not None:
@@ -124,4 +151,3 @@ class Qwen3VLAdapter(InferencePort):
             return [{"index": i, "score": 0.0} for i in range(len(image_urls))]
 
     def health_check(self) -> dict: return {"status": "online", "engine": "Qwen3-VL"}
-

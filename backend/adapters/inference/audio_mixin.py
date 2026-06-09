@@ -131,6 +131,9 @@ class AudioMixin:
 
     def speech_to_speech(self, audio_input: bytes, system_prompt: str = "") -> bytes:
         """Interaction End-to-End Voice via Moshi."""
+        if not audio_input:
+            raise InferenceError("Audio input is empty")
+            
         self._load_moshi()
         if not self._moshi_model:
             raise InferenceError("Moshi model not loaded.")
