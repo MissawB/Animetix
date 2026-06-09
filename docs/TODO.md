@@ -8,7 +8,7 @@ Ce document centralise toutes les tâches techniques, d'architecture et de fonct
 - [X] **Complétude de l'InferencePort** : Supprimer les stubs restants dans `backend/core/ports/inference_port.py`. (Plusieurs méthodes lèvent encore `InferenceNotImplementedError` sans implémentation réelle).
 - [X] **Refactorisation de `App.tsx`** : Découper ce fichier monolithique (21 KB) en composants atomiques et services dédiés.
 - [X] **Modularisation Frontend** : Créer un répertoire `src/pages/` pour isoler les vues des composants de fonctionnalités (`features/`).
-- [ ] **Cohérence du Routage & Navigation** :
+- [X] **Cohérence du Routage & Navigation** :
     - [X] Corriger la route World Boss (`/game/world-boss/active/` vs `/game/world-boss/`).
     - [X] Refactoriser `SocialRoutes.tsx` pour déplacer les pages non-sociales (Pricing, Support, Explore) dans leurs domaines respectifs.
 - [X] **Intégration réelle du `SelfEvolvingCompiler`** : Remplacer les `NotImplementedError` dans le proxy d'évolution LLM par une intégration effective.
@@ -17,14 +17,14 @@ Ce document centralise toutes les tâches techniques, d'architecture et de fonct
 
 ## 🔗 Désorphelinisation & Raccordement Backend
 
-- [ ] **Réactivation des Laboratoires (Ghost Labs)** : Décommenter et tester les endpoints backend pour :
-    - [ ] **Manga Lab** (Nettoyage & Traduction).
-    - [ ] **Video Lab** (Transfert de style FateZero).
-    - [ ] **Spatial Lab** (Estimation de profondeur & 3D).
-    - [ ] **Soundscape & Speech-to-Speech** (Génération sonore et voix E2E).
-- [ ] **Rétablissement du Nexus Companion** : Connecter l'interface de chat à l'endpoint `companion/interact/`.
-- [ ] **Finalisation des Outils d'Admin** : Raccorder les pages de monitoring (`Admin DPO`, `SOTA Benchmarks`, `Graph Debugger`) aux services backend correspondants.
-- [ ] **Activation des Services Cognitifs** : Déployer les endpoints pour `Archetype Nexus`, `Neuro Memory` et `AIDebate Arena`.
+- [X] **Réactivation des Laboratoires (Ghost Labs)** : Décommenter et tester les endpoints backend pour :
+    - [X] **Manga Lab** (Nettoyage & Traduction).
+    - [X] **Video Lab** (Transfert de style FateZero).
+    - [X] **Spatial Lab** (Estimation de profondeur & 3D).
+    - [X] **Soundscape & Speech-to-Speech** (Génération sonore et voix E2E).
+- [X] **Rétablissement du Nexus Companion** : Connecter l'interface de chat à l'endpoint `companion/interact/`.
+- [X] **Finalisation des Outils d'Admin** : Raccorder les pages de monitoring (`Admin DPO`, `SOTA Benchmarks`, `Graph Debugger`) aux services backend correspondants.
+- [X] **Activation des Services Cognitifs** : Déployer les endpoints pour `Archetype Nexus`, `Neuro Memory` et `AIDebate Arena`.
 
 ## 🚀 Intégrations & Pages Manquantes (Frontend)
 
@@ -34,8 +34,8 @@ Ce document centralise toutes les tâches techniques, d'architecture et de fonct
 - [X] **Galerie des Multivers** : Interface de type "catalogue" pour parcourir les segments de multivers synthétiques générés par la communauté.
 - [X] **Centre d'Aide & Support** : Implémenter une page pour le support technique connectée au `dpo_feedback_loop.py`.
 - [X] **Finalisation Intégration Explorer** : Désorpheliniser la page `/explore/` en l'intégrant plus profondément dans les flux de recommandation et de navigation contextuelle.
-- [ ] **Interface "Voice Cloning" (RVC)** : Créer un laboratoire dédié pour le clonage de voix zero-shot.
-- [ ] **Dashboard "Neural Diagnostics"** : Interface pour visualiser l'incertitude (entropie) et les activations internes (Logit Lens) des générations.
+- [X] **Interface "Voice Cloning" (RVC)** : Créer un laboratoire dédié pour le clonage de voix zero-shot.
+- [X] **Dashboard "Neural Diagnostics"** : Interface pour visualiser l'incertitude (entropie) et les activations internes (Logit Lens) des générations.
 
 ## 🛡️ Sécurité & Résilience
 
