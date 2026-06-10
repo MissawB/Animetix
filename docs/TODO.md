@@ -13,5 +13,5 @@ Ce document centralise toutes les tâches techniques, d'architecture et de fonct
 - [x] **Cloud KMS** : Chiffrement CMEK pour les images et voix générées.
 - [x] **AlloyDB AI** : Étudier la migration de pgvector vers AlloyDB pour des performances de recherche vectorielle accrues.
 - [x] **Vertex AI Vector Search 2.0 (Collections)** : Évaluer la migration vers les Collections de Vertex AI pour simplifier le RAG et gérer nativement la recherche hybride.
-- [ ] **Gemini Enterprise Agent Platform & Agentic RAG** : Intégrer l'Agent Gateway (sécurisation des prompts) et l'Agent Observability (suivi visuel du raisonnement des agents).
+- [x] **Gemini Enterprise Agent Platform & Agentic RAG** : Intégrer l'Agent Gateway (sécurisation des prompts) et l'Agent Observability (suivi visuel du raisonnement des agents).
 - [ ] **AlloyDB AI - Tools for Data Agents** : Implémenter les fonctions SQL natives `QueryData` (Text-to-SQL) pour simplifier et sécuriser l'accès au catalogue par les agents d'Animetix.
