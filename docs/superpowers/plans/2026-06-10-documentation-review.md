@@ -15,22 +15,22 @@
 **Files:**
 - Modify: `docs/ANIMETIX_SUBMISSION.md`
 
-- [ ] **Step 1: Read ANIMETIX_SUBMISSION.md**
+- [x] **Step 1: Read ANIMETIX_SUBMISSION.md**
 
 Read the entire content of `docs/ANIMETIX_SUBMISSION.md` to understand its purpose and current content.
 
-- [ ] **Step 2: Review Content for Accuracy, Completeness, and Clarity**
+- [x] **Step 2: Review Content for Accuracy, Completeness, and Clarity**
 
 Evaluate the document for:
     - **Accuracy:** Ensure all technical details, claims, and references are up-to-date and correct.
     - **Completeness:** Check if any crucial information is missing or if sections are underdeveloped.
     - **Clarity:** Assess readability, grammar, spelling, and logical flow. Ensure it's easily understandable by its target audience.
 
-- [ ] **Step 3: Document Required Updates (if any)**
+- [x] **Step 3: Document Required Updates (if any)**
 
 If any issues are found, make a note of the specific changes needed (e.g., "Update section X about Y," "Correct typo on line Z," "Expand on concept A"). These notes will guide actual modifications in a later step.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 
 ### Task 2: Review ARCHITECTURE.md
