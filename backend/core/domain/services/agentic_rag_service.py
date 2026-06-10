@@ -115,6 +115,23 @@ class AgenticRAGService:
             if self.workflow_manager and hasattr(self.workflow_manager, key):
                 setattr(self.workflow_manager, key, val)
 
+    def _record_agent_trace(self, state_name: str, details: dict):
+        from django.conf import settings
+        if not getattr(settings, 'VERTEX_AI_AGENT_OBSERVABILITY_ACTIVE', False):
+            return
+
+        try:
+            from opentelemetry import trace
+            span = trace.get_current_span()
+            if span and span.is_recording():
+                agent_id = getattr(settings, 'VERTEX_AI_AGENT_ID', 'animetix-core-rag-agent')
+                span.set_attribute("gcp.agent.id", agent_id)
+                span.set_attribute("gcp.agent.state", state_name)
+                for key, val in details.items():
+                    span.set_attribute(f"gcp.agent.details.{key}", str(val))
+        except Exception as e:
+            logger.debug(f"Telemetry logging failed: {e}")
+
     @property
     def planner(self):
         return self.workflow_manager.planner if self.workflow_manager else None
@@ -234,6 +251,7 @@ class AgenticRAGService:
             return
 
         # 2. ANALYSE COMPLEXITÉ ET INITIALISATION CONTEXTE
+        self._record_agent_trace("PLAN", {"query": query, "media_type": media_type})
         thinking_budget, complexity = self._assess_complexity(query)
         thinking_mode = complexity >= 2
         
