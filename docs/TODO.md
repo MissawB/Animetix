@@ -52,24 +52,24 @@ Ce document liste toutes les tâches techniques, architecturales et fonctionnell
 
 ---
 
-## 📚 Documentation Updates Required
+## 📚 Mises à jour de la documentation requises
 
 ### 🏛️ Architecture (ARCHITECTURE.md)
-- [ ] Clarify Django's role in the Hexagon diagram (explicit "API Port" or driving adapters note).
-- [ ] Explain the omission of `MlopsPort` from the main architectural diagram.
-- [ ] Add a brief explanation of why Dependency-Injector is used.
+- [ ] Clarifier le rôle de Django dans le diagramme Hexagonal (note explicite "Port API" ou adaptateurs de pilotage).
+- [ ] Expliquer l'omission de `MlopsPort` dans le diagramme architectural principal.
+- [ ] Ajouter une brève explication sur la raison d'utilisation de Dependency-Injector.
 
-### 📖 Full Guide (FULL_GUIDE.md)
-- [ ] Add Local Development Setup guide.
-- [ ] Include API Usage Examples.
-- [ ] Add Contribution Guidelines.
-- [ ] Create a Glossary of Terms.
-- [ ] Add Troubleshooting section.
-- [ ] Add Hardware Requirements recommendations.
-- [ ] Explicitly define "SLM" (Small Language Model).
-- [ ] Clarify or expand upon the "Anime Archetype Engine" concept.
+### 📖 Guide Complet (FULL_GUIDE.md)
+- [ ] Ajouter un guide de configuration de l'environnement de développement local.
+- [ ] Inclure des exemples d'utilisation de l'API.
+- [ ] Ajouter des directives de contribution.
+- [ ] Créer un glossaire des termes.
+- [ ] Ajouter une section de dépannage (Troubleshooting).
+- [ ] Ajouter des recommandations sur les exigences matérielles.
+- [ ] Définir explicitement "SLM" (Small Language Model).
+- [ ] Clarifier ou développer le concept de "Anime Archetype Engine".
 
-### 🗺️ Roadmap (ROADMAP.md)
-- [ ] Fix the Gantt chart timeline (currently all marked `:done` despite future dates).
-- [ ] Synchronize `ROADMAP.md` initiatives with those listed in `TODO.md`.
-- [ ] Add a "Next Steps" section to separate completed foundational AI work from future updates.
+### 🗺️ Feuille de Route (ROADMAP.md)
+- [ ] Corriger la chronologie du diagramme de Gantt (actuellement tous marqués `:done` malgré des dates futures).
+- [ ] Synchroniser les initiatives de `ROADMAP.md` avec celles listées dans `TODO.md`.
+- [ ] Ajouter une section "Prochaines Étapes" (Next Steps) pour séparer le travail fondamental d'IA terminé des futures mises à jour.
