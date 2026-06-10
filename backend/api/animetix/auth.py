@@ -103,7 +103,7 @@ class IAPRemoteUserBackend(RemoteUserBackend):
 
 # --- Google Identity Platform (GCIP) Authentication ---
 
-GOOGLE_CERTS_URL = "https://www.googleapis.com/robot/v1/metadata/x509/securetoken-system@system.gserviceaccount.com"
+GOOGLE_CERTS_URL = "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com"
 _public_keys_cache = {}
 _public_keys_expiry = 0
 
@@ -114,8 +114,14 @@ def get_google_public_keys():
         return _public_keys_cache
 
     try:
+        logger.info(f"Attempting to fetch Google public keys from: {GOOGLE_CERTS_URL}")
         response = requests.get(GOOGLE_CERTS_URL, timeout=5)
-        response.raise_for_status()
+        response.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
+        
+        logger.info(f"Successfully fetched Google public keys. Status Code: {response.status_code}")
+        logger.debug(f"Response Headers: {response.headers}")
+        # Log a snippet of the response content, careful not to log the entire potentially large body
+        logger.debug(f"Response Body (snippet): {response.text[:500]}...")
         
         cache_control = response.headers.get("Cache-Control", "")
         max_age = 3600
@@ -128,6 +134,9 @@ def get_google_public_keys():
         
         _public_keys_cache = response.json()
         _public_keys_expiry = now + max_age
+        return _public_keys_cache
+    except requests.exceptions.HTTPError as http_err:
+        logger.error(f"Failed to fetch Google public keys: HTTP Error - {http_err.response.status_code} {http_err.response.reason} for url: {GOOGLE_CERTS_URL}. Response: {http_err.response.text[:500]}...")
         return _public_keys_cache
     except Exception as e:
         logger.error(f"Failed to fetch Google public keys: {e}")
@@ -215,3 +224,43 @@ class GoogleIdentityAuthentication(authentication.BaseAuthentication):
         user.save()
         logger.info(f"Automatically created User {username} for email {email}")
         return user
+
+
+class DeveloperApiKeyAuthentication(authentication.BaseAuthentication):
+    """
+    Authentication backend that validates API keys passed in the 'X-API-Key' header.
+    Format: ax_pro_<profile_id>_<secret>
+    """
+    def authenticate(self, request):
+        api_key = request.META.get("HTTP_X_API_KEY")
+        if not api_key:
+            return None
+
+        if not api_key.startswith("ax_pro_"):
+            raise exceptions.AuthenticationFailed("Invalid API Key format.")
+
+        parts = api_key.split("_")
+        if len(parts) < 4:
+            raise exceptions.AuthenticationFailed("Invalid API Key structure.")
+
+        profile_id = parts[2]
+        from animetix.models import Profile
+
+        try:
+            profile = Profile.objects.select_related("user").get(pk=profile_id)
+        except (Profile.DoesNotExist, ValueError):
+            raise exceptions.AuthenticationFailed("Developer Profile not found.")
+
+        # Check if the user is in the 'pro' tier
+        if profile.tier != "pro":
+            raise exceptions.AuthenticationFailed("API access is restricted to Pro tier developers.")
+
+        # Verify the key using Django's password hasher
+        if not profile.check_api_key(api_key):
+            raise exceptions.AuthenticationFailed("Invalid API Key.")
+
+        if not profile.user.is_active:
+            raise exceptions.AuthenticationFailed("User account is disabled.")
+
+        return (profile.user, api_key)
+

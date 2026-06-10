@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock
-from core.domain.services.akinetix_service import AkinetixDomainService
+from core.domain.services.akinetix_service import AkinetixService
 
 @pytest.fixture
 def sample_db():
@@ -19,7 +19,7 @@ def mock_catalog():
     return service
 
 def test_akinetix_service_start_game(sample_db, mock_catalog):
-    domain_service = AkinetixDomainService(catalog_service=mock_catalog)
+    domain_service = AkinetixService(catalog_service=mock_catalog)
     state = domain_service.start_new_game(sample_db)
     
     assert state.game_over is False
@@ -31,7 +31,7 @@ def test_akinetix_service_start_game(sample_db, mock_catalog):
     mock_catalog.get_akinetix_attributes.assert_called_once()
 
 def test_akinetix_service_process_answer(sample_db, mock_catalog):
-    domain_service = AkinetixDomainService(catalog_service=mock_catalog)
+    domain_service = AkinetixService(catalog_service=mock_catalog)
     
     # 1. Start game
     state = domain_service.start_new_game(sample_db)

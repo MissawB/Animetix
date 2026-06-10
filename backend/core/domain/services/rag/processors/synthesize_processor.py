@@ -1,5 +1,6 @@
 from backend.core.domain.services.rag.processors.base import StateProcessor
-from backend.core.domain.entities.ai_schemas import RAGContext, RAGState
+from backend.core.domain.entities.ai_schemas import RAGContext, RAGState, StreamStep
+from typing import Generator
 import logging
 import time
 
@@ -11,20 +12,16 @@ class SynthesizeProcessor(StateProcessor):
         self.xai_service = xai_service
         self.rag_service = rag_service
 
-    def process(self, ctx: RAGContext) -> RAGState:
-        # Based on RAGWorkflowManager._handle_synthesize
-        # Note: Streaming logic needs to be handled outside or via callback?
-        # For now, let's just do the core logic.
+    def process(self, ctx: RAGContext) -> Generator[StreamStep, None, RAGState]:
+        if ctx.correction_feedback:
+            yield StreamStep(type="thought", content="[Synthesizer] Tentative d'auto-correction...").model_dump()
+        else:
+            yield StreamStep(type="thought", content="[Synthesizer] Rédaction de la réponse expert...").model_dump()
         
         ctx.full_answer = ""
-        
-        # Simplified synthesis: no streaming for now to fit in StateProcessor.process
-        # In a real scenario, this should be refactored to support streaming.
-        # Maybe ctx should have a callback for token updates?
-        
-        # For now, let's call the synthesizer.
-        # The synthesizer.synthesize_stream is a generator.
-        
+        in_thought = False
+        token_count = 0
+
         for token in self.synthesizer.synthesize_stream(
             ctx.query, 
             ctx.truth_path, 
@@ -32,20 +29,38 @@ class SynthesizeProcessor(StateProcessor):
             thinking_mode=ctx.thinking_mode,
             correction_feedback=ctx.correction_feedback
         ):
-            # This is tricky because we can't yield.
-            # I will just concatenate it for now, ignoring the complex <thought> splitting.
-            # This is suboptimal but necessary to fit the interface.
-            
-            # Better: if SynthesizeProcessor needs streaming, the architecture might need to change.
-            # Let's assume the SynthesizeProcessor is responsible for populating ctx.full_answer.
-            if "<thought>" in token or "</thought>" in token:
+            token_count += 1
+            if "<thought>" in token and not in_thought:
+                in_thought = True
+                parts = token.split("<thought>", 1)
+                if parts[0]:
+                    ctx.full_answer += parts[0]
+                    yield StreamStep(type="token", content=parts[0]).model_dump()
+                if parts[1]:
+                    yield StreamStep(type="thought", content=parts[1]).model_dump()
                 continue
-            ctx.full_answer += token
+            if "</thought>" in token and in_thought:
+                in_thought = False
+                parts = token.split("</thought>", 1)
+                if parts[0]:
+                    yield StreamStep(type="thought", content=parts[0]).model_dump()
+                if parts[1]:
+                    ctx.full_answer += parts[1]
+                    yield StreamStep(type="token", content=parts[1]).model_dump()
+                continue
+            if in_thought:
+                if ctx.thinking_budget > 0 and token_count > ctx.thinking_budget:
+                    continue
+                yield StreamStep(type="thought", content=token).model_dump()
+            else:
+                ctx.full_answer += token
+                yield StreamStep(type="token", content=token).model_dump()
         
         if not ctx.knowledge_acquired:
             res = self.xai_service.measure_confidence(ctx.query, ctx.full_answer)
             confidence = res.get("confidence_score", 1.0) if isinstance(res, dict) else float(res)
             if confidence < 0.6:
+                yield StreamStep(type="thought", content=f"[Uncertainty] Basse confiance détectée ({confidence:.2f}). Déclenchement du Librarian...").model_dump()
                 ctx.knowledge_acquired = True
                 return RAGState.ACQUIRE_KNOWLEDGE
 

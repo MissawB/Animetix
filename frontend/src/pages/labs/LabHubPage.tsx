@@ -379,12 +379,7 @@ const LabHubPage: React.FC = () => {
                 </Link>
             ))}
 
-            {/* Coming Soon / Experimental Slot */}
-            <Card padding="lg" className="bg-black/20 border-white/5 border-dashed flex flex-col items-center justify-center text-center opacity-30 group hover:opacity-50 transition-opacity">
-                <Sparkles className="w-12 h-12 mb-6 text-gray-500 group-hover:animate-spin-slow" />
-                <h4 className="text-xl font-black italic manga-font uppercase mb-2">Module [REDACTED]</h4>
-                <p className="text-[10px] font-bold uppercase tracking-widest">En cours de dé-silotage</p>
-            </Card>
+
         </div>
 
         {/* Creative Forge Section */}

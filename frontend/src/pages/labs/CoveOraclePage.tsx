@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   ShieldCheck, 
   Search, 
@@ -11,7 +12,9 @@ import {
   Zap,
   HelpCircle,
   MessageSquare,
-  Sparkles
+  Sparkles,
+  Brain, // Added for explainer cards
+  Activity // Added for explainer cards
 } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { apiClient } from "../../utils/apiClient";
@@ -22,6 +25,7 @@ import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion, AnimatePresence } from 'framer-motion';
 
 const CoveOraclePage: React.FC = () => {
+  const { t } = useTranslation();
   const [question, setQuestion] = useState('');
   const [mediaType, setMediaType] = useState('anime');
   const [trace, setTrace] = useState<any>(null);
@@ -51,13 +55,13 @@ const CoveOraclePage: React.FC = () => {
         {/* Header CoVe */}
         <header className="mb-16 text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-500 text-[10px] font-black uppercase tracking-[0.3em] mb-6 shadow-[0_0_15px_rgba(59,130,246,0.2)]">
-               <ShieldCheck className="w-4 h-4 fill-current" /> Oracle Verification Protocol v3.1
+               <ShieldCheck className="w-4 h-4 fill-current" /> {t('labs.cove_oracle.protocol_version')}
             </div>
             <h1 className="text-7xl font-black italic manga-font tracking-tighter uppercase mb-4">
-                COVE <span className="text-blue-500 text-glow">ORACLE</span>
+                {t('labs.cove_oracle.title_part1')} <span className="text-blue-500 text-glow">{t('labs.cove_oracle.title_part2')}</span>
             </h1>
             <p className="text-xl font-bold opacity-30 uppercase tracking-[0.3em] max-w-3xl mx-auto leading-relaxed">
-                Réduisez les hallucinations de l'IA via le protocole Chain-of-Verification raccordé au Knowledge Graph.
+                {t('labs.cove_oracle.subtitle')}
             </p>
         </header>
 
@@ -71,17 +75,17 @@ const CoveOraclePage: React.FC = () => {
                     </div>
                     
                     <h3 className="text-xs font-black uppercase opacity-40 mb-8 tracking-widest flex items-center gap-2">
-                        <Zap className="w-4 h-4 text-yellow-500" /> Requête d'Analyse
+                        <Zap className="w-4 h-4 text-yellow-500" /> {t('labs.cove_oracle.query_analysis')}
                     </h3>
                     
                     <form onSubmit={onSubmit} className="space-y-6">
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest opacity-30 ml-4">Question sur le Lore</label>
+                            <label className="text-[10px] font-black uppercase tracking-widest opacity-30 ml-4">{t('labs.cove_oracle.lore_question')}</label>
                             <textarea 
                                 value={question}
                                 onChange={(e) => setQuestion(e.target.value)}
                                 rows={4}
-                                placeholder="ex: Qui a tué le père de Ryuko Matoi dans Kill la Kill ?"
+                                placeholder={t('labs.cove_oracle.question_placeholder')}
                                 className="w-full bg-black border-2 border-white/5 rounded-2xl py-4 px-6 text-sm font-bold focus:border-blue-600 outline-none transition-all placeholder:opacity-20 resize-none"
                             />
                         </div>
@@ -108,7 +112,7 @@ const CoveOraclePage: React.FC = () => {
                             disabled={mutation.isPending || !question.trim()}
                             className="w-full bg-blue-600 hover:bg-blue-500 text-white py-6 rounded-2xl font-black italic text-lg uppercase shadow-xl hover:scale-105 active:scale-95 transition-all border-none"
                         >
-                            {mutation.isPending ? <Zap className="w-6 h-6 animate-spin" /> : "VÉRIFIER LES FAITS"}
+                            {mutation.isPending ? <Zap className="w-6 h-6 animate-spin" /> : t('labs.cove_oracle.verify_facts')}
                         </Button>
                     </form>
                 </Card>
@@ -116,21 +120,21 @@ const CoveOraclePage: React.FC = () => {
                 {/* Status Card */}
                 <Card padding="lg" className="bg-white/5 border-white/5 rounded-[2rem]">
                     <div className="flex items-center justify-between mb-4">
-                        <span className="text-[10px] font-black uppercase tracking-widest opacity-30">Vérification Pipeline</span>
-                        <Badge variant="success" className="bg-emerald-500/10 text-emerald-500 border-none">ACTIVE</Badge>
+                        <span className="text-[10px] font-black uppercase tracking-widest opacity-30">{t('labs.cove_oracle.verification_pipeline')}</span>
+                        <Badge variant="success" className="bg-emerald-500/10 text-emerald-500 border-none">{t('labs.cove_oracle.active')}</Badge>
                     </div>
                     <div className="space-y-4">
                         <div className="flex items-center gap-3 opacity-30">
                             <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                            <span className="text-[9px] font-bold uppercase">Multi-claims Decomposition</span>
+                            <span className="text-[9px] font-bold uppercase">{t('labs.cove_oracle.multi_claims_decomposition')}</span>
                         </div>
                         <div className="flex items-center gap-3 opacity-30">
                             <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                            <span className="text-[9px] font-bold uppercase">Neo4j Cross-Reference</span>
+                            <span className="text-[9px] font-bold uppercase">{t('labs.cove_oracle.neo4j_cross_reference')}</span>
                         </div>
                         <div className="flex items-center gap-3 opacity-30">
                             <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                            <span className="text-[9px] font-bold uppercase">Revised Consensus</span>
+                            <span className="text-[9px] font-bold uppercase">{t('labs.cove_oracle.revised_consensus')}</span>
                         </div>
                     </div>
                 </Card>
@@ -147,9 +151,9 @@ const CoveOraclePage: React.FC = () => {
                             className="h-full min-h-[500px] border-2 border-dashed border-white/5 rounded-[3rem] flex flex-col items-center justify-center text-center p-12"
                         >
                             <HelpCircle className="w-16 h-16 text-white/5 mb-6" />
-                            <h3 className="text-2xl font-black italic manga-font uppercase opacity-10">En attente d'une question</h3>
+                            <h3 className="text-2xl font-black italic manga-font uppercase opacity-10">{t('labs.cove_oracle.awaiting_question')}</h3>
                             <p className="text-sm font-bold opacity-10 uppercase tracking-widest max-w-xs mt-2">
-                                Soumettez une requête pour lancer le moteur CoVe et visualiser le graphe de vérification.
+                                {t('labs.cove_oracle.submit_query_prompt')}
                             </p>
                         </motion.div>
                     )}
@@ -167,7 +171,7 @@ const CoveOraclePage: React.FC = () => {
                                         <ShieldCheck className="w-8 h-8 text-blue-500 animate-pulse" />
                                     </div>
                                 </div>
-                                <p className="mt-8 text-sm font-black uppercase tracking-[0.4em] text-blue-500 animate-pulse">Processing Chain-of-Verification...</p>
+                                <p className="mt-8 text-sm font-black uppercase tracking-[0.4em] text-blue-500 animate-pulse">{t('labs.cove_oracle.processing_cove')}</p>
                             </div>
                         </motion.div>
                     )}
@@ -182,7 +186,7 @@ const CoveOraclePage: React.FC = () => {
                             <section>
                                 <div className="flex items-center gap-3 mb-6">
                                     <div className="w-8 h-8 rounded-lg bg-gray-500/10 flex items-center justify-center text-gray-500 text-xs font-black italic">01</div>
-                                    <h2 className="text-xl font-black italic manga-font uppercase tracking-tighter">Réponse Baseline <span className="text-gray-500 opacity-50">(Potentiellement instable)</span></h2>
+                                    <h2 className="text-xl font-black italic manga-font uppercase tracking-tighter">{t('labs.cove_oracle.baseline_response')} <span className="text-gray-500 opacity-50">({t('labs.cove_oracle.potentially_unstable')})</span></h2>
                                 </div>
                                 <Card padding="lg" className="bg-white/5 border-white/10 rounded-2xl italic text-white/60 leading-relaxed border-l-4 border-l-gray-500">
                                     {trace.baseline}
@@ -193,7 +197,7 @@ const CoveOraclePage: React.FC = () => {
                             <section>
                                 <div className="flex items-center gap-3 mb-6">
                                     <div className="w-8 h-8 rounded-lg bg-yellow-500/10 flex items-center justify-center text-yellow-500 text-xs font-black italic">02</div>
-                                    <h2 className="text-xl font-black italic manga-font uppercase tracking-tighter text-yellow-500">Plan de Vérification <span className="text-white/20">Decomposition</span></h2>
+                                    <h2 className="text-xl font-black italic manga-font uppercase tracking-tighter text-yellow-500">{t('labs.cove_oracle.verification_plan')} <span className="text-white/20">{t('labs.cove_oracle.decomposition')}</span></h2>
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {trace.verification_plan.map((q: string, i: number) => (
@@ -209,7 +213,7 @@ const CoveOraclePage: React.FC = () => {
                             <section>
                                 <div className="flex items-center gap-3 mb-6">
                                     <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 text-xs font-black italic">03</div>
-                                    <h2 className="text-xl font-black italic manga-font uppercase tracking-tighter text-emerald-500">Validation Graphe <span className="text-white/20">Neo4j Cross-Ref</span></h2>
+                                    <h2 className="text-xl font-black italic manga-font uppercase tracking-tighter text-emerald-500">{t('labs.cove_oracle.graph_validation')} <span className="text-white/20">{t('labs.cove_oracle.neo4j_cross_ref')}</span></h2>
                                 </div>
                                 <div className="space-y-4">
                                     {trace.verifications.map((v: any, i: number) => (
@@ -219,7 +223,7 @@ const CoveOraclePage: React.FC = () => {
                                                     <Network className="w-4 h-4 text-blue-400" />
                                                     <span className="text-[10px] font-black uppercase tracking-widest text-white/40">{v.query}</span>
                                                 </div>
-                                                {v.context_found && <Badge variant="success" className="bg-emerald-500/10 text-emerald-500 border-none text-[8px]">CONTEXT FOUND</Badge>}
+                                                {v.context_found && <Badge variant="success" className="bg-emerald-500/10 text-emerald-500 border-none text-[8px]">{t('labs.cove_oracle.context_found')}</Badge>}
                                             </div>
                                             <div className="p-6 text-sm font-bold leading-relaxed text-emerald-400/80">
                                                 <div className="flex gap-4 items-start">
@@ -244,8 +248,8 @@ const CoveOraclePage: React.FC = () => {
                                         <Sparkles className="w-6 h-6" />
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-black text-blue-500 uppercase tracking-[0.3em]">Final Verified Response</p>
-                                        <h2 className="text-3xl font-black italic manga-font uppercase tracking-tighter">Réponse Consolidée</h2>
+                                        <p className="text-[10px] font-black text-blue-500 uppercase tracking-[0.3em]">{t('labs.cove_oracle.final_verified_response')}</p>
+                                        <h2 className="text-3xl font-black italic manga-font uppercase tracking-tighter">{t('labs.cove_oracle.consolidated_response')}</h2>
                                     </div>
                                 </div>
                                 <Card padding="lg" className="bg-blue-600 text-white border-none shadow-2xl text-xl font-bold leading-relaxed rounded-[2rem] relative overflow-hidden">
@@ -262,13 +266,39 @@ const CoveOraclePage: React.FC = () => {
                                     onClick={() => { setTrace(null); setQuestion(''); }}
                                     className="border-white/10 hover:bg-white/5 text-white/40 font-black uppercase italic tracking-widest"
                                 >
-                                    NOUVELLE ANALYSE
+                                    {t('labs.cove_oracle.new_analysis')}
                                 </Button>
                             </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
             </div>
+        </div>
+
+        {/* Explainer Section */}
+        <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8">
+          <Card padding="lg" className="bg-black/40 border-blue-500/20 shadow-[0_0_50px_rgba(59,130,246,0.1)] relative overflow-hidden group">
+            <div className="absolute -right-12 -bottom-12 opacity-5 group-hover:opacity-10 transition-opacity">
+              <Brain className="w-64 h-64 text-blue-500" />
+            </div>
+            <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3 text-blue-400">
+              <Brain className="w-5 h-5" /> {t('labs.cove_oracle.explainer_title')}
+            </h4>
+            <div className="space-y-4 relative z-10">
+              <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
+                {t('labs.cove_oracle.explainer_text_card1')}
+              </p>
+              <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
+                {t('labs.cove_oracle.explainer_text_card2')}
+              </p>
+            </div>
+          </Card>
+
+          <div className="p-12 rounded-[4rem] bg-gradient-to-br from-blue-600/10 to-transparent border border-white/5 flex flex-col justify-center text-center">
+            <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30 italic leading-relaxed text-blue-200/40">
+              {t('labs.cove_oracle.protocol_text')}
+            </p>
+          </div>
         </div>
       </div>
     </AnimatedPage>

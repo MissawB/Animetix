@@ -245,6 +245,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'backend.api.animetix.auth.GoogleIdentityAuthentication',
+        'backend.api.animetix.auth.DeveloperApiKeyAuthentication',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
@@ -575,6 +576,14 @@ VERTEX_AI_AGENT_ID = env('VERTEX_AI_AGENT_ID', default='animetix-core-rag-agent'
 # --- ALLOYDB AI QUERYDATA (TEXT-TO-SQL) ---
 ALLOYDB_NL_QUERY_ACTIVE = env.bool('ALLOYDB_NL_QUERY_ACTIVE', default=False)
 ALLOYDB_NL_CONFIG_NAME = env('ALLOYDB_NL_CONFIG_NAME', default='animetix_catalog')
+
+# --- STRIPE BILLING CONFIGURATION ---
+STRIPE_SECRET_KEY = env('STRIPE_SECRET_KEY', default=None)
+STRIPE_PUBLISHABLE_KEY = env('STRIPE_PUBLISHABLE_KEY', default=None)
+STRIPE_WEBHOOK_SECRET = env('STRIPE_WEBHOOK_SECRET', default=None)
+STRIPE_USE_METERS = env.bool('STRIPE_USE_METERS', default=True)
+STRIPE_METER_EVENT_NAME = env('STRIPE_METER_EVENT_NAME', default='rag_api_requests')
+STRIPE_PRO_PRICE_ID = env('STRIPE_PRO_PRICE_ID', default='price_pro_metered')
 
 
 

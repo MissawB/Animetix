@@ -4,20 +4,31 @@ import { updateAccountSettings, generateApiKey, revokeApiKey } from '../../api';
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { useTranslation } from 'react-i18next';
-import { Settings, Key, ShieldAlert, Star, AlertTriangle, Eye, EyeOff, MessageSquare, ChevronRight } from 'lucide-react';
+import { Settings, Key, ShieldAlert, Star, AlertTriangle, Eye, EyeOff, MessageSquare, ChevronRight, Sparkles } from 'lucide-react';
 import { useToastStore } from "../../store/toastStore";
 import { Link } from 'react-router-dom';
 
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 
+const PRESET_COLORS = [
+  { name: 'Sponsor Or', hex: '#FFD700' },
+  { name: 'Néon Cyber', hex: '#00FFCC' },
+  { name: 'Rose Sakura', hex: '#FF66B2' },
+  { name: 'Rouge Fureur', hex: '#FF3333' },
+  { name: 'Bleu Abysse', hex: '#3366FF' }
+];
+
 const AccountSettingsPage: React.FC = () => {
   const { t } = useTranslation();
-  const { user, checkAuth } = useAuthStore();
+  const { user, checkAuth, refetchUser } = useAuthStore();
   const { addToast } = useToastStore();
   
   const [isUpdating, setIsUpdating] = useState(false);
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [showKey, setShowKey] = useState(false);
+
+  const [customColor, setCustomColor] = useState(user?.custom_username_color || '#FFD700');
+  const [isSavingColor, setIsSavingColor] = useState(false);
 
   if (!user) {
     return <div className="p-20 text-center">Vous devez être connecté.</div>;
@@ -63,6 +74,20 @@ const AccountSettingsPage: React.FC = () => {
       addToast(t('account.revokeError', 'Erreur lors de la révocation'), 'error');
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const handleSaveColor = async (colorToSave: string) => {
+    setIsSavingColor(true);
+    try {
+      await updateAccountSettings({ custom_username_color: colorToSave });
+      await refetchUser();
+      addToast("Couleur du pseudo mise à jour !", "success");
+    } catch (error) {
+      console.error(error);
+      addToast("Erreur lors de la mise à jour de la couleur.", "error");
+    } finally {
+      setIsSavingColor(false);
     }
   };
 
@@ -116,6 +141,121 @@ const AccountSettingsPage: React.FC = () => {
                   ACCÉDER À L'ESPACE SPONSORS
                 </Link>
               </div>
+            </Card>
+
+            {/* Personnalisation Cosmétique */}
+            <Card padding="lg" className="space-y-6 shadow-xl border-none bg-white dark:bg-[#0f0f1a] relative overflow-hidden flex flex-col justify-between">
+              <div>
+                <h2 className="text-xl font-bold uppercase tracking-widest border-b border-gray-100 dark:border-white/5 pb-4 mb-4 flex items-center gap-2 text-black dark:text-white">
+                  <Sparkles className="w-5 h-5 text-yellow-500" /> Couleur du Pseudo
+                </h2>
+                
+                {user.unlocked_badges?.includes('Sponsor Or') ? (
+                  <div className="space-y-6">
+                    <p className="text-xs text-gray-500">
+                      Personnalisez l'affichage de votre pseudo sur votre profil public.
+                    </p>
+                    
+                    {/* Preview */}
+                    <div className="p-4 rounded-2xl bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/5 text-center">
+                      <span className="text-[10px] font-black uppercase opacity-40 block mb-2 text-black dark:text-white">Aperçu du Profil</span>
+                      <span 
+                        className="text-2xl font-black italic manga-font uppercase tracking-tighter"
+                        style={{ color: customColor || undefined }}
+                      >
+                        {user.username}
+                      </span>
+                    </div>
+
+                    {/* Presets */}
+                    <div className="space-y-2">
+                      <span className="text-[10px] font-black uppercase opacity-50 block text-black dark:text-white">Couleurs Prédéfinies</span>
+                      <div className="flex flex-wrap gap-3">
+                        {PRESET_COLORS.map((preset) => (
+                          <button
+                            key={preset.hex}
+                            onClick={() => setCustomColor(preset.hex)}
+                            title={preset.name}
+                            className={`w-8 h-8 rounded-full border-2 transition-all ${
+                              customColor === preset.hex ? 'border-black dark:border-white scale-110 shadow-lg' : 'border-transparent hover:scale-105'
+                            }`}
+                            style={{ backgroundColor: preset.hex }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Custom Color Picker */}
+                    <div className="flex items-center gap-4">
+                      <div className="space-y-1">
+                        <span className="text-[10px] font-black uppercase opacity-50 block text-black dark:text-white">Couleur Personnalisée</span>
+                        <input
+                          type="color"
+                          value={customColor || '#FFD700'}
+                          onChange={(e) => setCustomColor(e.target.value)}
+                          className="w-12 h-10 rounded-xl border border-gray-200 dark:border-white/10 cursor-pointer bg-transparent"
+                        />
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <span className="text-[10px] font-black uppercase opacity-50 block text-black dark:text-white">Code Hex</span>
+                        <input
+                          type="text"
+                          value={customColor}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === "" || val.startsWith("#")) {
+                              setCustomColor(val);
+                            }
+                          }}
+                          placeholder="#FFD700"
+                          className="w-full bg-gray-50 dark:bg-black/20 px-3 py-2 rounded-xl border border-gray-100 dark:border-white/5 text-sm font-mono text-black dark:text-white"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="relative py-12 text-center space-y-4">
+                    <div className="mx-auto w-12 h-12 bg-gray-100 dark:bg-white/5 rounded-2xl flex items-center justify-center text-gray-400 dark:text-gray-600">
+                      🔒
+                    </div>
+                    <div className="space-y-1">
+                      <p className="font-bold text-sm text-black dark:text-white">Fonctionnalité Verrouillée</p>
+                      <p className="text-xs text-gray-500 max-w-xs mx-auto">
+                        Soutenez Animetix dans l'Espace Sponsors pour débloquer le badge exclusif et la couleur de pseudo personnalisée !
+                      </p>
+                    </div>
+                    <Link to="/pricing/" className="inline-block text-xs font-black uppercase tracking-wider text-yellow-500 hover:text-yellow-600 no-underline">
+                      Devenir Sponsor →
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              {user.unlocked_badges?.includes('Sponsor Or') && (
+                <div className="flex gap-3 pt-4 border-t border-gray-100 dark:border-white/5">
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    className="flex-1 font-black italic manga-font text-xs"
+                    onClick={() => handleSaveColor(customColor)}
+                    disabled={isSavingColor}
+                  >
+                    {isSavingColor ? "Enregistrement..." : "Enregistrer"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="font-black italic manga-font text-xs text-red-500 hover:bg-red-500 hover:text-white border-red-500/10"
+                    onClick={() => {
+                      setCustomColor("");
+                      handleSaveColor("");
+                    }}
+                    disabled={isSavingColor}
+                  >
+                    Réinitialiser
+                  </Button>
+                </div>
+              )}
             </Card>
 
             {/* Historique IA */}

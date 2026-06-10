@@ -67,7 +67,7 @@ class AgenticRAGStreamView(APIView):
             return JsonResponse({'error': 'No query provided'}, status=400)
             
         def event_stream():
-            agent = get_container().agentic.agentic_rag
+            agent = get_container().agentic.agentic_rag()
             user_id = str(request.user.id) if request.user.is_authenticated else None
             try:
                 for event in agent.plan_and_solve_stream(query, media_type, user_id=user_id):

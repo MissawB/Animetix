@@ -9,6 +9,8 @@ export interface User {
   tier?: string;
   has_api_key?: boolean;
   is_staff?: boolean;
+  unlocked_badges?: string[];
+  custom_username_color?: string;
 }
 
 export interface AppConfig {
@@ -35,6 +37,8 @@ export interface Profile {
   collection_count?: number;
   recent_achievements?: any[];
   top_fusions?: any[];
+  unlocked_badges?: string[];
+  custom_username_color?: string;
 }
 
 export interface UserConfig {

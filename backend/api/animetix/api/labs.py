@@ -433,7 +433,7 @@ class SoundscapeGenerationView(APIView):
 
     def post(self, request):
         container = get_container()
-        video_file = request.FILES.get('video')
+        video_file = request.FILES.get('video_file') or request.FILES.get('video')
         
         if not video_file:
             return Response({'error': 'Video file is required.'}, status=400)
@@ -456,7 +456,7 @@ class SpeechToSpeechLabView(APIView):
 
     def post(self, request):
         container = get_container()
-        audio_file = request.FILES.get('audio')
+        audio_file = request.FILES.get('audio_file') or request.FILES.get('audio')
         persona = request.data.get('persona', 'Standard')
         
         if not audio_file:

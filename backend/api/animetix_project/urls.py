@@ -4,7 +4,9 @@ from django.conf.urls.i18n import i18n_patterns
 from rest_framework import routers
 from animetix import api_views
 from animetix.api.monitoring import PipelineControlView
+from animetix.api.observability import ObservabilityView
 from django.views.generic.base import RedirectView
+from animetix.tasks_views import run_task_view, poll_workflow_view, eventarc_gcs_upload_view
 
 # REST Router
 router = routers.DefaultRouter()
@@ -18,12 +20,14 @@ router.register(r'curation', api_views.DataCurationTicketViewSet, basename='cura
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 from django.contrib.admin.views.decorators import staff_member_required
 from django_prometheus import exports as prometheus_exports
+from animetix.api.mlops import DPOFeedbackLoopView, AdaptersView
+from animetix.api.admin_api import AdEventLoggingAPIView # Directly import AdEventLoggingAPIView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('favicon.ico', RedirectView.as_view(url='/static/animetix/img/logo/logo.png')),
     path('i18n/', include('django.conf.urls.i18n')), # Permet le switch de langue via POST
-    
+
     # --- PROFESSIONNALISATION : API REST (Headless) ---
     path('api/v1/', include(router.urls)),
     path('api/v1/', include('animetix.urls.api')),
@@ -35,9 +39,14 @@ urlpatterns = [
     path('api/schema/', staff_member_required(SpectacularAPIView.as_view()), name='schema'),
     path('api/schema/swagger-ui/', staff_member_required(SpectacularSwaggerView.as_view(url_name='schema')), name='swagger-ui'),
     path('api/schema/redoc/', staff_member_required(SpectacularRedocView.as_view(url_name='schema')), name='redoc'),
-    
+
     # --- OBSERVABILITÉ : PROMETHEUS - Restreint au Staff ---
     path('metrics/', staff_member_required(prometheus_exports.ExportToDjangoView), name='prometheus-django-metrics'),
+    path('api/observability/', ObservabilityView.as_view(), name='observability'),
+
+    # --- MLOps API (Restricted to Staff) ---
+    path('api/mlops/dpo-loop/', staff_member_required(DPOFeedbackLoopView.as_view()), name='mlops-dpo-loop'),
+    path('api/mlops/adapters/', staff_member_required(AdaptersView.as_view()), name='mlops-adapters'),
 
     # --- IMAGE PROXY (Global, no i18n) ---
     path('cdn-proxy/', api_views.image_proxy_view, name='cdn_proxy'),
@@ -47,14 +56,12 @@ urlpatterns = [
         path('', RedirectView.as_view(url='/'), name='run_task_view_redirect'), # fallback
     ])),
     path('api/monitoring/<str:action>/', PipelineControlView.as_view(), name='pipeline-control'),
-]
-
-from animetix.tasks_views import run_task_view, poll_workflow_view, eventarc_gcs_upload_view
-urlpatterns += [
     path('api/tasks/run/', run_task_view, name='run_task_view'),
-    path('api/tasks/poll-workflow/', poll_workflow_view, name='poll-workflow'),
+    path('api/tasks/poll-workflow/', poll_workflow_view, name='api_poll_workflow'),
     path('api/events/gcs-upload/', eventarc_gcs_upload_view, name='eventarc-gcs-upload'),
-]
+
+    # --- BILLING ENDPOINTS ---
+    path('billing/log_ad_event/', AdEventLoggingAPIView.as_view(), name='api_log_ad_event'),
 
 
 # URLs traduites

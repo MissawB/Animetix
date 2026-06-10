@@ -62,7 +62,7 @@ class ModelsRegistry:
                 },
                 "vision": {
                     "id": "google/siglip2-so400m-patch14-384",
-                    "revision": "main" # TODO: Pin once stable
+                    "revision": "e8e4872"
                 }
             }
 

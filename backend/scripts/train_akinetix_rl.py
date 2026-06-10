@@ -29,7 +29,7 @@ def run_rl_training_simulation(episodes: int = 100):
     """
     print("🤖 Initializing Akinetix RL Environment...")
     container = get_container()
-    rl_service = container.akinetix_rl_env_service()
+    rl_service = container.core.akinetix_rl_env_service()
     env = rl_service.create_env("Anime")
     
     # Simple Q-Table mapping State -> Action values

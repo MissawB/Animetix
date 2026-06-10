@@ -26,6 +26,11 @@ const VoiceLabPage = lazy(() => import('../../../pages/labs/VoiceLabPage'));
 const NeuralDiagnosticsPage = lazy(() => import('../../../pages/labs/NeuralDiagnosticsPage'));
 const CoveOraclePage = lazy(() => import('../../../pages/labs/CoveOraclePage'));
 const StrategyLabPage = lazy(() => import('../../../pages/labs/StrategyLabPage'));
+const VideoRagPage = lazy(() => import('../../../pages/labs/VideoRagPage'));
+const MonitoringConsolePage = lazy(() => import('../../../pages/dev/MonitoringConsolePage'));
+const ApiHubPage = lazy(() => import('../../../pages/dev/ApiHubPage'));
+const ObservabilityConsolePage = lazy(() => import('../../../pages/dev/ObservabilityConsolePage'));
+const MLOpsConsolePage = lazy(() => import('../../../pages/dev/MLOpsConsolePage'));
 
 export const LabRoutes = (
   <>
@@ -55,5 +60,10 @@ export const LabRoutes = (
     <Route path="/lab/diagnostics/" element={<NeuralDiagnosticsPage />} />
     <Route path="/lab/cove-oracle/" element={<CoveOraclePage />} />
     <Route path="/lab/strategy/" element={<StrategyLabPage />} />
+    <Route path="/lab/video-rag/" element={<VideoRagPage />} />
+    <Route path="/dev/api-hub/" element={<ApiHubPage />} />
+    <Route path="/dev/monitoring/" element={<MonitoringConsolePage />} />
+    <Route path="/dev/observability/" element={<ObservabilityConsolePage />} />
+    <Route path="/dev/mlops/" element={<MLOpsConsolePage />} />
   </>
 );

@@ -76,3 +76,41 @@ This document archives the major milestones of the project's technical evolution
 
 ---
 *End of History Log*
+
+# Task List (TODO) - Animetix
+
+This document tracks all remaining technical, architectural, and feature tasks to implement. Completed tasks are checked or archived into `HISTORY.md`.
+
+## 🛠️ Technical Debt & Architecture
+
+### Backend & XAI
+- [X] **API URL Cleanup**: Permanently remove dead code and commented lines from `backend/api/animetix/urls/api.py`.
+- [X] **Refactor RAGWorkflowManager**: Decompose the monolithic state machine into smaller, atomic agents to improve maintainability.
+- [X] **Remove Deprecated Services**: Complete the merge and removal of `ClassicalAkinetixService` and `AkinetixRLDomainService`.
+- [X] **Testing Gap (SOTA Services)**: Implement comprehensive unit test coverage for high-complexity SOTA services (e.g., `SelfEvolvingCompiler`, `SynapticPlasticityService`, `LNNService`).
+- [X] **Implement PlanProcessor**: Implement and test `PlanProcessor` in `backend/core/domain/services/rag/processors/plan_processor.py`.
+- [ ] **Implement RAG Processors**: Implement `SpeculateProcessor`, `VlmRerankProcessor`, `SynthesizeProcessor`, `JudgeProcessor`, `FallbackRagProcessor`, and `RAGOrchestrator`. Update DI container and refactor/remove `RAGWorkflowManager`.
+
+### Frontend & UI
+- [X] **Extension Quantum Lab** : Intégrer les contrôles de compilation JIT et de plasticité synaptique dans `QuantumLabPage`.
+- [X] **Interface Video-RAG Avancée** : Développer une interface de gestion des index vidéo et d'inspection des segments temporels.
+- [X] **Dashboard Développeur (API Hub)** : Créer une interface de documentation interactive (Swagger/Redoc) pour l'API RAG B2B.
+- [X] **Console de Monitoring Pipeline** : Interface de contrôle pour le déclenchement des scrapers et la synchronisation Neo4j.
+- [X] **Console d'Observabilité & Guardrails** : Interface pour ajuster les seuils de sécurité et visualiser la dérive (`archetype_drift_service`).
+- [X] **Console MLOps (Training)** : Interface de supervision pour les boucles d'entraînement (`dpo_feedback_loop`) et la gestion des adaptateurs.
+
+## ☁️ Deployment & Google Cloud Platform (GCP) Integration
+
+- [x] **Google Identity Platform**: Migrate authentication to managed GCP service.
+- [x] **Cloud KMS**: CMEK encryption for generated images and cloned voices.
+- [x] **AlloyDB AI**: Study the migration from pgvector to AlloyDB for high performance vector search.
+- [x] **Vertex AI Vector Search 2.0 (Collections)**: Evaluate the migration to Vertex AI Collections to simplify RAG and manage native hybrid search.
+- [x] **Gemini Enterprise Agent Platform & Agentic RAG**: Integrate Agent Gateway (prompt security) and Agent Observability (visual reasoning tracking).
+- [x] **AlloyDB AI - Tools for Data Agents**: Implement native SQL `QueryData` (Text-to-SQL) functions to simplify and secure catalog access for Animetix agents.
+
+## 💰 Monétisation & Financement des Serveurs (Ad-Supported)
+
+- [X] **Régies Publicitaires Réelles** : Intégrer le SDK Google IMA ou un wrapper de Header Bidding (ex: Prebid.js) dans `SponsorStreamModal.tsx` pour remplacer les vidéos de test Google par de vraies pubs vidéo rémunératrices (CPM/CPC).
+- [X] **Sponsoring & Partenariats Anime Directs** : Remplacer les fausses bannières de `SimulatedAdBanner.tsx` par des bannières publicitaires réelles et des liens d'affiliation négociés avec des diffuseurs (ex: Crunchyroll, ADN) ou des boutiques partenaires.
+- [X] **Offres Développeur Payantes (Expert API)** : Mettre en place un système de facturation à la consommation via Stripe Billing pour l'utilisation de l'API (tier `pro`), permettant aux développeurs d'utiliser le moteur RAG d'Animetix dans leurs applications.
+- [X] **Financement Participatif (Dons)** : Ajouter un bouton Ko-fi/Patreon dans l'Espace Sponsors pour permettre aux utilisateurs de soutenir le serveur, en débloquant des cosmétiques exclusifs sur leur profil.

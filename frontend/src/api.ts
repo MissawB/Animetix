@@ -74,7 +74,7 @@ export async function getProfile(username: string): Promise<Profile> {
   return apiClient(`/api/v1/profile/${username}/`);
 }
 
-export async function updateAccountSettings(data: { tier?: string }): Promise<{ status: string; tier: string }> {
+export async function updateAccountSettings(data: { tier?: string; custom_username_color?: string }): Promise<{ status: string; tier: string; custom_username_color?: string }> {
   return apiClient('/api/v1/profiles/update_settings/', {
     method: 'PATCH',
     body: JSON.stringify(data),
@@ -153,6 +153,8 @@ export async function getAuthUser(): Promise<User> {
     xp: profile.xp,
     tier: profile.tier,
     has_api_key: profile.has_api_key,
+    unlocked_badges: profile.unlocked_badges,
+    custom_username_color: profile.custom_username_color,
   };
 }
 

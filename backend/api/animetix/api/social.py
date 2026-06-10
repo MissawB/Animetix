@@ -132,8 +132,40 @@ class ProfileViewSet(viewsets.ModelViewSet):
         if tier in dict(Profile.TIERS).keys():
             profile.tier = tier
 
+        custom_color = request.data.get('custom_username_color')
+        if custom_color is not None:
+            badges = list(profile.unlocked_badges) if isinstance(profile.unlocked_badges, list) else []
+            if "Sponsor Or" in badges:
+                import re
+                if custom_color == "" or re.match(r'^#(?:[0-9a-fA-F]{3}){1,2}$', custom_color):
+                    profile.custom_username_color = custom_color or None
+                else:
+                    return Response({"error": "Invalid color format. Use hex color e.g. #FFD700"}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({"error": "Vous devez soutenir le serveur pour personnaliser votre couleur de pseudo."}, status=status.HTTP_403_FORBIDDEN)
+
         profile.save()
-        return Response({'status': 'updated', 'tier': profile.tier})
+        return Response({
+            'status': 'updated', 
+            'tier': profile.tier, 
+            'custom_username_color': profile.custom_username_color,
+            'unlocked_badges': profile.unlocked_badges
+        })
+
+    @action(detail=False, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def claim_donation(self, request):
+        profile = request.user.profile
+        badges = list(profile.unlocked_badges) if isinstance(profile.unlocked_badges, list) else []
+        if "Sponsor Or" not in badges:
+            badges.append("Sponsor Or")
+            profile.unlocked_badges = badges
+        
+        if not profile.custom_username_color:
+            profile.custom_username_color = "#FFD700"
+            
+        profile.save()
+        serializer = self.get_serializer(profile)
+        return Response(serializer.data)
 
     @action(detail=False, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def refill_quota(self, request):

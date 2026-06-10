@@ -49,6 +49,9 @@ class Profile(models.Model):
     collected_fusions = models.ManyToManyField('CreativeFusion', related_name='collected_by_profiles', blank=True)
     tier = models.CharField(max_length=20, choices=TIERS, default='free')
     api_key_hash = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    stripe_customer_id = models.CharField(max_length=255, null=True, blank=True, db_index=True)
+    stripe_subscription_id = models.CharField(max_length=255, null=True, blank=True)
+    stripe_subscription_item_id = models.CharField(max_length=255, null=True, blank=True)
     personalization_settings = models.JSONField(default=dict, blank=True)
     
     def set_api_key(self, raw_key: str):
@@ -225,6 +228,17 @@ class AITokenUsage(models.Model):
     cost_estimate = models.FloatField(default=0.0) # In USD or native currency
     created_at = models.DateTimeField(auto_now_add=True)
     def __str__(self): return f"{self.engine} usage by {self.user.username if self.user else 'Guest'}"
+
+class AdEvent(models.Model):
+    EVENT_TYPES = [('impression', 'Impression'), ('click', 'Click')]
+    AD_TYPES = [('video', 'Video'), ('banner', 'Banner')]
+
+    event_type = models.CharField(max_length=20, choices=EVENT_TYPES)
+    ad_type = models.CharField(max_length=20, choices=AD_TYPES)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.ad_type} {self.event_type} at {self.created_at}"
 
 # --- ACHIEVEMENTS & FEEDBACK ---
 

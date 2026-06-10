@@ -19,6 +19,7 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   checkAuth: () => Promise<void>;
+  refetchUser: () => Promise<void>;
   login: (data: Record<string, any>) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   loginWithDiscord: () => Promise<void>;
@@ -34,6 +35,14 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,
   isLoading: true,
+  refetchUser: async () => {
+    try {
+      const user = await getAuthUser();
+      set({ user, isAuthenticated: true });
+    } catch (error) {
+      console.error("Failed to refetch user data:", error);
+    }
+  },
   checkAuth: async () => {
     if (authListenerInitialized) return;
     authListenerInitialized = true;

@@ -44,8 +44,8 @@ urlpatterns = [
     path('labs/video/fatezero/', api_views.VideoFateZeroLabView.as_view(), name='api_video_fatezero_lab'),
     path('labs/video/index/', api_views.VideoRAGIndexView.as_view(), name='api_video_rag_index'),
     path('labs/video/search/', api_views.VideoRAGSearchView.as_view(), name='api_video_rag_search'),
-    # path('labs/soundscape/', api_views.SoundscapeLabDataView.as_view(), name='api_soundscape_lab'),
-    # path('labs/s2s/', api_views.SpeechToSpeechLabDataView.as_view(), name='api_s2s_lab'),
+    path('labs/soundscape/', api_views.SoundscapeGenerationView.as_view(), name='api_soundscape_lab'),
+    path('labs/s2s/', api_views.SpeechToSpeechLabView.as_view(), name='api_s2s_lab'),
     path('labs/liquid-nn/', api_views.LiquidNeuralNetworkLabView.as_view(), name='api_liquid_nn_lab'),
     path('labs/tot/', api_views.TreeOfThoughtsLabView.as_view(), name='api_tot_lab'),
     path('labs/voice-cloning/', api_views.VoiceCloningLabView.as_view(), name='api_voice_cloning'),
@@ -105,9 +105,16 @@ urlpatterns = [
     path('explore/', api_views.MediaExploreView.as_view(), name='api_explore'),
     path('multiverse/gallery/', api_views.MultiverseGalleryView.as_view(), name='api_multiverse_gallery'),
     path('billing/webhook/', billing_alert_webhook, name='api_billing_webhook'),
+    path('billing/log_ad_event/', api_views.AdEventLoggingAPIView.as_view(), name='api_log_ad_event'),
     path('admin/ttc-monitoring/', api_views.TTCMonitoringAPIView.as_view(), name='api_ttc_monitoring'),
     path('admin/users/', api_views.UserManagementViewSet.as_view({'get': 'list'}), name='api_admin_users'),
     path('admin/users/<int:pk>/toggle-staff/', api_views.UserManagementViewSet.as_view({'post': 'toggle_staff'}), name='api_admin_toggle_staff'),
     path('admin/users/<int:pk>/toggle-active/', api_views.UserManagementViewSet.as_view({'post': 'toggle_active'}), name='api_admin_toggle_active'),
+    
+    # --- B2B DEVELOPER PAID API & STRIPE BILLING ---
+    path('developer/rag/', api_views.DeveloperRAGView.as_view(), name='developer_rag'),
+    path('developer/subscribe/', api_views.DeveloperSubscriptionMockView.as_view(), name='developer_subscribe'),
+    path('developer/api-key/', api_views.DeveloperApiKeyView.as_view(), name='developer_api_key'),
+    path('developer/webhook/stripe/', api_views.StripeWebhookView.as_view(), name='developer_webhook_stripe'),
 ]
 

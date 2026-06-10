@@ -1,5 +1,6 @@
 import logging
-from typing import List, Dict, Optional, Any
+import numpy as np
+from typing import List, Dict, Optional, Any, Tuple
 from .akinetix_engine import AkinetixEngine
 from .catalog_service import CatalogService
 from core.ports.game_state_port import GameStatePort
@@ -7,15 +8,60 @@ from ..entities.akinetix import AkinetixGameState, AkinetixQuestion
 
 logger = logging.getLogger('animetix.akinetix')
 
-class AkinetixDomainService:
+class AkinetixService:
     """
     Service de domaine orchestrant le jeu Akinetix.
     Utilise désormais AkinetixEngine pour la logique algorithmique.
+    Supports local state for backward compatibility with ClassicalAkinetixService.
     """
     
-    def __init__(self, catalog_service: CatalogService, engine: Optional[AkinetixEngine] = None):
+    def __init__(self, 
+                 catalog_service: CatalogService, 
+                 engine: Optional[AkinetixEngine] = None,
+                 catalog_db: Optional[List[Dict]] = None,
+                 probs: Optional[List[float]] = None,
+                 asked_attributes: Optional[List[str]] = None):
         self.catalog_service = catalog_service
         self.engine = engine or AkinetixEngine(catalog_service)
+        
+        # Local state compatibility for legacy callers / tests
+        self.catalog_db = catalog_db
+        if self.catalog_db is not None:
+            fine_attrs = self.catalog_service.get_akinetix_attributes()
+            self.items, self.attributes = self.engine._prepare_classical_data(self.catalog_db, fine_attrs)
+            self.n_items = len(self.items)
+            if probs is not None and len(probs) == self.n_items:
+                self.probs = np.array(probs)
+            else:
+                self.probs = np.full(self.n_items, 1.0 / self.n_items) if self.n_items > 0 else np.array([])
+            self.asked_attributes = set(asked_attributes) if asked_attributes else set()
+
+    def update_probabilities(self, attribute: str, answer: str):
+        if self.catalog_db is None:
+            raise ValueError("Stateful operation requires catalog_db")
+        fine_attrs = self.catalog_service.get_akinetix_attributes()
+        mapped_answer = answer.lower()
+        self.probs = self.engine._update_classical_probs(self.items, self.probs, attribute, mapped_answer, fine_attrs)
+        self.asked_attributes.add(attribute)
+
+    def propose_next_question(self) -> Optional[str]:
+        if self.catalog_db is None:
+            raise ValueError("Stateful operation requires catalog_db")
+        fine_attrs = self.catalog_service.get_akinetix_attributes()
+        return self.engine._propose_classical_question(self.items, self.attributes, self.probs, self.asked_attributes, fine_attrs)
+
+    def get_best_guess(self) -> Tuple[str, float]:
+        if self.catalog_db is None:
+            raise ValueError("Stateful operation requires catalog_db")
+        return self.engine._get_classical_best_guess(self.items, self.probs)
+
+    def get_probabilities(self) -> Dict[str, float]:
+        if self.catalog_db is None:
+            raise ValueError("Stateful operation requires catalog_db")
+        return { (item.get('title') or item.get('name', 'Inconnu')): prob for item, prob in zip(self.items, self.probs) }
+
+    def format_question(self, attribute: str) -> str:
+        return self.engine.formatter.format(attribute)
 
     def start_new_game(self, catalog_db: List[Dict], mode: str = "classical") -> AkinetixGameState:
         """Initialise une nouvelle partie et retourne l'état initial."""

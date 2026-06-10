@@ -17,16 +17,33 @@ import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion, AnimatePresence } from 'framer-motion';
 
+import { Select } from "../../components/ui/Select";
+
+interface QuantumResult {
+  probability: number;
+  outcome: boolean;
+  state_vector: string[];
+}
+
+interface QuantumMutationBody {
+  action: 'quantum';
+  theme: string;
+  jitLevel: string;
+  plasticity: string;
+}
+
 const QuantumLabPage: React.FC = () => {
   const [quantumTheme, setQuantumTheme] = useState('shonen');
-  const [quantumResult, setQuantumResult] = useState<any | null>(null);
+  const [jitLevel, setJitLevel] = useState('basic');
+  const [plasticity, setPlasticity] = useState('medium');
+  const [quantumResult, setQuantumResult] = useState<QuantumResult | null>(null);
 
   const quantumMutation = useMutation({
-    mutationFn: (body: any) => apiClient('/api/v1/singularity-lab/', { 
+    mutationFn: (body: QuantumMutationBody) => apiClient('/api/v1/singularity-lab/', { 
         method: 'POST', 
         body: JSON.stringify(body) 
     }),
-    onSuccess: (data) => setQuantumResult(data)
+    onSuccess: (data: QuantumResult) => setQuantumResult(data)
   });
 
   return (
@@ -61,23 +78,47 @@ const QuantumLabPage: React.FC = () => {
                       </h3>
 
                       <div className="space-y-8">
-                          <div className="space-y-4">
-                              <label className="text-[10px] font-black opacity-30 uppercase tracking-[0.2em] px-2">Observable Thématique</label>
-                              <select 
-                                  value={quantumTheme} 
-                                  onChange={(e) => setQuantumTheme(e.target.value)} 
-                                  className="w-full bg-black border-2 border-white/5 rounded-2xl px-6 py-4 text-sm font-bold text-white outline-none focus:border-purple-500 transition-all"
-                              >
-                                  <option value="shonen">SHONEN</option>
-                                  <option value="seinen">SEINEN</option>
-                                  <option value="ghibli">GHIBLI</option>
-                                  <option value="comedy">COMEDY</option>
-                                  <option value="cyberpunk">CYBERPUNK</option>
-                              </select>
-                          </div>
+                          <Select 
+                              id="theme"
+                              label="Observable Thématique"
+                              value={quantumTheme} 
+                              onChange={setQuantumTheme} 
+                              options={[
+                                { value: 'shonen', label: 'SHONEN' },
+                                { value: 'seinen', label: 'SEINEN' },
+                                { value: 'ghibli', label: 'GHIBLI' },
+                                { value: 'comedy', label: 'COMEDY' },
+                                { value: 'cyberpunk', label: 'CYBERPUNK' },
+                              ]}
+                          />
+
+                          <Select 
+                              id="jit-level"
+                              label="JIT Level"
+                              value={jitLevel} 
+                              onChange={setJitLevel} 
+                              options={[
+                                { value: 'none', label: 'NONE' },
+                                { value: 'basic', label: 'BASIC' },
+                                { value: 'aggressive', label: 'AGGRESSIVE' },
+                              ]}
+                          />
+
+                          <Select 
+                              id="plasticity"
+                              label="Plasticity"
+                              value={plasticity} 
+                              onChange={setPlasticity} 
+                              options={[
+                                { value: 'low', label: 'LOW' },
+                                { value: 'medium', label: 'MEDIUM' },
+                                { value: 'high', label: 'HIGH' },
+                                { value: 'dynamic', label: 'DYNAMIC' },
+                              ]}
+                          />
 
                           <Button 
-                              onClick={() => quantumMutation.mutate({ action: 'quantum', theme: quantumTheme })} 
+                              onClick={() => quantumMutation.mutate({ action: 'quantum', theme: quantumTheme, jitLevel, plasticity })} 
                               disabled={quantumMutation.isPending} 
                               className="w-full bg-purple-600 hover:bg-purple-500 text-white py-6 rounded-2xl font-black italic text-lg uppercase shadow-xl hover:scale-105 active:scale-95 transition-all border-none"
                           >

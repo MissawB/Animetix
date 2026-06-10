@@ -104,10 +104,3 @@ class AkinetixRLEnvironment:
 
         return self._get_state(), reward, terminated, truncated, {"information_gain": information_gain}
 
-class AkinetixRLService:
-    def __init__(self, catalog_service):
-        self.catalog_service = catalog_service
-
-    def create_env(self, media_type: str) -> AkinetixRLEnvironment:
-        catalog = self.catalog_service.load_catalog(media_type)
-        return AkinetixRLEnvironment(catalog['db'])

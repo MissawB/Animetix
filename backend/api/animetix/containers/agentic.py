@@ -17,12 +17,13 @@ from core.domain.services.rag.agents import (
     ResponseJudge, ScoutAgent, SemanticRouter, 
     RetrievalEvaluator, ContextCompressor
 )
-from core.domain.services.rag_workflow_manager import RAGWorkflowManager
+
 from core.domain.services.agentic_rag_service import AgenticRAGService
 from pipeline.mlops.graph_community_partitioner import GraphCommunityPartitioner
 from core.domain.services.long_term_memory_service import LongTermMemoryService
 from core.domain.services.semantic_cache_service import SemanticCacheService
 from core.domain.services.xai_service import XaiDiagnosticService
+from core.domain.entities.ai_schemas import RAGState
 from adapters.mlops_adapter import MlopsAdapter
 
 class AgenticContainer(containers.DeclarativeContainer):
@@ -155,32 +156,36 @@ class AgenticContainer(containers.DeclarativeContainer):
         prompt_manager=infrastructure.prompt_manager
     )
 
-    rag_workflow_manager = providers.Singleton(
-        RAGWorkflowManager,
-        planner=planner,
-        critic=critic,
-        synthesizer=synthesizer,
-        judge=judge,
-        scout=scout,
-        semantic_router=semantic_router,
-        retrieval_evaluator=retrieval_evaluator,
-        community_partitioner=community_partitioner,
-        graph_expert=graph_expert,
-        debate_manager=debate_manager,
-        librarian=librarian,
-        forge=forge,
-        saga_agent=saga_agent,
-        chronicler=chronicler,
-        xai_service=xai_service,
-        inference_engine=inference.inference_engine,
-        web_search=infrastructure.web_search,
-        prompt_manager=infrastructure.prompt_manager,
-        rag_service=rag_service,
-        neo4j_manager=persistence.graph_persistence_port,
-        context_compressor=context_compressor,
-        mlops_port=mlops_adapter_factory,
-        colbert_adapter=persistence.colbert_adapter,
-        video_rag_service=video_rag_service
+    from core.domain.services.rag_orchestrator import RAGOrchestrator
+    from core.domain.services.rag.processors.plan_processor import PlanProcessor
+    from core.domain.services.rag.processors.saga_lookup_processor import SagaLookupProcessor
+    from core.domain.services.rag.processors.graph_explore_processor import GraphExploreProcessor
+    from core.domain.services.rag.processors.research_processor import ResearchProcessor
+    from core.domain.services.rag.processors.acquire_knowledge_processor import AcquireKnowledgeProcessor
+    from core.domain.services.rag.processors.speculate_processor import SpeculateProcessor
+    from core.domain.services.rag.processors.vlm_rerank_processor import VlmRerankProcessor
+    from core.domain.services.rag.processors.synthesize_processor import SynthesizeProcessor
+    from core.domain.services.rag.processors.judge_processor import JudgeProcessor
+    from core.domain.services.rag.processors.fallback_rag_processor import FallbackRagProcessor
+
+    rag_processors = providers.Dict(
+        {
+            RAGState.PLAN: providers.Singleton(PlanProcessor, planner=planner),
+            RAGState.SAGA_LOOKUP: providers.Singleton(SagaLookupProcessor, saga_agent=saga_agent),
+            RAGState.GRAPH_EXPLORE: providers.Singleton(GraphExploreProcessor, community_partitioner=community_partitioner, graph_expert=graph_expert, neo4j_manager=persistence.graph_persistence_port, xai_collector=None),
+            RAGState.RESEARCH: providers.Singleton(ResearchProcessor, planner=planner, web_search=infrastructure.web_search, retrieval_evaluator=retrieval_evaluator, context_compressor=context_compressor, scout=scout, video_rag_service=video_rag_service, xai_collector=None),
+            RAGState.ACQUIRE_KNOWLEDGE: providers.Singleton(AcquireKnowledgeProcessor, librarian=librarian, xai_collector=None),
+            RAGState.SPECULATE: providers.Singleton(SpeculateProcessor, forge=forge, xai_collector=None),
+            RAGState.VLM_RERANK: providers.Singleton(VlmRerankProcessor, inference_engine=inference.inference_engine, prompt_manager=infrastructure.prompt_manager, xai_collector=None),
+            RAGState.SYNTHESIZE: providers.Singleton(SynthesizeProcessor, synthesizer=synthesizer, xai_service=xai_service, rag_service=rag_service),
+            RAGState.JUDGE: providers.Singleton(JudgeProcessor, debate_manager=debate_manager, xai_collector=None),
+            RAGState.FALLBACK_RAG: providers.Singleton(FallbackRagProcessor, rag_service=rag_service, inference_engine=inference.inference_engine, expert_facts=[]),
+        }
+    )
+
+    rag_orchestrator = providers.Singleton(
+        RAGOrchestrator,
+        processors=rag_processors
     )
 
     memory_service = providers.Singleton(
@@ -203,7 +208,7 @@ class AgenticContainer(containers.DeclarativeContainer):
         web_search=infrastructure.web_search,
         prompt_manager=infrastructure.prompt_manager,
         llm_service=llm_service,
-        workflow_manager=rag_workflow_manager,
+        workflow_orchestrator=rag_orchestrator,
         neo4j_manager=persistence.graph_persistence_port,
         memory_service=memory_service,
         semantic_cache=semantic_cache_service,

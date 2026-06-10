@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Sum
-from ..models import DataCurationTicket, AITokenUsage
+from ..models import DataCurationTicket, AITokenUsage, AdEvent
 from ..serializers import DataCurationTicketSerializer, UserAdminSerializer
 from django.contrib.auth.models import User
 
@@ -85,3 +85,22 @@ class TTCMonitoringAPIView(APIView):
                 } for l in recent_logs
             ]
         })
+
+class AdEventLoggingAPIView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        event_type = request.data.get("event_type")
+        ad_type = request.data.get("ad_type")
+        
+        valid_events = dict(AdEvent.EVENT_TYPES)
+        valid_ads = dict(AdEvent.AD_TYPES)
+        
+        if event_type not in valid_events or ad_type not in valid_ads:
+            return response.Response({"error": "Invalid event_type or ad_type"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        event = AdEvent.objects.create(
+            event_type=event_type,
+            ad_type=ad_type
+        )
+        return response.Response({"status": "logged", "id": event.id}, status=status.HTTP_201_CREATED)

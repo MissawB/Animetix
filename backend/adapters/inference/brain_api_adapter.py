@@ -67,17 +67,47 @@ class BrainAPIAdapter(InferencePort):
             raise
 
     def stream_generate(
-        self, 
-        prompt: str, 
-        system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.", 
-        thinking_budget: int = 0, 
-        thinking_mode: bool = False, 
+        self,
+        prompt: str,
+        system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.",
+        thinking_budget: int = 0,
+        thinking_mode: bool = False,
         include_logprobs: bool = False,
         **kwargs
     ):
         """Appelle l'API Brain pour générer du texte en streaming."""
-        # Pour le moment, fallback sur generate non-streamé si non implémenté côté serveur
-        yield self.generate(prompt, system_prompt, thinking_budget, thinking_mode, include_logprobs, **kwargs)
+        if not self.api_url:
+            raise ValueError("Brain API URL not configured")
+
+        payload = {
+            "prompt": prompt,
+            "system_prompt": system_prompt,
+            "thinking_budget": thinking_budget,
+            "thinking_mode": thinking_mode,
+            "include_logprobs": include_logprobs,
+            **kwargs
+        }
+
+        try:
+            with httpx.stream(
+                "POST",
+                f"{self.api_url}/stream_generate", # Assuming a dedicated streaming endpoint
+                json=payload,
+                headers=self._get_headers(),
+                timeout=None # Streaming responses can take a long time
+            ) as response:
+                response.raise_for_status()
+                for chunk in response.iter_text(): # Or iter_bytes() if chunks are not text
+                    yield chunk
+        except httpx.HTTPStatusError as e:
+            logger.error(f"BrainAPI Streaming Generation HTTP error: {e}")
+            raise
+        except httpx.RequestError as e:
+            logger.error(f"BrainAPI Streaming Generation network error: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"BrainAPI Streaming Generation failed: {e}")
+            raise
 
     def get_text_embedding(self, text: str) -> List[float]:
         """Appelle l'API Brain pour générer un embedding."""

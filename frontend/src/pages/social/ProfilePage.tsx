@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { User, Shield, Zap, Award, ArrowRight, Brain } from 'lucide-react';
+import { User, Shield, Zap, Award, ArrowRight, Brain, Sparkles } from 'lucide-react';
 import { useProfile } from '../../features/social/hooks/useProfile';
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
@@ -57,7 +57,12 @@ const ProfilePage: React.FC = () => {
                   {username?.[0].toUpperCase()}
                 </div>
                 <div className="text-center md:text-left">
-                  <h1 className="text-5xl font-black italic manga-font tracking-tighter mb-2 uppercase drop-shadow-sm">{username}</h1>
+                  <h1 
+                    className="text-5xl font-black italic manga-font tracking-tighter mb-2 uppercase drop-shadow-sm animate-in fade-in duration-300"
+                    style={{ color: profile.custom_username_color || undefined }}
+                  >
+                    {username}
+                  </h1>
                   <div className="flex flex-wrap justify-center md:justify-start gap-4">
                     <Badge variant="neutral" className="bg-black text-white border-none py-2 px-4 shadow-lg">
                       <Shield className="w-3 h-3" /> {t('social.profile.rank', { rank: profile.rank || 'Explorateur' })}
@@ -65,6 +70,11 @@ const ProfilePage: React.FC = () => {
                     <Badge variant="neutral" className="bg-white/30 backdrop-blur-md text-black border-none py-2 px-4 shadow-lg">
                       <Zap className="w-3 h-3" /> {t('social.profile.level', { level: profile.level })}
                     </Badge>
+                    {profile.unlocked_badges?.includes('Sponsor Or') && (
+                      <Badge variant="neutral" className="bg-gradient-to-r from-yellow-400 to-amber-500 text-black border-none py-2 px-4 shadow-lg font-black animate-pulse flex items-center gap-1.5">
+                        <Sparkles className="w-3 h-3 text-black animate-spin" style={{ animationDuration: '3s' }} /> SPONSOR OR
+                      </Badge>
+                    )}
                   </div>
                 </div>
               </div>

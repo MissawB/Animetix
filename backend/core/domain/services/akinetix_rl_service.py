@@ -1,27 +1,23 @@
 import logging
 import numpy as np
-import warnings
 from typing import List, Dict, Optional, Tuple
 from .akinetix_rl_env import AkinetixRLEnvironment
 from .catalog_service import CatalogService
 
 logger = logging.getLogger("animetix.rl.service")
 
-class AkinetixRLDomainService:
+class AkinetixRLService:
     """
-    DEPRECATED: Service de domaine utilisant l'IA par renforcement pour Akinetix.
-    Utilisez AkinetixEngine à la place.
+    Service de domaine utilisant l'IA par renforcement pour Akinetix.
     """
     def __init__(self, catalog_service: CatalogService):
-        warnings.warn(
-            "AkinetixRLDomainService is deprecated and will be removed in a future version. "
-            "Please use src.core.domain.services.akinetix_engine.AkinetixEngine instead.",
-            DeprecationWarning,
-            stacklevel=2
-        )
         self.catalog_service = catalog_service
         self._model = None
         self._is_ready = False
+
+    def create_env(self, media_type: str) -> AkinetixRLEnvironment:
+        catalog = self.catalog_service.get_catalog(media_type)
+        return AkinetixRLEnvironment(catalog['db'])
 
     def start_new_game(self, catalog_db: List[Dict]) -> Dict:
         """Initialise une nouvelle partie RL."""

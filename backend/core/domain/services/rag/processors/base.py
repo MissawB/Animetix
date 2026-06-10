@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
-from backend.core.domain.entities.ai_schemas import RAGContext, RAGState
+from typing import Generator
+from backend.core.domain.entities.ai_schemas import RAGContext, RAGState, StreamStep
 
 class StateProcessor(ABC):
     @abstractmethod
-    def process(self, ctx: RAGContext) -> RAGState:
-        """Processes the state and returns the next RAGState."""
+    def process(self, ctx: RAGContext) -> Generator[StreamStep, None, RAGState]:
+        """Processes the state and yields StreamSteps, returning the next RAGState."""
         pass

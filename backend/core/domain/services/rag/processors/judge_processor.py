@@ -1,5 +1,6 @@
 from backend.core.domain.services.rag.processors.base import StateProcessor
-from backend.core.domain.entities.ai_schemas import RAGContext, RAGState, JudgeAction
+from backend.core.domain.entities.ai_schemas import RAGContext, RAGState, StreamStep, JudgeAction
+from typing import Generator
 import logging
 
 logger = logging.getLogger('animetix.rag_workflow')
@@ -9,8 +10,8 @@ class JudgeProcessor(StateProcessor):
         self.debate_manager = debate_manager
         self.xai_collector = xai_collector
 
-    def process(self, ctx: RAGContext) -> RAGState:
-        # Based on RAGWorkflowManager._handle_judge
+    def process(self, ctx: RAGContext) -> Generator[StreamStep, None, RAGState]:
+        yield StreamStep(type="thought", content="[Swarm] Début du débat multi-agents...").model_dump()
         outcome = self.debate_manager.conduct_debate(
             ctx.query, 
             ctx.truth_path, 
@@ -22,8 +23,15 @@ class JudgeProcessor(StateProcessor):
         if self.xai_collector:
             self.xai_collector.log_agent_thought("ResponseJudge", f"Consensus : {outcome.consensus_action}. Raisonnement : {outcome.final_reasoning}")
             
+        yield StreamStep(
+            type="thought", 
+            content=f"[Swarm] Consensus : {outcome.consensus_action}. Raisonnement : {outcome.final_reasoning}"
+        ).model_dump()
+        yield StreamStep(type="eval", content=outcome.model_dump()).model_dump()
+        
         action = outcome.consensus_action
         if ctx.iteration >= 10 and action == JudgeAction.REWRITE:
+            yield StreamStep(type="thought", content="[Swarm] Seuil de correction atteint. Livraison de la meilleure réponse actuelle.").model_dump()
             return RAGState.FINALIZE
         
         if action == JudgeAction.APPROVE:
@@ -33,6 +41,7 @@ class JudgeProcessor(StateProcessor):
             return RAGState.SYNTHESIZE
         elif action == JudgeAction.RESEARCH_MORE:
             if len(ctx.truth_path) < 200 and not ctx.knowledge_acquired:
+                yield StreamStep(type="thought", content="[Judge] Contexte local insuffisant. Bascule vers Librarian pour chercher des infos fraîches...").model_dump()
                 return RAGState.ACQUIRE_KNOWLEDGE
             else:
                 return RAGState.RESEARCH

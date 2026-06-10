@@ -9,7 +9,7 @@ import './App.css';
 
 const App: React.FC = () => {
   return (
-    <div className="w-full bg-transparent transition-colors duration-500 bg-manga-overlay">
+    <div className="w-full bg-transparent transition-colors duration-500 bg-manga-overlay home-bg">
         <div className="hero-bg w-full transition-all duration-500 shadow-sm border-b border-gray-100/10 dark:border-navy-950/10">
           <HeroSection />
         </div>

@@ -3,17 +3,19 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Check, Shield, Zap, Sparkles, X, Activity } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from "../../store/authStore";
-import { updateAccountSettings, apiClient } from '../../api';
+import { updateAccountSettings } from '../../api';
+import { apiClient } from '../../utils/apiClient';
 import { useToastStore } from "../../store/toastStore";
 import { Button } from "../../components/ui/Button";
 import { SponsorStreamModal } from '../../features/billing/components/SponsorStreamModal';
 import { SimulatedAdBanner } from '../../features/billing/components/SimulatedAdBanner';
 
 export const PricingPage: React.FC = () => {
-  const { user, checkAuth } = useAuthStore();
+  const { user, checkAuth, refetchUser } = useAuthStore();
   const navigate = useNavigate();
   const { addToast } = useToastStore();
   const [activeModal, setActiveModal] = useState<'boost' | 'refill' | null>(null);
+  const [isClaiming, setIsClaiming] = useState(false);
 
   const handleConfirmBoost = async () => {
     try {
@@ -45,6 +47,24 @@ export const PricingPage: React.FC = () => {
       return;
     }
     setActiveModal(type);
+  };
+
+  const handleClaimDonation = async () => {
+    if (!user) {
+      navigate('/login?redirect=/pricing/');
+      return;
+    }
+    setIsClaiming(true);
+    try {
+      await apiClient('/api/v1/profiles/claim_donation/', { method: 'POST' });
+      await refetchUser();
+      addToast("Merci pour votre soutien ! Badge Sponsor Or et couleur de pseudo débloqués.", "success");
+    } catch (error) {
+      console.error('Failed to claim donation:', error);
+      addToast("Erreur lors de la validation du don.", "error");
+    } finally {
+      setIsClaiming(false);
+    }
   };
 
   return (
@@ -148,6 +168,59 @@ export const PricingPage: React.FC = () => {
           </motion.div>
         </div>
 
+        {/* Financement Participatif */}
+        <div className="max-w-4xl mx-auto bg-gradient-to-r from-amber-500/10 via-yellow-500/5 to-transparent border border-yellow-500/20 p-8 rounded-3xl space-y-6 relative overflow-hidden shadow-[0_0_50px_rgba(245,158,11,0.05)]">
+          <div className="absolute top-0 right-0 p-8 opacity-5">
+            <Sparkles className="w-48 h-48 text-yellow-500" />
+          </div>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+            <div className="space-y-3 max-w-xl">
+              <span className="bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 w-fit">
+                <Sparkles className="w-3.5 h-3.5" /> Soutenir Animetix
+              </span>
+              <h3 className="text-2xl font-black italic uppercase tracking-tight manga-font text-white">
+                Financement Participatif (Dons)
+              </h3>
+              <p className="text-xs text-gray-400 leading-relaxed">
+                Aidez-nous à payer les serveurs et les APIs de modèles d'IA ! En guise de remerciement, vous débloquerez un badge exclusif <span className="text-yellow-400 font-bold">"Sponsor Or"</span> sur votre profil public ainsi que la possibilité de <span className="text-yellow-400 font-bold">personnaliser la couleur de votre pseudo</span>.
+              </p>
+            </div>
+            <div className="flex flex-col gap-3 min-w-[240px]">
+              <a
+                href="https://ko-fi.com/animetix"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2.5 bg-[#FF5E5B] hover:bg-[#ff4c48] text-white font-black uppercase tracking-wider text-xs py-3.5 px-6 rounded-2xl shadow-lg shadow-[#FF5E5B]/15 transition-all text-center no-underline hover:scale-[1.02]"
+              >
+                ☕ Soutenir sur Ko-fi
+              </a>
+              <a
+                href="https://patreon.com/animetix"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2.5 bg-[#FF424D] hover:bg-[#e03a44] text-white font-black uppercase tracking-wider text-xs py-3.5 px-6 rounded-2xl shadow-lg shadow-[#FF424D]/15 transition-all text-center no-underline hover:scale-[1.02]"
+              >
+                🎁 Devenir Patron (Patreon)
+              </a>
+            </div>
+          </div>
+          
+          <div className="border-t border-white/5 pt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <p className="text-[10px] font-black uppercase text-gray-400">Déjà donateur ?</p>
+              <p className="text-xs text-gray-500">Récupérez et appliquez instantanément vos cosmétiques en simulant la validation ci-contre.</p>
+            </div>
+            <Button
+              variant="outline"
+              className="border-yellow-500/30 text-yellow-500 hover:bg-yellow-500 hover:text-black font-black uppercase italic tracking-wider py-4 px-6 text-xs"
+              onClick={handleClaimDonation}
+              disabled={isClaiming}
+            >
+              {isClaiming ? "Vérification..." : user?.unlocked_badges?.includes("Sponsor Or") ? "COSMÉTIQUES DÉBLOQUÉS !" : "Valider mon don & débloquer"}
+            </Button>
+          </div>
+        </div>
+
         {/* Espace Développeur */}
         <div className="max-w-4xl mx-auto border border-red-500/20 bg-red-950/5 p-6 rounded-3xl flex justify-between items-center">
           <div className="space-y-1">
@@ -163,6 +236,7 @@ export const PricingPage: React.FC = () => {
         <div className="max-w-md mx-auto">
           <SimulatedAdBanner />
         </div>
+
       </div>
 
       <AnimatePresence>

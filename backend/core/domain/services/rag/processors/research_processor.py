@@ -1,6 +1,6 @@
 from backend.core.domain.services.rag.processors.base import StateProcessor
 from backend.core.domain.entities.ai_schemas import RAGContext, RAGState
-from backend.core.exceptions import InfrastructureError, InferenceError
+from backend.core.domain.exceptions import InfrastructureError, InferenceError
 import logging
 import time
 

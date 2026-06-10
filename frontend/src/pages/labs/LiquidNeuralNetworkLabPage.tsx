@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import _Plot from 'react-plotly.js';
 import { 
   Cpu, 
@@ -9,7 +10,8 @@ import {
   Layers,
   FlaskConical,
   Play,
-  Settings
+  Settings,
+  Brain
 } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { apiClient } from "../../utils/apiClient";
@@ -22,6 +24,7 @@ import { motion } from 'framer-motion';
 const Plot = (_Plot as any).default || _Plot;
 
 const LiquidNeuralNetworkLabPage: React.FC = () => {
+  const { t } = useTranslation();
   const [signal, setSignal] = useState<number[][]>([[0.5, 0.2], [0.8, 0.4], [0.3, 0.9], [0.6, 0.1], [0.9, 0.7]]);
   const [dt, setDt] = useState(0.05);
   const [simulationResult, setSimulationResult] = useState<any>(null);
@@ -74,13 +77,13 @@ const LiquidNeuralNetworkLabPage: React.FC = () => {
         {/* Header */}
         <header className="mb-16 text-center">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] font-black uppercase tracking-widest text-blue-500 mb-4">
-                <FlaskConical className="w-3 h-3" /> Neuromorphic Engineering
+                <FlaskConical className="w-3 h-3" /> {t('labs.liquid_nn.subtitle')}
             </div>
             <h1 className="text-7xl font-black italic manga-font tracking-tighter uppercase mb-4 text-glow">
                 LIQUID <span className="text-blue-500">LAB</span>
             </h1>
             <p className="text-xl font-bold opacity-30 uppercase tracking-[0.3em] max-w-2xl mx-auto leading-relaxed">
-                Simulation de réseaux de neurones liquides (LNN) résolvant des ODEs en temps réel.
+                {t('labs.liquid_nn.title')}
             </p>
         </header>
 
@@ -216,8 +219,35 @@ const LiquidNeuralNetworkLabPage: React.FC = () => {
             </div>
         </div>
 
+        {/* Explainer Section */}
+        <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8">
+          <Card padding="lg" className="bg-black/40 border-blue-500/20 shadow-[0_0_50px_rgba(59,130,246,0.1)] relative overflow-hidden group">
+            <div className="absolute -right-12 -bottom-12 opacity-5 group-hover:opacity-10 transition-opacity">
+              <Brain className="w-64 h-64 text-blue-500" />
+            </div>
+            <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3 text-blue-400">
+              <Brain className="w-5 h-5" /> {t('labs.liquid_nn.explainer_title')}
+            </h4>
+            <div className="space-y-4 relative z-10">
+              <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
+                {t('labs.liquid_nn.explainer_text_card1')}
+              </p>
+              <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
+                {t('labs.liquid_nn.explainer_text_card2')}
+              </p>
+            </div>
+          </Card>
+
+          <div className="p-12 rounded-[4rem] bg-gradient-to-br from-blue-600/10 to-transparent border border-white/5 flex flex-col justify-center text-center">
+            <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30 italic leading-relaxed text-blue-200/40">
+              {t('labs.liquid_nn.protocol_text')}
+            </p>
+          </div>
+        </div>
+
         {/* Status Bar */}
         <div className="mt-24 p-12 rounded-[4rem] bg-gradient-to-br from-blue-600/10 to-transparent border border-white/5 flex flex-col md:flex-row items-center justify-between gap-8">
+
             <div className="flex items-center gap-6">
                 <div className="p-4 bg-blue-500/20 rounded-2xl">
                     <Cpu className="w-8 h-8 text-blue-500" />
@@ -238,5 +268,3 @@ const LiquidNeuralNetworkLabPage: React.FC = () => {
 };
 
 export default LiquidNeuralNetworkLabPage;
-
-

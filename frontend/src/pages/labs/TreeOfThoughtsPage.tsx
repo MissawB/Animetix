@@ -7,7 +7,8 @@ import {
   Info,
   X,
   Target,
-  Network
+  Network,
+  Sparkles
 } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import _ForceGraph2D from 'react-force-graph-2d';
@@ -303,7 +304,8 @@ const TreeOfThoughtsPage: React.FC = () => {
         </div>
       </div>
     </AnimatedPage>
-  );
+  </div>
+);
 };
 
 export default TreeOfThoughtsPage;

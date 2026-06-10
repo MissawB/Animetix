@@ -1,6 +1,7 @@
 from backend.core.domain.services.rag.processors.base import StateProcessor
-from backend.core.domain.entities.ai_schemas import RAGContext, RAGState
-from backend.core.exceptions import InferenceError, InfrastructureError
+from backend.core.domain.entities.ai_schemas import RAGContext, RAGState, StreamStep
+from backend.core.domain.exceptions import InferenceError, InfrastructureError
+from typing import Generator
 import logging
 
 logger = logging.getLogger('animetix.rag_workflow')
@@ -11,8 +12,8 @@ class VlmRerankProcessor(StateProcessor):
         self.inference_engine = inference_engine
         self.xai_collector = xai_collector
 
-    def process(self, ctx: RAGContext) -> RAGState:
-        # Based on RAGWorkflowManager._handle_vlm_rerank
+    def process(self, ctx: RAGContext) -> Generator[StreamStep, None, RAGState]:
+        yield StreamStep(type="thought", content="[VLM-Reranker] Analyse visuelle des images candidates...").model_dump()
         image_urls = []
         valid_candidates = []
         for c in ctx.candidates:
@@ -22,6 +23,7 @@ class VlmRerankProcessor(StateProcessor):
                 valid_candidates.append(c)
         
         if not image_urls:
+            yield StreamStep(type="thought", content="[VLM-Reranker] Aucune image exploitable trouvée pour le reranking.").model_dump()
             return RAGState.SYNTHESIZE
 
         try:
@@ -44,7 +46,12 @@ class VlmRerankProcessor(StateProcessor):
             ctx.truth_path += f"\n{vlm_context}"
             if self.xai_collector:
                 self.xai_collector.log_agent_thought("VLMReranker", "Analyse visuelle terminée pour le reranking des candidats")
-        except (InferenceError, InfrastructureError, RuntimeError) as e:
+            yield StreamStep(type="thought", content=f"[VLM-Reranker] Classement visuel terminé. Top match : {top_5[0].get('title')}").model_dump()
+        except InferenceError as e:
             logger.error(f"VLM Rerank error: {e}")
+            yield StreamStep(type="thought", content=f"[VLM-Reranker] Échec de l'analyse visuelle : {str(e)}").model_dump()
+        except (InferenceError, InfrastructureError, RuntimeError) as e:
+            logger.error(f"Unexpected error in VLM Reranker: {e}")
+            yield StreamStep(type="thought", content="[VLM-Reranker] Une erreur inattendue est survenue.").model_dump()
             
         return RAGState.SYNTHESIZE

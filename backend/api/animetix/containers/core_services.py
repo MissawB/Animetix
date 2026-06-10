@@ -17,9 +17,9 @@ from core.domain.services.emoji_service import EmojiDomainService
 from core.domain.services.paradox_service import ParadoxDomainService
 from core.domain.services.animinator_service import AniminatorDomainService
 from core.domain.services.companion_service import CompanionService
-from core.domain.services.akinetix_service import AkinetixDomainService
+from core.domain.services.akinetix_service import AkinetixService
 from core.domain.services.akinetix_engine import AkinetixEngine
-from core.domain.services.akinetix_rl_service import AkinetixRLDomainService
+from core.domain.services.akinetix_rl_service import AkinetixRLService
 from core.domain.services.blind_test_service import BlindTestDomainService
 from core.domain.services.cover_test_service import CoverTestDomainService
 from core.domain.services.creative.video_quest import VideoQuestService
@@ -29,7 +29,6 @@ from core.domain.services.creative.manga_flow import MangaFlowService
 from core.domain.services.creative.soundscape import SoundscapeGenerationService
 from core.domain.services.creative.visual_novel_service import VisualNovelService
 from core.domain.services.guardrail_service import GuardrailService, RedTeamingAgent
-from core.domain.services.akinetix_rl_env import AkinetixRLService
 from core.domain.services.self_play_debate_service import SelfPlayDebateService
 from core.domain.services.ragas_eval_service import RagasEvalService
 from core.domain.services.orchestrator_agent_service import OrchestratorAgentService
@@ -199,13 +198,13 @@ class CoreServicesContainer(containers.DeclarativeContainer):
     )
 
     akinetix_service = providers.Singleton(
-        AkinetixDomainService,
+        AkinetixService,
         catalog_service=catalog_service,
         engine=akinetix_engine
     )
 
     akinetix_expert_service = providers.Singleton(
-        AkinetixRLDomainService,
+        AkinetixRLService,
         catalog_service=catalog_service
     )
 

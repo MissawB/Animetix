@@ -1,0 +1,3 @@
+I have explored the codebase and identified `RAGWorkflowManager` in `backend/core/domain/services/rag_workflow_manager.py` and `PlanProcessor` in `backend/core/domain/services/rag/processors/plan_processor.py`. This task is a straightforward refactor to extract planning logic from `RAGWorkflowManager` into `PlanProcessor`. Visual assistance is not required for this code refactoring.
+
+I will now propose the design.

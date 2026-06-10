@@ -136,14 +136,17 @@ body {
 
   body {
     @apply font-sans antialiased;
-    background-image: url("/static/img/background.png");
-    background-attachment: fixed;
-    background-size: cover;
-    background-position: center;
     background-color: var(--page-bg);
     color: var(--page-text);
     min-height: 100vh;
     transition: background-color 0.5s ease, color 0.5s ease;
+  }
+
+  .home-bg {
+    background-image: url("/static/img/background.png");
+    background-attachment: fixed;
+    background-size: cover;
+    background-position: center;
   }
 
   body::before {

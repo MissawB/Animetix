@@ -17,5 +17,6 @@ from .api.multiverse import MultiverseGalleryView
 from .api.games.world_boss import ActiveWorldBossView, WorldBossAttackView
 from .api.games.animinator import AniminatorAskView
 from .api.explore import MediaExploreView
-from .api.admin_api import DataCurationTicketViewSet, TTCMonitoringAPIView, UserManagementViewSet
+from .api.admin_api import DataCurationTicketViewSet, TTCMonitoringAPIView, UserManagementViewSet, AdEventLoggingAPIView
 from .api.games.duel import CreateDuelRoomView, JoinDuelRoomView, MatchmakingView
+from .api.developer import *

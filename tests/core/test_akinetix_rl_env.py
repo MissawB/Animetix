@@ -1,7 +1,8 @@
 import pytest
 import numpy as np
 from unittest.mock import MagicMock
-from core.domain.services.akinetix_rl_env import AkinetixRLEnvironment, AkinetixRLService
+from core.domain.services.akinetix_rl_env import AkinetixRLEnvironment
+from core.domain.services.akinetix_rl_service import AkinetixRLService
 
 @pytest.fixture
 def sample_catalog():
@@ -45,6 +46,7 @@ def test_rl_env_step_incorrect(rl_env):
 
 def test_rl_service(sample_catalog):
     mock_catalog_service = MagicMock()
+    mock_catalog_service.get_catalog.return_value = {'db': sample_catalog}
     mock_catalog_service.load_catalog.return_value = {'db': sample_catalog}
     service = AkinetixRLService(mock_catalog_service)
     env = service.create_env("Anime")

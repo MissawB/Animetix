@@ -2,11 +2,12 @@ name: Animetix CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, dev ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main, master, dev ]
   schedule:
     - cron: '0 0 * * 1' # Run weekly at midnight on Mondays
+  workflow_dispatch:
 
 jobs:
   lint:
@@ -63,8 +64,6 @@ jobs:
     name: Run Unit Tests
     needs: [lint, docker-build]
     runs-on: ubuntu-latest
-    services:
-      # We now use the specialized test composition
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
@@ -78,16 +77,17 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+        pip install pytest-cov
     - name: Run Pytest
       env:
-        DATABASE_URL: sqlite:///:memory:
+        DATABASE_URL: 'sqlite:///:memory:'
         REDIS_URL: redis://localhost:6380
         DJANGO_SECRET_KEY: test-secret-key
         DJANGO_DEBUG: "True"
         NEO4J_URI: bolt://localhost:7687
         NEO4J_USER: neo4j
         NEO4J_PASSWORD: password
-      run: python -m pytest
+      run: python -m pytest --cov=backend --cov-report=term-missing --cov-report=xml
 
   perf-test:
     name: RAG Performance Test
@@ -104,3 +104,45 @@ jobs:
       run: pip install -r requirements.txt
     - name: Run Benchmark
       run: python scripts/mlops_rag_eval.py --fast-mode
+
+  promote-to-dev:
+    name: Promote to Development
+    needs: [lint, security-audit, docker-build, test, perf-test]
+    if: github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'dev' && success()
+    runs-on: ubuntu-latest
+    environment: development
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Push to Dev Branch
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git fetch origin ${{ github.event.pull_request.head.ref }}:temp-pr-branch
+        git checkout dev || git checkout -b dev origin/main
+        git merge temp-pr-branch --ff-only
+        git push origin dev
+
+  promote-to-prod:
+    name: Promote to Production
+    needs: [lint, security-audit, docker-build, test, perf-test]
+    if: github.ref == 'refs/heads/dev' && github.event_name == 'push' && success()
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Push to Main Branch
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git fetch origin main || true
+        git checkout main || git checkout master
+        git merge ${{ github.sha }} --ff-only
+        git push origin HEAD

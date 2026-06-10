@@ -8,7 +8,7 @@ from .advanced_rag_service import AdvancedRAGService
 from .prompt_manager import PromptManager
 from .llm_service import LLMService
 from .xai_service import XaiDiagnosticService, XaiCollector
-from .rag_workflow_manager import RAGWorkflowManager
+from .rag_orchestrator import RAGOrchestrator # Updated import
 from ..exceptions import (
     InfrastructureError, ParsingError, InferenceError, AnimetixError,
 )
@@ -22,7 +22,7 @@ logger = logging.getLogger("animetix.rag")
 class AgenticRAGService:
     """
     Orchestrateur RAG Agentique 2.0.
-    Délègue la machine à états au RAGWorkflowManager.
+    Délègue la machine à états au RAGOrchestrator.
     """
     def __init__(
         self, 
@@ -31,7 +31,7 @@ class AgenticRAGService:
         web_search: WebSearchPort,
         prompt_manager: PromptManager,
         llm_service: LLMService,
-        workflow_manager: RAGWorkflowManager,
+        workflow_orchestrator: RAGOrchestrator, # Updated parameter
         neo4j_manager: Optional[GraphPersistencePort] = None,
         memory_service=None,
         semantic_cache=None,
@@ -51,69 +51,12 @@ class AgenticRAGService:
         self.obs_service = obs_service
         self.xai_service = xai_service or XaiDiagnosticService(self.inference_engine)
         self.semantic_router = semantic_router or SemanticRouter(self.llm_service, self.prompt_manager)
+        self.orchestrator = workflow_orchestrator # Updated assignment
 
-        is_mock = False
-        try:
-            from unittest.mock import MagicMock
-            is_mock = isinstance(workflow_manager, MagicMock)
-        except ImportError:
-            logger.debug("unittest.mock not available, skipping mock check.")
-
-        if workflow_manager is None or is_mock:
-            from .rag.agents import SearchPlanner, ResponseCritic, ResponseSynthesizer, ResponseJudge, ScoutAgent, GraphExpert, RetrievalEvaluator, ContextCompressor
-            from .rag.agents.debate_manager import DebateManager
-            from .rag.agents.librarian import LibrarianAgent
-            from .rag.agents.forge import ForgeAgent
-            from .rag.agents.saga_agent import SagaAgent
-            from .rag.agents.chronicler import ChroniclerAgent
-            from pipeline.mlops.graph_community_partitioner import GraphCommunityPartitioner
-
-            planner = SearchPlanner(llm_service=self.llm_service, prompt_manager=self.prompt_manager)
-            critic = ResponseCritic(llm_service=self.llm_service, prompt_manager=self.prompt_manager)
-            synthesizer = ResponseSynthesizer(inference_engine=self.inference_engine, prompt_manager=self.prompt_manager)
-            judge = ResponseJudge(llm_service=self.llm_service, prompt_manager=self.prompt_manager)
-            scout = ScoutAgent(llm_service=self.llm_service, prompt_manager=self.prompt_manager)
-            semantic_router_obj = SemanticRouter(llm_service=self.llm_service, prompt_manager=self.prompt_manager)
-            retrieval_evaluator = RetrievalEvaluator(llm_service=self.llm_service, prompt_manager=self.prompt_manager)
-            community_partitioner = GraphCommunityPartitioner(neo4j_manager=self.neo4j_manager, llm_service=self.llm_service)
-            graph_expert = GraphExpert(llm_service=self.llm_service, prompt_manager=self.prompt_manager)
-            debate_manager = DebateManager(llm_service=self.llm_service, prompt_manager=self.prompt_manager)
-            librarian = LibrarianAgent(llm_service=self.llm_service, prompt_manager=self.prompt_manager, web_search=self.web_search)
-            forge = ForgeAgent(llm_service=self.llm_service, prompt_manager=self.prompt_manager, neo4j_manager=self.neo4j_manager)
-            saga_agent = SagaAgent(llm_service=self.llm_service, neo4j_manager=self.neo4j_manager)
-            chronicler = ChroniclerAgent(llm_service=self.llm_service, prompt_manager=self.prompt_manager, neo4j_manager=self.neo4j_manager, web_search=self.web_search)
-            context_compressor = ContextCompressor(llm_service=self.llm_service, prompt_manager=self.prompt_manager)
-
-            self.workflow_manager = RAGWorkflowManager(
-                planner=planner,
-                critic=critic,
-                synthesizer=synthesizer,
-                judge=judge,
-                scout=scout,
-                semantic_router=semantic_router_obj,
-                retrieval_evaluator=retrieval_evaluator,
-                community_partitioner=community_partitioner,
-                graph_expert=graph_expert,
-                debate_manager=debate_manager,
-                librarian=librarian,
-                forge=forge,
-                saga_agent=saga_agent,
-                chronicler=chronicler,
-                xai_service=self.xai_service,
-                inference_engine=self.inference_engine,
-                web_search=self.web_search,
-                prompt_manager=self.prompt_manager,
-                rag_service=self.rag_service,
-                neo4j_manager=self.neo4j_manager,
-                context_compressor=context_compressor
-            )
-        else:
-            self.workflow_manager = workflow_manager
-
-        # Delegate kwargs to workflow_manager if present
+        # Delegate kwargs to orchestrator if present
         for key, val in kwargs.items():
-            if self.workflow_manager and hasattr(self.workflow_manager, key):
-                setattr(self.workflow_manager, key, val)
+            if self.orchestrator and hasattr(self.orchestrator, key):
+                setattr(self.orchestrator, key, val)
 
     def _record_agent_trace(self, state_name: str, details: dict):
         from django.conf import settings
@@ -134,94 +77,93 @@ class AgenticRAGService:
 
     @property
     def planner(self):
-        return self.workflow_manager.planner if self.workflow_manager else None
+        return self.orchestrator.processors[RAGState.PLAN].planner if self.orchestrator else None
 
     @planner.setter
     def planner(self, value):
-        if self.workflow_manager:
-            self.workflow_manager.planner = value
+        if self.orchestrator:
+            self.orchestrator.processors[RAGState.PLAN].planner = value
 
     @property
     def scout(self):
-        return self.workflow_manager.scout if self.workflow_manager else None
+        return self.orchestrator.processors[RAGState.RESEARCH].scout if self.orchestrator else None
 
     @scout.setter
     def scout(self, value):
-        if self.workflow_manager:
-            self.workflow_manager.scout = value
+        if self.orchestrator:
+            self.orchestrator.processors[RAGState.RESEARCH].scout = value
 
     @property
     def synthesizer(self):
-        return self.workflow_manager.synthesizer if self.workflow_manager else None
+        return self.orchestrator.processors[RAGState.SYNTHESIZE].synthesizer if self.orchestrator else None
 
     @synthesizer.setter
     def synthesizer(self, value):
-        if self.workflow_manager:
-            self.workflow_manager.synthesizer = value
+        if self.orchestrator:
+            self.orchestrator.processors[RAGState.SYNTHESIZE].synthesizer = value
 
     @property
     def librarian(self):
-        return self.workflow_manager.librarian if self.workflow_manager else None
+        return self.orchestrator.processors[RAGState.ACQUIRE_KNOWLEDGE].librarian if self.orchestrator else None
 
     @librarian.setter
     def librarian(self, value):
-        if self.workflow_manager:
-            self.workflow_manager.librarian = value
+        if self.orchestrator:
+            self.orchestrator.processors[RAGState.ACQUIRE_KNOWLEDGE].librarian = value
 
     @property
     def critic(self):
-        return self.workflow_manager.critic if self.workflow_manager else None
+        return self.orchestrator.processors[RAGState.JUDGE].critic if self.orchestrator else None
 
     @critic.setter
     def critic(self, value):
-        if self.workflow_manager:
-            self.workflow_manager.critic = value
+        if self.orchestrator:
+            self.orchestrator.processors[RAGState.JUDGE].critic = value
 
     @property
     def judge(self):
-        return self.workflow_manager.judge if self.workflow_manager else None
+        return self.orchestrator.processors[RAGState.JUDGE].judge if self.orchestrator else None
 
     @judge.setter
     def judge(self, value):
-        if self.workflow_manager:
-            self.workflow_manager.judge = value
+        if self.orchestrator:
+            self.orchestrator.processors[RAGState.JUDGE].judge = value
 
     @property
     def debate_manager(self):
-        return self.workflow_manager.debate_manager if self.workflow_manager else None
+        return self.orchestrator.processors[RAGState.JUDGE].debate_manager if self.orchestrator else None
 
     @debate_manager.setter
     def debate_manager(self, value):
-        if self.workflow_manager:
-            self.workflow_manager.debate_manager = value
+        if self.orchestrator:
+            self.orchestrator.processors[RAGState.JUDGE].debate_manager = value
 
     @property
     def forge(self):
-        return self.workflow_manager.forge if self.workflow_manager else None
+        return self.orchestrator.processors[RAGState.SPECULATE].forge if self.orchestrator else None
 
     @forge.setter
     def forge(self, value):
-        if self.workflow_manager:
-            self.workflow_manager.forge = value
+        if self.orchestrator:
+            self.orchestrator.processors[RAGState.SPECULATE].forge = value
 
     @property
     def saga_agent(self):
-        return self.workflow_manager.saga_agent if self.workflow_manager else None
+        return self.orchestrator.processors[RAGState.SAGA_LOOKUP].saga_agent if self.orchestrator else None
 
     @saga_agent.setter
     def saga_agent(self, value):
-        if self.workflow_manager:
-            self.workflow_manager.saga_agent = value
+        if self.orchestrator:
+            self.orchestrator.processors[RAGState.SAGA_LOOKUP].saga_agent = value
 
     @property
     def graph_expert(self):
-        return self.workflow_manager.graph_expert if self.workflow_manager else None
+        return self.orchestrator.processors[RAGState.GRAPH_EXPLORE].graph_expert if self.orchestrator else None
 
     @graph_expert.setter
     def graph_expert(self, value):
-        if self.workflow_manager:
-            self.workflow_manager.graph_expert = value
-
+        if self.orchestrator:
+            self.orchestrator.processors[RAGState.GRAPH_EXPLORE].graph_expert = value
 
     def plan_and_solve(self, query: str, media_type: str, user_id: Optional[str] = None) -> str:
         """Wrapper non-streaming. Retourne uniquement la réponse finale."""
@@ -234,20 +176,21 @@ class AgenticRAGService:
         return last_answer
 
     def plan_and_solve_stream(self, query: str, media_type: str, user_id: Optional[str] = None) -> Generator[Dict, None, None]:
-        """Boucle principale orchestrée via RAGWorkflowManager."""
+        """Boucle principale orchestrée via RAGOrchestrator."""
         
         # 1. ROUTAGE SÉMANTIQUE INTELLIGENT (SOTA 2026)
         routing_decision = self.semantic_router.classify(query)
         if routing_decision == "SIMPLE":
-            yield StreamStep(type="thought", content="[Semantic Router] Requête simple détectée. Court-circuitage vers la recherche et synthèse directe en < 2 secondes...").model_dump()
+            yield StreamStep(type="thought", content="[Semantic Router] Requête simple détectée. Court-circuitage vers la recherche et synthèse directe en < 2 secondes...")
             full_answer = ""
-            for event in self.workflow_manager.handle_fast_rag(query, media_type, user_id=user_id):
-                yield event
-                if event['type'] == 'token':
-                    full_answer += event['content']
-            
-            if full_answer:
-                self._store_results(query, full_answer, user_id)
+            ctx = RAGContext(
+                query=query, media_type=media_type, user_id=user_id,
+                thinking_budget=0, thinking_mode=False,
+                memories="", current_state=RAGState.FALLBACK_RAG # Direct to Fallback
+            )
+            yield from self.orchestrator.run_workflow(ctx) # Run simple flow
+            if ctx.full_answer:
+                self._store_results(query, ctx.full_answer, user_id)
             return
 
         # 2. ANALYSE COMPLEXITÉ ET INITIALISATION CONTEXTE
@@ -256,7 +199,7 @@ class AgenticRAGService:
         thinking_mode = complexity >= 2
         
         if thinking_budget > 0 or thinking_mode:
-            yield StreamStep(type="thought", content=f"[TTC] Requête complexe (Score {complexity}). Budget: {thinking_budget} tokens. Mode Thinking: {thinking_mode}").model_dump()
+            yield StreamStep(type="thought", content=f"[TTC] Requête complexe (Score {complexity}). Budget: {thinking_budget} tokens. Mode Thinking: {thinking_mode}")
 
         if cached := self._check_cache(query):
             yield from self._stream_cached_response(cached)
@@ -267,7 +210,7 @@ class AgenticRAGService:
         if user_id and self.neo4j_manager:
             user_context = self.neo4j_manager.get_user_preferences_context(user_id)
             if user_context:
-                yield StreamStep(type="thought", content=f"[Graph User Memory] Profil utilisateur '{user_id}' chargé depuis le graphe sémantique.").model_dump()
+                yield StreamStep(type="thought", content=f"[Graph User Memory] Profil utilisateur '{user_id}' chargé depuis le graphe sémantique.")
 
         ctx = RAGContext(
             query=query,
@@ -277,18 +220,18 @@ class AgenticRAGService:
             thinking_mode=thinking_mode,
             memories=self._get_memories(user_id, query),
             current_state=RAGState.PLAN,
-            graph_expert=self.workflow_manager.graph_expert,
+            graph_expert=self.orchestrator.processors[RAGState.GRAPH_EXPLORE].graph_expert if self.orchestrator and RAGState.GRAPH_EXPLORE in self.orchestrator.processors else None,
             truth_path=user_context
         )
 
-        # 3. DÉLÉGATION AU WORKFLOW MANAGER
+        # 3. DÉLÉGATION À L'ORCHESTRATEUR
         xai_collector = XaiCollector()
-        yield from self.workflow_manager.run_workflow(ctx, xai_collector=xai_collector)
+        yield from self.orchestrator.run_workflow(ctx, xai_collector=xai_collector)
 
         # 4. FINALISATION
         if ctx.full_answer:
             self._store_results(ctx.query, ctx.full_answer, ctx.user_id)
-            
+
             if self.xai_service:
                 try:
                     response_obj = InferenceResponse(text=ctx.full_answer)
@@ -297,10 +240,9 @@ class AgenticRAGService:
                         response=response_obj,
                         collector=xai_collector
                     )
-                    yield StreamStep(type="xai_report", content=report.model_dump()).model_dump()
+                    yield StreamStep(type="xai_report", content=report) # Yield StreamStep directly
                 except Exception as e:
                     logger.error(f"Error generating XAI report: {e}", exc_info=True)
-
             # Enregistrement asynchrone de l'interaction utilisateur dans Neo4j (Task 5.2)
             if user_id and self.neo4j_manager:
                 import threading
@@ -372,12 +314,3 @@ class AgenticRAGService:
         except (InferenceError, InfrastructureError, RuntimeError) as e:
             logger.error(f"Unexpected error during JSON extraction: {e}")
         return {}
-
-    def _execute_search(self, plan, media_type: str, user_id: Optional[str] = None) -> tuple[List[Dict], str]:
-        if self.workflow_manager:
-            return self.workflow_manager._execute_search(plan, media_type, user_id=user_id)
-        return [], ""
-
-    def _handle_research(self, ctx) -> Generator[Dict, None, None]:
-        if self.workflow_manager:
-            yield from self.workflow_manager._handle_research(ctx)
