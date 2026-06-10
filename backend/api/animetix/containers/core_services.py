@@ -65,6 +65,9 @@ from core.domain.services.health_dashboard_service import HealthDashboardService
 from core.domain.services.sota_benchmark_service import SOTABenchmarkService
 from core.domain.services.game_session_service import GameSessionService
 from core.domain.services.xai_service import XaiDiagnosticService
+from core.domain.services.hierarchical_graph_rag import HierarchicalGraphRAGService
+from core.domain.services.complexity_analyser import ComplexityAnalyser
+from core.domain.services.video_language_indexing_service import VideoLanguageIndexingService
 
 # Adapters imports
 from adapters.persistence.pipeline_sync_adapter import PipelineSyncAdapter
@@ -471,4 +474,23 @@ class CoreServicesContainer(containers.DeclarativeContainer):
     xai_service = providers.Singleton(
         XaiDiagnosticService,
         inference_engine=inference.inference_engine
+    )
+
+    hierarchical_graph_rag_service = providers.Singleton(
+        HierarchicalGraphRAGService,
+        neo4j_manager=persistence.graph_persistence_port,
+        llm_service=agentic.llm_service
+    )
+
+    complexity_analyser = providers.Singleton(
+        ComplexityAnalyser,
+        prompt_manager=infrastructure.prompt_manager,
+        llm_service=agentic.llm_service
+    )
+
+    video_language_indexing_service = providers.Singleton(
+        VideoLanguageIndexingService,
+        inference_engine=inference.inference_engine,
+        prompt_manager=infrastructure.prompt_manager,
+        repository=persistence.repository
     )

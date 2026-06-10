@@ -1,40 +1,40 @@
-# GEMINI - Mandats du Projet Animetix
+# GEMINI - Animetix Project Mandates
 
-Ce fichier définit les règles absolues et les contraintes techniques du workspace.
+This file defines the absolute rules and technical constraints of the workspace.
 
 > [!IMPORTANT]
-> Des instructions spécifiques sont disponibles pour les sous-domaines :
-> - [Mandats Backend](../backend/GEMINI.md)
-> - [Mandats Frontend](../frontend/GEMINI.md)
+> Specific instructions are available for sub-domains:
+> - [Backend Mandates](../backend/GEMINI.md)
+> - [Frontend Mandates](../frontend/GEMINI.md)
 
-## 🏗️ Architecture Hexagonale (Ports & Adapters)
-Toute modification doit respecter strictement la séparation des couches :
+## 🏗️ Hexagonal Architecture (Ports & Adapters)
+All modifications must strictly respect the separation of layers:
 
-- **Domain (Core) :** `backend/core/domain/`. Logique métier pure, sans dépendance externe.
-    - *Entities:* Utiliser `Pydantic` pour la validation de structure (`ai_schemas.py`).
-    - *Services:* Logique de haut niveau. Interdiction d'utiliser `print`, utiliser le module `logging`.
-- **Ports (Interfaces) :** `backend/core/ports/`. Définitions abstraites des capacités externes.
-- **Adapters (Infrastructure) :** `backend/adapters/`. Implémentations concrètes.
-    - *Persistence:* `UnifiedRepositoryAdapter` (ChromaDB).
+- **Domain (Core):** `backend/core/domain/`. Pure business logic, without external dependencies.
+    - *Entities:* Use `Pydantic` for structure validation (`ai_schemas.py`).
+    - *Services:* High-level logic. Do not use `print()`, use the standard `logging` module.
+- **Ports (Interfaces):** `backend/core/ports/`. Abstract boundary definitions for external capabilities.
+- **Adapters (Infrastructure):** `backend/adapters/`. Concrete infrastructure implementations.
+    - *Persistence:* `UnifiedRepositoryAdapter` (Vertex AI Vector Search / pgvector).
     - *Inference:* `FallbackInferenceAdapter` (LLM Resilience + Streaming).
-- **Presentation (Driving) :** `backend/api/`. Django Headless API. Validation obligatoire via `Django Forms` pour les entrées utilisateur.
+- **Presentation (Driving):** `backend/api/`. Headless Django API. Input validation via `Django Forms` is mandatory for user inputs.
 
-## 📝 Standards de Code & IA
-- **Typing :** Python 3.10+. Annotations de type strictes obligatoires sur toutes les fonctions.
-- **Logging :** Loggers nommés (`animetix.rag`). Niveaux : `info`, `warning`, `error`.
-- **Prompts :** ZERO prompt en dur. Utilisation exclusive de `PromptManager` (fichiers YAML).
-- **Sécurité :** Désinfection systématique des sorties IA avec le filtre `sanitize_ai`.
+## 📝 Code & AI Standards
+- **Typing:** Python 3.10+. Strict type annotations are mandatory on all functions.
+- **Logging:** Named loggers (`animetix.rag`). Levels: `info`, `warning`, `error`.
+- **Prompts:** ZERO hardcoded prompts. Exclusively use `PromptManager` (YAML files).
+- **Security:** Systematically sanitize LLM outputs with the `sanitize_ai` filter.
 
-## 🚀 Spécificités Workspace & MLOps
-- **Pipeline :** Respecter les patterns Dagster. Synchronisation Neo4j automatisée.
-- **Observability :** 
-    - Tracking systématique des tokens/coûts via `UsagePort`.
-    - Évaluation RAG via `Ragas` (Faithfulness, Relevance).
-- **SOTA Search :** Avant de choisir/mettre à jour un modèle, utiliser `huggingface-best` pour identifier le meilleur candidat actuel.
-- **Performance :** Pagination côté DB (`limit`/`offset`). Index HNSW pour les vecteurs.
+## 🚀 Workspace & MLOps Specifics
+- **Pipeline:** Automated synchronization commands and scheduled tasks (Django management commands). Automated Neo4j synchronization.
+- **Observability:** 
+    - Systematic tracking of tokens/costs via `UsagePort`.
+    - RAG evaluation via `Ragas` (Faithfulness, Relevance).
+- **SOTA Search:** Before choosing or updating a model, use the `huggingface-best` skill to identify the current best candidate.
+- **Performance:** DB-side pagination (`limit`/`offset`). HNSW index for vector representations.
 
-## 🛠️ Workflow d'Intervention
-1. **Research :** Mapper les changements aux couches Domain, Port ou Adapter.
-2. **Strategy :** Justifier le respect de l'intégrité hexagonale et du typage.
-3. **Execution :** Mise à jour chirurgicale + Ajout de tests dans `tests/`.
-4. **Validation :** Exécuter `pytest` et vérifier l'étanchéité des couches.
+## 🛠️ Intervention Workflow
+1. **Research:** Map changes to Domain, Port, or Adapter layers.
+2. **Strategy:** Justify compliance with hexagonal integrity and strict typing.
+3. **Execution:** Surgical implementation + add tests in `tests/`.
+4. **Validation:** Run `pytest` and verify layer boundaries.

@@ -1,99 +1,159 @@
-# 🎭 Animetix: Next-Gen Media Discovery & AI Games
+# 🎭 Animetix: Next-Gen AI Sandbox & Interactive Games
 
 [![Build Status](https://img.shields.io/badge/Build-Success-brightgreen.svg)]()
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)]()
 [![Django](https://img.shields.io/badge/Django-5.0+-green.svg)]()
-[![Dagster](https://img.shields.io/badge/Orchestration-Dagster-red.svg)]()
+[![Firebase](https://img.shields.io/badge/Google_Identity_Platform-GCIP-orange.svg)]()
+[![Vertex AI](https://img.shields.io/badge/Vertex_AI-Vector_Search_2.0-blue.svg)]()
+[![AlloyDB AI](https://img.shields.io/badge/AlloyDB_AI-Text--to--SQL-lightblue.svg)]()
 [![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-yellow.svg)]()
 
-**Animetix** is an intelligent ecosystem for exploring Anime, Manga, Movies, and Games. Powered by a **RAG 2.0 architecture**, it combines semantic search, knowledge graphs, and agentic AI to deliver a unique discovery experience and a suite of innovative game modes.
+**Animetix** is a next-generation AI-powered cognitive sandbox and game platform for Anime, Manga, Movies, and Video Games. Powered by a **RAG 2.0 Knowledge Engine**, Animetix fuses advanced semantic graphs, multimodal reasoning, and deep reinforcement learning to power a vast suite of interactive game modes and research-grade AI laboratories.
+
+Built on an **Atomic & Hexagonal Architecture**, the platform runs with enterprise-grade cloud capabilities on **Google Cloud Platform (GCP)** in production, while maintaining a lightweight, zero-configuration local fallback ecosystem for local development.
 
 ---
 
 ## 📌 Table of Contents
-- [✨ Key Features](#-key-features)
-- [🏗️ Architecture & Tech Stack](#-architecture--tech-stack)
+
+- [🎮 Next-Gen AI Game Suite](#-next-gen-ai-game-suite)
+- [🧪 The Ghost Labs (Advanced AI Sandbox)](#-the-ghost-labs-advanced-ai-sandbox)
+- [🧠 Core RAG 2.0 & Cognitive Architecture](#-core-rag-2-0--cognitive-architecture)
+- [☁️ Enterprise GCP Infrastructure](#%EF%B8%8F-enterprise-gcp-infrastructure)
 - [🚀 Getting Started](#-getting-started)
 - [📂 Project Structure](#-project-structure)
-- [📊 MLOps & Observability](#-mlops--observability)
+- [📊 MLOps, Security & Observability](#-mlops-security--observability)
+- [🧪 Running Tests](#-running-tests)
 - [📜 License](#-license)
 
 ---
 
-## ✨ Key Features
+## 🎮 Next-Gen AI Game Suite
 
-### 🕹️ AI-Driven Game Modes
-*   **Animetix Classic:** Semantic search challenge. Find titles based on thematic similarity scores.
-*   **Vision Quest:** Multimodal challenges using VLM (Visual Language Models) to identify scenes and visual tropes.
-*   **La Forge:** Advanced "Fusion" mode where AI generates hybrid works and archetypes.
-*   **Emoji Decode:** Decipher synopses translated into complex emoji sequences by AI.
-*   **Animinator (Oracle):** Interrogate the AI Oracle. Uses agentic reasoning to verify facts before answering.
-*   **Akinetix (The Guesser):** The AI asks strategic questions to narrow down the media you're thinking of.
-*   **The Paradox:** Logic test. Identify the "intruder" among titles using LLM thematic analysis.
+Animetix features a rich variety of AI-driven game modes powered by customized domain services:
 
-### 🔍 Intelligent Discovery
-*   **RAG 2.0 Engine:** Harmonizes **ChromaDB** (semantic memory) and **Neo4j** (logical graph memory).
-*   **Multimodal Search:** Explore by plot description, visual "vibes", or complex relations.
-*   **Semantic Interpreters:** Explains *why* works are related (e.g., "Shared existential themes").
 
-> [!TIP]
-> **RAG 2.0** allows Animetix to not only find data but to reason about it using its internal Knowledge Graph.
+| Game Mode                      | AI Engine / Mechanics            | Description                                                                                     |
+| :----------------------------- | :------------------------------- | :---------------------------------------------------------------------------------------------- |
+| **Classic Game**               | Semantic similarity scores       | Challenge your anime knowledge by searching for titles matching specific thematic descriptions. |
+| **Akinetix**                   | Entropy-based decision trees     | Think of a media or character; the AI will ask strategic questions to guess it.                 |
+| **Akinetix RL**                | Reinforcement Learning (PPO/DQN) | Play against or train a neural network agent learning optimal query strategies.                 |
+| **Animinator (Oracle)**        | CoVe Fact-Checking               | Interrogate the AI Oracle. The agent dynamically audits facts before responding.                |
+| **La Forge (Creative Fusion)** | Generative fusion & diffusion    | Merge two universes, art styles, or characters to synthesize hybrid works.                      |
+| **Forge VN**                   | Interactive Visual Novel         | Experience dynamic, AI-generated branching stories based on your creative fusions.              |
+| **Vs Battle Arena**            | LLM Battle Simulation            | Simulate hypothetical battles between characters with comparative capability analysis.          |
+| **Emoji Decode**               | Translation sequence models      | Decipher complex plot summaries translated into emojis by an adversarial LLM.                   |
+| **World Boss Raids**           | Cooperative Swarm AI             | Join forces with the community to damage an AI boss by submitting thematic solutions.           |
+| **Multiplayer Labs**           | WebSockets Matchmaking           | Play**Undercover** (find the intruder) or **CodeManga** (Codenames variation) in real-time.     |
+| **Vision Quest**               | VLM Multimodal analysis          | Identify visual tropes, frames, and scenes using multimodal vision queries.                     |
 
 ---
 
-## 🏗️ Architecture & Tech Stack
+## 🧪 The Ghost Labs (Advanced AI Sandbox)
 
-Animetix is built on an **Atomic & Hexagonal Architecture** (Ports & Adapters), ensuring the core domain is strictly decoupled from infrastructure concerns.
+The **Ghost Labs** are specialized playgrounds for exploring cutting-edge machine learning and cognitive architectures directly in the browser:
 
-### Core Technology
-- **Backend:** **Django 5.0** + **Channels** (WebSockets) for real-time interactions.
-- **Dependency Injection:** Custom lazy-loading **DI Container** (`backend/api/animetix/containers.py`).
-- **Orchestration:** **Dagster** manages ETL & ML pipelines.
-- **Vector DB:** **ChromaDB** (Primary storage) with HNSW indexing.
-- **Graph DB:** **Neo4j** for complex relationship modeling.
-- **Inference:** Unified **InferencePort** supporting **BrainAPI** (Cloud) and **Ollama** (Local) with automated **Cross-Encoder Reranking**.
+### 🎙️ Speech & Audio Labs
 
-### Key Design Principles
-- **Atomic Components:** Small, single-purpose modules.
-- **Strict Typing:** Python 3.10+ with Pydantic for data validation.
-- **Lazy Loading:** Critical for performance; AI dependencies load only when accessed.
-- **Observability:** Metrics via **Ragas** and continuous **DPO alignment**.
+* **Voice Lab / Zero-Shot Cloning:** Synthesize voices and clone any voice from a short audio sample.
+* **Manga Voice Lab:** Click on speech bubbles in a manga panel to generate matching voice-overs using cloned character voices.
+* **Speech-to-Speech Live:** Converse with a real-time, bi-directional AI companion using the **Gemini Multimodal Live API** over raw WebSockets.
+
+### 🖼️ Vision & Manga Translation
+
+* **Manga Lab:** Run panel segmentation, optical character recognition (OCR), and translation pipelines on manga scans.
+* **Video Lab (FateZero):** Perform temporal frame analysis, translations, and video style transfer using diffusion networks.
+
+### 📐 Spatial Computing & 3D Labs
+
+* **Spatial Lab:** Estimate depth maps from 2D images and export 3D object meshes.
+* **Cinematic Volumetric Reconstruction:** View immersive, interactive 3D volumetric scenes rendered in real-time using `Three.js` and depth sensors.
+
+### 🧠 Cognitive & Neuromorphic Sandbox
+
+* **Tree of Thoughts Visualizer:** Watch the Monte Carlo Tree Search (MCTS) reasoning paths and decision trees of the thinking LLM.
+* **Swarm Consensus Arena:** Spawn multiple LLM agents, watch them debate a prompt, and reach a unified semantic consensus.
+* **Strategy CFR Solver:** Optimize game strategies using Counterfactual Regret Minimization (CFR) solvers.
+* **Liquid Neural Networks:** Experiment with continuous-time dynamical LNN models predicting popularity trajectories.
+* **Quantum Fiction Lab:** Interactive storytelling where narrative states exist in quantum-like superpositions.
+* **Neuro-Symbolic Profile:** Formalize your player profile using **Z3 Theorem Prover** rules derived from user memories.
+* **Self-Evolving Compiler:** Let the LLM self-improve and compile optimized backend routines on-the-fly.
+
+---
+
+## 🧠 Core RAG 2.0 & Cognitive Architecture
+
+Animetix separates domain rules from infrastructure concerns using a modular hexagonal approach:
+
+* **Hybrid Memory:** Merges dense vector databases (for semantic similarity) with **Neo4j** (logical knowledge graphs mapping relationships).
+* **Cross-Encoder Reranking:** Fine-tuned cross-encoders score candidate matches to mitigate hallucination.
+* **Lazy Loading Strategy:** Heavy packages (`torch`, `transformers`, `nltk`) are imported only when their respective adaptors are called, ensuring instantaneous container boot times.
+* **Zustand Store Architecture:** Replaced heavy state machines with modular, reactive stores for smooth client-side rendering.
+
+---
+
+## ☁️ GCP Infrastructure
+
+For production scale and security, Animetix utilizes managed Google Cloud Platform services:
+
+* **Google Identity Platform (GCIP):** Manages user registration and logins (supporting Firebase Web SDK, custom DRF JWT validation, and OAuth providers: Google, Discord, X, MyAnimeList).
+* **Vertex AI Vector Search (Collections):** Managed high-dimensional indexing with serverless auto-embeddings (`text-embedding-005`) and RRF search.
+* **AlloyDB AI Tools:** Accelerates text-to-SQL operations on database catalogs via native SQL functions (`alloydb_ai_nl.get_sql`).
+* **Cloud Run Jobs & Cloud Scheduler:** Serverless nightly database synchronizations, replacing standard Celery Beat infrastructure.
+* **Cloud KMS (CMEK):** Customer-managed encryption keys for GCS buckets containing generated creative assets.
+* **Edge Defense (Cloud Armor):** Preempts token-based DDoS, Web application attacks, and prompt injections via CEL filtering.
 
 ---
 
 ## 🚀 Getting Started
 
 ### 📋 Prerequisites
-- Python 3.11+
-- Docker & Docker Compose
-- *Optional:* API Keys for external services (TMDB, IGDB).
 
-### 🐳 Quick Start (Docker)
-1.  **Clone the Repo:**
-    ```bash
-    git clone https://github.com/MissawB/Animetix.git
-    cd Animetix
-    ```
-2.  **Environment Setup:**
-    `cp deploy/.env.example .env`
-3.  **Launch:**
-    ```bash
-    docker-compose -f deploy/docker-compose.yml up --build
-    ```
-    *Access at `http://localhost:8000`*
+* Python 3.11+
+* Node.js 18+ (for frontend development)
+* Docker & Docker Compose
+* *Optional:* GCP credentials & Firebase config.
+
+### 🐳 Run with Docker (Development Mode)
+
+1. **Clone the Repository:**
+   ```bash
+   git clone https://github.com/MissawB/Animetix.git
+   cd Animetix
+   ```
+2. **Configure Environment:**
+   ```bash
+   cp .env.example .env
+   ```
+3. **Spin up containers:**
+   ```bash
+   docker-compose -f deploy/docker-compose.yml up --build
+   ```
+
+   Access the unified SPA on `http://localhost:8000`.
 
 ### 🐍 Manual Development Setup
-```bash
-python -m venv .venv
-source .venv/bin/activate  # Or .venv\Scripts\activate on Windows
-pip install -r requirements.txt
 
-# Run migrations & seed data
-python backend/api/manage.py migrate
-python backend/api/manage.py seed_achievements
-python backend/api/manage.py sync_catalog
-python backend/api/manage.py runserver
-```
+1. **Backend (Headless Django Server):**
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   pip install -r requirements.txt
+
+   # Initialize SQLite database and media
+   python backend/api/manage.py migrate
+   python backend/api/manage.py seed_achievements
+   python backend/api/manage.py sync_catalog
+   python backend/api/manage.py runserver
+   ```
+2. **Frontend (React SPA):**
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
+
+   The React Vite server runs on `http://localhost:5173` and proxies calls to the backend on port 8000.
 
 ---
 
@@ -101,44 +161,51 @@ python backend/api/manage.py runserver
 
 ```text
 Animetix/
-├── backend/                # Backend & Core Logic
-│   ├── core/               # Domain Layer (Entities, Services, Ports)
+├── backend/                # Headless Django API & Orchestration
+│   ├── core/               # Pure Domain Layer (Entities, Ports, Services)
+│   │   ├── domain/         # Business domain logic (Akinetix, Swarm, LNN)
+│   │   ├── ports/          # Abstract boundary interfaces (InferencePort)
+│   │   └── utils/          # Security utilities (SQL Guardrail)
 │   ├── adapters/           # Infrastructure Layer (Driven Adapters)
-│   │   ├── persistence/    # ChromaDB, Neo4j, Django DB Adapters
-│   │   └── inference/      # BrainAPI, Ollama, Transformers Adapters
-│   ├── api/                # Presentation Layer (Django Headless Server)
-│   │   ├── animetix/
-│   │   │   ├── views/      # Modularized API Views (Classic, Vision, Forge, etc.)
-│   │   │   ├── containers/ # Dependency Injection Modules
-│   │   │   └── urls.py
-│   │   └── manage.py
-│   └── pipeline/           # Orchestration Layer (Dagster assets & ops)
-├── frontend/               # React SPA (Client Side)
-├── scripts/                # Root Utility scripts
-├── data/                   # Persistent storage (Vectors, Artifacts, Models)
-├── deploy/                 # Docker & CI/CD configs
-├── docs/                   # Architecture & Design Docs
-└── tests/                  # Unified Test Suite (Pytest)
+│   │   ├── persistence/    # Vertex AI, pgvector, and AlloyDB adapters
+│   │   └── inference/      # Google GenAI and Ollama adapters
+│   └── api/                # Presentation Layer (API Views & WebSockets)
+├── frontend/               # React Single Page Application
+│   ├── src/
+│   │   ├── pages/          # Decoupled Page Components (Games, Labs)
+│   │   ├── store/          # Zustand Global Stores
+│   │   └── features/       # Functional modules (Auth, Companion, Labs)
+│   └── vite.config.ts
+├── deploy/                 # Docker Compose, GCP templates & deployment configurations
+├── docs/                   # Specification plans and historical architecture docs
+└── tests/                  # Pytest Unit, Integration, and E2E (Playwright) suites
 ```
 
 ---
 
-## 📊 MLOps & Observability
-- **Continuous Alignment:** User interactions feed back into our DPO training loops.
-- **Hub Integration:** Models and datasets are automatically synced with **Hugging Face Hub**.
-- **Monitoring:** Integrated health checks and performance monitoring.
+## 📊 MLOps, Security & Observability
+
+* **Two-Layered SQL Guardrail:** Prior to execution, generated SQL queries are checked by `sql_guard.py` to prevent multi-statement injection, comments, mutating actions, or unauthorized table access.
+* **Prompt Sanitization:** Ingested context is audited to prevent indirect prompt injections.
+* **Telemetry & Tracing:** RAG decision steps and agent actions are injected into OpenTelemetry spans, which export directly to Google Cloud Trace when active.
+* **DPO Loop:** User preferences and corrections are logged to fine-tune local models.
 
 ---
 
-## 🧪 Tests
+## 🧪 Running Tests
 
-### Unitaires & Intégration
+### Unit & Integration Suite
+
+With the virtual environment active:
+
 ```bash
 pytest
 ```
 
-### End-to-End (Playwright)
-Pour exécuter les tests E2E, vous devez d'abord installer les navigateurs :
+### End-to-End User Journeys (Playwright)
+
+To execute frontend tests:
+
 ```bash
 python scripts/setup_e2e.py
 pytest tests/e2e
@@ -147,8 +214,9 @@ pytest tests/e2e
 ---
 
 ## 📜 License
-This project is licensed under the [MIT License](LICENSE).
+
+Licensed under the [MIT License](LICENSE).
 
 ---
-*Developed with ❤️ by the **Animetix Team** - 2026*
 
+*Developed with ❤️ by the **Animetix Team** - 2026*

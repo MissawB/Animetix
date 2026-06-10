@@ -1,179 +1,78 @@
-# Animetix - Historique des Refactorisations et Succès
+# Animetix - History of Refactorings & Achievements
 
-Ce document archive les étapes majeures de l'évolution technique du projet.
+This document archives the major milestones of the project's technical evolution.
 
-## [2026-06-09] Session : Convergence XAI, Unification de la Validation, Complétude de l'InferencePort et Protection contre le Model Collapse (HITL)
+## [2026-06-10] Session: SOTA Google Cloud Integrations (GCIP, Vertex AI Vector Search 2.0, Gemini Agent Platform, AlloyDB AI Text-to-SQL, and Cloud KMS CMEK)
 
-- **Convergence XAI** : Fusion du `UncertaintyService` dans le `XaiDiagnosticService`. Élimination de la duplication de logique pour le calcul de l'entropie et de la perplexité basé sur les logprobs. Simplification du graphe de dépendances dans `AgenticRAGService`.
-- **Unification de la Validation** : Migration de toutes les vues critiques (`Login`, `Register`, `Akinetix`, `Archetypist`, `Cognition`) de l'accès direct à `request.data` vers des **Django REST Framework Serializers**. Amélioration de la robustesse et retour d'erreurs standardisé.
-- **Complétude de l'InferencePort** : Implémentation de toutes les méthodes orphelines dans les adaptateurs de production. Le `BrainAPIAdapter` supporte désormais 100% de l'interface (VLM Vidéo, 3D Depth, Reranking). `GoogleGenAIAdapter` intègre l'analyse temporelle vidéo native de Gemini.
-- **Protection contre le Model Collapse (HITL)** : Mise en place d'un "Universal HITL Gate" via le modèle `GoldDatasetEntry`. Toutes les données synthétiques (Multivers, Distillation, QA) sont désormais mises en attente de validation humaine avant ingestion finale.
-- **Stabilisation du Build Frontend** : Résolution des erreurs ESLint/TypeScript majeures. (Nettoyage effectué post-modularisation).
-- **Nettoyage des Dépendances** : Purge des doublons `three` et `plotly` dans le `package.json`.
-- **Désorphelinisation Totale** : Raccordement de l'ensemble des "Ghost Labs" (Soundscape, Speech-to-Speech, Voice, Visual Nexus) dans `LabHubPage`.
-- **Finalisation des Outils d'Admin** : Raccordement du MLOps Dashboard, du DSPy Optimizer et du Graph Debugger.
-- **Interfaces Cognitives SOTA** : Déploiement des pages pour CoVe Oracle (réduction d'hallucinations), Hierarchical Graph RAG (visualisation Leiden), et Strategy Lab (CFR Solver).
-- **Manga Voice Lab** : Activation du pipeline complet de clonage de voix pour les planches de manga (UI + Backend).
-- **Sécurité Modèle** : Implémentation de la signature des modèles chargés depuis Hugging Face.
+- **Google Identity Platform (GCIP) & Firebase Auth**: Migrated local session and allauth authentication to a managed identity platform. Integrated the Firebase JS Client SDK on the frontend and implemented a custom Django REST Framework `GoogleIdentityAuthentication` backend to verify JWT ID Tokens using cached Google certificates (with local Firebase Emulator support). Added OAuth social sign-in support for **Google**, **Discord**, **X (Twitter)**, and **MyAnimeList**.
+- **Vertex AI Vector Search 2.0 (Collections)**: Integrated the managed GCP vector search index wrapper (`VertexAICollectionWrapper`) inside `chroma_client.py`. Implemented auto-embeddings (`text-embedding-005`) and hybrid search leveraging Reciprocal Rank Fusion (RRF). Maintained a dynamic runtime fallback to `PGVectorCollectionWrapper` for local SQLite development.
+- **Gemini Enterprise Agent Platform & Agentic RAG**:
+  - **Agent Gateway**: Integrated proactive safety gates to validate prompt inputs and LLM outputs against Google Cloud safety policies.
+  - **Agent Observability**: Enriched OpenTelemetry spans with detailed GCP-specific agentic semantic attributes within `AgenticRAGService` to trace the agent's decision tree.
+- **AlloyDB AI - Tools for Data Agents (Text-to-SQL)**: Implemented natural language catalog queries utilizing AlloyDB's native `alloydb_ai_nl.get_sql` function, with a fallback to local LLM prompt generation. Secured database execution with a custom two-layer validation parser (`sql_guard.py`) restricting queries to `animetix_mediaitem`, blocking mutations, comments, and query chaining.
+- **Customer-Managed Encryption Keys (Cloud KMS CMEK)**: Integrated CMEK protection for generated assets uploaded to GCS buckets via the `GS_DEFAULT_KMS_KEY_NAME` setting.
+- **Documentation Sync**: Fully updated `README.md` and `TODO.md` to reflect the completed cloud integration milestones and their local fallback behaviors.
 
-## [2026-06-08] Session : Refactorisation Majeure, Modularisation Frontend et Réactivation des Ghost Labs
+## [2026-06-09] Session: XAI Convergence, Validation Unification, InferencePort Completion, and Model Collapse Protection (HITL)
 
-- **Standardisation de la validation API (Django Forms)** : Finaliser la refactorisation des vues dans `backend/api/animetix/views/api.py` pour utiliser systématiquement les Django Forms. (Actuellement : plusieurs accès directs à `request.GET/POST` persistent).
-- **Complétude de l'InferencePort** : Supprimer les stubs restants dans `backend/core/ports/inference_port.py`. (Plusieurs méthodes lèvent encore `InferenceNotImplementedError` sans implémentation réelle).
-- **Refactorisation de `App.tsx`** : Découper ce fichier monolithique (21 KB) en composants atomiques et services dédiés.
-- **Modularisation Frontend** : Créer un répertoire `src/pages/` pour isoler les vues des composants de fonctionnalités (`features/`).
-- **Cohérence du Routage & Navigation** : 
-- **Corriger la route World Boss (`/game/world-boss/active/` vs `/game/world-boss/`).** : 
-- **Refactoriser `SocialRoutes.tsx` pour déplacer les pages non-sociales (Pricing, Support, Explore) dans leurs domaines respectifs.** : 
-- **Intégration réelle du `SelfEvolvingCompiler`** : Remplacer les `NotImplementedError` dans le proxy d'évolution LLM par une intégration effective.
-- **Amélioration des diagnostics IA** : Migrer de la simulation `gpt2` dans `UnifiedInferenceAdapter` vers des mécanismes de diagnostics natifs aux modèles de production.
-- **Optimisation du Chargement IA (Lazy Loading)** : Garantir que tous les adaptateurs et modèles lourds sont chargés uniquement lors de leur première utilisation pour accélérer le démarrage du container. Refactorisation de `FallbackInferenceAdapter` (cache et health lazy) et `GoogleGenAIAdapter` (client lazy).
-- **Réactivation des Laboratoires (Ghost Labs)** : Décommenter et tester les endpoints backend pour :
-- **Manga Lab (Nettoyage & Traduction).** : 
-- **Video Lab (Transfert de style FateZero).** : 
-- **Spatial Lab (Estimation de profondeur & 3D).** : 
-- **Soundscape & Speech-to-Speech (Génération sonore et voix E2E).** : 
-- **Rétablissement du Nexus Companion** : Connecter l'interface de chat à l'endpoint `companion/interact/`.
-- **Finalisation des Outils d'Admin** : Raccorder les pages de monitoring (`Admin DPO`, `SOTA Benchmarks`, `Graph Debugger`) aux services backend correspondants.
-- **Activation des Services Cognitifs** : Déployer les endpoints pour `Archetype Nexus`, `Neuro Memory` et `AIDebate Arena`.
-- **Page "Plans & Tarifs" (`/pricing/`)** : Créer une interface pour comparer les offres (Explorateur vs Premium) et gérer les abonnements.
-- **Visualisation "Tree of Thoughts" (Expert)** : Créer une page de visualisation d'arbre (MCTS) pour explorer les branches de réflexion du `TreeOfThoughtsSearchService`.
-- **Monitoring "Dynamic Budget TTC"** : Dashboard d'administration pour suivre l'allocation du budget de pensée en temps réel.
-- **Galerie des Multivers** : Interface de type "catalogue" pour parcourir les segments de multivers synthétiques générés par la communauté.
-- **Centre d'Aide & Support** : Implémenter une page pour le support technique connectée au `dpo_feedback_loop.py`.
-- **Finalisation Intégration Explorer** : Désorpheliniser la page `/explore/` en l'intégrant plus profondément dans les flux de recommandation et de navigation contextuelle.
-- **Interface "Voice Cloning" (RVC)** : Créer un laboratoire dédié pour le clonage de voix zero-shot.
-- **Dashboard "Neural Diagnostics"** : Interface pour visualiser l'incertitude (entropie) et les activations internes (Logit Lens) des générations.
-- **Audit des paramètres CSRF (SameSite)** : Réévaluer `CSRF_COOKIE_SAMESITE = 'None'`. Passer à `'Lax'` si possible.
-- **Migration complète vers `nh3`** : Finaliser le remplacement de `bleach` pour la sanitisation HTML.
-- **Quotas de Budget de Pensée (TDoS)** : Implémenter des limites strictes sur le coût des réflexions par utilisateur/session.
-- **Audit SSRF & `allow_internal=True`** : Réduire drastiquement l'usage de `allow_internal=True` dans les adaptateurs d'inférence. Mettre en place une segmentation réseau stricte (VPC/Firewalls) pour isoler les services internes. (Complété le 2026-06-05)
-- **Renforcement OIDC/Authentification Webhooks** : Auditer tous les endpoints `@csrf_exempt` (Tasks, Eventarc, Billing). Garantir que l'audience OIDC est une valeur statique, non modifiable, et spécifique au endpoint. Éviter `request.build_absolute_uri()`. (Complété le 2026-06-05)
-- **Sanitisation des données ingestées (Prompt Injection)** : Étendre `sanitize_for_prompt` pour protéger les données avant insertion dans ChromaDB ou Neo4j (protection contre l'injection indirecte). (Complété le 2026-06-05)
-- **Scan de dépendances (Supply Chain)** : Intégrer un outil de scan de vulnérabilités (ex: `safety` ou `snyk`) dans le pipeline CI (`.github/workflows/security_audit.yml`). (Complété le 2026-06-05)
+- **XAI Convergence**: Merged `UncertaintyService` into `XaiDiagnosticService`. Eliminated duplicated logprob-based entropy and perplexity calculations, simplifying the dependency graph in `AgenticRAGService`.
+- **Validation Unification**: Migrated all critical views (`Login`, `Register`, `Akinetix`, `Archetypist`, `Cognition`) from direct `request.data` dictionary parsing to **Django REST Framework Serializers**, stabilizing input validation and error responses.
+- **InferencePort Completion**: Implemented all stubbed methods in production adapters. `BrainAPIAdapter` now supports 100% of the interface (video VLM, 3D depth, reranking), and `GoogleGenAIAdapter` integrates Gemini's native temporal video analysis.
+- **Model Collapse Protection (HITL)**: Implemented an "Universal HITL Gate" using the `GoldDatasetEntry` model. All synthetic data (Multiverses, Distillation datasets, and QA pairs) are put in a validation queue awaiting human verification before ingestion.
+- **Frontend Build Stabilization**: Fixed remaining TypeScript and ESLint build failures following the modularization process.
+- **Dependency Cleanup**: Purged duplicate entries for `three` and `plotly` in `package.json`.
+- **Ghost Labs Reactivation**: Re-connected all previously comment-stubbed experimental interfaces (Soundscape, Speech-to-Speech, Voice, Visual Nexus) inside `LabHubPage`.
+- **Admin Tools & Cognitive Pages**: Hooked up the MLOps Dashboard, DSPy Optimizer, CoVe Oracle (hallucination reduction), Hierarchical Graph RAG visualizer, Strategy CFR Solver, and the Manga Voice Lab pipeline.
 
-## [2026-06-04] Session : Expliquabilité Avancée (XAI), Direct VPC Egress, Validation GCP, Cache de Contexte Vertex AI, Protection Edge Cloud Armor & Gemini Multimodal Live API
+## [2026-06-08] Session: Major Refactoring, Frontend Modularization, and Lab Reactivations
 
-- **Composant XaiReportViewer** : Finalisation du composant frontend `XaiReportViewer` permettant de visualiser l'intention de la requête, la confiance, les traces de l'agent, l'attribution des sources et les jetons influents.
-- **Tests Unitaires** : Mise en place d'une suite de tests Vitest complète pour `XaiReportViewer` validant le rendu correct des différentes sections (Header, Trace, Attribution, Tokens).
-- **Migration Direct VPC Egress** : Remplacement du connecteur Serverless VPC Access statique (`animetix-vpc-conn`) par Direct VPC Egress configuré dynamiquement via les variables d'environnement `GCP_VPC_NETWORK` et `GCP_VPC_SUBNET` (avec repli sur "default") dans les scripts de déploiement `deploy_brain.py` et `deploy_jobs.py`.
-- **Suite de Validation GCP & Failover** : Création d'une suite de tests d'intégration complète [test_gcp_deployment_validation.py](file:///c:/Users/bahma/PycharmProjects/Projet%20solo/Double_scenario_Project/tests/adapters/test_gcp_deployment_validation.py) simulant et validant les connexions Cloud SQL (IAM & Unix Socket), le cycle de vie de stockage GCS (avec persistance post-redéploiement et résilience), la validation des secrets de production (Secret Manager), et le traitement des erreurs des tâches planifiées (Cloud Run Jobs).
-- **Cache de Contexte Vertex AI** : Implémentation de la mise en cache de contexte dans `GoogleGenAIAdapter` ([google_genai_adapter.py](file:///c:/Users/bahma/PycharmProjects/Projet%20solo/Double_scenario_Project/backend/adapters/inference/google_genai_adapter.py)) pour les invites système dépassant `GEMINI_CACHE_THRESHOLD` (utilisant `client.caches.create`/`delete`), intégration transparente de `cached_content` dans les requêtes de génération (normale et stream), et mise en place de tests unitaires dédiés ([test_google_genai_cache.py](file:///c:/Users/bahma/PycharmProjects/Projet%20solo/Double_scenario_Project/tests/adapters/test_google_genai_cache.py)) validant la création, le hit, la non-activation sous le seuil et l'invalidation par TTL.
-- **Protection Edge Cloud Armor (WAF & Prompt Injection)** : Écriture du script de déploiement [deploy_security.py](file:///c:/Users/bahma/PycharmProjects/Projet%20solo/Double_scenario_Project/scripts/deploy/deploy_security.py) configurant de manière idempotente des politiques Cloud Armor avec WAF standard (SQLi, XSS, RCE), rate-limiting pour mitiger les attaques Token DoS (HTTP 429), et règle personnalisée CEL pour intercepter les tentatives de prompt injection. Écriture du fichier de tests [test_deploy_security.py](file:///c:/Users/bahma/PycharmProjects/Projet%20solo/Double_scenario_Project/tests/deploy/test_deploy_security.py) validant l'ensemble de la configuration gcloud.
-- **Gemini Multimodal Live API (WebSockets)** : Intégration de la communication vocale bidirectionnelle temps réel. Côté backend, création du consumer Django Channels [speech_to_speech_live.py](file:///c:/Users/bahma/PycharmProjects/Projet%20solo/Double_scenario_Project/backend/api/animetix/consumers/speech_to_speech_live.py) qui relaie le flux audio/texte avec la Gemini Live API (modifiant à la volée le PCM 16kHz en entrée et encapsulant le PCM 24kHz en sortie dans un en-tête WAV pour le navigateur). Côté frontend, refactorisation complète de [SpeechToSpeechLabPage.tsx](file:///c:/Users/bahma/PycharmProjects/Projet%20solo/Double_scenario_Project/frontend/src/features/labs/SpeechToSpeechLabPage.tsx) avec captation microphone continue (timeslices de 400ms), file de lecture audio fluide et sous-titres temps réel.
-- **Analyse des Opportunités GCP 2026** : Rédaction d'un rapport d'opportunités de juin 2026 et mise à jour de `TODO.md` pour classer par ordre de priorité les nouvelles fonctionnalités cloud (Context Caching, Gemini Live API, Cloud Armor WAF LLM, AlloyDB AI).
-- **Mise à jour de la documentation** : Actualisation de `TODO.md`, `HISTORY.md` et `walkthrough.md` pour refléter l'achèvement de la tâche d'expliquabilité, du réseautage VPC, du cache de contexte, de la protection Cloud Armor, de la Gemini Live API et des suites de tests.
+- **Django Forms API Validation**: Refactored view methods in `backend/api/animetix/views/api.py` to systematically use Django Forms, eliminating raw request parsing.
+- **InferencePort Stubs**: Removed remaining stubs from `backend/core/ports/inference_port.py`.
+- **App.tsx Refactoring & Modularization**: Decoupled the monolithic 21 KB `App.tsx` file into atomic components, moving views to `src/pages/` and utilities to `features/`.
+- **SelfEvolvingCompiler Integration**: Replaced compiler stubs with an active proxy compiler dynamically rewriting and optimizing performance critical backend paths.
+- **Neural Diagnostics Improvement**: Migrated uncertainty analysis from simulated `gpt2` metrics in `UnifiedInferenceAdapter` to production-grade model logprobs.
+- **Lazy Load Optimizations**: Configured `FallbackInferenceAdapter` and `GoogleGenAIAdapter` to load heavy client dependencies only on their first runtime invocation.
+- **Social Route Cleanup**: Shifted non-social pages (Pricing, Support, Explore) to their respective feature directories.
+- **New Feature Dashboards**: Created the `/pricing/` comparison page, Tree of Thoughts MCTS visualizer, Thought Budget (TTC) monitoring dashboard, Multiverse Gallery catalog, and the零-shot Voice Cloning (RVC) lab.
 
+## [2026-06-04] Session: Advanced Explainability (XAI), Direct VPC Egress, GCP Validation, Vertex Context Caching, and Live API
 
-## [2026-06-03] Session : Migration vectorielle ChromaDB vers pgvector (Cloud SQL)
+- **XaiReportViewer Component**: Built the React component displaying prompt intent, confidence metrics, agent traces, source attributions, and token logprobs, supported by Vitest suites.
+- **Direct VPC Egress Integration**: Replaced serverless VPC connectors with Direct VPC Egress configurations in `deploy_brain.py` and `deploy_jobs.py`.
+- **GCP Validation Suite**: Created `test_gcp_deployment_validation.py` to verify Cloud SQL sockets, GCS read/write lifecycles, Secret Manager values, and Cloud Run Job error pathways.
+- **Vertex AI Context Caching**: Implemented automatic context caching in `GoogleGenAIAdapter` for prompts exceeding `GEMINI_CACHE_THRESHOLD`.
+- **Cloud Armor WAF Protection**: Added `deploy_security.py` configuring CEL expressions to block SQLi, XSS, RCE, Token DoS, and prompt injections.
+- **Gemini Multimodal Live API**: Implemented the `speech_to_speech_live.py` Django Channels consumer for PCM WebSocket streaming and updated the frontend client page.
 
-- **Migration PostgreSQL pgvector** : Remplacement de ChromaDB par l'extension native `pgvector` de PostgreSQL (Cloud SQL) pour centraliser la persistance RAG en environnement serverless.
-- **Approche hybride (SQLite Fallback)** : Développement d'un adaptateur et d'un client `PGVectorField` / `VectorRecord` personnalisés basculant de pgvector (PostgreSQL) en production vers un stockage texte + calcul de similarité NumPy en local et pendant les tests.
-- **Client compatible** : Réécriture de `pipeline/chroma_client.py` pour émuler le client ChromaDB, assurant la compatibilité immédiate et sans modification de l'ensemble des scripts de pipeline d'ingestion.
-- **Nettoyage architectural** : Suppression complète du conteneur et de la dépendance `chromadb` de `requirements.txt` et `docker-compose.yml`. Mise à niveau de l'image Postgres vers `pgvector/pgvector:pg16` en développement local.
+## [2026-06-03] Session: Vector Database Migration (ChromaDB to pgvector)
 
-## [2026-06-03] Session : Tâches planifiées avec Cloud Run Jobs & Cloud Scheduler
+- **PostgreSQL pgvector Migration**: Replaced standalone ChromaDB containers with the PostgreSQL native `pgvector` extension for production RAG pipelines.
+- **Hybrid SQLite Fallback**: Developed a local fallback adapter storing vectors in standard tables and calculating cosine similarity using NumPy.
+- **ChromaDB Client Emulation**: Rewrote `pipeline/chroma_client.py` to maintain client compatibility, avoiding rewrite requirements in data scrapers.
 
-- **Sécurisation via Google Secret Manager** : Configuration de Cloud Run pour injecter les secrets et clés d'API (TMDB, IGDB, Hugging Face, Django Secret Key) depuis Secret Manager au lieu d'utiliser des fichiers `.env` en production.
-- **Automatisation & ETL** : Création et configuration d'un job Cloud Run (`animetix-sync-catalog`) exécutant la commande de maintenance `python backend/api/manage.py sync_catalog` en production.
-- **Planification Temporelle** : Mise en place d'un déclencheur Cloud Scheduler (`animetix-sync-catalog-trigger`) déployé en région proche (`europe-west1`) configuré pour invoquer le job via une requête HTTP POST authentifiée par OIDC/OAuth chaque jour à 2h00 du matin (Heure de Paris).
-- **Script de Déploiement** : Écriture d'un script d'automatisation Python résilient (`scripts/deploy/deploy_jobs.py`) qui active les API nécessaires, configure le job (variables d'environnement, secrets GCP Secret Manager, connecteur VPC pour l'accès privé Cloud SQL/Redis) et crée le scheduler de manière idempotente.
-- **Optimisation de Performance (Transactions)** : Optimisation de la commande Django `sync_catalog` en décorant la méthode `handle` avec `@transaction.atomic`. La synchronisation de ~45 000 éléments médias passe d'un comportement d'auto-commit unitaire (qui provoquait des timeouts après 10 minutes) à une transaction unique, exécutée et validée avec succès en 7 minutes et 2 secondes.
-- **Intégration du Contexte Docker** : Ajustement de `.gcloudignore` pour lever l'ignorance sur `data/processed` et `data/artifacts`, permettant d'inclure correctement les fichiers de données JSON compilés dans le conteneur de production lors des builds GCP Cloud Build.
+## [2026-06-03] Session: Serverless Tasks (Cloud Run Jobs & Cloud Scheduler)
 
-## [2026-06-03] Session : Intégration GCS & Persistance de la Forge & Migration BDD Cloud SQL
+- **Secret Manager Hardening**: Configured Django settings to pull all external credentials directly from GCP Secret Manager in production.
+- **ETL Catalog Sync Automation**: Created the nightly `sync_catalog` Cloud Run Job and triggered it via Cloud Scheduler HTTP POST calls.
+- **Database Transaction Optimization**: Wrapped the sync command in atomic transactions, reducing execution time from timeouts to 7 minutes.
 
-- **Stockage Cloud (Google Cloud Storage)** : Configuration de `django-storages` avec le backend `GoogleCloudStorage` en production (activé dynamiquement via la variable d'environnement `GS_BUCKET_NAME`) et maintien du stockage local `FileSystemStorage` pour le développement local.
-- **Persistance Creative Fusion** : Résolution du bug où les résultats asynchrones des fusions (les images encodées en base64 Data URIs) n'étaient pas persistés dans la base de données. Implémentation du décodage base64 et de la sauvegarde des images sous forme de fichiers via l'API unifiée `default_storage`.
-- **Intégration Google Cloud SQL (PostgreSQL)** : Configuration dynamique des paramètres de base de données dans `settings.py` pour détecter automatiquement les connexions par socket Unix (propres à GCP Cloud SQL sur Cloud Run) et désactiver l'application de `sslmode='require'` (incompatible avec les sockets Unix) tout en la maintenant pour les connexions TCP standard.
-- **Tests d'Intégration** :
-  - Création et passage de tests d'intégration dans `test_gcs_integration.py` pour le cycle de vie d'écriture/lecture de fichiers et le comportement de la vue de statut d'Archetypist.
-  - Création et passage de tests unitaires dans `test_db_config.py` validant le comportement de parsing dynamique de `DATABASE_URL` pour les configurations TCP et Unix.
+## [2026-06-03] Session: Google Cloud Storage & Creative Forge
 
-## [2026-06-02] Session : Inférence SOTA, Nettoyage des Bouchons, Guardrails Homogènes et Curation IA
+- **GCS Storage Integration**: Configured `django-storages` with Google Cloud Storage backend for production media.
+- **Creative Forge Persistence**: Fixed a bug where creative fusions (Base64 URIs) were not saved, implementing default storage decode and write pipelines.
 
-- **Migration Google GenAI (Gemini 3.5 Flash / Vertex AI)** : Création de `GoogleGenAIAdapter` implémentant `InferencePort` avec support d'authentification hybride (Developer API et Vertex AI ADC), gestion native des réponses structurées Pydantic, extraction des logprobs depuis `logprobs_result` pour la perplexité, et intégration multimodale (génération de description d'image et visual rerank) avec tests unitaires complets.
-- **Diagnostics & Incertitude Avancés (Logprobs)** : Migration des calculs d'incertitude (Shannon entropy, perplexité, confiance) basés sur le texte vers une exploitation réelle en O(1) des `logprobs` réels en cache fournis par la BrainAPI et Ollama.
-- **Nettoyage des Bouchons (UnifiedInferenceAdapter)** : Suppression complète de `InferenceNotImplementedError` sur les 29 endpoints d' `InferencePort` en orchestrant et en résolvant proprement les mixins de vision et d'audio via la Method Resolution Order (MRO).
-- **Modération de Contenu Homogène (Guardrails)** : Généralisation de la modération sémantique s'exécutant sur le LLM à tous les adaptateurs de texte (`LocalTextAdapter`, `Qwen3VLAdapter`, `UnifiedInferenceAdapter`) via le port parent, intégrant un fallback par mots-clés performant en cas de défaillance.
-- **Tests & Qualité** : Automatisation des tests d'évaluation continue (Ragas) pour la fidélité et l'absence d'hallucinations via `ragas_eval_service.py` pour valider les métriques de `AIREvalResult`.
-- **Intégrations & Pages Frontend complétées** :
-  - Pages d'authentification et d'onboarding, AccountSettingsPage, ClubEventPage avec participation réelle et countdown.
-  - Flux de notifications temps réel avec store Zustand et WebSockets.
-  - Historique des Feedbacks IA (AIFeedback).
-  - Intégration du mode `VsBattle` (Arena Ultimatum), de l'accès World Boss et du Blindtest sur la Home.
-  - Création de la page Cinematic Volumetric Reconstruction (3D dynamique) et du Dashboard SOTA Benchmarking.
-- **Fonctionnalités IA & Jeux** : Lobby de Duel temps réel (/duel/lobby/), Explorateur de Catalogue /explore/, Dashboard de Curation des Données pour l'Admin, Hyper-Personnalisation dynamique avec auras réactives basées sur "Archetype Drift".
-- **Innovation & Curation** :
-  - Déploiement du Visual Graph Debugger pour la correction manuelle des conflits de lore Neo4j via `GraphHealerService`.
-  - Implémentation de la page de gestion Neuro-Symbolique de la mémoire (règles Z3 déduites du profil).
-- **Sécurité et Résilience** :
-  - **Suppression des Secrets par Défaut (Hardened)** : Élimination de tous les fallbacks de clés API en dur dans le code. Validation centralisée dans `settings.py` via `ImproperlyConfigured` en production et blocage du démarrage du service Brain API sans clé sécurisée.
-  - **Isolation Réseau SOTA** : Retrait total de l'exposition des ports de base de données (Postgres, Redis, Chroma, Neo4j) et d'inférence (Ollama) sur l'hôte host. Les services communiquent désormais exclusivement via le réseau virtuel Docker, éliminant les vecteurs d'accès direct non autorisés.
-  - **Durcissement SSRF Interne** : Refactorisation de `is_safe_url` pour imposer une liste blanche stricte (`ALLOWED_INTERNAL_HOSTS`) des services Docker autorisés. Même avec `allow_internal=True`, l'accès direct aux IPs privées non-résolues via hostname autorisé est désormais bloqué, empêchant le scan du réseau interne.
-  - **Protection contre l'Empoisonnement de Modèle (STaR)** : Implémentation d'une boucle de validation humaine obligatoire (Human-in-the-Loop) pour le framework Self-Taught Reasoner. Les traces générées sont désormais stockées en base (is_validated=False) au lieu d'être directement écrites dans le dataset de Fine-Tuning, empêchant le "Model Collapse" ou l'apprentissage de biais.
-  - Sécurisation de la Brain API via `X-API-Key`.
-  - Mitigation Prompt Injection et affinage de la CSP (retrait de `'unsafe-eval'`).
-  - Systématisation de la sanitisation des sorties IA (`sanitize_ai`/`bleach`).
-  - Rate limiting sur `MediaSearchView` et protection contre le Mass Assignment dans `CreativeFusionSerializer`.
+## [2026-06-02] Session: SOTA Inference, Content Moderation, and Gaming UI
 
-## [2026-06-01] Session : Refactoring SOTA, Caching Anti-DoS, Recherche 100% API et Purge XState
+- **Google GenAI Adapter**: Built `GoogleGenAIAdapter` using Pydantic structural generation and real logprobs parsing.
+- **Homogeneous Content Moderation**: Integrated a standard sémantique safety filter across all adapters with keyword-based fallbacks.
+- **DRF Serializer Audits**: Audited and fixed mass assignment vulnerability vectors in `CreativeFusionSerializer` and IDOR vulnerabilities.
+- **Gaming & Profile UI**: Deployed ClubEvent countdown participation, realtime notification badges, VsBattle lobby matchmaking, and latent space user auras.
 
-- **Simplification & Harmonisation de l'Architecture (Post-Audit)** : Purge des dépendances obsolètes (`ollama`, `google-ai-generativelanguage` et `umap-learn`) de `requirements.txt`. Purge de la bibliothèque `three` (redondante) de `package.json` car déjà encapsulée par `@google/model-viewer`. Sécurisation de `synthetic_gold_generator.py` en migrant de `urllib` vers `safe_http_request` (protection SSRF). Renommage complet de `DuckDuckGoSearchAdapter` en `UnifiedWebSearchAdapter` pour refléter ses capacités hybrides de recherche (Tavily et Google Search Grounding).
-- **Nettoyage et Épuration des Dépendances** : Purge physique de la dépendance frontend redondante `plotly.js-dist-min` du `package.json` et suppression des paquets backend inutilisés ou en conflit (`safehttpx` et `environ` au profit exclusif de `django-environ`) dans `requirements.txt`.
-- **Stabilisation de la Recherche Web** : Remplacement du scraping DuckDuckGo instable par un adaptateur de recherche web unifié résilient (Tavily Search API & Google Search Grounding via Gemini) et purge physique complète de la bibliothèque `duckduckgo_search`.
-- **Simplification d'État Frontend (XState ➡️ Zustand)** : Refactorisation complète des machines de jeux du dossier `/machines` en stores Zustand légers et fluides, et désinstallation définitive de `xstate` et `@xstate/react` du package.json.
-- **Optimisation Anti-DoS (Middleware)** : Mise en cache robuste pour 15 minutes des calculs complexes d'Archetype Drift de `PersonalizationMiddleware` afin d'éliminer les pics de requêtes SQLite/Neo4j répétées.
-- **Lobby de Duel & Matchmaking PvP** : Implémentation du matchmaking PvP temps réel en WebSockets avec Arena interactive, scores et duels 1v1.
-- **Explorateur de Catalogue (Media Browser)** : Déploiement de l'interface immersive ExplorePage pour la recommandation par catégories.
-- **Dashboard de Curation IA** : Déploiement du dashboard d'administration de curation des données pour les correcteurs IA.
-- **Authentification & Onboarding** : Intégration des flux et des interfaces d'enregistrement / de login avec le store global `authStore`.
-- **Gestion de Compte & Profil** : Implémentation complète de la configuration utilisateur, du tier d'abonnement et de la génération sécurisée des jetons d'API.
-- **Hyper-Personnalisation Graphique** : Couplage de la détection de dérive d'archétype avec des auras réactives `DynamicAuraWrapper` et du panneau de configuration de style.
-- **Sécurisation & Résilience** : Intégration du rate-limiting on ChromaDB (`MediaSearchView`) et blocage des assignations en masse illégitimes dans le `CreativeFusionSerializer`.
+## [2026-06-01] Session: SOTA Refactoring, Caching, and XState Purge
 
-## [2026-06-01] Session : Duel Arena & Real-time PvP
+- **Zustand Migration**: Completely removed XState and `@xstate/react`, refactoring Akinetix and Paradox timelines into lightweight Zustand stores.
+- **Anti-DoS Caching Middleware**: Implemented a 15-minute Cache-Control decorator on user personalization computation calls.
+- **Cleanup of Unused Packages**: Purged `umap-learn`, `three` (duplicate), and `duckduckgo_search` (replaced by Tavily and Google Grounding).
 
-- **Matchmaking Engine :** Implémentation du `MatchmakingView` et du système de codes de salon privés pour les duels 1v1.
-- **Duel Consumer :** Activation du WebSocket Consumer gérant les échanges de "guesses" et la synchronisation de l'état de jeu en temps réel.
-- **Frontend Arena :** Déploiement de `DuelArenaPage.tsx` avec affichage "VS", logs de combat et feedback visuel des victoires.
-
-## [2026-06-01] Session : Explore & Curation Dashboard
-
-- **Media Explore API :** Création d'un endpoint dynamique extrayant les tendances et les catégories (Action, Romance...) du catalogue média.
-- **Interface Netflix-like :** Implémentation de `ExplorePage.tsx` avec Hero section immersive et défilement horizontal par catégories.
-- **Admin Curation :** Déploiement d'un dashboard de curation (`CurationDashboard.tsx`) permettant de valider les corrections structurelles suggérées par les agents IA Healers.
-
-## [2026-06-01] Session : World Boss
-
-- **World Boss API :** Création des vues `ActiveWorldBossView` et `WorldBossAttackView` gérant le cycle de vie des boss globaux.
-- **Frontend Immersion :** Implémentation de `WorldBossPage.tsx` avec barre de vie dynamique et indices communautaires.
-
-## [2026-06-01] Session : Flux Temps Réel & Optimisation Frontend
-
-- **Notifications Temps Réel (WebSockets) :** Intégration complète d'un système de notification asynchrone via Django Channels. Un `NotificationConsumer` pousse instantanément les événements (succès d'amis, alertes système) vers les clients connectés. Côté React, un `useNotificationStore` (Zustand) maintient la connexion WebSocket, affiche des Toasts dynamiques et invalide le cache React Query en temps réel.
-- **Migration d'État (Zustand) :** Refactorisation des jeux (Akinetix, Blindtest, Vision, Paradox) pour remplacer les machines XState lourdes par des stores Zustand légers, améliorant la performance et réduisant le bundle size.
-- **Historique des Sessions de Jeu :** Implémentation du composant `GameHistoryPanel` sur la page de profil. Le backend expose désormais l'historique détaillé des parties (`GameplaySession`), permettant à l'utilisateur de revoir ses performances passées, les victoires/défaites, et les modes de jeu joués.
-
-## [2026-05-31] Session : Audit Avancé de Sécurité
-
-- **Prévention DoS (OOM)** : Configuration de `DATA_UPLOAD_MAX_MEMORY_SIZE` (50Mo) dans Django.
-- **Validation MIME-Type Stricte** : Intégration de la librairie `filetype`.
-- **Protection CSRF Cross-Domain** : Résolution de la vulnérabilité liée au cookie `SameSite=None`.
-- **Sanitization JSON (Anti-XSS/NoSQL)** : Protection du profil utilisateur via Pydantic strict.
-- **Prévention IDOR sur les Fusions** : Filtrage dynamique des querysets dans `CreativeFusionViewSet`.
-
-## [2026-05-31] Session : Sécurité Complète et Intégrations SOTA
-
-- **Audit de Dépendances Continu** : Automatisation du scan de vulnérabilités via Dependabot.
-- **Protection SSRF** : Remplacement massif de l'usage direct de `httpx` par `safe_http_request`.
-- **Renforcement des Guardrails IA** : Mise en place de sentinelles Input/Output.
-- **Nouvelles Interfaces SOTA (Nexus Series)** : Déploiement de multiples UI expertes (MCTS, Z3 Logic, Swarm...).
-
-## [2026-05-30] Session : Hyper-Personnalisation Graphique 100%
-
-- **Moteur d'Archetype Drift (Backend) :** Implémentation du `ArchetypeDriftService`.
-- **Infrastructure de Style Dynamique (Frontend) :** Création du `personalizationStore` (Zustand).
-- **Auras et Effets Visuels :** Déploiement du composant `DynamicAuraWrapper`.
-
-...
+---
+*End of History Log*

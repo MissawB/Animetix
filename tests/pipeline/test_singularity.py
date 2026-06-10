@@ -127,7 +127,14 @@ def test_autonomous_domain_synthesizer():
     mock_neo4j = MagicMock()
     mock_neo4j.execute_query.return_value = []
     
-    synthesizer = AutonomousDomainSynthesizer(inference_engine=mock_inference, neo4j_manager=mock_neo4j)
+    # Mock Gold Dataset Port
+    mock_gold_port = MagicMock()
+    
+    synthesizer = AutonomousDomainSynthesizer(
+        inference_engine=mock_inference, 
+        neo4j_manager=mock_neo4j,
+        gold_dataset_port=mock_gold_port
+    )
     
     # 1. Génération sémantique de l'univers
     universe = synthesizer.synthesize_multiverse(universe_name="NeonGenesisX", primary_genre="Sci-Fi")
@@ -146,10 +153,10 @@ def test_autonomous_domain_synthesizer():
     assert evaluation["ai_score"] >= 0.7
     assert evaluation["community_score"] >= 0.7
     
-    # 3. Persistance d'un univers digne d'intérêt dans le graphe Neo4j
+    # 3. Persistance d'un univers digne d'intérêt (staged pour human validation)
     success = synthesizer.persist_universe_to_graph(universe)
     assert success is True
-    assert mock_neo4j.execute_query.call_count >= 3
+    mock_gold_port.save_synthetic_entry.assert_called_once()
     
     # 4. Test d'évaluation de cohérence (Cas indigne : genre impopulaire et manque de données)
     poor_universe = {

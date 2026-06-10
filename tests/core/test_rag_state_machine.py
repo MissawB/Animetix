@@ -30,7 +30,7 @@ def mock_deps():
         forge=MagicMock(),
         saga_agent=MagicMock(),
         chronicler=MagicMock(),
-        uncertainty_service=mock_xai,
+        xai_service=mock_xai,
         inference_engine=MagicMock(),
         web_search=MagicMock(),
         prompt_manager=mock_pm,

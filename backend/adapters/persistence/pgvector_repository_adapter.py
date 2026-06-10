@@ -2,7 +2,7 @@ import os
 import orjson
 import numpy as np
 import logging
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Any
 from core.ports.repository_port import RepositoryPort
 from pipeline.chroma_client import chroma_manager
 from django.core.cache import cache
@@ -233,4 +233,9 @@ class PGVectorRepositoryAdapter(RepositoryPort):
         return []
 
     def get_user_creative_history(self, user_id: int, limit: int = 10) -> List[Dict]:
+        return []
+
+    def query_data_natural_language(self, query: str, llm_service: Optional[Any] = None) -> List[Dict]:
+        """PGVector adapter doesn't query relational database directly. Returns empty."""
+        logger.warning("PGVectorRepositoryAdapter.query_data_natural_language called, but vector adapter does not support relational Text-to-SQL directly.")
         return []

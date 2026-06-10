@@ -5,7 +5,9 @@ Applies a Paxos-style semantic voting consensus protocol to validate sémantique
 """
 
 import logging
+import time
 from typing import List, Dict, Any, Tuple, Optional
+import numpy as np
 from pydantic import BaseModel, Field
 
 
@@ -24,11 +26,7 @@ class SwarmConsensusOrchestrator:
         self.agents = agent_names or [
             "VisualExpert", 
             "AcousticExpert", 
-            "LoreExpert", 
-            "LogicGate", 
-            "SentimentScanner", 
-            "TemporalGuard", 
-            "StyleCritic"
+            "LoreExpert"
         ]
         self.consensus_log: List[Dict[str, Any]] = []
         self.inference_engine = inference_engine

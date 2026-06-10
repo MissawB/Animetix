@@ -65,7 +65,7 @@ def test_archetypist_task_status_view_saves_to_storage(mock_async_result, client
     
     # Make GET request to the ArchetypistTaskStatusView using the correct prefix path /api/v1/
     response = client.get(
-        f"/fr/api/v1/archetypist/status/?task_id=mock-task-id&fusion_id={fusion.id}"
+        f"/api/v1/archetypist/status/?task_id=mock-task-id&fusion_id={fusion.id}"
     )
     
     assert response.status_code == 200

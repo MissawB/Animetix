@@ -1,29 +1,29 @@
-# Architecture Technique & Modulaire (Atomic & Hexagonal)
+# Technical & Modular Architecture (Atomic & Hexagonal)
 
-Ce document décrit l'architecture logicielle du projet **Double_scenario_Project** (Anime Archetype Engine). Le projet adopte une approche **Atomic & Hexagonal** (Clean Architecture) pour garantir un découplage strict entre la logique métier (Domain) et l'infrastructure (Adapters).
+This document describes the software architecture of the **Double_scenario_Project** (Anime Archetype Engine). The project adopts an **Atomic & Hexagonal** (Clean Architecture) approach to guarantee a strict decoupling between the business logic (Domain) and the infrastructure layer (Adapters).
 
 ---
 
-## 1. Vue d'Ensemble de l'Hexagone
+## 1. Overview of the Hexagon
 
-L'architecture s'articule autour de trois strates :
+The architecture is divided into three distinct layers:
 
 ```mermaid
 graph TD
-    subgraph Frameworks & Adapters (Externe)
+    subgraph Frameworks & Adapters (External)
         Django[Django Backend & Channels]
-        ML_Adapters[Adapteurs d'Inférence: LocalLlama, Diffusers, Transformers]
-        Persistence_Adapters[Adapteurs de Persistance: ChromaDB, Neo4j, Django DB]
+        ML_Adapters[Inference Adapters: LocalLlama, Diffusers, Transformers]
+        Persistence_Adapters[Persistence Adapters: Vertex AI, pgvector, Neo4j, Django DB]
     end
 
     subgraph Ports (Interfaces)
-        InferencePort[InferencePort - inclut Reranking]
+        InferencePort[InferencePort - includes Reranking]
         PersistencePort[PersistencePort - UnifiedRepository]
     end
 
-    subgraph Core Domain (Métier)
-        Services[Services Métier: AdvancedRAGService, PromptManager, Agents]
-        Models[Modèles Pydantic: DTOs, Schémas IA]
+    subgraph Core Domain (Business Logic)
+        Services[Domain Services: AgenticRAGService, PromptManager, Games]
+        Models[Pydantic Models: DTOs, AI Schemas]
     end
 
     Django --> Services
@@ -35,84 +35,84 @@ graph TD
 
 ---
 
-## 2. Structure du Code Source
+## 2. Source Code Structure
 
-Le code est organisé sous `backend/` :
+The backend code is organized under `backend/`:
 
-- **`core/ports/`** : Abstractions (ABC) définissant les contrats métier.
-  - `InferencePort` : Génération de texte/image, clonage de voix, reranking, et vision avancée.
-  - `MlopsPort` : Gestion de la télémétrie, journalisation DPO et feedbacks IA via Celery.
-  - `PersistencePort` : Accès aux données unifié (`UnifiedRepositoryAdapter`).
-- **`core/domain/services/`** : Logique métier pure, sans dépendance infra.
-- **`adapters/`** : Implémentations concrètes (Infrastructure).
-  - `adapters/persistence/` : Gestion multi-source (ChromaDB, Neo4j).
-  - `adapters/inference/` : Supports BrainAPI, Ollama (Unified), Transformers.
-- **`api/`** : Orchestration Django. Injection via `containers/`.
-
----
-
-## 3. Stockage & Persistance (Primary: ChromaDB)
-Le projet utilise **ChromaDB** comme stockage vectoriel exclusif pour la recherche sémantique. L'accès aux données est unifié via `UnifiedRepositoryAdapter`. Neo4j est utilisé en complément pour la persistance des relations complexes du graphe de connaissances.
-
+- **`core/ports/`**: Abstractions (Abstract Base Classes) defining the business contracts.
+  - `InferencePort`: Text/Image generation, voice cloning, reranking, and advanced computer vision.
+  - `MlopsPort`: Handles telemetry, DPO logging, and AI feedback loops via Celery/GCP Tasks.
+  - `PersistencePort`: Unified data access definition (`UnifiedRepositoryAdapter`).
+- **`core/domain/services/`**: Pure business logic services, completely independent of infrastructure or frameworks.
+- **`adapters/`**: Concrete infrastructure implementations.
+  - `adapters/persistence/`: Handles data multi-sources (Vertex AI, pgvector, Neo4j, Django DB).
+  - `adapters/inference/`: Adapter implementations for Google GenAI, BrainAPI, Ollama (Unified), and local Transformers.
+- **`api/`**: Headless Django configuration. Dependencies are declared and injected via `containers/` (Dependency-Injector).
 
 ---
 
-## 4. Stratégie d'Importations Paresseuses (Lazy Imports)
+## 3. Storage & Persistence
 
-Pour optimiser le chargement, les bibliothèques lourdes (`torch`, `transformers`, etc.) sont chargées via `lazy_import.py`. L'import réel ne se déclenche qu'au premier accès attributaire, évitant des surcoûts inutiles pour les composants non IA.
-
----
-
-## 5. Gestion des Fonctionnalités & Extension
-
-Les adaptateurs concrétisent les ports. Toute méthode non supportée lève `InferenceNotImplementedError`. L'ajout de fonctionnalités (ex: Reranking) suit le cycle :
-1. Extension du **Port**.
-2. Implémentation dans l'**Adapter** correspondant.
-3. Mise à jour de l'injection dans `containers.py`.
+The project utilizes **Vertex AI Vector Search (Collections)** in production and **pgvector (PostgreSQL)** / **NumPy (SQLite)** as local fallbacks for semantic vector searches. Data access is unified under the `UnifiedRepositoryAdapter`. Additionally, **Neo4j** acts as the graph database mapping complex, topological creator-studio-character relations.
 
 ---
 
-## 6. Déploiement : Architecture découplée (Pure SPA)
+## 4. Lazy Imports Strategy
 
-Animetix est désormais conçu et déployé comme une **Pure SPA** (Single Page Application) totalement découplée.
-
-- **Frontend (Statique)** : Une application React moderne construite avec **Vite** (`frontend/`). Le bundle généré (`dist/`) est servi de manière ultra-performante. En développement, Vite tourne sur le port `5173` et proxyfie les requêtes `/api` et `/ws` vers le backend Django.
-- **Backend (Headless API)** : Django fonctionne strictement comme une API headless. Toutes les anciennes routes HTML et contrôleurs de vues Django obsolètes ont été **intégralement supprimés** (nettoyage complet de `base.html` et des templates associés). 
-- **Routage Unifié** : Django configure un routage systématique où la racine et toutes les requêtes de fallback (`re_path(r'^(?!api/|static/|admin/).*$', spa_view)`) redirigent vers `spa_view` pour laisser React gérer le routage côté client via `react-router-dom`.
-
-### Synthèse des flux et découplage
-1. **Communication** : API REST JSON via `/api/v1/`.
-2. **Gestion d'État** : Tout l'état de l'application et les logiques de jeux complexes (Akinetix, Paradox, Forge) ont été déportés de la couche de présentation Django vers des **Domain Services** dans `backend/core/domain/services/`.
-3. **Sécurité et Authentification** : L'état d'authentification est centralisé côté React SPA, validé par un endpoint Django dédié (`feat(spa-auth)`).
-4. **Configuration de Production** :
-   - Construire le front avec `npm run build` dans le dossier `frontend/`.
-   - Servir les fichiers statiques de `dist/` via Nginx ou un service CDN.
-   - Configurer le reverse proxy pour diriger `/api/` et les connexions WebSocket `/ws/` vers le serveur d'application Django (Gunicorn/Uvicorn).
+To optimize startup performance and keep memory usage low, heavy AI libraries (`torch`, `transformers`, etc.) are imported lazily using an attribute-based wrapper (`lazy_import.py`). The actual module import is only triggered during the first attribute access, eliminating unnecessary loading overhead for non-AI tasks.
 
 ---
 
-## 7. Écosystème des Adaptateurs d'Inférence
+## 5. Extensibility & Port Implementation
 
-Le projet utilise un **FallbackInferenceAdapter** qui orchestre une chaîne de repli entre les différents moteurs d'inférence :
+Adapters implement the abstract ports. Any method not implemented by a specific adapter raises an `InferenceNotImplementedError`. Extending the platform follows a strict pattern:
+1. Extend the abstract **Port** definition.
+2. Implement the concrete logic in the corresponding **Adapter**.
+3. Register or bind the new implementation inside `containers.py`.
+
+---
+
+## 6. Deployment: Decoupled Single Page Application (SPA)
+
+Animetix is designed and deployed as a fully decoupled **Pure SPA** (Single Page Application).
+
+- **Frontend (Static)**: A modern React application built with **Vite** (`frontend/`). The production bundle (`dist/`) is built for high performance. In development mode, Vite runs on port `5173` and proxies `/api` and `/ws` requests to the Django backend.
+- **Backend (Headless API)**: Django operates strictly as a headless API. All legacy HTML templates and view controllers have been completely removed.
+- **Unified Client-Side Routing**: Django routes any non-API fallback paths (`re_path(r'^(?!api/|static/|admin/).*$', spa_view)`) directly to the SPA, allowing React Router DOM to manage application routing on the client side.
+
+### Streamlined Flows & Decoupling
+1. **Communication**: Clean JSON REST API exposed under `/api/v1/`.
+2. **State Management**: Frontend state is managed by lightweight **Zustand** stores, delegating game loops and decision rules to backend **Domain Services** under `backend/core/domain/services/`.
+3. **Security & Authentication**: Managed user authentication relies on the React SPA token state, validated via the custom `GoogleIdentityAuthentication` JWT verifier.
+4. **Production Configuration**:
+   - Build the frontend bundle using `npm run build` within `frontend/`.
+   - Serve static assets under `dist/` using Nginx or an CDN.
+   - Configure a reverse proxy to route `/api/` and WebSockets `/ws/` traffic to the Django ASGI runner (Daphne/Uvicorn).
+
+---
+
+## 7. Inference Adapters Ecosystem
+
+The project implements a resilient `FallbackInferenceAdapter` that manages fallback paths across multiple inference backends:
 
 ```mermaid
 graph TD
     FallbackAdapter["FallbackInferenceAdapter"]
     
-    subgraph Adaptateurs Texte
-        BrainAPI["BrainAPIAdapter (Cloud - Primaire)"]
+    subgraph Text_Adapters [Text Engines]
+        BrainAPI["BrainAPIAdapter (Cloud - Primary)"]
         Ollama["UnifiedInferenceAdapter (Ollama Local - Fallback)"]
         Langchain["LangchainAdapter"]
     end
     
-    subgraph Adaptateurs Vision
+    subgraph Vision_Adapters [Vision Engines]
         VisionTF["VisionTransformersAdapter"]
         Diffusers["DiffusersAdapter"]
         Qwen3VL["Qwen3VLAdapter"]
         Moondream["MoondreamAdapter"]
     end
     
-    subgraph Adaptateurs Audio
+    subgraph Audio_Adapters [Audio Engines]
         AudioTF["AudioTransformersAdapter"]
         XTTS["XTTSAdapter"]
     end
@@ -124,13 +124,13 @@ graph TD
     FallbackAdapter --> AudioTF
 ```
 
-Chaque adaptateur implémente un sous-ensemble de l'`InferencePort`. Le `FallbackInferenceAdapter` construit un **cache de capacités** au démarrage pour router chaque appel vers le premier adaptateur capable.
+The `FallbackInferenceAdapter` probes available engines at boot and constructs a capacity map to dynamically route requests to the first functional adapter.
 
 ---
 
-## 8. Architecture Mixin de VisionTransformersAdapter
+## 8. VisionTransformersAdapter Mixin Architecture
 
-Pour éviter un fichier monolithique, `VisionTransformersAdapter` est décomposé en **4 mixins** spécialisés :
+To maintain high readability and avoid a monolithic file, the `VisionTransformersAdapter` is modularized into **four specialized mixins**:
 
 ```mermaid
 classDiagram
@@ -173,9 +173,9 @@ classDiagram
 
 ---
 
-## 9. Hiérarchie des Exceptions
+## 9. Error Hierarchy
 
-Toutes les exceptions du projet dérivent de `AnimetixBaseError` :
+All custom application errors derive from `AnimetixBaseError`:
 
 ```mermaid
 classDiagram
@@ -202,33 +202,32 @@ classDiagram
 
 ---
 
-## 10. Accès & Modes de Déploiement
+## 10. Access & Deployment Environments
 
-### A. Environnement Local (Développement manuel)
-Dans cet environnement, le frontend et le backend tournent séparément pour permettre le *Hot Module Replacement* (HMR).
+### A. Local Development Environment
+The frontend and backend run in isolation to support Hot Module Replacement (HMR).
 
-- **Backend (Django)** : 
-  - URL : `http://localhost:8000`
-  - Commande : `python backend/api/manage.py runserver`
-- **Frontend (React/Vite)** : 
-  - URL : `http://localhost:5173`
-  - Commande : `cd frontend && npm run dev`
-  - *Note* : Le serveur Vite proxyfie automatiquement `/api/*` et `/ws/*` vers Django.
+- **Backend (Django)**: 
+  - URL: `http://localhost:8000`
+  - Command: `python backend/api/manage.py runserver`
+- **Frontend (Vite / React)**: 
+  - URL: `http://localhost:5173`
+  - Command: `cd frontend && npm run dev`
+  - *Note*: Vite automatically proxies `/api/*` and `/ws/*` calls to the Django instance.
 
-### B. Environnement Dev / Staging (Docker)
-L'utilisation de Docker regroupe tout dans des conteneurs isolés. Le frontend est pré-construit et servi par le backend.
+### B. Dev / Staging Environment (Docker)
+Containers package the entire infrastructure stack, serving the pre-built React frontend directly from the Django static server.
 
-- **Docker Standard** :
-  - URL : `http://localhost:8000`
-  - Commande : `docker-compose -f deploy/docker-compose.yml up`
-- **Docker Staging** (avec modes expérimentaux & debug) :
-  - URL : `http://localhost:8080`
-  - Commande : `docker-compose -f deploy/docker-compose.yml -f deploy/docker-compose.staging.yml up`
+- **Standard Docker**:
+  - URL: `http://localhost:8000`
+  - Command: `docker-compose -f deploy/docker-compose.yml up`
+- **Staging Docker** (includes debugging & experimental feature flags):
+  - URL: `http://localhost:8080`
+  - Command: `docker-compose -f deploy/docker-compose.yml -f deploy/docker-compose.staging.yml up`
 
-### C. Environnement de Production (Hugging Face)
-Animetix est optimisé pour un déploiement sur **Hugging Face Spaces**.
+### C. Production Environment (Hugging Face)
+Animetix is optimized for container deployments on **Hugging Face Spaces**.
 
-- **URL** : `https://huggingface.co/spaces/MissawB/Animetix` (ou URL personnalisée).
-- **Port Interne** : Le conteneur expose le port `7860`.
-- **Pipeline** : Déploiement automatisé via GitHub Actions (`deploy_to_hf.yml`).
-
+- **URL**: `https://huggingface.co/spaces/MissawB/Animetix`
+- **Internal Port**: Container exposes port `7860`.
+- **Pipeline**: Automated deployments triggered via GitHub Actions (`deploy_to_hf.yml`).

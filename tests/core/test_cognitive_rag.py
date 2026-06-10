@@ -124,7 +124,7 @@ def test_workflow_manager_triggers_cognitive_evolution(quantum_model, plasticity
         forge=mock_forge,
         saga_agent=mock_saga,
         chronicler=mock_chron,
-        uncertainty_service=mock_uncertainty,
+        xai_service=mock_uncertainty,
         inference_engine=mock_engine,
         web_search=mock_search,
         prompt_manager=mock_prompt_mgr,

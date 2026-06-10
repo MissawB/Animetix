@@ -1,22 +1,22 @@
-# GEMINI - Mandats Backend
+# GEMINI - Backend Mandates
 
-Ce fichier définit les contraintes spécifiques à la couche serveur et au domaine IA.
+This file defines constraints specific to the backend server and AI domain layers.
 
-## 🏗️ Architecture & Injection
-- **Hexagonal Integrity :** Respecter le flux `Presentation -> Core (Domain/Ports) <- Adapters`.
-- **Dependency Injection :** Utiliser le container global situé dans `backend/api/animetix/containers.py`. Les dépendances IA (modèles, adaptateurs) doivent être chargées de manière **lazy** pour optimiser le temps de démarrage.
+## 🏗️ Architecture & Dependency Injection
+- **Hexagonal Integrity:** Respect the presentation ➡️ core (domain/ports) ⬅️ adapters flow.
+- **Dependency Injection:** Utilize the global container located at `backend/api/animetix/containers.py`. All heavy AI dependencies (models, adapters) must be loaded **lazily** to optimize server boot times.
 
-## 🐍 Standards Python & API
-- **Version :** Python 3.11+.
-- **Validation :** Utilisation systématique de `Pydantic` (v2) pour les schémas d'entités et d'échange IA.
-- **Django :** Utiliser les `Forms` pour la validation des entrées API. Les vues doivent rester fines (thin views) et déléguer la logique aux `Domain Services`.
-- **Asynchronisme :** Utiliser `Channels` pour les flux temps réel (SSE/WebSockets). Préférer `contextvars` pour la gestion des états de requête en environnement asynchrone.
+## 🐍 Python & API Standards
+- **Version:** Python 3.11+.
+- **Validation:** Systematic use of `Pydantic` (v2) for structural entity mappings and AI exchanges.
+- **Django:** Use Django `Forms` to validate API parameters. Views must remain thin and delegate logic execution to backend `Domain Services`.
+- **Asynchrony:** Use `Django Channels` to stream real-time flows (SSE/WebSockets). Prefer `contextvars` to track request states across asynchronous loops.
 
-## 🧠 Intelligence Artificielle & MLOps
-- **Orchestration :** Les pipelines d'ingestion et d'entraînement doivent suivre les patterns **Dagster**.
-- **Inference :** Toujours passer par `InferencePort`. Implémenter le fallback vers Ollama ou BrainAPI.
-- **RAG :** Maintenir la synchronisation entre `ChromaDB` (recherche sémantique) et `Neo4j` (raisonnement par graphe).
+## 🧠 Artificial Intelligence & MLOps
+- **Pipeline:** ETL sync pipelines must be mapped to Django management commands and run as scheduled tasks (Cloud Run Jobs).
+- **Inference:** Requests must go through `InferencePort`. Maintain active routing and fallbacks to Ollama and BrainAPI.
+- **RAG:** Synchronize vector indices (Vertex AI Vector Search / pgvector) and the Neo4j Knowledge Graph.
 
-## 🧪 Tests & Qualité
-- **Suite de tests :** `pytest` avec couverture obligatoire des Use Cases du Domaine.
-- **Logging :** Ne jamais utiliser `print()`. Utiliser des loggers hiérarchiques.
+## 🧪 Testing & Quality
+- **Test Suite:** Execute `pytest` ensuring full code coverage over Domain Use Cases.
+- **Logging:** Never use `print()`. Systematically route logs via named hierarchical loggers.

@@ -1,54 +1,52 @@
-# Diagrammes d'Architecture - Double_scenario_Project (Animetix)
+# Architecture Diagrams - Double_scenario_Project (Animetix)
 
-Ce document regroupe les schémas explicatifs de l'architecture du projet. Ils sont rédigés au format [Mermaid](https://mermaid.js.org/). Si vous utilisez un IDE compatible (VSCode avec l'extension Markdown Preview Mermaid Support, PyCharm, ou GitHub/GitLab), les schémas s'afficheront automatiquement. Vous pouvez également copier-coller ces blocs sur [Mermaid Live Editor](https://mermaid.live/).
+This document groups the explanatory diagrams of the project's architecture. They are written in [Mermaid](https://mermaid.js.org/) format. If you use a compatible IDE (VSCode with Markdown Preview Mermaid Support extension, PyCharm, or GitHub/GitLab), the diagrams will render automatically. You can also copy-paste these blocks into the [Mermaid Live Editor](https://mermaid.live/).
 
 ---
 
-## 1. Vue d'Ensemble : Découplage Global du Système
+## 1. Global Overview: System Decoupling
 
-Ce schéma illustre la séparation stricte (Pure SPA) entre le client (React) et le serveur (API Django), ainsi que l'infrastructure de données.
+This diagram illustrates the strict decoupling (Pure SPA) between the client application (React) and the headless server (Django API), along with the data infrastructure.
 
 ```mermaid
 graph LR
-    %% Acteurs
-    User((Utilisateur))
+    %% Actors
+    User((User))
 
-    %% Front-End (Client)
-    subgraph Frontend ["Frontend (SPA React / Vite)"]
-        UI[Interface Utilisateur]
-        State[Gestion d'État (React Query / XState)]
-        AuthUI[Gestion Auth UI]
+    %% Frontend (Client)
+    subgraph Frontend ["Frontend (React / Vite SPA)"]
+        UI[User Interface]
+        State[State Management (React Query / Zustand)]
+        AuthUI[Auth State UI]
     end
 
-    %% Back-End (Serveur)
-    subgraph Backend ["Backend Headless (Django / Hexagonal)"]
-        API[API REST JSON]
-
-        WS[WebSockets]
-        Core[Core Domain (Logique Métier)]
+    %% Backend (Server)
+    subgraph Backend ["Backend (Django Headless / Hexagonal)"]
+        API[JSON REST API]
+        WS[WebSockets Channels]
+        Core[Core Domain (Business Logic)]
     end
 
-    %% Infrastructure de Données
-    subgraph Infrastructure ["Persistance & Cache"]
-        PostgreSQL[(PostgreSQL)]
+    %% Data Infrastructure
+    subgraph Infrastructure ["Persistence & Cache"]
+        PostgreSQL[(PostgreSQL / pgvector)]
         Redis[(Redis)]
         Neo4j[(Neo4j - Graph DB)]
-        Chroma[(ChromaDB)]
+        VertexAI[(Vertex AI Vector Search)]
     end
 
-    %% Infrastructure IA
-    subgraph AI_Ecosystem ["Écosystème IA"]
-        LocalLLM[Modèles Locaux (Ollama)]
-        CloudAPI[Brain API Cloud]
-        Vision[Modèles Vision / Audio]
+    %% AI Infrastructure
+    subgraph AI_Ecosystem ["AI Ecosystem"]
+        LocalLLM[Local Models (Ollama)]
+        CloudAPI[Brain API / Google GenAI]
+        Vision[Vision / Audio Models]
     end
 
-    %% Flux de communication
+    %% Communication Flows
     User <-->|HTTP / WS| UI
     UI --> State
-    State <-->|Requêtes API| API
-
-    State <-->|Temps Réel| WS
+    State <-->|API Requests| API
+    State <-->|Real-time Events| WS
     
     API --> Core
     WS --> Core
@@ -57,133 +55,133 @@ graph LR
     Core <--> AI_Ecosystem
 ```
 
-**Explication :**
-L'utilisateur n'interagit qu'avec l'application React. Cette dernière communique avec Django via des requêtes JSON (REST) ou des flux en temps réel (WebSockets). Le backend Django n'a aucune interface graphique ; son seul rôle est d'exécuter la logique métier (le "Core") et de discuter avec les bases de données et les modèles d'Intelligence Artificielle.
+**Explanation:**
+The user interacts exclusively with the React SPA. The client communicates with Django via JSON REST requests or real-time WebSockets. The Django backend is headless and contains no HTML templates; its role is solely executing business logic (the "Core") and communicating with data layers and AI engines.
 
 ---
 
-## 2. L'Architecture Hexagonale du Backend (Clean Architecture)
+## 2. Hexagonal Backend Architecture (Clean Architecture)
 
-Ce schéma détaille le composant "Backend" du schéma précédent. Il montre comment le projet protège sa logique métier des détails techniques (bases de données, frameworks web, modèles IA).
+This diagram details the "Backend" component from the previous overview. It highlights how the project protects its core business logic from infrastructure dependencies (databases, web frameworks, external AI models).
 
 ```mermaid
 graph TD
-    subgraph Adapters ["Adapteurs (Infrastructure - Extérieur)"]
+    subgraph Adapters ["Adapters (Infrastructure - External)"]
         DjangoWeb[Django Views / DRF]
-
-        ChromaAdapter[UnifiedRepositoryAdapter (ChromaDB)]
+        VectorAdapter[UnifiedRepositoryAdapter (Vertex AI / pgvector)]
         LLMAdapter[FallbackInferenceAdapter]
     end
 
-    subgraph Ports ["Ports (Interfaces/Contrats - Frontière)"]
+    subgraph Ports ["Ports (Interfaces/Contracts - Boundaries)"]
         InferencePort(InferencePort)
         PersistencePort(PersistencePort)
     end
 
-    subgraph Domain ["Core Domain (Logique Métier - Intérieur)"]
-        Entities[Entités (Pydantic, Dataclasses)]
-        Services[Services: RAG, Agents, Jeux]
+    subgraph Domain ["Core Domain (Business Logic - Internal)"]
+        Entities[Entities (Pydantic Schemas)]
+        Services[Domain Services: RAG, Agents, Games]
         Prompts[PromptManager (YAML)]
     end
 
-    %% Inbound / Driving (Ce qui pilote le domaine)
-    DjangoWeb -->|Appelle| Services
+    %% Inbound / Driving (What drives the domain)
+    DjangoWeb -->|Calls| Services
     
-    %% Outbound / Driven (Ce que le domaine pilote)
-    Services -->|Définit le besoin| InferencePort
-    Services -->|Définit le besoin| PersistencePort
+    %% Outbound / Driven (What the domain drives)
+    Services -->|Defines Need| InferencePort
+    Services -->|Defines Need| PersistencePort
     
-    %% Implémentations
-    LLMAdapter -.->|Implémente| InferencePort
-    ChromaAdapter -.->|Implémente| PersistencePort
+    %% Implementations
+    LLMAdapter -.->|Implements| InferencePort
+    VectorAdapter -.->|Implements| PersistencePort
 ```
 
-**Explication :**
-Le cœur du système (`Core Domain`) est isolé. Les services métier (qui gèrent les règles des jeux ou du RAG) ne savent pas s'ils parlent à PostgreSQL ou à une API Cloud. Ils utilisent des "Ports" (des interfaces abstraites). Les "Adapteurs" (comme Django, ChromaDB ou les modèles IA locaux) se branchent sur ces ports pour faire le pont avec le monde réel.
+**Explanation:**
+The core of the system (`Core Domain`) is isolated. The business services (which manage game rules or RAG pipelines) have no direct knowledge of PostgreSQL, SQLite, or Google Cloud APIs. They depend on abstract "Ports". Concrete "Adapters" plug into these ports to route data to and from real infrastructure components.
 
 ---
 
-## 3. Focus sur le routage et le Fallback de l'IA (Inference)
+## 3. Focus on AI Routing & Fallback (Inference)
 
-Le projet intègre un système robuste pour ne jamais tomber en panne si un modèle d'IA échoue, grâce au `FallbackInferenceAdapter`.
+The project integrates a robust fallback route manager (`FallbackInferenceAdapter`) to ensure the application remains operational even if specific cloud or local engines fail.
 
 ```mermaid
 graph TD
-    App[Services Métier] --> Port(InferencePort)
+    App[Domain Services] --> Port(InferencePort)
     Port --> Fallback[FallbackInferenceAdapter]
     
-    subgraph Moteurs_Texte [Génération de Texte & Reranking]
-        BrainAPI(Brain API Cloud - Primaire)
+    subgraph Text_Moteurs [Text Generation & Reranking]
+        BrainAPI(Brain API Cloud - Primary)
         Ollama(Ollama Local - Fallback)
     end
     
     subgraph Multimodal [Vision & Audio]
-        Vision(Vision Transformers / Qwen3VL)
-        Diffusers(Génération d'images)
-        Audio(XTTS / Audio Transformers)
+        Vision(Vision Transformers / Qwen-VL)
+        Diffusers(Stable Diffusion XL)
+        Audio(XTTS / Moshi Audio)
     end
 
-    Fallback -->|1. Tente Cloud| BrainAPI
-    Fallback -->|2. Si Cloud KO| Ollama
+    Fallback -->|1. Try Cloud| BrainAPI
+    Fallback -->|2. Fallback to Local| Ollama
     
     Fallback -.-> Multimodal
 ```
 
-**Explication :**
-Quand l'application a besoin d'une IA (ex: pour discuter, générer une image, classer des résultats), elle demande au `FallbackInferenceAdapter`. Ce routeur intelligent évalue dynamiquement les adaptateurs disponibles. Pour le texte par exemple, il essaiera d'abord la Brain API Cloud (plus puissante), s'elle est indisponible ou trop lente, il basculera automatiquement sur une instance Ollama locale. 
+**Explanation:**
+When the business layer requests an AI generation (e.g. Chat, Image synthesis, voice generation, or document reranking), it calls the `FallbackInferenceAdapter`. This adapter evaluates active engines. For text, it will try the cloud-based Brain API or Vertex AI first. If that request fails, it automatically fallbacks to a local Ollama instance without disrupting the user journey.
+
 ---
 
-## 4. Focus sur l' organisation de la donnée (Persistence & Pipeline MLOps)
+## 4. Data Flows & Ingestion (Persistence & ETL Pipeline)
 
-Le système de persistance repose principalement sur la recherche vectorielle (pour faire du RAG - Retrieval-Augmented Generation) et est alimenté par un pipeline de données.
+The data persistence layers support semantic search (RAG - Retrieval-Augmented Generation) and are populated by scheduled ingestion jobs.
 
 ```mermaid
 sequenceDiagram
-    participant Dagster as Pipeline (Dagster)
-    participant Json as Fichiers JSON (raw/processed)
-    participant Db as ChromaDB / Neo4j
-    participant RAG as AdvancedRAGService
+    participant Pipeline as Ingestion Pipeline (ETL)
+    participant Json as JSON Files (raw/processed)
+    participant Db as Vector DB (Vertex AI / pgvector) / Neo4j
+    participant RAG as AgenticRAGService
     participant LLM as InferenceAdapter
 
-    Dagster->>Json: Nettoie et structure la donnée (animes, jeux, acteurs)
-    Dagster->>Db: Matérialise et vectorise la donnée (Embeddings)
-    Note over Db: Indexation HNSW pour requêtes rapides
+    Pipeline->>Json: Clean & structure media metadata (animes, games, cast)
+    Pipeline->>Db: Materialize and vectorize data (Embeddings)
+    Note over Db: HNSW Indexing for fast similarity lookups
     
-    RAG->>Db: Requête de similarité sémantique (User Query)
-    Db-->>RAG: Retourne le contexte pertinent (Top K)
+    RAG->>Db: Semantic similarity query (User Query)
+    Db-->>RAG: Return relevant context (Top K)
     
-    RAG->>LLM: Envoie (Contexte + Prompt Externe + Query)
-    LLM-->>RAG: Réponse augmentée
+    RAG->>LLM: Send prompt (Context + System Prompt + Query)
+    LLM-->>RAG: Generate augmented response
 ```
 
-**Explication :**
-1. En amont, un outil de Data Engineering (Dagster) traite des fichiers bruts pour les transformer en données propres et en "Vecteurs" (représentation mathématique du texte).
-2. Ces vecteurs sont stockés dans ChromaDB et Neo4j.
-3. Quand un utilisateur pose une question (via le RAG Service), la base de données cherche le contexte le plus proche.
-4. Ce contexte est ajouté à la question et envoyé à l'IA pour garantir une réponse précise et basée sur vos données (et non sur les hallucinations de l'IA).
+**Explanation:**
+1. Upstream, scheduled ETL scripts clean raw files and generate semantic embeddings.
+2. These vectors are indexed in Vertex AI Vector Search / pgvector and relations are mapped in Neo4j.
+3. When a user queries the system (RAG Service), the databases identify the most semantically close metadata.
+4. This retrieved context is injected into the prompt sent to the LLM, ensuring factual accuracy and mitigating hallucinations.
 
 ---
 
-## 5. Zoom sur le Frontend (React SPA)
+## 5. Frontend Composition (React SPA)
 
 ```mermaid
 graph TD
-    subgraph Frontend_App [Application Vite / React]
-        Router(React Router)
+    subgraph Frontend_App [Vite / React Application]
+        Router(React Router DOM)
         
         subgraph Pages
-            Game[Vues Jeu : Akinetix, Paradox]
-            Chat[Interface Chat IA]
-            Dash[Tableau de bord MLOps]
+            Game[Game Vues: Akinetix, Paradox, Forge]
+            Chat[Chat Interface]
+            Dash[MLOps Dashboard]
         end
         
         subgraph State_Management
-            RQ[React Query - Cache & Fetching]
-            XState[XState - Machines à états complexes]
+            RQ[React Query - Fetching & Cache]
+            Zustand[Zustand - Lightweight Stores]
         end
         
         subgraph UI_Components
-            Tailwind[TailwindCSS / Composants réutilisables]
+            Tailwind[TailwindCSS / Design System Components]
         end
     end
 
@@ -194,5 +192,5 @@ graph TD
     RQ <-->|Fetch / Mutations| ExternalAPI((Backend API))
 ```
 
-**Explication :**
-Le frontend est conçu comme un logiciel à part entière. Le `React Router` distribue l'utilisateur vers les différentes pages (Chat, Jeux, Stats). Les états compliqués des jeux ou du cache serveur sont gérés respectivement par `XState` et `React Query`. La mise en forme utilise des composants atomiques stylisés avec `TailwindCSS`.
+**Explanation:**
+The frontend operates as a decoupled software application. The `React Router` routes users to different page containers. Complex state management (e.g. game loops and server caching) is managed respectively by `Zustand` stores and `React Query`. Layout styling is composed of atomic design components utility-styled via `TailwindCSS`.

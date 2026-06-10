@@ -1,136 +1,136 @@
-# 🧠 Le Fonctionnement Général de l'IA d'Animetix : Du Début à la Fin
+# How the Animetix AI Engine Works: End-to-End Guide
 
-Bienvenue dans ce guide explicatif complet de l'écosystème d'Intelligence Artificielle d'**Animetix** (Anime Archetype Engine). Ce document détaille de manière pédagogique le cycle de vie complet de l'information et le fonctionnement des algorithmes d'IA, depuis la collecte brute des données jusqu'aux interactions multimodales en temps réel avec l'utilisateur.
+Welcome to the comprehensive guide to the **Animetix** (Anime Archetype Engine) Artificial Intelligence ecosystem. This document explains the complete data lifecycle and the inner workings of our AI algorithms, from raw ingestion to real-time multimodal user interactions.
 
 ---
 
-## 🏛️ Vue d'ensemble du Cycle Cognitif
+## 🏛️ Cognitive Cycle Overview
 
-L'intelligence d'Animetix ne repose pas uniquement sur un grand modèle de langage (LLM) statique. C'est une architecture dynamique à **6 phases** combinant extraction de données, stockage hybride, recherche sémantique, raisonnement logique, apprentissage par renforcement et auto-évaluation continue.
+Animetix's intelligence does not rely on a single, static Large Language Model (LLM). Instead, it consists of a dynamic **6-phase cognitive cycle** combining ingestion pipelines, hybrid databases, semantic RAG search, logical reasoning solvers, reinforcement learning agents, and continuous MLOps alignment.
 
 ```mermaid
 flowchart TD
-    subgraph Phase 1 : Collecte & Ingestion
-        A1[Scrapers Jikan / API MAL] & A2[Scraper AnimeThemes] & A3[Synthèses Gemini / TV Tropes] --> Dagster{Orchestrateur Dagster}
+    subgraph Phase 1: Ingestion & Ingestion
+        A1[MAL / Jikan Scrapers] & A2[AnimeThemes Scraper] & A3[Gemini / TV Tropes Synthesizers] --> SyncPipeline{Sync Pipeline / ETL}
     end
 
-    subgraph Phase 2 : Structuration Multicouche
-        Dagster --> B1[(SQLite DB)]
-        Dagster --> B2[(JSON Files)]
-        Dagster --> B3[(Neo4j Graph)]
-        Dagster --> B4[(ChromaDB)]
+    subgraph Phase 2: Multi-Layer Structuring
+        SyncPipeline --> B1[(SQLite DB)]
+        SyncPipeline --> B2[(JSON Reference Files)]
+        SyncPipeline --> B3[(Neo4j Knowledge Graph)]
+        SyncPipeline --> B4[(Vector Search DB)]
     end
 
-    subgraph Phase 3 : Recherche Sémantique (RAG)
-        C1[Requête Utilisateur] --> C2[Matryoshka Embedding]
-        C2 --> C3[Recherche Vectorielle + Multi-Hop Neo4j]
-        C3 --> C4[Cross-Encoder Reranking BGE]
+    subgraph Phase 3: Semantic Retrieval (RAG)
+        C1[User Query] --> C2[Matryoshka Embedding]
+        C2 --> C3[Vector Similarity + Neo4j Multi-Hop]
+        C3 --> C4[BGE Cross-Encoder Reranking]
     end
 
-    subgraph Phase 4 : Agent de Raisonnement
+    subgraph Phase 4: Reasoning Agent
         C4 --> D1[Thinking Model DeepSeek-R1]
-        D1 --> D2[Internal Thought thought]
+        D1 --> D2[Internal Thoughts thought]
         D2 --> D3[Synthesis Model Llama-3]
     end
 
-    subgraph Phase 5 : Modes Intéractifs & Multimédias
+    subgraph Phase 5: Interactive & Multimodal Playgrounds
         D3 --> E1[Akinetix RL - PPO]
-        D3 --> E2[Paradox Quest - Z3]
+        D3 --> E2[Paradox Quest - Z3 Solver]
         D3 --> E3[La Forge - SDXL & Voice Cloning]
     end
 
-    subgraph Phase 6 : MLOps & Amélioration Continue
+    subgraph Phase 6: MLOps & Continuous Improvement
         E1 & E2 & E3 --> F1[LLM-as-a-Judge Ragas]
-        F1 --> F2[Feedback Utilisateur DPO]
-        F2 --> F3[GraphHealer & Auto-Entraînement]
+        F1 --> F2[DPO User Feedback Loop]
+        F2 --> F3[GraphHealer & Auto-Fine-Tuning]
     end
 ```
 
 ---
 
-## 🔌 Phase 1 : Collecte des Données & Ingestion Spécialisée
+## 🔌 Phase 1: Ingestion & Specialized Scraping
 
-Toute IA de pointe dépend de la qualité de sa base de connaissances. Animetix ingère des informations spécialisées à partir de multiples API et plateformes en ligne :
+A state-of-the-art AI is only as good as its training/retrieval knowledge base. Animetix continuously compiles specialized data from several external services:
 
-1. **Jikan (API non officielle MyAnimeList)** : Récupération des métadonnées fondamentales (titres, dates, popularité, recommandations humaines et fiches de doublage/casting complets).
-2. **AnimeThemes** : Compilation des titres d'openings (OP) et d'endings (ED) avec leurs interprètes officiels pour capturer la dimension musicale.
-3. **IGDB (API Twitch OAuth2)** : Extraction de toutes les adaptations réelles en jeux vidéo de chaque licence.
-4. **Modèles de Synthèse Spécialisés (Gemini)** : Extraction intelligente des tropes scénaristiques (clichés littéraires sur TV Tropes), des plateformes de streaming officielles actives en France (avec statut VF/VOSTFR), et des lieux réels du Japon servant d'inspiration visuelle (*Seichijunrei*).
+1.  **Jikan (MyAnimeList API Wrapper):** Fetches foundational metadata, ratings, community recommendations, and detailed casting/voice actor profiles.
+2.  **AnimeThemes:** Compiles opening (OP) and ending (ED) theme song titles, artists, and music video links to capture the audio identity of anime.
+3.  **IGDB (Twitch API):** Maps franchises to their official video game adaptations across all consoles.
+4.  **Specialized LLM Synthesizers (Gemini):** Extracts narrative tropes (clichés cataloged from TV Tropes), official streaming platforms availability in France, and real-life geolocations in Japan that inspired backgrounds (*Seichijunrei*).
 
-### L'Orchestrateur Dagster
-L'ensemble de ces scrapers est structuré comme des **Assets Dagster** chaînés séquentiellement. Si un scraper en amont échoue, le flux s'arrête ou applique des politiques de retry automatique avec délai pour respecter strictement les limites de requêtes (rate-limiting) des API externes.
-
----
-
-## 🗄️ Phase 2 : La Structuration et le Stockage Hybride (Multi-Couches)
-
-Une fois collectées, les données sont persistées de 4 manières complémentaires pour servir différents objectifs :
-
-* **La Base Relationnelle (SQLite)** : Assure la cohérence transactionnelle pour les sessions utilisateurs, l'authentification et les métadonnées de base structurées.
-* **Les Fichiers JSON de Référence (`clean_root_animes/mangas.json`)** : Versionnent l'état brut nettoyé des données, servant de base fiable pour l'entraînement ou la restauration rapide.
-* **Le Graphe de Connaissances (Neo4j)** : Modélise les liens sémantiques profonds. Les entités (`Media`, `Studio`, `Creator`, `Character`) deviennent des nœuds connectés par des relations typées (`PRODUCED_BY`, `FEATURES`, `INFLUENCED_BY`).
-* **La Base Vectorielle (ChromaDB)** : Indexe la représentation mathématique (les embeddings) des descriptions textuelles pour permettre des comparaisons sémantiques ultra-rapides.
+### The Ingestion Pipeline
+All scrapers are structured as scheduled ETL tasks. If a scraping job fails or encounters API rate-limits, it triggers automatic retry policies to respect third-party quotas without crashing the ingestion system.
 
 ---
 
-## 🔍 Phase 3 : La Recherche Intelligente (RAG - Retrieval Augmented Generation)
+## 🗄️ Phase 2: Hybrid Storage (Multi-Layer Data Architecture)
 
-Lorsqu'un utilisateur pose une question (ex: *"Trouve un manga cyberpunk des années 90 qui parle de mémoire humaine"*), le système n'effectue pas une simple recherche par mots-clés. Il passe par un pipeline RAG avancé :
+Once ingested, the data is persisted across four complementary storage engines to optimize different query profiles:
 
-### 1. Encodage Vectoriel Matryoshka (MRL)
-La requête est traduite en un vecteur numérique de haute dimension à l'aide d'un modèle d'embedding (Jina-v3) optimisé avec le concept de **poupées russes (Matryoshka)** :
-- Une recherche "grossière" et ultra-rapide (< 10ms) est lancée sur les **128 premières dimensions** du vecteur.
-- Les 50 résultats les plus proches sont ensuite réévalués en effectuant un "zoom" sur les **1024 dimensions** complètes pour une précision optimale.
-
-### 2. Parcours Graph sémantique (Multi-Hop Traversal)
-Parallèlement à la recherche vectorielle, Animetix interroge Neo4j pour traverser le graphe. Si l'utilisateur mentionne un studio ou un créateur, le graphe remonte instantanément tous les projets connectés, les personnages associés et les influences croisées.
-
-### 3. Le Réordonnancement (Cross-Encoder Reranking)
-Les documents trouvés via le vecteur et le graphe sont fusionnés et envoyés à un modèle **Cross-Encoder (BGE-Reranker)**. Contrairement aux embeddings classiques qui encodent les textes séparément, le reranker analyse la requête et chaque document conjointement pour calculer un score de pertinence absolu, ne retenant que la crème de la crème pour alimenter le prompt du LLM.
+*   **Relational Base (PostgreSQL / SQLite):** Manages relational integrity for user sessions, accounts, profile variables, and transactional metadata.
+*   **JSON Reference Files (`clean_root_animes/mangas.json`):** Versions the cleaned dataset directly in the repository, acting as a reliable, offline baseline for local fallbacks.
+*   **Knowledge Graph (Neo4j):** Models topological relationships. Entities (`Media`, `Studio`, `Creator`, `Character`) are nodes connected by directed, typed edges (`PRODUCED_BY`, `FEATURES`, `INFLUENCED_BY`).
+*   **Vector Search DB (Vertex AI / pgvector):** Stores high-dimensional mathematical embeddings of plots and tropes to execute sub-second semantic lookups.
 
 ---
 
-## 🧠 Phase 4 : L'Agent de Raisonnement (LLM & Test-Time Compute)
+## 🔍 Phase 3: Semantic Retrieval (RAG - Retrieval Augmented Generation)
 
-Pour formuler la réponse finale, le prompt enrichi par le contexte RAG est soumis à une architecture de modèles d'IA configurée en cascade selon la complexité :
+When a user submits a query (e.g., *"Find a cyberpunk manga from the 90s about human memories"*), Animetix avoids rigid keyword matching. It feeds the query through a modular RAG pipeline:
 
-### 1. Analyseur de Complexité & Test-Time Compute (TTC)
-Une micro-IA évalue l'ambiguïté de la question.
-- **Requête Simple** : Résolue directement par un modèle de synthèse léger (ex: Llama 3 8B) en moins d'une seconde.
-- **Requête Complexe/Ambiguë** : Routée vers un modèle de raisonnement profond (Thinking Model - ex: DeepSeek-R1 Distill). Ce modèle utilise le *Test-Time Compute*, c'est-à-dire qu'il s'accorde du temps de réflexion en générant des étapes de pensée logique délimitées par les balises `<thought>...</thought>` avant de produire la réponse finale en français.
+### 1. Matryoshka Representation Learning (MRL)
+The query is vectorized using the **Jina-v3** embedding model, which is optimized with Matryoshka representation learning:
+- A "rough" similarity lookup is executed in less than `10ms` on the first **128 dimensions** of the vector (indexing via HNSW).
+- The top 50 candidates are then re-scored using the full **1024-dimensional** vector for maximum accuracy.
 
----
+### 2. Multi-Hop Graph Traversal
+Simultaneously, the query context is matched against Neo4j. If a user references a studio, a director, or a specific franchise character, Neo4j traverses relationships to extract connected creators, studio history, and character details.
 
-## 🎮 Phase 5 : Les Modes de Jeu Interactifs
-
-L'IA d'Animetix n'est pas seulement un chatbot, elle orchestre également plusieurs mécaniques interactives complexes :
-
-### A. Akinetix RL (Apprentissage par Renforcement)
-Dans ce mode inspiré d'Akinator, l'IA doit deviner le personnage auquel pense l'utilisateur.
-- Elle utilise un agent entraîné par **PPO (Proximal Policy Optimization)** dans un environnement de jeu simulé.
-- L'algorithme calcule à chaque tour quelle question possède le plus haut pouvoir discriminant (entropie) pour éliminer le maximum de personnages possibles, minimisant le nombre de tours nécessaires pour gagner.
-
-### B. Paradox Quest (IA Neuro-Symbolique)
-Ce jeu de logique demande de trouver un intrus sémantique fort entre plusieurs œuvres.
-- **Neuro** : Le LLM extrait les propriétés de chaque média sous forme de faits booléens.
-- **Symbolique** : Ces faits sont injectés dans un solveur logique formel (**Z3 Solver**). Z3 calcule et prouve mathématiquement quel élément viole la règle logique ou constitue l'intrus (Preuve SAT).
-- Le LLM traduit ensuite cette preuve logique froide en une narration ludique et accessible en français.
-
-### C. La Forge (Génération de Médias)
-Permet à l'utilisateur de fusionner des univers graphiques (ex: *Dragon Ball* dessiné dans le style du *Studio Ghibli*).
-- Utilise **Stable Diffusion XL** combiné à **IP-Adapter** (pour conserver la structure et les traits caractéristiques des personnages) et **ControlNet** (pour guider la composition et la posture).
-- Un service de clonage vocal (RVC) génère également la réponse textuelle parlée avec le timbre de voix exact du personnage sélectionné.
+### 3. Cross-Encoder Reranking
+Candidates retrieved from both the vector index and the knowledge graph are unified and sent to a **BGE-Reranker** model. Unlike bi-encoder embeddings that encode queries and documents independently, the Cross-Encoder processes the query-document pair jointly. It outputs an absolute relevance score, filtering out unrelated documents to prevent LLM hallucinations.
 
 ---
 
-## 📊 Phase 6 : MLOps & Amélioration Continue (La Boucle Fermée)
+## 🧠 Phase 4: Reasoning Agent (LLM & Test-Time Compute)
 
-L'écosystème d'Animetix s'auto-évalue et s'améliore continuellement en production :
+The compiled context, system instructions, and user query are assembled into a prompt and routed based on complexity:
 
-1. **Évaluation en direct (LLM-as-a-Judge)** : Un agent critique (Scout & Critic) évalue chaque réponse générée selon les métriques Ragas :
-   - **Faithfulness (Anti-hallucination)** : La réponse est-elle strictement étayée par le contexte du RAG ?
-   - **Answer Relevancy (Pertinence)** : Répond-elle précisément à la question posée ?
-   Si le score est insuffisant, le système déclenche une correction sémantique à la volée.
-2. **Collecte de Préférences (DPO)** : Lorsque les utilisateurs cliquent sur "pouce levé" ou "pouce baissé", ces données sont enregistrées. Les échecs sont compilés sous forme de jeux de données au format `(Prompt, Choisi, Rejeté)`.
-3. **Auto-entraînement (Continuous Training)** : Les datasets DPO générés déclenchent périodiquement des entraînements de modèles (LoRA) pour spécialiser l'IA sur les spécificités de la culture otaku.
-4. **L'Agent d'Auto-Guérison (GraphHealer)** : Cet agent surveille Neo4j pour identifier les nœuds isolés, les relations manquantes ou incohérentes, et réécrit ou enrichit les connexions du graphe de manière autonome pour optimiser les futurs RAG.
+### Complexity Analyzer & Test-Time Compute (TTC)
+A lightweight model analyzes the prompt's ambiguity:
+- **Simple Queries:** Routed to a lightweight synthesis model (e.g., Llama 3 8B) for a response under one second.
+- **Complex / Ambiguous Queries:** Routed to a deep reasoning model (e.g., DeepSeek-R1 Distill). The model uses *Test-Time Compute*, generating chain-of-thought logical steps wrapped within `<thought>...</thought>` tags, resolving contradictions before formulating the final user-facing text.
+
+---
+
+## 🎮 Phase 5: Interactive Game Suite Engines
+
+Animetix's domain services orchestrate multiple advanced game engines:
+
+### A. Akinetix RL (Reinforcement Learning)
+Akinetix attempts to guess the character the user has in mind.
+- Powered by a neural agent trained via **Proximal Policy Optimization (PPO)** in a custom OpenAI Gym environment.
+- The algorithm calculates the mathematical entropy of its character database at each turn, selecting the question that eliminates the maximum number of candidates and minimizing the steps to victory.
+
+### B. Paradox Quest (Neuro-Symbolic Logic)
+The user must identify a thematic "intruder" among three titles.
+- **Neural Layer:** An LLM extracts Boolean properties and narrative facts from each title.
+- **Symbolic Layer:** These facts are compiled into logic predicates and solved via the **Z3 Theorem Prover** (SAT solver). Z3 mathematically proves which title violates the logical properties and constitutes the intruder.
+- The LLM then translates the cold logical proof back into a playful riddle.
+
+### C. La Forge (Creative Multimedia Fusion)
+Allows users to merge two media styles (e.g., *Dragon Ball* drawn in the art style of *Studio Ghibli*).
+- Uses **Stable Diffusion XL** along with **IP-Adapter** (to maintain character features) and **ControlNet** (to guide posture and frame composition).
+- Runs **XTTS-v2** to clone the voice of the characters for interactive zero-shot speech.
+
+---
+
+## 📊 Phase 6: MLOps & Continuous Evaluation Loop
+
+The platform self-evaluates and aligns dynamically in production:
+
+1.  **LLM-as-a-Judge (Ragas):** A critic agent audits responses against Ragas metrics:
+    - **Faithfulness:** Is the response strictly backed by the RAG context? (Anti-hallucination guard).
+    - **Answer Relevancy:** Does the output directly answer the user's intent?
+    If the scores fall below a strict threshold (e.g., 0.7), the response is corrected before delivery.
+2.  **DPO Preference Ingestion:** User feedback (upvotes/downvotes) and text corrections are captured. Failures are stored in `(Prompt, Chosen, Rejected)` JSONL datasets.
+3.  **Continuous Fine-Tuning:** The DPO datasets trigger periodic LoRA fine-tuning workflows to adapt the local models to Otaku culture nuances.
+4.  **Autonomous GraphHealer:** A background service monitors the Neo4j graph to detect isolated nodes, dead edges, or lore contradictions, automatically writing Cypher queries to repair and enrich the knowledge graph.

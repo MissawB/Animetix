@@ -1,124 +1,114 @@
-# 🎭 Animetix : L'Encyclopédie Technique & Fonctionnelle (SOTA 2026)
+# 🎭 Animetix: Complete Technical & Functional Reference Guide
 
-Ce document constitue la spécification technique exhaustive et le manuel opérationnel de la plateforme **Animetix**. Il est conçu pour les ingénieurs IA, les développeurs Fullstack et les architectes système souhaitant comprendre ou faire évoluer cet écosystème complexe.
+This document serves as the comprehensive technical specification and operations manual for the **Animetix** platform (Anime Archetype Engine). It is designed for AI engineers, fullstack developers, and system architects maintaining or extending this cognitive ecosystem.
 
 ---
-## 🏛️ 1. Architecture Cognitive : L'Hexagone 2.0
 
-Animetix est bâtie sur une **Architecture Atomic & Hexagonal** (Ports & Adapters). Cette structure garantit une isolation stricte entre le domaine métier et les détails techniques.
+## 🏛️ 1. Cognitive Architecture: Hexagon 2.0
 
-### A. Core Domain (Intelligence Pure)
-Le domaine (`backend/core/domain`) centralise la logique via :
-- **Services (ex: `AgenticRAGService`) :** Machines à états cognitifs (FSM).
-- **InferencePort :** Interface unifiée supportant le streaming SSE, le *Test-Time Compute* (TTC) et le routage multi-modèle. Elle expose désormais `rerank_documents` pour intégrer des Cross-Encoders (BGE-Reranker) lors de la recherche.
-- **PersistencePort (UnifiedRepository) :** Gère la persistance de manière unifiée, avec **ChromaDB** comme moteur de stockage pour les vecteurs, complété par Neo4j pour les relations.
+Animetix is built around an **Atomic & Hexagonal Architecture** (Ports & Adapters), separating pure business workflows from underlying frameworks.
+
+### A. Core Domain (Pure Intelligence)
+The domain layer (`backend/core/domain/`) encapsulates the application's core intelligence:
+- **Services (e.g., `AgenticRAGService`):** Orchestrate multi-step cognitive agents.
+- **InferencePort:** Interface boundary supporting Server-Sent Events (SSE) streaming, Test-Time Compute (TTC) routing, and `rerank_documents` Cross-Encoder operations.
+- **PersistencePort (UnifiedRepository):** Defines unified data read/write rules, delegating to vector search indices and Neo4j relational structures.
 
 ### B. Infrastructure (Adapters)
-- **Persistence :** Le `UnifiedRepositoryAdapter` abstrait la complexité du stockage, garantissant une persistance vectorielle via ChromaDB.
-- **Inference :** Supporte Ollama et BrainAPI, avec un système de `lazy_import` pour éviter les overheads inutiles au démarrage.
-
-
----
-
-## 🧠 2. Deep Dive : Pipeline IA & Modèles SOTA
-
-### A. Inférence & Raisonnement (LLM & SLM)
-Animetix utilise une hiérarchie de modèles pour optimiser le ratio **Coût / Latence / Précision** :
-1.  **Thinking Model (8B+ - ex: DeepSeek-R1 Distill) :** Utilisé uniquement lorsque l'Analyseur de Complexité détecte une requête hautement ambiguë. Il génère des tokens de réflexion interne (`<thought>`) avant de répondre.
-2.  **Synthesis Model (8B - ex: Llama-3 / Qwen3) :** Le modèle standard pour la rédaction finale de haute qualité.
-3.  **Scout & Critic (1B-3B - ex: Phi-4-mini / SmolLM3) :** Modèles ultra-légers optimisés pour des tâches structurelles (extraction d'entités, évaluation de pertinence, planification). Ils tournent sur le CPU ou des GPU d'entrée de gamme avec une latence sub-seconde.
-4.  **Quantisation BitNet (1.58-bit) :** Utilisation de poids ternaires pour réduire l'empreinte VRAM de 70% sans dégradation notable de l'intelligence.
-
-### B. Espace Vectoriel & Matryoshka (MRL)
-Animetix implémente le **Matryoshka Representation Learning** sur le modèle **Jina-v3** :
-- **Concept :** Les embeddings sont entraînés pour que l'information la plus importante soit concentrée dans les premières dimensions.
-- **Workflow de Recherche :**
-    1.  **Phase de "Grossissage" :** Recherche vectorielle SQL sur les **128 premières dimensions** (index HNSW). C'est 8x plus rapide qu'une recherche complète.
-    2.  **Phase de "Zoom" :** Les 50 meilleurs candidats sont ré-évalués en utilisant les **1024 dimensions** complètes.
-- **Résultat :** Latence de recherche < 50ms sur 1 million d'items.
-
-### C. Vision & Voice (Multimodalité SOTA)
-Animetix ne se limite pas au texte, il intègre des capacités sensorielles avancées :
-1.  **Vision (SigLIP-SO400M) :** Utilisation de SigLIP pour l'alignement Image-Texte. Contrairement à CLIP, SigLIP utilise une fonction de perte sigmoid permettant un alignement plus fin.
-2.  **Visual Reranker (Qwen-VL) :** Pour les requêtes visuelles complexes, un modèle Vision-Langage inspecte réellement les fichiers images pour valider la correspondance visuelle exacte.
-3.  **Voice Cloning (RVC) :** Le `VoiceCloningService` permet de générer des réponses audio avec la voix exacte d'un personnage à partir d'un échantillon de 10 secondes (Zero-shot cloning).
-4.  **Native Speech LLM (S2S) :** Support des interactions Speech-to-Speech (S2S) via le `NativeSpeechLLMService`, traitant l'audio de bout en bout sans passer par une transcription textuelle intermédiaire, réduisant drastiquement la latence émotionnelle.
+- **Persistence:** Concrete adapters implementing database interfaces (Vertex AI, pgvector, Neo4j, Django DB).
+- **Inference:** Implementations for cloud services (Google GenAI, BrainAPI) and local endpoints (Ollama, local Transformers). Uses lazy imports to prevent overhead at startup.
 
 ---
 
-## 🕸️ 3. Graphe de Connaissances & GraphRAG
+## 🧠 2. Deep Dive: AI Pipelines & Models
 
-### A. Ontologie Neo4j
-Le graphe n'est pas un simple index, c'est une structure de relations :
-- **Nœuds :** `Media`, `Studio`, `Creator`, `Character`, `MicroTag` (thèmes ultra-précis).
-- **Relations :** `PRODUCED_BY`, `CREATED_BY`, `FEATURES`, `HAS_THEME`, `INFLUENCED_BY`.
+### A. Inference & Reasoning Cascade (LLM & SLM)
+Animetix employs a cascade of models to optimize the **Cost / Latency / Accuracy** ratio:
+1.  **Thinking Model (8B+ - e.g., DeepSeek-R1 Distill):** Triggered only when the Complexity Analyzer detects highly ambiguous queries. It generates internal logical thought steps (`<thought>`) before outputting text.
+2.  **Synthesis Model (8B - e.g., Llama-3 / Qwen-3):** The standard model for high-quality conversational output.
+3.  **Scout & Critic (1B-3B - e.g., Phi-4-mini / SmolLM3):** Ultra-lightweight models running on CPU/entry-level GPU for structural sub-second tasks (entity extraction, safety audits, rating).
+4.  **BitNet Quantization (1.58-bit):** Employs ternary weights to run models with up to 70% VRAM savings.
 
-### B. Algorithmes de Raisonnement
-- **Multi-Hop Traversal :** L'agent peut demander : *"Trouve tous les animes produits par le studio qui a fait 'Arcane' mais qui ont un style visuel similaire à 'Spirited Away'"*. Le système navigue de `Media -> Studio -> Creator -> Other Media` et croise avec la recherche vectorielle.
-- **Global Community Summarization :** Utilisation de l'algorithme de détection de communautés (Leiden) pour générer des résumés de haut niveau. Neo4j agrège les données d'un groupe de nœuds et le LLM en fait une synthèse thématique (ex: "Panorama du genre Cyberpunk dans les années 90").
+### B. Matryoshka Representation Learning (MRL)
+Animetix implements MRL on top of the **Jina-v3** embedding model:
+- **Concept:** Embedding vectors are trained to pack the most critical semantic information into the early dimensions.
+- **Query Flow:**
+    1.  **Short-List Phase:** Vector similarity search is executed on the first **128 dimensions** (using an HNSW index). This is up to 8x faster than loading the entire vector.
+    2.  **Zoom Phase:** The top 50 matches are re-evaluated using the full **1024 dimensions** for precise ranking.
+- **Result:** Semantic search latency is kept below `50ms` on large catalogs.
 
----
-
-## 🎮 4. Analyse détaillée des Modes de Jeu
-
-### 1. Mode Paradox Quest (IA Neuro-Symbolique)
-*   **Technologie :** Combine un LLM avec un solveur logique (Z3 / Neuro-symbolic layer).
-*   **Mécanique :** L'IA identifie 2 œuvres avec un lien logique fort et 1 "intrus". Le joueur doit trouver l'intrus. 
-*   **Boucle de Résolution :**
-    1.  **Extraction Sémantique :** Un "Oracle" (LLM) extrait les propriétés booléennes des items.
-    2.  **Résolution Formelle :** Le solveur **Z3** traite ces faits pour identifier mathématiquement l'intrus (Preuve SAT).
-    3.  **Vulgarisation :** L'Oracle traduit la preuve mathématique en une explication narrative compréhensible pour le joueur.
-
-### 2. Mode Akinetix RL (Reinforcement Learning)
-*   **Technologie :** Proximal Policy Optimization (PPO).
-*   **Mécanique :** L'agent a été entraîné par renforcement dans un environnement simulé (`AkinetixRLService`) pour poser les questions les plus discriminantes le plus vite possible, minimisant le nombre de tours pour deviner un personnage.
-
-### 3. Mode La Forge (Génération Multimodale)
-*   **Technologie :** Stable Diffusion XL + IP-Adapter + ControlNet.
-*   **Mécanique :** Fusion de deux univers sémantiques. Le LLM génère un synopsis hybride, et le pipeline de vision génère une affiche respectant les codes visuels des deux œuvres (ex: mélange du trait de *Akira* avec l'ambiance de *Ghibli*).
-
-### 4. Mode Spatial Computing (Exploration 3D)
-*   **Technologie :** DepthAnything + 3D Gaussian Splatting.
-*   **Mécanique :** Reconstruction d'une scène 3D navigable à partir d'une simple image 2D (ex: poster généré dans La Forge). Le `SpatialComputingService` estime la carte de profondeur et génère un nuage de points volumétrique permettant une immersion VR immédiate dans l'univers hybride.
+### C. Multimodal & Audio Pipelines
+1.  **Vision Encoder (SigLIP-SO400M):** SigLIP aligns image-text features using a sigmoid loss function, enabling finer image description parsing than traditional CLIP.
+2.  **Visual Reranker (Qwen-VL):** For complex visual queries, a Vision-Language Model inspects image files directly to confirm similarity.
+3.  **Voice Cloning (RVC):** The `VoiceCloningService` clones character voices from a 10-second reference audio sample (zero-shot) for voice synthesizer playback.
+4.  **Gemini Multimodal Live API:** Relays PCM audio bidirectionally over WebSockets, bypassing text transcription for low-latency voice-to-voice companion dialogues.
 
 ---
 
-## 📊 5. MLOps, Observabilité & Évolution
+## 🕸️ 3. Knowledge Graph & GraphRAG
 
-### A. La boucle LooP (Real-time Evaluation)
-Animetix implémente le pattern **LLM-as-a-Judge** :
-- Chaque réponse est envoyée à un agent Juge.
-- **Métriques Ragas :**
-    - **Faithfulness :** La réponse est-elle supportée par le contexte ? (Anti-hallucination).
-    - **Relevancy :** La réponse est-elle utile ?
-- Si `Faithfulness < 0.7`, une alerte est levée et le système peut s'auto-corriger en direct avant que l'utilisateur ne voie la réponse (ou en affichant un disclaimer).
+### A. Neo4j Ontology
+The graph database maps structural relationships:
+- **Nodes:** `Media`, `Studio`, `Creator`, `Character`, `MicroTag` (granular themes).
+- **Edges:** `PRODUCED_BY`, `CREATED_BY`, `FEATURES`, `HAS_THEME`, `INFLUENCED_BY`.
 
-### B. Pipeline DPO (Direct Preference Optimization)
-Le système s'auto-améliore via les feedbacks :
-- **Collecte :** Les utilisateurs notent les réponses (Pouce levé/baissé).
-- **Curation :** Les feedbacks négatifs sont analysés par le Juge pour identifier pourquoi l'IA a échoué.
-- **Export :** Génération automatique de fichiers JSONL au format `(Prompt, Chosen, Rejected)`.
-- **Alignement :** Ces données servent à ré-entraîner le modèle SLM via l'asset Dagster `trl_retraining`.
+### B. Graph Algorithms
+- **Multi-Hop Traversal:** The agent can navigate relationships (e.g., *"Find anime produced by the studio that made 'Arcane' but with an art style resembling 'Spirited Away'"*) by traversing graph nodes before performing vector similarity matches.
+- **Leiden Community Summarization:** Runs community detection (Leiden algorithm) on Neo4j to summarize global knowledge clusters (e.g., "History of Cyberpunk in the 90s").
 
 ---
 
-## 🛡️ 6. Sécurité & Compliance IA
+## 🎮 4. Game Modes In-Depth
 
-### A. Sanitisation Robuste
-- **Bleach Integration :** Toutes les sorties LLM passent par un filtre de liste blanche HTML strict. Aucun script ou style malveillant généré par l'IA ne peut être exécuté dans le navigateur.
-- **Forbidden Terms :** Le `LLMService` dispose d'une couche de filtrage par Regex pour censurer les spoilers ou les contenus sensibles avant qu'ils ne sortent du moteur d'inférence.
+### 1. Paradox Quest (Neuro-Symbolic Logic)
+*   **Engine:** Fuses LLMs with a formal logic solver (Z3).
+*   **Workflow:**
+    1.  **Fact Extraction:** The LLM extracts narrative properties of titles as Boolean states.
+    2.  **SAT Solver:** The **Z3 Solver** processes these predicates to mathematically prove which item is the intruder.
+    3.  **Narrative Rendering:** The LLM translates the logical contradiction into a riddle.
 
-### B. Secrets & Infrastructure
-- **Isolation :** Aucun secret (API Key, DB URI) n'est présent dans le code ou les images Docker. Tout passe par le `Secret Manager` de l'environnement (ou fichier `.env` protégé).
-- **Rate Limiting :** Protection contre le déni de service IA (DoS) via un middleware de limitation du nombre de tokens consommés par IP et par heure.
+### 2. Akinetix RL (Reinforcement Learning)
+*   **Engine:** Proximal Policy Optimization (PPO).
+*   **Workflow:** The agent has been trained in a simulated Gym environment (`AkinetixRLService`) to select questions that maximize information gain (entropy), guessing the player's character in minimal turns.
+
+### 3. La Forge (Multimedia Generation)
+*   **Engine:** Stable Diffusion XL + IP-Adapter + ControlNet.
+*   **Workflow:** Fuses two creative IPs. The LLM generates a hybrid synopsis, while the diffusion pipeline generates posters preserving character features and postures.
+
+### 4. Spatial Computing (3D Reconstruction)
+*   **Engine:** DepthAnything + Three.js renderer.
+*   **Workflow:** Estimates depth maps from 2D posters and generates a 3D volumetric scene, rendering a navigable diorama in the browser.
 
 ---
 
-## 🚀 7. Roadmap de Déploiement
+## 📊 5. MLOps, Security & Observability
 
-1.  **Staging :** Déploiement Docker Stack (Postgres, Redis, Neo4j, Ollama, Dagster).
-2.  **Pre-Flight :** Exécution de `scripts/pre_flight_check.py` pour valider les 12 points de contrôle.
-3.  **Production :** Activation du streaming SSE et du monitoring Prometheus/Grafana pour surveiller la latence des agents en temps réel.
+### A. Real-Time Critic (Ragas)
+Animetix employs an **LLM-as-a-Judge** evaluation loop:
+- Every generation is audited on Ragas metrics (Faithfulness, Relevancy).
+- If Faithfulness falls below `0.7`, a safety disclaimer is attached, or the response is rewritten.
+
+### B. DPO Pipeline (Direct Preference Optimization)
+- **Ingestion:** User upvotes/downvotes and corrections are captured.
+- **Feedback Loop:** Malformed generations are formatted into `(Prompt, Chosen, Rejected)` JSONL datasets.
+- **Alignment:** Datasets are used for continuous LoRA training.
 
 ---
-*Fin du document technique - Animetix v3.0 - Mai 2026*
+
+## 🛡️ 6. Safety & Compliance
+
+- **SQL Guardrail:** Natural language text-to-SQL inputs are audited via `sql_guard.py` to prevent SQL injection, multi-statement queries, comments, or unauthorized table access.
+- **Prompt Sanitization:** Ingested context is audited to block indirect prompt injections.
+- **Rate Limiting:** Protects models from Token DoS attacks.
+- **OpenTelemetry Tracing:** Spans are enriched with semantic agentic attributes and exported directly to Cloud Trace.
+
+---
+
+## 🚀 7. Deployment Lifecycle
+
+1.  **Staging:** Deploy using Docker Stack (Postgres, Redis, Neo4j, Ollama).
+2.  **Pre-Flight:** Execute `scripts/pre_flight_check.py` to validate environment bindings.
+3.  **Production:** Enable Daphne ASGI server for SSE streaming and WebSockets.
+
+---
+*End of Technical Document - Animetix - June 2026*

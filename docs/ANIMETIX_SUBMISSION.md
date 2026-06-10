@@ -41,7 +41,7 @@ We designed Animetix from the ground up to follow **software engineering best pr
 * **Decoupled Pure SPA Frontend:** Built a modern, blazing-fast web application using **React + Vite** and `react-router-dom` on the client side, communicating asynchronously with the backend via REST endpoints and real-time WebSockets (Django Channels).
 * **Headless Django API:** Refactored Django to act purely as a headless backend API, purging all legacy HTML templates, view controllers, and static assets in favor of a clean, stateless JSON API.
 * **Unified Inference Engine & Fallbacks:** Designed a `FallbackInferenceAdapter` that orchestrates a latency-aware, error-tracking chain of adapters supporting cloud inference (**BrainAPI**) and local models (**Ollama**, Hugging Face **Transformers**, and **Diffusers**).
-* **Robust MLOps Pipelines:** Built automated data ETL and ingestion pipelines using **Dagster**. These pipelines orchestrate scrapers for Jikan (MyAnimeList), AnimeThemes (musical data), IGDB (video game adaptations), and Gemini (extracting narrative tropes and TV Tropes clichés).
+* **Robust MLOps Pipelines:** Built automated data ETL and ingestion pipelines. These pipelines orchestrate scrapers for Jikan (MyAnimeList), AnimeThemes (musical data), IGDB (video game adaptations), and Gemini (extracting narrative tropes and TV Tropes clichés).
 * **Cognitive Swarm Paxos:** Designed a `SwarmConsensusOrchestrator` that queries multiple specialized agent experts (Visual, Acoustic, and Lore Experts) and achieves consensus on facts through a single-call LLM query optimized via dynamic Pydantic structures.
 
 ---

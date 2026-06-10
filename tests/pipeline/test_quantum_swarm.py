@@ -75,11 +75,12 @@ def test_swarm_consensus_paxos():
 # ==========================================
 def test_counterfactual_conversation_simulator():
     from core.domain.services.counterfactual_simulator import CounterfactualConversationSimulator
+    from core.domain.entities.ai_schemas import InferenceResponse
     
     mock_engine = MagicMock()
     mock_engine.generate.side_effect = [
-        "Réponse alternative : Steins;Gate intègre une ligne temporelle complexe.", # response
-        "0.92" # judge utility score
+        InferenceResponse(text="Réponse alternative : Steins;Gate intègre une ligne temporelle complexe."), # response
+        InferenceResponse(text="0.92") # judge utility score
     ]
     
     simulator = CounterfactualConversationSimulator(inference_engine=mock_engine)

@@ -1,10 +1,39 @@
 import logging
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
+from django.conf import settings
 from core.ports.repository_port import RepositoryPort
 from animetix.models import MediaItem
 from django.db.models import Q
 
 logger = logging.getLogger('animetix')
+
+_alloydb_nl_supported = None
+
+def is_alloydb_nl_query_supported() -> bool:
+    global _alloydb_nl_supported
+    if _alloydb_nl_supported is not None:
+        return _alloydb_nl_supported
+        
+    from django.db import connection
+    if connection.vendor != 'postgresql':
+        _alloydb_nl_supported = False
+        return False
+        
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT EXISTS (
+                    SELECT 1 FROM pg_proc p 
+                    JOIN pg_namespace n ON p.pronamespace = n.oid 
+                    WHERE n.nspname = 'alloydb_ai_nl' AND p.proname = 'get_sql'
+                );
+            """)
+            row = cursor.fetchone()
+            _alloydb_nl_supported = bool(row and row[0])
+    except Exception as e:
+        logger.warning(f"[AlloyDB AI] Failed to probe alloydb_ai_nl.get_sql function: {e}")
+        _alloydb_nl_supported = False
+    return _alloydb_nl_supported
 
 class DjangoRepositoryAdapter(RepositoryPort):
     def get_nearest_neighbors(self, collection_name: str, item_id: str, n_results: int = 5) -> List[Dict]:
@@ -132,6 +161,101 @@ class DjangoRepositoryAdapter(RepositoryPort):
         from animetix.models import CreativeFusion
         fusions = CreativeFusion.objects.filter(creator_id=user_id).order_by('-created_at')[:limit]
         return [{"art_style": f.art_style, "titles": f"{f.title_a} x {f.title_b}"} for f in fusions]
+
+    def query_data_natural_language(self, query: str, llm_service: Optional[Any] = None) -> List[Dict]:
+        from django.db import connection
+        from core.utils.sql_guard import validate_sql_query
+        
+        nl_query_active = getattr(settings, 'ALLOYDB_NL_QUERY_ACTIVE', False)
+        config_name = getattr(settings, 'ALLOYDB_NL_CONFIG_NAME', 'animetix_catalog')
+        
+        generated_sql = None
+        
+        if nl_query_active and is_alloydb_nl_query_supported():
+            try:
+                with connection.cursor() as cursor:
+                    # Native AlloyDB AI call
+                    cursor.execute("SELECT alloydb_ai_nl.get_sql(%s, %s) ->> 'sql';", [config_name, query])
+                    row = cursor.fetchone()
+                    if row:
+                        generated_sql = row[0]
+            except Exception as e:
+                logger.error(f"[AlloyDB AI] Text-to-SQL error using native function: {e}")
+                
+        # Fallback to local LLM if native didn't execute or failed
+        if not generated_sql:
+            if not llm_service:
+                logger.error("Text-to-SQL Fallback: No LLM service provided to generate query.")
+                return []
+                
+            prompt = f"""You are a PostgreSQL Text-to-SQL expert. 
+Generate a valid SQL SELECT query to answer this request: "{query}"
+
+Schema:
+Table: animetix_mediaitem
+Columns:
+- id (integer, primary key)
+- external_id (varchar)
+- media_type (varchar: 'Anime', 'Manga', 'Character', 'Game', 'Actor', 'Movie')
+- title (varchar)
+- title_english (varchar)
+- title_native (varchar)
+- synopsis_en (text)
+- synopsis_fr (text)
+- alternative_titles (json)
+- description (text)
+- image_url (varchar)
+- release_year (integer)
+- rating (float)
+- popularity (float)
+- metadata (json)
+
+Strict Guidelines:
+1. Target ONLY the table `animetix_mediaitem`.
+2. Return ONLY the raw SQL query. Do not wrap it in markdown code blocks, do not write explanations.
+3. Keep the query simple and direct.
+"""
+            try:
+                generated_sql = llm_service.generate(prompt, system_prompt="You are a SQL generator. Output only raw SQL.")
+                if generated_sql:
+                    generated_sql = generated_sql.strip()
+                    # Strip any markdown backticks if the LLM outputted them despite instructions
+                    if generated_sql.startswith("```sql"):
+                        generated_sql = generated_sql[6:]
+                    if generated_sql.startswith("```"):
+                        generated_sql = generated_sql[3:]
+                    if generated_sql.endswith("```"):
+                        generated_sql = generated_sql[:-3]
+                    generated_sql = generated_sql.strip()
+            except Exception as e:
+                logger.error(f"Text-to-SQL Fallback: LLM query generation failed: {e}")
+                return []
+                
+        if not generated_sql:
+            logger.error("Text-to-SQL: Failed to produce SQL query.")
+            return []
+            
+        # Security validation
+        if not validate_sql_query(generated_sql):
+            logger.error(f"SQL Guardrail: Rejected SQL query: {generated_sql}")
+            return []
+            
+        # Execute query
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute(generated_sql)
+                # Fetch column names
+                columns = [col[0] for col in cursor.description]
+                rows = cursor.fetchall()
+                
+            results = []
+            for row in rows:
+                row_dict = dict(zip(columns, row))
+                results.append(row_dict)
+            return results
+        except Exception as e:
+            logger.error(f"Text-to-SQL: Database execution failed for query '{generated_sql}': {e}")
+            return []
 
     def _to_dict(self, item: MediaItem) -> Dict:
         data = {
