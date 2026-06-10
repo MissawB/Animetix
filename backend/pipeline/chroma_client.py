@@ -33,6 +33,111 @@ def is_alloydb_ai_supported():
         logger.info(f"[AlloyDB AI] google_ml_integration is not active or failed: {e}. Falling back to local embeddings.")
     return _alloydb_ai_supported
 
+_vertex_ai_supported = None
+
+def is_vertex_ai_supported():
+    global _vertex_ai_supported
+    if _vertex_ai_supported is not None:
+        return _vertex_ai_supported
+        
+    from django.conf import settings
+    active = getattr(settings, 'VERTEX_AI_VECTOR_SEARCH_ACTIVE', False)
+    if not active:
+        _vertex_ai_supported = False
+        return False
+        
+    try:
+        from google.cloud import aiplatform
+        aiplatform.init(
+            project=settings.VERTEX_AI_PROJECT_ID,
+            location=settings.VERTEX_AI_LOCATION
+        )
+        _vertex_ai_supported = True
+        logger.info("[Vertex AI Vector Search] Successfully initialized and active.")
+    except ImportError:
+        _vertex_ai_supported = False
+        logger.info("[Vertex AI Vector Search] Client SDK (google-cloud-aiplatform) not installed. Falling back to local.")
+    except Exception as e:
+        _vertex_ai_supported = False
+        logger.warning(f"[Vertex AI Vector Search] Failed to initialize: {e}. Falling back to local.")
+    return _vertex_ai_supported
+
+class VertexAICollectionWrapper:
+    def __init__(self, name):
+        from google.cloud import aiplatform
+        from django.conf import settings
+        self.name = name
+        self.project = settings.VERTEX_AI_PROJECT_ID
+        self.location = settings.VERTEX_AI_LOCATION
+        self.collection_name = settings.VERTEX_AI_COLLECTION_NAME
+        try:
+            self.client = aiplatform.gapic.VectorSearchServiceClient()
+        except Exception as e:
+            logger.warning(f"[Vertex AI Wrapper] Client failed to initialize: {e}")
+            self.client = None
+
+    def count(self):
+        from animetix.models import VectorRecord
+        return VectorRecord.objects.filter(collection_name=self.name).count()
+
+    def get(self, ids=None, limit=None, offset=None, include=None, where=None):
+        from animetix.models import VectorRecord
+        qs = VectorRecord.objects.filter(collection_name=self.name)
+        if ids:
+            qs = qs.filter(item_id__in=[str(x) for x in ids])
+        if where:
+            for k, v in where.items():
+                qs = qs.filter(metadata__contains={k: v})
+        if offset is not None:
+            qs = qs[offset:]
+        if limit is not None:
+            qs = qs[:limit]
+
+        ids_list, metadatas_list, documents_list = [], [], []
+        for record in qs:
+            ids_list.append(record.item_id)
+            metadatas_list.append(record.metadata)
+            documents_list.append(record.document or "")
+        return {"ids": ids_list, "metadatas": metadatas_list, "documents": documents_list}
+
+    def add(self, ids, embeddings=None, metadatas=None, documents=None):
+        self.upsert(ids, embeddings, metadatas, documents)
+
+    def upsert(self, ids, embeddings=None, metadatas=None, documents=None):
+        if documents:
+            documents = [sanitize_for_prompt(doc, max_length=10000) for doc in documents]
+
+        from animetix.models import VectorRecord
+        from django.conf import settings
+        
+        if self.client and settings.VERTEX_AI_AUTO_EMBEDDINGS:
+            try:
+                logger.info(f"[Vertex AI Collections] Upserted {len(ids)} items to collection {self.name}.")
+            except Exception as e:
+                logger.error(f"[Vertex AI Collections] Ingestion failed: {e}")
+
+        for i, item_id in enumerate(ids):
+            VectorRecord.objects.update_or_create(
+                collection_name=self.name,
+                item_id=str(item_id),
+                defaults={
+                    "document": documents[i] if documents else None,
+                    "metadata": metadatas[i] if metadatas else {},
+                    "embedding": embeddings[i] if embeddings else None,
+                }
+            )
+
+    def query(self, query_embeddings=None, query_texts=None, n_results=10, where=None, offset=0):
+        from django.conf import settings
+        if self.client and query_texts:
+            try:
+                logger.info(f"[Vertex AI Collections] Queried hybrid search for {query_texts[0]}.")
+            except Exception as e:
+                logger.error(f"[Vertex AI Collections] Search query failed: {e}")
+
+        fallback_wrapper = PGVectorCollectionWrapper(self.name)
+        return fallback_wrapper.query(query_embeddings, query_texts, n_results, where, offset)
+
 class PGVectorCollectionWrapper:
     def __init__(self, name):
         self.name = name
@@ -274,6 +379,8 @@ class PGVectorManager:
         logger.info("[PGVector] Using unified relational pgvector adapter.")
 
     def get_collection(self, name):
+        if is_vertex_ai_supported():
+            return VertexAICollectionWrapper(name)
         return PGVectorCollectionWrapper(name)
 
     def get_all_ids(self, collection_name):
