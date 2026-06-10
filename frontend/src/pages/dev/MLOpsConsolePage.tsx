@@ -15,22 +15,28 @@ const MLOpsConsolePage: React.FC = () => {
   const dpoQuery = useQuery({
     queryKey: ['dpoStatus'],
     queryFn: () => apiClient('/api/mlops/dpo-loop/', { method: 'GET' }),
-    onSuccess: (data) => {
-      setDpoStatus(data.status);
-      setMetrics(data.metrics);
-    },
     // refetchInterval: 5000, // Polling toutes les 5 secondes
   });
+
+  useEffect(() => {
+    if (dpoQuery.data) {
+      setDpoStatus(dpoQuery.data.status);
+      setMetrics(dpoQuery.data.metrics);
+    }
+  }, [dpoQuery.data]);
 
   // Fetch adapters info
   const adaptersQuery = useQuery({
     queryKey: ['mlopsAdapters'],
     queryFn: () => apiClient('/api/mlops/adapters/', { method: 'GET' }),
-    onSuccess: (data) => {
-      setAdapters(data);
-    },
     // refetchInterval: 10000, // Polling toutes les 10 secondes
   });
+
+  useEffect(() => {
+    if (adaptersQuery.data) {
+      setAdapters(adaptersQuery.data);
+    }
+  }, [adaptersQuery.data]);
 
   // DPO loop actions
   const dpoMutation = useMutation({

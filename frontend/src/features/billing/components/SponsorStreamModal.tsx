@@ -37,6 +37,20 @@ export const SponsorStreamModal: React.FC<Props> = ({ actionType, onClose, onCon
 
   const sponsor = SPONSORS_CLIPS[actionType];
 
+  const logVideoImpression = () => {
+    fetch('/api/v1/billing/log_ad_event/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event_type: 'impression', ad_type: 'video' })
+    }).catch(err => console.error('Failed to log video impression', err));
+  };
+
+  useEffect(() => {
+    if (hasError) {
+      logVideoImpression();
+    }
+  }, [hasError]);
+
   // 1. Chargement dynamique du script Google IMA SDK
   useEffect(() => {
     if ((window as any).google && (window as any).google.ima) {
@@ -184,6 +198,7 @@ export const SponsorStreamModal: React.FC<Props> = ({ actionType, onClose, onCon
 
   const startAdPlayback = () => {
     if (hasError) return;
+    logVideoImpression();
 
     try {
       const google = (window as any).google;

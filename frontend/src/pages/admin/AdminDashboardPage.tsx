@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Users, Activity, Brain, Database, BarChart3, Clock, Settings, ArrowRight, Workflow, Target, Network, ListChecks } from 'lucide-react';
+import { Shield, Users, Activity, Brain, Database, BarChart3, Clock, Settings, ArrowRight, Workflow, Target, Network, ListChecks, Coins } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card } from "../../components/ui/Card";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
@@ -75,6 +75,13 @@ const AdminDashboardPage: React.FC = () => {
       icon: <ListChecks className="w-8 h-8 text-amber-500" />,
       path: '/admin/curation/',
       color: 'amber'
+    },
+    {
+      title: 'Financial Dashboard',
+      desc: 'Calculer les coûts IA et égaliser avec les pubs/dons.',
+      icon: <Coins className="w-8 h-8 text-yellow-500" />,
+      path: '/admin/financials/',
+      color: 'yellow'
     }
   ];
 

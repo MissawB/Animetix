@@ -22,14 +22,52 @@ import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
+import XaiReportDisplay from "../../components/XaiReportDisplay"; // Import XaiReportDisplay
+
+interface DocumentAttribution {
+  document_id: string;
+  title: string;
+  relevance_score: number;
+  contribution_weight: number;
+}
+
+interface LogitLensTrajectory {
+  layer: number;
+  top_tokens: string[];
+  internal_probabilities: number[];
+}
+
+interface ModelDiagnostics {
+  attention_heatmap: any[]; 
+  top_influential_tokens: string[];
+  logit_lens_trajectory: LogitLensTrajectory[]; 
+}
+
+interface Uncertainty {
+  confidence_score: number;
+  is_reliable: boolean;
+  perplexity: number | null;
+  action_required: string;
+  method: string;
+}
+
+interface XaiReport {
+  query_intent: string;
+  retrieval_attribution: DocumentAttribution[];
+  internal_diagnostics: ModelDiagnostics;
+  uncertainty: Uncertainty;
+  agent_trace: any[]; 
+  final_confidence: number;
+}
 
 interface Step {
   id: string;
-  type: 'thought' | 'eval' | 'token';
+  type: 'thought' | 'eval' | 'token' | 'xai_report';
   content: any;
   timestamp: number;
   agent?: string;
-  parentId?: string; // Add parent tracking for graph
+  parentId?: string; 
+  xaiReport?: XaiReport;
 }
 
 // Interfaces for ForceGraph
@@ -38,7 +76,7 @@ interface GraphNode {
   label: string;
   agent: string;
   type: string;
-  val: number; // size
+  val: number; 
   color: string;
 }
 
@@ -56,6 +94,7 @@ const ExpertNexusPage: React.FC = () => {
   const [steps, setSteps] = useState<Step[]>([]);
   const [finalAnswer, setFinalAnswer] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [xaiReport, setXaiReport] = useState<XaiReport | null>(null);
   
   // Graph state
   const [graphData, setGraphData] = useState<{ nodes: GraphNode[], links: GraphLink[] }>({ nodes: [], links: [] });
@@ -197,6 +236,8 @@ const ExpertNexusPage: React.FC = () => {
           stopStreaming();
         } else if (data.type === 'done') {
           stopStreaming();
+        } else if (data.type === 'xai_report') { 
+          setXaiReport(data.content); 
         }
       } catch (e) {
         console.error("Failed to parse event data", e);
@@ -346,6 +387,8 @@ const ExpertNexusPage: React.FC = () => {
                             </div>
                         )}
                     </div>
+
+                    {xaiReport && <XaiReportDisplay xaiReport={xaiReport} />}
 
                     {/* Footer Stats */}
                     <div className="px-12 py-8 border-t border-white/5 bg-white/5 flex flex-wrap justify-between items-center gap-6">

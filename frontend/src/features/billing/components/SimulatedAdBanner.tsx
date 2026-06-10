@@ -35,9 +35,23 @@ export const SimulatedAdBanner: React.FC = () => {
   useEffect(() => {
     const random = SPONSORS[Math.floor(Math.random() * SPONSORS.length)];
     setSponsor(random);
+    
+    // Log Banner Impression
+    fetch('/api/v1/billing/log_ad_event/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event_type: 'impression', ad_type: 'banner' })
+    }).catch(err => console.error('Failed to log ad impression', err));
   }, []);
 
   const handleCtaClick = () => {
+    // Log Banner Click
+    fetch('/api/v1/billing/log_ad_event/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event_type: 'click', ad_type: 'banner' })
+    }).catch(err => console.error('Failed to log ad click', err));
+
     window.open(sponsor.url, '_blank', 'noopener,noreferrer');
   };
 

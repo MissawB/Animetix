@@ -31,10 +31,8 @@ django-redis==6.0.0
 neo4j==6.1.0
 psycopg2-binary==2.9.12
 redis==7.4.0
-sqlparse==0.5.5
-django-storages==1.14.6
-google-cloud-storage==3.10.1
-google-cloud-workflows==1.22.0
+sqlglot==25.0.0
+
 
 
 # --------------------------------------------------------------------------
@@ -65,7 +63,7 @@ numpy==1.26.4
 onnxruntime==1.24.4
 openai==2.30.0
 opencv-python-headless==4.9.0.80
-pandas==1.5.3
+
 peft==0.13.2
 pydub==0.25.1
 pynndescent==0.6.0

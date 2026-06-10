@@ -12,6 +12,7 @@ const SOTABenchmarkPage = lazy(() => import('../../../pages/admin/SOTABenchmarkP
 const TTCMonitoringPage = lazy(() => import('../../../pages/admin/TTCMonitoringPage'));
 const UserManagementPage = lazy(() => import('../../../pages/admin/UserManagementPage'));
 const AdminDashboardPage = lazy(() => import('../../../pages/admin/AdminDashboardPage'));
+const FinancialDashboardPage = lazy(() => import('../../../pages/admin/FinancialDashboardPage'));
 
 export const AdminRoutes = (
   <>
@@ -25,6 +26,7 @@ export const AdminRoutes = (
     <Route path="/admin/health/" element={<HealthPage />} />
     <Route path="/admin/sota-benchmark/" element={<SOTABenchmarkPage />} />
     <Route path="/admin/ttc-monitoring/" element={<TTCMonitoringPage />} />
+    <Route path="/admin/financials/" element={<FinancialDashboardPage />} />
     <Route path="/admin/users/" element={<UserManagementPage />} />
   </>
 );
