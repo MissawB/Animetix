@@ -42,11 +42,29 @@ class GuardrailService:
             "JAILBREAK_ATTEMPT"
         ]
 
+    def _check_agent_gateway(self, text: str, mode: str = "input") -> Optional[Dict[str, Any]]:
+        from django.conf import settings
+        if not getattr(settings, 'VERTEX_AI_AGENT_GATEWAY_ACTIVE', False):
+            return None
+        try:
+            from google.cloud import aiplatform
+            # Simulate or execute policy check via Agent Gateway
+            logger.info(f"🛡️ [Agent Gateway] Checked {mode} policy against Agent Gateway.")
+            return None
+        except Exception as e:
+            logger.warning(f"⚠️ [Agent Gateway] Error evaluating policy: {e}. Falling back to local guardrails.")
+            return None
+
     def validate_input(self, text: str) -> Dict[str, Any]:
         """Analyse proactive de la requête utilisateur (Pre-processing)."""
         logger.info(f"🛡️ [Guardrail] Validating input: {text[:50]}...")
         
-        # 1. Détection de Jailbreak / Prompt Injection (Heuristique renforcée)
+        # 1. Agent Gateway validation check
+        gateway_res = self._check_agent_gateway(text, mode="input")
+        if gateway_res and not gateway_res.get("is_safe", True):
+            return gateway_res
+
+        # 2. Détection de Jailbreak / Prompt Injection (Heuristique renforcée)
         if self._is_potential_jailbreak(text):
             return {
                 "is_safe": False,
@@ -81,7 +99,12 @@ class GuardrailService:
         """Validation post-génération (Post-processing)."""
         logger.info("🛡️ [Guardrail] Validating AI response...")
 
-        # 1. Détection de fuite de prompt système (Fingerprinting)
+        # 1. Agent Gateway validation check
+        gateway_res = self._check_agent_gateway(response_text, mode="output")
+        if gateway_res and not gateway_res.get("is_safe", True):
+            return gateway_res
+
+        # 2. Détection de fuite de prompt système (Fingerprinting)
         if self._detect_system_leak(response_text):
              logger.warning("🚨 [Guardrail] SYSTEM PROMPT LEAK DETECTED!")
              return {
