@@ -131,4 +131,4 @@ Maintenance scripts, database reconciliation, and background worker pools.
 | `python scripts/verify_brain_adapter.py` | Root | Performs a smoke test on the primary cloud inference adapter. |
 | `python scripts/rag_smoke_test.py` | Root | Runs a basic verification check on the RAG pipeline (Vector Search -> Rerank). |
 | `python scripts/vision_quest_worker.py` | Root | Starts the background worker processing vision queue tasks. |
-| `cd backend/api; celery -A animetix_project worker --loglevel=info` | Root | Starts Celery workers to handle background tasks (session cleanup, telemetry loops). |
+| `cd backend/api; celery -A animetix_project worker --loglevel=info` | `backend/api` | Starts Celery workers to handle background tasks (session cleanup, telemetry loops). |
