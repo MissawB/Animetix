@@ -1,69 +1,64 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import React from 'react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { BrowserRouter } from 'react-router-dom';
 import PricingPage from '../PricingPage';
+import { useAuthStore } from '../../../store/authStore';
+
+vi.mock('../../../store/authStore');
+vi.mock('../../../api', () => ({
+  updateAccountSettings: vi.fn().mockResolvedValue({ status: 'updated' }),
+  apiClient: vi.fn().mockResolvedValue({ status: 'refilled' })
+}));
 
 const mockNavigate = vi.fn();
-
-// Mock react-router-dom
-vi.mock('react-router-dom', async (importOriginal) => {
-  const actual = await importOriginal<any>();
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importOriginal<any>();
   return {
     ...actual,
-    useNavigate: () => mockNavigate,
+    useNavigate: () => mockNavigate
   };
 });
 
-// Mock the store
-vi.mock('../../store/authStore', () => ({
-  useAuthStore: vi.fn(() => ({
-    user: null,
-    checkAuth: vi.fn(),
-  })),
-}));
-
-// Mock the API
-vi.mock('../../api', () => ({
-  updateAccountSettings: vi.fn(),
-}));
-
-// Mock the toast store
-vi.mock('../../store/toastStore', () => ({
-  useToastStore: vi.fn(() => ({
-    addToast: vi.fn(),
-  })),
-}));
-
-describe('PricingPage', () => {
+describe('PricingPage (Espace Sponsors)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('renders all pricing tiers', () => {
+  it('renders correctly for guests', () => {
+    (useAuthStore as any).mockReturnValue({
+      user: null,
+      isAuthenticated: false,
+      checkAuth: vi.fn()
+    });
+
     render(
-      <MemoryRouter>
+      <BrowserRouter>
         <PricingPage />
-      </MemoryRouter>
+      </BrowserRouter>
     );
-    
-    expect(screen.getByText(/Explorateur/i)).toBeInTheDocument();
-    expect(screen.getByText(/Premium/i)).toBeInTheDocument();
-    expect(screen.getByText(/Expert API/i)).toBeInTheDocument();
+
+    expect(screen.getByText(/Sponsoring & Boost/i)).toBeInTheDocument();
+    expect(screen.getByText(/Recharge Quota/i)).toBeInTheDocument();
+    expect(screen.getByText(/Boost Cyber-Nexus/i)).toBeInTheDocument();
   });
 
-  it('redirects to login when a tier is selected by an anonymous user', () => {
+  it('redirects to login when standard user tries to boost without login', () => {
+    (useAuthStore as any).mockReturnValue({
+      user: null,
+      isAuthenticated: false,
+      checkAuth: vi.fn()
+    });
+
     render(
-      <MemoryRouter>
+      <BrowserRouter>
         <PricingPage />
-      </MemoryRouter>
+      </BrowserRouter>
     );
-    
-    const selectButtons = screen.getAllByText(/SÉLECTIONNER/i);
-    fireEvent.click(selectButtons[0]);
-    
+
+    const boostButton = screen.getByText('ACTIVER LE BOOST');
+    fireEvent.click(boostButton);
+
     expect(mockNavigate).toHaveBeenCalledWith('/login?redirect=/pricing/');
   });
 });
-
-
-
