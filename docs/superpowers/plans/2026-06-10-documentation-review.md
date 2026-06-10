@@ -38,7 +38,7 @@ If any issues are found, make a note of the specific changes needed (e.g., "Upda
 **Files:**
 - Modify: `docs/ARCHITECTURE.md`
 
-- [x] **Step 1: Read ARCHITECTURE.md**
+- [x] **Step 1: Read ARCHITECTURE.MD**
 
 Read the entire content of `docs/ARCHITECTURE.md` to understand the project's architectural overview and current content.
 
@@ -150,5 +150,27 @@ Evaluate the document for:
 - [x] **Step 3: Document Required Updates (if any)**
 
 If any issues are found, make a note of the specific changes needed (e.g., "Update setup instructions," "Clarify deployment steps," "Add troubleshooting tips"). These notes will guide actual modifications in a later step.
+
+- [x] **Step 4: Commit**
+
+### Task 7: Review docs/GEMINI.md
+
+**Files:**
+- Modify: `docs/GEMINI.md`
+
+- [x] **Step 1: Read docs/GEMINI.md**
+
+Read the entire content of `docs/GEMINI.md` to understand the project's mandates and guidelines for Gemini agents and current content.
+
+- [x] **Step 2: Review Content for Accuracy, Completeness, and Clarity**
+
+Evaluate the document for:
+    - **Accuracy:** Ensure all rules, technical constraints, and workflow descriptions are up-to-date and correctly stated.
+    - **Completeness:** Check if any mandates or important instructions are missing.
+    - **Clarity:** Assess readability, grammar, spelling, and logical flow. Ensure the guidelines are clear and unambiguous for agentic workers.
+
+- [x] **Step 3: Document Required Updates (if any)**
+
+If any issues are found, make a note of the specific changes needed (e.g., "Update rule X," "Clarify workflow Y," "Add new constraint Z"). These notes will guide actual modifications in a later step.
 
 - [x] **Step 4: Commit**
