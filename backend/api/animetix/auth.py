@@ -103,7 +103,7 @@ class IAPRemoteUserBackend(RemoteUserBackend):
 
 # --- Google Identity Platform (GCIP) Authentication ---
 
-GOOGLE_CERTS_URL = "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com"
+GOOGLE_CERTS_URL = "https://www.googleapis.com/robot/v1/metadata/x509/securetoken.google.com"
 _public_keys_cache = {}
 _public_keys_expiry = 0
 
@@ -114,14 +114,8 @@ def get_google_public_keys():
         return _public_keys_cache
 
     try:
-        logger.info(f"Attempting to fetch Google public keys from: {GOOGLE_CERTS_URL}")
         response = requests.get(GOOGLE_CERTS_URL, timeout=5)
         response.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
-        
-        logger.info(f"Successfully fetched Google public keys. Status Code: {response.status_code}")
-        logger.debug(f"Response Headers: {response.headers}")
-        # Log a snippet of the response content, careful not to log the entire potentially large body
-        logger.debug(f"Response Body (snippet): {response.text[:500]}...")
         
         cache_control = response.headers.get("Cache-Control", "")
         max_age = 3600
@@ -134,9 +128,6 @@ def get_google_public_keys():
         
         _public_keys_cache = response.json()
         _public_keys_expiry = now + max_age
-        return _public_keys_cache
-    except requests.exceptions.HTTPError as http_err:
-        logger.error(f"Failed to fetch Google public keys: HTTP Error - {http_err.response.status_code} {http_err.response.reason} for url: {GOOGLE_CERTS_URL}. Response: {http_err.response.text[:500]}...")
         return _public_keys_cache
     except Exception as e:
         logger.error(f"Failed to fetch Google public keys: {e}")

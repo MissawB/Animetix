@@ -107,6 +107,7 @@ urlpatterns = [
     path('billing/webhook/', billing_alert_webhook, name='api_billing_webhook'),
     path('billing/log_ad_event/', api_views.AdEventLoggingAPIView.as_view(), name='api_log_ad_event'),
     path('admin/ttc-monitoring/', api_views.TTCMonitoringAPIView.as_view(), name='api_ttc_monitoring'),
+    path('admin/financials/', api_views.AdminFinancialsAPIView.as_view(), name='api_admin_financials'),
     path('admin/users/', api_views.UserManagementViewSet.as_view({'get': 'list'}), name='api_admin_users'),
     path('admin/users/<int:pk>/toggle-staff/', api_views.UserManagementViewSet.as_view({'post': 'toggle_staff'}), name='api_admin_toggle_staff'),
     path('admin/users/<int:pk>/toggle-active/', api_views.UserManagementViewSet.as_view({'post': 'toggle_active'}), name='api_admin_toggle_active'),

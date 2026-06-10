@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Sum
-from ..models import DataCurationTicket, AITokenUsage, AdEvent
+from ..models import DataCurationTicket, AITokenUsage, AdEvent, Profile
 from ..serializers import DataCurationTicketSerializer, UserAdminSerializer
 from django.contrib.auth.models import User
 
@@ -104,3 +104,58 @@ class AdEventLoggingAPIView(APIView):
             ad_type=ad_type
         )
         return response.Response({"status": "logged", "id": event.id}, status=status.HTTP_201_CREATED)
+
+class AdminFinancialsAPIView(APIView):
+    permission_classes = [permissions.IsAdminUser]
+
+    def get(self, request):
+        # AI cost aggregation
+        total_ai_cost = AITokenUsage.objects.aggregate(Sum('cost_estimate'))['cost_estimate__sum'] or 0.0
+        
+        cost_by_engine = {}
+        engine_costs = AITokenUsage.objects.values('engine').annotate(total=Sum('cost_estimate'))
+        for item in engine_costs:
+            cost_by_engine[item['engine']] = item['total'] or 0.0
+            
+        # Ad stats aggregation
+        video_impressions = AdEvent.objects.filter(ad_type="video", event_type="impression").count()
+        banner_impressions = AdEvent.objects.filter(ad_type="banner", event_type="impression").count()
+        clicks = AdEvent.objects.filter(event_type="click").count()
+        
+        # Sponsorship stats (donations)
+        gold_sponsors = Profile.objects.filter(unlocked_badges__contains="Sponsor Or").count()
+        total_donations = gold_sponsors * 5.00
+        
+        # Base ad revenue calculation
+        # Video CPM: $3.00, Banner CPM: $1.00, CPC: $0.15
+        estimated_ad_revenue = (video_impressions * 0.003) + (banner_impressions * 0.001) + (clicks * 0.15)
+        
+        total_revenue = estimated_ad_revenue + total_donations
+        net_margin = total_revenue - total_ai_cost
+        
+        # Dynamic advice
+        if net_margin >= 0:
+            recommendation = "Solde positif. L'écosystème est équilibré financièrement."
+        else:
+            deficit = abs(net_margin)
+            needed_video = int(deficit / 0.003)
+            needed_clicks = int(deficit / 0.15)
+            recommendation = f"Déficit de ${deficit:.2f}. Il est recommandé de générer {needed_video:,} impressions vidéo supplémentaires ou {needed_clicks:,} clics pour équilibrer."
+            
+        return response.Response({
+            "total_ai_cost": round(total_ai_cost, 4),
+            "cost_by_engine": cost_by_engine,
+            "ad_stats": {
+                "video_impressions": video_impressions,
+                "banner_impressions": banner_impressions,
+                "clicks": clicks
+            },
+            "donation_stats": {
+                "gold_sponsors": gold_sponsors,
+                "total_donations": round(total_donations, 2)
+            },
+            "estimated_ad_revenue": round(estimated_ad_revenue, 4),
+            "total_revenue": round(total_revenue, 4),
+            "net_margin": round(net_margin, 4),
+            "recommendation": recommendation
+        })

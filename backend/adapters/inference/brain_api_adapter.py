@@ -138,6 +138,21 @@ class BrainAPIAdapter(InferencePort):
             logger.error(f"BrainAPI Image Generation failed: {e}")
             raise
 
+    def generate_sprite(self, prompt: str, style: str = "") -> str:
+        """Génère un sprite de personnage via Brain API."""
+        try:
+            # Assuming a dedicated Brain API endpoint for sprite generation
+            response = safe_http_request(
+                "POST",
+                f"{self.api_url}/vision/sprite/generate", # Hypothetical endpoint
+                json={"prompt": prompt, "style": style},
+                headers=self._get_headers()
+            )
+            return response.json()["image_url_or_b64"]
+        except Exception as e:
+            logger.error(f"BrainAPI Sprite Generation failed: {e}. Falling back to NotImplementedError.")
+            raise InferenceNotImplementedError("BrainAPI Sprite Generation not implemented or failed for this adapter")
+
     def get_image_embedding(self, image_data: bytes, model_id: Optional[str] = None) -> List[float]:
         try:
             img_b64 = base64.b64encode(image_data).decode('utf-8')

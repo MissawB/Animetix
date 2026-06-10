@@ -20,14 +20,14 @@ router.register(r'curation', api_views.DataCurationTicketViewSet, basename='cura
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 from django.contrib.admin.views.decorators import staff_member_required
 from django_prometheus import exports as prometheus_exports
-from animetix.api.mlops import DPOFeedbackLoopView, AdaptersView
+from animetix.api.mlops import DPOFeedbackLoopView, AdaptersView 
 from animetix.api.admin_api import AdEventLoggingAPIView # Directly import AdEventLoggingAPIView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('favicon.ico', RedirectView.as_view(url='/static/animetix/img/logo/logo.png')),
     path('i18n/', include('django.conf.urls.i18n')), # Permet le switch de langue via POST
-
+    
     # --- PROFESSIONNALISATION : API REST (Headless) ---
     path('api/v1/', include(router.urls)),
     path('api/v1/', include('animetix.urls.api')),
@@ -39,7 +39,7 @@ urlpatterns = [
     path('api/schema/', staff_member_required(SpectacularAPIView.as_view()), name='schema'),
     path('api/schema/swagger-ui/', staff_member_required(SpectacularSwaggerView.as_view(url_name='schema')), name='swagger-ui'),
     path('api/schema/redoc/', staff_member_required(SpectacularRedocView.as_view(url_name='schema')), name='redoc'),
-
+    
     # --- OBSERVABILITÉ : PROMETHEUS - Restreint au Staff ---
     path('metrics/', staff_member_required(prometheus_exports.ExportToDjangoView), name='prometheus-django-metrics'),
     path('api/observability/', ObservabilityView.as_view(), name='observability'),
@@ -62,6 +62,7 @@ urlpatterns = [
 
     # --- BILLING ENDPOINTS ---
     path('billing/log_ad_event/', AdEventLoggingAPIView.as_view(), name='api_log_ad_event'),
+]
 
 
 # URLs traduites

@@ -315,3 +315,14 @@ class UnifiedInferenceAdapter(
             logger.debug(f"OpenAI-Compatible health check failed: {e}")
 
         return {"status": "offline", "engine": "Unified"}
+
+    def generate_sprite(self, prompt: str, style: str = "") -> str:
+        """Génère un sprite de personnage (généralement sur fond transparent ou blanc)."""
+        # Leveraging the existing generate_image from ImageGenMixin
+        # Adding specific modifiers for sprite generation
+        modified_prompt = (
+            f"{prompt}, full body, character sheet, "
+            f"transparent background, no shadows, clean lines, "
+            f"digital art, high resolution, {style}"
+        )
+        return self.generate_image(modified_prompt, style)

@@ -82,25 +82,11 @@ class GoogleGenAIAdapter(DepthEstimationMixin, InferencePort):
 
     def get_diagnostics(self, prompt: str, completion: str) -> Dict[str, Any]:
         """Récupère les données d'activation internes simulées pour Gemini."""
-        # Note: Les logprobs sont capturées lors de generate/stream_generate
-        # Si on n'a pas de logprobs fraîches pour cette completion, on simule ou on relance
-        return {
-            "attention_heatmap": [],
-            "top_influential_tokens": [],
-            "logit_lens_trajectory": [],
-            "note": "Les diagnostics complets nécessitent l'accès aux poids du modèle, non disponible via API."
-        }
+        raise InferenceNotImplementedError("get_diagnostics not implemented for GoogleGenAIAdapter (requires model weights access or specific API support).")
 
     def calculate_uncertainty(self, prompt: str, completion: str) -> Dict[str, float]:
         """Calcule l'incertitude mathématique via les logprobs Gemini."""
-        # On tente de récupérer les logprobs de la dernière génération
-        # Dans un cas réel de production, on relancerait peut-être l'inférence avec logprobs=True 
-        # si elles ne sont pas fournies.
-        return {
-            "entropy": 0.0,
-            "perplexity": 1.0,
-            "confidence": 0.95
-        }
+        raise InferenceNotImplementedError("calculate_uncertainty not implemented for GoogleGenAIAdapter (logprobs not directly exposed for this purpose).")
 
     def health_check(self) -> dict:
         if not self.client:
@@ -463,6 +449,10 @@ class GoogleGenAIAdapter(DepthEstimationMixin, InferencePort):
         except Exception as e:
             logger.error(f"Google Imagen generation failed: {e}")
             raise InferenceError(f"Imagen failed: {e}")
+
+    def generate_sprite(self, prompt: str, style: str = "") -> str:
+        """Génère un sprite de personnage (généralement sur fond transparent ou blanc)."""
+        raise InferenceNotImplementedError("generate_sprite not implemented for GoogleGenAIAdapter")
 
     # --- Internal Helpers ---
 

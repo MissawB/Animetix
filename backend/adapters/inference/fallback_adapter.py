@@ -233,6 +233,7 @@ class FallbackInferenceAdapter(InferencePort):
             capable_adapters = self.adapters
 
         ordered_adapters = self._get_ordered_adapters(capable_adapters)
+        last_error = "" # Initialize last_error
         for adapter in ordered_adapters:
             if not hasattr(adapter, method_name) or not callable(getattr(adapter, method_name)):
                 continue
@@ -244,18 +245,23 @@ class FallbackInferenceAdapter(InferencePort):
                 
                 if res is not None: 
                     logger.info(f"✅ [Fallback] {adapter.__class__.__name__}.{method_name} success in {latency:.2f}s")
+                    if last_error: # If there was a previous error, log a warning about fallback
+                        logger.warning(f"⚠️ [Fallback] Successfully fell back to {adapter.__class__.__name__} for {method_name} after previous failures. Last failure reason: {last_error}")
                     return res
                 
                 self._report_failure(adapter, method_name, "Résultat None", latency)
+                last_error = "Résultat None" # Update last_error for subsequent checks
             except (InferenceNotImplementedError, NotImplementedError) as e:
                 logger.debug(
                     f"⚙️ [Fallback] {adapter.__class__.__name__}.{method_name} raised "
                     f"InferenceNotImplementedError/NotImplementedError (not implemented): {e}"
                 )
+                last_error = str(e) # Update last_error
                 continue
             except Exception as e:
                 latency = time.time() - start_time
                 self._report_failure(adapter, method_name, f"CRASH: {str(e)}", latency)
+                last_error = str(e) # Update last_error
                 continue
         return None
 

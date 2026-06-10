@@ -163,6 +163,9 @@ class DjangoRepositoryAdapter(RepositoryPort):
         return [{"art_style": f.art_style, "titles": f"{f.title_a} x {f.title_b}"} for f in fusions]
 
     def query_data_natural_language(self, query: str, llm_service: Optional[Any] = None) -> List[Dict]:
+        # TODO: This feature uses LLM-generated SQL and is HIGH-RISK.
+        # The `validate_sql_query` guardrail is CRITICAL for preventing SQL injection.
+        # This function requires rigorous security review and testing, especially any changes to `validate_sql_query`.
         from django.db import connection
         from core.utils.sql_guard import validate_sql_query
         
