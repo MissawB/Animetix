@@ -11,6 +11,7 @@ import CompanionOverlay from '../features/companion/CompanionOverlay';
 import { useUIStore } from '../store/uiStore';
 import { useAuthStore } from '../store/authStore';
 import { useTranslation } from 'react-i18next';
+import { SimulatedAdBanner } from '../features/billing/components/SimulatedAdBanner';
 import { 
   X, Home, Zap, Trophy, Settings, Sun, Moon, Monitor, 
   CheckCircle2, Shield, Sparkles, Gamepad2, Search, Compass, 
@@ -129,7 +130,7 @@ const LayoutContent: React.FC<{ children: ReactNode }> = ({ children }) => {
               <div>
                 <p className="manga-font text-sm m-0 text-black dark:text-white">{user.username}</p>
                 <p className="text-[10px] font-bold text-yellow-600 dark:text-yellow-400 uppercase m-0">
-                  {user.tier === 'premium' ? 'Premium' : 'Explorateur'}
+                  {user.tier === 'premium' ? 'Boosté' : 'Standard'}
                 </p>
               </div>
             </div>
@@ -270,6 +271,11 @@ const LayoutContent: React.FC<{ children: ReactNode }> = ({ children }) => {
               </Link>
             </div>
           </div>
+          {user && user.tier === 'free' && (
+            <div className="pt-8 px-2">
+              <SimulatedAdBanner />
+            </div>
+          )}
         </nav>
 
         {user?.is_staff && (

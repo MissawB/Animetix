@@ -50,7 +50,7 @@ export const HomeNav: React.FC = () => {
         {isAuthenticated && user && (
           <div className="hidden sm:flex flex-col items-end">
             <span className="text-[10px] font-bold uppercase text-yellow-600 dark:text-yellow-400 tracking-widest">
-              {user.tier === 'premium' ? 'Premium' : 'Explorateur'}
+              {user.tier === 'premium' ? 'Boosté' : 'Standard'}
             </span>
             <span className="text-xs font-black italic manga-font text-black dark:text-white">{user.username}</span>
           </div>

@@ -95,32 +95,26 @@ const AccountSettingsPage: React.FC = () => {
               </div>
             </Card>
 
-            {/* Niveau d'abonnement */}
+            {/* Statut & Sponsors */}
             <Card padding="lg" className="space-y-6 shadow-xl border-none bg-white dark:bg-[#0f0f1a]">
               <h2 className="text-xl font-bold uppercase tracking-widest border-b border-gray-100 dark:border-white/5 pb-4 mb-4 flex items-center gap-2 text-black dark:text-white">
-                <Star className="w-5 h-5 text-yellow-400" /> Abonnement
+                <Star className="w-5 h-5 text-yellow-400" /> Statut du Compte
               </h2>
               <div className="space-y-4">
-                {['free', 'premium', 'pro'].map((tierOption) => (
-                  <button
-                    key={tierOption}
-                    onClick={() => handleUpdateTier(tierOption)}
-                    disabled={isUpdating || user.tier === tierOption}
-                    className={`w-full text-left px-6 py-4 rounded-xl border-2 transition-all flex justify-between items-center ${
-                      user.tier === tierOption 
-                        ? 'border-brand-primary bg-brand-primary/5 cursor-default' 
-                        : 'border-transparent bg-gray-50 dark:bg-black/20 hover:border-gray-200 dark:hover:border-white/10'
-                    }`}
-                  >
-                    <div>
-                      <span className="font-bold uppercase tracking-widest block text-black dark:text-white">{tierOption}</span>
-                      <span className="text-xs opacity-60 text-black dark:text-white">
-                        {tierOption === 'free' ? 'Accès basique' : tierOption === 'premium' ? 'Accès Graph + UI Custom' : 'Accès API complet'}
-                      </span>
-                    </div>
-                    {user.tier === tierOption && <div className="w-3 h-3 rounded-full bg-brand-primary animate-pulse" />}
-                  </button>
-                ))}
+                <div className="p-4 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/5 space-y-2 text-black dark:text-white">
+                  <span className="text-[10px] font-black uppercase opacity-50 block">Votre Statut Actuel</span>
+                  <span className="font-bold text-lg uppercase text-yellow-500">
+                    {user.tier === 'premium' ? 'Boosté (Sponsorisé)' : 'Standard (Financé par Pubs)'}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500">
+                  {user.tier === 'premium' 
+                    ? "Votre boost est actif. Vous profitez d'une expérience sans publicité." 
+                    : "Votre compte est actuellement en mode standard. Pour supprimer les publicités et multiplier votre quota IA par 5, visitez l'Espace Sponsors."}
+                </p>
+                <Link to="/pricing/" className="block text-center bg-yellow-500 hover:bg-yellow-600 text-black font-black italic manga-font text-xs py-4 px-6 rounded-xl shadow-lg transition-all no-underline">
+                  ACCÉDER À L'ESPACE SPONSORS
+                </Link>
               </div>
             </Card>
 
