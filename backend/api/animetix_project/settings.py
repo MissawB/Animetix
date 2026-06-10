@@ -421,6 +421,11 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 GS_BUCKET_NAME = env('GS_BUCKET_NAME', default=None)
 GS_CUSTOM_ENDPOINT = env('GS_CUSTOM_ENDPOINT', default=None)
+GS_DEFAULT_KMS_KEY_NAME = env('GS_DEFAULT_KMS_KEY_NAME', default=None)
+
+GS_OBJECT_PARAMETERS = {}
+if GS_DEFAULT_KMS_KEY_NAME:
+    GS_OBJECT_PARAMETERS['kms_key_name'] = GS_DEFAULT_KMS_KEY_NAME
 
 if IS_PRODUCTION or GS_BUCKET_NAME:
     STORAGES = {
@@ -430,6 +435,7 @@ if IS_PRODUCTION or GS_BUCKET_NAME:
                 'bucket_name': GS_BUCKET_NAME,
                 'project_id': env('GOOGLE_CLOUD_PROJECT', default='animetix'),
                 'custom_endpoint': GS_CUSTOM_ENDPOINT,
+                'object_parameters': GS_OBJECT_PARAMETERS,
             }
         },
         'staticfiles': {
@@ -551,6 +557,14 @@ GCP_WORKFLOW_POLL_URL = env('GCP_WORKFLOW_POLL_URL', default='https://missawb-an
 
 # --- SECURITY ---
 STRICT_MODEL_VERIFICATION = False
+
+# --- VERTEX AI VECTOR SEARCH 2.0 (COLLECTIONS) ---
+VERTEX_AI_VECTOR_SEARCH_ACTIVE = env.bool('VERTEX_AI_VECTOR_SEARCH_ACTIVE', default=False)
+VERTEX_AI_PROJECT_ID = env('VERTEX_AI_PROJECT_ID', default='')
+VERTEX_AI_LOCATION = env('VERTEX_AI_LOCATION', default='europe-west1')
+VERTEX_AI_COLLECTION_NAME = env('VERTEX_AI_COLLECTION_NAME', default='animetix_media')
+VERTEX_AI_AUTO_EMBEDDINGS = env.bool('VERTEX_AI_AUTO_EMBEDDINGS', default=True)
+VERTEX_AI_EMBEDDING_MODEL = env('VERTEX_AI_EMBEDDING_MODEL', default='text-embedding-005')
 
 
 
