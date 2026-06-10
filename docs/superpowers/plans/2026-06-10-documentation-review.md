@@ -60,4 +60,29 @@ git add docs/superpowers/plans/2026-06-10-documentation-review.md
 git commit -m "docs: Add review task for ARCHITECTURE.md"
 ```
 
+### Task 3: Review COMMANDS.md
 
+**Files:**
+- Modify: `docs/COMMANDS.md`
+
+- [x] **Step 1: Read COMMANDS.md**
+
+Read the entire content of `docs/COMMANDS.md` to understand the project's command-line interface and current content.
+
+- [x] **Step 2: Review Content for Accuracy, Completeness, and Clarity**
+
+Evaluate the document for:
+    - **Accuracy:** Ensure all commands, options, and examples are up-to-date and correctly described.
+    - **Completeness:** Check if any new or existing commands are missing from the documentation.
+    - **Clarity:** Assess readability, grammar, spelling, and logical flow. Ensure commands are easy to understand and execute.
+
+- [x] **Step 3: Document Required Updates (if any)**
+
+If any issues are found, make a note of the specific changes needed (e.g., "Add new command X," "Update syntax for command Y," "Correct example for command Z"). These notes will guide actual modifications in a later step.
+
+- [x] **Step 4: Commit**
+
+```bash
+git add docs/superpowers/plans/2026-06-10-documentation-review.md
+git commit -m "docs: Add review task for COMMANDS.md"
+```
