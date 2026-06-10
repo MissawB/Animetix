@@ -108,3 +108,25 @@ Evaluate the document for:
 If any issues are found, make a note of the specific changes needed (e.g., "Update diagram X to reflect change Y," "Add new diagram for Z"). These notes will guide actual modifications in a later step.
 
 - [x] **Step 4: Commit**
+
+### Task 5: Review EXPLICATION_IA.md
+
+**Files:**
+- Modify: `docs/EXPLICATION_IA.md`
+
+- [x] **Step 1: Read EXPLICATION_IA.md**
+
+Read the entire content of `docs/EXPLICATION_IA.md` to understand the project's AI explanations and current content.
+
+- [x] **Step 2: Review Content for Accuracy, Completeness, and Clarity**
+
+Evaluate the document for:
+    - **Accuracy:** Ensure all AI model descriptions, methodologies, and results are up-to-date and correctly explained.
+    - **Completeness:** Check if any key aspects of the AI implementation are missing or if explanations are insufficient.
+    - **Clarity:** Assess readability, grammar, spelling, and logical flow. Ensure complex AI concepts are explained in an understandable manner.
+
+- [x] **Step 3: Document Required Updates (if any)**
+
+If any issues are found, make a note of the specific changes needed (e.g., "Update model version X," "Clarify the use of algorithm Y," "Add explanation for feature Z"). These notes will guide actual modifications in a later step.
+
+- [x] **Step 4: Commit**
