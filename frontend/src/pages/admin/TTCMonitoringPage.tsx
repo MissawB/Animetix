@@ -26,60 +26,66 @@ const TTCMonitoringPage = () => {
 
     return (
         <AnimatedPage>
-            <div className="max-w-7xl mx-auto px-6 py-16">
-                <Link to="/admin/" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-white mb-8">
-                    <ArrowLeft className="w-4 h-4" /> Retour MLOps
-                </Link>
-                <h1 className="text-4xl font-black italic uppercase mb-8">Dynamic Budget TTC</h1>
-                
-                {/* KPI Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-                    <Card padding="lg" className="bg-gray-900 border-white/10">
-                        <p className="text-xs uppercase opacity-50 mb-2">Budget Alloué (24h)</p>
-                        <p className="text-4xl font-black">{summary.total_allocated}</p>
-                    </Card>
-                    <Card padding="lg" className="bg-gray-900 border-white/10">
-                        <p className="text-xs uppercase opacity-50 mb-2">Consommation Réelle</p>
-                        <p className="text-4xl font-black">{summary.total_consumed}</p>
-                    </Card>
-                    <Card padding="lg" className={`bg-gray-900 border-white/10 ${summary.efficiency > 100 ? 'text-red-500' : 'text-green-500'}`}>
-                        <p className="text-xs uppercase opacity-50 mb-2 text-white">Efficacité Cognitive</p>
-                        <p className="text-4xl font-black">{summary.efficiency}%</p>
+            <div className="min-h-[calc(100vh-64px)] bg-[#fffcf0] dark:bg-[#1a1a2e] transition-colors duration-500 bg-manga-overlay">
+                <div className="max-w-7xl mx-auto px-6 py-16">
+                    <Link to="/admin/dashboard/" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-black dark:hover:text-white mb-8 no-underline">
+                        <ArrowLeft className="w-4 h-4" /> Retour Administration
+                    </Link>
+                    <h1 className="text-4xl font-black italic manga-font uppercase mb-12 text-black dark:text-white">
+                      DYNAMIC <span className="text-blue-500">BUDGET</span> TTC
+                    </h1>
+                    
+                    {/* KPI Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12 text-black dark:text-white">
+                        <Card padding="lg" className="bg-white dark:bg-[#0f0f1a] border-none shadow-xl">
+                            <p className="text-[10px] font-black uppercase opacity-40 mb-2">Budget Alloué (24h)</p>
+                            <p className="text-4xl font-black italic">{summary.total_allocated}</p>
+                        </Card>
+                        <Card padding="lg" className="bg-white dark:bg-[#0f0f1a] border-none shadow-xl">
+                            <p className="text-[10px] font-black uppercase opacity-40 mb-2">Consommation Réelle</p>
+                            <p className="text-4xl font-black italic">{summary.total_consumed}</p>
+                        </Card>
+                        <Card padding="lg" className={`bg-white dark:bg-[#0f0f1a] border-none shadow-xl ${summary.efficiency > 100 ? 'text-red-500' : 'text-emerald-500'}`}>
+                            <p className="text-[10px] font-black uppercase opacity-40 mb-2 text-black dark:text-white">Efficacité Cognitive</p>
+                            <p className="text-4xl font-black italic">{summary.efficiency}%</p>
+                        </Card>
+                    </div>
+
+                    {/* Table */}
+                    <Card padding="none" className="bg-white dark:bg-[#0f0f1a] border-none shadow-2xl overflow-hidden">
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left text-black dark:text-white">
+                              <thead className="bg-gray-50 dark:bg-black/40 text-[10px] uppercase font-black text-gray-400 border-b border-black/5 dark:border-white/5">
+                                  <tr>
+                                      <th className="p-6">Inference Engine</th>
+                                      <th className="p-6">Alloué</th>
+                                      <th className="p-6">Consommé</th>
+                                      <th className="p-6 text-right">Statut</th>
+                                  </tr>
+                              </thead>
+                              <tbody className="divide-y divide-black/5 dark:divide-white/5">
+                                  {logs.map((log: any) => {
+                                      const overBudget = log.consumed > log.allocated;
+                                      return (
+                                          <tr key={log.id} className="hover:bg-gray-50/50 dark:hover:bg-white/5 transition-colors">
+                                              <td className="p-6 font-mono text-[10px] font-black uppercase text-blue-500">{log.engine}</td>
+                                              <td className="p-6 font-black italic">{log.allocated}</td>
+                                              <td className="p-6 font-black italic">{log.consumed}</td>
+                                              <td className="p-6 text-right">
+                                                  {overBudget ? (
+                                                      <span className="inline-flex items-center gap-2 bg-red-500/10 text-red-500 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-red-500/20"><AlertTriangle className="w-3 h-3"/> Over Budget</span>
+                                                  ) : (
+                                                      <span className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-500 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-emerald-500/20"><CheckCircle className="w-3 h-3"/> Optimal</span>
+                                                  )}
+                                              </td>
+                                          </tr>
+                                      );
+                                  })}
+                              </tbody>
+                          </table>
+                        </div>
                     </Card>
                 </div>
-
-                {/* Table */}
-                <Card padding="none" className="bg-gray-900 border-white/10 overflow-hidden">
-                    <table className="w-full text-left">
-                        <thead className="bg-white/5 text-[10px] uppercase font-black">
-                            <tr>
-                                <th className="p-4">Engine</th>
-                                <th className="p-4">Alloué</th>
-                                <th className="p-4">Consommé</th>
-                                <th className="p-4">Statut</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {logs.map((log: any) => {
-                                const overBudget = log.consumed > log.allocated;
-                                return (
-                                    <tr key={log.id} className="border-t border-white/5 text-sm">
-                                        <td className="p-4 font-mono text-xs">{log.engine}</td>
-                                        <td className="p-4">{log.allocated}</td>
-                                        <td className="p-4">{log.consumed}</td>
-                                        <td className="p-4">
-                                            {overBudget ? (
-                                                <span className="flex items-center gap-1 text-red-500 text-xs font-bold"><AlertTriangle className="w-3 h-3"/> Dépassement</span>
-                                            ) : (
-                                                <span className="flex items-center gap-1 text-green-500 text-xs font-bold"><CheckCircle className="w-3 h-3"/> Optimal</span>
-                                            )}
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </Card>
             </div>
         </AnimatedPage>
     );

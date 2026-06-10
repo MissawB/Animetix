@@ -62,8 +62,8 @@ class InferenceContainer(containers.DeclarativeContainer):
 
     brain_api_adapter = providers.Singleton(
         BrainAPIAdapter,
-        brain_api_url=os.getenv("BRAIN_API_URL", ""),
-        brain_api_key=settings.BRAIN_API_KEY
+        api_url=os.getenv("BRAIN_API_URL", ""),
+        api_key=settings.BRAIN_API_KEY
     )
 
     inference_engine = providers.Singleton(

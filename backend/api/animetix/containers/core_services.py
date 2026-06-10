@@ -53,6 +53,8 @@ from core.domain.services.counterfactual_simulator import CounterfactualConversa
 from core.domain.services.self_evolving_compiler import SelfEvolvingCompiler
 from core.domain.services.neuromorphic_plasticity_service import SynapticPlasticityService
 from core.domain.services.domain_synthesizer import AutonomousDomainSynthesizer
+from core.domain.services.distillation_pipeline import ModelDistillationPipeline
+from core.domain.services.synthetic_promotion_service import SyntheticDataPromotionService
 from core.domain.services.star_mlops_service import StarMLOpsDomainService
 from core.domain.services.drift_service import DriftService
 from core.domain.services.archetype_drift_service import ArchetypeDriftService
@@ -62,6 +64,7 @@ from core.domain.services.creative.vs_battle_service import VsBattleService
 from core.domain.services.health_dashboard_service import HealthDashboardService
 from core.domain.services.sota_benchmark_service import SOTABenchmarkService
 from core.domain.services.game_session_service import GameSessionService
+from core.domain.services.xai_service import XaiDiagnosticService
 
 # Adapters imports
 from adapters.persistence.pipeline_sync_adapter import PipelineSyncAdapter
@@ -388,7 +391,15 @@ class CoreServicesContainer(containers.DeclarativeContainer):
     autonomous_domain_synthesizer = providers.Singleton(
         AutonomousDomainSynthesizer,
         inference_engine=inference.inference_engine,
-        neo4j_manager=persistence.graph_persistence_port
+        neo4j_manager=persistence.graph_persistence_port,
+        gold_dataset_port=persistence.gold_dataset_adapter
+    )
+
+    model_distillation_pipeline = providers.Singleton(
+        ModelDistillationPipeline,
+        teacher_engine=inference.inference_engine,
+        prompt_manager=infrastructure.prompt_manager,
+        gold_dataset_port=persistence.gold_dataset_adapter
     )
 
     star_mlops_service = providers.Singleton(
@@ -396,6 +407,13 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         prompt_manager=infrastructure.prompt_manager,
         gold_dataset_port=persistence.gold_dataset_adapter,
         eval_service=ragas_eval_service
+    )
+
+    synthetic_promotion_service = providers.Singleton(
+        SyntheticDataPromotionService,
+        gold_dataset_port=persistence.gold_dataset_adapter,
+        domain_synthesizer=autonomous_domain_synthesizer,
+        star_mlops_service=star_mlops_service
     )
 
     drift_service = providers.Singleton(
@@ -448,4 +466,9 @@ class CoreServicesContainer(containers.DeclarativeContainer):
     synaptic_plasticity_simulator = providers.Singleton(
         SynapticPlasticityService,
         num_concepts=10
+    )
+
+    xai_service = providers.Singleton(
+        XaiDiagnosticService,
+        inference_engine=inference.inference_engine
     )

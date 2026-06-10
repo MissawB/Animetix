@@ -4,5 +4,5 @@
 - [x] Task 4: Support Logprobs in UnifiedInferenceAdapter
 - [x] Task 5: Support Logprobs in BrainAPIAdapter
 - [x] Task 6: Update FallbackInferenceAdapter
-- [x] Task 7: Finalize UncertaintyService (Real Logprobs Logic)
+- [x] Task 7: Finalize XaiDiagnosticService (Uncertainty Convergence & Real Logprobs)
 - [x] Task 8: Verification & Regression Testing

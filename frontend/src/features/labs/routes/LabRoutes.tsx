@@ -5,6 +5,7 @@ const LabHubPage = lazy(() => import('../../../pages/labs/LabHubPage'));
 const AudioLabPage = lazy(() => import('../../../pages/labs/AudioLabPage'));
 const VideoLabPage = lazy(() => import('../../../pages/labs/VideoLabPage'));
 const MangaLabPage = lazy(() => import('../../../pages/labs/MangaLabPage'));
+const MangaVoicePage = lazy(() => import('../../../pages/labs/MangaVoicePage'));
 const QuantumLabPage = lazy(() => import('../../../pages/labs/QuantumLabPage'));
 const SynapticLabPage = lazy(() => import('../../../pages/labs/SynapticLabPage'));
 const SwarmLabPage = lazy(() => import('../../../pages/labs/SwarmLabPage'));
@@ -23,6 +24,8 @@ const MultiverseGalleryPage = lazy(() => import('../../../pages/labs/MultiverseG
 const CognitionHubPage = lazy(() => import('../../../pages/labs/CognitionHubPage'));
 const VoiceLabPage = lazy(() => import('../../../pages/labs/VoiceLabPage'));
 const NeuralDiagnosticsPage = lazy(() => import('../../../pages/labs/NeuralDiagnosticsPage'));
+const CoveOraclePage = lazy(() => import('../../../pages/labs/CoveOraclePage'));
+const StrategyLabPage = lazy(() => import('../../../pages/labs/StrategyLabPage'));
 
 export const LabRoutes = (
   <>
@@ -30,6 +33,7 @@ export const LabRoutes = (
     <Route path="/lab/audio/" element={<AudioLabPage />} />
     <Route path="/lab/video/" element={<VideoLabPage />} />
     <Route path="/lab/manga/" element={<MangaLabPage />} />
+    <Route path="/lab/manga-voice/" element={<MangaVoicePage />} />
     <Route path="/lab/quantum/" element={<QuantumLabPage />} />
     <Route path="/lab/synaptic/" element={<SynapticLabPage />} />
     <Route path="/lab/swarm/" element={<SwarmLabPage />} />
@@ -49,5 +53,7 @@ export const LabRoutes = (
     <Route path="/lab/cognition-hub/" element={<CognitionHubPage />} />
     <Route path="/lab/voice/" element={<VoiceLabPage />} />
     <Route path="/lab/diagnostics/" element={<NeuralDiagnosticsPage />} />
+    <Route path="/lab/cove-oracle/" element={<CoveOraclePage />} />
+    <Route path="/lab/strategy/" element={<StrategyLabPage />} />
   </>
 );

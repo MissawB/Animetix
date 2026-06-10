@@ -6,7 +6,8 @@ import {
   ChevronRight,
   ShieldCheck,
   Activity,
-  Target
+  Target,
+  Sparkles
 } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { apiClient } from "../../utils/apiClient";
@@ -159,8 +160,39 @@ const QuantumLabPage: React.FC = () => {
                   </AnimatePresence>
               </div>
           </div>
+
+          {/* Global Warning & Guide */}
+          <div className="mt-24 grid grid-cols-1 md:grid-cols-2 gap-8">
+              <Card padding="lg" className="bg-black/40 border-purple-500/20 shadow-[0_0_50px_rgba(168,85,247,0.1)] relative overflow-hidden group">
+                  <div className="absolute -right-12 -bottom-12 opacity-5 group-hover:opacity-10 transition-opacity">
+                      <Atom className="w-64 h-64 text-purple-500" />
+                  </div>
+                  <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3">
+                      <Sparkles className="w-5 h-5 text-purple-400" /> Guide du Cognitique Quantique
+                  </h4>
+                  <div className="space-y-4 relative z-10">
+                      <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
+                          <span className="text-purple-400">La Superposition :</span> Pour notre IA, vos goûts ne sont pas des cases figées. Vous êtes dans un état de "superposition" : vous aimez potentiellement tout à la fois jusqu'à ce qu'une décision soit prise.
+                      </p>
+                      <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
+                          <span className="text-purple-400">L'Effondrement :</span> Quand vous sélectionnez un genre (ex: SHONEN) et lancez une mesure, l'IA force vos probabilités à se fixer. C'est "l'effondrement de la fonction d'onde" de vos préférences.
+                      </p>
+                      <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
+                          <span className="text-purple-400">Pourquoi faire ça ?</span> Cela permet à l'IA de modéliser l'incertitude humaine et de découvrir des "liens invisibles" entre des genres qui n'ont rien à voir en apparence.
+                      </p>
+                  </div>
+              </Card>
+
+              <div className="p-12 rounded-[4rem] bg-gradient-to-br from-purple-600/10 to-transparent border border-white/5 flex flex-col justify-center text-center">
+                  <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30 italic leading-relaxed text-purple-200/40">
+                      Protocole de Mesure : Les amplitudes de probabilité sont calculées via le solveur cognitif Animetix. <br />
+                      Toute observation modifie l'état initial du vecteur de conscience de l'utilisateur.
+                  </p>
+              </div>
+          </div>
         </div>
       </AnimatedPage>
+
     </div>
   );
 };

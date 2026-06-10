@@ -40,7 +40,9 @@ const BlindtestPage: React.FC = () => {
         {/* LECTEUR */}
         <Card padding="md">
           {gameState.gameOver ? (
-            <video ref={videoRef} src={gameState.video_url} controls className="w-full rounded-3xl shadow-lg" />
+            <video ref={videoRef} src={gameState.video_url} controls className="w-full rounded-3xl shadow-lg">
+              <track kind="captions" />
+            </video>
           ) : (
             <div className="text-center py-10">
                <div className="w-48 h-48 bg-gray-900 rounded-full mx-auto flex items-center justify-center mb-8 shadow-inner border-4 border-yellow-400/20">

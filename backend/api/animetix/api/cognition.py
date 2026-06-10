@@ -1,8 +1,4 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import permissions, status
-from ..containers import Container, get_container
-from ..models import ArchetypeDriftSnapshot
+from ..serializers import AIDebateSerializer, CounterfactualSerializer, CoveOracleSerializer, CFRStrategySerializer
 
 class ArchetypeNexusView(APIView):
     """
@@ -100,18 +96,15 @@ class AIDebateArenaView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
+        serializer = AIDebateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
         container = get_container()
         debate_service = container.core.self_play_debate_service()
-        target_media = request.data.get('media_title')
-        topic = request.data.get('topic')
-
-        if not target_media or not topic:
-            return Response({"error": "media_title and topic are required"}, status=400)
-
+        
         try:
-            # Pour l'instant, on exécute de manière synchrone (bloquant) 
-            # mais on pourrait passer par Celery + SSE comme Expert Nexus plus tard.
-            record = debate_service.run_debate(target_media=target_media, topic=topic)
+            record = debate_service.run_debate(**serializer.validated_data)
             return Response(record)
         except Exception as e:
             return Response({"error": str(e)}, status=500)
@@ -156,21 +149,63 @@ class CounterfactualSimulatorView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
+        serializer = CounterfactualSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
         container = get_container()
         simulator = container.core.counterfactual_simulator()
-        what_if_query = request.data.get('what_if')
-        # On pourrait récupérer l'historique réel depuis la DB ou le passer dans le body
-        actual_dialogue = request.data.get('actual_context', [])
-
-        if not what_if_query:
-            return Response({"error": "what_if query is required"}, status=400)
-
+        
         try:
             result = simulator.simulate_counterfactual_path(
-                actual_dialogue=actual_dialogue,
-                what_if_query=what_if_query
+                actual_dialogue=serializer.validated_data['actual_context'],
+                what_if_query=serializer.validated_data['what_if']
             )
             return Response(result)
         except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+class CoveOracleView(APIView):
+    """
+    Interface pour visualiser le processus Chain-of-Verification (CoVe).
+    Réduit les hallucinations en décomposant et vérifiant les assertions.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        serializer = CoveOracleSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
+        container = get_container()
+        cove_service = container.core.cove_oracle_service()
+        
+        try:
+            trace = cove_service.trace_verification(**serializer.validated_data)
+            return Response(trace)
+        except Exception as e:
+            logger.error(f"CoVe Error: {e}")
+            return Response({"error": str(e)}, status=500)
+
+class CFRStrategyLabView(APIView):
+    """
+    Interface pour visualiser la convergence du solveur CFR (Counterfactual Regret Minimization).
+    Simule la résolution de dilemmes stratégiques pour Akinetix.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        serializer = CFRStrategySerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
+        container = get_container()
+        cfr_solver = container.core.cfr_game_solver()
+        
+        try:
+            result = cfr_solver.solve_with_history(**serializer.validated_data)
+            return Response(result)
+        except Exception as e:
+            logger.error(f"CFR Simulation Error: {e}")
             return Response({"error": str(e)}, status=500)
 

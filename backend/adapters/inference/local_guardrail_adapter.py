@@ -1,7 +1,8 @@
 import logging
 from typing import List, Dict, Any, Optional
-from core.ports.inference_port import InferencePort
+from core.ports.inference_port import InferencePort, InferenceNotImplementedError
 from pydantic import BaseModel, Field
+from core.domain.entities.ai_schemas import InferenceResponse
 
 logger = logging.getLogger("animetix.inference.guardrail")
 
@@ -14,6 +15,31 @@ class LocalGuardrailAdapter(InferencePort):
     def __init__(self, inference_engine: Optional[Any] = None):
         super().__init__()
         self.inference_engine = inference_engine
+
+    def generate(
+        self, 
+        prompt: str, 
+        system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.", 
+        thinking_budget: int = 0, 
+        thinking_mode: bool = False, 
+        include_logprobs: bool = False,
+        **kwargs
+    ) -> InferenceResponse:
+        raise InferenceNotImplementedError("Text generation not supported by LocalGuardrailAdapter")
+
+    def stream_generate(
+        self, 
+        prompt: str, 
+        system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.", 
+        thinking_budget: int = 0, 
+        thinking_mode: bool = False, 
+        include_logprobs: bool = False,
+        **kwargs
+    ):
+        raise InferenceNotImplementedError("Streaming generation not supported by LocalGuardrailAdapter")
+
+    def get_text_embedding(self, text: str) -> List[float]:
+        raise InferenceNotImplementedError("Text embedding not supported by LocalGuardrailAdapter")
 
     def moderate_content(self, text: str, categories: List[str]) -> Dict[str, Any]:
         """Analyse le texte pour détecter du contenu inapproprié ou des spoilers (Guardrail)."""

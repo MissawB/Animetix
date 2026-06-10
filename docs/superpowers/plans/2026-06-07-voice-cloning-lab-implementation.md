@@ -17,7 +17,7 @@
 - Modify: `backend/core/ports/inference_port.py` (verification)
 - Test: `tests/core/services/test_voice_cloning_service.py`
 
-- [ ] **Step 1: Write the failing test for the domain service**
+- [X] **Step 1: Write the failing test for the domain service**
 
 ```python
 import pytest
@@ -43,12 +43,12 @@ def test_voice_cloning_service_calls_port():
     )
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [X] **Step 2: Run test to verify it fails**
 
 Run: `pytest tests/core/services/test_voice_cloning_service.py -v`
 Expected: FAIL with "ImportError" (module not found)
 
-- [ ] **Step 3: Implement `VoiceCloningService`**
+- [X] **Step 3: Implement `VoiceCloningService`**
 
 ```python
 from typing import Optional
@@ -75,12 +75,12 @@ class VoiceCloningService:
         )
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [X] **Step 4: Run test to verify it passes**
 
 Run: `pytest tests/core/services/test_voice_cloning_service.py -v`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [X] **Step 5: Commit**
 
 ```bash
 git add backend/core/domain/services/voice_cloning_service.py tests/core/services/test_voice_cloning_service.py
@@ -96,7 +96,7 @@ git commit -m "feat(backend): add VoiceCloningService domain logic"
 - Modify: `backend/api/animetix/urls/api.py`
 - Test: `tests/api/test_voice_cloning_api.py`
 
-- [ ] **Step 1: Write the failing API test**
+- [X] **Step 1: Write the failing API test**
 
 ```python
 import pytest
@@ -115,12 +115,12 @@ def test_voice_cloning_api_endpoint():
     assert response.status_code == 200
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [X] **Step 2: Run test to verify it fails**
 
 Run: `pytest tests/api/test_voice_cloning_api.py -v`
 Expected: FAIL with "NoReverseMatch" (url not defined)
 
-- [ ] **Step 3: Implement `VoiceCloningLabView`**
+- [X] **Step 3: Implement `VoiceCloningLabView`**
 
 ```python
 # In backend/api/animetix/api/labs.py
@@ -156,19 +156,19 @@ class VoiceCloningLabView(APIView):
             return Response({"error": str(e)}, status=500)
 ```
 
-- [ ] **Step 4: Register URL**
+- [X] **Step 4: Register URL**
 
 ```python
 # In backend/api/animetix/urls/api.py
 path('labs/voice-cloning/', api_views.VoiceCloningLabView.as_view(), name='api_voice_cloning'),
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [X] **Step 5: Run test to verify it passes**
 
 Run: `pytest tests/api/test_voice_cloning_api.py -v`
 Expected: PASS (Mocking container/service might be needed in test setup)
 
-- [ ] **Step 6: Commit**
+- [X] **Step 6: Commit**
 
 ```bash
 git add backend/api/animetix/api/labs.py backend/api/animetix/urls/api.py
@@ -183,7 +183,7 @@ git commit -m "feat(backend): implement VoiceCloning API endpoint"
 - Modify: `frontend/src/api.ts`
 - Create: `frontend/src/features/labs/hooks/useVoiceCloning.ts`
 
-- [ ] **Step 1: Add `cloneVoice` to `api.ts`**
+- [X] **Step 1: Add `cloneVoice` to `api.ts`**
 
 ```typescript
 export async function cloneVoice(text: string, audioFile: File, pitch: number): Promise<{ audio_data: string }> {
@@ -195,12 +195,12 @@ export async function cloneVoice(text: string, audioFile: File, pitch: number): 
   return apiClient('/api/v1/labs/voice-cloning/', {
     method: 'POST',
     body: formData,
-    headers: {} // Let browser set Content-Type for FormData
+    isFormData: true
   });
 }
 ```
 
-- [ ] **Step 2: Create `useVoiceCloning` hook**
+- [X] **Step 2: Create `useVoiceCloning` hook**
 
 ```typescript
 import { useMutation } from '@tanstack/react-query';
@@ -214,14 +214,14 @@ export const useVoiceCloning = () => {
 
   return {
     clone: mutation.mutateAsync,
-    isLoading: mutation.isPending,
+    loading: mutation.isPending,
     result: mutation.data,
     error: mutation.error
   };
 };
 ```
 
-- [ ] **Step 3: Commit**
+- [X] **Step 3: Commit**
 
 ```bash
 git add frontend/src/api.ts frontend/src/features/labs/hooks/useVoiceCloning.ts
@@ -235,7 +235,7 @@ git commit -m "feat(frontend): add voice cloning API call and hook"
 **Files:**
 - Create: `frontend/src/features/labs/components/WaveformVisualizer.tsx`
 
-- [ ] **Step 1: Implement Canvas-based visualizer**
+- [X] **Step 1: Implement Canvas-based visualizer**
 
 ```tsx
 import React, { useEffect, useRef } from 'react';
@@ -289,7 +289,7 @@ export const WaveformVisualizer: React.FC<Props> = ({ stream, isActive }) => {
 };
 ```
 
-- [ ] **Step 2: Commit**
+- [X] **Step 2: Commit**
 
 ```bash
 git add frontend/src/features/labs/components/WaveformVisualizer.tsx
@@ -304,10 +304,10 @@ git commit -m "feat(frontend): add WaveformVisualizer component"
 - Create: `frontend/src/pages/labs/VoiceLabPage.tsx`
 - Modify: `frontend/src/features/labs/routes/LabRoutes.tsx`
 
-- [ ] **Step 1: Implement `VoiceLabPage`**
+- [X] **Step 1: Implement `VoiceLabPage`**
 (High-level structure with Split View, Pitch slider, and Record/Upload buttons)
 
-- [ ] **Step 2: Add Route**
+- [X] **Step 2: Add Route**
 
 ```typescript
 const VoiceLabPage = lazy(() => import('../../../pages/labs/VoiceLabPage'));
@@ -315,7 +315,7 @@ const VoiceLabPage = lazy(() => import('../../../pages/labs/VoiceLabPage'));
 <Route path="/lab/voice/" element={<VoiceLabPage />} />
 ```
 
-- [ ] **Step 3: Commit**
+- [X] **Step 3: Commit**
 
 ```bash
 git add frontend/src/pages/labs/VoiceLabPage.tsx frontend/src/features/labs/routes/LabRoutes.tsx
@@ -326,7 +326,7 @@ git commit -m "feat(frontend): implement VoiceLabPage and register route"
 
 ### Task 4: Final Validation
 
-- [ ] **Verify End-to-End**
+- [X] **Verify End-to-End**
 1. Navigate to `/lab/voice/`.
 2. Allow Mic access.
 3. Record 5s (verify waveform moves).

@@ -254,7 +254,9 @@ const VoiceLabPage: React.FC = () => {
                           <p className="text-sm opacity-80">Download or preview below</p>
                         </div>
                       </div>
-                      <audio controls className="h-10 accent-green-500" src={result?.audio_data} />
+                      <audio controls className="h-10 accent-green-500" src={result?.audio_data}>
+                        <track kind="captions" />
+                      </audio>
                     </div>
                   )}
                 </motion.div>

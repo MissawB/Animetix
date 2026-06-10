@@ -7,7 +7,7 @@ from core.ports.graph_persistence_port import GraphPersistencePort
 from .advanced_rag_service import AdvancedRAGService
 from .prompt_manager import PromptManager
 from .llm_service import LLMService
-from .xai_service import UncertaintyService, XaiDiagnosticService, XaiCollector
+from .xai_service import XaiDiagnosticService, XaiCollector
 from .rag_workflow_manager import RAGWorkflowManager
 from ..exceptions import (
     InfrastructureError, ParsingError, InferenceError, AnimetixError,
@@ -36,9 +36,8 @@ class AgenticRAGService:
         memory_service=None,
         semantic_cache=None,
         obs_service=None,
-        uncertainty_service: Optional[UncertaintyService] = None,
+        xai_service: Optional[XaiDiagnosticService] = None,
         semantic_router: Optional[SemanticRouter] = None,
-        xai_diagnostic_service=None,
         **kwargs
     ):
         self.inference_engine = inference_engine
@@ -50,9 +49,7 @@ class AgenticRAGService:
         self.memory_service = memory_service
         self.semantic_cache = semantic_cache
         self.obs_service = obs_service
-        self.xai_diagnostic_service = xai_diagnostic_service
-        
-        self.uncertainty_service = uncertainty_service or UncertaintyService(self.inference_engine)
+        self.xai_service = xai_service or XaiDiagnosticService(self.inference_engine)
         self.semantic_router = semantic_router or SemanticRouter(self.llm_service, self.prompt_manager)
 
         is_mock = False
@@ -102,7 +99,7 @@ class AgenticRAGService:
                 forge=forge,
                 saga_agent=saga_agent,
                 chronicler=chronicler,
-                uncertainty_service=self.uncertainty_service,
+                xai_service=self.xai_service,
                 inference_engine=self.inference_engine,
                 web_search=self.web_search,
                 prompt_manager=self.prompt_manager,
@@ -274,10 +271,10 @@ class AgenticRAGService:
         if ctx.full_answer:
             self._store_results(ctx.query, ctx.full_answer, ctx.user_id)
             
-            if self.xai_diagnostic_service:
+            if self.xai_service:
                 try:
                     response_obj = InferenceResponse(text=ctx.full_answer)
-                    report = self.xai_diagnostic_service.generate_advanced_report(
+                    report = self.xai_service.generate_advanced_report(
                         query=ctx.query,
                         response=response_obj,
                         collector=xai_collector

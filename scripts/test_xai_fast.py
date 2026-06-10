@@ -14,7 +14,7 @@ except Exception as e:
     pass
 
 from core.domain.services.agentic_rag_service import AgenticRAGService
-from core.domain.services.xai_service import XaiDiagnosticService, UncertaintyService
+from core.domain.services.xai_service import XaiDiagnosticService
 from core.domain.entities.ai_schemas import InferenceResponse, InferenceMetadata, TokenLogProb
 
 def mock_get_diagnostics(prompt, completion):
@@ -57,9 +57,8 @@ def main():
     mock_neo4j = MagicMock()
     mock_neo4j.get_user_preferences_context.return_value = "Contexte graphe de test."
     
-    # Initialize XAI services
-    uncertainty_service = UncertaintyService(mock_engine)
-    xai_service = XaiDiagnosticService(mock_engine, uncertainty_service)
+    # Initialize unified XAI service
+    xai_service = XaiDiagnosticService(mock_engine)
     
     mock_cache = MagicMock()
     mock_cache.get_cached_response.return_value = None
@@ -79,9 +78,8 @@ def main():
         memory_service=mock_memory,
         semantic_cache=mock_cache,
         obs_service=MagicMock(),
-        uncertainty_service=uncertainty_service,
-        semantic_router=mock_router,
-        xai_diagnostic_service=xai_service
+        xai_service=xai_service,
+        semantic_router=mock_router
     )
     
     # Mock workflow manager to go straight to synthesize and finalize

@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock
-from core.domain.services.xai_service import XaiDiagnosticService, XaiCollector, UncertaintyService
+from core.domain.services.xai_service import XaiDiagnosticService, XaiCollector
 from core.domain.entities.ai_schemas import InferenceResponse, InferenceMetadata, XaiReport, DocumentAttribution, ModelDiagnostics
 
 @pytest.fixture
@@ -11,9 +11,6 @@ def mock_inference_engine():
 def xai_service(mock_inference_engine):
     return XaiDiagnosticService(mock_inference_engine)
 
-@pytest.fixture
-def uncertainty_service(mock_inference_engine):
-    return UncertaintyService(mock_inference_engine)
 
 def test_generate_advanced_report(xai_service, mock_inference_engine):
     # Setup

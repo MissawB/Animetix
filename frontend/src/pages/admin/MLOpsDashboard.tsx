@@ -13,7 +13,8 @@ import {
   Terminal,
   LayoutGrid,
   Trophy,
-  Network
+  Network,
+  Wand2
 } from 'lucide-react';
 import { Card } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
@@ -22,10 +23,10 @@ import { AnimatedPage } from "../../components/ui/AnimatedPage";
 const MLOpsDashboard: React.FC = () => {
   const adminModules = [
     {
-      title: "Curation DPO",
-      desc: "Corrigez et validez les paires de préférences IA pour l'alignement du modèle.",
+      title: "Curation IA",
+      desc: "Corrigez les dérives sémantiques et les contradictions du Knowledge Graph.",
       icon: ShieldAlert,
-      path: "/admin/dpo-curation/",
+      path: "/admin/curation/",
       color: "text-red-500",
       count: 12,
       status: "Attention"
@@ -53,14 +54,6 @@ const MLOpsDashboard: React.FC = () => {
       path: "/admin/gold-dataset/",
       color: "text-amber-500",
       status: "Actif"
-    },
-    {
-      title: "Curation IA",
-      desc: "Validez les corrections structurelles suggérées par les agents de guérison (Graph Healers).",
-      icon: LayoutGrid,
-      path: "/admin/curation/",
-      color: "text-cyan-500",
-      status: "IA-Guérison"
     },
     {
       title: "Knowledge Graph",
@@ -93,6 +86,14 @@ const MLOpsDashboard: React.FC = () => {
       path: "/admin/graph-debugger/",
       color: "text-purple-500",
       status: "Beta"
+    },
+    {
+      title: "Optimiseur DSPy",
+      desc: "Auto-optimisation des prompts et mutation de templates via DSPy.",
+      icon: Wand2,
+      path: "/admin/dspy/",
+      color: "text-blue-500",
+      status: "SOTA"
     },
     {
       title: "Dynamic Budget TTC",

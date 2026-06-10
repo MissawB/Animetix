@@ -22,7 +22,7 @@ from core.domain.services.agentic_rag_service import AgenticRAGService
 from pipeline.mlops.graph_community_partitioner import GraphCommunityPartitioner
 from core.domain.services.long_term_memory_service import LongTermMemoryService
 from core.domain.services.semantic_cache_service import SemanticCacheService
-from core.domain.services.xai_service import XaiDiagnosticService, UncertaintyService
+from core.domain.services.xai_service import XaiDiagnosticService
 from adapters.mlops_adapter import MlopsAdapter
 
 class AgenticContainer(containers.DeclarativeContainer):
@@ -89,12 +89,7 @@ class AgenticContainer(containers.DeclarativeContainer):
         web_search=infrastructure.web_search
     )
 
-    uncertainty_service = providers.Singleton(
-        UncertaintyService,
-        inference_engine=inference.inference_engine
-    )
-
-    xai_diagnostic_service = providers.Singleton(
+    xai_service = providers.Singleton(
         XaiDiagnosticService,
         inference_engine=inference.inference_engine
     )
@@ -176,7 +171,7 @@ class AgenticContainer(containers.DeclarativeContainer):
         forge=forge,
         saga_agent=saga_agent,
         chronicler=chronicler,
-        uncertainty_service=uncertainty_service,
+        xai_service=xai_service,
         inference_engine=inference.inference_engine,
         web_search=infrastructure.web_search,
         prompt_manager=infrastructure.prompt_manager,
@@ -213,7 +208,6 @@ class AgenticContainer(containers.DeclarativeContainer):
         memory_service=memory_service,
         semantic_cache=semantic_cache_service,
         obs_service=infrastructure.obs_service,
-        uncertainty_service=uncertainty_service,
-        semantic_router=semantic_router,
-        xai_diagnostic_service=xai_diagnostic_service
+        xai_service=xai_service,
+        semantic_router=semantic_router
     )

@@ -76,6 +76,39 @@ class CFRGameSolver:
             
         return avg_strategy
 
+    def solve_with_history(self, questions: List[str], iterations: int = 100) -> Dict[str, Any]:
+        """
+        Exécute le solveur et retourne l'historique complet de convergence pour visualisation.
+        """
+        # Reset tables for a clean simulation
+        self.regret_sum = np.zeros(self.num_actions)
+        self.strategy_sum = np.zeros(self.num_actions)
+        
+        history = []
+        utilities = np.zeros(self.num_actions)
+        for i in range(min(self.num_actions, len(questions))):
+            q = questions[i]
+            utilities[i] = (len(q) % 7) / 7.0 + (0.2 if "genre" in q.lower() else 0.0)
+
+        for t in range(iterations):
+            opponent_action = int(np.random.randint(2))
+            self.train_step(opponent_action, utilities)
+            
+            if t % 5 == 0 or t == iterations - 1:
+                history.append({
+                    "iteration": t,
+                    "regrets": self.regret_sum.tolist(),
+                    "strategy": self.get_strategy().tolist(),
+                    "avg_strategy": self.get_average_strategy().tolist()
+                })
+
+        return {
+            "questions": questions[:self.num_actions],
+            "utilities": utilities.tolist(),
+            "history": history,
+            "final_strategy": self.get_average_strategy().tolist()
+        }
+
     def solve_best_question(self, questions: List[str], game_state: Dict[str, Any]) -> Tuple[str, float]:
         """
         Applique le solveur CFR pour choisir la question otaku idéale

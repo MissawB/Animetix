@@ -85,7 +85,7 @@ export const useGameModes = () => {
     {
       titre: 'VsBattle',
       titre_brush_1: 'ARENA',
-      titre_brush_2: 'ULTIMATUM',
+      titre_brush_2: isEn ? 'ULTIMATUM' : 'ULTIMATUM',
       description: isEn 
         ? 'Trans-dimensional duels moderated by AI.' 
         : "Duels trans-dimensionnels arbitrés par l'IA.",
@@ -93,9 +93,9 @@ export const useGameModes = () => {
       gradient: 'from-red-500 to-red-900 dark:from-red-600/80 dark:to-red-950/80',
       url: '/game/vsbattle/',
     }
-  ];
+    ];
 
-  const modesMulti = [
+    const modesMulti = [
     {
       titre: 'Undercover',
       description: isEn 
@@ -112,16 +112,27 @@ export const useGameModes = () => {
       icon_url: '/static/img/modes/codemanga.png',
       url: '/game/duel/lobby/',
     }
-  ];
+    ];
 
-  const modesCreative = [
+    const modesCreative = [
     {
       titre: isEn ? 'CREATIVE FORGE' : 'FORGE CRÉATIVE',
       titre_sub: isEn ? 'ACCESS THE AI MEDIA LABORATORIES' : 'ACCÉDEZ AUX LABORATOIRES DE MÉDIAS IA',
       fusion_image: '/static/img/modes/fusion.png',
-      url: '/forge-hub/',
+      url: '/lab/forge-hub/',
     }
-  ];
+    ];
 
-  return { modesSolo, modesMulti, modesCreative, isEn };
-};
+    const modesLab = [
+    {
+      titre: 'Latent Space',
+      url: '/lab/latent-space/',
+    },
+    {
+      titre: 'Theater',
+      url: '/theater/',
+    }
+    ];
+
+    return { modesSolo, modesMulti, modesCreative, modesLab, isEn };
+    };

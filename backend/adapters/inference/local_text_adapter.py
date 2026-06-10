@@ -1,7 +1,8 @@
 import logging
 from typing import Optional, List, Dict, Any
-from core.ports.inference_port import InferencePort
+from core.ports.inference_port import InferencePort, InferenceNotImplementedError
 from core.domain.exceptions import InferenceError
+from core.domain.entities.ai_schemas import InferenceResponse
 from core.utils.lazy_import import lazy_import
 
 torch = lazy_import('torch')
@@ -34,7 +35,15 @@ class LocalTextAdapter(InferencePort):
             logger.error(f"❌ Failed to load local text model: {e}")
             raise InferenceError(f"Critical failure during text model loading: {str(e)}")
 
-    def generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False, include_logprobs: bool = False, **kwargs) -> str:
+    def generate(
+        self, 
+        prompt: str, 
+        system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.", 
+        thinking_budget: int = 0, 
+        thinking_mode: bool = False, 
+        include_logprobs: bool = False,
+        **kwargs
+    ) -> InferenceResponse:
         self._load_model()
         try:
             if thinking_mode or thinking_budget > 0:
@@ -53,14 +62,22 @@ class LocalTextAdapter(InferencePort):
                 allocated_budget=thinking_budget
             )
             
-            return text
+            return InferenceResponse(text=text)
         except Exception as e:
             logger.error(f"Generation failed: {e}")
             raise InferenceError(f"Text generation failed: {str(e)}")
 
 
-    def stream_generate(self, prompt: str, system_prompt: str = "", thinking_budget: int = 0, thinking_mode: bool = False):
-        yield self.generate(prompt, system_prompt, thinking_budget, thinking_mode)
+    def stream_generate(
+        self, 
+        prompt: str, 
+        system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.", 
+        thinking_budget: int = 0, 
+        thinking_mode: bool = False, 
+        include_logprobs: bool = False,
+        **kwargs
+    ):
+        yield self.generate(prompt, system_prompt, thinking_budget, thinking_mode, include_logprobs)
 
     def get_text_embedding(self, text: str) -> List[float]:
         """Génère un embedding local via SentenceTransformer."""

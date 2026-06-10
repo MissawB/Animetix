@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Users, UserMinus, Heart, Brain, Swords, Layers, Activity, Zap } from 'lucide-react';
+import { Users, UserMinus, Heart, Brain, Swords, Layers, Activity, Zap, Fingerprint } from 'lucide-react';
 import { useSocialDashboard } from '../../features/social/hooks/useSocialDashboard';
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
@@ -72,6 +72,13 @@ const SocialDashboard: React.FC = () => {
                 icon={<Users className="text-emerald-500" />} 
                 to="/clubs/"
                 accent="emerald"
+            />
+            <DashboardLinkCard 
+                title="Neuro-Memory" 
+                desc="Gérez votre empreinte." 
+                icon={<Fingerprint className="text-purple-500" />} 
+                to="/social/neuro-memory/"
+                accent="purple"
             />
         </div>
       </section>

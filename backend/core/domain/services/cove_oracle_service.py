@@ -18,30 +18,47 @@ class CoveOracleService:
 
     def answer_with_verification(self, question: str, media_type: str) -> str:
         """
-        Processus CoVe complet.
+        Processus CoVe complet. Retourne uniquement la réponse finale.
         """
-        logger.info(f"🛡️ CoVe: Processing question: '{question}'")
+        trace = self.trace_verification(question, media_type)
+        return trace.get("final_response", "")
+
+    def trace_verification(self, question: str, media_type: str) -> Dict:
+        """
+        Processus CoVe complet avec trace détaillée pour visualisation.
+        """
+        logger.info(f"🛡️ CoVe Trace: Processing question: '{question}'")
         
+        trace = {
+            "question": question,
+            "baseline": "",
+            "verification_plan": [],
+            "verifications": [],
+            "final_response": ""
+        }
+
         # Étape 1 : Générer une réponse initiale (Baseline)
         baseline_prompt = self.prompt_manager.get_prompt("cove_baseline", media_type=media_type, question=question)
         baseline_res = self.inference_engine.generate(baseline_prompt)
-        baseline_response = baseline_res.text
+        trace["baseline"] = baseline_res.text
         
         # Étape 2 : Planification des vérifications (Deconstruct claims)
-        plan_prompt, plan_system = self.prompt_manager.get_prompt("cove_plan", baseline_response=baseline_response)
+        plan_prompt, plan_system = self.prompt_manager.get_prompt("cove_plan", baseline_response=trace["baseline"])
         plan_data = self._safe_json_generate(plan_prompt, system_prompt=plan_system)
         
         try:
             plan = CoVePlan(**plan_data)
             verification_questions = plan.verification_questions
+            trace["verification_plan"] = verification_questions
         except Exception as e:
             logger.warning(f"CoVe plan parsing failed: {e}")
             verification_questions = []
         
         if not verification_questions:
-            return baseline_response
+            trace["final_response"] = trace["baseline"]
+            return trace
             
-        logger.info(f"🔍 CoVe: Verifying {len(verification_questions)} claims...")
+        logger.info(f"🔍 CoVe Trace: Verifying {len(verification_questions)} claims...")
         
         # Étape 3 : Exécution des vérifications (contre le Graphe)
         verified_facts = []
@@ -62,14 +79,24 @@ class CoveOracleService:
             # Évaluation du fait avec le contexte vérifié
             eval_prompt = self.prompt_manager.get_prompt("cove_eval", v_question=v_question, graph_context=graph_context)
             eval_res = self.inference_engine.generate(eval_prompt)
+            
+            verification_entry = {
+                "query": v_question,
+                "entities": entities,
+                "context_found": graph_context != "",
+                "result": eval_res.text
+            }
+            trace["verifications"].append(verification_entry)
             verified_facts.append(f"Fait vérifié ({v_question}) : {eval_res.text}")
 
         # Étape 4 : Génération de la réponse finale révisée
-        final_prompt, final_system = self.prompt_manager.get_prompt("cove_final", question=question, baseline_response=baseline_response, verified_facts=" ".join(verified_facts))
+        final_prompt, final_system = self.prompt_manager.get_prompt("cove_final", question=question, baseline_response=trace["baseline"], verified_facts=" ".join(verified_facts))
         
-        logger.info("✅ CoVe: Generating final verified response.")
+        logger.info("✅ CoVe Trace: Generating final verified response.")
         final_res = self.inference_engine.generate(final_prompt, system_prompt=final_system)
-        return final_res.text
+        trace["final_response"] = final_res.text
+        
+        return trace
 
     def _safe_json_generate(self, prompt: str, system_prompt: str = "Réponds UNIQUEMENT en JSON.") -> Dict:
         res = self.inference_engine.generate(prompt, system_prompt=system_prompt)

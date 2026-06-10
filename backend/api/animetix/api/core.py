@@ -1,3 +1,4 @@
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
@@ -7,7 +8,8 @@ from dependency_injector.wiring import inject, Provide
 from ..models import Profile, DailyChallenge, Achievement, CreativeFusion, GameplaySession
 
 from ..serializers import (ProfileSerializer, DailyChallengeSerializer, AchievementSerializer, 
-                            MediaItemSerializer, CreativeFusionSerializer, FriendshipSerializer)
+                            MediaItemSerializer, CreativeFusionSerializer, FriendshipSerializer,
+                            LoginSerializer, RegisterSerializer)
 from ..containers import get_container, Container
 from core.domain.services.guardrail_service import GuardrailService
 from core.ports.usage_port import UsagePort
@@ -197,14 +199,17 @@ class GameSessionView(APIView):
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 
+@method_decorator(ensure_csrf_cookie, name='dispatch')
 @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True), name='dispatch')
 class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        username = request.data.get('username')
-        password = request.data.get('password')
-        user = authenticate(request, username=username, password=password)
+        serializer = LoginSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response({"success": False, "errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user = authenticate(request, **serializer.validated_data)
         if user is not None:
             login(request, user)
             return Response({"success": True})
@@ -219,29 +224,25 @@ class LogoutView(APIView):
         return Response({"success": True})
 
 
+@method_decorator(ensure_csrf_cookie, name='dispatch')
 @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True), name='dispatch')
 class RegisterView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        username = request.data.get('username')
-        email = request.data.get('email')
-        password = request.data.get('password')
-
-        if not username or not password or not email:
-            return Response({"success": False, "error": "Missing fields"}, status=status.HTTP_400_BAD_REQUEST)
-
-        if User.objects.filter(username=username).exists():
-            return Response({"success": False, "error": "Username already exists"}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = RegisterSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response({"success": False, "errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            user = User.objects.create_user(username=username, email=email, password=password)
+            user = User.objects.create_user(**serializer.validated_data)
             login(request, user)
             return Response({"success": True})
         except Exception as e:
             return Response({"success": False, "error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
+@method_decorator(ensure_csrf_cookie, name='dispatch')
 class ConfigView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -261,6 +262,7 @@ class ConfigView(APIView):
         return Response(data)
 
 
+@method_decorator(ensure_csrf_cookie, name='dispatch')
 class CurrentUserView(APIView):
     permission_classes = [permissions.AllowAny]
 

@@ -159,13 +159,25 @@ class AIREvalResult(models.Model):
 
 class GoldDatasetEntry(models.Model):
     """Dataset de haute qualité pour le fine-tuning, validé manuellement."""
+    ENTRY_TYPES = [
+        ('QA', 'Question-Answering'),
+        ('MULTIVERSE', 'Synthetic Universe'),
+        ('DISTILLATION', 'Model Distillation'),
+        ('OTHER', 'Other Synthetic Data')
+    ]
+    
     context = models.TextField()
     instruction = models.TextField()
     response = models.TextField()
+    
+    entry_type = models.CharField(max_length=20, choices=ENTRY_TYPES, default='QA')
+    metadata = models.JSONField(default=dict, blank=True)
+    
     source_feedback = models.OneToOneField(AIFeedback, on_delete=models.SET_NULL, null=True, blank=True)
     is_validated = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
-    def __str__(self): return f"Gold Entry {self.id} - {self.instruction[:30]}..."
+    
+    def __str__(self): return f"Gold Entry {self.id} ({self.entry_type}) - {self.instruction[:30]}..."
 
 class AISafetyEvent(models.Model):
     """Journal des événements de sécurité LLM (Guardrail)."""

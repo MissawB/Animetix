@@ -9,7 +9,7 @@ from core.ports.graph_persistence_port import GraphPersistencePort
 from core.ports.mlops_port import MlopsPort
 from .prompt_manager import PromptManager
 from .llm_service import LLMService
-from .xai_service import UncertaintyService, XaiCollector
+from .xai_service import XaiDiagnosticService, XaiCollector
 from .advanced_rag_service import AdvancedRAGService
 from ..exceptions import (
     InfrastructureError, InferenceError, AnimetixError,
@@ -48,7 +48,7 @@ class RAGWorkflowManager:
         forge: ForgeAgent,
         saga_agent: SagaAgent,
         chronicler: ChroniclerAgent,
-        uncertainty_service: UncertaintyService,
+        xai_service: XaiDiagnosticService,
         inference_engine: InferencePort,
         web_search: WebSearchPort,
         prompt_manager: PromptManager,
@@ -73,7 +73,7 @@ class RAGWorkflowManager:
         self.forge = forge
         self.saga_agent = saga_agent
         self.chronicler = chronicler
-        self.uncertainty_service = uncertainty_service
+        self.xai_service = xai_service
         self.inference_engine = inference_engine
         self.web_search = web_search
         self.prompt_manager = prompt_manager
@@ -86,6 +86,7 @@ class RAGWorkflowManager:
         # SOTA 2026 Context Compressor (Task 5.3)
         self.context_compressor = context_compressor or ContextCompressor(self.rag_service.llm_service, self.prompt_manager)
         self.expert_facts = self._load_expert_facts()
+
 
     def _load_expert_facts(self) -> List[Dict]:
         """Charge les faits experts depuis le fichier YAML."""
@@ -508,7 +509,7 @@ class RAGWorkflowManager:
         logger.info(f"PERF: Synthesizer took {(time.time() - syn_start)*1000:.2f}ms")
         
         if not ctx.knowledge_acquired:
-            res = self.uncertainty_service.measure_confidence(ctx.query, ctx.full_answer)
+            res = self.xai_service.measure_confidence(ctx.query, ctx.full_answer)
             confidence = res.get("confidence_score", 1.0) if isinstance(res, dict) else float(res)
             if confidence < 0.6:
                 yield StreamStep(type="thought", content=f"[Uncertainty] Basse confiance détectée ({confidence:.2f}). Déclenchement du Librarian...").model_dump()

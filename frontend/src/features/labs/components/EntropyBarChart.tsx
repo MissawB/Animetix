@@ -12,8 +12,8 @@ interface Props {
 
 const EntropyBarChart: React.FC<Props> = ({ data }) => {
   const getEntropyColor = (entropy: number) => {
-    if (entropy < 1.0) return 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]';
-    if (entropy < 2.5) return 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.3)]';
+    if (entropy < 0.5) return 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]';
+    if (entropy < 1.5) return 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.3)]';
     return 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.3)]';
   };
 

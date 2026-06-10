@@ -186,7 +186,9 @@ const VideoLabPage: React.FC = () => {
                         <div className="space-y-4 flex flex-col">
                             <Badge variant="neutral" className="bg-white/10 text-white border-white/10 w-fit">Source Originale</Badge>
                             <div className="flex-grow bg-gray-900 rounded-3xl overflow-hidden border border-white/5">
-                                <video src={videoPreview} controls className="w-full h-full object-cover" />
+                                <video src={videoPreview} controls className="w-full h-full object-cover">
+                                    <track kind="captions" />
+                                </video>
                             </div>
                         </div>
                         <div className="space-y-4 flex flex-col">
@@ -196,7 +198,9 @@ const VideoLabPage: React.FC = () => {
                             </div>
                             <div className="flex-grow bg-gray-900 rounded-3xl overflow-hidden border-2 border-red-500/20 flex items-center justify-center relative">
                                 {result ? (
-                                    <video src={result.video_url} controls autoPlay loop className="w-full h-full object-cover" />
+                                    <video src={result.video_url} controls autoPlay loop className="w-full h-full object-cover">
+                                        <track kind="captions" />
+                                    </video>
                                 ) : (
                                     <div className="text-center p-12">
                                         <Play className="w-16 h-16 text-white/5 mx-auto mb-4" />

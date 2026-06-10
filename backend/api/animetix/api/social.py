@@ -298,6 +298,16 @@ class ProfileDetailView(APIView):
         serializer = ProfileSerializer(profile)
         # On ajoute les succès et les fusions récentes
         data = serializer.data
+        data['achievements_count'] = user.user_achievements.count()
+        data['collection_count'] = CreativeFusion.objects.filter(creator=user).count()
+        data['recent_achievements'] = AchievementSerializer(
+            Achievement.objects.filter(userachievement__user=user).order_by('-userachievement__unlocked_at')[:5],
+            many=True
+        ).data
+        data['top_fusions'] = CreativeFusionSerializer(
+            CreativeFusion.objects.filter(creator=user).order_by('-likes')[:4], 
+            many=True
+        ).data
         data['recent_fusions'] = CreativeFusionSerializer(
             CreativeFusion.objects.filter(creator=user).order_by('-created_at')[:5], 
             many=True

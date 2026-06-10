@@ -22,7 +22,8 @@ class InferencePort(ABC):
         system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.",
         thinking_budget: int = 0,
         thinking_mode: bool = False,
-        include_logprobs: bool = False
+        include_logprobs: bool = False,
+        **kwargs
     ) -> InferenceResponse:
         """Génère du texte à partir d'un prompt. thinking_budget > 0 ou thinking_mode=True active le raisonnement approfondi."""
         pass
@@ -34,7 +35,8 @@ class InferencePort(ABC):
         system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.",
         thinking_budget: int = 0,
         thinking_mode: bool = False,
-        include_logprobs: bool = False
+        include_logprobs: bool = False,
+        **kwargs
     ):
         """Génère du texte en flux (streaming) à partir d'un prompt. thinking_budget > 0 ou thinking_mode=True active le raisonnement approfondi."""
         pass

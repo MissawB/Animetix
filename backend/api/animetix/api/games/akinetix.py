@@ -11,6 +11,10 @@ from animetix_project.logging_config import get_logger
 
 logger = get_logger("animetix." + __name__)
 
+from ...serializers import AkinetixStartSerializer, AkinetixAnswerSerializer, AkinetixConfirmSerializer
+
+# ... (rest of imports unchanged)
+
 # --- AKINETIX MODE ---
 
 class AkinetixGameStateView(APIView):
@@ -39,18 +43,22 @@ class AkinetixGameStartView(APIView):
     
     @inject
     def post(self, request, catalog_service = Provide[Container.core.catalog_service], akinetix_service = Provide[Container.core.akinetix_service]):
+        serializer = AkinetixStartSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
+        data = serializer.validated_data
         session_service = get_session_service(request)
         port = session_service.port
-        media_type = request.data.get('media_type', port.get('media_type', 'Anime'))
-        if media_type in ['Anime', 'Manga', 'Character']:
-            port.set('media_type', media_type)
-        is_daily = request.data.get('is_daily', False)
+        media_type = data['media_type']
+        port.set('media_type', media_type)
+        is_daily = data['is_daily']
         
-        data = catalog_service.load_data(media_type)
-        if not data:
+        cat_data = catalog_service.load_data(media_type)
+        if not cat_data:
             return Response({"error": "Catalog not found"}, status=status.HTTP_404_NOT_FOUND)
             
-        game_state = akinetix_service.start_new_game(data['db'])
+        game_state = akinetix_service.start_new_game(cat_data['db'])
         if is_daily:
             game_state.is_daily = True
             
@@ -81,23 +89,17 @@ class AkinetixGameAnswerView(APIView):
         if state.game_over:
             return Response({"error": "Game already over"}, status=status.HTTP_400_BAD_REQUEST)
             
-        answer = request.data.get('answer')
-        if not answer:
-            return Response({"error": "Answer is required"}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = AkinetixAnswerSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             
-        answer = answer.upper()
-        if answer not in ['OUI', 'NON', 'PEUT-ÊTRE', 'PEUT-ETRE']:
-            return Response({"error": f"Invalid answer '{answer}'. Expected OUI, NON, or PEUT-ÊTRE."}, status=status.HTTP_400_BAD_REQUEST)
-            
-        if answer == 'PEUT-ETRE':
-            answer = 'PEUT-ÊTRE'
-            
+        answer = serializer.validated_data['answer']
         media_type = port.get('media_type', 'Anime')
-        data = catalog_service.load_data(media_type)
-        if not data:
+        cat_data = catalog_service.load_data(media_type)
+        if not cat_data:
             return Response({"error": "Catalog not found"}, status=status.HTTP_404_NOT_FOUND)
             
-        new_state = akinetix_service.process_answer(data['db'], state, answer)
+        new_state = akinetix_service.process_answer(cat_data['db'], state, answer)
         akinetix_service.save_state(port, new_state)
         
         return Response({
@@ -122,21 +124,17 @@ class AkinetixGameConfirmView(APIView):
         if not state.current_q and not state.ai_guess:
             return Response({"error": "No game in progress to confirm"}, status=status.HTTP_400_BAD_REQUEST)
             
-        correct_val = request.data.get('correct')
-        if correct_val is None:
-            return Response({"error": "Field 'correct' (boolean) is required"}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = AkinetixConfirmSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             
-        if isinstance(correct_val, str):
-            is_correct = correct_val.lower() == 'true'
-        else:
-            is_correct = bool(correct_val)
-            
+        is_correct = serializer.validated_data['correct']
         media_type = port.get('media_type', 'Anime')
         unlocked_achievements = []
         
         # --- ANTI-CHEAT VALIDATION ---
         if not is_correct:
-            actual_target = request.data.get('actual_target')
+            actual_target = serializer.validated_data.get('actual_target')
             if not actual_target:
                 return Response({
                     "error": "You must specify the character you were thinking of to claim a victory."
@@ -176,7 +174,7 @@ class AkinetixGameConfirmView(APIView):
             user=request.user if request.user.is_authenticated else None,
             game_mode='akinetix',
             media_type=media_type,
-            target_item=request.data.get('actual_target', state.ai_guess or "Unknown"),
+            target_item=serializer.validated_data.get('actual_target', state.ai_guess or "Unknown"),
             history=[q.model_dump() if hasattr(q, 'model_dump') else q for q in state.history],
             was_won=is_correct
         )
@@ -190,3 +188,4 @@ class AkinetixGameConfirmView(APIView):
             'user_won': not is_correct,
             'newly_unlocked_achievements': unlocked_achievements
         })
+

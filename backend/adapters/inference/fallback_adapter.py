@@ -111,7 +111,8 @@ class FallbackInferenceAdapter(InferencePort):
         system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.", 
         thinking_budget: int = 0, 
         thinking_mode: bool = False, 
-        include_logprobs: bool = False
+        include_logprobs: bool = False,
+        **kwargs
     ) -> InferenceResponse:
         last_error = ""
         capable_adapters = self._capability_cache.get("generate", [])
@@ -130,14 +131,15 @@ class FallbackInferenceAdapter(InferencePort):
                 # Signature check for backward compatibility (optional but safer)
                 import inspect
                 sig = inspect.signature(adapter.generate)
-                kwargs = {
+                call_kwargs = {
                     "thinking_budget": thinking_budget,
                     "thinking_mode": thinking_mode
                 }
                 if 'include_logprobs' in sig.parameters:
-                    kwargs["include_logprobs"] = include_logprobs
+                    call_kwargs["include_logprobs"] = include_logprobs
+                call_kwargs.update(kwargs)
                 
-                result = adapter.generate(prompt, system_prompt, **kwargs)
+                result = adapter.generate(prompt, system_prompt, **call_kwargs)
                 latency = time.time() - start_time
                 
                 # CRITIQUE : Si le résultat est nul ou si le texte commence par "Erreur", on considère ça comme un échec
@@ -169,7 +171,8 @@ class FallbackInferenceAdapter(InferencePort):
         system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.", 
         thinking_budget: int = 0, 
         thinking_mode: bool = False, 
-        include_logprobs: bool = False
+        include_logprobs: bool = False,
+        **kwargs
     ):
         """Streaming avec repli intelligent."""
         capable_adapters = self._capability_cache.get("stream_generate", [])
@@ -185,15 +188,16 @@ class FallbackInferenceAdapter(InferencePort):
                 # Signature check for backward compatibility
                 import inspect
                 sig = inspect.signature(adapter.stream_generate)
-                kwargs = {
+                call_kwargs = {
                     "thinking_budget": thinking_budget,
                     "thinking_mode": thinking_mode
                 }
                 if 'include_logprobs' in sig.parameters:
-                    kwargs["include_logprobs"] = include_logprobs
+                    call_kwargs["include_logprobs"] = include_logprobs
+                call_kwargs.update(kwargs)
                 
                 # Tentative de premier token pour valider l'adaptateur
-                gen = adapter.stream_generate(prompt, system_prompt, **kwargs)
+                gen = adapter.stream_generate(prompt, system_prompt, **call_kwargs)
                 first_chunk = next(gen)
                 latency = time.time() - start_time
                 

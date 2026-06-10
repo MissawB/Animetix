@@ -211,6 +211,31 @@ Règles critiques :
     
     synthetic_gold_dataset.append(record)
 
+def push_to_hitl_gate(records):
+    """
+    Pousse les records générés vers le gate HITL (GoldDatasetEntry) 
+    pour validation humaine avant intégration.
+    """
+    logger.info(f"📤 Pushing {len(records)} records to HITL gate...")
+    try:
+        from animetix.containers import get_container
+        container = get_container()
+        gold_port = container.persistence.gold_dataset_adapter()
+        
+        count = 0
+        for rec in records:
+            gold_port.save_synthetic_entry(
+                entry_type="QA",
+                context="\n".join(rec["contexts"]),
+                instruction=rec["query"],
+                response=rec["ground_truth"],
+                metadata=rec
+            )
+            count += 1
+        logger.info(f"✅ Successfully staged {count} records in the HITL gate.")
+    except Exception as e:
+        logger.error(f"❌ Failed to push to HITL gate: {e}")
+
 # Output directory and write
 output_dir = os.path.join(BASE_DIR, "data", "mlops")
 os.makedirs(output_dir, exist_ok=True)
@@ -220,3 +245,6 @@ with open(output_path, "w", encoding="utf-8") as f:
     json.dump(synthetic_gold_dataset, f, indent=2, ensure_ascii=False)
 
 logger.info(f"✅ Generation complete! Saved exactly {len(synthetic_gold_dataset)} records to {output_path}")
+
+if "--push-to-db" in sys.argv:
+    push_to_hitl_gate(synthetic_gold_dataset)

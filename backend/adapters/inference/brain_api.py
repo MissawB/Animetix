@@ -98,6 +98,11 @@ class ClassifyRequest(BaseModel):
 
 class VideoRequest(BaseModel):
     video: str
+    prompt: str = ""
+
+class DocumentRerankRequest(BaseModel):
+    query: str
+    documents: List[str]
 
 class VideoLocalizeRequest(BaseModel):
     video: str
@@ -250,6 +255,23 @@ def vision_describe(req: DescribeImageRequest):
         img_bytes = base64.b64decode(req.image)
         desc = brain_engine.generate_image_description(img_bytes, req.prompt)
         return {"description": desc}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/video/describe", dependencies=[Depends(verify_api_key)])
+def video_describe(req: VideoRequest):
+    try:
+        vid_bytes = base64.b64decode(req.video)
+        desc = brain_engine.generate_video_description(vid_bytes, req.prompt)
+        return {"description": desc}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/v1/rerank", dependencies=[Depends(verify_api_key)])
+def rerank_documents(req: DocumentRerankRequest):
+    try:
+        scores = brain_engine.rerank_documents(req.query, req.documents)
+        return {"scores": scores}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

@@ -13,11 +13,54 @@ logger = logging.getLogger("animetix.xai")
 
 class XaiDiagnosticService:
     """
-    Service d'Analyse d'Interprétabilité (Explainable AI).
+    Service d'Analyse d'Interprétabilité et de Quantification de l'Incertitude.
+    Fusionne les diagnostics XAI et la mesure de confiance native.
     """
-    def __init__(self, inference_engine: InferencePort, uncertainty_service: Optional['UncertaintyService'] = None):
+    def __init__(self, inference_engine: InferencePort):
         self.inference_engine = inference_engine
-        self.uncertainty_service = uncertainty_service or UncertaintyService(inference_engine)
+        self.uncertainty_threshold = 0.7 # Seuil de confiance par défaut
+
+    def measure_confidence(self, prompt: str, completion: str, response: Optional[InferenceResponse] = None) -> Dict[str, Any]:
+        """
+        Calcule les métriques d'incertitude. Utilise les logprobs si disponibles, 
+        sinon assume une incertitude maximale par sécurité (Secure by Default).
+        """
+        # Utilisation des logprobs réels si disponibles (InferenceResponse)
+        if response and response.metadata and response.metadata.logprobs:
+            logger.info("📊 XAI: Using real logprobs for confidence measurement.")
+            logprobs = [lp.logprob for lp in response.metadata.logprobs if lp.logprob is not None]
+            
+            if logprobs:
+                # L'entropie par token est approximée par -logprob (si on n'a que le top-1)
+                # L'entropie moyenne est -sum(logprobs) / len(logprobs)
+                avg_entropy = -sum(logprobs) / len(logprobs)
+                
+                # Normalisation (constante 10.8 empirique)
+                confidence_score = max(0.0, min(1.0, 1.0 - (avg_entropy / 10.8)))
+                
+                # Perplexité = exp(entropie moyenne)
+                perplexity = float(np.exp(avg_entropy))
+                
+                is_reliable = confidence_score >= self.uncertainty_threshold
+                
+                return {
+                    "confidence_score": float(confidence_score),
+                    "is_reliable": bool(is_reliable),
+                    "perplexity": float(perplexity),
+                    "action_required": "PROCEED" if is_reliable else "VERIFY_WEB",
+                    "method": "real_logprobs"
+                }
+
+        # Fallback de sécurité (Secure by Default) si aucun logprob n'est fourni.
+        logger.warning("⚠️ XAI: No native logprobs provided. Defaulting to high uncertainty.")
+        
+        return {
+            "confidence_score": 0.0,
+            "is_reliable": False,
+            "perplexity": None,
+            "action_required": "VERIFY_WEB",
+            "method": "default_fallback"
+        }
 
     def explain_response(self, prompt: str, completion: str, response: Optional[InferenceResponse] = None) -> Dict[str, Any]:
         """
@@ -45,13 +88,6 @@ class XaiDiagnosticService:
             "attention_map_summary": "L'analyse est désormais basée sur les logprobs natifs plutôt que sur des matrices d'attention approximées."
         }
 
-    def generate_diagnostic_report(self, prompt: str, response: InferenceResponse) -> Dict[str, Any]:
-        """
-        Génère un rapport de diagnostic XAI incluant l'entropie et une simulation Logit Lens.
-        NOTE: Deprecated in favor of get_diagnostics_report for rich dashboard data.
-        """
-        return self.get_diagnostics_report(prompt, response)
-
     def get_diagnostics_report(self, prompt: str, response: InferenceResponse) -> Dict[str, Any]:
         """
         Génère un rapport de diagnostic complet pour le dashboard Neural Diagnostics.
@@ -59,8 +95,8 @@ class XaiDiagnosticService:
         """
         logger.info("🧪 XAI: Generating high-resolution diagnostic report...")
         
-        # 1. Calcul de l'incertitude et confiance via le service dédié
-        uncertainty = self.uncertainty_service.measure_confidence(prompt, response.text, response)
+        # 1. Calcul de l'incertitude via la méthode intégrée
+        uncertainty = self.measure_confidence(prompt, response.text, response)
         confidence_score = uncertainty.get("confidence_score", 0.0)
         
         # 2. Diagnostics par token
@@ -69,8 +105,7 @@ class XaiDiagnosticService:
         
         if response.metadata and response.metadata.logprobs:
             for lp in response.metadata.logprobs:
-                # L'entropie individuelle (surprise) est estimée par -logprob
-                entropy = -lp.logprob if lp.logprob is not None else 5.0 # Max uncertainty if missing
+                entropy = -lp.logprob if lp.logprob is not None else 5.0 
                 per_token_diagnostics.append({
                     "token": lp.token,
                     "entropy": float(entropy),
@@ -82,27 +117,20 @@ class XaiDiagnosticService:
         avg_entropy = -sum(logprobs_values) / len(logprobs_values) if logprobs_values else 10.8
         
         # 3. Simulation de la trajectoire Logit Lens (32 couches)
-        # On utilise une interpolation de convergence : 
-        # Les premières couches sont bruitées, les dernières convergent vers les tokens réels.
         logit_lens_trajectory = []
         final_tokens = [lp.token for lp in response.metadata.logprobs[:5]] if response.metadata and response.metadata.logprobs else ["Concept", "Entity"]
         
         for layer in range(1, 33):
             convergence = (layer - 1) / 31.0
-            
-            # Simulation des probabilités internes qui augmentent avec la convergence
             base_prob = convergence * confidence_score
             
             if convergence < 0.3:
-                # Couches initiales : Abstractions sémantiques larges
                 top_tokens = ["<UNK>", "Concept", "Vector", "Structure", "Latent"]
                 probs = [0.1 + (0.05 * np.random.random()) for _ in top_tokens]
             elif convergence < 0.8:
-                # Couches intermédiaires : Raffinement sémantique
                 top_tokens = ["Topic", "Class", "Action"] + final_tokens[:2]
                 probs = [base_prob * (0.5 + 0.5 * np.random.random()) for _ in top_tokens]
             else:
-                # Couches finales : Convergence vers la sortie
                 top_tokens = final_tokens + ["<EOS>"]
                 probs = [min(0.99, base_prob + (0.1 * np.random.random())) for _ in top_tokens]
             
@@ -135,9 +163,9 @@ class XaiDiagnosticService:
             top_influential_tokens = [lp.token for lp in sorted_logprobs[:10]]
             
         model_diagnostics = ModelDiagnostics(
-            attention_heatmap=[],  # Deprecated with native logprobs
+            attention_heatmap=[],  
             top_influential_tokens=top_influential_tokens,
-            logit_lens_trajectory=[] # Deprecated with native logprobs
+            logit_lens_trajectory=[] 
         )
         
         # 2. Attribution documentaire (RAG)
@@ -155,8 +183,8 @@ class XaiDiagnosticService:
                 contribution_weight=float(weight)
             ))
             
-        # 3. Calcul de l'incertitude
-        uncertainty = self.uncertainty_service.measure_confidence(query, response.text, response)
+        # 3. Calcul de l'incertitude via la méthode intégrée
+        uncertainty = self.measure_confidence(query, response.text, response)
         
         # 4. Assemblage du rapport final
         report = XaiReport(
@@ -169,60 +197,6 @@ class XaiDiagnosticService:
         )
         
         return report
-
-class UncertaintyService:
-    """
-    Service de Quantification de l'Incertitude utilisant exclusivement des mécanismes natifs.
-    """
-    def __init__(self, inference_engine: InferencePort):
-        self.inference_engine = inference_engine
-        self.uncertainty_threshold = 0.7 # Seuil de confiance
-
-    def measure_confidence(self, prompt: str, completion: str, response: Optional[InferenceResponse] = None) -> Dict[str, Any]:
-        """
-        Calcule les métriques d'incertitude. Utilise les logprobs si disponibles, 
-        sinon assume une incertitude maximale par sécurité (Secure by Default).
-        """
-        # Utilisation des logprobs réels si disponibles (InferenceResponse)
-        if response and response.metadata and response.metadata.logprobs:
-            logger.info("📊 Uncertainty: Using real logprobs from inference response.")
-            logprobs = [lp.logprob for lp in response.metadata.logprobs if lp.logprob is not None]
-            
-            if logprobs:
-                # L'entropie par token est approximée par -logprob (si on n'a que le top-1)
-                # L'entropie moyenne est -sum(logprobs) / len(logprobs)
-                avg_entropy = -sum(logprobs) / len(logprobs)
-                
-                # Normalisation (constante 10.8 empirique)
-                confidence_score = max(0.0, min(1.0, 1.0 - (avg_entropy / 10.8)))
-                
-                # Perplexité = exp(entropie moyenne)
-                perplexity = float(np.exp(avg_entropy))
-                
-                is_reliable = confidence_score >= self.uncertainty_threshold
-                
-                return {
-                    "confidence_score": float(confidence_score),
-                    "is_reliable": bool(is_reliable),
-                    "perplexity": float(perplexity),
-                    "action_required": "PROCEED" if is_reliable else "VERIFY_WEB",
-                    "method": "real_logprobs"
-                }
-
-        # Fallback de sécurité (Secure by Default) si aucun logprob n'est fourni.
-        # On ne charge PLUS de modèles lourds locaux comme gpt2.
-        logger.warning("⚠️ Uncertainty: No native logprobs provided. Defaulting to high uncertainty.")
-        
-        confidence_score = 0.0
-        is_reliable = False
-        
-        return {
-            "confidence_score": confidence_score,
-            "is_reliable": is_reliable,
-            "perplexity": None,
-            "action_required": "VERIFY_WEB",
-            "method": "default_fallback"
-        }
 
 class XaiCollector:
     """
@@ -244,4 +218,3 @@ class XaiCollector:
     def log_agent_thought(self, agent: str, thought: str):
         """Enregistre une étape de réflexion d'un agent."""
         self.steps.append({"agent": agent, "thought": thought})
-

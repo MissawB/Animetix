@@ -7,6 +7,15 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'username', 'email']
 
+class UserAdminSerializer(serializers.ModelSerializer):
+    level = serializers.IntegerField(source='profile.level', read_only=True)
+    tier = serializers.CharField(source='profile.tier', read_only=True)
+    
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'is_staff', 'is_active', 'date_joined', 'level', 'tier']
+        read_only_fields = ['date_joined']
+
 class ProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     rank = serializers.ReadOnlyField()
@@ -217,3 +226,82 @@ class DataCurationTicketSerializer(serializers.ModelSerializer):
     class Meta:
         model = DataCurationTicket
         fields = '__all__'
+
+# --- MLOPS SERIALIZERS ---
+class AIFeedbackInputSerializer(serializers.Serializer):
+    is_positive = serializers.BooleanField()
+    type = serializers.CharField(required=False, default='general')
+    input_context = serializers.CharField(required=False, allow_blank=True)
+    context = serializers.CharField(required=False, allow_blank=True)
+    query = serializers.CharField(required=False, allow_blank=True)
+    output_text = serializers.CharField(required=False, allow_blank=True)
+    output = serializers.CharField(required=False, allow_blank=True)
+
+    def to_internal_value(self, data):
+        ret = super().to_internal_value(data)
+        # Gestion des alias/fallbacks
+        ret['input_context'] = ret.get('input_context') or ret.get('context') or ret.get('query') or ''
+        ret['output_text'] = ret.get('output_text') or ret.get('output') or ''
+        return ret
+
+class DPOCurationSerializer(serializers.Serializer):
+    feedback_id = serializers.IntegerField()
+    chosen_text = serializers.CharField()
+
+# --- GAME SERIALIZERS ---
+class ArchetypistFusionSerializer(serializers.Serializer):
+    title_A = serializers.CharField(required=False, allow_blank=True)
+    title_B = serializers.CharField(required=False, allow_blank=True)
+    media_type_A = serializers.CharField(required=False)
+    media_type_B = serializers.CharField(required=False)
+    chaos_level = serializers.IntegerField(required=False, default=50, min_value=0, max_value=100)
+    universe_balance = serializers.IntegerField(required=False, default=50, min_value=0, max_value=100)
+    art_style = serializers.CharField(required=False, default='Cyberpunk')
+    parent_id = serializers.IntegerField(required=False, allow_null=True)
+
+# --- AKINETIX SERIALIZERS ---
+class AkinetixStartSerializer(serializers.Serializer):
+    media_type = serializers.ChoiceField(choices=['Anime', 'Manga', 'Character'], default='Anime')
+    is_daily = serializers.BooleanField(required=False, default=False)
+
+class AkinetixAnswerSerializer(serializers.Serializer):
+    answer = serializers.CharField()
+
+    def validate_answer(self, value):
+        val = value.upper().strip()
+        if val == 'PEUT-ETRE':
+            return 'PEUT-ÊTRE'
+        if val not in ['OUI', 'NON', 'PEUT-ÊTRE']:
+            raise serializers.ValidationError("Expected OUI, NON, or PEUT-ÊTRE.")
+        return val
+
+class AkinetixConfirmSerializer(serializers.Serializer):
+    correct = serializers.BooleanField()
+    actual_target = serializers.CharField(required=False, allow_blank=True)
+
+# --- COGNITION SERIALIZERS ---
+class AIDebateSerializer(serializers.Serializer):
+    media_title = serializers.CharField()
+    topic = serializers.CharField()
+
+class CounterfactualSerializer(serializers.Serializer):
+    what_if = serializers.CharField()
+    actual_context = serializers.ListField(child=serializers.DictField(), required=False, default=list)
+
+class CoveOracleSerializer(serializers.Serializer):
+    question = serializers.CharField()
+    media_type = serializers.CharField(required=False, default='anime')
+
+class CFRStrategySerializer(serializers.Serializer):
+    questions = serializers.ListField(child=serializers.CharField(), required=False)
+    iterations = serializers.IntegerField(required=False, default=100, min_value=1, max_value=1000)
+
+# --- AUTH SERIALIZERS ---
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField(write_only=True)
+
+class RegisterSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)

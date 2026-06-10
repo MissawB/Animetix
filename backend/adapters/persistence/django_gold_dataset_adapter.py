@@ -48,12 +48,29 @@ class DjangoGoldDatasetAdapter(GoldDatasetPort):
             is_validated=False
         )
 
+    def save_synthetic_entry(self, entry_type: str, context: str, instruction: str, response: str, metadata: Dict[str, Any] = None) -> int:
+        from animetix.models import GoldDatasetEntry
+        entry = GoldDatasetEntry.objects.create(
+            entry_type=entry_type,
+            context=context,
+            instruction=instruction,
+            response=response,
+            metadata=metadata or {},
+            is_validated=False
+        )
+        return entry.id
+
     def get_unprocessed_validated_entries(self) -> List[Dict[str, Any]]:
         from animetix.models import GoldDatasetEntry
         # Pour simplifier et éviter une migration DB, les entrées exportées
         # seront supprimées via mark_entries_as_processed.
         # Ainsi, tout ce qui est is_validated=True est en attente d'export.
         entries = GoldDatasetEntry.objects.filter(is_validated=True).order_by('created_at')
+        return [self._to_dict(e) for e in entries]
+
+    def get_unvalidated_entries_by_type(self, entry_type: str) -> List[Dict[str, Any]]:
+        from animetix.models import GoldDatasetEntry
+        entries = GoldDatasetEntry.objects.filter(entry_type=entry_type, is_validated=False).order_by('created_at')
         return [self._to_dict(e) for e in entries]
         
     def mark_entries_as_processed(self, entry_ids: List[int]) -> None:

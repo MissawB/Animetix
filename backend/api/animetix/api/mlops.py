@@ -6,7 +6,8 @@ from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
 from dependency_injector.wiring import inject, Provide
 from ..models import AIREvalResult, GoldDatasetEntry, AIFeedback
-from ..serializers import AIREvalResultSerializer, GoldDatasetEntrySerializer, AIFeedbackSerializer
+from ..serializers import (AIREvalResultSerializer, GoldDatasetEntrySerializer, AIFeedbackSerializer,
+                            AIFeedbackInputSerializer, DPOCurationSerializer)
 from core.ports.feedback_port import FeedbackRepositoryPort
 from core.ports.eval_port import EvalResultPort
 from core.ports.repository_port import RepositoryPort
@@ -71,19 +72,19 @@ class AIFeedbackAPIView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
-        is_pos = request.data.get('is_positive') == True or request.data.get('is_positive') == 'true'
-        f_type = request.data.get('type', 'general')
-        context = request.data.get('input_context') or request.data.get('context') or request.data.get('query', '')
-        output = request.data.get('output_text') or request.data.get('output', '')
+        serializer = AIFeedbackInputSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
+        data = serializer.validated_data
         user_id = request.user.id if request.user.is_authenticated else None
         
         self.feedback_port.save_feedback(
-            input_context=context,
-            output_text=output,
-            is_positive=is_pos,
+            input_context=data['input_context'],
+            output_text=data['output_text'],
+            is_positive=data['is_positive'],
             user_id=user_id,
-            feedback_type=f_type
+            feedback_type=data['type']
         )
         return Response({'status': 'success', 'message': 'Feedback submitted successfully'})
 
@@ -126,15 +127,14 @@ class DPOCurationViewSet(viewsets.ViewSet):
         return Response(samples)
 
     def create(self, request):
+        serializer = DPOCurationSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
         container = get_container()
         dpo_loop = container.core.dpo_feedback_loop()
-        feedback_id = request.data.get('feedback_id')
-        chosen_text = request.data.get('chosen_text')
         
-        if not feedback_id or not chosen_text:
-            return Response({'error': 'feedback_id and chosen_text are required'}, status=400)
-            
-        success = dpo_loop.curate_feedback(feedback_id, chosen_text)
+        success = dpo_loop.curate_feedback(**serializer.validated_data)
         if success:
             return Response({'status': 'success', 'message': 'Feedback successfully curated.'})
         return Response({'error': 'Curation failed'}, status=500)

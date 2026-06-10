@@ -2,6 +2,20 @@
 
 Ce document archive les étapes majeures de l'évolution technique du projet.
 
+## [2026-06-09] Session : Convergence XAI, Unification de la Validation, Complétude de l'InferencePort et Protection contre le Model Collapse (HITL)
+
+- **Convergence XAI** : Fusion du `UncertaintyService` dans le `XaiDiagnosticService`. Élimination de la duplication de logique pour le calcul de l'entropie et de la perplexité basé sur les logprobs. Simplification du graphe de dépendances dans `AgenticRAGService`.
+- **Unification de la Validation** : Migration de toutes les vues critiques (`Login`, `Register`, `Akinetix`, `Archetypist`, `Cognition`) de l'accès direct à `request.data` vers des **Django REST Framework Serializers**. Amélioration de la robustesse et retour d'erreurs standardisé.
+- **Complétude de l'InferencePort** : Implémentation de toutes les méthodes orphelines dans les adaptateurs de production. Le `BrainAPIAdapter` supporte désormais 100% de l'interface (VLM Vidéo, 3D Depth, Reranking). `GoogleGenAIAdapter` intègre l'analyse temporelle vidéo native de Gemini.
+- **Protection contre le Model Collapse (HITL)** : Mise en place d'un "Universal HITL Gate" via le modèle `GoldDatasetEntry`. Toutes les données synthétiques (Multivers, Distillation, QA) sont désormais mises en attente de validation humaine avant ingestion finale.
+- **Stabilisation du Build Frontend** : Résolution des erreurs ESLint/TypeScript majeures. (Nettoyage effectué post-modularisation).
+- **Nettoyage des Dépendances** : Purge des doublons `three` et `plotly` dans le `package.json`.
+- **Désorphelinisation Totale** : Raccordement de l'ensemble des "Ghost Labs" (Soundscape, Speech-to-Speech, Voice, Visual Nexus) dans `LabHubPage`.
+- **Finalisation des Outils d'Admin** : Raccordement du MLOps Dashboard, du DSPy Optimizer et du Graph Debugger.
+- **Interfaces Cognitives SOTA** : Déploiement des pages pour CoVe Oracle (réduction d'hallucinations), Hierarchical Graph RAG (visualisation Leiden), et Strategy Lab (CFR Solver).
+- **Manga Voice Lab** : Activation du pipeline complet de clonage de voix pour les planches de manga (UI + Backend).
+- **Sécurité Modèle** : Implémentation de la signature des modèles chargés depuis Hugging Face.
+
 ## [2026-06-08] Session : Refactorisation Majeure, Modularisation Frontend et Réactivation des Ghost Labs
 
 - **Standardisation de la validation API (Django Forms)** : Finaliser la refactorisation des vues dans `backend/api/animetix/views/api.py` pour utiliser systématiquement les Django Forms. (Actuellement : plusieurs accès directs à `request.GET/POST` persistent).

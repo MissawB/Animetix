@@ -113,7 +113,9 @@ const SoundscapeLabPage: React.FC = () => {
                             <div className="space-y-4">
                                 <Badge variant="neutral" className="bg-white/10 text-white border-white/10">Vidéo Source</Badge>
                                 <div className="aspect-video bg-gray-900 rounded-3xl overflow-hidden border border-white/5">
-                                    <video src={videoPreview} controls className="w-full h-full object-cover" />
+                                    <video src={videoPreview} controls className="w-full h-full object-cover">
+                                        <track kind="captions" />
+                                    </video>
                                 </div>
                             </div>
                             
@@ -128,7 +130,9 @@ const SoundscapeLabPage: React.FC = () => {
                                             <Volume2 className="w-8 h-8 text-white" />
                                         </div>
                                         <div className="flex-grow">
-                                            <audio src={result.audio_url} controls className="w-full h-12 custom-audio-player" />
+                                            <audio src={result.audio_url} controls className="w-full h-12 custom-audio-player">
+                                                <track kind="captions" />
+                                            </audio>
                                         </div>
                                     </div>
                                 ) : (

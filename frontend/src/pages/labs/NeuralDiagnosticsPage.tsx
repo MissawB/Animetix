@@ -92,13 +92,13 @@ const NeuralDiagnosticsPage: React.FC = () => {
                   <Card className="p-4 bg-[#12121e] border-white/5 text-center">
                     <span className="block text-[8px] font-black uppercase text-gray-500 mb-1 tracking-widest">Avg Entropy</span>
                     <span className="text-xl font-black italic manga-font text-blue-500">
-                      {data.global_metrics?.avg_entropy?.toFixed(4) || '0.0000'}
+                      {data.avg_entropy?.toFixed(4) || '0.0000'}
                     </span>
                   </Card>
                   <Card className="p-4 bg-[#12121e] border-white/5 text-center">
                     <span className="block text-[8px] font-black uppercase text-gray-500 mb-1 tracking-widest">Confidence</span>
                     <span className="text-xl font-black italic manga-font text-purple-500">
-                      {(data.global_metrics?.confidence * 100).toFixed(1)}%
+                      {(data.confidence_score * 100).toFixed(1)}%
                     </span>
                   </Card>
                 </motion.div>

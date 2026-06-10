@@ -4,7 +4,32 @@ from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Sum
 from ..models import DataCurationTicket, AITokenUsage
-from ..serializers import DataCurationTicketSerializer
+from ..serializers import DataCurationTicketSerializer, UserAdminSerializer
+from django.contrib.auth.models import User
+
+class UserManagementViewSet(viewsets.ModelViewSet):
+    """Gestion des comptes utilisateurs pour les administrateurs."""
+    queryset = User.objects.all().order_by('-date_joined')
+    serializer_class = UserAdminSerializer
+    permission_classes = [permissions.IsAdminUser]
+
+    @decorators.action(detail=True, methods=['post'])
+    def toggle_staff(self, request, pk=None):
+        user = self.get_object()
+        if user == request.user:
+            return response.Response({'error': 'Vous ne pouvez pas modifier votre propre statut.'}, status=status.HTTP_400_BAD_REQUEST)
+        user.is_staff = not user.is_staff
+        user.save()
+        return response.Response({'status': 'updated', 'is_staff': user.is_staff})
+
+    @decorators.action(detail=True, methods=['post'])
+    def toggle_active(self, request, pk=None):
+        user = self.get_object()
+        if user == request.user:
+            return response.Response({'error': 'Vous ne pouvez pas vous désactiver vous-même.'}, status=status.HTTP_400_BAD_REQUEST)
+        user.is_active = not user.is_active
+        user.save()
+        return response.Response({'status': 'updated', 'is_active': user.is_active})
 
 class DataCurationTicketViewSet(viewsets.ModelViewSet):
     """Dashboard de curation pour les administrateurs."""

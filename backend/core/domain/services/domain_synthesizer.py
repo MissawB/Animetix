@@ -9,18 +9,24 @@ Validates narrative coherence and community interest before persisting.
 import logging
 from typing import Dict, Any, List, Optional
 from core.ports.inference_port import InferencePort
+from core.ports.gold_dataset_port import GoldDatasetPort
 
 logger = logging.getLogger("animetix.evolving.synthesizer")
 
 class AutonomousDomainSynthesizer:
-    def __init__(self, inference_engine: Optional[InferencePort] = None, neo4j_manager: Optional[Any] = None):
+    def __init__(self, 
+                 inference_engine: Optional[InferencePort] = None, 
+                 neo4j_manager: Optional[Any] = None,
+                 gold_dataset_port: Optional[GoldDatasetPort] = None):
         """
         Initialise le synthétiseur de multivers autonome.
         :param inference_engine: Adaptateur d'inférence LLM pour générer le contenu narratif.
-        :param neo4j_manager: Port d'accès au graphe Neo4j.
+        :param neo4j_manager: Port d'accès au graphe Neo4j (utilisé lors de la promotion).
+        :param gold_dataset_port: Port HITL pour le staging des données synthétiques.
         """
         self.inference_engine = inference_engine
         self.neo4j_manager = neo4j_manager
+        self.gold_dataset_port = gold_dataset_port
 
     def evaluate_coherence_and_interest(self, universe: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -139,19 +145,41 @@ class AutonomousDomainSynthesizer:
 
     def persist_universe_to_graph(self, universe: Dict[str, Any]) -> bool:
         """
-        Persiste les entités générées (Media, Character, Studio, Genre) et leurs liens
-        directement dans le graphe Neo4j d'Animetix SI ET SEULEMENT SI l'univers est jugé
-        suffisamment cohérent et intéressant par l'IA et la communauté.
+        Détourne la persistance vers le port HITL (GoldDatasetEntry) pour validation humaine.
+        Empêche le Model Collapse en forçant une revue avant l'intégration au graphe.
         """
-        # 1. Évaluer la cohérence et l'intérêt
+        # 1. Évaluer la cohérence et l'intérêt (pré-filtre IA)
         evaluation = self.evaluate_coherence_and_interest(universe)
         if not evaluation["is_worthy"]:
             logger.warning(f"❌ Universe '{universe['name']}' rejected due to insufficient AI/Community score ({evaluation['ai_score']:.2f}/{evaluation['community_score']:.2f}).")
             return False
 
-        if not self.neo4j_manager or not hasattr(self.neo4j_manager, "execute_query"):
-            logger.warning("⚠️ Neo4j non disponible pour persister l'univers synthétique. Persistance simulée.")
+        if not self.gold_dataset_port:
+            logger.error("❌ GoldDatasetPort missing. Cannot stage synthetic universe for HITL.")
+            return False
+
+        try:
+            # On stocke l'univers complet dans les metadata pour la promotion ultérieure
+            self.gold_dataset_port.save_synthetic_entry(
+                entry_type="MULTIVERSE",
+                context=f"Genre: {universe['genre']}",
+                instruction=f"Valider la création de l'univers '{universe['name']}'",
+                response=universe['description'],
+                metadata=universe
+            )
+            logger.info(f"⏳ Universe '{universe['name']}' staged for human validation (HITL).")
             return True
+        except Exception as e:
+            logger.error(f"❌ Failed to stage synthetic universe: {e}")
+            return False
+
+    def _execute_graph_persistence(self, universe: Dict[str, Any]) -> bool:
+        """
+        Logique réelle de persistance Neo4j, appelée UNIQUEMENT après validation HITL.
+        """
+        if not self.neo4j_manager or not hasattr(self.neo4j_manager, "execute_query"):
+            logger.warning("⚠️ Neo4j non disponible pour persister l'univers synthétique.")
+            return False
 
         try:
             # 1. Persister le Média Synthétique

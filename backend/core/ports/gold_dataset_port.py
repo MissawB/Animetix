@@ -25,8 +25,18 @@ class GoldDatasetPort(ABC):
         pass
 
     @abstractmethod
+    def save_synthetic_entry(self, entry_type: str, context: str, instruction: str, response: str, metadata: Dict[str, Any] = None) -> int:
+        """Sauvegarde une donnée synthétique générique pour validation HITL."""
+        pass
+
+    @abstractmethod
     def get_unprocessed_validated_entries(self) -> List[Dict[str, Any]]:
         """Récupère les entrées validées qui n'ont pas encore été exportées pour le Fine-Tuning."""
+        pass
+
+    @abstractmethod
+    def get_unvalidated_entries_by_type(self, entry_type: str) -> List[Dict[str, Any]]:
+        """Récupère les entrées en attente de validation pour un type spécifique."""
         pass
         
     @abstractmethod

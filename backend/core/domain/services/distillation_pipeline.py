@@ -1,8 +1,9 @@
 import os
 import json
 import logging
-from typing import List, Dict
+from typing import List, Dict, Optional
 from core.ports.inference_port import InferencePort
+from core.ports.gold_dataset_port import GoldDatasetPort
 from .prompt_manager import PromptManager
 
 logger = logging.getLogger("animetix.mlops")
@@ -10,45 +11,78 @@ logger = logging.getLogger("animetix.mlops")
 class ModelDistillationPipeline:
     """
     Pipeline de Distillation : Entraîne un modèle étudiant (1B) à partir d'un enseignant (8B+).
+    Protégé contre le Model Collapse via validation HITL.
     """
-    def __init__(self, teacher_engine: InferencePort, prompt_manager: PromptManager):
+    def __init__(self, 
+                 teacher_engine: InferencePort, 
+                 prompt_manager: PromptManager,
+                 gold_dataset_port: Optional[GoldDatasetPort] = None):
         self.teacher = teacher_engine
         self.prompt_manager = prompt_manager
+        self.gold_dataset_port = gold_dataset_port
 
-    def generate_distillation_data(self, topics: List[str], count_per_topic: int = 10) -> List[Dict]:
+    def generate_distillation_data(self, topics: List[str], count_per_topic: int = 10) -> int:
         """
-        Génère un dataset synthétique de haute qualité via le modèle Enseignant.
+        Génère un dataset synthétique via le modèle Enseignant et le met en attente de validation.
         """
-        synthetic_data = []
+        if not self.gold_dataset_port:
+            logger.error("❌ GoldDatasetPort missing. Cannot stage distillation data.")
+            return 0
+
+        count = 0
         for topic in topics:
             logger.info(f"🧠 Teacher generating knowledge for: {topic}...")
             prompt, system_prompt = self.prompt_manager.get_prompt("distillation_explanation", topic=topic)
             explanation = self.teacher.generate(prompt, system_prompt=system_prompt)
             
-            synthetic_data.append({
-                "instruction": f"Explique moi {topic}.",
-                "output": explanation
-            })
-        return synthetic_data
+            self.gold_dataset_port.save_synthetic_entry(
+                entry_type="DISTILLATION",
+                context=f"Topic: {topic}",
+                instruction=f"Explique moi {topic}.",
+                response=explanation,
+                metadata={"topic": topic, "teacher": "teacher_8b"}
+            )
+            count += 1
+            
+        logger.info(f"⏳ {count} distillation pairs staged for human validation (HITL).")
+        return count
 
-    def fine_tune_student(self, train_data: List[Dict], student_model_id: str = "HuggingFaceTB/SmolLM-135M", epochs: float = 3.0):
+    def fine_tune_student(self, student_model_id: str = "HuggingFaceTB/SmolLM-135M", epochs: float = 3.0):
         """
-        Lance le fine-tuning REEL du modèle étudiant sur les données distillées.
+        Lance le fine-tuning du modèle étudiant sur les données validées par l'humain.
         """
-        logger.info(f"🚀 Fine-tuning Student Model: {student_model_id}")
+        if not self.gold_dataset_port:
+            logger.error("❌ GoldDatasetPort missing. Cannot fetch validated data.")
+            return
+
+        logger.info(f"🚀 Preparing Student Model Fine-tuning: {student_model_id}")
         
+        # On ne récupère que les données VALIDÉES pour éviter le Model Collapse
+        validated_entries = self.gold_dataset_port.get_unprocessed_validated_entries()
+        distill_data = [
+            e for e in validated_entries if e.get("entry_type") == "DISTILLATION" or e.get("entry_type") == "QA"
+        ]
+
+        if not distill_data:
+            logger.warning("⚠️ No validated synthetic data available for fine-tuning. Skipping.")
+            return
+
         # Enregistrement temporaire des données pour le script d'entraînement
         data_dir = "data/mlops/datasets"
         os.makedirs(data_dir, exist_ok=True)
         data_path = os.path.join(data_dir, "trl_train_data.jsonl")
         
         with open(data_path, "w", encoding="utf-8") as f:
-            for item in train_data:
-                f.write(json.dumps(item) + "\n")
+            for item in distill_data:
+                # Formatage pour TRL
+                f.write(json.dumps({
+                    "instruction": item["instruction"],
+                    "output": item["response"]
+                }, ensure_ascii=False) + "\n")
         
-        logger.info(f"📊 Dataset prepared at {data_path} with {len(train_data)} examples.")
+        logger.info(f"📊 {len(distill_data)} validated examples prepared at {data_path}.")
         
-        # Appel de la logique d'entraînement (Import local pour éviter les dépendances circulaires)
+        # Appel de la logique d'entraînement (Import local)
         from scripts.distill_draft_model import train_speculative_draft_model
         
         output_dir = f"checkpoints/distilled-{student_model_id.split('/')[-1]}"
@@ -59,7 +93,9 @@ class ModelDistillationPipeline:
                 output_dir=output_dir,
                 epochs=epochs
             )
-            logger.info(f"✅ Training completed successfully. Model saved at {output_dir}")
+            # Une fois l'entraînement fini, on marque les données comme traitées
+            self.gold_dataset_port.mark_entries_as_processed([e["id"] for e in distill_data])
+            logger.info(f"✅ Training completed. Model saved at {output_dir}")
         except Exception as e:
             logger.error(f"❌ Training failed: {e}")
             raise

@@ -13,6 +13,10 @@ from core.ports.usage_port import UsagePort
 
 logger = get_logger("animetix." + __name__)
 
+from ...serializers import ArchetypistFusionSerializer
+
+# ... (rest of imports unchanged)
+
 # --- ARCHETYPIST / CREATIVE FUSION ---
 
 class ArchetypistStartFusionView(APIView):
@@ -23,6 +27,12 @@ class ArchetypistStartFusionView(APIView):
              catalog_service = Provide[Container.core.catalog_service],
              guardrail_service: GuardrailService = Provide[Container.core.guardrail_service],
              usage_port: UsagePort = Provide[Container.infrastructure.usage_port]):
+        
+        serializer = ArchetypistFusionSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
+        data = serializer.validated_data
         session_service = get_session_service(request)
         port = session_service.port
         media_type = port.get('media_type', 'Anime')
@@ -32,15 +42,15 @@ class ArchetypistStartFusionView(APIView):
         if not usage_port.check_quota(request.user.id, tier):
              return Response({"error": "Daily AI quota exceeded."}, status=status.HTTP_403_FORBIDDEN)
         
-        title_A = request.data.get('title_A')
-        title_B = request.data.get('title_B')
-        media_A = request.data.get('media_type_A', media_type)
-        media_B = request.data.get('media_type_B', media_type)
+        title_A = data.get('title_A')
+        title_B = data.get('title_B')
+        media_A = data.get('media_type_A', media_type)
+        media_B = data.get('media_type_B', media_type)
         
-        chaos_level = int(request.data.get('chaos_level', 50))
-        universe_balance = int(request.data.get('universe_balance', 50))
-        art_style = request.data.get('art_style', 'Cyberpunk')
-        parent_id = request.data.get('parent_id')
+        chaos_level = data.get('chaos_level')
+        universe_balance = data.get('universe_balance')
+        art_style = data.get('art_style')
+        parent_id = data.get('parent_id')
 
         # 1. Guardrail Check on Art Style and Titles
         check_text = f"Titles: {title_A or ''} x {title_B or ''}. Style: {art_style}"
@@ -51,9 +61,9 @@ class ArchetypistStartFusionView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        data = catalog_service.load_data(media_type)
-        data_A = catalog_service.load_data(media_A) if media_A != media_type else data
-        data_B = catalog_service.load_data(media_B) if media_B != media_type else data
+        data_cat = catalog_service.load_data(media_type)
+        data_A = catalog_service.load_data(media_A) if media_A != media_type else data_cat
+        data_B = catalog_service.load_data(media_B) if media_B != media_type else data_cat
         
         if not data_A or not data_B:
             return Response({"error": "Catalog data missing"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -105,6 +115,7 @@ class ArchetypistStartFusionView(APIView):
             'item_a_image': item1.get('image'),
             'item_b_image': item2.get('image')
         })
+
 
 
 class ArchetypistTaskStatusView(APIView):

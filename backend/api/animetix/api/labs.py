@@ -214,6 +214,20 @@ class SingularityLabDataView(APIView):
             except Exception as e:
                 return Response({'error': str(e)}, status=500)
 
+        elif action == 'swarm':
+            fact = request.data.get('fact')
+            media = request.data.get('media')
+            if not fact or not media:
+                return Response({'error': 'fact and media are required'}, status=400)
+            
+            try:
+                orchestrator = container.core.swarm_consensus_orchestrator()
+                # On utilise les diagnostics pour exposer Paxos-sémantique
+                diagnostics = orchestrator.get_paxos_diagnostics(fact=fact, media_title=media)
+                return Response(diagnostics)
+            except Exception as e:
+                return Response({'error': str(e)}, status=500)
+
         return Response({'error': 'Action inconnue'}, status=400)
 
 class LiquidNeuralNetworkLabView(APIView):
@@ -253,9 +267,51 @@ class MangaLabDataView(APIView):
                     'name': 'Manga Translator',
                     'description': 'Translate manga bubbles to target language.',
                     'endpoint': '/api/v1/manga-lab/translate/'
+                },
+                {
+                    'id': 'voice',
+                    'name': 'Manga Voice Lab',
+                    'description': 'Generate voices for manga characters (Dubbing).',
+                    'endpoint': '/api/v1/manga-voice/'
                 }
             ]
         })
+
+class MangaVoiceLabView(APIView):
+    """Génère des voix pour les personnages de manga (Dubbing)."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        container = get_container()
+        target_text = request.data.get('text')
+        ref_audio_file = request.FILES.get('reference_audio')
+        character_voice = request.data.get('character', 'Standard')
+        
+        if not target_text:
+            return Response({'error': 'Text is required.'}, status=400)
+            
+        try:
+            service = container.core.voice_cloning_service()
+            
+            if not ref_audio_file:
+                 return Response({'error': 'Reference audio is required for cloning.'}, status=400)
+
+            audio_bytes = ref_audio_file.read()
+            result_audio = service.clone(
+                reference_audio=audio_bytes,
+                target_text=target_text
+            )
+            
+            import base64
+            encoded = base64.b64encode(result_audio).decode('utf-8')
+            return Response({
+                'status': 'success',
+                'audio_data': f"data:audio/wav;base64,{encoded}",
+                'character': character_voice
+            })
+        except Exception as e:
+            logger.error(f"Error in MangaVoiceLabView: {e}")
+            return Response({'error': str(e)}, status=500)
 
 class VideoFateZeroLabView(APIView):
     """Transforme une vidéo avec transfert de style SOTA (FateZero)."""
@@ -285,6 +341,47 @@ class VideoFateZeroLabView(APIView):
             logger.error(f"Error in VideoFateZeroLabView: {e}")
             return Response({'error': str(e)}, status=500)
 
+class VideoRAGIndexView(APIView):
+    """Endpoint pour indexer une vidéo dans le Video-RAG."""
+    permission_classes = [permissions.IsAdminUser]
+
+    def post(self, request):
+        video_file = request.FILES.get('video')
+        video_id = request.data.get('video_id')
+        
+        if not video_file or not video_id:
+            return Response({'error': 'video and video_id are required'}, status=400)
+            
+        container = get_container()
+        video_rag = container.agentic.video_rag_service()
+        
+        try:
+            video_data = video_file.read()
+            count = video_rag.index_video(video_id, video_data)
+            return Response({'status': 'success', 'indexed_segments': count})
+        except Exception as e:
+            logger.error(f"VideoRAGIndex Error: {e}")
+            return Response({'error': str(e)}, status=500)
+
+class VideoRAGSearchView(APIView):
+    """Endpoint pour rechercher des moments précis dans les vidéos indexées."""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        query = request.GET.get('q')
+        if not query:
+            return Response({'error': 'query q is required'}, status=400)
+            
+        container = get_container()
+        video_rag = container.agentic.video_rag_service()
+        
+        try:
+            results = video_rag.search_video_segment(query, limit=10)
+            return Response({'status': 'success', 'results': results})
+        except Exception as e:
+            logger.error(f"VideoRAGSearch Error: {e}")
+            return Response({'error': str(e)}, status=500)
+
 class VideoLabDataView(APIView):
     """Métadonnées pour les outils du Video Lab."""
     permission_classes = [permissions.AllowAny]
@@ -298,6 +395,12 @@ class VideoLabDataView(APIView):
                     'description': 'Temporally consistent anime style transfer for real videos.',
                     'endpoint': '/api/v1/labs/video/fatezero/',
                     'supported_styles': ['Shaft', 'Ufotable', 'Kyoto', 'Ghibli']
+                },
+                {
+                    'id': 'video-rag',
+                    'name': 'Video-RAG Search',
+                    'description': 'Semantic search for precise moments in anime videos.',
+                    'endpoint': '/api/v1/labs/video/search/'
                 }
             ]
         })
