@@ -11,9 +11,10 @@ from typing import List, Dict, Any, Optional
 logger = logging.getLogger("animetix.neuromorphic.lnn")
 
 class LiquidNeuralNetworkService:
-    def __init__(self, state_dimension: int = 4, input_dimension: int = 2):
+    def __init__(self, state_dimension: int = 4, input_dimension: int = 2, inference_engine: Optional[Any] = None):
         self.state_dimension = state_dimension
         self.input_dimension = input_dimension
+        self.inference_engine = inference_engine
         
         # État courant du système
         self.state = np.zeros(state_dimension)
@@ -22,6 +23,11 @@ class LiquidNeuralNetworkService:
         self.W = np.random.randn(state_dimension, state_dimension) * 0.1
         self.I_W = np.random.randn(state_dimension, input_dimension) * 0.1
         self.tau = np.random.uniform(0.1, 1.0, state_dimension)
+
+    def process(self, input_data: List[float]):
+        if self.inference_engine:
+            self.inference_engine.run(input_data)
+        return self.process_continuous_signal([input_data])
 
     def ode_system(self, x: np.ndarray, u: np.ndarray) -> np.ndarray:
         """
