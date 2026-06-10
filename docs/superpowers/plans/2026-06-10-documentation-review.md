@@ -86,3 +86,25 @@ If any issues are found, make a note of the specific changes needed (e.g., "Add 
 git add docs/superpowers/plans/2026-06-10-documentation-review.md
 git commit -m "docs: Add review task for COMMANDS.md"
 ```
+
+### Task 4: Review DIAGRAMMES.md
+
+**Files:**
+- Modify: `docs/DIAGRAMMES.md`
+
+- [x] **Step 1: Read DIAGRAMMES.md**
+
+Read the entire content of `docs/DIAGRAMMES.md` to understand the project's diagrams and current content.
+
+- [x] **Step 2: Review Content for Accuracy, Completeness, and Clarity**
+
+Evaluate the document for:
+    - **Accuracy:** Ensure all diagrams are up-to-date and reflect the current state of the architecture or processes.
+    - **Completeness:** Check if any necessary diagrams are missing or if existing diagrams are incomplete.
+    - **Clarity:** Assess readability, grammar, spelling, and logical flow. Ensure diagrams are easy to understand and well-annotated.
+
+- [x] **Step 3: Document Required Updates (if any)**
+
+If any issues are found, make a note of the specific changes needed (e.g., "Update diagram X to reflect change Y," "Add new diagram for Z"). These notes will guide actual modifications in a later step.
+
+- [x] **Step 4: Commit**
