@@ -27,7 +27,7 @@ Commands to manage the headless API server, apply migrations, and seed the catal
 
 | Command | Directory | Description |
 | :--- | :--- | :--- |
-| `python backend/api/manage.py runserver` | Root | Launches the local API development server (port `8000`). |
+| `daphne backend/api/animetix_project/asgi.py` | Root | Launches the local API development server with Django Channels (port `8000`). |
 | `python backend/api/manage.py makemigrations` | Root | Prepares new migration files following database model changes. |
 | `python backend/api/manage.py migrate` | Root | Applies migrations to PostgreSQL (including creating HNSW vector indexes). |
 | `python backend/api/manage.py createsuperuser` | Root | Creates a superuser account for the Django Admin dashboard (`/admin`). |
@@ -35,6 +35,17 @@ Commands to manage the headless API server, apply migrations, and seed the catal
 | `python backend/api/manage.py sync_catalog` | Root | Synchronizes media catalogs, importing metadata from external APIs (TMDB, IGDB). |
 | `python backend/api/manage.py show_urls` | Root | Lists all exposed API routes (requires django-extensions). |
 | `python backend/api/manage.py shell` | Root | Launches an interactive Python shell with the Django context loaded. |
+| `python backend/api/manage.py export_rlhf_data` | Root | Exports RLHF data for model fine-tuning. |
+| `python backend/api/manage.py restore_brain_service` | Root | Restores the brain service from a backup. |
+| `python backend/api/manage.py run_red_teaming` | Root | Executes red teaming exercises against the AI models. |
+| `python backend/api/manage.py run_scheduled_task` | Root | Manually triggers a specific scheduled background task. |
+| `python backend/api/manage.py sync_bigquery_recommendations` | Root | Synchronizes recommendations with BigQuery. |
+| `python backend/api/manage.py check` | Root | Checks the entire Django project for potential problems. |
+| `python backend/api/manage.py dumpdata` | Root | Dumps database contents to a fixture file (e.g., JSON). |
+| `python backend/api/manage.py loaddata` | Root | Loads data from a fixture file into the database. |
+| `python backend/api/manage.py test` | Root | Runs all tests for the installed applications. |
+| `python backend/api/manage.py spectacular --file schema.yaml` | Root | Generates the OpenAPI schema (YAML) for the API. |
+| `python backend/api/manage.py compilemessages` | Root | Compiles .po files into .mo files for internationalization. |
 
 ---
 
@@ -125,7 +136,6 @@ Maintenance scripts, database reconciliation, and background worker pools.
 | `python scripts/check_db_tables.py` | Root | Provides a quick inspection of PostgreSQL physical table statuses. |
 | `python scripts/check_instantiation.py` | Root | Dry-runs adapter instantiations to validate bindings and type signatures. |
 | `python scripts/check_migrations_any_db.py` | Root | Inspects migration status on any target database. |
-| `python scripts/compile_translations.py` | Root | Compiles Django translation source files (`.po`) into binary locale files (`.mo`). |
 | `python scripts/generate_offline_db.py` | Root | Compiles a lightweight SQLite database for offline catalog search capability. |
 | `python scripts/detect_embedding_drift.py` | Root | Detects vector semantic shifts following embedding model updates. |
 | `python scripts/verify_brain_adapter.py` | Root | Performs a smoke test on the primary cloud inference adapter. |
