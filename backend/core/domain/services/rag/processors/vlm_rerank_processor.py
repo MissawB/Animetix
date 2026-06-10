@@ -1,0 +1,50 @@
+from backend.core.domain.services.rag.processors.base import StateProcessor
+from backend.core.domain.entities.ai_schemas import RAGContext, RAGState
+from backend.core.exceptions import InferenceError, InfrastructureError
+import logging
+
+logger = logging.getLogger('animetix.rag_workflow')
+
+class VlmRerankProcessor(StateProcessor):
+    def __init__(self, prompt_manager, inference_engine, xai_collector=None):
+        self.prompt_manager = prompt_manager
+        self.inference_engine = inference_engine
+        self.xai_collector = xai_collector
+
+    def process(self, ctx: RAGContext) -> RAGState:
+        # Based on RAGWorkflowManager._handle_vlm_rerank
+        image_urls = []
+        valid_candidates = []
+        for c in ctx.candidates:
+            url = c.get('image') or c.get('image_url') or c.get('cover_url') or c.get('poster_path')
+            if url:
+                image_urls.append(url)
+                valid_candidates.append(c)
+        
+        if not image_urls:
+            return RAGState.SYNTHESIZE
+
+        try:
+            prompt_text, system_prompt = self.prompt_manager.get_prompt(
+                "vlm_reranker", 
+                query=ctx.query, 
+                num_images=len(image_urls)
+            )
+            reranked = self.inference_engine.visual_rerank(prompt_text, image_urls, system_prompt=system_prompt)
+            for item in reranked:
+                idx = item.get('index')
+                if idx is not None and idx < len(valid_candidates):
+                    valid_candidates[idx]['visual_score'] = item.get('score', 0.0)
+            valid_candidates.sort(key=lambda x: x.get('visual_score', 0.0), reverse=True)
+            top_5 = valid_candidates[:5]
+            vlm_context = "\n### VÉRIFICATION VISUELLE (RERANKING) ###\n"
+            for i, c in enumerate(top_5):
+                vlm_context += f"{i+1}. {c.get('title')} (Score Visuel: {c.get('visual_score', 0.0):.2f})\n"
+                vlm_context += f"   - Description: {c.get('description', '')[:300]}...\n"
+            ctx.truth_path += f"\n{vlm_context}"
+            if self.xai_collector:
+                self.xai_collector.log_agent_thought("VLMReranker", "Analyse visuelle terminée pour le reranking des candidats")
+        except (InferenceError, InfrastructureError, RuntimeError) as e:
+            logger.error(f"VLM Rerank error: {e}")
+            
+        return RAGState.SYNTHESIZE
