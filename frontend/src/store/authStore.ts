@@ -23,6 +23,7 @@ interface AuthState {
   loginWithGoogle: () => Promise<void>;
   loginWithDiscord: () => Promise<void>;
   loginWithX: () => Promise<void>;
+  loginWithMyAnimeList: () => Promise<void>;
   register: (data: Record<string, any>) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -87,6 +88,16 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true });
     try {
       const provider = new TwitterAuthProvider();
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      set({ isLoading: false });
+      throw error;
+    }
+  },
+  loginWithMyAnimeList: async () => {
+    set({ isLoading: true });
+    try {
+      const provider = new OAuthProvider('oauth.myanimelist');
       await signInWithPopup(auth, provider);
     } catch (error) {
       set({ isLoading: false });

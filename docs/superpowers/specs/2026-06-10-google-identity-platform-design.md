@@ -10,7 +10,7 @@ Cette spécification décrit la migration complète de l'authentification applic
 ### Objectifs :
 - Supprimer la gestion et le stockage des mots de passe en base de données Django.
 - Passer à un modèle stateless basé sur des tokens JWT à courte durée de vie.
-- Supporter la connexion par **Email/Mot de passe**, **Google OAuth**, **Discord OAuth** et **X (Twitter) OAuth** de manière native.
+- Supporter la connexion par **Email/Mot de passe**, **Google OAuth**, **Discord OAuth**, **X (Twitter) OAuth** et **MyAnimeList OAuth** de manière native.
 - Garantir le support du développement local via l'émulateur Firebase Auth.
 
 ---
@@ -136,6 +136,7 @@ Nous utiliserons le SDK Firebase Auth pour toutes les actions :
 - `loginWithGoogle()` -> `signInWithPopup(auth, new GoogleAuthProvider())`.
 - `loginWithDiscord()` -> `signInWithPopup(auth, new OAuthProvider('oauth.discord'))` avec les scopes `identify` et `email`.
 - `loginWithX()` -> `signInWithPopup(auth, new TwitterAuthProvider())`.
+- `loginWithMyAnimeList()` -> `signInWithPopup(auth, new OAuthProvider('oauth.myanimelist'))`.
 - `checkAuth()` -> Écoute réactive de `onAuthStateChanged(auth, async (firebaseUser) => { ... })` pour mettre à jour l'utilisateur et récupérer le profil Django `/api/v1/auth/me/`.
 
 ---
@@ -154,7 +155,7 @@ Nous utiliserons le SDK Firebase Auth pour toutes les actions :
 - `VITE_FIREBASE_APP_ID`: ID unique de l'application Firebase.
 - `VITE_FIREBASE_AUTH_EMULATOR_HOST`: Optionnel (ex: `localhost:9099` en dev).
 
-### 5.1. Configuration de Discord et de X (Twitter) sur la Console Google Identity Platform
+### 5.1. Configuration de Discord, de X (Twitter) et de MyAnimeList sur la Console Google Identity Platform
 #### Discord :
 Pour que la connexion Discord fonctionne en production, il faut configurer Discord comme fournisseur personnalisé dans la console Google Cloud :
 1. Allez sur la console Google Cloud, puis **Identity Platform** > **Fournisseurs d'identité** > **Ajouter un fournisseur**.
@@ -175,6 +176,19 @@ Pour X, Identity Platform intègre nativement le fournisseur d'identité :
 3. Renseignez l'**API Key** et la **Secret Key** fournies par le portail développeurs X (Twitter Developer Portal).
 4. Copiez l'URI de redirection et ajoutez-le aux paramètres de votre projet sur le portail développeurs X.
 5. Enregistrez pour activer.
+
+#### MyAnimeList :
+Pour MyAnimeList, configurez-le comme un fournisseur personnalisé :
+1. Allez sur **Identity Platform** > **Fournisseurs d'identité** > **Ajouter un fournisseur**.
+2. Sélectionnez **Personnalisé** (Custom OAuth 2.0).
+3. Renseignez les champs :
+   - **ID du fournisseur** : `oauth.myanimelist` (obligatoire pour correspondre au code frontend).
+   - **ID client** : Client ID de l'application MyAnimeList API.
+   - **Secret client** : Client Secret de l'application MyAnimeList API.
+   - **URI d'autorisation** : `https://myanimelist.net/v1/oauth2/authorize`
+   - **URI de jeton** : `https://myanimelist.net/v1/oauth2/token`
+   - **URI d'informations utilisateur** : `https://api.myanimelist.net/v2/users/@me`
+4. Ajoutez l'**URI de redirection de confiance** dans les paramètres de votre application sur MyAnimeList.
 
 ---
 

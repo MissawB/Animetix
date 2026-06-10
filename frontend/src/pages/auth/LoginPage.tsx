@@ -11,7 +11,7 @@ const LoginPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, loginWithGoogle, loginWithDiscord, loginWithX, isLoading } = useAuthStore();
+  const { login, loginWithGoogle, loginWithDiscord, loginWithX, loginWithMyAnimeList, isLoading } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -62,6 +62,16 @@ const LoginPage: React.FC = () => {
       navigate(from, { replace: true });
     } catch (err: any) {
       setError(err.message || t('auth.loginFailed', 'Connexion X échouée.'));
+    }
+  };
+
+  const handleMyAnimeListLogin = async () => {
+    setError('');
+    try {
+      await loginWithMyAnimeList();
+      navigate(from, { replace: true });
+    } catch (err: any) {
+      setError(err.message || t('auth.loginFailed', 'Connexion MyAnimeList échouée.'));
     }
   };
 
@@ -184,6 +194,20 @@ const LoginPage: React.FC = () => {
                   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                 </svg>
                 SE CONNECTER AVEC X
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                fullWidth
+                disabled={isLoading}
+                onClick={handleMyAnimeListLogin}
+                className="py-4 text-sm font-black italic manga-font tracking-widest flex items-center justify-center gap-2 border-2 border-gray-200 dark:border-white/10 mt-3"
+              >
+                <svg className="w-5 h-5 mr-1" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1.5 14h-1v-4.5l-1.5 1.5-1.5-1.5V16h-1V9h1l2 2 2-2h1v7zm6 0h-3.5v-7h1v2.5h2V10h1v6zm-1-2.5h-1V12h1v1.5z" />
+                </svg>
+                SE CONNECTER AVEC MYANIMELIST
               </Button>
 
               <div className="text-center pt-6 border-t border-gray-100 dark:border-white/5">
