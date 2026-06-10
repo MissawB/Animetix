@@ -1,7 +1,16 @@
 import { create } from 'zustand';
-import { getAuthUser, loginUser, registerUser, logoutUser } from '../api';
+import { getAuthUser } from '../api';
 import { User } from '../types';
 import { useNotificationStore } from './notificationStore';
+import { auth } from '../utils/firebase';
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signOut, 
+  onAuthStateChanged,
+  GoogleAuthProvider,
+  signInWithPopup
+} from 'firebase/auth';
 
 interface AuthState {
   user: User | null;
@@ -9,29 +18,50 @@ interface AuthState {
   isLoading: boolean;
   checkAuth: () => Promise<void>;
   login: (data: Record<string, any>) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
   register: (data: Record<string, any>) => Promise<void>;
   logout: () => Promise<void>;
 }
+
+let authListenerInitialized = false;
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,
   isLoading: true,
   checkAuth: async () => {
-    try {
-      const user = await getAuthUser();
-      set({ user, isAuthenticated: true, isLoading: false });
-      useNotificationStore.getState().connect();
-    } catch {
-      set({ user: null, isAuthenticated: false, isLoading: false });
-    }
+    if (authListenerInitialized) return;
+    authListenerInitialized = true;
+    
+    onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          const user = await getAuthUser();
+          set({ user, isAuthenticated: true, isLoading: false });
+          useNotificationStore.getState().connect();
+        } catch (error) {
+          set({ user: null, isAuthenticated: false, isLoading: false });
+        }
+      } else {
+        set({ user: null, isAuthenticated: false, isLoading: false });
+        useNotificationStore.getState().disconnect();
+      }
+    });
   },
   login: async (data) => {
     set({ isLoading: true });
     try {
-      const user = await loginUser(data);
-      set({ user, isAuthenticated: true, isLoading: false });
-      useNotificationStore.getState().connect();
+      await signInWithEmailAndPassword(auth, data.email, data.password);
+    } catch (error) {
+      set({ isLoading: false });
+      throw error;
+    }
+  },
+  loginWithGoogle: async () => {
+    set({ isLoading: true });
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
     } catch (error) {
       set({ isLoading: false });
       throw error;
@@ -40,9 +70,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   register: async (data) => {
     set({ isLoading: true });
     try {
-      const user = await registerUser(data);
-      set({ user, isAuthenticated: true, isLoading: false });
-      useNotificationStore.getState().connect();
+      await createUserWithEmailAndPassword(auth, data.email, data.password);
     } catch (error) {
       set({ isLoading: false });
       throw error;
@@ -51,9 +79,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: async () => {
     set({ isLoading: true });
     try {
-      await logoutUser();
-      set({ user: null, isAuthenticated: false, isLoading: false });
-      useNotificationStore.getState().disconnect();
+      await signOut(auth);
     } catch (error) {
       set({ isLoading: false });
       throw error;
