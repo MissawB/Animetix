@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Film, CheckCircle2, X, Volume2, VolumeX, AlertTriangle } from 'lucide-react';
+import { Film, CheckCircle2, X, AlertTriangle, Play } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 
 interface Props {
@@ -9,7 +9,7 @@ interface Props {
   onConfirm: () => Promise<void>;
 }
 
-const VIDEO_SOURCES = {
+const FALLBACK_VIDEO_SOURCES = {
   boost: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
   refill: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4'
 };
@@ -19,40 +19,215 @@ const SPONSORS_CLIPS = {
   refill: { name: "Future Gadget Lab", msg: "Optimisation de l'onde temporelle du micro-ondes..." }
 };
 
+const AD_TAG_URL = 'https://pubads.g.doubleclick.net/gampad/ads?iu=/21775744923/external/single_ad_samples&sz=640x480&ciu_szs=300x250&impl=s&gdfp_req=1&env=vp&output=vast&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ct%3Dlinear&correlator=';
+
 export const SponsorStreamModal: React.FC<Props> = ({ actionType, onClose, onConfirm }) => {
-  const [progress, setProgress] = useState(0);
+  const [isSdkLoaded, setIsSdkLoaded] = useState(false);
+  const [isAdStarted, setIsAdStarted] = useState(false);
   const [isDone, setIsDone] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
   const [hasError, setHasError] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const [progress, setProgress] = useState(0);
   
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const adContainerRef = useRef<HTMLDivElement>(null);
+  const adsLoaderRef = useRef<any>(null);
+  const adsManagerRef = useRef<any>(null);
+  const adDisplayContainerRef = useRef<any>(null);
+
   const sponsor = SPONSORS_CLIPS[actionType];
-  const videoUrl = VIDEO_SOURCES[actionType];
 
-  // Minuteur de secours si le chargement de la vidéo échoue
+  // 1. Chargement dynamique du script Google IMA SDK
   useEffect(() => {
-    if (!hasError) return;
-    
-    const duration = actionType === 'boost' ? 10000 : 5000;
-    const intervalTime = 50;
-    const step = (intervalTime / duration) * 100;
-    
-    const timer = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(timer);
-          setIsDone(true);
-          return 100;
-        }
-        return prev + step;
-      });
-    }, intervalTime);
-    
-    return () => clearInterval(timer);
-  }, [hasError, actionType]);
+    if ((window as any).google && (window as any).google.ima) {
+      setIsSdkLoaded(true);
+      return;
+    }
 
-  const handleTimeUpdate = () => {
+    const script = document.createElement('script');
+    script.src = 'https://imasdk.googleapis.com/js/sdkloader/ima3.js';
+    script.async = true;
+    script.onload = () => {
+      if ((window as any).google && (window as any).google.ima) {
+        setIsSdkLoaded(true);
+      } else {
+        console.error("IMA SDK script loaded but window.google.ima is undefined");
+        setHasError(true);
+      }
+    };
+    script.onerror = () => {
+      console.error("Failed to load Google IMA SDK script");
+      setHasError(true);
+    };
+    document.body.appendChild(script);
+
+    return () => {
+      try {
+        document.body.removeChild(script);
+      } catch (e) {
+        // Ignorer si déjà retiré ou absent
+      }
+    };
+  }, []);
+
+  // 2. Initialisation d'AdsLoader
+  useEffect(() => {
+    if (!isSdkLoaded || hasError) return;
+
+    try {
+      const google = (window as any).google;
+      
+      const adDisplayContainer = new google.ima.AdDisplayContainer(
+        adContainerRef.current,
+        videoRef.current
+      );
+      adDisplayContainerRef.current = adDisplayContainer;
+
+      const adsLoader = new google.ima.AdsLoader(adDisplayContainer);
+      adsLoaderRef.current = adsLoader;
+
+      adsLoader.addEventListener(
+        google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED,
+        onAdsManagerLoaded,
+        false
+      );
+      adsLoader.addEventListener(
+        google.ima.AdErrorEvent.Type.AD_ERROR,
+        onAdError,
+        false
+      );
+    } catch (e) {
+      console.error("Error initializing IMA loader:", e);
+      setHasError(true);
+    }
+
+    return () => {
+      destroyAds();
+    };
+  }, [isSdkLoaded, hasError]);
+
+  const destroyAds = () => {
+    try {
+      if (adsManagerRef.current) {
+        adsManagerRef.current.destroy();
+      }
+      if (adsLoaderRef.current) {
+        adsLoaderRef.current.contentComplete();
+      }
+    } catch (e) {
+      // Ignorer les erreurs d'extinction
+    }
+  };
+
+  const onAdsManagerLoaded = (adsManagerLoadedEvent: any) => {
+    try {
+      const google = (window as any).google;
+      const adsRenderingSettings = new google.ima.AdsRenderingSettings();
+      adsRenderingSettings.restoreHeaderAd = true;
+
+      const adsManager = adsManagerLoadedEvent.getAdsManager(
+        videoRef.current,
+        adsRenderingSettings
+      );
+      adsManagerRef.current = adsManager;
+
+      adsManager.addEventListener(
+        google.ima.AdErrorEvent.Type.AD_ERROR,
+        onAdError
+      );
+      adsManager.addEventListener(
+        google.ima.AdEvent.Type.CONTENT_PAUSE_REQUESTED,
+        () => {
+          if (videoRef.current) videoRef.current.pause();
+        }
+      );
+      adsManager.addEventListener(
+        google.ima.AdEvent.Type.CONTENT_RESUME_REQUESTED,
+        () => {
+          if (videoRef.current) videoRef.current.play();
+        }
+      );
+      adsManager.addEventListener(
+        google.ima.AdEvent.Type.COMPLETE,
+        onAdComplete
+      );
+      adsManager.addEventListener(
+        google.ima.AdEvent.Type.ALL_ADS_COMPLETED,
+        onAdComplete
+      );
+      
+      adsManager.addEventListener(
+        google.ima.AdEvent.Type.AD_PROGRESS,
+        (adEvent: any) => {
+          const adData = adEvent.getAdData();
+          if (adData && adData.duration) {
+            setProgress((adData.currentTime / adData.duration) * 100);
+          }
+        }
+      );
+    } catch (e) {
+      console.error("Error setting up AdsManager:", e);
+      setHasError(true);
+    }
+  };
+
+  const onAdComplete = () => {
+    setIsDone(true);
+    setProgress(100);
+    destroyAds();
+  };
+
+  const onAdError = (adErrorEvent: any) => {
+    console.error("IMA SDK Ad Error:", adErrorEvent?.getError?.() || adErrorEvent);
+    setHasError(true);
+  };
+
+  const startAdPlayback = () => {
+    if (hasError) return;
+
+    try {
+      const google = (window as any).google;
+      
+      if (adDisplayContainerRef.current) {
+        adDisplayContainerRef.current.initialize();
+      }
+
+      const adsRequest = new google.ima.AdsRequest();
+      adsRequest.adTagUrl = AD_TAG_URL;
+      
+      const width = adContainerRef.current?.clientWidth || 640;
+      const height = adContainerRef.current?.clientHeight || 360;
+      adsRequest.linearAdSlotWidth = width;
+      adsRequest.linearAdSlotHeight = height;
+      adsRequest.nonLinearAdSlotWidth = width;
+      adsRequest.nonLinearAdSlotHeight = height;
+
+      setIsAdStarted(true);
+
+      adsLoaderRef.current.requestAds(adsRequest);
+
+      setTimeout(() => {
+        if (adsManagerRef.current) {
+          try {
+            adsManagerRef.current.init(width, height, google.ima.ViewMode.NORMAL);
+            adsManagerRef.current.start();
+          } catch (managerError) {
+            console.error("AdsManager init/start error:", managerError);
+            setHasError(true);
+          }
+        }
+      }, 500);
+
+    } catch (e) {
+      console.error("Error starting ad playback:", e);
+      setHasError(true);
+    }
+  };
+
+  // Logique du lecteur vidéo de secours (fallback local)
+  const fallbackVideoUrl = FALLBACK_VIDEO_SOURCES[actionType];
+
+  const handleFallbackTimeUpdate = () => {
     if (videoRef.current) {
       const current = videoRef.current.currentTime;
       const duration = videoRef.current.duration || 1;
@@ -60,21 +235,9 @@ export const SponsorStreamModal: React.FC<Props> = ({ actionType, onClose, onCon
     }
   };
 
-  const handleVideoEnded = () => {
+  const handleFallbackEnded = () => {
     setIsDone(true);
     setProgress(100);
-  };
-
-  const handleVideoError = () => {
-    console.error("Video failed to load, triggering fallback timer.");
-    setHasError(true);
-  };
-
-  const toggleMute = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = !videoRef.current.muted;
-      setIsMuted(videoRef.current.muted);
-    }
   };
 
   const handleClaim = async () => {
@@ -107,7 +270,7 @@ export const SponsorStreamModal: React.FC<Props> = ({ actionType, onClose, onCon
           <header className="flex justify-between items-center">
             <div>
               <p className="text-yellow-500 text-[10px] font-black uppercase tracking-widest">Flux de Sponsoring</p>
-              <h3 className="text-xl font-black italic uppercase text-white">Lecture Vidéo de Pub</h3>
+              <h3 className="text-xl font-black italic uppercase text-white">Sponsor Réel (IMA SDK)</h3>
             </div>
             {isDone && !isSubmitting && (
               <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full text-gray-400 hover:text-white">
@@ -120,10 +283,19 @@ export const SponsorStreamModal: React.FC<Props> = ({ actionType, onClose, onCon
             <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none" />
             
             {hasError ? (
-              <div className="p-4 space-y-2 z-10">
-                <AlertTriangle className="w-12 h-12 text-yellow-500 mx-auto animate-pulse" />
-                <h4 className="text-sm font-black uppercase text-yellow-500">{sponsor.name}</h4>
-                <p className="text-xs text-gray-400 font-mono italic">Flux de secours actif...</p>
+              <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center p-6 space-y-4">
+                <video
+                  ref={videoRef}
+                  src={fallbackVideoUrl}
+                  autoPlay
+                  muted
+                  onTimeUpdate={handleFallbackTimeUpdate}
+                  onEnded={handleFallbackEnded}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+                <div className="z-10 bg-black/60 p-2 rounded-lg border border-yellow-500/20 text-yellow-500 text-[10px] uppercase font-bold tracking-widest flex items-center gap-1.5 animate-pulse">
+                  <AlertTriangle size={12} /> Ad-Blocker détecté / Repli Actif
+                </div>
               </div>
             ) : isDone ? (
               <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="z-10">
@@ -131,39 +303,39 @@ export const SponsorStreamModal: React.FC<Props> = ({ actionType, onClose, onCon
                 <h4 className="text-sm font-black uppercase text-yellow-500 mt-2">{sponsor.name}</h4>
                 <p className="text-xs text-gray-400 font-mono italic">Sponsor visionné avec succès !</p>
               </motion.div>
+            ) : !isAdStarted ? (
+              <div className="space-y-4 p-6 z-10 flex flex-col items-center">
+                <Film className="w-12 h-12 text-yellow-500 animate-pulse" />
+                <div className="space-y-1">
+                  <h4 className="text-sm font-black uppercase text-yellow-500">{sponsor.name}</h4>
+                  <p className="text-xs text-gray-400 font-mono italic">Cliquez ci-dessous pour charger la vidéo</p>
+                </div>
+                <button
+                  onClick={startAdPlayback}
+                  className="mt-2 py-2.5 px-6 bg-yellow-500 hover:bg-yellow-600 active:scale-95 text-black font-black text-xs uppercase tracking-wider rounded-xl transition-all flex items-center gap-2"
+                >
+                  <Play size={12} fill="currentColor" /> Lancer le Sponsor
+                </button>
+              </div>
             ) : (
               <>
                 <video
                   ref={videoRef}
-                  src={videoUrl}
-                  autoPlay
-                  muted={isMuted}
-                  onTimeUpdate={handleTimeUpdate}
-                  onEnded={handleVideoEnded}
-                  onError={handleVideoError}
-                  className="absolute inset-0 w-full h-full object-cover"
-                  onContextMenu={(e) => e.preventDefault()}
-                  data-testid="ad-video-element"
+                  className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                  muted
+                  playsInline
                 />
-                
-                {/* Contrôles overlay pour le son */}
-                <div className="absolute bottom-3 right-3 z-10">
-                  <button 
-                    onClick={toggleMute}
-                    className="p-2 bg-black/60 hover:bg-black/80 text-white rounded-full transition-colors border border-white/10"
-                    title={isMuted ? "Activer le son" : "Couper le son"}
-                    data-testid="mute-toggle-button"
-                  >
-                    {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
-                  </button>
-                </div>
+                <div 
+                  ref={adContainerRef} 
+                  className="absolute inset-0 w-full h-full z-10" 
+                />
               </>
             )}
           </div>
 
           <div className="space-y-2">
             <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider text-gray-500 font-mono">
-              <span>{isDone ? 'Complété' : 'Chargement du Boost...'}</span>
+              <span>{isDone ? 'Complété' : 'Lecture Publicitaire...'}</span>
               <span>{Math.min(100, Math.round(progress))}%</span>
             </div>
             <div className="w-full bg-gray-950 h-2.5 rounded-full overflow-hidden border border-white/5">
