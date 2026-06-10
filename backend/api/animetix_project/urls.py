@@ -3,6 +3,7 @@ from django.urls import path, include
 from django.conf.urls.i18n import i18n_patterns
 from rest_framework import routers
 from animetix import api_views
+from animetix.api.monitoring import PipelineControlView
 from django.views.generic.base import RedirectView
 
 # REST Router
@@ -32,8 +33,8 @@ urlpatterns = [
 
     # --- DOCUMENTATION API (Spectacular) - Restreint au Staff ---
     path('api/schema/', staff_member_required(SpectacularAPIView.as_view()), name='schema'),
-    path('api/docs/', staff_member_required(SpectacularSwaggerView.as_view(url_name='schema')), name='swagger-ui'),
-    path('api/redoc/', staff_member_required(SpectacularRedocView.as_view(url_name='schema')), name='redoc'),
+    path('api/schema/swagger-ui/', staff_member_required(SpectacularSwaggerView.as_view(url_name='schema')), name='swagger-ui'),
+    path('api/schema/redoc/', staff_member_required(SpectacularRedocView.as_view(url_name='schema')), name='redoc'),
     
     # --- OBSERVABILITÉ : PROMETHEUS - Restreint au Staff ---
     path('metrics/', staff_member_required(prometheus_exports.ExportToDjangoView), name='prometheus-django-metrics'),
@@ -45,6 +46,7 @@ urlpatterns = [
     path('api/tasks/run/', include([
         path('', RedirectView.as_view(url='/'), name='run_task_view_redirect'), # fallback
     ])),
+    path('api/monitoring/<str:action>/', PipelineControlView.as_view(), name='pipeline-control'),
 ]
 
 from animetix.tasks_views import run_task_view, poll_workflow_view, eventarc_gcs_upload_view
