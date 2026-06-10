@@ -12,23 +12,32 @@ from typing import Dict, Any, List, Optional
 logger = logging.getLogger("animetix.neuromorphic.plasticity")
 
 class SynapticPlasticityService:
-    def __init__(self, num_concepts: int = 10, tau_plus: float = 20.0, tau_minus: float = 20.0):
+    def __init__(self, num_concepts: int = 10, tau_plus: float = 20.0, tau_minus: float = 20.0, inference_engine: Optional[Any] = None):
         """
         Initialise le service de plasticité synaptique.
         :param num_concepts: Nombre de concepts sémantiques ou nœuds d'attention simulés.
         :param tau_plus: Constante de temps pour la potentiation à long terme (LTP).
         :param tau_minus: Constante de temps pour la dépression à long terme (LTD).
+        :param inference_engine: Optional inference engine for plasticity interactions.
         """
         self.num_concepts = num_concepts
         self.tau_plus = tau_plus
         self.tau_minus = tau_minus
-        
+        self.inference_engine = inference_engine
+
         # Matrice de poids synaptiques W
         self.W = np.random.uniform(0.1, 0.5, (num_concepts, num_concepts))
         np.fill_diagonal(self.W, 0.0)
-        
+
         # Horodatage du dernier spike/activation pour chaque concept
         self.last_spike_times = np.zeros(num_concepts)
+
+    def apply_plasticity(self, data: Dict[str, Any]):
+        """
+        Applies plasticity updates and triggers inference if engine is available.
+        """
+        if self.inference_engine:
+            self.inference_engine.run(data)
 
     def trigger_spikes(self, active_indices: List[int], current_time: float):
         """
