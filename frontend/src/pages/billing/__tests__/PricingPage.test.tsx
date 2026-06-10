@@ -12,8 +12,8 @@ vi.mock('../../../api', () => ({
 }));
 
 const mockNavigate = vi.fn();
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importOriginal<any>();
+vi.mock('react-router-dom', async (importOriginal) => {
+  const actual = await importOriginal<any>();
   return {
     ...actual,
     useNavigate: () => mockNavigate
