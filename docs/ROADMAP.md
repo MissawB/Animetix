@@ -83,3 +83,21 @@ gantt
 
 #### Phase L : Synthèse de Multivers Originaux (COMPLETED)
 *   **L.1 `AutonomousDomainSynthesizer`** : Génération et persistance (Neo4j) de multivers fictionnels complets validés par IA.
+
+---
+
+## 📝 Notes de Révision du Roadmap (À implémenter)
+
+**Précision (Accuracy) :**
+- Le diagramme de Gantt indique des dates allant de juin à décembre 2026, mais toutes les phases sont marquées comme complétées (`:done`). Si le projet a pris de l'avance, les dates doivent être ajustées à la chronologie réelle. Sinon, les phases futures ne doivent pas être marquées comme complétées.
+
+**Exhaustivité (Completeness) :**
+- Ce document se concentre exclusivement sur les fondations de l'écosystème IA. Il manque les initiatives en cours et à venir mentionnées dans le `TODO.md`, telles que :
+  - **Implémentation des RAG Processors** (`SpeculateProcessor`, `VlmRerankProcessor`, etc.) et refonte du `RAGWorkflowManager`.
+  - **Accessibilité (a11y)** : Audit complet de l'accessibilité du frontend.
+  - **Performance & Monitoring** : Amélioration du monitoring et des alertes de performance.
+  - **Sécurité** : Intégration de scanners de vulnérabilité et mises à jour automatisées (récemment complété).
+
+**Clarté (Clarity) :**
+- Bien que le document soit clair sur l'aspect IA, il bénéficierait d'une section "Prochaines Étapes" (Next Steps) pour distinguer clairement l'architecture IA (déjà terminée) du développement opérationnel futur du produit.
+
