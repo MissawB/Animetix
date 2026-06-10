@@ -9,7 +9,8 @@ import {
   signOut, 
   onAuthStateChanged,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  OAuthProvider
 } from 'firebase/auth';
 
 interface AuthState {
@@ -19,6 +20,7 @@ interface AuthState {
   checkAuth: () => Promise<void>;
   login: (data: Record<string, any>) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
+  loginWithDiscord: () => Promise<void>;
   register: (data: Record<string, any>) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -61,6 +63,18 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true });
     try {
       const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      set({ isLoading: false });
+      throw error;
+    }
+  },
+  loginWithDiscord: async () => {
+    set({ isLoading: true });
+    try {
+      const provider = new OAuthProvider('oauth.discord');
+      provider.addScope('identify');
+      provider.addScope('email');
       await signInWithPopup(auth, provider);
     } catch (error) {
       set({ isLoading: false });
