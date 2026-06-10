@@ -10,7 +10,7 @@ Cette spécification décrit la migration complète de l'authentification applic
 ### Objectifs :
 - Supprimer la gestion et le stockage des mots de passe en base de données Django.
 - Passer à un modèle stateless basé sur des tokens JWT à courte durée de vie.
-- Supporter la connexion par **Email/Mot de passe** et **Google OAuth** de manière native.
+- Supporter la connexion par **Email/Mot de passe**, **Google OAuth** et **Discord OAuth** de manière native.
 - Garantir le support du développement local via l'émulateur Firebase Auth.
 
 ---
@@ -134,6 +134,7 @@ Nous utiliserons le SDK Firebase Auth pour toutes les actions :
 - `register(email, password)` -> `createUserWithEmailAndPassword(auth, email, password)`.
 - `logout()` -> `signOut(auth)`.
 - `loginWithGoogle()` -> `signInWithPopup(auth, new GoogleAuthProvider())`.
+- `loginWithDiscord()` -> `signInWithPopup(auth, new OAuthProvider('oauth.discord'))` avec les scopes `identify` et `email`.
 - `checkAuth()` -> Écoute réactive de `onAuthStateChanged(auth, async (firebaseUser) => { ... })` pour mettre à jour l'utilisateur et récupérer le profil Django `/api/v1/auth/me/`.
 
 ---
@@ -151,6 +152,19 @@ Nous utiliserons le SDK Firebase Auth pour toutes les actions :
 - `VITE_FIREBASE_PROJECT_ID`: ID du projet GCP.
 - `VITE_FIREBASE_APP_ID`: ID unique de l'application Firebase.
 - `VITE_FIREBASE_AUTH_EMULATOR_HOST`: Optionnel (ex: `localhost:9099` en dev).
+
+### 5.1. Configuration de Discord sur la Console Google Identity Platform
+Pour que la connexion Discord fonctionne en production, il faut configurer Discord comme fournisseur personnalisé dans la console Google Cloud :
+1. Allez sur la console Google Cloud, puis **Identity Platform** > **Fournisseurs d'identité** > **Ajouter un fournisseur**.
+2. Sélectionnez **Personnalisé** (Custom OAuth 2.0).
+3. Remplissez les champs de configuration :
+   - **ID du fournisseur** : `oauth.discord` (obligatoire pour correspondre au code frontend).
+   - **ID client** : ID client de l'application Discord (récupérable sur le portail des développeurs Discord).
+   - **Secret client** : Clé secrète de l'application Discord.
+   - **URI d'autorisation** : `https://discord.com/api/oauth2/authorize`
+   - **URI de jeton** : `https://discord.com/api/oauth2/token`
+   - **URI d'informations utilisateur** : `https://discord.com/api/users/@me`
+4. Copiez l'**URI de redirection de confiance** fourni par GCP et ajoutez-le aux redirect URIs dans les paramètres de votre application Discord (ex: `https://<gcp-project>.firebaseapp.com/__/auth/handler`).
 
 ---
 
