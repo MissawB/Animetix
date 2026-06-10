@@ -19,7 +19,7 @@ We built **Animetix** to solve this. Our inspiration was to construct a cognitiv
 Animetix is an intelligent ecosystem composed of two primary engines: a **Cognitive Discovery Engine** and an **AI-Driven Game Suite**.
 
 ### 1. Intelligent RAG 2.0 Discovery
-* **Hybrid Cognitive Memory:** Integrates **ChromaDB** for vector semantic indexing (HNSW search over plot outlines and tropes) and **Neo4j** for complex relationship traversals (interconnecting studios, creators, characters, and adaptations).
+* **Hybrid Cognitive Memory:** Integrates **ChromaDB** for vector semantic indexing (HNSW search over plot outlines and tropes) and **Neo4j** for complex relationship traversals (interconnecting studios, creators, characters, and adaptations.)
 * **Multi-Scale Search (MRL):** Employs **Matryoshka Representation Learning** (using Jina-v3) to run lightning-fast rough filters on the first 128 dimensions, then zooming into the full 1024-dimensional space for exact matches.
 * **Cross-Encoder Reranking:** Leverages a **BGE-Reranker** to analyze query-context pairs jointly, calculating an absolute relevance score to ensure high precision and combat hallucination.
 
