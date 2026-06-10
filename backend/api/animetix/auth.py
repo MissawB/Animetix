@@ -8,7 +8,7 @@ from django.contrib.auth.backends import RemoteUserBackend
 from django.contrib.auth.middleware import RemoteUserMiddleware
 from django.core.exceptions import PermissionDenied
 from google.auth.transport import requests as google_requests
-from google.oauth2 import id_token as google_id_token
+from google.oauth2 import id_token
 from rest_framework import authentication
 from rest_framework import exceptions
 
@@ -26,7 +26,7 @@ def verify_iap_jwt(jwt_assertion, expected_audience):
         return None
     try:
         # verify_token fetches Google's IAP public keys and verifies signature/expiration
-        payload = google_id_token.verify_token(
+        payload = id_token.verify_token(
             jwt_assertion,
             request=google_requests.Request(),
             audience=expected_audience,
