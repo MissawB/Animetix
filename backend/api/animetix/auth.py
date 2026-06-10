@@ -1,12 +1,21 @@
 import logging
+import time
+import jwt
+import requests
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import RemoteUserBackend
 from django.contrib.auth.middleware import RemoteUserMiddleware
 from django.core.exceptions import PermissionDenied
-from google.auth.transport import requests
-from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
+from google.oauth2 import id_token as google_id_token
+from rest_framework import authentication
+from rest_framework import exceptions
 
 logger = logging.getLogger('animetix.auth')
+User = get_user_model()
+
+# --- GCP Identity-Aware Proxy (IAP) Helpers ---
 
 def verify_iap_jwt(jwt_assertion, expected_audience):
     """
@@ -17,9 +26,9 @@ def verify_iap_jwt(jwt_assertion, expected_audience):
         return None
     try:
         # verify_token fetches Google's IAP public keys and verifies signature/expiration
-        payload = id_token.verify_token(
+        payload = google_id_token.verify_token(
             jwt_assertion,
-            request=requests.Request(),
+            request=google_requests.Request(),
             audience=expected_audience,
             certs_url="https://www.gstatic.com/iap/verify/public_key"
         )
@@ -90,3 +99,119 @@ class IAPRemoteUserBackend(RemoteUserBackend):
                 user.is_superuser = False
                 user.save()
                 logger.info(f"Revoked administrative privileges from IAP user: {user.email}")
+
+
+# --- Google Identity Platform (GCIP) Authentication ---
+
+GOOGLE_CERTS_URL = "https://www.googleapis.com/robot/v1/metadata/x509/securetoken-system@system.gserviceaccount.com"
+_public_keys_cache = {}
+_public_keys_expiry = 0
+
+def get_google_public_keys():
+    global _public_keys_cache, _public_keys_expiry
+    now = time.time()
+    if _public_keys_cache and now < _public_keys_expiry:
+        return _public_keys_cache
+
+    try:
+        response = requests.get(GOOGLE_CERTS_URL, timeout=5)
+        response.raise_for_status()
+        
+        cache_control = response.headers.get("Cache-Control", "")
+        max_age = 3600
+        for part in cache_control.split(","):
+            if "max-age" in part:
+                try:
+                    max_age = int(part.split("=")[1].strip())
+                except Exception:
+                    pass
+        
+        _public_keys_cache = response.json()
+        _public_keys_expiry = now + max_age
+        return _public_keys_cache
+    except Exception as e:
+        logger.error(f"Failed to fetch Google public keys: {e}")
+        return _public_keys_cache
+
+class GoogleIdentityAuthentication(authentication.BaseAuthentication):
+    def authenticate(self, request):
+        auth_header = request.META.get("HTTP_AUTHORIZATION")
+        if not auth_header:
+            return None
+
+        parts = auth_header.split()
+        if len(parts) != 2 or parts[0].lower() != "bearer":
+            return None
+
+        id_token = parts[1]
+        project_id = getattr(settings, 'GOOGLE_CLOUD_PROJECT', 'animetix')
+
+        # Support Local Emulator
+        emulator_host = getattr(settings, 'FIREBASE_AUTH_EMULATOR_HOST', None)
+        if emulator_host:
+            try:
+                payload = jwt.decode(id_token, options={"verify_signature": False})
+                email = payload.get("email")
+                if not email:
+                    raise exceptions.AuthenticationFailed("Emulator token missing email claim.")
+                user = self._get_or_create_user(email)
+                return (user, payload)
+            except Exception as e:
+                raise exceptions.AuthenticationFailed(f"Invalid Emulator ID Token: {e}")
+
+        # Standard Production Verification
+        public_keys = get_google_public_keys()
+        if not public_keys:
+            raise exceptions.AuthenticationFailed("Google public keys unavailable.")
+
+        try:
+            header = jwt.get_unverified_header(id_token)
+            kid = header.get("kid")
+            if not kid or kid not in public_keys:
+                raise exceptions.AuthenticationFailed("Invalid kid in token header.")
+
+            cert = public_keys[kid]
+            
+            payload = jwt.decode(
+                id_token,
+                cert,
+                algorithms=["RS256"],
+                audience=project_id,
+                issuer=f"https://securetoken.google.com/{project_id}"
+            )
+        except jwt.ExpiredSignatureError:
+            raise exceptions.AuthenticationFailed("ID Token has expired.")
+        except jwt.InvalidTokenError as e:
+            raise exceptions.AuthenticationFailed(f"Invalid ID Token: {e}")
+        except Exception as e:
+            raise exceptions.AuthenticationFailed(f"Authentication failed: {e}")
+
+        email = payload.get("email")
+        if not email:
+            raise exceptions.AuthenticationFailed("Token is missing email claim.")
+
+        user = self._get_or_create_user(email)
+        return (user, payload)
+
+    def _get_or_create_user(self, email):
+        try:
+            return User.objects.get(email=email)
+        except User.DoesNotExist:
+            pass
+
+        base_username = email.split('@')[0]
+        username = base_username
+        suffix_counter = 1
+        
+        while User.objects.filter(username=username).exists():
+            username = f"{base_username}_{suffix_counter}"
+            suffix_counter += 1
+
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+        )
+        user.set_unusable_password()
+        user.save()
+        logger.info(f"Automatically created User {username} for email {email}")
+        return user
