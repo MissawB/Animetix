@@ -30,6 +30,7 @@
     "@types/howler": "^2.2.13",
     "d3-force": "^3.0.0",
     "eslint-plugin-jsx-a11y": "^6.10.2",
+    "firebase": "^12.14.0",
     "framer-motion": "^12.40.0",
     "howler": "^2.2.4",
     "i18next": "^26.2.0",

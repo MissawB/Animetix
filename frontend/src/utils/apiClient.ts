@@ -1,5 +1,6 @@
 import { useToastStore } from '../store/toastStore';
 import { usePersonalizationStore } from '../store/personalizationStore';
+import { auth } from './firebase';
 
 export const apiClient = async (url: string, options: RequestInit & { skipToast?: boolean; isFormData?: boolean } = {}) => {
   const { skipToast, isFormData, ...fetchOptions } = options;
@@ -9,6 +10,17 @@ export const apiClient = async (url: string, options: RequestInit & { skipToast?
 
   if (!isFormData) {
     defaultHeaders['Content-Type'] = 'application/json';
+  }
+
+  // Inject Firebase Auth Token if available
+  const firebaseUser = auth.currentUser;
+  if (firebaseUser) {
+    try {
+      const token = await firebaseUser.getIdToken();
+      defaultHeaders['Authorization'] = `Bearer ${token}`;
+    } catch (err) {
+      console.error('Failed to get Firebase ID Token', err);
+    }
   }
 
   // Récupération du CSRF Token
