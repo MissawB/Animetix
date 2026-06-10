@@ -205,23 +205,20 @@ class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        serializer = LoginSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response({"success": False, "errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-        
-        user = authenticate(request, **serializer.validated_data)
-        if user is not None:
-            login(request, user)
-            return Response({"success": True})
-        return Response({"success": False, "error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response(
+            {"success": False, "error": "Login is managed client-side via Google Identity Platform."},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED
+        )
 
 
 class LogoutView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        logout(request)
-        return Response({"success": True})
+        return Response(
+            {"success": False, "error": "Logout is managed client-side via Google Identity Platform."},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED
+        )
 
 
 @method_decorator(ensure_csrf_cookie, name='dispatch')
@@ -230,16 +227,10 @@ class RegisterView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        serializer = RegisterSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response({"success": False, "errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            user = User.objects.create_user(**serializer.validated_data)
-            login(request, user)
-            return Response({"success": True})
-        except Exception as e:
-            return Response({"success": False, "error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {"success": False, "error": "Registration is managed client-side via Google Identity Platform."},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED
+        )
 
 
 @method_decorator(ensure_csrf_cookie, name='dispatch')
