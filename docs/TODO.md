@@ -86,6 +86,10 @@ Ce document liste toutes les tâches techniques, architecturales et fonctionnell
 - [ ] **Documenter les Ghost Labs** : Ajouter les directives et endpoints pour les modules réactivés (Manga, Video, Spatial, Audio).
 - [ ] **Intégration MLOps** : Documenter le rôle de `StarMLOpsDomainService` et la connexion des outils Admin MLOps.
 
+#### 📄 frontend/GEMINI.md
+- [x] **Mettre à jour les mandats frontend** : Intégrer la structure FDD, le typage strict (anti-any), l'accessibilité détaillée (ARIA, tracks) et l'observabilité (Sentry/PostHog).
+- [ ] **Refactoriser les typages API** : Supprimer les déclarations manuelles de modèles API dans `src/api.ts` et `src/types/index.ts` au profit des types générés dans `src/types/api.d.ts`.
+
 ---
 
 ## 🧠 IA, Alignement & MLOps (Améliorations SOTA 2026)
