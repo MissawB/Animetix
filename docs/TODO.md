@@ -52,9 +52,14 @@ Ce document liste toutes les tâches techniques, architecturales et fonctionnell
 
 ---
 
-## 📚 Mises à jour de la documentation requises
+### 📚 Mises à jour de la documentation requises
 
-### 🏛️ Architecture (ARCHITECTURE.md)
+#### 📄 Root README.md
+- [ ] **Audit des ancres du Table des Matières** : Vérifier que toutes les ancres (ex: `#-gcp-infrastructure`) sont compatibles avec le rendu GitHub (les emojis peuvent casser les liens).
+- [ ] **Ajouter des directives de contribution** : Soit créer un `CONTRIBUTING.md`, soit ajouter une section simplifiée dans le `README.md`.
+- [ ] **Vérifier l'accessibilité des Ghost Labs** : S'assurer que les liens vers les différents Labs (Vision, Spatial, etc.) dans la documentation pointent vers des sections ou des pages existantes et fonctionnelles.
+
+#### 🏛️ Architecture (ARCHITECTURE.md)
 - [ ] Clarifier le rôle de Django dans le diagramme Hexagonal (note explicite "Port API" ou adaptateurs de pilotage).
 - [ ] Expliquer l'omission de `MlopsPort` dans le diagramme architectural principal.
 - [ ] Ajouter une brève explication sur la raison d'utilisation de Dependency-Injector.
@@ -69,14 +74,22 @@ Ce document liste toutes les tâches techniques, architecturales et fonctionnell
 - [ ] Définir explicitement "SLM" (Small Language Model).
 - [ ] Clarifier ou développer le concept de "Anime Archetype Engine".
 
-### 🗺️ Feuille de Route (ROADMAP.md)
+#### 📄 Feuille de Route (ROADMAP.md)
 - [ ] Corriger la chronologie du diagramme de Gantt (actuellement tous marqués `:done` malgré des dates futures).
 - [ ] Synchroniser les initiatives de `ROADMAP.md` avec celles listées dans `TODO.md`.
 - [ ] Ajouter une section "Prochaines Étapes" (Next Steps) pour séparer le travail fondamental d'IA terminé des futures mises à jour.
 
+#### 📄 backend/GEMINI.md
+- [ ] **Mettre à jour les standards de validation API** : Remplacer la mention de Django `Forms` par les `DRF Serializers` pour les vues critiques.
+- [ ] **Documenter les nouvelles protections IA** : Ajouter des sections sur le "Universal HITL Gate" et la protection contre le "Model Collapse".
+- [ ] **Mettre à jour la liste des services AI** : Refléter la fusion de `UncertaintyService` dans `XaiDiagnosticService`.
+- [ ] **Documenter les Ghost Labs** : Ajouter les directives et endpoints pour les modules réactivés (Manga, Video, Spatial, Audio).
+- [ ] **Intégration MLOps** : Documenter le rôle de `StarMLOpsDomainService` et la connexion des outils Admin MLOps.
+
 ---
 
 ## 🧠 IA, Alignement & MLOps (Améliorations SOTA 2026)
+
 
 ### 🚀 Modèles de Base & Alignement
 - [x] **Évaluation et Migration vers Qwen3 / DeepSeek-R1** :
@@ -96,9 +109,9 @@ Ce document liste toutes les tâches techniques, architecturales et fonctionnell
 ### 🧠 Améliorations de l'IA & MLOps Futures
 - [x] **Automatisation de la boucle de feedback DPO via Modèle Oracle (Gemini) :**
   - Mettre à jour `dpo_feedback_loop.py` pour qu'il appelle l'API Gemini afin de générer automatiquement les réponses d'expert (chosen) corrigées lors du traitement des retours utilisateurs négatifs (rejected), éliminant ainsi les placeholders. (Fait : Nouveau client Oracle Gemini intégré avec gestion de quota via pauses progressives et fallback sécurisé).
-- [ ] **Alignement du Modèle Draft pour le Décodage Spéculatif :**
-  - Modifier `continuous_pretraining.py` pour pré-entraîner et distiller le modèle de draft `SmolLM-135M` directement sur les dialogues et instructions du dataset d'entraînement expert, maximisant ainsi le taux d'acceptation des tokens et la vitesse d'inférence.
-- [ ] **Résilience du Juge RAG (LLM Judge Fallback) :**
-  - Implémenter un mécanisme de repli sémantique dans `evaluation_metrics.py` utilisant l'API distante Gemini si le moteur d'inférence local de l'application est indisponible ou saturé lors des évaluations sémantiques Ragas.
+- [x] **Alignement du Modèle Draft pour le Décodage Spéculatif :**
+  - Modifier `continuous_pretraining.py` pour pré-entraîner et distiller le modèle de draft `SmolLM-135M` directement sur les dialogues et instructions du dataset d'entraînement expert, maximisant ainsi le taux d'acceptation des tokens et la vitesse d'inférence. (Fait : Support du mode distillation ChatML avec injection de tokens spéciaux et resize d'embeddings).
+- [x] **Résilience du Juge RAG (LLM Judge Fallback) :**
+  - Implémenter un mécanisme de repli sémantique dans `evaluation_metrics.py` utilisant l'API distante Gemini si le moteur d'inférence local de l'application est indisponible ou saturé lors des évaluations sémantiques Ragas. (Fait : Fallback sémantique structuré natif via l'API Gemini et scores de secours par défaut intégrés).
 - [ ] **Support Multi-GPU et Distributed Training :**
   - Adapter `train_preference.py` et `train_expert_model.py` pour supporter nativement DeepSpeed Zero-3 ou FSDP afin de répartir efficacement la charge d'entraînement sur plusieurs GPU lors de l'utilisation de modèles 8B+.
