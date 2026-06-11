@@ -207,10 +207,21 @@ class AdvancedRAGService:
 
     def generate_advanced_answer(self, query: str, media_type: str, user_id: Optional[str] = None) -> str:
         candidates = self.hybrid_search(query, media_type, limit=20, user_id=user_id)
+        if self.colbert_adapter:
+            candidates = self.colbert_adapter.rank_documents(query, candidates)
         ranked_candidates = self.rerank_results(query, candidates, user_id=user_id)
         top_results = ranked_candidates[:5]
         context = "\n".join([f"- {r.get('title')}: {r.get('description', '')[:500]}" for r in top_results])
         
+        prompt, system_prompt = self.prompt_manager.get_prompt("advanced_rag_generate", context=context, query=query)
+        inference_res = self.llm_service.inference_engine.generate(prompt, system_prompt=system_prompt)
+        return inference_res.text
+
+    def generate_holistic_answer(self, query: str, media_type: str, category_name: str) -> str:
+        """Génère une réponse globale en utilisant un résumé de communauté Neo4j comme contexte."""
+        if not self.neo4j_manager:
+            return ""
+        context = self.neo4j_manager.get_community_summary(media_type, category_name)
         prompt, system_prompt = self.prompt_manager.get_prompt("advanced_rag_generate", context=context, query=query)
         inference_res = self.llm_service.inference_engine.generate(prompt, system_prompt=system_prompt)
         return inference_res.text

@@ -22,7 +22,7 @@ def test_chronicler_theories_integration():
         web_search=mock_web_search,
         prompt_manager=mock_prompt_mgr,
         llm_service=mock_llm,
-        workflow_manager=MagicMock(),
+        workflow_orchestrator=MagicMock(),
         neo4j_manager=mock_neo4j
     )
 
@@ -34,14 +34,23 @@ def test_chronicler_theories_integration():
     # Run the query
     query = "Quelle est la théorie sur Imu ?"
     
-    # We are testing the _handle_research which handles theory detection.
-    # The AgenticRAGService.plan_and_solve_stream calls this.
-    # We can mock RAGContext to trigger the theory logic.
+    # We are testing the theory detection logic inside ResearchProcessor.
     ctx = RAGContext(query=query, media_type="Anime")
     ctx.plan = SearchPlan(optimized_query="Imu theory", entities=["Imu"], reasoning="Test planning")
 
-    # Directly trigger _handle_research
-    gen = rag_service._handle_research(ctx)
+    # Directly trigger ResearchProcessor.process
+    from backend.core.domain.services.rag.processors.research_processor import ResearchProcessor
+    processor = ResearchProcessor(
+        planner=MagicMock(),
+        rag_service=mock_rag_service,
+        context_compressor=MagicMock(),
+        retrieval_evaluator=MagicMock(),
+        web_search=mock_web_search,
+        video_rag_service=MagicMock(),
+        scout=MagicMock(),
+        neo4j_manager=mock_neo4j
+    )
+    gen = processor.process(ctx)
     
     events = list(gen)
     

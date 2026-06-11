@@ -142,9 +142,14 @@
       "explainer_text_card1": "Ce laboratoire vous permet d'explorer des scénarios 'ce qui se passerait si' en simulant des résultats alternatifs basés sur différentes décisions ou prompts. Il quantifie le 'regret' de ne pas avoir choisi une voie optimale.",
       "explainer_text_card2": "En comprenant le regret contrefactuel, vous pouvez optimiser vos stratégies et prompts pour obtenir des résultats supérieurs dans diverses interactions IA, de la génération de contenu à la prise de décision.",
       "protocol_text": "Protocole de Simulation : Le simulateur utilise des algorithmes de Minimisation du Regret Contrefactuel (CFR) pour analyser et optimiser itérativement les arbres de décision dans des jeux à information incomplète, modélisant les interactions IA."
-    }
-  },
-  "games": {
+      },
+      "ai_debate_arena": {
+      "title": "Arène de Débat IA",
+      "subtitle": "Raisonnement Dialectique & Argumentation",
+      "explainer_title": "À propos de l'Arène de Débat IA",
+      "explainer_text_card1": "Cette arène oppose deux IA dans un débat structuré, testant leurs compétences en raisonnement dialectique et en argumentation sur un sujet donné. Observez comment elles construisent et défendent leurs arguments.",
+      "explainer_text_card2": "En analysant la dynamique du débat, vous pouvez obtenir des aperçus de la logique de l'IA, identifier les biais et comprendre les nuances des arguments générés par la machine, améliorant ainsi votre propre pensée critique."
+    },
     "akinetix": {
       "title": "Akinetix : Le Devin",
       "history": "Historique de transmission",

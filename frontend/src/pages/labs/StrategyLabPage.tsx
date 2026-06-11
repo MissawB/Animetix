@@ -21,20 +21,13 @@ import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  AreaChart,
-  Area
-} from 'recharts';
+import _Plot from 'react-plotly.js';
+import { useTranslation } from 'react-i18next';
+
+const Plot = (_Plot as any).default || _Plot;
 
 const StrategyLabPage: React.FC = () => {
+  const { t } = useTranslation();
   const [iterations, setIterations] = useState(100);
   const [result, setResult] = useState<any>(null);
 
@@ -53,29 +46,41 @@ const StrategyLabPage: React.FC = () => {
     mutation.mutate({ iterations });
   };
 
-  const getChartData = () => {
-    if (!result) return [];
-    return result.history.map((step: any) => ({
-      name: step.iteration,
-      ...step.avg_strategy.reduce((acc: any, val: number, idx: number) => {
-        acc[result.questions[idx]] = val;
-        return acc;
-      }, {})
-    }));
+  const getStrategyPlotData = () => {
+      if (!result) return [];
+      const traces = [];
+      const iterations = result.history.map((step: any) => step.iteration);
+
+      result.questions.forEach((q: string, idx: number) => {
+          traces.push({
+              x: iterations,
+              y: result.history.map((step: any) => step.avg_strategy[idx]),
+              name: q,
+              type: 'scatter',
+              mode: 'lines',
+              line: { width: 3 }
+          });
+      });
+      return traces;
   };
 
-  const getRegretData = () => {
-    if (!result) return [];
-    return result.history.map((step: any) => ({
-      name: step.iteration,
-      ...step.regrets.reduce((acc: any, val: number, idx: number) => {
-        acc[result.questions[idx]] = val;
-        return acc;
-      }, {})
-    }));
-  };
+  const getRegretPlotData = () => {
+      if (!result) return [];
+      const traces = [];
+      const iterations = result.history.map((step: any) => step.iteration);
 
-  const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+      result.questions.forEach((q: string, idx: number) => {
+          traces.push({
+              x: iterations,
+              y: result.history.map((step: any) => step.regrets[idx]),
+              name: q,
+              type: 'scatter',
+              mode: 'lines',
+              fill: 'tozeroy'
+          });
+      });
+      return traces;
+  };
 
   return (
     <AnimatedPage>
@@ -194,30 +199,32 @@ const StrategyLabPage: React.FC = () => {
                                     <h2 className="text-2xl font-black italic manga-font uppercase tracking-tighter">Convergence de <span className="text-red-500">Nash</span></h2>
                                     <Badge variant="neutral" className="bg-white/5 border-none text-[8px] uppercase tracking-widest">PROBABILITÉ D'ACTION</Badge>
                                 </div>
-                                <Card padding="lg" className="bg-black border-white/5 h-[400px]">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <LineChart data={getChartData()}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
-                                            <XAxis dataKey="name" stroke="#ffffff30" fontSize={10} label={{ value: 'Itérations', position: 'insideBottom', offset: -5, fill: '#ffffff30' }} />
-                                            <YAxis stroke="#ffffff30" fontSize={10} domain={[0, 1]} />
-                                            <Tooltip 
-                                                contentStyle={{ backgroundColor: '#0a0a12', border: '1px solid #ffffff10', borderRadius: '12px' }}
-                                                itemStyle={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }}
-                                            />
-                                            <Legend wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', paddingTop: '20px' }} />
-                                            {result.questions.map((q: string, i: number) => (
-                                                <Line 
-                                                    key={q} 
-                                                    type="monotone" 
-                                                    dataKey={q} 
-                                                    stroke={colors[i % colors.length]} 
-                                                    strokeWidth={3}
-                                                    dot={false}
-                                                    animationDuration={1500}
-                                                />
-                                            ))}
-                                        </LineChart>
-                                    </ResponsiveContainer>
+                                <Card padding="lg" className="bg-black border-white/5 min-h-[400px]">
+                                    <Plot
+                                        data={getStrategyPlotData() as any}
+                                        layout={{
+                                            autosize: true,
+                                            height: 400,
+                                            paper_bgcolor: 'rgba(0,0,0,0)',
+                                            plot_bgcolor: 'rgba(0,0,0,0)',
+                                            margin: { l: 40, r: 20, b: 40, t: 10 },
+                                            showlegend: true,
+                                            legend: { font: { color: '#64748b', size: 10 }, orientation: 'h', y: -0.2 },
+                                            xaxis: {
+                                                title: 'Itérations',
+                                                gridcolor: 'rgba(255,255,255,0.05)',
+                                                tickfont: { color: '#475569', size: 10 },
+                                            },
+                                            yaxis: {
+                                                title: 'Probabilité',
+                                                gridcolor: 'rgba(255,255,255,0.05)',
+                                                tickfont: { color: '#475569', size: 10 },
+                                                range: [0, 1]
+                                            }
+                                        }}
+                                        config={{ responsive: true, displayModeBar: false }}
+                                        style={{ width: '100%', height: '100%' }}
+                                    />
                                 </Card>
                             </section>
 
@@ -227,35 +234,30 @@ const StrategyLabPage: React.FC = () => {
                                     <h2 className="text-2xl font-black italic manga-font uppercase tracking-tighter text-blue-500">Regret <span className="text-white/20">Matching</span></h2>
                                     <Badge variant="neutral" className="bg-blue-500/10 text-blue-500 border-none text-[8px] uppercase tracking-widest">ÉVOLUTION DU REGRET</Badge>
                                 </div>
-                                <Card padding="lg" className="bg-black border-white/5 h-[300px]">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <AreaChart data={getRegretData()}>
-                                            <defs>
-                                                {result.questions.map((q: string, i: number) => (
-                                                    <linearGradient key={`grad-${i}`} id={`color-${i}`} x1="0" y1="0" x2="0" y2="1">
-                                                        <stop offset="5%" stopColor={colors[i % colors.length]} stopOpacity={0.3}/>
-                                                        <stop offset="95%" stopColor={colors[i % colors.length]} stopOpacity={0}/>
-                                                    </linearGradient>
-                                                ))}
-                                            </defs>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
-                                            <XAxis dataKey="name" hide />
-                                            <YAxis stroke="#ffffff30" fontSize={10} />
-                                            <Tooltip 
-                                                contentStyle={{ backgroundColor: '#0a0a12', border: '1px solid #ffffff10', borderRadius: '12px' }}
-                                            />
-                                            {result.questions.map((q: string, i: number) => (
-                                                <Area 
-                                                    key={q} 
-                                                    type="monotone" 
-                                                    dataKey={q} 
-                                                    stroke={colors[i % colors.length]} 
-                                                    fillOpacity={1} 
-                                                    fill={`url(#color-${i})`} 
-                                                />
-                                            ))}
-                                        </AreaChart>
-                                    </ResponsiveContainer>
+                                <Card padding="lg" className="bg-black border-white/5 min-h-[300px]">
+                                    <Plot
+                                        data={getRegretPlotData() as any}
+                                        layout={{
+                                            autosize: true,
+                                            height: 300,
+                                            paper_bgcolor: 'rgba(0,0,0,0)',
+                                            plot_bgcolor: 'rgba(0,0,0,0)',
+                                            margin: { l: 40, r: 20, b: 40, t: 10 },
+                                            showlegend: false,
+                                            xaxis: {
+                                                title: 'Itérations',
+                                                gridcolor: 'rgba(255,255,255,0.05)',
+                                                tickfont: { color: '#475569', size: 10 },
+                                            },
+                                            yaxis: {
+                                                title: 'Regret',
+                                                gridcolor: 'rgba(255,255,255,0.05)',
+                                                tickfont: { color: '#475569', size: 10 },
+                                            }
+                                        }}
+                                        config={{ responsive: true, displayModeBar: false }}
+                                        style={{ width: '100%', height: '100%' }}
+                                    />
                                 </Card>
                             </section>
 

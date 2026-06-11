@@ -26,7 +26,14 @@ def test_voice_cloning_api_endpoint():
         mock_get_container.return_value = mock_container
         
         # Create a dummy audio file
-        audio_file = io.BytesIO(b"fake_reference_audio")
+        size_bytes = 100
+        header = (
+            b'RIFF' + 
+            (size_bytes + 36).to_bytes(4, 'little') + 
+            b'WAVEfmt \x10\x00\x00\x00\x01\x00\x01\x00\x22\x56\x00\x00\x44\xac\x00\x00\x02\x00\x10\x00data' + 
+            size_bytes.to_bytes(4, 'little')
+        )
+        audio_file = io.BytesIO(header + b'\x00' * size_bytes)
         audio_file.name = 'test.wav'
         
         # Sending as multipart to include the file

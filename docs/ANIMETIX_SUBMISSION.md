@@ -19,7 +19,7 @@ We built **Animetix** to solve this. Our inspiration was to construct a cognitiv
 Animetix is an intelligent ecosystem composed of two primary engines: a **Cognitive Discovery Engine** and an **AI-Driven Game Suite**.
 
 ### 1. Intelligent RAG 2.0 Discovery
-* **Hybrid Cognitive Memory:** Integrates **ChromaDB** for vector semantic indexing (HNSW search over plot outlines and tropes) and **Neo4j** for complex relationship traversals (interconnecting studios, creators, characters, and adaptations.)
+*   **Hybrid Cognitive Memory:** Integrates **ChromaDB** for vector semantic indexing (HNSW search over plot outlines and tropes) and **Neo4j** for complex relationship traversals (interconnecting studios, creators, characters, and adaptations.) 
 * **Multi-Scale Search (MRL):** Employs **Matryoshka Representation Learning** (using Jina-v3) to run lightning-fast rough filters on the first 128 dimensions, then zooming into the full 1024-dimensional space for exact matches.
 * **Cross-Encoder Reranking:** Leverages a **BGE-Reranker** to analyze query-context pairs jointly, calculating an absolute relevance score to ensure high precision and combat hallucination.
 
@@ -113,7 +113,7 @@ The platform leverages a cutting-edge stack spanning front-end rendering engines
 * **React Router DOM (7)**: Client-side URL routing.
 * **React Force Graph 2D & d3-force**: Renders an interactive 2D visualization of the Neo4j knowledge graph.
 * **Plotly.js & React-Plotly.js**: Interactive chart builders for ML diagnostic uncertainty analysis (per-layer logits, attention entropy).
-* **Howler.js**: Powers real-time high-fidelity game audio and dynamic soundscapes.
+*   **Howler.js**: Powers real-time, high-fidelity game audio, and dynamic soundscapes.
 
 ### 4. Databases, Vector Stores, & Cache
 * **ChromaDB (1.5)**: HNSW vector search database acting as semantic memory.
@@ -129,7 +129,7 @@ The platform leverages a cutting-edge stack spanning front-end rendering engines
 * **Coqui-TTS (0.27) & XTTS v2**: High-quality Zero-Shot voice cloning (RVC).
 * **Kyutai Moshi (moshi)**: High-performance Speech-to-Speech (S2S) low-latency local execution.
 * **MangaOCR (0.1) & TrOCR**: OCR character-segmentation parsing for manga dialogue bubbles.
-* **Sentence-Transformers (3.3)**: Generates high-dimension sémantiques embeddings (Matryoshka Jina-v3, CLIP).
+*   **Sentence-Transformers (3.3)**: Generates high-dimension semantic embeddings (Matryoshka Jina-v3, CLIP).
 * **Ragas (0.4)**: Automated RAG metrics scoring framework (Faithfulness, Relevancy) acting as an LLM-as-a-judge.
 * **Z3-Solver (4.16)**: High-performance formal logic theorem prover solving thematic contradictions in Paradox Quest.
 * **Instructor (1.15) & Pydantic (2.12)**: Enforces structural Pydantic validation on model responses.
@@ -155,3 +155,17 @@ The platform leverages a cutting-edge stack spanning front-end rendering engines
 * **Vitest & JSDOM**: Lightweight frontend component unit tests.
 * **Storybook (10)**: Dynamic UI component cataloging with built-in accessibility (a11y) auditing.
 
+---
+
+## Dependency Discrepancies (Requires Further Investigation)
+
+This section highlights dependencies observed in the project that are not explicitly listed or detailed in the `Technology Stack & Detailed Dependencies` section above. These require further investigation to ensure accuracy and completeness of the documentation.
+
+### Python Dependencies:
+*   ChromaDB
+*   Ollama
+*   LangChain
+*   LangGraph
+
+### JavaScript Dependencies:
+*   XState

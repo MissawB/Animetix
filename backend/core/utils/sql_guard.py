@@ -1,89 +1,95 @@
-import re
 import logging
-from typing import List
+from sqlglot import parse, exp, ParseError # Changed parse_one to parse
 
 logger = logging.getLogger("animetix.sql_guard")
 
-def get_all_db_tables() -> List[str]:
-    """
-    Récupère dynamiquement la liste de toutes les tables de la base de données Django.
-    Fournit un fallback statique complet si Django n'est pas initialisé.
-    """
-    try:
-        from django.apps import apps
-        if not apps.ready:
-            import django
-            django.setup()
-        return [model._meta.db_table.lower() for model in apps.get_models()]
-    except Exception as e:
-        logger.warning(f"Impossible de récupérer dynamiquement les modèles Django: {e}")
-        # Fallback statique complet basé sur le schéma d'Animetix
-        return [
-            "auth_user", "auth_group", "django_session", "django_migrations", "django_content_type",
-            "animetix_profile", "animetix_friendship", "animetix_globalboss", "animetix_bossparticipation",
-            "animetix_duelroom", "animetix_dailychallenge", "animetix_challengeresult", "animetix_achievement",
-            "animetix_userachievement", "animetix_aifeedback", "animetix_gameplaysession", "animetix_airevalresult",
-            "animetix_golddatasetentry", "animetix_aisafetyevent", "animetix_semanticcache", "animetix_datacurationticket",
-            "animetix_aitokenusage", "animetix_latentspacepoint", "animetix_creativefusion", "animetix_vsbattle",
-            "animetix_notification", "animetix_discoveryclub", "animetix_clubmembership", "animetix_archetypedriftsnapshot",
-            "animetix_clubevent", "animetix_vectorrecord", "animetix_userrecommendation", "animetix_supportticket"
-        ]
-
 def validate_sql_query(sql: str) -> bool:
     """
-    Vérifie la sécurité d'une requête SQL générée par IA.
-    Retourne True si et seulement si la requête est un SELECT inoffensif cibrant uniquement animetix_mediaitem.
+    Vérifie la sécurité d'une requête SQL générée par IA en utilisant un parseur SQL robuste.
+    Retourne True si et seulement si la requête est un SELECT inoffensif ciblant uniquement animetix_mediaitem.
     """
     if not sql or not isinstance(sql, str):
         return False
         
     sql_clean = sql.strip()
-    
-    # 1. Commencer impérativement par SELECT
-    if not sql_clean.upper().startswith("SELECT"):
-        logger.warning(f"SQL Guardrail: La requête ne commence pas par SELECT: {sql_clean[:200]}")
-        return False
-        
-    # 2. Interdire les commentaires SQL (potentiels masquages de logique malveillante)
+
+    # Re-introduce check for SQL comments to prevent comment-based injection
     if "--" in sql_clean or "/*" in sql_clean:
-        logger.warning("SQL Guardrail: Commentaires SQL interdits détectés")
+        logger.warning("SQL Guardrail: SQL comments detected, which are forbidden.")
         return False
+
+    try:
+        # Parse the SQL query with PostgreSQL dialect
+        # Use sqlglot.parse to get a list of expressions
+        parsed_statements = parse(sql_clean, read="postgres")
+
+        # Ensure only one statement is present
+        if len(parsed_statements) != 1:
+            logger.warning(f"SQL Guardrail: Multiple statements detected in query: {sql_clean[:200]}")
+            return False
+
+        parsed_sql = parsed_statements[0]
+        print(f"DEBUG: Parsed SQL for invalid syntax: {parsed_sql.dump()}")
+
+        # 1. Ensure it's a SELECT statement
+        if not isinstance(parsed_sql, exp.Select):
+            logger.warning(f"SQL Guardrail: Query is not a SELECT statement: {sql_clean[:200]}")
+            return False
+
+        # 2. Check for forbidden operations (INSERT, UPDATE, DELETE, DROP, ALTER, CREATE, etc.)
+        forbidden_expressions = (
+            exp.Insert, exp.Update, exp.Delete, exp.Drop, exp.AlterTable, exp.Create,
+            exp.Merge, exp.Show, exp.Set,
+            exp.Copy, exp.Command
+        )
+        for node in parsed_sql.walk(): # Traverse the AST
+            if isinstance(node, forbidden_expressions):
+                logger.warning(f"SQL Guardrail: Forbidden operation '{node.key}' detected in query: {sql_clean[:200]}")
+                return False
+            # Prevent UNION as it can be used for injection (e.g., UNION SELECT sensitive_data)
+            if isinstance(node, exp.Union):
+                logger.warning(f"SQL Guardrail: UNION detected in query, which is forbidden: {sql_clean[:200]}")
+                return False
+
+        # 2.1. Function Whitelisting: Allow only safe aggregate functions
+        allowed_functions = {"count", "sum", "avg", "min", "max"} # Lowercased for comparison
+        for func_exp in parsed_sql.find_all(exp.Func):
+            func_name = func_exp.name.lower()
+
+            # Allow COUNT(*) specifically when it's exp.Count with exp.Star as its argument
+            if isinstance(func_exp, exp.Count) and func_exp.this and isinstance(func_exp.this, exp.Star):
+                continue
+
+            if func_name not in allowed_functions:
+                logger.warning(f"SQL Guardrail: Forbidden function '{func_name}' detected in query: {sql_clean[:200]}")
+                return False
+            
+        # 3. Table Whitelisting: Ensure only 'animetix_mediaitem' table is accessed
+        allowed_table = "animetix_mediaitem"
+        found_tables = set()
+        for table_exp in parsed_sql.find_all(exp.Table):
+            table_name = table_exp.name.lower() # Normalize to lower case for comparison
+            found_tables.add(table_name)
         
-    # 3. Interdire les requêtes multiples via point-virgule (sauf point-virgule final)
-    sql_no_semicolon = sql_clean
-    if sql_clean.endswith(";"):
-        sql_no_semicolon = sql_clean[:-1].strip()
-        
-    if ";" in sql_no_semicolon:
-        logger.warning("SQL Guardrail: Plusieurs requêtes chaînées via point-virgule détectées")
-        return False
-        
-    # 4. Liste noire de mots-clés d'écriture ou d'administration
-    forbidden_keywords = [
-        "INSERT", "UPDATE", "DELETE", "DROP", "TRUNCATE", "ALTER", "CREATE", 
-        "REPLACE", "GRANT", "REVOKE", "MERGE", "EXEC", "EXECUTE", "UNION",
-        "COPY", "VACUUM", "ANALYZE"
-    ]
-    for keyword in forbidden_keywords:
-        pattern = re.compile(rf"\b{keyword}\b", re.IGNORECASE)
-        if pattern.search(sql_clean):
-            logger.warning(f"SQL Guardrail: Mot-clé interdit '{keyword}' détecté")
+        if not found_tables:
+            logger.warning(f"SQL Guardrail: No tables found in SELECT query: {sql_clean[:200]}")
+            return False
+
+        if len(found_tables) > 1 or (len(found_tables) == 1 and allowed_table not in found_tables):
+            logger.warning(f"SQL Guardrail: Query accesses forbidden tables: {found_tables}. Only '{allowed_table}' is allowed. Query: {sql_clean[:200]}")
             return False
             
-    # 5. Doit impérativement cibler la table autorisée
-    allowed_table = "animetix_mediaitem"
-    if not re.search(rf"\b{allowed_table}\b", sql_clean, re.IGNORECASE):
-        logger.warning(f"SQL Guardrail: La requête ne cible pas la table autorisée '{allowed_table}'")
-        return False
-        
-    # 6. Interdire de cibler d'autres tables de l'application
-    all_tables = get_all_db_tables()
-    forbidden_tables = [t for t in all_tables if t != allowed_table]
-    
-    for f_table in forbidden_tables:
-        pattern = re.compile(rf"\b{f_table}\b", re.IGNORECASE)
-        if pattern.search(sql_clean):
-            logger.warning(f"SQL Guardrail: Requête cibrant une table interdite '{f_table}'")
+        # Ensure that the only table found is the allowed_table
+        if found_tables and list(found_tables)[0] != allowed_table:
+            logger.warning(f"SQL Guardrail: Query accesses forbidden tables: {found_tables}. Only '{allowed_table}' is allowed. Query: {sql_clean[:200]}")
             return False
-            
-    return True
+
+        # All checks passed
+        return True
+
+    except ParseError as e:
+        logger.warning(f"SQL Guardrail: SQL parsing error (malformed or disallowed syntax): {e} in query: {sql_clean[:200]}")
+        return False
+    except Exception as e:
+        logger.error(f"SQL Guardrail: An unexpected error occurred during SQL validation: {e} in query: {sql_clean[:200]}")
+        return False

@@ -10,7 +10,7 @@ def mock_dependencies():
         'web_search': MagicMock(),
         'prompt_manager': MagicMock(),
         'neo4j_manager': MagicMock(),
-        'workflow_manager': MagicMock()
+        'workflow_orchestrator': MagicMock()
     }
 
 def test_agentic_rag_triggers_thinking_mode_on_complex_query(mock_dependencies):

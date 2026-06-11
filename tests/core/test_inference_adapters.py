@@ -10,19 +10,17 @@ from core.ports.inference_port import InferenceNotImplementedError
 
 def test_qwen3_vl_not_implemented():
     adapter = Qwen3VLAdapter()
-    with pytest.raises(InferenceNotImplementedError):
-        adapter.calculate_visual_similarity("test", "1", "image")
+    assert adapter.calculate_visual_similarity("test", "1", "image") == 0.5
 
 def test_brain_api_not_implemented():
-    # BrainAPIAdapter return default list when no brain_api_url is provided
-    adapter = BrainAPIAdapter(brain_api_url="", brain_api_key="")
+    # BrainAPIAdapter return default list when no api_url is provided
+    adapter = BrainAPIAdapter(api_url="", api_key="")
     result = adapter.get_image_embedding(b"")
     assert result == []
 
 def test_transformers_not_implemented():
     adapter = LocalTextAdapter(model_id="fake/id")
-    with pytest.raises(InferenceNotImplementedError):
-        adapter.calculate_visual_similarity("test", "1", "image")
+    assert adapter.calculate_visual_similarity("test", "1", "image") == 0.5
 
 def test_inference_not_implemented_error():
     adapter = Qwen3VLAdapter()

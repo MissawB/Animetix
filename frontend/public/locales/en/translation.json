@@ -143,6 +143,14 @@
       "explainer_text_card2": "By understanding counterfactual regret, you can optimize your strategies and prompts to achieve superior results in various AI interactions, from content generation to decision-making.",
       "protocol_text": "Simulation Protocol: The simulator employs Counterfactual Regret Minimization (CFR) algorithms to iteratively analyze and optimize decision trees in incomplete information games, modeling AI interactions.",
       "initial_context": "The user asked who is stronger between Goku and Saitama."
+    },
+    "ai_debate_arena": {
+      "title": "AI Debate Arena",
+      "subtitle": "Dialectic Reasoning & Argumentation",
+      "explainer_title": "About the AI Debate Arena",
+      "explainer_text_card1": "This arena pits two AIs against each other in a structured debate, testing their dialectic reasoning and argumentation skills on a given topic. Observe how they construct and defend their arguments.",
+      "explainer_text_card2": "By analyzing the debate dynamics, you can gain insights into AI logic, identify biases, and understand the nuances of machine-generated arguments, improving your own critical thinking.",
+      "protocol_text": "Debate Protocol: Two specialized LLMs engage in a multi-turn dialogue, generating arguments, counter-arguments, and rebuttals, with a third LLM acting as moderator and scoring agent."
     }
   },
   "games": {

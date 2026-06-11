@@ -20,11 +20,13 @@ import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next'; // Import useTranslation
 
 const AIDebateArenaPage: React.FC = () => {
   const [mediaTitle, setMediaTitle] = useState('');
   const [topic, setTopic] = useState('');
   const [debateResult, setDebateResult] = useState<any>(null);
+  const { t } = useTranslation(); // Initialize useTranslation
 
   const mutation = useMutation({
     mutationFn: (data: { media_title: string; topic: string }) => 
@@ -232,11 +234,33 @@ const AIDebateArenaPage: React.FC = () => {
                 <p className="text-[10px] font-bold opacity-30 uppercase leading-relaxed">L'équilibre de Nash est recherché entre les arguments pour garantir une synthèse finale la plus juste possible.</p>
             </Card>
         </div>
+        {/* Explanation Cards Section */}
+        <div className="mt-24 grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Card padding="lg" className="bg-black/40 border-red-500/20 shadow-[0_0_50px_rgba(239,68,68,0.1)] relative overflow-hidden group">
+                <div className="absolute -right-12 -bottom-12 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <Swords className="w-64 h-64 text-red-500" />
+                </div>
+                <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3 text-red-400">
+                    <Swords className="w-5 h-5" /> {t('labs.ai_debate_arena.explainer_title')}
+                </h4>
+                <div className="space-y-4 relative z-10">
+                    <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
+                        {t('labs.ai_debate_arena.explainer_text_card1')}
+                    </p>
+                    <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
+                        {t('labs.ai_debate_arena.explainer_text_card2')}
+                    </p>
+                </div>
+            </Card>
+            <div className="p-12 rounded-[4rem] bg-gradient-to-br from-red-600/10 to-transparent border border-white/5 flex flex-col justify-center text-center">
+                <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30 italic leading-relaxed text-red-200/40">
+                    {t('labs.ai_debate_arena.subtitle')}
+                </p>
+            </div>
+        </div>
       </div>
     </AnimatedPage>
   );
 };
 
 export default AIDebateArenaPage;
-
-

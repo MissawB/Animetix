@@ -48,7 +48,7 @@ def agentic_rag(mock_inference, mock_rag_service, mock_web_search, mock_prompt_m
         web_search=mock_web_search,
         prompt_manager=mock_prompt_manager,
         llm_service=mock_llm_service,
-        workflow_manager=MagicMock(),
+        workflow_orchestrator=MagicMock(),
         neo4j_manager=mock_neo4j
     )
     # Force high confidence to skip recovery and librarian
@@ -71,8 +71,8 @@ def test_graph_exploration_flow(agentic_rag, mock_llm_service, mock_neo4j):
     agentic_rag.semantic_router = MagicMock()
     agentic_rag.semantic_router.classify.return_value = "COMPLEX"
 
-    agentic_rag.workflow_manager.community_partitioner = MagicMock()
-    agentic_rag.workflow_manager.community_partitioner.search_communities.return_value = [
+    agentic_rag.orchestrator.community_partitioner = MagicMock()
+    agentic_rag.orchestrator.community_partitioner.search_communities.return_value = [
         {"name": "MOCK", "summary": "MOCK SUMMARY", "entities": ["Mamoru"]}
     ]
 

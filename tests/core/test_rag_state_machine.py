@@ -113,7 +113,20 @@ def test_research_more_loop_integration(mock_deps):
         print(e)
     print("--- STATE LOGS ---")
     
-    state_logs = [e.content for e in events if e.type == 'thought']
+    state_logs = []
+    for e in events:
+        if isinstance(e, dict):
+            content = e.get("content", "")
+            if "Etat:" in content or "État:" in content:
+                continue
+            if e.get("type") == "thought":
+                state_logs.append(content)
+        else:
+            content = getattr(e, "content", "")
+            if "Etat:" in content or "État:" in content:
+                continue
+            if getattr(e, "type", None) == "thought":
+                state_logs.append(content)
     
     assert RAGState.PLAN.name in state_logs[0]
     assert RAGState.RESEARCH.name in state_logs[1]
@@ -148,7 +161,21 @@ def test_rewrite_loop(mock_deps):
     mock_deps['workflow_orchestrator'].processors[RAGState.JUDGE].process.side_effect = judge_process_side_effect
 
     events = list(service.plan_and_solve_stream("query", "Anime"))
-    state_logs = [e.content for e in events if e.type == 'thought']
+    
+    state_logs = []
+    for e in events:
+        if isinstance(e, dict):
+            content = e.get("content", "")
+            if "Etat:" in content or "État:" in content:
+                continue
+            if e.get("type") == "thought":
+                state_logs.append(content)
+        else:
+            content = getattr(e, "content", "")
+            if "Etat:" in content or "État:" in content:
+                continue
+            if getattr(e, "type", None) == "thought":
+                state_logs.append(content)
     
     assert RAGState.PLAN.name in state_logs[0]
     assert RAGState.RESEARCH.name in state_logs[1]

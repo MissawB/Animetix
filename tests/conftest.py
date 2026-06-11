@@ -1,5 +1,15 @@
 import sys
 import os
+import asyncio
+
+os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
+
+if sys.platform == 'win32':
+    try:
+        asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+    except Exception:
+        pass
+
 from importlib.abc import MetaPathFinder, Loader
 import importlib
 from importlib.machinery import ModuleSpec

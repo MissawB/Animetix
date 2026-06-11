@@ -1,5 +1,6 @@
 from backend.core.domain.services.rag.processors.base import StateProcessor
-from backend.core.domain.entities.ai_schemas import RAGContext, RAGState
+from backend.core.domain.entities.ai_schemas import RAGContext, RAGState, StreamStep
+from typing import Generator
 from backend.core.domain.exceptions import InfrastructureError, InferenceError
 import logging
 import time
@@ -18,12 +19,15 @@ class ResearchProcessor(StateProcessor):
         self.neo4j_manager = neo4j_manager
         self.xai_collector = xai_collector
 
-    def process(self, ctx: RAGContext) -> RAGState:
+    def process(self, ctx: RAGContext) -> Generator[dict, None, RAGState]:
         if not ctx.plan:
             return RAGState.PLAN
 
+        yield StreamStep(type="thought", content=f"[Searcher] Exécution recherche ({'Web' if ctx.plan.requires_web else 'Local'})...").model_dump()
+
         # Logic from _handle_research
         if "théorie" in ctx.query.lower() or "theory" in ctx.query.lower() or "vrai que" in ctx.query.lower():
+            yield StreamStep(type="thought", content="[Chronicler] Vérification des théories de fans dans la base...").model_dump()
             logger.info("🔎 [Chronicler] Theory intent detected. Searching FanTheories...")
             
             cypher = """
@@ -57,11 +61,39 @@ class ResearchProcessor(StateProcessor):
 
         logger.info(f"[Searcher] Exécution recherche ({'Web' if ctx.plan.requires_web else 'Local'})...")
         
-        # Need to call _execute_search logic here or call a service?
-        # The logic is in RAGWorkflowManager._execute_search, which is a private method.
-        # I should probably have moved _execute_search into RAGService or similar.
-        # Since I'm creating processors for RAGWorkflowManager, I might have to replicate or refactor.
-        # I'll just use the logic in RAGWorkflowManager for now or refactor it.
-        # Actually I can just move _execute_search to RAGService.
+        raw_results = []
+        if ctx.plan.requires_web:
+            if self.web_search:
+                raw_results = self.web_search.search(ctx.plan.optimized_query or ctx.query)
+            candidates = []
+            raw_text_parts = []
+            for r in raw_results:
+                snippet = r.get("snippet", r.get("content", ""))
+                candidates.append({
+                    "title": r.get("title", "Sans titre"),
+                    "description": snippet,
+                    "image_url": r.get("image_url") or r.get("url")
+                })
+                raw_text_parts.append(f"Title: {r.get('title')}\nSnippet: {snippet}")
+            raw_context = "\n\n".join(raw_text_parts)
+        else:
+            raw_results = self.rag_service.hybrid_search(ctx.plan.optimized_query or ctx.query, ctx.media_type)
+            candidates = raw_results
+            raw_text_parts = []
+            for r in raw_results:
+                desc = r.get("description", "")
+                raw_text_parts.append(f"Title: {r.get('title')}\nDescription: {desc}")
+            raw_context = "\n\n".join(raw_text_parts)
+
+        ctx.candidates = candidates
+
+        if self.xai_collector and candidates:
+            self.xai_collector.log_retrieval(candidates)
+
+        distilled = self.scout.find_truth_path(ctx.query, ctx.plan, raw_context)
+        if ctx.truth_path:
+            ctx.truth_path += f"\n\n### CONTEXTE PRINCIPAL ###\n{distilled}"
+        else:
+            ctx.truth_path = f"### CONTEXTE PRINCIPAL ###\n{distilled}"
         
         return RAGState.SYNTHESIZE if not ctx.plan.is_visual_query else RAGState.VLM_RERANK

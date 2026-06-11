@@ -2,6 +2,8 @@ import pytest
 from unittest.mock import MagicMock
 from core.domain.services.llm_service import LLMService
 
+from core.domain.entities.ai_schemas import InferenceResponse
+
 @pytest.fixture
 def mock_engine():
     return MagicMock()
@@ -21,7 +23,7 @@ def test_explain_relationship(llm_service, mock_engine, mock_prompt_manager):
         "Explique de manière concise pourquoi 'Naruto' et 'Ninja' sont liés par la relation 'HAS_THEME'.",
         "System prompt"
     )
-    mock_engine.generate.return_value = "Parce que Naruto est un ninja."
+    mock_engine.generate.return_value = InferenceResponse(text="Parce que Naruto est un ninja.")
 
     result = llm_service.explain_relationship("Naruto", "Ninja", "HAS_THEME")
 
@@ -38,5 +40,6 @@ def test_explain_relationship(llm_service, mock_engine, mock_prompt_manager):
         "Explique de manière concise pourquoi 'Naruto' et 'Ninja' sont liés par la relation 'HAS_THEME'.",
         "System prompt",
         thinking_budget=0,
-        thinking_mode=False
+        thinking_mode=False,
+        include_logprobs=True
     )

@@ -58,7 +58,7 @@ def test_librarian_loop_integration(mock_dependencies):
         web_search=web_search,
         prompt_manager=prompt_manager,
         llm_service=MagicMock(),
-        workflow_manager=MagicMock(),
+        workflow_orchestrator=MagicMock(),
         uncertainty_service=uncertainty_service,
         librarian=librarian,
         debate_manager=debate_manager
@@ -79,6 +79,7 @@ def test_librarian_loop_integration(mock_dependencies):
         
         # Verification
         thoughts = [e['content'] for e in events if e['type'] == 'thought']
+        print("DEBUG THOUGHTS:", thoughts)
         
         # 1. Assert that ACQUIRE_KNOWLEDGE was reached
         assert any("[Librarian] Recherche active sur JIKAN : Naruto Ep 5" in t for t in thoughts)

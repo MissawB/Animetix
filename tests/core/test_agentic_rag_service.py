@@ -38,7 +38,7 @@ def agentic_rag(mock_engine, mock_rag, mock_web, mock_prompt_manager):
         web_search=mock_web, 
         prompt_manager=mock_prompt_manager, 
         llm_service=MagicMock(),
-        workflow_manager=MagicMock(),
+        workflow_orchestrator=MagicMock(),
         uncertainty_service=mock_xai
     )
 

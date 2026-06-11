@@ -10,15 +10,15 @@ def mock_dependencies():
     web_search = MagicMock()
     prompt_manager = MagicMock()
     llm_service = MagicMock()
-    workflow_manager = MagicMock()
+    workflow_orchestrator = MagicMock()
     
     # Default prompt manager returns
     prompt_manager.get_prompt.return_value = ("prompt", "system")
     
-    return inference_engine, rag_service, web_search, prompt_manager, llm_service, workflow_manager
+    return inference_engine, rag_service, web_search, prompt_manager, llm_service, workflow_orchestrator
 
 def test_vlm_reranking_end_to_end(mock_dependencies):
-    inference_engine, rag_service, web_search, prompt_manager, llm_service, workflow_manager = mock_dependencies
+    inference_engine, rag_service, web_search, prompt_manager, llm_service, workflow_orchestrator = mock_dependencies
     
     agentic_rag = AgenticRAGService(
         inference_engine=inference_engine,
@@ -26,7 +26,7 @@ def test_vlm_reranking_end_to_end(mock_dependencies):
         web_search=web_search,
         prompt_manager=prompt_manager,
         llm_service=llm_service,
-        workflow_manager=workflow_manager
+        workflow_orchestrator=workflow_orchestrator
     )
 
     # Force high confidence to skip fallback and librarian

@@ -1,6 +1,6 @@
 from backend.core.domain.services.rag.processors.base import StateProcessor
 from backend.core.domain.entities.ai_schemas import RAGContext, RAGState, StreamStep
-from typing import Optional
+from typing import Optional, Generator
 import logging
 
 logger = logging.getLogger('animetix.rag_workflow')
@@ -10,7 +10,8 @@ class AcquireKnowledgeProcessor(StateProcessor):
         self.librarian = librarian
         self.xai_collector = xai_collector
 
-    def process(self, ctx: RAGContext) -> RAGState:
+    def process(self, ctx: RAGContext) -> Generator[dict, None, RAGState]:
+        yield StreamStep(type="thought", content="[Librarian] Identification des lacunes de connaissances...").model_dump()
         # Based on RAGWorkflowManager._handle_acquire_knowledge
         # Note: The original method yielded StreamStep. 
         # The StateProcessor interface only returns RAGState.
@@ -27,8 +28,8 @@ class AcquireKnowledgeProcessor(StateProcessor):
         gap = self.librarian.identify_gap(ctx.query, ctx.truth_path)
         
         if gap and gap.get("query"):
-            if self.xai_collector:
-                self.xai_collector.log_agent_thought("LibrarianAgent", f"Lacune de connaissance identifiée : {gap.get('query')}")
+            source_type = gap.get("source_type", "").upper()
+            yield StreamStep(type="thought", content=f"[Librarian] Recherche active sur {source_type} : {gap.get('query')}").model_dump()
             fresh_data = self.librarian.fetch_data(gap)
             
             if fresh_data:
@@ -36,6 +37,7 @@ class AcquireKnowledgeProcessor(StateProcessor):
                 ctx.knowledge_acquired = True
                 return RAGState.SYNTHESIZE
             else:
+                yield StreamStep(type="thought", content="[Librarian] Aucune donnée supplémentaire trouvée. Passage en mode spéculation...").model_dump()
                 return RAGState.SPECULATE
         else:
             return RAGState.SYNTHESIZE

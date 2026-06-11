@@ -21,5 +21,6 @@ def test_llm_service_propagation():
         "test prompt", 
         "", 
         thinking_budget=0, 
-        thinking_mode=True
+        thinking_mode=True,
+        include_logprobs=True
     )

@@ -1,5 +1,6 @@
 from backend.core.domain.services.rag.processors.base import StateProcessor
-from backend.core.domain.entities.ai_schemas import RAGContext, RAGState
+from backend.core.domain.entities.ai_schemas import RAGContext, RAGState, StreamStep
+from typing import Generator
 from backend.core.domain.exceptions import InfrastructureError
 import logging
 
@@ -12,9 +13,11 @@ class GraphExploreProcessor(StateProcessor):
         self.neo4j_manager = neo4j_manager
         self.xai_collector = xai_collector
 
-    def process(self, ctx: RAGContext) -> RAGState:
+    def process(self, ctx: RAGContext) -> Generator[dict, None, RAGState]:
         if not ctx.plan:
             return RAGState.PLAN
+
+        yield StreamStep(type="thought", content="[GraphRAG] Recherche de communautés thématiques transversales...").model_dump()
 
         logger.info("[GraphRAG] Recherche de communautés thématiques transversales...")
         communities = self.community_partitioner.search_communities(ctx.query)
@@ -31,12 +34,14 @@ class GraphExploreProcessor(StateProcessor):
             logger.info("[Graph-Agent] Neo4j non disponible pour l'exploration détaillée. Poursuite avec GraphRAG Communautaire...")
             return RAGState.RESEARCH
 
+        yield StreamStep(type="thought", content="[Graph-Agent] Génération d'une requête Cypher...").model_dump()
         logger.info("[Graph-Agent] Génération d'une requête Cypher...")
         cypher = self.graph_expert.generate_cypher(ctx.query, ctx.plan.reasoning)
         
         if cypher:
             if self.xai_collector:
                 self.xai_collector.log_agent_thought("GraphExpert", f"Requête Cypher générée : {cypher}")
+            yield StreamStep(type="thought", content=f"[Graph-Agent] Exécution Cypher : {cypher}").model_dump()
             logger.info(f"[Graph-Agent] Exécution Cypher : {cypher}")
             try:
                 results = self.neo4j_manager.execute_read(cypher)

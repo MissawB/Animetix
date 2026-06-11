@@ -1,5 +1,6 @@
 from backend.core.domain.services.rag.processors.base import StateProcessor
-from backend.core.domain.entities.ai_schemas import RAGContext, RAGState
+from backend.core.domain.entities.ai_schemas import RAGContext, RAGState, StreamStep
+from typing import Generator
 import logging
 
 logger = logging.getLogger('animetix.rag_workflow')
@@ -9,7 +10,8 @@ class SagaLookupProcessor(StateProcessor):
         self.saga_agent = saga_agent
         self.xai_collector = xai_collector
 
-    def process(self, ctx: RAGContext) -> RAGState:
+    def process(self, ctx: RAGContext) -> Generator[dict, None, RAGState]:
+        yield StreamStep(type="thought", content="[World-Brain] Analyse globale de la saga...").model_dump()
         logger.info("[World-Brain] Analyse globale de la saga...")
         
         saga_name = self.saga_agent.lookup_saga(ctx.query)

@@ -34,7 +34,7 @@ def test_rag_colbert_filtering():
     
     # Verify ColBERT was called to filter down to 10 (or 5 in our mock) before rerank
     mock_colbert.rank_documents.assert_called_once_with("test query", dummy_docs)
-    service.rerank_results.assert_called_once_with("test query", filtered_docs)
+    service.rerank_results.assert_called_once_with("test query", filtered_docs, user_id=None)
 
 def test_generate_holistic_answer():
     mock_repo = MagicMock()

@@ -110,7 +110,7 @@ class TestMultiAgentDebateIntegration:
             web_search=mock_web_search,
             prompt_manager=mock_prompt_manager,
             llm_service=mock_llm_service,
-            workflow_manager=MagicMock()
+            workflow_orchestrator=MagicMock()
         )
         service.uncertainty_service = MagicMock()
         service.uncertainty_service.measure_confidence.return_value = {"confidence_score": 1.0, "is_reliable": True}

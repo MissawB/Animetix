@@ -4,12 +4,12 @@ from adapters.inference.local_guardrail_adapter import LocalGuardrailAdapter, Mo
 
 def test_semantic_moderation_success():
     mock_engine = MagicMock()
-    mock_result = ModerationResult(
-        is_safe=False,
-        detected_categories=["nsfw", "violence"],
-        reason="Contenu violent et explicite inapproprié."
-    )
-    mock_engine.generate_structured.return_value = mock_result
+    mock_engine.moderate_content.return_value = {
+        "is_safe": False,
+        "detected_categories": ["nsfw", "violence"],
+        "action": "block",
+        "reason": "Contenu violent et explicite inapproprié."
+    }
     
     adapter = LocalGuardrailAdapter(inference_engine=mock_engine)
     
@@ -23,11 +23,11 @@ def test_semantic_moderation_success():
     assert "violence" in res["detected_categories"]
     assert res["action"] == "block"
     assert res["reason"] == "Contenu violent et explicite inapproprié."
-    mock_engine.generate_structured.assert_called_once()
+    mock_engine.moderate_content.assert_called_once_with("Quelque chose de inapproprié", ["nsfw", "violence"])
 
 def test_semantic_moderation_fallback_on_failure():
     mock_engine = MagicMock()
-    mock_engine.generate_structured.side_effect = Exception("Connection timed out")
+    mock_engine.moderate_content.side_effect = Exception("Connection timed out")
     
     adapter = LocalGuardrailAdapter(inference_engine=mock_engine)
     

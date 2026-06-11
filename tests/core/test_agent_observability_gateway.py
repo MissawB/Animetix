@@ -39,7 +39,7 @@ def test_agent_observability_sets_span_attributes(mock_get_span):
         "web_search": MagicMock(),
         "prompt_manager": MagicMock(),
         "llm_service": MagicMock(),
-        "workflow_manager": MagicMock(),
+        "workflow_orchestrator": MagicMock(),
         "neo4j_manager": MagicMock(),
         "memory_service": MagicMock(),
         "semantic_cache": MagicMock(),

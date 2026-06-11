@@ -7,7 +7,7 @@ from typing import Optional, List, Dict, Any
 from core.ports.inference_port import InferencePort, InferenceNotImplementedError
 from core.ports.usage_port import UsagePort
 from core.utils.security import safe_http_request
-from core.domain.entities.ai_schemas import InferenceResponse
+from core.domain.entities.ai_schemas import InferenceResponse, InferenceMetadata, TokenLogProb
 
 logger = logging.getLogger("animetix.inference.brain")
 
@@ -61,7 +61,19 @@ class BrainAPIAdapter(InferencePort):
                 allocated_budget=thinking_budget
             )
             
-            return InferenceResponse(text=data["text"])
+            logprobs = None
+            if "logprobs" in data and data["logprobs"] is not None:
+                logprobs = [
+                    TokenLogProb(token=lp["token"], logprob=lp["logprob"])
+                    for lp in data["logprobs"]
+                ]
+            
+            metadata = InferenceMetadata(
+                logprobs=logprobs,
+                usage=data.get("usage"),
+                thinking=data.get("thinking")
+            )
+            return InferenceResponse(text=data["text"], metadata=metadata)
         except Exception as e:
             logger.error(f"BrainAPI Generation failed: {e}")
             raise
@@ -98,7 +110,7 @@ class BrainAPIAdapter(InferencePort):
             ) as response:
                 response.raise_for_status()
                 for chunk in response.iter_text(): # Or iter_bytes() if chunks are not text
-                    yield chunk
+                    yield InferenceResponse(text=chunk)
         except httpx.HTTPStatusError as e:
             logger.error(f"BrainAPI Streaming Generation HTTP error: {e}")
             raise
@@ -154,6 +166,8 @@ class BrainAPIAdapter(InferencePort):
             raise InferenceNotImplementedError("BrainAPI Sprite Generation not implemented or failed for this adapter")
 
     def get_image_embedding(self, image_data: bytes, model_id: Optional[str] = None) -> List[float]:
+        if not self.api_url:
+            return []
         try:
             img_b64 = base64.b64encode(image_data).decode('utf-8')
             response = safe_http_request(

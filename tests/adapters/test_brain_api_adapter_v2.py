@@ -6,7 +6,7 @@ from core.domain.entities.ai_schemas import InferenceResponse, TokenLogProb
 
 @pytest.fixture
 def brain_adapter():
-    return BrainAPIAdapter(brain_api_url="http://brain-api:5000")
+    return BrainAPIAdapter(api_url="http://brain-api:5000", api_key="dev-secret-key")
 
 def test_generate_returns_inference_response(brain_adapter):
     mock_response_data = {
@@ -57,16 +57,11 @@ def test_generate_with_logprobs(brain_adapter):
         assert response.metadata.logprobs[1].logprob == -0.05
 
 def test_stream_generate_yields_inference_response(brain_adapter):
-    mock_response_data = {
-        "text": "Hello world",
-        "usage": {"prompt_tokens": 5, "completion_tokens": 2}
-    }
-    
-    with patch("adapters.inference.brain_api_adapter.safe_http_request") as mock_request:
+    with patch("adapters.inference.brain_api_adapter.httpx.stream") as mock_stream:
         mock_res = MagicMock()
-        mock_res.json.return_value = mock_response_data
+        mock_res.iter_text.return_value = ["Hello world"]
         mock_res.status_code = 200
-        mock_request.return_value = mock_res
+        mock_stream.return_value.__enter__.return_value = mock_res
         
         generator = brain_adapter.stream_generate("Hi")
         response = next(generator)

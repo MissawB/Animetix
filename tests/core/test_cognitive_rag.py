@@ -10,7 +10,6 @@ from unittest.mock import MagicMock
 from core.domain.services.advanced_rag_service import AdvancedRAGService
 from core.domain.services.quantum_cognitive_service import QuantumCognitiveService
 from core.domain.services.neuromorphic_plasticity_service import SynapticPlasticityService
-from core.domain.services.rag_workflow_manager import RAGWorkflowManager
 
 @pytest.fixture
 def quantum_model():
@@ -78,28 +77,7 @@ def test_graceful_degradation_without_cognitive_models():
 
 
 def test_workflow_manager_triggers_cognitive_evolution(quantum_model, plasticity_simulator):
-    """Vérifie que RAGWorkflowManager déclenche correctement la plasticité et l'effondrement quantique en fin de workflow."""
-    # Mocks de tous les agents du workflow
-    mock_planner = MagicMock()
-    mock_critic = MagicMock()
-    mock_synthesizer = MagicMock()
-    mock_judge = MagicMock()
-    mock_scout = MagicMock()
-    mock_router = MagicMock()
-    mock_evaluator = MagicMock()
-    mock_partitioner = MagicMock()
-    mock_graph_exp = MagicMock()
-    mock_debate = MagicMock()
-    mock_lib = MagicMock()
-    mock_forge = MagicMock()
-    mock_saga = MagicMock()
-    mock_chron = MagicMock()
-    mock_uncertainty = MagicMock()
-    mock_engine = MagicMock()
-    mock_search = MagicMock()
-    mock_prompt_mgr = MagicMock()
-
-    # Mock RAG Service avec nos vrais modèles cognitifs injectés
+    """Vérifie que la plasticité et l'effondrement quantique sont déclenchés en fin de workflow."""
     mock_repo = MagicMock()
     mock_llm = MagicMock()
     rag_service = AdvancedRAGService(
@@ -109,35 +87,13 @@ def test_workflow_manager_triggers_cognitive_evolution(quantum_model, plasticity
         plasticity_simulator=plasticity_simulator
     )
 
-    manager = RAGWorkflowManager(
-        planner=mock_planner,
-        critic=mock_critic,
-        synthesizer=mock_synthesizer,
-        judge=mock_judge,
-        scout=mock_scout,
-        semantic_router=mock_router,
-        retrieval_evaluator=mock_evaluator,
-        community_partitioner=mock_partitioner,
-        graph_expert=mock_graph_exp,
-        debate_manager=mock_debate,
-        librarian=mock_lib,
-        forge=mock_forge,
-        saga_agent=mock_saga,
-        chronicler=mock_chron,
-        xai_service=mock_uncertainty,
-        inference_engine=mock_engine,
-        web_search=mock_search,
-        prompt_manager=mock_prompt_mgr,
-        rag_service=rag_service
-    )
-
     # 1. Définir l'état initial des modèles
     old_weight_matrix = np.copy(plasticity_simulator.W)
 
     # 2. Exécuter la mise à jour cognitive pour une requête de "action"
     # On passe user_id="test_user" pour s'assurer que ça ne retourne pas early
-    candidates = [{"id": "1", "title": "Naruto", "genres": ["Action", "Adventure", "Shonen"]}]
-    manager._update_cognitive_state(query="action", answer="Naruto utilise le rasengan", candidates=candidates, user_id="test_user")
+    candidates = {"genres": ["Action", "Adventure", "Shonen"]}
+    rag_service.update_cognitive_state(user_id="test_user", query="action", clicked_item_metadata=candidates)
 
     # 3. Vérifications :
     # A. Modèle Quantique : L'état quantique doit avoir subi une mesure sur le thème "shonen",
