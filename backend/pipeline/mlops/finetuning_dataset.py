@@ -136,6 +136,28 @@ def paraphrase_text_via_gemini(text: str, client, style_type: str = "naturel") -
             
     return text
 
+def calculate_dataset_counts(non_meta_count: int) -> tuple[int, int]:
+    """
+    Calcule dynamiquement le nombre d'exemples méta et généraux nécessaires
+    en fonction du nombre d'exemples spécialisés (non_meta_count) et des ratios
+    configurés via les variables d'environnement.
+    """
+    ratio_spec = float(os.getenv("ANIMETIX_RATIO_SPECIALIZED", "80.0"))
+    ratio_meta = float(os.getenv("ANIMETIX_RATIO_META", "5.0"))
+    ratio_gen = float(os.getenv("ANIMETIX_RATIO_GENERAL", "15.0"))
+    
+    # Normalisation pour être robuste
+    total_ratio = ratio_spec + ratio_meta + ratio_gen
+    if total_ratio <= 0:
+        logger.warning("Total SFT ratio is less than or equal to 0, falling back to 80/5/15.")
+        ratio_spec, ratio_meta, ratio_gen = 80.0, 5.0, 15.0
+        total_ratio = 100.0
+        
+    meta_required = int(non_meta_count * (ratio_meta / ratio_spec))
+    general_required = int(non_meta_count * (ratio_gen / ratio_spec))
+    
+    return meta_required, general_required
+
 # --- CARTOGRAPHIE DES ANAGRAMMES ET DES NOMS MULTIPLES (COMMUNAUTÉS ET NICKNAMES) ---
 MULTI_TITLE_MAP = {
     "Shingeki no Kyojin": ["L'Attaque des Titans", "Attack on Titan", "SnK"],
@@ -1183,9 +1205,8 @@ def run_generate_instruction_dataset():
     specialized_data = deduplicate_dataset(specialized_data)
     non_meta_count = len(specialized_data)
     
-    # 5. RATIO MATHEMATIQUE STRICT (80% Spécialisé, 5% Meta, 15% Général)
-    meta_required = int(non_meta_count * 0.0625)
-    general_required = int(non_meta_count * 0.1875)
+    # 5. RATIO CONFIGURABLE ET PARAMETRABLE (Défaut : 80% Spécialisé, 5% Meta, 15% Général)
+    meta_required, general_required = calculate_dataset_counts(non_meta_count)
     
     logger.info(f"[INFO] Total Non-meta (80% target) instructions generated: {non_meta_count}")
     logger.info(f"[INFO] Target Meta required (5% target): {meta_required}")

@@ -40,5 +40,20 @@ class TestFinetuningDataset(unittest.TestCase):
         self.assertIn("Un autre texte||naturel", fd.PARAPHRASE_CACHE)
         self.assertEqual(fd.PARAPHRASE_CACHE["Un autre texte||naturel"], "Nouvelle paraphrase")
 
+    def test_configurable_ratios(self):
+        import backend.pipeline.mlops.finetuning_dataset as fd
+        from unittest.mock import patch
+        
+        env_vars = {
+            "ANIMETIX_RATIO_SPECIALIZED": "70",
+            "ANIMETIX_RATIO_META": "10",
+            "ANIMETIX_RATIO_GENERAL": "20"
+        }
+        
+        with patch.dict(os.environ, env_vars):
+            meta_req, gen_req = fd.calculate_dataset_counts(700)
+            self.assertEqual(meta_req, 100)
+            self.assertEqual(gen_req, 200)
+
 if __name__ == "__main__":
     unittest.main()
