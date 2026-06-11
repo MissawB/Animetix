@@ -59,11 +59,47 @@ from french_market_db import (
 )
 from volumes_and_episodes_db import VOLUMES_AND_EPISODES_DATA
 
+CACHE_FILE = os.path.join(BASE_DIR, 'data', 'mlops', 'datasets', 'gemini_paraphrase_cache.json')
+PARAPHRASE_CACHE = {}
+
+def load_paraphrase_cache():
+    global PARAPHRASE_CACHE
+    if os.path.exists(CACHE_FILE):
+        try:
+            with open(CACHE_FILE, 'r', encoding='utf-8') as f:
+                PARAPHRASE_CACHE = json.load(f)
+            logger.info(f"Loaded {len(PARAPHRASE_CACHE)} entries from paraphrase cache.")
+        except Exception as e:
+            logger.warning(f"Failed to load paraphrase cache: {e}")
+            PARAPHRASE_CACHE = {}
+    else:
+        PARAPHRASE_CACHE = {}
+
+def save_paraphrase_cache():
+    if PARAPHRASE_CACHE:
+        try:
+            os.makedirs(os.path.dirname(CACHE_FILE), exist_ok=True)
+            with open(CACHE_FILE, 'w', encoding='utf-8') as f:
+                json.dump(PARAPHRASE_CACHE, f, ensure_ascii=False, indent=2)
+            logger.info(f"Saved {len(PARAPHRASE_CACHE)} entries to paraphrase cache.")
+        except Exception as e:
+            logger.warning(f"Failed to save paraphrase cache: {e}")
+
+load_paraphrase_cache()
+
 def paraphrase_text_via_gemini(text: str, client, style_type: str = "naturel") -> str:
     """
     Appelle Gemini pour paraphraser un texte en français afin de diversifier le style.
     En cas d'échec ou d'absence de client, retourne le texte original.
+    Utilise un cache local persistant JSON pour éviter les appels redondants.
     """
+    if not text:
+        return ""
+    
+    cache_key = f"{text.strip()}||{style_type}"
+    if cache_key in PARAPHRASE_CACHE:
+        return PARAPHRASE_CACHE[cache_key]
+        
     if not client:
         return text
     
@@ -85,7 +121,9 @@ def paraphrase_text_via_gemini(text: str, client, style_type: str = "naturel") -
             )
             if response.text:
                 time.sleep(0.5)  # Respecter le rate limiting
-                return response.text.strip()
+                result_text = response.text.strip()
+                PARAPHRASE_CACHE[cache_key] = result_text
+                return result_text
         except Exception as e:
             logger.warning(f"Attempt {attempt+1}/3 failed to paraphrase: {e}")
             err_msg = str(e).upper()
@@ -1216,6 +1254,9 @@ def run_generate_instruction_dataset():
     logger.info(f"  - Otaku Meta-Vocabulary (5% target): {len(selected_meta)} / {total_count} ({actual_meta_ratio:.2f}%)")
     logger.info(f"  - General French SFT (15% target): {len(general_data)} / {total_count} ({actual_gen_ratio:.2f}%)")
     logger.info(f"[INFO] Saved at: {OUTPUT_DATASET}")
+    
+    # Sauvegarde du cache
+    save_paraphrase_cache()
 
 if __name__ == "__main__":
     run_generate_instruction_dataset()
