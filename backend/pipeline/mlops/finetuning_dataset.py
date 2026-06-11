@@ -11,13 +11,21 @@ import os
 import random
 import sys
 import logging
+import time
 from typing import List, Any
 from datasets import load_dataset
+from dotenv import load_dotenv
+
+try:
+    from google import genai
+except ImportError:
+    genai = None
 
 logger = logging.getLogger("animetix.pipeline." + __name__)
 
 # Chemins de fichiers absolus
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+load_dotenv(os.path.join(BASE_DIR, '.env'))
 ANIME_DB = os.path.join(BASE_DIR, 'data', 'processed', 'clean_root_animes.json')
 MANGA_DB = os.path.join(BASE_DIR, 'data', 'processed', 'clean_root_mangas.json')
 CHAR_DB = os.path.join(BASE_DIR, 'data', 'processed', 'refined_characters.json')
@@ -37,6 +45,45 @@ from french_market_db import (
     FRENCH_MARKET_RELATIONS
 )
 from volumes_and_episodes_db import VOLUMES_AND_EPISODES_DATA
+
+def paraphrase_text_via_gemini(text: str, client, style_type: str = "naturel") -> str:
+    """
+    Appelle Gemini pour paraphraser un texte en français afin de diversifier le style.
+    En cas d'échec ou d'absence de client, retourne le texte original.
+    """
+    if not client:
+        return text
+    
+    prompt = (
+        f"Réécris et paraphrase le texte suivant en français de manière fluide et naturelle. "
+        f"Ne change pas les faits, les noms propres, les studios, ou les dates. "
+        f"Style souhaité : {style_type}. "
+        f"Renvoie uniquement le texte réécrit, sans aucun commentaire ou salutations.\n\n"
+        f"Texte à réécrire :\n{text}"
+    )
+    
+    model_name = os.getenv("ANIMETIX_GEMINI_MODEL", "gemini-3-flash-preview")
+    
+    for attempt in range(3):
+        try:
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+            )
+            if response.text:
+                time.sleep(0.5)  # Respecter le rate limiting
+                return response.text.strip()
+        except Exception as e:
+            logger.warning(f"Attempt {attempt+1}/3 failed to paraphrase: {e}")
+            err_msg = str(e).upper()
+            if "RESOURCE_EXHAUSTED" in err_msg or "429" in err_msg or "UNAVAILABLE" in err_msg or "503" in err_msg:
+                sleep_time = (attempt + 1) * 15.0  # 15s, 30s
+                logger.info(f"Rate limit or service unavailable detected. Sleeping for {sleep_time}s before retry...")
+                time.sleep(sleep_time)
+            else:
+                time.sleep(1.0)
+            
+    return text
 
 # --- CARTOGRAPHIE DES ANAGRAMMES ET DES NOMS MULTIPLES (COMMUNAUTÉS ET NICKNAMES) ---
 MULTI_TITLE_MAP = {
@@ -574,10 +621,324 @@ def deduplicate_dataset(dataset):
     logger.info(f"[INFO] Deduplication removed {duplicates_count} duplicate SFT pairs.")
     return deduped
 
+def generate_mcp_tool_instructions() -> List[dict]:
+    """
+    Génère des exemples d'entraînement SFT pour apprendre au modèle expert
+    à appeler des serveurs MCP (Jikan et Spotify) et à en traiter les réponses.
+    Génère ~250 variations.
+    """
+    instructions = []
+    
+    # Éléments de données pour l'injection
+    titles = [
+        "Kimetsu no Yaiba", "Shingeki no Kyojin", "One Piece", "Naruto",
+        "Jujutsu Kaisen", "Boku no Hero Academia", "Hunter x Hunter",
+        "Fullmetal Alchemist", "Steins;Gate", "Bleach", "Chainsaw Man"
+    ]
+    
+    studios = ["Ufotable", "MAPPA", "Wit Studio", "Madhouse", "Bones", "Pierrot", "Toei Animation"]
+    
+    tracks_data = [
+        {"track": "Gurenge", "artist": "LiSA", "album": "Leo-Nine", "popularity": 85, "track_id": "0TrPqh5AaXEtzd52oKM769"},
+        {"track": "Idol", "artist": "YOASOBI", "album": "Idol", "popularity": 92, "track_id": "2d1FDF2v80pB8E9f69b82F"},
+        {"track": "Kaikai Kitan", "artist": "Eve", "album": "Kaikai Kitan", "popularity": 80, "track_id": "0yEvEvEve0py1EvE83jf8e"},
+        {"track": "Shinzou wo Sasageyo!", "artist": "Linked Horizon", "album": "Shinzou wo Sasageyo", "popularity": 88, "track_id": "2SASASASA038sasasasas"},
+        {"track": "Zankyou Sanka", "artist": "Aimer", "album": "Zankyou Sanka", "popularity": 84, "track_id": "3AiAiAimer039aierarera"},
+        {"track": "Unravel", "artist": "TK from Ling Tosite Sigure", "album": "Fantastic Magic", "popularity": 87, "track_id": "0TkTkTkTk038tktktktkt"},
+        {"track": "Sign", "artist": "FLOW", "album": "FLOW ANIME BEST", "popularity": 79, "track_id": "0FlFlFlFl038flflflflf"},
+        {"track": "The Rumbling", "artist": "SiM", "album": "The Rumbling", "popularity": 86, "track_id": "0SiMSiMSiM038simsimsim"}
+    ]
+    
+    artists = ["LiSA", "YOASOBI", "Aimer", "Eve", "FLOW", "Linked Horizon", "SiM", "Kenshi Yonezu", "RADWIMPS"]
+    
+    characters_data = [
+        {"title": "Kimetsu no Yaiba", "char1": "Tanjiro Kamado", "va1": "Natsuki Hanae", "char2": "Nezuko Kamado", "va2": "Akari Kito"},
+        {"title": "Shingeki no Kyojin", "char1": "Eren Yeager", "va1": "Yuki Kaji", "char2": "Mikasa Ackerman", "va2": "Yui Ishikawa"},
+        {"title": "One Piece", "char1": "Monkey D. Luffy", "va1": "Mayumi Tanaka", "char2": "Roronoa Zoro", "va2": "Kazuya Nakai"},
+        {"title": "Jujutsu Kaisen", "char1": "Yuji Itadori", "va1": "Junya Enoki", "char2": "Satoru Gojo", "va2": "Yuichi Nakamura"},
+        {"title": "Boku no Hero Academia", "char1": "Izuku Midoriya", "va1": "Daiki Yamashita", "char2": "Katsuki Bakugo", "va2": "Nobuhiko Okamoto"},
+        {"title": "Hunter x Hunter", "char1": "Gon Freecss", "va1": "Megumi Han", "char2": "Killua Zoldyck", "va2": "Mariya Ise"}
+    ]
+
+    # --- 1. JIKAN SEARCH ANIME & DETAILS ---
+    for title in titles:
+        # Tool Call Generation
+        q_templates = [
+            f"Recherche les détails de l'anime '{title}' sur MyAnimeList pour voir sa note et ses épisodes.",
+            f"Peux-tu interroger MyAnimeList (Jikan) pour l'anime '{title}' ?",
+            f"Donne-moi les infos en temps réel de '{title}' depuis MAL.",
+            f"Cherche l'anime '{title}' sur MAL avec l'API Jikan."
+        ]
+        
+        for q in q_templates:
+            tool_call_json = {
+                "server": "jikan",
+                "tool": "search_anime",
+                "arguments": {
+                    "query": title
+                }
+            }
+            instructions.append({
+                "instruction": q,
+                "input": "",
+                "output": f"<tool_call>\n{json.dumps(tool_call_json, ensure_ascii=False, indent=2)}\n</tool_call>"
+            })
+
+        # Tool Response Processing
+        for studio in studios:
+            episodes = random.choice([12, 24, 26, 75, 170])
+            score = round(random.uniform(7.8, 9.1), 2)
+            
+            tool_response_json = {
+                "status": "success",
+                "data": {
+                    "title": title,
+                    "episodes": episodes,
+                    "score": score,
+                    "status": "Finished Airing",
+                    "studios": [studio]
+                }
+            }
+            
+            q_proc = f"Recherche les détails de l'anime '{title}' sur MyAnimeList."
+            ans = f"D'après les informations obtenues en temps réel via MyAnimeList (Jikan), l'anime '{title}' comporte {episodes} épisodes, est produit par le studio {studio} et obtient une note globale de {score}/10."
+            
+            instructions.append({
+                "instruction": q_proc,
+                "input": f"<tool_response>\n{json.dumps(tool_response_json, ensure_ascii=False, indent=2)}\n</tool_response>",
+                "output": ans
+            })
+
+    # --- 2. JIKAN ANIME CHARACTERS ---
+    for char_info in characters_data:
+        t = char_info["title"]
+        q_templates = [
+            f"Trouve la liste des personnages et doublages pour l'anime '{t}'.",
+            f"Qui double les personnages principaux de '{t}' ? Interroge Jikan.",
+            f"Quels sont les seiyuu et personnages principaux de '{t}' sur MyAnimeList ?"
+        ]
+        
+        for q in q_templates:
+            tool_call_json = {
+                "server": "jikan",
+                "tool": "get_anime_characters",
+                "arguments": {
+                    "query": t
+                }
+            }
+            instructions.append({
+                "instruction": q,
+                "input": "",
+                "output": f"<tool_call>\n{json.dumps(tool_call_json, ensure_ascii=False, indent=2)}\n</tool_call>"
+            })
+            
+        # Tool Response Processing
+        tool_response_json = {
+            "status": "success",
+            "data": {
+                "characters": [
+                    {"name": char_info["char1"], "role": "Main", "voice_actor": char_info["va1"]},
+                    {"name": char_info["char2"], "role": "Supporting", "voice_actor": char_info["va2"]}
+                ]
+            }
+        }
+        
+        q_proc = f"Trouve la liste des personnages et doublages pour l'anime '{t}'."
+        ans = f"Voici les personnages principaux et leurs seiyuu officiels pour '{t}' :\n- **{char_info['char1']}** (rôle principal), doublé par {char_info['va1']}.\n- **{char_info['char2']}** (rôle de soutien), doublé par {char_info['va2']}."
+        
+        instructions.append({
+            "instruction": q_proc,
+            "input": f"<tool_response>\n{json.dumps(tool_response_json, ensure_ascii=False, indent=2)}\n</tool_response>",
+            "output": ans
+        })
+
+    # --- 3. SPOTIFY SEARCH TRACK ---
+    for track_info in tracks_data:
+        tr = track_info["track"]
+        art = track_info["artist"]
+        alb = track_info["album"]
+        pop = track_info["popularity"]
+        tr_id = track_info["track_id"]
+        
+        q_templates = [
+            f"Recherche le morceau '{tr}' sur Spotify.",
+            f"Trouve le lien de la chanson '{tr}' de '{art}' sur Spotify.",
+            f"Cherche la musique '{tr}' via l'API Spotify."
+        ]
+        
+        for q in q_templates:
+            tool_call_json = {
+                "server": "spotify",
+                "tool": "search_track",
+                "arguments": {
+                    "query": f"{art} {tr}"
+                }
+            }
+            instructions.append({
+                "instruction": q,
+                "input": "",
+                "output": f"<tool_call>\n{json.dumps(tool_call_json, ensure_ascii=False, indent=2)}\n</tool_call>"
+            })
+
+        # Tool Response Processing
+        tool_response_json = {
+            "status": "success",
+            "data": {
+                "tracks": [
+                    {
+                        "name": tr,
+                        "artist": art,
+                        "album": alb,
+                        "popularity": pop,
+                        "spotify_url": f"https://open.spotify.com/track/{tr_id}"
+                    }
+                ]
+            }
+        }
+        
+        q_proc = f"Recherche le morceau '{tr}' sur Spotify."
+        ans = f"La chanson '{tr}' interprétée par {art} est disponible sur Spotify. Elle figure sur l'album '{alb}' avec un indice de popularité de {pop}/100. Vous pouvez l'écouter ici : https://open.spotify.com/track/{tr_id}."
+        
+        instructions.append({
+            "instruction": q_proc,
+            "input": f"<tool_response>\n{json.dumps(tool_response_json, ensure_ascii=False, indent=2)}\n</tool_response>",
+            "output": ans
+        })
+
+    # --- 4. SPOTIFY ARTIST TOP TRACKS ---
+    for art in artists:
+        q_templates = [
+            f"Quels sont les morceaux les plus populaires de '{art}' sur Spotify ?",
+            f"Affiche le top des écoutes de '{art}' sur Spotify.",
+            f"Interroge Spotify pour avoir les meilleurs titres de '{art}'."
+        ]
+        
+        for q in q_templates:
+            tool_call_json = {
+                "server": "spotify",
+                "tool": "get_artist_top_tracks",
+                "arguments": {
+                    "artist_name": art
+                }
+            }
+            instructions.append({
+                "instruction": q,
+                "input": "",
+                "output": f"<tool_call>\n{json.dumps(tool_call_json, ensure_ascii=False, indent=2)}\n</tool_call>"
+            })
+
+        # Tool Response Processing
+        t1, t2, t3 = f"Track A de {art}", f"Track B de {art}", f"Track C de {art}"
+        p1, p2, p3 = random.randint(85, 95), random.randint(75, 84), random.randint(65, 74)
+        
+        tool_response_json = {
+            "status": "success",
+            "data": {
+                "artist": art,
+                "top_tracks": [
+                    {"name": t1, "popularity": p1},
+                    {"name": t2, "popularity": p2},
+                    {"name": t3, "popularity": p3}
+                ]
+            }
+        }
+        
+        q_proc = f"Quels sont les morceaux les plus populaires de '{art}' sur Spotify ?"
+        ans = f"Sur Spotify, les titres les plus écoutés de l'artiste '{art}' sont :\n1. **{t1}** (popularité: {p1}/100)\n2. **{t2}** (popularité: {p2}/100)\n3. **{t3}** (popularité: {p3}/100)"
+        
+        instructions.append({
+            "instruction": q_proc,
+            "input": f"<tool_response>\n{json.dumps(tool_response_json, ensure_ascii=False, indent=2)}\n</tool_response>",
+            "output": ans
+        })
+
+    return instructions
+
 # --- METHODE D'ASSEMBLAGE UNIFIEE ---
 
 def run_generate_instruction_dataset():
     specialized_data = []
+
+    # Initialisation client Gemini pour augmentation facultative
+    augment_data = os.getenv("ANIMETIX_AUGMENT_DATA", "False").lower() in ("true", "1")
+    api_key = os.getenv("GEMINI_API_KEY")
+    client = None
+    if augment_data and api_key and genai is not None:
+        logger.info("[INFO] Initializing Gemini API client for data augmentation...")
+        client = genai.Client(api_key=api_key)
+    else:
+        logger.info("[INFO] Gemini API client not initialized (augmentation disabled or missing key). Using static templates.")
+
+    # Limites d'augmentation pour maîtriser les coûts et le temps d'exécution
+    limit_anime_t1 = int(os.getenv("ANIMETIX_LIMIT_ANIME_T1", "15"))
+    limit_anime_t2 = int(os.getenv("ANIMETIX_LIMIT_ANIME_T2", "10"))
+    limit_manga_t1 = int(os.getenv("ANIMETIX_LIMIT_MANGA_T1", "5"))
+    limit_manga_t2 = int(os.getenv("ANIMETIX_LIMIT_MANGA_T2", "5"))
+    limit_char_t1 = int(os.getenv("ANIMETIX_LIMIT_CHAR_T1", "15"))
+    limit_char_t2 = int(os.getenv("ANIMETIX_LIMIT_CHAR_T2", "10"))
+
+    # Établir la liste des éléments éligibles à l'augmentation par tri de popularité
+    augmented_anime_titles = set()
+    if os.path.exists(ANIME_DB) and client:
+        try:
+            with open(ANIME_DB, 'r', encoding='utf-8') as f:
+                animes_list = json.load(f)
+                t1_animes = [item for item in animes_list if item.get('popularity', 0) > 150000]
+                t1_animes.sort(key=lambda x: x.get('popularity', 0), reverse=True)
+                for item in t1_animes[:limit_anime_t1]:
+                    if item.get('title'):
+                        augmented_anime_titles.add(item.get('title'))
+                
+                t2_animes = [item for item in animes_list if 50000 < item.get('popularity', 0) <= 150000]
+                t2_animes.sort(key=lambda x: x.get('popularity', 0), reverse=True)
+                for item in t2_animes[:limit_anime_t2]:
+                    if item.get('title'):
+                        augmented_anime_titles.add(item.get('title'))
+            logger.info(f"[INFO] Targeted {len(augmented_anime_titles)} popular animes for dynamic augmentation.")
+        except Exception as e:
+            logger.warning(f"Failed to identify target animes for augmentation: {e}")
+
+    augmented_manga_titles = set()
+    if os.path.exists(MANGA_DB) and client:
+        try:
+            with open(MANGA_DB, 'r', encoding='utf-8') as f:
+                mangas_list = json.load(f)
+                t1_mangas = [item for item in mangas_list if item.get('popularity', 0) > 150000]
+                t1_mangas.sort(key=lambda x: x.get('popularity', 0), reverse=True)
+                for item in t1_mangas[:limit_manga_t1]:
+                    if item.get('title'):
+                        augmented_manga_titles.add(item.get('title'))
+                
+                t2_mangas = [item for item in mangas_list if 50000 < item.get('popularity', 0) <= 150000]
+                t2_mangas.sort(key=lambda x: x.get('popularity', 0), reverse=True)
+                for item in t2_mangas[:limit_manga_t2]:
+                    if item.get('title'):
+                        augmented_manga_titles.add(item.get('title'))
+            logger.info(f"[INFO] Targeted {len(augmented_manga_titles)} popular mangas for dynamic augmentation.")
+        except Exception as e:
+            logger.warning(f"Failed to identify target mangas for augmentation: {e}")
+
+    augmented_char_names = set()
+    if os.path.exists(CHAR_DB) and client:
+        try:
+            with open(CHAR_DB, 'r', encoding='utf-8') as f:
+                chars_list = json.load(f)
+                top_chars_list = [c for c in chars_list if c.get('popularity', {}).get('favourites', 0) > 50]
+                
+                t1_chars = [c for c in top_chars_list if c.get('popularity', {}).get('favourites', 0) > 2000]
+                t1_chars.sort(key=lambda x: x.get('popularity', {}).get('favourites', 0), reverse=True)
+                for item in t1_chars[:limit_char_t1]:
+                    if item.get('name') and item.get('origin'):
+                        augmented_char_names.add((item.get('name'), item.get('origin')))
+                
+                t2_chars = [c for c in top_chars_list if 500 < c.get('popularity', {}).get('favourites', 0) <= 2000]
+                t2_chars.sort(key=lambda x: x.get('popularity', {}).get('favourites', 0), reverse=True)
+                for item in t2_chars[:limit_char_t2]:
+                    if item.get('name') and item.get('origin'):
+                        augmented_char_names.add((item.get('name'), item.get('origin')))
+            logger.info(f"[INFO] Targeted {len(augmented_char_names)} popular characters for dynamic augmentation.")
+        except Exception as e:
+            logger.warning(f"Failed to identify target characters for augmentation: {e}")
 
     # 1. TRANSMEDIA BRIDGES (400 instructions en français)
     logger.info("[INFO] Generating high-quality transmedia bridge instructions...")
@@ -609,6 +970,11 @@ def run_generate_instruction_dataset():
     vol_ep_data = generate_volumes_and_episodes_instructions()
     specialized_data.extend(vol_ep_data)
     
+    # 1g. CADRAGE D'OUTILS VIA MCP (serveurs Jikan & Spotify)
+    logger.info("[INFO] Generating high-quality MCP tool calling instructions...")
+    mcp_data = generate_mcp_tool_instructions()
+    specialized_data.extend(mcp_data)
+    
     # 2. ANIME DATABASE
     if os.path.exists(ANIME_DB):
         with open(ANIME_DB, 'r', encoding='utf-8') as f:
@@ -627,17 +993,33 @@ def run_generate_instruction_dataset():
                 
                 # Tier 1 : Ultra Populaire (> 150k membres) -> 5 variations
                 if pop > 150000:
-                    specialized_data.append({"instruction": f"Présente l'anime culte '{display_t}' de manière extrêmement détaillée.", "input": "", "output": profile})
-                    specialized_data.append({"instruction": f"Quel studio est derrière le chef-d'œuvre '{display_t}' et de quoi s'agit-il ?", "input": "", "output": profile})
-                    specialized_data.append({"instruction": f"De quoi parle l'œuvre majeure '{display_t}' ?", "input": "", "output": profile})
-                    specialized_data.append({"instruction": f"Quelles sont les thématiques majeures et l'univers de '{display_t}' ?", "input": "", "output": profile})
-                    specialized_data.append({"instruction": f"Pourquoi '{display_t}' est-elle une œuvre extrêmement populaire et appréciée des spectateurs ?", "input": "", "output": profile})
+                    if client and title in augmented_anime_titles:
+                        logger.info(f"Augmenting anime (Tier 1) '{title}' via Gemini...")
+                        p1 = paraphrase_text_via_gemini(profile, client, "encyclopédique")
+                        p2 = paraphrase_text_via_gemini(profile, client, "critique")
+                        p3 = paraphrase_text_via_gemini(profile, client, "enthousiaste")
+                        p4 = paraphrase_text_via_gemini(profile, client, "décontracté")
+                        p5 = paraphrase_text_via_gemini(profile, client, "analytique")
+                    else:
+                        p1 = p2 = p3 = p4 = p5 = profile
+                    specialized_data.append({"instruction": f"Présente l'anime culte '{display_t}' de manière extrêmement détaillée.", "input": "", "output": p1})
+                    specialized_data.append({"instruction": f"Quel studio est derrière le chef-d'œuvre '{display_t}' et de quoi s'agit-il ?", "input": "", "output": p2})
+                    specialized_data.append({"instruction": f"De quoi parle l'œuvre majeure '{display_t}' ?", "input": "", "output": p3})
+                    specialized_data.append({"instruction": f"Quelles sont les thématiques majeures et l'univers de '{display_t}' ?", "input": "", "output": p4})
+                    specialized_data.append({"instruction": f"Pourquoi '{display_t}' est-elle une œuvre extrêmement populaire et appréciée des spectateurs ?", "input": "", "output": p5})
                 
                 # Tier 2 : Très Populaire (50k - 150k membres) -> 3 variations
                 elif pop > 50000:
-                    specialized_data.append({"instruction": f"Présente l'anime populaire '{display_t}' de manière détaillée.", "input": "", "output": profile})
-                    specialized_data.append({"instruction": f"Quel studio a produit '{display_t}' et de quoi ça parle ?", "input": "", "output": profile})
-                    specialized_data.append({"instruction": f"Quelles sont les thématiques majeures de l'anime '{display_t}' ?", "input": "", "output": profile})
+                    if client and title in augmented_anime_titles:
+                        logger.info(f"Augmenting anime (Tier 2) '{title}' via Gemini...")
+                        p1 = paraphrase_text_via_gemini(profile, client, "encyclopédique")
+                        p2 = paraphrase_text_via_gemini(profile, client, "critique")
+                        p3 = paraphrase_text_via_gemini(profile, client, "décontracté")
+                    else:
+                        p1 = p2 = p3 = profile
+                    specialized_data.append({"instruction": f"Présente l'anime populaire '{display_t}' de manière détaillée.", "input": "", "output": p1})
+                    specialized_data.append({"instruction": f"Quel studio a produit '{display_t}' et de quoi ça parle ?", "input": "", "output": p2})
+                    specialized_data.append({"instruction": f"Quelles sont les thématiques majeures de l'anime '{display_t}' ?", "input": "", "output": p3})
                 
                 # Tier 3 : Standard / Obscure (<= 50k membres) -> 1 variation
                 else:
@@ -659,17 +1041,33 @@ def run_generate_instruction_dataset():
                 
                 # Tier 1 : Ultra Populaire (> 150k membres) -> 5 variations
                 if pop > 150000:
-                    specialized_data.append({"instruction": f"Quelles sont les thématiques principales du manga culte '{display_t}' ?", "input": "", "output": profile})
-                    specialized_data.append({"instruction": f"Analyse et résume le manga emblématique '{display_t}'.", "input": "", "output": profile})
-                    specialized_data.append({"instruction": f"Pourquoi le manga '{display_t}' a-t-il rencontré un si grand succès auprès du public ?", "input": "", "output": profile})
-                    specialized_data.append({"instruction": f"Présente l'univers et le scénario du manga culte '{display_t}'.", "input": "", "output": profile})
-                    specialized_data.append({"instruction": f"De quoi parle le manga culte '{display_t}' ?", "input": "", "output": profile})
+                    if client and title in augmented_manga_titles:
+                        logger.info(f"Augmenting manga (Tier 1) '{title}' via Gemini...")
+                        p1 = paraphrase_text_via_gemini(profile, client, "encyclopédique")
+                        p2 = paraphrase_text_via_gemini(profile, client, "critique")
+                        p3 = paraphrase_text_via_gemini(profile, client, "enthousiaste")
+                        p4 = paraphrase_text_via_gemini(profile, client, "décontracté")
+                        p5 = paraphrase_text_via_gemini(profile, client, "analytique")
+                    else:
+                        p1 = p2 = p3 = p4 = p5 = profile
+                    specialized_data.append({"instruction": f"Quelles sont les thématiques principales du manga culte '{display_t}' ?", "input": "", "output": p1})
+                    specialized_data.append({"instruction": f"Analyse et résume le manga emblématique '{display_t}'.", "input": "", "output": p2})
+                    specialized_data.append({"instruction": f"Pourquoi le manga '{display_t}' a-t-il rencontré un si grand succès auprès du public ?", "input": "", "output": p3})
+                    specialized_data.append({"instruction": f"Présente l'univers et le scénario du manga culte '{display_t}'.", "input": "", "output": p4})
+                    specialized_data.append({"instruction": f"De quoi parle le manga culte '{display_t}' ?", "input": "", "output": p5})
                 
                 # Tier 2 : Très Populaire (50k - 150k membres) -> 3 variations
                 elif pop > 50000:
-                    specialized_data.append({"instruction": f"Quelles sont les thématiques principales du manga populaire '{display_t}' ?", "input": "", "output": profile})
-                    specialized_data.append({"instruction": f"De quoi parle le manga populaire '{display_t}' ?", "input": "", "output": profile})
-                    specialized_data.append({"instruction": f"Résume les thèmes clés du manga '{display_t}'.", "input": "", "output": profile})
+                    if client and title in augmented_manga_titles:
+                        logger.info(f"Augmenting manga (Tier 2) '{title}' via Gemini...")
+                        p1 = paraphrase_text_via_gemini(profile, client, "encyclopédique")
+                        p2 = paraphrase_text_via_gemini(profile, client, "critique")
+                        p3 = paraphrase_text_via_gemini(profile, client, "décontracté")
+                    else:
+                        p1 = p2 = p3 = profile
+                    specialized_data.append({"instruction": f"Quelles sont les thématiques principales du manga populaire '{display_t}' ?", "input": "", "output": p1})
+                    specialized_data.append({"instruction": f"De quoi parle le manga populaire '{display_t}' ?", "input": "", "output": p2})
+                    specialized_data.append({"instruction": f"Résume les thèmes clés du manga '{display_t}'.", "input": "", "output": p3})
                 
                 # Tier 3 : Standard / Obscure (<= 50k membres) -> 1 variation
                 else:
@@ -697,17 +1095,33 @@ def run_generate_instruction_dataset():
                 
                 # Tier 1 : Ultra Populaire (> 2000 favoris) -> 5 variations
                 if favs > 2000:
-                    specialized_data.append({"instruction": f"Analyse complète du personnage culte {display_name} dans {display_origin}.", "input": "", "output": profile})
-                    specialized_data.append({"instruction": f"Qui est {display_name} ?", "input": f"Contexte : {display_origin}", "output": profile})
-                    specialized_data.append({"instruction": f"Analyse approfondie de la psychologie et du rôle de {display_name} dans '{display_origin}'.", "input": "", "output": profile})
-                    specialized_data.append({"instruction": f"Quels sont les traits marquants et l'importance du personnage de {display_name} ?", "input": f"Œuvre d'origine : {display_origin}", "output": profile})
-                    specialized_data.append({"instruction": f"Pourquoi {display_name} est-il l'un des personnages les plus emblématiques et adorés de '{display_origin}' ?", "input": "", "output": profile})
+                    if client and (name, origin) in augmented_char_names:
+                        logger.info(f"Augmenting character (Tier 1) '{name}' ({origin}) via Gemini...")
+                        p1 = paraphrase_text_via_gemini(profile, client, "encyclopédique")
+                        p2 = paraphrase_text_via_gemini(profile, client, "critique")
+                        p3 = paraphrase_text_via_gemini(profile, client, "enthousiaste")
+                        p4 = paraphrase_text_via_gemini(profile, client, "décontracté")
+                        p5 = paraphrase_text_via_gemini(profile, client, "analytique")
+                    else:
+                        p1 = p2 = p3 = p4 = p5 = profile
+                    specialized_data.append({"instruction": f"Analyse complète du personnage culte {display_name} dans {display_origin}.", "input": "", "output": p1})
+                    specialized_data.append({"instruction": f"Qui est {display_name} ?", "input": f"Contexte : {display_origin}", "output": p2})
+                    specialized_data.append({"instruction": f"Analyse approfondie de la psychologie et du rôle de {display_name} dans '{display_origin}'.", "input": "", "output": p3})
+                    specialized_data.append({"instruction": f"Quels sont les traits marquants et l'importance du personnage de {display_name} ?", "input": f"Œuvre d'origine : {display_origin}", "output": p4})
+                    specialized_data.append({"instruction": f"Pourquoi {display_name} est-il l'un des personnages les plus emblématiques et adorés de '{display_origin}' ?", "input": "", "output": p5})
                 
                 # Tier 2 : Très Populaire (500 - 2000 favoris) -> 3 variations
                 elif favs > 500:
-                    specialized_data.append({"instruction": f"Analyse le personnage populaire de {display_name} dans {display_origin}.", "input": "", "output": profile})
-                    specialized_data.append({"instruction": f"Qui est {display_name} ?", "input": f"Contexte : {display_origin}", "output": profile})
-                    specialized_data.append({"instruction": f"Quels sont les traits marquants du personnage de {display_name} dans '{display_origin}' ?", "input": "", "output": profile})
+                    if client and (name, origin) in augmented_char_names:
+                        logger.info(f"Augmenting character (Tier 2) '{name}' ({origin}) via Gemini...")
+                        p1 = paraphrase_text_via_gemini(profile, client, "encyclopédique")
+                        p2 = paraphrase_text_via_gemini(profile, client, "critique")
+                        p3 = paraphrase_text_via_gemini(profile, client, "décontracté")
+                    else:
+                        p1 = p2 = p3 = profile
+                    specialized_data.append({"instruction": f"Analyse le personnage populaire de {display_name} dans {display_origin}.", "input": "", "output": p1})
+                    specialized_data.append({"instruction": f"Qui est {display_name} ?", "input": f"Contexte : {display_origin}", "output": p2})
+                    specialized_data.append({"instruction": f"Quels sont les traits marquants du personnage de {display_name} dans '{display_origin}' ?", "input": "", "output": p3})
                 
                 # Tier 3 : Standard (50 - 500 favoris) -> 2 variations
                 else:

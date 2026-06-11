@@ -50,9 +50,12 @@ except ImportError:
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 def run_expert_training():
-    model_name = "unsloth/Qwen2.5-7B-Instruct" 
+    model_name = os.getenv("BASE_MODEL_NAME", "unsloth/DeepSeek-R1-Distill-Qwen-8B")
+    default_seq_len = 1024 if "deepseek" in model_name.lower() else 768
+    max_seq_length = int(os.getenv("MAX_SEQ_LENGTH", str(default_seq_len)))
+    
     dataset_path = os.path.join(BASE_DIR, "data", "mlops", "datasets", "animetix_expert_ft.jsonl")
-    output_dir = os.path.join(BASE_DIR, "data", "models", "otaku-qwen-7b-adapter")
+    output_dir = os.path.join(BASE_DIR, "data", "models", "otaku-expert-adapter")
     
     tracker = trackio.init(project="animetix-expert", job_name=f"expert-qlora-{int(time.time())}")
 
@@ -106,7 +109,7 @@ def run_expert_training():
         logger.info("🚀 Unsloth detected. Loading model with native GPU optimizations...")
         model, tokenizer = FastLanguageModel.from_pretrained(
             model_name=model_name,
-            max_seq_length=768,
+            max_seq_length=max_seq_length,
             dtype=None,  # Détection automatique de précision (float16/bfloat16)
             load_in_4bit=True,
         )
@@ -156,42 +159,47 @@ def run_expert_training():
 
     # 5. Assistant-Only Loss Masking (Data Collator ciblant uniquement la réponse de l'assistant)
     # Validation dynamique du patron pour éviter les échecs de tokenisation silencieux
-    logger.info("🔍 Checking DataCollator response template tokenization...")
-    test_messages = [
-        {"role": "user", "content": "Test"},
-        {"role": "assistant", "content": "Réponse"}
-    ]
-    test_text = tokenizer.apply_chat_template(test_messages, tokenize=False)
-    test_tokenized = tokenizer(test_text, return_tensors="pt")
+    enable_packing = os.getenv("ANIMETIX_PACKING", "False").lower() in ("true", "1", "yes")
     
     collator = None
-    possible_templates = [
-        "<|im_start|>assistant\n",
-        "<|im_start|>assistant",
-        "assistant\n",
-        "assistant"
-    ]
-    
-    for template in possible_templates:
-        try:
-            candidate_collator = DataCollatorForCompletionOnlyLM(
-                response_template=template,
-                tokenizer=tokenizer
-            )
-            outputs = candidate_collator.torch_call([test_tokenized["input_ids"][0].tolist()])
-            labels = outputs["labels"][0]
-            trained_tokens = (labels != -100).sum().item()
-            if trained_tokens > 0:
-                logger.info(f"✅ DataCollator validated with template: {repr(template)} ({trained_tokens} tokens trained)")
-                collator = candidate_collator
-                break
-        except Exception as e:
-            logger.debug(f"Failed template {repr(template)}: {e}")
-            
-    if collator is None:
-        logger.warning("⚠️ Warning: DataCollator template verification failed for all options. Falling back to standard DataCollator (training on prompts too to prevent crash).")
-        from transformers import DataCollatorForLanguageModeling
-        collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
+    if enable_packing:
+        logger.info("📦 Sequence Packing is enabled. Bypassing DataCollatorForCompletionOnlyLM to prevent TRL conflicts.")
+    else:
+        logger.info("🔍 Checking DataCollator response template tokenization...")
+        test_messages = [
+            {"role": "user", "content": "Test"},
+            {"role": "assistant", "content": "Réponse"}
+        ]
+        test_text = tokenizer.apply_chat_template(test_messages, tokenize=False)
+        test_tokenized = tokenizer(test_text, return_tensors="pt")
+        
+        possible_templates = [
+            "<|im_start|>assistant\n",
+            "<|im_start|>assistant",
+            "assistant\n",
+            "assistant"
+        ]
+        
+        for template in possible_templates:
+            try:
+                candidate_collator = DataCollatorForCompletionOnlyLM(
+                    response_template=template,
+                    tokenizer=tokenizer
+                )
+                outputs = candidate_collator.torch_call([test_tokenized["input_ids"][0].tolist()])
+                labels = outputs["labels"][0]
+                trained_tokens = (labels != -100).sum().item()
+                if trained_tokens > 0:
+                    logger.info(f"✅ DataCollator validated with template: {repr(template)} ({trained_tokens} tokens trained)")
+                    collator = candidate_collator
+                    break
+            except Exception as e:
+                logger.debug(f"Failed template {repr(template)}: {e}")
+                
+        if collator is None:
+            logger.warning("⚠️ Warning: DataCollator template verification failed for all options. Falling back to standard DataCollator (training on prompts too to prevent crash).")
+            from transformers import DataCollatorForLanguageModeling
+            collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
 
     # 6. Configuration des hyperparamètres d'entraînement de pointe
     # Batch size=1 avec gradient accumulation=8 permet d'atteindre un batch virtuel stable de 8
@@ -234,10 +242,11 @@ def run_expert_training():
         eval_dataset=eval_ds,
         peft_config=peft_config,
         dataset_text_field="text",
-        max_seq_length=768,
+        max_seq_length=max_seq_length,
         tokenizer=tokenizer,
         data_collator=collator,
         args=training_args,
+        packing=enable_packing,
     )
 
     # Lancement de l'entraînement

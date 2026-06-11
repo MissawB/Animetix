@@ -11,9 +11,9 @@ logger = logging.getLogger("animetix." + __name__)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 def merge_lora():
-    base_model_name = "unsloth/Qwen2.5-7B-Instruct"
-    adapter_path = os.path.join(BASE_DIR, "data", "models", "otaku-qwen-7b-adapter", "checkpoint-100")
-    output_path = os.path.join(BASE_DIR, "data", "models", "otaku-qwen-7b-final")
+    base_model_name = os.getenv("BASE_MODEL_NAME", "unsloth/DeepSeek-R1-Distill-Qwen-8B")
+    adapter_path = os.path.join(BASE_DIR, "data", "models", "otaku-expert-adapter", "checkpoint-100")
+    output_path = os.path.join(BASE_DIR, "data", "models", "otaku-expert-final")
 
     if not os.path.exists(adapter_path):
         logger.error(f"❌ Error: Adapter not found at {adapter_path}. Please train the model first.")

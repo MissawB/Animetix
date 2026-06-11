@@ -77,7 +77,13 @@ def train_custom_embeddings():
         logger.info("🤖 Sentence-Transformers détecté. Initialisation du fine-tuning de jina-embeddings-v3...")
         
         # Charger le modèle de base (ou un modèle léger local par défaut)
-        model = SentenceTransformer("all-MiniLM-L6-v2")
+        try:
+            from unsloth import FastSentenceTransformer
+            logger.info("🚀 Unsloth FastSentenceTransformer detected. Accelerating embedding training with Triton kernels...")
+            model = FastSentenceTransformer("all-MiniLM-L6-v2")
+        except ImportError:
+            logger.info("ℹ️ Unsloth FastSentenceTransformer not available. Loading standard SentenceTransformer...")
+            model = SentenceTransformer("all-MiniLM-L6-v2")
         
         train_examples = []
         for row in dataset:

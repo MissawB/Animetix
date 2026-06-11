@@ -79,16 +79,26 @@ Ce document liste toutes les tâches techniques, architecturales et fonctionnell
 ## 🧠 IA, Alignement & MLOps (Améliorations SOTA 2026)
 
 ### 🚀 Modèles de Base & Alignement
-- [ ] **Évaluation et Migration vers Qwen3 / DeepSeek-R1** :
-  - Migrer le modèle de base `Qwen2.5-7B-Instruct` vers `Qwen3-8B-Instruct` ou `DeepSeek-R1-Distill-Qwen-8B` pour des capacités linguistiques, culturelles et de raisonnement accrues.
-- [ ] **Mise en œuvre de l'alignement par préférences SimPO / ORPO** :
-  - Implémenter un script d'alignement de préférences `train_preference.py` exploitant les retours utilisateurs loggés en production sous forme de paires `(Chosen, Rejected)`.
-- [ ] **Intégration d'Unsloth Studio & Triton Kernels** :
-  - Activer le *Sequence Packing* dans le `SFTTrainer` pour éliminer le padding des séquences courtes et diviser le temps d'entraînement par 2.
-  - Exploiter les nouveaux noyaux d'accélération d'embeddings d'Unsloth pour accélérer le fine-tuning contrastif dans [train_embeddings.py](file:///c:/Users/bahma/PycharmProjects/Projet solo/Double_scenario_Project/backend/pipeline/mlops/train_embeddings.py).
+- [x] **Évaluation et Migration vers Qwen3 / DeepSeek-R1** :
+  - Migrer le modèle de base `Qwen2.5-7B-Instruct` vers `Qwen3-8B-Instruct` ou `DeepSeek-R1-Distill-Qwen-8B` pour des capacités linguistiques, culturelles et de raisonnement accrues. (Configuré dynamiquement via la variable d'environnement `BASE_MODEL_NAME`, avec `unsloth/DeepSeek-R1-Distill-Qwen-8B` par défaut).
+- [x] **Mise en œuvre de l'alignement par préférences SimPO / ORPO** :
+  - Implémenter un script d'alignement de préférences `train_preference.py` exploitant les retours utilisateurs loggés en production sous forme de paires `(Chosen, Rejected)`. (Fait : Nouveau script [train_preference.py](file:///c:/Users/bahma/PycharmProjects/Projet solo/Double_scenario_Project/backend/pipeline/mlops/train_preference.py) opérationnel avec support dynamique de SimPO/ORPO/DPO, Unsloth et génération de données synthétiques de secours).
+- [x] **Intégration d'Unsloth Studio & Triton Kernels** :
+  - Activer le *Sequence Packing* dans le `SFTTrainer` pour éliminer le padding des séquences courtes et diviser le temps d'entraînement par 2. (Fait : Géré dynamiquement via `ANIMETIX_PACKING=True` dans [train_expert_model.py](file:///c:/Users/bahma/PycharmProjects/Projet solo/Double_scenario_Project/backend/pipeline/mlops/train_expert_model.py)).
+  - Exploiter les nouveaux noyaux d'accélération d'embeddings d'Unsloth pour accélérer le fine-tuning contrastif dans [train_embeddings.py](file:///c:/Users/bahma/PycharmProjects/Projet solo/Double_scenario_Project/backend/pipeline/mlops/train_embeddings.py). (Fait : `FastSentenceTransformer` utilisé de manière transparente en présence d'Unsloth).
 
 ### 📊 Base de Données & Data Engineering
-- [ ] **Augmentation de Données Synthétiques par LLM** :
-  - Remplacer les gabarits de texte figés dans [finetuning_dataset.py](file:///c:/Users/bahma/PycharmProjects/Projet solo/Double_scenario_Project/backend/pipeline/mlops/finetuning_dataset.py) par des reformulations et paraphrases dynamiques générées par LLM (via l'API Gemini 1.5) pour diversifier les styles de conversation.
-- [ ] **Cadrage d'outils via le protocole MCP (Model Context Protocol)** :
-  - Entraîner le modèle expert à interagir nativement avec des serveurs MCP pour interroger de manière dynamique les API tierces (MAL/Jikan, Spotify) sans dépendre de scripts rigides en Django.
+- [x] **Augmentation de Données Synthétiques par LLM** :
+  - Remplacer les gabarits de texte figés dans [finetuning_dataset.py](file:///c:/Users/bahma/PycharmProjects/Projet solo/Double_scenario_Project/backend/pipeline/mlops/finetuning_dataset.py) par des reformulations et paraphrases dynamiques générées par LLM (via l'API Gemini 1.5/2.5/3) pour diversifier les styles de conversation. (Fait : Intégration de l'API Gemini avec gestion de quota/unavailability via backoff sleep progressif et tri par popularité (Top-N) pour optimiser les appels d'API).
+- [x] **Cadrage d'outils via le protocole MCP (Model Context Protocol)** :
+  - Entraîner le modèle expert à interagir nativement avec des serveurs MCP pour interroger de manière dynamique les API tierces (MAL/Jikan, Spotify) sans dépendre de scripts rigides en Django. (Fait : Génération de 213 paires SFT structurées sous forme d'appels d'outils XML/JSON `<tool_call>` et de traitements de réponses XML/JSON `<tool_response>`).
+
+### 🧠 Améliorations de l'IA & MLOps Futures
+- [x] **Automatisation de la boucle de feedback DPO via Modèle Oracle (Gemini) :**
+  - Mettre à jour `dpo_feedback_loop.py` pour qu'il appelle l'API Gemini afin de générer automatiquement les réponses d'expert (chosen) corrigées lors du traitement des retours utilisateurs négatifs (rejected), éliminant ainsi les placeholders. (Fait : Nouveau client Oracle Gemini intégré avec gestion de quota via pauses progressives et fallback sécurisé).
+- [ ] **Alignement du Modèle Draft pour le Décodage Spéculatif :**
+  - Modifier `continuous_pretraining.py` pour pré-entraîner et distiller le modèle de draft `SmolLM-135M` directement sur les dialogues et instructions du dataset d'entraînement expert, maximisant ainsi le taux d'acceptation des tokens et la vitesse d'inférence.
+- [ ] **Résilience du Juge RAG (LLM Judge Fallback) :**
+  - Implémenter un mécanisme de repli sémantique dans `evaluation_metrics.py` utilisant l'API distante Gemini si le moteur d'inférence local de l'application est indisponible ou saturé lors des évaluations sémantiques Ragas.
+- [ ] **Support Multi-GPU et Distributed Training :**
+  - Adapter `train_preference.py` et `train_expert_model.py` pour supporter nativement DeepSpeed Zero-3 ou FSDP afin de répartir efficacement la charge d'entraînement sur plusieurs GPU lors de l'utilisation de modèles 8B+.

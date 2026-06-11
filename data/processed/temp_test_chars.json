@@ -1,0 +1,49 @@
+[
+  {
+    "id": 45627,
+    "name": "Levi",
+    "origin": "Shingeki no Kyojin",
+    "metadata": {
+      "height": "160 cm (5'3\") Squad Captain of the Special Operations Squad (known as Squad"
+    },
+    "entities": {
+      "related_characters": [],
+      "locations": [],
+      "organizations": [
+        "Survey Corps"
+      ]
+    },
+    "traits": [],
+    "popularity": {
+      "favourites": 40830,
+      "rank": 5
+    },
+    "biography": "Levi) within the Survey Corps. He is known as humanity's strongest soldier. Levi is abrasive, blunt, and has a strong respect for structure and discipline. He is a clean-freak, demanding spotless cleanliness of himself, his equipment, and his environment. Rumors say he was involved in underground crime in his life before coming a soldier. Despite his emotionless and unfriendly demeanor, Levi cares deeply for his squad and greatly values human life.",
+    "image": "https://s4.anilist.co/file/anilistcdn/character/large/b45627-CR68RyZmddGG.png"
+  },
+  {
+    "id": 2079,
+    "name": "Alex Louis Armstrong",
+    "origin": "Hagane no Renkinjutsushi",
+    "metadata": {
+      "birthplace": "Amestris",
+      "occupation": [
+        "State Alchemist Major"
+      ]
+    },
+    "entities": {
+      "related_characters": [
+        "Strong Arm"
+      ],
+      "locations": [],
+      "organizations": []
+    },
+    "traits": [],
+    "popularity": {
+      "favourites": 1995,
+      "rank": 3
+    },
+    "biography": "Alex Louis Armstrong, the Strong Arm Alchemist, was born into an elite family of alchemists and has mastered his family's techniques. Members of his family have, in the past, filled the highest military and political positions in the state. He acquired his alchemy titles for his skill of using arm strength in his alchemy. All though he may look intimidating, he is really friendly and (overly)affectionate, and often stays behind or risks his life for the safety of others. He also has a tendency to show off techniques passed down to him to his enemies, and make them feel somewhat awkward during a battle. (Source: Fullmetal Alchemist wiki)",
+    "image": "https://s4.anilist.co/file/anilistcdn/character/large/b2079-RnhPS44vyqpJ.jpg"
+  }
+]

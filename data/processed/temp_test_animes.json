@@ -1,0 +1,137 @@
+[
+  {
+    "id": 101922,
+    "idMal": 38000,
+    "title": "Kimetsu no Yaiba",
+    "title_english": "Demon Slayer: Kimetsu no Yaiba",
+    "title_native": "鬼滅の刃",
+    "description": "It is the Taisho Period in Japan. Tanjiro, a kindhearted boy who sells charcoal for a living, finds his family slaughtered by a demon. To make matters worse, his younger sister Nezuko, the sole survivor, has been transformed into a demon herself. Though devastated by this grim reality, Tanjiro resolves to become a “demon slayer” so that he can turn his sister back into a human, and kill the demon that massacred his family.",
+    "genres": [
+      "Action",
+      "Adventure",
+      "Drama",
+      "Fantasy",
+      "Supernatural"
+    ],
+    "tags": [
+      "aucune unité de calcul d'IA n'est disponible (Ollama/HF).",
+      "Shounen",
+      "Vampire",
+      "Primarily Teen Cast",
+      "Orphan",
+      "Demons",
+      "Monster Girl",
+      "Male Protagonist",
+      "Travel",
+      "Revenge",
+      "Désolé",
+      "Tragedy",
+      "Swordplay"
+    ],
+    "micro_tags": [
+      "Désolé",
+      "aucune unité de calcul d'IA n'est disponible (Ollama/HF)."
+    ],
+    "popularity": 928335,
+    "year": 2019,
+    "image": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx101922-WBsBl0ClmgYL.jpg",
+    "studios": [],
+    "recommendations": {
+      "Owari no Seraph": 79,
+      "Dororo": 1912,
+      "Ao no Exorcist": 22,
+      "Boku no Hero Academia": 24,
+      "Stranger: Mukou Hadan": 13,
+      "Fate/stay night [Heaven's Feel] I. presage flower": 1,
+      "Boku no Hero Academia 4": 335,
+      "Black Clover": 153,
+      "HUNTER×HUNTER (2011)": 100,
+      "JoJo no Kimyou na Bouken (TV)": 29,
+      "Inuyasha": 78,
+      "Noragami": 47,
+      "BLEACH": 374,
+      "Katanagatari": 51,
+      "Basilisk: Kouga Ninpouchou": 21,
+      "Juubee Ninpuuchou": 14,
+      "NARUTO": 80,
+      "Rurouni Kenshin: Meiji Kenkaku Romantan": 24,
+      "Hagane no Renkinjutsushi: FULLMETAL ALCHEMIST": 104,
+      "Nurarihyon no Mago": 36,
+      "Shingetsutan Tsukihime": 1,
+      "Akame ga Kill!": 98,
+      "Shaman King": 13,
+      "Dororo to Hyakkimaru": 8,
+      "Magi: The labyrinth of magic": 24
+    },
+    "graph_nodes": {
+      "genre_nodes": [
+        "Action",
+        "Adventure",
+        "Drama",
+        "Fantasy",
+        "Supernatural"
+      ],
+      "year_node": 2019
+    }
+  },
+  {
+    "id": 98202,
+    "idMal": 34822,
+    "title": "Tsuki ga Kirei",
+    "title_english": "Tsukigakirei",
+    "title_native": "月がきれい",
+    "description": "It’s the third year of middle school. Kotaro, a bookish boy aspiring to become a novelist, and Akane, a track girl who loves to run, meet in the same class together for the first time. They’re put in charge of the equipment for the sports festival, and slowly grow closer via LINE. How does Kotaro deal with his growing feelings for her? Meanwhile, Takumi has been in love with Akane since first year, and Akane’s friend, Chinatsu, becomes interested in Kotaro. A refreshing story of young love set in Kawagoe.",
+    "genres": [
+      "Drama",
+      "Romance",
+      "Slice of Life"
+    ],
+    "tags": [
+      "Writing",
+      "Coming of Age",
+      "School",
+      "Male Protagonist",
+      "Heterosexual",
+      "Female Protagonist"
+    ],
+    "micro_tags": [],
+    "popularity": 149846,
+    "year": 2017,
+    "image": "https://s4.anilist.co/file/anilistcdn/media/anime/cover/medium/bx98202-H6RtsIMZPALF.png",
+    "studios": [],
+    "recommendations": {
+      "Just Because!": 188,
+      "Tamako Love Story": 115,
+      "Kimikiss pure rouge": 8,
+      "Hourou Musuko": 21,
+      "Kimi ni Todoke": 143,
+      "Byousoku 5 Centimeter": 13,
+      "Araburu Kisetsu no Otome-domo yo.": 57,
+      "Kimi no Koe wo Todoketai": 5,
+      "Tsurezure Children": 54,
+      "Hatsukoi Limited": 2,
+      "Isshuukan Friends.": 43,
+      "ef: a tale of memories.": 5,
+      "Saenai Heroine no Sodatekata ♭": 4,
+      "Itsudatte Bokura no Koi wa 10 cm Datta.": 13,
+      "Yesterday wo Utatte": 18,
+      "Hoshiai no Sora": 10,
+      "Kimi ni Todoke 2ND SEASON": 24,
+      "Kimi no Suizou wo Tabetai": 29,
+      "Yahari Ore no Seishun Love Come wa Machigatteiru. Kan": 93,
+      "Saenai Heroine no Sodatekata Fine": 16,
+      "CLANNAD": 14,
+      "Tada-kun wa Koi wo Shinai": 23,
+      "Yahari Ore no Seishun Love Come wa Machigatteiru. Zoku": 16,
+      "Ore Monogatari!!": 7
+    },
+    "graph_nodes": {
+      "genre_nodes": [
+        "Drama",
+        "Romance",
+        "Slice of Life"
+      ],
+      "year_node": 2017
+    }
+  }
+]
