@@ -11,14 +11,14 @@ Ce document liste toutes les tâches techniques, architecturales et fonctionnell
   - Mettre en place un nettoyage regex rigoureux dans `finetuning_dataset.py` pour éliminer le balisage HTML (`<br>`, `<i>`), les entités HTML et les caractères spéciaux parasites des descriptions brutes.
 
 ### 🗺️ Améliorations Lore World Map (UI/UX & Data Science)
-- [ ] **Visualisation Interactive du Graphe** :
+- [X] **Visualisation Interactive du Graphe** :
   - Remplacer la vue "grille de cartes" actuelle par un vrai composant de graphe interactif (ex: `react-force-graph-2d` ou `3d`) pour visualiser la topologie des clusters Neo4j.
-- [ ] **Timeline de Généalogie des Studios** : 
+- [x] **Timeline de Généalogie des Studios** : 
   - Développer une vue chronologique des productions et influences entre studios/créateurs en utilisant les relations du graphe.
-- [ ] **Interactivité des Éléments** :
+- [X] **Interactivité des Éléments** :
   - Câbler le bouton "Explorer la zone" sur chaque carte de cluster pour ouvrir un panneau latéral ou une vue détaillée du cluster.
   - Rendre les badges d'entités cliquables pour lancer une recherche rapide contextuelle.
-- [ ] **Légende et Couleurs Dynamiques** :
+- [x] **Légende et Couleurs Dynamiques** :
   - Appliquer dynamiquement les couleurs de la "Légende Dynamique" en fonction des métriques réelles (score de densité, modularité).
 - [ ] **Recherche et Filtrage** :
   - Ajouter une barre de recherche en texte libre pour trouver rapidement un cluster par thématique ou entité.
@@ -35,6 +35,14 @@ Ce document liste toutes les tâches techniques, architecturales et fonctionnell
   - Remplacer l'utilisation abusive du type `any` par des types/interfaces TypeScript adéquats.
   - Corriger la mise à jour synchrone d'état React dans l'effet de [CustomConfigPage.tsx](frontend/src/pages/utils/CustomConfigPage.tsx).
   - Corriger les caractères d'espacement irréguliers dans le fichier de typages généré [api.d.ts](frontend/src/types/api.d.ts).
+
+### 🔒 Sécurité & Robustesse
+- [ ] **Audit de Sécurité SQL (NL Query)** : 
+  - Réviser rigoureusement `backend/adapters/persistence/django_repository_adapter.py` et `core/utils/sql_guard.py`.
+  - S'assurer que les guardrails contre l'injection SQL sont infranchissables pour la fonctionnalité de requête en langage naturel.
+- [ ] **Alignement de la Documentation** :
+  - Synchroniser `docs/ROADMAP.md` avec la réalité opérationnelle du `TODO.md`.
+  - Mettre à jour les dates et le statut des phases IA (certaines marquées `:done` alors qu'elles sont en cours d'optimisation).
 
 ### 🏗️ Finalisation des pages "Squelettes"
 - [x] **VideoRagPage** : Implémenter l'interface d'exploration temporelle profonde et de navigation narrative. (Fait : Timeline interactive et inspecteur sémantique opérationnels).
@@ -54,8 +62,8 @@ Ce document liste toutes les tâches techniques, architecturales et fonctionnell
 - [x] **Mise en place de métriques de performance granulaires** :
   - Collecter en temps réel le temps d'exécution des requêtes de base de données vectorielles (pgvector) et sémantiques (Neo4j).
   - Enregistrer les temps de réponse de l'API RAG. (Fait : Instrumentation des adaptateurs persistence et des services RAG avec logging vers W&B).
-- [ ] **Alertes de dégradation de performance** :
-  - Configurer un système de notifications/alertes en cas de pic de latence d'inférence ou de dérive sémantique importante des profils d'archetypes utilisateur.
+- [x] **Alertes de dégradation de performance** :
+  - Configurer un système de notifications/alertes en cas de pic de latence d'inférence ou de dérive sémantique importante des profils d'archetypes utilisateur. (Fait : Implémentation d'AlertService, détection automatique des pics >2s et des dérives majeures d'archétypes avec notifications via WebSockets/DB).
 
 ---
 
@@ -68,4 +76,4 @@ Ce document liste toutes les tâches techniques, architecturales et fonctionnell
   - Simuler des réponses d'erreur ou d'indisponibilité d'outils (`<tool_response>` en statut d'erreur/timeout) dans les exemples d'entraînement pour apprendre au modèle expert à réagir poliment et intelligemment en cas de panne.
 
 ### 🏗️ Pipeline RAG 2.0 (Next)
-- [ ] **Implement RAG Processors**: Implement `SpeculateProcessor`, `VlmRerankProcessor`, `SynthesizeProcessor`, `JudgeProcessor`, `FallbackRagProcessor`, and `RAGOrchestrator`. Update DI container and refactor/remove `RAGWorkflowManager`.
+- [x] **Implement RAG Processors**: Implement `SpeculateProcessor`, `VlmRerankProcessor`, `SynthesizeProcessor`, `JudgeProcessor`, `FallbackRagProcessor`, and `RAGOrchestrator`. Update DI container and refactor/remove `RAGWorkflowManager`. (Fait : Toutes les classes de processeurs RAG et l'orchestrateur sont implémentés sous `backend/core/domain/services/rag/processors/`, configurés dans le conteneur DI `AgenticContainer`, et vérifiés avec une couverture de tests unitaires complète).

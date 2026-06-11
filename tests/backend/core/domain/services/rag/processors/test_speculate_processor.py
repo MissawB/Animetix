@@ -3,6 +3,13 @@ from unittest.mock import MagicMock
 from backend.core.domain.services.rag.processors.speculate_processor import SpeculateProcessor
 from backend.core.domain.entities.ai_schemas import RAGContext, RAGState
 
+def consume_generator(gen):
+    try:
+        while True:
+            next(gen)
+    except StopIteration as e:
+        return e.value
+
 def test_speculate_processor_generates_hypothesis():
     mock_forge = MagicMock()
     mock_res = MagicMock()
@@ -15,7 +22,7 @@ def test_speculate_processor_generates_hypothesis():
     ctx.query = "test query"
     ctx.truth_path = "initial truth"
     
-    next_state = processor.process(ctx)
+    next_state = consume_generator(processor.process(ctx))
     
     assert next_state == RAGState.SYNTHESIZE
     assert "### HYPOTHÈSE LOGIQUE (DÉDUCTION) ###" in ctx.truth_path
@@ -31,7 +38,7 @@ def test_speculate_processor_handles_no_hypothesis():
     ctx.query = "test query"
     ctx.truth_path = "initial truth"
     
-    next_state = processor.process(ctx)
+    next_state = consume_generator(processor.process(ctx))
     
     assert next_state == RAGState.SYNTHESIZE
     assert ctx.truth_path == "initial truth"
