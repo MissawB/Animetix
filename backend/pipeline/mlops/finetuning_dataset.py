@@ -925,6 +925,39 @@ def generate_mcp_tool_instructions() -> List[dict]:
             "output": ans
         })
 
+    # --- SCENARIOS D'ERREURS ET RESILIENCE MCP ---
+    # 1. Erreur Jikan (Rate Limit 429)
+    for tr in titles[:5]:
+        q = f"Recherche les personnages du manga ou de l'anime '{tr}'."
+        tool_response_error = {
+            "status": "error",
+            "code": 429,
+            "message": "Rate limit exceeded. Too many requests."
+        }
+        ans = f"Je rencontre actuellement une limite de requêtes avec l'API Jikan (Erreur 429). Néanmoins, d'après mes connaissances encyclopédiques, les personnages principaux de l'œuvre '{tr}' incluent les figures incontournables de son univers."
+        
+        instructions.append({
+            "instruction": q,
+            "input": f"<tool_response>\n{json.dumps(tool_response_error, ensure_ascii=False, indent=2)}\n</tool_response>",
+            "output": ans
+        })
+
+    # 2. Erreur Spotify (Service Unavailable 503)
+    for art in artists[:5]:
+        q = f"Quels sont les morceaux les plus populaires de '{art}' sur Spotify ?"
+        tool_response_error = {
+            "status": "error",
+            "code": 503,
+            "message": "Service Unavailable. Please try again later."
+        }
+        ans = f"L'API Spotify est temporairement indisponible (Erreur 503). Je ne peux pas récupérer le classement en temps réel pour '{art}'. D'après mes connaissances de base de données, cet artiste possède un catalogue très populaire apprécié des fans d'anisongs."
+        
+        instructions.append({
+            "instruction": q,
+            "input": f"<tool_response>\n{json.dumps(tool_response_error, ensure_ascii=False, indent=2)}\n</tool_response>",
+            "output": ans
+        })
+
     return instructions
 
 # --- METHODE D'ASSEMBLAGE UNIFIEE ---

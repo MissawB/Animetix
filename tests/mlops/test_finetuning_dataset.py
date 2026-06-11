@@ -55,5 +55,27 @@ class TestFinetuningDataset(unittest.TestCase):
             self.assertEqual(meta_req, 100)
             self.assertEqual(gen_req, 200)
 
+    def test_mcp_error_scenarios(self):
+        from backend.pipeline.mlops.finetuning_dataset import generate_mcp_tool_instructions
+        
+        instructions = generate_mcp_tool_instructions()
+        
+        # Vérifier la présence d'au moins un scénario contenant une réponse d'erreur de tool_response
+        error_found = False
+        for inst in instructions:
+            if "<tool_response>" in inst["input"] and '"status": "error"' in inst["input"]:
+                error_found = True
+                # Vérifier que l'output contient une excuse ou indique une recherche en mémoire/connaissance
+                self.assertTrue(
+                    "rencontre une erreur" in inst["output"] or
+                    "indisponible" in inst["output"] or
+                    "limite de requêtes" in inst["output"] or
+                    "désolé" in inst["output"].lower() or
+                    "connaissances" in inst["output"]
+                )
+                break
+                
+        self.assertTrue(error_found, "Aucun scénario d'erreur MCP trouvé dans les instructions.")
+
 if __name__ == "__main__":
     unittest.main()
