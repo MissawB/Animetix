@@ -12,6 +12,8 @@ import random
 import sys
 import logging
 import time
+import html
+import re
 from typing import List, Any
 from datasets import load_dataset
 from dotenv import load_dotenv
@@ -22,6 +24,17 @@ except ImportError:
     genai = None
 
 logger = logging.getLogger("animetix.pipeline." + __name__)
+
+def clean_description(text: str) -> str:
+    if not text:
+        return ""
+    # 1. Décoder les entités HTML
+    text = html.unescape(text)
+    # 2. Supprimer les balises HTML
+    text = re.sub(r'</?[a-zA-Z]+(?:\s+[^>]*)?>', ' ', text)
+    # 3. Supprimer les espaces multiples et les retours à la ligne
+    text = re.sub(r'\s+', ' ', text)
+    return text.strip()
 
 # Chemins de fichiers absolus
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -981,10 +994,10 @@ def run_generate_instruction_dataset():
             animes = json.load(f)
             logger.info(f"[INFO] Processing ALL {len(animes)} animes with popularity weighting...")
             for item in animes:
-                title = item.get('title', 'Unknown')
-                genres = item.get('genres', [])
-                studios = item.get('studios', [])
-                tags = item.get('tags', [])
+                title = clean_description(item.get('title', 'Unknown'))
+                genres = [clean_description(g) for g in item.get('genres', [])]
+                studios = [clean_description(s) for s in item.get('studios', [])]
+                tags = [clean_description(t) for t in item.get('tags', [])]
                 pop = item.get('popularity', 0)
                 year = item.get('year', 2020)
                 
@@ -1031,9 +1044,9 @@ def run_generate_instruction_dataset():
             mangas = json.load(f)
             logger.info(f"[INFO] Processing ALL {len(mangas)} mangas with popularity weighting...")
             for item in mangas:
-                title = item.get('title', 'Unknown')
-                genres = item.get('genres', [])
-                tags = item.get('tags', [])
+                title = clean_description(item.get('title', 'Unknown'))
+                genres = [clean_description(g) for g in item.get('genres', [])]
+                tags = [clean_description(t) for t in item.get('tags', [])]
                 pop = item.get('popularity', 0)
                 
                 profile = make_french_manga_profile(title, genres, tags)
@@ -1081,13 +1094,13 @@ def run_generate_instruction_dataset():
             logger.info(f"[INFO] Processing {len(top_chars)} characters with tiered augmentation...")
             
             for c in top_chars:
-                name = c.get('name', 'Anonyme')
-                origin = c.get('origin', 'Inconnu')
+                name = clean_description(c.get('name', 'Anonyme'))
+                origin = clean_description(c.get('origin', 'Inconnu'))
                 ents = c.get('entities', {})
-                orgs = ents.get('organizations', [])
+                orgs = [clean_description(o) for o in ents.get('organizations', [])]
                 favs = c.get('popularity', {}).get('favourites', 0)
                 rank = c.get('popularity', {}).get('rank', 9999)
-                height = c.get('metadata', {}).get('height', 'Unknown')
+                height = clean_description(c.get('metadata', {}).get('height', 'Unknown'))
                 
                 profile = make_french_character_bio(name, origin, orgs, favs, rank, height)
                 display_name = get_display_character(name)
