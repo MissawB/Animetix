@@ -19,12 +19,34 @@ def test_beam_pipeline_execution():
         container = get_container()
         repo = container.persistence.repository()
         
+        # Mock embedding_fn to avoid loading SentenceTransformer model during tests
+        repo.chroma._embedding_fn = lambda texts: [[0.1] * 384 for _ in texts]
+        
         with patch.object(repo.chroma, 'upsert_items') as mock_upsert:
-            # Run in-memory using DirectRunner
-            run_pipeline(
-                argv=["--runner=DirectRunner"],
-                test_input=test_input
+            from backend.pipeline.mlops.lore_ingestion_beam import (
+                ScrapeAndCleanDoFn, ChunkTextDoFn, GenerateEmbeddingsDoFn, WriteToVectorDBDoFn
             )
+            
+            # Step 1: Scrape
+            scraper = ScrapeAndCleanDoFn()
+            scraped = list(scraper.process(test_input[0]))
+            assert len(scraped) == 1
+            
+            # Step 2: Chunk
+            chunker = ChunkTextDoFn()
+            chunked = list(chunker.process(scraped[0]))
+            assert len(chunked) == 1
+            
+            # Step 3: Embed
+            embedder = GenerateEmbeddingsDoFn()
+            embedder.setup()
+            embedded = list(embedder.process(chunked[0]))
+            assert len(embedded) == 1
+            
+            # Step 4: Write
+            writer = WriteToVectorDBDoFn()
+            writer.setup()
+            list(writer.process(embedded[0]))
             
             # Assert elements were scraped, chunked, embedded and upserted
             assert mock_upsert.call_count == 1

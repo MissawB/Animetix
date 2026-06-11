@@ -64,15 +64,26 @@ class TestForgeVNAPI:
                 return mock_script_data
 
         # Configure the global mock_container
+        mock_container.visual_novel_service.generate_script.return_value = MockScript()
         mock_container.visual_novel_service.return_value.generate_script.return_value = MockScript()
 
-        response = api_client.post(url, data, format='json')
-        assert response.status_code == status.HTTP_200_OK
-        assert response.data['vn_script']['title'] == "Fusion Script"
-        
-        # Verify persistence
-        sample_fusion.refresh_from_db()
-        assert sample_fusion.vn_script['title'] == "Fusion Script"
+        mock_guardrail = MagicMock()
+        mock_guardrail.validate_input.return_value = {"is_safe": True}
+        mock_guardrail.validate_output.return_value = {"is_safe": True}
+
+        mock_usage = MagicMock()
+        mock_usage.check_quota.return_value = True
+
+        with container.core.visual_novel_service.override(providers.Object(mock_container.visual_novel_service)), \
+             container.core.guardrail_service.override(providers.Object(mock_guardrail)), \
+             container.infrastructure.usage_port.override(providers.Object(mock_usage)):
+            response = api_client.post(url, data, format='json')
+            assert response.status_code == status.HTTP_200_OK
+            assert response.data['vn_script']['title'] == "Fusion Script"
+            
+            # Verify persistence
+            sample_fusion.refresh_from_db()
+            assert sample_fusion.vn_script['title'] == "Fusion Script"
 
     def test_update_vn_script_success(self, api_client, mock_user, sample_fusion):
         api_client.force_authenticate(user=mock_user)

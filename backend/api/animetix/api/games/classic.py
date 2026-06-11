@@ -37,10 +37,13 @@ class ClassicGameStateView(APIView):
         
         return Response({
             'media_type': media_type,
+            'mediaType': media_type,
             'difficulty': state['difficulty'],
             'is_daily': state['is_daily'],
+            'isDaily': state['is_daily'],
             'is_ranked': state['is_ranked'],
             'game_over': state['game_over'],
+            'gameOver': state['game_over'],
             'guess_count': len(state['guesses']),
             'guesses': state['guesses'],
             'hints': hints,
@@ -90,10 +93,13 @@ class ClassicGameStartView(APIView):
         return Response({
             'status': 'started',
             'media_type': media_type,
+            'mediaType': media_type,
             'difficulty': difficulty,
             'is_daily': False,
+            'isDaily': False,
             'is_ranked': False,
             'game_over': False,
+            'gameOver': False,
             'guess_count': 0,
             'guesses': []
         })
@@ -147,7 +153,9 @@ class ClassicGameGuessView(APIView):
             "title_native": g_data.get('title_native'), 
             "image": g_data.get('image'), 
             "score": score, 
-            "color": color
+            "color": color,
+            "is_correct": is_correct,
+            "isCorrect": is_correct
         }
         
         # Add guess
@@ -200,7 +208,9 @@ class ClassicGameGuessView(APIView):
         
         return Response({
             'media_type': media_type,
+            'mediaType': media_type,
             'game_over': port.get('game_over', False),
+            'gameOver': port.get('game_over', False),
             'guess_count': len(guesses),
             'guesses': guesses,
             'latest_guess': new_guess,

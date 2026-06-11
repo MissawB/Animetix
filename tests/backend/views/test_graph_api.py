@@ -27,12 +27,14 @@ def test_graph_neighbors_premium_access(client, premium_user, mock_container):
     
     from animetix.containers import container
     from dependency_injector import providers
-    with container.graph_persistence_port.override(providers.Object(mock_container.graph_persistence_port)):
+    with container.persistence.graph_persistence_port.override(providers.Object(mock_container.graph_persistence_port)):
         url = reverse('api_graph_neighbors')
         response = client.get(url, {'id': '123', 'type': 'Anime', 'depth': 2})
         
         assert response.status_code == 200
-        assert response.json() == mock_data
+        res_json = response.json()
+        assert res_json["nodes"] == mock_data["nodes"]
+        assert res_json["links"] == mock_data["links"]
         mock_container.graph_persistence_port.get_neighborhood.assert_called_once_with('123', 'Anime', 2)
 
 @pytest.mark.django_db

@@ -73,3 +73,22 @@ Ce document liste toutes les tâches techniques, architecturales et fonctionnell
 - [ ] Corriger la chronologie du diagramme de Gantt (actuellement tous marqués `:done` malgré des dates futures).
 - [ ] Synchroniser les initiatives de `ROADMAP.md` avec celles listées dans `TODO.md`.
 - [ ] Ajouter une section "Prochaines Étapes" (Next Steps) pour séparer le travail fondamental d'IA terminé des futures mises à jour.
+
+---
+
+## 🧠 IA, Alignement & MLOps (Améliorations SOTA 2026)
+
+### 🚀 Modèles de Base & Alignement
+- [ ] **Évaluation et Migration vers Qwen3 / DeepSeek-R1** :
+  - Migrer le modèle de base `Qwen2.5-7B-Instruct` vers `Qwen3-8B-Instruct` ou `DeepSeek-R1-Distill-Qwen-8B` pour des capacités linguistiques, culturelles et de raisonnement accrues.
+- [ ] **Mise en œuvre de l'alignement par préférences SimPO / ORPO** :
+  - Implémenter un script d'alignement de préférences `train_preference.py` exploitant les retours utilisateurs loggés en production sous forme de paires `(Chosen, Rejected)`.
+- [ ] **Intégration d'Unsloth Studio & Triton Kernels** :
+  - Activer le *Sequence Packing* dans le `SFTTrainer` pour éliminer le padding des séquences courtes et diviser le temps d'entraînement par 2.
+  - Exploiter les nouveaux noyaux d'accélération d'embeddings d'Unsloth pour accélérer le fine-tuning contrastif dans [train_embeddings.py](file:///c:/Users/bahma/PycharmProjects/Projet solo/Double_scenario_Project/backend/pipeline/mlops/train_embeddings.py).
+
+### 📊 Base de Données & Data Engineering
+- [ ] **Augmentation de Données Synthétiques par LLM** :
+  - Remplacer les gabarits de texte figés dans [finetuning_dataset.py](file:///c:/Users/bahma/PycharmProjects/Projet solo/Double_scenario_Project/backend/pipeline/mlops/finetuning_dataset.py) par des reformulations et paraphrases dynamiques générées par LLM (via l'API Gemini 1.5) pour diversifier les styles de conversation.
+- [ ] **Cadrage d'outils via le protocole MCP (Model Context Protocol)** :
+  - Entraîner le modèle expert à interagir nativement avec des serveurs MCP pour interroger de manière dynamique les API tierces (MAL/Jikan, Spotify) sans dépendre de scripts rigides en Django.

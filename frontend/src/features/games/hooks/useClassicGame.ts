@@ -8,7 +8,13 @@ export const useClassicGame = () => {
 
   const { data: gameState, isLoading: loading } = useQuery({
     queryKey: QUERY_KEY,
-    queryFn: () => classicGameService.getState(),
+    queryFn: async () => {
+      try {
+        return await classicGameService.getState();
+      } catch {
+        return await classicGameService.start();
+      }
+    },
     refetchOnWindowFocus: false,
   });
 

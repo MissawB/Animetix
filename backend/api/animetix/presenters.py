@@ -267,10 +267,26 @@ class GamePresenter:
     @classmethod
     def format_classic_hints(cls, secret_data: dict, guess_count: int, revealed_ids: list) -> dict:
         """Centralizes hint formatting for the Classic mode."""
+        if not secret_data:
+            secret_data = {}
+        
+        origin = secret_data.get('origin') or 'Inconnu'
+        year = secret_data.get('year') or '????'
+        origin_year = f"{origin} ({year})"
+        
+        tags = secret_data.get('tags')
+        tags_str = ", ".join(tags[:5]) if tags else "Inconnu"
+        
+        metadata = secret_data.get('metadata') or {}
+        studio = metadata.get('studio') or 'Inconnu' if isinstance(metadata, dict) else 'Inconnu'
+        
+        desc = secret_data.get('description') or '...'
+        desc_snippet = desc[:100] + "..." if len(desc) > 100 else desc
+        
         return {
-            'origin': cls.format_hint('origin', 'Origine / Année', 5, f"{secret_data.get('origin', 'Inconnu')} ({secret_data.get('year', '????')})", guess_count, revealed_ids),
-            'tags': cls.format_hint('tags', 'Tags', 10, ", ".join(secret_data.get('tags', [])[:5]) if secret_data.get('tags') else "Inconnu", guess_count, revealed_ids),
-            'studio': cls.format_hint('studio', 'Studio', 15, secret_data.get('metadata', {}).get('studio', 'Inconnu'), guess_count, revealed_ids),
-            'desc': cls.format_hint('desc', 'Description', 20, secret_data.get('description', '...')[:100] + "...", guess_count, revealed_ids)
+            'origin': cls.format_hint('origin', 'Origine / Année', 5, origin_year, guess_count, revealed_ids),
+            'tags': cls.format_hint('tags', 'Tags', 10, tags_str, guess_count, revealed_ids),
+            'studio': cls.format_hint('studio', 'Studio', 15, studio, guess_count, revealed_ids),
+            'desc': cls.format_hint('desc', 'Description', 20, desc_snippet, guess_count, revealed_ids)
         }
 

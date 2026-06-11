@@ -19,16 +19,32 @@ def merge_lora():
         logger.error(f"❌ Error: Adapter not found at {adapter_path}. Please train the model first.")
         return
 
-    logger.info(f"🚀 Loading base model: {base_model_name}...")
+    device_map = "cuda" if torch.cuda.is_available() else "cpu"
+    logger.info(f"🚀 Loading base model: {base_model_name} on {device_map}...")
     
     # On charge le modèle en FP16 (ou BF16 si supporté) pour le merge
     # Note: On ne charge PAS en 4-bit pour le merge final car merge_and_unload() ne le supporte pas bien
-    base_model = AutoModelForCausalLM.from_pretrained(
-        base_model_name,
-        torch_dtype=torch.float16,
-        device_map="cpu", # On merge sur CPU pour éviter de saturer la VRAM si le modèle est gros
-        trust_remote_code=True,
-    )
+    try:
+        base_model = AutoModelForCausalLM.from_pretrained(
+            base_model_name,
+            torch_dtype=torch.float16,
+            device_map=device_map,
+            trust_remote_code=True,
+        )
+    except (torch.cuda.OutOfMemoryError, RuntimeError) as e:
+        if device_map == "cuda":
+            logger.warning(f"⚠️ OutOfMemory on GPU ({e}). Falling back to CPU merge...")
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+            device_map = "cpu"
+            base_model = AutoModelForCausalLM.from_pretrained(
+                base_model_name,
+                torch_dtype=torch.float16,
+                device_map=device_map,
+                trust_remote_code=True,
+            )
+        else:
+            raise e
     
     tokenizer = AutoTokenizer.from_pretrained(base_model_name)
 

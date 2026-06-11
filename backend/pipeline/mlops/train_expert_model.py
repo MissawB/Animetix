@@ -155,15 +155,56 @@ def run_expert_training():
         logger.info("✅ Model loaded with standard BitsAndBytes and PEFT configuration.")
 
     # 5. Assistant-Only Loss Masking (Data Collator ciblant uniquement la réponse de l'assistant)
-    response_template = "<|im_start|>assistant\n"
-    collator = DataCollatorForCompletionOnlyLM(
-        response_template=response_template,
-        tokenizer=tokenizer
-    )
+    # Validation dynamique du patron pour éviter les échecs de tokenisation silencieux
+    logger.info("🔍 Checking DataCollator response template tokenization...")
+    test_messages = [
+        {"role": "user", "content": "Test"},
+        {"role": "assistant", "content": "Réponse"}
+    ]
+    test_text = tokenizer.apply_chat_template(test_messages, tokenize=False)
+    test_tokenized = tokenizer(test_text, return_tensors="pt")
+    
+    collator = None
+    possible_templates = [
+        "<|im_start|>assistant\n",
+        "<|im_start|>assistant",
+        "assistant\n",
+        "assistant"
+    ]
+    
+    for template in possible_templates:
+        try:
+            candidate_collator = DataCollatorForCompletionOnlyLM(
+                response_template=template,
+                tokenizer=tokenizer
+            )
+            outputs = candidate_collator.torch_call([test_tokenized["input_ids"][0].tolist()])
+            labels = outputs["labels"][0]
+            trained_tokens = (labels != -100).sum().item()
+            if trained_tokens > 0:
+                logger.info(f"✅ DataCollator validated with template: {repr(template)} ({trained_tokens} tokens trained)")
+                collator = candidate_collator
+                break
+        except Exception as e:
+            logger.debug(f"Failed template {repr(template)}: {e}")
+            
+    if collator is None:
+        logger.warning("⚠️ Warning: DataCollator template verification failed for all options. Falling back to standard DataCollator (training on prompts too to prevent crash).")
+        from transformers import DataCollatorForLanguageModeling
+        collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
 
     # 6. Configuration des hyperparamètres d'entraînement de pointe
     # Batch size=1 avec gradient accumulation=8 permet d'atteindre un batch virtuel stable de 8
     # Paged AdamW 8-bit prévient les pannes de VRAM locale
+    enable_eval = os.getenv("ANIMETIX_ENABLE_EVAL", "False").lower() in ("true", "1", "yes")
+    eval_strategy = "steps" if enable_eval else "no"
+    eval_steps = 100 if enable_eval else 9999
+    
+    if enable_eval:
+        logger.info(f"📊 Evaluation activated: strategy={eval_strategy}, steps={eval_steps}")
+    else:
+        logger.info("ℹ️ Evaluation deactivated to conserve VRAM (set env ANIMETIX_ENABLE_EVAL=True to enable).")
+
     training_args = TrainingArguments(
         output_dir=output_dir,
         per_device_train_batch_size=1,
@@ -172,8 +213,8 @@ def run_expert_training():
         max_steps=2500,
         learning_rate=2e-4,
         logging_steps=1,
-        eval_strategy="no",
-        eval_steps=9999,  # Désactivé pour préserver la VRAM sur GPU portable
+        eval_strategy=eval_strategy,
+        eval_steps=eval_steps,
         save_strategy="steps",
         save_steps=5,
         save_total_limit=1,

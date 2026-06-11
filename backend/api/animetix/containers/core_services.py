@@ -221,8 +221,7 @@ class CoreServicesContainer(containers.DeclarativeContainer):
     )
 
     game_session_service_factory = providers.Factory(
-        GameSessionService,
-        state_port=providers.Dependency()
+        GameSessionService
     )
 
     video_quest_service = providers.Singleton(

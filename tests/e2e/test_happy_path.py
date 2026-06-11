@@ -13,8 +13,9 @@ def test_happy_path(page: Page, live_server):
         external_id="456",
         media_type="Anime",
         title="Naruto",
-        year=2002,
-        origin="Japan"
+        description="Naruto Uzumaki is a young ninja who seeks recognition from his peers and dreams of becoming the Hokage.",
+        release_year=2002,
+        metadata={"origin": "Japan"}
     )
 
     # 1. Accès à l'accueil
@@ -22,7 +23,7 @@ def test_happy_path(page: Page, live_server):
     expect(page).to_have_title(re.compile("Animetix"))
 
     # 2. Choix d'un mode de jeu (ex: Classic) via navigation directe
-    page.goto(f"{live_server.url}/game/start/")
+    page.goto(f"{live_server.url}/game/classic/")
     
     # 3. Faire une devinette
     # Attendre que la page de jeu soit chargée
@@ -35,4 +36,4 @@ def test_happy_path(page: Page, live_server):
     
     # 4. Vérifier le feedback de victoire
     expect(page.locator("text=VICTOIRE")).to_be_visible()
-    expect(page.locator("text=Naruto")).to_be_visible()
+    expect(page.locator("text=Naruto").first).to_be_visible()

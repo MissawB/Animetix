@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 from pydantic import BaseModel
 from core.domain.services.llm_service import LLMService
 from core.domain.exceptions import InferenceError, ParsingError
+from core.domain.entities.ai_schemas import InferenceResponse
 
 class MockSchema(BaseModel):
     name: str
@@ -13,7 +14,7 @@ def test_generate_structured_success():
     inference_engine = MagicMock()
     prompt_manager = MagicMock()
     # Mocking a valid JSON response
-    inference_engine.generate.return_value = '{"name": "Alice", "age": 30}'
+    inference_engine.generate.return_value = InferenceResponse(text='{"name": "Alice", "age": 30}')
     
     service = LLMService(inference_engine, prompt_manager)
     result = service.generate_structured("test prompt", MockSchema)
@@ -28,8 +29,8 @@ def test_generate_structured_retry_success():
     
     # First call returns invalid JSON, second call returns valid JSON
     inference_engine.generate.side_effect = [
-        'Invalid JSON string',
-        '{"name": "Bob", "age": 25}'
+        InferenceResponse(text='Invalid JSON string'),
+        InferenceResponse(text='{"name": "Bob", "age": 25}')
     ]
     
     service = LLMService(inference_engine, prompt_manager)
@@ -45,8 +46,8 @@ def test_generate_structured_retry_failure():
     
     # Both calls return invalid JSON
     inference_engine.generate.side_effect = [
-        'Invalid JSON 1',
-        'Invalid JSON 2'
+        InferenceResponse(text='Invalid JSON 1'),
+        InferenceResponse(text='Invalid JSON 2')
     ]
     
     service = LLMService(inference_engine, prompt_manager)

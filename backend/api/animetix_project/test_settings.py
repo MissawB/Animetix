@@ -19,3 +19,14 @@ FEATURES = {
 
 # Mock out heavy logging/tracking
 sentry_sdk.init = lambda **kwargs: None
+
+# Allow session-based authentication in tests for Django test client compatibility
+REST_FRAMEWORK = {
+    **REST_FRAMEWORK,
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        *REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'],
+    ]
+}
+
+EVENTARC_RECEIVER_URL = 'http://localhost:8000/api/events/gcs-upload/'

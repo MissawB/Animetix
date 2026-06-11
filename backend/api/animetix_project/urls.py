@@ -57,7 +57,7 @@ urlpatterns = [
     ])),
     path('api/monitoring/<str:action>/', PipelineControlView.as_view(), name='pipeline-control'),
     path('api/tasks/run/', run_task_view, name='run_task_view'),
-    path('api/tasks/poll-workflow/', poll_workflow_view, name='api_poll_workflow'),
+    path('api/tasks/poll-workflow/', poll_workflow_view, name='poll-workflow'),
     path('api/events/gcs-upload/', eventarc_gcs_upload_view, name='eventarc-gcs-upload'),
 
     # --- BILLING ENDPOINTS ---

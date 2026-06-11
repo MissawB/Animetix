@@ -277,41 +277,54 @@ class MangaLabDataView(APIView):
             ]
         })
 
+@method_decorator(ratelimit(key='user_or_ip', rate='5/m', method='POST', block=True), name='dispatch')
 class MangaVoiceLabView(APIView):
-    """Génère des voix pour les personnages de manga (Dubbing)."""
+    """Traduction de manga + synthèse vocale orchestrée via GCP Workflows."""
     permission_classes = [permissions.IsAuthenticated]
+    throttle_scope = 'gpu'
 
     def post(self, request):
-        container = get_container()
-        target_text = request.data.get('text')
-        ref_audio_file = request.FILES.get('reference_audio')
-        character_voice = request.data.get('character', 'Standard')
-        
-        if not target_text:
-            return Response({'error': 'Text is required.'}, status=400)
-            
-        try:
-            service = container.core.voice_cloning_service()
-            
-            if not ref_audio_file:
-                 return Response({'error': 'Reference audio is required for cloning.'}, status=400)
+        import uuid
+        from django.core.cache import cache
+        from adapters.inference.workflows_client import GCPWorkflowsClient
+        from animetix.tasks_client import enqueue_task
 
-            audio_bytes = ref_audio_file.read()
-            result_audio = service.clone(
-                reference_audio=audio_bytes,
-                target_text=target_text
-            )
+        image = request.data.get('image')
+        reference_audio = request.data.get('reference_audio')
+        target_lang = request.data.get('target_lang', 'French')
+        
+        if not image or not reference_audio:
+            return Response({'error': 'Missing image or reference_audio in payload'}, status=400)
             
-            import base64
-            encoded = base64.b64encode(result_audio).decode('utf-8')
-            return Response({
-                'status': 'success',
-                'audio_data': f"data:audio/wav;base64,{encoded}",
-                'character': character_voice
-            })
-        except Exception as e:
-            logger.error(f"Error in MangaVoiceLabView: {e}")
-            return Response({'error': str(e)}, status=500)
+        task_id = str(uuid.uuid4())
+        filename = f"manga_voice_{task_id}.wav"
+        
+        # Initialisation du cache
+        cache.set(f"task_result:{task_id}", {"ready": False, "status": "pending"}, timeout=3600)
+        
+        is_prod = getattr(settings, 'IS_PRODUCTION', False)
+        if is_prod:
+            try:
+                client = GCPWorkflowsClient()
+                execution_name = client.trigger_pipeline(image, reference_audio, target_lang, filename)
+                
+                # Cloud Task pour le polling
+                client.enqueue_polling_task(execution_name, task_id)
+                return Response({"task_id": task_id}, status=202)
+            except Exception as e:
+                cache.set(f"task_result:{task_id}", {"ready": True, "status": "failed", "error": str(e)}, timeout=3600)
+                return Response({"error": f"Failed to start workflow: {str(e)}"}, status=500)
+        else:
+            # Fallback local dev synchrone simulé
+            cache.set(f"task_result:{task_id}", {
+                "ready": True,
+                "status": "success",
+                "result": {
+                    "translated_text": "[Local Dev Fallback] Traduction simulée.",
+                    "audio_url": f"http://localhost:8000/media/mock_{filename}"
+                }
+            }, timeout=3600)
+            return Response({"task_id": task_id}, status=202)
 
 class VideoFateZeroLabView(APIView):
     """Transforme une vidéo avec transfert de style SOTA (FateZero)."""

@@ -27,6 +27,10 @@ class AnimetixConfig(AppConfig):
             "animetix.api.mlops",
             "animetix.api.graph",
             "animetix.api.companion",
+            "animetix.api.dependencies",
+            "animetix.api.multiverse",
+            "animetix.api.observability",
+            "animetix.api.forge_vn",
             "animetix.middleware",
             "animetix.views.common"
         ])
