@@ -1,10 +1,31 @@
 import os
+import sys
 import json
 import logging
 import time
 from typing import List, Dict, Any
 from datetime import datetime
 from dotenv import load_dotenv
+
+# Set up paths relative to workspace root with insert(0) to bypass name conflicts
+backend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+if backend_path not in sys.path:
+    sys.path.insert(0, backend_path)
+api_path = os.path.join(backend_path, 'api')
+if api_path not in sys.path:
+    sys.path.insert(0, api_path)
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'animetix_project.settings')
+
+# Try initializing Django
+django_available = False
+try:
+    import django
+    django.setup()
+    django_available = True
+    from animetix.models import AIFeedback
+except Exception as e:
+    pass
 
 try:
     from google import genai
@@ -34,6 +55,31 @@ class DPOFeedbackLoop:
         else:
             logger.warning("Gemini client not initialized (missing API key or google-genai dependency).")
             self.client = None
+
+    def fetch_db_feedbacks(self) -> List[Dict[str, Any]]:
+        """
+        Queries AIFeedback models from Django database.
+        Returns a list of dicts formatted like the JSONL feedback entries.
+        """
+        if not django_available:
+            logger.warning("Django is not configured or available. Returning empty feedback list.")
+            return []
+        
+        try:
+            feedbacks = []
+            # Query all feedback entries
+            for fb in AIFeedback.objects.all():
+                feedbacks.append({
+                    "context": fb.input_context,
+                    "output": fb.output_text,
+                    "is_positive": fb.is_positive,
+                    "feedback_type": fb.feedback_type
+                })
+            logger.info(f"Retrieved {len(feedbacks)} feedback entries from Django database.")
+            return feedbacks
+        except Exception as e:
+            logger.warning(f"Failed to query Django AIFeedback table: {e}. Returning empty list.")
+            return []
 
     def validate_feedback(self, entry: Dict) -> bool:
         """
@@ -91,29 +137,40 @@ class DPOFeedbackLoop:
                     
         return "Désolé, je ne dispose pas d'informations supplémentaires sur ce sujet."
 
-    def create_dpo_pair(self, entry: Dict) -> Dict:
+    def create_dpo_pair(self, entry: Dict, corrupt_fn = None) -> Dict:
         """
         Creates a DPO pair (Chosen/Rejected) based on user satisfaction.
         """
         prompt = f"Génère une réponse expert pour : {entry['context']}"
         
         if entry.get('is_positive'):
+            # For positive feedback, the output IS the chosen sample
+            # We generate a corrupted version as the rejected sample using the callback
+            rejected = None
+            if corrupt_fn:
+                rejected = corrupt_fn(entry['output'])
+            if not rejected or rejected == entry['output']:
+                rejected = "Désolé, je ne peux pas traiter cette demande pour le moment."
             return {
                 "prompt": prompt,
                 "chosen": entry['output'],
-                "rejected": "Désolé, je ne peux pas traiter cette demande pour le moment." # Generic baseline
+                "rejected": rejected
             }
         else:
             # For negative feedback, the output IS the rejected sample
-            # We generate the chosen sample via Gemini
+            # We generate the chosen sample via Gemini (Oracle)
             chosen_response = self.generate_oracle_response(entry['context'])
+            # If oracle generation fails or returns default refusal, we return None (will be skipped)
+            default_refusal = "Désolé, je ne dispose pas d'informations supplémentaires sur ce sujet."
+            if chosen_response == default_refusal or not chosen_response:
+                return None
             return {
                 "prompt": prompt,
                 "chosen": chosen_response,
                 "rejected": entry['output']
             }
 
-    def process_and_export(self, raw_data_path: str, output_path: str) -> int:
+    def process_and_export(self, raw_data_path: str, output_path: str, corrupt_fn = None) -> int:
         """
         Processes raw feedback and exports a validated DPO dataset.
         """
@@ -128,9 +185,10 @@ class DPOFeedbackLoop:
                     try:
                         fb = json.loads(line)
                         if self.validate_feedback(fb):
-                            pair = self.create_dpo_pair(fb)
-                            out_f.write(json.dumps(pair, ensure_ascii=False) + '\n')
-                            processed_count += 1
+                            pair = self.create_dpo_pair(fb, corrupt_fn)
+                            if pair is not None:
+                                out_f.write(json.dumps(pair, ensure_ascii=False) + '\n')
+                                processed_count += 1
                     except json.JSONDecodeError:
                         continue
                         
