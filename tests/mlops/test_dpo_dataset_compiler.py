@@ -19,24 +19,54 @@ class TestDPODatasetCompiler(unittest.TestCase):
         self.assertNotEqual(text_num, corr_num)
         self.assertTrue(any(str(year) in corr_num for year in range(1980, 2027) if str(year) != "2018"))
 
-        # Test entity replacement if entities match databases (using popular keys like Wit Studio, Ghibli, etc.)
+        # Test studio close-concept replacement
         text_studio = "L'anime a été produit par Wit Studio."
         corr_studio = corrupt_fact_substitution(text_studio, "Français")
         self.assertNotEqual(text_studio, corr_studio)
+        
+        text_ufotable = "L'anime a été produit par ufotable."
+        corr_ufo = corrupt_fact_substitution(text_ufotable, "Français")
+        self.assertNotEqual(text_ufotable, corr_ufo)
+        self.assertTrue(any(s in corr_ufo for s in ["MAPPA", "Studio Trigger", "Bones", "Sunrise", "Wit Studio", "Studio Ghibli", "Kyoto Animation", "Madhouse", "Studio Pierrot"]))
+
+        # Test voice actor franchise replacement
+        text_va = "Son Goku est doublé par Brigitte Lecordier."
+        corr_va = corrupt_fact_substitution(text_va, "Français")
+        self.assertNotEqual(text_va, corr_va)
+        self.assertTrue(any(v in corr_va for v in ["Patrick Borg", "Eric Legrand", "Philippe Ariotti"]))
+
+        # Test publisher group replacement
+        text_pub = "Le manga est édité par Glénat Manga."
+        corr_pub = corrupt_fact_substitution(text_pub, "Français")
+        self.assertNotEqual(text_pub, corr_pub)
+        self.assertTrue(any(p in corr_pub for p in ["Kana", "Pika Édition", "Kurokawa", "Ki-oon", "Crunchyroll Manga"]))
 
     def test_corrupt_tonal_deviation(self):
         from backend.pipeline.mlops.dpo_dataset_compiler import corrupt_tonal_deviation
         
-        text = "Pourquoi cet anime est un chef-d'œuvre ? C'est incroyable !"
-        corr_fr = corrupt_tonal_deviation(text, "Français")
+        text = "Cet anime est un chef-d'œuvre avec d'excellents personnages. C'est incroyable !"
         
-        # Lowercase check
-        self.assertEqual(corr_fr, corr_fr.lower())
-        # Stripped punctuation check
-        self.assertNotIn("?", corr_fr)
-        self.assertNotIn("!", corr_fr)
-        # Slang/tonal deviation inclusion check (e.g. bro, literally, like, wesh, fr fr, kiffé)
-        self.assertTrue(any(x in corr_fr for x in ["like", "literally", "bro", "wesh", "fr fr", "kiffé"]))
+        strategies_seen = {
+            "code_switching": False,
+            "redundancy": False,
+            "condescending": False
+        }
+        
+        for _ in range(50):
+            corr = corrupt_tonal_deviation(text, "Français")
+            # 1. Code-switching check
+            if "masterpiece" in corr or "character" in corr or "basically" in corr.lower():
+                strategies_seen["code_switching"] = True
+            # 2. Redundancy check
+            if "préciser" in corr or "explication" in corr or "répète" in corr.lower():
+                strategies_seen["redundancy"] = True
+            # 3. Condescending check
+            if "évident" in corr or "otaku" in corr or "Franchement" in corr or "triviale" in corr:
+                strategies_seen["condescending"] = True
+                
+        self.assertTrue(strategies_seen["code_switching"], "Code-switching strategy was not triggered")
+        self.assertTrue(strategies_seen["redundancy"], "Redundancy strategy was not triggered")
+        self.assertTrue(strategies_seen["condescending"], "Condescending strategy was not triggered")
 
     def test_corrupt_abrupt_truncation(self):
         from backend.pipeline.mlops.dpo_dataset_compiler import corrupt_abrupt_truncation
