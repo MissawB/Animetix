@@ -58,6 +58,210 @@ POPULAR_TITLES = [
 ]
 
 
+# --- PRECOMPUTATION OF CLOSE-CONCEPTS RELATION MAPPINGS ---
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+ANIME_DB = os.path.join(BASE_DIR, 'data', 'processed', 'clean_root_animes.json')
+MANGA_DB = os.path.join(BASE_DIR, 'data', 'processed', 'clean_root_mangas.json')
+
+MANGAKAS_LIST = []
+DIRECTORS_LIST = []
+STUDIOS_ONLY_LIST = []
+
+if CREATORS_AND_STUDIOS:
+    keys = list(CREATORS_AND_STUDIOS.keys())
+    MANGAKAS_LIST = keys[:48]
+    DIRECTORS_LIST = keys[48:68]
+    STUDIOS_ONLY_LIST = keys[68:]
+else:
+    STUDIOS_ONLY_LIST = STUDIOS_LIST
+
+title_genres = {}
+studio_genres = {}
+
+if os.path.exists(ANIME_DB):
+    try:
+        with open(ANIME_DB, 'r', encoding='utf-8') as f:
+            animes = json.load(f)
+            for a in animes:
+                genres = set(g.lower() for g in a.get('genres', []) + a.get('tags', []))
+                for key_title in [a.get('title'), a.get('title_english'), a.get('title_native')]:
+                    if key_title:
+                        title_genres[key_title.strip().lower()] = genres
+                for s in a.get('studios', []):
+                    s_clean = s.strip()
+                    if s_clean:
+                        if s_clean not in studio_genres:
+                            studio_genres[s_clean] = set()
+                        studio_genres[s_clean].update(genres)
+    except Exception as e:
+        logger.warning(f"Failed to load anime DB in DPO compiler: {e}")
+
+if os.path.exists(MANGA_DB):
+    try:
+        with open(MANGA_DB, 'r', encoding='utf-8') as f:
+            mangas = json.load(f)
+            for m in mangas:
+                genres = set(g.lower() for g in m.get('genres', []) + m.get('tags', []))
+                for key_title in [m.get('title'), m.get('title_english'), m.get('title_native')]:
+                    if key_title:
+                        title_genres[key_title.strip().lower()] = genres
+    except Exception as e:
+        logger.warning(f"Failed to load manga DB in DPO compiler: {e}")
+
+RELATED_ENTITIES_MAP = {}
+
+# 1. Voice Actors
+va_series = {}
+if FRENCH_VOICE_ACTORS:
+    for va_name, va_data in FRENCH_VOICE_ACTORS.items():
+        examples = va_data.get("examples", "")
+        titles = re.findall(r'\*(.*?)\*', examples)
+        clean_titles = {t.lower().strip() for t in titles if t}
+        va_series[va_name] = clean_titles
+
+for va_name in VOICE_ACTORS_LIST:
+    va_titles = va_series.get(va_name, set())
+    similarities = []
+    for other_va in VOICE_ACTORS_LIST:
+        if other_va.lower() == va_name.lower():
+            continue
+        other_titles = va_series.get(other_va, set())
+        overlap = len(va_titles.intersection(other_titles))
+        similarities.append((other_va, overlap))
+    similarities.sort(key=lambda x: x[1], reverse=True)
+    candidates = [va for va, overlap in similarities if overlap > 0]
+    if candidates:
+        RELATED_ENTITIES_MAP[va_name] = candidates[:3]
+    else:
+        RELATED_ENTITIES_MAP[va_name] = [va for va in VOICE_ACTORS_LIST if va.lower() != va_name.lower()]
+
+# 2. Studios
+for studio_name in STUDIOS_ONLY_LIST:
+    s_genres = studio_genres.get(studio_name, set())
+    similarities = []
+    for other_s in STUDIOS_ONLY_LIST:
+        if other_s.lower() == studio_name.lower():
+            continue
+        other_genres = studio_genres.get(other_s, set())
+        intersection = s_genres.intersection(other_genres)
+        union = s_genres.union(other_genres)
+        jaccard = len(intersection) / len(union) if union else 0.0
+        similarities.append((other_s, jaccard))
+    similarities.sort(key=lambda x: x[1], reverse=True)
+    candidates = [s for s, sim in similarities if sim > 0]
+    if candidates:
+        RELATED_ENTITIES_MAP[studio_name] = candidates[:3]
+    else:
+        RELATED_ENTITIES_MAP[studio_name] = [s for s in STUDIOS_ONLY_LIST if s.lower() != studio_name.lower()]
+
+# 3. Mangakas and Directors (from CREATORS_AND_STUDIOS)
+creator_genres = {}
+if CREATORS_AND_STUDIOS:
+    for name, info in CREATORS_AND_STUDIOS.items():
+        examples = info.get("examples", "")
+        titles = re.findall(r'\*(.*?)\*', examples)
+        clean_titles = [t.lower().strip() for t in titles if t]
+        genres_tags = set()
+        for t in clean_titles:
+            if t in title_genres:
+                genres_tags.update(title_genres[t])
+        creator_genres[name] = genres_tags
+
+# Map Mangakas
+for name in MANGAKAS_LIST:
+    m_genres = creator_genres.get(name, set())
+    similarities = []
+    for other_name in MANGAKAS_LIST:
+        if other_name.lower() == name.lower():
+            continue
+        other_genres = creator_genres.get(other_name, set())
+        intersection = m_genres.intersection(other_genres)
+        union = m_genres.union(other_genres)
+        jaccard = len(intersection) / len(union) if union else 0.0
+        similarities.append((other_name, jaccard))
+    similarities.sort(key=lambda x: x[1], reverse=True)
+    candidates = [n for n, sim in similarities if sim > 0]
+    if candidates:
+        RELATED_ENTITIES_MAP[name] = candidates[:3]
+    else:
+        RELATED_ENTITIES_MAP[name] = [n for n in MANGAKAS_LIST if n.lower() != name.lower()]
+
+# Map Directors
+for name in DIRECTORS_LIST:
+    d_genres = creator_genres.get(name, set())
+    similarities = []
+    for other_name in DIRECTORS_LIST:
+        if other_name.lower() == name.lower():
+            continue
+        other_genres = creator_genres.get(other_name, set())
+        intersection = d_genres.intersection(other_genres)
+        union = d_genres.union(other_genres)
+        jaccard = len(intersection) / len(union) if union else 0.0
+        similarities.append((other_name, jaccard))
+    similarities.sort(key=lambda x: x[1], reverse=True)
+    candidates = [n for n, sim in similarities if sim > 0]
+    if candidates:
+        RELATED_ENTITIES_MAP[name] = candidates[:3]
+    else:
+        RELATED_ENTITIES_MAP[name] = [n for n in DIRECTORS_LIST if n.lower() != name.lower()]
+
+# 4. Manga Publishers
+PUBLISHER_GROUPS = {
+    "Glénat Manga": "shonen_giant", "Kana": "shonen_giant", "Pika Édition": "shonen_giant",
+    "Kurokawa": "shonen_giant", "Ki-oon": "shonen_giant", "Crunchyroll Manga": "shonen_giant",
+    "Delcourt/Tonkam": "seinen_classic", "Vega-Dupuis": "seinen_classic", "Meian": "seinen_classic",
+    "Ototo": "isekai_light_novel", "Mana Books": "video_games", "Soleil Manga": "video_games",
+    "Akata": "indie_societal", "ChattoChatto": "indie_societal", "Taifu Comics": "yaoi_yuri"
+}
+for pub_name in PUBLISHERS_LIST:
+    grp = PUBLISHER_GROUPS.get(pub_name)
+    if grp:
+        same_group = [p for p in PUBLISHERS_LIST if PUBLISHER_GROUPS.get(p) == grp and p.lower() != pub_name.lower()]
+        if same_group:
+            RELATED_ENTITIES_MAP[pub_name] = same_group
+            continue
+    RELATED_ENTITIES_MAP[pub_name] = [p for p in PUBLISHERS_LIST if p.lower() != pub_name.lower()]
+
+# 5. Distributors
+DISTRIBUTOR_GROUPS = {
+    "Crunchyroll France": "streaming_specialist", "ADN": "streaming_specialist", "Wakanim": "streaming_specialist",
+    "Netflix France": "streaming_generalist", "Disney+ France": "streaming_generalist", "Prime Video Channels": "streaming_generalist",
+    "Club Dorothée": "retro_broadcaster", "Kazé": "physical_distributor", "Dybex": "physical_distributor", "Declic Images": "physical_distributor"
+}
+for dist_name in DISTRIBUTORS_LIST:
+    grp = DISTRIBUTOR_GROUPS.get(dist_name)
+    if grp:
+        same_group = [d for d in DISTRIBUTORS_LIST if DISTRIBUTOR_GROUPS.get(d) == grp and d.lower() != dist_name.lower()]
+        if same_group:
+            RELATED_ENTITIES_MAP[dist_name] = same_group
+            continue
+        if grp == "retro_broadcaster":
+            phys = [d for d in DISTRIBUTORS_LIST if DISTRIBUTOR_GROUPS.get(d) == "physical_distributor"]
+            if phys:
+                RELATED_ENTITIES_MAP[dist_name] = phys
+                continue
+    RELATED_ENTITIES_MAP[dist_name] = [d for d in DISTRIBUTORS_LIST if d.lower() != dist_name.lower()]
+
+# 6. Popular Titles
+for title_name in POPULAR_TITLES:
+    t_genres = title_genres.get(title_name.lower(), set())
+    similarities = []
+    for other_t in POPULAR_TITLES:
+        if other_t.lower() == title_name.lower():
+            continue
+        other_genres = title_genres.get(other_t.lower(), set())
+        intersection = t_genres.intersection(other_genres)
+        union = t_genres.union(other_genres)
+        jaccard = len(intersection) / len(union) if union else 0.0
+        similarities.append((other_t, jaccard))
+    similarities.sort(key=lambda x: x[1], reverse=True)
+    candidates = [t for t, sim in similarities if sim > 0]
+    if candidates:
+        RELATED_ENTITIES_MAP[title_name] = candidates[:3]
+    else:
+        RELATED_ENTITIES_MAP[title_name] = [t for t in POPULAR_TITLES if t.lower() != title_name.lower()]
+
+
 def corrupt_fact_substitution(text: str, language: str = "Français") -> str:
     """
     Substitue des entités (studios, doubleurs, éditeurs, titres, années) par d'autres valeurs incorrectes.
@@ -78,17 +282,19 @@ def corrupt_fact_substitution(text: str, language: str = "Français") -> str:
     def replace_from_list(current_text: str, entities: List[str]) -> tuple[str, bool]:
         text_mod = current_text
         found_any = False
-        # Trier par longueur décroissante pour éviter d'écraser des sous-chaînes
         sorted_entities = sorted(entities, key=len, reverse=True)
         for ent in sorted_entities:
-            # Recherche insensible à la casse avec bordures de mots ou caractères spéciaux
             pattern = rf'\b{re.escape(ent)}\b'
             if re.search(pattern, text_mod, re.IGNORECASE):
-                choices = [e for e in entities if e.lower() != ent.lower()]
+                # Look up closely related entities first
+                choices = RELATED_ENTITIES_MAP.get(ent)
+                if not choices:
+                    choices = [e for e in entities if e.lower() != ent.lower()]
                 if choices:
                     rep = random.choice(choices)
                     text_mod = re.sub(pattern, rep, text_mod, flags=re.IGNORECASE)
                     found_any = True
+                    break
         return text_mod, found_any
 
     # Appliquer les substitutions d'entités
@@ -120,37 +326,102 @@ def corrupt_fact_substitution(text: str, language: str = "Français") -> str:
 
 def corrupt_tonal_deviation(text: str, language: str = "Français") -> str:
     """
-    Dégrade le ton en injectant du code-switching agressif/slang et en rendant
-    la ponctuation absente / le texte en minuscules.
+    Dégrade le ton en choisissant aléatoirement l'un des trois types de corruption :
+    1. Code-switching excessif (mélange fr/en ou en/jp non naturel)
+    2. Redondance excessive (répétitions de propositions ou de phrases)
+    3. Ton condescendant (ajouts de formules hautaines et pédantes)
     """
-    fr_slang = [
-        " c'est trop un banger fr fr",
-        " wesh bro",
-        " like literally",
-        " lmao",
-        " c'est kiffant de fou",
-        " wesh",
-        " genre grave"
-    ]
-    en_slang = [
-        " fr fr",
-        " lmao",
-        " bro",
-        " like, literally",
-        " dude",
-        " ikr"
-    ]
+    strategy = random.choice(["code_switching", "redundancy", "condescending"])
 
-    # Minuscules et suppression de la ponctuation standard
-    text = text.lower()
-    text = re.sub(r'[?,.!;:\'"]', '', text)
+    if strategy == "code_switching":
+        if language == "Français":
+            swaps = {
+                r"\bpersonnages?\b": lambda m: "characters" if m.group(0).endswith("s") else "character",
+                r"\bréalisateurs?\b": lambda m: "directors" if m.group(0).endswith("s") else "director",
+                r"\bdirecteurs?\b": lambda m: "directors" if m.group(0).endswith("s") else "director",
+                r"\bhistoire\b": "plotline",
+                r"\bscénario\b": "storyline",
+                r"\bchef-d'œuvre\b": "masterpiece",
+                r"\bchefs-d'œuvre\b": "masterpieces",
+                r"\bépisodes?\b": lambda m: "episodes" if m.group(0).endswith("s") else "episode",
+                r"\bséries?\b": lambda m: "shows" if m.group(0).endswith("s") else "show",
+                r"\banimation\b": "art style",
+                r"\bdessins?\b": "art style",
+                r"\bdiffusés?\b": "released",
+                r"\bsortis?\b": "released",
+                r"\béditeurs?\b": "publisher",
+                r"\bédités?\b": "published",
+            }
+            for pattern, replacement in swaps.items():
+                text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
+            
+            prependers = ["Basically, ", "Honestly, ", "Anyway, "]
+            appenders = [", which is totally fine.", ", literally.", ", fr fr.", ", actually."]
+            text = random.choice(prependers) + text[0].lower() + text[1:]
+            text = text.rstrip(".") + random.choice(appenders)
+        else:
+            swaps_en = {
+                r"\bcharacters?\b": "chara",
+                r"\bmasterpiece\b": "kami-sama tier masterpiece",
+                r"\bfriends?\b": "nakama",
+                r"\bprotagonists?\b": "MC",
+                r"\bheros?\b": "MC",
+                r"\banimation\b": "sakuga",
+            }
+            for pattern, replacement in swaps_en.items():
+                text = re.sub(pattern, replacement, text, flags=re.IGNORECASE)
+            
+            prependers = ["So, basically, ", "Like, honestly, "]
+            appenders = [", which is fine.", ", literally.", ", fr fr."]
+            text = random.choice(prependers) + text[0].lower() + text[1:]
+            text = text.rstrip(".") + random.choice(appenders)
 
-    # Injection de slang
-    slangs = en_slang if language == "English" else fr_slang
-    # Ajouter 1 ou 2 expressions au hasard
-    text += random.choice(slangs)
-    if random.random() < 0.5:
-        text = random.choice(slangs).strip() + " " + text
+    elif strategy == "redundancy":
+        prependers = ["Pour ce qui est de ce sujet, et afin de préciser les choses de manière très précise, "]
+        appenders = [
+            ", et comme je l'ai déjà expliqué et mentionné précédemment dans mon explication à ce sujet, c'est tout à fait cela.",
+            ", ce qui signifie et veut dire exactement ce que cela signifie."
+        ]
+        sentences = re.split(r'(?<=[.!?])\s+', text)
+        if len(sentences) > 1:
+            idx = random.randint(0, len(sentences) - 1)
+            target = sentences[idx].rstrip(".!? ")
+            if target:
+                dup = f"Je répète donc que {target[0].lower() + target[1:]}."
+                sentences.insert(idx + 1, dup)
+            text = " ".join(sentences)
+        else:
+            text = random.choice(prependers) + text[0].lower() + text[1:]
+            text = text.rstrip(".") + random.choice(appenders)
+
+    elif strategy == "condescending":
+        prependers = [
+            "C'est pourtant évident, et tout otaku digne de ce nom devrait le savoir : ",
+            "Franchement, il est élémentaire de comprendre que : ",
+            "Pour peu que l'on s'y connaisse un minimum en japanimation, on sait bien que : ",
+            "C'est une question triviale... Tout le monde sait que : "
+        ]
+        appenders = [
+            " Mais bon, il faut avoir un minimum de culture pour s'en rendre compte.",
+            " C'est pourtant la base.",
+            " (Enfin, si tant est que tu puisses comprendre cela)."
+        ]
+        inlines = [
+            ", comme n'importe quel amateur de base l'aurait compris,",
+            ", ce qui va de soi pour n'importe qui de cultivé,",
+            ", bien que les néophytes en doutent,"
+        ]
+        if "," in text:
+            parts = text.split(",", 1)
+            text = parts[0] + random.choice(inlines) + parts[1]
+        else:
+            words = text.split()
+            if len(words) > 4:
+                words.insert(4, random.choice(inlines).strip())
+                text = " ".join(words)
+        
+        text = random.choice(prependers) + text[0].lower() + text[1:]
+        text = text.rstrip(".") + random.choice(appenders)
 
     return text.strip()
 
