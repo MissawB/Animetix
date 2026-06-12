@@ -667,7 +667,7 @@ def compile_dpo_pairs(sft_path: str, output_path: str, limit: int = 2000, seed: 
         random.shuffle(selected_entries)
         selected_entries = selected_entries[:remaining_limit]
         
-        strategies = ["fact", "tone", "truncation", "refusal"]
+        strategies = ["fact", "tone", "truncation", "refusal", "llm"]
         for idx, entry in enumerate(selected_entries):
             prompt = entry["instruction"]
             chosen = entry["output"]
@@ -680,6 +680,8 @@ def compile_dpo_pairs(sft_path: str, output_path: str, limit: int = 2000, seed: 
                 rejected = corrupt_tonal_deviation(chosen, lang)
             elif strategy == "truncation":
                 rejected = corrupt_abrupt_truncation(chosen)
+            elif strategy == "llm":
+                rejected = corrupt_llm_critic(chosen, lang)
             else:
                 rejected = corrupt_evasive_refusal(chosen, lang)
                 

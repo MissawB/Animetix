@@ -210,24 +210,24 @@ class TestDPODatasetCompiler(unittest.TestCase):
     def test_dpo_cache_read_write(self):
         import tempfile
         import os
-        from backend.pipeline.mlops.dpo_dataset_compiler import init_dpo_cache, save_dpo_cache, DPO_CACHE
+        import backend.pipeline.mlops.dpo_dataset_compiler as compiler
         
         with tempfile.TemporaryDirectory() as tmpdir:
-            init_dpo_cache(tmpdir)
+            compiler.init_dpo_cache(tmpdir)
             # Cache should be empty initially
-            self.assertEqual(DPO_CACHE, {})
+            self.assertEqual(compiler.DPO_CACHE, {})
             
             # Insert a mock entry
-            DPO_CACHE["test_hash"] = "test_corrupted"
-            save_dpo_cache()
+            compiler.DPO_CACHE["test_hash"] = "test_corrupted"
+            compiler.save_dpo_cache()
             
             # Check file exists
             cache_file = os.path.join(tmpdir, "gemini_dpo_cache.json")
             self.assertTrue(os.path.exists(cache_file))
             
             # Re-initialize should load it back
-            init_dpo_cache(tmpdir)
-            self.assertEqual(DPO_CACHE.get("test_hash"), "test_corrupted")
+            compiler.init_dpo_cache(tmpdir)
+            self.assertEqual(compiler.DPO_CACHE.get("test_hash"), "test_corrupted")
 
     def test_corrupt_llm_critic(self):
         from unittest.mock import MagicMock, patch
@@ -260,6 +260,76 @@ class TestDPODatasetCompiler(unittest.TestCase):
         corrupted_api = compiler.corrupt_llm_critic(chosen, "Français")
         self.assertEqual(corrupted_api, "Gemini mocked logical error response.")
         self.assertEqual(compiler.DPO_CACHE[chosen_hash], "Gemini mocked logical error response.")
+
+    def test_compile_dpo_pairs_llm_strategy_in_rotation(self):
+        """Verify that the 'llm' strategy is part of compile_dpo_pairs rotation (~20%)."""
+        from unittest.mock import patch, MagicMock
+        import tempfile
+        import backend.pipeline.mlops.dpo_dataset_compiler as compiler
+
+        # Create a SFT dataset with 10 valid entries to observe strategy distribution
+        mock_data = []
+        for i in range(10):
+            mock_data.append({
+                "instruction": f"Question numéro {i} sur l'animation japonaise et ses créateurs.",
+                "input": "",
+                "output": f"Réponse détaillée numéro {i} sur Wit Studio et le manga Naruto sorti en 2002 avec Madhouse. Cet anime est incroyable.",
+                "language": "Français"
+            })
+
+        # Track which strategies are called
+        call_log = {"llm": 0, "fact": 0, "tone": 0, "truncation": 0, "refusal": 0}
+        original_corrupt_llm = compiler.corrupt_llm_critic
+        original_corrupt_fact = compiler.corrupt_fact_substitution
+        original_corrupt_tone = compiler.corrupt_tonal_deviation
+        original_corrupt_trunc = compiler.corrupt_abrupt_truncation
+        original_corrupt_refusal = compiler.corrupt_evasive_refusal
+
+        def mock_llm(chosen, lang="Français"):
+            call_log["llm"] += 1
+            return "LLM corrupted: " + chosen[:30]
+
+        def mock_fact(text, lang="Français"):
+            call_log["fact"] += 1
+            return original_corrupt_fact(text, lang)
+
+        def mock_tone(text, lang="Français"):
+            call_log["tone"] += 1
+            return original_corrupt_tone(text, lang)
+
+        def mock_trunc(text):
+            call_log["truncation"] += 1
+            return original_corrupt_trunc(text)
+
+        def mock_refusal(text, lang="Français"):
+            call_log["refusal"] += 1
+            return original_corrupt_refusal(text, lang)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            sft_file = os.path.join(tmpdir, "sft.jsonl")
+            output_file = os.path.join(tmpdir, "dpo.jsonl")
+
+            with open(sft_file, "w", encoding="utf-8") as f:
+                for item in mock_data:
+                    f.write(json.dumps(item, ensure_ascii=False) + "\n")
+
+            with patch.object(compiler, 'corrupt_llm_critic', side_effect=mock_llm), \
+                 patch.object(compiler, 'corrupt_fact_substitution', side_effect=mock_fact), \
+                 patch.object(compiler, 'corrupt_tonal_deviation', side_effect=mock_tone), \
+                 patch.object(compiler, 'corrupt_abrupt_truncation', side_effect=mock_trunc), \
+                 patch.object(compiler, 'corrupt_evasive_refusal', side_effect=mock_refusal):
+                compiled_count = compiler.compile_dpo_pairs(sft_file, output_file, limit=10, seed=42)
+
+            self.assertEqual(compiled_count, 10)
+
+            # "llm" should be one of the 5 strategies in the rotation
+            # With 10 entries and 5 strategies (round-robin), we expect exactly 2 LLM calls
+            self.assertEqual(call_log["llm"], 2, f"Expected 2 LLM calls (20%), got {call_log['llm']}")
+
+            # All 5 strategies should have been used
+            for strat in ["fact", "tone", "truncation", "refusal", "llm"]:
+                self.assertGreater(call_log[strat], 0, f"Strategy '{strat}' was never called")
+
 
 if __name__ == "__main__":
     unittest.main()
