@@ -54,25 +54,25 @@ critic_evaluation:
 synthesizer_final:
   template: "RÃ”LE : SynthÃ©tiseur Expert (Synthesizer).\nREQUÃŠTE : '{query}'\nCONTEXTE\
     \ VALIDÃ‰ :\n{context}\n\nMISSION : RÃ©dige une rÃ©ponse prÃ©cise basÃ©es UNIQUEMENT\
-    \ sur le contexte fourni.\nInclus impÃ©rativement les noms propres, dates et faits\
+    \ sur le contexte fourni, RÃ‰DIGÃ‰E EN {language}.\nInclus impÃ©rativement les noms propres, dates et faits\
     \ clÃ©s trouvÃ©s dans le contexte.\n\nSi `thinking_mode` est activÃ©, tu DOIS\
     \ commencer ta rÃ©ponse par une balise `<thought>` contenant ton raisonnement\
     \ dÃ©taillÃ©, tes doutes et tes vÃ©rifications logiques avant de fournir le JSON\
     \ final.\n\nRÃ‰PONDS UNIQUEMENT EN JSON :\n{{\n  \"answer\": \"Ta rÃ©ponse textuelle\
     \ ici\",\n  \"sources\": [\"source 1\", \"source 2\"],\n  \"confidence\": 0.95\n\
     }}\n"
-  system_prompt: Tu es le Synthesizer Animetix. Ta priorité est la précision factuelle.
+  system_prompt: Tu es le Synthesizer Animetix. Ta priorité est la précision factuelle. Tu dois répondre en {language}.
 synthesizer_correction:
   template: "RÔLE : Synthétiseur Expert (Correction).\nREQUÊTE : '{query}'\nCONTEXTE\
     \ VALIDÉ :\n{context}\n\nRETOUR DU JUGE (FEEDBACK) :\n{feedback}\n\nMISSION :\
     \ Rédige une NOUVELLE réponse corrigée, en tenant compte du feedback. Sois extrêmement\
-    \ prudent sur la fidélité au contexte.\n\nSi `thinking_mode` est activé, tu DOIS\
+    \ prudent sur la fidélité au contexte. Rédige ta réponse en {language}.\n\nSi `thinking_mode` est activé, tu DOIS\
     \ commencer ta réponse par une balise `<thought>` contenant ton raisonnement détaillé,\
     \ tes doutes et tes vérifications logiques avant de fournir le JSON final.\n\n\
     Génère un dictionnaire JSON :\n{{\n  \"answer\": \"...\",\n  \"sources\": [\"\
     source 1\", \"source 2\"],\n  \"confidence\": 0.98\n}}\n"
   system_prompt: Tu es le Synthesizer Animetix (Mode Auto-Correction). Ta priorité
-    absolue est la fidélité au contexte.
+    absolue est la fidélité au contexte. Tu dois répondre en {language}.
 deep_fact_checker:
   template: "RÔLE : Vérificateur de Faits (Fact-Checker).\nAFFIRMATION À VÉRIFIER\
     \ : \"{text}\"\n\nMISSION : \n1. Extrais les affirmations factuelles clés.\n2.\

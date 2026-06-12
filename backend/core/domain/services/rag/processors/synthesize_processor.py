@@ -27,7 +27,8 @@ class SynthesizeProcessor(StateProcessor):
             ctx.truth_path, 
             thinking_budget=ctx.thinking_budget, 
             thinking_mode=ctx.thinking_mode,
-            correction_feedback=ctx.correction_feedback
+            correction_feedback=ctx.correction_feedback,
+            language=ctx.language
         ):
             token_count += 1
             if "<thought>" in token and not in_thought:

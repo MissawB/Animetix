@@ -291,3 +291,18 @@ def test_agentic_rag_service_propagates_language(monkeypatch):
     # Run stream
     list(service.plan_and_solve_stream("Who is Naruto?", "Anime", language="English"))
 
+def test_response_synthesizer_respects_language():
+    from backend.core.domain.services.rag.agents.synthesizer import ResponseSynthesizer
+    from unittest.mock import MagicMock
+    
+    mock_engine = MagicMock()
+    mock_prompt_mgr = MagicMock()
+    mock_prompt_mgr.get_prompt.return_value = ("formatted_prompt", "system_prompt")
+    
+    synthesizer = ResponseSynthesizer(mock_engine, mock_prompt_mgr)
+    list(synthesizer.synthesize_stream("query", "context", language="English"))
+    
+    mock_prompt_mgr.get_prompt.assert_called_with(
+        "synthesizer_final", query="query", context="context", feedback=None, language="English"
+    )
+
