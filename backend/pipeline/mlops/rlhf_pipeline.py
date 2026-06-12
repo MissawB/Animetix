@@ -50,14 +50,33 @@ def exported_user_feedback():
     manage_py = os.path.join(BASE_DIR, 'backend', 'manage.py')
     try:
         import subprocess
-        subprocess.run(['python', manage_py, 'export_rlhf_data'], check=True)
+        subprocess.run([sys.executable, manage_py, 'export_rlhf_data'], check=True)
     except Exception as e:
-        logger.error(f"❌ Error exporting data from Django: {e}")
+        logger.error(f"[ERROR] Error exporting data from Django: {e}")
         return None
 
     feedback_path = os.path.join(FEEDBACK_DATASET_DIR, "ai_feedback.jsonl")
     session_path = os.path.join(FEEDBACK_DATASET_DIR, "gameplay_sessions.jsonl")
     return {"feedback": feedback_path, "sessions": session_path}
+
+def run_sql_quality_checks():
+    """Runs dbt data quality checks via Django management command before compilation."""
+    manage_py = os.path.join(BASE_DIR, 'backend', 'manage.py')
+    try:
+        import subprocess
+        logger.info("Executing SQL database quality checks via dbt...")
+        # In test/dev environment, we might exclude BigQuery checks if offline, but standard is to run both
+        exclude_bq = os.getenv("MLOPS_OFFLINE_MODE", "false").lower() == "true"
+        cmd = [sys.executable, manage_py, 'run_data_quality_tests']
+        if exclude_bq:
+            cmd.append('--exclude-bigquery')
+            
+        result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+        logger.info("[SUCCESS] SQL database quality checks passed.")
+        return True
+    except subprocess.CalledProcessError as e:
+        logger.error(f"[ERROR] SQL data quality validation failed:\n{e.stderr or e.stdout}")
+        raise RuntimeError("Training aborted due to data quality violations in SQL tables.") from e
 
 from .dpo_feedback_loop import DPOFeedbackLoop
 
@@ -65,11 +84,16 @@ def validated_dpo_dataset(exported_user_feedback):
     """Transforme l'export en dataset DPO validé et nettoyé."""
     if not exported_user_feedback:
         return None
+    
+    # Run database quality checks before compilation
+    run_sql_quality_checks()
+    
     feedback_path = exported_user_feedback["feedback"]
     dataset_path = os.path.join(FEEDBACK_DATASET_DIR, "dpo_train_validated.jsonl")
     loop = DPOFeedbackLoop(data_dir=FEEDBACK_DATASET_DIR)
     count = loop.process_and_export(feedback_path, dataset_path)
     return {"path": dataset_path, "count": count}
+
 
 def periodic_rag_evaluation():
     """Lance une évaluation Ragas sur un Golden Dataset pour détecter les régressions."""
