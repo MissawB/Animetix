@@ -36,11 +36,12 @@ To train the model to prefer factual, complete, and politely expert responses, w
 - **Concept**: Substitute key names, entities, or dates with incorrect values from our local databases (e.g. `creators_db`, `french_market_db`).
 - **Implementation**: Parse for known names/titles using regex/word-matching and swap with a different item of the same class. If no match is found, fallback to swapping numbers (like release years or volume counts).
 
-### B. Tonal & Style Deviation (Code-Switching / Bad Tone)
-- **Concept**: Break the polite, expert tone by introducing inappropriate slang or mixing languages.
-- **Implementation**: 
-  - For French outputs, inject heavy English gaming/otaku slang or filler words (e.g., *"like, literally"*, *"bro"*, *"fr fr"*, *"wesh"*).
-  - Convert to lower-case and strip punctuation to simulate a lazy, unhelpful response style.
+### B. Tonal & Style Deviation (Subtle Tonal Corruption)
+- **Concept**: Break the polite, expert tone by introducing inappropriate slang/code-switching, excessive redundancy, or a condescending/pedantic tone, rather than just stripping punctuation/casing.
+- **Implementation**: Choose randomly one of three sub-strategies per example:
+  - **Code-switching**: Swaps common French words with English/slang alternatives (e.g., *personnage* -> *character/chara*, *réalisateur* -> *director*, *histoire* -> *plotline/storyline*) and injects English fillers (e.g., *Basically*, *Honestly*, *literally*, *fr fr*). For English outputs, injects Japanese/romaji otaku jargon (e.g., *chara*, *nakama*, *sakuga*).
+  - **Redundancy**: Prepends/appends verbose, repetitive clauses (e.g., *"et comme je l'ai déjà expliqué et mentionné précédemment..."*, *"ce qui signifie et veut dire exactement ce que cela signifie"*).
+  - **Condescending Tone**: Prepends elitist/pedantic prefixes (e.g., *"C'est pourtant évident, et tout otaku digne de ce nom devrait le savoir :"*, *"Franchement, il est élémentaire de comprendre que :"*) and inserts inline/trailing gatekeeping remarks.
 
 ### C. Abrupt Truncation (Incomplete Generation)
 - **Concept**: Simulate model crash/timeout mid-sentence.
