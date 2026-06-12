@@ -186,28 +186,44 @@ class TestFinetuningDataset(unittest.TestCase):
         ]
         vocab = {"Tsundere": {"definition": "Cold then hot", "examples": "Taiga", "impact": "Popular trope", "origin": "Japanese"}}
         
-        dialogues = generate_multiturn_dialogues(animes, mangas, chars, vocab, count=12)
-        self.assertEqual(len(dialogues), 12)
+        dialogues = generate_multiturn_dialogues(animes, mangas, chars, vocab, count=14)
+        self.assertEqual(len(dialogues), 14)
         
-        # Verify comparative debate (scenario 3 -> indices 3 and 9)
-        d_debate_en = dialogues[9]
+        # Verify comparative debate (scenario 3 -> indices 3 and 10)
+        d_debate_en = dialogues[10]
         d_debate_fr = dialogues[3]
         self.assertEqual(d_debate_en["language"], "English")
         self.assertEqual(d_debate_fr["language"], "Français")
         self.assertIn("compare two major anime", d_debate_en["turns"][0]["user"])
         self.assertIn("comparer deux", d_debate_fr["turns"][0]["user"])
         
-        # Verify clarification request (scenario 4 -> indices 4 and 10)
-        d_clarif_en = dialogues[10]
+        # Verify clarification request (scenario 4 -> indices 4 and 11)
+        d_clarif_en = dialogues[11]
         d_clarif_fr = dialogues[4]
         self.assertEqual(d_clarif_en["language"], "English")
         self.assertEqual(d_clarif_fr["language"], "Français")
-        self.assertIn("popular", d_clarif_en["turns"][0]["user"])
-        self.assertIn("populaire", d_clarif_fr["turns"][0]["user"])
+        self.assertTrue(
+            "popular" in d_clarif_en["turns"][0]["user"].lower() or
+            "character" in d_clarif_en["turns"][0]["user"].lower() or
+            "adaptation" in d_clarif_en["turns"][0]["user"].lower()
+        )
+        self.assertTrue(
+            "populaire" in d_clarif_fr["turns"][0]["user"].lower() or
+            "personnage" in d_clarif_fr["turns"][0]["user"].lower() or
+            "adaptation" in d_clarif_fr["turns"][0]["user"].lower()
+        )
         
-        # Verify self-correction (scenario 5 -> indices 5 and 11)
-        d_corr_en = dialogues[11]
-        d_corr_fr = dialogues[5]
+        # Verify progressive recommendation (scenario 5 -> indices 5 and 12)
+        d_prog_en = dialogues[12]
+        d_prog_fr = dialogues[5]
+        self.assertEqual(d_prog_en["language"], "English")
+        self.assertEqual(d_prog_fr["language"], "Français")
+        self.assertIn("looking for a good", d_prog_en["turns"][0]["user"])
+        self.assertIn("Je cherche un bon anime de type", d_prog_fr["turns"][0]["user"])
+
+        # Verify self-correction (scenario 6 -> indices 6 and 13)
+        d_corr_en = dialogues[13]
+        d_corr_fr = dialogues[6]
         self.assertEqual(d_corr_en["language"], "English")
         self.assertEqual(d_corr_fr["language"], "Français")
         self.assertIn("produced", d_corr_en["turns"][0]["user"])
@@ -243,6 +259,60 @@ class TestFinetuningDataset(unittest.TestCase):
                 f"Refusal output must contain Animetix or expertise keywords: {item['output']}"
             )
 
+    def test_refusal_topic_diversity(self):
+        from backend.pipeline.mlops.finetuning_dataset import generate_negative_refusal_examples
+        
+        # Generate enough refusals to cover all categories (11 categories * 2 languages = 22 variations)
+        refusals = generate_negative_refusal_examples(count=400)
+        
+        # Find which topics are covered in the outputs
+        french_topics_found = set()
+        english_topics_found = set()
+        
+        # We can map from output keywords/topic names back to the category keys
+        french_mapping = {
+            "les recettes de cuisine": "recette",
+            "la programmation informatique": "programmation",
+            "les mathématiques": "mathematiques",
+            "les conseils médicaux": "medecine",
+            "la finance et les investissements": "finance",
+            "l'histoire ou la géographie générale": "histoire_geo",
+            "la rédaction générale": "redaction",
+            "les sciences et les technologies": "science_technologie",
+            "la pop culture occidentale": "pop_culture_occidentale",
+            "les loisirs, le sport ou le bricolage": "loisirs_sport",
+            "la culture générale": "culture_generale"
+        }
+        
+        english_mapping = {
+            "cooking recipes": "recipe",
+            "programming and coding": "programming",
+            "mathematics": "mathematics",
+            "medical advice": "medical",
+            "financial topics": "finance",
+            "general history or geography": "history_geo",
+            "general writing": "writing",
+            "science and technology": "science_technology",
+            "western pop culture": "western_pop_culture",
+            "hobbies, sports, or DIY": "hobbies_sports",
+            "general knowledge or trivial facts": "general_knowledge"
+        }
+        
+        for item in refusals:
+            out = item["output"]
+            lang = item["language"]
+            if lang == "Français":
+                for phrase, cat in french_mapping.items():
+                    if phrase in out:
+                        french_topics_found.add(cat)
+            elif lang == "English":
+                for phrase, cat in english_mapping.items():
+                    if phrase in out:
+                        english_topics_found.add(cat)
+                        
+        self.assertEqual(len(french_topics_found), 11, f"Missing French refusal categories: {set(french_mapping.values()) - french_topics_found}")
+        self.assertEqual(len(english_topics_found), 11, f"Missing English refusal categories: {set(english_mapping.values()) - english_topics_found}")
+
     def test_run_generate_instruction_dataset_contains_refusals(self):
         from backend.pipeline.mlops.finetuning_dataset import OUTPUT_DATASET
         import json
@@ -260,17 +330,23 @@ class TestFinetuningDataset(unittest.TestCase):
             self.assertTrue(refusal_found, "Compilation did not produce refusal negative examples")
 
     def test_thematic_rebalancing_boosting(self):
-        # We verify that underrepresented genres (Shojo, Josei, Slice of Life) get boosted variation counts
-        underrepresented_keywords = ["shoujo", "shojo", "josei", "slice of life", "tranche de vie"]
+        # We verify that underrepresented genres get boosted variation counts
+        underrepresented_keywords = [
+            "shoujo", "shojo", "josei", "slice of life", "tranche de vie",
+            "iyashikei", "mecha", "mahou shoujo", "magical girl", "music",
+            "sports", "historical", "horror", "thriller"
+        ]
         
         # Mock entries
         shoujo_manga = {"title": "Ao Haru Ride", "genres": ["Romance", "Shoujo"], "tags": ["School Life"], "popularity": 10000}
         shonen_manga = {"title": "Naruto", "genres": ["Action", "Shonen"], "tags": ["Ninja"], "popularity": 10000}
+        retro_manga = {"title": "Akira", "genres": ["Sci-Fi"], "tags": ["Cyberpunk"], "year": 1982, "popularity": 10000}
         
         def get_effective_pop(item):
             pop = item.get("popularity", 0)
             genres = [g.lower() for g in item.get("genres", [])]
             tags = [t.lower() for t in item.get("tags", [])]
+            year = item.get("year")
             
             is_underrepresented = False
             for term in underrepresented_keywords:
@@ -278,12 +354,16 @@ class TestFinetuningDataset(unittest.TestCase):
                     is_underrepresented = True
                     break
                     
+            if not is_underrepresented and year and 1970 <= year <= 1999:
+                is_underrepresented = True
+                    
             if is_underrepresented:
                 return max(pop, 150001) if pop > 50000 else 100000
             return pop
 
         self.assertEqual(get_effective_pop(shonen_manga), 10000)      # Standard pop
         self.assertEqual(get_effective_pop(shoujo_manga), 100000)    # Boosted to Tier 2 (100k)
+        self.assertEqual(get_effective_pop(retro_manga), 100000)     # Boosted retro work
 
     def test_run_generate_instruction_dataset_rebalanced_ratio(self):
         from backend.pipeline.mlops.finetuning_dataset import OUTPUT_DATASET
@@ -292,7 +372,11 @@ class TestFinetuningDataset(unittest.TestCase):
         if os.path.exists(OUTPUT_DATASET):
             underrepresented_count = 0
             total_count = 0
-            keywords = ["shoujo", "shojo", "josei", "slice of life", "tranche de vie"]
+            keywords = [
+                "shoujo", "shojo", "josei", "slice of life", "tranche de vie",
+                "iyashikei", "mecha", "mahou shoujo", "magical girl", "music",
+                "sports", "historical", "horror", "thriller"
+            ]
             with open(OUTPUT_DATASET, 'r', encoding='utf-8') as f:
                 for line in f:
                     item = json.loads(line)
@@ -359,6 +443,28 @@ class TestFinetuningDataset(unittest.TestCase):
 
         # Verify empty text returns empty
         self.assertEqual(inject_query_noise("", "Français"), "")
+
+    def test_generate_rag_context_instructions(self):
+        from backend.pipeline.mlops.finetuning_dataset import generate_rag_context_instructions
+        animes = [{"title": "Naruto", "genres": ["Action"], "studios": ["Pierrot"], "year": 2002}]
+        chars = [{"name": "Luffy", "origin": "One Piece", "popularity": {"favourites": 150000}, "metadata": {"height": "174cm"}}]
+        
+        instructions = generate_rag_context_instructions(animes, chars)
+        self.assertGreater(len(instructions), 0)
+        for item in instructions:
+            self.assertIn("instruction", item)
+            self.assertIn("input", item)
+            self.assertIn("output", item)
+            # Verify input contains document markers
+            self.assertTrue(
+                "[" in item["input"] and "]" in item["input"]
+            )
+            # Verify output mentions ignoring or Document/Source
+            self.assertTrue(
+                "Document" in item["output"] or
+                "Source" in item["output"] or
+                "ignor" in item["output"].lower()
+            )
 
 if __name__ == "__main__":
     unittest.main()

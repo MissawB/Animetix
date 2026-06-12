@@ -1421,14 +1421,16 @@ def generate_multiturn_dialogues(animes, mangas, characters, otaku_vocab, count=
     ]
  
     for idx in range(count):
-        lang = "English" if (idx // 6) % 2 == 1 else "Français"
-        scenario = idx % 6
+        lang = "English" if (idx // 7) % 2 == 1 else "Français"
+        scenario = idx % 7
         
         # Safe fallback if databases are empty or not matching requirements
         if scenario == 3 and (not animes or len(animes) < 2):
             scenario = 0
         if scenario == 4 and not animes:
             scenario = 1
+        if scenario == 5 and (not animes or len(animes) < 2):
+            scenario = 0
         
         if scenario == 0 and animes:
             # Anime / Manga exploration dialogue
@@ -1557,43 +1559,210 @@ def generate_multiturn_dialogues(animes, mangas, characters, otaku_vocab, count=
                 
         elif scenario == 4:
             # Clarification request
-            anime = random.choice(animes)
-            title = get_display_title(anime.get("title", "Unknown"))
-            genres = clean_tags(anime.get("genres", ["Action"]), lang)
-            genre = genres[0] if genres else ("Action" if lang == "English" else "Action")
-            studio = ", ".join(anime.get("studios", ["Pierrot"]))
-            year = anime.get("year", 2002)
-            genres_str = ", ".join(genres)
+            sub_scenario = random.choice(["studio_genre", "character_name", "adaptation"])
             
-            tags = clean_tags(anime.get("tags", []), lang)
-            tag = tags[0] if tags else ("adventure" if lang == "English" else "aventure")
-            tags_str = ", ".join(tags[:3])
+            if sub_scenario == "studio_genre":
+                anime = random.choice(animes)
+                title = get_display_title(anime.get("title", "Unknown"))
+                genres = clean_tags(anime.get("genres", ["Action"]), lang)
+                genre = genres[0] if genres else ("Action" if lang == "English" else "Action")
+                studio = ", ".join(anime.get("studios", ["Pierrot"]))
+                year = anime.get("year", 2002)
+                genres_str = ", ".join(genres)
+                
+                tags = clean_tags(anime.get("tags", []), lang)
+                tag = tags[0] if tags else ("adventure" if lang == "English" else "aventure")
+                tags_str = ", ".join(tags[:3])
+                
+                char_name = "Luffy"
+                for c in characters:
+                    if c.get("origin") == anime.get("title"):
+                        char_name = get_display_character(c.get("name"))
+                        break
+                        
+                if lang == "English":
+                    turns = [
+                        {"user": f"Can you tell me about that popular {genre} anime produced by {studio}?",
+                         "assistant": f"Could you please clarify which anime you mean? Studio {studio} has produced several {genre} anime, such as '{title}' (with themes like {tag}) or other notable projects. Were you referring to this one?"},
+                        {"user": f"Yes, I was referring to '{title}'!",
+                         "assistant": f"Great! '{title}' was released in {year} and falls into the genres: {genres_str}. The story explores key themes like: {tags_str}. It is a prominent production by {studio}."},
+                        {"user": "Thanks for the details. Are there any highly popular characters in it?",
+                         "assistant": f"Definitely! Within this universe, {char_name} is extremely popular among fans, ranking high with many votes of admiration."}
+                    ]
+                else:
+                    turns = [
+                        {"user": f"Peux-tu me parler de cet anime de {genre} très populaire produit par {studio} ?",
+                         "assistant": f"Pourrais-tu préciser de quelle œuvre il s'agit ? Le studio {studio} a produit plusieurs animés de {genre}, notamment '{title}' (avec des thèmes comme {tag}) ou d'autres projets marquants. Parlais-tu de celui-ci ?"},
+                        {"user": f"Oui, je parlais bien de '{title}' !",
+                         "assistant": f"Excellent choix ! '{title}' est sorti en {year} et s'inscrit dans les genres : {genres_str}. L'histoire aborde des thématiques fortes comme : {tags_str}. C'est une production majeure de {studio}."},
+                        {"user": "Merci pour ces détails. Est-ce qu'il y a des personnages très populaires dedans ?",
+                         "assistant": f"Absolument ! Si on regarde les personnages de cet univers, {char_name} est particulièrement apprécié de la communauté, se classant dans le top avec de nombreux votes d'admiration."}
+                    ]
             
-            char_name = "Luffy"
-            for c in characters:
-                if c.get("origin") == anime.get("title"):
-                    char_name = get_display_character(c.get("name"))
-                    break
+            elif sub_scenario == "character_name":
+                # Clarification about character names that are ambiguous
+                choices = [
+                    {"common_name": "Sakura", "char1": "Sakura Haruno", "anime1": "Naruto", "char2": "Sakura Kinomoto", "anime2": "Cardcaptor Sakura"},
+                    {"common_name": "Rin", "char1": "Rin Tohsaka", "anime1": "Fate/stay night", "char2": "Rin Okumura", "anime2": "Blue Exorcist"},
+                    {"common_name": "Yuki", "char1": "Yuki Sohma", "anime1": "Fruits Basket", "char2": "Yuki Nagato", "anime2": "The Melancholy of Haruhi Suzumiya"}
+                ]
+                choice = random.choice(choices)
+                common_name = choice["common_name"]
+                char1 = choice["char1"]
+                anime1 = choice["anime1"]
+                char2 = choice["char2"]
+                anime2 = choice["anime2"]
+                
+                orgs1 = ["le village de Konoha" if lang == "Français" else "Konoha Village"]
+                orgs2 = ["le club d'astronomie" if lang == "Français" else "Astronomy Club"]
+                
+                for c in characters:
+                    if c.get("name") == char1:
+                        ents = c.get("entities", {})
+                        if isinstance(ents, dict) and ents.get("organizations"):
+                            orgs1 = ents["organizations"]
+                    if c.get("name") == char2:
+                        ents = c.get("entities", {})
+                        if isinstance(ents, dict) and ents.get("organizations"):
+                            orgs2 = ents["organizations"]
+                            
+                orgs1_str = ", ".join(orgs1)
+                
+                if lang == "English":
+                    turns = [
+                        {"user": f"Can you give me information about the character '{common_name}'?",
+                         "assistant": f"There are several famous characters named '{common_name}' in anime. Are you referring to {char1} from '{anime1}' or {char2} from '{anime2}'?"},
+                        {"user": f"I was talking about {char1} in '{anime1}'.",
+                         "assistant": f"Understood! {char1} is a key protagonist in '{anime1}'. Within this work, they play a narrative-defining role and are deeply connected to the main plot."},
+                        {"user": "Great, thanks. What groups or factions do they belong to?",
+                         "assistant": f"In '{anime1}', they are primarily associated with the following groups or factions: {orgs1_str}."}
+                    ]
+                else:
+                    turns = [
+                        {"user": f"Peux-tu me donner des informations sur le personnage '{common_name}' ?",
+                         "assistant": f"Il existe plusieurs personnages célèbres nommés '{common_name}' dans la japanimation. Fais-tu référence à {char1} de '{anime1}' ou à {char2} de '{anime2}' ?"},
+                        {"user": f"Je parlais de {char1} dans '{anime1}'.",
+                         "assistant": f"D'accord ! {char1} est un protagoniste clé de '{anime1}'. Dans cette œuvre, il joue un rôle narratif déterminant et est intimement lié à l'intrigue principale."},
+                        {"user": "Super, merci. Quels sont ses groupes d'appartenance ?",
+                         "assistant": f"Dans '{anime1}', il est principalement associé aux groupes ou factions suivantes : {orgs1_str}."}
+                    ]
+            
+            else:
+                # Clarification about adaptations (e.g., FMA vs FMAB, or first adaptation vs remake)
+                choices = [
+                    {"title": "Fullmetal Alchemist", "studio1": "Studio Bones", "year1": 2003, "studio2": "Studio Bones (Brotherhood)", "year2": 2009, "episodes1": 51, "episodes2": 64},
+                    {"title": "Hunter x Hunter", "studio1": "Nippon Animation", "year1": 1999, "studio2": "Madhouse", "year2": 2011, "episodes1": 62, "episodes2": 148},
+                    {"title": "Fate/stay night", "studio1": "Studio Deen", "year1": 2006, "studio2": "ufotable", "year2": 2014, "episodes1": 24, "episodes2": 26}
+                ]
+                choice = random.choice(choices)
+                title = choice["title"]
+                studio1 = choice["studio1"]
+                year1 = choice["year1"]
+                studio2 = choice["studio2"]
+                year2 = choice["year2"]
+                episodes1 = choice["episodes1"]
+                episodes2 = choice["episodes2"]
+                
+                if lang == "English":
+                    turns = [
+                        {"user": f"I would like to get details about the anime adaptation of '{title}'.",
+                         "assistant": f"The franchise '{title}' has multiple adaptations. Are you referring to the first series animated by {studio1} in {year1}, or the remake version animated by {studio2} in {year2}?"},
+                        {"user": f"The version from {year2}.",
+                         "assistant": f"Excellent choice! The {year2} adaptation of '{title}' by {studio2} is highly praised for its faithful retelling of the original manga source material, offering stellar production values."},
+                        {"user": "How many episodes does it have in total?",
+                         "assistant": f"This version of '{title}' consists of {episodes2} episodes in total."}
+                    ]
+                else:
+                    turns = [
+                        {"user": f"Je voudrais des détails sur l'adaptation en animé de '{title}'.",
+                         "assistant": f"La franchise '{title}' possède plusieurs adaptations. Fais-tu référence à la première série produite par {studio1} en {year1}, ou à la version remake produite par {studio2} en {year2} ?"},
+                        {"user": f"La version de {year2}.",
+                         "assistant": f"Excellent choix ! L'adaptation de {year2} de '{title}' par {studio2} est particulièrement réputée pour sa fidélité totale au manga d'origine et ses combats spectaculaires."},
+                        {"user": "Combien d'épisodes comporte-t-elle au total ?",
+                         "assistant": f"Cette version de '{title}' comporte un total de {episodes2} épisodes."}
+                    ]
+                
+        elif scenario == 5:
+            # Progressive recommendation (user refines tastes)
+            anime1 = random.choice(animes)
+            anime2 = random.choice(animes)
+            while anime2.get("title") == anime1.get("title"):
+                anime2 = random.choice(animes)
+                
+            title1 = get_display_title(anime1.get("title", "Unknown"))
+            title2 = get_display_title(anime2.get("title", "Unknown"))
+            
+            genres1 = anime1.get("genres", ["Action"])
+            genre1 = random.choice(genres1) if genres1 else "Action"
+            
+            # Translate genre1 if language is English
+            if lang == "English":
+                genre1_translated = clean_tags([genre1], "English")[0]
+            else:
+                genre1_translated = clean_tags([genre1], "Français")[0]
+                
+            genres2 = anime2.get("genres", [])
+            tags2 = anime2.get("tags", [])
+            all_genres_tags2_lower = [g.lower() for g in genres2 + tags2]
+            
+            # Determine mood of anime2
+            dark_keywords = ["drama", "psychological", "horror", "tragedy", "mystery", "thriller", "seinen", "dark fantasy"]
+            light_keywords = ["comedy", "slice of life", "parody", "school", "romance", "shoujo", "josei"]
+            action_keywords = ["action", "adventure", "fantasy", "supernatural", "mecha", "shonen", "super power"]
+            
+            if any(k in all_genres_tags2_lower for k in dark_keywords):
+                mood_fr = "sombre et psychologique"
+                mood_en = "dark and psychological"
+            elif any(k in all_genres_tags2_lower for k in light_keywords):
+                mood_fr = "léger, comique ou axé tranche de vie"
+                mood_en = "light, comedy or slice-of-life"
+            elif any(k in all_genres_tags2_lower for k in action_keywords):
+                mood_fr = "dynamique avec de l'action ou de l'aventure"
+                mood_en = "dynamic, action-packed or adventurous"
+            else:
+                mood_fr = "captivant et profond"
+                mood_en = "captivating and deep"
+                
+            studio2 = ", ".join(anime2.get("studios", ["MAPPA"]))
+            year2 = anime2.get("year", 2021)
+            tags2_str = ", ".join(clean_tags(tags2, lang)[:3]) if tags2 else ("animation" if lang == "English" else "animation")
+            
+            # Check if we have volume/episode count from database or use a realistic dummy
+            from backend.pipeline.mlops.volumes_and_episodes_db import VOLUMES_AND_EPISODES_DATA
+            episodes2 = "12 épisodes" if lang == "Français" else "12 episodes"
+            if anime2.get("title") in VOLUMES_AND_EPISODES_DATA:
+                episodes2 = VOLUMES_AND_EPISODES_DATA[anime2.get("title")]["anime_episodes"]
+            else:
+                episodes2 = random.choice(["12", "24", "26", "50", "75"])
+                if lang == "Français":
+                    episodes2 = f"{episodes2} épisodes"
+                else:
+                    episodes2 = f"{episodes2} episodes"
                     
             if lang == "English":
+                p_text1 = make_english_anime_profile(anime1.get("title"), genres1, anime1.get("studios", []), anime1.get("tags", []), anime1.get("year", 2010))
+                p_text2 = make_english_anime_profile(anime2.get("title"), genres2, anime2.get("studios", []), tags2, year2)
+                
                 turns = [
-                    {"user": f"Can you tell me about that popular {genre} anime produced by {studio}?",
-                     "assistant": f"Could you please clarify which anime you mean? Studio {studio} has produced several {genre} anime, such as '{title}' (with themes like {tag}) or other notable projects. Were you referring to this one?"},
-                    {"user": f"Yes, I was referring to '{title}'!",
-                     "assistant": f"Great! '{title}' was released in {year} and falls into the genres: {genres_str}. The story explores key themes like: {tags_str}. It is a prominent production by {studio}."},
-                    {"user": "Thanks for the details. Are there any highly popular characters in it?",
-                     "assistant": f"Definitely! Within this universe, {char_name} is extremely popular among fans, ranking high with many votes of admiration."}
+                    {"user": f"Hi! I'm looking for a good {genre1_translated} anime. Do you have any recommendation?",
+                     "assistant": f"Hello! I highly recommend '{title1}'. {p_text1}"},
+                    {"user": f"Thanks, but actually I would prefer something more {mood_en}. Do you have something else?",
+                     "assistant": f"I see! In that case, you should check out '{title2}'. {p_text2}"},
+                    {"user": "That looks awesome! Which studio produced it, and how many episodes does it have?",
+                     "assistant": f"'{title2}' was produced by the studio {studio2} and consists of {episodes2} in total. It was released in {year2}."}
                 ]
             else:
-                turns = [
-                    {"user": f"Peux-tu me parler de cet anime de {genre} très populaire produit par {studio} ?",
-                     "assistant": f"Pourrais-tu préciser de quelle œuvre il s'agit ? Le studio {studio} a produit plusieurs animés de {genre}, notamment '{title}' (avec des thèmes comme {tag}) ou d'autres projets marquants. Parlais-tu de celui-ci ?"},
-                    {"user": f"Oui, je parlais bien de '{title}' !",
-                     "assistant": f"Excellent choix ! '{title}' est sorti en {year} et s'inscrit dans les genres : {genres_str}. L'histoire aborde des thématiques fortes comme : {tags_str}. C'est une production majeure de {studio}."},
-                    {"user": "Merci pour ces détails. Est-ce qu'il y a des personnages très populaires dedans ?",
-                     "assistant": f"Absolument ! Si on regarde les personnages de cet univers, {char_name} est particulièrement apprécié de la communauté, se classant dans le top avec de nombreux votes d'admiration."}
-                ]
+                p_text1 = make_french_anime_profile(anime1.get("title"), genres1, anime1.get("studios", []), anime1.get("tags", []), anime1.get("year", 2010))
+                p_text2 = make_french_anime_profile(anime2.get("title"), genres2, anime2.get("studios", []), tags2, year2)
                 
+                turns = [
+                    {"user": f"Salut ! Je cherche un bon anime de type {genre1_translated}. Tu as une recommandation ?",
+                     "assistant": f"Bonjour ! Je te conseille vivement '{title1}'. {p_text1}"},
+                    {"user": f"Merci, mais en fait je préfère quelque chose de plus {mood_fr}. Tu as un autre choix ?",
+                     "assistant": f"Je vois ! Dans ce cas, tu devrais adorer '{title2}'. {p_text2}"},
+                    {"user": "Ça a l'air super ! Quel studio a produit cette série, et elle fait combien d'épisodes ?",
+                     "assistant": f"'{title2}' a été produit par le studio {studio2} et compte un total de {episodes2}. Cet anime est sorti en {year2}."}
+                ]
         else:
             # Self-correction after feedback
             anime_choice = random.choice([
@@ -1640,6 +1809,164 @@ def generate_multiturn_dialogues(animes, mangas, characters, otaku_vocab, count=
         
     return dialogues
 
+def generate_rag_context_instructions(animes, characters) -> List[dict]:
+    """
+    Génère des exemples d'entraînement SFT pour le RAG (Retrieval-Augmented Generation).
+    Le modèle doit répondre à une question sur une œuvre ou un personnage en s'appuyant
+    strictement sur des fragments de contexte fournis (synopsis, trivia, fiches doubleurs)
+    qui incluent du bruit (publicités, informations sur d'autres œuvres).
+    Génère ~320 exemples.
+    """
+    instructions = []
+    
+    # Fragments de bruit pour simuler des documents non pertinents ou des publicités
+    noise_fr = [
+        "Sponsor : Profitez de 10% de réduction sur la boutique Otaku-Shop avec le code ANIME10.",
+        "Météo : Des pluies éparses sont attendues sur Tokyo ce week-end.",
+        "Rumeur : Un nouveau film d'animation pour cette franchise serait en préparation pour fin 2027.",
+        "Note de l'éditeur : Cet article est paru initialement dans le magazine Shonen Jump en 2021.",
+        "Avis des lecteurs : Une note moyenne de 4.8/5 a été attribuée à ce tome par les membres du club.",
+        "Publicité : Téléchargez l'application Manga-Reader dès maintenant sur iOS et Android."
+    ]
+    noise_en = [
+        "Sponsor: Get 10% off at the Otaku-Shop with promo code ANIME10.",
+        "Weather: Scattered showers are expected over Tokyo this weekend.",
+        "Rumor: A new anime movie for this franchise is reportedly in production for late 2027.",
+        "Editor's Note: This article was originally published in the Shonen Jump magazine in 2021.",
+        "Reader reviews: A rating of 4.8/5 was given to this volume by club members.",
+        "Advertisement: Download the Manga-Reader app now on iOS and Android."
+    ]
+    
+    import random
+    
+    # Scenario A: Synopsis extraction with noise
+    for idx in range(120):
+        lang = "English" if idx % 2 == 1 else "Français"
+        anime = random.choice(animes) if animes else {"title": "Naruto", "genres": ["Action"], "studios": ["Pierrot"], "year": 2002}
+        title = anime.get("title", "Unknown")
+        genres = ", ".join(anime.get("genres", ["Action"]))
+        studio = ", ".join(anime.get("studios", ["Pierrot"]))
+        year = anime.get("year", 2002)
+        
+        # Build clean info
+        if lang == "English":
+            clean_doc = f"[Document A (Official profile)] The anime '{title}' was produced by the studio {studio} and released in the year {year}. It belongs to the genres: {genres}."
+            unrelated_anime = "One Piece" if title != "One Piece" else "Dragon Ball"
+            noise_doc1 = f"[Document B (Trivia)] The manga '{unrelated_anime}' has sold millions of copies worldwide and is serialized in Weekly Shonen Jump."
+            noise_doc2 = f"[Document C (Ads)] {random.choice(noise_en)}"
+            
+            # Shuffle docs order
+            docs = [clean_doc, noise_doc1, noise_doc2]
+            random.shuffle(docs)
+            context = "\n".join(docs)
+            
+            q = f"According to the provided documents, which studio produced the anime '{title}', in which year was it released, and which genres does it belong to?"
+            ans = f"Based on the provided documents (specifically Document A), the anime '{title}' was produced by the studio {studio} and released in {year}. It belongs to the genres: {genres}. The other documents contain unrelated trivia about '{unrelated_anime}' and an advertisement, which have been ignored."
+        else:
+            clean_doc = f"[Document A (Fiche officielle)] L'anime '{title}' a été produit par le studio {studio} et est sorti en {year}. Il appartient aux genres : {genres}."
+            unrelated_anime = "One Piece" if title != "One Piece" else "Dragon Ball"
+            noise_doc1 = f"[Document B (Anecdotes)] Le manga '{unrelated_anime}' s'est vendu à des millions d'exemplaires et est prépublié dans le Weekly Shonen Jump."
+            noise_doc2 = f"[Document C (Pub)] {random.choice(noise_fr)}"
+            
+            # Shuffle docs order
+            docs = [clean_doc, noise_doc1, noise_doc2]
+            random.shuffle(docs)
+            context = "\n".join(docs)
+            
+            q = f"D'après les documents fournis, quel studio a produit l'anime '{title}', en quelle année est-il sorti et à quels genres appartient-il ?"
+            ans = f"D'après le contexte fourni (spécifiquement le Document A), l'anime '{title}' a été produit par le studio {studio} et est sorti en {year}. Ses genres sont : {genres}. Les autres documents mentionnent des anecdotes sur '{unrelated_anime}' et une annonce publicitaire, qui ont été ignorées."
+            
+        instructions.append({
+            "instruction": q,
+            "input": context,
+            "output": ans,
+            "language": lang
+        })
+
+    # Scenario B: Voice Actor (VF) profile extraction with conflict
+    from french_market_db import FRENCH_VOICE_ACTORS
+    voice_actors_list = list(FRENCH_VOICE_ACTORS.keys()) if FRENCH_VOICE_ACTORS else ["Brigitte Lecordier", "Benoît DuPac"]
+    
+    for idx in range(100):
+        lang = "English" if idx % 2 == 1 else "Français"
+        va = random.choice(voice_actors_list)
+        va_data = FRENCH_VOICE_ACTORS.get(va, {"definition": "Doubleur", "examples": "Rôle A", "impact": "VF culte", "origin": "AB Production"})
+        
+        # Build clean info
+        roles = va_data["examples"]
+        bio = va_data["definition"]
+        
+        if lang == "English":
+            clean_doc = f"[Source 1 (French Voice Cast)] the famous French voice actor '{va}' is known for lending their voice to: {roles}. They are recognized as: {bio}."
+            noise_doc1 = f"[Source 2 (Music)] Yoasobi is a popular Japanese music duo composed of producer Ayase and singer ikura."
+            noise_doc2 = f"[Source 3] {random.choice(noise_en)}"
+            
+            docs = [clean_doc, noise_doc1, noise_doc2]
+            random.shuffle(docs)
+            context = "\n".join(docs)
+            
+            q = f"Based on the text above, who is the French voice actor '{va}' and what are some of their iconic roles?"
+            ans = f"According to Source 1, '{va}' is {bio}. Their iconic French voice acting roles include: {roles}. The other sources regarding Japanese music (Yoasobi) and advertisements were ignored as they are not relevant to the question."
+        else:
+            clean_doc = f"[Source 1 (Doublage Français)] Le célèbre comédien de doublage '{va}' est connu pour prêter sa voix en VF à : {roles}. Il est défini comme : {bio}."
+            noise_doc1 = f"[Source 2 (Musique)] Yoasobi est un duo musical japonais très populaire, composé du producteur Ayase et de la chanteuse Ikura."
+            noise_doc2 = f"[Source 3] {random.choice(noise_fr)}"
+            
+            docs = [clean_doc, noise_doc1, noise_doc2]
+            random.shuffle(docs)
+            context = "\n".join(docs)
+            
+            q = f"En vous appuyant sur les documents fournis, qui est le doubleur français '{va}' et quels sont ses rôles marquants ?"
+            ans = f"D'après la Source 1, '{va}' est {bio}. Ses rôles marquants en version française (VF) sont : {roles}. Les informations sur le duo de musique japonais Yoasobi (Source 2) et les publicités ont été ignorées car elles ne concernent pas le sujet."
+
+        instructions.append({
+            "instruction": q,
+            "input": context,
+            "output": ans,
+            "language": lang
+        })
+
+    # Scenario C: Character Bio with multiple documents
+    for idx in range(100):
+        lang = "English" if idx % 2 == 1 else "Français"
+        char = random.choice(characters) if characters else {"name": "Luffy", "origin": "One Piece", "entities": {"organizations": ["Straw Hats"]}, "popularity": {"favourites": 150000, "rank": 1}, "metadata": {"height": "174cm"}}
+        name = char.get("name", "Unknown")
+        origin = char.get("origin", "Unknown")
+        height = char.get("metadata", {}).get("height", "Unknown") if isinstance(char.get("metadata"), dict) else "Unknown"
+        favs = char.get("popularity", {}).get("favourites", 0) if isinstance(char.get("popularity"), dict) else 0
+        
+        if lang == "English":
+            clean_doc = f"[Document A (Character Wiki)] Character profile: {name} is from '{origin}'. Official height: {height}. Popularity rank: {favs} favorites."
+            noise_doc1 = f"[Document B (Sponsor)] {random.choice(noise_en)}"
+            noise_doc2 = f"[Document C (Release Dates)] Studio Trigger announced a new project coming out in winter next year."
+            
+            docs = [clean_doc, noise_doc1, noise_doc2]
+            random.shuffle(docs)
+            context = "\n".join(docs)
+            
+            q = f"According to the context, what is the official height of '{name}' and which anime/manga work are they from?"
+            ans = f"Based on Document A, the character '{name}' is from '{origin}' and their official height is {height}. Documents B and C contain unrelated sponsor advertisements and Trigger release announcements, which were excluded from this answer."
+        else:
+            clean_doc = f"[Document A (Wiki Personnages)] Profil du personnage : {name} est issu de '{origin}'. Sa taille officielle est {height}. Popularité : {favs} votes d'admiration."
+            noise_doc1 = f"[Document B (Sponsor)] {random.choice(noise_fr)}"
+            noise_doc2 = f"[Document C (Sorties)] Le studio Trigger a annoncé un nouveau projet pour l'hiver prochain."
+            
+            docs = [clean_doc, noise_doc1, noise_doc2]
+            random.shuffle(docs)
+            context = "\n".join(docs)
+            
+            q = f"D'après le contexte fourni, quelle est la taille officielle de '{name}' et de quelle œuvre est-il issu ?"
+            ans = f"D'après le Document A, le personnage '{name}' provient de l'œuvre '{origin}' et sa taille officielle est {height}. Les Documents B et C concernant le sponsor publicitaire et les annonces du studio Trigger n'ont pas été pris en compte car ils sont hors-sujet."
+
+        instructions.append({
+            "instruction": q,
+            "input": context,
+            "output": ans,
+            "language": lang
+        })
+
+    return instructions
+
 def generate_negative_refusal_examples(count=800) -> List[dict]:
     """
     Génère procéduralement des exemples négatifs (hors-sujet) avec des refus polis
@@ -1655,14 +1982,23 @@ def generate_negative_refusal_examples(count=800) -> List[dict]:
             "Donne-moi la recette des lasagnes maison.",
             "Comment préparer une soupe à l'oignon ?",
             "Quelle est la recette traditionnelle du boeuf bourguignon ?",
-            "Peux-tu m'expliquer comment réussir des macarons ?"
+            "Peux-tu m'expliquer comment réussir des macarons ?",
+            "Comment cuire des asperges vertes à la poêle ?",
+            "Quelle est la recette d'une vraie quiche lorraine ?",
+            "Comment préparer une pâte à crêpes sans grumeaux ?",
+            "Quel temps de cuisson pour un oeuf mollet ?"
         ],
         "programmation": [
             "Écris une fonction Python pour trier une liste.",
             "Comment résoudre un NullPointerException en Java ?",
             "Explique-moi la différence entre let, var et const en JavaScript.",
             "Comment configurer un serveur web avec Nginx ?",
-            "Donne-moi un exemple de requête SQL pour joindre deux tables."
+            "Donne-moi un exemple de requête SQL pour joindre deux tables.",
+            "Comment inverser une chaîne de caractères en C++ ?",
+            "Écris une feuille de style CSS pour centrer une div.",
+            "Comment configurer une base de données PostgreSQL avec Docker ?",
+            "Qu'est-ce qu'une promesse (Promise) en JavaScript et comment l'utiliser ?",
+            "Comment annuler le dernier commit avec Git ?"
         ],
         "mathematiques": [
             "Calcule la dérivée de f(x) = 3x^2 + 5x - 2.",
@@ -1698,6 +2034,34 @@ def generate_negative_refusal_examples(count=800) -> List[dict]:
             "Écris un poème d'amour romantique en alexandrins.",
             "Rédige un compte-rendu de réunion synthétique.",
             "Écris une critique littéraire du roman Les Misérables."
+        ],
+        "science_technologie": [
+            "Peux-tu m'expliquer la théorie de la relativité d'Einstein ?",
+            "Comment fonctionne la fusion nucléaire ?",
+            "Quelle est la distance entre la Terre et Mars ?",
+            "Qu'est-ce qu'un trou noir ?",
+            "Comment fonctionne le chiffrement RSA ?"
+        ],
+        "pop_culture_occidentale": [
+            "Qui joue le rôle principal dans le film Inception ?",
+            "Donne-moi la liste des albums de Taylor Swift.",
+            "Quel est le synopsis de la série Breaking Bad ?",
+            "Qui a réalisé le film Le Parrain ?",
+            "Peux-tu me résumer l'intrigue de Star Wars Episode IV ?"
+        ],
+        "loisirs_sport": [
+            "Comment bien entretenir un bonsaï chez soi ?",
+            "Quelles sont les règles de base du football américain ?",
+            "Donne-moi un programme de musculation pour débutant.",
+            "Comment fabriquer une étagère en bois soi-même ?",
+            "Quelles plantes planter en extérieur au printemps ?"
+        ],
+        "culture_generale": [
+            "Quand a eu lieu la Révolution Française ?",
+            "Quelle est la capitale du Canada ?",
+            "Qui a peint la Joconde ?",
+            "Quel est le plus long fleuve du monde ?",
+            "Quelle est la hauteur de la Tour Eiffel ?"
         ]
     }
 
@@ -1707,14 +2071,23 @@ def generate_negative_refusal_examples(count=800) -> List[dict]:
             "Give me a recipe for homemade lasagna.",
             "How you make a classic French onion soup?",
             "What is the traditional recipe for beef stew?",
-            "Can you explain how to make chocolate chip cookies?"
+            "Can you explain how to make chocolate chip cookies?",
+            "How do you cook green asparagus in a pan?",
+            "What is the traditional recipe for a French quiche lorraine?",
+            "How do I make pancake batter without lumps?",
+            "How long does it take to soft-boil an egg?"
         ],
         "programming": [
             "Write a Python function to sort a list of numbers.",
             "How do I fix a NullPointerException in Java?",
             "Explain the difference between let, var, and const in JavaScript.",
             "How do I set up a web server using Nginx?",
-            "Give me a SQL query example to join two tables."
+            "Give me a SQL query example to join two tables.",
+            "How do I reverse a string in C++?",
+            "Write a CSS stylesheet to center a div horizontally and vertically.",
+            "How do you run a PostgreSQL database using Docker?",
+            "What is a Promise in JavaScript and how do you use it?",
+            "How can I undo my last commit in Git?"
         ],
         "mathematics": [
             "Calculate the derivative of f(x) = 3x^2 + 5x - 2.",
@@ -1750,6 +2123,34 @@ def generate_negative_refusal_examples(count=800) -> List[dict]:
             "Write a romantic love poem.",
             "Draft a concise meeting summary.",
             "Write a literary review of the novel Les Misérables."
+        ],
+        "science_technology": [
+            "Can you explain Einstein's theory of relativity?",
+            "How does nuclear fusion work?",
+            "What is the average distance between Earth and Mars?",
+            "What is a black hole and how is it formed?",
+            "How does RSA encryption secure data?"
+        ],
+        "western_pop_culture": [
+            "Who plays the lead role in the movie Inception?",
+            "Give me a list of all Taylor Swift albums.",
+            "What is the plot of the TV show Breaking Bad?",
+            "Who directed the movie The Godfather?",
+            "Can you summarize the plot of Star Wars Episode IV?"
+        ],
+        "hobbies_sports": [
+            "How do I properly care for a bonsai tree at home?",
+            "What are the basic rules of American football?",
+            "Give me a beginner-friendly workout routine.",
+            "How can I build a wooden bookshelf myself?",
+            "Which flowers should I plant in the spring?"
+        ],
+        "general_knowledge": [
+            "When did the French Revolution start?",
+            "What is the capital of Canada?",
+            "Who painted the Mona Lisa?",
+            "What is the longest river in the world?",
+            "How tall is the Eiffel Tower?"
         ]
     }
 
@@ -1764,6 +2165,8 @@ def generate_negative_refusal_examples(count=800) -> List[dict]:
         "Pourrais-tu m'aider avec : ",
         "Bonjour, ",
         "Salut ! ",
+        "J'aimerais savoir : ",
+        "Dis, Animetix, ",
         ""
     ]
     
@@ -1777,6 +2180,8 @@ def generate_negative_refusal_examples(count=800) -> List[dict]:
         "Could you help me with: ",
         "Hello, ",
         "Hi! ",
+        "I'd like to know: ",
+        "Hey Animetix, ",
         ""
     ]
 
@@ -1784,14 +2189,18 @@ def generate_negative_refusal_examples(count=800) -> List[dict]:
         "En tant qu'Animetix, mon expertise se concentre exclusivement sur l'univers des animés, des mangas et de la culture otaku. Je ne peux donc pas vous aider avec des sujets hors de ce domaine comme {topic}. Si vous avez des questions sur des œuvres, des personnages, des doubleurs ou des créateurs de mangas, je serai ravi d'y répondre !",
         "Désolé, mais mon rôle d'assistant expert Animetix est dédié uniquement aux mangas, aux animés et à la pop-culture japonaise. Je dois refuser les requêtes concernant d'autres sujets comme {topic}. N'hésitez pas à me poser une question sur vos animes ou personnages préférés !",
         "Je ne peux pas répondre à cette demande. Animetix est une intelligence artificielle spécialisée uniquement dans les mangas, les animés et la culture otaku. Les questions concernant {topic} dépassent mon cadre d'expertise. Posez-moi plutôt une question sur l'univers des animés !",
-        "En tant qu'expert de la japanimation et des mangas sous le nom d'Animetix, je me limite à ce domaine passionnant. Je ne peux pas traiter de sujets généraux tels que {topic}. Avez-vous une question sur les animés, les studios ou les seiyuu à me poser ?"
+        "En tant qu'expert de la japanimation et des mangas sous le nom d'Animetix, je me limite à ce domaine passionnant. Je ne peux pas traiter de sujets généraux tels que {topic}. Avez-vous une question sur les animés, les studios ou les seiyuu à me poser ?",
+        "Navré, mais en tant qu'assistant Animetix, je suis uniquement conçu pour répondre aux questions relatives aux mangas, aux animés et à l'univers otaku. Je ne suis pas habilité à traiter des sujets comme {topic}. Si vous souhaitez parler de japanimation, je suis à votre disposition !",
+        "Je regrette, mais ma base de connaissances sous le nom d'Animetix est spécialisée à 100% dans la pop-culture japonaise, les animés et les mangas. Je ne peux pas répondre aux demandes concernant {topic}. N'hésitez pas à me solliciter pour des recommandations d'animes !"
     ]
 
     refusal_templates_en = [
         "As Animetix, my expertise is exclusively focused on the universe of anime, manga, and otaku culture. Therefore, I cannot help you with topics outside this domain like {topic}. If you have questions about anime series, characters, voice actors, or manga creators, I would be delighted to answer!",
         "Sorry, but my role as the expert assistant Animetix is solely dedicated to manga, anime, and Japanese pop culture. I must decline requests concerning other topics like {topic}. Feel free to ask me questions about your favorite anime series or characters instead!",
         "I cannot answer this request. Animetix is an AI specialized exclusively in manga, anime, and otaku culture. Questions regarding {topic} fall outside my scope of expertise. Please ask me a question about the anime universe instead!",
-        "As an anime and manga specialist known as Animetix, I restrict my answers to this exciting domain. I cannot assist with general topics such as {topic}. Do you have a question about anime, studios, or seiyuu for me?"
+        "As an anime and manga specialist known as Animetix, I restrict my answers to this exciting domain. I cannot assist with general topics such as {topic}. Do you have a question about anime, studios, or seiyuu for me?",
+        "I am sorry, but as Animetix, I am strictly designed to answer queries about anime, manga, and otaku culture. I cannot assist with topics like {topic}. If you want to discuss Japanese animation or manga, I am here for you!",
+        "Unfortunately, my database as Animetix is completely dedicated to Japanese pop culture, anime, and manga. I cannot address requests regarding {topic}. Please let me know if you need any anime recommendations instead!"
     ]
 
     for idx in range(count):
@@ -1810,7 +2219,11 @@ def generate_negative_refusal_examples(count=800) -> List[dict]:
                 "medical": "medical advice",
                 "finance": "financial topics",
                 "history_geo": "general history or geography",
-                "writing": "general writing"
+                "writing": "general writing",
+                "science_technology": "science and technology",
+                "western_pop_culture": "western pop culture",
+                "hobbies_sports": "hobbies, sports, or DIY",
+                "general_knowledge": "general knowledge or trivial facts"
             }
             topic_name = topic_names.get(cat, "general topics")
         else:
@@ -1826,7 +2239,11 @@ def generate_negative_refusal_examples(count=800) -> List[dict]:
                 "medecine": "les conseils médicaux",
                 "finance": "la finance et les investissements",
                 "histoire_geo": "l'histoire ou la géographie générale",
-                "redaction": "la rédaction générale"
+                "redaction": "la rédaction générale",
+                "science_technologie": "les sciences et les technologies",
+                "pop_culture_occidentale": "la pop culture occidentale",
+                "loisirs_sport": "les loisirs, le sport ou le bricolage",
+                "culture_generale": "la culture générale"
             }
             topic_name = topic_names.get(cat, "des sujets généraux")
 
@@ -1966,6 +2383,19 @@ def run_generate_instruction_dataset():
     mcp_data = generate_mcp_tool_instructions()
     specialized_data.extend(mcp_data)
     
+    # 1h. SIMULATION DE CONTEXTES RAG AVEC BRUIT
+    logger.info("[INFO] Generating RAG context simulation instructions with noise...")
+    animes_list = []
+    if os.path.exists(ANIME_DB):
+        with open(ANIME_DB, 'r', encoding='utf-8') as f:
+            animes_list = json.load(f)
+    chars_list = []
+    if os.path.exists(CHAR_DB):
+        with open(CHAR_DB, 'r', encoding='utf-8') as f:
+            chars_list = json.load(f)
+    rag_data = generate_rag_context_instructions(animes_list, chars_list)
+    specialized_data.extend(rag_data)
+    
     # 2. ANIME DATABASE
     if os.path.exists(ANIME_DB):
         with open(ANIME_DB, 'r', encoding='utf-8') as f:
@@ -1981,13 +2411,21 @@ def run_generate_instruction_dataset():
                 
                 display_t = get_display_title(title)
                 
-                # Check for underrepresented genres (Shojo, Josei, Slice of Life)
+                # Check for underrepresented genres (Shojo, Josei, Slice of Life, Mecha, Iyashikei, Mahou Shoujo, Music, Sports, Historical, Horror, Thriller)
                 is_underrepresented = False
-                underrepresented_keywords = ["shoujo", "shojo", "josei", "slice of life", "tranche de vie"]
+                underrepresented_keywords = [
+                    "shoujo", "shojo", "josei", "slice of life", "tranche de vie",
+                    "iyashikei", "mecha", "mahou shoujo", "magical girl", "music",
+                    "sports", "historical", "horror", "thriller"
+                ]
                 for term in underrepresented_keywords:
                     if any(term in str(g).lower() for g in genres + tags):
                         is_underrepresented = True
                         break
+                
+                # Boost retro eras (70s, 80s, 90s)
+                if not is_underrepresented and year and 1970 <= year <= 1999:
+                    is_underrepresented = True
                         
                 effective_pop = pop
                 if is_underrepresented:
@@ -2077,13 +2515,24 @@ def run_generate_instruction_dataset():
                 
                 display_t = get_display_title(title)
                 
-                # Check for underrepresented genres (Shojo, Josei, Slice of Life)
+                year = item.get('year')
+                display_t = get_display_title(title)
+                
+                # Check for underrepresented genres (Shojo, Josei, Slice of Life, Mecha, Iyashikei, Mahou Shoujo, Music, Sports, Historical, Horror, Thriller)
                 is_underrepresented = False
-                underrepresented_keywords = ["shoujo", "shojo", "josei", "slice of life", "tranche de vie"]
+                underrepresented_keywords = [
+                    "shoujo", "shojo", "josei", "slice of life", "tranche de vie",
+                    "iyashikei", "mecha", "mahou shoujo", "magical girl", "music",
+                    "sports", "historical", "horror", "thriller"
+                ]
                 for term in underrepresented_keywords:
                     if any(term in str(g).lower() for g in genres + tags):
                         is_underrepresented = True
                         break
+                        
+                # Boost retro eras (70s, 80s, 90s)
+                if not is_underrepresented and year and 1970 <= year <= 1999:
+                    is_underrepresented = True
                         
                 effective_pop = pop
                 if is_underrepresented:
