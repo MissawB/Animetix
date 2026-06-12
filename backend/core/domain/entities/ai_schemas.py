@@ -64,6 +64,7 @@ class CoVePlan(BaseModel):
 class ParadoxLogic(BaseModel):
     reasoning: str
     scenario: str
+    proof_details: Optional[Dict[str, Any]] = None
 
 class RagasReport(BaseModel):
     avg_faithfulness: float
@@ -97,6 +98,7 @@ class RAGContext(BaseModel):
     query: str
     media_type: str
     user_id: Optional[str] = None
+    language: str = "Français"
     thinking_budget: int = 0
     thinking_mode: bool = False
     memories: str = ""

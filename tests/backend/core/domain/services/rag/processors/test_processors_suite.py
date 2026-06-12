@@ -245,3 +245,12 @@ def test_acquire_knowledge_processor_gap_found():
     assert next_state == RAGState.SYNTHESIZE
     assert ctx.knowledge_acquired is True
     assert "Fresh Gap Knowledge" in ctx.truth_path
+
+# 9. Bilingual / Language Tests
+def test_rag_context_language():
+    from backend.core.domain.entities.ai_schemas import RAGContext
+    ctx = RAGContext(query="test", media_type="Anime")
+    assert ctx.language == "Français"
+    
+    ctx_en = RAGContext(query="test", media_type="Anime", language="English")
+    assert ctx_en.language == "English"
