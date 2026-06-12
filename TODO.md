@@ -37,5 +37,5 @@ Fichier cible : [dpo_dataset_compiler.py](file:///c:/Users/bahma/PycharmProjects
 ## ⚙️ 3. MLOps et Qualité des Données
 - [x] **Ajouter des validations strictes par schéma (Pydantic)** :
   - [x] Valider chaque échantillon généré au moment de la compilation pour éliminer les résidus HTML, les balises de code mal formées ou les réponses d'API en échec.
-- [ ] **Suivi des métriques de drift et régression** :
-  - [ ] Intégrer les analyses de détection de dérive sémantique avant de lancer de nouveaux entraînements majeurs.
+- [x] **Suivi des métriques de drift et régression** :
+  - [x] Intégrer les analyses de détection de dérive sémantique avant de lancer de nouveaux entraînements majeurs.
