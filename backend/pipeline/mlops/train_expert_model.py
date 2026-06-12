@@ -52,26 +52,33 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.pa
 def format_chatml_messages(item) -> list:
     """
     Formate les messages au format ChatML selon la langue du dataset.
+    Supporte le mono-tour et le multi-tours.
     """
-    user_content = item["instruction"]
     language = item.get("language", "Français")
-    
-    if item.get("input"):
-        if language == "English":
-            user_content = f"{item['instruction']}\n\nContext: {item['input']}"
-        else:
-            user_content = f"{item['instruction']}\n\nContexte : {item['input']}"
-            
     if language == "English":
         system_prompt = "You are Animetix, an absolute expert in otaku culture, Japanese manga, and anime. You answer in a very comprehensive and precise manner in English."
     else:
         system_prompt = "Tu es Animetix, un expert absolu de la culture otaku, des mangas et des animés japonais. Tu réponds de manière très complète et précise en français."
         
-    return [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": user_content},
-        {"role": "assistant", "content": item["output"]}
+    messages = [
+        {"role": "system", "content": system_prompt}
     ]
+    
+    if "turns" in item:
+        for turn in item["turns"]:
+            messages.append({"role": "user", "content": turn["user"]})
+            messages.append({"role": "assistant", "content": turn["assistant"]})
+    else:
+        user_content = item["instruction"]
+        if item.get("input"):
+            if language == "English":
+                user_content = f"{item['instruction']}\n\nContext: {item['input']}"
+            else:
+                user_content = f"{item['instruction']}\n\nContexte : {item['input']}"
+        messages.append({"role": "user", "content": user_content})
+        messages.append({"role": "assistant", "content": item["output"]})
+        
+    return messages
 
 def run_expert_training():
     model_name = os.getenv("BASE_MODEL_NAME", "unsloth/DeepSeek-R1-Distill-Qwen-8B")

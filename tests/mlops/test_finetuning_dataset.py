@@ -172,5 +172,19 @@ class TestFinetuningDataset(unittest.TestCase):
             self.assertGreaterEqual(len(d["turns"]), 2)
             self.assertIn(d["language"], ["Français", "English"])
 
+    def test_run_generate_instruction_dataset_contains_multiturn(self):
+        from backend.pipeline.mlops.finetuning_dataset import OUTPUT_DATASET
+        import json
+        
+        if os.path.exists(OUTPUT_DATASET):
+            multiturn_found = False
+            with open(OUTPUT_DATASET, 'r', encoding='utf-8') as f:
+                for line in f:
+                    item = json.loads(line)
+                    if "turns" in item:
+                        multiturn_found = True
+                        break
+            self.assertTrue(multiturn_found, "Compilation did not produce multi-turn examples")
+
 if __name__ == "__main__":
     unittest.main()

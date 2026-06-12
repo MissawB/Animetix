@@ -1343,14 +1343,14 @@ def generate_multiturn_dialogues(animes, mangas, characters, otaku_vocab, count=
                 turns = [
                     {"user": t["t1"].format(term=term), "assistant": f"In otaku culture, '{term}' refers to: {data['definition']}."},
                     {"user": t["t2"], "assistant": f"Iconic examples illustrating this concept include: {data['examples']}."},
-                    {"user": t["t3"], "assistant": f"Where does this term come from and what is its writing impact?"}
+                    {"user": t["t3"], "assistant": f"Origin: {data['origin']}. Narrative impact: {data['impact']}."}
                 ]
             else:
                 t = fr_vocab_templates[0]
                 turns = [
                     {"user": t["t1"].format(term=term), "assistant": f"Dans la culture otaku, '{term}' désigne : {data['definition']}."},
                     {"user": t["t2"], "assistant": f"Parmi les exemples emblématiques illustrant ce concept, on peut citer : {data['examples']}."},
-                    {"user": t["t3"], "assistant": f"D'où vient ce terme et quel est son impact sur l'écriture ?"}
+                    {"user": t["t3"], "assistant": f"Origine : {data['origin']}. Impact narratif : {data['impact']}."}
                 ]
                 
         dialogues.append({
@@ -1752,6 +1752,28 @@ def run_generate_instruction_dataset():
 
     non_meta_count = len(specialized_data)
     
+    # Generate Multi-Turn dialogues to represent ~15% of the SFT dataset
+    multiturn_required = int(non_meta_count * 0.18)
+    logger.info(f"[INFO] Generating {multiturn_required} multi-turn dialogue examples...")
+    
+    animes_list = []
+    if os.path.exists(ANIME_DB):
+        with open(ANIME_DB, 'r', encoding='utf-8') as f:
+            animes_list = json.load(f)
+            
+    mangas_list = []
+    if os.path.exists(MANGA_DB):
+        with open(MANGA_DB, 'r', encoding='utf-8') as f:
+            mangas_list = json.load(f)
+            
+    chars_list = []
+    if os.path.exists(CHAR_DB):
+        with open(CHAR_DB, 'r', encoding='utf-8') as f:
+            chars_list = json.load(f)
+            
+    multiturn_dialogues = generate_multiturn_dialogues(animes_list, mangas_list, chars_list, OTAKU_VOCABULARY, count=multiturn_required)
+    multiturn_dialogues = deduplicate_dataset(multiturn_dialogues)
+
     # 5. RATIO CONFIGURABLE ET PARAMETRABLE (Défaut : 80% Spécialisé, 5% Meta, 15% Général)
     meta_required, general_required = calculate_dataset_counts(non_meta_count)
     
@@ -1801,6 +1823,7 @@ def run_generate_instruction_dataset():
     final_dataset.extend(specialized_data)
     final_dataset.extend(selected_meta)
     final_dataset.extend(general_data)
+    final_dataset.extend(multiturn_dialogues)
     
     # Mélange global
     logger.info("[INFO] Shuffling the unified massive dataset...")
@@ -1822,6 +1845,7 @@ def run_generate_instruction_dataset():
     logger.info(f"  - Specialized, Bridges & French Market (80% target): {len(specialized_data)} / {total_count} ({actual_spec_ratio:.2f}%)")
     logger.info(f"  - Otaku Meta-Vocabulary (5% target): {len(selected_meta)} / {total_count} ({actual_meta_ratio:.2f}%)")
     logger.info(f"  - General French SFT (15% target): {len(general_data)} / {total_count} ({actual_gen_ratio:.2f}%)")
+    logger.info(f"  - Multi-Turn Dialogues (15-20% target): {len(multiturn_dialogues)} / {total_count} ({len(multiturn_dialogues)/total_count*100:.2f}%)")
     logger.info(f"[INFO] Saved at: {OUTPUT_DATASET}")
     
     # Sauvegarde du cache

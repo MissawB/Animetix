@@ -50,5 +50,23 @@ class TestTrainExpertModel(unittest.TestCase):
         self.assertIn("Tu es Animetix, un expert absolu", messages[0]["content"])
         self.assertEqual(messages[1]["content"], "Qui est Luffy ?")
 
+    def test_format_chatml_messages_multiturn(self):
+        item = {
+            "turns": [
+                {"user": "Salut ! Tu as un bon anime de combats ?", "assistant": "Bonjour ! Oui, je te recommande 'Naruto'..."},
+                {"user": "Et c'est quel studio ?", "assistant": "Il a été produit par Pierrot."}
+            ],
+            "language": "Français"
+        }
+        messages = format_chatml_messages(item)
+        self.assertEqual(len(messages), 5)
+        self.assertEqual(messages[0]["role"], "system")
+        self.assertEqual(messages[1]["role"], "user")
+        self.assertEqual(messages[1]["content"], "Salut ! Tu as un bon anime de combats ?")
+        self.assertEqual(messages[2]["role"], "assistant")
+        self.assertEqual(messages[2]["content"], "Bonjour ! Oui, je te recommande 'Naruto'...")
+        self.assertEqual(messages[3]["role"], "user")
+        self.assertEqual(messages[4]["role"], "assistant")
+
 if __name__ == "__main__":
     unittest.main()
