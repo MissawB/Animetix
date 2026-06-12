@@ -136,6 +136,45 @@ def paraphrase_text_via_gemini(text: str, client, style_type: str = "naturel") -
             
     return text
 
+def translate_to_english_via_gemini(text: str, client) -> str:
+    """
+    Traduit le texte en anglais via Gemini.
+    Si le client est None ou en cas d'erreur, retourne le texte original.
+    """
+    if not text:
+        return ""
+    if not client:
+        return text
+        
+    prompt = (
+        f"Translate the following French text into natural, fluent English. "
+        f"Do not change proper nouns, names, or numbers. "
+        f"Return ONLY the translated English text, without any comments, introduction, or markdown styling.\n\n"
+        f"Text to translate:\n{text}"
+    )
+    
+    model_name = os.getenv("ANIMETIX_GEMINI_MODEL", "gemini-3-flash-preview")
+    
+    for attempt in range(3):
+        try:
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+            )
+            if response.text:
+                time.sleep(0.5)  # Respecter le rate limiting
+                return response.text.strip()
+        except Exception as e:
+            logger.warning(f"Attempt {attempt+1}/3 failed to translate to English: {e}")
+            err_msg = str(e).upper()
+            if "RESOURCE_EXHAUSTED" in err_msg or "429" in err_msg or "UNAVAILABLE" in err_msg or "503" in err_msg:
+                sleep_time = (attempt + 1) * 15.0
+                time.sleep(sleep_time)
+            else:
+                time.sleep(1.0)
+                
+    return text
+
 def calculate_dataset_counts(non_meta_count: int) -> tuple[int, int]:
     """
     Calcule dynamiquement le nombre d'exemples méta et généraux nécessaires
@@ -217,7 +256,7 @@ CHARACTER_NICKNAMES = {
     "Kurisu Makise": ["Christina", "Kurigohan and Kamehameha"]
 }
 
-def clean_tags(tags):
+def clean_tags(tags, language="Français"):
     if not tags: return []
     invalid_keywords = [
         "aucune unité", "ia n'est disponible", "ollama", "hf", "désolé", "sorry", 
@@ -228,54 +267,66 @@ def clean_tags(tags):
         lower_tag = tag.lower()
         if any(kw in lower_tag for kw in invalid_keywords):
             continue
-        tag_translation = {
-            "Shounen": "Shonen",
-            "Vampire": "Vampire",
-            "Primarily Teen Cast": "Protagonistes adolescents",
-            "Orphan": "Orphelin",
-            "Demons": "Démons",
-            "Monster Girl": "Fille monstre (Monster Girl)",
-            "Male Protagonist": "Protagoniste masculin",
-            "Travel": "Voyage",
-            "Revenge": "Vengeance",
-            "Tragedy": "Tragédie",
-            "Swordplay": "Combat au sabre (Swordplay)",
-            "Action": "Action",
-            "Adventure": "Aventure",
-            "Drama": "Drame",
-            "Fantasy": "Fantasy",
-            "Supernatural": "Surnaturel",
-            "Seinen": "Seinen",
-            "Slice of Life": "Tranche de vie",
-            "Comedy": "Comédie",
-            "Romance": "Romance",
-            "School": "Milieu scolaire",
-            "Sci-Fi": "Science-Fiction",
-            "Mecha": "Mécha",
-            "Psychological": "Psychologique",
-            "Mystery": "Mystère",
-            "Thriller": "Thriller",
-            "Horror": "Horreur",
-            "Historical": "Historique",
-            "Military": "Militaire",
-            "Magic": "Magie",
-            "Sports": "Sport",
-            "Music": "Musique",
-            "Super Power": "Super-pouvoirs",
-            "Martial Arts": "Arts martiaux"
-        }
+        if language == "English":
+            tag_translation = {
+                "Shounen": "Shonen",
+                "Primarily Teen Cast": "Teen Cast",
+                "Male Protagonist": "Male Protagonist",
+                "Swordplay": "Swordplay"
+            }
+        else:
+            tag_translation = {
+                "Shounen": "Shonen",
+                "Vampire": "Vampire",
+                "Primarily Teen Cast": "Protagonistes adolescents",
+                "Orphan": "Orphelin",
+                "Demons": "Démons",
+                "Monster Girl": "Fille monstre (Monster Girl)",
+                "Male Protagonist": "Protagoniste masculin",
+                "Travel": "Voyage",
+                "Revenge": "Vengeance",
+                "Tragedy": "Tragédie",
+                "Swordplay": "Combat au sabre (Swordplay)",
+                "Action": "Action",
+                "Adventure": "Aventure",
+                "Drama": "Drame",
+                "Fantasy": "Fantasy",
+                "Supernatural": "Surnaturel",
+                "Seinen": "Seinen",
+                "Slice of Life": "Tranche de vie",
+                "Comedy": "Comédie",
+                "Romance": "Romance",
+                "School": "Milieu scolaire",
+                "Sci-Fi": "Science-Fiction",
+                "Mecha": "Mécha",
+                "Psychological": "Psychologique",
+                "Mystery": "Mystère",
+                "Thriller": "Thriller",
+                "Horror": "Horreur",
+                "Historical": "Historique",
+                "Military": "Militaire",
+                "Magic": "Magie",
+                "Sports": "Sport",
+                "Music": "Musique",
+                "Super Power": "Super-pouvoirs",
+                "Martial Arts": "Arts martiaux"
+            }
         cleaned.append(tag_translation.get(tag, tag))
     return cleaned
 
-def get_synonyms_string(title):
+def get_synonyms_string(title, language="Français"):
     if title in MULTI_TITLE_MAP:
         names = [f"'{n}'" for n in MULTI_TITLE_MAP[title]]
+        if language == "English":
+            return f" (also known as {', '.join(names)})"
         return f" (également connu sous les noms de {', '.join(names)})"
     return ""
 
-def get_character_synonyms_string(name):
+def get_character_synonyms_string(name, language="Français"):
     if name in CHARACTER_NICKNAMES:
         names = [f"'{n}'" for n in CHARACTER_NICKNAMES[name]]
+        if language == "English":
+            return f" (also known as {', '.join(names)})"
         return f" (connu aussi comme {', '.join(names)})"
     return ""
 
@@ -367,120 +418,289 @@ def make_french_character_bio(name, origin, orgs, favs, rank, height):
     
     return " ".join(bio_parts)
 
-# --- GENERATEURS DE JEUX DE DONNEES ---
+def make_english_anime_profile(title: str, genres: List[str], studios: List[str], tags: List[str], year: int) -> str:
+    cleaned_tags = clean_tags(tags, "English")
+    cleaned_genres = clean_tags(genres, "English")
+    
+    genres_str = ", ".join(cleaned_genres) if cleaned_genres else "undetermined genres"
+    studios_str = ", ".join(studios) if studios else "unspecified talented studio"
+    tags_str = ", ".join(cleaned_tags[:5]) if cleaned_tags else "various themes"
+    syns = get_synonyms_string(title, "English")
+    
+    profile_parts = [
+        f"The anime '{title}'{syns} is a landmark work of Japanese animation released in {year}.",
+        f"It fits brilliantly into the {genres_str} genres.",
+        f"Produced impressively by the studio {studios_str}, this series has established itself through its careful direction and production quality.",
+        f"Its story and universe address deep thematic concepts such as {tags_str}.",
+        f"Due to its high artistic quality and thrilling plot, '{title}' is highly recommended for anime fans."
+    ]
+    return " ".join(profile_parts)
 
-def generate_otaku_meta_instructions():
+def make_english_manga_profile(title: str, genres: List[str], tags: List[str]) -> str:
+    cleaned_tags = clean_tags(tags, "English")
+    cleaned_genres = clean_tags(genres, "English")
+    
+    genres_str = ", ".join(cleaned_genres) if cleaned_genres else "undetermined genres"
+    tags_str = ", ".join(cleaned_tags[:5]) if cleaned_tags else "various themes"
+    syns = get_synonyms_string(title, "English")
+    
+    profile_parts = [
+        f"The cult manga '{title}'{syns} is a major work highly appreciated by readers.",
+        f"It is particularly famous in the following genres and publishing categories: {genres_str}.",
+        f"This manga offers a rich plot, standing out for its strong themes such as {tags_str}.",
+        f"With its striking graphic panels and a dense story, '{title}' remains an essential reference in its category."
+    ]
+    return " ".join(profile_parts)
+
+def make_english_character_bio(name, origin, orgs, favs, rank, height):
+    org_str = " and ".join(orgs) if orgs else "several factions and groups in their universe"
+    
+    syns = get_character_synonyms_string(name, "English")
+    origin_syns = get_synonyms_string(origin, "English")
+    
+    formatted_favs = f"{favs:,}"
+    
+    bio_parts = [
+        f"{name}{syns} is a legendary and prominent character from the hit series '{origin}'{origin_syns}.",
+        f"Within this work, their narrative importance is colossal.",
+    ]
+    
+    if orgs:
+        bio_parts.append(f"They are primarily known for their affiliation and major role within: {org_str}.")
+        
+    if height and height != "Unknown":
+        bio_parts.append(f"Their physical characteristics and official profile notably mention: {height}.")
+        
+    bio_parts.append(f"They enjoy immense popularity among the global community of anime fans, ranking at number {rank} of favorite characters with no less than {formatted_favs} votes of admiration.")
+    
+    bio_parts.append(f"As an essential figure in '{origin}', {name} embodies the values and major conflicts of their universe, deeply marking the audience with their writing and top-tier character development.")
+    
+    return " ".join(bio_parts)
+    
+def generate_otaku_meta_instructions(client=None):
     """Génère un grand nombre de variations expertes de Q&A pour le dictionnaire Otaku de base + les créateurs et studios."""
     otaku_instructions = []
     
     # 1. Génération par template pour les concepts généraux (15 variations par concept = ~6 000 exemples)
-    for term, data in OTAKU_VOCABULARY.items():
-        templates = [
-            (f"Qu'est-ce que le terme '{term}' dans la culture otaku ? Cite des exemples.", 
-             f"Dans la culture otaku, le terme '{term}' désigne : {data['definition']}. Parmi les exemples emblématiques, on peut citer : {data['examples']}. Impact culturel : {data['impact']}"),
+    for idx, (term, data) in enumerate(OTAKU_VOCABULARY.items()):
+        if idx % 2 == 1:
+            lang = "English"
+            definition = translate_to_english_via_gemini(data['definition'], client)
+            examples = translate_to_english_via_gemini(data['examples'], client)
+            impact = translate_to_english_via_gemini(data['impact'], client)
+            origin = translate_to_english_via_gemini(data['origin'], client)
             
-            (f"Donne-moi une définition claire et précise du concept de '{term}' dans les animés.",
-             f"Le concept de '{term}' se définit comme suit dans l'animation japonaise : {data['definition']}. On l'illustre à travers des exemples comme : {data['examples']}."),
-            
-            (f"En tant qu'expert de la japanimation, comment définirais-tu le concept de '{term}' ?",
-             f"En tant qu'expert, je définis '{term}' par : {data['definition']}. Cette notion a un fort impact de domaine : {data['impact']}"),
-            
-            (f"Peux-tu m'expliquer ce que signifie '{term}' pour un passionné de mangas ?",
-             f"Pour un passionné de mangas, '{term}' représente : {data['definition']}. C'est une figure courante caractérisée par : {data['origin']}"),
-            
-            (f"Explique l'origine, l'étymologie et la signification profonde du trope '{term}'.",
-             f"Le trope '{term}' possède une étymologie et une histoire riches. Origine : {data['origin']}. Signification profonde : {data['definition']}. Ce trope s'illustre particulièrement bien avec : {data['examples']}."),
-            
-            (f"D'où vient le mot '{term}' utilisé dans la culture otaku et que signifie-t-il ?",
-             f"Le terme '{term}' trouve sa racine dans : {data['origin']}. Il désigne précisément : {data['definition']}. En industrie, cela s'explique par : {data['impact']}"),
-            
-            (f"Quelle est l'histoire et la racine linguistique du concept de '{term}' dans les mangas ?",
-             f"L'histoire linguistique de '{term}' remonte à : {data['origin']}. C'est un concept fondamental signifiant : {data['definition']}"),
-            
-            (f"Quels personnages ou œuvres sont considérés comme des exemples emblématiques de '{term}' ?",
-             f"Parmi les exemples phares associés à '{term}', on trouve : {data['examples']}. Par définition, ce trope représente : {data['definition']}"),
-            
-            (f"Donne-moi des exemples de figures célèbres illustrant le trope '{term}' dans les animés.",
-             f"Les figures majeures illustrant le trope '{term}' incluent : {data['examples']}. Ce trope se caractérise par : {data['definition']} et tire son origine de : {data['origin']}"),
-            
-            (f"Quelles sont les œuvres majeures qui représentent le mieux le concept de '{term}' ?",
-             f"Les œuvres et personnages emblématiques pour '{term}' sont : {data['examples']}. Ce concept est défini comme : {data['definition']}"),
-            
-            (f"Quelle est l'importance et l'impact culturel de la notion de '{term}' dans l'industrie de l'animation ?",
-             f"L'impact culturel de '{term}' dans l'industrie est majeur. {data['impact']} Par définition : {data['definition']}. On le retrouve dans : {data['examples']}"),
-            
-            (f"Analyse l'influence et le rôle scénaristique du trope '{term}' dans les mangas.",
-             f"Le rôle scénaristique de '{term}' est très influent. {data['impact']} Il permet d'exprimer : {data['definition']}. Exemples : {data['examples']}"),
-            
-            (f"Pourquoi le concept de '{term}' est-il si populaire et récurrent dans les animés japonais ?",
-             f"La popularité de '{term}' s'explique par sa résonance dans la pop-culture. {data['impact']} Origine : {data['origin']}. Définition : {data['definition']}"),
-            
-            (f"Fais-moi une synthèse complète et experte sur le concept Otaku de '{term}'.",
-             f"Synthèse Experte - '{term}' : {data['definition']}. Origine étymologique : {data['origin']}. Œuvres et personnages repères : {data['examples']}. Impact d'écriture : {data['impact']}"),
-            
-            (f"Quels sont les détails clés et l'analyse à retenir sur la notion de '{term}' ?",
-             f"Les points essentiels à retenir sur '{term}' sont : sa définition ({data['definition']}), sa racine historique ({data['origin']}) et ses incarnations majeures ({data['examples']}).")
-        ]
+            templates = [
+                (f"What does the term '{term}' mean in otaku culture? Provide examples.", 
+                 f"In otaku culture, the term '{term}' refers to: {definition}. Iconic examples include: {examples}. Cultural impact: {impact}"),
+                
+                (f"Give me a clear and precise definition of the concept of '{term}' in anime.",
+                 f"The concept of '{term}' is defined as follows in Japanese animation: {definition}. It is illustrated through examples like: {examples}."),
+                
+                (f"As an anime expert, how would you define the concept of '{term}'?",
+                 f"As an expert, I define '{term}' as: {definition}. This concept has a strong domain impact: {impact}"),
+                
+                (f"Can you explain what '{term}' means to a manga fan?",
+                 f"For a manga fan, '{term}' represents: {definition}. It is a common trope characterized by: {origin}"),
+                
+                (f"Explain the origin, etymology and deep meaning of the trope '{term}'.",
+                 f"The trope '{term}' has a rich history and etymology. Origin: {origin}. Deep meaning: {definition}. This trope is particularly well illustrated by: {examples}."),
+                
+                (f"Where does the word '{term}' used in otaku culture come from and what does it mean?",
+                 f"The term '{term}' has its roots in: {origin}. It refers precisely to: {definition}. In the industry, this is explained by: {impact}"),
+                
+                (f"What is the history and linguistic root of the concept of '{term}' in manga?",
+                 f"The linguistic history of '{term}' dates back to: {origin}. It is a fundamental concept meaning: {definition}"),
+                
+                (f"Which characters or works are considered iconic examples of '{term}'?",
+                 f"Some of the key examples associated with '{term}' are: {examples}. By definition, this trope represents: {definition}"),
+                
+                (f"Give me examples of famous figures illustrating the trope '{term}' in anime.",
+                 f"Major figures illustrating the trope '{term}' include: {examples}. This trope is characterized by: {definition} and originates from: {origin}"),
+                
+                (f"What are the major works that best represent the concept of '{term}'?",
+                 f"The iconic works and characters for '{term}' are: {examples}. This concept is defined as: {definition}"),
+                
+                (f"What is the importance and cultural impact of the notion of '{term}' in the animation industry?",
+                 f"The cultural impact of '{term}' in the industry is major. {impact} By definition: {definition}. It can be found in: {examples}"),
+                
+                (f"Analyze the influence and narrative role of the trope '{term}' in manga.",
+                 f"The narrative role of '{term}' is highly influential. {impact} It expresses: {definition}. Examples: {examples}"),
+                
+                (f"Why is the concept of '{term}' so popular and recurring in Japanese anime?",
+                 f"The popularity of '{term}' is explained by its resonance in pop culture. {impact} Origin: {origin}. Definition: {definition}"),
+                
+                (f"Give me a complete and expert summary of the otaku concept of '{term}'.",
+                 f"Expert Summary - '{term}': {definition}. Etymological origin: {origin}. Reference works and characters: {examples}. Writing impact: {impact}"),
+                
+                (f"What are the key details and analysis to remember about the concept of '{term}'?",
+                 f"The essential points to remember about '{term}' are: its definition ({definition}), its historical root ({origin}) and its major incarnations ({examples}).")
+            ]
+        else:
+            lang = "Français"
+            templates = [
+                (f"Qu'est-ce que le terme '{term}' dans la culture otaku ? Cite des exemples.", 
+                 f"Dans la culture otaku, le terme '{term}' désigne : {data['definition']}. Parmi les exemples emblématiques, on peut citer : {data['examples']}. Impact culturel : {data['impact']}"),
+                
+                (f"Donne-moi une définition claire et précise du concept de '{term}' dans les animés.",
+                 f"Le concept de '{term}' se définit comme suit dans l'animation japonaise : {data['definition']}. On l'illustre à travers des exemples comme : {data['examples']}."),
+                
+                (f"En tant qu'expert de la japanimation, comment définirais-tu le concept de '{term}' ?",
+                 f"En tant qu'expert, je définis '{term}' par : {data['definition']}. Cette notion a un fort impact de domaine : {data['impact']}"),
+                
+                (f"Peux-tu m'expliquer ce que signifie '{term}' pour un passionné de mangas ?",
+                 f"Pour un passionné de mangas, '{term}' représente : {data['definition']}. C'est une figure courante caractérisée par : {data['origin']}"),
+                
+                (f"Explique l'origine, l'étymologie et la signification profonde du trope '{term}'.",
+                 f"Le trope '{term}' possède une étymologie et une histoire riches. Origine : {data['origin']}. Signification profonde : {data['definition']}. Ce trope s'illustre particulièrement bien avec : {data['examples']}."),
+                
+                (f"D'où vient le mot '{term}' utilisé dans la culture otaku et que signifie-t-il ?",
+                 f"Le terme '{term}' trouve sa racine dans : {data['origin']}. Il désigne précisément : {data['definition']}. En industrie, cela s'explique par : {data['impact']}"),
+                
+                (f"Quelle est l'histoire et la racine linguistique du concept de '{term}' dans les mangas ?",
+                 f"L'histoire linguistique de '{term}' remonte à : {data['origin']}. C'est un concept fondamental signifiant : {data['definition']}"),
+                
+                (f"Quels personnages ou œuvres sont considérés comme des exemples emblématiques de '{term}' ?",
+                 f"Parmi les exemples phares associés à '{term}' sont : {data['examples']}. Par définition, ce trope représente : {data['definition']}"),
+                
+                (f"Donne-moi des exemples de figures célèbres illustrant le trope '{term}' dans les animés.",
+                 f"Les figures majeures illustrant le trope '{term}' incluent : {data['examples']}. Ce trope se caractérise par : {data['definition']} et tire son origine de : {data['origin']}"),
+                
+                (f"Quelles sont les œuvres majeures qui représentent le mieux le concept de '{term}' ?",
+                 f"Les œuvres et personnages emblématiques pour '{term}' sont : {data['examples']}. Ce concept est défini comme : {data['definition']}"),
+                
+                (f"Quelle est l'importance et l'impact culturel de la notion de '{term}' dans l'industrie de l'animation ?",
+                 f"L'impact culturel de '{term}' dans l'industrie est majeur. {data['impact']} Par définition : {data['definition']}. On le retrouve dans : {data['examples']}"),
+                
+                (f"Analyse l'influence et le rôle scénaristique du trope '{term}' dans les mangas.",
+                 f"Le rôle scénaristique de '{term}' est très influent. {data['impact']} Il permet d'exprimer : {data['definition']}. Exemples : {data['examples']}"),
+                
+                (f"Pourquoi le concept de '{term}' est-il si populaire et récurrent dans les animés japonais ?",
+                 f"La popularité de '{term}' s'explique par sa résonance dans la pop-culture. {data['impact']} Origine : {data['origin']}. Définition : {data['definition']}"),
+                
+                (f"Fais-moi une synthèse complète et experte sur le concept Otaku de '{term}'.",
+                 f"Synthèse Experte - '{term}' : {data['definition']}. Origine étymologique : {data['origin']}. Œuvres et personnages repères : {data['examples']}. Impact d'écriture : {data['impact']}"),
+                
+                (f"Quels sont les détails clés et l'analyse à retenir sur la notion de '{term}' ?",
+                 f"Les points essentiels à retenir sur '{term}' sont : sa définition ({data['definition']}), sa racine historique ({data['origin']}) et ses incarnations majeures ({data['examples']}).")
+            ]
         for q, a in templates:
             otaku_instructions.append({
                 "instruction": q,
                 "input": "",
-                "output": a
+                "output": a,
+                "language": lang
             })
             
     # 2. Génération par template pour les créateurs et studios d'animation (15 variations par concept = 1 500 exemples)
-    for creator, data in CREATORS_AND_STUDIOS.items():
-        templates = [
-            (f"Qui est '{creator}' dans le monde de l'animation et du manga japonais ?",
-             f"Dans l'industrie japonaise, '{creator}' est : {data['definition']}. Ses travaux les plus marquants incluent : {data['examples']}. Impact : {data['impact']}"),
+    for idx, (creator, data) in enumerate(CREATORS_AND_STUDIOS.items()):
+        if idx % 2 == 1:
+            lang = "English"
+            definition = translate_to_english_via_gemini(data['definition'], client)
+            examples = translate_to_english_via_gemini(data['examples'], client)
+            impact = translate_to_english_via_gemini(data['impact'], client)
+            origin = translate_to_english_via_gemini(data['origin'], client)
             
-            (f"Présente-moi en détail le profil et l'impact industriel de '{creator}'.",
-             f"Profil de domaine - '{creator}' : {data['definition']} Origines et contexte : {data['origin']}. Parmi ses œuvres les plus célèbres, on compte : {data['examples']}. Son impact est immense : {data['impact']}"),
-            
-            (f"Quelles sont les œuvres emblématiques de '{creator}' et son rôle historique ?",
-             f"'{creator}' a marqué l'histoire à travers ses créations : {data['examples']}. Il est défini comme : {data['definition']} Influence majeure : {data['impact']}"),
-            
-            (f"En tant que spécialiste de la japanimation, que peux-tu me dire sur '{creator}' ?",
-             f"En tant que spécialiste, je peux vous dire que '{creator}' est : {data['definition']} Contexte historique : {data['origin']}. Il a travaillé sur des projets comme : {data['examples']}."),
-            
-            (f"Pourquoi '{creator}' est-il considéré comme une figure légendaire de la culture otaku ?",
-             f"'{creator}' est considéré comme légendaire car son impact a été révolutionnaire : {data['impact']} Il s'est imposé comme : {data['definition']}"),
-            
-            (f"Quels sont les projets phares de '{creator}' ?",
-             f"Les projets marquants de '{creator}' comprennent : {data['examples']}. Sa philosophie et son parcours : {data['origin']}"),
-            
-            (f"Présente une synthèse complète du studio ou créateur '{creator}'.",
-             f"Synthèse de domaine - '{creator}' : {data['definition']}. Histoire et origines : {data['origin']}. Réalisations majeures : {data['examples']}. Impact d'industrie : {data['impact']}"),
-            
-            (f"Peux-tu analyser l'importance de '{creator}' pour l'industrie du manga ?",
-             f"L'importance de '{creator}' est indiscutable : {data['impact']} Il a œuvré à travers : {data['definition']}. Œuvres repères : {data['examples']}"),
-            
-            (f"Quel a été le rôle de '{creator}' dans le développement de l'animation japonaise ?",
-             f"'{creator}' a joué un rôle déterminant : {data['impact']} Par définition : {data['definition']}. Contexte : {data['origin']}"),
-            
-            (f"Donne des détails sur le style ou les contributions de '{creator}'.",
-             f"Les contributions de '{creator}' se résument ainsi : {data['definition']}. Ses travaux phares : {data['examples']}. Style et impact : {data['impact']}"),
-             
-            (f"Explique comment '{creator}' a influencé d'autres auteurs ou studios.",
-             f"L'influence de '{creator}' s'étend largement : {data['impact']} Il a redéfini le secteur comme : {data['definition']}. Ses créations repères sont : {data['examples']}"),
-             
-            (f"Quelles sont les caractéristiques majeures associées aux créations de '{creator}' ?",
-             f"Les créations de '{creator}' se caractérisent par son style : {data['definition']}. Exemples notables : {data['examples']}. Contexte : {data['origin']}"),
-             
-            (f"Décris le parcours artistique et le profil de '{creator}'.",
-             f"Parcours de '{creator}' : {data['definition']}. Origines et évolutions : {data['origin']}. Ses projets les plus influents : {data['examples']}"),
-             
-            (f"Analyse l'importance historique et l'héritage de '{creator}'.",
-             f"L'héritage de '{creator}' est colossal. {data['impact']} Connu pour : {data['definition']}. Réalisations clés : {data['examples']}"),
-             
-            (f"Qu'est-ce qui rend '{creator}' incontournable dans le paysage otaku moderne ?",
-             f"'{creator}' est incontournable en tant que : {data['definition']}. Ses créations populaires ({data['examples']}) et son impact ({data['impact']}) en font une référence absolue.")
-        ]
+            templates = [
+                (f"Who is '{creator}' in the world of Japanese animation and manga?",
+                 f"In the Japanese industry, '{creator}' is: {definition}. Their most notable works include: {examples}. Impact: {impact}"),
+                
+                (f"Present in detail the profile and industrial impact of '{creator}'.",
+                 f"Domain profile - '{creator}': {definition} Origins and context: {origin}. Among their most famous works are: {examples}. Their impact is immense: {impact}"),
+                
+                (f"What are the iconic works of '{creator}' and their historical role?",
+                 f"'{creator}' has marked history through their creations: {examples}. They are defined as: {definition} Major influence: {impact}"),
+                
+                (f"As a Japanese animation specialist, what can you tell me about '{creator}'?",
+                 f"As a specialist, I can tell you that '{creator}' is: {definition} Historical context: {origin}. They have worked on projects like: {examples}."),
+                
+                (f"Why is '{creator}' considered a legendary figure in otaku culture?",
+                 f"'{creator}' is considered legendary because their impact has been revolutionary: {impact} They established themselves as: {definition}"),
+                
+                (f"What are the key projects of '{creator}'?",
+                 f"The notable projects of '{creator}' include: {examples}. Their philosophy and career path: {origin}"),
+                
+                (f"Present a complete summary of the studio or creator '{creator}'.",
+                 f"Domain Summary - '{creator}': {definition}. History and origins: {origin}. Major achievements: {examples}. Industry impact: {impact}"),
+                
+                (f"Can you analyze the importance of '{creator}' for the manga industry?",
+                 f"The importance of '{creator}' is indisputable: {impact} They worked through: {definition}. Reference works: {examples}"),
+                
+                (f"What was the role of '{creator}' in the development of Japanese animation?",
+                 f"'{creator}' played a crucial role: {impact} By definition: {definition}. Context: {origin}"),
+                
+                (f"Give details on the style or contributions of '{creator}'.",
+                 f"The contributions of '{creator}' can be summarized as follows: {definition}. Their key works: {examples}. Style and impact: {impact}"),
+                
+                (f"Explain how '{creator}' influenced other authors or studios.",
+                 f"The influence of '{creator}' extends widely: {impact} They redefined the industry as: {definition}. Their reference creations are: {examples}"),
+                
+                (f"What are the major characteristics associated with the creations of '{creator}'?",
+                 f"The creations of '{creator}' are characterized by their style: {definition}. Notable examples: {examples}. Context: {origin}"),
+                
+                (f"Describe the artistic career and profile of '{creator}'.",
+                 f"Artistic path of '{creator}': {definition}. Origins and evolution: {origin}. Their most influential projects: {examples}"),
+                
+                (f"Analyze the historical importance and legacy of '{creator}'.",
+                 f"The legacy of '{creator}' is colossal. {impact} Known for: {definition}. Key achievements: {examples}"),
+                
+                (f"What makes '{creator}' essential in the modern otaku landscape?",
+                 f"'{creator}' is essential as: {definition}. Their popular creations ({examples}) and impact ({impact}) make them an absolute reference.")
+            ]
+        else:
+            lang = "Français"
+            templates = [
+                (f"Qui est '{creator}' dans le monde de l'animation et du manga japonais ?",
+                 f"Dans l'industrie japonaise, '{creator}' est : {data['definition']}. Ses travaux les plus marquants incluent : {data['examples']}. Impact : {data['impact']}"),
+                
+                (f"Présente-moi en détail le profil et l'impact industriel de '{creator}'.",
+                 f"Profil de domaine - '{creator}' : {data['definition']} Origines et contexte : {data['origin']}. Parmi ses œuvres les plus célèbres, on compte : {data['examples']}. Son impact est immense : {data['impact']}"),
+                
+                (f"Quelles sont les œuvres emblématiques de '{creator}' et son rôle historique ?",
+                 f"'{creator}' a marqué l'histoire à travers ses créations : {data['examples']}. Il est défini comme : {data['definition']} Influence majeure : {data['impact']}"),
+                
+                (f"En tant que spécialiste de la japanimation, que peux-tu me dire sur '{creator}' ?",
+                 f"En tant que spécialiste, je peux vous dire que '{creator}' est : {data['definition']} Contexte historique : {data['origin']}. Il a travaillé sur des projets comme : {data['examples']}."),
+                
+                (f"Pourquoi '{creator}' est-il considéré comme une figure légendaire de la culture otaku ?",
+                 f"'{creator}' est considéré comme légendaire car son impact a été révolutionnaire : {data['impact']} Il s'est imposé comme : {data['definition']}"),
+                
+                (f"Quels sont les projets phares de '{creator}' ?",
+                 f"Les projets marquants de '{creator}' comprennent : {data['examples']}. Sa philosophie et son parcours : {data['origin']}"),
+                
+                (f"Présente une synthèse complète du studio ou créateur '{creator}'.",
+                 f"Synthèse de domaine - '{creator}' : {data['definition']}. Histoire et origines : {data['origin']}. Réalisations majeures : {data['examples']}. Impact d'industrie : {data['impact']}"),
+                
+                (f"Peux-tu analyser l'importance de '{creator}' pour l'industrie du manga ?",
+                 f"L'importance de '{creator}' est indiscutable : {data['impact']} Il a œuvré à travers : {data['definition']}. Œuvres repères : {data['examples']}"),
+                
+                (f"Quel a été le rôle de '{creator}' dans le développement de l'animation japonaise ?",
+                 f"'{creator}' a joué un rôle déterminant : {data['impact']} Par définition : {data['definition']}. Contexte : {data['origin']}"),
+                
+                (f"Donne des détails sur le style ou les contributions de '{creator}'.",
+                 f"Les contributions de '{creator}' se résument ainsi : {data['definition']}. Ses travaux phares : {data['examples']}. Style et impact : {data['impact']}"),
+                 
+                (f"Explique comment '{creator}' a influencé d'autres auteurs ou studios.",
+                 f"L'influence de '{creator}' s'étend largement : {data['impact']} Il a redéfini le secteur comme : {data['definition']}. Ses créations repères sont : {data['examples']}"),
+                 
+                (f"Quelles sont les caractéristiques majeures associées aux créations de '{creator}' ?",
+                 f"Les créations de '{creator}' se caractérisent par son style : {data['definition']}. Exemples notables : {data['examples']}. Contexte : {data['origin']}"),
+                 
+                (f"Décris le parcours artistique et le profil de '{creator}'.",
+                 f"Parcours de '{creator}' : {data['definition']}. Origines et évolutions : {data['origin']}. Ses projets les plus influents : {data['examples']}"),
+                 
+                (f"Analyse l'importance historique et l'héritage de '{creator}'.",
+                 f"L'héritage de '{creator}' est colossal. {data['impact']} Connu pour : {data['definition']}. Réalisations clés : {data['examples']}"),
+                 
+                (f"Qu'est-ce qui rend '{creator}' incontournable dans le paysage otaku moderne ?",
+                 f"'{creator}' est incontournable en tant que : {data['definition']}. Ses créations populaires ({data['examples']}) et son impact ({data['impact']}) en font une référence absolue.")
+            ]
         for q, a in templates:
             otaku_instructions.append({
                 "instruction": q,
                 "input": "",
-                "output": a
+                "output": a,
+                "language": lang
             })
             
     # 3. Ajout de comparaisons croisées (12 exemples)
@@ -665,18 +885,44 @@ def generate_volumes_and_episodes_instructions():
     return instructions
 
 def fetch_general_instructions(count):
-    """Télécharge de manière stable 'pinzhenchen/alpaca-cleaned-fr' depuis HF Hub."""
-    logger.info(f"[INFO] Loading {count} general French SFT instructions from Hugging Face...")
-    ds = load_dataset('pinzhenchen/alpaca-cleaned-fr', split='train')
+    """Télécharge de manière stable 'pinzhenchen/alpaca-cleaned-fr' et 'yahma/alpaca-cleaned' depuis HF Hub."""
+    logger.info(f"[INFO] Loading {count} general SFT instructions from Hugging Face...")
+    
+    fr_count = count // 2
+    en_count = count - fr_count
     
     general_samples = []
-    for i in range(min(count, len(ds))):
-        item = ds[i]
-        general_samples.append({
-            "instruction": item.get("instruction", ""),
-            "input": item.get("input", ""),
-            "output": item.get("output", "")
-        })
+    
+    if fr_count > 0:
+        logger.info(f"[INFO] Loading {fr_count} French general instructions...")
+        try:
+            ds_fr = load_dataset('pinzhenchen/alpaca-cleaned-fr', split='train')
+            for i in range(min(fr_count, len(ds_fr))):
+                item = ds_fr[i]
+                general_samples.append({
+                    "instruction": item.get("instruction", ""),
+                    "input": item.get("input", ""),
+                    "output": item.get("output", ""),
+                    "language": "Français"
+                })
+        except Exception as e:
+            logger.warning(f"Failed to load French Alpaca dataset: {e}")
+            
+    if en_count > 0:
+        logger.info(f"[INFO] Loading {en_count} English general instructions...")
+        try:
+            ds_en = load_dataset('yahma/alpaca-cleaned', split='train')
+            for i in range(min(en_count, len(ds_en))):
+                item = ds_en[i]
+                general_samples.append({
+                    "instruction": item.get("instruction", ""),
+                    "input": item.get("input", ""),
+                    "output": item.get("output", ""),
+                    "language": "English"
+                })
+        except Exception as e:
+            logger.warning(f"Failed to load English Alpaca dataset: {e}")
+            
     logger.info(f"[SUCCESS] Loaded exactly {len(general_samples)} general SFT instructions.")
     return general_samples
 
@@ -685,7 +931,15 @@ def deduplicate_dataset(dataset):
     deduped = []
     duplicates_count = 0
     for item in dataset:
-        key = (item["instruction"].strip(), item["input"].strip())
+        if "turns" in item:
+            sig_list = []
+            for t in item["turns"]:
+                sig_list.append(t["user"].strip())
+                sig_list.append(t["assistant"].strip())
+            key = tuple(sig_list)
+        else:
+            key = (item["instruction"].strip(), item.get("input", "").strip())
+            
         if key in seen:
             duplicates_count += 1
             continue
@@ -1086,7 +1340,7 @@ def run_generate_instruction_dataset():
         with open(ANIME_DB, 'r', encoding='utf-8') as f:
             animes = json.load(f)
             logger.info(f"[INFO] Processing ALL {len(animes)} animes with popularity weighting...")
-            for item in animes:
+            for idx, item in enumerate(animes):
                 title = clean_description(item.get('title', 'Unknown'))
                 genres = [clean_description(g) for g in item.get('genres', [])]
                 studios = [clean_description(s) for s in item.get('studios', [])]
@@ -1094,90 +1348,162 @@ def run_generate_instruction_dataset():
                 pop = item.get('popularity', 0)
                 year = item.get('year', 2020)
                 
-                profile = make_french_anime_profile(title, genres, studios, tags, year)
                 display_t = get_display_title(title)
                 
-                # Tier 1 : Ultra Populaire (> 150k membres) -> 5 variations
-                if pop > 150000:
-                    if client and title in augmented_anime_titles:
-                        logger.info(f"Augmenting anime (Tier 1) '{title}' via Gemini...")
-                        p1 = paraphrase_text_via_gemini(profile, client, "encyclopédique")
-                        p2 = paraphrase_text_via_gemini(profile, client, "critique")
-                        p3 = paraphrase_text_via_gemini(profile, client, "enthousiaste")
-                        p4 = paraphrase_text_via_gemini(profile, client, "décontracté")
-                        p5 = paraphrase_text_via_gemini(profile, client, "analytique")
+                if idx % 2 == 1:
+                    profile = make_english_anime_profile(title, genres, studios, tags, year)
+                    # Tier 1 : Ultra Populaire (> 150k membres) -> 5 variations
+                    if pop > 150000:
+                        if client and title in augmented_anime_titles:
+                            logger.info(f"Augmenting anime (Tier 1) '{title}' via Gemini...")
+                            p1 = paraphrase_text_via_gemini(profile, client, "encyclopédique")
+                            p2 = paraphrase_text_via_gemini(profile, client, "critique")
+                            p3 = paraphrase_text_via_gemini(profile, client, "enthousiaste")
+                            p4 = paraphrase_text_via_gemini(profile, client, "décontracté")
+                            p5 = paraphrase_text_via_gemini(profile, client, "analytique")
+                        else:
+                            p1 = p2 = p3 = p4 = p5 = profile
+                        specialized_data.append({"instruction": f"Present the cult anime '{display_t}' in extreme detail.", "input": "", "output": p1, "language": "English"})
+                        specialized_data.append({"instruction": f"Which studio is behind the masterpiece '{display_t}' and what is it about?", "input": "", "output": p2, "language": "English"})
+                        specialized_data.append({"instruction": f"What is the story of the major work '{display_t}'?", "input": "", "output": p3, "language": "English"})
+                        specialized_data.append({"instruction": f"What are the major themes and universe of '{display_t}'?", "input": "", "output": p4, "language": "English"})
+                        specialized_data.append({"instruction": f"Why is '{display_t}' such an extremely popular and appreciated work among viewers?", "input": "", "output": p5, "language": "English"})
+                    
+                    # Tier 2 : Très Populaire (50k - 150k membres) -> 3 variations
+                    elif pop > 50000:
+                        if client and title in augmented_anime_titles:
+                            logger.info(f"Augmenting anime (Tier 2) '{title}' via Gemini...")
+                            p1 = paraphrase_text_via_gemini(profile, client, "encyclopédique")
+                            p2 = paraphrase_text_via_gemini(profile, client, "critique")
+                            p3 = paraphrase_text_via_gemini(profile, client, "décontracté")
+                        else:
+                            p1 = p2 = p3 = profile
+                        specialized_data.append({"instruction": f"Present the popular anime '{display_t}' in detail.", "input": "", "output": p1, "language": "English"})
+                        specialized_data.append({"instruction": f"Which studio produced '{display_t}' and what is it about?", "input": "", "output": p2, "language": "English"})
+                        specialized_data.append({"instruction": f"What are the major themes of the anime '{display_t}'?", "input": "", "output": p3, "language": "English"})
+                    
+                    # Tier 3 : Standard / Obscure (<= 50k membres) -> 1 variation
                     else:
-                        p1 = p2 = p3 = p4 = p5 = profile
-                    specialized_data.append({"instruction": f"Présente l'anime culte '{display_t}' de manière extrêmement détaillée.", "input": "", "output": p1})
-                    specialized_data.append({"instruction": f"Quel studio est derrière le chef-d'œuvre '{display_t}' et de quoi s'agit-il ?", "input": "", "output": p2})
-                    specialized_data.append({"instruction": f"De quoi parle l'œuvre majeure '{display_t}' ?", "input": "", "output": p3})
-                    specialized_data.append({"instruction": f"Quelles sont les thématiques majeures et l'univers de '{display_t}' ?", "input": "", "output": p4})
-                    specialized_data.append({"instruction": f"Pourquoi '{display_t}' est-elle une œuvre extrêmement populaire et appréciée des spectateurs ?", "input": "", "output": p5})
-                
-                # Tier 2 : Très Populaire (50k - 150k membres) -> 3 variations
-                elif pop > 50000:
-                    if client and title in augmented_anime_titles:
-                        logger.info(f"Augmenting anime (Tier 2) '{title}' via Gemini...")
-                        p1 = paraphrase_text_via_gemini(profile, client, "encyclopédique")
-                        p2 = paraphrase_text_via_gemini(profile, client, "critique")
-                        p3 = paraphrase_text_via_gemini(profile, client, "décontracté")
-                    else:
-                        p1 = p2 = p3 = profile
-                    specialized_data.append({"instruction": f"Présente l'anime populaire '{display_t}' de manière détaillée.", "input": "", "output": p1})
-                    specialized_data.append({"instruction": f"Quel studio a produit '{display_t}' et de quoi ça parle ?", "input": "", "output": p2})
-                    specialized_data.append({"instruction": f"Quelles sont les thématiques majeures de l'anime '{display_t}' ?", "input": "", "output": p3})
-                
-                # Tier 3 : Standard / Obscure (<= 50k membres) -> 1 variation
+                        specialized_data.append({"instruction": f"Present the anime '{display_t}' in detail.", "input": "", "output": profile, "language": "English"})
                 else:
-                    specialized_data.append({"instruction": f"Présente l'anime '{display_t}' de manière détaillée.", "input": "", "output": profile})
+                    profile = make_french_anime_profile(title, genres, studios, tags, year)
+                    # Tier 1 : Ultra Populaire (> 150k membres) -> 5 variations
+                    if pop > 150000:
+                        if client and title in augmented_anime_titles:
+                            logger.info(f"Augmenting anime (Tier 1) '{title}' via Gemini...")
+                            p1 = paraphrase_text_via_gemini(profile, client, "encyclopédique")
+                            p2 = paraphrase_text_via_gemini(profile, client, "critique")
+                            p3 = paraphrase_text_via_gemini(profile, client, "enthousiaste")
+                            p4 = paraphrase_text_via_gemini(profile, client, "décontracté")
+                            p5 = paraphrase_text_via_gemini(profile, client, "analytique")
+                        else:
+                            p1 = p2 = p3 = p4 = p5 = profile
+                        specialized_data.append({"instruction": f"Présente l'anime culte '{display_t}' de manière extrêmement détaillée.", "input": "", "output": p1, "language": "Français"})
+                        specialized_data.append({"instruction": f"Quel studio est derrière le chef-d'œuvre '{display_t}' et de quoi s'agit-il ?", "input": "", "output": p2, "language": "Français"})
+                        specialized_data.append({"instruction": f"De quoi parle l'œuvre majeure '{display_t}' ?", "input": "", "output": p3, "language": "Français"})
+                        specialized_data.append({"instruction": f"Quelles sont les thématiques majeures et l'univers de '{display_t}' ?", "input": "", "output": p4, "language": "Français"})
+                        specialized_data.append({"instruction": f"Pourquoi '{display_t}' est-elle une œuvre extrêmement populaire et appréciée des spectateurs ?", "input": "", "output": p5, "language": "Français"})
+                    
+                    # Tier 2 : Très Populaire (50k - 150k membres) -> 3 variations
+                    elif pop > 50000:
+                        if client and title in augmented_anime_titles:
+                            logger.info(f"Augmenting anime (Tier 2) '{title}' via Gemini...")
+                            p1 = paraphrase_text_via_gemini(profile, client, "encyclopédique")
+                            p2 = paraphrase_text_via_gemini(profile, client, "critique")
+                            p3 = paraphrase_text_via_gemini(profile, client, "décontracté")
+                        else:
+                            p1 = p2 = p3 = profile
+                        specialized_data.append({"instruction": f"Présente l'anime populaire '{display_t}' de manière détaillée.", "input": "", "output": p1, "language": "Français"})
+                        specialized_data.append({"instruction": f"Quel studio a produit '{display_t}' et de quoi ça parle ?", "input": "", "output": p2, "language": "Français"})
+                        specialized_data.append({"instruction": f"Quelles sont les thématiques majeures de l'anime '{display_t}' ?", "input": "", "output": p3, "language": "Français"})
+                    
+                    # Tier 3 : Standard / Obscure (<= 50k membres) -> 1 variation
+                    else:
+                        specialized_data.append({"instruction": f"Présente l'anime '{display_t}' de manière détaillée.", "input": "", "output": profile, "language": "Français"})
 
     # 3. MANGA DATABASE
     if os.path.exists(MANGA_DB):
         with open(MANGA_DB, 'r', encoding='utf-8') as f:
             mangas = json.load(f)
             logger.info(f"[INFO] Processing ALL {len(mangas)} mangas with popularity weighting...")
-            for item in mangas:
+            for idx, item in enumerate(mangas):
                 title = clean_description(item.get('title', 'Unknown'))
                 genres = [clean_description(g) for g in item.get('genres', [])]
                 tags = [clean_description(t) for t in item.get('tags', [])]
                 pop = item.get('popularity', 0)
                 
-                profile = make_french_manga_profile(title, genres, tags)
                 display_t = get_display_title(title)
                 
-                # Tier 1 : Ultra Populaire (> 150k membres) -> 5 variations
-                if pop > 150000:
-                    if client and title in augmented_manga_titles:
-                        logger.info(f"Augmenting manga (Tier 1) '{title}' via Gemini...")
-                        p1 = paraphrase_text_via_gemini(profile, client, "encyclopédique")
-                        p2 = paraphrase_text_via_gemini(profile, client, "critique")
-                        p3 = paraphrase_text_via_gemini(profile, client, "enthousiaste")
-                        p4 = paraphrase_text_via_gemini(profile, client, "décontracté")
-                        p5 = paraphrase_text_via_gemini(profile, client, "analytique")
+                if idx % 2 == 1:
+                    profile = make_english_manga_profile(title, genres, tags)
+                    # Tier 1 : Ultra Populaire (> 150k membres) -> 5 variations
+                    if pop > 150000:
+                        if client and title in augmented_manga_titles:
+                            logger.info(f"Augmenting manga (Tier 1) '{title}' via Gemini...")
+                            p1 = paraphrase_text_via_gemini(profile, client, "encyclopédique")
+                            p2 = paraphrase_text_via_gemini(profile, client, "critique")
+                            p3 = paraphrase_text_via_gemini(profile, client, "enthousiaste")
+                            p4 = paraphrase_text_via_gemini(profile, client, "décontracté")
+                            p5 = paraphrase_text_via_gemini(profile, client, "analytique")
+                        else:
+                            p1 = p2 = p3 = p4 = p5 = profile
+                        specialized_data.append({"instruction": f"What are the main themes of the cult manga '{display_t}'?", "input": "", "output": p1, "language": "English"})
+                        specialized_data.append({"instruction": f"Analyze and summarize the iconic manga '{display_t}'.", "input": "", "output": p2, "language": "English"})
+                        specialized_data.append({"instruction": f"Why has the manga '{display_t}' met with such great success with the public?", "input": "", "output": p3, "language": "English"})
+                        specialized_data.append({"instruction": f"Present the universe and plot of the cult manga '{display_t}'.", "input": "", "output": p4, "language": "English"})
+                        specialized_data.append({"instruction": f"What is the cult manga '{display_t}' about?", "input": "", "output": p5, "language": "English"})
+                    
+                    # Tier 2 : Très Populaire (50k - 150k membres) -> 3 variations
+                    elif pop > 50000:
+                        if client and title in augmented_manga_titles:
+                            logger.info(f"Augmenting manga (Tier 2) '{title}' via Gemini...")
+                            p1 = paraphrase_text_via_gemini(profile, client, "encyclopédique")
+                            p2 = paraphrase_text_via_gemini(profile, client, "critique")
+                            p3 = paraphrase_text_via_gemini(profile, client, "décontracté")
+                        else:
+                            p1 = p2 = p3 = profile
+                        specialized_data.append({"instruction": f"What are the main themes of the popular manga '{display_t}'?", "input": "", "output": p1, "language": "English"})
+                        specialized_data.append({"instruction": f"What is the popular manga '{display_t}' about?", "input": "", "output": p2, "language": "English"})
+                        specialized_data.append({"instruction": f"Summarize the key themes of the manga '{display_t}'.", "input": "", "output": p3, "language": "English"})
+                    
+                    # Tier 3 : Standard / Obscure (<= 50k membres) -> 1 variation
                     else:
-                        p1 = p2 = p3 = p4 = p5 = profile
-                    specialized_data.append({"instruction": f"Quelles sont les thématiques principales du manga culte '{display_t}' ?", "input": "", "output": p1})
-                    specialized_data.append({"instruction": f"Analyse et résume le manga emblématique '{display_t}'.", "input": "", "output": p2})
-                    specialized_data.append({"instruction": f"Pourquoi le manga '{display_t}' a-t-il rencontré un si grand succès auprès du public ?", "input": "", "output": p3})
-                    specialized_data.append({"instruction": f"Présente l'univers et le scénario du manga culte '{display_t}'.", "input": "", "output": p4})
-                    specialized_data.append({"instruction": f"De quoi parle le manga culte '{display_t}' ?", "input": "", "output": p5})
-                
-                # Tier 2 : Très Populaire (50k - 150k membres) -> 3 variations
-                elif pop > 50000:
-                    if client and title in augmented_manga_titles:
-                        logger.info(f"Augmenting manga (Tier 2) '{title}' via Gemini...")
-                        p1 = paraphrase_text_via_gemini(profile, client, "encyclopédique")
-                        p2 = paraphrase_text_via_gemini(profile, client, "critique")
-                        p3 = paraphrase_text_via_gemini(profile, client, "décontracté")
-                    else:
-                        p1 = p2 = p3 = profile
-                    specialized_data.append({"instruction": f"Quelles sont les thématiques principales du manga populaire '{display_t}' ?", "input": "", "output": p1})
-                    specialized_data.append({"instruction": f"De quoi parle le manga populaire '{display_t}' ?", "input": "", "output": p2})
-                    specialized_data.append({"instruction": f"Résume les thèmes clés du manga '{display_t}'.", "input": "", "output": p3})
-                
-                # Tier 3 : Standard / Obscure (<= 50k membres) -> 1 variation
+                        specialized_data.append({"instruction": f"What are the main themes of the manga '{display_t}'?", "input": "", "output": profile, "language": "English"})
                 else:
-                    specialized_data.append({"instruction": f"Quelles sont les thématiques principales du manga '{display_t}' ?", "input": "", "output": profile})
+                    profile = make_french_manga_profile(title, genres, tags)
+                    # Tier 1 : Ultra Populaire (> 150k membres) -> 5 variations
+                    if pop > 150000:
+                        if client and title in augmented_manga_titles:
+                            logger.info(f"Augmenting manga (Tier 1) '{title}' via Gemini...")
+                            p1 = paraphrase_text_via_gemini(profile, client, "encyclopédique")
+                            p2 = paraphrase_text_via_gemini(profile, client, "critique")
+                            p3 = paraphrase_text_via_gemini(profile, client, "enthousiaste")
+                            p4 = paraphrase_text_via_gemini(profile, client, "décontracté")
+                            p5 = paraphrase_text_via_gemini(profile, client, "analytique")
+                        else:
+                            p1 = p2 = p3 = p4 = p5 = profile
+                        specialized_data.append({"instruction": f"Quelles sont les thématiques principales du manga culte '{display_t}' ?", "input": "", "output": p1, "language": "Français"})
+                        specialized_data.append({"instruction": f"Analyse et résume le manga emblématique '{display_t}'.", "input": "", "output": p2, "language": "Français"})
+                        specialized_data.append({"instruction": f"Pourquoi le manga '{display_t}' a-t-il rencontré un si grand succès auprès du public ?", "input": "", "output": p3, "language": "Français"})
+                        specialized_data.append({"instruction": f"Présente l'univers et le scénario du manga culte '{display_t}'.", "input": "", "output": p4, "language": "Français"})
+                        specialized_data.append({"instruction": f"De quoi parle le manga culte '{display_t}' ?", "input": "", "output": p5, "language": "Français"})
+                    
+                    # Tier 2 : Très Populaire (50k - 150k membres) -> 3 variations
+                    elif pop > 50000:
+                        if client and title in augmented_manga_titles:
+                            logger.info(f"Augmenting manga (Tier 2) '{title}' via Gemini...")
+                            p1 = paraphrase_text_via_gemini(profile, client, "encyclopédique")
+                            p2 = paraphrase_text_via_gemini(profile, client, "critique")
+                            p3 = paraphrase_text_via_gemini(profile, client, "décontracté")
+                        else:
+                            p1 = p2 = p3 = profile
+                        specialized_data.append({"instruction": f"Quelles sont les thématiques principales du manga populaire '{display_t}' ?", "input": "", "output": p1, "language": "Français"})
+                        specialized_data.append({"instruction": f"De quoi parle le manga populaire '{display_t}' ?", "input": "", "output": p2, "language": "Français"})
+                        specialized_data.append({"instruction": f"Résume les thèmes clés du manga '{display_t}'.", "input": "", "output": p3, "language": "Français"})
+                    
+                    # Tier 3 : Standard / Obscure (<= 50k membres) -> 1 variation
+                    else:
+                        specialized_data.append({"instruction": f"Quelles sont les thématiques principales du manga '{display_t}' ?", "input": "", "output": profile, "language": "Français"})
 
     # 4. CHARACTER DATABASE
     if os.path.exists(CHAR_DB):
@@ -1186,7 +1512,7 @@ def run_generate_instruction_dataset():
             top_chars = [c for c in chars if c.get('popularity', {}).get('favourites', 0) > 50]
             logger.info(f"[INFO] Processing {len(top_chars)} characters with tiered augmentation...")
             
-            for c in top_chars:
+            for idx, c in enumerate(top_chars):
                 name = clean_description(c.get('name', 'Anonyme'))
                 origin = clean_description(c.get('origin', 'Inconnu'))
                 ents = c.get('entities', {})
@@ -1195,47 +1521,89 @@ def run_generate_instruction_dataset():
                 rank = c.get('popularity', {}).get('rank', 9999)
                 height = clean_description(c.get('metadata', {}).get('height', 'Unknown'))
                 
-                profile = make_french_character_bio(name, origin, orgs, favs, rank, height)
                 display_name = get_display_character(name)
                 display_origin = get_display_title(origin)
                 
-                # Tier 1 : Ultra Populaire (> 2000 favoris) -> 5 variations
-                if favs > 2000:
-                    if client and (name, origin) in augmented_char_names:
-                        logger.info(f"Augmenting character (Tier 1) '{name}' ({origin}) via Gemini...")
-                        p1 = paraphrase_text_via_gemini(profile, client, "encyclopédique")
-                        p2 = paraphrase_text_via_gemini(profile, client, "critique")
-                        p3 = paraphrase_text_via_gemini(profile, client, "enthousiaste")
-                        p4 = paraphrase_text_via_gemini(profile, client, "décontracté")
-                        p5 = paraphrase_text_via_gemini(profile, client, "analytique")
+                if idx % 2 == 1:
+                    profile = make_english_character_bio(name, origin, orgs, favs, rank, height)
+                    # Tier 1 : Ultra Populaire (> 2000 favoris) -> 5 variations
+                    if favs > 2000:
+                        if client and (name, origin) in augmented_char_names:
+                            logger.info(f"Augmenting character (Tier 1) '{name}' ({origin}) via Gemini...")
+                            p1 = paraphrase_text_via_gemini(profile, client, "encyclopédique")
+                            p2 = paraphrase_text_via_gemini(profile, client, "critique")
+                            p3 = paraphrase_text_via_gemini(profile, client, "enthousiaste")
+                            p4 = paraphrase_text_via_gemini(profile, client, "décontracté")
+                            p5 = paraphrase_text_via_gemini(profile, client, "analytique")
+                        else:
+                            p1 = p2 = p3 = p4 = p5 = profile
+                        specialized_data.append({"instruction": f"Complete analysis of the cult character {display_name} in {display_origin}.", "input": "", "output": p1, "language": "English"})
+                        specialized_data.append({"instruction": f"Who is {display_name} ?", "input": f"Context: {display_origin}", "output": p2, "language": "English"})
+                        specialized_data.append({"instruction": f"In-depth analysis of the psychology and role of {display_name} in '{display_origin}'.", "input": "", "output": p3, "language": "English"})
+                        specialized_data.append({"instruction": f"What are the outstanding traits and importance of the character of {display_name} ?", "input": f"Original work: {display_origin}", "output": p4, "language": "English"})
+                        specialized_data.append({"instruction": f"Why is {display_name} one of the most iconic and beloved characters in '{display_origin}' ?", "input": "", "output": p5, "language": "English"})
+                    
+                    # Tier 2 : Très Populaire (500 - 2000 favoris) -> 3 variations
+                    elif favs > 500:
+                        if client and (name, origin) in augmented_char_names:
+                            logger.info(f"Augmenting character (Tier 2) '{name}' ({origin}) via Gemini...")
+                            p1 = paraphrase_text_via_gemini(profile, client, "encyclopédique")
+                            p2 = paraphrase_text_via_gemini(profile, client, "critique")
+                            p3 = paraphrase_text_via_gemini(profile, client, "décontracté")
+                        else:
+                            p1 = p2 = p3 = profile
+                        specialized_data.append({"instruction": f"Analyze the popular character of {display_name} in {display_origin}.", "input": "", "output": p1, "language": "English"})
+                        specialized_data.append({"instruction": f"Who is {display_name} ?", "input": f"Context: {display_origin}", "output": p2, "language": "English"})
+                        specialized_data.append({"instruction": f"What are the outstanding traits of the character of {display_name} in '{display_origin}' ?", "input": "", "output": p3, "language": "English"})
+                    
+                    # Tier 3 : Standard (50 - 500 favoris) -> 2 variations
                     else:
-                        p1 = p2 = p3 = p4 = p5 = profile
-                    specialized_data.append({"instruction": f"Analyse complète du personnage culte {display_name} dans {display_origin}.", "input": "", "output": p1})
-                    specialized_data.append({"instruction": f"Qui est {display_name} ?", "input": f"Contexte : {display_origin}", "output": p2})
-                    specialized_data.append({"instruction": f"Analyse approfondie de la psychologie et du rôle de {display_name} dans '{display_origin}'.", "input": "", "output": p3})
-                    specialized_data.append({"instruction": f"Quels sont les traits marquants et l'importance du personnage de {display_name} ?", "input": f"Œuvre d'origine : {display_origin}", "output": p4})
-                    specialized_data.append({"instruction": f"Pourquoi {display_name} est-il l'un des personnages les plus emblématiques et adorés de '{display_origin}' ?", "input": "", "output": p5})
-                
-                # Tier 2 : Très Populaire (500 - 2000 favoris) -> 3 variations
-                elif favs > 500:
-                    if client and (name, origin) in augmented_char_names:
-                        logger.info(f"Augmenting character (Tier 2) '{name}' ({origin}) via Gemini...")
-                        p1 = paraphrase_text_via_gemini(profile, client, "encyclopédique")
-                        p2 = paraphrase_text_via_gemini(profile, client, "critique")
-                        p3 = paraphrase_text_via_gemini(profile, client, "décontracté")
-                    else:
-                        p1 = p2 = p3 = profile
-                    specialized_data.append({"instruction": f"Analyse le personnage populaire de {display_name} dans {display_origin}.", "input": "", "output": p1})
-                    specialized_data.append({"instruction": f"Qui est {display_name} ?", "input": f"Contexte : {display_origin}", "output": p2})
-                    specialized_data.append({"instruction": f"Quels sont les traits marquants du personnage de {display_name} dans '{display_origin}' ?", "input": "", "output": p3})
-                
-                # Tier 3 : Standard (50 - 500 favoris) -> 2 variations
+                        specialized_data.append({"instruction": f"Analyze the character of {display_name} in {display_origin}.", "input": "", "output": profile, "language": "English"})
+                        specialized_data.append({"instruction": f"Who is {display_name} ?", "input": f"Context: {display_origin}", "output": profile, "language": "English"})
                 else:
-                    specialized_data.append({"instruction": f"Analyse le personnage de {display_name} dans {display_origin}.", "input": "", "output": profile})
-                    specialized_data.append({"instruction": f"Qui est {display_name} ?", "input": f"Contexte : {display_origin}", "output": profile})
+                    profile = make_french_character_bio(name, origin, orgs, favs, rank, height)
+                    # Tier 1 : Ultra Populaire (> 2000 favoris) -> 5 variations
+                    if favs > 2000:
+                        if client and (name, origin) in augmented_char_names:
+                            logger.info(f"Augmenting character (Tier 1) '{name}' ({origin}) via Gemini...")
+                            p1 = paraphrase_text_via_gemini(profile, client, "encyclopédique")
+                            p2 = paraphrase_text_via_gemini(profile, client, "critique")
+                            p3 = paraphrase_text_via_gemini(profile, client, "enthousiaste")
+                            p4 = paraphrase_text_via_gemini(profile, client, "décontracté")
+                            p5 = paraphrase_text_via_gemini(profile, client, "analytique")
+                        else:
+                            p1 = p2 = p3 = p4 = p5 = profile
+                        specialized_data.append({"instruction": f"Analyse complète du personnage culte {display_name} dans {display_origin}.", "input": "", "output": p1, "language": "Français"})
+                        specialized_data.append({"instruction": f"Qui est {display_name} ?", "input": f"Contexte : {display_origin}", "output": p2, "language": "Français"})
+                        specialized_data.append({"instruction": f"Analyse approfondie de la psychologie et du rôle de {display_name} dans '{display_origin}'.", "input": "", "output": p3, "language": "Français"})
+                        specialized_data.append({"instruction": f"Quels sont les traits marquants et l'importance du personnage de {display_name} ?", "input": f"Œuvre d'origine : {display_origin}", "output": p4, "language": "Français"})
+                        specialized_data.append({"instruction": f"Pourquoi {display_name} est-il l'un des personnages les plus emblématiques et adorés de '{display_origin}' ?", "input": "", "output": p5, "language": "Français"})
+                    
+                    # Tier 2 : Très Populaire (500 - 2000 favoris) -> 3 variations
+                    elif favs > 500:
+                        if client and (name, origin) in augmented_char_names:
+                            logger.info(f"Augmenting character (Tier 2) '{name}' ({origin}) via Gemini...")
+                            p1 = paraphrase_text_via_gemini(profile, client, "encyclopédique")
+                            p2 = paraphrase_text_via_gemini(profile, client, "critique")
+                            p3 = paraphrase_text_via_gemini(profile, client, "décontracté")
+                        else:
+                            p1 = p2 = p3 = profile
+                        specialized_data.append({"instruction": f"Analyse le personnage populaire de {display_name} dans {display_origin}.", "input": "", "output": p1, "language": "Français"})
+                        specialized_data.append({"instruction": f"Qui est {display_name} ?", "input": f"Contexte : {display_origin}", "output": p2, "language": "Français"})
+                        specialized_data.append({"instruction": f"Quels sont les traits marquants du personnage de {display_name} dans '{display_origin}' ?", "input": "", "output": p3, "language": "Français"})
+                    
+                    # Tier 3 : Standard (50 - 500 favoris) -> 2 variations
+                    else:
+                        specialized_data.append({"instruction": f"Analyse le personnage de {display_name} dans {display_origin}.", "input": "", "output": profile, "language": "Français"})
+                        specialized_data.append({"instruction": f"Qui est {display_name} ?", "input": f"Contexte : {display_origin}", "output": profile, "language": "Français"})
 
     # Déduplication
     specialized_data = deduplicate_dataset(specialized_data)
+    # Ensure every instruction in specialized_data has a default language of "Français"
+    for item in specialized_data:
+        if "language" not in item:
+            item["language"] = "Français"
+
     non_meta_count = len(specialized_data)
     
     # 5. RATIO CONFIGURABLE ET PARAMETRABLE (Défaut : 80% Spécialisé, 5% Meta, 15% Général)
@@ -1247,7 +1615,7 @@ def run_generate_instruction_dataset():
     
     # Pool de questions méta
     logger.info("[INFO] Generating high-quality Otaku Meta Vocabulary questions pool...")
-    meta_pool = generate_otaku_meta_instructions()
+    meta_pool = generate_otaku_meta_instructions(client)
     meta_pool = deduplicate_dataset(meta_pool)
     
     # Échantillonnage
@@ -1274,7 +1642,8 @@ def run_generate_instruction_dataset():
             extra_meta.append({
                 "instruction": new_instruction,
                 "input": base_item["input"],
-                "output": new_output
+                "output": new_output,
+                "language": base_item.get("language", "Français")
             })
         selected_meta.extend(extra_meta)
     

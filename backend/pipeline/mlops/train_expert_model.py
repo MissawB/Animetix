@@ -49,6 +49,30 @@ except ImportError:
 # Base directory (4 levels up from backend/pipeline/mlops/)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+def format_chatml_messages(item) -> list:
+    """
+    Formate les messages au format ChatML selon la langue du dataset.
+    """
+    user_content = item["instruction"]
+    language = item.get("language", "Français")
+    
+    if item.get("input"):
+        if language == "English":
+            user_content = f"{item['instruction']}\n\nContext: {item['input']}"
+        else:
+            user_content = f"{item['instruction']}\n\nContexte : {item['input']}"
+            
+    if language == "English":
+        system_prompt = "You are Animetix, an absolute expert in otaku culture, Japanese manga, and anime. You answer in a very comprehensive and precise manner in English."
+    else:
+        system_prompt = "Tu es Animetix, un expert absolu de la culture otaku, des mangas et des animés japonais. Tu réponds de manière très complète et précise en français."
+        
+    return [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_content},
+        {"role": "assistant", "content": item["output"]}
+    ]
+
 def run_expert_training():
     model_name = os.getenv("BASE_MODEL_NAME", "unsloth/DeepSeek-R1-Distill-Qwen-8B")
     default_seq_len = 1024 if "deepseek" in model_name.lower() else 768
@@ -85,26 +109,26 @@ def run_expert_training():
     # 3. Application du patron de discussion ChatML natif de Qwen
     logger.info("⚙️ Formatting dataset with native ChatML templates...")
     def process_chatml(item):
-        user_content = item["instruction"]
-        if item["input"]:
-            user_content = f"{item['instruction']}\n\nContexte : {item['input']}"
-            
-        messages = [
-            {"role": "system", "content": "Tu es Animetix, un expert absolu de la culture otaku, des mangas et des animés japonais. Tu réponds de manière très complète et précise en français."},
-            {"role": "user", "content": user_content},
-            {"role": "assistant", "content": item["output"]}
-        ]
+        messages = format_chatml_messages(item)
         formatted = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
         return {"text": formatted}
 
     train_ds = train_ds.map(process_chatml, remove_columns=train_ds.column_names)
     eval_ds = eval_ds.map(process_chatml, remove_columns=eval_ds.column_names)
 
-    # 4. Chargement optimisé via Unsloth (avec repli PEFT/BitsAndBytes standard en cas d'absence)
+    # 4. Chargement optimisé via Unsloth (avec repli PEFT/BitsAndBytes standard en cas d'absence ou distribué)
     model = None
     peft_config = None
     
+    local_rank = int(os.environ.get("LOCAL_RANK", "-1"))
+    world_size = int(os.environ.get("WORLD_SIZE", "1"))
+    is_distributed = local_rank != -1 or world_size > 1 or (torch.cuda.is_available() and torch.cuda.device_count() > 1)
+    
     try:
+        if is_distributed:
+            logger.info("ℹ️ Distributed training detected. Bypassing Unsloth to avoid single-GPU constraints.")
+            raise ImportError("Bypass Unsloth under distributed training")
+            
         from unsloth import FastLanguageModel
         logger.info("🚀 Unsloth detected. Loading model with native GPU optimizations...")
         model, tokenizer = FastLanguageModel.from_pretrained(
@@ -127,22 +151,36 @@ def run_expert_training():
         )
         logger.info("✅ Model loaded and LoRA adapters injected using Unsloth FastLanguageModel.")
     except ImportError:
-        logger.info("ℹ️ Unsloth not available. Falling back to standard Hugging Face PEFT + BitsAndBytesConfig...")
+        logger.info("ℹ️ Unsloth not available or bypassed. Falling back to standard Hugging Face PEFT + BitsAndBytesConfig/Full precision...")
         
-        bnb_config = BitsAndBytesConfig(
-            load_in_4bit=True,
-            bnb_4bit_quant_type="nf4",
-            bnb_4bit_compute_dtype=torch.float16,
-            bnb_4bit_use_double_quant=True,
-        )
+        device_map = {"": local_rank} if local_rank != -1 else "auto"
+        disable_quant = os.getenv("ANIMETIX_DISABLE_QUANT", "False").lower() in ("true", "1", "yes") or is_distributed
         
-        model = AutoModelForCausalLM.from_pretrained(
-            model_name,
-            quantization_config=bnb_config,
-            device_map="auto",
-            trust_remote_code=True,
-            low_cpu_mem_usage=True,
-        )
+        if disable_quant:
+            logger.info("Loading model in full/mixed precision (no quantization) for distributed training compatibility...")
+            model = AutoModelForCausalLM.from_pretrained(
+                model_name,
+                device_map=device_map,
+                torch_dtype=torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16,
+                trust_remote_code=True,
+                low_cpu_mem_usage=True if device_map == "auto" else False
+            )
+        else:
+            logger.info("Loading model with standard 4-bit quantization...")
+            bnb_config = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_quant_type="nf4",
+                bnb_4bit_compute_dtype=torch.float16,
+                bnb_4bit_use_double_quant=True,
+            )
+            model = AutoModelForCausalLM.from_pretrained(
+                model_name,
+                quantization_config=bnb_config,
+                device_map=device_map,
+                trust_remote_code=True,
+                low_cpu_mem_usage=True,
+            )
+            
         model.gradient_checkpointing_enable()
         model.enable_input_require_grads()
         
@@ -155,7 +193,7 @@ def run_expert_training():
             use_rslora=True,   # Rank-Stabilized LoRA activé
             task_type="CAUSAL_LM",
         )
-        logger.info("✅ Model loaded with standard BitsAndBytes and PEFT configuration.")
+        logger.info("✅ Model loaded with standard PEFT configuration.")
 
     # 5. Assistant-Only Loss Masking (Data Collator ciblant uniquement la réponse de l'assistant)
     # Validation dynamique du patron pour éviter les échecs de tokenisation silencieux
@@ -203,7 +241,7 @@ def run_expert_training():
 
     # 6. Configuration des hyperparamètres d'entraînement de pointe
     # Batch size=1 avec gradient accumulation=8 permet d'atteindre un batch virtuel stable de 8
-    # Paged AdamW 8-bit prévient les pannes de VRAM locale
+    # Paged AdamW 8-bit prévient les pannes de VRAM locale, standard adamw_torch utilisé en distribué
     enable_eval = os.getenv("ANIMETIX_ENABLE_EVAL", "False").lower() in ("true", "1", "yes")
     eval_strategy = "steps" if enable_eval else "no"
     eval_steps = 100 if enable_eval else 9999
@@ -213,7 +251,11 @@ def run_expert_training():
     else:
         logger.info("ℹ️ Evaluation deactivated to conserve VRAM (set env ANIMETIX_ENABLE_EVAL=True to enable).")
 
-    training_args = TrainingArguments(
+    optim = "adamw_torch" if is_distributed else "paged_adamw_8bit"
+    deepspeed_config = os.getenv("ANIMETIX_DEEPSPEED_CONFIG", None)
+    fsdp_config_env = os.getenv("ANIMETIX_FSDP_CONFIG", None)
+
+    training_args_kwargs = dict(
         output_dir=output_dir,
         per_device_train_batch_size=1,
         gradient_accumulation_steps=8,
@@ -228,12 +270,25 @@ def run_expert_training():
         save_total_limit=1,
         fp16=not torch.cuda.is_bf16_supported(),
         bf16=torch.cuda.is_bf16_supported(),
-        optim="paged_adamw_8bit",  # Optimiseur avec déchargement sur RAM
+        optim=optim,
         lr_scheduler_type="cosine",  # Décroissance cosinusoïdale de pointe
         weight_decay=0.01,
         report_to="none",
         neftune_noise_alpha=5.0,  # NEFTune pour la robustesse et la diversité linguistique
     )
+
+    if is_distributed:
+        if deepspeed_config and os.path.exists(deepspeed_config):
+            logger.info(f"Injecting DeepSpeed configuration path: {deepspeed_config}")
+            training_args_kwargs["deepspeed"] = deepspeed_config
+        elif fsdp_config_env:
+            logger.info(f"Injecting FSDP configuration parameters: {fsdp_config_env}")
+            training_args_kwargs["fsdp"] = fsdp_config_env
+            training_args_kwargs["fsdp_config"] = {
+                "transformer_layer_cls_to_wrap": os.getenv("ANIMETIX_FSDP_WRAP_CLASS", "Qwen2DecoderLayer"),
+            }
+
+    training_args = TrainingArguments(**training_args_kwargs)
 
     # 7. Initialisation du SFTTrainer de TRL
     trainer = SFTTrainer(

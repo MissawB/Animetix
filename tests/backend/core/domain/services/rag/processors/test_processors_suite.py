@@ -153,6 +153,7 @@ def test_synthesize_processor_success():
     ctx.thinking_mode = "fast"
     ctx.correction_feedback = None
     ctx.knowledge_acquired = False
+    ctx.language = "Français"
     
     next_state, steps = consume_generator(processor.process(ctx))
     
@@ -195,6 +196,7 @@ def test_fallback_rag_processor():
     ctx = MagicMock(spec=RAGContext)
     ctx.query = "test query"
     ctx.media_type = "Anime"
+    ctx.language = "Français"
     
     next_state, steps = consume_generator(processor.process(ctx))
     
