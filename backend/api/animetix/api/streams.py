@@ -63,6 +63,15 @@ class AgenticRAGStreamView(APIView):
         query = request.GET.get('q', '')
         media_type = request.GET.get('media_type') or session.get_current_mode()
         
+        lang_param = request.GET.get('lang')
+        if lang_param:
+            if 'en' in lang_param.lower() or 'eng' in lang_param.lower():
+                language = 'English'
+            else:
+                language = 'Français'
+        else:
+            language = session.get('language', 'Français')
+        
         if not query: 
             return JsonResponse({'error': 'No query provided'}, status=400)
             
@@ -70,7 +79,7 @@ class AgenticRAGStreamView(APIView):
             agent = get_container().agentic.agentic_rag()
             user_id = str(request.user.id) if request.user.is_authenticated else None
             try:
-                for event in agent.plan_and_solve_stream(query, media_type, user_id=user_id):
+                for event in agent.plan_and_solve_stream(query, media_type, user_id=user_id, language=language):
                     yield f"data: {json.dumps(event)}\n\n"
             except Exception as e:
                 yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"

@@ -251,32 +251,36 @@ class AgenticRAGService:
         if self.orchestrator and RAGState.SYNTHESIZE in self.orchestrator.processors:
             self.orchestrator.processors[RAGState.SYNTHESIZE].xai_service = value
 
-    def plan_and_solve(self, query: str, media_type: str, user_id: Optional[str] = None) -> str:
+    def plan_and_solve(self, query: str, media_type: str, user_id: Optional[str] = None, language: str = "Français") -> str:
         """Wrapper non-streaming. Retourne uniquement la réponse finale."""
         last_answer = ""
-        for event in self.plan_and_solve_stream(query, media_type, user_id):
+        for event in self.plan_and_solve_stream(query, media_type, user_id, language):
             if event['type'] == 'token':
                 last_answer += event['content']
             elif event['type'] == 'thought' and "[Synthesizer]" in event['content']:
                 last_answer = ""
         return last_answer
 
-    def plan_and_solve_stream(self, query: str, media_type: str, user_id: Optional[str] = None) -> Generator[Dict, None, None]:
+    def plan_and_solve_stream(self, query: str, media_type: str, user_id: Optional[str] = None, language: str = "Français") -> Generator[Dict, None, None]:
         """Boucle principale orchestrée via RAGOrchestrator."""
+        start_time = time.time()
         
         # 1. ROUTAGE SÉMANTIQUE INTELLIGENT (SOTA 2026)
         routing_decision = self.semantic_router.classify(query)
         if routing_decision == "SIMPLE":
             yield StreamStep(type="thought", content="[Semantic Router] Requête simple détectée. Court-circuitage vers la recherche et synthèse directe en < 2 secondes...").model_dump()
-            full_answer = ""
             ctx = RAGContext(
                 query=query, media_type=media_type, user_id=user_id,
                 thinking_budget=0, thinking_mode=False,
-                memories="", current_state=RAGState.FALLBACK_RAG # Direct to Fallback
+                memories="", current_state=RAGState.FALLBACK_RAG, # Direct to Fallback
+                language=language
             )
             yield from self.orchestrator.run_workflow(ctx) # Run simple flow
             if ctx.full_answer:
                 self._store_results(query, ctx.full_answer, user_id)
+            
+            if self.obs_service:
+                self.obs_service.log_rag_latency(time.time() - start_time, query, user_id)
             return
 
         # 2. ANALYSE COMPLEXITÉ ET INITIALISATION CONTEXTE
@@ -289,6 +293,8 @@ class AgenticRAGService:
 
         if cached := self._check_cache(query):
             yield from self._stream_cached_response(cached)
+            if self.obs_service:
+                self.obs_service.log_rag_latency(time.time() - start_time, query, user_id)
             return
 
         # Chargement de la mémoire utilisateur depuis le Graphe (Task 5.2)
@@ -307,7 +313,8 @@ class AgenticRAGService:
             memories=self._get_memories(user_id, query),
             current_state=RAGState.PLAN,
             graph_expert=self.orchestrator.processors[RAGState.GRAPH_EXPLORE].graph_expert if self.orchestrator and RAGState.GRAPH_EXPLORE in self.orchestrator.processors else None,
-            truth_path=user_context
+            truth_path=user_context,
+            language=language
         )
 
         # 3. DÉLÉGATION À L'ORCHESTRATEUR
@@ -337,6 +344,9 @@ class AgenticRAGService:
                     args=(user_id, query, "SEARCH"),
                     daemon=True
                 ).start()
+        
+        if self.obs_service:
+            self.obs_service.log_rag_latency(time.time() - start_time, query, user_id)
 
 
     # --- MÉTHODES UTILITAIRES ---

@@ -254,3 +254,40 @@ def test_rag_context_language():
     
     ctx_en = RAGContext(query="test", media_type="Anime", language="English")
     assert ctx_en.language == "English"
+
+def test_agentic_rag_service_propagates_language(monkeypatch):
+    from backend.core.domain.services.agentic_rag_service import AgenticRAGService
+    from unittest.mock import MagicMock
+    
+    # Mock dependencies
+    mock_engine = MagicMock()
+    mock_rag = MagicMock()
+    mock_search = MagicMock()
+    mock_prompt = MagicMock()
+    mock_llm = MagicMock()
+    mock_orch = MagicMock()
+    
+    service = AgenticRAGService(
+        inference_engine=mock_engine,
+        rag_service=mock_rag,
+        web_search=mock_search,
+        prompt_manager=mock_prompt,
+        llm_service=mock_llm,
+        workflow_orchestrator=mock_orch
+    )
+    
+    # Mock semantic router to trigger standard flow
+    service.semantic_router.classify = MagicMock(return_value="COMPLEX")
+    service._assess_complexity = MagicMock(return_value=(1000, 2))
+    service._check_cache = MagicMock(return_value=None)
+    service._get_memories = MagicMock(return_value="")
+    
+    # Intercept run_workflow to verify context language
+    def mock_run_workflow(ctx, xai_collector=None):
+        assert ctx.language == "English"
+        yield from []
+    mock_orch.run_workflow.side_effect = mock_run_workflow
+    
+    # Run stream
+    list(service.plan_and_solve_stream("Who is Naruto?", "Anime", language="English"))
+
