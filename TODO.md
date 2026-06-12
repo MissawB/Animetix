@@ -27,15 +27,15 @@ Fichier cible : [dpo_dataset_compiler.py](file:///c:/Users/bahma/PycharmProjects
   - [x] Remplacer des entités par des concepts proches ou reliés plutôt que par des choix purement aléatoires (ex: échanger deux doubleurs du même anime, intervertir des studios de production du même genre d'œuvre).
 - [x] **Subtiliser la corruption tonale** :
   - [x] Au lieu de supprimer toute la ponctuation/majuscules, générer des réponses rejetées contenant du *code-switching* excessif (mélange fr/en non naturel), de la redondance excessive ou un ton condescendant.
-- [ ] **Intégrer le feedback utilisateur réel** :
-  - [ ] Connecter le compilateur à la base Django via [dpo_feedback_loop.py](file:///c:/Users/bahma/PycharmProjects/Projet%20solo/Double_scenario_Project/backend/pipeline/mlops/dpo_feedback_loop.py) pour collecter et formater les pouces levés/baissés réels de l'application en paires (chosen/rejected).
-- [ ] **DPO par critique de LLM (LLM-as-a-Judge)** :
-  - [ ] Utiliser Gemini pour générer des variantes `rejected` contenant de subtiles erreurs de logique ou de raisonnement au lieu d'heuristiques rigides.
+- [x] **Intégrer le feedback utilisateur réel** :
+  - [x] Connecter le compilateur à la base Django via [dpo_feedback_loop.py](file:///c:/Users/bahma/PycharmProjects/Projet%20solo/Double_scenario_Project/backend/pipeline/mlops/dpo_feedback_loop.py) pour collecter et formater les pouces levés/baissés réels de l'application en paires (chosen/rejected).
+- [X] **DPO par critique de LLM (LLM-as-a-Judge)** :
+  - [X] Utiliser Gemini pour générer des variantes `rejected` contenant de subtiles erreurs de logique ou de raisonnement au lieu d'heuristiques rigides.
 
 ---
 
 ## ⚙️ 3. MLOps et Qualité des Données
-- [ ] **Ajouter des validations strictes par schéma (Pydantic)** :
-  - [ ] Valider chaque échantillon généré au moment de la compilation pour éliminer les résidus HTML, les balises de code mal formées ou les réponses d'API en échec.
+- [x] **Ajouter des validations strictes par schéma (Pydantic)** :
+  - [x] Valider chaque échantillon généré au moment de la compilation pour éliminer les résidus HTML, les balises de code mal formées ou les réponses d'API en échec.
 - [ ] **Suivi des métriques de drift et régression** :
   - [ ] Intégrer les analyses de détection de dérive sémantique avant de lancer de nouveaux entraînements majeurs.
