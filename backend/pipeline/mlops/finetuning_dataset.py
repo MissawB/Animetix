@@ -1360,6 +1360,211 @@ def generate_multiturn_dialogues(animes, mangas, characters, otaku_vocab, count=
         
     return dialogues
 
+def generate_negative_refusal_examples(count=800) -> List[dict]:
+    """
+    Génère procéduralement des exemples négatifs (hors-sujet) avec des refus polis
+    cadrant l'expertise exclusive d'Animetix sur l'univers anime/manga.
+    """
+    import random
+    refusals = []
+    
+    # Categories of out-of-scope topics
+    topics_fr = {
+        "recette": [
+            "Comment faire un gâteau au chocolat ?",
+            "Donne-moi la recette des lasagnes maison.",
+            "Comment préparer une soupe à l'oignon ?",
+            "Quelle est la recette traditionnelle du boeuf bourguignon ?",
+            "Peux-tu m'expliquer comment réussir des macarons ?"
+        ],
+        "programmation": [
+            "Écris une fonction Python pour trier une liste.",
+            "Comment résoudre un NullPointerException en Java ?",
+            "Explique-moi la différence entre let, var et const en JavaScript.",
+            "Comment configurer un serveur web avec Nginx ?",
+            "Donne-moi un exemple de requête SQL pour joindre deux tables."
+        ],
+        "mathematiques": [
+            "Calcule la dérivée de f(x) = 3x^2 + 5x - 2.",
+            "Quel est le théorème de Pythagore ?",
+            "Comment résoudre une équation du second degré ?",
+            "Combien font 1547 fois 36 ?",
+            "Explique-moi la conjecture de Goldbach."
+        ],
+        "medecine": [
+            "Que faire en cas de migraine persistante ?",
+            "Quels sont les symptômes d'une grippe ?",
+            "Comment soigner un rhume rapidement ?",
+            "Est-ce que l'ibuprofène est conseillé pour le mal de ventre ?",
+            "Donne-moi des conseils pour mieux dormir sans médicaments."
+        ],
+        "finance": [
+            "Comment investir 1000 euros en bourse ?",
+            "Qu'est-ce qu'une action à dividendes ?",
+            "Comment fonctionne le Bitcoin et la cryptomonnaie ?",
+            "Quels sont les meilleurs placements financiers actuels ?",
+            "Comment rédiger un plan d'épargne retraite ?"
+        ],
+        "histoire_geo": [
+            "Qui était le premier président de la République Française ?",
+            "Quelle est la capitale de l'Australie ?",
+            "Explique les causes de la Première Guerre mondiale.",
+            "Combien de pays compte l'Union Européenne ?",
+            "Qui a découvert l'Amérique en 1492 ?"
+        ],
+        "redaction": [
+            "Rédige une lettre de motivation pour un poste d'ingénieur commercial.",
+            "Aide-moi à écrire un e-mail professionnel pour demander une augmentation.",
+            "Écris un poème d'amour romantique en alexandrins.",
+            "Rédige un compte-rendu de réunion synthétique.",
+            "Écris une critique littéraire du roman Les Misérables."
+        ]
+    }
+
+    topics_en = {
+        "recipe": [
+            "How do I bake a chocolate cake?",
+            "Give me a recipe for homemade lasagna.",
+            "How you make a classic French onion soup?",
+            "What is the traditional recipe for beef stew?",
+            "Can you explain how to make chocolate chip cookies?"
+        ],
+        "programming": [
+            "Write a Python function to sort a list of numbers.",
+            "How do I fix a NullPointerException in Java?",
+            "Explain the difference between let, var, and const in JavaScript.",
+            "How do I set up a web server using Nginx?",
+            "Give me a SQL query example to join two tables."
+        ],
+        "mathematics": [
+            "Calculate the derivative of f(x) = 3x^2 + 5x - 2.",
+            "What is the Pythagorean theorem?",
+            "How do you solve a quadratic equation?",
+            "What is 1547 multiplied by 36?",
+            "Explain Goldbach's conjecture."
+        ],
+        "medical": [
+            "What should I do for a persistent headache?",
+            "What are the main symptoms of the flu?",
+            "How can I cure a cold quickly?",
+            "Is ibuprofen recommended for stomach pain?",
+            "Give me tips for sleeping better without medication."
+        ],
+        "finance": [
+            "How should I invest 1000 dollars in the stock market?",
+            "What is a dividend-paying stock?",
+            "How do Bitcoin and cryptocurrencies work?",
+            "What are the best financial investments right now?",
+            "How do I write a retirement savings plan?"
+        ],
+        "history_geo": [
+            "Who was the first president of the United States?",
+            "What is the capital of Australia?",
+            "Explain the causes of World War I.",
+            "How many countries are in the European Union?",
+            "Who discovered America in 1492?"
+        ],
+        "writing": [
+            "Write a cover letter for a sales engineer position.",
+            "Help me write a professional email asking for a raise.",
+            "Write a romantic love poem.",
+            "Draft a concise meeting summary.",
+            "Write a literary review of the novel Les Misérables."
+        ]
+    }
+
+    # Context / prefix templates to generate massive variations
+    prefixes_fr = [
+        "S'il te plaît, ",
+        "Peux-tu me dire : ",
+        "Est-ce que tu sais ",
+        "J'ai besoin d'aide pour cela : ",
+        "Dis-moi, ",
+        "Est-il possible de m'expliquer ",
+        "Pourrais-tu m'aider avec : ",
+        "Bonjour, ",
+        "Salut ! ",
+        ""
+    ]
+    
+    prefixes_en = [
+        "Please, ",
+        "Can you tell me: ",
+        "Do you know ",
+        "I need help with this: ",
+        "Tell me, ",
+        "Is it possible to explain ",
+        "Could you help me with: ",
+        "Hello, ",
+        "Hi! ",
+        ""
+    ]
+
+    refusal_templates_fr = [
+        "En tant qu'Animetix, mon expertise se concentre exclusivement sur l'univers des animés, des mangas et de la culture otaku. Je ne peux donc pas vous aider avec des sujets hors de ce domaine comme {topic}. Si vous avez des questions sur des œuvres, des personnages, des doubleurs ou des créateurs de mangas, je serai ravi d'y répondre !",
+        "Désolé, mais mon rôle d'assistant expert Animetix est dédié uniquement aux mangas, aux animés et à la pop-culture japonaise. Je dois refuser les requêtes concernant d'autres sujets comme {topic}. N'hésitez pas à me poser une question sur vos animes ou personnages préférés !",
+        "Je ne peux pas répondre à cette demande. Animetix est une intelligence artificielle spécialisée uniquement dans les mangas, les animés et la culture otaku. Les questions concernant {topic} dépassent mon cadre d'expertise. Posez-moi plutôt une question sur l'univers des animés !",
+        "En tant qu'expert de la japanimation et des mangas sous le nom d'Animetix, je me limite à ce domaine passionnant. Je ne peux pas traiter de sujets généraux tels que {topic}. Avez-vous une question sur les animés, les studios ou les seiyuu à me poser ?"
+    ]
+
+    refusal_templates_en = [
+        "As Animetix, my expertise is exclusively focused on the universe of anime, manga, and otaku culture. Therefore, I cannot help you with topics outside this domain like {topic}. If you have questions about anime series, characters, voice actors, or manga creators, I would be delighted to answer!",
+        "Sorry, but my role as the expert assistant Animetix is solely dedicated to manga, anime, and Japanese pop culture. I must decline requests concerning other topics like {topic}. Feel free to ask me questions about your favorite anime series or characters instead!",
+        "I cannot answer this request. Animetix is an AI specialized exclusively in manga, anime, and otaku culture. Questions regarding {topic} fall outside my scope of expertise. Please ask me a question about the anime universe instead!",
+        "As an anime and manga specialist known as Animetix, I restrict my answers to this exciting domain. I cannot assist with general topics such as {topic}. Do you have a question about anime, studios, or seiyuu for me?"
+    ]
+
+    for idx in range(count):
+        lang = "English" if idx % 2 == 1 else "Français"
+        
+        if lang == "English":
+            cat = random.choice(list(topics_en.keys()))
+            question = random.choice(topics_en[cat])
+            prefix = random.choice(prefixes_en)
+            refusal_template = random.choice(refusal_templates_en)
+            
+            topic_names = {
+                "recipe": "cooking recipes",
+                "programming": "programming and coding",
+                "mathematics": "mathematics",
+                "medical": "medical advice",
+                "finance": "financial topics",
+                "history_geo": "general history or geography",
+                "writing": "general writing"
+            }
+            topic_name = topic_names.get(cat, "general topics")
+        else:
+            cat = random.choice(list(topics_fr.keys()))
+            question = random.choice(topics_fr[cat])
+            prefix = random.choice(prefixes_fr)
+            refusal_template = random.choice(refusal_templates_fr)
+            
+            topic_names = {
+                "recette": "les recettes de cuisine",
+                "programmation": "la programmation informatique",
+                "mathematiques": "les mathématiques",
+                "medecine": "les conseils médicaux",
+                "finance": "la finance et les investissements",
+                "histoire_geo": "l'histoire ou la géographie générale",
+                "redaction": "la rédaction générale"
+            }
+            topic_name = topic_names.get(cat, "des sujets généraux")
+
+        instruction = prefix + question
+        # Ensure capitalization is clean
+        if prefix and prefix[0].isupper() and len(question) > 0:
+            instruction = prefix + question[0].lower() + question[1:]
+
+        output = refusal_template.format(topic=topic_name)
+        refusals.append({
+            "instruction": instruction,
+            "input": "",
+            "output": output,
+            "language": lang
+        })
+
+    return refusals
+
 # --- METHODE D'ASSEMBLAGE UNIFIEE ---
 
 def run_generate_instruction_dataset():
@@ -1774,6 +1979,12 @@ def run_generate_instruction_dataset():
     multiturn_dialogues = generate_multiturn_dialogues(animes_list, mangas_list, chars_list, OTAKU_VOCABULARY, count=multiturn_required)
     multiturn_dialogues = deduplicate_dataset(multiturn_dialogues)
 
+    # Generate out-of-scope/refusal negative examples to represent ~1.5% of the dataset
+    refusal_required = int(non_meta_count * 0.02)  # ~2% of non-meta is about 1.5% of total
+    logger.info(f"[INFO] Generating {refusal_required} out-of-scope refusal negative examples...")
+    refusal_data = generate_negative_refusal_examples(count=refusal_required)
+    refusal_data = deduplicate_dataset(refusal_data)
+
     # 5. RATIO CONFIGURABLE ET PARAMETRABLE (Défaut : 80% Spécialisé, 5% Meta, 15% Général)
     meta_required, general_required = calculate_dataset_counts(non_meta_count)
     
@@ -1824,6 +2035,7 @@ def run_generate_instruction_dataset():
     final_dataset.extend(selected_meta)
     final_dataset.extend(general_data)
     final_dataset.extend(multiturn_dialogues)
+    final_dataset.extend(refusal_data)
     
     # Mélange global
     logger.info("[INFO] Shuffling the unified massive dataset...")
@@ -1846,6 +2058,7 @@ def run_generate_instruction_dataset():
     logger.info(f"  - Otaku Meta-Vocabulary (5% target): {len(selected_meta)} / {total_count} ({actual_meta_ratio:.2f}%)")
     logger.info(f"  - General French SFT (15% target): {len(general_data)} / {total_count} ({actual_gen_ratio:.2f}%)")
     logger.info(f"  - Multi-Turn Dialogues (15-20% target): {len(multiturn_dialogues)} / {total_count} ({len(multiturn_dialogues)/total_count*100:.2f}%)")
+    logger.info(f"  - Persona & Refus (Negative) (1-2% target): {len(refusal_data)} / {total_count} ({len(refusal_data)/total_count*100:.2f}%)")
     logger.info(f"[INFO] Saved at: {OUTPUT_DATASET}")
     
     # Sauvegarde du cache

@@ -186,5 +186,37 @@ class TestFinetuningDataset(unittest.TestCase):
                         break
             self.assertTrue(multiturn_found, "Compilation did not produce multi-turn examples")
 
+    def test_generate_negative_refusal_examples(self):
+        from backend.pipeline.mlops.finetuning_dataset import generate_negative_refusal_examples
+        
+        refusals = generate_negative_refusal_examples(count=10)
+        self.assertEqual(len(refusals), 10)
+        for item in refusals:
+            self.assertIn("instruction", item)
+            self.assertIn("output", item)
+            self.assertIn(item["language"], ["Français", "English"])
+            # Output should contain Animetix or expertise keywords
+            out_lower = item["output"].lower()
+            self.assertTrue(
+                "animetix" in out_lower or "expertise" in out_lower or "expert" in out_lower,
+                f"Refusal output must contain Animetix or expertise keywords: {item['output']}"
+            )
+
+    def test_run_generate_instruction_dataset_contains_refusals(self):
+        from backend.pipeline.mlops.finetuning_dataset import OUTPUT_DATASET
+        import json
+        
+        if os.path.exists(OUTPUT_DATASET):
+            refusal_found = False
+            with open(OUTPUT_DATASET, 'r', encoding='utf-8') as f:
+                for line in f:
+                    item = json.loads(line)
+                    if "turns" not in item:
+                        out_lower = item.get("output", "").lower()
+                        if "animetix" in out_lower and ("expertise" in out_lower or "expert" in out_lower) and ("ne peux" in out_lower or "cannot" in out_lower):
+                            refusal_found = True
+                            break
+            self.assertTrue(refusal_found, "Compilation did not produce refusal negative examples")
+
 if __name__ == "__main__":
     unittest.main()
