@@ -328,5 +328,37 @@ class TestFinetuningDataset(unittest.TestCase):
         self.assertFalse(validate_factual_alignment(orig, gen, mock_client))
         mock_client.models.generate_content.assert_called_once()
 
+    def test_inject_query_noise(self):
+        from backend.pipeline.mlops.finetuning_dataset import inject_query_noise
+        import random
+        random.seed(42)  # Deterministic for reproducibility
+
+        # Test French abbreviation replacement
+        text_fr = "S'il te plaît, pourquoi cet anime est un chef-d'œuvre ?"
+        noisy_fr = inject_query_noise(text_fr, "Français")
+        # At least one abbreviation should be applied (stp, pq, anim, masterclass)
+        self.assertTrue(
+            any(x in noisy_fr.lower() for x in ["stp", "pq", "anim", "masterclass"]),
+            f"Expected French abbreviations in: {noisy_fr}"
+        )
+
+        # Test English abbreviation replacement
+        random.seed(42)
+        text_en = "What is your favorite character and are you sure about it?"
+        noisy_en = inject_query_noise(text_en, "English")
+        # At least one abbreviation should be applied (wht, fav, char, r, u, abt)
+        self.assertTrue(
+            any(x in noisy_en.lower() for x in ["wht", "fav", "char", "r", "u", "abt"]),
+            f"Expected English abbreviations in: {noisy_en}"
+        )
+
+        # Verify that the noisy text is different from the original
+        random.seed(42)
+        self.assertNotEqual(inject_query_noise("Bonjour, pourquoi cet anime est populaire ?", "Français"),
+                            "Bonjour, pourquoi cet anime est populaire ?")
+
+        # Verify empty text returns empty
+        self.assertEqual(inject_query_noise("", "Français"), "")
+
 if __name__ == "__main__":
     unittest.main()
