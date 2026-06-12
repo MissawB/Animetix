@@ -79,9 +79,8 @@ Ce document liste toutes les tâches techniques, architecturales et fonctionnell
   - [x] **Persona & Refus (Negative Examples)** : Ajouter des exemples de requêtes hors-sujet avec refus poli pour cadrer l'expertise exclusive du modèle sur l'univers anime/manga.
   - [x] **Rééquilibrage Thématique** : Assurer une proportion minimale de genres sous-représentés (Shojo, Josei, Tranche de vie) pour atténuer le biais actuel Shonen/Seinen.
   - [x] **Validation factuelle via "LLM-as-a-Judge"** : Mettre en place un validateur automatique pour vérifier que les paraphrases et traductions générées par l'API ne contiennent pas d'hallucinations factuelles par rapport aux fiches d'œuvres locales.
-- [ ] **Complexification sémantique multi-tours** :
-  Simuler des flux de dialogues plus variés incluant des débats comparatifs, des requêtes de clarification et des auto-corrections après retour utilisateur fictif.
-- [ ] **Query Noise (Robustesse aux fautes de saisie)** :
+  - [x] **Complexification sémantique multi-tours** : Simuler des flux de dialogues plus variés incluant des débats comparatifs, des requêtes de clarification et des auto-corrections après retour utilisateur fictif.
+- [x] **Query Noise (Robustesse aux fautes de saisie)** :
   - Injecter du bruit (fautes de frappe, abréviations, argot, absence de ponctuation) dans 10-15% des instructions utilisateur pour accroître la robustesse de l'expert en conditions réelles.
 - [ ] **Construction d'un dataset de préférence DPO / RLHF** :
   - Compiler des exemples appariés (Réponse correcte vs Réponse rejetée/hallucinée) pour aligner finement le ton et le formatage du modèle via DPO.
