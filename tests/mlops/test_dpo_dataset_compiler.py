@@ -135,5 +135,67 @@ class TestDPODatasetCompiler(unittest.TestCase):
                 self.assertIn("rejected", item)
                 self.assertNotEqual(item["chosen"], item["rejected"])
 
+    def test_compile_dpo_pairs_with_db_feedback(self):
+        from unittest.mock import patch, MagicMock
+        from backend.pipeline.mlops.dpo_dataset_compiler import compile_dpo_pairs
+        
+        # Mocking fetch_db_feedbacks to simulate user feedback entries
+        mock_feedbacks = [
+            # 1. Thumbs up feedback (should trigger positive DPO pair generation)
+            {"context": "Qui est Shinji Ikari ?", "output": "Shinji Ikari est le protagoniste de Neon Genesis Evangelion, un adolescent complexe qui pilote l'EVA-01.", "is_positive": True, "feedback_type": "thumbs_up"},
+            # 2. Thumbs down feedback (should trigger Gemini Oracle chosen generation)
+            {"context": "Quel studio a fait Demon Slayer ?", "output": "C'est MAPPA, non ?", "is_positive": False, "feedback_type": "thumbs_down"}
+        ]
+        
+        with patch('backend.pipeline.mlops.dpo_feedback_loop.django_available', True), \
+             patch('backend.pipeline.mlops.dpo_feedback_loop.AIFeedback') as mock_ai_feedback:
+            
+            # Setup mock model query results
+            mock_entries = []
+            for fb in mock_feedbacks:
+                mock_fb = MagicMock()
+                mock_fb.input_context = fb["context"]
+                mock_fb.output_text = fb["output"]
+                mock_fb.is_positive = fb["is_positive"]
+                mock_fb.feedback_type = fb["feedback_type"]
+                mock_entries.append(mock_fb)
+            
+            mock_ai_feedback.objects.all.return_value = mock_entries
+            
+            # Mock generate_oracle_response to return a valid chosen response for negative feedback
+            with patch('backend.pipeline.mlops.dpo_feedback_loop.DPOFeedbackLoop.generate_oracle_response') as mock_oracle:
+                mock_oracle.return_value = "Demon Slayer a été produit par le studio ufotable, connu pour son animation de haute qualité."
+                
+                import tempfile
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    sft_file = os.path.join(tmpdir, "sft.jsonl")
+                    output_file = os.path.join(tmpdir, "dpo.jsonl")
+                    
+                    # Create empty SFT file so compiler only outputs feedback pairs
+                    with open(sft_file, "w", encoding="utf-8") as f:
+                        pass
+                        
+                    compiled_count = compile_dpo_pairs(sft_file, output_file, limit=5, seed=42)
+                    
+                    # We expect 2 pairs compiled (both mock feedbacks validated and converted)
+                    self.assertEqual(compiled_count, 2)
+                    
+                    with open(output_file, "r", encoding="utf-8") as f:
+                        lines = [json.loads(line) for line in f]
+                        
+                    self.assertEqual(len(lines), 2)
+                    
+                    # Verify positive feedback pair
+                    p1 = lines[0]
+                    self.assertEqual(p1["prompt"], "Génère une réponse expert pour : Qui est Shinji Ikari ?")
+                    self.assertEqual(p1["chosen"], "Shinji Ikari est le protagoniste de Neon Genesis Evangelion, un adolescent complexe qui pilote l'EVA-01.")
+                    self.assertNotEqual(p1["rejected"], p1["chosen"])
+                    
+                    # Verify negative feedback pair
+                    p2 = lines[1]
+                    self.assertEqual(p2["prompt"], "Génère une réponse expert pour : Quel studio a fait Demon Slayer ?")
+                    self.assertEqual(p2["chosen"], "Demon Slayer a été produit par le studio ufotable, connu pour son animation de haute qualité.")
+                    self.assertEqual(p2["rejected"], "C'est MAPPA, non ?")
+
 if __name__ == "__main__":
     unittest.main()
