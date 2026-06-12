@@ -1214,6 +1214,152 @@ def generate_mcp_tool_instructions() -> List[dict]:
 
     return instructions
 
+def generate_multiturn_dialogues(animes, mangas, characters, otaku_vocab, count=1000) -> List[dict]:
+    """
+    Génère procéduralement des dialogues multi-tours à partir des bases de données locales.
+    """
+    dialogues = []
+    
+    # Templates de questions/réponses en Français
+    fr_anime_templates = [
+        {
+            "t1": "Salut ! Tu as un bon anime de {genre} à me conseiller ?",
+            "t2": "Ah super. Et c'est quel studio qui l'a produit, et en quelle année ?",
+            "t3": "Génial, merci. Et quelles sont les thématiques principales abordées ?"
+        }
+    ]
+    # Templates de questions/réponses en Anglais
+    en_anime_templates = [
+        {
+            "t1": "Hi! Can you recommend a good {genre} anime?",
+            "t2": "Awesome. Which studio produced it, and in what year was it released?",
+            "t3": "Thanks! What are the primary themes in this anime?"
+        }
+    ]
+    
+    fr_char_templates = [
+        {
+            "t1": "Qui est le personnage {name} ?",
+            "t2": "D'accord, et à quel groupe ou faction appartient-il ?",
+            "t3": "Quelle est sa taille officielle et est-il populaire ?"
+        }
+    ]
+    en_char_templates = [
+        {
+            "t1": "Who is the character {name}?",
+            "t2": "Understood, and which group or faction do they belong to?",
+            "t3": "What is their official height and are they popular?"
+        }
+    ]
+    
+    fr_vocab_templates = [
+        {
+            "t1": "Peux-tu m'expliquer le concept otaku de '{term}' ?",
+            "t2": "Quels sont des exemples connus qui illustrent ce trope ?",
+            "t3": "D'où vient ce terme et quel est son impact sur l'écriture ?"
+        }
+    ]
+    en_vocab_templates = [
+        {
+            "t1": "Can you explain the otaku concept of '{term}'?",
+            "t2": "What are some well-known examples illustrating this trope?",
+            "t3": "Where does this term come from and what is its writing impact?"
+        }
+    ]
+
+    for idx in range(count):
+        lang = "English" if idx % 2 == 1 else "Français"
+        scenario = idx % 3
+        
+        if scenario == 0 and animes:
+            # Anime / Manga exploration dialogue
+            anime = random.choice(animes)
+            title = anime.get("title", "Unknown")
+            display_title = get_display_title(title)
+            genres = anime.get("genres", ["Action"])
+            genre = random.choice(genres) if genres else "Action"
+            studios = anime.get("studios", ["Pierrot"])
+            studio_str = ", ".join(studios)
+            year = anime.get("year", 2002)
+            tags = anime.get("tags", [])
+            tags_str = ", ".join(clean_tags(tags, lang)[:4])
+            
+            if lang == "English":
+                p_text = make_english_anime_profile(title, genres, studios, tags, year)
+                t = en_anime_templates[0]
+                turns = [
+                    {"user": t["t1"].format(genre=genre), "assistant": p_text},
+                    {"user": t["t2"], "assistant": f"This anime was produced by the studio {studio_str} and released in {year}."},
+                    {"user": t["t3"], "assistant": f"In '{display_title}', the primary themes explored are: {tags_str}."}
+                ]
+            else:
+                p_text = make_french_anime_profile(title, genres, studios, tags, year)
+                t = fr_anime_templates[0]
+                turns = [
+                    {"user": t["t1"].format(genre=genre), "assistant": p_text},
+                    {"user": t["t2"], "assistant": f"Cet anime a été produit par le studio {studio_str} et est sorti en {year}."},
+                    {"user": t["t3"], "assistant": f"Dans '{display_title}', les thématiques principales abordées sont : {tags_str}."}
+                ]
+                
+        elif scenario == 1 and characters:
+            # Character dialogue
+            char = random.choice(characters)
+            name = char.get("name", "Unknown")
+            display_name = get_display_character(name)
+            origin = char.get("origin", "Unknown")
+            display_origin = get_display_title(origin)
+            ents = char.get("entities", {})
+            orgs = ents.get("organizations", []) if isinstance(ents, dict) else []
+            orgs_str = ", ".join(orgs) if orgs else "several groups"
+            favs = char.get("popularity", {}).get("favourites", 0) if isinstance(char.get("popularity"), dict) else 0
+            rank = char.get("popularity", {}).get("rank", 999) if isinstance(char.get("popularity"), dict) else 999
+            height = char.get("metadata", {}).get("height", "Unknown") if isinstance(char.get("metadata"), dict) else "Unknown"
+            
+            if lang == "English":
+                p_text = make_english_character_bio(name, origin, orgs, favs, rank, height)
+                t = en_char_templates[0]
+                turns = [
+                    {"user": t["t1"].format(name=display_name), "assistant": p_text},
+                    {"user": t["t2"], "assistant": f"They are primarily known for their affiliation with: {orgs_str}."},
+                    {"user": t["t3"], "assistant": f"Their official height is {height}. They are ranked #{rank} in popularity with {favs:,} favourites."}
+                ]
+            else:
+                p_text = make_french_character_bio(name, origin, orgs, favs, rank, height)
+                t = fr_char_templates[0]
+                turns = [
+                    {"user": t["t1"].format(name=display_name), "assistant": p_text},
+                    {"user": t["t2"], "assistant": f"Il est principalement connu pour son affiliation avec : {orgs_str}."},
+                    {"user": t["t3"], "assistant": f"Sa taille officielle est {height}. Il est classé au rang #{rank} des favoris avec {favs} votes d'admiration."}
+                ]
+                
+        else:
+            # Otaku concept dialogue
+            vocab_list = list(otaku_vocab.keys())
+            term = random.choice(vocab_list) if vocab_list else "Tsundere"
+            data = otaku_vocab.get(term, {"definition": "trope", "examples": "Taiga", "impact": "popular", "origin": "Japan"})
+            
+            if lang == "English":
+                t = en_vocab_templates[0]
+                turns = [
+                    {"user": t["t1"].format(term=term), "assistant": f"In otaku culture, '{term}' refers to: {data['definition']}."},
+                    {"user": t["t2"], "assistant": f"Iconic examples illustrating this concept include: {data['examples']}."},
+                    {"user": t["t3"], "assistant": f"Where does this term come from and what is its writing impact?"}
+                ]
+            else:
+                t = fr_vocab_templates[0]
+                turns = [
+                    {"user": t["t1"].format(term=term), "assistant": f"Dans la culture otaku, '{term}' désigne : {data['definition']}."},
+                    {"user": t["t2"], "assistant": f"Parmi les exemples emblématiques illustrant ce concept, on peut citer : {data['examples']}."},
+                    {"user": t["t3"], "assistant": f"D'où vient ce terme et quel est son impact sur l'écriture ?"}
+                ]
+                
+        dialogues.append({
+            "turns": turns,
+            "language": lang
+        })
+        
+    return dialogues
+
 # --- METHODE D'ASSEMBLAGE UNIFIEE ---
 
 def run_generate_instruction_dataset():

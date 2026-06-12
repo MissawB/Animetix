@@ -158,5 +158,19 @@ class TestFinetuningDataset(unittest.TestCase):
         res = deduplicate_dataset(dataset)
         self.assertEqual(len(res), 2)
 
+    def test_generate_multiturn_dialogues(self):
+        from backend.pipeline.mlops.finetuning_dataset import generate_multiturn_dialogues
+        animes = [{"title": "Naruto", "genres": ["Action"], "studios": ["Pierrot"], "tags": ["Ninja"], "popularity": 1000000, "year": 2002}]
+        mangas = [{"title": "One Piece", "genres": ["Adventure"], "tags": ["Pirates"], "popularity": 1500000}]
+        chars = [{"name": "Luffy", "origin": "One Piece", "entities": {"organizations": ["Straw Hats"]}, "popularity": {"favourites": 150000, "rank": 1}, "metadata": {"height": "174cm"}}]
+        vocab = {"Tsundere": {"definition": "Cold then hot", "examples": "Taiga", "impact": "Popular trope", "origin": "Japanese"}}
+        
+        dialogues = generate_multiturn_dialogues(animes, mangas, chars, vocab, count=6)
+        self.assertEqual(len(dialogues), 6)
+        for d in dialogues:
+            self.assertIn("turns", d)
+            self.assertGreaterEqual(len(d["turns"]), 2)
+            self.assertIn(d["language"], ["Français", "English"])
+
 if __name__ == "__main__":
     unittest.main()
