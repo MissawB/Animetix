@@ -2345,6 +2345,33 @@ def run_generate_instruction_dataset():
     logger.info("[INFO] Shuffling the unified massive dataset...")
     random.shuffle(final_dataset)
     
+    # --- INJECT QUERY NOISE (10-15% of user prompts/turns) ---
+    noise_rate_env = os.getenv("ANIMETIX_QUERY_NOISE_RATE", "0.12")
+    try:
+        noise_rate = float(noise_rate_env)
+        if not (0.0 <= noise_rate <= 1.0):
+            raise ValueError("Rate out of bounds")
+    except ValueError:
+        logger.warning(f"Invalid ANIMETIX_QUERY_NOISE_RATE: '{noise_rate_env}'. Falling back to 0.12.")
+        noise_rate = 0.12
+
+    logger.info(f"[INFO] Injecting query noise with rate target: {noise_rate * 100:.1f}%...")
+    noise_count = 0
+    for item in final_dataset:
+        if random.random() < noise_rate:
+            noise_count += 1
+            lang = item.get("language", "Français")
+            if "turns" in item:
+                for turn in item["turns"]:
+                    if "user" in turn:
+                        turn["user"] = inject_query_noise(turn["user"], lang)
+            else:
+                if "instruction" in item:
+                    item["instruction"] = inject_query_noise(item["instruction"], lang)
+
+    actual_noise_rate = (noise_count / len(final_dataset)) * 100 if final_dataset else 0.0
+    logger.info(f"[SUCCESS] Injected query noise into {noise_count}/{len(final_dataset)} instructions ({actual_noise_rate:.2f}%).")
+
     # Sauvegarde finale en JSONL
     os.makedirs(os.path.dirname(OUTPUT_DATASET), exist_ok=True)
     with open(OUTPUT_DATASET, 'w', encoding='utf-8') as f:
@@ -2363,6 +2390,7 @@ def run_generate_instruction_dataset():
     logger.info(f"  - General French SFT (15% target): {len(general_data)} / {total_count} ({actual_gen_ratio:.2f}%)")
     logger.info(f"  - Multi-Turn Dialogues (15-20% target): {len(multiturn_dialogues)} / {total_count} ({len(multiturn_dialogues)/total_count*100:.2f}%)")
     logger.info(f"  - Persona & Refus (Negative) (1-2% target): {len(refusal_data)} / {total_count} ({len(refusal_data)/total_count*100:.2f}%)")
+    logger.info(f"  - Query Noise (10-15% target): {noise_count} / {total_count} ({actual_noise_rate:.2f}%)")
     logger.info(f"[INFO] Saved at: {OUTPUT_DATASET}")
     
     # Sauvegarde du cache
