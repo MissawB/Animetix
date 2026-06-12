@@ -255,8 +255,9 @@ google-cloud-bigquery==3.20.1
 google-cloud-pubsub==2.21.1
 apache-beam==2.74.0
 google-cloud-aiplatform>=1.115.0
-dbt-core==1.8.2
-dbt-sqlite==1.4.0
-dbt-postgres==1.8.2
-dbt-bigquery==1.8.2
+dbt-core==1.9.0
+dbt-sqlite==1.9.1
+dbt-postgres==1.9.0
+dbt-bigquery==1.9.0
+
 
