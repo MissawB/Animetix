@@ -306,3 +306,24 @@ def test_response_synthesizer_respects_language():
         "synthesizer_final", query="query", context="context", feedback=None, language="English"
     )
 
+def test_fallback_processor_english():
+    from backend.core.domain.services.rag.processors.fallback_rag_processor import FallbackRagProcessor
+    from backend.core.domain.entities.ai_schemas import RAGContext, RAGState
+    from unittest.mock import MagicMock
+    
+    mock_rag = MagicMock()
+    mock_rag.hybrid_search.return_value = [{"title": "Title", "description": "Desc"}]
+    mock_engine = MagicMock()
+    mock_engine.stream_generate.return_value = ["Answer"]
+    
+    processor = FallbackRagProcessor(mock_rag, mock_engine, [])
+    ctx = RAGContext(query="What is Naruto?", media_type="Anime", language="English")
+    
+    states = list(processor.process(ctx))
+    
+    mock_engine.stream_generate.assert_called_once()
+    args = mock_engine.stream_generate.call_args[0]
+    assert "Answer the following question" in args[0]
+    assert "You are an expert assistant" in args[1]
+
+

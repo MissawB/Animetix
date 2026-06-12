@@ -25,8 +25,12 @@ class FallbackRagProcessor(StateProcessor):
 
         yield StreamStep(type="thought", content="[Fallback] Synthèse de la réponse de secours...").model_dump()
 
-        prompt = f"Réponds à la question suivante en utilisant UNIQUEMENT le contexte fourni.\nQUESTION: {ctx.query}\nCONTEXTE:\n{fallback_context}"
-        system = "Tu es un assistant expert. Sois concis et factuel."
+        if ctx.language == "English":
+            prompt = f"Answer the following question using ONLY the context provided.\nQUESTION: {ctx.query}\nCONTEXT:\n{fallback_context}"
+            system = "You are an expert assistant. Be concise and factual. Reply in English."
+        else:
+            prompt = f"Réponds à la question suivante en utilisant UNIQUEMENT le contexte fourni.\nQUESTION: {ctx.query}\nCONTEXTE:\n{fallback_context}"
+            system = "Tu es un assistant expert. Sois concis et factuel. Réponds en Français."
 
         ctx.full_answer = ""
         for token in self.inference_engine.stream_generate(prompt, system):
