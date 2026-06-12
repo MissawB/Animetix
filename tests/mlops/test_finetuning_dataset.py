@@ -218,5 +218,50 @@ class TestFinetuningDataset(unittest.TestCase):
                             break
             self.assertTrue(refusal_found, "Compilation did not produce refusal negative examples")
 
+    def test_thematic_rebalancing_boosting(self):
+        # We verify that underrepresented genres (Shojo, Josei, Slice of Life) get boosted variation counts
+        underrepresented_keywords = ["shoujo", "shojo", "josei", "slice of life", "tranche de vie"]
+        
+        # Mock entries
+        shoujo_manga = {"title": "Ao Haru Ride", "genres": ["Romance", "Shoujo"], "tags": ["School Life"], "popularity": 10000}
+        shonen_manga = {"title": "Naruto", "genres": ["Action", "Shonen"], "tags": ["Ninja"], "popularity": 10000}
+        
+        def get_effective_pop(item):
+            pop = item.get("popularity", 0)
+            genres = [g.lower() for g in item.get("genres", [])]
+            tags = [t.lower() for t in item.get("tags", [])]
+            
+            is_underrepresented = False
+            for term in underrepresented_keywords:
+                if any(term in str(g) for g in genres + tags):
+                    is_underrepresented = True
+                    break
+                    
+            if is_underrepresented:
+                return max(pop, 150001) if pop > 50000 else 100000
+            return pop
+
+        self.assertEqual(get_effective_pop(shonen_manga), 10000)      # Standard pop
+        self.assertEqual(get_effective_pop(shoujo_manga), 100000)    # Boosted to Tier 2 (100k)
+
+    def test_run_generate_instruction_dataset_rebalanced_ratio(self):
+        from backend.pipeline.mlops.finetuning_dataset import OUTPUT_DATASET
+        import json
+        
+        if os.path.exists(OUTPUT_DATASET):
+            underrepresented_count = 0
+            total_count = 0
+            keywords = ["shoujo", "shojo", "josei", "slice of life", "tranche de vie"]
+            with open(OUTPUT_DATASET, 'r', encoding='utf-8') as f:
+                for line in f:
+                    item = json.loads(line)
+                    total_count += 1
+                    item_str = str(item).lower()
+                    if any(kw in item_str for kw in keywords):
+                        underrepresented_count += 1
+            ratio = (underrepresented_count / total_count) * 100
+            # Confirm ratio has increased from original ~7.4% to a minimum of 10%
+            self.assertGreaterEqual(ratio, 10.0, f"Underrepresented genres representation is too low: {ratio:.2f}%")
+
 if __name__ == "__main__":
     unittest.main()

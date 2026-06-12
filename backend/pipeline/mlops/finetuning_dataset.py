@@ -1701,10 +1701,22 @@ def run_generate_instruction_dataset():
                 
                 display_t = get_display_title(title)
                 
+                # Check for underrepresented genres (Shojo, Josei, Slice of Life)
+                is_underrepresented = False
+                underrepresented_keywords = ["shoujo", "shojo", "josei", "slice of life", "tranche de vie"]
+                for term in underrepresented_keywords:
+                    if any(term in str(g).lower() for g in genres + tags):
+                        is_underrepresented = True
+                        break
+                        
+                effective_pop = pop
+                if is_underrepresented:
+                    effective_pop = max(pop, 150001) if pop > 50000 else 100000
+                
                 if idx % 2 == 1:
                     profile = make_english_anime_profile(title, genres, studios, tags, year)
                     # Tier 1 : Ultra Populaire (> 150k membres) -> 5 variations
-                    if pop > 150000:
+                    if effective_pop > 150000:
                         if client and title in augmented_anime_titles:
                             logger.info(f"Augmenting anime (Tier 1) '{title}' via Gemini...")
                             p1 = paraphrase_text_via_gemini(profile, client, "encyclopédique")
@@ -1721,7 +1733,7 @@ def run_generate_instruction_dataset():
                         specialized_data.append({"instruction": f"Why is '{display_t}' such an extremely popular and appreciated work among viewers?", "input": "", "output": p5, "language": "English"})
                     
                     # Tier 2 : Très Populaire (50k - 150k membres) -> 3 variations
-                    elif pop > 50000:
+                    elif effective_pop > 50000:
                         if client and title in augmented_anime_titles:
                             logger.info(f"Augmenting anime (Tier 2) '{title}' via Gemini...")
                             p1 = paraphrase_text_via_gemini(profile, client, "encyclopédique")
@@ -1739,7 +1751,7 @@ def run_generate_instruction_dataset():
                 else:
                     profile = make_french_anime_profile(title, genres, studios, tags, year)
                     # Tier 1 : Ultra Populaire (> 150k membres) -> 5 variations
-                    if pop > 150000:
+                    if effective_pop > 150000:
                         if client and title in augmented_anime_titles:
                             logger.info(f"Augmenting anime (Tier 1) '{title}' via Gemini...")
                             p1 = paraphrase_text_via_gemini(profile, client, "encyclopédique")
@@ -1756,7 +1768,7 @@ def run_generate_instruction_dataset():
                         specialized_data.append({"instruction": f"Pourquoi '{display_t}' est-elle une œuvre extrêmement populaire et appréciée des spectateurs ?", "input": "", "output": p5, "language": "Français"})
                     
                     # Tier 2 : Très Populaire (50k - 150k membres) -> 3 variations
-                    elif pop > 50000:
+                    elif effective_pop > 50000:
                         if client and title in augmented_anime_titles:
                             logger.info(f"Augmenting anime (Tier 2) '{title}' via Gemini...")
                             p1 = paraphrase_text_via_gemini(profile, client, "encyclopédique")
@@ -1785,10 +1797,22 @@ def run_generate_instruction_dataset():
                 
                 display_t = get_display_title(title)
                 
+                # Check for underrepresented genres (Shojo, Josei, Slice of Life)
+                is_underrepresented = False
+                underrepresented_keywords = ["shoujo", "shojo", "josei", "slice of life", "tranche de vie"]
+                for term in underrepresented_keywords:
+                    if any(term in str(g).lower() for g in genres + tags):
+                        is_underrepresented = True
+                        break
+                        
+                effective_pop = pop
+                if is_underrepresented:
+                    effective_pop = max(pop, 150001) if pop > 50000 else 100000
+                
                 if idx % 2 == 1:
                     profile = make_english_manga_profile(title, genres, tags)
                     # Tier 1 : Ultra Populaire (> 150k membres) -> 5 variations
-                    if pop > 150000:
+                    if effective_pop > 150000:
                         if client and title in augmented_manga_titles:
                             logger.info(f"Augmenting manga (Tier 1) '{title}' via Gemini...")
                             p1 = paraphrase_text_via_gemini(profile, client, "encyclopédique")
@@ -1805,7 +1829,7 @@ def run_generate_instruction_dataset():
                         specialized_data.append({"instruction": f"What is the cult manga '{display_t}' about?", "input": "", "output": p5, "language": "English"})
                     
                     # Tier 2 : Très Populaire (50k - 150k membres) -> 3 variations
-                    elif pop > 50000:
+                    elif effective_pop > 50000:
                         if client and title in augmented_manga_titles:
                             logger.info(f"Augmenting manga (Tier 2) '{title}' via Gemini...")
                             p1 = paraphrase_text_via_gemini(profile, client, "encyclopédique")
@@ -1823,7 +1847,7 @@ def run_generate_instruction_dataset():
                 else:
                     profile = make_french_manga_profile(title, genres, tags)
                     # Tier 1 : Ultra Populaire (> 150k membres) -> 5 variations
-                    if pop > 150000:
+                    if effective_pop > 150000:
                         if client and title in augmented_manga_titles:
                             logger.info(f"Augmenting manga (Tier 1) '{title}' via Gemini...")
                             p1 = paraphrase_text_via_gemini(profile, client, "encyclopédique")
@@ -1840,7 +1864,7 @@ def run_generate_instruction_dataset():
                         specialized_data.append({"instruction": f"De quoi parle le manga culte '{display_t}' ?", "input": "", "output": p5, "language": "Français"})
                     
                     # Tier 2 : Très Populaire (50k - 150k membres) -> 3 variations
-                    elif pop > 50000:
+                    elif effective_pop > 50000:
                         if client and title in augmented_manga_titles:
                             logger.info(f"Augmenting manga (Tier 2) '{title}' via Gemini...")
                             p1 = paraphrase_text_via_gemini(profile, client, "encyclopédique")
