@@ -5,11 +5,20 @@ Génère offline des paires (chosen, rejected) à partir du jeu de données SFT.
 """
 
 import os
+import sys
 import json
 import random
 import re
 import logging
 from typing import List, Dict, Any
+
+# Insert paths at 0 to avoid name conflicts with virtualenv packages
+backend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+if backend_path not in sys.path:
+    sys.path.insert(0, backend_path)
+api_path = os.path.join(backend_path, "api")
+if api_path not in sys.path:
+    sys.path.insert(0, api_path)
 
 logger = logging.getLogger("animetix.pipeline.mlops.dpo_dataset_compiler")
 logging.basicConfig(level=logging.INFO)
@@ -292,7 +301,7 @@ def corrupt_fact_substitution(text: str, language: str = "Français") -> str:
                     choices = [e for e in entities if e.lower() != ent.lower()]
                 if choices:
                     rep = random.choice(choices)
-                    text_mod = re.sub(pattern, rep, text_mod, flags=re.IGNORECASE)
+                    text_mod = re.sub(pattern, lambda m: rep, text_mod, flags=re.IGNORECASE)
                     found_any = True
                     break
         return text_mod, found_any
@@ -463,13 +472,52 @@ def corrupt_evasive_refusal(text: str, language: str = "Français") -> str:
 
 def compile_dpo_pairs(sft_path: str, output_path: str, limit: int = 2000, seed: int = 42) -> int:
     """
-    Lit le dataset SFT, filtre les entrées éligibles, génère les paires
-    DPO par corruption équilibrée, et les écrit au format JSONL.
+    Lit le dataset SFT et la base Django, fusionne le feedback utilisateur,
+    génère les paires DPO par corruption équilibrée, et les écrit au format JSONL.
     """
     random.seed(seed)
     
+    # 1. Fetch real user feedback from Django database
+    feedback_pairs = []
+    try:
+        from dpo_feedback_loop import DPOFeedbackLoop
+    except ImportError:
+        try:
+            from backend.pipeline.mlops.dpo_feedback_loop import DPOFeedbackLoop
+        except ImportError:
+            DPOFeedbackLoop = None
+
+    if DPOFeedbackLoop:
+        try:
+            data_dir = os.path.dirname(output_path)
+            loop = DPOFeedbackLoop(data_dir=data_dir)
+            db_feedbacks = loop.fetch_db_feedbacks()
+            
+            # Helper callback for corruption of positive feedback
+            def corrupt_callback(text):
+                if random.random() < 0.5:
+                    return corrupt_tonal_deviation(text)
+                else:
+                    return corrupt_evasive_refusal(text)
+                    
+            for fb in db_feedbacks:
+                if loop.validate_feedback(fb):
+                    pair = loop.create_dpo_pair(fb, corrupt_callback)
+                    if pair is not None:
+                        feedback_pairs.append(pair)
+            logger.info(f"Compiled {len(feedback_pairs)} DPO pairs from user feedback database.")
+        except Exception as e:
+            logger.warning(f"Failed to compile feedback pairs from Django database: {e}")
+
     if not os.path.exists(sft_path):
         logger.error(f"SFT dataset not found at: {sft_path}")
+        # If SFT is missing, still write feedback pairs if any
+        if feedback_pairs:
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+            with open(output_path, "w", encoding="utf-8") as out_f:
+                for pair in feedback_pairs[:limit]:
+                    out_f.write(json.dumps(pair, ensure_ascii=False) + "\n")
+            return min(len(feedback_pairs), limit)
         return 0
 
     logger.info(f"Reading SFT dataset from {sft_path}...")
@@ -485,18 +533,15 @@ def compile_dpo_pairs(sft_path: str, output_path: str, limit: int = 2000, seed: 
         for line in f:
             try:
                 entry = json.loads(line)
-                # On ne traite que les dialogues à tour unique simple pour DPO simple
                 if "instruction" not in entry or "output" not in entry:
                     continue
                 
                 output_text = entry["output"]
                 instruction_text = entry["instruction"]
                 
-                # Filtre de longueur
                 if len(output_text) < 40:
                     continue
                 
-                # Filtre de refus
                 if any(kw in output_text.lower() for kw in refusal_keywords) or \
                    any(kw in instruction_text.lower() for kw in refusal_keywords):
                     continue
@@ -508,44 +553,43 @@ def compile_dpo_pairs(sft_path: str, output_path: str, limit: int = 2000, seed: 
     total_eligible = len(eligible_entries)
     logger.info(f"Found {total_eligible} eligible SFT entries for DPO conversion.")
     
-    if total_eligible == 0:
-        return 0
-
-    # Mélanger et limiter
-    random.shuffle(eligible_entries)
-    selected_entries = eligible_entries[:limit]
-    
     compiled_pairs = []
+    compiled_pairs.extend(feedback_pairs)
+    feedback_prompts = {p["prompt"] for p in feedback_pairs}
     
-    # Les 4 stratégies
-    strategies = ["fact", "tone", "truncation", "refusal"]
-    
-    for idx, entry in enumerate(selected_entries):
-        prompt = entry["instruction"]
-        chosen = entry["output"]
-        lang = entry.get("language", "Français")
+    remaining_limit = limit - len(compiled_pairs)
+    if remaining_limit > 0:
+        # Eligible SFT entries to process, excluding already compiled prompt contexts
+        selected_entries = [e for e in eligible_entries if f"Génère une réponse expert pour : {e['instruction']}" not in feedback_prompts and e['instruction'] not in feedback_prompts]
+        random.shuffle(selected_entries)
+        selected_entries = selected_entries[:remaining_limit]
         
-        # Choix de la stratégie de manière cyclique/équilibrée
-        strategy = strategies[idx % len(strategies)]
-        
-        if strategy == "fact":
-            rejected = corrupt_fact_substitution(chosen, lang)
-        elif strategy == "tone":
-            rejected = corrupt_tonal_deviation(chosen, lang)
-        elif strategy == "truncation":
-            rejected = corrupt_abrupt_truncation(chosen)
-        else:
-            rejected = corrupt_evasive_refusal(chosen, lang)
+        strategies = ["fact", "tone", "truncation", "refusal"]
+        for idx, entry in enumerate(selected_entries):
+            prompt = entry["instruction"]
+            chosen = entry["output"]
+            lang = entry.get("language", "Français")
+            strategy = strategies[idx % len(strategies)]
             
-        # Par sécurité, si la corruption échoue et renvoie la même chose, utiliser le refus
-        if rejected == chosen:
-            rejected = corrupt_evasive_refusal(chosen, lang)
-            
-        compiled_pairs.append({
-            "prompt": prompt,
-            "chosen": chosen,
-            "rejected": rejected
-        })
+            if strategy == "fact":
+                rejected = corrupt_fact_substitution(chosen, lang)
+            elif strategy == "tone":
+                rejected = corrupt_tonal_deviation(chosen, lang)
+            elif strategy == "truncation":
+                rejected = corrupt_abrupt_truncation(chosen)
+            else:
+                rejected = corrupt_evasive_refusal(chosen, lang)
+                
+            if rejected == chosen:
+                rejected = corrupt_evasive_refusal(chosen, lang)
+                
+            compiled_pairs.append({
+                "prompt": prompt,
+                "chosen": chosen,
+                "rejected": rejected
+            })
+    else:
+        compiled_pairs = compiled_pairs[:limit]
 
     # Sauvegarder au format JSONL
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
