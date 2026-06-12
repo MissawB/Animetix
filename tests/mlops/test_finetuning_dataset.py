@@ -35,11 +35,12 @@ class TestFinetuningDataset(unittest.TestCase):
         mock_response.text = "Nouvelle paraphrase"
         mock_client.models.generate_content.return_value = mock_response
         
-        res2 = paraphrase_text_via_gemini("Un autre texte", mock_client, "naturel")
-        self.assertEqual(res2, "Nouvelle paraphrase")
-        mock_client.models.generate_content.assert_called_once()
-        self.assertIn("Un autre texte||naturel", fd.PARAPHRASE_CACHE)
-        self.assertEqual(fd.PARAPHRASE_CACHE["Un autre texte||naturel"], "Nouvelle paraphrase")
+        with patch('backend.pipeline.mlops.finetuning_dataset.validate_factual_alignment', return_value=True):
+            res2 = paraphrase_text_via_gemini("Un autre texte", mock_client, "naturel")
+            self.assertEqual(res2, "Nouvelle paraphrase")
+            mock_client.models.generate_content.assert_called_once()
+            self.assertIn("Un autre texte||naturel", fd.PARAPHRASE_CACHE)
+            self.assertEqual(fd.PARAPHRASE_CACHE["Un autre texte||naturel"], "Nouvelle paraphrase")
 
     def test_configurable_ratios(self):
         import backend.pipeline.mlops.finetuning_dataset as fd
@@ -172,6 +173,46 @@ class TestFinetuningDataset(unittest.TestCase):
             self.assertGreaterEqual(len(d["turns"]), 2)
             self.assertIn(d["language"], ["Français", "English"])
 
+    def test_generate_multiturn_dialogues_complex_scenarios(self):
+        from backend.pipeline.mlops.finetuning_dataset import generate_multiturn_dialogues
+        animes = [
+            {"title": "Naruto", "genres": ["Action"], "studios": ["Pierrot"], "tags": ["Ninja"], "popularity": 1000000, "year": 2002},
+            {"title": "One Piece", "genres": ["Adventure"], "studios": ["Toei Animation"], "tags": ["Pirates"], "popularity": 1500000, "year": 1999}
+        ]
+        mangas = [{"title": "One Piece", "genres": ["Adventure"], "tags": ["Pirates"], "popularity": 1500000}]
+        chars = [
+            {"name": "Luffy", "origin": "One Piece", "entities": {"organizations": ["Straw Hats"]}, "popularity": {"favourites": 150000, "rank": 1}, "metadata": {"height": "174cm"}},
+            {"name": "Naruto Uzumaki", "origin": "Naruto", "entities": {"organizations": ["Konoha"]}, "popularity": {"favourites": 100000, "rank": 2}, "metadata": {"height": "166cm"}}
+        ]
+        vocab = {"Tsundere": {"definition": "Cold then hot", "examples": "Taiga", "impact": "Popular trope", "origin": "Japanese"}}
+        
+        dialogues = generate_multiturn_dialogues(animes, mangas, chars, vocab, count=12)
+        self.assertEqual(len(dialogues), 12)
+        
+        # Verify comparative debate (scenario 3 -> indices 3 and 9)
+        d_debate_en = dialogues[9]
+        d_debate_fr = dialogues[3]
+        self.assertEqual(d_debate_en["language"], "English")
+        self.assertEqual(d_debate_fr["language"], "Français")
+        self.assertIn("compare two major anime", d_debate_en["turns"][0]["user"])
+        self.assertIn("comparer deux", d_debate_fr["turns"][0]["user"])
+        
+        # Verify clarification request (scenario 4 -> indices 4 and 10)
+        d_clarif_en = dialogues[10]
+        d_clarif_fr = dialogues[4]
+        self.assertEqual(d_clarif_en["language"], "English")
+        self.assertEqual(d_clarif_fr["language"], "Français")
+        self.assertIn("popular", d_clarif_en["turns"][0]["user"])
+        self.assertIn("populaire", d_clarif_fr["turns"][0]["user"])
+        
+        # Verify self-correction (scenario 5 -> indices 5 and 11)
+        d_corr_en = dialogues[11]
+        d_corr_fr = dialogues[5]
+        self.assertEqual(d_corr_en["language"], "English")
+        self.assertEqual(d_corr_fr["language"], "Français")
+        self.assertIn("produced", d_corr_en["turns"][0]["user"])
+        self.assertIn("occupé", d_corr_fr["turns"][0]["user"])
+
     def test_run_generate_instruction_dataset_contains_multiturn(self):
         from backend.pipeline.mlops.finetuning_dataset import OUTPUT_DATASET
         import json
@@ -262,6 +303,30 @@ class TestFinetuningDataset(unittest.TestCase):
             ratio = (underrepresented_count / total_count) * 100
             # Confirm ratio has increased from original ~7.4% to a minimum of 10%
             self.assertGreaterEqual(ratio, 10.0, f"Underrepresented genres representation is too low: {ratio:.2f}%")
+
+    def test_validate_factual_alignment_success(self):
+        from backend.pipeline.mlops.finetuning_dataset import validate_factual_alignment
+        mock_client = MagicMock()
+        mock_response = MagicMock()
+        mock_response.text = '{"aligned": true, "reason": ""}'
+        mock_client.models.generate_content.return_value = mock_response
+        
+        orig = "L'anime Naruto est sorti en 2002."
+        gen = "En 2002 est sorti l'anime Naruto."
+        self.assertTrue(validate_factual_alignment(orig, gen, mock_client))
+        mock_client.models.generate_content.assert_called_once()
+        
+    def test_validate_factual_alignment_failure(self):
+        from backend.pipeline.mlops.finetuning_dataset import validate_factual_alignment
+        mock_client = MagicMock()
+        mock_response = MagicMock()
+        mock_response.text = '```json\n{"aligned": false, "reason": "Changement de date"}\n```'
+        mock_client.models.generate_content.return_value = mock_response
+        
+        orig = "L'anime Naruto est sorti en 2002."
+        gen = "L'anime Naruto est sorti en 2005."
+        self.assertFalse(validate_factual_alignment(orig, gen, mock_client))
+        mock_client.models.generate_content.assert_called_once()
 
 if __name__ == "__main__":
     unittest.main()

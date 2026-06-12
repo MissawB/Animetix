@@ -78,6 +78,13 @@ Ce document liste toutes les tâches techniques, architecturales et fonctionnell
   - [x] **Dialogues Multi-Tours (Multi-turn)** : Intégrer ~15-20% de scénarios de dialogues à plusieurs tours pour apprendre au modèle à suivre le contexte sur plusieurs messages consécutifs.
   - [x] **Persona & Refus (Negative Examples)** : Ajouter des exemples de requêtes hors-sujet avec refus poli pour cadrer l'expertise exclusive du modèle sur l'univers anime/manga.
   - [x] **Rééquilibrage Thématique** : Assurer une proportion minimale de genres sous-représentés (Shojo, Josei, Tranche de vie) pour atténuer le biais actuel Shonen/Seinen.
+  - [x] **Validation factuelle via "LLM-as-a-Judge"** : Mettre en place un validateur automatique pour vérifier que les paraphrases et traductions générées par l'API ne contiennent pas d'hallucinations factuelles par rapport aux fiches d'œuvres locales.
+- [ ] **Complexification sémantique multi-tours** :
+  Simuler des flux de dialogues plus variés incluant des débats comparatifs, des requêtes de clarification et des auto-corrections après retour utilisateur fictif.
+- [ ] **Query Noise (Robustesse aux fautes de saisie)** :
+  - Injecter du bruit (fautes de frappe, abréviations, argot, absence de ponctuation) dans 10-15% des instructions utilisateur pour accroître la robustesse de l'expert en conditions réelles.
+- [ ] **Construction d'un dataset de préférence DPO / RLHF** :
+  - Compiler des exemples appariés (Réponse correcte vs Réponse rejetée/hallucinée) pour aligner finement le ton et le formatage du modèle via DPO.
 
 ### 🏗️ Pipeline RAG 2.0 (Next)
 - [x] **Implement RAG Processors**: Implement `SpeculateProcessor`, `VlmRerankProcessor`, `SynthesizeProcessor`, `JudgeProcessor`, `FallbackRagProcessor`, and `RAGOrchestrator`. Update DI container and refactor/remove `RAGWorkflowManager`. (Fait : Toutes les classes de processeurs RAG et l'orchestrateur sont implémentés sous `backend/core/domain/services/rag/processors/`, configurés dans le conteneur DI `AgenticContainer`, et vérifiés avec une couverture de tests unitaires complète).

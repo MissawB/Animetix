@@ -122,8 +122,12 @@ def paraphrase_text_via_gemini(text: str, client, style_type: str = "naturel") -
             if response.text:
                 time.sleep(0.5)  # Respecter le rate limiting
                 result_text = response.text.strip()
-                PARAPHRASE_CACHE[cache_key] = result_text
-                return result_text
+                if validate_factual_alignment(text, result_text, client):
+                    PARAPHRASE_CACHE[cache_key] = result_text
+                    return result_text
+                else:
+                    logger.warning(f"Paraphrase discarded due to factual misalignment: {text[:50]}...")
+                    return text
         except Exception as e:
             logger.warning(f"Attempt {attempt+1}/3 failed to paraphrase: {e}")
             err_msg = str(e).upper()
@@ -163,7 +167,12 @@ def translate_to_english_via_gemini(text: str, client) -> str:
             )
             if response.text:
                 time.sleep(0.5)  # Respecter le rate limiting
-                return response.text.strip()
+                result_text = response.text.strip()
+                if validate_factual_alignment(text, result_text, client):
+                    return result_text
+                else:
+                    logger.warning(f"Translation discarded due to factual misalignment: {text[:50]}...")
+                    return text
         except Exception as e:
             logger.warning(f"Attempt {attempt+1}/3 failed to translate to English: {e}")
             err_msg = str(e).upper()
@@ -174,6 +183,60 @@ def translate_to_english_via_gemini(text: str, client) -> str:
                 time.sleep(1.0)
                 
     return text
+
+def validate_factual_alignment(original_text: str, generated_text: str, client) -> bool:
+    """
+    Utilise Gemini comme juge pour vérifier l'alignement factuel du texte généré
+    par rapport au texte original. Retourne True si les faits concordent et s'il n'y a
+    pas d'hallucinations, False sinon.
+    """
+    if not original_text or not generated_text:
+        return False
+    if not client:
+        return True  # Pas de client, on valide par défaut
+        
+    prompt = (
+        "RÔLE : Validateur d'Alignement Factuel (Factual Alignment Judge).\n"
+        "MISSION : Tu dois comparer le TEXTE GÉNÉRÉ (qui est une paraphrase ou une traduction) "
+        "au TEXTE ORIGINAL pour t'assurer qu'aucune information factuelle n'a été altérée, contredite, "
+        "ou inventée (pas d'hallucination de dates, studios, doubleurs, noms propres, chiffres, etc.).\n\n"
+        f"TEXTE ORIGINAL :\n{original_text}\n\n"
+        f"TEXTE GÉNÉRÉ :\n{generated_text}\n\n"
+        "CONSIGNES :\n"
+        "1. Une réécriture stylistique ou une traduction fluide est autorisée et encouragée.\n"
+        "2. Les faits (noms, dates, chiffres, studios, genres, rôles) doivent être STRICTEMENT identiques.\n"
+        "3. Aucune nouvelle information factuelle ne doit être ajoutée.\n\n"
+        "Génère UNIQUEMENT un objet JSON sous le format exact suivant :\n"
+        "{\n"
+        "  \"aligned\": true ou false,\n"
+        "  \"reason\": \"Explication détaillée en cas de désalignement, sinon vide\"\n"
+        "}"
+    )
+    
+    model_name = os.getenv("ANIMETIX_GEMINI_MODEL", "gemini-3-flash-preview")
+    
+    for attempt in range(2):
+        try:
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+            )
+            if response.text:
+                content = response.text.strip()
+                if content.startswith("```"):
+                    content = re.sub(r'^```(?:json)?\n', '', content)
+                    content = re.sub(r'\n```$', '', content)
+                
+                result = json.loads(content.strip())
+                aligned = result.get("aligned", True)
+                if not aligned:
+                    logger.warning(f"Fact-checking failed. Reason: {result.get('reason')}")
+                return aligned
+        except Exception as e:
+            logger.warning(f"Factual validation attempt {attempt+1} failed: {e}")
+            time.sleep(1.0)
+            
+    return True  # En cas d'erreur de l'API, on fait confiance par défaut
 
 def calculate_dataset_counts(non_meta_count: int) -> tuple[int, int]:
     """
@@ -1266,10 +1329,16 @@ def generate_multiturn_dialogues(animes, mangas, characters, otaku_vocab, count=
             "t3": "Where does this term come from and what is its writing impact?"
         }
     ]
-
+ 
     for idx in range(count):
-        lang = "English" if idx % 2 == 1 else "Français"
-        scenario = idx % 3
+        lang = "English" if (idx // 6) % 2 == 1 else "Français"
+        scenario = idx % 6
+        
+        # Safe fallback if databases are empty or not matching requirements
+        if scenario == 3 and (not animes or len(animes) < 2):
+            scenario = 0
+        if scenario == 4 and not animes:
+            scenario = 1
         
         if scenario == 0 and animes:
             # Anime / Manga exploration dialogue
@@ -1332,7 +1401,7 @@ def generate_multiturn_dialogues(animes, mangas, characters, otaku_vocab, count=
                     {"user": t["t3"], "assistant": f"Sa taille officielle est {height}. Il est classé au rang #{rank} des favoris avec {favs} votes d'admiration."}
                 ]
                 
-        else:
+        elif scenario == 2:
             # Otaku concept dialogue
             vocab_list = list(otaku_vocab.keys())
             term = random.choice(vocab_list) if vocab_list else "Tsundere"
@@ -1351,6 +1420,127 @@ def generate_multiturn_dialogues(animes, mangas, characters, otaku_vocab, count=
                     {"user": t["t1"].format(term=term), "assistant": f"Dans la culture otaku, '{term}' désigne : {data['definition']}."},
                     {"user": t["t2"], "assistant": f"Parmi les exemples emblématiques illustrant ce concept, on peut citer : {data['examples']}."},
                     {"user": t["t3"], "assistant": f"Origine : {data['origin']}. Impact narratif : {data['impact']}."}
+                ]
+                
+        elif scenario == 3:
+            # comparative debate
+            anime1 = random.choice(animes)
+            anime2 = random.choice(animes)
+            while anime2.get("title") == anime1.get("title"):
+                anime2 = random.choice(animes)
+                
+            title1 = get_display_title(anime1.get("title", "Unknown"))
+            title2 = get_display_title(anime2.get("title", "Unknown"))
+            genres1 = ", ".join(clean_tags(anime1.get("genres", []), lang))
+            genres2 = ", ".join(clean_tags(anime2.get("genres", []), lang))
+            studio1 = ", ".join(anime1.get("studios", ["Pierrot"]))
+            studio2 = ", ".join(anime2.get("studios", ["Toei Animation"]))
+            year1 = anime1.get("year", 2002)
+            year2 = anime2.get("year", 1999)
+            pop1 = anime1.get("popularity", 10000)
+            pop2 = anime2.get("popularity", 10000)
+            
+            char_name = "Luffy"
+            for c in characters:
+                if c.get("origin") == anime1.get("title"):
+                    char_name = get_display_character(c.get("name"))
+                    break
+            
+            if lang == "English":
+                turns = [
+                    {"user": f"I want to compare two major anime: '{title1}' and '{title2}'. Which one should I watch?", 
+                     "assistant": f"Both are incredible shows but quite different. '{title1}' fits into the {genres1} genres and was produced by {studio1}. On the other hand, '{title2}' is a {genres2} show produced by {studio2}. If you enjoy character-driven shows, '{title1}' is a great pick. If you prefer high-stakes action, go with '{title2}'."},
+                    {"user": f"But I heard that '{title1}' has much better character development, do you agree?",
+                     "assistant": f"That is a very common opinion! The character writing in '{title1}' is indeed stellar, especially with figures like {char_name}. However, '{title2}' makes up for it with its thrilling pacing and outstanding production values. It depends on whether you value psychological depth or action-packed animation more."},
+                    {"user": "Understood. Are both finished and were they popular?",
+                     "assistant": f"Yes, '{title1}' was released in {year1} and has a popularity score of {pop1:,} members. '{title2}' was released in {year2} with {pop2:,} members. Both are major hits in otaku culture."}
+                ]
+            else:
+                turns = [
+                    {"user": f"Je cherche à comparer deux œuvres majeures de la japanimation : '{title1}' et '{title2}'. Lequel devrais-je regarder ?", 
+                     "assistant": f"Ce sont deux œuvres formidables mais très différentes. '{title1}' s'inscrit dans les genres de type {genres1} et a été produit par {studio1}. De l'autre côté, '{title2}' s'illustre dans les genres {genres2} par {studio2}. Si tu aimes la profondeur des personnages, '{title1}' est un excellent choix. Si tu préfères l'action pure, opte pour '{title2}'."},
+                    {"user": f"Mais j'ai entendu dire que '{title1}' a une bien meilleure écriture de personnages, tu es d'accord ?",
+                     "assistant": f"C'est un point de vue très répandu ! L'écriture des personnages dans '{title1}' est en effet brillante, notamment grâce à des figures emblématiques comme {char_name}. Cependant, '{title2}' compense par son rythme haletant et ses qualités d'animation. Tout dépend de ce qui prime pour toi entre la profondeur psychologique et la mise en scène."},
+                    {"user": "D'accord, je vois. Est-ce que les deux sont terminés et ont été populaires ?",
+                     "assistant": f"Oui, '{title1}' est sorti en {year1} et jouit d'une popularité de {pop1} membres. '{title2}' est sorti en {year2} et compte {pop2} membres. Les deux sont des succès majeurs incontournables."}
+                ]
+                
+        elif scenario == 4:
+            # Clarification request
+            anime = random.choice(animes)
+            title = get_display_title(anime.get("title", "Unknown"))
+            genres = clean_tags(anime.get("genres", ["Action"]), lang)
+            genre = genres[0] if genres else ("Action" if lang == "English" else "Action")
+            studio = ", ".join(anime.get("studios", ["Pierrot"]))
+            year = anime.get("year", 2002)
+            genres_str = ", ".join(genres)
+            
+            tags = clean_tags(anime.get("tags", []), lang)
+            tag = tags[0] if tags else ("adventure" if lang == "English" else "aventure")
+            tags_str = ", ".join(tags[:3])
+            
+            char_name = "Luffy"
+            for c in characters:
+                if c.get("origin") == anime.get("title"):
+                    char_name = get_display_character(c.get("name"))
+                    break
+                    
+            if lang == "English":
+                turns = [
+                    {"user": f"Can you tell me about that popular {genre} anime produced by {studio}?",
+                     "assistant": f"Could you please clarify which anime you mean? Studio {studio} has produced several {genre} anime, such as '{title}' (with themes like {tag}) or other notable projects. Were you referring to this one?"},
+                    {"user": f"Yes, I was referring to '{title}'!",
+                     "assistant": f"Great! '{title}' was released in {year} and falls into the genres: {genres_str}. The story explores key themes like: {tags_str}. It is a prominent production by {studio}."},
+                    {"user": "Thanks for the details. Are there any highly popular characters in it?",
+                     "assistant": f"Definitely! Within this universe, {char_name} is extremely popular among fans, ranking high with many votes of admiration."}
+                ]
+            else:
+                turns = [
+                    {"user": f"Peux-tu me parler de cet anime de {genre} très populaire produit par {studio} ?",
+                     "assistant": f"Pourrais-tu préciser de quelle œuvre il s'agit ? Le studio {studio} a produit plusieurs animés de {genre}, notamment '{title}' (avec des thèmes comme {tag}) ou d'autres projets marquants. Parlais-tu de celui-ci ?"},
+                    {"user": f"Oui, je parlais bien de '{title}' !",
+                     "assistant": f"Excellent choix ! '{title}' est sorti en {year} et s'inscrit dans les genres : {genres_str}. L'histoire aborde des thématiques fortes comme : {tags_str}. C'est une production majeure de {studio}."},
+                    {"user": "Merci pour ces détails. Est-ce qu'il y a des personnages très populaires dedans ?",
+                     "assistant": f"Absolument ! Si on regarde les personnages de cet univers, {char_name} est particulièrement apprécié de la communauté, se classant dans le top avec de nombreux votes d'admiration."}
+                ]
+                
+        else:
+            # Self-correction after feedback
+            anime_choice = random.choice([
+                {"title_fr": "L'Attaque des Titans", "title_en": "Attack on Titan", "s1": "Wit Studio", "s2": "MAPPA", "year1": 2013, "year2": 2020, "vols": 34},
+                {"title_fr": "One Punch Man", "title_en": "One Punch Man", "s1": "Madhouse", "s2": "J.C.Staff", "year1": 2015, "year2": 2019, "vols": 30},
+                {"title_fr": "Vinland Saga", "title_en": "Vinland Saga", "s1": "Wit Studio", "s2": "MAPPA", "year1": 2019, "year2": 2023, "vols": 27}
+            ])
+            
+            if lang == "English":
+                title = anime_choice["title_en"]
+                s1 = anime_choice["s1"]
+                s2 = anime_choice["s2"]
+                y1 = anime_choice["year1"]
+                y2 = anime_choice["year2"]
+                vols = anime_choice["vols"]
+                turns = [
+                    {"user": f"Which animation studio produced '{title}'?",
+                     "assistant": f"The anime adaptation of '{title}' was primarily produced by {s1} starting in {y1}."},
+                    {"user": f"Wait, wasn't it produced by {s2} instead?",
+                     "assistant": f"You are absolutely correct, thank you for pointing that out! There was a change in production: {s1} animated the initial part (starting in {y1}), and then {s2} took over for the subsequent seasons starting in {y2}."},
+                    {"user": "Ah I see, thanks. Is the manga finished?",
+                     "assistant": f"Yes, the manga has finished its publication run, compiling a total of {vols} volumes."}
+                ]
+            else:
+                title = anime_choice["title_fr"]
+                s1 = anime_choice["s1"]
+                s2 = anime_choice["s2"]
+                y1 = anime_choice["year1"]
+                y2 = anime_choice["year2"]
+                vols = anime_choice["vols"]
+                turns = [
+                    {"user": f"Quel studio d'animation s'est occupé de l'anime '{title}' ?",
+                     "assistant": f"L'adaptation animée de '{title}' a été initialement produite par le studio {s1} à partir de {y1}."},
+                    {"user": f"Attends, ce n'est pas plutôt le studio {s2} qui l'a fait ?",
+                     "assistant": f"Vous avez tout à fait raison, et je vous remercie pour cette précision importante ! Il y a eu un changement de studio : {s1} a produit le début (à partir de {y1}), puis c'est le studio {s2} qui a repris la main pour produire les saisons suivantes à partir de {y2}."},
+                    {"user": "Ah d'accord, merci pour l'explication. Et le manga est terminé ?",
+                     "assistant": f"Oui, le manga s'est achevé avec un total de {vols} volumes publiés."}
                 ]
                 
         dialogues.append({
