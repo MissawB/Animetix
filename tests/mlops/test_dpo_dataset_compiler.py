@@ -136,6 +136,13 @@ class TestDPODatasetCompiler(unittest.TestCase):
                 self.assertNotEqual(item["chosen"], item["rejected"])
 
     def test_compile_dpo_pairs_with_db_feedback(self):
+        import sys
+        import os
+        # Ensure mlops directory is in path for mock import resolution
+        mlops_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "backend", "pipeline", "mlops"))
+        if mlops_path not in sys.path:
+            sys.path.insert(0, mlops_path)
+            
         from unittest.mock import patch, MagicMock
         from backend.pipeline.mlops.dpo_dataset_compiler import compile_dpo_pairs
         
@@ -147,8 +154,10 @@ class TestDPODatasetCompiler(unittest.TestCase):
             {"context": "Quel studio a fait Demon Slayer ?", "output": "C'est MAPPA, non ?", "is_positive": False, "feedback_type": "thumbs_down"}
         ]
         
-        with patch('backend.pipeline.mlops.dpo_feedback_loop.django_available', True), \
-             patch('backend.pipeline.mlops.dpo_feedback_loop.AIFeedback') as mock_ai_feedback:
+        with patch('dpo_feedback_loop.django_available', True), \
+             patch('backend.pipeline.mlops.dpo_feedback_loop.django_available', True), \
+             patch('dpo_feedback_loop.AIFeedback') as mock_ai_feedback, \
+             patch('backend.pipeline.mlops.dpo_feedback_loop.AIFeedback', mock_ai_feedback):
             
             # Setup mock model query results
             mock_entries = []
@@ -163,7 +172,8 @@ class TestDPODatasetCompiler(unittest.TestCase):
             mock_ai_feedback.objects.all.return_value = mock_entries
             
             # Mock generate_oracle_response to return a valid chosen response for negative feedback
-            with patch('backend.pipeline.mlops.dpo_feedback_loop.DPOFeedbackLoop.generate_oracle_response') as mock_oracle:
+            with patch('dpo_feedback_loop.DPOFeedbackLoop.generate_oracle_response') as mock_oracle, \
+                 patch('backend.pipeline.mlops.dpo_feedback_loop.DPOFeedbackLoop.generate_oracle_response', mock_oracle):
                 mock_oracle.return_value = "Demon Slayer a été produit par le studio ufotable, connu pour son animation de haute qualité."
                 
                 import tempfile
@@ -196,6 +206,28 @@ class TestDPODatasetCompiler(unittest.TestCase):
                     self.assertEqual(p2["prompt"], "Génère une réponse expert pour : Quel studio a fait Demon Slayer ?")
                     self.assertEqual(p2["chosen"], "Demon Slayer a été produit par le studio ufotable, connu pour son animation de haute qualité.")
                     self.assertEqual(p2["rejected"], "C'est MAPPA, non ?")
+
+    def test_dpo_cache_read_write(self):
+        import tempfile
+        import os
+        from backend.pipeline.mlops.dpo_dataset_compiler import init_dpo_cache, save_dpo_cache, DPO_CACHE
+        
+        with tempfile.TemporaryDirectory() as tmpdir:
+            init_dpo_cache(tmpdir)
+            # Cache should be empty initially
+            self.assertEqual(DPO_CACHE, {})
+            
+            # Insert a mock entry
+            DPO_CACHE["test_hash"] = "test_corrupted"
+            save_dpo_cache()
+            
+            # Check file exists
+            cache_file = os.path.join(tmpdir, "gemini_dpo_cache.json")
+            self.assertTrue(os.path.exists(cache_file))
+            
+            # Re-initialize should load it back
+            init_dpo_cache(tmpdir)
+            self.assertEqual(DPO_CACHE.get("test_hash"), "test_corrupted")
 
 if __name__ == "__main__":
     unittest.main()

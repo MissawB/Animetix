@@ -23,6 +23,62 @@ if api_path not in sys.path:
 logger = logging.getLogger("animetix.pipeline.mlops.dpo_dataset_compiler")
 logging.basicConfig(level=logging.INFO)
 
+import hashlib
+
+# Cache variables
+DPO_CACHE_FILE = None
+DPO_CACHE = {}
+
+def init_dpo_cache(data_dir: str):
+    global DPO_CACHE_FILE, DPO_CACHE
+    DPO_CACHE_FILE = os.path.join(data_dir, "gemini_dpo_cache.json")
+    if os.path.exists(DPO_CACHE_FILE):
+        try:
+            with open(DPO_CACHE_FILE, "r", encoding="utf-8") as f:
+                DPO_CACHE = json.load(f)
+            logger.info(f"Loaded {len(DPO_CACHE)} entries from DPO cache.")
+        except Exception as e:
+            logger.warning(f"Failed to load DPO cache: {e}")
+            DPO_CACHE = {}
+    else:
+        DPO_CACHE = {}
+
+def save_dpo_cache():
+    if DPO_CACHE_FILE:
+        try:
+            os.makedirs(os.path.dirname(DPO_CACHE_FILE), exist_ok=True)
+            with open(DPO_CACHE_FILE, "w", encoding="utf-8") as f:
+                json.dump(DPO_CACHE, f, ensure_ascii=False, indent=2)
+            logger.info("Saved DPO cache to disk.")
+        except Exception as e:
+            logger.warning(f"Failed to save DPO cache: {e}")
+
+try:
+    from google import genai
+except ImportError:
+    genai = None
+
+GEMINI_CLIENT = None
+GEMINI_MODEL = "gemini-2.5-flash"
+
+def init_gemini_client():
+    global GEMINI_CLIENT, GEMINI_MODEL
+    from dotenv import load_dotenv
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+    load_dotenv(os.path.join(base_dir, '.env'))
+    api_key = os.getenv("GEMINI_API_KEY")
+    GEMINI_MODEL = os.getenv("ANIMETIX_GEMINI_MODEL", "gemini-2.5-flash")
+    if api_key and genai is not None:
+        try:
+            GEMINI_CLIENT = genai.Client(api_key=api_key)
+            logger.info("Gemini API client initialized for LLM-as-a-Judge.")
+        except Exception as e:
+            logger.warning(f"Failed to initialize Gemini API client: {e}")
+            GEMINI_CLIENT = None
+    else:
+        logger.warning("Gemini client not initialized (missing API key or google-genai dependency).")
+        GEMINI_CLIENT = None
+
 # Tentatives d'importation des bases locales d'entités pour la substitution factuelle
 try:
     from creators_db import CREATORS_AND_STUDIOS
