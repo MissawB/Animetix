@@ -229,5 +229,37 @@ class TestDPODatasetCompiler(unittest.TestCase):
             init_dpo_cache(tmpdir)
             self.assertEqual(DPO_CACHE.get("test_hash"), "test_corrupted")
 
+    def test_corrupt_llm_critic(self):
+        from unittest.mock import MagicMock, patch
+        import backend.pipeline.mlops.dpo_dataset_compiler as compiler
+        
+        # Reset mock state
+        compiler.DPO_CACHE = {}
+        compiler.GEMINI_CLIENT = None
+        
+        # 1. Test offline/missing API key fallback
+        chosen = "Le studio Wit Studio a produit L'Attaque des Titans."
+        corrupted = compiler.corrupt_llm_critic(chosen, "Français")
+        # Fallback should run and modify the text
+        self.assertNotEqual(corrupted, chosen)
+        
+        # 2. Test cache hits
+        chosen_hash = compiler.hashlib.md5(chosen.encode("utf-8")).hexdigest()
+        compiler.DPO_CACHE[chosen_hash] = "Cached mock response"
+        corrupted_cached = compiler.corrupt_llm_critic(chosen, "Français")
+        self.assertEqual(corrupted_cached, "Cached mock response")
+        
+        # 3. Test active API call mock
+        compiler.DPO_CACHE = {}
+        mock_client = MagicMock()
+        mock_response = MagicMock()
+        mock_response.text = "Gemini mocked logical error response."
+        mock_client.models.generate_content.return_value = mock_response
+        compiler.GEMINI_CLIENT = mock_client
+        
+        corrupted_api = compiler.corrupt_llm_critic(chosen, "Français")
+        self.assertEqual(corrupted_api, "Gemini mocked logical error response.")
+        self.assertEqual(compiler.DPO_CACHE[chosen_hash], "Gemini mocked logical error response.")
+
 if __name__ == "__main__":
     unittest.main()

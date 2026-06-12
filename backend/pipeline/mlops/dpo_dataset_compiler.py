@@ -526,6 +526,53 @@ def corrupt_evasive_refusal(text: str, language: str = "Français") -> str:
     return random.choice(refusals)
 
 
+def corrupt_llm_critic(chosen: str, language: str = "Français") -> str:
+    """
+    Critiques et corrompt la réponse chosen via Gemini pour y introduire une erreur logique/factuelle.
+    Utilise le cache local et retombe sur la substitution factuelle heuristique en cas de panne.
+    """
+    import time
+    chosen_hash = hashlib.md5(chosen.encode("utf-8")).hexdigest()
+    if chosen_hash in DPO_CACHE:
+        return DPO_CACHE[chosen_hash]
+        
+    if not GEMINI_CLIENT:
+        return corrupt_fact_substitution(chosen, language)
+        
+    prompt = (
+        "Tu es un critique expert et rigoureux de la japanimation, des mangas, et de la culture otaku.\n"
+        "Prends la réponse correcte suivante et réécris-la pour y introduire une et une seule erreur logique, chronologique ou factuelle subtile (ex: inverser deux personnages proches, confondre deux studios ayant produit des œuvres du même genre, ou intervertir une année de sortie).\n"
+        "La réponse modifiée doit conserver exactement le même ton d'expert, le même niveau de détail et être rédigée de manière fluide en français. Elle doit sembler parfaitement plausible à un lecteur non averti.\n\n"
+        "Réponse correcte :\n"
+        f"{chosen}\n\n"
+        "Renvoie uniquement la réponse modifiée, sans aucune introduction, salutation ou explication."
+    )
+    
+    for attempt in range(3):
+        try:
+            response = GEMINI_CLIENT.models.generate_content(
+                model=GEMINI_MODEL,
+                contents=prompt,
+            )
+            if response.text:
+                corrupted = response.text.strip()
+                if corrupted and corrupted != chosen:
+                    DPO_CACHE[chosen_hash] = corrupted
+                    save_dpo_cache()
+                    time.sleep(0.5)
+                    return corrupted
+        except Exception as e:
+            logger.warning(f"Attempt {attempt+1}/3 failed to generate DPO logical corruption via Gemini: {e}")
+            err_msg = str(e).upper()
+            if "RESOURCE_EXHAUSTED" in err_msg or "429" in err_msg or "UNAVAILABLE" in err_msg or "503" in err_msg:
+                sleep_time = (attempt + 1) * 15.0
+                time.sleep(sleep_time)
+            else:
+                time.sleep(1.0)
+                
+    return corrupt_fact_substitution(chosen, language)
+
+
 def compile_dpo_pairs(sft_path: str, output_path: str, limit: int = 2000, seed: int = 42) -> int:
     """
     Lit le dataset SFT et la base Django, fusionne le feedback utilisateur,
