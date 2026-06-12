@@ -74,10 +74,10 @@ Ce document liste toutes les tâches techniques, architecturales et fonctionnell
   - Diversifier la base d'entraînement avec des genres plus larges (Shojo, Josei, Tranche de vie) et rendre les ratios de composition (Spécialisé, Méta, Général) configurables par variables d'environnement.
 - [x] **Résilience des Scénarios d'Appels d'Outils (MCP) :**
   - Simuler des réponses d'erreur ou d'indisponibilité d'outils (`<tool_response>` en statut d'erreur/timeout) dans les exemples d'entraînement pour apprendre au modèle expert à réagir poliment et intelligemment en cas de panne.
-- [ ] **Améliorations SOTA 2026 de la Base d'Entraînement SFT :**
+- [x] **Améliorations SOTA 2026 de la Base d'Entraînement SFT :**
   - [x] **Dialogues Multi-Tours (Multi-turn)** : Intégrer ~15-20% de scénarios de dialogues à plusieurs tours pour apprendre au modèle à suivre le contexte sur plusieurs messages consécutifs.
   - [x] **Persona & Refus (Negative Examples)** : Ajouter des exemples de requêtes hors-sujet avec refus poli pour cadrer l'expertise exclusive du modèle sur l'univers anime/manga.
-  - [ ] **Rééquilibrage Thématique** : Assurer une proportion minimale de genres sous-représentés (Shojo, Josei, Tranche de vie) pour atténuer le biais actuel Shonen/Seinen.
+  - [x] **Rééquilibrage Thématique** : Assurer une proportion minimale de genres sous-représentés (Shojo, Josei, Tranche de vie) pour atténuer le biais actuel Shonen/Seinen.
 
 ### 🏗️ Pipeline RAG 2.0 (Next)
 - [x] **Implement RAG Processors**: Implement `SpeculateProcessor`, `VlmRerankProcessor`, `SynthesizeProcessor`, `JudgeProcessor`, `FallbackRagProcessor`, and `RAGOrchestrator`. Update DI container and refactor/remove `RAGWorkflowManager`. (Fait : Toutes les classes de processeurs RAG et l'orchestrateur sont implémentés sous `backend/core/domain/services/rag/processors/`, configurés dans le conteneur DI `AgenticContainer`, et vérifiés avec une couverture de tests unitaires complète).
