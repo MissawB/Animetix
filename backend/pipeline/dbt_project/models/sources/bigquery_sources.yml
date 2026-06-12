@@ -1,0 +1,39 @@
+version: 2
+sources:
+  - name: telemetry_source
+    schema: telemetry
+    tables:
+      - name: user_interactions
+        description: "BigQuery user interaction telemetry logs"
+        columns:
+          - name: event_id
+            tests:
+              - unique
+              - not_null
+          - name: user_id
+            tests:
+              - not_null
+          - name: media_item_id
+            tests:
+              - not_null
+          - name: interaction_type
+            tests:
+              - not_null
+              - accepted_values:
+                  values: ['thumbs_up', 'thumbs_down', 'game_win', 'game_loss', 'recommendation_view', 'search_query', 'detail_view']
+      - name: archetype_drift
+        description: "BigQuery user archetype drift metrics"
+        columns:
+          - name: event_id
+            tests:
+              - unique
+              - not_null
+          - name: user_id
+            tests:
+              - not_null
+          - name: intensity
+            tests:
+              - not_null
+          - name: logic_consistency
+            tests:
+              - not_null

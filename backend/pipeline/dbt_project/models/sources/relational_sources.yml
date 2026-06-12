@@ -1,0 +1,47 @@
+version: 2
+sources:
+  - name: django_source
+    schema: main
+    tables:
+      - name: animetix_mediaitem
+        description: "Media item catalog (Anime, Manga, etc.)"
+        columns:
+          - name: id
+            tests:
+              - unique
+              - not_null
+      - name: animetix_aifeedback
+        description: "Explicit thumbs up/down user feedback"
+        columns:
+          - name: id
+            tests:
+              - unique
+              - not_null
+          - name: input_context
+            tests:
+              - not_null
+          - name: output_text
+            tests:
+              - not_null
+      - name: animetix_gameplaysession
+        description: "Historical user gameplay sessions"
+        columns:
+          - name: id
+            tests:
+              - unique
+              - not_null
+          - name: target_item
+            tests:
+              - not_null
+      - name: animetix_golddatasetentry
+        description: "Validated high-quality training pairs"
+        columns:
+          - name: id
+            tests:
+              - unique
+              - not_null
+          - name: source_feedback_id
+            tests:
+              - relationships:
+                  to: source('django_source', 'animetix_aifeedback')
+                  field: id
