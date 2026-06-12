@@ -259,5 +259,4 @@ dbt-core==1.9.0
 dbt-sqlite==1.9.1
 dbt-postgres==1.9.0
 dbt-bigquery==1.9.0
-
-
+beautifulsoup4==4.12.3
