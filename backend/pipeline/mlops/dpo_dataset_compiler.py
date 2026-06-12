@@ -24,10 +24,68 @@ logger = logging.getLogger("animetix.pipeline.mlops.dpo_dataset_compiler")
 logging.basicConfig(level=logging.INFO)
 
 import hashlib
+from pydantic import BaseModel, field_validator, model_validator
 
 # Cache variables
 DPO_CACHE_FILE = None
 DPO_CACHE = {}
+
+# --- Regex patterns for sample validation ---
+_HTML_TAG_RE = re.compile(r'<[a-zA-Z][^>]*>')
+_UNCLOSED_CODE_BLOCK_RE = re.compile(r'```')
+_API_ERROR_PATTERNS = [
+    re.compile(r'(?i)^\s*error\s*:', re.MULTILINE),
+    re.compile(r'(?i)\b\d{3}\s+internal\s+server\s+error\b'),
+    re.compile(r'^\s*\{\s*"error"', re.MULTILINE),
+    re.compile(r'(?i)<!DOCTYPE\s+html>', re.MULTILINE),
+]
+
+
+class DPOSampleValidator(BaseModel):
+    """
+    Schéma Pydantic pour valider chaque échantillon DPO compilé.
+    Élimine les résidus HTML, les balises de code mal formées,
+    les réponses d'API en échec, et les champs vides.
+    """
+    prompt: str
+    chosen: str
+    rejected: str
+
+    @field_validator('prompt', 'chosen', 'rejected')
+    @classmethod
+    def must_not_be_blank(cls, v: str, info) -> str:
+        if not v or not v.strip():
+            raise ValueError(f"Le champ '{info.field_name}' ne doit pas être vide ou composé uniquement d'espaces.")
+        return v
+
+    @field_validator('chosen', 'rejected')
+    @classmethod
+    def must_not_contain_html(cls, v: str, info) -> str:
+        if _HTML_TAG_RE.search(v):
+            raise ValueError(f"Le champ '{info.field_name}' contient des résidus HTML : {_HTML_TAG_RE.findall(v)[:3]}")
+        return v
+
+    @field_validator('chosen', 'rejected')
+    @classmethod
+    def must_not_have_unclosed_code_blocks(cls, v: str, info) -> str:
+        count = len(_UNCLOSED_CODE_BLOCK_RE.findall(v))
+        if count % 2 != 0:
+            raise ValueError(f"Le champ '{info.field_name}' contient un bloc de code non fermé (``` impair).")
+        return v
+
+    @field_validator('chosen', 'rejected')
+    @classmethod
+    def must_not_be_api_error(cls, v: str, info) -> str:
+        for pattern in _API_ERROR_PATTERNS:
+            if pattern.search(v):
+                raise ValueError(f"Le champ '{info.field_name}' ressemble à une réponse d'API en échec.")
+        return v
+
+    @model_validator(mode='after')
+    def chosen_must_differ_from_rejected(self):
+        if self.chosen.strip() == self.rejected.strip():
+            raise ValueError("Les champs 'chosen' et 'rejected' sont identiques — la paire DPO est invalide.")
+        return self
 
 def init_dpo_cache(data_dir: str):
     global DPO_CACHE_FILE, DPO_CACHE
@@ -687,12 +745,13 @@ def compile_dpo_pairs(sft_path: str, output_path: str, limit: int = 2000, seed: 
                 
             if rejected == chosen:
                 rejected = corrupt_evasive_refusal(chosen, lang)
-                
-            compiled_pairs.append({
-                "prompt": prompt,
-                "chosen": chosen,
-                "rejected": rejected
-            })
+
+            # Validate with Pydantic schema before appending
+            try:
+                validated = DPOSampleValidator(prompt=prompt, chosen=chosen, rejected=rejected)
+                compiled_pairs.append(validated.model_dump())
+            except Exception as e:
+                logger.warning(f"DPO sample dropped (validation failed): {e}")
     else:
         compiled_pairs = compiled_pairs[:limit]
 

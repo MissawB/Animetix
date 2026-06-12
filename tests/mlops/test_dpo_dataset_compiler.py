@@ -331,5 +331,131 @@ class TestDPODatasetCompiler(unittest.TestCase):
                 self.assertGreater(call_log[strat], 0, f"Strategy '{strat}' was never called")
 
 
+class TestDPOSampleValidator(unittest.TestCase):
+    """Tests for Pydantic schema validation of DPO samples."""
+
+    def test_valid_sample_passes(self):
+        from backend.pipeline.mlops.dpo_dataset_compiler import DPOSampleValidator
+        sample = DPOSampleValidator(
+            prompt="Qui est le créateur de Naruto ?",
+            chosen="Naruto a été créé par Masashi Kishimoto et publié dans le Weekly Shōnen Jump depuis 1999.",
+            rejected="Naruto a été créé par Eiichiro Oda et publié dans le Monthly Shōnen Magazine."
+        )
+        self.assertEqual(sample.prompt, "Qui est le créateur de Naruto ?")
+
+    def test_rejects_html_residues_in_chosen(self):
+        from backend.pipeline.mlops.dpo_dataset_compiler import DPOSampleValidator
+        from pydantic import ValidationError
+        with self.assertRaises(ValidationError) as ctx:
+            DPOSampleValidator(
+                prompt="Explique l'anime.",
+                chosen="<div>Cet anime est produit par <b>MAPPA</b></div>",
+                rejected="Je ne sais pas."
+            )
+        self.assertIn("chosen", str(ctx.exception))
+
+    def test_rejects_html_residues_in_rejected(self):
+        from backend.pipeline.mlops.dpo_dataset_compiler import DPOSampleValidator
+        from pydantic import ValidationError
+        with self.assertRaises(ValidationError) as ctx:
+            DPOSampleValidator(
+                prompt="Explique l'anime.",
+                chosen="Cet anime est produit par MAPPA.",
+                rejected="<p>Réponse mal formatée</p>"
+            )
+        self.assertIn("rejected", str(ctx.exception))
+
+    def test_rejects_malformed_code_blocks(self):
+        from backend.pipeline.mlops.dpo_dataset_compiler import DPOSampleValidator
+        from pydantic import ValidationError
+        # Unclosed code block
+        with self.assertRaises(ValidationError):
+            DPOSampleValidator(
+                prompt="Question valide.",
+                chosen="Voici du code ```python\nprint('hello')\n sans fermer le bloc.",
+                rejected="Réponse correcte et propre sans résidu de formatage."
+            )
+
+    def test_rejects_failed_api_response(self):
+        from backend.pipeline.mlops.dpo_dataset_compiler import DPOSampleValidator
+        from pydantic import ValidationError
+        api_failures = [
+            "Error: Internal Server Error",
+            '{"error": "rate_limit_exceeded"}',
+            "500 Internal Server Error",
+            "<!DOCTYPE html><html>Error page</html>",
+        ]
+        for fail_text in api_failures:
+            with self.assertRaises(ValidationError, msg=f"Should reject: {fail_text!r}"):
+                DPOSampleValidator(
+                    prompt="Question valide.",
+                    chosen=fail_text,
+                    rejected="Réponse correcte."
+                )
+
+    def test_rejects_empty_or_whitespace(self):
+        from backend.pipeline.mlops.dpo_dataset_compiler import DPOSampleValidator
+        from pydantic import ValidationError
+        with self.assertRaises(ValidationError):
+            DPOSampleValidator(prompt="  ", chosen="Texte valide.", rejected="Texte valide.")
+        with self.assertRaises(ValidationError):
+            DPOSampleValidator(prompt="Question.", chosen="", rejected="Texte valide.")
+        with self.assertRaises(ValidationError):
+            DPOSampleValidator(prompt="Question.", chosen="Texte valide.", rejected="   ")
+
+    def test_rejects_identical_chosen_rejected(self):
+        from backend.pipeline.mlops.dpo_dataset_compiler import DPOSampleValidator
+        from pydantic import ValidationError
+        with self.assertRaises(ValidationError):
+            DPOSampleValidator(
+                prompt="Question.",
+                chosen="Exactement la même réponse.",
+                rejected="Exactement la même réponse."
+            )
+
+    def test_compile_dpo_pairs_filters_invalid_samples(self):
+        """Integration: compile_dpo_pairs should skip samples that fail Pydantic validation."""
+        from unittest.mock import patch
+        import tempfile
+        import backend.pipeline.mlops.dpo_dataset_compiler as compiler
+
+        # 5 entries: the corruption function will return HTML for some
+        mock_data = [
+            {"instruction": "Q1 sur l'animation japonaise.", "input": "", "output": "Wit Studio est un studio d'animation fondé en 2012.", "language": "Français"},
+            {"instruction": "Q2 sur les mangas japonais.", "input": "", "output": "One Piece est un manga de Eiichiro Oda depuis 1997 au Japon.", "language": "Français"},
+            {"instruction": "Q3 sur les doubleurs français.", "input": "", "output": "Brigitte Lecordier est une doubleuse française très connue de Dragon Ball Z.", "language": "Français"},
+        ]
+
+        call_count = {"idx": 0}
+
+        def mock_corrupt_fact(text, lang="Français"):
+            call_count["idx"] += 1
+            if call_count["idx"] == 1:
+                # Return HTML residue — should be filtered
+                return "<div>Réponse cassée avec du HTML</div>"
+            return compiler.corrupt_fact_substitution.__wrapped__(text, lang) if hasattr(compiler.corrupt_fact_substitution, '__wrapped__') else "MAPPA est un studio d'animation fondé en 2011."
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            sft_file = os.path.join(tmpdir, "sft.jsonl")
+            output_file = os.path.join(tmpdir, "dpo.jsonl")
+
+            with open(sft_file, "w", encoding="utf-8") as f:
+                for item in mock_data:
+                    f.write(json.dumps(item, ensure_ascii=False) + "\n")
+
+            with patch.object(compiler, 'corrupt_fact_substitution', side_effect=mock_corrupt_fact):
+                compiled_count = compiler.compile_dpo_pairs(sft_file, output_file, limit=3, seed=42)
+
+            # At least one sample should have been filtered out
+            with open(output_file, "r", encoding="utf-8") as f:
+                lines = [json.loads(line) for line in f]
+
+            # No line should contain HTML tags
+            for line in lines:
+                self.assertNotRegex(line["chosen"], r"<[a-zA-Z][^>]*>")
+                self.assertNotRegex(line["rejected"], r"<[a-zA-Z][^>]*>")
+
+
 if __name__ == "__main__":
     unittest.main()
+
