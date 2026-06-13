@@ -52,24 +52,6 @@ services:
     volumes:
       - neo4j_data:/data
 
-  # ⚙️ Celery Asynchronous Workers
-  celery_worker:
-    build:
-      context: ..
-      dockerfile: deploy/Dockerfile
-    container_name: animetix-celery-worker
-    command: celery -A animetix_project worker --loglevel=info
-    volumes:
-      - ..:/app
-    env_file:
-      - ../.env
-    depends_on:
-      - db
-      - redis
-      - neo4j
-
-
-
   # Ram Server / Inférence Local (Ollama)
   # NOTE: En production (GCP/AWS), déployer ce service sur des instances GPU "Spot" 
   # pour réduire les coûts de ~70%. Les modèles privilégiés sont Qwen-2.5-1.5B et Llama-3-8B.
