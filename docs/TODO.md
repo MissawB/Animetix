@@ -12,7 +12,7 @@ Ce document liste toutes les tâches techniques, architecturales et fonctionnell
 
 ### 🧪 Lab & IA (Frontend -> Backend)
 - [ ] **Mise à jour API Manga Lab :** Corriger `MangaLabPage.tsx` pour utiliser les endpoints réels `/api/v1/manga-lab/clean/` et `/api/v1/manga-lab/translate/` (Actuellement en 404).
-- [ ] **Connexion Video-RAG UI :** Lier les composants `Timeline` et `Inspector` de `VideoRagPage.tsx` aux services réels de recherche vectorielle (`VideoRAGSearchView`).
+- [x] **Connexion Video-RAG UI :** Lier les composants `Timeline` et `Inspector` de `VideoRagPage.tsx` aux services réels de recherche vectorielle (`VideoRAGSearchView`).
 
 ### 🏗️ Architecture & Données
 - [ ] **Modèles Manga Backend :** Implémenter le modèle `Chapter` (ou `MangaPage`) dans `backend/api/animetix/models.py` pour alimenter le `MangaReader` avec de vraies données.

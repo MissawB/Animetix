@@ -167,7 +167,7 @@ class PGVectorRepositoryAdapter(RepositoryPort):
         if not media_type:
             media_type = 'Anime'
             
-        coll_name = self.coll_names.get(media_type)
+        coll_name = self.coll_names.get(media_type, media_type)
         if not coll_name:
             return []
             

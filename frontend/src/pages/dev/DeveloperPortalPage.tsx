@@ -185,16 +185,14 @@ const DeveloperPortalPage: React.FC = () => {
                                 <p className="text-xs text-gray-500 font-bold uppercase tracking-wide italic">
                                     Interrogez le moteur Agentic RAG d'Animetix pour obtenir des réponses expertes basées sur le Lore actuel.
                                 </p>
-                                
-                                <div className="bg-black/60 rounded-2xl p-6 font-mono text-[11px] text-gray-300 leading-relaxed border border-white/5">
+                                 <div className="bg-black/60 rounded-2xl p-6 font-mono text-[11px] text-gray-300 leading-relaxed border border-white/5 my-4">
                                     <p className="text-blue-400 mb-2">// Requête cURL</p>
                                     curl -X POST https://animetix.com/api/v1/developer/rag/ \<br />
                                     &nbsp;&nbsp;-H "X-API-Key: YOUR_API_KEY" \<br />
                                     &nbsp;&nbsp;-H "Content-Type: application/json" \<br />
-                                    &nbsp;&nbsp;-d '{"query": "Explique moi le passé de Guts dans Berserk", "media_type": "Manga"}'
+                                    &nbsp;&nbsp;-d '&#123;"query": "Explique moi le passé de Guts dans Berserk", "media_type": "Manga"&#125;'
                                 </div>
-
-                                <Button variant="outline" fullWidth className="border-white/5 bg-white/5 text-[10px] font-black uppercase tracking-widest hover:bg-white/10">
+                                 <Button variant="outline" fullWidth className="border-white/5 bg-white/5 text-[10px] font-black uppercase tracking-widest hover:bg-white/10">
                                     <ExternalLink className="w-3 h-3 mr-2" /> Documentation Complète (OpenAPI)
                                 </Button>
                             </div>

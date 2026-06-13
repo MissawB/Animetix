@@ -326,5 +326,10 @@ export async function cloneVoice(text: string, audioFile: File, pitch: number): 
   });
 }
 
+export async function searchVideoSegments(query: string): Promise<{ status: string; results: any[] }> {
+  return apiClient(`/api/v1/labs/video/search/?q=${encodeURIComponent(query)}`);
+}
+
+
 
 

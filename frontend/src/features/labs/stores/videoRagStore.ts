@@ -6,6 +6,7 @@ export interface Segment {
   end: number;
   description: string;
   type: 'emotion' | 'action' | 'dialogue';
+  video_id?: string;
 }
 
 interface VideoRagState {
