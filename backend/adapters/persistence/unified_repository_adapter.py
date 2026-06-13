@@ -12,7 +12,7 @@ class UnifiedRepositoryAdapter(RepositoryPort):
     Primary: pgvector (Local/Fast)
     Relational: Django ORM (PostgreSQL)
     """
-    def __init__(self, chroma_db_path: str, project_root: str):
+    def __init__(self, project_root: str):
         self.project_root = project_root
         self.chroma = PGVectorRepositoryAdapter(project_root=project_root)
         self.django = DjangoRepositoryAdapter()

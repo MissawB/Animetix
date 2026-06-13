@@ -16,7 +16,6 @@ from adapters.persistence.django_safety_adapter import DjangoSafetyAdapter
 class PersistenceContainer(containers.DeclarativeContainer):
     repository = providers.Singleton(
         UnifiedRepositoryAdapter,
-        chroma_db_path=settings.CHROMA_DB_PATH,
         project_root=settings.PROJECT_ROOT
     )
 
