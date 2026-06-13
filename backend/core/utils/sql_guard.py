@@ -1,5 +1,5 @@
 import logging
-from sqlglot import parse, exp, ParseError # Changed parse_one to parse
+from sqlglot import parse, exp, ParseError
 
 logger = logging.getLogger("animetix.sql_guard")
 
@@ -20,7 +20,6 @@ def validate_sql_query(sql: str) -> bool:
 
     try:
         # Parse the SQL query with PostgreSQL dialect
-        # Use sqlglot.parse to get a list of expressions
         parsed_statements = parse(sql_clean, read="postgres")
 
         # Ensure only one statement is present
@@ -29,67 +28,108 @@ def validate_sql_query(sql: str) -> bool:
             return False
 
         parsed_sql = parsed_statements[0]
-        print(f"DEBUG: Parsed SQL for invalid syntax: {parsed_sql.dump()}")
+        
+        # AST Depth Check to prevent DoS via deep nesting or complex recursions
+        def get_depth(node, current_depth=0):
+            if current_depth > 50: # Fail-safe
+                raise ValueError("AST too deep")
+            max_depth = current_depth
+            # Use args to traverse child nodes
+            if hasattr(node, 'args'):
+                for k, v in node.args.items():
+                    if isinstance(v, list):
+                        for item in v:
+                            if isinstance(item, exp.Expression):
+                                max_depth = max(max_depth, get_depth(item, current_depth + 1))
+                    elif isinstance(v, exp.Expression):
+                        max_depth = max(max_depth, get_depth(v, current_depth + 1))
+            return max_depth
+
+        try:
+            if get_depth(parsed_sql) > 20:
+                logger.warning("SQL Guardrail: Query AST is too deep (DoS protection).")
+                return False
+        except ValueError:
+            return False
 
         # 1. Ensure it's a SELECT statement
         if not isinstance(parsed_sql, exp.Select):
             logger.warning(f"SQL Guardrail: Query is not a SELECT statement: {sql_clean[:200]}")
             return False
+            
+        # 1.1 Ensure at least one expression is selected (reject SELECT FROM table;)
+        if not parsed_sql.expressions:
+            logger.warning(f"SQL Guardrail: Empty SELECT expressions: {sql_clean[:200]}")
+            return False
 
-        # 2. Check for forbidden operations (INSERT, UPDATE, DELETE, DROP, ALTER, CREATE, etc.)
-        forbidden_expressions = (
+        # 2. Check for forbidden operations (DDL, DML, and dangerous extensions)
+        # Use a list of types and convert to tuple later
+        forbidden_expressions = [
             exp.Insert, exp.Update, exp.Delete, exp.Drop, exp.AlterTable, exp.Create,
-            exp.Merge, exp.Show, exp.Set,
-            exp.Copy, exp.Command
-        )
-        for node in parsed_sql.walk(): # Traverse the AST
-            if isinstance(node, forbidden_expressions):
+            exp.Merge, exp.Show, exp.Set, exp.Copy, exp.Command,
+            exp.Commit, exp.Rollback, exp.Transaction, exp.Kill,
+            exp.Union, exp.Except, exp.Intersect,
+            # Block bitwise operations often used in obfuscation
+            exp.BitwiseAnd, exp.BitwiseOr, exp.BitwiseXor, exp.BitwiseNot,
+            exp.BitwiseLeftShift, exp.BitwiseRightShift
+        ]
+        
+        # Safely add potentially missing types
+        for extra_type in ['TruncateTable', 'Explain', 'Analyze', 'Pragma', 'Fetch', 'Into', 'LoadData']:
+            if hasattr(exp, extra_type):
+                forbidden_expressions.append(getattr(exp, extra_type))
+
+        forbidden_tuple = tuple(forbidden_expressions)
+        
+        for node in parsed_sql.walk(): 
+            if isinstance(node, forbidden_tuple):
                 logger.warning(f"SQL Guardrail: Forbidden operation '{node.key}' detected in query: {sql_clean[:200]}")
                 return False
-            # Prevent UNION as it can be used for injection (e.g., UNION SELECT sensitive_data)
-            if isinstance(node, exp.Union):
-                logger.warning(f"SQL Guardrail: UNION detected in query, which is forbidden: {sql_clean[:200]}")
-                return False
 
-        # 2.1. Function Whitelisting: Allow only safe aggregate functions
-        allowed_functions = {"count", "sum", "avg", "min", "max"} # Lowercased for comparison
+        # 2.1. Function Whitelisting: Allow ONLY specific safe functions
+        # Added common text and math functions needed for catalog queries
+        # Note: SUBSTRING removed as it was used in original tests to represent 'dangerous' inference patterns
+        allowed_functions = {
+            "count", "sum", "avg", "min", "max", 
+            "lower", "upper", "length", "trim", "coalesce", "cast", "round"
+        }
         for func_exp in parsed_sql.find_all(exp.Func):
-            func_name = func_exp.name.lower()
-
-            # Allow COUNT(*) specifically when it's exp.Count with exp.Star as its argument
+            # Use .key for function name as .name is empty for specialized classes like Lower/Upper
+            func_name = func_exp.key.lower() if func_exp.key else ""
+            
+            # Allow COUNT(*) specifically
             if isinstance(func_exp, exp.Count) and func_exp.this and isinstance(func_exp.this, exp.Star):
+                continue
+            
+            # Allow CAST expression even if it inherits from Func
+            if isinstance(func_exp, exp.Cast):
                 continue
 
             if func_name not in allowed_functions:
                 logger.warning(f"SQL Guardrail: Forbidden function '{func_name}' detected in query: {sql_clean[:200]}")
                 return False
             
-        # 3. Table Whitelisting: Ensure only 'animetix_mediaitem' table is accessed
+        # 3. Table Whitelisting: Ensure ONLY 'animetix_mediaitem' table is accessed
         allowed_table = "animetix_mediaitem"
         found_tables = set()
         for table_exp in parsed_sql.find_all(exp.Table):
-            table_name = table_exp.name.lower() # Normalize to lower case for comparison
+            table_name = table_exp.name.lower()
             found_tables.add(table_name)
         
         if not found_tables:
             logger.warning(f"SQL Guardrail: No tables found in SELECT query: {sql_clean[:200]}")
             return False
 
-        if len(found_tables) > 1 or (len(found_tables) == 1 and allowed_table not in found_tables):
-            logger.warning(f"SQL Guardrail: Query accesses forbidden tables: {found_tables}. Only '{allowed_table}' is allowed. Query: {sql_clean[:200]}")
-            return False
-            
-        # Ensure that the only table found is the allowed_table
-        if found_tables and list(found_tables)[0] != allowed_table:
+        # Strict check: exactly one table allowed, and it must be the whitelist one
+        if len(found_tables) > 1 or list(found_tables)[0] != allowed_table:
             logger.warning(f"SQL Guardrail: Query accesses forbidden tables: {found_tables}. Only '{allowed_table}' is allowed. Query: {sql_clean[:200]}")
             return False
 
-        # All checks passed
         return True
 
     except ParseError as e:
-        logger.warning(f"SQL Guardrail: SQL parsing error (malformed or disallowed syntax): {e} in query: {sql_clean[:200]}")
+        logger.warning(f"SQL Guardrail: SQL parsing error: {e} in query: {sql_clean[:200]}")
         return False
     except Exception as e:
-        logger.error(f"SQL Guardrail: An unexpected error occurred during SQL validation: {e} in query: {sql_clean[:200]}")
+        logger.error(f"SQL Guardrail: An unexpected error occurred: {e} in query: {sql_clean[:200]}")
         return False

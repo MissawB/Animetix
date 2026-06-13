@@ -1,6 +1,18 @@
 from rest_framework import serializers
-from .models import Profile, DailyChallenge, ChallengeResult, Achievement, UserAchievement, CreativeFusion, DiscoveryClub, ClubMembership, ClubEvent, GlobalBoss, BossParticipation, DataCurationTicket
+from .models import Profile, DailyChallenge, ChallengeResult, Achievement, UserAchievement, CreativeFusion, DiscoveryClub, ClubMembership, ClubEvent, GlobalBoss, BossParticipation, DataCurationTicket, MangaChapter, MangaPage
 from django.contrib.auth.models import User
+
+class MangaPageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MangaPage
+        fields = ['id', 'number', 'image_url', 'metadata']
+
+class MangaChapterSerializer(serializers.ModelSerializer):
+    pages = MangaPageSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = MangaChapter
+        fields = ['id', 'manga', 'number', 'title', 'external_id', 'pages', 'created_at', 'updated_at']
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -136,8 +148,15 @@ from .models import (
     AIREvalResult, 
     GoldDatasetEntry, 
     AIFeedback,
-    GameplaySession
+    GameplaySession,
+    AISafetyEvent
 )
+
+class AISafetyEventSerializer(serializers.ModelSerializer):
+    username = serializers.ReadOnlyField(source='user.username')
+    class Meta:
+        model = AISafetyEvent
+        fields = '__all__'
 
 class AIREvalResultSerializer(serializers.ModelSerializer):
     class Meta:
