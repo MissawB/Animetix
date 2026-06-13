@@ -24,6 +24,13 @@ export default {
         'surface-text': 'rgb(var(--color-text) / <alpha-value>)',
         'surface-card': 'rgb(var(--color-card) / <alpha-value>)',
         
+        // Cyberpunk
+        'cyberpunk-bg': '#050505',
+        'cyberpunk-panel': 'rgba(255, 255, 255, 0.05)',
+        'cyberpunk-panelBorder': 'rgba(255, 255, 255, 0.1)',
+        'cyberpunk-neonCyan': '#00F3FF',
+        'cyberpunk-neonMagenta': '#FF00FF',
+        
         // Legacy compat (if needed)
         'anime-accent': 'rgb(var(--color-accent) / <alpha-value>)',
         'anime-success': 'rgb(var(--color-success) / <alpha-value>)',
