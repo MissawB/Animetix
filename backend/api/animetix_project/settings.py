@@ -371,34 +371,6 @@ GCP_TASKS_SERVICE_ACCOUNT = env('GCP_TASKS_SERVICE_ACCOUNT', default='animetix-t
 # and Cloud Scheduler triggers.
 # The recurring tasks are mapped to the django management command:
 # `python manage.py run_scheduled_task <task_key>`
-#
-# from celery.schedules import crontab
-# CELERY_BEAT_SCHEDULE = {
-#     'dpo-optimization-daily': {
-#         'task': 'animetix.tasks.scheduled_dpo_optimization',
-#         'schedule': crontab(hour=3, minute=0),
-#     },
-#     'daily-data-ingestion': {
-#         'task': 'animetix.pipeline.run_daily_ingestion_workflow',
-#         'schedule': crontab(hour=3, minute=0),
-#     },
-#     'daily-maintenance-mlops': {
-#         'task': 'animetix.pipeline.run_daily_maintenance_workflow',
-#         'schedule': crontab(hour=5, minute=0),
-#     },
-#     'hourly-health-monitoring': {
-#         'task': 'animetix.pipeline.run_hourly_monitoring_workflow',
-#         'schedule': crontab(minute=0),
-#     },
-#     'gold-dataset-lora-sensor': {
-#         'task': 'animetix.pipeline.check_gold_dataset_sensor_task',
-#         'schedule': crontab(minute='*/10'),
-#     },
-#     'gold-dataset-dpo-sensor': {
-#         'task': 'animetix.pipeline.check_dpo_feedback_sensor_task',
-#         'schedule': crontab(minute='*/10'),
-#     },
-# }
 
 # Static files
 STATIC_URL = 'static/'
