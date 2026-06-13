@@ -9,6 +9,17 @@ from django.core.cache import cache
 
 logger = logging.getLogger('animetix')
 
+class LocalSentenceTransformerEmbeddingFunction:
+    def __init__(self, model_name: str, trust_remote_code: bool = True):
+        from sentence_transformers import SentenceTransformer
+        self.model = SentenceTransformer(model_name, trust_remote_code=trust_remote_code)
+
+    def __call__(self, input: List[str]) -> List[List[float]]:
+        embeddings = self.model.encode(input)
+        if hasattr(embeddings, "tolist"):
+            return embeddings.tolist()
+        return [list(emb) for emb in embeddings]
+
 class PGVectorRepositoryAdapter(RepositoryPort):
     def __init__(self, project_root: str):
         self.project_root = project_root
@@ -36,8 +47,7 @@ class PGVectorRepositoryAdapter(RepositoryPort):
     @property
     def embedding_fn(self):
         if self._embedding_fn is None:
-            from chromadb.utils import embedding_functions
-            self._embedding_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
+            self._embedding_fn = LocalSentenceTransformerEmbeddingFunction(
                 model_name="jinaai/jina-embeddings-v3",
                 trust_remote_code=True
             )
