@@ -246,6 +246,11 @@ Strict Guidelines:
         # Execute query
         try:
             with connection.cursor() as cursor:
+                # Use a read-only transaction for security
+                cursor.execute("SET TRANSACTION READ ONLY;")
+                # Set a strict timeout to prevent long-running queries or ReDoS (1.5 seconds)
+                cursor.execute("SET statement_timeout = '1500';")
+                
                 cursor.execute(generated_sql)
                 # Fetch column names
                 columns = [col[0] for col in cursor.description]
