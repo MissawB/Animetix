@@ -58,3 +58,18 @@ def test_beam_pipeline_execution():
             assert "beam_lore_one piece" in ids[0]
             assert "Monkey D. Luffy" in metadatas[0]["description"]
             assert metadatas[0]["franchise"] == "one piece"
+
+
+def test_dofn_parameter_propagation():
+    from backend.pipeline.mlops.lore_ingestion_beam import GenerateEmbeddingsDoFn, WriteToVectorDBDoFn
+    
+    # Test GenerateEmbeddingsDoFn
+    embedder = GenerateEmbeddingsDoFn(database_url="postgresql://test_url", django_env="test_env")
+    assert embedder.database_url == "postgresql://test_url"
+    assert embedder.django_env == "test_env"
+    
+    # Test WriteToVectorDBDoFn
+    writer = WriteToVectorDBDoFn(database_url="postgresql://test_url", django_env="test_env")
+    assert writer.database_url == "postgresql://test_url"
+    assert writer.django_env == "test_env"
+

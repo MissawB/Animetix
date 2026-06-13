@@ -83,8 +83,24 @@ class ChunkTextDoFn(beam.DoFn):
             "chunks": chunks
         }
 
+class IngestionOptions(PipelineOptions):
+    @classmethod
+    def _add_argparse_args(cls, parser):
+        parser.add_argument('--pubsub_subscription', type=str, help='Pub/sub subscription path')
+        parser.add_argument('--database_url', type=str, help='Database connection URL')
+        parser.add_argument('--django_env', type=str, default='production', help='Django environment')
+
 class GenerateEmbeddingsDoFn(beam.DoFn):
+    def __init__(self, database_url=None, django_env=None):
+        self.database_url = database_url
+        self.django_env = django_env
+        super().__init__()
+
     def setup(self):
+        if self.database_url:
+            os.environ['DATABASE_URL'] = self.database_url
+        if self.django_env:
+            os.environ['DJANGO_ENV'] = self.django_env
         import django
         os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'animetix_project.settings')
         try:
@@ -143,7 +159,16 @@ class GenerateEmbeddingsDoFn(beam.DoFn):
         }
 
 class WriteToVectorDBDoFn(beam.DoFn):
+    def __init__(self, database_url=None, django_env=None):
+        self.database_url = database_url
+        self.django_env = django_env
+        super().__init__()
+
     def setup(self):
+        if self.database_url:
+            os.environ['DATABASE_URL'] = self.database_url
+        if self.django_env:
+            os.environ['DJANGO_ENV'] = self.django_env
         import django
         os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'animetix_project.settings')
         try:
@@ -184,9 +209,13 @@ def run_pipeline(argv=None, test_input=None):
         if test_input is not None:
             # Read from static test inputs (DirectRunner Testing)
             raw_input = p | "CreateMockInput" >> beam.Create(test_input)
+            db_url = None
+            dj_env = None
         else:
-            # Read from streaming Pub/Sub subscription in production
-            subscription_path = pipeline_options.get_all_options().get('pubsub_subscription')
+            options = pipeline_options.view_as(IngestionOptions)
+            subscription_path = options.pubsub_subscription
+            db_url = options.database_url
+            dj_env = options.django_env
             if not subscription_path:
                 raise ValueError("Missing required parameter: --pubsub_subscription")
             raw_input = (
@@ -199,20 +228,12 @@ def run_pipeline(argv=None, test_input=None):
             raw_input
             | "ScrapeAndClean" >> beam.ParDo(ScrapeAndCleanDoFn())
             | "ChunkText" >> beam.ParDo(ChunkTextDoFn())
-            | "GenerateEmbeddings" >> beam.ParDo(GenerateEmbeddingsDoFn())
-            | "WriteToVectorDB" >> beam.ParDo(WriteToVectorDBDoFn())
+            | "GenerateEmbeddings" >> beam.ParDo(GenerateEmbeddingsDoFn(database_url=db_url, django_env=dj_env))
+            | "WriteToVectorDB" >> beam.ParDo(WriteToVectorDBDoFn(database_url=db_url, django_env=dj_env))
         )
 
 if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--pubsub_subscription',
-        help='The Pub/Sub subscription path to read streaming tasks from.'
-    )
-    known_args, pipeline_args = parser.parse_known_args()
-    
     # Configure logging
     logging.basicConfig(level=logging.INFO)
-    
-    run_pipeline(pipeline_args + [f"--pubsub_subscription={known_args.pubsub_subscription}"])
+    import sys
+    run_pipeline(sys.argv[1:])

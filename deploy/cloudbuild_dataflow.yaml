@@ -1,0 +1,27 @@
+steps:
+  # 1. Build the Single Docker Image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '-t', 'europe-west9-docker.pkg.dev/animetix/animetix-repo/lore-ingestion-beam:latest',
+      '-f', 'deploy/Dockerfile.dataflow',
+      '.'
+    ]
+
+  # 2. Push the Image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'europe-west9-docker.pkg.dev/animetix/animetix-repo/lore-ingestion-beam:latest']
+
+  # 3. Build the Dataflow Flex Template spec file and upload to GCS
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args: [
+      'dataflow', 'flex-template', 'build',
+      'gs://animetix-dataflow/templates/lore-ingestion-beam.json',
+      '--image', 'europe-west9-docker.pkg.dev/animetix/animetix-repo/lore-ingestion-beam:latest',
+      '--sdk-language', 'PYTHON',
+      '--metadata-file', 'deploy/lore_ingestion_metadata.json'
+    ]
+
+images:
+  - 'europe-west9-docker.pkg.dev/animetix/animetix-repo/lore-ingestion-beam:latest'

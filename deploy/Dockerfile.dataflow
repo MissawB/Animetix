@@ -1,0 +1,39 @@
+# --- Stage 1: Get Python Flex Template Launcher Binary ---
+FROM gcr.io/dataflow-templates-base/python3-template-launcher-base:latest AS launcher
+
+# --- Stage 2: Build Application Image ---
+FROM apache/beam_python3.12_sdk:2.74.0
+
+# Copy Flex Template launcher binary
+COPY --from=launcher /opt/google/dataflow/python_template_launcher /opt/google/dataflow/python_template_launcher
+
+# Set working directory
+WORKDIR /template
+
+# Install system dependencies
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    gcc \
+    libsndfile1 \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements.txt
+COPY requirements.txt ./
+
+# Install requirements + bs4
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir beautifulsoup4
+
+# Copy backend codebase
+COPY backend/ ./backend/
+
+# Configure Python search path
+ENV PYTHONPATH="/template/backend:/template/backend/api:$PYTHONPATH"
+
+# Specify Pipeline Entrypoint
+ENV FLEX_TEMPLATE_PYTHON_PY_FILE=/template/backend/pipeline/mlops/lore_ingestion_beam.py
+
+ENTRYPOINT ["/opt/google/dataflow/python_template_launcher"]

@@ -1,0 +1,27 @@
+{
+  "name": "Lore Ingestion Pipeline",
+  "description": "Scalable Apache Beam pipeline on Dataflow to ingest, chunk, embed, and load wiki lore pages into pgvector database.",
+  "parameters": [
+    {
+      "name": "pubsub_subscription",
+      "label": "Pub/Sub Subscription Path",
+      "helpText": "The Pub/Sub subscription to consume wiki ingestion tasks from (e.g. projects/animetix/subscriptions/lore-ingestion-sub).",
+      "type": "TEXT",
+      "isOptional": false
+    },
+    {
+      "name": "database_url",
+      "label": "Database URL",
+      "helpText": "Connection URL for the PostgreSQL/AlloyDB database.",
+      "type": "TEXT",
+      "isOptional": true
+    },
+    {
+      "name": "django_env",
+      "label": "Django Environment",
+      "helpText": "Set to 'production' to enable production configurations.",
+      "type": "TEXT",
+      "isOptional": true
+    }
+  ]
+}
