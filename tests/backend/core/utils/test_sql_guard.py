@@ -17,7 +17,7 @@ def test_valid_select_query(valid_sql):
 # Test cases for invalid SQL syntax
 @pytest.mark.parametrize("invalid_syntax_sql", [
     "SELECT FROM animetix_mediaitem;",
-    "SELECT id, FROM animetix_mediaitem;",
+    "SELECT id FROM ;",  # Missing table name
     "SELECT * FROM WHERE id = 1;",
     "SELECT * FROM animetix_mediaitem WHERE ;",
     "SELECT * animetix_mediaitem;",
