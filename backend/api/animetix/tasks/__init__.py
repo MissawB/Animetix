@@ -79,11 +79,28 @@ def sync_media_item_task(self, media_type, item_id, data):
 @shared_task
 @register_task("trigger_club_event")
 def trigger_club_event(club_id, event_id):
+    """
+    Signals all members of a club via WebSocket that an event has started.
+    """
     from channels.layers import get_channel_layer
     from asgiref.sync import async_to_sync
     channel_layer = get_channel_layer()
-    if channel_layer:
-        async_to_sync(channel_layer.group_send)(f'club_{club_id}', {'type': 'event_start', 'event_id': event_id})
+    if not channel_layer:
+        logger.error("No channel layer found for club event trigger.")
+        return
+
+    group_name = f'club_{club_id}'
+    
+    # Broadcast to the club's WebSocket group
+    async_to_sync(channel_layer.group_send)(
+        group_name,
+        {
+            'type': 'event_start',
+            'event_id': event_id,
+            'message': "L'événement du club commence maintenant !"
+        }
+    )
+    logger.info(f"Triggered event {event_id} for club {club_id}")
 
 
 from . import telemetry_tasks
