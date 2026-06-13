@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, Zap, Flame, Image as ImageIcon, Loader2, ArrowRight, RefreshCw, Heart, Share2, Info, X, Film } from 'lucide-react';
 import { SearchBar } from "../../components/SearchBar";
+import { CyberTerminalPanel } from '../../components/forge/CyberTerminalPanel';
+import { GlitchText } from '../../components/forge/GlitchText';
+import { CyberSlider } from '../../components/forge/CyberSlider';
+import { CyberButton } from '../../components/forge/CyberButton';
 import { startFusion, getFusionStatus, FusionResponse, FusionStatus } from '../../api';
 import { SearchItem } from "../../types";
 
@@ -220,7 +224,7 @@ const ForgePage: React.FC = () => {
       <div className="text-center mb-20 relative">
         <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-64 h-64 bg-anime-accent/10 blur-[100px] rounded-full" />
         <h1 className="text-8xl font-black italic manga-font mb-4 tracking-tighter leading-none">
-          LA <span className="text-anime-accent">FORGE</span>
+          <GlitchText>LA FORGE</GlitchText>
         </h1>
         <div className="flex items-center justify-center gap-4 mb-4">
             <div className="h-px w-12 bg-black/10 dark:bg-white/10" />
@@ -232,8 +236,7 @@ const ForgePage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-16">
         
         <div className="lg:col-span-7 space-y-8">
-            <div className="bg-white dark:bg-anime-dark-card rounded-[3rem] p-8 shadow-xl border border-gray-100 dark:border-white/5 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-2 h-full bg-anime-accent" />
+            <CyberTerminalPanel>
                 <h3 className="text-xl font-black italic manga-font mb-6 flex items-center gap-3">
                    <Zap className="w-5 h-5 text-anime-accent" /> Sélecteur d'Univers
                 </h3>
@@ -297,9 +300,9 @@ const ForgePage: React.FC = () => {
                         </div>
                     </div>
                 </div>
-            </div>
+            </CyberTerminalPanel>
 
-            <div className="bg-white dark:bg-anime-dark-card rounded-[3rem] p-8 shadow-xl border border-gray-100 dark:border-white/5">
+            <CyberTerminalPanel>
                 <h3 className="text-xl font-black italic manga-font mb-6 flex items-center gap-3">
                    <ImageIcon className="w-5 h-5 text-blue-400" /> Esthétique Visuelle
                 </h3>
@@ -316,11 +319,11 @@ const ForgePage: React.FC = () => {
                         </button>
                     ))}
                 </div>
-            </div>
+            </CyberTerminalPanel>
         </div>
 
         <div className="lg:col-span-5 space-y-8">
-            <div className="bg-white dark:bg-anime-dark-card rounded-[3rem] p-8 shadow-xl border border-gray-100 dark:border-white/5 sticky top-24">
+            <CyberTerminalPanel className="sticky top-24">
                 <h3 className="text-xl font-black italic manga-font mb-10 flex items-center gap-3">
                    <Flame className="w-5 h-5 text-anime-error" /> Paramètres du Réacteur
                 </h3>
@@ -335,10 +338,10 @@ const ForgePage: React.FC = () => {
                            <span className="text-2xl font-black italic manga-font text-anime-error">{chaosLevel}%</span>
                         </div>
                         <div className="relative group pt-4">
-                            <input 
-                                type="range" min="0" max="100" value={chaosLevel} 
-                                onChange={(e) => setChaosLevel(parseInt(e.target.value))} 
-                                className="w-full h-1.5 bg-gray-200 dark:bg-white/10 rounded-lg appearance-none cursor-pointer accent-anime-error" 
+                            <CyberSlider 
+                                min={0} max={100} value={chaosLevel} 
+                                onChange={setChaosLevel} 
+                                color="magenta"
                             />
                             <div className="flex justify-between mt-2 text-[8px] font-black uppercase opacity-20">
                                 <span>Cohérent</span>
@@ -357,10 +360,10 @@ const ForgePage: React.FC = () => {
                            <span className="text-2xl font-black italic manga-font text-blue-500">{balance}%</span>
                         </div>
                         <div className="relative group pt-4">
-                            <input 
-                                type="range" min="0" max="100" value={balance} 
-                                onChange={(e) => setBalance(parseInt(e.target.value))} 
-                                className="w-full h-1.5 bg-gray-200 dark:bg-white/10 rounded-lg appearance-none cursor-pointer accent-blue-500" 
+                            <CyberSlider 
+                                min={0} max={100} value={balance} 
+                                onChange={setBalance} 
+                                color="cyan"
                             />
                             <div className="flex justify-between mt-2 text-[8px] font-black uppercase opacity-20">
                                 <span>Origine A</span>
@@ -370,18 +373,17 @@ const ForgePage: React.FC = () => {
                         </div>
                     </div>
 
-                    <button
-                        disabled={!itemA || !itemB || isGenerating}
-                        onClick={handleStartFusion}
-                        className="w-full bg-anime-accent disabled:bg-gray-200 dark:disabled:bg-white/5 disabled:opacity-20 text-black py-8 rounded-[2.5rem] font-black italic text-3xl shadow-2xl hover:scale-[1.03] active:scale-95 transition-all duration-300 flex items-center justify-center gap-4 uppercase"
+                    <CyberButton
+                        onClick={() => !(!itemA || !itemB || isGenerating) && handleStartFusion()}
+                        className={`w-full py-8 rounded-[2.5rem] font-black italic text-3xl shadow-2xl transition-all duration-300 flex items-center justify-center gap-4 uppercase ${(!itemA || !itemB || isGenerating) ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                         <Sparkles className="w-8 h-8" />
                         Forger la Réalité
-                    </button>
+                    </CyberButton>
                     
                     {error && <div className="text-anime-error text-center text-xs font-black uppercase bg-anime-error/10 p-4 rounded-2xl animate-bounce">{error}</div>}
                 </div>
-            </div>
+            </CyberTerminalPanel>
         </div>
       </div>
 
