@@ -1,4 +1,3 @@
-from celery import shared_task
 from animetix_project.logging_config import get_logger
 from animetix.tasks_registry import register_task
 from animetix.bigquery_service import BigQueryTelemetryService
@@ -6,7 +5,6 @@ from animetix.models import DuelRoom, ArchetypeDriftSnapshot, MediaItem
 
 logger = get_logger('animetix.' + __name__)
 
-@shared_task
 @register_task("ingest_duel_telemetry")
 def ingest_duel_telemetry(room_id):
     try:
@@ -45,7 +43,6 @@ def ingest_duel_telemetry(room_id):
         logger.error(f"Error in ingest_duel_telemetry: {e}")
         return {"status": "error", "error": str(e)}
 
-@shared_task
 @register_task("ingest_drift_telemetry")
 def ingest_drift_telemetry(snapshot_id):
     try:

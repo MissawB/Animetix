@@ -1,11 +1,9 @@
-from celery import shared_task
 import time
 from animetix_project.logging_config import get_logger
 from animetix.tasks_registry import register_task
 
 logger = get_logger('animetix.' + __name__)
 
-@shared_task
 @register_task("process_video_search_task")
 def process_video_search_task(video_data_b64, query):
     """Tâche asynchrone pour Video-RAG."""
@@ -21,7 +19,6 @@ def process_video_search_task(video_data_b64, query):
     result = container.video_quest_service().search_moment_in_video(query, segments)
     return result
 
-@shared_task
 @register_task("transform_user_image_task")
 def transform_user_image_task(image_data_b64, studio_name):
     """Tâche asynchrone pour Anime-to-Real transformation."""
@@ -33,7 +30,6 @@ def transform_user_image_task(image_data_b64, studio_name):
     image_url = container.studio_transform_service().transform_user_to_anime(image_bytes, studio_name)
     return {"image_url": image_url}
 
-@shared_task
 @register_task("translate_manga_page_task")
 def translate_manga_page_task(image_data_b64, target_lang):
     """Tâche asynchrone pour le pipeline Manga Flow."""
@@ -45,7 +41,6 @@ def translate_manga_page_task(image_data_b64, target_lang):
     translated_image_url = container.manga_flow_service().translate_manga_page(image_bytes, target_lang)
     return {"translated_image_url": translated_image_url}
 
-@shared_task
 @register_task("localize_video_action_task")
 def localize_video_action_task(video_data_b64, actions):
     """Tâche asynchrone pour la Temporal Action Localization (TAL)."""
@@ -58,7 +53,6 @@ def localize_video_action_task(video_data_b64, actions):
     action_boundaries = container.video_quest_service().find_action_boundaries(video_bytes, actions)
     return {"actions_found": action_boundaries}
 
-@shared_task
 @register_task("transform_video_task")
 def transform_video_task(video_data_b64, studio_name):
     """Tâche asynchrone pour le Neural Style Transfer sur vidéo avec consistance temporelle."""
@@ -70,7 +64,6 @@ def transform_video_task(video_data_b64, studio_name):
     video_url = container.studio_transform_service().transform_video_to_anime_consistent(video_bytes, studio_name)
     return {"video_url": video_url}
 
-@shared_task
 @register_task("generate_video_soundscape_task")
 def generate_video_soundscape_task(video_data_b64):
     """Tâche asynchrone pour générer une ambiance sonore à partir d'une vidéo."""
@@ -82,7 +75,6 @@ def generate_video_soundscape_task(video_data_b64):
     audio_url = container.soundscape_service().generate_soundscape_for_video(video_bytes)
     return {"audio_url": audio_url}
 
-@shared_task
 @register_task("generate_3d_scene_task")
 def generate_3d_scene_task(image_data_b64, title):
     """Tâche asynchrone pour la reconstruction de scène 3D (Spatial Computing)."""
@@ -100,7 +92,6 @@ def generate_fusion_image(item1, item2, art_style="Cyberpunk"):
     container = get_container()
     return container.fusion_service().generate_fusion_image(item1, item2, art_style=art_style)
 
-@shared_task
 @register_task("process_gcs_upload_task")
 def process_gcs_upload_task(bucket, name):
     """

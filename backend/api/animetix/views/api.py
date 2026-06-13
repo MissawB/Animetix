@@ -5,7 +5,6 @@ from django.http import JsonResponse, HttpResponse, StreamingHttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.core.cache import cache
 from django_ratelimit.decorators import ratelimit
-from celery.result import AsyncResult
 from pydantic import ValidationError
 from .common import logger
 from ..forms import EmojiStreamForm, ParadoxStreamForm, AgenticRagForm, AniminatorForm

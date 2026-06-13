@@ -6,12 +6,10 @@ Automates prompt optimization and cognitive self-correction using DSPy.
 
 from animetix_project.logging_config import get_logger
 from animetix.tasks_registry import register_task
-from celery import shared_task
 from ..containers import get_container
 
 logger = get_logger('animetix.' + __name__)
 
-@shared_task(name="animetix.meta.optimize_prompts")
 @register_task("weekly_prompt_optimization")
 def weekly_prompt_optimization():
     """
@@ -57,7 +55,6 @@ def weekly_prompt_optimization():
     return "NO_IMPROVEMENT"
 
 
-@shared_task(name="animetix.tasks.scheduled_dpo_optimization")
 @register_task("scheduled_dpo_optimization")
 def scheduled_dpo_optimization():
     """

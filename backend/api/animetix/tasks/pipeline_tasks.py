@@ -7,7 +7,6 @@ Migrated from Dagster pipelines to achieve a lightweight orchestration engine.
 import os
 import sys
 from pathlib import Path
-from celery import shared_task
 from animetix_project.logging_config import get_logger
 from animetix.tasks_registry import register_task
 from animetix.tasks_client import enqueue_task
@@ -22,7 +21,6 @@ for path in [str(PIPELINE_DIR), str(PIPELINE_DIR / "mlops"), str(PIPELINE_DIR / 
     if path not in sys.path:
         sys.path.insert(0, path)
 
-@shared_task(name="animetix.pipeline.run_daily_ingestion_workflow")
 @register_task("run_daily_ingestion_workflow")
 def run_daily_ingestion_workflow():
     """
@@ -159,7 +157,6 @@ def run_daily_ingestion_workflow():
     logger.info("🎉 Daily Ingestion Workflow Finished.")
     return "SUCCESS"
 
-@shared_task(name="animetix.pipeline.run_daily_maintenance_workflow")
 @register_task("run_daily_maintenance_workflow")
 def run_daily_maintenance_workflow():
     """
@@ -230,7 +227,6 @@ def run_daily_maintenance_workflow():
     logger.info("🎉 Daily Maintenance Workflow Finished.")
     return "SUCCESS"
 
-@shared_task(name="animetix.pipeline.run_hourly_monitoring_workflow")
 @register_task("run_hourly_monitoring_workflow")
 def run_hourly_monitoring_workflow():
     """
@@ -265,7 +261,6 @@ def run_hourly_monitoring_workflow():
     logger.info("🎉 Hourly Monitoring Workflow Finished.")
     return "SUCCESS"
 
-@shared_task(name="animetix.pipeline.check_gold_dataset_sensor_task")
 @register_task("check_gold_dataset_sensor_task")
 def check_gold_dataset_sensor_task():
     """
@@ -294,7 +289,6 @@ def check_gold_dataset_sensor_task():
     logger.info(f"ℹ️ Gold Dataset Sensor finished. Count={validated_count}, Last={last_count}. Threshold (100) not met.")
     return "NO_TRIGGER"
 
-@shared_task(name="animetix.pipeline.check_dpo_feedback_sensor_task")
 @register_task("check_dpo_feedback_sensor_task")
 def check_dpo_feedback_sensor_task():
     """

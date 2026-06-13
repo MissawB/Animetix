@@ -61,37 +61,6 @@ class VideoRAGService:
         # Uses standard collection search
         return self.repository.search_media_items(query, media_type=self.collection_name, limit=limit)
 
-    def start_distributed_analysis(self, video_data: bytes, query: Optional[str] = None) -> Any:
-        """
-        Point d'entrée pour l'analyse asynchrone distribuée.
-        Découpe la vidéo et lance un groupe de tâches Celery.
-        """
-        logger.info("🎬 Video-RAG: Initializing distributed analysis workflow...")
-        
-        # 1. Découpage logique (Simulé ici, en prod utiliserait un wrapper FFmpeg)
-        # On divise les octets pour la démo, mais on prépare la structure
-        chunks = self._segment_video(video_data)
-        
-        from backend.animetix.tasks import process_video_chunk_task, aggregate_video_results_task
-        from celery import group, chain
-
-        # 2. Création du groupe de tâches (Map)
-        task_group = group(
-            process_video_chunk_task.s(
-                base64.b64encode(chunk).decode('utf-8'), 
-                i, 
-                len(chunks), 
-                query
-            ) for i, chunk in enumerate(chunks)
-        )
-
-        # 3. Chaînage vers l'agrégation (Reduce)
-        workflow = chain(task_group, aggregate_video_results_task.s(original_query=query))
-        
-        # 4. Lancement
-        result = workflow.apply_async()
-        return {"task_id": result.id, "status": "started", "chunks": len(chunks)}
-
     def process_segment(self, segment_data: bytes) -> Dict[str, Any]:
         """Analyse un segment individuel (Exécuté par un worker Celery)."""
         # Extraction du récit pour ce segment
