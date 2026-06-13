@@ -5,7 +5,7 @@ import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
 
 import { useTranslation } from 'react-i18next';
-import { apiClient } from "../../utils/apiClient";
+import { animinatorService } from "../../features/games/services/animinatorService";
 
 interface Message {
   role: 'ai' | 'user';
@@ -41,10 +41,7 @@ const AniminatorPage: React.FC = () => {
     setThoughtProcess('Analyse de la requête...');
 
     try {
-      const data = await apiClient('/api/v1/game/animinator/ask/', {
-        method: 'POST',
-        body: JSON.stringify({ question: userMsg })
-      });
+      const data = await animinatorService.ask(userMsg);
       
       setTimeout(() => {
         setMessages(prev => [...prev, { role: 'ai', text: data.answer || "Je commence à voir plus clair..." }]);

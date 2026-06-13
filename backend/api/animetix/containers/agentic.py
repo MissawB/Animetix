@@ -173,7 +173,7 @@ class AgenticContainer(containers.DeclarativeContainer):
             RAGState.PLAN: providers.Singleton(PlanProcessor, planner=planner),
             RAGState.SAGA_LOOKUP: providers.Singleton(SagaLookupProcessor, saga_agent=saga_agent),
             RAGState.GRAPH_EXPLORE: providers.Singleton(GraphExploreProcessor, community_partitioner=community_partitioner, graph_expert=graph_expert, neo4j_manager=persistence.graph_persistence_port, xai_collector=None),
-            RAGState.RESEARCH: providers.Singleton(ResearchProcessor, planner=planner, web_search=infrastructure.web_search, retrieval_evaluator=retrieval_evaluator, context_compressor=context_compressor, scout=scout, video_rag_service=video_rag_service, xai_collector=None),
+            RAGState.RESEARCH: providers.Singleton(ResearchProcessor, planner=planner, rag_service=rag_service, context_compressor=context_compressor, retrieval_evaluator=retrieval_evaluator, web_search=infrastructure.web_search, video_rag_service=video_rag_service, scout=scout, neo4j_manager=persistence.graph_persistence_port, xai_collector=None),
             RAGState.ACQUIRE_KNOWLEDGE: providers.Singleton(AcquireKnowledgeProcessor, librarian=librarian, xai_collector=None),
             RAGState.SPECULATE: providers.Singleton(SpeculateProcessor, forge=forge, xai_collector=None),
             RAGState.VLM_RERANK: providers.Singleton(VlmRerankProcessor, inference_engine=inference.inference_engine, prompt_manager=infrastructure.prompt_manager, xai_collector=None),

@@ -81,14 +81,22 @@ The **Ghost Labs** are specialized playgrounds for exploring cutting-edge machin
 
 ---
 
+## 💎 Rewarded Economy: The Berrix Model
+
+Animetix is **100% free** for all users, financed by a sustainable "attention-to-compute" economy. All advanced AI features (Creative Forge, Visual Novel Generation, Deep Graph Visualizer) are powered by **Berrix** (Bx).
+
+*   **Passive Mining**: Earn Berrix simply by playing our suite of interactive games (+20 Bx / 3 min).
+*   **Active Injection**: Watch short sponsored clips in the **Power Station** to instantly recharge your neuronal battery (+250 Bx / clip).
+*   **Zero-Paywall Philosophy**: No features are locked behind subscriptions. Only the developer API remains subject to strict quotas.
+
 ## 🧠 Core RAG 2.0 & Cognitive Architecture
 
 Animetix separates domain rules from infrastructure concerns using a modular hexagonal approach:
 
-* **Hybrid Memory:** Merges dense vector databases (for semantic similarity) with **Neo4j** (logical knowledge graphs mapping relationships).
-* **Cross-Encoder Reranking:** Fine-tuned cross-encoders score candidate matches to mitigate hallucination.
-* **Lazy Loading Strategy:** Heavy packages (`torch`, `transformers`, `nltk`) are imported only when their respective adaptors are called, ensuring instantaneous container boot times.
-* **Zustand Store Architecture:** Replaced heavy state machines with modular, reactive stores for smooth client-side rendering.
+*   **Local-First Inference**: Minimizes latency and costs by prioritizing local SLMs (**Qwen-2.5-1.5B**, **Llama-3-8B**) running on GPU Spot instances before falling back to cloud APIs.
+*   **Hybrid Memory**: Merges dense vector databases (for semantic similarity) with **Neo4j** (logical knowledge graphs mapping relationships).
+*   **Cross-Encoder Reranking**: Fine-tuned cross-encoders score candidate matches to mitigate hallucination.
+
 
 ---
 

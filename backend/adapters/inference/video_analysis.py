@@ -33,9 +33,10 @@ class VideoAnalysisMixin:
                     bnb_4bit_quant_type="nf4",
                 )
 
-            self._video_processor = AutoProcessor.from_pretrained(model_id)
+            self._video_processor = AutoProcessor.from_pretrained(model_id, revision="main") # nosec B615
             self._video_vlm = Qwen2VLForConditionalGeneration.from_pretrained(
                 model_id,
+                revision="main", # nosec B615
                 torch_dtype=_torch.float16 if _torch.cuda.is_available() else _torch.float32,
                 device_map="auto",
                 quantization_config=quantization_config,

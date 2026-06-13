@@ -146,6 +146,31 @@ class DeveloperSubscriptionMockView(APIView):
         })
 
 
+class CreateBxCheckoutView(APIView):
+    """
+    Crée une session Stripe Checkout pour l'achat d'un pack de Bx.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        amount = request.data.get('amount') # Nombre de Bx (ex: 10000)
+        price = request.data.get('price_cents') # Prix en centimes (ex: 499)
+        
+        if not amount or not price:
+            return Response({"error": "amount and price_cents are required"}, status=400)
+            
+        success, result = StripeBillingService.create_checkout_session(
+            user_id=request.user.id,
+            amount_bx=amount,
+            price_cents=price
+        )
+        
+        if not success:
+            return Response({"error": result}, status=500)
+            
+        return Response({"checkout_url": result})
+
+
 @method_decorator(csrf_exempt, name="dispatch")
 class StripeWebhookView(APIView):
     """
@@ -187,26 +212,44 @@ class StripeWebhookView(APIView):
             session = event.get("data", {}).get("object", {})
             client_reference_id = session.get("client_reference_id")
             customer_id = session.get("customer")
-            subscription_id = session.get("subscription")
+            metadata = session.get("metadata", {})
 
             if client_reference_id:
                 try:
                     profile = Profile.objects.get(user_id=client_reference_id)
-                    profile.tier = "pro"
-                    profile.stripe_customer_id = customer_id
-                    profile.stripe_subscription_id = subscription_id
                     
-                    # Fetch subscription items to locate the metered item if using real Stripe
-                    if settings.STRIPE_SECRET_KEY and subscription_id:
-                        import stripe
-                        stripe.api_key = settings.STRIPE_SECRET_KEY
-                        sub = stripe.Subscription.retrieve(subscription_id)
-                        items = sub.get("items", {}).get("data", [])
-                        if items:
-                            profile.stripe_subscription_item_id = items[0].get("id")
+                    # Cas 1 : Achat de pack de Bx
+                    if metadata.get('transaction_type') == 'berrix_purchase':
+                        amount = int(metadata.get('amount_bx', 0))
+                        from ..models import WalletTransaction
+                        profile.wallet_balance += amount
+                        profile.save()
+                        
+                        WalletTransaction.objects.create(
+                            user=profile.user,
+                            amount=amount,
+                            transaction_type='purchase',
+                            description=f"Achat via Stripe (Pack {amount} Bx)"
+                        )
+                        logger.info(f"User {profile.user.username} bought {amount} Bx via Stripe.")
+                    
+                    # Cas 2 : Inscription Pro API (Legacy/Alternative)
+                    else:
+                        subscription_id = session.get("subscription")
+                        profile.tier = "pro"
+                        profile.stripe_customer_id = customer_id
+                        profile.stripe_subscription_id = subscription_id
+                        
+                        if settings.STRIPE_SECRET_KEY and subscription_id:
+                            import stripe
+                            stripe.api_key = settings.STRIPE_SECRET_KEY
+                            sub = stripe.Subscription.retrieve(subscription_id)
+                            items = sub.get("items", {}).get("data", [])
+                            if items:
+                                profile.stripe_subscription_item_id = items[0].get("id")
 
-                    profile.save()
-                    logger.info(f"User {profile.user.username} successfully upgraded to Pro via Stripe.")
+                        profile.save()
+                        logger.info(f"User {profile.user.username} upgraded to Pro API via Stripe.")
                 except Profile.DoesNotExist:
                     logger.error(f"Profile not found for user_id={client_reference_id} on checkout.")
 

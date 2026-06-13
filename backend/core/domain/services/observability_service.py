@@ -55,6 +55,17 @@ class ObservabilityService:
             "rag/query_length": len(query)
         })
 
+    def log_rag_latency(self, latency: float, query: str, user_id: Optional[str] = None):
+        """Logue la latence globale d'une requête RAG."""
+        logger.info(f"⏱️ RAG Latency: {latency:.2f}s for query '{query[:50]}' by user {user_id}")
+        if not self.enabled: return
+        
+        wandb.log({
+            "rag/latency": latency,
+            "rag/query_length": len(query),
+            "rag/user_id": user_id or "anonymous"
+        })
+
     def log_dynamic_eval(self, query: str, context: str, answer: str, evaluation: Any):
         """Logue une évaluation dynamique 'LLM-as-a-Judge'."""
         if not self.enabled: return

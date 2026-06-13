@@ -113,7 +113,7 @@ class TestFinetuningDataset(unittest.TestCase):
         mock_ds_fr = [{"instruction": "Inst FR", "input": "", "output": "Rep FR"}]
         mock_ds_en = [{"instruction": "Inst EN", "input": "", "output": "Rep EN"}]
         
-        def side_effect(path, split=None):
+        def side_effect(path, split=None, **kwargs):
             if 'alpaca-cleaned-fr' in path:
                 return mock_ds_fr
             else:

@@ -28,6 +28,11 @@ export interface MediaItem {
   popularity?: number;
 }
 
+import type { components } from './api';
+
+type ApiAchievement = components["schemas"]["Achievement"];
+type ApiCreativeFusion = components["schemas"]["CreativeFusion"];
+
 export interface Profile {
   username: string;
   xp: number;
@@ -35,8 +40,8 @@ export interface Profile {
   rank?: string;
   achievements_count?: number;
   collection_count?: number;
-  recent_achievements?: any[];
-  top_fusions?: any[];
+  recent_achievements?: ApiAchievement[];
+  top_fusions?: ApiCreativeFusion[];
   unlocked_badges?: string[];
   custom_username_color?: string;
 }

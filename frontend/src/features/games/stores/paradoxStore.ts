@@ -27,8 +27,9 @@ export const useParadoxStore = create<ParadoxStore>((set) => ({
         const state = await res.json();
         if (!res.ok) throw new Error(state.error || 'Failed to start game');
         set({ gameState: state, isLoading: false });
-      } catch (err: any) {
-        set({ error: err.message || 'Failed to start game', isLoading: false });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to start game';
+        set({ error: message, isLoading: false });
       }
     }
   },
@@ -38,8 +39,9 @@ export const useParadoxStore = create<ParadoxStore>((set) => ({
     try {
       const state = await paradoxService.submit({ intruder_id: itemId });
       set({ gameState: state, isLoading: false });
-    } catch (err: any) {
-      set({ error: err.message || 'Failed to submit guess', isLoading: false });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to submit guess';
+      set({ error: message, isLoading: false });
     }
   }
 }));

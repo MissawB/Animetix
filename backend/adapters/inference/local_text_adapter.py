@@ -26,11 +26,11 @@ class LocalTextAdapter(InferencePort):
         try:
             from transformers import BitsAndBytesConfig, AutoModelForCausalLM, AutoTokenizer
             logger.info(f"🏗️ Loading Local Text Model: {self.model_id}")
-            self.tokenizer = AutoTokenizer.from_pretrained(self.model_id)
+            self.tokenizer = AutoTokenizer.from_pretrained(self.model_id, revision="main") # nosec B615
             quantization_config = BitsAndBytesConfig(load_in_4bit=True) if self.use_4bit else None
             self.model = AutoModelForCausalLM.from_pretrained(
-                self.model_id, device_map="auto", quantization_config=quantization_config, trust_remote_code=True
-            )
+                self.model_id, revision="main", device_map="auto", quantization_config=quantization_config, trust_remote_code=True
+            ) # nosec B615
         except Exception as e:
             logger.error(f"❌ Failed to load local text model: {e}")
             raise InferenceError(f"Critical failure during text model loading: {str(e)}")

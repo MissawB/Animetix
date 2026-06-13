@@ -140,12 +140,17 @@ from otaku_concepts import OTAKU_VOCABULARY
 from creators_db import CREATORS_AND_STUDIOS
 from transmedia_db import TRANSMEDIA_RELATIONS
 from magazines_and_awards_db import AWARDS_AND_MAGAZINES_RELATIONS
-from songs_and_seiyuu_db import SONGS_AND_SEIYUU_RELATIONS
+from songs_and_seiyuu_db import SONGS_AND_SEIYUU_RELATIONS, SEIYUU_PROFILES as JAPANESE_VOICE_ACTORS
 from french_market_db import (
     FRENCH_VOICE_ACTORS,
     FRENCH_MANGA_PUBLISHERS,
     FRENCH_ANIME_DISTRIBUTORS,
     FRENCH_MARKET_RELATIONS
+)
+from japanese_market_db import (
+    JAPANESE_MANGA_PUBLISHERS,
+    JAPANESE_ANIME_DISTRIBUTORS,
+    JAPANESE_MARKET_RELATIONS
 )
 from volumes_and_episodes_db import VOLUMES_AND_EPISODES_DATA
 
@@ -1015,6 +1020,93 @@ def generate_french_market_relations_instructions():
         instructions.append({"instruction": f"Analyse le contexte d'édition, de doublage ou de distribution du sujet suivant : {q}", "input": "", "output": f"Analyse et contexte français : {a}"})
     return instructions
 
+def generate_japanese_market_profile_instructions():
+    """Génère 15 variations de Q&A pour chaque comédien (seiyuu), éditeur et plateforme du marché japonais (600 instructions)."""
+    instructions = []
+    
+    # 1. Seiyuu Japonais (15 * 15 = 225 instructions)
+    for actor, data in JAPANESE_VOICE_ACTORS.items():
+        templates = [
+            (f"Qui est '{actor}' dans le doublage japonais d'animés ?", f"Dans le doublage japonais (seiyuu), '{actor}' est : {data['definition']}. Doublages cultes : {data['examples']}. Parcours : {data['origin']}"),
+            (f"Présente-moi le parcours de la voix japonaise (seiyuu) culte '{actor}'.", f"Fiche de doublage - '{actor}' : {data['definition']} Carrière : {data['origin']}. Rôles phares : {data['examples']}. Impact : {data['impact']}"),
+            (f"Quels sont les rôles majeurs doublés par '{actor}' en version originale japonaise ?", f"Les doublages originaux de '{actor}' incluent : {data['examples']}. Il/Elle est connu(e) comme : {data['definition']}"),
+            (f"En tant que spécialiste des seiyuu japonais, que peux-tu me dire sur '{actor}' ?", f"Spécialité Seiyuu - '{actor}' : {data['definition']} Origines : {data['origin']}. Ses rôles phares : {data['examples']}"),
+            (f"Pourquoi le doublage de '{actor}' a-t-il tant marqué le public de la japanimation ?", f"Le doublage de '{actor}' est légendaire : {data['impact']} Il/Elle est reconnu(e) en tant que : {data['definition']}"),
+            (f"Quels personnages célèbres ont la voix originale de '{actor}' ?", f"Les figures doublées par '{actor}' comprennent : {data['examples']}. Style vocal : {data['origin']}"),
+            (f"Fais-moi une synthèse complète de la carrière de seiyuu de '{actor}'.", f"Synthèse Seiyuu - '{actor}' : {data['definition']}. Histoire : {data['origin']}. Rôles repères : {data['examples']}. Impact : {data['impact']}"),
+            (f"Peux-tu analyser l'importance de '{actor}' pour le doublage de nos animés cultes ?", f"L'importance de '{actor}' en tant que seiyuu est colossale. {data['impact']} Connu pour : {data['definition']}. Rôles majeurs : {data['examples']}"),
+            (f"Quel a été le rôle de '{actor}' au sein de l'industrie du doublage au Japon ?", f"'{actor}' a joué un rôle déterminant : {data['impact']} Définition : {data['definition']}. Parcours : {data['origin']}"),
+            (f"Donne des détails sur le timbre ou le registre de voix de '{actor}'.", f"Le timbre et registre de '{actor}' se caractérisent ainsi : {data['definition']}. Ses rôles phares : {data['examples']}. Style : {data['impact']}"),
+            (f"Explique comment '{actor}' insuffle de la personnalité à ses doublages originaux.", f"L'interprétation de '{actor}' se distingue par son énergie : {data['impact']} Notamment à travers : {data['definition']}. Rôles repères : {data['examples']}"),
+            (f"Quelles sont les séries majeures où l'on peut apprécier le doublage de '{actor}' ?", f"On l'entend dans plusieurs animés cultes : {data['examples']}. Profil : {data['definition']}"),
+            (f"Décris le parcours artistique et le profil vocal de '{actor}'.", f"Parcours de '{actor}' : {data['definition']}. Origines et évolutions : {data['origin']}. Rôles majeurs : {data['examples']}"),
+            (f"Analyse l'importance historique et l'héritage de la voix de '{actor}' pour les passionnés d'animation.", f"L'héritage de '{actor}' est inestimable. {data['impact']} Connu pour : {data['definition']}. Rôles cultes : {data['examples']}"),
+            (f"Qu'est-ce qui rend '{actor}' incontournable dans le paysage des seiyuu japonais ?", f"'{actor}' est incontournable en tant que : {data['definition']}. Ses créations populaires ({data['examples']}) et son impact ({data['impact']}) en font une référence absolue.")
+        ]
+        for q, a in templates:
+            instructions.append({"instruction": q, "input": "", "output": a})
+            
+    # 2. Éditeurs de mangas au Japon (15 * 15 = 225 instructions)
+    for publisher, data in JAPANESE_MANGA_PUBLISHERS.items():
+        templates = [
+            (f"Qui est l'éditeur japonais '{publisher}' dans le milieu du manga ?", f"Sur le marché japonais, '{publisher}' est : {data['definition']}. Catalogue : {data['examples']}. Origines : {data['origin']}"),
+            (f"Présente-moi le profil et l'impact sur le marché de l'éditeur japonais '{publisher}'.", f"Fiche Éditeur JP - '{publisher}' : {data['definition']} Création : {data['origin']}. Mangas clés : {data['examples']}. Impact : {data['impact']}"),
+            (f"Quelles sont les œuvres emblématiques publiées par '{publisher}' au Japon ?", f"Les licences phares éditées par '{publisher}' incluent : {data['examples']}. Il s'est imposé comme : {data['definition']}"),
+            (f"En tant que spécialiste du marché du manga au Japon, que peux-tu me dire sur '{publisher}' ?", f"Marché japonais - '{publisher}' : {data['definition']} Histoire : {data['origin']}. Succès : {data['examples']}"),
+            (f"Pourquoi l'éditeur '{publisher}' a-t-il rencontré un si grand succès au Japon ?", f"Le succès éditorial de '{publisher}' s'explique par sa ligne éditoriale : {data['impact']} Définition : {data['definition']}"),
+            (f"Quels mangas célèbres sont publiés sous le label japonais de '{publisher}' ?", f"Les titres édités par '{publisher}' comprennent : {data['examples']}. Démarche : {data['origin']}"),
+            (f"Fais-moi une synthèse complète de l'historique de la maison d'édition japonaise '{publisher}'.", f"Synthèse Éditeur JP - '{publisher}' : {data['definition']}. Histoire : {data['origin']}. Catalogue repère : {data['examples']}. Impact : {data['impact']}"),
+            (f"Peux-tu analyser l'importance de '{publisher}' pour la popularisation du manga au Japon et dans le monde ?", f"L'importance de '{publisher}' est colossale. {data['impact']} Connu pour : {data['definition']}. Succès majeurs : {data['examples']}"),
+            (f"Quel a été le rôle de '{publisher}' dans l'essor mondial des magazines de prépublication ?", f"'{publisher}' a joué un rôle déterminant : {data['impact']} Définition : {data['definition']}. Origines : {data['origin']}"),
+            (f"Donne des détails sur la ligne éditoriale ou le style éditorial de '{publisher}'.", f"La ligne éditoriale de '{publisher}' se caractérise ainsi : {data['definition']}. Titres phares : {data['examples']}. Style : {data['impact']}"),
+            (f"Explique comment '{publisher}' se démarque des autres éditeurs de mangas au Japon.", f"La force de '{publisher}' réside dans son catalogue : {data['impact']} Définition : {data['definition']}. Œuvres repères : {data['examples']}"),
+            (f"Quels sont les mangas majeurs que l'on doit lire chez l'éditeur japonais '{publisher}' ?", f"On peut lire plusieurs œuvres majeures chez cet éditeur : {data['examples']}. Profil : {data['definition']}"),
+            (f"Décris le parcours d'édition et le profil de '{publisher}' au Japon.", f"Parcours de '{publisher}' : {data['definition']}. Origines et évolutions : {data['origin']}. Catalogues majeurs : {data['examples']}"),
+            (f"Analyse l'importance historique et l'héritage de '{publisher}' pour l'industrie du manga.", f"L'héritage de '{publisher}' est inestimable. {data['impact']} Définition : {data['definition']}. Succès clés : {data['examples']}"),
+            (f"Qu'est-ce qui rend '{publisher}' incontournable dans l'édition de mangas japonaise ?", f"'{publisher}' est incontournable en tant que : {data['definition']}. Ses séries populaires ({data['examples']}) et son impact ({data['impact']}) en font une référence absolue.")
+        ]
+        for q, a in templates:
+            instructions.append({"instruction": q, "input": "", "output": a})
+            
+    # 3. Distributeurs et sites de diffusion au Japon (10 * 15 = 150 instructions)
+    for distributor, data in JAPANESE_ANIME_DISTRIBUTORS.items():
+        templates = [
+            (f"Qu'est-ce que la plateforme, diffuseur ou comité de production japonais '{distributor}' ?", f"Sur le marché japonais, '{distributor}' est : {data['definition']}. Catalogue : {data['examples']}. Origines : {data['origin']}"),
+            (f"Présente-moi le profil et l'impact sur la production et la distribution de '{distributor}' au Japon.", f"Fiche Diffuseur JP - '{distributor}' : {data['definition']} Lancement : {data['origin']}. Animés : {data['examples']}. Impact : {data['impact']}"),
+            (f"Quels sont les animés phares produits ou diffusés par '{distributor}' au Japon ?", f"Les licences majeures produites ou diffusées par '{distributor}' incluent : {data['examples']}. Il s'est imposé comme : {data['definition']}"),
+            (f"En tant que spécialiste de la diffusion d'animés au Japon, que peux-tu me dire sur '{distributor}' ?", f"Diffusion Japon - '{distributor}' : {data['definition']} Contexte : {data['origin']}. Succès : {data['examples']}"),
+            (f"Pourquoi le service ou la diffusion de '{distributor}' s'est-il imposé dans l'archipel ?", f"Le succès s'explique par sa distribution : {data['impact']} Définition : {data['definition']}"),
+            (f"Quels animés célèbres sont disponibles ou diffusés par '{distributor}' ?", f"Les titres diffusés par '{distributor}' comprennent : {data['examples']}. Démarche : {data['origin']}"),
+            (f"Fais-moi une synthèse complète de l'histoire du diffuseur ou producteur japonais '{distributor}'.", f"Synthèse Diffusion JP - '{distributor}' : {data['definition']}. Histoire : {data['origin']}. Catalogue repère : {data['examples']}. Impact : {data['impact']}"),
+            (f"Peux-tu analyser l'importance de '{distributor}' pour l'industrie de la japanimation ?", f"L'importance de '{distributor}' au Japon est colossale. {data['impact']} Connu pour : {data['definition']}. Succès majeurs : {data['examples']}"),
+            (f"Quel a été le rôle de '{distributor}' dans le développement ou le financement des animés ?", f"'{distributor}' a joué un rôle déterminant : {data['impact']} Définition : {data['definition']}. Origines : {data['origin']}"),
+            (f"Donne des détails sur le mode de fonctionnement ou l'histoire de '{distributor}'.", f"Le service de '{distributor}' se caractérise ainsi : {data['definition']}. Titres phares : {data['examples']}. Style : {data['impact']}"),
+            (f"Explique comment '{distributor}' a transformé la distribution ou production d'animés au Japon.", f"La force réside dans son catalogue : {data['impact']} Définition : {data['definition']}. Œuvres repères : {data['examples']}"),
+            (f"Quels sont les animés majeurs que l'on doit regarder issus de '{distributor}' ?", f"On peut regarder plusieurs œuvres majeures issues de ce diffuseur/producteur : {data['examples']}. Profil : {data['definition']}"),
+            (f"Décris le parcours de production ou diffusion et le profil de '{distributor}'.", f"Parcours de '{distributor}' : {data['definition']}. Origines et évolutions : {data['origin']}. Catalogues majeurs : {data['examples']}"),
+            (f"Analyse l'importance historique et l'héritage de '{distributor}' pour les passionnés d'animes.", f"L'héritage de '{distributor}' est inestimable. {data['impact']} Connu pour : {data['definition']}. Succès de diffusion : {data['examples']}"),
+            (f"Qu'est-ce qui rend '{distributor}' incontournable dans le paysage de la japanimation ?", f"'{distributor}' est incontournable en tant que : {data['definition']}. Ses séries populaires ({data['examples']}) et son impact ({data['impact']}) en font une référence absolue.")
+        ]
+        for q, a in templates:
+            instructions.append({"instruction": q, "input": "", "output": a})
+            
+    return instructions
+
+def generate_japanese_market_relations_instructions():
+    """Génère 4 variations pour chacune des 40 relations du marché japonais (160 instructions)."""
+    instructions = []
+    for relation in JAPANESE_MARKET_RELATIONS:
+        q = relation["question"]
+        a = relation["answer"]
+        
+        # Variations
+        instructions.append({"instruction": q, "input": "", "output": a})
+        instructions.append({"instruction": f"Donne l'explication et le contexte de cette question sur le marché japonais de japanimation : {q}", "input": "", "output": f"Explication du marché japonais : {a}"})
+        q_clean = q[0].lower() + q[1:]
+        instructions.append({"instruction": f"En tant que spécialiste de l'histoire du manga et de l'animation au Japon, saurais-tu me dire {q_clean}", "input": "", "output": a})
+        instructions.append({"instruction": f"Analyse le contexte d'édition, de doublage ou de distribution du sujet suivant : {q}", "input": "", "output": f"Analyse et contexte japonais : {a}"})
+    return instructions
+
 def generate_volumes_and_episodes_instructions():
     """Génère des instructions détaillées sur le nombre d'épisodes, de saisons et de tomes (volumes) pour les animés/mangas phares."""
     instructions = []
@@ -1049,7 +1141,8 @@ def fetch_general_instructions(count):
     if fr_count > 0:
         logger.info(f"[INFO] Loading {fr_count} French general instructions...")
         try:
-            ds_fr = load_dataset('pinzhenchen/alpaca-cleaned-fr', split='train')
+            # Using revision="main" to ensure secure, reproducible download
+            ds_fr = load_dataset('pinzhenchen/alpaca-cleaned-fr', split='train', revision="main") # nosec B615
             for i in range(min(fr_count, len(ds_fr))):
                 item = ds_fr[i]
                 general_samples.append({
@@ -1064,7 +1157,8 @@ def fetch_general_instructions(count):
     if en_count > 0:
         logger.info(f"[INFO] Loading {en_count} English general instructions...")
         try:
-            ds_en = load_dataset('yahma/alpaca-cleaned', split='train')
+            # Using revision="main" to ensure secure, reproducible download
+            ds_en = load_dataset('yahma/alpaca-cleaned', split='train', revision="main") # nosec B615
             for i in range(min(en_count, len(ds_en))):
                 item = ds_en[i]
                 general_samples.append({
@@ -2368,10 +2462,20 @@ def run_generate_instruction_dataset():
     french_relations = generate_french_market_relations_instructions()
     specialized_data.extend(french_relations)
 
+    # 1d2. PAYSAGE JAPONAIS - RELATIONS (160 instructions en français)
+    logger.info("[INFO] Generating high-quality Japanese market relational instructions...")
+    japanese_relations = generate_japanese_market_relations_instructions()
+    specialized_data.extend(japanese_relations)
+
     # 1e. PAYSAGE FRANÇAIS - PROFILS (600 instructions en français)
     logger.info("[INFO] Generating high-quality French voice actors, publishers, and distributors profile instructions...")
     french_profiles = generate_french_market_profile_instructions()
     specialized_data.extend(french_profiles)
+
+    # 1e2. PAYSAGE JAPONAIS - PROFILS (600 instructions en français)
+    logger.info("[INFO] Generating high-quality Japanese voice actors, publishers, and distributors profile instructions...")
+    japanese_profiles = generate_japanese_market_profile_instructions()
+    specialized_data.extend(japanese_profiles)
 
     # 1f. VOLUMES ET EPISODES (72 instructions en français)
     logger.info("[INFO] Generating high-quality manga volumes and anime episodes instructions...")

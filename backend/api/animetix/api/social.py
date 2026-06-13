@@ -171,23 +171,36 @@ class ProfileViewSet(viewsets.ModelViewSet):
     def refill_quota(self, request):
         """
         Réinitialise l'utilisation quotidienne de quota de l'utilisateur
-        en supprimant ses enregistrements AITokenUsage d'aujourd'hui.
+        et crédite un bonus de secours de 1000 Bx.
         """
         from django.utils import timezone
-        from ..models import AITokenUsage
-        
+        from ..models import AITokenUsage, WalletTransaction
+
         today = timezone.now().date()
         deleted_count, _ = AITokenUsage.objects.filter(
-            user=request.user, 
+            user=request.user,
             created_at__date=today
         ).delete()
-        
-        return Response({
-            'status': 'refilled', 
-            'deleted_records': deleted_count,
-            'message': 'Votre quota a été réinitialisé avec succès.'
-        })
 
+        # Bonus de secours
+        amount = 1000
+        profile = request.user.profile
+        profile.wallet_balance += amount
+        profile.save()
+
+        WalletTransaction.objects.create(
+            user=request.user,
+            amount=amount,
+            transaction_type='daily_grant',
+            description="Recharge de secours (Reset Quota)"
+        )
+
+        return Response({
+            'status': 'refilled',
+            'deleted_records': deleted_count,
+            'new_balance': profile.wallet_balance,
+            'message': 'Votre quota a été réinitialisé et 1000 Bx ont été injectés.'
+        })
     @action(detail=False, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def generate_api_key(self, request):
         import uuid

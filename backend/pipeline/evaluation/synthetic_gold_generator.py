@@ -12,7 +12,8 @@ logger = logging.getLogger("animetix.pipeline." + __name__)
 
 # Root detection
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-sys.path.insert(0, os.path.join(BASE_DIR, "src"))
+sys.path.insert(0, os.path.join(BASE_DIR, "backend"))
+sys.path.insert(0, BASE_DIR)
 
 logger.info("Initializing Synthetic Gold Dataset Generator...")
 
@@ -22,7 +23,7 @@ try:
     from pipeline.mlops.magazines_and_awards_db import SERIALIZATION_MAGAZINES, POP_CULTURE_AWARDS
 except ImportError as e:
     logger.warning(f"Import error: {e}. Attempting manual path injection...")
-    sys.path.insert(0, os.path.join(BASE_DIR, "src", "pipeline", "mlops"))
+    sys.path.insert(0, os.path.join(BASE_DIR, "backend", "pipeline", "mlops"))
     from french_market_db import FRENCH_VOICE_ACTORS
     from songs_and_seiyuu_db import SEIYUU_PROFILES, ANIME_SONGS_AND_SINGERS
     from magazines_and_awards_db import SERIALIZATION_MAGAZINES, POP_CULTURE_AWARDS
@@ -140,6 +141,53 @@ def ask_ollama(prompt: str) -> str:
         logger.error(f"Ollama API Error or Timeout: {e}")
     return ""
 
+def extract_neo4j_relational_patterns():
+    """
+    Extrait des motifs de graphe relationnels aléatoires depuis Neo4j.
+    """
+    logger.info("Connecting to Neo4j to extract relational patterns...")
+    try:
+        from pipeline.neo4j_client import neo4j_manager
+        if not neo4j_manager.driver:
+            logger.warning("Neo4j driver not available. Using fallback facts.")
+            return []
+            
+        # Tente de récupérer des chemins de longueur 3 (Media -> Studio -> Media -> Person)
+        query = """
+        MATCH (m1:Media)-[:PRODUCED_BY]->(s:Studio)<-[:PRODUCED_BY]-(m2:Media)-[:CREATED_BY]->(p:Person)
+        WHERE m1 <> m2
+        RETURN m1.title as m1_title, m1.id as m1_id, s.name as studio_name, m2.title as m2_title, m2.id as m2_id, p.name as person_name
+        LIMIT 5
+        """
+        records = neo4j_manager.execute_read(query)
+        logger.info(f"Retrieved {len(records)} path records from Neo4j.")
+        
+        extracted_facts = []
+        for r in records:
+            fact_text = (
+                f"L'œuvre '{r['m1_title']}' a été produite par le studio {r['studio_name']}, "
+                f"qui a également produit '{r['m2_title']}', une œuvre créée par {r['person_name']}."
+            )
+            extracted_facts.append({
+                "fact": fact_text,
+                "domain": "graph",
+                "difficulty": "hard",
+                "query_type": "graph",
+                "expected_title": r['m1_title'],
+                "expected_id": str(r['m1_id']),
+                "expected_entities": [r['m1_title'], r['studio_name'], r['m2_title'], r['person_name']],
+                "expected_chunks": [str(r['m1_id']), str(r['m2_id'])]
+            })
+        return extracted_facts
+    except Exception as e:
+        logger.warning(f"Error querying Neo4j for patterns: {e}. Using fallback facts.")
+        return []
+
+# Chargement dynamique des motifs Neo4j
+neo4j_facts = extract_neo4j_relational_patterns()
+if neo4j_facts:
+    FACTS = neo4j_facts + FACTS
+
 synthetic_gold_dataset = []
 
 logger.info(f"Generating synthetic QA pairs for {len(FACTS)} relational motifs...")
@@ -196,7 +244,7 @@ Règles critiques :
             query = f"Dans quel magazine ou avec quel prix est lié le manga {entry['expected_title']} ?"
             ground_truth = fact
 
-    # Structure into final RAGAS-ready gold record
+    # Structure into final RAGAS-ready gold record conforming to evolved schema
     record = {
         "query": query,
         "expected_id": entry["expected_id"],
@@ -206,7 +254,11 @@ Règles critiques :
         "ground_truth": ground_truth,
         "domain": entry["domain"],
         "difficulty": entry["difficulty"],
-        "contexts": [fact]
+        "contexts": [fact],
+        "expected_entities": entry.get("expected_entities", [entry["expected_title"]] if entry["expected_title"] and entry["expected_title"] not in ["None", "Multiple", "0"] else []),
+        "expected_contexts": [fact],
+        "expected_chunks": entry.get("expected_chunks", [entry["expected_id"]] if entry["expected_id"] and entry["expected_id"] != "0" else []),
+        "multi_turn_history": []
     }
     
     synthetic_gold_dataset.append(record)

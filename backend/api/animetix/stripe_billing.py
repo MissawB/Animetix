@@ -8,6 +8,46 @@ logger = logging.getLogger("animetix.stripe_billing")
 
 class StripeBillingService:
     @staticmethod
+    def create_checkout_session(user_id, amount_bx, price_cents, currency="eur"):
+        """
+        Creates a Stripe Checkout Session for a Bx pack.
+        """
+        stripe_key = getattr(settings, 'STRIPE_SECRET_KEY', None)
+        if not stripe_key:
+            return None, "mock_checkout_url"
+
+        import stripe
+        stripe.api_key = stripe_key
+
+        try:
+            session = stripe.checkout.Session.create(
+                payment_method_types=['card'],
+                line_items=[{
+                    'price_data': {
+                        'currency': currency,
+                        'product_data': {
+                            'name': f'Pack {amount_bx} Berrix (Bx) - Animetix',
+                            'description': 'Crédits pour l\'utilisation des fonctionnalités IA d\'Animetix.',
+                        },
+                        'unit_amount': price_cents,
+                    },
+                    'quantity': 1,
+                }],
+                mode='payment',
+                client_reference_id=user_id,
+                metadata={
+                    'transaction_type': 'bx_purchase',
+                    'amount_bx': amount_bx
+                },
+                success_url=f"{settings.FRONTEND_URL}/pricing?status=success",
+                cancel_url=f"{settings.FRONTEND_URL}/pricing?status=cancel",
+            )
+            return True, session.url
+        except Exception as e:
+            logger.error(f"Failed to create checkout session: {e}")
+            return False, str(e)
+
+    @staticmethod
     def report_usage(profile, quantity=1):
         """
         Reports metered usage to Stripe.

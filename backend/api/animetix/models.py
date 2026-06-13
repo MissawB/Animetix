@@ -48,6 +48,7 @@ class Profile(models.Model):
     custom_username_color = models.CharField(max_length=20, null=True, blank=True)
     collected_fusions = models.ManyToManyField('CreativeFusion', related_name='collected_by_profiles', blank=True)
     tier = models.CharField(max_length=20, choices=TIERS, default='free')
+    wallet_balance = models.IntegerField(default=1000)
     api_key_hash = models.CharField(max_length=255, unique=True, null=True, blank=True)
     stripe_customer_id = models.CharField(max_length=255, null=True, blank=True, db_index=True)
     stripe_subscription_id = models.CharField(max_length=255, null=True, blank=True)
@@ -239,6 +240,24 @@ class AdEvent(models.Model):
 
     def __str__(self):
         return f"{self.ad_type} {self.event_type} at {self.created_at}"
+
+class WalletTransaction(models.Model):
+    TRANSACTION_TYPES = [
+        ('ad_passive', 'Passive Mining'),
+        ('ad_active', 'Rewarded Video'),
+        ('purchase', 'Direct Purchase'),
+        ('ai_usage', 'AI Consumption'),
+        ('daily_grant', 'Daily Grant'),
+        ('welcome_bonus', 'Welcome Bonus'),
+    ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='wallet_transactions')
+    amount = models.IntegerField()
+    transaction_type = models.CharField(max_length=20, choices=TRANSACTION_TYPES)
+    description = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.transaction_type} ({self.amount})"
 
 # --- ACHIEVEMENTS & FEEDBACK ---
 

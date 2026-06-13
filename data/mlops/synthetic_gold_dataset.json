@@ -10,7 +10,17 @@
     "difficulty": "easy",
     "contexts": [
       "Brigitte Lecordier est la voix française d'enfance emblématique de Son Goku, Son Gohan et Son Goten dans la saga Dragon Ball."
-    ]
+    ],
+    "expected_entities": [
+      "Dragon Ball"
+    ],
+    "expected_contexts": [
+      "Brigitte Lecordier est la voix française d'enfance emblématique de Son Goku, Son Gohan et Son Goten dans la saga Dragon Ball."
+    ],
+    "expected_chunks": [
+      "223"
+    ],
+    "multi_turn_history": []
   },
   {
     "query": "Qui prête sa voix française à Light Yagami dans l'anime Death Note ?",
@@ -23,7 +33,17 @@
     "difficulty": "medium",
     "contexts": [
       "Alexis Tomassian prête sa voix française cultissime à Light Yagami dans l'anime de thriller psychologique Death Note."
-    ]
+    ],
+    "expected_entities": [
+      "Death Note"
+    ],
+    "expected_contexts": [
+      "Alexis Tomassian prête sa voix française cultissime à Light Yagami dans l'anime de thriller psychologique Death Note."
+    ],
+    "expected_chunks": [
+      "1535"
+    ],
+    "multi_turn_history": []
   },
   {
     "query": "Qui est la voix française de Mikasa Ackerman dans l'adaptation animée de L'Attaque des Titans ?",
@@ -36,7 +56,17 @@
     "difficulty": "medium",
     "contexts": [
       "Geneviève Doang est la voix française de Mikasa Ackerman dans l'adaptation animée de L'Attaque des Titans."
-    ]
+    ],
+    "expected_entities": [
+      "Attack on Titan"
+    ],
+    "expected_contexts": [
+      "Geneviève Doang est la voix française de Mikasa Ackerman dans l'adaptation animée de L'Attaque des Titans."
+    ],
+    "expected_chunks": [
+      "16498"
+    ],
+    "multi_turn_history": []
   },
   {
     "query": "Qui prête sa voix originale japonaise au protagoniste Eren Jäger dans L'Attaque des Titans ?",
@@ -49,10 +79,16 @@
     "difficulty": "hard",
     "contexts": [
       "Yuki Kaji prête sa voix originale japonaise (seiyuu) au protagoniste Eren Jäger dans L'Attaque des Titans et à Koichi Hirose dans JoJo's Bizarre Adventure."
-    ]
+    ],
+    "expected_entities": [],
+    "expected_contexts": [
+      "Yuki Kaji prête sa voix originale japonaise (seiyuu) au protagoniste Eren Jäger dans L'Attaque des Titans et à Koichi Hirose dans JoJo's Bizarre Adventure."
+    ],
+    "expected_chunks": [],
+    "multi_turn_history": []
   },
   {
-    "query": "Qui double Emilia dans Re:Zero et Megumin dans KonoSuba ?",
+    "query": "Qui est la doubleuse japonaise d'Emilia dans Re:Zero et de Megumin dans KonoSuba ?",
     "expected_id": "0",
     "expected_title": "Multiple",
     "is_architectural": true,
@@ -62,7 +98,13 @@
     "difficulty": "hard",
     "contexts": [
       "Rie Takahashi est la doubleuse japonaise (seiyuu) d'Emilia dans Re:Zero et de Megumin dans KonoSuba."
-    ]
+    ],
+    "expected_entities": [],
+    "expected_contexts": [
+      "Rie Takahashi est la doubleuse japonaise (seiyuu) d'Emilia dans Re:Zero et de Megumin dans KonoSuba."
+    ],
+    "expected_chunks": [],
+    "multi_turn_history": []
   },
   {
     "query": "Qui interprète le générique d'ouverture Zankyou Sancka pour l'arc du Quartier des Plaisirs de l'anime Demon Slayer ?",
@@ -75,7 +117,17 @@
     "difficulty": "medium",
     "contexts": [
       "L'artiste emblématique Aimer interprète le générique d'ouverture Zankyou Sancka pour l'arc du Quartier des Plaisirs de l'anime Demon Slayer."
-    ]
+    ],
+    "expected_entities": [
+      "Demon Slayer"
+    ],
+    "expected_contexts": [
+      "L'artiste emblématique Aimer interprète le générique d'ouverture Zankyou Sancka pour l'arc du Quartier des Plaisirs de l'anime Demon Slayer."
+    ],
+    "expected_chunks": [
+      "38000"
+    ],
+    "multi_turn_history": []
   },
   {
     "query": "Quels sont les openings de l'anime Naruto Shippuden chantés par le groupe FLOW ?",
@@ -88,10 +140,20 @@
     "difficulty": "medium",
     "contexts": [
       "Le groupe de rock japonais FLOW chante les openings mythiques GO!!! et Sign de l'anime Naruto Shippuden."
-    ]
+    ],
+    "expected_entities": [
+      "Naruto"
+    ],
+    "expected_contexts": [
+      "Le groupe de rock japonais FLOW chante les openings mythiques GO!!! et Sign de l'anime Naruto Shippuden."
+    ],
+    "expected_chunks": [
+      "20"
+    ],
+    "multi_turn_history": []
   },
   {
-    "query": "Quel manga a remporté le Prix culturel Osamu Tezuka en 1999 ?",
+    "query": "Quel manga a reçu le Prix culturel Osamu Tezuka en 1999 ?",
     "expected_id": "19",
     "expected_title": "Monster",
     "is_architectural": true,
@@ -101,7 +163,17 @@
     "difficulty": "hard",
     "contexts": [
       "Le prestigieux Prix culturel Osamu Tezuka a récompensé le manga chef-d'œuvre Monster de Naoki Urasawa en 1999."
-    ]
+    ],
+    "expected_entities": [
+      "Monster"
+    ],
+    "expected_contexts": [
+      "Le prestigieux Prix culturel Osamu Tezuka a récompensé le manga chef-d'œuvre Monster de Naoki Urasawa en 1999."
+    ],
+    "expected_chunks": [
+      "19"
+    ],
+    "multi_turn_history": []
   },
   {
     "query": "Quel est le magazine japonais dans lequel a été prépublié le manga Slam Dunk ?",
@@ -114,6 +186,16 @@
     "difficulty": "medium",
     "contexts": [
       "Le manga mythique Slam Dunk d'Takehiko Inoue a été prépublié au Japon dans le célèbre magazine Weekly Shōnen Jump."
-    ]
+    ],
+    "expected_entities": [
+      "Slam Dunk"
+    ],
+    "expected_contexts": [
+      "Le manga mythique Slam Dunk d'Takehiko Inoue a été prépublié au Japon dans le célèbre magazine Weekly Shōnen Jump."
+    ],
+    "expected_chunks": [
+      "170"
+    ],
+    "multi_turn_history": []
   }
 ]

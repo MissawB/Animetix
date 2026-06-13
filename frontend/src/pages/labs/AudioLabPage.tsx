@@ -114,7 +114,7 @@ const AudioLabPage: React.FC = () => {
 
             <div className="mt-8 space-y-4">
                 {recordings.map((rec) => (
-                    <div key={rec.id} className="p-4 bg-gray-50 dark:bg-navy-900 rounded-2xl flex items-center justify-between group border border-gray-100 dark:border-white/5">
+                    <div key={rec.id} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl flex items-center justify-between group">
                         <div className="flex items-center gap-3">
                             <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center text-white">
                                 <Play className="w-4 h-4 fill-current" />
@@ -140,8 +140,8 @@ const AudioLabPage: React.FC = () => {
                     <div className="flex flex-col gap-2">
                         <textarea 
                             {...register('text')}
-                            className={`w-full p-8 rounded-[2rem] bg-gray-50 dark:bg-navy-900 border-2 outline-none font-medium text-lg min-h-[200px] transition-all 
-                                ${errors.text ? 'border-red-500 focus:ring-4 focus:ring-red-500/20' : 'border-transparent focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20'}
+                            className={`w-full p-8 rounded-[2rem] bg-gray-50 dark:bg-gray-800 outline-none font-medium text-lg min-h-[200px] transition-all 
+                                ${errors.text ? 'ring-2 ring-red-500' : 'focus:ring-2 focus:ring-purple-500'}
                             `}
                             placeholder="Tapez le texte que l'IA doit dire avec votre voix..."
                         ></textarea>

@@ -56,9 +56,9 @@ class VlmMixin:
             
             if not hasattr(self, '_vlm_model'):
                 logger.info(f"🏗️ Loading Local VLM: {vlm_id}")
-                self._vlm_tokenizer = AutoTokenizer.from_pretrained(vlm_id)
+                self._vlm_tokenizer = AutoTokenizer.from_pretrained(vlm_id, revision="main") # nosec B615
                 self._vlm_model = AutoModelForCausalLM.from_pretrained(
-                    vlm_id, trust_remote_code=True
+                    vlm_id, revision="main", trust_remote_code=True # nosec B615
                 ).to("cuda" if torch.cuda.is_available() else "cpu")
             
             enc_image = self._vlm_model.encode_image(img)

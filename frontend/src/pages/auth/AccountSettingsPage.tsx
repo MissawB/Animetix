@@ -4,7 +4,7 @@ import { updateAccountSettings, generateApiKey, revokeApiKey } from '../../api';
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { useTranslation } from 'react-i18next';
-import { Settings, Key, ShieldAlert, Star, AlertTriangle, Eye, EyeOff, MessageSquare, ChevronRight, Sparkles } from 'lucide-react';
+import { Settings, Key, ShieldAlert, Star, AlertTriangle, Eye, EyeOff, MessageSquare, ChevronRight, Sparkles, BarChart3 } from 'lucide-react';
 import { useToastStore } from "../../store/toastStore";
 import { Link } from 'react-router-dom';
 
@@ -259,80 +259,41 @@ const AccountSettingsPage: React.FC = () => {
             </Card>
 
             {/* Historique IA */}
-            <Card padding="lg" className="md:col-span-2 space-y-6 shadow-xl border-none bg-white dark:bg-[#0f0f1a]">
+            <Card padding="lg" className="space-y-6 shadow-xl border-none bg-white dark:bg-[#0f0f1a]">
               <h2 className="text-xl font-bold uppercase tracking-widest border-b border-gray-100 dark:border-white/5 pb-4 mb-4 flex items-center gap-2 text-black dark:text-white">
-                <MessageSquare className="w-5 h-5 text-purple-500" /> Vos Contributions IA
+                <BarChart3 className="w-5 h-5 text-blue-500" /> Quotas & Consommation
               </h2>
               <p className="text-sm opacity-60 text-black dark:text-white">
-                Retrouvez l'historique de vos feedbacks et aidez l'intelligence d'Animetix à s'améliorer.
+                Suivez votre utilisation des Bx et vérifiez votre limite quotidienne.
               </p>
               <Link 
-                to="/social/ai-feedback-history/" 
-                className="flex items-center justify-between bg-gray-50 dark:bg-black/20 p-4 rounded-xl border border-gray-100 dark:border-white/5 hover:border-brand-primary transition-all no-underline text-black dark:text-white group"
+                to="/auth/usage/" 
+                className="flex items-center justify-between bg-blue-500/5 dark:bg-blue-500/10 p-4 rounded-xl border border-blue-500/10 hover:border-blue-500 transition-all no-underline text-black dark:text-white group"
               >
-                <span className="font-bold uppercase tracking-widest text-xs">Accéder à l'historique complet</span>
-                <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-brand-primary group-hover:translate-x-1 transition-all" />
+                <span className="font-bold uppercase tracking-widest text-xs text-blue-600 dark:text-blue-400">Voir mes statistiques</span>
+                <ChevronRight className="w-5 h-5 text-blue-400 group-hover:translate-x-1 transition-all" />
               </Link>
             </Card>
 
-            {/* Clé API */}
-            <Card padding="lg" className="md:col-span-2 space-y-6 border-2 border-red-500/20 bg-white dark:bg-[#0f0f1a] shadow-xl">
-              <h2 className="text-xl font-bold uppercase tracking-widest border-b border-gray-100 dark:border-white/5 pb-4 mb-4 flex items-center gap-2 text-red-500">
-                <Key className="w-5 h-5" /> Accès Développeur (API)
-              </h2>
-              
-              <div className="bg-red-500/5 p-4 rounded-xl border border-red-500/20 flex gap-3 text-red-400">
-                <AlertTriangle className="w-5 h-5 shrink-0" />
-                <p className="text-sm font-bold">
-                  Votre clé API vous permet d'accéder au backend Headless en externe. Ne la partagez jamais. Si elle est compromise, révoquez-la immédiatement.
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-black dark:text-white">Statut de la clé :</span>
-                  <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest ${user.has_api_key ? 'bg-green-500/20 text-green-500' : 'bg-gray-500/20 text-gray-500'}`}>
-                    {user.has_api_key ? 'Active' : 'Aucune'}
-                  </span>
-                </div>
-
-                {apiKey && (
-                  <div className="mt-4 space-y-2">
-                    <span className="text-xs font-black uppercase text-brand-primary">Votre nouvelle clé (Copiez-la maintenant !)</span>
-                    <div className="flex gap-2">
-                      <div className="flex-1 bg-gray-900 text-green-400 font-mono p-3 rounded-lg border border-gray-700 overflow-x-auto">
-                        {showKey ? apiKey : '•'.repeat(apiKey.length)}
-                      </div>
-                      <Button variant="outline" onClick={() => setShowKey(!showKey)}>
-                        {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </Button>
-                    </div>
+            {/* Portail Développeur */}
+            <Card padding="lg" className="md:col-span-2 space-y-6 border-2 border-blue-500/20 bg-white dark:bg-[#0f0f1a] shadow-xl">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="flex items-center gap-6">
+                  <div className="p-4 bg-blue-500/10 rounded-2xl text-blue-500">
+                    <Terminal className="w-8 h-8" />
                   </div>
-                )}
-
-                <div className="flex gap-4 pt-4">
-                  <Button 
-                    variant="primary" 
-                    onClick={handleGenerateKey} 
-                    disabled={isUpdating}
-                    className="font-black italic manga-font text-xs"
-                  >
-                    <Key className="w-4 h-4 mr-2" /> Générer une nouvelle clé
-                  </Button>
-                  {user.has_api_key && (
-                    <Button 
-                      variant="outline" 
-                      onClick={handleRevokeKey} 
-                      disabled={isUpdating}
-                      className="text-red-500 hover:bg-red-500 hover:text-white border-red-500/20 font-black italic manga-font text-xs"
-                    >
-                      <ShieldAlert className="w-4 h-4 mr-2" /> Révoquer
-                    </Button>
-                  )}
+                  <div>
+                    <h2 className="text-xl font-bold uppercase tracking-widest text-black dark:text-white mb-1">
+                      Accès Développeur (API)
+                    </h2>
+                    <p className="text-sm text-gray-500 font-bold uppercase tracking-widest">Gérez vos clés API et accédez à la documentation technique.</p>
+                  </div>
                 </div>
+                <Button as={Link} to="/developer/" variant="outline" className="border-blue-500/20 text-blue-500 hover:bg-blue-500/10 px-8 font-black italic manga-font text-xs">
+                  TERMINAL DÉVELOPPEUR <ChevronRight className="w-4 h-4 ml-2" />
+                </Button>
               </div>
             </Card>
-
           </div>
         </div>
       </div>

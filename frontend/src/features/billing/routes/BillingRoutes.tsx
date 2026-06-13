@@ -1,10 +1,11 @@
 import { Route } from 'react-router-dom';
 import { lazy } from 'react';
 
-const PricingPage = lazy(() => import('../../../pages/billing/PricingPage'));
+const PowerStationPage = lazy(() => import('../../../pages/billing/PowerStationPage'));
 
 export const BillingRoutes = (
   <>
-    <Route path="/pricing/" element={<PricingPage />} />
+    <Route path="/pricing/" element={<PowerStationPage />} />
+    <Route path="/power-station/" element={<PowerStationPage />} />
   </>
 );

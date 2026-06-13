@@ -75,6 +75,13 @@ class AgenticRAGStreamView(APIView):
         if not query: 
             return JsonResponse({'error': 'No query provided'}, status=400)
             
+        if request.user.is_authenticated:
+            try:
+                from animetix.api.billing import deduct_berrix
+                deduct_berrix(request.user, 5, "Agentic RAG / Chatbot")
+            except Exception as e:
+                return JsonResponse({'error': str(e)}, status=402)
+
         def event_stream():
             agent = get_container().agentic.agentic_rag()
             user_id = str(request.user.id) if request.user.is_authenticated else None

@@ -67,10 +67,9 @@ class ForgeVNView(APIView):
                  return Response({"error": "Unauthorized"}, status=status.HTTP_403_FORBIDDEN)
 
             if action == 'generate':
-                # Quota Check
-                tier = getattr(request, 'user_tier', 'free')
-                if not self.usage_port.check_quota(request.user.id, tier):
-                     return Response({"error": "Daily AI quota exceeded."}, status=status.HTTP_403_FORBIDDEN)
+                # Déduction des Bx (100 Bx pour un script VN complet)
+                from animetix.api.billing import deduct_berrix
+                deduct_berrix(request.user, 100, "Génération de Script Visual Novel")
 
                 # Guardrail check on fusion metadata
                 check_text = f"{fusion.title_a} x {fusion.title_b}\n{fusion.scenario_text}"

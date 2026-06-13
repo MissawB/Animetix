@@ -466,7 +466,8 @@ class GoogleGenAIAdapter(DepthEstimationMixin, InferencePort):
             cache_name, expire_time = self._context_caches[context_hash]
             if current_time < expire_time: return cache_name
             try: self.client.caches.delete(name=cache_name)
-            except: pass
+            except Exception as e:
+                logger.warning(f"Failed to delete expired Gemini context cache {cache_name}: {e}")
             del self._context_caches[context_hash]
         try:
             ttl_str = f"{self.cache_ttl_seconds}s"

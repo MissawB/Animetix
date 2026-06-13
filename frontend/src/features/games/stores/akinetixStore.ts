@@ -26,8 +26,9 @@ export const useAkinetixStore = create<AkinetixStore>((set) => ({
       try {
         const state = await akinetixService.startGame();
         set({ gameState: state, isLoading: false });
-      } catch (err: any) {
-        set({ error: err.message || 'Failed to start game', isLoading: false });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to start game';
+        set({ error: message, isLoading: false });
       }
     }
   },
@@ -37,8 +38,9 @@ export const useAkinetixStore = create<AkinetixStore>((set) => ({
     try {
       const state = await akinetixService.startGame();
       set({ gameState: state, isLoading: false });
-    } catch (err: any) {
-      set({ error: err.message || 'Failed to restart game', isLoading: false });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to restart game';
+      set({ error: message, isLoading: false });
     }
   },
 
@@ -47,8 +49,9 @@ export const useAkinetixStore = create<AkinetixStore>((set) => ({
     try {
       const state = await akinetixService.submitAnswer(answer);
       set({ gameState: state, isLoading: false });
-    } catch (err: any) {
-      set({ error: err.message || 'Failed to submit answer', isLoading: false });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to submit answer';
+      set({ error: message, isLoading: false });
     }
   },
 
@@ -58,9 +61,10 @@ export const useAkinetixStore = create<AkinetixStore>((set) => ({
       await akinetixService.submitConfirmation(isCorrect, actualTarget);
       // Backend resets state on confirmation, we just reload the app state or restart
       window.location.reload();
-    } catch (err: any) {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to confirm';
       // Don't reload on error (e.g. cheat detected) so user sees the message
-      set({ error: err.message || 'Failed to confirm', isLoading: false });
+      set({ error: message, isLoading: false });
     }
   }
 }));

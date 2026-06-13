@@ -71,6 +71,14 @@ class AgenticRAGService:
         self.semantic_router = semantic_router or SemanticRouter(self.llm_service, self.prompt_manager)
         self.orchestrator = workflow_orchestrator # Updated assignment
 
+        # Resolve guardrail service
+        self.guardrail_service = kwargs.get('guardrail_service')
+        if not self.guardrail_service:
+            try:
+                self.guardrail_service = get_container().core.guardrail_service()
+            except Exception:
+                self.guardrail_service = None
+
         # Mock-compatibility for testing:
         # If the orchestrator is a Mock/MagicMock, construct a real RAGOrchestrator populated with real agents
         # using the mocked dependency parameters, so that the state machine can run during unit tests.
@@ -265,6 +273,18 @@ class AgenticRAGService:
         """Boucle principale orchestrée via RAGOrchestrator."""
         start_time = time.time()
         
+        # 0. SÉCURITÉ ET GUARDRAILS (Anti-Jailbreak / Prompt Injection)
+        if self.guardrail_service:
+            guard_input = self.guardrail_service.validate_input(query)
+            if not guard_input.get("is_safe", True):
+                reason = guard_input.get("reason", "Suspicion de tentative d'injection de prompt ou de contournement des règles.")
+                logger.warning(f"🛡️ [Guardrail] Query blocked: {reason}")
+                yield StreamStep(type="thought", content=f"[Guardrail] Requête bloquée : {reason}").model_dump()
+                # Yield tokens for streaming compatibility
+                for token in reason.split(" "):
+                    yield StreamStep(type="token", content=token + " ").model_dump()
+                return
+
         # 1. ROUTAGE SÉMANTIQUE INTELLIGENT (SOTA 2026)
         routing_decision = self.semantic_router.classify(query)
         if routing_decision == "SIMPLE":

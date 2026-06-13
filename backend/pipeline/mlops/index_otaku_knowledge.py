@@ -12,6 +12,9 @@ sys.path.insert(0, os.path.join(BASE_DIR, "src", "backend"))
 sys.path.insert(0, os.path.join(BASE_DIR, "src", "pipeline", "mlops"))
 
 # Configuration Django
+logger = logging.getLogger("animetix.mlops.knowledge_indexer")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+
 import django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'animetix_project.settings')
 try:
@@ -21,10 +24,7 @@ except Exception as e:
     logger.warning(f"Django init warning: {e}. Running in standalone simulated mode.")
     get_container = None
 
-logger = logging.getLogger("animetix.mlops.knowledge_indexer")
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
-
-# Importation dynamique sécurisée des 6 bases de données d'élite locales
+# Importation dynamique sécurisée des 7 bases de données d'élite locales
 try:
     from creators_db import CREATORS_AND_STUDIOS
     from songs_and_seiyuu_db import ANIME_SONGS_AND_SINGERS, SEIYUU_PROFILES, SONGS_AND_SEIYUU_RELATIONS
@@ -34,6 +34,11 @@ try:
         FRENCH_MANGA_PUBLISHERS,
         FRENCH_ANIME_DISTRIBUTORS,
         FRENCH_MARKET_RELATIONS
+    )
+    from japanese_market_db import (
+        JAPANESE_MANGA_PUBLISHERS,
+        JAPANESE_ANIME_DISTRIBUTORS,
+        JAPANESE_MARKET_RELATIONS
     )
     from volumes_and_episodes_db import VOLUMES_AND_EPISODES_DATA
     from transmedia_db import TRANSMEDIA_RELATIONS
@@ -84,6 +89,16 @@ class OtakuKnowledgeIndexer:
             text = f"Distributeur et diffuseur d'anime en France : {name}. Présentation : {details.get('definition', '')} Origine de la plateforme : {details.get('origin', '')} Catalogues et exclusivités : {details.get('examples', '')} Impact de diffusion : {details.get('impact', '')}"
             facts.append({"category": "French Anime Distributors", "title": name, "content": text})
 
+        # 6b. Éditeurs Japonais de Mangas (Symmetrie Japon)
+        for name, details in JAPANESE_MANGA_PUBLISHERS.items():
+            text = f"Maison d'édition de manga au Japon : {name}. Présentation : {details.get('definition', '')} Historique de fondation : {details.get('origin', '')} Titres phares du catalogue : {details.get('examples', '')} Impact sur le marché japonais : {details.get('impact', '')}"
+            facts.append({"category": "Japanese Manga Publishers", "title": name, "content": text})
+
+        # 6c. Distributeurs & Plateformes au Japon (Symmetrie Japon)
+        for name, details in JAPANESE_ANIME_DISTRIBUTORS.items():
+            text = f"Distributeur et diffuseur d'anime au Japon : {name}. Présentation : {details.get('definition', '')} Origine de la plateforme : {details.get('origin', '')} Catalogues et exclusivités : {details.get('examples', '')} Impact de diffusion : {details.get('impact', '')}"
+            facts.append({"category": "Japanese Anime Distributors (JP)", "title": name, "content": text})
+
         # 7. Prix Littéraires & Récompenses
         for name, details in POP_CULTURE_AWARDS.items():
             text = f"Prix prestigieux de la pop-culture (Manga/Anime) : {name}. Définition : {details.get('definition', '')} Historique et origine : {details.get('origin', '')} Lauréats historiques majeurs : {details.get('examples', '')} Impact sur l'industrie : {details.get('impact', '')}"
@@ -99,18 +114,25 @@ class OtakuKnowledgeIndexer:
             text = f"Statistiques d'adaptation et volumes physiques : {key}. Détails : {details.get('definition', '')} Épisodes d'adaptation animée : {details.get('origin', '')} Tomes de manga papier : {details.get('examples', '')} Comparaison transmédiatique : {details.get('impact', '')}"
             facts.append({"category": "Volumes & Episodes Stats", "title": key, "content": text})
 
-        # 10. Relations Complexes (Anisongs, Seiyuu, French Market, Transmedia)
+        # 10. Relations Complexes (Anisongs, Seiyuu, French Market, Japanese Market, Transmedia)
         all_relations = (
             SONGS_AND_SEIYUU_RELATIONS + 
             AWARDS_AND_MAGAZINES_RELATIONS + 
             FRENCH_MARKET_RELATIONS + 
+            JAPANESE_MARKET_RELATIONS +
             TRANSMEDIA_RELATIONS
         )
         for rel in all_relations:
+            if "question" in rel and "answer" in rel:
+                title = f"Relation : {rel['question'][:100]}"
+                content = f"Question : {rel['question']} Réponse : {rel['answer']}"
+            else:
+                title = f"Relation sémantique {rel.get('source', '')} - {rel.get('target', '')}"
+                content = f"Fait relationnel Otaku expert : {rel.get('relation_text', '')}"
             facts.append({
                 "category": "Expert Transmedia Relations",
-                "title": f"Relation sémantique {rel.get('source', '')} - {rel.get('target', '')}",
-                "content": f"Fait relationnel Otaku expert : {rel.get('relation_text', '')}"
+                "title": title,
+                "content": content
             })
             
         return facts

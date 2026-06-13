@@ -23,8 +23,8 @@ class MoondreamAdapter(InferencePort):
         if self.model: return
         try:
             from transformers import AutoModelForCausalLM, AutoTokenizer
-            self.model = AutoModelForCausalLM.from_pretrained(self.model_id, trust_remote_code=True, device_map="auto")
-            self.tokenizer = AutoTokenizer.from_pretrained(self.model_id)
+            self.model = AutoModelForCausalLM.from_pretrained(self.model_id, revision="main", trust_remote_code=True, device_map="auto") # nosec B615
+            self.tokenizer = AutoTokenizer.from_pretrained(self.model_id, revision="main") # nosec B615
         except Exception as e:
             logger.error(f"Failed to load Moondream model: {e}")
             raise InferenceError(f"Moondream loading failed: {e}")

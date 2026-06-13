@@ -67,7 +67,16 @@ const MediaDetailPage: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                    <Button variant="primary" fullWidth className="bg-yellow-400 text-black border-none py-6 group">
+                    {mediaType?.toLowerCase() === 'manga' ? (
+                        <Button as={Link} to={`/media/manga/${itemId}/1/`} variant="primary" fullWidth className="bg-anime-accent text-white border-none py-6 group col-span-2 shadow-[0_0_20px_rgba(255,0,120,0.3)]">
+                            <BookOpen className="w-5 h-5 group-hover:scale-110 transition-transform" /> LIRE LE MANGA
+                        </Button>
+                    ) : (
+                        <Button variant="primary" fullWidth className="bg-yellow-400 text-black border-none py-6 group">
+                            <Play className="w-5 h-5 group-hover:scale-110 transition-transform" /> VOIR
+                        </Button>
+                    )}
+                    <Button variant="primary" fullWidth className="bg-white/10 text-white border-none py-6 group">
                         <Bookmark className="w-5 h-5 group-hover:fill-current" /> AJOUTER
                     </Button>
                     <Button variant="outline" fullWidth className="py-6 border-white/10 hover:bg-red-500/10 hover:text-red-500 group">

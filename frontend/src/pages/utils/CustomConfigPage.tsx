@@ -5,23 +5,28 @@ import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { useTranslation } from 'react-i18next';
 import { CardSkeleton } from "../../components/ui/Skeleton";
+import { UserConfig } from '../../types';
 
 const CustomConfigPage: React.FC = () => {
   const { t } = useTranslation();
   const { config: serverConfig, isLoading, saveConfig, isSaving } = useCustomConfig();
-  const [localConfig, setLocalConfig] = useState<any>(null);
+  const [localConfig, setLocalConfig] = useState<UserConfig | null>(null);
 
+  // Synchronize local state with server data only once or when server data changes
   useEffect(() => {
-    if (serverConfig) setLocalConfig(serverConfig);
-  }, [serverConfig]);
+    if (serverConfig && !localConfig) {
+      setLocalConfig(serverConfig);
+    }
+  }, [serverConfig, localConfig]);
 
   // Appliquer le thème visuel dynamiquement pour l'aperçu
   useEffect(() => {
-    if (localConfig?.visual_theme) {
+    const visualTheme = localConfig?.visual_theme;
+    if (visualTheme) {
       const themes = ['theme-naruto', 'theme-manga-classic'];
       document.documentElement.classList.remove(...themes);
-      if (localConfig.visual_theme !== 'default') {
-        document.documentElement.classList.add(`theme-${localConfig.visual_theme}`);
+      if (visualTheme !== 'default') {
+        document.documentElement.classList.add(`theme-${visualTheme}`);
       }
     }
   }, [localConfig?.visual_theme]);
@@ -31,6 +36,10 @@ const CustomConfigPage: React.FC = () => {
         <CardSkeleton />
     </div>
   );
+
+  const updateConfig = (updates: Partial<UserConfig>) => {
+    setLocalConfig(prev => prev ? { ...prev, ...updates } : null);
+  };
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-16">
@@ -54,7 +63,7 @@ const CustomConfigPage: React.FC = () => {
                 ].map((theme) => (
                     <button 
                         key={theme.id}
-                        onClick={() => setLocalConfig({...localConfig, visual_theme: theme.id})}
+                        onClick={() => updateConfig({ visual_theme: theme.id })}
                         className={`p-4 rounded-2xl flex flex-col items-center gap-2 border-2 transition-all ${localConfig.visual_theme === theme.id || (!localConfig.visual_theme && theme.id === 'default') ? 'border-brand-primary bg-brand-primary/5' : 'border-transparent bg-gray-50 dark:bg-navy-900'}`}
                     >
                         <div className={`w-8 h-8 rounded-full ${theme.color} shadow-inner`}></div>
@@ -73,7 +82,7 @@ const CustomConfigPage: React.FC = () => {
                 {['easy', 'normal', 'hard'].map((d) => (
                     <button 
                         key={d}
-                        onClick={() => setLocalConfig({...localConfig, difficulty: d})}
+                        onClick={() => updateConfig({ difficulty: d })}
                         className={`py-4 rounded-2xl font-black italic uppercase transition-all ${localConfig.difficulty === d ? 'bg-yellow-400 text-black shadow-lg scale-105' : 'bg-gray-50 dark:bg-navy-900 opacity-40 hover:opacity-100'}`}
                     >
                         {d}
@@ -89,14 +98,14 @@ const CustomConfigPage: React.FC = () => {
             </h3>
             <div className="flex gap-4">
                 <button 
-                    onClick={() => setLocalConfig({...localConfig, theme: 'light'})}
+                    onClick={() => updateConfig({ theme: 'light' })}
                     className={`flex-1 p-6 rounded-3xl border-2 flex flex-col items-center gap-3 transition-all ${localConfig.theme === 'light' ? 'border-yellow-400 bg-yellow-400/5' : 'border-transparent bg-gray-50 dark:bg-navy-900 hover:border-gray-200 dark:hover:border-white/10'}`}
                 >
                     <Sun className={localConfig.theme === 'light' ? 'text-yellow-500' : 'opacity-20'} />
                     <span className="font-bold text-sm">Clair</span>
                 </button>
                 <button 
-                    onClick={() => setLocalConfig({...localConfig, theme: 'dark'})}
+                    onClick={() => updateConfig({ theme: 'dark' })}
                     className={`flex-1 p-6 rounded-3xl border-2 flex flex-col items-center gap-3 transition-all ${localConfig.theme === 'dark' ? 'border-yellow-400 bg-yellow-400/5' : 'border-transparent bg-gray-50 dark:bg-navy-900 hover:border-gray-200 dark:hover:border-white/10'}`}
                 >
                     <Moon className={localConfig.theme === 'dark' ? 'text-blue-500' : 'opacity-20'} />
@@ -112,7 +121,7 @@ const CustomConfigPage: React.FC = () => {
             </h3>
             <select 
                 value={localConfig.ai_personality}
-                onChange={(e) => setLocalConfig({...localConfig, ai_personality: e.target.value})}
+                onChange={(e) => updateConfig({ ai_personality: e.target.value })}
                 className="w-full p-5 rounded-2xl bg-gray-50 dark:bg-navy-900 border-2 border-transparent focus:border-yellow-400 outline-none font-bold appearance-none cursor-pointer"
             >
                 <option value="helpful">Serviable & Précis</option>

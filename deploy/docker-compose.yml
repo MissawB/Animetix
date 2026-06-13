@@ -70,11 +70,14 @@ services:
 
 
 
-  # 🐏 Serveur d'Inférence Local (Ollama)
+  # Ram Server / Inférence Local (Ollama)
+  # NOTE: En production (GCP/AWS), déployer ce service sur des instances GPU "Spot" 
+  # pour réduire les coûts de ~70%. Les modèles privilégiés sont Qwen-2.5-1.5B et Llama-3-8B.
   ollama:
     profiles: ["llm"]
     image: ollama/ollama:latest
     container_name: animetix-ollama
+    restart: on-failure # Important pour les instances Spot qui peuvent être préemptées
     volumes:
       - ollama_storage:/root/.ollama
     deploy:

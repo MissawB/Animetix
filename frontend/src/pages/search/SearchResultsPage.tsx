@@ -121,7 +121,15 @@ const SearchResultsPage: React.FC = () => {
         ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 animate-fade-in">
                 {filteredResults.map((item: any, i: number) => (
-                    <Link key={i} to={`/media/${item.type}/${item.id}/`} className="no-underline group">
+                    <Link 
+                        key={i} 
+                        to={
+                            item.type?.toLowerCase() === 'character' ? `/character/${item.id}/` :
+                            item.type?.toLowerCase() === 'actor' ? `/staff/${item.id}/` :
+                            `/media/${item.type}/${item.id}/`
+                        } 
+                        className="no-underline group"
+                    >
                         <Card padding="none" className="h-full overflow-hidden bg-navy-900/40 border-white/5 hover:border-blue-500/30 transition-all duration-500 hover:-translate-y-2 relative">
                             <div className="aspect-[2/3] relative overflow-hidden bg-black shadow-inner">
                                 {item.image_url ? (

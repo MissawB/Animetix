@@ -156,6 +156,15 @@ except ImportError:
         FRENCH_MANGA_PUBLISHERS = {}
         FRENCH_ANIME_DISTRIBUTORS = {}
 
+try:
+    from japanese_market_db import JAPANESE_MANGA_PUBLISHERS, JAPANESE_ANIME_DISTRIBUTORS
+except ImportError:
+    try:
+        from backend.pipeline.mlops.japanese_market_db import JAPANESE_MANGA_PUBLISHERS, JAPANESE_ANIME_DISTRIBUTORS
+    except ImportError:
+        JAPANESE_MANGA_PUBLISHERS = {}
+        JAPANESE_ANIME_DISTRIBUTORS = {}
+
 # Listes d'entités par défaut en cas d'échec d'importation
 STUDIOS_LIST = list(CREATORS_AND_STUDIOS.keys()) if CREATORS_AND_STUDIOS else [
     "Wit Studio", "Studio Ghibli", "MAPPA", "ufotable", "Madhouse", "Shaft", "Studio Trigger", "Bones", "Sunrise", "Toei Animation"
@@ -165,13 +174,25 @@ VOICE_ACTORS_LIST = list(FRENCH_VOICE_ACTORS.keys()) if FRENCH_VOICE_ACTORS else
     "Brigitte Lecordier", "Benoît DuPac", "Alexis Tomassian", "Arthur Pestel", "Patrick Borg", "Eric Legrand", "Philippe Ariotti"
 ]
 
-PUBLISHERS_LIST = list(FRENCH_MANGA_PUBLISHERS.keys()) if FRENCH_MANGA_PUBLISHERS else [
+PUBLISHERS_LIST = (list(FRENCH_MANGA_PUBLISHERS.keys()) if FRENCH_MANGA_PUBLISHERS else [
     "Glénat Manga", "Kana", "Pika Édition", "Kurokawa", "Ki-oon", "Delcourt/Tonkam", "Soleil Manga", "Akata", "Meian"
-]
+]) + (list(JAPANESE_MANGA_PUBLISHERS.keys()) if JAPANESE_MANGA_PUBLISHERS else [
+    "Shūeisha", "Kōdansha", "Shōgakukan", "Kadokawa Future Publishing", "Square Enix Manga"
+])
 
-DISTRIBUTORS_LIST = list(FRENCH_ANIME_DISTRIBUTORS.keys()) if FRENCH_ANIME_DISTRIBUTORS else [
+DISTRIBUTORS_LIST = (list(FRENCH_ANIME_DISTRIBUTORS.keys()) if FRENCH_ANIME_DISTRIBUTORS else [
     "Crunchyroll France", "ADN", "Netflix France", "Prime Video Channels", "Disney+ France", "Wakanim"
-]
+]) + (list(JAPANESE_ANIME_DISTRIBUTORS.keys()) if JAPANESE_ANIME_DISTRIBUTORS else [
+    "Aniplex", "Tōhō", "Toei Animation", "Bandai Namco Filmworks", "Pony Canyon", "TV Tokyo"
+])
+
+JAPANESE_PUBLISHERS_SET = set(JAPANESE_MANGA_PUBLISHERS.keys()) if JAPANESE_MANGA_PUBLISHERS else {
+    "Shūeisha", "Kōdansha", "Shōgakukan", "Kadokawa Future Publishing", "Square Enix Manga"
+}
+
+JAPANESE_DISTRIBUTORS_SET = set(JAPANESE_ANIME_DISTRIBUTORS.keys()) if JAPANESE_ANIME_DISTRIBUTORS else {
+    "Aniplex", "Tōhō", "Toei Animation", "Bandai Namco Filmworks", "Pony Canyon", "TV Tokyo"
+}
 
 POPULAR_TITLES = [
     "One Piece", "Naruto", "Bleach", "Death Note", "Berserk", "Dragon Ball Z", "My Hero Academia",
@@ -334,36 +355,56 @@ PUBLISHER_GROUPS = {
     "Kurokawa": "shonen_giant", "Ki-oon": "shonen_giant", "Crunchyroll Manga": "shonen_giant",
     "Delcourt/Tonkam": "seinen_classic", "Vega-Dupuis": "seinen_classic", "Meian": "seinen_classic",
     "Ototo": "isekai_light_novel", "Mana Books": "video_games", "Soleil Manga": "video_games",
-    "Akata": "indie_societal", "ChattoChatto": "indie_societal", "Taifu Comics": "yaoi_yuri"
+    "Akata": "indie_societal", "ChattoChatto": "indie_societal", "Taifu Comics": "yaoi_yuri",
+    # Japanese publishers
+    "Shūeisha": "jp_major", "Kōdansha": "jp_major", "Shōgakukan": "jp_major",
+    "Kadokawa Future Publishing": "jp_conglom", "Media Factory": "jp_conglom",
+    "Square Enix Manga": "jp_gangan", "Mag Garden": "jp_gangan",
+    "Hakusensha": "jp_seinen_shojo", "Shodensha": "jp_seinen_shojo",
+    "Akita Shoten": "jp_action_furyo", "Futabasha": "jp_action_furyo",
+    "Houbunsha": "jp_kirara", "Ichijinsha": "jp_otaku",
+    "Tokuma Shoten": "jp_historic", "Leed Publishing": "jp_historic"
 }
 for pub_name in PUBLISHERS_LIST:
     grp = PUBLISHER_GROUPS.get(pub_name)
+    is_jp = pub_name in JAPANESE_PUBLISHERS_SET
+    regional_candidates = [p for p in PUBLISHERS_LIST if (p in JAPANESE_PUBLISHERS_SET) == is_jp]
+    
     if grp:
-        same_group = [p for p in PUBLISHERS_LIST if PUBLISHER_GROUPS.get(p) == grp and p.lower() != pub_name.lower()]
+        same_group = [p for p in regional_candidates if PUBLISHER_GROUPS.get(p) == grp and p.lower() != pub_name.lower()]
         if same_group:
             RELATED_ENTITIES_MAP[pub_name] = same_group
             continue
-    RELATED_ENTITIES_MAP[pub_name] = [p for p in PUBLISHERS_LIST if p.lower() != pub_name.lower()]
+    RELATED_ENTITIES_MAP[pub_name] = [p for p in regional_candidates if p.lower() != pub_name.lower()]
 
 # 5. Distributors
 DISTRIBUTOR_GROUPS = {
     "Crunchyroll France": "streaming_specialist", "ADN": "streaming_specialist", "Wakanim": "streaming_specialist",
     "Netflix France": "streaming_generalist", "Disney+ France": "streaming_generalist", "Prime Video Channels": "streaming_generalist",
-    "Club Dorothée": "retro_broadcaster", "Kazé": "physical_distributor", "Dybex": "physical_distributor", "Declic Images": "physical_distributor"
+    "Club Dorothée": "retro_broadcaster", "Kazé": "physical_distributor", "Dybex": "physical_distributor", "Declic Images": "physical_distributor",
+    # Japanese distributors
+    "Aniplex": "jp_producer", "Kadokawa Anime": "jp_producer", "Pony Canyon": "jp_producer",
+    "Tōhō": "jp_film_distributor", "Toei Animation": "jp_film_distributor",
+    "Bandai Namco Filmworks": "jp_sci_fi",
+    "TV Tokyo": "jp_tv", "Fuji TV": "jp_tv", "MBS TV": "jp_tv",
+    "NHK": "jp_public_tv"
 }
 for dist_name in DISTRIBUTORS_LIST:
     grp = DISTRIBUTOR_GROUPS.get(dist_name)
+    is_jp = dist_name in JAPANESE_DISTRIBUTORS_SET
+    regional_candidates = [d for d in DISTRIBUTORS_LIST if (d in JAPANESE_DISTRIBUTORS_SET) == is_jp]
+    
     if grp:
-        same_group = [d for d in DISTRIBUTORS_LIST if DISTRIBUTOR_GROUPS.get(d) == grp and d.lower() != dist_name.lower()]
+        same_group = [d for d in regional_candidates if DISTRIBUTOR_GROUPS.get(d) == grp and d.lower() != dist_name.lower()]
         if same_group:
             RELATED_ENTITIES_MAP[dist_name] = same_group
             continue
         if grp == "retro_broadcaster":
-            phys = [d for d in DISTRIBUTORS_LIST if DISTRIBUTOR_GROUPS.get(d) == "physical_distributor"]
+            phys = [d for d in regional_candidates if DISTRIBUTOR_GROUPS.get(d) == "physical_distributor"]
             if phys:
                 RELATED_ENTITIES_MAP[dist_name] = phys
                 continue
-    RELATED_ENTITIES_MAP[dist_name] = [d for d in DISTRIBUTORS_LIST if d.lower() != dist_name.lower()]
+    RELATED_ENTITIES_MAP[dist_name] = [d for d in regional_candidates if d.lower() != dist_name.lower()]
 
 # 6. Popular Titles
 for title_name in POPULAR_TITLES:

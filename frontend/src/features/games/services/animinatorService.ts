@@ -2,11 +2,17 @@ import { apiClient } from '../../../utils/apiClient';
 
 const API_BASE = '/api/v1/game/animinator';
 
+export interface AniminatorResponse {
+  answer: string;
+  questions_left: number;
+  error?: string;
+}
+
 export const animinatorService = {
-  getState: async (): Promise<any> => {
-    return apiClient(`${API_BASE}/state/`);
-  },
-  submit: async (data: any): Promise<any> => {
-    return apiClient(`${API_BASE}/frame/`, { method: 'POST', body: JSON.stringify(data) });
+  ask: async (question: string): Promise<AniminatorResponse> => {
+    return apiClient(`${API_BASE}/ask/`, { 
+      method: 'POST', 
+      body: JSON.stringify({ question }) 
+    });
   }
 };

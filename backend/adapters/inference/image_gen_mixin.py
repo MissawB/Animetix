@@ -152,7 +152,8 @@ class ImageGenMixin:
             init_image = PILImage.open(BytesIO(image_data)).convert("RGB")
             w, h = init_image.size
             try: self._load_inpainting()
-            except: pass
+            except Exception as e:
+                logger.warning(f"Could not load inpainting model, falling back to basic replacement: {e}")
             if hasattr(self, '_inpaint_pipe') and self._inpaint_pipe:
                 mask = PILImage.new("L", (w, h), 0); d = PILImageDraw.Draw(mask)
                 for b in bubbles: 

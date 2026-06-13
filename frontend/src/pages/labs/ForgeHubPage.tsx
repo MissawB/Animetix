@@ -11,15 +11,15 @@ const categoryLabs: Record<string, { id: string, title: string, url: string, des
     { id: 'forge', title: 'Forge de Réalité', url: '/forge/', desc: 'Fusionnez univers et scénarios.' },
   ],
   visual: [
-    { id: 'manga', title: 'Manga Lab', url: '/manga_lab/', desc: 'Rendu Manga par IA.' },
-    { id: 'video', title: 'Video Lab', url: '/video-lab/', desc: 'Analyse et indexation vidéo.' },
-    { id: 'nexus', title: 'Visual Nexus', url: '/visual-nexus/', desc: 'Exploration d\'embeddings visuels.' },
-    { id: 'reconstruction', title: 'Cinematic Reconstruction', url: '/cinematic-reconstruction/', desc: '3D de scènes animées.' },
+    { id: 'manga', title: 'Manga Lab', url: '/lab/manga/', desc: 'Rendu Manga par IA.' },
+    { id: 'video', title: 'Video Lab', url: '/lab/video/', desc: 'Analyse et indexation vidéo.' },
+    { id: 'nexus', title: 'Visual Nexus', url: '/lab/visual-nexus/', desc: 'Exploration d\'embeddings visuels.' },
+    { id: 'reconstruction', title: 'Cinematic Reconstruction', url: '/lab/cinematic/', desc: '3D de scènes animées.' },
   ],
   audio: [
-    { id: 'audio', title: 'Audio Lab', url: '/audio_lab/', desc: 'Clonage vocal et synthèse.' },
-    { id: 'soundscape', title: 'Soundscape Lab', url: '/soundscape-lab/', desc: 'Génération d\'ambiances sonores.' },
-    { id: 'speech', title: 'Speech-to-Speech', url: '/s2s-lab/', desc: 'Transformation vocale temps-réel.' },
+    { id: 'audio', title: 'Audio Lab', url: '/lab/audio/', desc: 'Clonage vocal et synthèse.' },
+    { id: 'soundscape', title: 'Soundscape Lab', url: '/lab/soundscape/', desc: 'Génération d\'ambiances sonores.' },
+    { id: 'speech', title: 'Speech-to-Speech', url: '/lab/speech-to-speech/', desc: 'Transformation vocale temps-réel.' },
   ],
   experimental: [
     { id: 'singularity', title: 'Singularity Hub', url: '/lab/', desc: 'Accès aux modules de recherche Omega.' },

@@ -164,10 +164,20 @@ const SpatialLabPage: React.FC = () => {
                   </p>
                   <Button 
                       as={Link}
+                      to="/lab/spatial/gallery/"
+                      variant="outline"
+                      fullWidth
+                      className="mt-4 border-blue-500/30 text-blue-400 hover:bg-blue-500/10 text-[10px] font-black uppercase tracking-widest"
+                  >
+                      VOIR MA GALERIE 3D <ArrowRight className="ml-2 w-3 h-3" />
+                  </Button>
+
+                  <Button 
+                      as={Link}
                       to="/cinematic-reconstruction/"
                       variant="outline"
                       fullWidth
-                      className="mt-6 border-purple-500/30 text-purple-400 hover:bg-purple-500/10 text-[10px] font-black uppercase tracking-widest"
+                      className="mt-4 border-purple-500/30 text-purple-400 hover:bg-purple-500/10 text-[10px] font-black uppercase tracking-widest"
                   >
                       DÉCOUVRIR LE DCS (3D VIDÉO) <ArrowRight className="ml-2 w-3 h-3" />
                   </Button>

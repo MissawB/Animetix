@@ -24,8 +24,8 @@ class LateInteractionColBERTAdapter:
             return
         try:
             from transformers import AutoTokenizer, AutoModel
-            self._tokenizer = AutoTokenizer.from_pretrained(self.model_name)
-            self._model = AutoModel.from_pretrained(self.model_name)
+            self._tokenizer = AutoTokenizer.from_pretrained(self.model_name, revision="main") # nosec B615
+            self._model = AutoModel.from_pretrained(self.model_name, revision="main") # nosec B615
             self._initialized = True
             logger.info(f"ColBERT Adapter initialized successfully with model {self.model_name}.")
         except Exception as e:

@@ -5,7 +5,7 @@ import { useAuthStore } from '../store/authStore';
 import { 
   Menu, Shield, Sparkles, Box, Network, Users, Search, 
   Gamepad2, User, Sliders, LogOut, LogIn, UserPlus, Bell,
-  HelpCircle
+  HelpCircle, Zap
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { DynamicAuraWrapper } from './shared/DynamicAuraWrapper';
@@ -59,6 +59,14 @@ const Navbar: React.FC = () => {
       <div className="flex items-center gap-4 shrink-0">
           {user ? (
             <>
+              {/* Solde de Berrix (Bx) */}
+              <Link to="/power-station/" className="flex items-center gap-2 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 rounded-xl transition-all no-underline group shadow-sm">
+                <Zap className="w-3.5 h-3.5 text-blue-500 group-hover:scale-110 transition-transform fill-current" />
+                <span className="text-[11px] font-black italic manga-font text-blue-500">
+                  {user.wallet_balance?.toLocaleString() || 0} <span className="text-[8px] opacity-70">Bx</span>
+                </span>
+              </Link>
+
               <div className="hidden md:flex items-center bg-gray-50 dark:bg-black/20 rounded-xl p-1 border border-black/5 dark:border-white/5 shadow-inner">
                 <button 
                   onClick={() => setPersonalizationEnabled(!isPersonalizationEnabled)}

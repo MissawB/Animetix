@@ -30,6 +30,8 @@ from dependency_injector.wiring import inject, Provide
 
 logger = get_logger('animetix.' + __name__)
 
+from animetix.api.billing import deduct_berrix
+
 class DailyChallengeViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = DailyChallenge.objects.all()
     serializer_class = DailyChallengeSerializer
@@ -136,6 +138,7 @@ class SingularityLabDataView(APIView):
         container = get_container()
 
         if action == 'compile':
+            deduct_berrix(request.user, 20, "Singularity: Compilation de Kernel")
             function_name = request.data.get('function_name', 'cosine_similarity').strip()
             allowed_functions = ['cosine_similarity', 'euclidean_distance', 'vector_norm']
             if function_name not in allowed_functions:
@@ -156,6 +159,7 @@ class SingularityLabDataView(APIView):
                 return Response({'error': str(e)}, status=500)
 
         elif action == 'plasticity':
+            deduct_berrix(request.user, 20, "Singularity: Plasticité Synaptique")
             activations = request.data.get('activations', [1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
             active_indices = request.data.get('trigger_spikes', [0, 1])
             learning_rate = float(request.data.get('learning_rate', 0.05))
@@ -173,6 +177,7 @@ class SingularityLabDataView(APIView):
                 return Response({'error': str(e)}, status=500)
 
         elif action == 'quantum':
+            deduct_berrix(request.user, 20, "Singularity: Effondrement Quantique")
             theme = request.data.get('theme', 'shonen').lower()
             try:
                 from core.domain.services.quantum_cognitive_service import QuantumCognitiveService
@@ -190,6 +195,7 @@ class SingularityLabDataView(APIView):
                 return Response({'error': str(e)}, status=500)
         
         elif action == 'evolve_dynamic':
+            deduct_berrix(request.user, 50, "Singularity: Évolution LLM Dynamique")
             task = request.data.get('task', 'dot_product')
             try:
                 compiler = container.core.self_evolving_compiler()
@@ -215,6 +221,7 @@ class SingularityLabDataView(APIView):
                 return Response({'error': str(e)}, status=500)
 
         elif action == 'swarm':
+            deduct_berrix(request.user, 50, "Singularity: Consensus Swarm P2P")
             fact = request.data.get('fact')
             media = request.data.get('media')
             if not fact or not media:
@@ -296,6 +303,9 @@ class MangaVoiceLabView(APIView):
         if not image or not reference_audio:
             return Response({'error': 'Missing image or reference_audio in payload'}, status=400)
             
+        # Déduction des Berrix (200 Bx pour orchestration GCP + Audio)
+        deduct_berrix(request.user, 200, "Manga Voice Lab (Doublage IA)")
+
         task_id = str(uuid.uuid4())
         filename = f"manga_voice_{task_id}.wav"
         
@@ -339,6 +349,9 @@ class VideoFateZeroLabView(APIView):
         if not video_file:
             return Response({'error': 'Video file is required.'}, status=400)
             
+        # Déduction des Berrix (500 Bx pour transfert de style vidéo - Très lourd)
+        deduct_berrix(request.user, 500, f"FateZero Style Transfer: {studio_style}")
+
         try:
             video_bytes = video_file.read()
             service = container.core.studio_transform_service()
@@ -451,6 +464,9 @@ class SoundscapeGenerationView(APIView):
         if not video_file:
             return Response({'error': 'Video file is required.'}, status=400)
             
+        # Déduction des Berrix (50 Bx pour génération audio)
+        deduct_berrix(request.user, 50, "Génération de Soundscape Immersif")
+
         try:
             video_bytes = video_file.read()
             service = container.core.soundscape_service()
@@ -475,6 +491,9 @@ class SpeechToSpeechLabView(APIView):
         if not audio_file:
             return Response({'error': 'Audio file is required.'}, status=400)
             
+        # Déduction des Berrix (10 Bx pour un tour de parole S2S)
+        deduct_berrix(request.user, 10, f"Speech-to-Speech: {persona}")
+
         try:
             audio_bytes = audio_file.read()
             service = container.core.native_speech_llm_service()
@@ -516,7 +535,7 @@ import base64
 
 class MangaCleanLabView(APIView):
     """Nettoie (inpaint) les bulles de texte d'une planche de manga."""
-    permission_classes = [permissions.AllowAny] # Change to IsAuthenticated if needed in production
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         container = get_container()
@@ -525,6 +544,9 @@ class MangaCleanLabView(APIView):
         if not image_file:
             return Response({'error': 'Image file is required.'}, status=400)
             
+        # Déduction des Berrix (20 Bx pour inpainting de planche)
+        deduct_berrix(request.user, 20, "Manga Cleaner (Planche)")
+
         try:
             image_bytes = image_file.read()
             inference_engine = container.inference.primary()
@@ -543,7 +565,7 @@ class MangaCleanLabView(APIView):
 
 class MangaTranslateLabView(APIView):
     """Traduit les bulles de texte d'une planche de manga."""
-    permission_classes = [permissions.AllowAny] # Change to IsAuthenticated if needed in production
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         container = get_container()
@@ -553,6 +575,9 @@ class MangaTranslateLabView(APIView):
         if not image_file:
             return Response({'error': 'Image file is required.'}, status=400)
             
+        # Déduction des Berrix (20 Bx pour inpainting + traduction)
+        deduct_berrix(request.user, 20, f"Manga Translator: {target_lang}")
+
         try:
             image_bytes = image_file.read()
             manga_flow_service = container.core.manga_flow_service()
@@ -577,6 +602,9 @@ class VoiceCloningLabView(APIView):
         
         if not target_text or not ref_audio_file:
             return Response({"error": "Missing text or audio"}, status=400)
+
+        # Déduction des Berrix (100 Bx pour clonage vocal multi-passes)
+        deduct_berrix(request.user, 100, "Voice Cloning (Audio)")
 
         # Validation: Pitch must be an integer
         try:
@@ -649,6 +677,9 @@ class Generate3DDataView(APIView):
         if not image_file:
             return Response({'error': 'Image file is required.'}, status=400)
             
+        # Déduction des Berrix (150 Bx pour reconstruction 3D Gaussian Splatting)
+        deduct_berrix(request.user, 150, f"Image-to-3D: {title}")
+
         try:
             image_bytes = image_file.read()
             service = container.core.spatial_computing_service()
@@ -670,6 +701,9 @@ class CinematicReconstructionView(APIView):
         if not video_file:
             return Response({'error': 'Video file is required.'}, status=400)
             
+        # Déduction des Berrix (500 Bx pour reconstruction volumétrique dynamique)
+        deduct_berrix(request.user, 500, f"Cinematic 3D Reconstruction: {title}")
+
         try:
             video_bytes = video_file.read()
             service = container.core.cinematic_volumetric_reconstruction_service()
@@ -678,6 +712,72 @@ class CinematicReconstructionView(APIView):
         except Exception as e:
             logger.error(f"Error in CinematicReconstructionView: {e}")
             return Response({'error': str(e)}, status=500)
+
+class SingularityCommandCenterView(APIView):
+    """
+    Vue unifiée pour le monitoring et le contrôle des expériences IA avancées.
+    Agrège les données de santé de Quantum, Plasticity, Swarm, LNN, etc.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    @inject
+    def get(self, request):
+        container = get_container()
+        
+        # 1. État des services (Simulation de santé système)
+        services = []
+        try:
+            # Quantum
+            services.append({
+                "id": "quantum",
+                "name": "Quantum Cognitive",
+                "status": "online",
+                "load": random.randint(5, 25),
+                "metrics": {"coherence": 0.98, "dimension": 4}
+            })
+            
+            # Plasticity
+            services.append({
+                "id": "plasticity",
+                "name": "Synaptic Plasticity",
+                "status": "online",
+                "load": random.randint(10, 40),
+                "metrics": {"learning_rate": 0.05, "synapses": 1024}
+            })
+            
+            # Swarm
+            services.append({
+                "id": "swarm",
+                "name": "P2P Swarm Consensus",
+                "status": "online",
+                "load": random.randint(15, 60),
+                "metrics": {"nodes": 12, "consensus_rate": 0.95}
+            })
+
+            # LNN
+            services.append({
+                "id": "lnn",
+                "name": "Liquid Neural Network",
+                "status": "online",
+                "load": random.randint(20, 80),
+                "metrics": {"stability": 0.92, "dt": 0.05}
+            })
+        except:
+            pass
+
+        # 2. Événements récents (Simulés pour le dashboard)
+        events = [
+            {"time": (datetime.datetime.now() - datetime.timedelta(minutes=2)).isoformat(), "type": "QUANTUM", "msg": "Effondrement de fonction d'onde détecté (Shonen)."},
+            {"time": (datetime.datetime.now() - datetime.timedelta(minutes=5)).isoformat(), "type": "PLASTICITY", "msg": "Apprentissage Hebbien complété pour user_77."},
+            {"time": (datetime.datetime.now() - datetime.timedelta(minutes=12)).isoformat(), "type": "SWARM", "msg": "Consensus Paxos-sémantique atteint sur 'One Piece Timeline'."},
+        ]
+
+        return Response({
+            "status": "operational",
+            "services": services,
+            "events": events,
+            "system_load": random.randint(30, 50)
+        })
 
 class NeuralDiagnosticsLabView(APIView):
     """
@@ -706,3 +806,4 @@ class NeuralDiagnosticsLabView(APIView):
         except Exception as e:
             logger.error(f"Neural Diagnostics Error: {e}", exc_info=True)
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+

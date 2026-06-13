@@ -57,6 +57,7 @@ from core.domain.services.synthetic_promotion_service import SyntheticDataPromot
 from core.domain.services.star_mlops_service import StarMLOpsDomainService
 from core.domain.services.drift_service import DriftService
 from core.domain.services.archetype_drift_service import ArchetypeDriftService
+from core.domain.services.alert_service import AlertService
 from core.domain.services.dpo_feedback_loop import DPOFeedbackLoop
 from core.domain.services.creative.fusion_service import FusionDomainService
 from core.domain.services.creative.vs_battle_service import VsBattleService
@@ -427,6 +428,12 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         feedback_port=persistence.feedback_adapter,
         memory_service=agentic.memory_service,
         repository=persistence.repository
+    )
+
+    alert_service = providers.Singleton(
+        AlertService,
+        notification_port=infrastructure.notification_port,
+        drift_service=drift_service
     )
 
     dpo_feedback_loop = providers.Singleton(

@@ -9,29 +9,19 @@ import {
     ChevronRight, 
     BookOpen, 
     Target, 
-    Gem,
     Atom,
     BarChart,
     Lightbulb
 } from 'lucide-react';
+import type { components } from '../types/api';
 
-interface DocumentAttribution {
-  document_id: string;
-  title: string;
-  relevance_score: number;
-  contribution_weight: number;
-}
+type ApiXaiReport = components["schemas"]["XaiReport"];
+type ApiDocumentAttribution = components["schemas"]["DocumentAttribution"];
 
 interface LogitLensTrajectory {
   layer: number;
   top_tokens: string[];
   internal_probabilities: number[];
-}
-
-interface ModelDiagnostics {
-  attention_heatmap: any[]; 
-  top_influential_tokens: string[];
-  logit_lens_trajectory: LogitLensTrajectory[]; 
 }
 
 interface Uncertainty {
@@ -42,12 +32,25 @@ interface Uncertainty {
   method: string;
 }
 
-interface XaiReport {
+interface AgentTraceStep {
+  agent?: string;
+  thought?: string;
+  action?: string;
+  observation?: string;
+  [key: string]: unknown;
+}
+
+// We refine the generated types for the UI components to avoid 'unknown' issues
+interface XaiReport extends Omit<ApiXaiReport, 'internal_diagnostics' | 'uncertainty' | 'retrieval_attribution' | 'agent_trace'> {
   query_intent: string;
-  retrieval_attribution: DocumentAttribution[];
-  internal_diagnostics: ModelDiagnostics;
+  retrieval_attribution: ApiDocumentAttribution[];
+  internal_diagnostics: {
+    attention_heatmap: number[][];
+    top_influential_tokens: string[];
+    logit_lens_trajectory: LogitLensTrajectory[];
+  };
   uncertainty: Uncertainty;
-  agent_trace: any[]; 
+  agent_trace: AgentTraceStep[];
   final_confidence: number;
 }
 

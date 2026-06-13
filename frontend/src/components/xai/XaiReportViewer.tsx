@@ -9,6 +9,12 @@ export interface XaiReportViewerProps {
   className?: string;
 }
 
+interface AgentTraceStep {
+  agent?: string;
+  thought?: string;
+  [key: string]: unknown;
+}
+
 export const XaiReportViewer: React.FC<XaiReportViewerProps> = ({ report, className = '' }) => {
   const formatConfidence = (conf: number) => `${Math.round(conf * 100)}%`;
 
@@ -43,7 +49,7 @@ export const XaiReportViewer: React.FC<XaiReportViewerProps> = ({ report, classN
               Agent Trace
             </h4>
             <div className="pl-2 border-l-2 border-slate-700 ml-2 space-y-4">
-              {report.agent_trace.map((trace: any, idx) => (
+              {report.agent_trace.map((trace: AgentTraceStep, idx) => (
                 <div key={idx} className="relative pl-6">
                   <div className="absolute -left-[29px] top-1 w-3 h-3 rounded-full bg-blue-500 border-4 border-slate-900" />
                   <div className="bg-slate-800/50 p-3 rounded-lg border border-slate-700/50">

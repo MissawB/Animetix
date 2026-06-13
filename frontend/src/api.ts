@@ -97,6 +97,30 @@ export async function getAIFeedbackHistory(): Promise<AIFeedback[]> {
   return apiClient('/api/v1/mlops/feedback/submit/');
 }
 
+export interface AIUsageData {
+  tier: string;
+  limits: {
+    daily_tokens: number;
+    daily_requests: number;
+  };
+  usage_today: {
+    tokens: number;
+    requests: number;
+    estimated_cost_usd: number;
+    tokens_percent: number;
+    requests_percent: number;
+  };
+  history: {
+    date: string;
+    tokens: number;
+    requests: number;
+  }[];
+}
+
+export async function getAIUsage(): Promise<AIUsageData> {
+  return apiClient('/api/v1/profiles/usage/');
+}
+
 // --- Daily Challenge ---
 export async function getDailyChallenge(): Promise<DailyChallenge> {
   return apiClient('/api/v1/daily-challenge/');
@@ -158,7 +182,7 @@ export async function getAuthUser(): Promise<User> {
   };
 }
 
-export async function loginUser(data: Record<string, any>): Promise<User> {
+export async function loginUser(data: Record<string, unknown>): Promise<User> {
   await apiClient('/api/v1/auth/login/', {
     method: 'POST',
     body: JSON.stringify(data),
@@ -166,7 +190,8 @@ export async function loginUser(data: Record<string, any>): Promise<User> {
   return getAuthUser();
 }
 
-export async function registerUser(data: Record<string, any>): Promise<User> {
+export async function registerUser(data: Record<string, unknown>): Promise<User> {
+
   await apiClient('/api/v1/auth/register/', {
     method: 'POST',
     body: JSON.stringify(data),
@@ -200,11 +225,11 @@ export interface VsBattleRequest {
 }
 
 export interface VsBattleResult {
-  character_a: any;
-  character_b: any;
+  character_a: components["schemas"]["CombatCharacter"];
+  character_b: components["schemas"]["CombatCharacter"];
   winner: string;
   verdict_summary: string;
-  debate_history: any[];
+  debate_history: components["schemas"]["DebateTurn"][];
 }
 
 export async function runVsBattle(params: VsBattleRequest): Promise<VsBattleResult> {

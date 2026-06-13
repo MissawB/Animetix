@@ -19,8 +19,7 @@ from core.utils.security import safe_http_request
 logger = logging.getLogger("animetix.pipeline." + __name__)
 
 # Chemins
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-GOLD_DATASET = os.path.join(BASE_DIR, 'data', 'mlops', 'gold_dataset.json')
+GOLD_DATASET = os.path.join(PROJECT_ROOT, 'data', 'mlops', 'gold_dataset.json')
 
 def calculate_animetix_score(metrics):
     """Calcule une note globale sur 10 basée sur les métriques RAGAS."""
@@ -28,7 +27,7 @@ def calculate_animetix_score(metrics):
     return ScoringDomainService.calculate_animetix_ragas_score(metrics)
 
 def ragas_performance_comparison():
-    """Évaluation et comparaison RAGAS (OFFICIELLE) avec W&B par catégorie."""
+    """Évaluation et comparaison RAGAS (OFFICIELLE) avec W&B par catégorie et par tranche."""
     if not os.path.exists(GOLD_DATASET):
         return {"error": "Gold dataset missing"}
 
@@ -61,6 +60,10 @@ def ragas_performance_comparison():
     brain_url = os.getenv("BRAIN_API_URL", "http://127.0.0.1:7861")
     brain_api_key = os.getenv("BRAIN_API_KEY", "dev-secret-key")
 
+    # Registry and service for costs
+    from core.domain.services.pricing_service import PricingService
+    pricing_service = PricingService()
+
     comparison_results = {}
     summary_table = wandb.Table(columns=["Mode", "QueryType", "Faithfulness", "Relevancy", "Context Recall", "Animetix Score"])
 
@@ -71,7 +74,6 @@ def ragas_performance_comparison():
         for i, entry in enumerate(eval_set):
             q = entry['query']
             q_vec = embed_model.encode([q]).tolist()
-            q_type = "architectural" if entry.get('is_architectural', False) else "standard"
             
             # Retrieval
             try:
@@ -93,6 +95,14 @@ def ragas_performance_comparison():
             
             # Generation
             answer = "Erreur"
+            latency = 0.0
+            prompt_tokens = 0
+            completion_tokens = 0
+            total_tokens = 0
+            cost = 0.0
+            
+            import time
+            start_time = time.time()
             try:
                 # Assurez-vous que l'URL se termine par /generate
                 actual_url = f"{brain_url}/generate" if not brain_url.endswith("/generate") else brain_url
@@ -100,11 +110,20 @@ def ragas_performance_comparison():
                     "prompt": f"Context: {contexts}\n\nQuestion: {q}",
                     "system_prompt": "Expert Anime/Manga précis."
                 }, headers={"X-API-Key": brain_api_key}, timeout=40, allow_internal=True)
+                latency = time.time() - start_time
                 if resp.status_code == 200:
-                    answer = resp.json().get("text", "Erreur")
+                    resp_json = resp.json()
+                    answer = resp_json.get("text", "Erreur")
+                    usage = resp_json.get("usage", {})
+                    if usage:
+                        prompt_tokens = usage.get("prompt_tokens", 0)
+                        completion_tokens = usage.get("completion_tokens", 0)
+                        total_tokens = usage.get("total_tokens", 0)
+                        cost = pricing_service.calculate_cost("brain-api", prompt_tokens, completion_tokens)
                 else:
                     logger.error(f"❌ Brain API Error {resp.status_code} for question: {q}")
             except Exception as e:
+                latency = time.time() - start_time
                 logger.warning(f"⚠️ Brain API generation error: {e}")
                 pass
 
@@ -112,72 +131,158 @@ def ragas_performance_comparison():
                 "question": q,
                 "answer": answer,
                 "contexts": contexts,
-                "ground_truth": entry.get('expected_title', ''),
-                "query_type": q_type
+                "ground_truth": entry.get('ground_truth', '') or entry.get('expected_title', ''),
+                "is_architectural": entry.get('is_architectural', False),
+                "query_type": entry.get('query_type', 'standard'),
+                "difficulty": entry.get('difficulty', 'easy'),
+                "latency": latency,
+                "prompt_tokens": prompt_tokens,
+                "completion_tokens": completion_tokens,
+                "total_tokens": total_tokens,
+                "cost": cost
             })
 
-        # Evaluation RAGAS par catégorie
-        logger.info(f"⚖️ Running RAGAS evaluation per category (Mode: {mode})...")
-        df_results = pd.DataFrame(results_list)
-        
-        for q_type in ["architectural", "standard"]:
-            cat_df = df_results[df_results['query_type'] == q_type]
-            if cat_df.empty: continue
+        # Evaluation RAGAS
+        logger.info(f"⚖️ Running RAGAS evaluation (Mode: {mode})...")
+        for res in results_list:
+            q = res['question']
+            a = res['answer']
+            c_str = "\n".join(res['contexts'])
+            gt = res['ground_truth']
             
+            prompt = f"""
+            Évalue l'interaction RAG ci-dessous en la comparant à la Vérité Terrain (Ground Truth) attendue :
+            
+            Question de l'utilisateur :
+            {q}
+            
+            Contexte de connaissances fourni :
+            {c_str}
+            
+            Réponse générée par le système :
+            {a}
+            
+            Vérité Terrain attendue (Ground Truth) :
+            {gt}
+            """
             try:
-                faith_scores = []
-                relevance_scores = []
-                precision_scores = []
-                recall_scores = []
+                result = eval_service.judge_engine.generate_structured(
+                    prompt=prompt,
+                    response_model=EvaluationResult,
+                    system_prompt="Tu es un juge sémantique d'IA impartial chargé de mesurer la qualité d'une interaction RAG."
+                )
+                res["faithfulness"] = float(result.faithfulness)
+                res["answer_relevancy"] = float(result.answer_relevancy)
+                res["context_precision"] = float(result.context_precision)
+                res["context_recall"] = float(result.context_recall if result.context_recall is not None else 0.0)
                 
-                for _, row in cat_df.iterrows():
-                    q = row['question']
-                    a = row['answer']
-                    c_str = "\n".join(row['contexts'])
-                    gt = row['ground_truth']
-                    
-                    prompt = f"""
-                    Évalue l'interaction RAG ci-dessous en la comparant à la Vérité Terrain (Ground Truth) attendue :
-                    
-                    Question de l'utilisateur :
-                    {q}
-                    
-                    Contexte de connaissances fourni :
-                    {c_str}
-                    
-                    Réponse générée par le système :
-                    {a}
-                    
-                    Vérité Terrain attendue (Ground Truth) :
-                    {gt}
-                    """
-                    
-                    result = eval_service.judge_engine.generate_structured(
-                        prompt=prompt,
-                        response_model=EvaluationResult,
-                        system_prompt="Tu es un juge sémantique d'IA impartial chargé de mesurer la qualité d'une interaction RAG."
-                    )
-                    
-                    faith_scores.append(result.faithfulness)
-                    relevance_scores.append(result.answer_relevancy)
-                    precision_scores.append(result.context_precision)
-                    recall_scores.append(result.context_recall if result.context_recall is not None else 0.0)
-                
+                # Calcule une note globale sur 10 basée sur les métriques RAGAS
                 metrics = {
-                    "faithfulness": float(np.mean(faith_scores)),
-                    "answer_relevancy": float(np.mean(relevance_scores)),
-                    "context_precision": float(np.mean(precision_scores)),
-                    "context_recall": float(np.mean(recall_scores))
+                    "faithfulness": res["faithfulness"],
+                    "answer_relevancy": res["answer_relevancy"],
+                    "context_precision": res["context_precision"],
+                    "context_recall": res["context_recall"]
                 }
-                
+                res["animetix_score"] = calculate_animetix_score(metrics)
+            except Exception as e:
+                logger.error(f"❌ RAGAS Evaluation Error for query '{q}': {e}")
+                res["faithfulness"] = 0.0
+                res["answer_relevancy"] = 0.0
+                res["context_precision"] = 0.0
+                res["context_recall"] = 0.0
+                res["animetix_score"] = 0.0
+
+        # Construct DataFrame
+        df_results = pd.DataFrame(results_list)
+
+        # Overall Mode metrics
+        if not df_results.empty:
+            overall_metrics = {
+                "faithfulness": float(df_results["faithfulness"].mean()),
+                "answer_relevancy": float(df_results["answer_relevancy"].mean()),
+                "context_precision": float(df_results["context_precision"].mean()),
+                "context_recall": float(df_results["context_recall"].mean()),
+                "avg_latency": float(df_results["latency"].mean()),
+                "avg_cost": float(df_results["cost"].mean()),
+                "avg_total_tokens": float(df_results["total_tokens"].mean())
+            }
+            overall_metrics['animetix_score'] = calculate_animetix_score(overall_metrics)
+            wandb.log({f"{mode}_overall_{k}": v for k, v in overall_metrics.items()})
+
+        # Standard vs Architectural slice
+        for arch_val, q_type_name in [(True, "architectural"), (False, "standard")]:
+            slice_df = df_results[df_results['is_architectural'] == arch_val]
+            if not slice_df.empty:
+                metrics = {
+                    "faithfulness": float(slice_df["faithfulness"].mean()),
+                    "answer_relevancy": float(slice_df["answer_relevancy"].mean()),
+                    "context_precision": float(slice_df["context_precision"].mean()),
+                    "context_recall": float(slice_df["context_recall"].mean()),
+                    "avg_latency": float(slice_df["latency"].mean()),
+                    "avg_cost": float(slice_df["cost"].mean()),
+                    "avg_total_tokens": float(slice_df["total_tokens"].mean())
+                }
                 animetix_score = calculate_animetix_score(metrics)
                 metrics['animetix_score'] = animetix_score
                 
-                # Logging W&B
-                summary_table.add_data(mode, q_type, metrics.get('faithfulness', 0), metrics.get('answer_relevancy', 0), metrics.get('context_recall', 0), animetix_score)
-                wandb.log({f"{mode}_{q_type}_{k}": v for k, v in metrics.items()})
-            except Exception as e:
-                logger.error(f"❌ RAGAS Evaluation Error for {mode}/{q_type}: {e}")
+                summary_table.add_data(
+                    mode, q_type_name, 
+                    metrics['faithfulness'], metrics['answer_relevancy'], 
+                    metrics['context_recall'], animetix_score
+                )
+                
+                # Log metrics to W&B
+                wandb.log({f"{mode}_{q_type_name}_{k}": v for k, v in metrics.items()})
+
+        # Slice Analysis by Query Type (graph, thematic, etc.)
+        for q_type in df_results['query_type'].unique():
+            slice_df = df_results[df_results['query_type'] == q_type]
+            if not slice_df.empty:
+                metrics = {
+                    "faithfulness": float(slice_df["faithfulness"].mean()),
+                    "answer_relevancy": float(slice_df["answer_relevancy"].mean()),
+                    "context_precision": float(slice_df["context_precision"].mean()),
+                    "context_recall": float(slice_df["context_recall"].mean()),
+                    "avg_latency": float(slice_df["latency"].mean()),
+                    "avg_cost": float(slice_df["cost"].mean()),
+                    "avg_total_tokens": float(slice_df["total_tokens"].mean())
+                }
+                metrics['animetix_score'] = calculate_animetix_score(metrics)
+                
+                # Log to W&B
+                wandb.log({f"{mode}_slice_query_type_{q_type}_{k}": v for k, v in metrics.items()})
+
+        # Slice Analysis by Difficulty (easy, medium, hard)
+        for diff in df_results['difficulty'].unique():
+            slice_df = df_results[df_results['difficulty'] == diff]
+            if not slice_df.empty:
+                metrics = {
+                    "faithfulness": float(slice_df["faithfulness"].mean()),
+                    "answer_relevancy": float(slice_df["answer_relevancy"].mean()),
+                    "context_precision": float(slice_df["context_precision"].mean()),
+                    "context_recall": float(slice_df["context_recall"].mean()),
+                    "avg_latency": float(slice_df["latency"].mean()),
+                    "avg_cost": float(slice_df["cost"].mean()),
+                    "avg_total_tokens": float(slice_df["total_tokens"].mean())
+                }
+                metrics['animetix_score'] = calculate_animetix_score(metrics)
+                
+                # Log to W&B
+                wandb.log({f"{mode}_slice_difficulty_{diff}_{k}": v for k, v in metrics.items()})
+
+        # Log detailed Table to W&B
+        try:
+            table_cols = [
+                "question", "answer", "ground_truth", "query_type", "difficulty",
+                "latency", "prompt_tokens", "completion_tokens", "total_tokens", "cost",
+                "faithfulness", "answer_relevancy", "context_precision", "context_recall", "animetix_score"
+            ]
+            wb_table = wandb.Table(columns=table_cols)
+            for _, row in df_results.iterrows():
+                wb_table.add_data(*(row[col] for col in table_cols))
+            wandb.log({f"{mode}_detailed_results": wb_table})
+        except Exception as e:
+            logger.error(f"❌ Error logging detailed table to W&B: {e}")
 
     wandb.log({"Official Comparison": summary_table})
     run.finish()

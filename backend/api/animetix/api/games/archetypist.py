@@ -17,6 +17,8 @@ from ...serializers import ArchetypistFusionSerializer
 
 # ... (rest of imports unchanged)
 
+from animetix.api.billing import deduct_berrix
+
 # --- ARCHETYPIST / CREATIVE FUSION ---
 
 class ArchetypistStartFusionView(APIView):
@@ -25,22 +27,19 @@ class ArchetypistStartFusionView(APIView):
     @inject
     def post(self, request, 
              catalog_service = Provide[Container.core.catalog_service],
-             guardrail_service: GuardrailService = Provide[Container.core.guardrail_service],
-             usage_port: UsagePort = Provide[Container.infrastructure.usage_port]):
+             guardrail_service: GuardrailService = Provide[Container.core.guardrail_service]):
         
         serializer = ArchetypistFusionSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             
+        # Déduction des Bx (50 Bx pour marge minimale)
+        deduct_berrix(request.user, 50, "Forge de Creative Fusion")
+            
         data = serializer.validated_data
         session_service = get_session_service(request)
         port = session_service.port
         media_type = port.get('media_type', 'Anime')
-
-        # Quota Check
-        tier = getattr(request, 'user_tier', 'free')
-        if not usage_port.check_quota(request.user.id, tier):
-             return Response({"error": "Daily AI quota exceeded."}, status=status.HTTP_403_FORBIDDEN)
         
         title_A = data.get('title_A')
         title_B = data.get('title_B')

@@ -25,8 +25,9 @@ export const useBlindtestStore = create<BlindtestStore>((set) => ({
       try {
         const state = await blindtestService.startGame();
         set({ gameState: state, isLoading: false });
-      } catch (err: any) {
-        set({ error: err.message || 'Failed to start game', isLoading: false });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to start game';
+        set({ error: message, isLoading: false });
       }
     }
   },
@@ -36,8 +37,9 @@ export const useBlindtestStore = create<BlindtestStore>((set) => ({
     try {
       const state = await blindtestService.startGame();
       set({ gameState: state, isLoading: false });
-    } catch (err: any) {
-      set({ error: err.message || 'Failed to restart game', isLoading: false });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to restart game';
+      set({ error: message, isLoading: false });
     }
   },
 
@@ -46,8 +48,9 @@ export const useBlindtestStore = create<BlindtestStore>((set) => ({
     try {
       const state = await blindtestService.submitGuess(guess);
       set({ gameState: state, isLoading: false });
-    } catch (err: any) {
-      set({ error: err.message || 'Failed to submit guess', isLoading: false });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to submit guess';
+      set({ error: message, isLoading: false });
     }
   }
 }));

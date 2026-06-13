@@ -12,6 +12,7 @@ const SwarmLabPage = lazy(() => import('../../../pages/labs/SwarmLabPage'));
 const VisualNexusPage = lazy(() => import('../../../pages/labs/VisualNexusPage'));
 const LatentSpacePage = lazy(() => import('../../../pages/labs/LatentSpacePage'));
 const SpatialLabPage = lazy(() => import('../../../pages/labs/SpatialLabPage'));
+const DioramaGalleryPage = lazy(() => import('../../../pages/labs/DioramaGalleryPage'));
 const SoundscapeLabPage = lazy(() => import('../../../pages/labs/SoundscapeLabPage'));
 const SpeechToSpeechLabPage = lazy(() => import('../../../pages/labs/SpeechToSpeechLabPage'));
 const CinematicReconstructionPage = lazy(() => import('../../../pages/labs/CinematicReconstructionPage'));
@@ -27,6 +28,8 @@ const NeuralDiagnosticsPage = lazy(() => import('../../../pages/labs/NeuralDiagn
 const CoveOraclePage = lazy(() => import('../../../pages/labs/CoveOraclePage'));
 const StrategyLabPage = lazy(() => import('../../../pages/labs/StrategyLabPage'));
 const VideoRagPage = lazy(() => import('../../../pages/labs/VideoRagPage'));
+const SingularityCommandCenterPage = lazy(() => import('../../../pages/labs/SingularityCommandCenterPage'));
+const DeveloperPortalPage = lazy(() => import('../../../pages/dev/DeveloperPortalPage'));
 const MonitoringConsolePage = lazy(() => import('../../../pages/dev/MonitoringConsolePage'));
 const ApiHubPage = lazy(() => import('../../../pages/dev/ApiHubPage'));
 const ObservabilityConsolePage = lazy(() => import('../../../pages/dev/ObservabilityConsolePage'));
@@ -45,6 +48,7 @@ export const LabRoutes = (
     <Route path="/lab/visual-nexus/" element={<VisualNexusPage />} />
     <Route path="/lab/latent-space/" element={<LatentSpacePage />} />
     <Route path="/lab/spatial/" element={<SpatialLabPage />} />
+    <Route path="/lab/spatial/gallery/" element={<DioramaGalleryPage />} />
     <Route path="/lab/soundscape/" element={<SoundscapeLabPage />} />
     <Route path="/lab/speech-to-speech/" element={<SpeechToSpeechLabPage />} />
     <Route path="/lab/cinematic/" element={<CinematicReconstructionPage />} />
@@ -61,6 +65,8 @@ export const LabRoutes = (
     <Route path="/lab/cove-oracle/" element={<CoveOraclePage />} />
     <Route path="/lab/strategy/" element={<StrategyLabPage />} />
     <Route path="/lab/video-rag/" element={<VideoRagPage />} />
+    <Route path="/lab/singularity/command-center/" element={<SingularityCommandCenterPage />} />
+    <Route path="/developer/" element={<DeveloperPortalPage />} />
     <Route path="/dev/api-hub/" element={<ApiHubPage />} />
     <Route path="/dev/monitoring/" element={<MonitoringConsolePage />} />
     <Route path="/dev/observability/" element={<ObservabilityConsolePage />} />

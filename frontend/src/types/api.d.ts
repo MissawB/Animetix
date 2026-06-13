@@ -4,1489 +4,1489 @@
  */
 
 export interface paths {
-    "/api/achievements/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["api_achievements_list"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+  "/api/achievements/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/achievements/{id}/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["api_achievements_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations["api_achievements_list"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/achievements/{id}/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/daily-challenges/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["api_daily_challenges_list"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations["api_achievements_retrieve"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/daily-challenges/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/daily-challenges/{id}/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["api_daily_challenges_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations["api_daily_challenges_list"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/daily-challenges/{id}/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/fusions/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description API endpoint pour visualiser, créer, liker et remixer des fusions créatives. */
-        get: operations["api_fusions_list"];
-        put?: never;
-        /** @description API endpoint pour visualiser, créer, liker et remixer des fusions créatives. */
-        post: operations["api_fusions_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations["api_daily_challenges_retrieve"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/fusions/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/fusions/{id}/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description API endpoint pour visualiser, créer, liker et remixer des fusions créatives. */
-        get: operations["api_fusions_retrieve"];
-        /** @description API endpoint pour visualiser, créer, liker et remixer des fusions créatives. */
-        put: operations["api_fusions_update"];
-        post?: never;
-        /** @description API endpoint pour visualiser, créer, liker et remixer des fusions créatives. */
-        delete: operations["api_fusions_destroy"];
-        options?: never;
-        head?: never;
-        /** @description API endpoint pour visualiser, créer, liker et remixer des fusions créatives. */
-        patch: operations["api_fusions_partial_update"];
-        trace?: never;
+    /** @description API endpoint pour visualiser, créer, liker et remixer des fusions créatives. */
+    get: operations["api_fusions_list"];
+    put?: never;
+    /** @description API endpoint pour visualiser, créer, liker et remixer des fusions créatives. */
+    post: operations["api_fusions_create"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/fusions/{id}/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/fusions/{id}/like/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description API endpoint pour visualiser, créer, liker et remixer des fusions créatives. */
-        post: operations["api_fusions_like_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** @description API endpoint pour visualiser, créer, liker et remixer des fusions créatives. */
+    get: operations["api_fusions_retrieve"];
+    /** @description API endpoint pour visualiser, créer, liker et remixer des fusions créatives. */
+    put: operations["api_fusions_update"];
+    post?: never;
+    /** @description API endpoint pour visualiser, créer, liker et remixer des fusions créatives. */
+    delete: operations["api_fusions_destroy"];
+    options?: never;
+    head?: never;
+    /** @description API endpoint pour visualiser, créer, liker et remixer des fusions créatives. */
+    patch: operations["api_fusions_partial_update"];
+    trace?: never;
+  };
+  "/api/fusions/{id}/like/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/fusions/{id}/remix/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** @description API endpoint pour visualiser, créer, liker et remixer des fusions créatives. */
-        post: operations["api_fusions_remix_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** @description API endpoint pour visualiser, créer, liker et remixer des fusions créatives. */
+    post: operations["api_fusions_like_create"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/fusions/{id}/remix/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/profiles/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description API endpoint pour visualiser les profils utilisateurs. */
-        get: operations["api_profiles_list"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** @description API endpoint pour visualiser, créer, liker et remixer des fusions créatives. */
+    post: operations["api_fusions_remix_create"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/profiles/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/profiles/{id}/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description API endpoint pour visualiser les profils utilisateurs. */
-        get: operations["api_profiles_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** @description API endpoint pour visualiser les profils utilisateurs. */
+    get: operations["api_profiles_list"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/profiles/{id}/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/profiles/me/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description API endpoint pour visualiser les profils utilisateurs. */
-        get: operations["api_profiles_me_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** @description API endpoint pour visualiser les profils utilisateurs. */
+    get: operations["api_profiles_retrieve"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/profiles/me/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/search/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description Recherche d'œuvres via SQL (Source of Truth) pour autocomplétion performante. */
-        get: operations["api_search_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** @description API endpoint pour visualiser les profils utilisateurs. */
+    get: operations["api_profiles_me_retrieve"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/search/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/session/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description Endpoint pour gérer l'état du jeu via API. */
-        get: operations["api_session_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** @description Recherche d'œuvres via SQL (Source of Truth) pour autocomplétion performante. */
+    get: operations["api_search_retrieve"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/session/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/fr/api/v1/achievements/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["fr_api_v1_achievements_list"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** @description Endpoint pour gérer l'état du jeu via API. */
+    get: operations["api_session_retrieve"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/fr/api/v1/achievements/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/fr/api/v1/config/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["fr_api_v1_config_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations["fr_api_v1_achievements_list"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/fr/api/v1/config/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/fr/api/v1/custom-config/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["fr_api_v1_custom_config_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations["fr_api_v1_config_retrieve"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/fr/api/v1/custom-config/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/fr/api/v1/daily-challenge/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["fr_api_v1_daily_challenge_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations["fr_api_v1_custom_config_retrieve"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/fr/api/v1/daily-challenge/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/fr/api/v1/fusions/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description API endpoint pour visualiser, créer, liker et remixer des fusions créatives. */
-        get: operations["fr_api_v1_fusions_list"];
-        put?: never;
-        /** @description API endpoint pour visualiser, créer, liker et remixer des fusions créatives. */
-        post: operations["fr_api_v1_fusions_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations["fr_api_v1_daily_challenge_retrieve"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/fr/api/v1/fusions/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/fr/api/v1/game/akinetix/state/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["fr_api_v1_game_akinetix_state_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** @description API endpoint pour visualiser, créer, liker et remixer des fusions créatives. */
+    get: operations["fr_api_v1_fusions_list"];
+    put?: never;
+    /** @description API endpoint pour visualiser, créer, liker et remixer des fusions créatives. */
+    post: operations["fr_api_v1_fusions_create"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/fr/api/v1/game/akinetix/state/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/fr/api/v1/game/blindtest/state/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["fr_api_v1_game_blindtest_state_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations["fr_api_v1_game_akinetix_state_retrieve"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/fr/api/v1/game/blindtest/state/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/fr/api/v1/game/classic/state/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["fr_api_v1_game_classic_state_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations["fr_api_v1_game_blindtest_state_retrieve"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/fr/api/v1/game/classic/state/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/fr/api/v1/game/covertest/state/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["fr_api_v1_game_covertest_state_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations["fr_api_v1_game_classic_state_retrieve"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/fr/api/v1/game/covertest/state/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/fr/api/v1/game/emoji/state/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["fr_api_v1_game_emoji_state_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations["fr_api_v1_game_covertest_state_retrieve"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/fr/api/v1/game/emoji/state/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/fr/api/v1/game/paradox/state/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["fr_api_v1_game_paradox_state_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations["fr_api_v1_game_emoji_state_retrieve"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/fr/api/v1/game/paradox/state/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/fr/api/v1/game/vision/state/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["fr_api_v1_game_vision_state_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations["fr_api_v1_game_paradox_state_retrieve"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/fr/api/v1/game/vision/state/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/fr/api/v1/latent-space/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["fr_api_v1_latent_space_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations["fr_api_v1_game_vision_state_retrieve"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/fr/api/v1/latent-space/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/fr/api/v1/leaderboard/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["fr_api_v1_leaderboard_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations["fr_api_v1_latent_space_retrieve"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/fr/api/v1/leaderboard/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/fr/api/v1/profile/{username}/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["fr_api_v1_profile_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations["fr_api_v1_leaderboard_retrieve"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/fr/api/v1/profile/{username}/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/fr/api/v1/social/collection/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["fr_api_v1_social_collection_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations["fr_api_v1_profile_retrieve"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/fr/api/v1/social/collection/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/fr/api/v1/social/notifications/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["fr_api_v1_social_notifications_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations["fr_api_v1_social_collection_retrieve"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/fr/api/v1/social/notifications/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/fr/api/v1/spatial-lab/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["fr_api_v1_spatial_lab_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get: operations["fr_api_v1_social_notifications_retrieve"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/fr/api/v1/spatial-lab/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/fr/api/v1/transparency/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["fr_api_v1_transparency_retrieve"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations["fr_api_v1_spatial_lab_create"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/fr/api/v1/transparency/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
+    get: operations["fr_api_v1_transparency_retrieve"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: {
-        Achievement: {
-            readonly id: number;
-            code: string;
-            name: string;
-            description: string;
-            icon: string;
-            xp_reward?: number;
-            rarity?: string;
-        };
-        CreativeFusion: {
-            readonly id: number;
-            /**
-             * Nom d’utilisateur
-             * @description Requis. 150 caractères maximum. Uniquement des lettres, nombres et les caractères « @ », « . », « + », « - » et « _ ».
-             */
-            readonly creator_name: string;
-            readonly likes_count: number;
-            readonly is_remix: string;
-            title_a: string;
-            title_b: string;
-            media_type_a: string;
-            media_type_b: string;
-            scenario_text: string;
-            /** Format: uri */
-            image_url?: string | null;
-            chaos_level?: number;
-            universe_balance?: number;
-            art_style?: string;
-            /** Format: date-time */
-            readonly created_at: string;
-            creator?: number | null;
-            parent?: number | null;
-            likes?: number[];
-        };
-        DailyChallenge: {
-            readonly id: number;
-            /** Format: date */
-            date: string;
-            media_type: string;
-            game_mode?: string;
-            secret_title: string;
-        };
-        PaginatedAchievementList: {
-            /** @example 123 */
-            count: number;
-            /**
-             * Format: uri
-             * @example http://api.example.org/accounts/?page=4
-             */
-            next?: string | null;
-            /**
-             * Format: uri
-             * @example http://api.example.org/accounts/?page=2
-             */
-            previous?: string | null;
-            results: components["schemas"]["Achievement"][];
-        };
-        PaginatedCreativeFusionList: {
-            /** @example 123 */
-            count: number;
-            /**
-             * Format: uri
-             * @example http://api.example.org/accounts/?page=4
-             */
-            next?: string | null;
-            /**
-             * Format: uri
-             * @example http://api.example.org/accounts/?page=2
-             */
-            previous?: string | null;
-            results: components["schemas"]["CreativeFusion"][];
-        };
-        PaginatedDailyChallengeList: {
-            /** @example 123 */
-            count: number;
-            /**
-             * Format: uri
-             * @example http://api.example.org/accounts/?page=4
-             */
-            next?: string | null;
-            /**
-             * Format: uri
-             * @example http://api.example.org/accounts/?page=2
-             */
-            previous?: string | null;
-            results: components["schemas"]["DailyChallenge"][];
-        };
-        PaginatedProfileList: {
-            /** @example 123 */
-            count: number;
-            /**
-             * Format: uri
-             * @example http://api.example.org/accounts/?page=4
-             */
-            next?: string | null;
-            /**
-             * Format: uri
-             * @example http://api.example.org/accounts/?page=2
-             */
-            previous?: string | null;
-            results: components["schemas"]["Profile"][];
-        };
-        PatchedCreativeFusion: {
-            readonly id?: number;
-            /**
-             * Nom d’utilisateur
-             * @description Requis. 150 caractères maximum. Uniquement des lettres, nombres et les caractères « @ », « . », « + », « - » et « _ ».
-             */
-            readonly creator_name?: string;
-            readonly likes_count?: number;
-            readonly is_remix?: string;
-            title_a?: string;
-            title_b?: string;
-            media_type_a?: string;
-            media_type_b?: string;
-            scenario_text?: string;
-            /** Format: uri */
-            image_url?: string | null;
-            chaos_level?: number;
-            universe_balance?: number;
-            art_style?: string;
-            /** Format: date-time */
-            readonly created_at?: string;
-            creator?: number | null;
-            parent?: number | null;
-            likes?: number[];
-        };
-        Profile: {
-            readonly user: components["schemas"]["User"];
-            xp?: number;
-            current_streak?: number;
-            max_streak?: number;
-            total_wins?: number;
-            total_games?: number;
-            ranked_points?: number;
-            ranked_max_points?: number;
-            readonly rank: string;
-        };
-        User: {
-            readonly id: number;
-            /**
-             * Nom d’utilisateur
-             * @description Requis. 150 caractères maximum. Uniquement des lettres, nombres et les caractères « @ », « . », « + », « - » et « _ ».
-             */
-            username: string;
-            /**
-             * Adresse électronique
-             * Format: email
-             */
-            email?: string;
-        };
-        DocumentAttribution: {
-            document_id: string;
-            title: string;
-            /** Format: float */
-            relevance_score: number;
-            /** Format: float */
-            contribution_weight: number;
-        };
-        ModelDiagnostics: {
-            attention_heatmap: number[][];
-            top_influential_tokens: string[];
-            logit_lens_trajectory: {
-                [key: string]: unknown;
-            }[];
-        };
-        XaiReport: {
-            query_intent: string;
-            retrieval_attribution: components["schemas"]["DocumentAttribution"][];
-            internal_diagnostics?: components["schemas"]["ModelDiagnostics"] | null;
-            uncertainty: {
-                [key: string]: unknown;
-            };
-            agent_trace: {
-                [key: string]: unknown;
-            }[];
-            /** Format: float */
-            final_confidence: number;
-        };
+  schemas: {
+    Achievement: {
+      readonly id: number;
+      code: string;
+      name: string;
+      description: string;
+      icon: string;
+      xp_reward?: number;
+      rarity?: string;
     };
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+    CreativeFusion: {
+      readonly id: number;
+      /**
+       * Nom d’utilisateur
+       * @description Requis. 150 caractères maximum. Uniquement des lettres, nombres et les caractères « @ », « . », « + », « - » et « _ ».
+       */
+      readonly creator_name: string;
+      readonly likes_count: number;
+      readonly is_remix: string;
+      title_a: string;
+      title_b: string;
+      media_type_a: string;
+      media_type_b: string;
+      scenario_text: string;
+      /** Format: uri */
+      image_url?: string | null;
+      chaos_level?: number;
+      universe_balance?: number;
+      art_style?: string;
+      /** Format: date-time */
+      readonly created_at: string;
+      creator?: number | null;
+      parent?: number | null;
+      likes?: number[];
+    };
+    DailyChallenge: {
+      readonly id: number;
+      /** Format: date */
+      date: string;
+      media_type: string;
+      game_mode?: string;
+      secret_title: string;
+    };
+    PaginatedAchievementList: {
+      /** @example 123 */
+      count: number;
+      /**
+       * Format: uri
+       * @example http://api.example.org/accounts/?page=4
+       */
+      next?: string | null;
+      /**
+       * Format: uri
+       * @example http://api.example.org/accounts/?page=2
+       */
+      previous?: string | null;
+      results: components["schemas"]["Achievement"][];
+    };
+    PaginatedCreativeFusionList: {
+      /** @example 123 */
+      count: number;
+      /**
+       * Format: uri
+       * @example http://api.example.org/accounts/?page=4
+       */
+      next?: string | null;
+      /**
+       * Format: uri
+       * @example http://api.example.org/accounts/?page=2
+       */
+      previous?: string | null;
+      results: components["schemas"]["CreativeFusion"][];
+    };
+    PaginatedDailyChallengeList: {
+      /** @example 123 */
+      count: number;
+      /**
+       * Format: uri
+       * @example http://api.example.org/accounts/?page=4
+       */
+      next?: string | null;
+      /**
+       * Format: uri
+       * @example http://api.example.org/accounts/?page=2
+       */
+      previous?: string | null;
+      results: components["schemas"]["DailyChallenge"][];
+    };
+    PaginatedProfileList: {
+      /** @example 123 */
+      count: number;
+      /**
+       * Format: uri
+       * @example http://api.example.org/accounts/?page=4
+       */
+      next?: string | null;
+      /**
+       * Format: uri
+       * @example http://api.example.org/accounts/?page=2
+       */
+      previous?: string | null;
+      results: components["schemas"]["Profile"][];
+    };
+    PatchedCreativeFusion: {
+      readonly id?: number;
+      /**
+       * Nom d’utilisateur
+       * @description Requis. 150 caractères maximum. Uniquement des lettres, nombres et les caractères « @ », « . », « + », « - » et « _ ».
+       */
+      readonly creator_name?: string;
+      readonly likes_count?: number;
+      readonly is_remix?: string;
+      title_a?: string;
+      title_b?: string;
+      media_type_a?: string;
+      media_type_b?: string;
+      scenario_text?: string;
+      /** Format: uri */
+      image_url?: string | null;
+      chaos_level?: number;
+      universe_balance?: number;
+      art_style?: string;
+      /** Format: date-time */
+      readonly created_at?: string;
+      creator?: number | null;
+      parent?: number | null;
+      likes?: number[];
+    };
+    Profile: {
+      readonly user: components["schemas"]["User"];
+      xp?: number;
+      current_streak?: number;
+      max_streak?: number;
+      total_wins?: number;
+      total_games?: number;
+      ranked_points?: number;
+      ranked_max_points?: number;
+      readonly rank: string;
+    };
+    User: {
+      readonly id: number;
+      /**
+       * Nom d’utilisateur
+       * @description Requis. 150 caractères maximum. Uniquement des lettres, nombres et les caractères « @ », « . », « + », « - » et « _ ».
+       */
+      username: string;
+      /**
+       * Adresse électronique
+       * Format: email
+       */
+      email?: string;
+    };
+    DocumentAttribution: {
+      document_id: string;
+      title: string;
+      /** Format: float */
+      relevance_score: number;
+      /** Format: float */
+      contribution_weight: number;
+    };
+    ModelDiagnostics: {
+      attention_heatmap: number[][];
+      top_influential_tokens: string[];
+      logit_lens_trajectory: {
+        [key: string]: unknown;
+      }[];
+    };
+    XaiReport: {
+      query_intent: string;
+      retrieval_attribution: components["schemas"]["DocumentAttribution"][];
+      internal_diagnostics?: components["schemas"]["ModelDiagnostics"] | null;
+      uncertainty: {
+        [key: string]: unknown;
+      };
+      agent_trace: {
+        [key: string]: unknown;
+      }[];
+      /** Format: float */
+      final_confidence: number;
+    };
+  };
+  responses: never;
+  parameters: never;
+  requestBodies: never;
+  headers: never;
+  pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    api_achievements_list: {
-        parameters: {
-            query?: {
-                /** @description Un numéro de page de l'ensemble des résultats. */
-                page?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedAchievementList"];
-                };
-            };
-        };
+  api_achievements_list: {
+    parameters: {
+      query?: {
+        /** @description Un numéro de page de l'ensemble des résultats. */
+        page?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    api_achievements_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Un(une) valeur entière unique identifiant ce(cette) achievement. */
-                id: number;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Achievement"];
-                };
-            };
+        content: {
+          "application/json": components["schemas"]["PaginatedAchievementList"];
         };
+      };
     };
-    api_daily_challenges_list: {
-        parameters: {
-            query?: {
-                /** @description Un numéro de page de l'ensemble des résultats. */
-                page?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedDailyChallengeList"];
-                };
-            };
-        };
+  };
+  api_achievements_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Un(une) valeur entière unique identifiant ce(cette) achievement. */
+        id: number;
+      };
+      cookie?: never;
     };
-    api_daily_challenges_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Un(une) valeur entière unique identifiant ce(cette) daily challenge. */
-                id: number;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DailyChallenge"];
-                };
-            };
+        content: {
+          "application/json": components["schemas"]["Achievement"];
         };
+      };
     };
-    api_fusions_list: {
-        parameters: {
-            query?: {
-                /** @description Un numéro de page de l'ensemble des résultats. */
-                page?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedCreativeFusionList"];
-                };
-            };
-        };
+  };
+  api_daily_challenges_list: {
+    parameters: {
+      query?: {
+        /** @description Un numéro de page de l'ensemble des résultats. */
+        page?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    api_fusions_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreativeFusion"];
-                "application/x-www-form-urlencoded": components["schemas"]["CreativeFusion"];
-                "multipart/form-data": components["schemas"]["CreativeFusion"];
-            };
+        content: {
+          "application/json": components["schemas"]["PaginatedDailyChallengeList"];
         };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CreativeFusion"];
-                };
-            };
-        };
+      };
     };
-    api_fusions_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Un(une) valeur entière unique identifiant ce(cette) creative fusion. */
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CreativeFusion"];
-                };
-            };
-        };
+  };
+  api_daily_challenges_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Un(une) valeur entière unique identifiant ce(cette) daily challenge. */
+        id: number;
+      };
+      cookie?: never;
     };
-    api_fusions_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Un(une) valeur entière unique identifiant ce(cette) creative fusion. */
-                id: number;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreativeFusion"];
-                "application/x-www-form-urlencoded": components["schemas"]["CreativeFusion"];
-                "multipart/form-data": components["schemas"]["CreativeFusion"];
-            };
+        content: {
+          "application/json": components["schemas"]["DailyChallenge"];
         };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CreativeFusion"];
-                };
-            };
-        };
+      };
     };
-    api_fusions_destroy: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Un(une) valeur entière unique identifiant ce(cette) creative fusion. */
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  };
+  api_fusions_list: {
+    parameters: {
+      query?: {
+        /** @description Un numéro de page de l'ensemble des résultats. */
+        page?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    api_fusions_partial_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Un(une) valeur entière unique identifiant ce(cette) creative fusion. */
-                id: number;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["PatchedCreativeFusion"];
-                "application/x-www-form-urlencoded": components["schemas"]["PatchedCreativeFusion"];
-                "multipart/form-data": components["schemas"]["PatchedCreativeFusion"];
-            };
+        content: {
+          "application/json": components["schemas"]["PaginatedCreativeFusionList"];
         };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CreativeFusion"];
-                };
-            };
-        };
+      };
     };
-    api_fusions_like_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Un(une) valeur entière unique identifiant ce(cette) creative fusion. */
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreativeFusion"];
-                "application/x-www-form-urlencoded": components["schemas"]["CreativeFusion"];
-                "multipart/form-data": components["schemas"]["CreativeFusion"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CreativeFusion"];
-                };
-            };
-        };
+  };
+  api_fusions_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    api_fusions_remix_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Un(une) valeur entière unique identifiant ce(cette) creative fusion. */
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreativeFusion"];
-                "application/x-www-form-urlencoded": components["schemas"]["CreativeFusion"];
-                "multipart/form-data": components["schemas"]["CreativeFusion"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CreativeFusion"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreativeFusion"];
+        "application/x-www-form-urlencoded": components["schemas"]["CreativeFusion"];
+        "multipart/form-data": components["schemas"]["CreativeFusion"];
+      };
     };
-    api_profiles_list: {
-        parameters: {
-            query?: {
-                /** @description Un numéro de page de l'ensemble des résultats. */
-                page?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedProfileList"];
-                };
-            };
+        content: {
+          "application/json": components["schemas"]["CreativeFusion"];
         };
+      };
     };
-    api_profiles_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Un(une) valeur entière unique identifiant ce(cette) profile. */
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Profile"];
-                };
-            };
-        };
+  };
+  api_fusions_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Un(une) valeur entière unique identifiant ce(cette) creative fusion. */
+        id: number;
+      };
+      cookie?: never;
     };
-    api_profiles_me_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Profile"];
-                };
-            };
+        content: {
+          "application/json": components["schemas"]["CreativeFusion"];
         };
+      };
     };
-    api_search_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  };
+  api_fusions_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Un(une) valeur entière unique identifiant ce(cette) creative fusion. */
+        id: number;
+      };
+      cookie?: never;
     };
-    api_session_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreativeFusion"];
+        "application/x-www-form-urlencoded": components["schemas"]["CreativeFusion"];
+        "multipart/form-data": components["schemas"]["CreativeFusion"];
+      };
     };
-    fr_api_v1_achievements_list: {
-        parameters: {
-            query?: {
-                /** @description Un numéro de page de l'ensemble des résultats. */
-                page?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedAchievementList"];
-                };
-            };
+        content: {
+          "application/json": components["schemas"]["CreativeFusion"];
         };
+      };
     };
-    fr_api_v1_config_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  };
+  api_fusions_destroy: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Un(une) valeur entière unique identifiant ce(cette) creative fusion. */
+        id: number;
+      };
+      cookie?: never;
     };
-    fr_api_v1_custom_config_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description No response body */
+      204: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+        content?: never;
+      };
     };
-    fr_api_v1_daily_challenge_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  };
+  api_fusions_partial_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Un(une) valeur entière unique identifiant ce(cette) creative fusion. */
+        id: number;
+      };
+      cookie?: never;
     };
-    fr_api_v1_fusions_list: {
-        parameters: {
-            query?: {
-                /** @description Un numéro de page de l'ensemble des résultats. */
-                page?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedCreativeFusionList"];
-                };
-            };
-        };
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["PatchedCreativeFusion"];
+        "application/x-www-form-urlencoded": components["schemas"]["PatchedCreativeFusion"];
+        "multipart/form-data": components["schemas"]["PatchedCreativeFusion"];
+      };
     };
-    fr_api_v1_fusions_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreativeFusion"];
-                "application/x-www-form-urlencoded": components["schemas"]["CreativeFusion"];
-                "multipart/form-data": components["schemas"]["CreativeFusion"];
-            };
+        content: {
+          "application/json": components["schemas"]["CreativeFusion"];
         };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CreativeFusion"];
-                };
-            };
-        };
+      };
     };
-    fr_api_v1_game_akinetix_state_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  };
+  api_fusions_like_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Un(une) valeur entière unique identifiant ce(cette) creative fusion. */
+        id: number;
+      };
+      cookie?: never;
     };
-    fr_api_v1_game_blindtest_state_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreativeFusion"];
+        "application/x-www-form-urlencoded": components["schemas"]["CreativeFusion"];
+        "multipart/form-data": components["schemas"]["CreativeFusion"];
+      };
     };
-    fr_api_v1_game_classic_state_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+        content: {
+          "application/json": components["schemas"]["CreativeFusion"];
         };
+      };
     };
-    fr_api_v1_game_covertest_state_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  };
+  api_fusions_remix_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Un(une) valeur entière unique identifiant ce(cette) creative fusion. */
+        id: number;
+      };
+      cookie?: never;
     };
-    fr_api_v1_game_emoji_state_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreativeFusion"];
+        "application/x-www-form-urlencoded": components["schemas"]["CreativeFusion"];
+        "multipart/form-data": components["schemas"]["CreativeFusion"];
+      };
     };
-    fr_api_v1_game_paradox_state_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+        content: {
+          "application/json": components["schemas"]["CreativeFusion"];
         };
+      };
     };
-    fr_api_v1_game_vision_state_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  };
+  api_profiles_list: {
+    parameters: {
+      query?: {
+        /** @description Un numéro de page de l'ensemble des résultats. */
+        page?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    fr_api_v1_latent_space_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+        content: {
+          "application/json": components["schemas"]["PaginatedProfileList"];
         };
+      };
     };
-    fr_api_v1_leaderboard_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  };
+  api_profiles_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Un(une) valeur entière unique identifiant ce(cette) profile. */
+        id: number;
+      };
+      cookie?: never;
     };
-    fr_api_v1_profile_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                username: string;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+        content: {
+          "application/json": components["schemas"]["Profile"];
         };
+      };
     };
-    fr_api_v1_social_collection_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  };
+  api_profiles_me_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    fr_api_v1_social_notifications_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+        content: {
+          "application/json": components["schemas"]["Profile"];
         };
+      };
     };
-    fr_api_v1_spatial_lab_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+  };
+  api_search_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    fr_api_v1_transparency_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description No response body */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
+        content?: never;
+      };
     };
+  };
+  api_session_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No response body */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  fr_api_v1_achievements_list: {
+    parameters: {
+      query?: {
+        /** @description Un numéro de page de l'ensemble des résultats. */
+        page?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PaginatedAchievementList"];
+        };
+      };
+    };
+  };
+  fr_api_v1_config_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No response body */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  fr_api_v1_custom_config_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No response body */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  fr_api_v1_daily_challenge_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No response body */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  fr_api_v1_fusions_list: {
+    parameters: {
+      query?: {
+        /** @description Un numéro de page de l'ensemble des résultats. */
+        page?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PaginatedCreativeFusionList"];
+        };
+      };
+    };
+  };
+  fr_api_v1_fusions_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreativeFusion"];
+        "application/x-www-form-urlencoded": components["schemas"]["CreativeFusion"];
+        "multipart/form-data": components["schemas"]["CreativeFusion"];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CreativeFusion"];
+        };
+      };
+    };
+  };
+  fr_api_v1_game_akinetix_state_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No response body */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  fr_api_v1_game_blindtest_state_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No response body */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  fr_api_v1_game_classic_state_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No response body */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  fr_api_v1_game_covertest_state_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No response body */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  fr_api_v1_game_emoji_state_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No response body */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  fr_api_v1_game_paradox_state_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No response body */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  fr_api_v1_game_vision_state_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No response body */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  fr_api_v1_latent_space_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No response body */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  fr_api_v1_leaderboard_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No response body */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  fr_api_v1_profile_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        username: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No response body */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  fr_api_v1_social_collection_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No response body */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  fr_api_v1_social_notifications_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No response body */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  fr_api_v1_spatial_lab_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No response body */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  fr_api_v1_transparency_retrieve: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No response body */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
 }

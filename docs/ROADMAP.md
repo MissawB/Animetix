@@ -34,6 +34,9 @@ gantt
     section Singularité
     Phase K: Auto-Compilation & Plasticité   :done, k1, 2026-12-01, 2026-12-20
     Phase L: Synthèse de Multivers           :done, l1, 2026-12-20, 2026-12-30
+    
+    section Économie & Accessibilité
+    Phase M: Économie des Bx & Gratuité  :done, m1, 2026-06-13, 2026-06-14
 ```
 
 ---
@@ -83,6 +86,11 @@ gantt
 
 #### Phase L : Synthèse de Multivers Originaux (COMPLETED)
 *   **L.1 `AutonomousDomainSynthesizer`** : Génération et persistance (Neo4j) de multivers fictionnels complets validés par IA.
+
+#### Phase M : Économie Circulaire & Démocratisation (COMPLETED)
+*   **M.1 Système de Portefeuille Bx** : Remplacement du modèle Premium par une économie basée sur les jetons (Cyber-Yens).
+*   **M.2 Financement par Rewarded Ads** : Implémentation du minage passif (3 min en jeu) et actif (Power Station) pour offrir l'IA gratuitement.
+*   **M.3 Stratégie "Local-First"** : Priorité absolue aux modèles d'inférence locaux (SLMs) sur instances GPU Spot pour maximiser la marge opérationnelle.
 
 ---
 

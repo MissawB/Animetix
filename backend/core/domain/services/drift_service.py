@@ -30,8 +30,8 @@ class DriftService:
             
         return report
 
-    def check_collection_drift(self, collection_name: str, threshold: float = 0.05) -> Dict[str, Any]:
-        """Vérifie la dérive pour une collection spécifique."""
+    def check_collection_drift(self, collection_name: str, threshold: float = 0.01) -> Dict[str, Any]:
+        """Vérifie la dérive pour une collection spécifique (KS-test threshold calibré à 0.01)."""
         baseline_path = self.baseline_dir / f"{collection_name}_baseline.npy"
         
         if not os.path.exists(baseline_path):

@@ -18,12 +18,9 @@ class GraphNeighborsView(APIView):
         self.graph_manager = graph_manager
 
     def get(self, request):
-        # Check premium tier
-        if getattr(request, 'user_tier', 'free') != 'premium':
-            return Response(
-                {"error": "Localized Graph Visualizer is a Premium feature."}, 
-                status=status.HTTP_403_FORBIDDEN
-            )
+        # Déduction des Bx (10 Bx pour exploration de graphe profonde)
+        from animetix.api.billing import deduct_berrix
+        deduct_berrix(request.user, 10, "Exploration du Knowledge Graph")
 
         item_id = request.query_params.get('id')
         media_type = request.query_params.get('type')

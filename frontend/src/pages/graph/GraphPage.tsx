@@ -1,8 +1,10 @@
 import React from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { GraphExplorer } from "../../features/graph/GraphExplorer";
 import { SearchBar } from "../../components/SearchBar";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
+
+import { Zap } from 'lucide-react';
 
 const GraphPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -10,7 +12,7 @@ const GraphPage: React.FC = () => {
   const id = searchParams.get('id');
   const type = searchParams.get('type');
 
-  const handleSelect = (item: any) => {
+  const handleSelect = (item: Record<string, unknown>) => {
     if (item.id && item.type) {
       setSearchParams({ id: item.id.toString(), type: item.type });
     }
@@ -33,6 +35,14 @@ const GraphPage: React.FC = () => {
                 placeholder="Search media..." 
               />
             </div>
+
+            <Link 
+              to="/graph/neighborhood/" 
+              className="mt-8 flex items-center gap-2 px-6 py-3 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 rounded-xl transition-all no-underline group"
+            >
+              <Zap className="w-4 h-4 text-blue-500 group-hover:scale-110 transition-transform" />
+              <span className="text-[10px] font-black uppercase text-blue-500 tracking-widest">Activer l'Explorateur de Voisinage Profond</span>
+            </Link>
           </div>
         ) : (
           <div className="flex flex-col h-full">

@@ -1,0 +1,58 @@
+{% extends "admin/change_list.html" %}
+{% load i18n %}
+
+{% block object-tools-items %}
+  <li>
+    <a href="promote/" class="addlink" style="background-color: #28a745; background-image: none; color: white; font-weight: bold; border-radius: 4px; padding: 10px 15px; display: inline-flex; align-items: center; gap: 5px;">
+      🚀 Promouvoir les entrées validées
+    </a>
+  </li>
+  {{ block.super }}
+{% endblock %}
+
+{% block content_title %}
+  {{ block.super }}
+  
+  <!-- Premium Stats Dashboard for HITL Curation -->
+  <div class="hitl-stats-dashboard" style="margin: 20px 0 30px 0; font-family: 'Roboto', 'Inter', sans-serif;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px;">
+      
+      <!-- Pending QA -->
+      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); display: flex; align-items: center; justify-content: space-between;">
+        <div>
+          <span style="display: block; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.05em; color: #718096; font-weight: bold;">Questions (QA) en attente</span>
+          <span style="font-size: 1.8em; font-weight: 800; color: #2d3748; line-height: 1.2;">{{ stats.pending_qa }}</span>
+        </div>
+        <div style="font-size: 2em; opacity: 0.7;">❓</div>
+      </div>
+      
+      <!-- Pending Multiverse -->
+      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); display: flex; align-items: center; justify-content: space-between;">
+        <div>
+          <span style="display: block; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.05em; color: #718096; font-weight: bold;">Multivers en attente</span>
+          <span style="font-size: 1.8em; font-weight: 800; color: #2d3748; line-height: 1.2;">{{ stats.pending_multiverse }}</span>
+        </div>
+        <div style="font-size: 2em; opacity: 0.7;">🌌</div>
+      </div>
+      
+      <!-- Pending Distillation -->
+      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); display: flex; align-items: center; justify-content: space-between;">
+        <div>
+          <span style="display: block; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.05em; color: #718096; font-weight: bold;">Distillation en attente</span>
+          <span style="font-size: 1.8em; font-weight: 800; color: #2d3748; line-height: 1.2;">{{ stats.pending_distillation }}</span>
+        </div>
+        <div style="font-size: 2em; opacity: 0.7;">🧪</div>
+      </div>
+      
+      <!-- Total Validated Awaiting Curation -->
+      <div style="background: #ebf8ff; border: 1px solid #bee3f8; border-radius: 8px; padding: 15px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); display: flex; align-items: center; justify-content: space-between;">
+        <div>
+          <span style="display: block; font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.05em; color: #2b6cb0; font-weight: bold;">Total validé & Prêt</span>
+          <span style="font-size: 1.8em; font-weight: 800; color: #2b6cb0; line-height: 1.2;">{{ stats.total_validated }}</span>
+        </div>
+        <div style="font-size: 2em; opacity: 0.7;">✅</div>
+      </div>
+      
+    </div>
+  </div>
+{% endblock %}

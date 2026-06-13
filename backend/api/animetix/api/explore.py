@@ -61,3 +61,39 @@ class MediaExploreView(views.APIView):
         except Exception as e:
             logger.error(f"Error in MediaExploreView: {e}", exc_info=True)
             return response.Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class SeichijunreiMapView(views.APIView):
+    """Récupère tous les lieux de pèlerinage réels pour la carte interactive (Seichijunrei)."""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        locations = []
+        try:
+            # On récupère les médias ayant des lieux de pèlerinage dans leurs métadonnées
+            # Supporté par Django JSONField (SQLite & Postgres)
+            items = MediaItem.objects.filter(metadata__has_key='real_locations_pilgrimage')
+            
+            for item in items:
+                pilgrimage_data = item.metadata.get('real_locations_pilgrimage', [])
+                if not isinstance(pilgrimage_data, list): continue
+                
+                for loc in pilgrimage_data:
+                    # On s'assure d'avoir au moins le nom et la ville (les coordonnées sont nouvelles)
+                    locations.append({
+                        "id": f"{item.external_id}_{hash(loc.get('location_name', ''))}",
+                        "media_id": item.external_id,
+                        "media_title": item.title,
+                        "media_type": item.media_type,
+                        "location_name": loc.get('location_name', 'Lieu inconnu'),
+                        "city": loc.get('city', ''),
+                        "lat": loc.get('lat'),
+                        "lng": loc.get('lng'),
+                        "description": loc.get('scene_description', ''),
+                        "image": item.image_url
+                    })
+            
+            return response.Response(locations)
+        except Exception as e:
+            logger.error(f"Error in SeichijunreiMapView: {e}")
+            return response.Response({"error": str(e)}, status=500)

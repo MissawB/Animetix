@@ -38,13 +38,9 @@ class CompanionInteractView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Check quota
-        tier = getattr(request, 'user_tier', 'free')
-        if not usage_port.check_quota(request.user.id, tier):
-            return Response(
-                {"error": "AI usage quota exceeded for your tier."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        # Déduction des Bx (5 Bx pour une interaction Chat)
+        from animetix.api.billing import deduct_berrix
+        deduct_berrix(request.user, 5, f"Interaction Compagnon: {mentor_id}")
 
         # Retrieve history from session
         history = request.session.get('companion_history', [])

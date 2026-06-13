@@ -19,4 +19,29 @@ class PipelineControlView(APIView):
                 return Response({'status': 'Neo4j sync triggered'})
             except Exception as e:
                 return Response({'error': str(e)}, status=500)
+        elif action == 'run_beam_ingestion':
+            try:
+                # Trigger the Beam pipeline (lore_ingestion_beam.py)
+                # In production, this would use DataflowRunner
+                import subprocess
+                from django.conf import settings
+                
+                # Check if we should use Dataflow or DirectRunner
+                runner = "DirectRunner"
+                if not settings.DEBUG:
+                    runner = "DataflowRunner"
+                
+                # Simple async trigger (using subprocess for simplicity in this staff-only view)
+                pipeline_path = os.path.join(settings.PROJECT_ROOT, "backend", "pipeline", "mlops", "lore_ingestion_beam.py")
+                cmd = [
+                    "python", pipeline_path,
+                    f"--runner={runner}",
+                    f"--pubsub_subscription=projects/{getattr(settings, 'GCP_PROJECT_ID', 'animetix')}/subscriptions/lore-ingestion-sub",
+                    f"--database_url={getattr(settings, 'DATABASE_URL', '')}",
+                    f"--django_env={'production' if not settings.DEBUG else 'development'}"
+                ]
+                subprocess.Popen(cmd)
+                return Response({'status': f'Beam pipeline ({runner}) triggered in background'})
+            except Exception as e:
+                return Response({'error': str(e)}, status=500)
         return Response({'error': 'Invalid action'}, status=400)

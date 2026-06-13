@@ -177,6 +177,8 @@ Titre de l'œuvre : {title} ({media_type})
 Réponds STRICTEMENT sous la forme d'une liste JSON d'objets contenant :
 - "location_name" : Le nom précis du lieu réel (ex: "Sanctuaire Suga", "Shirakawa-go", "Gare de Shinjuku").
 - "city" : La ville et/ou préfecture japonaise correspondante (ex: "Tokyo", "Gifu", "Kyoto").
+- "lat" : La latitude approximative du lieu (nombre flottant).
+- "lng" : La longitude approximative du lieu (nombre flottant).
 - "scene_description" : Une explication de 2 phrases en français décrivant quelle scène culte s'y déroule ou comment le lieu apparaît.
 
 Retourne uniquement le JSON, sans fioritures Markdown ou balises ```json.

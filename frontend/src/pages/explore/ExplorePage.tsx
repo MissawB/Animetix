@@ -2,7 +2,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion } from 'framer-motion';
-import { Search, Filter, TrendingUp, Play, Info, Plus, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Search, Filter, TrendingUp, Play, Info, Plus, ChevronRight, ChevronLeft, MapPin, Globe } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const ExplorePage: React.FC = () => {
@@ -110,18 +110,27 @@ const ExplorePage: React.FC = () => {
 
       <div className="px-12 -mt-12 relative z-20 space-y-16 pb-24">
         {/* Media Selector */}
-        <div className="flex gap-6 border-b border-white/5 pb-4">
-            {['Anime', 'Manga', 'Game', 'Movie'].map(type => (
-                <button 
-                    key={type}
-                    onClick={() => setMediaType(type)}
-                    className={`text-sm font-black uppercase tracking-widest transition-all ${
-                        mediaType === type ? 'text-blue-500 scale-110' : 'text-gray-500 hover:text-white'
-                    }`}
-                >
-                    {type}s
-                </button>
-            ))}
+        <div className="flex justify-between items-center border-b border-white/5 pb-4">
+            <div className="flex gap-6">
+                {['Anime', 'Manga', 'Game', 'Movie'].map(type => (
+                    <button 
+                        key={type}
+                        onClick={() => setMediaType(type)}
+                        className={`text-sm font-black uppercase tracking-widest transition-all ${
+                            mediaType === type ? 'text-blue-500 scale-110' : 'text-gray-500 hover:text-white'
+                        }`}
+                    >
+                        {type}s
+                    </button>
+                ))}
+            </div>
+
+            <Link 
+                to="/explore/seichijunrei/"
+                className="flex items-center gap-3 px-6 py-2 bg-yellow-400/10 border border-yellow-400/20 rounded-full text-yellow-500 font-black uppercase text-[10px] tracking-widest hover:bg-yellow-400 hover:text-black transition-all group no-underline shadow-lg shadow-yellow-400/5"
+            >
+                <MapPin className="w-4 h-4 group-hover:animate-bounce" /> Carte Seichijunrei
+            </Link>
         </div>
 
         {/* Categories Rows */}

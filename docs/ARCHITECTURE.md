@@ -80,55 +80,52 @@ Animetix is designed and deployed as a fully decoupled **Pure SPA** (Single Page
 - **Backend (Headless API)**: Django operates strictly as a headless API. All legacy HTML templates and view controllers have been completely removed.
 - **Unified Client-Side Routing**: Django routes any non-API fallback paths (`re_path(r'^(?!api/|static/|admin/).*$', spa_view)`) directly to the SPA, allowing React Router DOM to manage application routing on the client side.
 
-### Streamlined Flows & Decoupling
-1. **Communication**: Clean JSON REST API exposed under `/api/v1/`.
-2. **State Management**: Frontend state is managed by lightweight **Zustand** stores, delegating game loops and decision rules to backend **Domain Services** under `backend/core/domain/services/`.
-3. **Security & Authentication**: Managed user authentication relies on the React SPA token state, validated via the custom `GoogleIdentityAuthentication` JWT verifier.
-4. **Production Configuration**:
-   - Build the frontend bundle using `npm run build` within `frontend/`.
-   - Serve static assets under `dist/` using Nginx or an CDN.
-   - Configure a reverse proxy to route `/api/` and WebSockets `/ws/` traffic to the Django ASGI runner (Daphne/Uvicorn).
-
 ---
 
-## 7. Inference Adapters Ecosystem
+## 7. Inference Adapters Ecosystem (Local-First Priority)
 
-The project implements a resilient `FallbackInferenceAdapter` that manages fallback paths across multiple inference backends:
+The project implements a resilient `FallbackInferenceAdapter` that prioritizes free local compute to minimize operational costs (maximizing margin).
 
 ```mermaid
 graph TD
     FallbackAdapter["FallbackInferenceAdapter"]
     
-    subgraph Text_Adapters [Text Engines]
-        BrainAPI["BrainAPIAdapter (Cloud - Primary)"]
-        Ollama["UnifiedInferenceAdapter (Ollama Local - Fallback)"]
-        Langchain["LangchainAdapter"]
+    subgraph Local_Compute [Tier 1: Free (Priority)]
+        Ollama["UnifiedInferenceAdapter (Ollama - API)"]
+        Transformers["LocalTextAdapter (Transformers - 4bit)"]
     end
-    
-    subgraph Vision_Adapters [Vision Engines]
-        VisionTF["VisionTransformersAdapter"]
-        Diffusers["DiffusersAdapter"]
-        Qwen3VL["Qwen3VLAdapter"]
-        Moondream["MoondreamAdapter"]
-    end
-    
-    subgraph Audio_Adapters [Audio Engines]
-        AudioTF["AudioTransformersAdapter"]
-        XTTS["XTTSAdapter"]
-    end
-    
-    FallbackAdapter --> BrainAPI
-    FallbackAdapter --> Ollama
-    FallbackAdapter --> VisionTF
-    FallbackAdapter --> Diffusers
-    FallbackAdapter --> AudioTF
-```
 
-The `FallbackInferenceAdapter` probes available engines at boot and constructs a capacity map to dynamically route requests to the first functional adapter.
+    subgraph Managed_Inference [Tier 2: Managed (Fallback)]
+        BrainAPI["BrainAPIAdapter (Custom Central API)"]
+    end
+    
+    subgraph External_APIs [Tier 3: Pay-Per-Token (Last Resort)]
+        Gemini["GoogleGenAIAdapter (Gemini 1.5)"]
+    end
+    
+    FallbackAdapter --> Ollama
+    FallbackAdapter --> Transformers
+    FallbackAdapter --> BrainAPI
+    FallbackAdapter --> Gemini
+```
 
 ---
 
-## 8. VisionTransformersAdapter Mixin Architecture
+## 8. Economy & Monetization: The Berrix Model
+
+Animetix operates on a **Rewarded Economy** where all advanced AI features are 100% free for users, financed by their engagement.
+
+### 8.1. Tokens: The Berrix (Bx)
+- **Passive Mining**: Users earn +20 Bx every 3 minutes of gameplay (Blindtest, Akinetix, etc.).
+- **Active Injection**: Users can watch 30s sponsored videos ("Rewarded Ads") for +250 Bx.
+- **Micro-Transactions**: Direct purchase of Berrix packs via Stripe for power-users.
+
+### 8.2. Token Consumption & Protection
+Business logic services (`InferencePort`, `Forge`) call the atomic `deduct_berrix` function. If the user's `wallet_balance` is insufficient, the API returns an **HTTP 402 Payment Required** error, which the frontend intercepts to redirect the user to the **Power Station**.
+
+---
+
+## 9. VisionTransformersAdapter Mixin Architecture
 
 To maintain high readability and avoid a monolithic file, the `VisionTransformersAdapter` is modularized into **four specialized mixins**:
 
@@ -173,7 +170,7 @@ classDiagram
 
 ---
 
-## 9. Error Hierarchy
+## 10. Error Hierarchy
 
 All custom application errors derive from `AnimetixBaseError`:
 
@@ -202,7 +199,7 @@ classDiagram
 
 ---
 
-## 10. Access & Deployment Environments
+## 11. Access & Deployment Environments
 
 ### A. Local Development Environment
 The frontend and backend run in isolation to support Hot Module Replacement (HMR).

@@ -1,6 +1,6 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from .models import MediaItem, ChallengeResult, GlobalBoss, Friendship, Notification, ArchetypeDriftSnapshot, DuelRoom
+from .models import MediaItem, ChallengeResult, GlobalBoss, Friendship, Notification, ArchetypeDriftSnapshot, DuelRoom, AIFeedback, GoldDatasetEntry
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
@@ -145,4 +145,60 @@ def trigger_duel_telemetry(sender, instance, created, **kwargs):
             "secret_title": instance.secret_title,
             "media_type": instance.media_type
         })
+
+
+@receiver(post_save, sender=AIFeedback)
+def flag_and_stage_complex_user_query(sender, instance, created, **kwargs):
+    """
+    Connecte le système de feedback utilisateur de l'application Django pour flagger 
+    et stager automatiquement les requêtes utilisateur complexes dans une file 
+    de modération HITL (GoldDatasetEntry) avant leur intégration dans le Gold Set.
+    """
+    if created:
+        query = instance.input_context
+        if not query:
+            return
+            
+        try:
+            # 1. Évaluation de la complexité via le ComplexityAnalyser ou des règles heuristiques
+            from core.domain.services.complexity_analyser import ComplexityAnalyser
+            from animetix.containers import get_container
+            
+            container = get_container()
+            pm = getattr(container, 'prompt_manager', None)
+            llm = getattr(container, 'llm_service', None)
+            
+            if pm and llm:
+                analyser = ComplexityAnalyser(pm(), llm())
+            else:
+                analyser = ComplexityAnalyser()
+                
+            _, complexity_score = analyser.assess_complexity(query)
+        except Exception as e:
+            logger.warning(f"Failed to use ComplexityAnalyser in signal, falling back to simple rules: {e}")
+            complexity_score = 0
+            q_lower = query.lower()
+            keywords = ["ressemble", "comparaison", "similaire", "recommande", "différence", "pourquoi", "paradoxe", "intrus", "thème", "influence", "explication", "philosophique", "scénar", "scénario", "décors"]
+            if any(w in q_lower for w in keywords) or len(query.split()) > 10:
+                complexity_score = 1
+
+        is_complex = complexity_score >= 1
+        
+        # 2. Si la requête est complexe, on la stage dans GoldDatasetEntry pour validation HITL
+        if is_complex:
+            if not GoldDatasetEntry.objects.filter(source_feedback=instance).exists():
+                GoldDatasetEntry.objects.create(
+                    context=instance.input_context,
+                    instruction=instance.input_context,
+                    response=instance.output_text,
+                    entry_type='QA',
+                    source_feedback=instance,
+                    is_validated=False,  # En attente de revue humaine
+                    metadata={
+                        "staged_from_feedback": True,
+                        "is_complex_user_query": True,
+                        "complexity_score": complexity_score,
+                        "user_id": instance.user.id if instance.user else None
+                    }
+                )
 

@@ -1,8 +1,15 @@
 from django.urls import path
 from .. import api_views
 from ..views.billing import billing_alert_webhook
+from ..api import billing
 
 urlpatterns = [
+    # --- ECONOMY & BILLING ---
+    path('billing/wallet/mine/', billing.WalletMineView.as_view(), name='api_wallet_mine'),
+    path('billing/wallet/watch-ad/', billing.WalletWatchAdView.as_view(), name='api_wallet_watch_ad'),
+    path('billing/wallet/balance/', billing.WalletBalanceView.as_view(), name='api_wallet_balance'),
+    path('billing/wallet/checkout/', api_views.CreateBxCheckoutView.as_view(), name='api_wallet_checkout'),
+
     path('fusions/', api_views.CreativeFusionViewSet.as_view({'get': 'list', 'post': 'create'}), name='api-fusions'),
     path('clubs/', api_views.ClubViewSet.as_view({'get': 'list', 'post': 'create'}), name='api-clubs'),
     path('clubs/<int:pk>/', api_views.ClubViewSet.as_view({'get': 'retrieve', 'put': 'update', 'patch': 'partial_update', 'delete': 'destroy'}), name='api-club-detail'),
@@ -40,6 +47,7 @@ urlpatterns = [
     path('labs/audio/soundscape/', api_views.SoundscapeGenerationView.as_view(), name='api_audio_soundscape'),
     path('labs/audio/s2s/', api_views.SpeechToSpeechLabView.as_view(), name='api_audio_s2s'),
     path('singularity-lab/', api_views.SingularityLabDataView.as_view(), name='api_singularity_lab'),
+    path('singularity-lab/command-center/', api_views.SingularityCommandCenterView.as_view(), name='api_singularity_command_center'),
     path('labs/video/', api_views.VideoLabDataView.as_view(), name='api_video_lab'),
     path('labs/video/fatezero/', api_views.VideoFateZeroLabView.as_view(), name='api_video_fatezero_lab'),
     path('labs/video/index/', api_views.VideoRAGIndexView.as_view(), name='api_video_rag_index'),
@@ -106,6 +114,7 @@ urlpatterns = [
     path('game/duel/join/', api_views.JoinDuelRoomView.as_view(), name='api_duel_join'),
     path('game/duel/matchmaking/', api_views.MatchmakingView.as_view(), name='api_duel_matchmaking'),
     path('explore/', api_views.MediaExploreView.as_view(), name='api_explore'),
+    path('explore/seichijunrei/', api_views.SeichijunreiMapView.as_view(), name='api_seichijunrei'),
     path('multiverse/gallery/', api_views.MultiverseGalleryView.as_view(), name='api_multiverse_gallery'),
     path('billing/webhook/', billing_alert_webhook, name='api_billing_webhook'),
     path('billing/log_ad_event/', api_views.AdEventLoggingAPIView.as_view(), name='api_log_ad_event'),
