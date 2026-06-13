@@ -328,7 +328,7 @@ else:
     }
 DATABASES['default']['ATOMIC_REQUESTS'] = False
 
-# Cache & Celery
+# Cache
 REDIS_URL = os.getenv("REDIS_URL")
 if REDIS_URL:
     CACHES = {
@@ -341,7 +341,6 @@ if REDIS_URL:
             }
         }
     }
-    CELERY_BROKER_URL = REDIS_URL
 else:
     # Fallback en local si pas de Redis
     CACHES = {
@@ -350,15 +349,8 @@ else:
             "LOCATION": "unique-snowflake",
         }
     }
-    CELERY_BROKER_URL = "memory://"
     if not IS_PRODUCTION:
         print("[INFO] Redis not found, using Local Memory Cache.")
-
-CELERY_RESULT_BACKEND = REDIS_URL if REDIS_URL and not REDIS_URL.startswith("rediss://") else "rpc://" 
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = TIME_ZONE
 
 # Google Cloud Tasks Configuration
 GCP_PROJECT_ID = env('GOOGLE_CLOUD_PROJECT', default='animetix')
@@ -437,7 +429,6 @@ ALLOYDB_EMBEDDING_MODEL = env('ALLOYDB_EMBEDDING_MODEL', default='text-embedding
 import sentry_sdk
 import asyncio
 from sentry_sdk.integrations.django import DjangoIntegration
-from sentry_sdk.integrations.celery import CeleryIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
 
 def before_send(event, hint):
@@ -453,7 +444,6 @@ if sentry_dsn and not os.environ.get('PYTEST_CURRENT_TEST'):
         dsn=sentry_dsn,
         integrations=[
             DjangoIntegration(),
-            CeleryIntegration(),
             LoggingIntegration(level=None, event_level=None),
         ],
         before_send=before_send,
@@ -461,7 +451,7 @@ if sentry_dsn and not os.environ.get('PYTEST_CURRENT_TEST'):
         traces_sample_rate=0.1,
         send_default_pii=False, # Sécurité/RGPD : Ne pas envoyer d'infos personnelles identifiables (IP, emails, etc.)
     )
-    print("[SUCCESS] Sentry initialized with Django & Celery integrations.")
+    print("[SUCCESS] Sentry initialized with Django integration.")
 
 # --- 🛡️ CONTENT SECURITY POLICY (CSP) ---
 CSP_DEFAULT_SRC = ("'self'",)
