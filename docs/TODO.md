@@ -56,7 +56,7 @@ Ce document liste toutes les tâches techniques, architecturales et fonctionnell
 ---
 
 ## ⚙️ MLOps et Qualité des Données
-- [x] **Contrôle de qualité via dbt/Dataform** : Mettre en place des tests de qualité de données (schémas, doublons, intégrité référentielle) au niveau SQL avant l'entraînement.
+- [x] **Contrôle de qualité via dbt** : Mettre en place des tests de qualité de données (schémas, doublons, intégrité référentielle) au niveau SQL avant l'entraînement.
 - [x] **Orchestration Apache Beam scalable** : Migrer l'ingestion vers [lore_ingestion_beam.py](backend/pipeline/mlops/lore_ingestion_beam.py) exécuté sur Dataflow pour la robustesse et la scalabilité.
 - [ ] **Phase L.2 - Multimodal SFT (Axe A)** : Indexation et génération de paires d'entraînement images/vidéos + texte (mangas, animes) pour fine-tuner le modèle expert sur les capacités vision-langage.
 
