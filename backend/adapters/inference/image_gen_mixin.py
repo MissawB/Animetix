@@ -46,7 +46,7 @@ class ImageGenMixin:
         if hasattr(self, 'pipe') and self.pipe: return
         try:
             from diffusers import AutoPipelineForText2Image
-            model_id = getattr(self, 'model_id', "stabilityai/sdxl-turbo")
+            model_id = getattr(self, 'model_id', "black-forest-labs/FLUX.1-schnell")
             logger.info(f"🏗️ Loading Txt2Img: {model_id}")
             self.pipe = AutoPipelineForText2Image.from_pretrained(
                 model_id, torch_dtype=self._get_dtype(), variant=self._get_variant(), trust_remote_code=True
@@ -63,7 +63,7 @@ class ImageGenMixin:
         if hasattr(self, '_img2img_pipe') and self._img2img_pipe: return
         try:
             from diffusers import AutoPipelineForImage2Image
-            model_id = getattr(self, 'model_id', "stabilityai/sdxl-turbo")
+            model_id = getattr(self, 'model_id', "black-forest-labs/FLUX.1-schnell")
             logger.info(f"🏗️ Loading Img2Img: {model_id}")
             self._img2img_pipe = AutoPipelineForImage2Image.from_pretrained(
                 model_id, torch_dtype=self._get_dtype(), variant=self._get_variant(), trust_remote_code=True
@@ -79,7 +79,7 @@ class ImageGenMixin:
         if hasattr(self, '_inpaint_pipe') and self._inpaint_pipe: return
         try:
             from diffusers import AutoPipelineForInpainting
-            model_id = getattr(self, 'model_id', "stabilityai/sdxl-turbo")
+            model_id = getattr(self, 'model_id', "black-forest-labs/FLUX.1-schnell")
             logger.info(f"🏗️ Loading Inpainting: {model_id}")
             self._inpaint_pipe = AutoPipelineForInpainting.from_pretrained(
                 model_id, torch_dtype=self._get_dtype(), variant=self._get_variant(), trust_remote_code=True
@@ -92,9 +92,9 @@ class ImageGenMixin:
     def generate_image(self, prompt: str, style: str = "") -> str:
         self._load_txt2img()
         try:
-            model_id = getattr(self, 'model_id', "stabilityai/sdxl-turbo")
-            num_steps = 1 if "turbo" in model_id.lower() else 30
-            guidance_scale = 0.0 if "turbo" in model_id.lower() else 7.5
+            model_id = getattr(self, 'model_id', "black-forest-labs/FLUX.1-schnell")
+            num_steps = 4 if "schnell" in model_id.lower() else 1 if "turbo" in model_id.lower() else 30
+            guidance_scale = 0.0 if "schnell" in model_id.lower() or "turbo" in model_id.lower() else 7.5
             image = self.pipe(prompt=f"{prompt}, {style}", num_inference_steps=num_steps, guidance_scale=guidance_scale).images[0]
             self._log_usage(engine=f"diffusers:{model_id}:txt2img", units=1)
             buffered = BytesIO(); image.save(buffered, format="JPEG", quality=85)
@@ -105,7 +105,7 @@ class ImageGenMixin:
     def transform_image_to_anime(self, image_data: bytes, studio_style: str = "", prompt: str = "") -> str:
         self._load_img2img()
         try:
-            model_id = getattr(self, 'model_id', "stabilityai/sdxl-turbo")
+            model_id = getattr(self, 'model_id', "black-forest-labs/FLUX.1-schnell")
             pil_img = Image.open(BytesIO(image_data)).convert("RGB").resize((512, 512))
             res = self._img2img_pipe(
                 prompt=f"anime style, {studio_style}, {prompt}", image=pil_img, strength=0.5, 
@@ -128,7 +128,7 @@ class ImageGenMixin:
             input_frames = frames[:8]
             attn_proc = CrossFrameAttentionProcessor(unet_chunk_size=len(input_frames))
             self._img2img_pipe.unet.set_attn_processor(attn_proc)
-            model_id = getattr(self, 'model_id', "stabilityai/sdxl-turbo")
+            model_id = getattr(self, 'model_id', "black-forest-labs/FLUX.1-schnell")
             styled_images = self._img2img_pipe(
                 prompt=[f"anime style, {studio_style}, {prompt}"] * len(input_frames),
                 image=input_frames, strength=0.6, num_inference_steps=20
@@ -159,7 +159,7 @@ class ImageGenMixin:
                 for b in bubbles: 
                     bbox = b.get('bbox')
                     if bbox: d.rectangle(bbox, fill=255)
-                model_id = getattr(self, 'model_id', "stabilityai/sdxl-turbo")
+                model_id = getattr(self, 'model_id', "black-forest-labs/FLUX.1-schnell")
                 inpainted = self._inpaint_pipe(
                     prompt="clean manga bubble, no text, white background",
                     image=init_image, mask_image=mask, 

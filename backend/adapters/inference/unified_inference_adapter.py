@@ -51,7 +51,7 @@ class UnifiedInferenceAdapter(
         super().__init__(usage_port=usage_port)
         # Default to local Ollama OpenAI-compatible endpoint
         self.api_base = api_base or os.getenv("LLM_API_BASE") or "http://localhost:11434/v1"
-        self.model_name = model_name or os.getenv("LLM_MODEL_NAME") or "llama3"
+        self.model_name = model_name or os.getenv("LLM_MODEL_NAME") or "qwen3.5"
         self.api_key = api_key or os.getenv("LLM_API_KEY") or "ollama"
         self.max_retries = max_retries
         self.timeout = timeout

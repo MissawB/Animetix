@@ -13,9 +13,12 @@ import {
   FlaskConical,
   Play,
   Copy,
-  ChevronRight
+  ChevronRight,
+  ShieldAlert,
+  Database,
+  X
 } from 'lucide-react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { apiClient } from "../../utils/apiClient";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
@@ -23,15 +26,36 @@ import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion, AnimatePresence } from 'framer-motion';
 
+interface EvalFailure {
+    id: number;
+    input_context: string;
+    output_text: string;
+    faithfulness: number;
+    relevancy: number;
+    hallucination_detected: boolean;
+    created_at: string;
+}
+
 const AdminDSPyDashboard: React.FC = () => {
   const [template, setTemplate] = useState<string>("Réponds à la question suivante sur l'univers de l'anime : {query}");
   const [result, setResult] = useState<any>(null);
+  const [selectedFailure, setSelectedFailure] = useState<EvalFailure | null>(null);
+
+  const { data: failures, isLoading: isLoadingFailures } = useQuery<EvalFailure[]>({
+    queryKey: ['eval-failures'],
+    queryFn: () => apiClient('/api/v1/mlops/eval/failures/'),
+  });
 
   const optimizeMutation = useMutation({
     mutationFn: async () => {
+        // Construct a mini-dataset from the selected failure if available
+        const dataset = selectedFailure ? [
+            { query: selectedFailure.input_context, expected: "CORRECTED_ANSWER_PLACEHOLDER" }
+        ] : [];
+
         return apiClient('/api/v1/mlops/dspy/optimizer/', {
             method: 'POST',
-            body: JSON.stringify({ template }),
+            body: JSON.stringify({ template, dataset }),
             headers: { 'Content-Type': 'application/json' }
         });
     },
@@ -73,8 +97,9 @@ const AdminDSPyDashboard: React.FC = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 text-black dark:text-white">
               
-              {/* Template Editor */}
+              {/* Left Column: Editor & Failures */}
               <div className="lg:col-span-5 space-y-8">
+                  {/* Template Editor Card */}
                   <Card padding="lg" className="bg-white dark:bg-[#0f0f1a] border-none shadow-2xl rounded-[3rem]">
                       <h3 className="text-xs font-black uppercase opacity-40 mb-8 tracking-widest flex items-center gap-2">
                           <Settings className="w-4 h-4 text-blue-500" /> Configuration de l'Optimiseur
@@ -86,10 +111,22 @@ const AdminDSPyDashboard: React.FC = () => {
                               <textarea 
                                   value={template}
                                   onChange={(e) => setTemplate(e.target.value)}
-                                  className="w-full bg-gray-50 dark:bg-black/20 border-2 border-black/5 dark:border-white/5 rounded-2xl p-6 text-sm font-bold min-h-[200px] focus:border-blue-500 outline-none transition-all font-mono text-black dark:text-white"
+                                  className="w-full bg-gray-50 dark:bg-black/20 border-2 border-black/5 dark:border-white/5 rounded-2xl p-6 text-sm font-bold min-h-[150px] focus:border-blue-500 outline-none transition-all font-mono text-black dark:text-white"
                                   placeholder="Entrez le template avec le placeholder {query}..."
                               />
                           </div>
+
+                          {selectedFailure && (
+                              <div className="p-4 bg-red-500/5 border border-red-500/20 rounded-2xl relative group">
+                                  <div className="flex justify-between items-start mb-2">
+                                      <span className="text-[8px] font-black uppercase text-red-500 tracking-widest flex items-center gap-1">
+                                          <ShieldAlert className="w-2 h-2" /> Seeded from Failure #{selectedFailure.id}
+                                      </span>
+                                      <button onClick={() => setSelectedFailure(null)} className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors" aria-label="Supprimer le contexte d'échec"><X className="w-3 h-3" /></button>
+                                  </div>
+                                  <p className="text-[10px] font-bold opacity-60 italic truncate">"{selectedFailure.input_context}"</p>
+                              </div>
+                          )}
 
                           <div className="grid grid-cols-2 gap-4">
                               <div className="p-4 bg-gray-50 dark:bg-white/5 rounded-2xl border border-black/5 dark:border-white/5">
@@ -113,17 +150,55 @@ const AdminDSPyDashboard: React.FC = () => {
                       </form>
                   </Card>
 
+                  {/* Production Failures Log Card */}
+                  <Card padding="lg" className="bg-white dark:bg-[#0f0f1a] border-none shadow-xl rounded-[3rem] overflow-hidden">
+                      <h3 className="text-xs font-black uppercase opacity-40 mb-6 tracking-widest flex items-center gap-2">
+                          <ShieldAlert className="w-4 h-4 text-red-500" /> Erreurs de Raisonnement (Prod)
+                      </h3>
+                      
+                      <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                          {isLoadingFailures ? (
+                              <div className="py-12 text-center"><RefreshCw className="w-6 h-6 animate-spin mx-auto opacity-20" /></div>
+                          ) : failures && failures.length > 0 ? (
+                              failures.map((fail) => (
+                                  <div 
+                                      key={fail.id} 
+                                      onClick={() => setSelectedFailure(fail)}
+                                      className={`p-4 rounded-2xl border-2 transition-all cursor-pointer group ${selectedFailure?.id === fail.id ? 'bg-red-500/10 border-red-500/50' : 'bg-gray-50 dark:bg-black/20 border-black/5 dark:border-white/5 hover:border-red-500/30'}`}
+                                  >
+                                      <div className="flex justify-between items-center mb-2">
+                                          <Badge variant="neutral" className="bg-red-500/10 text-red-500 border-none text-[8px] font-black italic">
+                                              {fail.hallucination_detected ? 'HALLUCINATION' : 'LOW_PRECISION'}
+                                          </Badge>
+                                          <span className="text-[8px] font-bold opacity-30 italic">{new Date(fail.created_at).toLocaleTimeString()}</span>
+                                      </div>
+                                      <p className="text-[11px] font-bold opacity-70 line-clamp-2 mb-2 group-hover:opacity-100 transition-opacity">
+                                          "{fail.input_context}"
+                                      </p>
+                                      <div className="flex items-center gap-4 text-[9px] font-black uppercase tracking-widest">
+                                          <span className="text-red-400">Score: {Math.round(fail.faithfulness * 100)}%</span>
+                                          <span className="text-blue-500 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                              SEED OPTIMIZER <ArrowRight size={10} />
+                                          </span>
+                                      </div>
+                                  </div>
+                              ))
+                          ) : (
+                              <div className="py-12 text-center opacity-20">
+                                  <CheckCircle2 className="w-8 h-8 mx-auto mb-4" />
+                                  <p className="text-[10px] font-black uppercase tracking-widest">Aucune erreur détectée</p>
+                              </div>
+                          )}
+                      </div>
+                  </Card>
+
                   <Card padding="lg" className="bg-white dark:bg-[#0f0f1a] border-none shadow-xl rounded-[2.5rem]">
                       <h3 className="text-xs font-black uppercase opacity-40 mb-6 tracking-widest flex items-center gap-2">
-                          <FlaskConical className="w-4 h-4 text-emerald-500" /> Evaluation Dataset
+                          <Database className="w-4 h-4 text-emerald-500" /> Evaluation Dataset
                       </h3>
                       <p className="text-[10px] font-bold opacity-40 leading-relaxed uppercase italic">
-                          L'optimiseur utilise le <b>Gold Dataset v2</b> pour valider la pertinence sémantique de chaque mutation générée.
+                          L'optimiseur utilise le <b>Gold Dataset v2</b> complété par les échecs de production pour valider la robustesse.
                       </p>
-                      <div className="mt-6 flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-blue-500">
-                          <span>50 Samples actifs</span>
-                          <ChevronRight className="w-3 h-3" />
-                      </div>
                   </Card>
               </div>
 

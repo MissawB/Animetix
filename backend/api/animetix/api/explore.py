@@ -97,3 +97,42 @@ class SeichijunreiMapView(views.APIView):
         except Exception as e:
             logger.error(f"Error in SeichijunreiMapView: {e}")
             return response.Response({"error": str(e)}, status=500)
+
+class MarketWikiView(views.APIView):
+    """Expose les données du marché (éditeurs, diffuseurs) pour le Wiki."""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        try:
+            from backend.pipeline.mlops.japanese_market_db import JAPANESE_MANGA_PUBLISHERS, JAPANESE_ANIME_DISTRIBUTORS
+            from backend.pipeline.mlops.french_market_db import FRENCH_MANGA_PUBLISHERS, FRENCH_ANIME_DISTRIBUTORS
+            
+            return response.Response({
+                "japanese": {
+                    "publishers": JAPANESE_MANGA_PUBLISHERS,
+                    "distributors": JAPANESE_ANIME_DISTRIBUTORS
+                },
+                "french": {
+                    "publishers": FRENCH_MANGA_PUBLISHERS,
+                    "distributors": FRENCH_ANIME_DISTRIBUTORS
+                }
+            })
+        except ImportError:
+            # Fallback if path is different (depends on how it's executed)
+            try:
+                from pipeline.mlops.japanese_market_db import JAPANESE_MANGA_PUBLISHERS, JAPANESE_ANIME_DISTRIBUTORS
+                from pipeline.mlops.french_market_db import FRENCH_MANGA_PUBLISHERS, FRENCH_ANIME_DISTRIBUTORS
+                return response.Response({
+                    "japanese": {
+                        "publishers": JAPANESE_MANGA_PUBLISHERS,
+                        "distributors": JAPANESE_ANIME_DISTRIBUTORS
+                    },
+                    "french": {
+                        "publishers": FRENCH_MANGA_PUBLISHERS,
+                        "distributors": FRENCH_ANIME_DISTRIBUTORS
+                    }
+                })
+            except Exception as e:
+                return response.Response({"error": f"Data not found: {str(e)}"}, status=404)
+        except Exception as e:
+            return response.Response({"error": str(e)}, status=500)

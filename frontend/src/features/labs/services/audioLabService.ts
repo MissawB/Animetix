@@ -15,5 +15,8 @@ export const audioLabService = {
   },
   process: async (data: AudioProcessPayload): Promise<AudioLabState> => {
     return apiClient(`${API_BASE}/process/`, { method: 'POST', body: JSON.stringify(data) });
+  },
+  searchSeiyuu: async (query: string): Promise<any> => {
+    return apiClient(`${API_BASE}/seiyuu/?q=${encodeURIComponent(query)}`);
   }
 };

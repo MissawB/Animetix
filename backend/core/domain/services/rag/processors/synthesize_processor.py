@@ -7,12 +7,11 @@ import time
 logger = logging.getLogger('animetix.rag_workflow')
 
 class SynthesizeProcessor(StateProcessor):
-    def __init__(self, synthesizer, xai_service, rag_service):
+    def __init__(self, synthesizer, xai_service):
         self.synthesizer = synthesizer
         self.xai_service = xai_service
-        self.rag_service = rag_service
 
-    def process(self, ctx: RAGContext) -> Generator[StreamStep, None, RAGState]:
+    def process(self, ctx: RAGContext, xai_collector=None) -> Generator[dict, None, RAGState]:
         if ctx.correction_feedback:
             yield StreamStep(type="thought", content="[Synthesizer] Tentative d'auto-correction...").model_dump()
         else:
@@ -28,7 +27,8 @@ class SynthesizeProcessor(StateProcessor):
             thinking_budget=ctx.thinking_budget, 
             thinking_mode=ctx.thinking_mode,
             correction_feedback=ctx.correction_feedback,
-            language=ctx.language
+            language=ctx.language,
+            xai_collector=xai_collector
         ):
             token_count += 1
             if "<thought>" in token and not in_thought:

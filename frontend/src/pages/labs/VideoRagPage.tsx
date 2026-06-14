@@ -7,6 +7,8 @@ import { useVideoRagStore } from '../../features/labs/stores/videoRagStore';
 import { searchVideoSegments } from '../../api';
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
+import { useAuthStore } from "../../store/authStore";
+import { VideoIndexing } from "../../components/video/VideoIndexing";
 
 const SUGGESTIONS = [
   { label: '⚔️ Combat Épique', query: 'combat épique' },
@@ -46,6 +48,8 @@ const VideoRagPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { setSegments, selectSegment } = useVideoRagStore();
+  const { user } = useAuthStore();
+  const isAdmin = user?.is_staff || false;
 
   const handleSearch = async (searchQuery: string) => {
     if (!searchQuery.trim()) return;
@@ -144,6 +148,8 @@ const VideoRagPage: React.FC = () => {
                 </div>
               </div>
             </Card>
+
+            {isAdmin && <VideoIndexing />}
           </div>
 
           {/* Main Content (Timeline + Inspector) */}

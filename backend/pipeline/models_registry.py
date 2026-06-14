@@ -42,7 +42,8 @@ class ModelsRegistry:
         self._vision_model = None
         self._device = None
         self.manifest = self._load_manifest()
-        self.active_text_version = os.getenv("MODEL_VERSION_TEXT", "v3")
+        self.active_text_version = os.getenv("MODEL_VERSION_TEXT", "v4")
+        self.active_vision_version = os.getenv("MODEL_VERSION_VISION", "v3")
         self.verifier = ModelIntegrityVerifier()
     
     def _load_manifest(self):
@@ -58,11 +59,21 @@ class ModelsRegistry:
                     "v3": {
                         "id": "jinaai/jina-embeddings-v3",
                         "revision": "4955745f4705a61a0b33c7f12e8c257ca46797a7"
+                    },
+                    "v4": {
+                        "id": "Qwen/Qwen3-Embedding-8B",
+                        "revision": "1d8ad4ca9b3dd8059ad90a75d4983776a23d44af"
                     }
                 },
                 "vision": {
-                    "id": "google/siglip2-so400m-patch14-384",
-                    "revision": "e8e4872"
+                    "v2": {
+                        "id": "google/siglip2-so400m-patch14-384",
+                        "revision": "e8e4872"
+                    },
+                    "v3": {
+                        "id": "Qwen/Qwen3-VL-Embedding-8B",
+                        "revision": "2c4565515e0f265c6511776e7193b22c0968ddc7"
+                    }
                 }
             }
 
@@ -102,14 +113,21 @@ class ModelsRegistry:
     def vision_model(self):
         if self._vision_model is None:
             from sentence_transformers import SentenceTransformer
-            config = self.manifest.get("vision", {"id": "google/siglip2-so400m-patch14-384"})
-            model_id = config["id"]
-            revision = config.get("revision", "main")
+            vision_config = self.manifest.get("vision", {})
+            config = vision_config.get(self.active_vision_version)
+            
+            if config is None:
+                # Fallback to legacy or first available
+                model_id = vision_config.get("id", "google/siglip2-so400m-patch14-384")
+                revision = vision_config.get("revision", "main")
+            else:
+                model_id = config["id"]
+                revision = config.get("revision", "main")
 
             # Vérification
             self.verifier.verify(model_id, revision=revision)
 
-            logger.info(f"📦 Loading vision model: {model_id}...")
+            logger.info(f"📦 Loading vision model: {model_id} (version: {self.active_vision_version})...")
             self._vision_model = SentenceTransformer(
                 model_id, 
                 device=self.device,

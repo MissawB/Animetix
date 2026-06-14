@@ -4,7 +4,7 @@ import { fadeUpVariants } from './animations';
 
 import { DynamicAuraWrapper } from '../shared/DynamicAuraWrapper';
 
-interface CardProps {
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
   className?: string;
   padding?: 'none' | 'sm' | 'md' | 'lg';
@@ -19,7 +19,8 @@ export const Card: React.FC<CardProps> = ({
   padding = 'lg',
   animate = true,
   hasAura = false,
-  onClick
+  onClick,
+  ...props
 }) => {
   const paddings = {
     none: 'p-0',
@@ -30,6 +31,7 @@ export const Card: React.FC<CardProps> = ({
 
   let content = (
     <div 
+      {...props}
       className={`bg-surface-card rounded-token-card shadow-token-card border-token-card border-surface-text/[var(--opacity-card-border)] ${paddings[padding]} ${className}`}
       onClick={onClick}
       onKeyDown={(e) => {

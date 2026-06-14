@@ -5,11 +5,11 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from dependency_injector.wiring import inject, Provide
-from ..models import Profile, DailyChallenge, Achievement, CreativeFusion, GameplaySession
+from ..models import Profile, DailyChallenge, Achievement, CreativeFusion, GameplaySession, MangaChapter, MangaPage
 
 from ..serializers import (ProfileSerializer, DailyChallengeSerializer, AchievementSerializer, 
                             MediaItemSerializer, CreativeFusionSerializer, FriendshipSerializer,
-                            LoginSerializer, RegisterSerializer)
+                            LoginSerializer, RegisterSerializer, MangaChapterSerializer, MangaPageSerializer)
 from ..containers import get_container, Container
 from core.domain.services.guardrail_service import GuardrailService
 from core.ports.usage_port import UsagePort
@@ -290,7 +290,7 @@ class MediaDetailView(APIView):
             serializer = MediaItemSerializer(item_obj)
             return Response(serializer.data)
         except MediaItem.DoesNotExist:
-            pass
+            logger.debug(f"MediaItem {item_id} ({media_type}) not found in SQL, falling back to Catalog.")
             
         # 2. Fallback via Catalog Service (si non synchronisé en SQL)
         container = get_container()
@@ -359,5 +359,27 @@ class TransparencyDataView(APIView):
                 "hallucination_rate": 0.02
             }
         })
+
+class MangaChapterListView(APIView):
+    """Liste des chapitres d'un manga."""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, media_id):
+        chapters = MangaChapter.objects.filter(manga__external_id=media_id)
+        serializer = MangaChapterSerializer(chapters, many=True)
+        return Response(serializer.data)
+
+class MangaChapterDetailView(APIView):
+    """Détails d'un chapitre (incluant les pages)."""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, media_id, chapter_number):
+        try:
+            # On cherche par external_id du manga et numéro du chapitre
+            chapter = MangaChapter.objects.get(manga__external_id=media_id, number=chapter_number)
+            serializer = MangaChapterSerializer(chapter)
+            return Response(serializer.data)
+        except MangaChapter.DoesNotExist:
+            return Response({"error": "Chapter not found"}, status=status.HTTP_404_NOT_FOUND)
 
 

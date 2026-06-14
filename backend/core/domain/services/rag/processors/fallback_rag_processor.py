@@ -11,7 +11,7 @@ class FallbackRagProcessor(StateProcessor):
         self.inference_engine = inference_engine
         self.expert_facts = expert_facts
 
-    def process(self, ctx: RAGContext) -> Generator[StreamStep, None, RAGState]:
+    def process(self, ctx: RAGContext, xai_collector=None) -> Generator[dict, None, RAGState]:
         yield StreamStep(type="thought", content="[Fallback] Exécution d'une recherche hybride standard...").model_dump()
 
         expert_injections = self._get_expert_injections(ctx.query)

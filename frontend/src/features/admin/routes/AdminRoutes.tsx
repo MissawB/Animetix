@@ -13,17 +13,25 @@ const TTCMonitoringPage = lazy(() => import('../../../pages/admin/TTCMonitoringP
 const UserManagementPage = lazy(() => import('../../../pages/admin/UserManagementPage'));
 const AdminDashboardPage = lazy(() => import('../../../pages/admin/AdminDashboardPage'));
 const FinancialDashboardPage = lazy(() => import('../../../pages/admin/FinancialDashboardPage'));
+const AISafetyAuditPage = lazy(() => import('../../../pages/admin/AISafetyAuditPage'));
+const EconomicAuditPage = lazy(() => import('../../../pages/admin/EconomicAuditPage'));
+const ObservabilityConsolePage = lazy(() => import('../../../pages/dev/ObservabilityConsolePage'));
 
 export const AdminRoutes = (
   <>
+    <Route path="/admin/" element={<AdminDashboardPage />} />
     <Route path="/admin/dashboard/" element={<AdminDashboardPage />} />
     <Route path="/admin/mlops/" element={<MLOpsDashboard />} />
+    <Route path="/admin/safety/" element={<AISafetyAuditPage />} />
+    <Route path="/admin/economics/" element={<EconomicAuditPage />} />
+    <Route path="/admin/observability/" element={<ObservabilityConsolePage />} />
     <Route path="/admin/curation/" element={<AdminCurationPage />} />
     <Route path="/admin/dspy/" element={<AdminDSPyDashboard />} />
     <Route path="/admin/eval/" element={<AdminEvalPage />} />
     <Route path="/admin/gold-dataset/" element={<AdminGoldDatasetPage />} />
     <Route path="/admin/graph-debugger/" element={<GraphDebuggerPage />} />
     <Route path="/admin/health/" element={<HealthPage />} />
+    <Route path="/admin/monitoring/" element={<HealthPage />} />
     <Route path="/admin/sota-benchmark/" element={<SOTABenchmarkPage />} />
     <Route path="/admin/ttc-monitoring/" element={<TTCMonitoringPage />} />
     <Route path="/admin/financials/" element={<FinancialDashboardPage />} />

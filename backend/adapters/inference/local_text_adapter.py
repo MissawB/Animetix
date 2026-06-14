@@ -13,7 +13,7 @@ from core.ports.usage_port import UsagePort
 logger = logging.getLogger("animetix.inference.text")
 
 class LocalTextAdapter(InferencePort):
-    def __init__(self, model_id: str = "Qwen/Qwen2.5-1.5B-Instruct", use_4bit: bool = True, usage_port: Optional[UsagePort] = None):
+    def __init__(self, model_id: str = "Qwen/Qwen3.5-4B", use_4bit: bool = True, usage_port: Optional[UsagePort] = None):
         super().__init__(usage_port=usage_port)
         self.model_id = model_id
         self.model = None

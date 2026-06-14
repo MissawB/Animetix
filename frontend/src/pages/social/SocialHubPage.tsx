@@ -1,39 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Users, UserPlus, Search, UserMinus, Shield, MessageCircle, Star, ChevronRight } from 'lucide-react';
-import { getSocialDashboard, searchUsers, toggleFollow } from '../../api';
+import { Users, UserPlus, Search, UserMinus, ChevronRight } from 'lucide-react';
+import { searchUsers } from '../../api';
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Link } from 'react-router-dom';
-import { Friendship, User } from "../../types";
+import { User } from "../../types";
 import { useToastStore } from "../../store/toastStore";
+import { useSocialDashboard } from "../../features/social/hooks/useSocialDashboard";
 
 const SocialHubPage: React.FC = () => {
   const { t } = useTranslation();
   const { addToast } = useToastStore();
+  const { data: dashboardData, isLoading: isDashboardLoading, toggleFollow } = useSocialDashboard();
   
-  const [following, setFollowing] = useState<Friendship[]>([]);
-  const [followers, setFollowers] = useState<Friendship[]>([]);
   const [searchResults, setSearchUsers] = useState<(User & { is_following: boolean })[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'following' | 'followers' | 'discovery'>('following');
 
-  const fetchDashboard = async () => {
-    try {
-      const data = await getSocialDashboard();
-      setFollowing(data.following);
-      setFollowers(data.followers);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchDashboard();
-  }, []);
+  const following = dashboardData?.following || [];
+  const followers = dashboardData?.followers || [];
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,20 +35,24 @@ const SocialHubPage: React.FC = () => {
 
   const handleToggleFollow = async (userId: number) => {
     try {
-      const response = await toggleFollow(userId);
-      addToast(response.status === 'followed' ? "Utilisateur suivi !" : "Abonnement retiré.", "success");
-      
-      // Update local states
-      if (activeTab === 'discovery') {
-        setSearchUsers(prev => prev.map(u => u.id === userId ? { ...u, is_following: response.status === 'followed' } : u));
-      }
-      fetchDashboard();
+      toggleFollow(userId, {
+        onSuccess: () => {
+          addToast("Action effectuée avec succès !", "success");
+          if (activeTab === 'discovery') {
+            // Optimistic or manual update of search results if needed
+            setSearchUsers(prev => prev.map(u => u.id === userId ? { ...u, is_following: !u.is_following } : u));
+          }
+        },
+        onError: () => {
+          addToast("Action impossible.", "error");
+        }
+      });
     } catch (err) {
       addToast("Action impossible.", "error");
     }
   };
 
-  if (isLoading) {
+  if (isDashboardLoading) {
     return <div className="p-20 text-center animate-pulse font-black uppercase tracking-widest">Initialisation du réseau social...</div>;
   }
 

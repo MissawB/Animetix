@@ -119,7 +119,7 @@ const DeveloperPortalPage: React.FC = () => {
                                         variant="primary" 
                                         className="bg-blue-600 border-none px-10 py-6 rounded-2xl shadow-xl"
                                     >
-                                        ACTIVER L'ACCÈS DÉVELOPPEUR (TEST)
+                                        ACTIVER L'ACCÈS DÉVELOPPEUR PRO
                                     </Button>
                                 </div>
                             ) : (

@@ -44,7 +44,7 @@ const MangaLabPage: React.FC = () => {
       const formData = new FormData();
       formData.append('image', imageFile);
 
-      const response = await apiClient('/api/v1/manga-lab/clean/', {
+      const response = await apiClient('/api/v1/labs/manga-lab/clean/', {
         method: 'POST',
         body: formData,
         headers: {} 
@@ -69,7 +69,7 @@ const MangaLabPage: React.FC = () => {
       formData.append('image', imageFile);
       formData.append('target_lang', targetLanguage);
 
-      const response = await apiClient('/api/v1/manga-lab/translate/', {
+      const response = await apiClient('/api/v1/labs/manga-lab/translate/', {
         method: 'POST',
         body: formData,
         headers: {} 

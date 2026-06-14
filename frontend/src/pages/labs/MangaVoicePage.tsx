@@ -38,7 +38,7 @@ const MangaVoicePage: React.FC = () => {
       formData.append('character', character);
       formData.append('reference_audio', refAudio);
 
-      const data = await apiClient('/api/v1/manga-voice/', {
+      const data = await apiClient('/api/v1/labs/manga-voice/', {
         method: 'POST',
         body: formData,
         headers: {} 

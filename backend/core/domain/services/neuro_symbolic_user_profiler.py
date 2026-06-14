@@ -28,8 +28,12 @@ class NeuroSymbolicUserProfiler:
         # Chaque feedback représente un état de fait
         facts = []
         for fb in user_feedbacks:
+            if fb.get("is_ignored", False):
+                continue
+                
             ctx = fb.get("input_context", "").lower()
             is_pos = fb.get("is_positive", True)
+            weight = fb.get("weight", 1.0)
             
             # Vecteur de traits booléens
             has_shonen = "shonen" in ctx or "nekketsu" in ctx
@@ -42,7 +46,8 @@ class NeuroSymbolicUserProfiler:
                 "seinen": has_seinen,
                 "violence": has_violence,
                 "short": has_short,
-                "satisfied": is_pos
+                "satisfied": is_pos,
+                "weight": weight
             })
 
         # --- Résolution Formelle SAT avec Z3 ---

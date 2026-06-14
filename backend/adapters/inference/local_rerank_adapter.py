@@ -12,7 +12,7 @@ logger = logging.getLogger("animetix.inference.rerank")
 class LocalRerankAdapter(RerankMixin, InferencePort):
     def __init__(self, model_name: Optional[str] = None, usage_port: Optional[UsagePort] = None):
         super().__init__(usage_port=usage_port)
-        self.reranker_model_name = model_name or os.getenv("RERANKER_MODEL", "cross-encoder/ms-marco-MiniLM-L-6-v2")
+        self.reranker_model_name = model_name or os.getenv("RERANKER_MODEL", "cross-encoder/ms-marco-MiniLM-L-12-v2")
         self.model_name = self.reranker_model_name
         self._cross_encoder = None
 

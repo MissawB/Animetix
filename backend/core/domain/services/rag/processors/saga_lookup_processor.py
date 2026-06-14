@@ -6,18 +6,17 @@ import logging
 logger = logging.getLogger('animetix.rag_workflow')
 
 class SagaLookupProcessor(StateProcessor):
-    def __init__(self, saga_agent, xai_collector=None):
+    def __init__(self, saga_agent):
         self.saga_agent = saga_agent
-        self.xai_collector = xai_collector
 
-    def process(self, ctx: RAGContext) -> Generator[dict, None, RAGState]:
+    def process(self, ctx: RAGContext, xai_collector=None) -> Generator[dict, None, RAGState]:
         yield StreamStep(type="thought", content="[World-Brain] Analyse globale de la saga...").model_dump()
         logger.info("[World-Brain] Analyse globale de la saga...")
         
         saga_name = self.saga_agent.lookup_saga(ctx.query)
         if saga_name:
-            if self.xai_collector:
-                self.xai_collector.log_agent_thought("SagaAgent", f"Saga détectée : {saga_name}")
+            if xai_collector:
+                xai_collector.log_agent_thought("SagaAgent", f"Saga détectée : {saga_name}")
             ctx.saga_name = saga_name
             logger.info(f"[World-Brain] Saga détectée : {saga_name}. Récupération du résumé exécutif...")
             

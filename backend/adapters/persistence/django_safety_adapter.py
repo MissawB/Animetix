@@ -19,7 +19,7 @@ class DjangoSafetyAdapter(SafetyPort):
             try:
                 user = User.objects.get(id=user_id)
             except User.DoesNotExist:
-                pass
+                logger.debug(f"Safety event for non-existent user_id: {user_id}")
 
         return AISafetyEvent.objects.create(
             user=user,

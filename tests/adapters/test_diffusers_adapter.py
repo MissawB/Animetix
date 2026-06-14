@@ -4,7 +4,7 @@ from adapters.inference.diffusers_adapter import DiffusersAdapter
 
 def test_inpaint_text_bubbles_pillow_fallback_when_pipe_none():
     # Instancier DiffusersAdapter sans charger le pipeline neuronal (qui restera à None)
-    adapter = DiffusersAdapter(model_id="stabilityai/sdxl-turbo", use_fp16=False)
+    adapter = DiffusersAdapter(model_id="black-forest-labs/FLUX.1-schnell", use_fp16=False)
     adapter._inpaint_pipe = None  # S'assurer qu'il est à None pour forcer le fallback
     
     # Créer de fausses données d'image 100x100 en bytes

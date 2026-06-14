@@ -1,261 +1,1084 @@
-# ==========================================================================
-# Double_scenario_Project – Categorized & Refactored Dependency File
-# ==========================================================================
-
-# --------------------------------------------------------------------------
-# 1. Web Application & API Frameworks (Django, FastAPI, REST)
-# --------------------------------------------------------------------------
-asgiref==3.11.1
-channels==4.3.2
-daphne==4.2.1
-django-allauth==65.14.1
-django-cors-headers==4.9.0
-django-environ==0.13.0
-django-filter==25.2
-django-prometheus==2.4.1
-django-ratelimit==4.1.0
-django-csp==4.0
-Django==5.2.14
-djangorestframework==3.17.1
-fastapi==0.135.3
-gunicorn==25.3.0
-prometheus_client==0.25.0
-starlette==1.0.0
-uvicorn==0.44.0
-whitenoise==6.7.0
-
-# --------------------------------------------------------------------------
-# 2. Databases, Vector Stores, Caches & ORM Clients (Neo4j, Redis, Chroma)
-# --------------------------------------------------------------------------
-django-redis==6.0.0
-neo4j==6.1.0
-psycopg2-binary==2.9.12
-redis==7.4.0
-sqlglot==25.0.0
-
-
-
-# --------------------------------------------------------------------------
-# 3. Testing, Dev Tools, Automation & Sentry MLOps (Pytest, Playwright)
-# --------------------------------------------------------------------------
-coloredlogs==14.0
-mypy_extensions==1.1.0
-playwright==1.59.0
-pytest-django==4.12.0
-pytest-mock==3.15.1
-pytest-playwright==0.7.2
-pytest==9.0.3
-watchdog==6.0.0
-
-# --------------------------------------------------------------------------
-# 4. Heavy ML/AI, Deep Learning, NLP & Computer Vision (Loaded Lazily)
-# --------------------------------------------------------------------------
-bitsandbytes==0.49.2
-diffusers==0.37.0
-google-genai==1.75.0
-imageio==2.37.3
-imageio-ffmpeg==0.6.0
-instructor==1.15.1
-llvmlite==0.47.0
-moshi==0.2.13
-numba==0.65.1
-numpy==1.26.4
-onnxruntime==1.24.4
-openai==2.30.0
-opencv-python-headless==4.9.0.80
-
-peft==0.13.2
-pydub==0.25.1
-pynndescent==0.6.0
-scikit-learn==1.8.0
-scipy==1.17.1
-sentence-transformers==3.3.1
-sentencepiece==0.2.1
-soundfile
-tokenizers>=0.21.0
-torch==2.5.1
-torchvision==0.20.1
-transformer-lens==2.15.0
-transformers>=4.57.0
-trl==0.12.1
-coqui-tts==0.27.5
-ultralytics==8.4.51
-
-# --------------------------------------------------------------------------
-# 5. Utilities, Helpers & Base Dependencies
-# --------------------------------------------------------------------------
-aiofiles==24.1.0
-aiohappyeyeballs==2.6.1
-aiosignal==1.4.0
-amqp==5.3.1
-annotated-doc==0.0.4
-annotated-types==0.7.0
-antlr4-python3-runtime==4.13.2
-anyio==4.13.0
-attrs==26.1.0
-autobahn==25.12.2
-Automat==25.4.16
-backoff==2.2.1
-bcrypt==5.0.0
-billiard==4.2.4
-bleach==6.1.0
-brotli==1.2.0
-build==1.4.2
-certifi==2026.5.20
-cffi==2.0.0
-charset-normalizer==3.4.7
-click-didyoumean==0.3.1
-click-plugins==1.1.1.2
-click-repl==0.3.0
-click==8.4.1
-colorama==0.4.6
-constantly==23.10.4
-cryptography==46.0.7
-dataclasses-json==0.6.7
-datasets==4.8.4
-dill==0.4.0
-distro==1.9.0
-docstring-parser==0.18.0
-drf_spectacular==0.29.0
-durationpy==0.10
-ffmpy==1.0.0
-filelock==3.29.0
-filetype==1.2.0
-flatbuffers==25.12.19
-frozenlist==1.8.0
-
-h11==0.16.0
-hf-gradio==0.3.0
-hf-xet==1.5.0
-httpcore==1.0.9
-httptools==0.7.1
-httpx-sse==0.4.3
-httpx==0.28.1
-huggingface_hub==0.36.2
-humanfriendly==10.0
-hyperlink==21.0.0
-idna==3.16
-importlib_metadata==8.7.1
-importlib_resources==6.5.2
-Incremental==24.11.0
-Jinja2==3.1.6
-jiter==0.13.0
-jmespath==1.0.1
-joblib==1.5.3
-jsonpatch==1.33
-jsonpointer==3.1.1
-jsonschema-specifications==2025.9.1
-jsonschema==4.26.0
-kombu==5.6.2
-lomond==0.3.3
-Mako==1.3.11
-manga_ocr==0.1.14
-markdown-it-py==4.2.0
-MarkupSafe==3.0.3
-marshmallow==3.26.2
-mdurl==0.1.2
-mmh3==5.2.1
-mpmath==1.3.0
-multidict==6.7.1
-multiprocess==0.70.16
-networkx==3.6.1
-oauthlib==3.3.1
-opentelemetry-api==1.40.0
-opentelemetry-exporter-otlp-proto-common==1.40.0
-opentelemetry-exporter-otlp-proto-grpc==1.40.0
-opentelemetry-proto==1.40.0
-opentelemetry-sdk==1.40.0
-opentelemetry-semantic-conventions==0.61b0
-orjson==3.11.8
-overrides==7.7.0
-packaging==26.2
-pathlib_abc==0.5.2
-pillow==12.2.0
-platformdirs==4.9.6
-polib==1.2.0
-promise==2.3
-prompt_toolkit==3.0.52
-propcache==0.4.1
-proto-plus==1.27.2
-protobuf==6.33.6
-psutil==7.2.2
-py-ubjson==0.16.1
-pyarrow==23.0.1
-pyasn1==0.6.3
-pyasn1_modules==0.4.2
-pybase64==1.4.3
-pycparser==3.0
-pydantic-settings==2.13.1
-pydantic==2.12.5
-pydantic_core==2.41.5
-Pygments==2.20.0
-PyJWT==2.12.0
-pyOpenSSL==26.1.0
-pypdf==6.12.2
-PyPika==0.51.1
-pyproject_hooks==1.2.0
-pyreadline3==3.5.4
-python-dateutil==2.9.0.post0
-python-dotenv==1.2.2
-python-multipart==0.0.29
-pytz==2026.1.post1
-pywin32==311; sys_platform == 'win32'
-PyYAML==6.0.3
-stripe==15.2.0
-referencing==0.37.0
-regex==2026.5.9
-rich==14.3.4
-rpds-py==0.30.0
-semantic-version==2.10.0
-sentry-sdk==2.58.0
-service-identity==24.2.0
-setuptools==69.5.1
-shellingham==1.5.4
-six==1.17.0
-sniffio==1.3.1
-structlog==25.5.0
-sympy==1.13.1
-tabulate==0.10.0
-tenacity==9.1.4
-text-unidecode==1.3
-threadpoolctl==3.6.0
-tiktoken==0.12.0
-tomli==2.4.1
-tomlkit==0.13.3
-toposort==1.10
-tqdm==4.67.3
-Twisted==25.5.0
-txaio==25.12.2
-typer==0.25.1
-typing-inspect==0.9.0
-typing-inspection==0.4.2
-typing_extensions==4.15.0
-tzdata==2026.1
-tzlocal==5.3.1
-universal_pathlib==0.3.10
-uuid_utils==0.14.1
-vine==5.1.0
-watchfiles==1.1.1
-wcwidth==0.6.0
-websocket-client==1.9.0
-websockets==16.0
-wheel==0.46.3
-xxhash==3.6.0
-z3-solver==4.16.0.0
-zipp==3.23.0
-zope.interface==8.4
-zstandard==0.25.0
-dependency-injector==4.49.0
+#
+# This file is autogenerated by pip-compile with Python 3.12
+# by the following command:
+#
+#    pip-compile --output-file=requirements.txt requirements.in
+#
+absl-py==2.4.0
+    # via tensorboard
 accelerate==1.13.0
-supervisor==4.2.5
-opentelemetry-exporter-gcp-trace==1.7.0
-google-cloud-profiler==4.1.0
-google-cloud-bigquery==3.20.1
-google-cloud-pubsub==2.21.1
+    # via
+    #   -r requirements.in
+    #   peft
+    #   trl
+agate==1.9.1
+    # via
+    #   dbt-adapters
+    #   dbt-common
+    #   dbt-core
+    #   dbt-postgres
+aiohappyeyeballs==2.6.2
+    # via aiohttp
+aiohttp==3.14.1
+    # via
+    #   fsspec
+    #   instructor
+aiosignal==1.4.0
+    # via aiohttp
+annotated-doc==0.0.4
+    # via
+    #   fastapi
+    #   typer
+annotated-types==0.7.0
+    # via pydantic
+anyascii==0.3.3
+    # via coqui-tts
+anyio==4.13.0
+    # via
+    #   google-genai
+    #   httpx
+    #   openai
+    #   starlette
 apache-beam==2.74.0
-google-cloud-aiplatform>=1.115.0
-dbt-core==1.9.0
-dbt-sqlite==1.9.1
-dbt-postgres==1.9.0
-dbt-bigquery==1.9.0
+    # via -r requirements.in
+asgiref==3.11.1
+    # via
+    #   channels
+    #   daphne
+    #   django
+    #   django-allauth
+    #   django-cors-headers
+attrs==26.1.0
+    # via
+    #   aiohttp
+    #   jsonschema
+    #   referencing
+    #   service-identity
+    #   twisted
+audioread==3.1.0
+    # via librosa
+autobahn==25.12.2
+    # via daphne
+automat==25.4.16
+    # via twisted
+babel==2.18.0
+    # via agate
+beartype==0.22.9
+    # via apache-beam
 beautifulsoup4==4.12.3
+    # via -r requirements.in
+betterproto==2.0.0b6
+    # via envoy-data-plane
+bitsandbytes==0.49.2
+    # via -r requirements.in
+cbor2==6.1.2
+    # via autobahn
+certifi==2026.5.20
+    # via
+    #   google-cloud-aiplatform
+    #   httpcore
+    #   httpx
+    #   requests
+    #   sentry-sdk
+cffi==2.0.0
+    # via
+    #   autobahn
+    #   cryptography
+    #   soundfile
+channels==4.3.2
+    # via -r requirements.in
+charset-normalizer==3.4.7
+    # via requests
+click==8.4.1
+    # via
+    #   dbt-core
+    #   dbt-semantic-interfaces
+    #   uvicorn
+colorama==0.4.6
+    # via
+    #   click
+    #   dbt-common
+    #   loguru
+    #   pytest
+    #   tqdm
+    #   typer
+coloredlogs==14.0
+    # via -r requirements.in
+constantly==23.10.4
+    # via twisted
+contourpy==1.3.3
+    # via matplotlib
+coqpit-config==0.2.5
+    # via
+    #   coqui-tts
+    #   coqui-tts-trainer
+coqui-tts==0.27.5
+    # via -r requirements.in
+coqui-tts-trainer==0.3.3
+    # via coqui-tts
+cryptography==47.0.0
+    # via
+    #   apache-beam
+    #   autobahn
+    #   google-auth
+    #   pyopenssl
+    #   service-identity
+cycler==0.12.1
+    # via matplotlib
+daff==1.4.2
+    # via dbt-core
+daphne==4.2.1
+    # via -r requirements.in
+datasets==5.0.0
+    # via trl
+db-dtypes==1.7.0
+    # via
+    #   google-cloud-bigquery
+    #   pandas-gbq
+dbt-adapters==1.16.7
+    # via
+    #   dbt-bigquery
+    #   dbt-core
+    #   dbt-postgres
+    #   dbt-sqlite
+dbt-bigquery==1.10.3
+    # via -r requirements.in
+dbt-common==1.38.0
+    # via
+    #   dbt-adapters
+    #   dbt-bigquery
+    #   dbt-core
+    #   dbt-postgres
+dbt-core==1.11.11
+    # via
+    #   -r requirements.in
+    #   dbt-bigquery
+    #   dbt-postgres
+    #   dbt-sqlite
+dbt-extractor==0.6.0
+    # via dbt-core
+dbt-postgres==1.9.1
+    # via -r requirements.in
+dbt-protos==1.0.514
+    # via
+    #   dbt-adapters
+    #   dbt-common
+    #   dbt-core
+dbt-semantic-interfaces==0.9.0
+    # via dbt-core
+dbt-sqlite==1.10.0
+    # via -r requirements.in
+decorator==5.3.1
+    # via librosa
+deepdiff==8.6.2
+    # via dbt-common
+dependency-injector==4.49.0
+    # via -r requirements.in
+diffusers==0.37.0
+    # via -r requirements.in
+dill==0.4.1
+    # via
+    #   datasets
+    #   multiprocess
+distro==1.9.0
+    # via
+    #   google-genai
+    #   openai
+django==5.2.14
+    # via
+    #   -r requirements.in
+    #   channels
+    #   django-allauth
+    #   django-cors-headers
+    #   django-csp
+    #   django-filter
+    #   django-prometheus
+    #   django-redis
+    #   djangorestframework
+django-allauth==65.14.1
+    # via -r requirements.in
+django-cors-headers==4.9.0
+    # via -r requirements.in
+django-csp==4.0
+    # via -r requirements.in
+django-environ==0.13.0
+    # via -r requirements.in
+django-filter==25.2
+    # via -r requirements.in
+django-prometheus==2.4.1
+    # via -r requirements.in
+django-ratelimit==4.1.0
+    # via -r requirements.in
+django-redis==6.0.0
+    # via -r requirements.in
+djangorestframework==3.17.1
+    # via -r requirements.in
+dnspython==2.8.0
+    # via pymongo
+docopt==0.6.2
+    # via num2words
+docstring-parser==0.18.0
+    # via
+    #   google-cloud-aiplatform
+    #   instructor
+einops==0.8.2
+    # via coqui-tts
+envoy-data-plane==1.0.3
+    # via apache-beam
+fastapi==0.135.3
+    # via -r requirements.in
+fastavro==1.12.2
+    # via apache-beam
+fasteners==0.20
+    # via apache-beam
+fastjsonschema==2.21.2
+    # via nbformat
+filelock==3.29.4
+    # via
+    #   datasets
+    #   diffusers
+    #   huggingface-hub
+    #   torch
+    #   transformers
+fire==0.7.1
+    # via manga-ocr
+flatbuffers==25.12.19
+    # via onnxruntime
+fonttools==4.63.0
+    # via matplotlib
+frozenlist==1.8.0
+    # via
+    #   aiohttp
+    #   aiosignal
+fsspec[http]==2026.4.0
+    # via
+    #   coqui-tts
+    #   coqui-tts-trainer
+    #   datasets
+    #   huggingface-hub
+    #   torch
+fugashi==1.5.2
+    # via manga-ocr
+google-api-core[grpc]==2.31.0
+    # via
+    #   dbt-bigquery
+    #   google-api-python-client
+    #   google-cloud-aiplatform
+    #   google-cloud-bigquery
+    #   google-cloud-core
+    #   google-cloud-dataproc
+    #   google-cloud-pubsub
+    #   google-cloud-resource-manager
+    #   google-cloud-storage
+    #   google-cloud-trace
+    #   pandas-gbq
+google-api-python-client==2.197.0
+    # via google-cloud-profiler
+google-auth[requests]==2.54.0
+    # via
+    #   dbt-bigquery
+    #   google-api-core
+    #   google-api-python-client
+    #   google-auth-httplib2
+    #   google-auth-oauthlib
+    #   google-cloud-aiplatform
+    #   google-cloud-bigquery
+    #   google-cloud-core
+    #   google-cloud-dataproc
+    #   google-cloud-profiler
+    #   google-cloud-pubsub
+    #   google-cloud-resource-manager
+    #   google-cloud-storage
+    #   google-cloud-trace
+    #   google-genai
+    #   pandas-gbq
+    #   pydata-google-auth
+google-auth-httplib2==0.4.0
+    # via
+    #   google-api-python-client
+    #   google-cloud-profiler
+google-auth-oauthlib==1.4.0
+    # via
+    #   pandas-gbq
+    #   pydata-google-auth
+google-cloud-aiplatform==1.157.0
+    # via
+    #   -r requirements.in
+    #   dbt-bigquery
+google-cloud-bigquery[pandas]==3.41.0
+    # via
+    #   -r requirements.in
+    #   dbt-bigquery
+    #   google-cloud-aiplatform
+    #   pandas-gbq
+google-cloud-core==2.6.0
+    # via
+    #   google-cloud-bigquery
+    #   google-cloud-storage
+google-cloud-dataproc==5.28.0
+    # via dbt-bigquery
+google-cloud-profiler==4.1.0
+    # via -r requirements.in
+google-cloud-pubsub==2.39.0
+    # via -r requirements.in
+google-cloud-resource-manager==1.17.0
+    # via google-cloud-aiplatform
+google-cloud-storage==3.1.1
+    # via
+    #   dbt-bigquery
+    #   google-cloud-aiplatform
+google-cloud-trace==1.19.0
+    # via opentelemetry-exporter-gcp-trace
+google-crc32c==1.8.0
+    # via
+    #   google-cloud-storage
+    #   google-resumable-media
+google-genai==1.75.0
+    # via
+    #   -r requirements.in
+    #   google-cloud-aiplatform
+google-resumable-media==2.10.0
+    # via
+    #   google-cloud-bigquery
+    #   google-cloud-storage
+googleapis-common-protos[grpc]==1.75.0
+    # via
+    #   google-api-core
+    #   grpc-google-iam-v1
+    #   grpcio-status
+greenlet==3.5.1
+    # via playwright
+grpc-google-iam-v1==0.14.4
+    # via
+    #   google-cloud-dataproc
+    #   google-cloud-pubsub
+    #   google-cloud-resource-manager
+grpcio==1.81.1
+    # via
+    #   apache-beam
+    #   google-api-core
+    #   google-cloud-bigquery
+    #   google-cloud-dataproc
+    #   google-cloud-pubsub
+    #   google-cloud-resource-manager
+    #   google-cloud-trace
+    #   googleapis-common-protos
+    #   grpc-google-iam-v1
+    #   grpcio-status
+    #   grpcio-tools
+    #   tensorboard
+grpcio-status==1.81.1
+    # via
+    #   google-api-core
+    #   google-cloud-pubsub
+grpcio-tools==1.81.1
+    # via envoy-data-plane
+grpclib==0.4.9
+    # via betterproto
+gunicorn==25.3.0
+    # via -r requirements.in
+h11==0.16.0
+    # via
+    #   httpcore
+    #   uvicorn
+h2==4.3.0
+    # via grpclib
+hpack==4.1.0
+    # via h2
+httpcore==1.0.9
+    # via httpx
+httplib2==0.31.2
+    # via
+    #   apache-beam
+    #   google-api-python-client
+    #   google-auth-httplib2
+httpx==0.28.1
+    # via
+    #   datasets
+    #   diffusers
+    #   google-genai
+    #   openai
+huggingface-hub==0.36.2
+    # via
+    #   accelerate
+    #   datasets
+    #   diffusers
+    #   peft
+    #   sentence-transformers
+    #   tokenizers
+    #   transformers
+humanfriendly==10.0
+    # via coloredlogs
+hyperframe==6.1.0
+    # via h2
+hyperlink==21.0.0
+    # via
+    #   autobahn
+    #   twisted
+idna==3.18
+    # via
+    #   anyio
+    #   httpx
+    #   hyperlink
+    #   requests
+    #   twisted
+    #   yarl
+importlib-metadata==8.7.1
+    # via
+    #   dbt-semantic-interfaces
+    #   diffusers
+    #   opentelemetry-api
+incremental==24.11.0
+    # via twisted
+inflect==7.5.0
+    # via coqui-tts
+iniconfig==2.3.0
+    # via pytest
+instructor==1.15.1
+    # via -r requirements.in
+isodate==0.7.2
+    # via
+    #   agate
+    #   dbt-common
+jaconv==0.5.0
+    # via manga-ocr
+jinja2==3.1.6
+    # via
+    #   dbt-common
+    #   dbt-core
+    #   dbt-semantic-interfaces
+    #   instructor
+    #   torch
+jiter==0.13.0
+    # via
+    #   instructor
+    #   openai
+joblib==1.5.3
+    # via
+    #   librosa
+    #   scikit-learn
+jsonpickle==3.4.2
+    # via apache-beam
+jsonschema==4.26.0
+    # via
+    #   dbt-common
+    #   dbt-core
+    #   dbt-semantic-interfaces
+    #   nbformat
+jsonschema-specifications==2025.9.1
+    # via jsonschema
+jupyter-core==5.9.1
+    # via nbformat
+kiwisolver==1.5.0
+    # via matplotlib
+ko-speech-tools==0.1.0
+    # via coqui-tts
+lazy-loader==0.5
+    # via librosa
+leather==0.4.1
+    # via agate
+librosa==0.11.0
+    # via coqui-tts
+llvmlite==0.47.0
+    # via numba
+loguru==0.7.3
+    # via manga-ocr
+manga-ocr==0.1.14
+    # via -r requirements.in
+markdown==3.10.2
+    # via tensorboard
+markdown-it-py==4.2.0
+    # via rich
+markupsafe==3.0.3
+    # via
+    #   jinja2
+    #   werkzeug
+mashumaro[msgpack]==3.14
+    # via
+    #   dbt-adapters
+    #   dbt-common
+    #   dbt-core
+matplotlib==3.11.0
+    # via
+    #   coqui-tts
+    #   ultralytics
+mdurl==0.1.2
+    # via markdown-it-py
+monotonic-alignment-search==0.2.1
+    # via coqui-tts
+more-itertools==10.8.0
+    # via
+    #   dbt-semantic-interfaces
+    #   inflect
+mpmath==1.3.0
+    # via sympy
+msgpack==1.2.0
+    # via
+    #   autobahn
+    #   librosa
+    #   mashumaro
+multidict==6.7.1
+    # via
+    #   aiohttp
+    #   grpclib
+    #   yarl
+multiprocess==0.70.19
+    # via datasets
+narwhals==2.22.1
+    # via scikit-learn
+nbformat==5.10.4
+    # via dbt-bigquery
+neo4j==6.1.0
+    # via -r requirements.in
+networkx==3.6.1
+    # via
+    #   dbt-core
+    #   torch
+num2words==0.5.14
+    # via coqui-tts
+numba==0.65.1
+    # via
+    #   -r requirements.in
+    #   coqui-tts
+    #   librosa
+numpy==1.26.4
+    # via
+    #   -r requirements.in
+    #   accelerate
+    #   apache-beam
+    #   bitsandbytes
+    #   contourpy
+    #   coqui-tts
+    #   datasets
+    #   db-dtypes
+    #   diffusers
+    #   librosa
+    #   manga-ocr
+    #   matplotlib
+    #   monotonic-alignment-search
+    #   numba
+    #   onnxruntime
+    #   opencv-python
+    #   opencv-python-headless
+    #   pandas
+    #   pandas-gbq
+    #   peft
+    #   scikit-learn
+    #   scipy
+    #   soundfile
+    #   soxr
+    #   tensorboard
+    #   torchvision
+    #   transformers
+    #   ultralytics
+    #   ultralytics-thop
+oauthlib==3.3.1
+    # via requests-oauthlib
+objsize==0.7.1
+    # via apache-beam
+onnxruntime==1.24.4
+    # via -r requirements.in
+openai==2.30.0
+    # via
+    #   -r requirements.in
+    #   instructor
+opencv-python==4.11.0.86
+    # via ultralytics
+opencv-python-headless==4.9.0.80
+    # via -r requirements.in
+opentelemetry-api==1.40.0
+    # via
+    #   -r requirements.in
+    #   google-cloud-pubsub
+    #   opentelemetry-exporter-gcp-trace
+    #   opentelemetry-resourcedetector-gcp
+    #   opentelemetry-sdk
+    #   opentelemetry-semantic-conventions
+opentelemetry-exporter-gcp-trace==1.7.0
+    # via -r requirements.in
+opentelemetry-resourcedetector-gcp==1.12.0a0
+    # via opentelemetry-exporter-gcp-trace
+opentelemetry-sdk==1.40.0
+    # via
+    #   -r requirements.in
+    #   google-cloud-pubsub
+    #   opentelemetry-exporter-gcp-trace
+    #   opentelemetry-resourcedetector-gcp
+opentelemetry-semantic-conventions==0.61b0
+    # via opentelemetry-sdk
+orderly-set==5.5.0
+    # via deepdiff
+packaging==26.2
+    # via
+    #   accelerate
+    #   apache-beam
+    #   bitsandbytes
+    #   coqui-tts
+    #   coqui-tts-trainer
+    #   datasets
+    #   db-dtypes
+    #   dbt-core
+    #   django-csp
+    #   google-cloud-aiplatform
+    #   google-cloud-bigquery
+    #   gunicorn
+    #   huggingface-hub
+    #   incremental
+    #   lazy-loader
+    #   matplotlib
+    #   onnxruntime
+    #   pandas-gbq
+    #   peft
+    #   pooch
+    #   pytest
+    #   tensorboard
+    #   transformers
+pandas==3.0.3
+    # via
+    #   datasets
+    #   db-dtypes
+    #   google-cloud-bigquery
+    #   pandas-gbq
+pandas-gbq==0.35.0
+    # via google-cloud-bigquery
+parsedatetime==2.6
+    # via agate
+pathspec==0.12.1
+    # via
+    #   dbt-common
+    #   dbt-core
+peft==0.13.2
+    # via -r requirements.in
+pillow==12.2.0
+    # via
+    #   apache-beam
+    #   diffusers
+    #   manga-ocr
+    #   matplotlib
+    #   sentence-transformers
+    #   tensorboard
+    #   torchvision
+    #   ultralytics
+platformdirs==4.10.0
+    # via
+    #   jupyter-core
+    #   pooch
+playwright==1.59.0
+    # via
+    #   -r requirements.in
+    #   pytest-playwright
+pluggy==1.6.0
+    # via pytest
+polars==1.41.2
+    # via ultralytics
+polars-runtime-32==1.41.2
+    # via polars
+pooch==1.9.0
+    # via librosa
+prometheus-client==0.25.0
+    # via django-prometheus
+propcache==0.5.2
+    # via
+    #   aiohttp
+    #   yarl
+proto-plus==1.28.0
+    # via
+    #   apache-beam
+    #   google-api-core
+    #   google-cloud-aiplatform
+    #   google-cloud-dataproc
+    #   google-cloud-pubsub
+    #   google-cloud-resource-manager
+    #   google-cloud-trace
+protobuf==6.33.6
+    # via
+    #   apache-beam
+    #   dbt-adapters
+    #   dbt-common
+    #   dbt-core
+    #   dbt-protos
+    #   google-api-core
+    #   google-cloud-aiplatform
+    #   google-cloud-dataproc
+    #   google-cloud-profiler
+    #   google-cloud-pubsub
+    #   google-cloud-resource-manager
+    #   google-cloud-trace
+    #   googleapis-common-protos
+    #   grpc-google-iam-v1
+    #   grpcio-status
+    #   grpcio-tools
+    #   onnxruntime
+    #   proto-plus
+    #   tensorboard
+psutil==7.2.2
+    # via
+    #   accelerate
+    #   coqui-tts-trainer
+    #   pandas-gbq
+    #   peft
+    #   ultralytics
+psycopg2-binary==2.9.12
+    # via
+    #   -r requirements.in
+    #   dbt-postgres
+py-ubjson==0.16.1
+    # via autobahn
+pyarrow==23.0.1
+    # via
+    #   apache-beam
+    #   datasets
+    #   db-dtypes
+    #   google-cloud-bigquery
+    #   pandas-gbq
+pyarrow-hotfix==0.7
+    # via apache-beam
+pyasn1==0.6.3
+    # via pyasn1-modules
+pyasn1-modules==0.4.2
+    # via google-auth
+pycparser==3.0
+    # via cffi
+pydantic==2.12.5
+    # via
+    #   -r requirements.in
+    #   dbt-core
+    #   dbt-semantic-interfaces
+    #   fastapi
+    #   google-cloud-aiplatform
+    #   google-genai
+    #   instructor
+    #   openai
+    #   pydantic-settings
+pydantic-core==2.41.5
+    # via
+    #   instructor
+    #   pydantic
+pydantic-settings==2.13.1
+    # via -r requirements.in
+pydata-google-auth==1.9.1
+    # via pandas-gbq
+pyee==13.0.1
+    # via playwright
+pygments==2.20.0
+    # via
+    #   pytest
+    #   rich
+pymongo==4.17.0
+    # via apache-beam
+pyopenssl==26.2.0
+    # via twisted
+pyparsing==3.3.2
+    # via
+    #   httplib2
+    #   matplotlib
+pyperclip==1.11.0
+    # via manga-ocr
+pyreadline3==3.5.6
+    # via humanfriendly
+pysbd==0.3.4
+    # via coqui-tts
+pytest==9.0.3
+    # via
+    #   -r requirements.in
+    #   pytest-base-url
+    #   pytest-django
+    #   pytest-mock
+    #   pytest-playwright
+pytest-base-url==2.1.0
+    # via pytest-playwright
+pytest-django==4.12.0
+    # via -r requirements.in
+pytest-mock==3.15.1
+    # via -r requirements.in
+pytest-playwright==0.7.2
+    # via -r requirements.in
+python-dateutil==2.9.0.post0
+    # via
+    #   apache-beam
+    #   betterproto
+    #   dbt-common
+    #   dbt-semantic-interfaces
+    #   google-cloud-bigquery
+    #   matplotlib
+    #   pandas
+python-dotenv==1.2.2
+    # via pydantic-settings
+python-slugify==8.0.4
+    # via
+    #   agate
+    #   pytest-playwright
+pytimeparse==1.1.8
+    # via agate
+pytz==2026.2
+    # via
+    #   apache-beam
+    #   dbt-adapters
+    #   dbt-core
+    #   neo4j
+pyyaml==6.0.3
+    # via
+    #   accelerate
+    #   apache-beam
+    #   coqui-tts
+    #   datasets
+    #   dbt-core
+    #   dbt-semantic-interfaces
+    #   huggingface-hub
+    #   peft
+    #   transformers
+    #   ultralytics
+redis==7.4.0
+    # via
+    #   -r requirements.in
+    #   django-redis
+referencing==0.37.0
+    # via
+    #   jsonschema
+    #   jsonschema-specifications
+regex==2026.5.9
+    # via
+    #   diffusers
+    #   transformers
+requests==2.34.2
+    # via
+    #   apache-beam
+    #   datasets
+    #   dbt-common
+    #   dbt-core
+    #   diffusers
+    #   google-api-core
+    #   google-auth
+    #   google-cloud-bigquery
+    #   google-cloud-profiler
+    #   google-cloud-storage
+    #   google-genai
+    #   huggingface-hub
+    #   instructor
+    #   opentelemetry-resourcedetector-gcp
+    #   pooch
+    #   pytest-base-url
+    #   requests-oauthlib
+    #   snowplow-tracker
+    #   stripe
+    #   transformers
+    #   ultralytics
+requests-oauthlib==2.0.0
+    # via google-auth-oauthlib
+rich==14.3.4
+    # via
+    #   instructor
+    #   trl
+    #   typer
+rpds-py==2026.5.1
+    # via
+    #   jsonschema
+    #   referencing
+safetensors==0.8.0
+    # via
+    #   accelerate
+    #   diffusers
+    #   peft
+    #   transformers
+scikit-learn==1.9.0
+    # via
+    #   librosa
+    #   sentence-transformers
+scipy==1.17.1
+    # via
+    #   coqui-tts
+    #   librosa
+    #   scikit-learn
+    #   sentence-transformers
+    #   ultralytics
+sentence-transformers==3.3.1
+    # via -r requirements.in
+sentry-sdk==2.58.0
+    # via -r requirements.in
+service-identity==26.1.0
+    # via twisted
+shellingham==1.5.4
+    # via typer
+six==1.17.0
+    # via python-dateutil
+sniffio==1.3.1
+    # via
+    #   google-genai
+    #   openai
+snowplow-tracker==1.1.0
+    # via dbt-core
+sortedcontainers==2.4.0
+    # via apache-beam
+soundfile==0.14.0
+    # via
+    #   coqui-tts
+    #   librosa
+soupsieve==2.8.4
+    # via beautifulsoup4
+soxr==1.1.0
+    # via librosa
+sqlglot==25.0.0
+    # via -r requirements.in
+sqlparse==0.5.5
+    # via
+    #   dbt-core
+    #   django
+starlette==1.3.1
+    # via fastapi
+stripe==15.2.0
+    # via -r requirements.in
+supervisor==4.2.5
+    # via -r requirements.in
+sympy==1.13.1
+    # via
+    #   onnxruntime
+    #   torch
+tenacity==9.1.4
+    # via
+    #   google-genai
+    #   instructor
+tensorboard==2.20.0
+    # via coqui-tts-trainer
+tensorboard-data-server==0.7.2
+    # via tensorboard
+termcolor==3.3.0
+    # via fire
+text-unidecode==1.3
+    # via python-slugify
+threadpoolctl==3.6.0
+    # via scikit-learn
+tokenizers==0.22.2
+    # via transformers
+torch==2.5.1
+    # via
+    #   -r requirements.in
+    #   accelerate
+    #   bitsandbytes
+    #   manga-ocr
+    #   peft
+    #   sentence-transformers
+    #   torchvision
+    #   ultralytics
+    #   ultralytics-thop
+torchvision==0.20.1
+    # via
+    #   -r requirements.in
+    #   ultralytics
+tqdm==4.68.2
+    # via
+    #   coqui-tts
+    #   datasets
+    #   huggingface-hub
+    #   openai
+    #   peft
+    #   sentence-transformers
+    #   transformers
+traitlets==5.15.1
+    # via
+    #   jupyter-core
+    #   nbformat
+transformers==4.57.6
+    # via
+    #   -r requirements.in
+    #   coqui-tts
+    #   manga-ocr
+    #   peft
+    #   sentence-transformers
+    #   trl
+trl==0.12.1
+    # via -r requirements.in
+twisted[tls]==26.4.0
+    # via daphne
+txaio==25.12.2
+    # via autobahn
+typeguard==4.5.2
+    # via inflect
+typer==0.26.7
+    # via instructor
+typing-extensions==4.15.0
+    # via
+    #   aiohttp
+    #   aiosignal
+    #   anyio
+    #   apache-beam
+    #   coqpit-config
+    #   coqui-tts
+    #   dbt-adapters
+    #   dbt-common
+    #   dbt-core
+    #   dbt-semantic-interfaces
+    #   dependency-injector
+    #   fastapi
+    #   google-cloud-aiplatform
+    #   google-genai
+    #   grpcio
+    #   huggingface-hub
+    #   librosa
+    #   mashumaro
+    #   openai
+    #   opentelemetry-api
+    #   opentelemetry-resourcedetector-gcp
+    #   opentelemetry-sdk
+    #   opentelemetry-semantic-conventions
+    #   pydantic
+    #   pydantic-core
+    #   pyee
+    #   pyopenssl
+    #   referencing
+    #   snowplow-tracker
+    #   soundfile
+    #   starlette
+    #   stripe
+    #   torch
+    #   twisted
+    #   typeguard
+    #   typing-inspection
+typing-inspection==0.4.2
+    # via
+    #   fastapi
+    #   pydantic
+    #   pydantic-settings
+tzdata==2026.2
+    # via
+    #   agate
+    #   django
+    #   pandas
+ujson==5.12.1
+    # via autobahn
+ultralytics==8.4.51
+    # via -r requirements.in
+ultralytics-thop==2.0.20
+    # via ultralytics
+unidic-lite==1.0.8
+    # via manga-ocr
+uritemplate==4.2.0
+    # via google-api-python-client
+urllib3==2.7.0
+    # via
+    #   requests
+    #   sentry-sdk
+uvicorn==0.44.0
+    # via -r requirements.in
+watchdog==6.0.0
+    # via -r requirements.in
+websockets==16.0
+    # via google-genai
+werkzeug==3.1.8
+    # via tensorboard
+whitenoise==6.7.0
+    # via -r requirements.in
+win32-setctime==1.2.0
+    # via loguru
+xxhash==3.7.0
+    # via datasets
+yarl==1.24.2
+    # via aiohttp
+zipp==4.1.0
+    # via importlib-metadata
+zope-interface==8.5
+    # via twisted
+zstandard==0.25.0
+    # via apache-beam
+
+# The following packages are considered to be unsafe in a requirements file:
+# setuptools

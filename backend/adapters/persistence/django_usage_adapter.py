@@ -40,6 +40,22 @@ class DjangoUsageAdapter(UsagePort):
             allocated_budget=allocated_budget
         )
 
+        # Automatic Stripe Reporting for Pro Developers
+        if user_id:
+            try:
+                from animetix.models import Profile
+                from animetix.stripe_billing import StripeBillingService
+                profile = Profile.objects.get(user_id=user_id)
+                if profile.tier == 'pro' and (units > 0 or input_tokens > 0):
+                    # For simplicity, we report units if present, otherwise 1 per request
+                    quantity = units if units > 0 else 1
+                    StripeBillingService.report_usage(profile, quantity=quantity)
+            except Exception as e:
+                # Use logger from outer scope if available, or locally
+                import logging
+                logger = logging.getLogger('animetix.adapters.usage')
+                logger.warning(f"Failed to auto-report usage to Stripe for user {user_id}: {e}")
+
     def get_total_cost(self, since: Optional[datetime] = None) -> float:
         query = AITokenUsage.objects.all()
         if since:

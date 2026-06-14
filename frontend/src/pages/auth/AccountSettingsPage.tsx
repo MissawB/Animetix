@@ -137,7 +137,7 @@ const AccountSettingsPage: React.FC = () => {
                     ? "Votre boost est actif. Vous profitez d'une expérience sans publicité." 
                     : "Votre compte est actuellement en mode standard. Pour supprimer les publicités et multiplier votre quota IA par 5, visitez l'Espace Sponsors."}
                 </p>
-                <Link to="/pricing/" className="block text-center bg-yellow-500 hover:bg-yellow-600 text-black font-black italic manga-font text-xs py-4 px-6 rounded-xl shadow-lg transition-all no-underline">
+                <Link to="/power-station/" className="block text-center bg-yellow-500 hover:bg-yellow-600 text-black font-black italic manga-font text-xs py-4 px-6 rounded-xl shadow-lg transition-all no-underline">
                   ACCÉDER À L'ESPACE SPONSORS
                 </Link>
               </div>
@@ -224,7 +224,7 @@ const AccountSettingsPage: React.FC = () => {
                         Soutenez Animetix dans l'Espace Sponsors pour débloquer le badge exclusif et la couleur de pseudo personnalisée !
                       </p>
                     </div>
-                    <Link to="/pricing/" className="inline-block text-xs font-black uppercase tracking-wider text-yellow-500 hover:text-yellow-600 no-underline">
+                    <Link to="/power-station/" className="inline-block text-xs font-black uppercase tracking-wider text-yellow-500 hover:text-yellow-600 no-underline">
                       Devenir Sponsor →
                     </Link>
                   </div>

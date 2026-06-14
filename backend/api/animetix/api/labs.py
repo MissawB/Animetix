@@ -267,19 +267,19 @@ class MangaLabDataView(APIView):
                     'id': 'clean',
                     'name': 'Manga Cleaner',
                     'description': 'Remove text bubbles from manga pages.',
-                    'endpoint': '/api/v1/manga-lab/clean/'
+                    'endpoint': '/api/v1/labs/manga-lab/clean/'
                 },
                 {
                     'id': 'translate',
                     'name': 'Manga Translator',
                     'description': 'Translate manga bubbles to target language.',
-                    'endpoint': '/api/v1/manga-lab/translate/'
+                    'endpoint': '/api/v1/labs/manga-lab/translate/'
                 },
                 {
                     'id': 'voice',
                     'name': 'Manga Voice Lab',
                     'description': 'Generate voices for manga characters (Dubbing).',
-                    'endpoint': '/api/v1/manga-voice/'
+                    'endpoint': '/api/v1/labs/manga-voice/'
                 }
             ]
         })
@@ -449,8 +449,43 @@ class AudioLabDataView(APIView):
                     'name': 'Voice Interaction (S2S)',
                     'description': 'Direct speech-to-speech interaction with anime personas.',
                     'endpoint': '/api/v1/labs/audio/s2s/'
+                },
+                {
+                    'id': 'seiyuu-discovery',
+                    'name': 'Seiyuu Discovery',
+                    'description': 'Search and explore voice actors (seiyuu) and their iconic character roles.',
+                    'endpoint': '/api/v1/labs/audio/seiyuu/'
                 }
             ]
+        })
+
+class SeiyuuDiscoveryView(APIView):
+    """Recherche et exploration des Seiyuu et de leurs rôles."""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        query = request.query_params.get('q', '').lower()
+        from pipeline.mlops.songs_and_seiyuu_db import SEIYUU_PROFILES
+        
+        results = []
+        for name, profile in SEIYUU_PROFILES.items():
+            # Search by Seiyuu name OR character roles mentioned in examples/definition
+            if (query in name.lower() or 
+                query in profile.get('examples', '').lower() or 
+                query in profile.get('definition', '').lower()):
+                
+                results.append({
+                    "name": name,
+                    "description": profile.get('definition'),
+                    "roles": profile.get('examples'),
+                    "impact": profile.get('impact'),
+                    "origin": profile.get('origin'),
+                    "sample_url": f"/static/audio/seiyuu/{name.lower().replace(' ', '_')}_sample.wav"
+                })
+        
+        return Response({
+            "query": query,
+            "results": results
         })
 
 class SoundscapeGenerationView(APIView):
@@ -762,8 +797,8 @@ class SingularityCommandCenterView(APIView):
                 "load": random.randint(20, 80),
                 "metrics": {"stability": 0.92, "dt": 0.05}
             })
-        except:
-            pass
+        except Exception as e:
+            logger.error(f"Failed to aggregate health metrics for Ghost Labs: {e}")
 
         # 2. Événements récents (Simulés pour le dashboard)
         events = [

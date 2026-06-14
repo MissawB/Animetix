@@ -11,7 +11,10 @@ import {
   AlertCircle,
   Cpu,
   Unplug,
-  ShieldCheck
+  ShieldCheck,
+  Heart,
+  Coffee,
+  Star
 } from 'lucide-react';
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { Card } from "../../components/ui/Card";
@@ -224,6 +227,83 @@ const PowerStationPage: React.FC = () => {
               </div>
             </div>
 
+          </div>
+
+          {/* Donation / Support Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mt-20">
+            <Card padding="none" className="bg-gradient-to-br from-pink-900/20 to-transparent border-white/10 rounded-[3rem] overflow-hidden relative group shadow-2xl">
+              <div className="p-10 space-y-6 relative z-10 text-center md:text-left">
+                <div className="flex flex-col md:flex-row items-center gap-4">
+                  <div className="p-3 bg-pink-500/20 rounded-2xl border border-pink-500/30 shadow-[0_0_15px_rgba(236,72,153,0.3)]">
+                    <Heart className="w-8 h-8 text-pink-500 animate-pulse fill-current" />
+                  </div>
+                  <div>
+                    <h2 className="text-3xl font-black italic uppercase manga-font tracking-tight">Soutien Indépendant</h2>
+                    <p className="text-[10px] text-gray-500 font-black uppercase tracking-[0.2em]">Animetix est maintenu par une équipe passionnée.</p>
+                  </div>
+                </div>
+
+                <p className="text-sm text-gray-400 leading-relaxed font-bold uppercase tracking-wide italic">
+                  Chaque don nous aide à couvrir les coûts GPU massifs et à garder le serveur <span className="text-pink-500">100% indépendant</span>. 
+                  En guise de remerciement, débloquez des récompenses uniques.
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                  <a 
+                    href="https://ko-fi.com/animetix" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex-1 px-8 py-5 bg-[#29abe2] hover:bg-[#29abe2]/80 text-white font-black italic uppercase text-xs rounded-2xl shadow-xl transition-all hover:scale-[1.02] flex items-center justify-center gap-3 no-underline group"
+                  >
+                    <Coffee className="w-5 h-5 group-hover:rotate-12 transition-transform" /> Soutenir sur Ko-fi
+                  </a>
+                  <a 
+                    href="https://patreon.com/animetix" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex-1 px-8 py-5 bg-[#f96854] hover:bg-[#f96854]/80 text-white font-black italic uppercase text-xs rounded-2xl shadow-xl transition-all hover:scale-[1.02] flex items-center justify-center gap-3 no-underline group"
+                  >
+                    <Star className="w-5 h-5 group-hover:scale-125 transition-transform fill-current" /> Devenir Patron
+                  </a>
+                </div>
+              </div>
+              
+              <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none group-hover:scale-110 transition-transform duration-700">
+                  <Heart className="w-40 h-48 text-pink-500 fill-current" />
+              </div>
+            </Card>
+
+            <div className="bg-white/5 border border-white/10 rounded-[3rem] p-10 flex flex-col justify-center space-y-6 relative overflow-hidden backdrop-blur-md">
+               <div className="absolute -bottom-20 -right-20 opacity-10 rotate-12">
+                  <Zap className="w-64 h-64 text-yellow-500 fill-current" />
+               </div>
+               <h3 className="text-xl font-black italic uppercase manga-font tracking-tight flex items-center gap-3">
+                 <Star className="w-5 h-5 text-yellow-500 fill-current" /> Cosmétiques Exclusifs
+               </h3>
+               <div className="grid grid-cols-1 gap-3">
+                  {[
+                    { label: "Badge 'Sponsor' permanent", detail: "Exhibez votre soutien sur chaque message." },
+                    { label: "Couleur de Pseudo 'Gold'", detail: "Distinguez-vous dans le classement mondial." },
+                    { label: "Avatars Animés (GIF)", detail: "Donnez vie à votre profil sur le Hub." },
+                    { label: "Accès Prioritaire Labs", detail: "Testez les nouveaux modèles avant tout le monde." },
+                    { label: "Canal Discord Privé", detail: "Échangez directement avec les créateurs." }
+                  ].map((benefit, i) => (
+                    <motion.div 
+                      key={i}
+                      initial={{ opacity: 0, x: 20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.1 }}
+                      className="flex items-start gap-4 p-3 rounded-2xl hover:bg-white/5 transition-colors border border-transparent hover:border-white/5"
+                    >
+                      <CheckCircle2 className="w-5 h-5 text-pink-500 shrink-0 mt-0.5" />
+                      <div>
+                        <div className="text-[11px] font-black uppercase text-white tracking-widest">{benefit.label}</div>
+                        <div className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-0.5">{benefit.detail}</div>
+                      </div>
+                    </motion.div>
+                  ))}
+               </div>
+            </div>
           </div>
 
           {/* History Section */}

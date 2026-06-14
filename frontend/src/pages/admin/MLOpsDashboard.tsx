@@ -14,7 +14,8 @@ import {
   LayoutGrid,
   Trophy,
   Network,
-  Wand2
+  Wand2,
+  Lock
 } from 'lucide-react';
 import { Card } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
@@ -33,7 +34,7 @@ const MLOpsDashboard: React.FC = () => {
     },
     {
       title: "Santé Système",
-      desc: "Monitoring en temps réel de Brain API, Redis, Celery et PostgreSQL.",
+      desc: "Monitoring en temps réel et pilotage des pipelines (Sync, Scrapers).",
       icon: Activity,
       path: "/admin/health/",
       color: "text-cyan-500",
@@ -43,9 +44,17 @@ const MLOpsDashboard: React.FC = () => {
       title: "Évaluation IA",
       desc: "Benchmarks de régression et tests de qualité sémantique automatisés.",
       icon: BarChart2,
-      path: "/admin/ai_eval/",
+      path: "/admin/eval/",
       color: "text-purple-500",
       status: "Active"
+    },
+    {
+      title: "Audit Sécurité",
+      desc: "Surveillance des guardrails, blocages et tentatives de jailbreak.",
+      icon: Lock,
+      path: "/admin/safety/",
+      color: "text-red-500",
+      status: "Critique"
     },
     {
       title: "Gold Dataset",
@@ -59,7 +68,7 @@ const MLOpsDashboard: React.FC = () => {
       title: "Knowledge Graph",
       desc: "Gestion de Neo4j, résolution de conflits et audit de relations.",
       icon: Zap,
-      path: "/graph/",
+      path: "/admin/graph-debugger/",
       color: "text-purple-500",
       status: "Maintenance"
     },
@@ -67,7 +76,7 @@ const MLOpsDashboard: React.FC = () => {
       title: "Open Ledger",
       desc: "Dashboard de transparence publique, éthique et coûts IA.",
       icon: ShieldCheck,
-      path: "/transparency/",
+      path: "/social/transparency/",
       color: "text-emerald-500",
       status: "Public"
     },
@@ -75,7 +84,7 @@ const MLOpsDashboard: React.FC = () => {
       title: "Benchmarks SOTA",
       desc: "Suivi des performances mondiales des modèles (ELO score, MMLU accuracy).",
       icon: Trophy,
-      path: "/admin/sota-benchmarks/",
+      path: "/admin/sota-benchmark/",
       color: "text-cyan-500",
       status: "Global"
     },
@@ -102,6 +111,14 @@ const MLOpsDashboard: React.FC = () => {
       path: "/admin/ttc-monitoring/",
       color: "text-yellow-500",
       status: "Actif"
+    },
+    {
+      title: "Audit Économique",
+      desc: "Suivi de la masse monétaire, de l'inflation et de la vélocité des Berrix (Bx).",
+      icon: Coins,
+      path: "/admin/economics/",
+      color: "text-amber-500",
+      status: "Finance"
     }
   ];
 

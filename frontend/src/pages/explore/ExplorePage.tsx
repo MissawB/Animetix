@@ -125,12 +125,21 @@ const ExplorePage: React.FC = () => {
                 ))}
             </div>
 
-            <Link 
-                to="/explore/seichijunrei/"
-                className="flex items-center gap-3 px-6 py-2 bg-yellow-400/10 border border-yellow-400/20 rounded-full text-yellow-500 font-black uppercase text-[10px] tracking-widest hover:bg-yellow-400 hover:text-black transition-all group no-underline shadow-lg shadow-yellow-400/5"
-            >
-                <MapPin className="w-4 h-4 group-hover:animate-bounce" /> Carte Seichijunrei
-            </Link>
+            <div className="flex gap-4">
+                <Link 
+                    to="/explore/market/"
+                    className="flex items-center gap-3 px-6 py-2 bg-blue-400/10 border border-blue-400/20 rounded-full text-blue-500 font-black uppercase text-[10px] tracking-widest hover:bg-blue-400 hover:text-black transition-all group no-underline shadow-lg shadow-blue-400/5"
+                >
+                    <Globe className="w-4 h-4 group-hover:rotate-12" /> Wiki Marché
+                </Link>
+
+                <Link 
+                    to="/explore/seichijunrei/"
+                    className="flex items-center gap-3 px-6 py-2 bg-yellow-400/10 border border-yellow-400/20 rounded-full text-yellow-500 font-black uppercase text-[10px] tracking-widest hover:bg-yellow-400 hover:text-black transition-all group no-underline shadow-lg shadow-yellow-400/5"
+                >
+                    <MapPin className="w-4 h-4 group-hover:animate-bounce" /> Carte Seichijunrei
+                </Link>
+            </div>
         </div>
 
         {/* Categories Rows */}
@@ -146,6 +155,7 @@ const ExplorePage: React.FC = () => {
                     <div className="relative group">
                         <button 
                             onClick={() => scrollLeft('recs-row')}
+                            aria-label="Défiler à gauche"
                             className="absolute left-0 top-0 bottom-0 w-12 z-30 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
                         >
                             <ChevronLeft size={32} />
@@ -160,6 +170,7 @@ const ExplorePage: React.FC = () => {
                         </div>
                         <button 
                             onClick={() => scrollRight('recs-row')}
+                            aria-label="Défiler"
                             className="absolute right-0 top-0 bottom-0 w-12 z-30 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
                         >
                             <ChevronRight size={32} />
@@ -176,6 +187,7 @@ const ExplorePage: React.FC = () => {
                 <div className="relative group">
                     <button 
                         onClick={() => scrollLeft('trending-row')}
+                            aria-label="Défiler à gauche"
                         className="absolute left-0 top-0 bottom-0 w-12 z-30 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
                     >
                         <ChevronLeft size={32} />
@@ -190,6 +202,7 @@ const ExplorePage: React.FC = () => {
                     </div>
                     <button 
                         onClick={() => scrollRight('trending-row')}
+                            aria-label="Défiler à droite"
                         className="absolute right-0 top-0 bottom-0 w-12 z-30 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
                     >
                         <ChevronRight size={32} />
@@ -206,6 +219,7 @@ const ExplorePage: React.FC = () => {
                     <div className="relative group">
                         <button 
                             onClick={() => scrollLeft(`cat-row-${idx}`)}
+                            aria-label="Défiler à gauche"
                             className="absolute left-0 top-0 bottom-0 w-12 z-30 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
                         >
                             <ChevronLeft size={32} />
@@ -220,6 +234,7 @@ const ExplorePage: React.FC = () => {
                         </div>
                         <button 
                             onClick={() => scrollRight(`cat-row-${idx}`)}
+                            aria-label="Défiler"
                             className="absolute right-0 top-0 bottom-0 w-12 z-30 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
                         >
                             <ChevronRight size={32} />

@@ -2,18 +2,26 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.db import models
 from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
 from dependency_injector.wiring import inject, Provide
 from ..models import AIREvalResult, GoldDatasetEntry, AIFeedback
 from ..serializers import (AIREvalResultSerializer, GoldDatasetEntrySerializer, AIFeedbackSerializer,
-                            AIFeedbackInputSerializer, DPOCurationSerializer)
+                            AIFeedbackInputSerializer, DPOCurationSerializer, AISafetyEventSerializer)
 from core.ports.feedback_port import FeedbackRepositoryPort
 from core.ports.eval_port import EvalResultPort
 from core.ports.repository_port import RepositoryPort
 from core.ports.gold_dataset_port import GoldDatasetPort
 from ..containers import Container, get_container
+from ..models import AIREvalResult, GoldDatasetEntry, AIFeedback, AISafetyEvent
 import datetime
+
+class AISafetyEventViewSet(viewsets.ReadOnlyModelViewSet):
+    """API for viewing AI Safety events (Guardrail logs)."""
+    queryset = AISafetyEvent.objects.all().order_by('-created_at')
+    serializer_class = AISafetyEventSerializer
+    permission_classes = [permissions.IsAdminUser]
 
 class AIREvaluationViewSet(viewsets.ReadOnlyModelViewSet):
     """API for AI Evaluation results and stats."""
@@ -30,6 +38,17 @@ class AIREvaluationViewSet(viewsets.ReadOnlyModelViewSet):
     def stats(self, request):
         stats_data = self.eval_port.get_evaluation_stats()
         return Response(stats_data)
+
+    @action(detail=False, methods=['get'])
+    def failures(self, request):
+        """Fetch evaluation logs with low scores or hallucinations."""
+        queryset = self.queryset.filter(
+            models.Q(hallucination_detected=True) | 
+            models.Q(faithfulness__lt=0.6) | 
+            models.Q(relevancy__lt=0.6)
+        )[:20]
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 class LatentSpaceAPIView(APIView):
     """API for retrieving latent space data for visualization."""

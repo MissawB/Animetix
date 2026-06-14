@@ -32,7 +32,7 @@ class CrossModalSearchService:
             
         image_vec = []
         if image_data:
-            image_vec = self.inference_engine.get_image_embedding(image_data, model_id="openai/clip-vit-base-patch32")
+            image_vec = self.inference_engine.get_image_embedding(image_data, model_id="dudcjs2779/anime-style-tag-clip")
             
         # 2. Fusion des Vecteurs (Weighted Average ou Projection)
         if len(text_vec) > 0 and len(image_vec) > 0:

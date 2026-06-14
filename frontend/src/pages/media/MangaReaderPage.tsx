@@ -18,17 +18,22 @@ const MangaReaderPage: React.FC = () => {
     queryFn: () => apiClient(`/api/v1/media/Manga/${mediaId}/`),
   });
 
-  // Mock Chapter Content (since real chapter API might not be ready)
+  // Fetch Chapter Content
+  const { data: chapter, isLoading: isChapterLoading } = useQuery({
+    queryKey: ['media', 'Manga', mediaId, 'chapters', chapterId],
+    queryFn: () => apiClient(`/api/v1/media/Manga/${mediaId}/chapters/${chapterId}/`),
+  });
+
   useEffect(() => {
-    const mockPages = [
-      { url: 'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?auto=format&fit=crop&q=80&w=1000', index: 0 },
-      { url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1000', index: 1 },
-      { url: 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&q=80&w=1000', index: 2 },
-      { url: 'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?auto=format&fit=crop&q=80&w=1000', index: 3 },
-    ];
-    setPages(mockPages);
-    setCurrentPageIndex(0);
-  }, [mediaId, chapterId, setPages, setCurrentPageIndex]);
+    if (chapter?.pages) {
+      const formattedPages = chapter.pages.map((p: any) => ({
+        url: p.image_url,
+        index: p.number
+      }));
+      setPages(formattedPages);
+      setCurrentPageIndex(0);
+    }
+  }, [chapter, setPages, setCurrentPageIndex]);
 
   return (
     <AnimatedPage>

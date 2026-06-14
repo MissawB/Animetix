@@ -25,7 +25,7 @@ try:
     django_available = True
     from animetix.models import AIFeedback
 except Exception as e:
-    pass
+    logger.warning(f"Django initialization skipped or failed in DPO loop: {e}")
 
 try:
     from google import genai

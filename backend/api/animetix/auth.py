@@ -103,7 +103,7 @@ class IAPRemoteUserBackend(RemoteUserBackend):
 
 # --- Google Identity Platform (GCIP) Authentication ---
 
-GOOGLE_CERTS_URL = "https://www.googleapis.com/robot/v1/metadata/x509/securetoken.google.com"
+GOOGLE_CERTS_URL = "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com"
 _public_keys_cache = {}
 _public_keys_expiry = 0
 
@@ -197,7 +197,7 @@ class GoogleIdentityAuthentication(authentication.BaseAuthentication):
         try:
             return User.objects.get(email=email)
         except User.DoesNotExist:
-            pass
+            logger.debug(f"New user registration flow for email: {email}")
 
         base_username = email.split('@')[0]
         username = base_username
@@ -254,4 +254,5 @@ class DeveloperApiKeyAuthentication(authentication.BaseAuthentication):
             raise exceptions.AuthenticationFailed("User account is disabled.")
 
         return (profile.user, api_key)
+
 

@@ -7,12 +7,11 @@ import logging
 logger = logging.getLogger('animetix.rag_workflow')
 
 class VlmRerankProcessor(StateProcessor):
-    def __init__(self, prompt_manager, inference_engine, xai_collector=None):
+    def __init__(self, prompt_manager, inference_engine):
         self.prompt_manager = prompt_manager
         self.inference_engine = inference_engine
-        self.xai_collector = xai_collector
 
-    def process(self, ctx: RAGContext) -> Generator[StreamStep, None, RAGState]:
+    def process(self, ctx: RAGContext, xai_collector=None) -> Generator[dict, None, RAGState]:
         yield StreamStep(type="thought", content="[VLM-Reranker] Analyse visuelle des images candidates...").model_dump()
         image_urls = []
         valid_candidates = []
@@ -44,8 +43,8 @@ class VlmRerankProcessor(StateProcessor):
                 vlm_context += f"{i+1}. {c.get('title')} (Score Visuel: {c.get('visual_score', 0.0):.2f})\n"
                 vlm_context += f"   - Description: {c.get('description', '')[:300]}...\n"
             ctx.truth_path += f"\n{vlm_context}"
-            if self.xai_collector:
-                self.xai_collector.log_agent_thought("VLMReranker", "Analyse visuelle terminée pour le reranking des candidats")
+            if xai_collector:
+                xai_collector.log_agent_thought("VLMReranker", "Analyse visuelle terminée pour le reranking des candidats")
             yield StreamStep(type="thought", content=f"[VLM-Reranker] Classement visuel terminé. Top match : {top_5[0].get('title')}").model_dump()
         except InferenceError as e:
             logger.error(f"VLM Rerank error: {e}")

@@ -18,5 +18,13 @@ export const socialService = {
         body: JSON.stringify(data),
         headers: { 'Content-Type': 'application/json' }
     });
+  },
+
+  getClubDetails: async (id: number): Promise<any> => {
+    return apiClient(`/api/v1/clubs/${id}/`);
+  },
+
+  getClubEvents: async (clubId: number): Promise<any[]> => {
+    return apiClient(`/api/v1/club-events/?club=${clubId}`);
   }
 };

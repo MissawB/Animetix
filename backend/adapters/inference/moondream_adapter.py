@@ -13,21 +13,28 @@ PIL = lazy_import('PIL.Image')
 logger = logging.getLogger("animetix.inference.moondream")
 
 class MoondreamAdapter(InferencePort):
-    def __init__(self, model_id: str = "vikhyatk/moondream2", usage_port: Optional[UsagePort] = None):
+    def __init__(self, model_id: str = "HuggingFaceTB/SmolVLM-Instruct", usage_port: Optional[UsagePort] = None):
         super().__init__(usage_port=usage_port)
         self.model_id = model_id
         self.model = None
-        self.tokenizer = None
+        self.processor = None
 
     def _load_model(self):
         if self.model: return
         try:
-            from transformers import AutoModelForCausalLM, AutoTokenizer
-            self.model = AutoModelForCausalLM.from_pretrained(self.model_id, revision="main", trust_remote_code=True, device_map="auto") # nosec B615
-            self.tokenizer = AutoTokenizer.from_pretrained(self.model_id, revision="main") # nosec B615
+            from transformers import AutoModelForVision2Seq, AutoProcessor
+            import torch as _torch
+            self.model = AutoModelForVision2Seq.from_pretrained(
+                self.model_id, 
+                revision="main", 
+                trust_remote_code=True, 
+                device_map="auto",
+                torch_dtype=_torch.bfloat16 if _torch.cuda.is_available() else _torch.float32
+            ) # nosec B615
+            self.processor = AutoProcessor.from_pretrained(self.model_id, revision="main") # nosec B615
         except Exception as e:
-            logger.error(f"Failed to load Moondream model: {e}")
-            raise InferenceError(f"Moondream loading failed: {e}")
+            logger.error(f"Failed to load SmolVLM model: {e}")
+            raise InferenceError(f"SmolVLM loading failed: {e}")
 
     def generate(
         self, 
@@ -59,15 +66,33 @@ class MoondreamAdapter(InferencePort):
         try:
             import io
             from PIL import Image
-            image = Image.open(io.BytesIO(image_data))
-            enc_image = self.model.encode_image(image)
-            description = self.model.answer_question(enc_image, prompt, self.tokenizer)
+            image = Image.open(io.BytesIO(image_data)).convert("RGB")
             
-            self._log_usage(engine="local:moondream2", units=1)
+            messages = [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "image"},
+                        {"type": "text", "text": prompt}
+                    ]
+                }
+            ]
+            
+            text = self.processor.apply_chat_template(messages, add_generation_prompt=True)
+            inputs = self.processor(text=text, images=[image], return_tensors="pt").to(self.model.device)
+            
+            generated_ids = self.model.generate(**inputs, max_new_tokens=512)
+            description = self.processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
+            
+            # Clean up potential template artifacts
+            if "Assistant:" in description:
+                description = description.split("Assistant:")[-1].strip()
+            
+            self._log_usage(engine="local:smolvlm", units=1)
             return description
         except Exception as e:
-            logger.error(f"Moondream visual description failed: {e}")
-            raise InferenceError(f"Moondream visual description failed: {e}")
+            logger.error(f"SmolVLM visual description failed: {e}")
+            raise InferenceError(f"SmolVLM visual description failed: {e}")
 
     def health_check(self) -> dict:
-        return {"status": "online" if self.model else "offline", "engine": "Moondream-VLM"}
+        return {"status": "online" if self.model else "offline", "engine": "SmolVLM"}

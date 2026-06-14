@@ -39,12 +39,44 @@ class StripeBillingService:
                     'transaction_type': 'bx_purchase',
                     'amount_bx': amount_bx
                 },
-                success_url=f"{settings.FRONTEND_URL}/pricing?status=success",
-                cancel_url=f"{settings.FRONTEND_URL}/pricing?status=cancel",
+                success_url=f"{settings.FRONTEND_URL}/power-station?status=success",
+                cancel_url=f"{settings.FRONTEND_URL}/power-station?status=cancel",
             )
             return True, session.url
         except Exception as e:
             logger.error(f"Failed to create checkout session: {e}")
+            return False, str(e)
+
+    @staticmethod
+    def create_subscription_checkout_session(user_id, price_id):
+        """
+        Creates a Stripe Checkout Session for a recurring subscription (Pro API).
+        """
+        stripe_key = getattr(settings, 'STRIPE_SECRET_KEY', None)
+        if not stripe_key:
+            return None, "mock_checkout_url"
+
+        import stripe
+        stripe.api_key = stripe_key
+
+        try:
+            session = stripe.checkout.Session.create(
+                payment_method_types=['card'],
+                line_items=[{
+                    'price': price_id,
+                    'quantity': 1,
+                }],
+                mode='subscription',
+                client_reference_id=user_id,
+                metadata={
+                    'transaction_type': 'pro_subscription_upgrade'
+                },
+                success_url=f"{settings.FRONTEND_URL}/developer?status=success",
+                cancel_url=f"{settings.FRONTEND_URL}/developer?status=cancel",
+            )
+            return True, session.url
+        except Exception as e:
+            logger.error(f"Failed to create subscription checkout session: {e}")
             return False, str(e)
 
     @staticmethod

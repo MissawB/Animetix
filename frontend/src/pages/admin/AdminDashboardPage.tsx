@@ -56,6 +56,13 @@ const AdminDashboardPage: React.FC = () => {
       color: 'indigo'
     },
     {
+      title: 'Observability Console',
+      desc: 'Analyser le drift d\'archétype et ajuster les guardrails.',
+      icon: <Activity className="w-8 h-8 text-purple-500" />,
+      path: '/admin/observability/',
+      color: 'purple'
+    },
+    {
       title: 'DSPy Optimizer',
       desc: 'Optimisation automatique des prompts via DSPy.',
       icon: <Target className="w-8 h-8 text-red-500" />,
@@ -82,6 +89,13 @@ const AdminDashboardPage: React.FC = () => {
       icon: <Coins className="w-8 h-8 text-yellow-500" />,
       path: '/admin/financials/',
       color: 'yellow'
+    },
+    {
+      title: 'Economic Audit',
+      desc: 'Analyse de la masse monétaire et de l\'inflation des Berrix.',
+      icon: <TrendingUp className="w-8 h-8 text-emerald-500" />,
+      path: '/admin/economics/',
+      color: 'emerald'
     }
   ];
 

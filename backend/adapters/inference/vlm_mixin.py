@@ -20,7 +20,7 @@ class VlmMixin:
             from io import BytesIO
             from transformers import pipeline
             img = Image.open(BytesIO(image_data)).convert("RGB")
-            detector_id = model_id or "google/owlvit-base-patch32"
+            detector_id = model_id or "google/owlv2-base-patch16-ensemble"
             
             if not hasattr(self, '_detector_pipeline'):
                 logger.info(f"🏗️ Loading Object Detector: {detector_id}")
@@ -45,24 +45,41 @@ class VlmMixin:
             return []
 
     def generate_image_description(self, image_data: bytes, prompt: str = "Décris cette image d'anime.") -> str:
-        """Génère une description d'image via Moondream2."""
+        """Génère une description d'image via SmolVLM."""
         try:
             from PIL import Image
             from io import BytesIO
-            from transformers import AutoModelForCausalLM, AutoTokenizer
+            from transformers import AutoModelForVision2Seq, AutoProcessor
             
             img = Image.open(BytesIO(image_data)).convert("RGB")
-            vlm_id = "vikhyatk/moondream2"
+            vlm_id = "HuggingFaceTB/SmolVLM-Instruct"
             
             if not hasattr(self, '_vlm_model'):
                 logger.info(f"🏗️ Loading Local VLM: {vlm_id}")
-                self._vlm_tokenizer = AutoTokenizer.from_pretrained(vlm_id, revision="main") # nosec B615
-                self._vlm_model = AutoModelForCausalLM.from_pretrained(
-                    vlm_id, revision="main", trust_remote_code=True # nosec B615
+                self._vlm_processor = AutoProcessor.from_pretrained(vlm_id, revision="main") # nosec B615
+                self._vlm_model = AutoModelForVision2Seq.from_pretrained(
+                    vlm_id, revision="main", trust_remote_code=True, # nosec B615
+                    torch_dtype=torch.bfloat16 if torch.cuda.is_available() else torch.float32
                 ).to("cuda" if torch.cuda.is_available() else "cpu")
             
-            enc_image = self._vlm_model.encode_image(img)
-            res = self._vlm_model.answer_question(enc_image, prompt, self._vlm_tokenizer)
+            messages = [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "image"},
+                        {"type": "text", "text": prompt}
+                    ]
+                }
+            ]
+            
+            text = self._vlm_processor.apply_chat_template(messages, add_generation_prompt=True)
+            inputs = self._vlm_processor(text=text, images=[img], return_tensors="pt").to(self._vlm_model.device)
+            
+            generated_ids = self._vlm_model.generate(**inputs, max_new_tokens=512)
+            res = self._vlm_processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
+            
+            if "Assistant:" in res:
+                res = res.split("Assistant:")[-1].strip()
 
             self._log_usage(engine=f"transformers:{vlm_id}", units=1)
             return res

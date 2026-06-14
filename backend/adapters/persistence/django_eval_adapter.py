@@ -2,7 +2,7 @@ from typing import Dict, Any
 from core.ports.eval_port import EvalResultPort
 
 class DjangoEvalAdapter(EvalResultPort):
-    def save_result(self, query: str, context: str, answer: str, metrics: Dict[str, float]) -> None:
+    def save_result(self, query: str, context: str, answer: str, metrics: Dict[str, Any]) -> None:
         from animetix.models import AIREvalResult
         AIREvalResult.objects.create(
             game_mode='classic',

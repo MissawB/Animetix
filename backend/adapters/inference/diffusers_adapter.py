@@ -13,7 +13,7 @@ class DiffusersAdapter(ImageGenMixin, InferencePort):
     """
     def __init__(
         self, 
-        model_id: str = "stabilityai/sdxl-turbo", 
+        model_id: str = "black-forest-labs/FLUX.1-schnell", 
         use_fp16: bool = True,
         usage_port: Optional[UsagePort] = None
     ):

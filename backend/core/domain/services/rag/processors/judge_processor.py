@@ -6,22 +6,22 @@ import logging
 logger = logging.getLogger('animetix.rag_workflow')
 
 class JudgeProcessor(StateProcessor):
-    def __init__(self, debate_manager, xai_collector=None):
+    def __init__(self, debate_manager):
         self.debate_manager = debate_manager
-        self.xai_collector = xai_collector
 
-    def process(self, ctx: RAGContext) -> Generator[StreamStep, None, RAGState]:
+    def process(self, ctx: RAGContext, xai_collector=None) -> Generator[dict, None, RAGState]:
         yield StreamStep(type="thought", content="[Swarm] Début du débat multi-agents...").model_dump()
         outcome = self.debate_manager.conduct_debate(
             ctx.query, 
             ctx.truth_path, 
             ctx.full_answer,
             thinking_budget=ctx.thinking_budget,
-            thinking_mode=ctx.thinking_mode
+            thinking_mode=ctx.thinking_mode,
+            xai_collector=xai_collector
         )
         ctx.debate_outcome = outcome
-        if self.xai_collector:
-            self.xai_collector.log_agent_thought("ResponseJudge", f"Consensus : {outcome.consensus_action}. Raisonnement : {outcome.final_reasoning}")
+        if xai_collector:
+            xai_collector.log_agent_thought("ResponseJudge", f"Consensus : {outcome.consensus_action}. Raisonnement : {outcome.final_reasoning}")
             
         yield StreamStep(
             type="thought", 

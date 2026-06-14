@@ -4,6 +4,6 @@ from backend.core.domain.entities.ai_schemas import RAGContext, RAGState, Stream
 
 class StateProcessor(ABC):
     @abstractmethod
-    def process(self, ctx: RAGContext) -> Generator[StreamStep, None, RAGState]:
+    def process(self, ctx: RAGContext, xai_collector=None) -> Generator[StreamStep, None, RAGState]:
         """Processes the state and yields StreamSteps, returning the next RAGState."""
         pass

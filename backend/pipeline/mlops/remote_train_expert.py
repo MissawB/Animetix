@@ -22,8 +22,8 @@ import trackio
 logger = logging.getLogger("animetix." + __name__)
 
 def train():
-    # Remplacé Llama-3.2-3B par Qwen2.5-3B-Instruct (SOTA 2026 pour le multilingue / culture japonaise)
-    model_name = "unsloth/Qwen2.5-3B-Instruct"
+    # SOTA pour le raisonnement logique et la culture otaku (Juin 2026)
+    model_name = "unsloth/Qwen3-8B"
     max_seq_length = 2048
     load_in_4bit = True
 
@@ -54,7 +54,7 @@ def train():
 
     # 4. Configuration de l'entraînement avec SFTConfig
     training_args = SFTConfig(
-        output_dir = "otaku-qwen-adapter",
+        output_dir = "otaku-expert-adapter",
         max_seq_length = max_seq_length,
         per_device_train_batch_size = 2,
         gradient_accumulation_steps = 4,
@@ -71,11 +71,11 @@ def train():
         # MLOps Mandates
         report_to = "trackio",
         push_to_hub = True,
-        hub_model_id = os.getenv("HUB_MODEL_ID", "username/otaku-qwen-3b-adapter"),
+        hub_model_id = os.getenv("HUB_MODEL_ID", "username/otaku-expert-qwen3-8b-adapter"),
         
         # Trackio specifics
         project = "DoubleScenario",
-        run_name = "expert_sft_unsloth",
+        run_name = "expert_sft_unsloth_qwen3_8b",
     )
 
     # 5. Trainer

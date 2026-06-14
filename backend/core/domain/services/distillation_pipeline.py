@@ -47,7 +47,7 @@ class ModelDistillationPipeline:
         logger.info(f"⏳ {count} distillation pairs staged for human validation (HITL).")
         return count
 
-    def fine_tune_student(self, student_model_id: str = "HuggingFaceTB/SmolLM-135M", epochs: float = 3.0):
+    def fine_tune_student(self, student_model_id: str = "Qwen/Qwen3-0.6B", epochs: float = 3.0):
         """
         Lance le fine-tuning du modèle étudiant sur les données validées par l'humain.
         """

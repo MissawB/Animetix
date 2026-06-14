@@ -28,7 +28,7 @@ class RAGOrchestrator:
                 break
             # Delegate to processor and yield its steps if it's a generator
             try:
-                res = processor.process(ctx)
+                res = processor.process(ctx, xai_collector=xai_collector)
                 if hasattr(res, '__next__') or hasattr(res, '__iter__'):
                     ctx.current_state = yield from res
                 else:

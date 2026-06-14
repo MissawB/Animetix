@@ -171,8 +171,8 @@ class GuardrailService:
                     decoded = base64.b64decode(word).decode('utf-8').lower()
                     if JAILBREAK_REGEX.search(decoded):
                         return True
-                except (binascii.Error, UnicodeDecodeError):
-                    pass
+                except (binascii.Error, UnicodeDecodeError) as e:
+                    logger.debug(f"Base64 heuristic failed to decode word: {e}")
 
         return False
 

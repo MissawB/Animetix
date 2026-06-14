@@ -68,49 +68,16 @@ This document archives the major milestones of the project's technical evolution
 - **DRF Serializer Audits**: Audited and fixed mass assignment vulnerability vectors in `CreativeFusionSerializer` and IDOR vulnerabilities.
 - **Gaming & Profile UI**: Deployed ClubEvent countdown participation, realtime notification badges, VsBattle lobby matchmaking, and latent space user auras.
 
-## [2026-06-01] Session: SOTA Refactoring, Caching, and XState Purge
+## [2026-06-14] Session: Backend Robustness, Frontend Type Hardening, Semantic RAG Caching, and UI Convergence
 
-- **Zustand Migration**: Completely removed XState and `@xstate/react`, refactoring Akinetix and Paradox timelines into lightweight Zustand stores.
-- **Anti-DoS Caching Middleware**: Implemented a 15-minute Cache-Control decorator on user personalization computation calls.
-- **Cleanup of Unused Packages**: Purged `umap-learn`, `three` (duplicate), and `duckduckgo_search` (replaced by Tavily and Google Grounding).
+- **Backend Robustness & Observability**: Eliminated the "silent failure" anti-pattern by replacing all identified `except: pass` blocks with explicit logging (`debug`, `warning`, or `error`) across all adapters (Google GenAI, ImageGen, Rerank, Safety), API views, and MLOps loops. This ensures full traceability of system failures in production.
+- **Frontend Type Hardening**: Performed a massive cleanup of the TypeScript codebase, replacing generic `any` types with precise interfaces generated from the OpenAPI schema (`api.d.ts`). Secured game stores (`akinetix`, `blindtest`, `vision`, `paradox`), services (`animinator`, `codemanga`, `audioLab`), and XAI components.
+- **Semantic RAG Caching**: Implemented a vector-based caching layer in `DjangoSemanticCacheAdapter` using the project's unified vector store (`PGVector`/`ChromaDB`). Cached LLM responses are now reused for semantically similar queries (0.92 similarity threshold), significantly reducing costs and latency.
+- **Natural Language SQL Security**: Hardened the Text-to-SQL pipeline by enforcing a strictly **Read-Only transaction** in `DjangoRepositoryAdapter` for all AI-generated queries, providing a final line of defense against injection even if guardrails are bypassed.
+- **React Performance Optimization**: Migrated `SocialHubPage` and `ClubDashboard` to **TanStack Query** (hooks `useSocialDashboard`, `useClub`), resolving technical debt regarding synchronous state updates in effects and improving data fetching reliability.
+- **UI Routing & Page Convergence**: Finalized the integration of several "Ghost" pages into the main router, including the **Developer Portal**, **Transparency Hub**, **Manga Reader**, and specialized profiles for **Characters** and **Staff**.
+- **Stripe Metered Billing for Expert API**: Fully implemented usage-based monetization for the B2B API. Developers can now subscribe to the **Pro tier** via Stripe Checkout. Consumption (RAG requests) is automatically reported to **Stripe Billing Meters** through the `DjangoUsageAdapter`, enabling precise pay-as-you-go invoicing.
+- **Documentation Refactoring**: Purged and archived all completed tasks from `docs/TODO.md` into this log to maintain a focused and actionable project backlog.
 
 ---
 *End of History Log*
-
-# Task List (TODO) - Animetix
-
-This document tracks all remaining technical, architectural, and feature tasks to implement. Completed tasks are checked or archived into `HISTORY.md`.
-
-## 🛠️ Technical Debt & Architecture
-
-### Backend & XAI
-- [X] **API URL Cleanup**: Permanently remove dead code and commented lines from `backend/api/animetix/urls/api.py`.
-- [X] **Refactor RAGWorkflowManager**: Decompose the monolithic state machine into smaller, atomic agents to improve maintainability.
-- [X] **Remove Deprecated Services**: Complete the merge and removal of `ClassicalAkinetixService` and `AkinetixRLDomainService`.
-- [X] **Testing Gap (SOTA Services)**: Implement comprehensive unit test coverage for high-complexity SOTA services (e.g., `SelfEvolvingCompiler`, `SynapticPlasticityService`, `LNNService`).
-- [X] **Implement PlanProcessor**: Implement and test `PlanProcessor` in `backend/core/domain/services/rag/processors/plan_processor.py`.
-- [ ] **Implement RAG Processors**: Implement `SpeculateProcessor`, `VlmRerankProcessor`, `SynthesizeProcessor`, `JudgeProcessor`, `FallbackRagProcessor`, and `RAGOrchestrator`. Update DI container and refactor/remove `RAGWorkflowManager`.
-
-### Frontend & UI
-- [X] **Extension Quantum Lab** : Intégrer les contrôles de compilation JIT et de plasticité synaptique dans `QuantumLabPage`.
-- [X] **Interface Video-RAG Avancée** : Développer une interface de gestion des index vidéo et d'inspection des segments temporels.
-- [X] **Dashboard Développeur (API Hub)** : Créer une interface de documentation interactive (Swagger/Redoc) pour l'API RAG B2B.
-- [X] **Console de Monitoring Pipeline** : Interface de contrôle pour le déclenchement des scrapers et la synchronisation Neo4j.
-- [X] **Console d'Observabilité & Guardrails** : Interface pour ajuster les seuils de sécurité et visualiser la dérive (`archetype_drift_service`).
-- [X] **Console MLOps (Training)** : Interface de supervision pour les boucles d'entraînement (`dpo_feedback_loop`) et la gestion des adaptateurs.
-
-## ☁️ Deployment & Google Cloud Platform (GCP) Integration
-
-- [x] **Google Identity Platform**: Migrate authentication to managed GCP service.
-- [x] **Cloud KMS**: CMEK encryption for generated images and cloned voices.
-- [x] **AlloyDB AI**: Study the migration from pgvector to AlloyDB for high performance vector search.
-- [x] **Vertex AI Vector Search 2.0 (Collections)**: Evaluate the migration to Vertex AI Collections to simplify RAG and manage native hybrid search.
-- [x] **Gemini Enterprise Agent Platform & Agentic RAG**: Integrate Agent Gateway (prompt security) and Agent Observability (visual reasoning tracking).
-- [x] **AlloyDB AI - Tools for Data Agents**: Implement native SQL `QueryData` (Text-to-SQL) functions to simplify and secure catalog access for Animetix agents.
-
-## 💰 Monétisation & Financement des Serveurs (Ad-Supported)
-
-- [X] **Régies Publicitaires Réelles** : Intégrer le SDK Google IMA ou un wrapper de Header Bidding (ex: Prebid.js) dans `SponsorStreamModal.tsx` pour remplacer les vidéos de test Google par de vraies pubs vidéo rémunératrices (CPM/CPC).
-- [X] **Sponsoring & Partenariats Anime Directs** : Remplacer les fausses bannières de `SimulatedAdBanner.tsx` par des bannières publicitaires réelles et des liens d'affiliation négociés avec des diffuseurs (ex: Crunchyroll, ADN) ou des boutiques partenaires.
-- [X] **Offres Développeur Payantes (Expert API)** : Mettre en place un système de facturation à la consommation via Stripe Billing pour l'utilisation de l'API (tier `pro`), permettant aux développeurs d'utiliser le moteur RAG d'Animetix dans leurs applications.
-- [X] **Financement Participatif (Dons)** : Ajouter un bouton Ko-fi/Patreon dans l'Espace Sponsors pour permettre aux utilisateurs de soutenir le serveur, en débloquant des cosmétiques exclusifs sur leur profil.

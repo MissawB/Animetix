@@ -10,9 +10,9 @@ def test_calculate_cost_llm():
 
 def test_calculate_cost_unit():
     service = PricingService()
-    # SDXL-Turbo: 0.01 per unit
-    cost = service.calculate_cost("stabilityai/sdxl-turbo", units=10)
-    assert cost == 0.1
+    # FLUX.1-schnell: 0.03 per unit
+    cost = service.calculate_cost("black-forest-labs/FLUX.1-schnell", units=10)
+    assert cost == 0.3
 
 def test_get_limits_free():
     service = PricingService()

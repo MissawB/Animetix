@@ -2,6 +2,8 @@ from django.urls import path
 from .. import api_views
 from ..views.billing import billing_alert_webhook
 from ..api import billing
+from ..api import monitoring
+from ..api import observability
 
 urlpatterns = [
     # --- ECONOMY & BILLING ---
@@ -20,6 +22,8 @@ urlpatterns = [
     path('achievements/', api_views.AchievementViewSet.as_view({'get': 'list'}), name='api-achievements'),
     path('search/', api_views.MediaSearchView.as_view(), name='api_search'),
     path('media/<str:media_type>/<str:item_id>/', api_views.MediaDetailView.as_view(), name='api_media_detail'),
+    path('media/Manga/<str:media_id>/chapters/', api_views.MangaChapterListView.as_view(), name='api_manga_chapters'),
+    path('media/Manga/<str:media_id>/chapters/<str:chapter_number>/', api_views.MangaChapterDetailView.as_view(), name='api_manga_chapter_detail'),
     path('config/', api_views.ConfigView.as_view(), name='api_config'),
     path('auth/login/', api_views.LoginView.as_view(), name='api_auth_login'),
     path('auth/logout/', api_views.LogoutView.as_view(), name='api_auth_logout'),
@@ -39,13 +43,14 @@ urlpatterns = [
     path('labs/spatial/generate-3d/', api_views.Generate3DDataView.as_view(), name='api_generate_3d'),
     path('labs/spatial/cinematic/', api_views.CinematicReconstructionView.as_view(), name='api_cinematic_reconstruction'),
 
-    path('manga-lab/', api_views.MangaLabDataView.as_view(), name='api_manga_lab'),
-    path('manga-lab/clean/', api_views.MangaCleanLabView.as_view(), name='api_manga_clean_lab'),
-    path('manga-lab/translate/', api_views.MangaTranslateLabView.as_view(), name='api_manga_translate_lab'),
-    path('manga-voice/', api_views.MangaVoiceLabView.as_view(), name='manga-voice'),
+    path('labs/manga-lab/', api_views.MangaLabDataView.as_view(), name='api_manga_lab'),
+    path('labs/manga-lab/clean/', api_views.MangaCleanLabView.as_view(), name='api_manga_clean_lab'),
+    path('labs/manga-lab/translate/', api_views.MangaTranslateLabView.as_view(), name='api_manga_translate_lab'),
+    path('labs/manga-voice/', api_views.MangaVoiceLabView.as_view(), name='manga-voice'),
     path('labs/audio/', api_views.AudioLabDataView.as_view(), name='api_audio_lab'),
     path('labs/audio/soundscape/', api_views.SoundscapeGenerationView.as_view(), name='api_audio_soundscape'),
     path('labs/audio/s2s/', api_views.SpeechToSpeechLabView.as_view(), name='api_audio_s2s'),
+    path('labs/audio/seiyuu/', api_views.SeiyuuDiscoveryView.as_view(), name='api_audio_seiyuu'),
     path('singularity-lab/', api_views.SingularityLabDataView.as_view(), name='api_singularity_lab'),
     path('singularity-lab/command-center/', api_views.SingularityCommandCenterView.as_view(), name='api_singularity_command_center'),
     path('labs/video/', api_views.VideoLabDataView.as_view(), name='api_video_lab'),
@@ -61,6 +66,7 @@ urlpatterns = [
     path('mlops/dpo/curation/', api_views.DPOCurationViewSet.as_view({'get': 'list', 'post': 'create'}), name='api_dpo_curation'),
     path('mlops/sota/benchmarks/', api_views.SOTABenchmarkListView.as_view(), name='api_sota_benchmarks'),
     path('mlops/dspy/optimizer/', api_views.DSPyOptimizerView.as_view(), name='api_dspy_optimizer'),
+    path('mlops/safety/events/', api_views.AISafetyEventViewSet.as_view({'get': 'list'}), name='api_safety_events'),
     path('graph/neighbors/', api_views.GraphNeighborsView.as_view(), name='api_graph_neighbors'),
     path('graph/debugger/', api_views.GraphDebuggerView.as_view(), name='api_graph_debugger'),
     path('graph/world-map/', api_views.GraphWorldMapView.as_view(), name='api_graph_world_map'),
@@ -115,18 +121,26 @@ urlpatterns = [
     path('game/duel/matchmaking/', api_views.MatchmakingView.as_view(), name='api_duel_matchmaking'),
     path('explore/', api_views.MediaExploreView.as_view(), name='api_explore'),
     path('explore/seichijunrei/', api_views.SeichijunreiMapView.as_view(), name='api_seichijunrei'),
+    path('market/wiki/', api_views.MarketWikiView.as_view(), name='api_market_wiki'),
     path('multiverse/gallery/', api_views.MultiverseGalleryView.as_view(), name='api_multiverse_gallery'),
     path('billing/webhook/', billing_alert_webhook, name='api_billing_webhook'),
     path('billing/log_ad_event/', api_views.AdEventLoggingAPIView.as_view(), name='api_log_ad_event'),
     path('admin/ttc-monitoring/', api_views.TTCMonitoringAPIView.as_view(), name='api_ttc_monitoring'),
     path('admin/financials/', api_views.AdminFinancialsAPIView.as_view(), name='api_admin_financials'),
+    path('admin/economics/', api_views.AdminEconomicAuditAPIView.as_view(), name='api_admin_economics'),
+    path('curation/', api_views.DataCurationTicketViewSet.as_view({'get': 'list'}), name='api_curation_tickets'),
+    path('curation/<int:pk>/resolve/', api_views.DataCurationTicketViewSet.as_view({'post': 'resolve'}), name='api_resolve_ticket'),
+    path('curation/stats/', api_views.DataCurationTicketViewSet.as_view({'get': 'stats'}), name='api_curation_stats'),
+    path('admin/pipelines/control/<str:action>/', monitoring.PipelineControlView.as_view(), name='api_pipeline_control'),
+    path('admin/observability/', observability.ObservabilityView.as_view(), name='api_observability'),
     path('admin/users/', api_views.UserManagementViewSet.as_view({'get': 'list'}), name='api_admin_users'),
     path('admin/users/<int:pk>/toggle-staff/', api_views.UserManagementViewSet.as_view({'post': 'toggle_staff'}), name='api_admin_toggle_staff'),
     path('admin/users/<int:pk>/toggle-active/', api_views.UserManagementViewSet.as_view({'post': 'toggle_active'}), name='api_admin_toggle_active'),
     
     # --- B2B DEVELOPER PAID API & STRIPE BILLING ---
     path('developer/rag/', api_views.DeveloperRAGView.as_view(), name='developer_rag'),
-    path('developer/subscribe/', api_views.DeveloperSubscriptionMockView.as_view(), name='developer_subscribe'),
+    path('developer/subscribe-pro/', api_views.CreateProSubscriptionCheckoutView.as_view(), name='developer_subscribe_pro'),
+    path('developer/subscribe/', api_views.DeveloperSubscriptionMockView.as_view(), name='developer_subscribe_mock'),
     path('developer/api-key/', api_views.DeveloperApiKeyView.as_view(), name='developer_api_key'),
     path('developer/webhook/stripe/', api_views.StripeWebhookView.as_view(), name='developer_webhook_stripe'),
 ]

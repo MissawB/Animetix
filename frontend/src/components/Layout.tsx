@@ -1,5 +1,6 @@
 import React, { ReactNode, useEffect } from 'react';
 import Navbar from './Navbar';
+import AdminNavbar from './admin/AdminNavbar';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -112,6 +113,7 @@ const LayoutContent: React.FC<{ children: ReactNode }> = ({ children }) => {
           <button 
             className="text-3xl hover:rotate-90 transition-transform duration-300 text-black dark:text-white" 
             onClick={() => toggleSidebar(true)}
+            aria-label="Fermer le menu"
           >
             <X className="w-6 h-6" />
           </button>
@@ -196,7 +198,7 @@ const LayoutContent: React.FC<{ children: ReactNode }> = ({ children }) => {
           <Link to="/social/nexus/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/social/nexus/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
             <BrainCircuit className="w-4 h-4 text-fuchsia-400" /> {t('nav.nexus', 'Nexus Pro')}
           </Link>
-          <Link to="/transparence/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/transparence/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
+          <Link to="/social/transparency/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/social/transparency/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
             <Eye className="w-4 h-4 text-slate-400" /> {t('navbar.transparency', 'Transparence')}
           </Link>
 
@@ -369,12 +371,15 @@ const LayoutContent: React.FC<{ children: ReactNode }> = ({ children }) => {
       <button 
         className="fixed bottom-6 left-6 w-14 h-14 bg-black text-yellow-400 dark:bg-[#0f0f1a] dark:text-white rounded-2xl shadow-2xl flex items-center justify-center text-3xl rotate-45 hover:rotate-0 transition-all duration-500 z-[800] group border border-black/10 dark:border-white/10" 
         onClick={() => toggleSettings()}
+        aria-label="Ouvrir les paramètres"
       >
         <Settings className="w-6 h-6 -rotate-45 group-hover:rotate-90 transition-transform duration-700" />
       </button>
 
       {/* NAVBAR */}
       <Navbar />
+
+      {location.pathname.startsWith('/admin/') && <AdminNavbar />}
 
       {/* CONTENT WRAPPER */}
       <main className="flex-grow">

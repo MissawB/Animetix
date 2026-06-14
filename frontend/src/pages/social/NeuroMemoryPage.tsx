@@ -37,6 +37,14 @@ const NeuroMemoryPage: React.FC = () => {
     onSuccess: () => refetch()
   });
 
+  const signalMutation = useMutation({
+    mutationFn: (body: any) => apiClient('/api/v1/cognition/neuro-memory/', {
+        method: 'POST',
+        body: JSON.stringify(body)
+    }),
+    onSuccess: () => refetch()
+  });
+
   if (isLoading) return (
     <div className="min-h-screen w-full bg-[#0a0a12] flex flex-col items-center justify-center">
         <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-8 shadow-[0_0_20px_rgba(99,102,241,0.5)]"></div>
@@ -163,6 +171,78 @@ const NeuroMemoryPage: React.FC = () => {
                       </div>
                   </Card>
                   </div>
+                  </div>
+
+                  {/* Granular Signal Management */}
+                  <div className="mt-16">
+                      <Card padding="none" className="bg-navy-950/40 border-white/5 rounded-[3rem] overflow-hidden">
+                          <header className="px-12 py-8 border-b border-white/5 flex justify-between items-center">
+                              <div>
+                                  <h3 className="text-2xl font-black italic manga-font uppercase flex items-center gap-3 text-emerald-500">
+                                      <Activity className="w-6 h-6" /> Raw Signal Management
+                                  </h3>
+                                  <p className="text-[10px] font-bold opacity-30 uppercase tracking-widest mt-1">Ajustez le poids de chaque interaction ou révoquez les signaux obsolètes.</p>
+                              </div>
+                              <Badge variant="neutral" className="bg-emerald-500/10 text-emerald-500 border-none uppercase font-black italic">GRANULAR CONTROL</Badge>
+                          </header>
+
+                          <div className="p-8">
+                              <div className="grid grid-cols-1 gap-4">
+                                  {data?.signals && data.signals.length > 0 ? (
+                                      data.signals.map((signal: any) => (
+                                          <div key={signal.id} className={`p-6 rounded-2xl border transition-all flex flex-col md:flex-row items-center gap-8 ${signal.is_ignored ? 'bg-black/20 border-white/5 opacity-40' : 'bg-white/5 border-white/10 hover:border-emerald-500/20'}`}>
+                                              <div className="flex items-center gap-4 shrink-0">
+                                                  <div className={`p-3 rounded-xl ${signal.is_positive ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>
+                                                      {signal.is_positive ? <Zap className="w-4 h-4 fill-current" /> : <ShieldCheck className="w-4 h-4" />}
+                                                  </div>
+                                                  <div className="text-right">
+                                                      <p className="text-[8px] font-black uppercase opacity-30">Weight</p>
+                                                      <p className="text-sm font-black italic manga-font">x{signal.weight.toFixed(1)}</p>
+                                                  </div>
+                                              </div>
+
+                                              <div className="flex-grow">
+                                                  <p className="text-xs font-bold text-white/70 italic line-clamp-1">"{signal.input_context}"</p>
+                                                  <p className="text-[8px] font-black uppercase opacity-20 mt-1">{new Date(signal.created_at).toLocaleDateString()} • {signal.feedback_type}</p>
+                                              </div>
+
+                                              <div className="flex items-center gap-6 shrink-0">
+                                                  <div className="flex flex-col gap-1 w-32">
+                                                      <input 
+                                                          type="range" 
+                                                          min="0.1" 
+                                                          max="2.0" 
+                                                          step="0.1" 
+                                                          defaultValue={signal.weight}
+                                                          onChange={(e) => signalMutation.mutate({ action: 'update_weight', feedback_id: signal.id, weight: parseFloat(e.target.value) })}
+                                                          className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                                                      />
+                                                      <div className="flex justify-between text-[7px] font-black opacity-30 uppercase">
+                                                          <span>Soft</span>
+                                                          <span>Dominant</span>
+                                                      </div>
+                                                  </div>
+
+                                                  <Button 
+                                                      variant="ghost" 
+                                                      size="sm"
+                                                      onClick={() => signalMutation.mutate({ action: signal.is_ignored ? 'restore' : 'revoke', feedback_id: signal.id })}
+                                                      className={`text-[9px] font-black uppercase tracking-widest ${signal.is_ignored ? 'text-emerald-500 hover:text-emerald-400' : 'text-red-500 hover:text-red-400'}`}
+                                                  >
+                                                      {signal.is_ignored ? <><RefreshCw className="w-3 h-3 mr-2" /> Restore</> : <><Trash2 className="w-3 h-3 mr-2" /> Revoke</>}
+                                                  </Button>
+                                              </div>
+                                          </div>
+                                      ))
+                                  ) : (
+                                      <div className="py-20 text-center opacity-20">
+                                          <Fingerprint className="w-12 h-12 mx-auto mb-4" />
+                                          <p className="text-[10px] font-black uppercase tracking-widest">No cognitive signals archived</p>
+                                      </div>
+                                  )}
+                              </div>
+                          </div>
+                      </Card>
                   </div>
 
                   {/* Global Warning & Guide */}

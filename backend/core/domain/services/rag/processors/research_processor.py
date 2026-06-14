@@ -8,7 +8,7 @@ import time
 logger = logging.getLogger('animetix.rag_workflow')
 
 class ResearchProcessor(StateProcessor):
-    def __init__(self, planner, rag_service, context_compressor, retrieval_evaluator, web_search, video_rag_service, scout, neo4j_manager, xai_collector=None):
+    def __init__(self, planner, rag_service, context_compressor, retrieval_evaluator, web_search, video_rag_service, scout, neo4j_manager):
         self.planner = planner
         self.rag_service = rag_service
         self.context_compressor = context_compressor
@@ -17,9 +17,8 @@ class ResearchProcessor(StateProcessor):
         self.video_rag_service = video_rag_service
         self.scout = scout
         self.neo4j_manager = neo4j_manager
-        self.xai_collector = xai_collector
 
-    def process(self, ctx: RAGContext) -> Generator[dict, None, RAGState]:
+    def process(self, ctx: RAGContext, xai_collector=None) -> Generator[dict, None, RAGState]:
         if not ctx.plan:
             return RAGState.PLAN
 
@@ -87,8 +86,8 @@ class ResearchProcessor(StateProcessor):
 
         ctx.candidates = candidates
 
-        if self.xai_collector and candidates:
-            self.xai_collector.log_retrieval(candidates)
+        if xai_collector and candidates:
+            xai_collector.log_retrieval(candidates)
 
         distilled = self.scout.find_truth_path(ctx.query, ctx.plan, raw_context)
         if ctx.truth_path:

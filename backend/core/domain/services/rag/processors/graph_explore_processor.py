@@ -7,13 +7,12 @@ import logging
 logger = logging.getLogger('animetix.rag_workflow')
 
 class GraphExploreProcessor(StateProcessor):
-    def __init__(self, community_partitioner, graph_expert, neo4j_manager, xai_collector=None):
+    def __init__(self, community_partitioner, graph_expert, neo4j_manager):
         self.community_partitioner = community_partitioner
         self.graph_expert = graph_expert
         self.neo4j_manager = neo4j_manager
-        self.xai_collector = xai_collector
 
-    def process(self, ctx: RAGContext) -> Generator[dict, None, RAGState]:
+    def process(self, ctx: RAGContext, xai_collector=None) -> Generator[dict, None, RAGState]:
         if not ctx.plan:
             return RAGState.PLAN
 
@@ -39,8 +38,8 @@ class GraphExploreProcessor(StateProcessor):
         cypher = self.graph_expert.generate_cypher(ctx.query, ctx.plan.reasoning)
         
         if cypher:
-            if self.xai_collector:
-                self.xai_collector.log_agent_thought("GraphExpert", f"Requête Cypher générée : {cypher}")
+            if xai_collector:
+                xai_collector.log_agent_thought("GraphExpert", f"Requête Cypher générée : {cypher}")
             yield StreamStep(type="thought", content=f"[Graph-Agent] Exécution Cypher : {cypher}").model_dump()
             logger.info(f"[Graph-Agent] Exécution Cypher : {cypher}")
             try:

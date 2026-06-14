@@ -14,15 +14,15 @@ class VideoAnalysisMixin:
     """Provides video temporal analysis, action localization, and description."""
 
     def _load_video_vlm(self):
-        """Chargement paresseux de Qwen2-VL pour le RAG temporel."""
+        """Chargement paresseux de Qwen3-VL pour le RAG temporel."""
         if hasattr(self, '_video_vlm'):
             return
         try:
             from transformers import Qwen2VLForConditionalGeneration, AutoProcessor, BitsAndBytesConfig
             import torch as _torch
 
-            logger.info("📽️ Loading Qwen2-VL-2B for Temporal RAG...")
-            model_id = "Qwen/Qwen2-VL-2B-Instruct"
+            logger.info("📽️ Loading Qwen3-VL-8B for Temporal RAG...")
+            model_id = "Qwen/Qwen3-VL-8B-Instruct"
 
             quantization_config = None
             if self.use_4bit:
@@ -43,7 +43,7 @@ class VideoAnalysisMixin:
                 trust_remote_code=True
             )
         except Exception as e:
-            logger.error(f"❌ Failed to load Qwen2-VL: {e}")
+            logger.error(f"❌ Failed to load Qwen3-VL: {e}")
             raise InferenceError(f"Video VLM loading failed: {str(e)}")
 
     def _sample_video_frames(self, video_data: bytes, max_frames: int = 8) -> List:
@@ -81,7 +81,7 @@ class VideoAnalysisMixin:
             return []
 
     def get_video_temporal_embeddings(self, video_data: bytes) -> List[Dict[str, Any]]:
-        """Analyse temporelle profonde via Qwen2-VL."""
+        """Analyse temporelle profonde via Qwen3-VL."""
         try:
             self._load_video_vlm()
             frames = self._sample_video_frames(video_data, max_frames=8)
@@ -105,7 +105,7 @@ class VideoAnalysisMixin:
             generated_ids = self._video_vlm.generate(**inputs, max_new_tokens=256)
             output_text = self._video_processor.batch_decode(generated_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
 
-            self._log_usage(engine="transformers:Qwen2-VL-2B:temporal", units=1)
+            self._log_usage(engine="transformers:Qwen3-VL-8B:temporal", units=1)
 
             # --- Extract Text Embedding for RAG ---
             embedding = []
@@ -165,7 +165,7 @@ class VideoAnalysisMixin:
                 generated_ids = self._video_vlm.generate(**inputs, max_new_tokens=128)
                 response = self._video_processor.batch_decode(generated_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
 
-                self._log_usage(engine="transformers:Qwen2-VL-2B:localize", units=1)
+                self._log_usage(engine="transformers:Qwen3-VL-8B:localize", units=1)
 
                 try:
                     if '[' in response and ']' in response:
@@ -184,7 +184,7 @@ class VideoAnalysisMixin:
             raise InferenceError(f"Video action localization failed: {str(e)}")
 
     def generate_video_description(self, video_data: bytes, prompt: str = "Décris cette vidéo d'anime.") -> str:
-        """Utilise Qwen2-VL pour décrire une vidéo."""
+        """Utilise Qwen3-VL pour décrire une vidéo."""
         try:
             self._load_video_vlm()
             frames = self._sample_video_frames(video_data, max_frames=8)
@@ -207,7 +207,7 @@ class VideoAnalysisMixin:
             generated_ids = self._video_vlm.generate(**inputs, max_new_tokens=512)
             output_text = self._video_processor.batch_decode(generated_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
 
-            self._log_usage(engine="transformers:Qwen2-VL:video_description", units=1)
+            self._log_usage(engine="transformers:Qwen3-VL-8B:video_description", units=1)
 
             return output_text
         except Exception as e:

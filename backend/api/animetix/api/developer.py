@@ -58,11 +58,7 @@ class DeveloperRAGView(APIView):
                         final_answer = event.get("content", "")
                         break
 
-            # 1. Report usage to Stripe Billing
-            profile = request.user.profile
-            StripeBillingService.report_usage(profile, quantity=1)
-            
-            # 2. Log usage in Django database
+            # 1. Log usage (Automatic Stripe reporting for Pro tier is handled inside log_usage)
             usage_adapter = DjangoUsageAdapter()
             usage_adapter.log_usage(
                 engine="agentic_rag",
@@ -121,6 +117,26 @@ class DeveloperApiKeyView(APIView):
             "api_key": raw_key,
             "warning": "Please copy this API key now. You will not be able to see it again!"
         }, status=201)
+
+
+class CreateProSubscriptionCheckoutView(APIView):
+    """
+    Crée une session Stripe Checkout pour l'abonnement Pro API.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        price_id = getattr(settings, 'STRIPE_PRO_API_PRICE_ID', 'price_pro_api_standard')
+        
+        success, result = StripeBillingService.create_subscription_checkout_session(
+            user_id=request.user.id,
+            price_id=price_id
+        )
+        
+        if not success:
+            return Response({"error": result}, status=500)
+            
+        return Response({"checkout_url": result})
 
 
 class DeveloperSubscriptionMockView(APIView):
@@ -219,7 +235,7 @@ class StripeWebhookView(APIView):
                     profile = Profile.objects.get(user_id=client_reference_id)
                     
                     # Cas 1 : Achat de pack de Bx
-                    if metadata.get('transaction_type') == 'berrix_purchase':
+                    if metadata.get('transaction_type') == 'bx_purchase':
                         amount = int(metadata.get('amount_bx', 0))
                         from ..models import WalletTransaction
                         profile.wallet_balance += amount
@@ -233,8 +249,8 @@ class StripeWebhookView(APIView):
                         )
                         logger.info(f"User {profile.user.username} bought {amount} Bx via Stripe.")
                     
-                    # Cas 2 : Inscription Pro API (Legacy/Alternative)
-                    else:
+                    # Cas 2 : Inscription Pro API
+                    elif metadata.get('transaction_type') == 'pro_subscription_upgrade':
                         subscription_id = session.get("subscription")
                         profile.tier = "pro"
                         profile.stripe_customer_id = customer_id

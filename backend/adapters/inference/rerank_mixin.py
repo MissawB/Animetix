@@ -43,7 +43,7 @@ class RerankMixin:
 
         try:
             sentence_transformers = lazy_import('sentence_transformers')
-            model_name = getattr(self, 'reranker_model_name', "cross-encoder/ms-marco-MiniLM-L-6-v2")
+            model_name = getattr(self, 'reranker_model_name', "cross-encoder/ms-marco-MiniLM-L-12-v2")
             
             if not hasattr(self, '_cross_encoder') or self._cross_encoder is None:
                 logger.info(f"🏗️ Loading CrossEncoder: {model_name}")
@@ -72,7 +72,7 @@ class RerankMixin:
                         scores = json.loads(match.group(0))
                         if len(scores) == len(documents):
                             return [float(s) for s in scores]
-                except:
-                    pass
+                except Exception as e:
+                    logger.warning(f"Prompt-based reranking fallback failed: {e}")
             
             return [0.0] * len(documents)

@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from ..containers import get_container
-from ..models import ArchetypeDriftSnapshot
+from ..models import ArchetypeDriftSnapshot, AIFeedback
 from ..serializers import AIDebateSerializer, CounterfactualSerializer, CoveOracleSerializer, CFRStrategySerializer
 
 class ArchetypeNexusView(APIView):
@@ -127,26 +127,51 @@ class NeuroMemoryManagementView(APIView):
         feedback_port = container.persistence.feedback_adapter()
         user_id = request.user.id
         feedbacks = feedback_port.get_user_feedback(user_id, limit=100)
+
+        # On passe les dictionnaires de feedbacks (incluant is_ignored et weight) au profileur
         rules = profiler.deduce_preference_rules(feedbacks)
-        
+
         return Response({
             "status": "success",
             "deduced_rules": [
-                {"id": i, "rule": r, "confidence": 0.95, "source": "Z3 Theorem Prover"} 
+                {"id": i, "rule": r, "confidence": 0.95, "source": "Z3 Theorem Prover"}
                 for i, r in enumerate(rules)
             ],
+            "signals": feedbacks, # On renvoie les signaux bruts pour gestion granulaire
             "total_signals": len(feedbacks)
         })
 
     def post(self, request):
         """Révoquer une règle ou réinitialiser le profil logique."""
         action = request.data.get('action')
-        if action == 'reset':
-            # Simulation d'un reset (on supprimerait les feedbacks en prod)
-            return Response({"status": "success", "message": "Neuro-Symbolic profile reset."})
-            
-        return Response({"error": "Invalid action"}, status=400)
+        feedback_id = request.data.get('feedback_id')
 
+        if action == 'reset':
+            # Simulation d'un reset : on ignore tous les feedbacks de l'utilisateur
+            AIFeedback.objects.filter(user=request.user).update(is_ignored=True)
+            return Response({"status": "success", "message": "Neuro-Symbolic profile reset."})
+
+        if action == 'revoke':
+            if not feedback_id:
+                return Response({"error": "feedback_id is required"}, status=400)
+            AIFeedback.objects.filter(id=feedback_id, user=request.user).update(is_ignored=True)
+            return Response({"status": "success", "message": "Signal revoked."})
+
+        if action == 'restore':
+            if not feedback_id:
+                return Response({"error": "feedback_id is required"}, status=400)
+            AIFeedback.objects.filter(id=feedback_id, user=request.user).update(is_ignored=True) # Wait, restore should set False
+            AIFeedback.objects.filter(id=feedback_id, user=request.user).update(is_ignored=False)
+            return Response({"status": "success", "message": "Signal restored."})
+
+        if action == 'update_weight':
+            weight = request.data.get('weight')
+            if not feedback_id or weight is None:
+                return Response({"error": "feedback_id and weight are required"}, status=400)
+            AIFeedback.objects.filter(id=feedback_id, user=request.user).update(weight=weight)
+            return Response({"status": "success", "message": "Weight updated."})
+
+        return Response({"error": "Invalid action"}, status=400)
 class CounterfactualSimulatorView(APIView):
     """
     Simulateur de timelines alternatives pour une conversation donnée.

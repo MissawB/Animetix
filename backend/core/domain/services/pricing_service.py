@@ -15,9 +15,14 @@ class PricingService:
         # Pricing registry: USD per 1M tokens or per unit
         self._registry: Dict[str, Dict[str, float]] = {
             # LLMs - USD / 1M tokens
+            "Qwen/Qwen3.5-4B": {"input": 0.10, "output": 0.10},
+            "Qwen/Qwen3-8B": {"input": 0.15, "output": 0.15},
             "Qwen/Qwen2.5-1.5B-Instruct": {"input": 0.07, "output": 0.07},
             "meta-llama/Llama-3-8B-Instruct": {"input": 0.15, "output": 0.15},
+            "ollama/qwen3.5": {"input": 0.0, "output": 0.0},
             "ollama/llama3": {"input": 0.0, "output": 0.0},
+            "HuggingFaceTB/SmolVLM-Instruct": {"input": 0.20, "output": 0.20},
+            "Qwen/Qwen3-VL-8B-Instruct": {"input": 0.30, "output": 0.30},
             "moondream2": {"input": 0.50, "output": 0.50},
             "gpt-4o": {"input": 5.0, "output": 15.0},
             "gpt-3.5-turbo": {"input": 0.5, "output": 1.5},
@@ -27,8 +32,9 @@ class PricingService:
             "brain-api-slm": {"input": 0.1, "output": 0.1},
             
             # Generative Models - USD per Unit
-            "stabilityai/sdxl-turbo": {"unit_cost": 0.01}, # USD per image
-            "xtts-v2": {"unit_cost": 0.005},             # USD per voice cloning request
+            "black-forest-labs/FLUX.1-schnell": {"unit_cost": 0.03}, # High quality fast gen
+            "stabilityai/sdxl-turbo": {"unit_cost": 0.01},           # Legacy fast gen
+            "xtts-v2": {"unit_cost": 0.005},                        # USD per voice cloning request
         }
 
     def calculate_cost(

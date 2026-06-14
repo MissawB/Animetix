@@ -123,7 +123,7 @@ def ask_ollama(prompt: str) -> str:
         from core.utils.security import safe_http_request
 
         payload = {
-            "model": "llama3",
+            "model": "qwen3.5",
             "messages": [
                 {"role": "system", "content": "Tu es un assistant expert en structuration de données de pop culture japonaise. Réponds exclusivement en JSON valide."},
                 {"role": "user", "content": prompt}
@@ -215,7 +215,7 @@ Règles critiques :
     response_json = ""
     success = False
     
-    # Try calling Ollama llama3
+    # Try calling Ollama qwen3.5
     response_raw = ask_ollama(prompt)
     if response_raw:
         try:
@@ -224,7 +224,7 @@ Règles critiques :
                 query = parsed["query"]
                 ground_truth = parsed["ground_truth"]
                 success = True
-                logger.info(" -> Success via Ollama llama3!")
+                logger.info(" -> Success via Ollama qwen3.5!")
         except Exception as pe:
             logger.error(f" -> Parse error: {pe}")
             

@@ -70,7 +70,7 @@ def run_rl_training_simulation(episodes: int = 100):
     print(f"Average steps per game: {total_steps/episodes:.2f}")
     print("="*40)
 
-def train_dpo(model_id: str = "HuggingFaceTB/SmolLM2-135M-Instruct", dataset_path: str = "data/mlops/datasets/dpo_train_swarm.jsonl"):
+def train_dpo(model_id: str = "Qwen/Qwen3-0.6B", dataset_path: str = "data/mlops/datasets/dpo_train_swarm.jsonl"):
     """
     Exécute le fine-tuning DPO (Direct Preference Optimization) pour le SLM local.
     Utilise le dataset généré par le loop Swarm-to-DPO.
@@ -176,7 +176,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", type=str, choices=["rl-sim", "dpo"], default="rl-sim", help="Training mode")
     parser.add_argument("--episodes", type=int, default=100, help="Number of episodes for RL sim")
-    parser.add_argument("--model", type=str, default="HuggingFaceTB/SmolLM2-135M-Instruct", help="Model ID for DPO")
+    parser.add_argument("--model", type=str, default="Qwen/Qwen3-0.6B", help="Model ID for DPO")
     parser.add_argument("--dataset", type=str, default="data/mlops/datasets/dpo_train_swarm.jsonl", help="Dataset path for DPO")
     args = parser.parse_args()
     

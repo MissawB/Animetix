@@ -105,9 +105,12 @@ class DebateManager:
         self.llm_service = llm_service
         self.prompt_manager = prompt_manager
 
-    def conduct_debate(self, query: str, context: str, answer: str, thinking_budget: int = 0, thinking_mode: bool = False) -> DebateOutcome:
+    def conduct_debate(self, query: str, context: str, answer: str, thinking_budget: int = 0, thinking_mode: bool = False, xai_collector=None) -> DebateOutcome:
         critiques: Dict[str, JudgeEvaluation] = {}
         judges = ["judge_lore_expert", "judge_logic_auditor", "judge_critic"]
+        
+        if xai_collector:
+            xai_collector.log_agent_thought("DebateManager", f"Lancement du débat multi-experts ({len(judges)} juges)")
         
         from concurrent.futures import ThreadPoolExecutor
         

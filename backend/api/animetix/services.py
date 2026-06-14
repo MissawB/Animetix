@@ -15,6 +15,35 @@ DIFFICULTY_SETTINGS = {
 
 # Legacy bridges removed. Directly use the DI Container (get_container()) for all domain services.
 
+def check_achievements(user, event_type, data):
+    """
+    Pont entre les modèles Django et le service de domaine des succès.
+    Appelé lors d'une victoire ou d'une action significative pour vérifier les déblocages.
+    """
+    from .containers import get_container
+    from core.domain.entities.achievement import GameEvent
+    
+    container = get_container()
+    achievement_service = container.core.achievement_service()
+    
+    # Construction de l'événement de domaine
+    event = GameEvent(
+        user_id=user.id,
+        game_mode=data.get('game_mode', 'classic'),
+        media_type=data.get('media_type', 'Anime'),
+        was_won=(event_type == 'win'),
+        is_daily=data.get('is_daily', False),
+        is_ranked=data.get('is_ranked', False),
+        attempts=data.get('attempts', 0),
+        streak=user.profile.current_streak,
+        total_wins=user.profile.total_wins,
+        total_games=user.profile.total_games,
+        item_rarity=data.get('item_rarity', 'Common')
+    )
+    
+    # Délégation au service de domaine
+    return achievement_service.check_and_unlock(event)
+
 def shutdown_brain_service():
     """
     Shuts down the animetix-brain Cloud Run GPU service by setting maxInstanceCount to 0.

@@ -19,9 +19,16 @@ export const useAudioLab = () => {
     },
   });
 
+  const seiyuuSearchMutation = useMutation({
+    mutationFn: (q: string) => audioLabService.searchSeiyuu(q),
+  });
+
   return {
     data,
     loading,
     processAudio: processMutation.mutateAsync,
+    searchSeiyuu: seiyuuSearchMutation.mutateAsync,
+    seiyuuResults: seiyuuSearchMutation.data?.results || [],
+    isSearchingSeiyuu: seiyuuSearchMutation.isPending,
   };
 };

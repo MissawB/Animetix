@@ -24,7 +24,7 @@ class DjangoAchievementAdapter(AchievementPort):
     def get_user_unlocked_codes(self, user_id: int) -> List[str]:
         return list(UserAchievement.objects.filter(user_id=user_id).values_list('achievement__code', flat=True))
 
-    def unlock_achievement(self, user_id: int, achievement_code: str):
+    def unlock_achievement(self, user_id: int, achievement_code: str) -> None:
         try:
             user = User.objects.get(id=user_id)
             achievement = Achievement.objects.get(code=achievement_code)

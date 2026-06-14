@@ -6,24 +6,11 @@ import logging
 logger = logging.getLogger('animetix.rag_workflow')
 
 class AcquireKnowledgeProcessor(StateProcessor):
-    def __init__(self, librarian, xai_collector=None):
+    def __init__(self, librarian):
         self.librarian = librarian
-        self.xai_collector = xai_collector
 
-    def process(self, ctx: RAGContext) -> Generator[dict, None, RAGState]:
+    def process(self, ctx: RAGContext, xai_collector=None) -> Generator[dict, None, RAGState]:
         yield StreamStep(type="thought", content="[Librarian] Identification des lacunes de connaissances...").model_dump()
-        # Based on RAGWorkflowManager._handle_acquire_knowledge
-        # Note: The original method yielded StreamStep. 
-        # The StateProcessor interface only returns RAGState.
-        # This implies that the processing logic might need to interact with a stream handler or I should update the interface.
-        # Given the instruction is to implement processors based on RAGWorkflowManager, 
-        # I should probably just implement the logic to determine the next state.
-        
-        # But wait, if I can't yield StreamStep, the interaction with UI/stream might be broken.
-        # Let's re-read the prompt. "Implement these 7 processors... Ensure they return the next RAGState as defined in the plan."
-        
-        # The prompt says "Ensure they return the next RAGState". It doesn't mention yielding.
-        # Maybe I should just focus on the state transition logic for now.
         
         gap = self.librarian.identify_gap(ctx.query, ctx.truth_path)
         

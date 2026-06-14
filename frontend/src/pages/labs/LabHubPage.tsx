@@ -86,7 +86,7 @@ const labs = [
         title: 'Multiverse Genesis',
         desc: 'Génération autonome de segments de lore auto-cohérents (ADMS).',
         icon: Globe,
-        url: '/lab/multiverse-generator/',
+        url: '/lab/multiverse/',
         color: 'text-amber-500',
         bg: 'from-amber-500/20 to-transparent',
         badge: 'Generative',
@@ -168,6 +168,16 @@ const creativeLabs = [
         color: 'text-emerald-500',
         bg: 'from-emerald-500/20 to-transparent',
         badge: 'Neural Audio'
+    },
+    {
+        id: 'seiyuu',
+        title: 'Seiyuu Discovery',
+        desc: 'Identifiez les voix iconiques et accédez au catalogue des doubleurs japonais.',
+        icon: Mic2,
+        url: '/lab/audio/seiyuu/',
+        color: 'text-emerald-400',
+        bg: 'from-emerald-400/20 to-transparent',
+        badge: 'VA Catalog'
     },
     {
         id: 'video',

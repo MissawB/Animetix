@@ -32,6 +32,37 @@ class MediaItem(models.Model):
         unique_together = ('external_id', 'media_type')
     def __str__(self): return f"[{self.media_type}] {self.title}"
 
+class MangaChapter(models.Model):
+    manga = models.ForeignKey(MediaItem, on_delete=models.CASCADE, related_name='chapters', limit_choices_to={'media_type': 'Manga'})
+    number = models.FloatField()
+    title = models.CharField(max_length=255, null=True, blank=True)
+    external_id = models.CharField(max_length=100, db_index=True, null=True, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['number']
+        unique_together = ('manga', 'number')
+
+    def __str__(self):
+        return f"{self.manga.title} - Ch.{self.number}"
+
+class MangaPage(models.Model):
+    chapter = models.ForeignKey(MangaChapter, on_delete=models.CASCADE, related_name='pages')
+    number = models.IntegerField()
+    image_url = models.URLField(max_length=500)
+    
+    # Metadata for potential OCR/Translation data
+    metadata = models.JSONField(default=dict, blank=True)
+
+    class Meta:
+        ordering = ['number']
+        unique_together = ('chapter', 'number')
+
+    def __str__(self):
+        return f"{self.chapter} - Page {self.number}"
+
 # --- USER SYSTEM ---
 class Profile(models.Model):
     TIERS = [('free', 'Free'), ('premium', 'Premium'), ('pro', 'Professional')]
@@ -150,8 +181,16 @@ class UserAchievement(models.Model):
     def __str__(self): return f"{self.user.username} - {self.achievement.name}"
 
 class AIFeedback(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True); feedback_type = models.CharField(max_length=50); input_context = models.TextField(default=""); output_text = models.TextField(default=""); is_positive = models.BooleanField(); created_at = models.DateTimeField(auto_now_add=True)
-    def __str__(self): return f"Feedback {self.feedback_type}"
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    feedback_type = models.CharField(max_length=50)
+    input_context = models.TextField(default="")
+    output_text = models.TextField(default="")
+    is_positive = models.BooleanField()
+    is_ignored = models.BooleanField(default=False)
+    weight = models.FloatField(default=1.0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self): return f"Feedback {self.feedback_type} ({'IGNORED' if self.is_ignored else 'ACTIVE'})"
 
 class GameplaySession(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)

@@ -13,7 +13,7 @@ class AdvancedVisionService:
         # Modèles spécialisés
         self.clip_anime_model = "dudcjs2779/anime-style-tag-clip"
         self.face_reid_model = "deepghs/ccip"
-        self.owl_vit_model = "google/owlvit-base-patch32" # Open-World Object Detection
+        self.owl_vit_model = "google/owlv2-base-patch16-ensemble" # Open-World Object Detection (v2)
         
         # Adaptateur LoRA spécifique (ex: Makoto Shinkai Style)
         self.style_adapters = {
