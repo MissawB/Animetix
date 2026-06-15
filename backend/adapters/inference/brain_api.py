@@ -446,4 +446,6 @@ def vision_generate(req: ImageGenerateRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=7861)
+    import os
+    host = os.getenv("BRAIN_API_HOST", "127.0.0.1")
+    uvicorn.run(app, host=host, port=7861)
