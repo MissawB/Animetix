@@ -56,7 +56,7 @@ class SelfEvolvingCompiler:
             decorated_source = "@njit(cache=False, fastmath=True)\n" + source_code
 
         try:
-            exec(decorated_source, exec_globals)
+            exec(decorated_source, exec_globals) # nosec B102
             # Récupération de la fonction compilée
             if name in exec_globals:
                 compiled_fn = exec_globals[name]

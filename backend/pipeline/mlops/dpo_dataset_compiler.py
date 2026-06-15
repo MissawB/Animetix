@@ -631,7 +631,7 @@ def corrupt_llm_critic(chosen: str, language: str = "Français") -> str:
     Utilise le cache local et retombe sur la substitution factuelle heuristique en cas de panne.
     """
     import time
-    chosen_hash = hashlib.md5(chosen.encode("utf-8")).hexdigest()
+    chosen_hash = hashlib.md5(chosen.encode("utf-8"), usedforsecurity=False).hexdigest()
     if chosen_hash in DPO_CACHE:
         return DPO_CACHE[chosen_hash]
         

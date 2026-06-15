@@ -44,4 +44,4 @@ class RerankingCache:
         cache.set_many(data_to_cache, timeout=self.ttl)
 
     def _hash(self, text: str) -> str:
-        return hashlib.md5(text.lower().strip().encode()).hexdigest()
+        return hashlib.md5(text.lower().strip().encode(), usedforsecurity=False).hexdigest()

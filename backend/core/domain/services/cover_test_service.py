@@ -17,7 +17,7 @@ class CoverTestDomainService:
         return self._pick_cover(locale)
 
     def get_daily_cover(self, date_obj) -> Optional[Dict]:
-        seed = int(hashlib.md5(f"covertest-{date_obj}".encode()).hexdigest(), 16)
+        seed = int(hashlib.md5(f"covertest-{date_obj}".encode(), usedforsecurity=False).hexdigest(), 16)
         return self._pick_cover(seed=seed)
 
     def _pick_cover(self, locale: Optional[str] = None, seed: Optional[int] = None) -> Optional[Dict]:

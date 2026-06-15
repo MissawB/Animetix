@@ -58,10 +58,10 @@ def image_proxy_view(request):
         logger.warning(f"🚩 Invalid proxy signature detected for URL: {url}")
         return HttpResponse("Forbidden: Invalid signature", status=403)
 
-    cache_key = f"img_cache_{hashlib.md5(url.encode()).hexdigest()}"
-    cached_data = cache.get(cache_key)
-    
-    if cached_data:
+        cache_key = f"img_cache_{hashlib.md5(url.encode(), usedforsecurity=False).hexdigest()}"
+        cached_data = cache.get(cache_key)
+
+        if cached_data:
         return HttpResponse(cached_data['content'], content_type=cached_data['content_type'])
 
     try:

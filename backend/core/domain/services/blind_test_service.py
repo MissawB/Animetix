@@ -17,7 +17,7 @@ class BlindTestDomainService:
         return self._pick_theme(theme_type)
 
     def get_daily_theme(self, date_obj) -> Optional[Dict]:
-        seed = int(hashlib.md5(f"blindtest-{date_obj}".encode()).hexdigest(), 16)
+        seed = int(hashlib.md5(f"blindtest-{date_obj}".encode(), usedforsecurity=False).hexdigest(), 16)
         return self._pick_theme(seed=seed)
 
     def _pick_theme(self, theme_type: Optional[str] = None, seed: Optional[int] = None) -> Optional[Dict]:
