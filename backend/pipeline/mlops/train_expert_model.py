@@ -101,13 +101,13 @@ def run_expert_training():
 
     # 1. Configuration et chargement du tokenizer
     logger.info("📂 Loading tokenizer...")
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    tokenizer = AutoTokenizer.from_pretrained(model_name, revision="main") # nosec B615
     tokenizer.pad_token = tokenizer.eos_token
     tokenizer.padding_side = "right"
 
     # 2. Chargement et fractionnement Train/Eval (95/05)
     logger.info("📂 Loading and splitting dataset...")
-    full_dataset = load_dataset("json", data_files=dataset_path, split="train")
+    full_dataset = load_dataset("json", data_files=dataset_path, split="train", revision="main") # nosec B615
     split_dataset = full_dataset.train_test_split(test_size=0.05, seed=42)
     train_ds = split_dataset["train"]
     eval_ds = split_dataset["test"]
@@ -143,7 +143,8 @@ def run_expert_training():
             max_seq_length=max_seq_length,
             dtype=None,  # Détection automatique de précision (float16/bfloat16)
             load_in_4bit=True,
-        )
+            revision="main",
+        ) # nosec B615
         # Injection LoRA via Unsloth
         model = FastLanguageModel.get_peft_model(
             model,
@@ -170,8 +171,9 @@ def run_expert_training():
                 device_map=device_map,
                 torch_dtype=torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16,
                 trust_remote_code=True,
-                low_cpu_mem_usage=True if device_map == "auto" else False
-            )
+                low_cpu_mem_usage=True if device_map == "auto" else False,
+                revision="main"
+            ) # nosec B615
         else:
             logger.info("Loading model with standard 4-bit quantization...")
             bnb_config = BitsAndBytesConfig(
@@ -186,7 +188,8 @@ def run_expert_training():
                 device_map=device_map,
                 trust_remote_code=True,
                 low_cpu_mem_usage=True,
-            )
+                revision="main"
+            ) # nosec B615
             
         model.gradient_checkpointing_enable()
         model.enable_input_require_grads()

@@ -11,7 +11,6 @@ import {
   ShieldCheck,
   Terminal,
   Layers,
-  Sparkles,
   Bot,
   Palette,
   Headphones,
@@ -34,7 +33,6 @@ import {
 import { Card } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
-import { motion } from 'framer-motion';
 
 const labs = [
     {
@@ -68,7 +66,7 @@ const labs = [
         color: 'text-red-500',
         bg: 'from-red-500/20 to-transparent',
         badge: 'Neural Sim',
-        status: 'Beta'
+        status: 'Operational'
     },
     {
         id: 'compiler',
@@ -112,7 +110,7 @@ const labs = [
         color: 'text-blue-500',
         bg: 'from-blue-500/20 to-transparent',
         badge: 'Diagnostics',
-        status: 'Beta'
+        status: 'Operational'
     },
     {
         id: 'liquid',
@@ -123,7 +121,7 @@ const labs = [
         color: 'text-cyan-400',
         bg: 'from-cyan-400/20 to-transparent',
         badge: 'Neural ODE',
-        status: 'Experimental'
+        status: 'Operational'
     },
     {
         id: 'cove',
@@ -358,7 +356,7 @@ const LabHubPage: React.FC = () => {
 
         {/* Labs Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-24">
-            {labs.map((lab, i) => (
+            {labs.map((lab) => (
                 <Link key={lab.id} to={lab.url} className="no-underline group">
                     <Card padding="none" className="h-full bg-navy-950/40 border-white/5 hover:border-red-600/30 transition-all duration-500 overflow-hidden relative group shadow-2xl">
                         {/* Interactive BG hover effect */}

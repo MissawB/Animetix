@@ -134,8 +134,8 @@ const AdminDSPyDashboard: React.FC = () => {
                                   <p className="text-xs font-bold text-blue-500">BayesianMutation</p>
                               </div>
                               <div className="p-4 bg-gray-50 dark:bg-white/5 rounded-2xl border border-black/5 dark:border-white/5">
-                                  <p className="text-[8px] font-black opacity-30 uppercase mb-1">Variants</p>
-                                  <p className="text-xs font-bold text-emerald-500">3 par cycle</p>
+                                  <p className="text-[10px] font-black opacity-30 uppercase mb-1 tracking-widest">Variants</p>
+                                  <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">3 par cycle</p>
                               </div>
                           </div>
 

@@ -31,7 +31,7 @@ const LeaderboardPage: React.FC = () => {
         <div className="p-8">
           <table className="w-full text-left border-separate border-spacing-y-4">
             <thead>
-              <tr className="text-[10px] font-black uppercase opacity-30 tracking-[0.2em]">
+              <tr className="text-[10px] font-black uppercase text-gray-600 dark:text-gray-400 tracking-[0.2em]">
                 <th className="pb-4 pl-6">{t('social.leaderboard.rank')}</th>
                 <th className="pb-4">{t('social.leaderboard.player')}</th>
                 <th className="pb-4 text-right pr-6">{t('social.leaderboard.xp_level')}</th>

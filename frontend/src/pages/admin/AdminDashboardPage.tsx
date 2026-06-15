@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Users, Activity, Brain, Database, BarChart3, Clock, Settings, ArrowRight, Workflow, Target, Network, ListChecks, Coins } from 'lucide-react';
+import { Shield, Users, Activity, Brain, Database, BarChart3, Clock, Settings, ArrowRight, Workflow, Target, Network, ListChecks, Coins, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card } from "../../components/ui/Card";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
@@ -105,13 +105,13 @@ const AdminDashboardPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-6 py-16">
           
           <div className="mb-16">
-            <div className="flex items-center gap-3 text-blue-500 font-black uppercase tracking-widest text-xs mb-4">
+            <div className="flex items-center gap-3 text-blue-600 dark:text-blue-400 font-black uppercase tracking-widest text-xs mb-4">
               <Shield size={20} /> Accès Administrateur Sécurisé
             </div>
             <h1 className="text-6xl font-black italic manga-font tracking-tighter uppercase text-black dark:text-white leading-none">
-              COMMAND <span className="text-blue-500">CENTER</span>
+              COMMAND <span className="text-blue-600 dark:text-blue-400">CENTER</span>
             </h1>
-            <p className="text-gray-500 font-bold uppercase tracking-widest mt-4">
+            <p className="text-gray-600 dark:text-gray-400 font-bold uppercase tracking-widest mt-4">
               Supervision globale de l'écosystème Animetix
             </p>
           </div>
@@ -124,19 +124,19 @@ const AdminDashboardPage: React.FC = () => {
                     {module.icon}
                   </div>
                   
-                  <div className="bg-gray-50 dark:bg-white/5 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shadow-inner border border-gray-100 dark:border-white/5 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                  <div className="bg-gray-50 dark:bg-white/5 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shadow-inner border border-gray-100 dark:border-white/5 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                     {module.icon}
                   </div>
                   
-                  <h3 className="text-2xl font-black italic manga-font uppercase mb-3 text-black dark:text-white group-hover:text-blue-500 transition-colors">
+                  <h3 className="text-2xl font-black italic manga-font uppercase mb-3 text-black dark:text-white group-hover:text-blue-600 transition-colors">
                     {module.title}
                   </h3>
                   
-                  <p className="text-sm text-gray-500 font-medium leading-relaxed mb-6">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 font-medium leading-relaxed mb-6">
                     {module.desc}
                   </p>
                   
-                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
                     Accéder au module <ArrowRight size={12} />
                   </div>
                 </Card>
@@ -145,8 +145,8 @@ const AdminDashboardPage: React.FC = () => {
           </div>
 
           <div className="mt-16 pt-12 border-t border-gray-100 dark:border-white/5 text-center">
-            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400">
-              Animetix Admin Engine v2.4.0 • Node Status: <span className="text-green-500">Optimal</span>
+            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-500 dark:text-gray-400">
+              Animetix Admin Engine v2.4.0 • Node Status: <span className="text-green-700 dark:text-green-400">Optimal</span>
             </p>
           </div>
         </div>

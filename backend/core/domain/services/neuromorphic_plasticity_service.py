@@ -12,18 +12,20 @@ from typing import Dict, Any, List, Optional
 logger = logging.getLogger("animetix.neuromorphic.plasticity")
 
 class SynapticPlasticityService:
-    def __init__(self, num_concepts: int = 10, tau_plus: float = 20.0, tau_minus: float = 20.0, inference_engine: Optional[Any] = None):
+    def __init__(self, num_concepts: int = 10, tau_plus: float = 20.0, tau_minus: float = 20.0, inference_engine: Optional[Any] = None, checkpoint_path: Optional[str] = None):
         """
         Initialise le service de plasticité synaptique.
         :param num_concepts: Nombre de concepts sémantiques ou nœuds d'attention simulés.
         :param tau_plus: Constante de temps pour la potentiation à long terme (LTP).
         :param tau_minus: Constante de temps pour la dépression à long terme (LTD).
         :param inference_engine: Optional inference engine for plasticity interactions.
+        :param checkpoint_path: Path to save/load synaptic state.
         """
         self.num_concepts = num_concepts
         self.tau_plus = tau_plus
         self.tau_minus = tau_minus
         self.inference_engine = inference_engine
+        self.checkpoint_path = checkpoint_path
 
         # Matrice de poids synaptiques W
         self.W = np.random.uniform(0.1, 0.5, (num_concepts, num_concepts))
@@ -31,6 +33,46 @@ class SynapticPlasticityService:
 
         # Horodatage du dernier spike/activation pour chaque concept
         self.last_spike_times = np.zeros(num_concepts)
+        
+        # Tentative de chargement du checkpoint si disponible
+        if checkpoint_path:
+            self.load_checkpoint()
+
+    def reset_matrix(self):
+        """Réinitialise la matrice de poids synaptiques."""
+        self.W = np.random.uniform(0.1, 0.5, (self.num_concepts, self.num_concepts))
+        np.fill_diagonal(self.W, 0.0)
+        self.last_spike_times = np.zeros(self.num_concepts)
+        logger.info("🧠 Synaptic weights reset to initial state.")
+        if self.checkpoint_path:
+            self.save_checkpoint()
+
+    def save_checkpoint(self):
+        """Sauvegarde l'état actuel des synapses sur disque."""
+        if not self.checkpoint_path:
+            return
+        try:
+            import json
+            data = self.to_dict()
+            with open(self.checkpoint_path, 'w') as f:
+                json.dump(data, f)
+            logger.info(f"💾 Synaptic checkpoint saved to {self.checkpoint_path}")
+        except Exception as e:
+            logger.error(f"❌ Failed to save synaptic checkpoint: {e}")
+
+    def load_checkpoint(self):
+        """Charge l'état des synapses depuis le disque."""
+        if not self.checkpoint_path or not os.path.exists(self.checkpoint_path):
+            return
+        try:
+            import json
+            with open(self.checkpoint_path, 'r') as f:
+                data = json.load(f)
+            self.W = np.array(data["W"])
+            self.last_spike_times = np.array(data["last_spike_times"])
+            logger.info(f"📂 Synaptic checkpoint loaded from {self.checkpoint_path}")
+        except Exception as e:
+            logger.error(f"❌ Failed to load synaptic checkpoint: {e}")
 
     def apply_plasticity(self, data: Dict[str, Any]):
         """

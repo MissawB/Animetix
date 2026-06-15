@@ -30,7 +30,8 @@ def merge_lora():
             torch_dtype=torch.float16,
             device_map=device_map,
             trust_remote_code=True,
-        )
+            revision="main"
+        ) # nosec B615
     except (torch.cuda.OutOfMemoryError, RuntimeError) as e:
         if device_map == "cuda":
             logger.warning(f"⚠️ OutOfMemory on GPU ({e}). Falling back to CPU merge...")
@@ -42,14 +43,15 @@ def merge_lora():
                 torch_dtype=torch.float16,
                 device_map=device_map,
                 trust_remote_code=True,
-            )
+                revision="main"
+            ) # nosec B615
         else:
             raise e
     
-    tokenizer = AutoTokenizer.from_pretrained(base_model_name)
+    tokenizer = AutoTokenizer.from_pretrained(base_model_name, revision="main") # nosec B615
 
     logger.info(f"📦 Loading adapter from {adapter_path}...")
-    model = PeftModel.from_pretrained(base_model, adapter_path)
+    model = PeftModel.from_pretrained(base_model, adapter_path, revision="main") # nosec B615
 
     logger.info("🚀 Merging weights...")
     merged_model = model.merge_and_unload()

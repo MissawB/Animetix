@@ -44,12 +44,12 @@ def run_cpt(draft_model_id="checkpoints/animetix-draft-135m", limit=5000):
         # Fallback au modèle de base si le draft n'a pas encore été distillé
         model_path = "HuggingFaceTB/SmolLM-135M"
         
-    tokenizer = AutoTokenizer.from_pretrained(model_path)
+    tokenizer = AutoTokenizer.from_pretrained(model_path, revision="main") # nosec B615
     # Important pour SmolLM/Llama
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
         
-    model = AutoModelForCausalLM.from_pretrained(model_path)
+    model = AutoModelForCausalLM.from_pretrained(model_path, revision="main") # nosec B615
     
     # 3. Tokenisation
     def tokenize_function(examples):

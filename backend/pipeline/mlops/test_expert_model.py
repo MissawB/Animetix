@@ -16,12 +16,13 @@ def test_inference():
         return
 
     logger.info(f"📂 Loading Expert Model from {model_path}...")
-    tokenizer = AutoTokenizer.from_pretrained(model_path)
+    tokenizer = AutoTokenizer.from_pretrained(model_path, revision="main") # nosec B615
     model = AutoModelForCausalLM.from_pretrained(
         model_path,
         torch_dtype=torch.float16,
         device_map="auto",
-    )
+        revision="main"
+    ) # nosec B615
 
     test_queries = [
         "Présente l'anime 'Cowboy Bebop' de manière détaillée.",

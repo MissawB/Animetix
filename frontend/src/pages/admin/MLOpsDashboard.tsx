@@ -15,7 +15,8 @@ import {
   Trophy,
   Network,
   Wand2,
-  Lock
+  Lock,
+  Coins
 } from 'lucide-react';
 import { Card } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";

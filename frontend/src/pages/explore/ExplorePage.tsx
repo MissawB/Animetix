@@ -117,7 +117,7 @@ const ExplorePage: React.FC = () => {
                         key={type}
                         onClick={() => setMediaType(type)}
                         className={`text-sm font-black uppercase tracking-widest transition-all ${
-                            mediaType === type ? 'text-blue-500 scale-110' : 'text-gray-500 hover:text-white'
+                            mediaType === type ? 'text-blue-500 scale-110' : 'text-gray-400 hover:text-white'
                         }`}
                     >
                         {type}s

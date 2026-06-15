@@ -61,6 +61,19 @@ class LiquidNeuralNetworkService:
         """
         Traite un signal d'entrée multimodal continu et met à jour l'état interne.
         """
+        # Validation de stabilité : dt trop grand peut faire diverger RK4
+        if dt > 0.5:
+            logger.warning(f"⚠️ LNN: Time step dt={dt} is too large for stable RK4 integration. Clipping to 0.5.")
+            dt = 0.5
+
+        if not input_signal:
+            logger.warning("⚠️ LNN: Empty input signal received.")
+            return []
+
+        if len(input_signal) > 1000:
+            logger.warning(f"⚠️ LNN: Signal length {len(input_signal)} exceeds safety limit (1000). Truncating.")
+            input_signal = input_signal[:1000]
+
         logger.info(f"🧠 LNN: Processing continuous signal of length {len(input_signal)} steps...")
         
         current_state = np.copy(self.state)
@@ -72,6 +85,12 @@ class LiquidNeuralNetworkService:
                 u_arr = np.pad(u_arr, (0, self.input_dimension - len(u_arr)))
                 
             current_state = self.integrate_rk4(current_state, u_arr, dt)
+            
+            # Anti-Explosion check : saturation forcée si divergence
+            if np.any(np.isnan(current_state)) or np.any(np.isinf(current_state)):
+                logger.error("🔥 LNN: State divergence detected! Emergency reset.")
+                current_state = np.zeros(self.state_dimension)
+                
             state_history.append(current_state.tolist())
             
         self.state = current_state

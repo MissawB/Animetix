@@ -5,10 +5,10 @@ test.describe('Audit d\'Accessibilité (a11y)', () => {
   // Liste des pages critiques à auditer
   const pagesToTest = [
     '/static/',
-    '/static/lab/hub',
-    '/static/explore',
-    '/static/admin',
-    '/static/social/leaderboard'
+    '/static/lab/hub/',
+    '/static/explore/',
+    '/static/admin/dashboard/',
+    '/static/leaderboard/'
   ];
 
   for (const route of pagesToTest) {

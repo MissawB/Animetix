@@ -25,6 +25,8 @@ class XaiDiagnosticService:
         Calcule les métriques d'incertitude. Utilise les logprobs si disponibles, 
         sinon assume une incertitude maximale par sécurité (Secure by Default).
         """
+        from animetix.metrics import MODEL_REASONING_CONFIDENCE, MODEL_REASONING_ENTROPY, MODEL_REASONING_PERPLEXITY
+
         # Utilisation des logprobs réels si disponibles (InferenceResponse)
         if response and response.metadata and response.metadata.logprobs:
             logger.info("📊 XAI: Using real logprobs for confidence measurement.")
@@ -41,6 +43,11 @@ class XaiDiagnosticService:
                 # Perplexité = exp(entropie moyenne)
                 perplexity = float(np.exp(avg_entropy))
                 
+                # Mise à jour des métriques Prometheus
+                MODEL_REASONING_CONFIDENCE.set(confidence_score)
+                MODEL_REASONING_ENTROPY.set(avg_entropy)
+                MODEL_REASONING_PERPLEXITY.set(perplexity)
+                
                 is_reliable = confidence_score >= self.uncertainty_threshold
                 
                 return {
@@ -53,6 +60,7 @@ class XaiDiagnosticService:
 
         # Fallback de sécurité (Secure by Default) si aucun logprob n'est fourni.
         logger.warning("⚠️ XAI: No native logprobs provided. Defaulting to high uncertainty.")
+        MODEL_REASONING_CONFIDENCE.set(0.0)
         
         return {
             "confidence_score": 0.0,

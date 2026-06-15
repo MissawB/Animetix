@@ -46,7 +46,15 @@ def ingest_duel_telemetry(room_id):
 @register_task("ingest_drift_telemetry")
 def ingest_drift_telemetry(snapshot_id):
     try:
+        from animetix.metrics import ARCHETYPE_DRIFT_INTENSITY
         snapshot = ArchetypeDriftSnapshot.objects.get(id=snapshot_id)
+        
+        # Mise à jour de la métrique Prometheus
+        ARCHETYPE_DRIFT_INTENSITY.labels(
+            user_id=str(snapshot.user.id),
+            archetype_id=snapshot.archetype_id
+        ).set(snapshot.intensity)
+
         service = BigQueryTelemetryService()
         service.stream_drift(
             user_id=snapshot.user.id,

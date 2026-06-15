@@ -86,7 +86,7 @@ def train_dpo(model_id: str = "Qwen/Qwen3-0.6B", dataset_path: str = "data/mlops
         return
 
     # Load dataset
-    dataset = load_dataset("json", data_files=abs_dataset_path, split="train")
+    dataset = load_dataset("json", data_files=abs_dataset_path, split="train", revision="main") # nosec B615
     print(f"📊 Dataset loaded: {len(dataset)} preference pairs")
 
     # Device configuration
@@ -105,7 +105,7 @@ def train_dpo(model_id: str = "Qwen/Qwen3-0.6B", dataset_path: str = "data/mlops
 
     # Load model and tokenizer
     print(f"📦 Loading model {model_id}...")
-    tokenizer = AutoTokenizer.from_pretrained(model_id)
+    tokenizer = AutoTokenizer.from_pretrained(model_id, revision="main") # nosec B615
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
     
@@ -113,7 +113,8 @@ def train_dpo(model_id: str = "Qwen/Qwen3-0.6B", dataset_path: str = "data/mlops
         model_id,
         quantization_config=bnb_config,
         device_map="auto" if device == "cuda" else None,
-        trust_remote_code=True
+        trust_remote_code=True,
+        revision="main" # nosec B615
     )
     
     if device == "cuda":

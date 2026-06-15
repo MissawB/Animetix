@@ -26,7 +26,7 @@ const Footer: React.FC = () => {
       <p className="manga-font text-[10px] tracking-[0.3em] mb-3">
         {t('footer.powered_by', 'Powered by Animetix IA & React 19')}
       </p>
-      <p className="text-xs italic opacity-60">
+      <p className="text-xs italic text-gray-500 dark:text-gray-400">
         &copy; 2026 Animetix Team. All rights reserved.
       </p>
     </footer>
@@ -305,6 +305,7 @@ const LayoutContent: React.FC<{ children: ReactNode }> = ({ children }) => {
           <button 
             className="text-3xl hover:rotate-90 transition-transform duration-300 text-black dark:text-white" 
             onClick={() => toggleSettings(true)}
+            aria-label="Fermer les paramètres"
           >
             <X className="w-6 h-6" />
           </button>

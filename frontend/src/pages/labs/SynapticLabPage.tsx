@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Activity,
   Flame,
@@ -25,6 +26,7 @@ const CONCEPTS = [
 ];
 
 const SynapticLabPage: React.FC = () => {
+  const { t } = useTranslation();
   const [activations] = useState<number[]>(Array(10).fill(0).map(() => Math.random()));
   const [selectedSpikes, setSelectedSpikes] = useState<number[]>([]);
   const [lr, setLr] = useState(0.05);
@@ -57,10 +59,10 @@ const SynapticLabPage: React.FC = () => {
                   <Activity className="w-3 h-3 animate-pulse" /> Spike-Timing-Dependent Plasticity
               </div>
               <h1 className="text-7xl font-black italic manga-font tracking-tighter uppercase mb-4">
-                  SYNAPTIC <span className="text-red-500 text-glow">PLASTICITY</span>
+                  {t('labs.plasticity.title').split(' ')[0]} <span className="text-red-500 text-glow">{t('labs.plasticity.title').split(' ')[1]}</span>
               </h1>
               <p className="text-xl font-bold opacity-30 uppercase tracking-[0.3em] max-w-2xl leading-relaxed">
-                  Simulation bio-inspirée du renforcement des liens sémantiques entre concepts de l'animation.
+                  {t('labs.plasticity.subtitle')}
               </p>
           </header>
 
@@ -217,25 +219,21 @@ const SynapticLabPage: React.FC = () => {
                       <Brain className="w-64 h-64 text-red-500" />
                   </div>
                   <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3">
-                      <Sparkles className="w-5 h-5 text-red-400" /> Guide de la Plasticité
+                      <Sparkles className="w-5 h-5 text-red-400" /> {t('labs.plasticity.explainer_title')}
                   </h4>
                   <div className="space-y-4 relative z-10">
                       <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                          <span className="text-red-400">Les Connexions :</span> Imaginez que chaque genre d'anime est un neurone. Cette page simule comment ces neurones se connectent entre eux en fonction de vos goûts.
+                          {t('labs.plasticity.explainer_text_card1')}
                       </p>
                       <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                          <span className="text-red-400">La Règle de Hebb :</span> Si vous activez deux concepts souvent ensemble (ex: Mecha + Seinen), le lien entre eux se renforce. "Ce qui s'allume ensemble, se lie ensemble."
-                      </p>
-                      <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                          <span className="text-red-400">L'Impact :</span> Plus ces liens sont robustes, plus l'IA Animetix devient "experte" pour vous recommander des œuvres qui fusionnent parfaitement vos styles favoris.
+                          {t('labs.plasticity.explainer_text_card2')}
                       </p>
                   </div>
               </Card>
 
               <div className="p-12 rounded-[4rem] bg-gradient-to-br from-red-600/10 to-transparent border border-white/5 flex flex-col justify-center text-center">
                   <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30 italic leading-relaxed text-red-200/40">
-                      Simulation Bio-Inspirée : Les poids synaptiques sont recalculés via l'algorithme STDP (Spike-Timing-Dependent Plasticity). <br />
-                      Les données sont volatiles et servent à l'entraînement du modèle d'archétype.
+                      {t('labs.plasticity.protocol_text')}
                   </p>
               </div>
           </div>

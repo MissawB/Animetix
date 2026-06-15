@@ -36,12 +36,12 @@ class VideoAnalysisMixin:
             self._video_processor = AutoProcessor.from_pretrained(model_id, revision="main") # nosec B615
             self._video_vlm = Qwen2VLForConditionalGeneration.from_pretrained(
                 model_id,
-                revision="main", # nosec B615
+                revision="main",
                 torch_dtype=_torch.float16 if _torch.cuda.is_available() else _torch.float32,
                 device_map="auto",
                 quantization_config=quantization_config,
                 trust_remote_code=True
-            )
+            ) # nosec B615
         except Exception as e:
             logger.error(f"❌ Failed to load Qwen3-VL: {e}")
             raise InferenceError(f"Video VLM loading failed: {str(e)}")

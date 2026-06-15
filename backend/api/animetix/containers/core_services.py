@@ -473,7 +473,8 @@ class CoreServicesContainer(containers.DeclarativeContainer):
 
     synaptic_plasticity_simulator = providers.Singleton(
         SynapticPlasticityService,
-        num_concepts=10
+        num_concepts=10,
+        checkpoint_path=os.path.join(os.getcwd(), "data", "artifacts", "synaptic_state.json")
     )
 
     xai_service = providers.Singleton(

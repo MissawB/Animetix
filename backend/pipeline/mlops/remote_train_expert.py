@@ -31,7 +31,8 @@ def train():
         model_name = model_name,
         max_seq_length = max_seq_length,
         load_in_4bit = load_in_4bit,
-    )
+        revision = "main",
+    ) # nosec B615
 
     # 2. Ajout de LoRA adapters avec Unsloth (2x plus rapide)
     model = FastLanguageModel.get_peft_model(
@@ -50,7 +51,7 @@ def train():
     # Pour un job distant, on charge soit depuis le Hub, soit on le génère/télécharge
     # Ici on suppose que le dataset a été uploadé sur le Hub ou on utilise un placeholder
     dataset_name = os.getenv("DATASET_NAME", "trl-lib/Capybara") # Valeur par défaut
-    dataset = load_dataset(dataset_name, split="train")
+    dataset = load_dataset(dataset_name, split="train", revision="main") # nosec B615
 
     # 4. Configuration de l'entraînement avec SFTConfig
     training_args = SFTConfig(

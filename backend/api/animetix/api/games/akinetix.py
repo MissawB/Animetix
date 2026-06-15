@@ -37,7 +37,7 @@ class AkinetixGameStateView(APIView):
             'is_daily': state.is_daily
         })
 
-@method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True), name='post')
+@method_decorator(ratelimit(key='user_or_ip', rate='60/m', method='POST', block=True), name='post')
 class AkinetixGameStartView(APIView):
     permission_classes = [permissions.AllowAny]
     
@@ -74,7 +74,7 @@ class AkinetixGameStartView(APIView):
             'is_daily': game_state.is_daily
         })
 
-@method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True), name='post')
+@method_decorator(ratelimit(key='user_or_ip', rate='60/m', method='POST', block=True), name='post')
 class AkinetixGameAnswerView(APIView):
     permission_classes = [permissions.AllowAny]
     
