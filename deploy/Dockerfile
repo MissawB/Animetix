@@ -10,7 +10,13 @@ RUN npm run build
 FROM python:3.11-slim AS builder
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-RUN apt-get update && apt-get install -y --no-install-recommends build-essential libpq-dev gcc libsndfile1 ffmpeg && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential=12.* \
+    libpq-dev=15.* \
+    gcc=4:12.2.* \
+    libsndfile1=1.2.0* \
+    ffmpeg=7:5.1.* \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
@@ -19,7 +25,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Stage 3: Runtime
 FROM python:3.11-slim
-RUN apt-get update && apt-get install -y --no-install-recommends libpq5 curl libsndfile1 ffmpeg && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5=15.* \
+    curl=7.88.1* \
+    libsndfile1=1.2.0* \
+    ffmpeg=7:5.1.* \
+    && rm -rf /var/lib/apt/lists/*
 RUN groupadd -r appuser && useradd -r -g appuser appuser
 WORKDIR /app
 
