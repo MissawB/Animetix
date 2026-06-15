@@ -1,21 +1,22 @@
 from django.conf import settings
 from dependency_injector import containers, providers
 
-from adapters.persistence.unified_repository_adapter import UnifiedRepositoryAdapter
-from adapters.persistence.neo4j_graph_adapter import Neo4jGraphAdapter
-from adapters.persistence.django_semantic_cache_adapter import DjangoSemanticCacheAdapter
-from adapters.persistence.django_feedback_adapter import DjangoFeedbackAdapter
-from adapters.persistence.django_eval_adapter import DjangoEvalAdapter
-from adapters.persistence.django_gold_dataset_adapter import DjangoGoldDatasetAdapter
-from adapters.persistence.colbert_adapter import LateInteractionColBERTAdapter
-from adapters.persistence.fandom_adapter import FandomAdapter
-from adapters.persistence.session_state_adapter import DjangoSessionStateAdapter
-
-from adapters.persistence.django_safety_adapter import DjangoSafetyAdapter
+class LazyClass:
+    def __init__(self, module_name, class_name):
+        self.module_name = module_name
+        self.class_name = class_name
+        self._class = None
+    
+    def __call__(self, *args, **kwargs):
+        if self._class is None:
+            import importlib
+            module = importlib.import_module(self.module_name)
+            self._class = getattr(module, self.class_name)
+        return self._class(*args, **kwargs)
 
 class PersistenceContainer(containers.DeclarativeContainer):
     repository = providers.Singleton(
-        UnifiedRepositoryAdapter,
+        LazyClass("adapters.persistence.unified_repository_adapter", "UnifiedRepositoryAdapter"),
         project_root=settings.PROJECT_ROOT
     )
 
@@ -24,17 +25,17 @@ class PersistenceContainer(containers.DeclarativeContainer):
         repository
     )
 
-    graph_persistence_port = providers.Singleton(Neo4jGraphAdapter)
+    graph_persistence_port = providers.Singleton(LazyClass("adapters.persistence.neo4j_graph_adapter", "Neo4jGraphAdapter"))
 
-    semantic_cache_adapter = providers.Singleton(DjangoSemanticCacheAdapter)
-    feedback_adapter = providers.Singleton(DjangoFeedbackAdapter)
-    eval_adapter = providers.Singleton(DjangoEvalAdapter)
-    gold_dataset_adapter = providers.Singleton(DjangoGoldDatasetAdapter)
-    colbert_adapter = providers.Singleton(LateInteractionColBERTAdapter)
-    fandom_adapter = providers.Singleton(FandomAdapter)
+    semantic_cache_adapter = providers.Singleton(LazyClass("adapters.persistence.django_semantic_cache_adapter", "DjangoSemanticCacheAdapter"))
+    feedback_adapter = providers.Singleton(LazyClass("adapters.persistence.django_feedback_adapter", "DjangoFeedbackAdapter"))
+    eval_adapter = providers.Singleton(LazyClass("adapters.persistence.django_eval_adapter", "DjangoEvalAdapter"))
+    gold_dataset_adapter = providers.Singleton(LazyClass("adapters.persistence.django_gold_dataset_adapter", "DjangoGoldDatasetAdapter"))
+    colbert_adapter = providers.Singleton(LazyClass("adapters.persistence.colbert_adapter", "LateInteractionColBERTAdapter"))
+    fandom_adapter = providers.Singleton(LazyClass("adapters.persistence.fandom_adapter", "FandomAdapter"))
     
-    safety_adapter = providers.Singleton(DjangoSafetyAdapter)
+    safety_adapter = providers.Singleton(LazyClass("adapters.persistence.django_safety_adapter", "DjangoSafetyAdapter"))
 
     session_state_adapter_factory = providers.Factory(
-        DjangoSessionStateAdapter
+        LazyClass("adapters.persistence.session_state_adapter", "DjangoSessionStateAdapter")
     )

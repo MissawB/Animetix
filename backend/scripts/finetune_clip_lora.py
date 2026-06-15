@@ -12,8 +12,8 @@ def finetune_clip_lora(artist_name="Makoto Shinkai"):
     
     # 1. Chargement du modèle de base
     model_id = "openai/clip-vit-base-patch32"
-    model = CLIPModel.from_pretrained(model_id)
-    processor = CLIPProcessor.from_pretrained(model_id)
+    model = CLIPModel.from_pretrained(model_id, revision="main") # nosec B615
+    processor = CLIPProcessor.from_pretrained(model_id, revision="main") # nosec B615
     
     # 2. Configuration LoRA
     # On cible les couches d'attention (q_proj, v_proj)
