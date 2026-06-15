@@ -101,8 +101,8 @@ def validate_sql_query(sql: str) -> bool:
             if isinstance(func_exp, exp.Count) and func_exp.this and isinstance(func_exp.this, exp.Star):
                 continue
             
-            # Allow CAST expression even if it inherits from Func
-            if isinstance(func_exp, exp.Cast):
+            # Allow CAST, CASE, and IF expressions even if they inherit from Func
+            if isinstance(func_exp, (exp.Cast, exp.Case, exp.If)):
                 continue
 
             if func_name not in allowed_functions:

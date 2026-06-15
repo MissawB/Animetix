@@ -7,10 +7,10 @@ Ce document liste toutes les tâches techniques, architecturales et fonctionnell
 ## 🛠️ Dette Technique & Architecture (Prioritaire)
 
 ### 🏗️ Nettoyage & Refactorisation Core
-- [ ] **Suppression des Scripts Orphelins :** Supprimer les scripts de refactorisation et de fix temporaires devenus inutiles (`refactor_di.py`, `refactor_di_all.py`, `fix_explore_aria.py`, `backend/api/list_users.py`, `backend/api/list_users_fixed.py`).
-- [ ] **Optimisation Boot Backend (Lazy Loading) :** Finaliser la refactorisation de `CoreServicesContainer.py` et `PersistenceContainer.py` pour utiliser des imports dynamiques (chaînes de caractères) afin de réduire le temps de démarrage du serveur (actuellement encore majoritairement statique).
-- [ ] **Nettoyage Dépendances Frontend :** Auditer et supprimer les dépendances potentiellement inutilisées dans `package.json` (`three`, `plotly.js`) pour réduire la taille du bundle.
-- [ ] **Audit de Sécurité SQL Guard :** Réaliser le "fuzzing" et la revue de sécurité formelle du parseur `sql_guard.py` (marqué comme HIGH-RISK dans le code).
+- [x] **Suppression des Scripts Orphelins :** Supprimer les scripts de refactorisation et de fix temporaires devenus inutiles (`refactor_di.py`, `refactor_di_all.py`, `fix_explore_aria.py`, `backend/api/list_users.py`, `backend/api/list_users_fixed.py`).
+- [x] **Optimisation Boot Backend (Lazy Loading) :** Finaliser la refactorisation de `CoreServicesContainer.py` et `PersistenceContainer.py` pour utiliser des imports dynamiques (chaînes de caractères) afin de réduire le temps de démarrage du serveur (actuellement encore majoritairement statique).
+- [x] **Nettoyage Dépendances Frontend :** Auditer et supprimer les dépendances potentiellement inutilisées dans `package.json` (`three`, `plotly.js`) pour réduire la taille du bundle.
+- [x] **Audit de Sécurité SQL Guard :** Réaliser le "fuzzing" et la revue de sécurité formelle du parseur `sql_guard.py` (marqué comme HIGH-RISK dans le code).
 
 ### 🏗️ Complétion des Adapteurs (Stubs)
 - [ ] **Génération de Sprites Réelle :** Remplacer le stub `"stub-url"` dans `DiffusersAdapter.generate_sprite` par une implémentation réelle utilisant le pipeline de diffusion.

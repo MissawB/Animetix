@@ -1,0 +1,49 @@
+groups:
+  - name: animetix_mlops_alerts
+    rules:
+      # --- Alertes sur le Drift d'Archétype ---
+      - alert: HighArchetypeDrift
+        expr: animetix_mlops_archetype_drift_intensity > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Dérive d'archétype élevée détectée pour l'utilisateur {{ $labels.user_id }}"
+          description: "L'intensité du drift pour l'archétype {{ $labels.archetype_id }} est de {{ $value }}, dépassant le seuil de 0.8."
+
+      - alert: CriticalArchetypeDrift
+        expr: animetix_mlops_archetype_drift_intensity > 0.95
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Dérive d'archétype CRITIQUE détectée"
+          description: "Un drift massif (> 0.95) a été détecté. Le profil utilisateur pourrait être corrompu ou les préférences ont radicalement changé."
+
+      # --- Alertes sur la Stabilité du Modèle de Raisonnement ---
+      - alert: ReasoningModelInstability
+        expr: animetix_mlops_reasoning_stability_confidence < 0.5
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Instabilité du modèle de raisonnement (Confiance faible)"
+          description: "Le score de confiance moyen est tombé à {{ $value }}, indiquant une possible dégradation des performances du modèle ou un 'Model Collapse'."
+
+      - alert: HighModelEntropy
+        expr: animetix_mlops_reasoning_stability_entropy > 5.0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Entropie élevée du modèle de raisonnement"
+          description: "L'entropie des tokens en sortie est de {{ $value }}, indiquant une forte incertitude dans les réponses générées."
+
+      - alert: CriticalModelCollapse
+        expr: animetix_mlops_reasoning_stability_confidence < 0.3
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "EFFONDREMENT DU MODÈLE (Model Collapse)"
+          description: "Le score de confiance est extrêmement bas ({{ $value }}). Une intervention humaine ou un basculement vers un modèle de secours est requis immédiatement."

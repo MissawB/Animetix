@@ -91,7 +91,7 @@ def run_preference_training():
 
     # 1. Configuration et chargement du tokenizer
     logger.info("📂 Loading tokenizer...")
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    tokenizer = AutoTokenizer.from_pretrained(model_name, revision="main") # nosec B615
     tokenizer.pad_token = tokenizer.eos_token
     tokenizer.padding_side = "right"
 
@@ -180,6 +180,7 @@ def run_preference_training():
             device_map="auto",
             trust_remote_code=True,
             low_cpu_mem_usage=True,
+            revision="main" # nosec B615
         )
         model.gradient_checkpointing_enable()
         model.enable_input_require_grads()

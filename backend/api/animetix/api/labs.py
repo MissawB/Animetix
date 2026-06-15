@@ -235,6 +235,28 @@ class SingularityLabDataView(APIView):
             except Exception as e:
                 return Response({'error': str(e)}, status=500)
 
+        elif action == 'synthesize':
+            deduct_berrix(request.user, 100, "Singularity: Synthèse Multivers")
+            universe_name = request.data.get('universe_name', 'Unnamed Universe')
+            genre = request.data.get('genre', 'Cyberpunk')
+            
+            try:
+                synthesizer = container.core.autonomous_domain_synthesizer()
+                universe_data = synthesizer.synthesize_multiverse(
+                    universe_name=universe_name, 
+                    primary_genre=genre
+                )
+                evaluation = synthesizer.evaluate_coherence_and_interest(universe_data)
+                
+                return Response({
+                    'status': 'success',
+                    'universe': universe_data,
+                    'evaluation': evaluation,
+                    'message': f"Univers '{universe_name}' synthétisé et persisté."
+                })
+            except Exception as e:
+                return Response({'error': str(e)}, status=500)
+
         return Response({'error': 'Action inconnue'}, status=400)
 
 class LiquidNeuralNetworkLabView(APIView):
