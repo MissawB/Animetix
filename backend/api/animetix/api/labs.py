@@ -246,13 +246,18 @@ class SingularityLabDataView(APIView):
                     universe_name=universe_name, 
                     primary_genre=genre
                 )
+                
+                # CRITICAL: Persist for HITL validation
+                persisted = synthesizer.persist_universe_to_graph(universe_data)
+                
                 evaluation = synthesizer.evaluate_coherence_and_interest(universe_data)
                 
                 return Response({
                     'status': 'success',
                     'universe': universe_data,
                     'evaluation': evaluation,
-                    'message': f"Univers '{universe_name}' synthétisé et persisté."
+                    'persisted': persisted,
+                    'message': f"Univers '{universe_name}' synthétisé et stagé pour validation." if persisted else f"Univers '{universe_name}' synthétisé mais rejeté par les filtres de cohérence."
                 })
             except Exception as e:
                 return Response({'error': str(e)}, status=500)
