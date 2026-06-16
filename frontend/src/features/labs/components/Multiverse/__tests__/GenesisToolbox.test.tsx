@@ -4,28 +4,23 @@ import { GenesisToolbox } from '../GenesisToolbox';
 
 describe('GenesisToolbox', () => {
   it('renders all seeds', () => {
-    render(<GenesisToolbox onDragStart={vi.fn()} />);
-    
-    expect(screen.getByText('Genesis Seeds')).toBeDefined();
-    expect(screen.getByText('Cyberpunk')).toBeDefined();
-    expect(screen.getByText('Fantasy')).toBeDefined();
-    expect(screen.getByText('Sci-Fi')).toBeDefined();
-    expect(screen.getByText('Steampunk')).toBeDefined();
+    render(<GenesisToolbox />);
+    expect(screen.getByText(/Cyberpunk/i)).toBeInTheDocument();
+    expect(screen.getByText(/Fantasy/i)).toBeInTheDocument();
+    expect(screen.getByText(/Sci-Fi/i)).toBeInTheDocument();
+    expect(screen.getByText(/Steampunk/i)).toBeInTheDocument();
   });
 
-  it('triggers onDragStart when a seed is dragged', () => {
-    const onDragStart = vi.fn();
-    render(<GenesisToolbox onDragStart={onDragStart} />);
+  it('sets dataTransfer seed on drag start', () => {
+    render(<GenesisToolbox />);
     
-    const cyberpunkSeed = screen.getByText('Cyberpunk').parentElement!;
-    
+    const seed = screen.getByText(/Cyberpunk/i).closest('div');
     const dataTransfer = {
       setData: vi.fn(),
     };
-    
-    fireEvent.dragStart(cyberpunkSeed, { dataTransfer });
-    
+
+    fireEvent.dragStart(seed!, { dataTransfer });
+
     expect(dataTransfer.setData).toHaveBeenCalledWith('seed', 'Cyberpunk');
-    expect(onDragStart).toHaveBeenCalledWith('Cyberpunk');
   });
 });

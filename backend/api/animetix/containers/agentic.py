@@ -1,40 +1,29 @@
+from core.domain.entities.ai_schemas import RAGState
 import os
 from dependency_injector import containers, providers
 
-from core.domain.services.llm_service import LLMService
-from core.domain.services.advanced_rag_service import AdvancedRAGService
-from core.domain.services.quantum_cognitive_model import QuantumCognitivePreferenceModel
-from core.domain.services.synaptic_plasticity import SynapticPlasticitySimulator
-from core.domain.services.rag.agents.debate_manager import DebateManager
-from core.domain.services.rag.agents.librarian import LibrarianAgent
-from core.domain.services.rag.agents.forge import ForgeAgent
-from core.domain.services.rag.agents.saga_agent import SagaAgent
-from core.domain.services.rag.agents.chronicler import ChroniclerAgent
-from core.domain.services.rag.agents.graph_expert import GraphExpert
-from core.domain.services.rag.video_rag_service import VideoRAGService
-from core.domain.services.rag.agents import (
-    SearchPlanner, ResponseCritic, ResponseSynthesizer, 
-    ResponseJudge, ScoutAgent, SemanticRouter, 
-    RetrievalEvaluator, ContextCompressor
-)
-
-from core.domain.services.agentic_rag_service import AgenticRAGService
-from pipeline.mlops.graph_community_partitioner import GraphCommunityPartitioner
-from core.domain.services.long_term_memory_service import LongTermMemoryService
-from core.domain.services.semantic_cache_service import SemanticCacheService
-from core.domain.services.xai_service import XaiDiagnosticService
-from core.domain.entities.ai_schemas import RAGState
-from adapters.mlops_adapter import MlopsAdapter
+class LazyClass:
+    def __init__(self, module_name, class_name):
+        self.module_name = module_name
+        self.class_name = class_name
+        self._class = None
+    
+    def __call__(self, *args, **kwargs):
+        if self._class is None:
+            import importlib
+            module = importlib.import_module(self.module_name)
+            self._class = getattr(module, self.class_name)
+        return self._class(*args, **kwargs)
 
 class AgenticContainer(containers.DeclarativeContainer):
     infrastructure = providers.DependenciesContainer()
     persistence = providers.DependenciesContainer()
     inference = providers.DependenciesContainer()
 
-    mlops_adapter_factory = providers.Factory(MlopsAdapter)
+    mlops_adapter_factory = providers.Factory(LazyClass("adapters.mlops_adapter", "MlopsAdapter"))
 
     llm_service = providers.Singleton(
-        LLMService,
+        LazyClass("core.domain.services.llm_service", "LLMService"),
         inference_engine=inference.inference_engine,
         prompt_manager=infrastructure.prompt_manager,
         usage_port=infrastructure.usage_port,
@@ -43,7 +32,7 @@ class AgenticContainer(containers.DeclarativeContainer):
     )
 
     rag_service = providers.Singleton(
-        AdvancedRAGService,
+        LazyClass("core.domain.services.advanced_rag_service", "AdvancedRAGService"),
         repository=persistence.repository,
         llm_service=llm_service,
         neo4j_manager=persistence.graph_persistence_port,
@@ -51,39 +40,39 @@ class AgenticContainer(containers.DeclarativeContainer):
     )
 
     graph_expert = providers.Singleton(
-        GraphExpert,
+        LazyClass("core.domain.services.rag.agents.graph_expert", "GraphExpert"),
         llm_service=llm_service,
         prompt_manager=infrastructure.prompt_manager
     )
 
     debate_manager = providers.Singleton(
-        DebateManager,
+        LazyClass("core.domain.services.rag.agents.debate_manager", "DebateManager"),
         llm_service=llm_service,
         prompt_manager=infrastructure.prompt_manager
     )
 
     librarian = providers.Singleton(
-        LibrarianAgent,
+        LazyClass("core.domain.services.rag.agents.librarian", "LibrarianAgent"),
         llm_service=llm_service,
         prompt_manager=infrastructure.prompt_manager,
         web_search=infrastructure.web_search
     )
 
     forge = providers.Singleton(
-        ForgeAgent,
+        LazyClass("core.domain.services.rag.agents.forge", "ForgeAgent"),
         llm_service=llm_service,
         prompt_manager=infrastructure.prompt_manager,
         neo4j_manager=persistence.graph_persistence_port
     )
 
     saga_agent = providers.Singleton(
-        SagaAgent,
+        LazyClass("core.domain.services.rag.agents.saga_agent", "SagaAgent"),
         llm_service=llm_service,
         neo4j_manager=persistence.graph_persistence_port
     )
 
     chronicler = providers.Singleton(
-        ChroniclerAgent,
+        LazyClass("core.domain.services.rag.agents.chronicler", "ChroniclerAgent"),
         llm_service=llm_service,
         prompt_manager=infrastructure.prompt_manager,
         neo4j_manager=persistence.graph_persistence_port,
@@ -91,118 +80,106 @@ class AgenticContainer(containers.DeclarativeContainer):
     )
 
     xai_service = providers.Singleton(
-        XaiDiagnosticService,
+        LazyClass("core.domain.services.xai_service", "XaiDiagnosticService"),
         inference_engine=inference.inference_engine
     )
 
     planner = providers.Singleton(
-        SearchPlanner, 
+        LazyClass("core.domain.services.rag.agents", "SearchPlanner"), 
         llm_service=llm_service, 
         prompt_manager=infrastructure.prompt_manager
     )
     
     critic = providers.Singleton(
-        ResponseCritic, 
+        LazyClass("core.domain.services.rag.agents", "ResponseCritic"), 
         llm_service=llm_service, 
         prompt_manager=infrastructure.prompt_manager
     )
     
     synthesizer = providers.Singleton(
-        ResponseSynthesizer, 
+        LazyClass("core.domain.services.rag.agents", "ResponseSynthesizer"), 
         inference_engine=inference.inference_engine, 
         prompt_manager=infrastructure.prompt_manager
     )
     
     judge = providers.Singleton(
-        ResponseJudge, 
+        LazyClass("core.domain.services.rag.agents", "ResponseJudge"), 
         llm_service=llm_service, 
         prompt_manager=infrastructure.prompt_manager
     )
     
     scout = providers.Singleton(
-        ScoutAgent, 
+        LazyClass("core.domain.services.rag.agents", "ScoutAgent"), 
         llm_service=llm_service, 
         prompt_manager=infrastructure.prompt_manager
     )
     
     semantic_router = providers.Singleton(
-        SemanticRouter, 
+        LazyClass("core.domain.services.rag.agents", "SemanticRouter"), 
         llm_service=llm_service, 
         prompt_manager=infrastructure.prompt_manager
     )
     
     retrieval_evaluator = providers.Singleton(
-        RetrievalEvaluator, 
+        LazyClass("core.domain.services.rag.agents", "RetrievalEvaluator"), 
         llm_service=llm_service, 
         prompt_manager=infrastructure.prompt_manager
     )
     
     community_partitioner = providers.Singleton(
-        GraphCommunityPartitioner, 
+        LazyClass("pipeline.mlops.graph_community_partitioner", "GraphCommunityPartitioner"), 
         neo4j_manager=persistence.graph_persistence_port, 
         llm_service=llm_service
     )
     
     context_compressor = providers.Singleton(
-        ContextCompressor, 
+        LazyClass("core.domain.services.rag.agents", "ContextCompressor"), 
         llm_service=llm_service, 
         prompt_manager=infrastructure.prompt_manager
     )
 
     video_rag_service = providers.Singleton(
-        VideoRAGService,
+        LazyClass("core.domain.services.rag.video_rag_service", "VideoRAGService"),
         inference_engine=inference.inference_engine,
         repository=persistence.repository,
         prompt_manager=infrastructure.prompt_manager
     )
 
-    from core.domain.services.rag_orchestrator import RAGOrchestrator
-    from core.domain.services.rag.processors.plan_processor import PlanProcessor
-    from core.domain.services.rag.processors.saga_lookup_processor import SagaLookupProcessor
-    from core.domain.services.rag.processors.graph_explore_processor import GraphExploreProcessor
-    from core.domain.services.rag.processors.research_processor import ResearchProcessor
-    from core.domain.services.rag.processors.acquire_knowledge_processor import AcquireKnowledgeProcessor
-    from core.domain.services.rag.processors.speculate_processor import SpeculateProcessor
-    from core.domain.services.rag.processors.vlm_rerank_processor import VlmRerankProcessor
-    from core.domain.services.rag.processors.synthesize_processor import SynthesizeProcessor
-    from core.domain.services.rag.processors.judge_processor import JudgeProcessor
-    from core.domain.services.rag.processors.fallback_rag_processor import FallbackRagProcessor
-
     rag_processors = providers.Dict(
         {
-            RAGState.PLAN: providers.Singleton(PlanProcessor, planner=planner),
-            RAGState.SAGA_LOOKUP: providers.Singleton(SagaLookupProcessor, saga_agent=saga_agent),
-            RAGState.GRAPH_EXPLORE: providers.Singleton(GraphExploreProcessor, community_partitioner=community_partitioner, graph_expert=graph_expert, neo4j_manager=persistence.graph_persistence_port, xai_collector=None),
-            RAGState.RESEARCH: providers.Singleton(ResearchProcessor, planner=planner, rag_service=rag_service, context_compressor=context_compressor, retrieval_evaluator=retrieval_evaluator, web_search=infrastructure.web_search, video_rag_service=video_rag_service, scout=scout, neo4j_manager=persistence.graph_persistence_port, xai_collector=None),
-            RAGState.ACQUIRE_KNOWLEDGE: providers.Singleton(AcquireKnowledgeProcessor, librarian=librarian, xai_collector=None),
-            RAGState.SPECULATE: providers.Singleton(SpeculateProcessor, forge=forge, xai_collector=None),
-            RAGState.VLM_RERANK: providers.Singleton(VlmRerankProcessor, inference_engine=inference.inference_engine, prompt_manager=infrastructure.prompt_manager, xai_collector=None),
-            RAGState.SYNTHESIZE: providers.Singleton(SynthesizeProcessor, synthesizer=synthesizer, xai_service=xai_service, rag_service=rag_service),
-            RAGState.JUDGE: providers.Singleton(JudgeProcessor, debate_manager=debate_manager, xai_collector=None),
-            RAGState.FALLBACK_RAG: providers.Singleton(FallbackRagProcessor, rag_service=rag_service, inference_engine=inference.inference_engine, expert_facts=[]),
+            RAGState.PLAN: providers.Singleton(LazyClass("core.domain.services.rag.processors.plan_processor", "PlanProcessor"), planner=planner),
+            RAGState.SAGA_LOOKUP: providers.Singleton(LazyClass("core.domain.services.rag.processors.saga_lookup_processor", "SagaLookupProcessor"), saga_agent=saga_agent),
+            RAGState.GRAPH_EXPLORE: providers.Singleton(LazyClass("core.domain.services.rag.processors.graph_explore_processor", "GraphExploreProcessor"), community_partitioner=community_partitioner, graph_expert=graph_expert, neo4j_manager=persistence.graph_persistence_port, xai_collector=None),
+            RAGState.RESEARCH: providers.Singleton(LazyClass("core.domain.services.rag.processors.research_processor", "ResearchProcessor"), planner=planner, rag_service=rag_service, context_compressor=context_compressor, retrieval_evaluator=retrieval_evaluator, web_search=infrastructure.web_search, video_rag_service=video_rag_service, scout=scout, neo4j_manager=persistence.graph_persistence_port, xai_collector=None),
+            RAGState.ACQUIRE_KNOWLEDGE: providers.Singleton(LazyClass("core.domain.services.rag.processors.acquire_knowledge_processor", "AcquireKnowledgeProcessor"), librarian=librarian, xai_collector=None),
+            RAGState.SPECULATE: providers.Singleton(LazyClass("core.domain.services.rag.processors.speculate_processor", "SpeculateProcessor"), forge=forge, xai_collector=None),
+            RAGState.VLM_RERANK: providers.Singleton(LazyClass("core.domain.services.rag.processors.vlm_rerank_processor", "VlmRerankProcessor"), inference_engine=inference.inference_engine, prompt_manager=infrastructure.prompt_manager, xai_collector=None),
+            RAGState.SYNTHESIZE: providers.Singleton(LazyClass("core.domain.services.rag.processors.synthesize_processor", "SynthesizeProcessor"), synthesizer=synthesizer, xai_service=xai_service, rag_service=rag_service),
+            RAGState.JUDGE: providers.Singleton(LazyClass("core.domain.services.rag.processors.judge_processor", "JudgeProcessor"), debate_manager=debate_manager, xai_collector=None),
+            RAGState.FALLBACK_RAG: providers.Singleton(LazyClass("core.domain.services.rag.processors.fallback_rag_processor", "FallbackRagProcessor"), rag_service=rag_service, inference_engine=inference.inference_engine, expert_facts=[]),
         }
     )
 
     rag_orchestrator = providers.Singleton(
-        RAGOrchestrator,
+        LazyClass("core.domain.services.rag_orchestrator", "RAGOrchestrator"),
         processors=rag_processors
     )
 
     memory_service = providers.Singleton(
-        LongTermMemoryService,
+        LazyClass("core.domain.services.long_term_memory_service", "LongTermMemoryService"),
         chroma_resource=persistence.repository,
         inference_engine=inference.inference_engine,
         prompt_manager=infrastructure.prompt_manager
     )
 
     semantic_cache_service = providers.Singleton(
-        SemanticCacheService,
+        LazyClass("core.domain.services.semantic_cache_service", "SemanticCacheService"),
         inference_engine=inference.inference_engine,
         cache_port=persistence.semantic_cache_adapter
     )
 
     agentic_rag = providers.Singleton(
-        AgenticRAGService,
+        LazyClass("core.domain.services.agentic_rag_service", "AgenticRAGService"),
         inference_engine=inference.inference_engine,
         rag_service=rag_service,
         web_search=infrastructure.web_search,

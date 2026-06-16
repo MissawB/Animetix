@@ -9,11 +9,9 @@ const SEEDS = [
   { id: 'Steampunk', label: 'Steampunk', icon: Shield, color: '#f59e0b' },
 ];
 
-interface GenesisToolboxProps {
-  onDragStart: (seed: string) => void;
-}
+interface GenesisToolboxProps {}
 
-export const GenesisToolbox: React.FC<GenesisToolboxProps> = ({ onDragStart }) => {
+export const GenesisToolbox: React.FC<GenesisToolboxProps> = () => {
   return (
     <motion.div 
       drag
@@ -30,7 +28,6 @@ export const GenesisToolbox: React.FC<GenesisToolboxProps> = ({ onDragStart }) =
             draggable
             onDragStart={(e) => {
               e.dataTransfer.setData('seed', seed.id);
-              onDragStart(seed.id);
             }}
             className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10 transition-all cursor-grab active:cursor-grabbing group"
           >

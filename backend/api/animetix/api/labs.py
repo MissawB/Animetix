@@ -1,5 +1,6 @@
 import os
 import json
+import random
 import datetime
 import time
 import numpy as np
@@ -782,7 +783,6 @@ class SingularityCommandCenterView(APIView):
     """
     permission_classes = [permissions.IsAuthenticated]
 
-    @inject
     def get(self, request):
         container = get_container()
         
