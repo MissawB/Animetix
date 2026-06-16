@@ -7,9 +7,10 @@ COPY frontend/ ./
 RUN npm run build
 
 # Stage 2: Python Builder
-FROM python:3.11-slim AS builder
+FROM python:3.11-slim-bookworm AS builder
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+# hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential=12.* \
     libpq-dev=15.* \
@@ -24,7 +25,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Stage 3: Runtime
-FROM python:3.11-slim
+FROM python:3.11-slim-bookworm
+# hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5=15.* \
     curl=7.88.1* \
