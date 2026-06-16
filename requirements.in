@@ -62,7 +62,7 @@ google-cloud-pubsub
 google-cloud-profiler
 opentelemetry-api==1.40.0
 opentelemetry-sdk==1.40.0
-opentelemetry-exporter-gcp-trace==1.7.0
+opentelemetry-exporter-gcp-trace==1.12.0
 sentry-sdk==2.58.0
 pydantic==2.12.5
 pydantic-settings==2.13.1
