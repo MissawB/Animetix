@@ -287,7 +287,7 @@ class CoreServicesContainer(containers.DeclarativeContainer):
 
     star_reasoner_service = providers.Singleton(
         LazyClass("core.domain.services.star_reasoner_service", "StarReasonerService"),
-        inference_engine=inference.inference_engine,
+        llm_service=agentic.llm_service,
         prompt_manager=infrastructure.prompt_manager,
         gold_dataset_port=persistence.gold_dataset_adapter
     )
@@ -440,4 +440,16 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         inference_engine=inference.inference_engine,
         prompt_manager=infrastructure.prompt_manager,
         repository=persistence.repository
+    )
+
+    manga_service = providers.Singleton(
+        LazyClass("core.domain.services.manga_service", "MangaService")
+    )
+
+    synthetic_validation_service = providers.Singleton(
+        LazyClass("core.domain.services.validation_gate", "SyntheticValidationService"),
+        inference_engine=inference.inference_engine,
+        gold_dataset_port=persistence.gold_dataset_adapter,
+        guardrail_service=guardrail_service,
+        xai_service=xai_service
     )

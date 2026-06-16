@@ -218,6 +218,13 @@ class GoldDatasetEntry(models.Model):
     
     source_feedback = models.OneToOneField(AIFeedback, on_delete=models.SET_NULL, null=True, blank=True)
     is_validated = models.BooleanField(default=False)
+    
+    # AI Validation Fields (HITL Gate)
+    ai_validation_score = models.FloatField(default=0.0)
+    ai_critique = models.TextField(null=True, blank=True)
+    confidence_score = models.FloatField(default=0.0)
+    is_safe = models.BooleanField(default=True)
+    
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self): return f"Gold Entry {self.id} ({self.entry_type}) - {self.instruction[:30]}..."

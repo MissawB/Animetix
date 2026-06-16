@@ -59,13 +59,21 @@ class InferenceContainer(containers.DeclarativeContainer):
         api_key=settings.BRAIN_API_KEY
     )
 
+    compact_reasoning_adapter = providers.Singleton(
+        LazyClass("adapters.inference.compact_reasoning_adapter", "CompactReasoningAdapter"),
+        model_id=os.getenv("COMPACT_MODEL_ID", "WeiboAI/VibeThinker-3B"),
+        use_4bit=True,
+        usage_port=infrastructure.usage_port
+    )
+
     inference_engine = providers.Singleton(
         LazyClass("adapters.inference.fallback_adapter", "FallbackInferenceAdapter"),
         adapters=providers.List(
             unified_inference_adapter, # 1. Local Ollama (FREE)
-            local_text_adapter,        # 2. Local Transformers (FREE fallback)
-            brain_api_adapter,          # 3. Central Brain API (MANAGED)
-            google_genai_adapter,       # 4. External Gemini (LAST RESORT)
+            compact_reasoning_adapter,  # 2. Compact Reasoning Core (NEW - 3B optimized)
+            local_text_adapter,        # 3. Local Transformers (FREE fallback)
+            brain_api_adapter,          # 4. Central Brain API (MANAGED)
+            google_genai_adapter,       # 5. External Gemini (LAST RESORT)
             local_guardrail_adapter
         ),
         obs_service=infrastructure.obs_service

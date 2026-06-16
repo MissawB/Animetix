@@ -134,18 +134,22 @@ Réponds UNIQUEMENT avec le nouveau System Prompt, sans explications.
             }
 
     def export_preference_dataset(self):
-        """Export from persistence port."""
+        """Export from persistence port with sensitive data scrubbing."""
         if not self.feedback_port:
             logger.error("Feedback port missing for export.")
             return
 
+        from core.utils.scrubbing import scrub_sensitive_data
         feedbacks = self.feedback_port.get_recent_feedback(limit=1000)
         output_path = os.path.join(self.data_dir, "dpo_export.jsonl")
         
         with open(output_path, 'w', encoding='utf-8') as f:
             for fb in feedbacks:
                 if self.validate_feedback(fb):
-                    f.write(json.dumps(self.create_dpo_pair(fb), ensure_ascii=False) + '\n')
+                    pair = self.create_dpo_pair(fb)
+                    # Force recursive scrubbing of the entire pair before export
+                    scrubbed_pair = scrub_sensitive_data(pair)
+                    f.write(json.dumps(scrubbed_pair, ensure_ascii=False) + '\n')
 
     def get_rejected_for_curation(self, limit: int = 100) -> List[Dict]:
         """Retrieves negative feedback entries."""

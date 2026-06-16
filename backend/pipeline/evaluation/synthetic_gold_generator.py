@@ -272,8 +272,27 @@ def push_to_hitl_gate(records):
     try:
         from animetix.containers import get_container
         container = get_container()
-        gold_port = container.persistence.gold_dataset_adapter()
         
+        # Tentative d'utilisation du Gate de validation (recommandé)
+        try:
+            validation_gate = container.synthetic_validation_service()
+            count = 0
+            for rec in records:
+                validation_gate.validate_and_stage(
+                    entry_type="QA",
+                    context="\n".join(rec["contexts"]),
+                    instruction=rec["query"],
+                    response=rec["ground_truth"],
+                    metadata=rec
+                )
+                count += 1
+            logger.info(f"✅ Successfully validated and staged {count} records via HITL gate.")
+            return
+        except Exception as ge:
+            logger.warning(f"⚠️ Validation Gate not available or failed: {ge}. Falling back to direct port.")
+
+        # Fallback sur le port direct si le gate est absent
+        gold_port = container.persistence.gold_dataset_adapter()
         count = 0
         for rec in records:
             gold_port.save_synthetic_entry(
@@ -284,7 +303,7 @@ def push_to_hitl_gate(records):
                 metadata=rec
             )
             count += 1
-        logger.info(f"✅ Successfully staged {count} records in the HITL gate.")
+        logger.info(f"✅ Successfully staged {count} records in the HITL gate (direct port).")
     except Exception as e:
         logger.error(f"❌ Failed to push to HITL gate: {e}")
 

@@ -101,6 +101,7 @@ class RAGContext(BaseModel):
     language: str = "Français"
     thinking_budget: int = 0
     thinking_mode: bool = False
+    use_slm: bool = False
     memories: str = ""
     plan: Optional[SearchPlan] = None
     raw_context: str = ""

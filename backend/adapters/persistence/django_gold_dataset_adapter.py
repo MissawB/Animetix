@@ -48,7 +48,10 @@ class DjangoGoldDatasetAdapter(GoldDatasetPort):
             is_validated=False
         )
 
-    def save_synthetic_entry(self, entry_type: str, context: str, instruction: str, response: str, metadata: Dict[str, Any] = None) -> int:
+    def save_synthetic_entry(self, entry_type: str, context: str, instruction: str, response: str, 
+                             metadata: Dict[str, Any] = None, ai_validation_score: float = 0.0, 
+                             ai_critique: str = None, confidence_score: float = 0.0, 
+                             is_safe: bool = True) -> int:
         from animetix.models import GoldDatasetEntry
         entry = GoldDatasetEntry.objects.create(
             entry_type=entry_type,
@@ -56,7 +59,11 @@ class DjangoGoldDatasetAdapter(GoldDatasetPort):
             instruction=instruction,
             response=response,
             metadata=metadata or {},
-            is_validated=False
+            is_validated=False,
+            ai_validation_score=ai_validation_score,
+            ai_critique=ai_critique,
+            confidence_score=confidence_score,
+            is_safe=is_safe
         )
         return entry.id
 
@@ -87,6 +94,12 @@ class DjangoGoldDatasetAdapter(GoldDatasetPort):
             'context': entry.context,
             'instruction': entry.instruction,
             'response': entry.response,
+            'entry_type': entry.entry_type,
+            'metadata': entry.metadata,
             'is_validated': entry.is_validated,
+            'ai_validation_score': entry.ai_validation_score,
+            'ai_critique': entry.ai_critique,
+            'confidence_score': entry.confidence_score,
+            'is_safe': entry.is_safe,
             'created_at': entry.created_at
         }

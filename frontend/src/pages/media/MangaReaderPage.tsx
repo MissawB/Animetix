@@ -75,9 +75,20 @@ const MangaReaderPage: React.FC = () => {
         {/* Bottom Navigation (Quick Chapter Switch) */}
         <footer className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
             <div className="bg-navy-900/90 backdrop-blur-2xl border border-white/10 px-8 py-4 rounded-full shadow-2xl flex items-center gap-8">
-                <button className="text-xs font-black uppercase tracking-tighter opacity-40 hover:opacity-100 transition-opacity">Chapitre Précédent</button>
+                <button 
+                  onClick={() => navigate(`/media/manga/${mediaId}/${parseFloat(chapterId!) - 1}/`)}
+                  disabled={parseFloat(chapterId!) <= 1}
+                  className="text-xs font-black uppercase tracking-tighter opacity-40 hover:opacity-100 transition-opacity disabled:hidden"
+                >
+                  Chapitre Précédent
+                </button>
                 <div className="w-px h-4 bg-white/10"></div>
-                <button className="text-xs font-black uppercase tracking-tighter opacity-40 hover:opacity-100 transition-opacity">Chapitre Suivant</button>
+                <button 
+                  onClick={() => navigate(`/media/manga/${mediaId}/${parseFloat(chapterId!) + 1}/`)}
+                  className="text-xs font-black uppercase tracking-tighter opacity-40 hover:opacity-100 transition-opacity"
+                >
+                  Chapitre Suivant
+                </button>
             </div>
         </footer>
       </div>

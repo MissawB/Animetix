@@ -26,6 +26,7 @@ class SynthesizeProcessor(StateProcessor):
             ctx.truth_path, 
             thinking_budget=ctx.thinking_budget, 
             thinking_mode=ctx.thinking_mode,
+            use_slm=ctx.use_slm,
             correction_feedback=ctx.correction_feedback,
             language=ctx.language,
             xai_collector=xai_collector

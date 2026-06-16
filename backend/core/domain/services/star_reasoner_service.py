@@ -2,7 +2,7 @@ import os
 import json
 import logging
 from typing import List, Dict, Optional
-from core.ports.inference_port import InferencePort
+from core.domain.services.llm_service import LLMService
 from core.domain.services.prompt_manager import PromptManager
 from core.ports.gold_dataset_port import GoldDatasetPort
 
@@ -11,17 +11,18 @@ logger = logging.getLogger("animetix.mlops")
 class StarReasonerService:
     """
     Implémentation de STaR (Self-Taught Reasoner).
+    Optimisé pour le Compact Reasoning Core (3B parameters).
     """
-    def __init__(self, inference_engine: InferencePort, prompt_manager: PromptManager, gold_dataset_port: GoldDatasetPort):
-        self.inference_engine = inference_engine
+    def __init__(self, llm_service: LLMService, prompt_manager: PromptManager, gold_dataset_port: GoldDatasetPort):
+        self.llm_service = llm_service
         self.prompt_manager = prompt_manager
         self.gold_dataset_port = gold_dataset_port
 
     def solve_riddle_with_star(self, riddle: str, expected_answer: str, num_attempts: int = 3) -> Dict:
         """
-        Tente de résoudre une énigme en générant plusieurs chemins de raisonnement.
+        Tente de résoudre une énigme en générant plusieurs chemins de raisonnement via SLM.
         """
-        logger.info(f"🧠 STaR: Generating {num_attempts} reasoning paths for riddle...")
+        logger.info(f"🧠 STaR: Generating {num_attempts} reasoning paths using Compact Core...")
         successful_paths = []
         best_answer = "Désolé, je n'ai pas pu résoudre l'énigme."
         
@@ -30,7 +31,8 @@ class StarReasonerService:
                 "star_reasoner_thought",
                 riddle=riddle
             )
-            response = self.inference_engine.generate(prompt, system_prompt=system)
+            # Utilisation systématique du SLM (Compact Reasoning Core)
+            response = self.llm_service.generate(prompt, system_prompt=system, use_slm=True)
             
             # Extraction de la réponse finale
             final_answer = ""

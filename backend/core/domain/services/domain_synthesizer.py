@@ -17,16 +17,19 @@ class AutonomousDomainSynthesizer:
     def __init__(self, 
                  inference_engine: Optional[InferencePort] = None, 
                  neo4j_manager: Optional[Any] = None,
-                 gold_dataset_port: Optional[GoldDatasetPort] = None):
+                 gold_dataset_port: Optional[GoldDatasetPort] = None,
+                 validation_gate: Optional[Any] = None):
         """
         Initialise le synthétiseur de multivers autonome.
         :param inference_engine: Adaptateur d'inférence LLM pour générer le contenu narratif.
         :param neo4j_manager: Port d'accès au graphe Neo4j (utilisé lors de la promotion).
         :param gold_dataset_port: Port HITL pour le staging des données synthétiques.
+        :param validation_gate: Service de validation centralisé (HITL Gate).
         """
         self.inference_engine = inference_engine
         self.neo4j_manager = neo4j_manager
         self.gold_dataset_port = gold_dataset_port
+        self.validation_gate = validation_gate
 
     def evaluate_coherence_and_interest(self, universe: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -148,18 +151,32 @@ class AutonomousDomainSynthesizer:
         Détourne la persistance vers le port HITL (GoldDatasetEntry) pour validation humaine.
         Empêche le Model Collapse en forçant une revue avant l'intégration au graphe.
         """
-        # 1. Évaluer la cohérence et l'intérêt (pré-filtre IA)
+        # 1. Évaluer la cohérence et l'intérêt (pré-filtre IA rapide)
         evaluation = self.evaluate_coherence_and_interest(universe)
         if not evaluation["is_worthy"]:
             logger.warning(f"❌ Universe '{universe['name']}' rejected due to insufficient AI/Community score ({evaluation['ai_score']:.2f}/{evaluation['community_score']:.2f}).")
             return False
 
+        # 2. Utiliser le Validation Gate (HITL Gate) s'il est disponible
+        if self.validation_gate:
+            try:
+                self.validation_gate.validate_and_stage(
+                    entry_type="MULTIVERSE",
+                    context=f"Genre: {universe['genre']}",
+                    instruction=f"Valider la création de l'univers '{universe['name']}'",
+                    response=universe['description'],
+                    metadata=universe
+                )
+                return True
+            except Exception as e:
+                logger.error(f"❌ HITL Gate validation failed: {e}. Falling back to direct port staging.")
+
+        # 3. Fallback sur le port direct si le gate échoue ou n'est pas injecté
         if not self.gold_dataset_port:
-            logger.error("❌ GoldDatasetPort missing. Cannot stage synthetic universe for HITL.")
+            logger.error("❌ GoldDatasetPort and ValidationGate missing. Cannot stage synthetic universe.")
             return False
 
         try:
-            # On stocke l'univers complet dans les metadata pour la promotion ultérieure
             self.gold_dataset_port.save_synthetic_entry(
                 entry_type="MULTIVERSE",
                 context=f"Genre: {universe['genre']}",
@@ -167,10 +184,10 @@ class AutonomousDomainSynthesizer:
                 response=universe['description'],
                 metadata=universe
             )
-            logger.info(f"⏳ Universe '{universe['name']}' staged for human validation (HITL).")
+            logger.info(f"⏳ Universe '{universe['name']}' staged for human validation (direct port fallback).")
             return True
         except Exception as e:
-            logger.error(f"❌ Failed to stage synthetic universe: {e}")
+            logger.error(f"❌ Failed to stage synthetic universe via port: {e}")
             return False
 
     def _execute_graph_persistence(self, universe: Dict[str, Any]) -> bool:

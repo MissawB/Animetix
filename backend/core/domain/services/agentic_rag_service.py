@@ -106,7 +106,7 @@ class AgenticRAGService:
 
             planner_agent = SearchPlanner(self.llm_service, self.prompt_manager)
             scout_agent = ScoutAgent(self.llm_service, self.prompt_manager, self.neo4j_manager)
-            synthesizer_agent = ResponseSynthesizer(self.inference_engine, self.prompt_manager)
+            synthesizer_agent = ResponseSynthesizer(self.llm_service, self.prompt_manager)
             judge_agent = ResponseJudge(self.llm_service, self.prompt_manager)
             critic_agent = ResponseCritic(self.llm_service, self.prompt_manager)
             debate_mgr = DebateManager(self.llm_service, self.prompt_manager)
@@ -330,6 +330,7 @@ class AgenticRAGService:
             user_id=user_id,
             thinking_budget=thinking_budget,
             thinking_mode=thinking_mode,
+            use_slm=complexity in [1, 2], # On utilise le SLM pour les niveaux 1 et 2 (déchargement)
             memories=self._get_memories(user_id, query),
             current_state=RAGState.PLAN,
             graph_expert=self.orchestrator.processors[RAGState.GRAPH_EXPLORE].graph_expert if self.orchestrator and RAGState.GRAPH_EXPLORE in self.orchestrator.processors else None,

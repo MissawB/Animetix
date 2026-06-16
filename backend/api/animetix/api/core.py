@@ -365,7 +365,9 @@ class MangaChapterListView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, media_id):
-        chapters = MangaChapter.objects.filter(manga__external_id=media_id)
+        container = get_container()
+        manga_service = container.core.manga_service()
+        chapters = manga_service.get_chapters(media_id)
         serializer = MangaChapterSerializer(chapters, many=True)
         return Response(serializer.data)
 
@@ -374,12 +376,13 @@ class MangaChapterDetailView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, media_id, chapter_number):
-        try:
-            # On cherche par external_id du manga et numéro du chapitre
-            chapter = MangaChapter.objects.get(manga__external_id=media_id, number=chapter_number)
+        container = get_container()
+        manga_service = container.core.manga_service()
+        chapter = manga_service.get_chapter_details(media_id, float(chapter_number))
+        
+        if chapter:
             serializer = MangaChapterSerializer(chapter)
             return Response(serializer.data)
-        except MangaChapter.DoesNotExist:
-            return Response({"error": "Chapter not found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"error": "Chapter not found"}, status=status.HTTP_404_NOT_FOUND)
 
 

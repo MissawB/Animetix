@@ -37,7 +37,7 @@ class ComplexityAnalyser:
         if self.prompt_manager and self.llm_service:
             try:
                 prompt, sys = self.prompt_manager.get_prompt("complexity_analyzer", query=query)
-                res = self.llm_service.generate(prompt, sys, use_slm=False)
+                res = self.llm_service.generate(prompt, sys, use_slm=True)
                 
                 # Parsing simple du JSON retourné
                 import json

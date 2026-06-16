@@ -13,24 +13,53 @@ class GoldDatasetEntryAdmin(admin.ModelAdmin):
         'id', 
         'entry_type', 
         'instruction_preview', 
-        'context_preview', 
         'is_validated', 
+        'ai_validation_score_display',
+        'confidence_score_display',
+        'is_safe_display',
         'created_at',
         'validation_status_display'
     )
     list_editable = ('is_validated',)
-    list_filter = ('is_validated', 'entry_type', 'created_at')
-    search_fields = ('instruction', 'context', 'response')
-    readonly_fields = ('created_at', 'source_feedback')
+    list_filter = ('is_validated', 'entry_type', 'is_safe', 'created_at')
+    search_fields = ('instruction', 'context', 'response', 'ai_critique')
+    readonly_fields = ('created_at', 'source_feedback', 'ai_validation_score', 'confidence_score', 'is_safe')
     actions = ['validate_selected', 'invalidate_selected', 'promote_selected_entries']
+
+    fieldsets = (
+        ('Données Synthétiques', {
+            'fields': ('entry_type', 'instruction', 'context', 'response', 'metadata')
+        }),
+        ('Validation IA (HITL Gate)', {
+            'fields': ('ai_validation_score', 'confidence_score', 'is_safe', 'ai_critique'),
+            'description': 'Résultats de la validation croisée automatique.'
+        }),
+        ('Statut Humain', {
+            'fields': ('is_validated', 'source_feedback', 'created_at')
+        }),
+    )
 
     def instruction_preview(self, obj):
         return obj.instruction[:80] + "..." if len(obj.instruction) > 80 else obj.instruction
     instruction_preview.short_description = "Instruction"
 
-    def context_preview(self, obj):
-        return obj.context[:80] + "..." if len(obj.context) > 80 else obj.context
-    context_preview.short_description = "Contexte"
+    def ai_validation_score_display(self, obj):
+        color = "green" if obj.ai_validation_score >= 0.7 else "orange" if obj.ai_validation_score >= 0.4 else "red"
+        return format_html('<span style="color: {}; font-weight: bold;">{:.2f}</span>', color, obj.ai_validation_score)
+    ai_validation_score_display.short_description = "Score IA"
+    ai_validation_score_display.admin_order_field = 'ai_validation_score'
+
+    def confidence_score_display(self, obj):
+        color = "green" if obj.confidence_score >= 0.7 else "orange" if obj.confidence_score >= 0.4 else "red"
+        return format_html('<span style="color: {}; font-weight: bold;">{:.2f}</span>', color, obj.confidence_score)
+    confidence_score_display.short_description = "Confiance XAI"
+    confidence_score_display.admin_order_field = 'confidence_score'
+
+    def is_safe_display(self, obj):
+        if obj.is_safe:
+            return format_html('<span style="color: green;">✔ Safe</span>')
+        return format_html('<span style="color: red; font-weight: bold;">✖ UNSAFE</span>')
+    is_safe_display.short_description = "Sécurité"
 
     def validation_status_display(self, obj):
         from django.utils.safestring import mark_safe

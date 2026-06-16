@@ -25,7 +25,10 @@ class GoldDatasetPort(ABC):
         pass
 
     @abstractmethod
-    def save_synthetic_entry(self, entry_type: str, context: str, instruction: str, response: str, metadata: Dict[str, Any] = None) -> int:
+    def save_synthetic_entry(self, entry_type: str, context: str, instruction: str, response: str, 
+                             metadata: Dict[str, Any] = None, ai_validation_score: float = 0.0, 
+                             ai_critique: str = None, confidence_score: float = 0.0, 
+                             is_safe: bool = True) -> int:
         """Sauvegarde une donnée synthétique générique pour validation HITL."""
         pass
 

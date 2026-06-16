@@ -27,7 +27,7 @@ class AgenticContainer(containers.DeclarativeContainer):
         inference_engine=inference.inference_engine,
         prompt_manager=infrastructure.prompt_manager,
         usage_port=infrastructure.usage_port,
-        slm_engine=inference.inference_engine,
+        slm_engine=inference.compact_reasoning_adapter,
         obs_service=infrastructure.obs_service
     )
 
@@ -98,7 +98,7 @@ class AgenticContainer(containers.DeclarativeContainer):
     
     synthesizer = providers.Singleton(
         LazyClass("core.domain.services.rag.agents", "ResponseSynthesizer"), 
-        inference_engine=inference.inference_engine, 
+        llm_service=llm_service, 
         prompt_manager=infrastructure.prompt_manager
     )
     

@@ -4,32 +4,57 @@ Ce document liste toutes les tâches techniques, architecturales et fonctionnell
 
 ---
 
-## 🛠️ Dette Technique & Architecture (Prioritaire)
+## 🧠 Recherche & Innovation IA
 
-### 🏗️ Nettoyage & Refactorisation Core
-- [x] **Suppression des Scripts Orphelins :** Supprimer les scripts de refactorisation et de fix temporaires devenus inutiles (`refactor_di.py`, `refactor_di_all.py`, `fix_explore_aria.py`, `backend/api/list_users.py`, `backend/api/list_users_fixed.py`).
-- [x] **Optimisation Boot Backend (Lazy Loading) :** Finaliser la refactorisation de `CoreServicesContainer.py` et `PersistenceContainer.py` pour utiliser des imports dynamiques (chaînes de caractères) afin de réduire le temps de démarrage du serveur (actuellement encore majoritairement statique).
-- [x] **Nettoyage Dépendances Frontend :** Auditer et supprimer les dépendances potentiellement inutilisées dans `package.json` (`three`, `plotly.js`) pour réduire la taille du bundle.
-- [x] **Audit de Sécurité SQL Guard :** Réaliser le "fuzzing" et la revue de sécurité formelle du parseur `sql_guard.py` (marqué comme HIGH-RISK dans le code).
+### 🚀 Optimisation du Raisonnement (Inspiré par VibeThinker-3B)
+- [x] **Implémentation du "Reasoning Core" Local :** Étudier l'intégration de modèles 3B compacts (type VibeThinker) dans les adaptateurs d'inférence.
+    - [x] Créer un `CompactReasoningAdapter` pour décharger les requêtes de niveau 1 et 2 vers des modèles locaux.
+    - [x] Réduire la latence du *Paradox Quest* et du *Star Reasoner* via cette compression de paramètres.
 
-### 🏗️ Complétion des Adapteurs (Stubs)
-- [x] **Génération de Sprites Réelle :** Remplacer le stub `"stub-url"` dans `DiffusersAdapter.generate_sprite` par une implémentation réelle utilisant le pipeline de diffusion.
-- [x] **Latence Alert Service :** Connecter l' `AlertService` à l'`ObservabilityService` pour récupérer et monitorer la latence réelle des requêtes RAG.
-- [x] **Endpoints MLOps Réels :** Implémenter la logique métier réelle pour `AdaptersView` et `DPOFeedbackLoopView` dans `backend/api/animetix/api/mlops.py` (actuellement en mode placeholder).
+### 🎥 Multimodalité Évolutive (Inspiré par VisualClaw)
+- [ ] **Système de "Skill Bank" pour Video-RAG :** Implémenter une boucle d'apprentissage auto-évolutive dans `video_language_indexing_service.py`.
+    - [ ] Enregistrer les échecs de reconnaissance (actions de combat, styles graphiques) comme "Expériences de Correction".
+    - [ ] Utiliser ces expériences pour affiner dynamiquement les prompts du Video-RAG.
 
----
-
-## ⚙️ MLOps, Qualité & Observabilité
-- [ ] **Stabilisation des "Ghost Labs" :** Finaliser les tests d'intégration et le durcissement des services de recherche (LNN, Plasticité Synaptique, Quantum Cognition) pour passage en état "Operational" complet (actuellement en beta/recherche).
-- [x] **Audit Accessibilité (WCAG) :** Finaliser l'audit complet via Playwright et corriger les derniers problèmes d'accessibilité identifiés.
-- [x] **Monitoring Alerting :** Configurer les alertes Prometheus pour le drift d'archétype et la stabilité des modèles.
+### ⚖️ Raffinement du Budget TTC (Inspiré par Nemotron 3 Ultra)
+- [ ] **Dynamic Reasoning Budget :** Refondre la logique de `complexity_analyser.py` pour une allocation granulaire du "Thinking Budget".
+    - [ ] Passer d'un budget statique à un budget prédictif basé sur la structure sémantique de la requête.
 
 ---
 
-## 🎨 Interface & Expérience Utilisateur
-- [x] **Fusion Studio Multivers :** Unifier le workflow entre la génération (`MultiverseLabPage`) et la galerie (`MultiverseGalleryPage`).
-- [ ] **Manga Reader Backend :** Finaliser la connexion au backend réel pour le chargement dynamique des chapitres.
-- [ ] **UI Indexation Vidéo :** Finaliser l'interface d'indexation pour le Video-RAG côté Admin.
+## 🚨 Sécurité & Risques Critiques (Priorité Haute)
+
+- [ ] **Audit Formel SQL Guard :** Réaliser le "fuzzing" et la revue de sécurité formelle du parseur `sql_guard.py` (marqué comme HIGH-RISK). Valider contre les injections SQL complexes générées par IA.
+- [ ] **Isolation des Secrets :** Vérifier que les logs de `mlops.py` et `DPOFeedbackLoop` ne fuitent pas de métadonnées sensibles lors du fine-tuning.
+- [x] **Pipeline de Validation HITL :** Finaliser le "Universal HITL Gate" pour empêcher le "Model Collapse" via une validation croisée systématique.
+
+---
+
+## 🏗️ Dette Technique & Architecture
+
+### 🎨 Frontend (Assainissement Linter - 549 erreurs)
+- [ ] **Cycles de Vie React :** Supprimer l'utilisation de `Math.random()` dans les rendus (`AdminDSPyDashboard.tsx`, `CognitionHubPage.tsx`) pour stabiliser l'UI.
+- [ ] **Pureté des Effets :** Corriger les erreurs `set-state-in-effect` dans `ClubChat.tsx` et `VNPlayer.tsx` (risques de boucles de rendu).
+- [ ] **Typage Strict :** Remplacer systématiquement les types `any` par des interfaces TypeScript rigoureuses conformément aux mandats `GEMINI.md`.
+- [ ] **Déclarations :** Résoudre les accès aux fonctions avant déclaration dans `AkinetixRLPage.tsx` et `ExpertNexusPage.tsx`.
+
+### 🧠 Backend & Inférence
+- [ ] **Optimisation Boot (Lazy Loading) :** Vérifier et renforcer le chargement paresseux des modèles dans le container DI pour garantir un démarrage serveur < 5s.
+- [ ] **Complétion du Port d'Inférence :** 
+    - [ ] Implémenter `generate_sprite` réel dans `BrainAPIAdapter` (bloque le Game Engine).
+    - [ ] Implémenter `localize_video_actions` et `estimate_depth` pour les Labs Spatiaux.
+    - [ ] Remplacer le placeholder statique (`0.5`) de similarité dans `GoogleGenAIAdapter` par un embedding réel.
+
+---
+
+## 🧪 "Ghost Labs" & Fonctionnalités Beta
+
+- [x] **Manga Lab :**
+    - [x] Implémenter `inpaint_text_bubbles` pour le nettoyage automatique des pages avant traduction.
+    - [x] Finaliser le flux backend `manga_flow.py` pour le chargement dynamique des chapitres et pages (Raccordé à `MangaService`).
+- [ ] **Video RAG :** Finaliser l'UI d'indexation temporelle côté Admin et stabiliser le service `video_language_indexing_service.py`.
+- [ ] **MLOps Pipeline :** Finaliser les vues API réelles pour le `DPOFeedbackLoop` (actuellement partiellement en stub).
+- [ ] **Accessibilité (WCAG) :** Intégrer les tests d'accessibilité automatisés dans le pipeline CI via Playwright.
 
 ---
 
@@ -38,4 +63,5 @@ Ce document liste toutes les tâches techniques, architecturales et fonctionnell
 - [ ] **Rapports de Conformité :** Automatiser les rapports hebdomadaires de conformité sécurité.
 
 ---
-*Dernière mise à jour : 15 Juin 2026*
+*Dernière mise à jour : 16 Juin 2026*
+

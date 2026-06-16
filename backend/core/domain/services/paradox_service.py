@@ -75,7 +75,8 @@ class ParadoxDomainService:
         )
         
         full_res = ""
-        for token in self.llm_service.inference_engine.stream_generate(prompt, system_prompt=system):
+        # Utilisation du Compact Reasoning Core pour le streaming
+        for token in self.llm_service.stream_generate(prompt, system_prompt=system, use_slm=True):
             full_res += token
             # On pourrait yield token ici pour un effet CoT ultra-détaillé
             
@@ -88,13 +89,13 @@ class ParadoxDomainService:
                     scenario=parsed.get('scenario', full_res)
                 )}
             else:
-                yield {"type": "result", "content": ParadoxLogic(reasoning="LLM Fallback", scenario=full_res)}
+                yield {"type": "result", "content": ParadoxLogic(reasoning="LLM Fallback (SLM)", scenario=full_res)}
         except Exception as e:
             logger.warning(f"Paradox logic generator parsing failed: {e}")
             yield {"type": "result", "content": ParadoxLogic(reasoning="Error", scenario=full_res)}
 
     def generate_logic(self, media_type: str, item_a: Dict, item_b: Dict, intruder: Dict, language: str) -> ParadoxLogic:
-        """Génère le scénario paradoxal via IA Neuro-Symbolique ou fallback LLM."""
+        """Génère le scénario paradoxal via IA Neuro-Symbolique ou fallback LLM (SLM)."""
         label_a = item_a.get('title') or item_a.get('name')
         label_b = item_b.get('title') or item_b.get('name')
         label_i = intruder.get('title') or intruder.get('name')
@@ -112,7 +113,7 @@ class ParadoxDomainService:
                     scenario=explanation
                 )
                 
-        # Fallback classique (LLM pure)
+        # Fallback classique (LLM pure via SLM pour la rapidité)
         res_text = self.llm_service.generate_paradox_explanation(media_type, label_a, label_b, label_i)
         
         try:
@@ -126,4 +127,4 @@ class ParadoxDomainService:
         except Exception as e:
             logger.warning(f"Paradox JSON Parsing Error: {e}")
             
-        return ParadoxLogic(reasoning="Analyse probabiliste (LLM)", scenario=res_text)
+        return ParadoxLogic(reasoning="Analyse probabiliste (SLM)", scenario=res_text)
