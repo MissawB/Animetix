@@ -42,7 +42,7 @@ google-genai==1.75.0
 instructor==1.15.1
 numba==0.65.1
 numpy==1.26.4
-onnxruntime==1.24.4
+onnxruntime==1.27.0
 openai==2.30.0
 opencv-python-headless==4.9.0.80
 peft==0.13.2
