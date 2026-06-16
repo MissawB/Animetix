@@ -75,4 +75,4 @@ dbt-core
 dbt-sqlite
 dbt-postgres
 dbt-bigquery
-beautifulsoup4==4.12.3
+beautifulsoup4==4.15.0
