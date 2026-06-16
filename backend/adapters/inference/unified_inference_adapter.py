@@ -316,6 +316,12 @@ class UnifiedInferenceAdapter(
 
         return {"status": "offline", "engine": "Unified"}
 
+    def set_model_name(self, model_name: str):
+        """Change dynamiquement le modèle cible."""
+        old_model = self.model_name
+        self.model_name = model_name
+        logger.info(f"🔄 UnifiedInferenceAdapter: Model changed from {old_model} to {self.model_name}")
+
     def generate_sprite(self, prompt: str, style: str = "") -> str:
         """Génère un sprite de personnage (généralement sur fond transparent ou blanc)."""
         # Leveraging the existing generate_image from ImageGenMixin

@@ -234,6 +234,25 @@ def run_hourly_monitoring_workflow():
     """
     logger.info("🚀 Starting Hourly Monitoring Workflow...")
     
+    # 0. Global Alert & Health Check
+    try:
+        from animetix.containers import get_container
+        from django.contrib.auth import get_user_model
+        
+        container = get_container()
+        alert_service = container.core.alert_service()
+        
+        # On récupère le premier administrateur pour envoyer les alertes
+        User = get_user_model()
+        admin = User.objects.filter(is_superuser=True).first()
+        if admin:
+            logger.info(f"Running global health check for admin {admin.username}...")
+            alert_service.check_and_alert(admin_user_id=admin.id)
+        else:
+            logger.warning("No superuser found to receive alerts.")
+    except Exception as e:
+        logger.error(f"❌ Error in Global Alert Check: {e}", exc_info=True)
+
     # 1. Monitor Inference Health
     try:
         from mlops import rlhf_pipeline

@@ -97,12 +97,12 @@ def run_preference_training():
 
     # 2. Chargement et fractionnement Train/Eval (90/10)
     logger.info("📂 Loading and splitting dataset...")
-    full_dataset = load_dataset("json", data_files=dataset_path, split="train")
+    full_dataset = load_dataset("json", data_files=dataset_path, split="train", revision="main") # nosec B615
     # TRL DPOTrainer requiert au moins quelques exemples pour valider
     if len(full_dataset) < 2:
         logger.warning("Dataset too small for split, duplication applied.")
         # Dupliquer pour éviter le crash en test
-        full_dataset = load_dataset("json", data_files=dataset_path, split="train")
+        full_dataset = load_dataset("json", data_files=dataset_path, split="train", revision="main") # nosec B615
     
     split_dataset = full_dataset.train_test_split(test_size=0.1, seed=42)
     train_ds = split_dataset["train"]

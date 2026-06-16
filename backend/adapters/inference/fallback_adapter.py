@@ -357,6 +357,16 @@ class FallbackInferenceAdapter(InferencePort):
         is_online = any(s.get("status") == "online" for s in statuses)
         return {"status": "online" if is_online else "offline", "adapters": statuses}
 
+    def set_primary_adapter(self, index: int) -> bool:
+        """Change dynamiquement l'adaptateur prioritaire."""
+        if 0 <= index < len(self.adapters):
+            adapter = self.adapters.pop(index)
+            self.adapters.insert(0, adapter)
+            self._build_capability_cache()
+            logger.info(f"🔄 [Fallback] Primary adapter set to {adapter.__class__.__name__}")
+            return True
+        return False
+
     @property
     def primary_adapter(self):
         return self.adapters[0] if self.adapters else None

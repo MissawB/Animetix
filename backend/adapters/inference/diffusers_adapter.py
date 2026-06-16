@@ -49,11 +49,6 @@ class DiffusersAdapter(ImageGenMixin, InferencePort):
     def get_text_embedding(self, text: str) -> List[float]:
         raise InferenceNotImplementedError("Text embedding not supported by DiffusersAdapter")
 
-    def generate_sprite(self, prompt: str, style: str = "") -> str:
-        """Surcharger generate_sprite pour utiliser le pipeline local."""
-        # Implémentation réelle ici...
-        return "stub-url"
-
     def health_check(self) -> dict:
         return {
             "status": "online" if self.pipe or self._img2img_pipe or self._inpaint_pipe else "offline", 

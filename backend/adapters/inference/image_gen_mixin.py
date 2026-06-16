@@ -102,6 +102,15 @@ class ImageGenMixin:
         except Exception as e:
             logger.error(f"❌ Image Gen failed: {e}"); raise InferenceError(f"Image generation failed: {e}")
 
+    def generate_sprite(self, prompt: str, style: str = "") -> str:
+        """Génère un sprite de personnage sur fond blanc pour un détourage facile."""
+        sprite_prompt = (
+            f"character sprite, full body standing, anime style, {prompt}, "
+            f"centered, isolated on pure white background, masterpiece, high quality, "
+            f"game asset, concept art"
+        )
+        return self.generate_image(sprite_prompt, style)
+
     def transform_image_to_anime(self, image_data: bytes, studio_style: str = "", prompt: str = "") -> str:
         self._load_img2img()
         try:

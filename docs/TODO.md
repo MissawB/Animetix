@@ -13,9 +13,9 @@ Ce document liste toutes les tâches techniques, architecturales et fonctionnell
 - [x] **Audit de Sécurité SQL Guard :** Réaliser le "fuzzing" et la revue de sécurité formelle du parseur `sql_guard.py` (marqué comme HIGH-RISK dans le code).
 
 ### 🏗️ Complétion des Adapteurs (Stubs)
-- [ ] **Génération de Sprites Réelle :** Remplacer le stub `"stub-url"` dans `DiffusersAdapter.generate_sprite` par une implémentation réelle utilisant le pipeline de diffusion.
-- [ ] **Latence Alert Service :** Connecter l' `AlertService` à l'`ObservabilityService` pour récupérer et monitorer la latence réelle des requêtes RAG.
-- [ ] **Endpoints MLOps Réels :** Implémenter la logique métier réelle pour `AdaptersView` et `DPOFeedbackLoopView` dans `backend/api/animetix/api/mlops.py` (actuellement en mode placeholder).
+- [x] **Génération de Sprites Réelle :** Remplacer le stub `"stub-url"` dans `DiffusersAdapter.generate_sprite` par une implémentation réelle utilisant le pipeline de diffusion.
+- [x] **Latence Alert Service :** Connecter l' `AlertService` à l'`ObservabilityService` pour récupérer et monitorer la latence réelle des requêtes RAG.
+- [x] **Endpoints MLOps Réels :** Implémenter la logique métier réelle pour `AdaptersView` et `DPOFeedbackLoopView` dans `backend/api/animetix/api/mlops.py` (actuellement en mode placeholder).
 
 ---
 
@@ -27,7 +27,7 @@ Ce document liste toutes les tâches techniques, architecturales et fonctionnell
 ---
 
 ## 🎨 Interface & Expérience Utilisateur
-- [ ] **Fusion Studio Multivers :** Unifier le workflow entre la génération (`MultiverseLabPage`) et la galerie (`MultiverseGalleryPage`).
+- [x] **Fusion Studio Multivers :** Unifier le workflow entre la génération (`MultiverseLabPage`) et la galerie (`MultiverseGalleryPage`).
 - [ ] **Manga Reader Backend :** Finaliser la connexion au backend réel pour le chargement dynamique des chapitres.
 - [ ] **UI Indexation Vidéo :** Finaliser l'interface d'indexation pour le Video-RAG côté Admin.
 

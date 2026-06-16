@@ -16,6 +16,10 @@ class ObservabilityService:
         self.api_key = os.getenv("WANDB_API_KEY")
         self.enabled = bool(self.api_key)
         self._run = None
+        
+        # Suivi de la latence en mémoire pour les alertes temps réel
+        self._recent_latencies = []
+        self._max_history = 50
 
         if self.enabled:
             try:
@@ -58,6 +62,12 @@ class ObservabilityService:
     def log_rag_latency(self, latency: float, query: str, user_id: Optional[str] = None):
         """Logue la latence globale d'une requête RAG."""
         logger.info(f"⏱️ RAG Latency: {latency:.2f}s for query '{query[:50]}' by user {user_id}")
+        
+        # Mise à jour de l'historique local
+        self._recent_latencies.append(latency)
+        if len(self._recent_latencies) > self._max_history:
+            self._recent_latencies.pop(0)
+
         if not self.enabled: return
         
         wandb.log({
@@ -65,6 +75,12 @@ class ObservabilityService:
             "rag/query_length": len(query),
             "rag/user_id": user_id or "anonymous"
         })
+
+    def get_average_rag_latency(self) -> float:
+        """Retourne la latence moyenne des dernières requêtes RAG."""
+        if not self._recent_latencies:
+            return 0.0
+        return sum(self._recent_latencies) / len(self._recent_latencies)
 
     def log_dynamic_eval(self, query: str, context: str, answer: str, evaluation: Any):
         """Logue une évaluation dynamique 'LLM-as-a-Judge'."""

@@ -220,30 +220,76 @@ class SOTABenchmarkListView(APIView):
 class DPOFeedbackLoopView(APIView):
     """
     API for managing the DPO Feedback Loop.
-    Placeholder for now.
+    Provides status, trends, and manual triggers for optimization.
     """
     permission_classes = [permissions.IsAdminUser]
 
     def get(self, request, *args, **kwargs):
-        # Placeholder logic: Return a success message and some dummy data
-        return Response({"message": "DPO Feedback Loop API - GET (placeholder)", "data": []}, status=status.HTTP_200_OK)
+        container = get_container()
+        dpo_loop = container.core.dpo_feedback_loop()
+        stats = dpo_loop.analyze_feedback_trends()
+        
+        return Response({
+            "status": "active",
+            "timestamp": datetime.datetime.now().isoformat(),
+            "metrics": stats
+        }, status=status.HTTP_200_OK)
 
     def post(self, request, *args, **kwargs):
-        # Placeholder logic: Simulate processing and return a success message
-        return Response({"message": "DPO Feedback Loop API - POST (placeholder)", "received_data": request.data}, status=status.HTTP_200_OK)
+        action_type = request.data.get('action')
+        container = get_container()
+        dpo_loop = container.core.dpo_feedback_loop()
+
+        if action_type == 'export':
+            dpo_loop.export_preference_dataset()
+            return Response({"status": "success", "message": "DPO dataset exported to local storage."})
+        
+        if action_type == 'optimize':
+            prompt_key = request.data.get('prompt_key', 'rag_response')
+            new_prompt = dpo_loop.optimize_prompt_from_feedback(prompt_key)
+            if new_prompt:
+                return Response({"status": "success", "new_system_prompt": new_prompt})
+            return Response({"status": "error", "message": "Optimization failed or insufficient data."}, status=400)
+
+        return Response({"error": "Invalid action"}, status=status.HTTP_400_BAD_REQUEST)
 
 class AdaptersView(APIView):
     """
     API for managing MLOps Adapters.
-    Placeholder for now.
+    Allows real-time health checks and dynamic configuration.
     """
     permission_classes = [permissions.IsAdminUser]
 
     def get(self, request, *args, **kwargs):
-        # Placeholder logic: Return a success message and some dummy data
-        return Response({"message": "Adapters API - GET (placeholder)", "adapters": ["Adapter A", "Adapter B"]}, status=status.HTTP_200_OK)
+        container = get_container()
+        engine = container.inference.inference_engine()
+        health = engine.health_check()
+        
+        return Response({
+            "engine": "FallbackInferenceAdapter",
+            "health": health
+        }, status=status.HTTP_200_OK)
 
     def post(self, request, *args, **kwargs):
-        # Placeholder logic: Simulate processing and return a success message
-        return Response({"message": "Adapters API - POST (placeholder)", "received_data": request.data}, status=status.HTTP_200_OK)
+        action_type = request.data.get('action')
+        container = get_container()
+        engine = container.inference.inference_engine()
+
+        if action_type == 'set_primary':
+            index = int(request.data.get('index', 0))
+            if engine.set_primary_adapter(index):
+                return Response({"status": "success", "message": f"Adapter at index {index} is now primary."})
+            return Response({"error": "Invalid index"}, status=400)
+
+        if action_type == 'set_model':
+            model_name = request.data.get('model_name')
+            if not model_name:
+                return Response({"error": "model_name required"}, status=400)
+            
+            # Target the unified adapter specifically
+            unified = container.inference.unified_inference_adapter()
+            unified.set_model_name(model_name)
+            return Response({"status": "success", "message": f"Unified adapter switched to model {model_name}."})
+
+        return Response({"error": "Invalid action"}, status=status.HTTP_400_BAD_REQUEST)
 

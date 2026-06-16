@@ -35,8 +35,8 @@ class GoldDatasetEntryAdmin(admin.ModelAdmin):
     def validation_status_display(self, obj):
         from django.utils.safestring import mark_safe
         if obj.is_validated:
-            return mark_safe('<span style="color: green; font-weight: bold;">✔ Validé</span>')
-        return mark_safe('<span style="color: orange; font-weight: bold;">⏳ En attente</span>')
+            return mark_safe('<span style="color: green; font-weight: bold;">✔ Validé</span>') # nosec B308
+        return mark_safe('<span style="color: orange; font-weight: bold;">⏳ En attente</span>') # nosec B308
     validation_status_display.short_description = "Statut"
 
     def validate_selected(self, request, queryset):
