@@ -8,7 +8,6 @@ import {
   RefreshCw, 
   Layers, 
   Lock,
-  ChevronRight,
   Fingerprint,
   Target,
   Scale,
@@ -21,10 +20,12 @@ import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
+
+import { NeuroMemoryData, DeducedRule, NeuralSignal } from '../../types';
 
 const NeuroMemoryPage: React.FC = () => {
-  const { data, isLoading, refetch } = useQuery<any>({
+  const { data, isLoading, refetch } = useQuery<NeuroMemoryData>({
     queryKey: ['neuro-memory'],
     queryFn: () => apiClient('/api/v1/cognition/neuro-memory/'),
   });
@@ -38,7 +39,7 @@ const NeuroMemoryPage: React.FC = () => {
   });
 
   const signalMutation = useMutation({
-    mutationFn: (body: any) => apiClient('/api/v1/cognition/neuro-memory/', {
+    mutationFn: (body: { action: string; feedback_id: number; weight?: number }) => apiClient('/api/v1/cognition/neuro-memory/', {
         method: 'POST',
         body: JSON.stringify(body)
     }),
@@ -137,7 +138,7 @@ const NeuroMemoryPage: React.FC = () => {
                       <div className="p-8">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                               {data?.deduced_rules && data.deduced_rules.length > 0 ? (
-                                  data.deduced_rules.map((item: any) => (
+                                  data.deduced_rules.map((item: DeducedRule) => (
                                       <div key={item.id} className="group p-6 bg-black/40 rounded-[2rem] border border-white/5 hover:border-indigo-500/30 transition-all flex flex-col justify-between">
                                           <div>
                                               <div className="flex justify-between items-start mb-4">
@@ -189,7 +190,7 @@ const NeuroMemoryPage: React.FC = () => {
                           <div className="p-8">
                               <div className="grid grid-cols-1 gap-4">
                                   {data?.signals && data.signals.length > 0 ? (
-                                      data.signals.map((signal: any) => (
+                                      data.signals.map((signal: NeuralSignal) => (
                                           <div key={signal.id} className={`p-6 rounded-2xl border transition-all flex flex-col md:flex-row items-center gap-8 ${signal.is_ignored ? 'bg-black/20 border-white/5 opacity-40' : 'bg-white/5 border-white/10 hover:border-emerald-500/20'}`}>
                                               <div className="flex items-center gap-4 shrink-0">
                                                   <div className={`p-3 rounded-xl ${signal.is_positive ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>

@@ -7,13 +7,8 @@ import {
   Settings, 
   BarChart3, 
   Sparkles, 
-  CheckCircle2, 
-  AlertCircle,
-  Clock,
-  FlaskConical,
-  Play,
+  CheckCircle2,
   Copy,
-  ChevronRight,
   ShieldAlert,
   Database,
   X
@@ -36,9 +31,15 @@ interface EvalFailure {
     created_at: string;
 }
 
+interface OptimizationResult {
+    best_score: number;
+    best_template: string;
+    all_mutations: string[];
+}
+
 const AdminDSPyDashboard: React.FC = () => {
   const [template, setTemplate] = useState<string>("Réponds à la question suivante sur l'univers de l'anime : {query}");
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<OptimizationResult | null>(null);
   const [selectedFailure, setSelectedFailure] = useState<EvalFailure | null>(null);
 
   const { data: failures, isLoading: isLoadingFailures } = useQuery<EvalFailure[]>({
@@ -71,8 +72,19 @@ const AdminDSPyDashboard: React.FC = () => {
   };
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
+    navigator.clipboard.writeText(text).then(() => {
+      // Optionally show a success message
+    });
   };
+
+  // Pre-calculate stable random-ish scores for mutations to avoid Math.random() in render
+  const mutationStats = React.useMemo(() => {
+    if (!result?.all_mutations) return [];
+    return result.all_mutations.map((mut: string) => ({
+      width: 70 + (mut.length % 20), // Deterministic "random" width based on content
+      score: 0.7 + (mut.length % 20) / 100 // Deterministic "random" score
+    }));
+  }, [result]);
 
   return (
     <AnimatedPage>
@@ -104,11 +116,12 @@ const AdminDSPyDashboard: React.FC = () => {
                       <h3 className="text-xs font-black uppercase opacity-40 mb-8 tracking-widest flex items-center gap-2">
                           <Settings className="w-4 h-4 text-blue-500" /> Configuration de l'Optimiseur
                       </h3>
-                      
+
                       <form onSubmit={onSubmit} className="space-y-6">
                           <div>
-                              <label className="text-[10px] font-black uppercase opacity-30 mb-2 block tracking-widest">Template d'origine</label>
+                              <label htmlFor="template-editor" className="text-[10px] font-black uppercase opacity-30 mb-2 block tracking-widest">Template d'origine</label>
                               <textarea 
+                                  id="template-editor"
                                   value={template}
                                   onChange={(e) => setTemplate(e.target.value)}
                                   className="w-full bg-gray-50 dark:bg-black/20 border-2 border-black/5 dark:border-white/5 rounded-2xl p-6 text-sm font-bold min-h-[150px] focus:border-blue-500 outline-none transition-all font-mono text-black dark:text-white"
@@ -164,6 +177,14 @@ const AdminDSPyDashboard: React.FC = () => {
                                   <div 
                                       key={fail.id} 
                                       onClick={() => setSelectedFailure(fail)}
+                                      onKeyDown={(e) => {
+                                          if (e.key === 'Enter' || e.key === ' ') {
+                                              setSelectedFailure(fail);
+                                          }
+                                      }}
+                                      role="button"
+                                      tabIndex={0}
+                                      aria-label={`Détails de l'échec ${fail.id}`}
                                       className={`p-4 rounded-2xl border-2 transition-all cursor-pointer group ${selectedFailure?.id === fail.id ? 'bg-red-500/10 border-red-500/50' : 'bg-gray-50 dark:bg-black/20 border-black/5 dark:border-white/5 hover:border-red-500/30'}`}
                                   >
                                       <div className="flex justify-between items-center mb-2">
@@ -259,9 +280,9 @@ const AdminDSPyDashboard: React.FC = () => {
                                                       <span className="text-[8px] font-black opacity-30 uppercase tracking-widest">Variant #{i + 1}</span>
                                                       <div className="flex items-center gap-3">
                                                           <div className="w-20 h-1 bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden">
-                                                              <div className={`h-full ${mut === result.best_template ? 'bg-emerald-500' : 'bg-blue-500/40'}`} style={{ width: `${(Math.random() * 20 + 70)}%` }} />
+                                                              <div className={`h-full ${mut === result.best_template ? 'bg-emerald-500' : 'bg-blue-500/40'}`} style={{ width: `${mutationStats[i]?.width || 70}%` }} />
                                                           </div>
-                                                          <span className="text-[10px] font-black italic">{(Math.random() * 0.2 + 0.7).toFixed(2)}</span>
+                                                          <span className="text-[10px] font-black italic">{(mutationStats[i]?.score || 0.7).toFixed(2)}</span>
                                                       </div>
                                                   </div>
                                                   <p className="text-[11px] font-bold opacity-60 italic leading-relaxed line-clamp-2">
@@ -313,5 +334,3 @@ const AdminDSPyDashboard: React.FC = () => {
 };
 
 export default AdminDSPyDashboard;
-
-

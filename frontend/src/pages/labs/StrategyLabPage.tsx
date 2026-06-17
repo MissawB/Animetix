@@ -1,17 +1,10 @@
 import React, { useState } from 'react';
 import { 
-  Target, 
-  TrendingUp, 
-  Activity, 
-  BarChart3, 
+  Target,
   Zap, 
   Brain, 
   GitBranch,
-  Search,
-  Maximize2,
   RefreshCw,
-  Layers,
-  ChevronRight,
   ShieldCheck
 } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
@@ -22,16 +15,25 @@ import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion, AnimatePresence } from 'framer-motion';
 import _Plot from 'react-plotly.js';
-import { useTranslation } from 'react-i18next';
 
-const Plot = (_Plot as any).default || _Plot;
+
+const Plot = (_Plot as unknown as { default: React.ComponentType<unknown> }).default || _Plot;
+
+interface CFRResult {
+    history: Array<{
+        iteration: number;
+        avg_strategy: number[];
+        regrets: number[];
+    }>;
+    questions: string[];
+    final_strategy: number[];
+}
 
 const StrategyLabPage: React.FC = () => {
-  const { t } = useTranslation();
   const [iterations, setIterations] = useState(100);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<CFRResult | null>(null);
 
-  const mutation = useMutation({
+  const mutation = useMutation<CFRResult, Error, { iterations: number }>({
     mutationFn: (data: { iterations: number }) => 
         apiClient('/api/v1/cognition/cfr-strategy-lab/', {
             method: 'POST',
@@ -48,36 +50,36 @@ const StrategyLabPage: React.FC = () => {
 
   const getStrategyPlotData = () => {
       if (!result) return [];
-      const traces = [];
-      const iterations = result.history.map((step: any) => step.iteration);
+      const traces: Array<Partial<Plotly.Data>> = [];
+      const iterationsArr = result.history.map((step) => step.iteration);
 
       result.questions.forEach((q: string, idx: number) => {
           traces.push({
-              x: iterations,
-              y: result.history.map((step: any) => step.avg_strategy[idx]),
+              x: iterationsArr,
+              y: result.history.map((step) => step.avg_strategy[idx]),
               name: q,
               type: 'scatter',
               mode: 'lines',
               line: { width: 3 }
-          });
+          } as unknown as Partial<Plotly.Data>);
       });
       return traces;
   };
 
   const getRegretPlotData = () => {
       if (!result) return [];
-      const traces = [];
-      const iterations = result.history.map((step: any) => step.iteration);
+      const traces: Array<Partial<Plotly.Data>> = [];
+      const iterationsArr = result.history.map((step) => step.iteration);
 
       result.questions.forEach((q: string, idx: number) => {
           traces.push({
-              x: iterations,
-              y: result.history.map((step: any) => step.regrets[idx]),
+              x: iterationsArr,
+              y: result.history.map((step) => step.regrets[idx]),
               name: q,
               type: 'scatter',
               mode: 'lines',
               fill: 'tozeroy'
-          });
+          } as unknown as Partial<Plotly.Data>);
       });
       return traces;
   };
@@ -116,10 +118,11 @@ const StrategyLabPage: React.FC = () => {
                     <div className="space-y-8">
                         <div className="space-y-4">
                             <div className="flex justify-between">
-                                <label className="text-[10px] font-black uppercase tracking-widest opacity-30">Itérations de Convergence</label>
+                                <label htmlFor="iter-slider" className="text-[10px] font-black uppercase tracking-widest opacity-30">Itérations de Convergence</label>
                                 <span className="text-sm font-black text-red-500">{iterations}</span>
                             </div>
                             <input 
+                                id="iter-slider"
                                 type="range" 
                                 min="50" 
                                 max="500" 
@@ -201,7 +204,7 @@ const StrategyLabPage: React.FC = () => {
                                 </div>
                                 <Card padding="lg" className="bg-black border-white/5 min-h-[400px]">
                                     <Plot
-                                        data={getStrategyPlotData() as any}
+                                        data={getStrategyPlotData()}
                                         layout={{
                                             autosize: true,
                                             height: 400,
@@ -236,7 +239,7 @@ const StrategyLabPage: React.FC = () => {
                                 </div>
                                 <Card padding="lg" className="bg-black border-white/5 min-h-[300px]">
                                     <Plot
-                                        data={getRegretPlotData() as any}
+                                        data={getRegretPlotData()}
                                         layout={{
                                             autosize: true,
                                             height: 300,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Hash, Loader2 } from 'lucide-react';
+import { Send, Hash } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -19,15 +19,13 @@ const ClubChat: React.FC<ClubChatProps> = ({ clubId, clubName }) => {
   const [isConnected, setIsConnected] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<WebSocket | null>(null);
+  const lastInitId = useRef<string | null>(null);
 
   useEffect(() => {
-    // In a real scenario, use the actual backend URL
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const socketUrl = `${protocol}//${window.location.host}/ws/club/${clubId}/`;
-    
+    if (lastInitId.current === clubId) return;
+    lastInitId.current = clubId;
+
     // For demo purposes, we'll simulate the connection
-    // socketRef.current = new WebSocket(socketUrl);
-    
     setIsConnected(true);
     setMessages([
       { id: '1', sender: 'System', content: `Welcome to the ${clubName} chat!`, timestamp: new Date().toISOString() },
@@ -38,6 +36,7 @@ const ClubChat: React.FC<ClubChatProps> = ({ clubId, clubName }) => {
       if (socketRef.current) {
         socketRef.current.close();
       }
+      socketRef.current = null;
     };
   }, [clubId, clubName]);
 

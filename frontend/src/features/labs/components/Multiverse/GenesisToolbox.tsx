@@ -9,7 +9,7 @@ const SEEDS = [
   { id: 'Steampunk', label: 'Steampunk', icon: Shield, color: '#f59e0b' },
 ];
 
-interface GenesisToolboxProps {}
+type GenesisToolboxProps = object
 
 export const GenesisToolbox: React.FC<GenesisToolboxProps> = () => {
   return (

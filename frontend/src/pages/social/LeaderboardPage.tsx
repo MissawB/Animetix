@@ -2,6 +2,7 @@ import React from 'react';
 import { Trophy, Medal } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLeaderboard } from '../../features/social/hooks/useLeaderboard';
+import { Profile } from '../../types';
 import { Card } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
 import { useTranslation } from 'react-i18next';
@@ -38,7 +39,7 @@ const LeaderboardPage: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {(leaders || []).map((player: any, index: number) => (
+              {(leaders || []).map((player: Profile, index: number) => (
                 <tr key={player.username} className="bg-gray-50 dark:bg-navy-900 transition-transform hover:scale-[1.01] border border-gray-100 dark:border-white/5">
                   <td className="py-5 pl-6 rounded-l-2xl">
                     <div className="flex items-center gap-3">

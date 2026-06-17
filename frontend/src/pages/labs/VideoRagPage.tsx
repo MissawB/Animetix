@@ -58,12 +58,12 @@ const VideoRagPage: React.FC = () => {
     try {
       const response = await searchVideoSegments(searchQuery);
       if (response && response.status === 'success' && Array.isArray(response.results)) {
-        const mapped = response.results.map((res: any) => ({
+        const mapped = response.results.map((res) => ({
           id: res.id || `${res.video_id}_${res.start}`,
           start: Number(res.start) || 0,
           end: Number(res.end) || 0,
           description: res.summary || '',
-          type: determineSegmentType(res.summary),
+          type: determineSegmentType(res.summary || ''),
           video_id: res.video_id,
         }));
         setSegments(mapped);
@@ -71,9 +71,10 @@ const VideoRagPage: React.FC = () => {
       } else {
         setError('Aucun résultat valide retourné par le serveur.');
       }
-    } catch (err: any) {
-      console.error('Error during Video-RAG search:', err);
-      setError(err?.message || 'Une erreur est survenue lors de la recherche vectorielle.');
+    } catch (err) {
+      const error = err as Error;
+      console.error('Error during Video-RAG search:', error);
+      setError(error.message || 'Une erreur est survenue lors de la recherche vectorielle.');
     } finally {
       setIsLoading(false);
     }
@@ -131,7 +132,7 @@ const VideoRagPage: React.FC = () => {
 
               {/* Suggestions */}
               <div className="mt-8">
-                <label className="text-[10px] font-black uppercase opacity-40 tracking-widest block mb-3">Suggestions de test</label>
+                <span className="text-[10px] font-black uppercase opacity-40 tracking-widest block mb-3">Suggestions de test</span>
                 <div className="flex flex-col gap-2">
                   {SUGGESTIONS.map((s, idx) => (
                     <button

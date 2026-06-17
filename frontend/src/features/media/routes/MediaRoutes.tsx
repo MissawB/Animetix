@@ -6,7 +6,7 @@ const MangaReaderPage = lazy(() => import('../../../pages/media/MangaReaderPage'
 const CharacterDetailPage = lazy(() => import('../../../pages/media/CharacterDetailPage'));
 const StaffDetailPage = lazy(() => import('../../../pages/media/StaffDetailPage'));
 
-export const MediaRoutes = (
+export const MediaRoutes = () => (
   <>
     <Route path="/media/:mediaId/" element={<MediaDetailPage />} />
     <Route path="/media/:mediaType/:itemId/" element={<MediaDetailPage />} />

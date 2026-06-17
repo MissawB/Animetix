@@ -19,12 +19,8 @@ scout_distiller:
     la topologie des relations trouvées dans Neo4j et d'éliminer rigoureusement les
     distracteurs.
 complexity_analyzer:
-  template: "ANALYSE LA COMPLEXITÉ : '{query}'\n\nCRITÈRES :\n- 0 (Simple) : Recherche\
-    \ de fait direct, métadonnée unique.\n- 1 (Moyen) : Comparaison, recommandation\
-    \ simple.\n- 2 (Complexe) : Analyse thématique, paradoxes, synthèse multi-sources,\
-    \ raisonnement logique profond.\n\nRÉPONDS UNIQUEMENT EN JSON :\n{{\n  \"complexity_score\"\
-    : 0|1|2,\n  \"reasoning\": \"...\",\n  \"thinking_budget\": 0|500|1500\n}}\n"
-  system_prompt: Tu es l'Analyseur de Complexité Animetix.
+  template: "ANALYSE LA COMPLEXITÉ SÉMANTIQUE : '{query}'\n\nCRITÈRES DE BUDGET DYNAMIQUE (TTC) :\n- 0 (Simple) : Recherche de fait direct, métadonnée unique. Budget : 0.\n- 1 (Moyen) : Comparaison, recommandation simple. Budget suggéré : 100 à 500 tokens.\n- 2 (Complexe) : Analyse thématique, paradoxes, raisonnement logique profond. Budget suggéré : 500 à 2000 tokens.\n\nPrends en compte la structure logique (boucles, vérifications, déductions) requise pour répondre.\n\nRÉPONDS UNIQUEMENT EN JSON :\n{{\n  \"complexity_score\": 0|1|2,\n  \"reasoning\": \"...\",\n  \"thinking_budget\": <entier précis selon ton estimation, ex: 350>\n}}\n"
+  system_prompt: Tu es l'Analyseur de Complexité Animetix. Ton but est d'allouer le budget de tokens exact nécessaire à la réflexion (Nemotron 3 Ultra).
 searcher_plan:
   template: "RÔLE : Expert en Recherche (Searcher).\nREQUÊTE UTILISATEUR : '{query}'\n\
     \nMISSIONS :\n1. Identifie les entités nommées.\n2. Propose une requête de recherche\
@@ -718,4 +714,8 @@ vs_battle_ai_generator:
 video_rag_synthesis:
   template: "RÔLE : Expert en Synthèse Vidéo.\nREQUÊTE : '{query}'\n\nCHRONOLOGIE DES SEGMENTS ANALYSÉS :\n{context}\n\nMISSION : À partir des descriptions temporelles ci-dessus, fournis une réponse détaillée et chronologique à la requête.\nIdentifie les moments clés, les actions et les personnages impliqués. Si un timestamp précis est disponible, mentionne-le (ex: [12s]).\n\nRÉPONDS EN FRANÇAIS."
   system_prompt: Tu es le cerveau analytique du Vidéo-RAG Animetix. Tu transformes des descriptions de segments en un récit cohérent.
+
+video_narrative_generation:
+  template: "RÔLE : Chroniqueur Visuel Expert.\nTITRE DE L'ŒUVRE : {title}\n\nMISSION : Décris de manière extrêmement détaillée ce qui se passe dans cet extrait vidéo.\n\nCONSIGNES :\n1. STYLES GRAPHIQUES : Identifie le style d'animation, les jeux de lumière et les palettes de couleurs.\n2. ACTIONS : Détaille les mouvements, les techniques de combat et les expressions faciales.\n3. CONTEXTE : Relie les actions au lore de '{title}' si possible.\n\nSois factuel et précis. Ne fais pas de suppositions si l'image est floue."
+  system_prompt: Tu es l'Expert en Narration Visuelle d'Animetix. Ta description servira de base à un moteur de recherche sémantique.
 

@@ -16,10 +16,9 @@ import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
-import { useTranslation } from 'react-i18next';
+
 
 const CompanionChatPage: React.FC = () => {
-  const { t } = useTranslation();
   const [input, setInput] = useState('');
   const { history, isLoading, sendMessage, activeMentor, setMentor, clearHistory } = useCompanionStore();
   const scrollRef = useRef<HTMLDivElement>(null);

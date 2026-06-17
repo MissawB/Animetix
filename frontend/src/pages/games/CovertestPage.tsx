@@ -6,12 +6,9 @@ import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
 import { Badge } from "../../components/ui/Badge";
 import { CardSkeleton } from "../../components/ui/Skeleton";
-import { CovertestState } from "../../types";
 
-import { useTranslation } from 'react-i18next';
 
 const CovertestPage: React.FC = () => {
-  const { t } = useTranslation();
   const { gameState, loading, handleGuess } = useCovertest();
   const [guess, setGuess] = useState<string>('');
 

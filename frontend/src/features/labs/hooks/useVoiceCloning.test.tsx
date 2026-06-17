@@ -56,7 +56,7 @@ describe('useVoiceCloning Hook', () => {
 
     try {
       await result.current.clone({ text, audioFile, pitch });
-    } catch (e) {
+    } catch (_e) {
       // expected
     }
 

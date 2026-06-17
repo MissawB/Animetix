@@ -4,13 +4,15 @@ import { Loader2, Film, Play, Edit3, ArrowLeft, Sparkles } from 'lucide-react';
 import { VNPlayer } from '../../features/games/components/VNPlayer';
 import { VNDirector } from '../../features/games/components/VNDirector';
 
+import { VNScene } from '../../types';
+
 export const ForgeVNPage: React.FC = () => {
   const { fusionId } = useParams<{ fusionId: string }>();
   const navigate = useNavigate();
   const [mode, setMode] = useState<'player' | 'director'>('player');
-  const [scenes, setScenes] = useState<any[]>([]);
+  const [scenes, setScenes] = useState<VNScene[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchScript = async () => {
@@ -40,14 +42,14 @@ export const ForgeVNPage: React.FC = () => {
           setIsLoading(false);
         }, 1500);
 
-      } catch (err) {
-        setError("Impossible de charger le script du Visual Novel.");
+      } catch (_err) {
+        setErrorMessage("Impossible de charger le script du Visual Novel.");
         setIsLoading(false);
       }
     };
 
     if (fusionId) fetchScript();
-  }, [fusionId]);
+  }, [fusionId, setErrorMessage]);
 
   if (isLoading) {
     return (

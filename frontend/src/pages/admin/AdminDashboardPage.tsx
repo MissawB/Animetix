@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Users, Activity, Brain, Database, BarChart3, Clock, Settings, ArrowRight, Workflow, Target, Network, ListChecks, Coins, TrendingUp } from 'lucide-react';
+import { Shield, Users, Activity, Brain, Database, BarChart3, Clock, ArrowRight, Workflow, Target, Network, ListChecks, Coins, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card } from "../../components/ui/Card";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";

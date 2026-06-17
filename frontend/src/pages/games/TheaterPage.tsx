@@ -2,10 +2,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Film, 
-  Play, 
-  Sparkles, 
-  Clock, 
-  User, 
+  Play,
+  Clock,
   Heart,
   ChevronRight,
   BookOpen,
@@ -18,12 +16,10 @@ import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { CardSkeleton } from "../../components/ui/Skeleton";
-import { useTranslation } from 'react-i18next';
 
 const TheaterPage: React.FC = () => {
-  const { t } = useTranslation();
 
-  const { data: vns, isLoading, isError } = useQuery<any[]>({
+  const { data: vns, isLoading } = useQuery<Record<string, unknown>[]>({
     queryKey: ['theater-list'],
     queryFn: () => apiClient('/api/v1/archetypist/theater/'),
   });

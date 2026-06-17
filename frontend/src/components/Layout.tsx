@@ -16,7 +16,7 @@ import { SimulatedAdBanner } from '../features/billing/components/SimulatedAdBan
 import { 
   X, Home, Zap, Trophy, Settings, Sun, Moon, Monitor, 
   CheckCircle2, Shield, Sparkles, Gamepad2, Search, Compass, 
-  Network, Film, Users, UserPlus, FlaskConical, BrainCircuit, Eye, LogIn
+  Network, Film, Users, UserPlus, FlaskConical, BrainCircuit, Eye, LogIn, Microscope
 } from 'lucide-react';
 
 const Footer: React.FC = () => {
@@ -194,6 +194,9 @@ const LayoutContent: React.FC<{ children: ReactNode }> = ({ children }) => {
           </Link>
           <Link to="/lab/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/lab/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
             <FlaskConical className="w-4 h-4 text-green-400" /> {t('nav.betalab', 'Labo Bêta')}
+          </Link>
+          <Link to="/research/papers/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/research/papers/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
+            <Microscope className="w-4 h-4 text-cyan-500" /> {t('nav.research', 'Labo de Recherche')}
           </Link>
           <Link to="/social/nexus/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/social/nexus/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
             <BrainCircuit className="w-4 h-4 text-fuchsia-400" /> {t('nav.nexus', 'Nexus Pro')}

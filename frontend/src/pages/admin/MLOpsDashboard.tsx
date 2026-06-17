@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  Settings, 
+import {
   ShieldAlert, 
   Activity, 
   BarChart2, 
@@ -11,7 +10,6 @@ import {
   Brain,
   Zap,
   Terminal,
-  LayoutGrid,
   Trophy,
   Network,
   Wand2,

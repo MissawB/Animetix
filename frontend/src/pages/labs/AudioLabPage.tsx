@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Mic, MicOff, Play, Save, Trash2, Wand2, Search, Star, User, Languages, ArrowRight } from 'lucide-react';
+import { Mic, MicOff, Play, Save, Trash2, Wand2, Search, Star, User, ArrowRight } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -8,7 +8,6 @@ import { useTranslation } from 'react-i18next';
 import { useAudioLab } from '../../features/labs/hooks/useAudioLab';
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
-import { Input } from "../../components/ui/Input";
 import { Badge } from "../../components/ui/Badge";
 import { CardSkeleton } from "../../components/ui/Skeleton";
 
@@ -33,9 +32,9 @@ const AudioLabPage: React.FC = () => {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [seiyuuQuery, setSeiyuuQuery] = useState('');
   const [isDraggingOver, setIsDraggingOver] = useState(false);
-  const [selectedSeiyuu, setSelectedSeiyuu] = useState<any>(null);
+  const [selectedSeiyuu, setSelectedSeiyuu] = useState<Seiyuu | null>(null);
 
-  const { register, handleSubmit, formState: { errors }, setValue } = useForm<AudioFormValues>({
+  const { register, handleSubmit, formState: { errors } } = useForm<AudioFormValues>({
     resolver: zodResolver(audioSchema),
     defaultValues: { text: '' }
   });
@@ -43,7 +42,7 @@ const AudioLabPage: React.FC = () => {
   // Fetch initial seiyuu list
   useEffect(() => {
     searchSeiyuu('');
-  }, []);
+  }, [searchSeiyuu]);
 
   const startRecording = () => setIsRecording(true);
   const stopRecording = () => {
@@ -61,7 +60,7 @@ const AudioLabPage: React.FC = () => {
     }
   };
 
-  const onDragStart = (e: React.DragEvent, seiyuu: any) => {
+  const onDragStart = (e: React.DragEvent, seiyuu: Seiyuu) => {
     e.dataTransfer.setData('seiyuu', JSON.stringify(seiyuu));
   };
 
@@ -184,7 +183,14 @@ const AudioLabPage: React.FC = () => {
                                         </div>
                                         <span className="font-bold text-[9px] truncate max-w-[80px]">{rec.name}</span>
                                     </div>
-                                    <Trash2 className="w-3 h-3 text-red-500 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity" onClick={() => { setRecordings([]); setAudioFile(null); setSelectedSeiyuu(null); }} />
+                                    <button 
+                                      type="button"
+                                      aria-label="Supprimer l'enregistrement"
+                                      className="p-1 hover:bg-red-500/10 rounded transition-all opacity-0 group-hover:opacity-100 border-none bg-transparent cursor-pointer"
+                                      onClick={() => { setRecordings([]); setAudioFile(null); setSelectedSeiyuu(null); }}
+                                    >
+                                      <Trash2 className="w-3 h-3 text-red-500" />
+                                    </button>
                                 </div>
                             ))}
                         </div>
@@ -276,7 +282,7 @@ const AudioLabPage: React.FC = () => {
             </div>
 
             <div className="space-y-6 max-h-[800px] overflow-y-auto pr-2 custom-scrollbar">
-                {seiyuuResults.map((s: any, idx: number) => (
+                {seiyuuResults.map((s: Seiyuu, idx: number) => (
                     <div 
                         key={idx} 
                         draggable 
@@ -292,18 +298,18 @@ const AudioLabPage: React.FC = () => {
                             </div>
                             
                             <h4 className="text-lg font-black uppercase tracking-tight mb-0.5">{s.name}</h4>
-                            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-4 leading-relaxed line-clamp-1">{s.description}</p>
+                            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-4 leading-relaxed line-clamp-1">{s.role || 'Seiyuu'}</p>
                             
                             <div className="space-y-3">
                                 <div className="space-y-1">
                                     <span className="text-[8px] font-black uppercase text-blue-500 tracking-widest flex items-center gap-1">
                                         <Star className="w-2.5 h-2.5 fill-current" /> Rôles
                                     </span>
-                                    <p className="text-[10px] font-medium leading-relaxed italic opacity-80 line-clamp-2">{s.roles}</p>
+                                    <p className="text-[10px] font-medium leading-relaxed italic opacity-80 line-clamp-2">{s.role}</p>
                                 </div>
                                 
                                 <div className="pt-3 border-t border-black/5 dark:border-white/5 space-y-1">
-                                    <p className="text-[9px] leading-relaxed opacity-60 line-clamp-2">{s.impact}</p>
+                                    <p className="text-[9px] leading-relaxed opacity-60 line-clamp-2">Talent vocal certifié.</p>
                                 </div>
                             </div>
                             

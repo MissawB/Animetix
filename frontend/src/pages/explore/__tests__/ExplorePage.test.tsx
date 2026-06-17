@@ -22,9 +22,9 @@ describe('ExplorePage', () => {
   });
 
   it('renders the explore page title and sections', () => {
-    (global.fetch as any).mockResolvedValue({
+    vi.mocked(global.fetch).mockResolvedValue({
       json: async () => ({ trending: [] })
-    });
+    } as unknown as Response);
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -37,9 +37,9 @@ describe('ExplorePage', () => {
   });
 
   it('renders media type filters', () => {
-    (global.fetch as any).mockResolvedValue({
+    vi.mocked(global.fetch).mockResolvedValue({
       json: async () => ({ trending: [] })
-    });
+    } as unknown as Response);
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -60,9 +60,9 @@ describe('ExplorePage', () => {
       trending: []
     };
 
-    (global.fetch as any).mockResolvedValue({
+    vi.mocked(global.fetch).mockResolvedValue({
       json: async () => mockData
-    });
+    } as unknown as Response);
 
     render(
       <QueryClientProvider client={queryClient}>

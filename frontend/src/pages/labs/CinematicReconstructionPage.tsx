@@ -2,15 +2,12 @@ import React, { useState } from 'react';
 import { 
   Box, 
   Video, 
-  Upload, 
-  Sparkles, 
+  Upload,
   Zap, 
   Play, 
   Clock, 
-  Layers, 
-  ArrowRight,
+  Layers,
   Loader2,
-  AlertCircle,
   ChevronRight,
   Target,
   Maximize2
@@ -23,12 +20,22 @@ import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion, AnimatePresence } from 'framer-motion';
 
+interface DCSFrame {
+    model_url: string;
+    timestamp: number;
+    point_count: number;
+}
+
+interface DCSResult {
+    frames: DCSFrame[];
+}
+
 const CinematicReconstructionPage: React.FC = () => {
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
-  const [reconstructionResult, setReconstructionResult] = useState<any>(null);
+  const [reconstructionResult, setReconstructionResult] = useState<DCSResult | null>(null);
 
-  const mutation = useMutation({
+  const mutation = useMutation<DCSResult, Error, FormData>({
     mutationFn: (formData: FormData) => 
         apiClient('/api/v1/spatial-lab/cinematic-reconstruction/', {
             method: 'POST',
@@ -210,7 +217,7 @@ const CinematicReconstructionPage: React.FC = () => {
 
                             {/* Frames Grid */}
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {reconstructionResult.frames.map((frame: any, i: number) => (
+                                {reconstructionResult.frames.map((frame: DCSFrame, i: number) => (
                                     <Card key={i} padding="sm" className="bg-navy-900/40 border-white/5 group hover:border-purple-500/30 transition-all">
                                         <div className="aspect-square bg-black rounded-2xl mb-4 overflow-hidden relative">
                                             <img src={frame.model_url} alt={`Frame ${i}`} className="w-full h-full object-cover opacity-50 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all" />

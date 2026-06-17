@@ -1,18 +1,10 @@
 import React from 'react';
 import { BrainCircuit, CheckCircle2, ChevronRight, BookOpen, Fingerprint } from 'lucide-react';
-import type { components } from '../../types/api';
-
-type XaiReport = components['schemas']['XaiReport'];
+import { XaiReport, AgentTraceStep } from '../../types';
 
 export interface XaiReportViewerProps {
   report: XaiReport;
   className?: string;
-}
-
-interface AgentTraceStep {
-  agent?: string;
-  thought?: string;
-  [key: string]: unknown;
 }
 
 export const XaiReportViewer: React.FC<XaiReportViewerProps> = ({ report, className = '' }) => {

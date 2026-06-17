@@ -1,16 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../../utils/apiClient';
 
-export interface CurationTicket {
-  id: number;
-  item_title: string;
-  issue_description: string;
-  source_pg: any;
-  source_neo4j: any;
-  is_resolved: boolean;
-  created_at: string;
-}
-
 export const useCurationTickets = () => {
   const queryClient = useQueryClient();
 

@@ -218,7 +218,8 @@ class CoreServicesContainer(containers.DeclarativeContainer):
 
     self_play_debate_service = providers.Singleton(
         LazyClass("core.domain.services.self_play_debate_service", "SelfPlayDebateService"),
-        llm_service=agentic.llm_service
+        llm_service=agentic.llm_service,
+        neo4j_manager=persistence.graph_persistence_port
     )
 
     ragas_eval_service = providers.Singleton(
@@ -439,7 +440,8 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         LazyClass("core.domain.services.video_language_indexing_service", "VideoLanguageIndexingService"),
         inference_engine=inference.inference_engine,
         prompt_manager=infrastructure.prompt_manager,
-        repository=persistence.repository
+        repository=persistence.repository,
+        feedback_port=persistence.feedback_adapter
     )
 
     manga_service = providers.Singleton(

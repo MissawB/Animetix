@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { useAuthStore } from "../../store/authStore";
-import { updateAccountSettings, generateApiKey, revokeApiKey } from '../../api';
+import { updateAccountSettings } from '../../api';
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
-import { useTranslation } from 'react-i18next';
-import { Settings, Key, ShieldAlert, Star, AlertTriangle, Eye, EyeOff, MessageSquare, ChevronRight, Sparkles, BarChart3 } from 'lucide-react';
+import {Settings, Star, ChevronRight, Sparkles, BarChart3, Terminal} from 'lucide-react';
 import { useToastStore } from "../../store/toastStore";
 import { Link } from 'react-router-dom';
 
@@ -19,13 +18,8 @@ const PRESET_COLORS = [
 ];
 
 const AccountSettingsPage: React.FC = () => {
-  const { t } = useTranslation();
-  const { user, checkAuth, refetchUser } = useAuthStore();
+  const { user, refetchUser } = useAuthStore();
   const { addToast } = useToastStore();
-  
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [apiKey, setApiKey] = useState<string | null>(null);
-  const [showKey, setShowKey] = useState(false);
 
   const [customColor, setCustomColor] = useState(user?.custom_username_color || '#FFD700');
   const [isSavingColor, setIsSavingColor] = useState(false);
@@ -33,50 +27,6 @@ const AccountSettingsPage: React.FC = () => {
   if (!user) {
     return <div className="p-20 text-center">Vous devez être connecté.</div>;
   }
-
-  const handleUpdateTier = async (newTier: string) => {
-    setIsUpdating(true);
-    try {
-      await updateAccountSettings({ tier: newTier });
-      await checkAuth(); // Refresh user data
-      addToast(t('account.updateSuccess', 'Niveau mis à jour avec succès'), 'success');
-    } catch (error) {
-      addToast(t('account.updateError', 'Erreur lors de la mise à jour'), 'error');
-    } finally {
-      setIsUpdating(false);
-    }
-  };
-
-  const handleGenerateKey = async () => {
-    if (!window.confirm("Générer une nouvelle clé révoquera l'ancienne. Continuer ?")) return;
-    setIsUpdating(true);
-    try {
-      const response = await generateApiKey();
-      setApiKey(response.api_key);
-      await checkAuth();
-      addToast(t('account.keyGenerated', 'Nouvelle clé API générée. Copiez-la maintenant !'), 'success');
-    } catch (error) {
-      addToast(t('account.keyError', 'Erreur lors de la génération de la clé'), 'error');
-    } finally {
-      setIsUpdating(false);
-    }
-  };
-
-  const handleRevokeKey = async () => {
-    if (!window.confirm("Êtes-vous sûr de vouloir révoquer votre clé API ?")) return;
-    setIsUpdating(true);
-    try {
-      await revokeApiKey();
-      setApiKey(null);
-      await checkAuth();
-      addToast(t('account.keyRevoked', 'Clé API révoquée'), 'success');
-    } catch (error) {
-      addToast(t('account.revokeError', 'Erreur lors de la révocation'), 'error');
-    } finally {
-      setIsUpdating(false);
-    }
-  };
-
   const handleSaveColor = async (colorToSave: string) => {
     setIsSavingColor(true);
     try {
@@ -248,7 +198,7 @@ const AccountSettingsPage: React.FC = () => {
                     className="font-black italic manga-font text-xs text-red-500 hover:bg-red-500 hover:text-white border-red-500/10"
                     onClick={() => {
                       setCustomColor("");
-                      handleSaveColor("");
+                      handleSaveColor("").then();
                     }}
                     disabled={isSavingColor}
                   >
@@ -302,4 +252,3 @@ const AccountSettingsPage: React.FC = () => {
 };
 
 export default AccountSettingsPage;
-

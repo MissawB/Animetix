@@ -4,7 +4,6 @@ import {
   Activity,
   Flame,
   Loader2,
-  ChevronRight,
   ShieldCheck,
   Zap,
   Target,
@@ -18,7 +17,8 @@ import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
-import { motion, AnimatePresence } from 'framer-motion';
+
+import { PlasticityResult } from '../../types';
 
 const CONCEPTS = [
   'Shonen', 'Seinen', 'Cyberpunk', 'Mecha', 'Fantasy',
@@ -27,16 +27,18 @@ const CONCEPTS = [
 
 const SynapticLabPage: React.FC = () => {
   const { t } = useTranslation();
-  const [activations] = useState<number[]>(Array(10).fill(0).map(() => Math.random()));
+  const [activations] = useState<number[]>(Array(10).fill(0).map((_, i) => (i * 0.13) % 1.0));
   const [selectedSpikes, setSelectedSpikes] = useState<number[]>([]);
   const [lr, setLr] = useState(0.05);
-  const [plasticityResult, setPlasticityResult] = useState<any | null>(null);
+  const [plasticityResult, setPlasticityResult] = useState<PlasticityResult | null>(null);
 
-  const plasticityMutation = useMutation({
-    mutationFn: (body: any) => apiClient('/api/v1/singularity-lab/', { 
-        method: 'POST', 
-        body: JSON.stringify(body) 
-    }),
+
+  const plasticityMutation = useMutation<PlasticityResult, Error, { action: string; learning_rate: number; trigger_spikes: number[] }>({
+    mutationFn: (body: { action: string; learning_rate: number; trigger_spikes: number[] }) => 
+        apiClient('/api/v1/singularity-lab/', { 
+            method: 'POST', 
+            body: JSON.stringify(body) 
+        }),
     onSuccess: (data) => setPlasticityResult(data)
   });
 
@@ -83,10 +85,11 @@ const SynapticLabPage: React.FC = () => {
                           <div className="space-y-6">
                               <div className="space-y-3">
                                   <div className="flex justify-between items-center px-2">
-                                      <label className="text-[10px] font-black opacity-30 uppercase tracking-widest">Learning Rate (η)</label>
+                                      <label htmlFor="lr-slider" className="text-[10px] font-black opacity-30 uppercase tracking-widest">Learning Rate (η)</label>
                                       <span className="text-xs font-mono text-red-500">{lr.toFixed(3)}</span>
                                   </div>
                                   <input 
+                                      id="lr-slider"
                                       type="range" 
                                       min="0.01" 
                                       max="0.2" 

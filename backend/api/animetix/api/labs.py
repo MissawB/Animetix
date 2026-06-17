@@ -169,10 +169,20 @@ class SingularityLabDataView(APIView):
                 now = time.time()
                 service.trigger_spikes(active_indices, now)
                 updated_W = service.update_hebbian(activations, learning_rate=learning_rate)
+                
+                # Check for STDP if two specific indices provided
+                stdp_log = []
+                if len(active_indices) >= 2:
+                    pre, post = active_indices[0], active_indices[1]
+                    dW = service.update_stdp(pre, post, learning_rate=learning_rate)
+                    stdp_log.append(f"STDP Update: {pre} -> {post} (dW: {dW:+.4f})")
+
                 return Response({
                     'status': 'success',
-                    'message': "Plasticité synaptique (Hebb) mise à jour !",
-                    'weights_mean': float(np.mean(updated_W))
+                    'message': "Plasticité synaptique synchronisée !",
+                    'weights': updated_W.tolist(),
+                    'weights_mean': float(np.mean(updated_W)),
+                    'stdp_log': stdp_log
                 })
             except Exception as e:
                 return Response({'error': str(e)}, status=500)
@@ -181,8 +191,7 @@ class SingularityLabDataView(APIView):
             deduct_berrix(request.user, 20, "Singularity: Effondrement Quantique")
             theme = request.data.get('theme', 'shonen').lower()
             try:
-                from core.domain.services.quantum_cognitive_service import QuantumCognitiveService
-                model = QuantumCognitiveService(dimension=4)
+                model = container.core.quantum_cognitive_model()
                 prob, outcome = model.measure_preference(theme)
                 return Response({
                     'status': 'success',

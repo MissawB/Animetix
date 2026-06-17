@@ -10,12 +10,16 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full flex flex-col gap-2 text-left">
         {label && (
-          <label className="text-xs font-black uppercase opacity-60 tracking-wider pl-1">
+          <label 
+            htmlFor={props.id}
+            className="text-xs font-black uppercase opacity-60 tracking-wider pl-1"
+          >
             {label}
           </label>
         )}
         <input
           ref={ref}
+          id={props.id}
           className={`w-full p-4 md:p-5 rounded-token-button bg-surface-text/5 dark:bg-navy-900 border-2 outline-none font-bold text-base md:text-lg shadow-inner transition-all placeholder:font-normal placeholder:opacity-40
             ${error 
               ? 'border-brand-danger focus:ring-4 focus:ring-brand-danger/20 text-brand-danger' 

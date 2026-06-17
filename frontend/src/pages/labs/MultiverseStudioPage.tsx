@@ -45,9 +45,8 @@ interface MultiverseData {
 
 const MultiverseStudioPage: React.FC = () => {
   const queryClient = useQueryClient();
-  const [activeSynthesis, setActiveSynthesis] = useState<any[]>([]);
+  const [activeSynthesis, setActiveSynthesis] = useState<MultiverseNode[]>([]);
   const [selectedNode, setSelectedNode] = useState<MultiverseNode | null>(null);
-  const fgRef = useRef<any>(null);
 
   // --- Queries & Mutations ---
 
@@ -56,11 +55,12 @@ const MultiverseStudioPage: React.FC = () => {
     queryFn: () => apiClient('/api/v1/multiverse/gallery/'),
   });
 
-  const synthesizeMutation = useMutation({
-    mutationFn: (body: any) => apiClient('/api/v1/singularity-lab/', { 
-        method: 'POST', 
-        body: JSON.stringify(body) 
-    }),
+  const synthesizeMutation = useMutation<void, Error, { action: string; universe_name: string; genre: string }>({
+    mutationFn: (body: { action: string; universe_name: string; genre: string }) => 
+        apiClient('/api/v1/singularity-lab/', { 
+            method: 'POST', 
+            body: JSON.stringify(body) 
+        }),
     onSuccess: () => {
         // Refresh graph data after a successful generation
         queryClient.invalidateQueries({ queryKey: ['multiverse-gallery'] });
@@ -71,7 +71,7 @@ const MultiverseStudioPage: React.FC = () => {
 
   const handleDropSeed = (seed: string, x: number, y: number) => {
     const id = `latent_${Date.now()}`;
-    const latentNode = { id, name: `Synthesizing ${seed}...`, type: 'universe', x, y };
+    const latentNode: MultiverseNode = { id, name: `Synthesizing ${seed}...`, type: 'universe', x, y };
     
     setActiveSynthesis(prev => [...prev, latentNode]);
     mutationsInProgress.current.add(id);
@@ -99,7 +99,7 @@ const MultiverseStudioPage: React.FC = () => {
 
   // --- Graph Helpers ---
 
-  const handleNodeClick = useCallback((node: any) => {
+  const handleNodeClick = useCallback((node: MultiverseNode) => {
     setSelectedNode(node);
   }, []);
 

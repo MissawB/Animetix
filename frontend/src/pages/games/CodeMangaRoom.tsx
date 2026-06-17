@@ -6,10 +6,11 @@ import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
 
-import { useTranslation } from 'react-i18next';
+
+
+import { GamePlayer, ChatMessage } from '../../types';
 
 const CodeMangaRoom: React.FC = () => {
-  const { t } = useTranslation();
   const { roomCode } = useParams<{ roomCode: string }>();
   const { gameState, messages, connected, sendAction } = useSocket(roomCode, 'codemanga');
   const [inputMessage, setInputMessage] = useState<string>('');
@@ -24,6 +25,9 @@ const CodeMangaRoom: React.FC = () => {
 
   if (!connected) return <div className="text-center py-20 text-white font-black animate-pulse uppercase tracking-[0.4em]">Connexion au terminal...</div>;
 
+  const players = (gameState?.players as GamePlayer[]) || [];
+  const chatMessages = (messages as unknown as ChatMessage[]) || [];
+
   return (
     
       <div className="max-w-7xl mx-auto px-6 py-12">
@@ -36,7 +40,7 @@ const CodeMangaRoom: React.FC = () => {
                       <Users className="w-4 h-4" /> Hackers actifs
                   </h3>
                   <div className="space-y-4">
-                      {gameState?.players?.map((player: any) => (
+                      {players.map((player) => (
                           <div key={player.id} className="flex items-center gap-4 p-2">
                               <div className={`w-3 h-3 rounded-full ${player.is_online ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : 'bg-gray-300'}`}></div>
                               <span className="font-bold text-sm">{player.username}</span>
@@ -67,19 +71,19 @@ const CodeMangaRoom: React.FC = () => {
                   <div className="bg-gray-900 rounded-3xl p-8 mb-8 border border-white/10 font-mono text-green-400 relative shadow-inner">
                       <Sparkles className="w-6 h-6 absolute top-6 right-6 opacity-20" />
                       <pre className="whitespace-pre-wrap text-sm md:text-lg">
-                          {gameState?.current_code || '// Initialisation de la session de hack...'}
+                          {(gameState?.current_code as string) || '// Initialisation de la session de hack...'}
                       </pre>
                   </div>
 
                   <div className="mt-auto">
                       <div className="bg-white/5 rounded-3xl p-6 mb-6 max-h-40 overflow-y-auto border border-white/5">
-                          {messages.map((msg: any, i: number) => (
+                          {chatMessages.map((msg, i) => (
                               <div key={i} className="text-xs mb-2 animate-fade-in">
                                   <span className="text-blue-400 font-bold mr-2">[{msg.user}]:</span>
                                   <span className="text-white/70">{msg.text}</span>
                               </div>
                           ))}
-                          {messages.length === 0 && <p className="text-center text-white/10 italic text-[10px]">TERMINAL SILENCIEUX</p>}
+                          {chatMessages.length === 0 && <p className="text-center text-white/10 italic text-[10px]">TERMINAL SILENCIEUX</p>}
                       </div>
 
                       <form onSubmit={handleSendMessage} className="relative flex gap-4">

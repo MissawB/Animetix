@@ -2,14 +2,10 @@ import React from 'react';
 import { 
   Trophy, 
   Cpu, 
-  BarChart3, 
-  ShieldCheck, 
+  BarChart3,
   Globe, 
-  Zap, 
-  ArrowUpRight, 
-  Layers, 
+  Zap,
   Activity,
-  Server,
   Code,
   Sparkles
 } from 'lucide-react';
@@ -18,10 +14,11 @@ import { apiClient } from "../../utils/apiClient";
 import { Card } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
-import { motion } from 'framer-motion';
+
+import { BenchmarkData, ModelBenchmark } from '../../types';
 
 const SOTABenchmarkPage: React.FC = () => {
-  const { data, isLoading, isError } = useQuery<any>({
+  const { data, isLoading, isError } = useQuery<BenchmarkData>({
     queryKey: ['sota-benchmarks'],
     queryFn: () => apiClient('/api/v1/mlops/sota/benchmarks/'),
   });
@@ -33,7 +30,7 @@ const SOTABenchmarkPage: React.FC = () => {
     </div>
   );
 
-  if (isError) return (
+  if (isError || !data) return (
     <div className="max-w-7xl mx-auto px-6 py-32 text-center text-red-500">
         <h2 className="text-3xl font-black italic uppercase">Sync Failure</h2>
         <p className="opacity-50 mt-4">Impossible de récupérer les benchmarks en temps réel.</p>
@@ -137,9 +134,10 @@ const SOTABenchmarkPage: React.FC = () => {
                           </tr>
                       </thead>
                       <tbody className="divide-y divide-black/5 dark:divide-white/5">
-                          {benchmarks.sort((a: any, b: any) => b.elo_score - a.elo_score).map((m: any, i: number) => (
+                          {[...benchmarks].sort((a: ModelBenchmark, b: ModelBenchmark) => b.elo_score - a.elo_score).map((m: ModelBenchmark, i: number) => (
                               <tr key={m.model_id} className="group hover:bg-gray-50/50 dark:hover:bg-white/[0.02] transition-colors">
                                   <td className="px-12 py-6">
+
                                       <span className={`text-xl font-black italic manga-font ${i === 0 ? 'text-yellow-500' : 'opacity-20'}`}>
                                           #0{i + 1}
                                       </span>

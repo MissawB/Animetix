@@ -20,11 +20,13 @@ import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { CardSkeleton } from "../../components/ui/Skeleton";
 
+import { NotableWork } from '../../types';
+
 const StaffDetailPage: React.FC = () => {
   const { staffId } = useParams<{ staffId: string }>();
 
   // Use generic media detail for Actor/Staff types
-  const { data: staff, isLoading, isError } = useQuery({
+  const { data: staff, isLoading, isError } = useQuery<MediaDetail>({
     queryKey: ['staff-detail', staffId],
     queryFn: () => apiClient(`/api/v1/media/Actor/${staffId}/`),
   });
@@ -139,8 +141,8 @@ const StaffDetailPage: React.FC = () => {
                         <Star className="w-4 h-4 text-yellow-400" /> Œuvres Notables
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        {staff.metadata?.notable_works?.map((work: any, i: number) => (
-                            <Link key={i} to={`/media/${work.type || 'Anime'}/${work.id}/`} className="no-underline group">
+                        {staff.metadata?.notable_works?.map((work: NotableWork) => (
+                            <Link key={work.id} to={`/media/${work.type || 'Anime'}/${work.id}/`} className="no-underline group">
                                 <Card className="p-4 bg-gray-900/50 border-white/5 group-hover:border-emerald-500/30 transition-all flex items-center gap-4">
                                     <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
                                         <img src={work.image || 'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?auto=format&fit=crop&q=80&w=200'} className="w-full h-full object-cover" alt="" />

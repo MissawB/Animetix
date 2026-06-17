@@ -31,6 +31,6 @@ export const initObservability = () => {
 };
 
 // Utilitaire pour capturer des événements personnalisés
-export const trackEvent = (name: string, properties?: Record<string, any>) => {
+export const trackEvent = (name: string, properties?: Record<string, unknown>) => {
   posthog.capture(name, properties);
 };

@@ -3,12 +3,20 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../../utils/apiClient';
 import { Card } from '../../../components/ui/Card';
 import { Gamepad2, Check, X, Clock } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+
+interface GameSession {
+  id: number;
+  game_mode: string;
+  media_type: string;
+  target_item: string;
+  was_won: boolean;
+  history: Record<string, unknown>[]; 
+  created_at: string;
+}
 
 export const GameHistoryPanel: React.FC = () => {
-  const { t } = useTranslation();
 
-  const { data: sessions, isLoading, isError } = useQuery({
+  const { data: sessions, isLoading, isError } = useQuery<GameSession[]>({
     queryKey: ['gameplay-history'],
     queryFn: () => apiClient('/api/v1/social/gameplay-history/?limit=10'),
   });
@@ -31,7 +39,7 @@ export const GameHistoryPanel: React.FC = () => {
         </div>
         
         <div className="space-y-4 overflow-y-auto pr-2" style={{ maxHeight: '400px' }}>
-            {sessions.map((session: any) => (
+            {sessions.map((session) => (
                 <div key={session.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors">
                     <div className="flex items-center gap-4">
                         <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${session.was_won ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'}`}>

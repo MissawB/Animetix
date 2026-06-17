@@ -18,7 +18,7 @@ const ArchetypeNexusPage = lazy(() => import('../../../pages/social/ArchetypeNex
 const AIDebateArenaPage = lazy(() => import('../../../pages/social/AIDebateArenaPage'));
 const NeuroMemoryPage = lazy(() => import('../../../pages/social/NeuroMemoryPage'));
 
-export const SocialRoutes = (
+export const SocialRoutes = () => (
   <>
     <Route path="/social/dashboard/" element={<SocialDashboard />} />
     <Route path="/social/hub/" element={<SocialHubPage />} />

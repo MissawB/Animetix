@@ -32,26 +32,34 @@ const FinancialDashboardPage: React.FC = () => {
   const [cpc, setCpc] = useState<number>(0.15);
   const [donationVal, setDonationVal] = useState<number>(5.00);
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = useCallback(async () => {
     try {
-      const res = await fetch('/api/v1/admin/financials/');
+      const res = await fetch('/api/v1/billing/admin/financial-summary/');
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}`);
       }
       const json = await res.json();
       setData(json);
       setError(null);
-    } catch (err: any) {
-      setError(err.message || 'Erreur inconnue');
+    } catch (err) {
+      const error = err as Error;
+      setError(error.message || 'Erreur inconnue');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    let ignore = false;
+    if (loading) {
+        setTimeout(() => {
+            fetchData().then(() => {
+                if (ignore) return;
+            });
+        }, 0);
+    }
+    return () => { ignore = true; };
+  }, [fetchData, loading]);
 
   if (loading) {
     return (

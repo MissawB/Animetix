@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {  } from 'react';
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
@@ -7,36 +7,22 @@ import { apiClient } from "../../utils/apiClient";
 import { useQuery, useMutation } from '@tanstack/react-query';
 
 const MLOpsConsolePage: React.FC = () => {
-  const [dpoStatus, setDpoStatus] = useState<string>('idle');
-  const [metrics, setMetrics] = useState<any>({});
-  const [adapters, setAdapters] = useState<any>({});
-
   // Fetch DPO status and metrics
   const dpoQuery = useQuery({
     queryKey: ['dpoStatus'],
     queryFn: () => apiClient('/api/mlops/dpo-loop/', { method: 'GET' }),
-    // refetchInterval: 5000, // Polling toutes les 5 secondes
   });
 
-  useEffect(() => {
-    if (dpoQuery.data) {
-      setDpoStatus(dpoQuery.data.status);
-      setMetrics(dpoQuery.data.metrics);
-    }
-  }, [dpoQuery.data]);
+  const dpoStatus = dpoQuery.data?.status || 'idle';
+  const metrics = dpoQuery.data?.metrics || {};
 
   // Fetch adapters info
   const adaptersQuery = useQuery({
     queryKey: ['mlopsAdapters'],
     queryFn: () => apiClient('/api/mlops/adapters/', { method: 'GET' }),
-    // refetchInterval: 10000, // Polling toutes les 10 secondes
   });
 
-  useEffect(() => {
-    if (adaptersQuery.data) {
-      setAdapters(adaptersQuery.data);
-    }
-  }, [adaptersQuery.data]);
+  const adapters = adaptersQuery.data || {};
 
   // DPO loop actions
   const dpoMutation = useMutation({
@@ -76,7 +62,7 @@ const MLOpsConsolePage: React.FC = () => {
           {/* Adapters Management */}
           <Card padding="lg" className="bg-navy-950/50 border-white/10 rounded-xl shadow-2xl">
             <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><List className="w-5 h-5 text-blue-400" /> Gestion des Adaptateurs</h2>
-            {Object.entries(adapters).map(([type, adapterInfo]: [string, any]) => (
+            {Object.entries(adapters as Record<string, { active: string, available: string[] }>).map(([type, adapterInfo]) => (
               <div key={type} className="mb-4">
                 <h3 className="text-lg font-semibold capitalize">{type} Adapters:</h3>
                 <p>Active: <span className="font-bold text-green-400">{adapterInfo.active}</span></p>

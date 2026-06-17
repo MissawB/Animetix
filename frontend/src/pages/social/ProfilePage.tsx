@@ -3,13 +3,16 @@ import { useParams, Link } from 'react-router-dom';
 import { User, Shield, Zap, Award, ArrowRight, Brain, Sparkles } from 'lucide-react';
 import { useProfile } from '../../features/social/hooks/useProfile';
 import { Card } from "../../components/ui/Card";
-import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { useTranslation } from 'react-i18next';
 import { CardSkeleton } from "../../components/ui/Skeleton";
 import { GameHistoryPanel } from '../../features/social/components/GameHistoryPanel';
+import type { components } from '../../types/api';
 
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
+
+type ApiAchievement = components["schemas"]["Achievement"];
+type ApiCreativeFusion = components["schemas"]["CreativeFusion"];
 
 const StatCard: React.FC<{ label: string; value: number; icon: React.ReactNode }> = ({ label, value, icon }) => (
   <div className="bg-gray-50 dark:bg-black/20 p-8 rounded-[2rem] text-center border border-black/5 dark:border-white/5 shadow-inner">
@@ -95,7 +98,7 @@ const ProfilePage: React.FC = () => {
                         <Award className="w-4 h-4 text-yellow-500" /> Succès Récents
                     </h3>
                     <div className="space-y-4">
-                        {profile.recent_achievements?.map((ach: any, i: number) => (
+                        {profile.recent_achievements?.map((ach: ApiAchievement, i: number) => (
                             <div key={i} className="flex items-center gap-4 p-4 bg-white dark:bg-white/5 rounded-2xl border border-black/5 dark:border-white/5 group hover:border-yellow-400 transition-all shadow-sm">
                                 <div className="w-10 h-10 bg-yellow-500/10 rounded-xl flex items-center justify-center text-yellow-500 group-hover:scale-110 transition-transform">
                                     <Award className="w-6 h-6" />
@@ -123,7 +126,7 @@ const ProfilePage: React.FC = () => {
                         <Zap className="w-4 h-4 text-blue-500" /> Fusions Favorites
                     </h3>
                     <div className="grid grid-cols-2 gap-4">
-                        {profile.top_fusions?.map((fusion: any, i: number) => (
+                        {profile.top_fusions?.map((fusion: ApiCreativeFusion, i: number) => (
                             <div key={i} className="aspect-video rounded-xl overflow-hidden relative group cursor-pointer border border-black/5 dark:border-white/5 hover:border-blue-500 transition-all shadow-sm">
                                 <img src={fusion.image_url} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="" />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />

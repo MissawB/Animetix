@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { getAIFeedbackHistory, AIFeedback } from '../../api';
+import { getAIFeedbackHistory } from '../../api';
 import { Card } from "../../components/ui/Card";
-import { useTranslation } from 'react-i18next';
-import { MessageSquare, ThumbsUp, ThumbsDown, Calendar, Clock, ChevronLeft } from 'lucide-react';
+import { MessageSquare, ThumbsUp, ThumbsDown, Calendar, ChevronLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import {AIFeedback} from "../../types";
 
 const AIFeedbackHistoryPage: React.FC = () => {
-  const { t } = useTranslation();
   const [feedbacks, setFeedbacks] = useState<AIFeedback[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -21,7 +20,7 @@ const AIFeedbackHistoryPage: React.FC = () => {
         setIsLoading(false);
       }
     };
-    fetchHistory();
+    fetchHistory().then();
   }, []);
 
   if (isLoading) {

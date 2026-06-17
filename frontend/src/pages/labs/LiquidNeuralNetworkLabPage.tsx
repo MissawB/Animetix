@@ -19,17 +19,21 @@ import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
-import { motion } from 'framer-motion';
 
-const Plot = (_Plot as any).default || _Plot;
+const Plot = (_Plot as unknown as { default: React.ComponentType<unknown> }).default || _Plot;
+
+interface LNNResult {
+    state_history: number[][];
+    state_dimension: number;
+}
 
 const LiquidNeuralNetworkLabPage: React.FC = () => {
   const { t } = useTranslation();
   const [signal, setSignal] = useState<number[][]>([[0.5, 0.2], [0.8, 0.4], [0.3, 0.9], [0.6, 0.1], [0.9, 0.7]]);
   const [dt, setDt] = useState(0.05);
-  const [simulationResult, setSimulationResult] = useState<any>(null);
+  const [simulationResult, setSimulationResult] = useState<LNNResult | null>(null);
 
-  const simulateMutation = useMutation({
+  const simulateMutation = useMutation<LNNResult, Error>({
     mutationFn: async () => {
         return apiClient('/api/v1/labs/liquid-nn/', {
             method: 'POST',
@@ -45,29 +49,29 @@ const LiquidNeuralNetworkLabPage: React.FC = () => {
   useEffect(() => {
       // Auto-simulate on mount
       simulateMutation.mutate();
-  }, []);
+  }, [simulateMutation]);
 
   const handleRandomSignal = () => {
-      const newSignal = Array.from({ length: 20 }, () => [Math.random(), Math.random()]);
-      setSignal(newSignal);
+    const newSignal = Array.from({ length: 20 }, () => [Math.random(), Math.random()]);
+    setSignal(newSignal);
   };
 
   const getPlotData = () => {
-      if (!simulationResult) return [];
-      const { state_history, state_dimension } = simulationResult;
-      
-      const traces = [];
-      for (let i = 0; i < state_dimension; i++) {
-          traces.push({
-              x: state_history.map((_: any, idx: number) => idx * dt),
-              y: state_history.map((step: number[]) => step[i]),
-              name: `Neurone ${i + 1}`,
-              type: 'scatter',
-              mode: 'lines',
-              line: { width: 2, shape: 'spline' }
-          });
-      }
-      return traces;
+    if (!simulationResult) return [];
+    const { state_history, state_dimension } = simulationResult;
+
+    const traces: Array<Partial<Plotly.Data>> = [];
+    for (let i = 0; i < state_dimension; i++) {
+        traces.push({
+            x: state_history.map((_, idx: number) => idx * dt),
+            y: state_history.map((step: number[]) => step[i]),
+            name: `Neurone ${i + 1}`,
+            type: 'scatter',
+            mode: 'lines',
+            line: { width: 2, shape: 'spline' }
+        } as unknown as Partial<Plotly.Data>);
+    }
+    return traces;
   };
 
   return (
@@ -98,8 +102,9 @@ const LiquidNeuralNetworkLabPage: React.FC = () => {
                     
                     <div className="space-y-6">
                         <div>
-                            <label className="text-[10px] font-black uppercase opacity-30 mb-2 block">Pas temporel (dt)</label>
+                            <label htmlFor="dt-slider" className="text-[10px] font-black uppercase opacity-30 mb-2 block">Pas temporel (dt)</label>
                             <input 
+                                id="dt-slider"
                                 type="range" min="0.01" max="0.2" step="0.01" 
                                 value={dt} onChange={(e) => setDt(parseFloat(e.target.value))}
                                 className="w-full h-1.5 bg-white/5 rounded-lg appearance-none cursor-pointer accent-blue-500"
@@ -168,7 +173,7 @@ const LiquidNeuralNetworkLabPage: React.FC = () => {
                     <div className="flex-grow relative">
                         {simulationResult ? (
                             <Plot
-                                data={getPlotData() as any}
+                                data={getPlotData()}
                                 layout={{
                                     autosize: true,
                                     height: 400,

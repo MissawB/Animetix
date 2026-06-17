@@ -1,14 +1,20 @@
 import { 
-  AkinetixState, AppConfig, ClassicGameState, DailyChallenge, MediaItem, Profile, User, GraphData,
-  DiscoveryClub, ClubMembership, AIFeedback, SocialDashboardData 
+  User, 
+  AppConfig, 
+  MediaItem, 
+  Profile, 
+  SocialDashboardData,
+  AkinetixState,
+  DailyChallenge,
+  GraphData,
+  ClubEvent,
+  DiscoveryClub,
+  AIFeedback,
+  ClassicGameState,
+  VideoSegment
 } from './types';
-export type { 
-  AkinetixState, AppConfig, ClassicGameState, DailyChallenge, MediaItem, Profile, User, GraphData,
-  DiscoveryClub, ClubMembership, AIFeedback, SocialDashboardData 
-};
 import { apiClient } from './utils/apiClient';
-
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
+import type { components } from './types/api';
 
 // --- Config API ---
 export async function getAppConfig(): Promise<AppConfig> {
@@ -191,7 +197,6 @@ export async function loginUser(data: Record<string, unknown>): Promise<User> {
 }
 
 export async function registerUser(data: Record<string, unknown>): Promise<User> {
-
   await apiClient('/api/v1/auth/register/', {
     method: 'POST',
     body: JSON.stringify(data),
@@ -216,6 +221,17 @@ export interface CompanionResponse {
   history: { role: string; content: string }[];
 }
 
+export async function interactWithCompanion(mentorId: string, message: string, contextUrl: string = ''): Promise<CompanionResponse> {
+  return apiClient('/api/v1/companion/interact/', {
+    method: 'POST',
+    body: JSON.stringify({
+      mentor_id: mentorId,
+      user_message: message,
+      context_url: contextUrl,
+    }),
+  });
+}
+
 // --- VS Battle API ---
 export interface VsBattleRequest {
   char_a: string;
@@ -236,17 +252,6 @@ export async function runVsBattle(params: VsBattleRequest): Promise<VsBattleResu
   return apiClient('/api/v1/game/vs_battle/run/', {
     method: 'POST',
     body: JSON.stringify(params),
-  });
-}
-
-export async function interactWithCompanion(mentorId: string, message: string, contextUrl: string = ''): Promise<CompanionResponse> {
-  return apiClient('/api/v1/companion/interact/', {
-    method: 'POST',
-    body: JSON.stringify({
-      mentor_id: mentorId,
-      user_message: message,
-      context_url: contextUrl,
-    }),
   });
 }
 
@@ -277,17 +282,6 @@ export async function leaveClub(id: number): Promise<{ status: string }> {
   return apiClient(`/api/v1/clubs/${id}/leave/`, {
     method: 'POST',
   });
-}
-
-export interface ClubEvent {
-  id: number;
-  club: number;
-  title: string;
-  description: string;
-  event_date: string;
-  created_at: string;
-  is_participant?: boolean;
-  participants_count?: number;
 }
 
 export async function getClubEvents(clubId: number): Promise<ClubEvent[]> {
@@ -326,10 +320,6 @@ export async function cloneVoice(text: string, audioFile: File, pitch: number): 
   });
 }
 
-export async function searchVideoSegments(query: string): Promise<{ status: string; results: any[] }> {
+export async function searchVideoSegments(query: string): Promise<{ status: string; results: VideoSegment[] }> {
   return apiClient(`/api/v1/labs/video/search/?q=${encodeURIComponent(query)}`);
 }
-
-
-
-

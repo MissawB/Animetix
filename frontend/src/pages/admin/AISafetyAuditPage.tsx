@@ -1,10 +1,7 @@
 import React, { useState } from 'react';
 import { 
   ShieldAlert, 
-  ShieldCheck, 
-  Search, 
-  Filter, 
-  Clock, 
+  ShieldCheck,
   User, 
   AlertTriangle, 
   ChevronRight, 
@@ -98,6 +95,14 @@ const AISafetyAuditPage: React.FC = () => {
                                   <div 
                                       key={event.id}
                                       onClick={() => setSelectedEvent(event)}
+                                      onKeyDown={(e) => {
+                                          if (e.key === 'Enter' || e.key === ' ') {
+                                              setSelectedEvent(event);
+                                          }
+                                      }}
+                                      role="button"
+                                      tabIndex={0}
+                                      aria-label={`Détails de l'événement ${event.id}`}
                                       className={`p-8 border-b border-black/5 dark:border-white/5 transition-all cursor-pointer group flex items-start gap-6 ${selectedEvent?.id === event.id ? 'bg-red-500/[0.03] dark:bg-red-500/[0.05]' : 'hover:bg-gray-50 dark:hover:bg-white/[0.02]'}`}
                                   >
                                       <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border ${getActionColor(event.action)} shadow-lg shadow-current/10`}>

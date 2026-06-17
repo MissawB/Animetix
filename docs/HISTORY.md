@@ -68,6 +68,21 @@ This document archives the major milestones of the project's technical evolution
 - **DRF Serializer Audits**: Audited and fixed mass assignment vulnerability vectors in `CreativeFusionSerializer` and IDOR vulnerabilities.
 - **Gaming & Profile UI**: Deployed ClubEvent countdown participation, realtime notification badges, VsBattle lobby matchmaking, and latent space user auras.
 
+## [2026-06-16] Session: Universal HITL Gate, SQL Guard Hardening, MLOps Privacy, and Frontend Stabilization
+
+- **Universal HITL Gate (Model Collapse Protection)**: Implemented a centralized `SyntheticValidationService` that executes systematic cross-validation (self-critique, XAI scoring, and guardrails) on all synthetic data before human moderation.
+- **SQL Guard Formal Audit & Hardening**: Performed a security audit and fuzzing of the Text-to-SQL validator. Implemented mandatory `LIMIT` clauses, restricted `JOIN` counts (max 5), and strictly enforced AST-level table whitelisting for `animetix_mediaitem`. Verified against 34 attack scenarios.
+- **MLOps Privacy & Secret Isolation**: Created a recursive data scrubbing utility to strip API keys, JWTs, and PII from logs and fine-tuning datasets (`DPOFeedbackLoop`).
+- **Frontend Core Stabilization**: 
+    - Resolved UI flicker and unpredictability by replacing `Math.random()` in render cycles with stable deterministic values or `useMemo`.
+    - Fixed critical performance regressions by eliminating synchronous `setState` calls within effects in core components (`ClubChat`, `VNPlayer`).
+    - Fixed "used before defined" reference errors in `AkinetixRLPage` and `ExpertNexusPage`.
+    - **TypeScript Type Hardening**: Massive refactoring to eliminate `any` in core API clients and pages (`Explore`, `Admin`, `Health`), replaced with strict interfaces.
+- **InferencePort & Adapters Completion**: Finalized the `InferencePort` implementation across all production adapters. Added real sprite generation for the Game Engine and replaced similarity placeholders with real embeddings in the Google GenAI adapter.
+- **Manga & Video Labs Promotion**: Completed the backend flow for the Manga Reader (OCR & Inpainting) and stabilized the temporal indexing service for Video-RAG.
+- **Reasoning & Budget Optimizations**: Integrated local 3B reasoning models for low-latency tasks and implemented a dynamic "Reasoning Budget" based on query complexity.
+- **Research Lab Expo**: Deployed a dedicated frontend page to showcase and search through the project's 29 fundamental AI research papers.
+
 ## [2026-06-14] Session: Backend Robustness, Frontend Type Hardening, Semantic RAG Caching, and UI Convergence
 
 - **Backend Robustness & Observability**: Eliminated the "silent failure" anti-pattern by replacing all identified `except: pass` blocks with explicit logging (`debug`, `warning`, or `error`) across all adapters (Google GenAI, ImageGen, Rerank, Safety), API views, and MLOps loops. This ensures full traceability of system failures in production.

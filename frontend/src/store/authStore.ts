@@ -20,12 +20,12 @@ interface AuthState {
   isLoading: boolean;
   checkAuth: () => Promise<void>;
   refetchUser: () => Promise<void>;
-  login: (data: Record<string, any>) => Promise<void>;
+  login: (data: Record<string, unknown>) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   loginWithDiscord: () => Promise<void>;
   loginWithX: () => Promise<void>;
   loginWithMyAnimeList: () => Promise<void>;
-  register: (data: Record<string, any>) => Promise<void>;
+  register: (data: Record<string, unknown>) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -39,7 +39,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const user = await getAuthUser();
       set({ user, isAuthenticated: true });
-    } catch (error) {
+    } catch (_error) {
       console.error("Failed to refetch user data:", error);
     }
   },
@@ -53,7 +53,7 @@ export const useAuthStore = create<AuthState>((set) => ({
           const user = await getAuthUser();
           set({ user, isAuthenticated: true, isLoading: false });
           useNotificationStore.getState().connect();
-        } catch (error) {
+        } catch (_error) {
           set({ user: null, isAuthenticated: false, isLoading: false });
         }
       } else {
@@ -62,11 +62,11 @@ export const useAuthStore = create<AuthState>((set) => ({
       }
     });
   },
-  login: async (data) => {
+  login: async (data: Record<string, string>) => {
     set({ isLoading: true });
     try {
       await signInWithEmailAndPassword(auth, data.email, data.password);
-    } catch (error) {
+    } catch (_error) {
       set({ isLoading: false });
       throw error;
     }
@@ -76,7 +76,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
-    } catch (error) {
+    } catch (_error) {
       set({ isLoading: false });
       throw error;
     }
@@ -88,7 +88,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       provider.addScope('identify');
       provider.addScope('email');
       await signInWithPopup(auth, provider);
-    } catch (error) {
+    } catch (_error) {
       set({ isLoading: false });
       throw error;
     }
@@ -98,7 +98,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const provider = new TwitterAuthProvider();
       await signInWithPopup(auth, provider);
-    } catch (error) {
+    } catch (_error) {
       set({ isLoading: false });
       throw error;
     }
@@ -108,16 +108,16 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const provider = new OAuthProvider('oauth.myanimelist');
       await signInWithPopup(auth, provider);
-    } catch (error) {
+    } catch (_error) {
       set({ isLoading: false });
       throw error;
     }
   },
-  register: async (data) => {
+  register: async (data: Record<string, string>) => {
     set({ isLoading: true });
     try {
       await createUserWithEmailAndPassword(auth, data.email, data.password);
-    } catch (error) {
+    } catch (_error) {
       set({ isLoading: false });
       throw error;
     }
@@ -126,7 +126,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true });
     try {
       await signOut(auth);
-    } catch (error) {
+    } catch (_error) {
       set({ isLoading: false });
       throw error;
     }

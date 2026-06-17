@@ -2,24 +2,43 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { Card } from "../../components/ui/Card";
-import { Brain, ArrowLeft, AlertTriangle, CheckCircle } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { apiClient } from "../../utils/apiClient";
 
+interface TTCLog {
+    id: number;
+    engine: string;
+    allocated: number;
+    consumed: number;
+}
+
+interface TTCMonitoringData {
+    summary: {
+        total_allocated: number;
+        total_consumed: number;
+        efficiency: number;
+    };
+    logs: TTCLog[];
+}
+
 // Create a small helper to fetch
-const fetchTTCStats = async () => {
-  const data = await apiClient('/api/v1/admin/ttc-monitoring/');
-  return data;
+const fetchTTCStats = async (): Promise<TTCMonitoringData> => {
+  return apiClient('/api/v1/admin/ttc-monitoring/');
 };
 
-const TTCMonitoringPage = () => {
-    const { data, isLoading } = useQuery({
+const TTCMonitoringPage: React.FC = () => {
+    const { data, isLoading } = useQuery<TTCMonitoringData>({
         queryKey: ['ttc-monitoring'],
         queryFn: fetchTTCStats,
         refetchInterval: 5000 // Rafraîchissement régulier
     });
 
-    if (isLoading) return <div>Loading...</div>;
+    if (isLoading) return (
+        <div className="max-w-7xl mx-auto px-6 py-32 flex justify-center">
+            <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+    );
 
     const summary = data?.summary || { total_allocated: 0, total_consumed: 0, efficiency: 100 };
     const logs = data?.logs || [];
@@ -64,7 +83,7 @@ const TTCMonitoringPage = () => {
                                   </tr>
                               </thead>
                               <tbody className="divide-y divide-black/5 dark:divide-white/5">
-                                  {logs.map((log: any) => {
+                                  {logs.map((log: TTCLog) => {
                                       const overBudget = log.consumed > log.allocated;
                                       return (
                                           <tr key={log.id} className="hover:bg-gray-50/50 dark:hover:bg-white/5 transition-colors">
@@ -92,5 +111,3 @@ const TTCMonitoringPage = () => {
 };
 
 export default TTCMonitoringPage;
-
-

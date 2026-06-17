@@ -29,13 +29,10 @@ const SPONSORS = [
 ];
 
 export const SimulatedAdBanner: React.FC = () => {
-  const [sponsor, setSponsor] = useState(SPONSORS[0]);
+  const [sponsor] = useState(() => SPONSORS[Math.floor(Math.random() * SPONSORS.length)]);
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
-    const random = SPONSORS[Math.floor(Math.random() * SPONSORS.length)];
-    setSponsor(random);
-    
     // Log Banner Impression
     fetch('/api/v1/billing/log_ad_event/', {
       method: 'POST',
@@ -74,19 +71,20 @@ export const SimulatedAdBanner: React.FC = () => {
 
       <div className="space-y-3 mt-2 flex flex-col">
         {/* Image de la bannière publicitaire */}
-        <div 
+        <button 
           onClick={handleCtaClick}
-          className="relative aspect-[8/3] w-full rounded-lg overflow-hidden border border-white/5 cursor-pointer hover:opacity-90 transition-opacity"
+          className="relative aspect-[8/3] w-full rounded-lg overflow-hidden border border-white/5 cursor-pointer hover:opacity-90 transition-opacity bg-transparent p-0 block"
+          aria-label={`Visiter ${sponsor.name}`}
         >
           <img 
             src={sponsor.image} 
-            alt={sponsor.name} 
+            alt="" 
             className="w-full h-full object-cover"
             onError={(e) => {
               (e.target as HTMLElement).style.display = 'none';
             }}
           />
-        </div>
+        </button>
 
         <div className="space-y-1">
           <h4 className="text-xs font-black uppercase tracking-tight text-white flex items-center gap-1.5">

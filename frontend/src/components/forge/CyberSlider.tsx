@@ -10,9 +10,7 @@ interface CyberSliderProps {
 
 export const CyberSlider: React.FC<CyberSliderProps> = ({ min, max, value, onChange, color = 'cyan' }) => {
   const accentClass = color === 'cyan' ? 'accent-cyberpunk-neonCyan' : 'accent-cyberpunk-neonMagenta';
-  const trackColor = color === 'cyan' ? 'bg-cyberpunk-neonCyan' : 'bg-cyberpunk-neonMagenta';
-
-  return (
+    return (
     <div className="w-full">
       <input
         type="range"

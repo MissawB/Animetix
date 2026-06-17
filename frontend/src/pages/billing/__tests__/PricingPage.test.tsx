@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 import PricingPage from '../PricingPage';
@@ -13,7 +13,7 @@ vi.mock('../../../api', () => ({
 
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async (importOriginal) => {
-  const actual = await importOriginal<any>();
+  const actual = await importOriginal<typeof import('react-router-dom')>();
   return {
     ...actual,
     useNavigate: () => mockNavigate
@@ -26,11 +26,11 @@ describe('PricingPage (Espace Sponsors)', () => {
   });
 
   it('renders correctly for guests', () => {
-    (useAuthStore as any).mockReturnValue({
+    vi.mocked(useAuthStore).mockReturnValue({
       user: null,
       isAuthenticated: false,
       checkAuth: vi.fn()
-    });
+    } as unknown as ReturnType<typeof useAuthStore>);
 
     render(
       <BrowserRouter>
@@ -44,11 +44,11 @@ describe('PricingPage (Espace Sponsors)', () => {
   });
 
   it('redirects to login when standard user tries to boost without login', () => {
-    (useAuthStore as any).mockReturnValue({
+    vi.mocked(useAuthStore).mockReturnValue({
       user: null,
       isAuthenticated: false,
       checkAuth: vi.fn()
-    });
+    } as unknown as ReturnType<typeof useAuthStore>);
 
     render(
       <BrowserRouter>

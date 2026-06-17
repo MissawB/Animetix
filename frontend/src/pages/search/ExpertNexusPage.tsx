@@ -1,28 +1,23 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Brain, 
   Search, 
   Zap, 
   Sparkles, 
-  Layers, 
   Network, 
   ShieldCheck, 
   CheckCircle2, 
   AlertCircle,
-  Clock,
-  ChevronRight,
-  Database,
-  Cpu,
-  Bot
+  Clock
 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import ForceGraph2D from 'react-force-graph-2d';
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
-import XaiReportDisplay from "../../components/XaiReportDisplay"; // Import XaiReportDisplay
+import XaiReportDisplay from "../../components/XaiReportDisplay";
 
 interface DocumentAttribution {
   document_id: string;
@@ -38,7 +33,7 @@ interface LogitLensTrajectory {
 }
 
 interface ModelDiagnostics {
-  attention_heatmap: any[]; 
+  attention_heatmap: number[][]; 
   top_influential_tokens: string[];
   logit_lens_trajectory: LogitLensTrajectory[]; 
 }
@@ -56,14 +51,14 @@ interface XaiReport {
   retrieval_attribution: DocumentAttribution[];
   internal_diagnostics: ModelDiagnostics;
   uncertainty: Uncertainty;
-  agent_trace: any[]; 
+  agent_trace: string[]; 
   final_confidence: number;
 }
 
 interface Step {
   id: string;
   type: 'thought' | 'eval' | 'token' | 'xai_report';
-  content: any;
+  content: string | XaiReport;
   timestamp: number;
   agent?: string;
   parentId?: string; 
@@ -91,31 +86,24 @@ const ExpertNexusPage: React.FC = () => {
   const initialQuery = searchParams.get('q') || '';
   const [query, setQuery] = useState(initialQuery);
   const [isStreaming, setIsStreaming] = useState(false);
-  const [steps, setSteps] = useState<Step[]>([]);
+  const [, setSteps] = useState<Step[]>([]);
   const [finalAnswer, setFinalAnswer] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [xaiReport, setXaiReport] = useState<XaiReport | null>(null);
   
   // Graph state
   const [graphData, setGraphData] = useState<{ nodes: GraphNode[], links: GraphLink[] }>({ nodes: [], links: [] });
-  const graphRef = useRef<any>(null);
+  const graphRef = useRef<{ zoomToFit: (duration: number, padding?: number) => void } | null>(null);
 
   const eventSourceRef = useRef<EventSource | null>(null);
 
-  useEffect(() => {
-    if (initialQuery) {
-      handleSearch(initialQuery);
-    }
-    return () => stopStreaming();
-  }, []);
-
-  const stopStreaming = () => {
+  const stopStreaming = useCallback(() => {
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
     }
     setIsStreaming(false);
-  };
+  }, []);
 
   const getAgentColorCode = (agent?: string) => {
     switch (agent) {
@@ -130,7 +118,7 @@ const ExpertNexusPage: React.FC = () => {
     }
   };
 
-  const handleSearch = (searchQuery: string) => {
+  const handleSearch = useCallback((searchQuery: string) => {
     if (!searchQuery.trim()) return;
     
     setSearchParams({ q: searchQuery });
@@ -247,7 +235,21 @@ const ExpertNexusPage: React.FC = () => {
     eventSource.onerror = () => {
       stopStreaming();
     };
-  };
+  }, [setSearchParams, stopStreaming]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const startInitialSearch = async () => {
+        if (initialQuery && isMounted) {
+            await handleSearch(initialQuery);
+        }
+    };
+    startInitialSearch();
+    return () => { 
+      isMounted = false;
+      stopStreaming(); 
+    };
+  }, [initialQuery, handleSearch, stopStreaming]);
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -322,14 +324,14 @@ const ExpertNexusPage: React.FC = () => {
                                 backgroundColor="#000000"
                                 onEngineStop={() => graphRef.current?.zoomToFit(400, 20)}
                                 nodeCanvasObjectMode={() => 'after'}
-                                nodeCanvasObject={(node: any, ctx, globalScale) => {
+                                nodeCanvasObject={(node: GraphNode, ctx, globalScale) => {
                                     const label = node.agent;
                                     const fontSize = 12/globalScale;
                                     ctx.font = `${fontSize}px Sans-Serif`;
                                     ctx.textAlign = 'center';
                                     ctx.textBaseline = 'middle';
                                     ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'; // Text color
-                                    ctx.fillText(label, node.x, node.y + 12);
+                                    ctx.fillText(label, node.x || 0, (node.y || 0) + 12);
                                 }}
                             />
                         </div>

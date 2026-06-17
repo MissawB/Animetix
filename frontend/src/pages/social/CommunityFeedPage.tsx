@@ -5,9 +5,7 @@ import {
   MessageSquare, 
   Share2, 
   Zap, 
-  TrendingUp, 
-  Clock,
-  User,
+  TrendingUp,
   Plus
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -18,13 +16,12 @@ import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { CardSkeleton } from "../../components/ui/Skeleton";
-import { useTranslation } from 'react-i18next';
 import { queryClient } from "../../utils/queryClient";
+import {CreativeFusion} from "../../types";
 
 const CommunityFeedPage: React.FC = () => {
-  const { t } = useTranslation();
 
-  const { data: feed, isLoading, isError } = useQuery({
+  const { data: feed, isLoading } = useQuery<CreativeFusion[]>({
     queryKey: ['fusions-feed'],
     queryFn: fusionService.getFeed
   });
@@ -81,7 +78,7 @@ const CommunityFeedPage: React.FC = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {feed.map((fusion: any) => (
+            {feed.map((fusion: CreativeFusion) => (
               <Card key={fusion.id} padding="none" className="group overflow-hidden bg-navy-900/40 border-white/5 hover:border-yellow-400/30 transition-all duration-500 hover:-translate-y-2">
                 <div className="aspect-video relative overflow-hidden bg-black shadow-inner">
                   {fusion.image_url ? (

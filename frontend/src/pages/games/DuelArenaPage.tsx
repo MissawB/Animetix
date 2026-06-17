@@ -10,36 +10,45 @@ const DuelArenaPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const [socket, setSocket] = React.useState<WebSocket | null>(null);
-  const [gameState, setGameState] = React.useState<any>(null);
+  const [gameState, setGameState] = React.useState<DuelGameState | null>(null);
   const [guess, setGuess] = React.useState('');
-  const [logs, setLogs] = React.useState<any[]>([]);
+  const [logs, setLogs] = React.useState<DuelLog[]>([]);
   const [winner, setWinner] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     if (!roomCode) return;
+    let isMounted = true;
+    const initSocket = async () => {
+        const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+        const wsUrl = `${protocol}://${window.location.host}/ws/duel/${roomCode}/`;
+        const ws = new WebSocket(wsUrl);
 
-    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-    const wsUrl = `${protocol}://${window.location.host}/ws/duel/${roomCode}/`;
-    const ws = new WebSocket(wsUrl);
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type === 'duel_state') {
+                setGameState(data);
+            } else if (data.type === 'opponent_guess') {
+                setLogs(prev => [{ type: 'guess', ...data }, ...prev.slice(0, 4)]);
+            } else if (data.type === 'duel_finished') {
+                setWinner(data.winner);
+                setLogs(prev => [{ type: 'win', ...data }, ...prev]);
+            }
+        };
 
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.type === 'duel_state') {
-        setGameState(data);
-      } else if (data.type === 'opponent_guess') {
-        setLogs(prev => [{ type: 'guess', ...data }, ...prev.slice(0, 4)]);
-      } else if (data.type === 'duel_finished') {
-        setWinner(data.winner);
-        setLogs(prev => [{ type: 'win', ...data }, ...prev]);
-      }
+        ws.onclose = () => {
+            // Optionnel : gérer la déconnexion
+        };
+
+        if (isMounted) {
+            setSocket(ws);
+        }
     };
 
-    ws.onclose = () => {
-        // Optionnel : gérer la déconnexion
+    initSocket();
+    return () => {
+        isMounted = false;
+        // socket?.close() est géré par la fermeture de ws dans le cleanup
     };
-
-    setSocket(ws);
-    return () => ws.close();
   }, [roomCode]);
 
   const handleGuess = (e: React.FormEvent) => {

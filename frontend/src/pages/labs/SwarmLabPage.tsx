@@ -3,11 +3,8 @@ import {
   Users,
   BarChart3,
   Loader2,
-  ChevronRight,
   ShieldCheck,
   Activity,
-  Target,
-  Zap,
   MessageSquare,
   Sparkles
 } from 'lucide-react';
@@ -19,16 +16,37 @@ import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion, AnimatePresence } from 'framer-motion';
 
+interface SwarmResult {
+    consensus_score: number;
+    is_recorded: boolean;
+    votes: Record<string, number>;
+    phases?: {
+        prepare?: {
+            proposal_id: number;
+            promises_received: string[];
+        };
+        accept?: {
+            quorum_required: number;
+            threshold: number;
+        };
+        learn?: {
+            paxos_state: string;
+            message: string;
+        };
+    };
+}
+
 const SwarmLabPage: React.FC = () => {
   const [swarmFact, setSwarmFact] = useState('Luffy est plus fort que Naruto.');
   const [swarmMedia, setSwarmMedia] = useState('One Piece');
-  const [swarmResult, setSwarmResult] = useState<any | null>(null);
+  const [swarmResult, setSwarmResult] = useState<SwarmResult | null>(null);
 
-  const swarmMutation = useMutation({
-    mutationFn: (body: any) => apiClient('/api/v1/singularity-lab/', { 
-        method: 'POST', 
-        body: JSON.stringify(body) 
-    }),
+  const swarmMutation = useMutation<SwarmResult, Error, { action: string; fact: string; media: string }>({
+    mutationFn: (body: { action: string; fact: string; media: string }) => 
+        apiClient('/api/v1/singularity-lab/', { 
+            method: 'POST', 
+            body: JSON.stringify(body) 
+        }),
     onSuccess: (data) => setSwarmResult(data)
   });
 
@@ -66,8 +84,9 @@ const SwarmLabPage: React.FC = () => {
                       <div className="space-y-8">
                           <div className="space-y-6">
                               <div className="space-y-2">
-                                  <label className="text-[10px] font-black opacity-30 uppercase tracking-widest px-2">Média Cible</label>
+                                  <label htmlFor="swarm-media" className="text-[10px] font-black opacity-30 uppercase tracking-widest px-2">Média Cible</label>
                                   <input 
+                                      id="swarm-media"
                                       type="text" 
                                       value={swarmMedia} 
                                       onChange={(e) => setSwarmMedia(e.target.value)} 
@@ -76,8 +95,9 @@ const SwarmLabPage: React.FC = () => {
                                   />
                               </div>
                               <div className="space-y-2">
-                                  <label className="text-[10px] font-black opacity-30 uppercase tracking-widest px-2">Fait Sémantique</label>
+                                  <label htmlFor="swarm-fact" className="text-[10px] font-black opacity-30 uppercase tracking-widest px-2">Fait Sémantique</label>
                                   <textarea 
+                                      id="swarm-fact"
                                       value={swarmFact} 
                                       onChange={(e) => setSwarmFact(e.target.value)} 
                                       rows={4} 
@@ -153,7 +173,7 @@ const SwarmLabPage: React.FC = () => {
                                       <BarChart3 className="w-5 h-5 text-emerald-500" /> Répartition Individuelle des Votes
                                   </h4>
                                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                                      {swarmResult.votes && Object.entries(swarmResult.votes).map(([agent, score]: any) => (
+                                      {swarmResult.votes && Object.entries(swarmResult.votes).map(([agent, score]: [string, number]) => (
                                           <div key={agent} className="p-6 bg-black/40 rounded-[2rem] border border-white/5 space-y-4 group hover:border-emerald-500/30 transition-all">
                                               <div className="flex justify-between items-center">
                                                   <span className="text-[10px] font-black uppercase text-gray-500 tracking-tighter">{agent.replace('_', ' ')}</span>

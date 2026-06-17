@@ -6,8 +6,7 @@ import {
   X, 
   Info, 
   Check, 
-  Database, 
-  LayoutGrid, 
+  Database,
   Clock, 
   CheckCircle2, 
   AlertCircle,
@@ -23,12 +22,14 @@ import { CardSkeleton } from "../../components/ui/Skeleton";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion, AnimatePresence } from 'framer-motion';
 
+import { AIFeedback, CurationTicket } from '../../types';
+
 const AdminCurationPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'dpo' | 'graph'>('dpo');
   const { feedbacks, isLoading: isDPOLoading, curate, isSubmitting: isDPOSubmitting } = useDPO();
   const { tickets, isLoading: isGraphLoading, stats: graphStats, resolve, isResolving } = useCurationTickets();
   const [editingDPOId, setEditingDPOId] = useState<number | null>(null);
-  const [selectedTicket, setSelectedTicket] = useState<any>(null);
+  const [selectedTicket, setSelectedTicket] = useState<CurationTicket | null>(null);
   
   const { register, handleSubmit, reset } = useForm<{ chosen_text: string }>();
 
@@ -86,7 +87,7 @@ const AdminCurationPage: React.FC = () => {
                     exit={{ opacity: 0, x: 20 }}
                     className="space-y-8"
                 >
-                    {feedbacks.map((fb: any) => (
+                    {feedbacks.map((fb: AIFeedback) => (
                         <Card key={fb.id} padding="lg" className="relative overflow-hidden group border-none shadow-xl bg-white dark:bg-[#0f0f1a]">
                             <div className="absolute top-0 left-0 w-1.5 h-full bg-red-500 opacity-20 group-hover:opacity-100 transition-opacity" />
                             
@@ -97,13 +98,13 @@ const AdminCurationPage: React.FC = () => {
                                             <Info className="w-3 h-3" /> Contexte Utilisateur
                                         </h4>
                                         <div className="bg-gray-50 dark:bg-black/20 p-5 rounded-2xl text-xs font-medium italic border border-black/5 dark:border-white/5">
-                                            "{fb.context}"
+                                            "{fb.input_context}"
                                         </div>
                                     </div>
                                     <div>
                                         <h4 className="text-[10px] font-black uppercase text-red-500/50 mb-3">Réponse Rejetée</h4>
                                         <div className="bg-red-500/5 p-5 rounded-2xl text-xs font-bold border border-red-500/10 text-red-600 dark:text-red-400">
-                                            {fb.output}
+                                            {fb.output_text}
                                         </div>
                                     </div>
                                 </div>
@@ -163,7 +164,7 @@ const AdminCurationPage: React.FC = () => {
                             <Clock size={14} /> Flux des Contradictions
                         </h3>
                         <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-2 no-scrollbar">
-                            {tickets.map((ticket: any) => (
+                            {tickets.map((ticket: CurationTicket) => (
                                 <motion.button
                                     whileHover={{ x: 5 }}
                                     key={ticket.id}

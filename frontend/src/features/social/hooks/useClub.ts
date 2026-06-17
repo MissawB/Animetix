@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { socialService } from '../services/socialService';
 
+
 export const useClub = (clubId: number) => {
   const queryClient = useQueryClient();
 
@@ -17,7 +18,7 @@ export const useClub = (clubId: number) => {
   });
 
   const createEventMutation = useMutation({
-    mutationFn: (data: any) => {
+    mutationFn: () => {
         // We'll use the existing api.ts helper or socialService
         return socialService.getClubDetails(clubId); // Placeholder, real implementation would call create
     },

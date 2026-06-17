@@ -7,6 +7,8 @@ import { Button } from '../../components/ui/Button';
 import { apiClient } from '../../utils/apiClient';
 import { Link } from 'react-router-dom';
 
+import { SupportTicket } from '../../types';
+
 const SupportDashboardPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null);
@@ -14,7 +16,7 @@ const SupportDashboardPage: React.FC = () => {
   const [subject, setSubject] = useState('');
   const [queryText, setQueryText] = useState('');
 
-  const { data: tickets, isLoading } = useQuery({
+  const { data: tickets, isLoading } = useQuery<SupportTicket[]>({
     queryKey: ['support-tickets'],
     queryFn: async () => {
       return apiClient('/api/v1/support/tickets/');
@@ -48,7 +50,7 @@ const SupportDashboardPage: React.FC = () => {
     },
   });
 
-  const selectedTicket = tickets?.find((t: any) => t.id === selectedTicketId);
+  const selectedTicket = tickets?.find((t: SupportTicket) => t.id === selectedTicketId);
 
   return (
     <AnimatedPage>
@@ -81,7 +83,7 @@ const SupportDashboardPage: React.FC = () => {
               ) : tickets?.length === 0 ? (
                 <p className="text-xs opacity-30 italic px-2 font-bold uppercase">Aucun signal détecté.</p>
               ) : (
-                tickets?.map((ticket: any) => (
+                tickets?.map((ticket: SupportTicket) => (
                   <Card 
                     key={ticket.id} 
                     padding="md" 

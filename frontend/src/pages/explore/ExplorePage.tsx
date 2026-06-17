@@ -1,14 +1,24 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion } from 'framer-motion';
-import { Search, Filter, TrendingUp, Play, Info, Plus, ChevronRight, ChevronLeft, MapPin, Globe } from 'lucide-react';
+import { TrendingUp, Play, Info, Plus, ChevronRight, ChevronLeft, MapPin, Globe } from 'lucide-react';
 import { Link } from 'react-router-dom';
+
+import { MediaItem } from '../../types';
+
+interface ExploreData {
+    trending: (MediaItem & { synopsis_fr?: string; synopsis_en?: string })[];
+    recommendations: MediaItem[];
+    categories: {
+        name: string;
+        items: MediaItem[];
+    }[];
+}
 
 const ExplorePage: React.FC = () => {
   const [mediaType, setMediaType] = React.useState('Anime');
   
-  const { data, isLoading } = useQuery({
+  const { data } = useQuery<ExploreData>({
     queryKey: ['explore', mediaType],
     queryFn: async () => {
       const res = await fetch(`/api/explore/?media_type=${mediaType}`);
@@ -26,7 +36,7 @@ const ExplorePage: React.FC = () => {
     if (el) el.scrollBy({ left: 400, behavior: 'smooth' });
   };
 
-  const MediaCard = ({ item }: { item: any }) => (
+  const MediaCard = ({ item }: { item: MediaItem }) => (
     <motion.div 
       whileHover={{ scale: 1.05, zIndex: 10 }}
       className="flex-none w-48 md:w-56 aspect-[2/3] rounded-xl overflow-hidden relative group cursor-pointer"
@@ -164,7 +174,7 @@ const ExplorePage: React.FC = () => {
                             id="recs-row"
                             className="flex gap-6 overflow-x-auto no-scrollbar pb-4"
                         >
-                            {data.recommendations.map((item: any) => (
+                            {data.recommendations.map((item) => (
                                 <MediaCard key={item.id} item={item} />
                             ))}
                         </div>
@@ -196,7 +206,7 @@ const ExplorePage: React.FC = () => {
                         id="trending-row"
                         className="flex gap-6 overflow-x-auto no-scrollbar pb-4"
                     >
-                        {data?.trending?.map((item: any) => (
+                        {data?.trending?.map((item) => (
                             <MediaCard key={item.id} item={item} />
                         ))}
                     </div>
@@ -210,7 +220,7 @@ const ExplorePage: React.FC = () => {
                 </div>
             </div>
 
-            {data?.categories?.map((cat: any, idx: number) => (
+            {data?.categories?.map((cat, idx: number) => (
                 <div key={idx} className="space-y-4">
                     <h2 className="text-xl font-black italic uppercase tracking-widest flex items-center gap-3">
                         {cat.name}
@@ -228,7 +238,7 @@ const ExplorePage: React.FC = () => {
                             id={`cat-row-${idx}`}
                             className="flex gap-6 overflow-x-auto no-scrollbar pb-4"
                         >
-                            {cat.items.map((item: any) => (
+                            {cat.items.map((item) => (
                                 <MediaCard key={item.id} item={item} />
                             ))}
                         </div>

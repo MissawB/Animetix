@@ -100,7 +100,7 @@ const VisionPage: React.FC = () => {
 
           <div className="space-y-4">
             <h4 className="text-[10px] font-black opacity-30 uppercase tracking-widest mb-4">Journal d'analyse</h4>
-            {gameState.guesses.map((g: any, i: number) => (
+            {gameState.guesses.map((g, i: number) => (
               <div key={i} className="p-4 bg-gray-50 dark:bg-navy-900 rounded-2xl flex justify-between items-center group hover:bg-blue-500/10 transition-colors border border-gray-100 dark:border-white/5">
                 <span className="font-bold opacity-80">{g.text}</span>
                 <Badge variant="primary">{Math.round(g.score)}%</Badge>

@@ -3,7 +3,7 @@ import { lazy } from 'react';
 
 const SupportDashboardPage = lazy(() => import('../../../pages/support/SupportDashboardPage'));
 
-export const SupportRoutes = (
+export const SupportRoutes = () => (
   <>
     <Route path="/support/" element={<SupportDashboardPage />} />
   </>

@@ -34,7 +34,7 @@ describe('AkinetixPage', () => {
     expect(question).toBeInTheDocument();
 
     // Mock pour la réponse suivante
-    (global.fetch as any).mockResolvedValueOnce({
+    (global.fetch as unknown).mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({
             history: [{ q: "Est-ce un personnage masculin ?", a: "OUI" }],

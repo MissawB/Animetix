@@ -1,4 +1,4 @@
-import { SocialDashboardData } from '../../../types';
+import { SocialDashboardData, DiscoveryClub, ClubEvent } from '../../../types';
 import { apiClient } from '../../../utils/apiClient';
 
 const API_BASE = '/api/v1/social';
@@ -12,7 +12,7 @@ export const socialService = {
     return apiClient(`${API_BASE}/${userId}/toggle_follow/`, { method: 'POST' });
   },
 
-  createClub: async (data: { name: string, description: string, theme: string, is_private: boolean }): Promise<any> => {
+  createClub: async (data: { name: string, description: string, theme: string, is_private: boolean }): Promise<DiscoveryClub> => {
     return apiClient('/api/v1/clubs/', {
         method: 'POST',
         body: JSON.stringify(data),
@@ -20,11 +20,11 @@ export const socialService = {
     });
   },
 
-  getClubDetails: async (id: number): Promise<any> => {
+  getClubDetails: async (id: number): Promise<DiscoveryClub> => {
     return apiClient(`/api/v1/clubs/${id}/`);
   },
 
-  getClubEvents: async (clubId: number): Promise<any[]> => {
+  getClubEvents: async (clubId: number): Promise<ClubEvent[]> => {
     return apiClient(`/api/v1/club-events/?club=${clubId}`);
   }
 };

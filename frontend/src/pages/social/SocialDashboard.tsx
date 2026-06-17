@@ -1,11 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Users, UserMinus, Heart, Brain, Swords, Layers, Activity, Zap, Fingerprint } from 'lucide-react';
+import { Users, UserMinus, Heart, Brain, Swords, Layers, Zap, Fingerprint } from 'lucide-react';
 import { useSocialDashboard } from '../../features/social/hooks/useSocialDashboard';
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { useTranslation } from 'react-i18next';
 import { CardSkeleton } from "../../components/ui/Skeleton";
+import { Friendship } from '../../types';
 
 const DashboardLinkCard: React.FC<{ title: string; desc: string; icon: React.ReactNode; to: string; accent: string }> = ({ title, desc, icon, to, accent }) => (
     <Link to={to} className="no-underline group">
@@ -91,7 +92,7 @@ const SocialDashboard: React.FC = () => {
           <Users className="w-6 h-6 text-yellow-400" /> {t('social.dashboard.following_title')}
         </h3>
         <div className="space-y-4">
-          {data.following.map((f: any) => (
+          {data.following.map((f: Friendship) => (
             <div key={f.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-navy-900 rounded-2xl hover:scale-[1.02] transition-transform border border-gray-100 dark:border-white/5">
               <Link to={`/profile/${f.username}/`} className="flex items-center gap-4 no-underline text-current">
                 <div className="w-12 h-12 bg-yellow-400 rounded-xl flex items-center justify-center font-black italic border-2 border-black text-black">
@@ -122,7 +123,7 @@ const SocialDashboard: React.FC = () => {
           <Heart className="w-6 h-6 text-red-500" /> {t('social.dashboard.followers_title')}
         </h3>
         <div className="space-y-4">
-          {data.followers.map((f: any) => (
+          {data.followers.map((f: Friendship) => (
             <div key={f.id} className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-navy-900 rounded-2xl border border-gray-100 dark:border-white/5">
               <div className="w-12 h-12 bg-navy-700 rounded-xl flex items-center justify-center font-black italic border-2 border-white/10">
                 {f.username[0].toUpperCase()}
@@ -142,5 +143,3 @@ const SocialDashboard: React.FC = () => {
 };
 
 export default SocialDashboard;
-
-

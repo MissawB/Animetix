@@ -3,8 +3,6 @@ import {
   Atom,
   Zap,
   Loader2,
-  ChevronRight,
-  ShieldCheck,
   Activity,
   Target,
   Sparkles

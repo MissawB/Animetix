@@ -4,17 +4,13 @@ import {
   ShieldCheck, 
   Search, 
   Cpu, 
-  CheckCircle2, 
-  AlertCircle, 
-  ArrowRight, 
+  CheckCircle2,
   Database,
   Network,
   Zap,
   HelpCircle,
-  MessageSquare,
   Sparkles,
-  Brain, // Added for explainer cards
-  Activity // Added for explainer cards
+  Brain // Added for explainer cards
 } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { apiClient } from "../../utils/apiClient";
@@ -24,13 +20,27 @@ import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion, AnimatePresence } from 'framer-motion';
 
+interface CoveVerification {
+    query: string;
+    context_found: boolean;
+    result: string;
+    entities: string[];
+}
+
+interface CoveTrace {
+    baseline: string;
+    verification_plan: string[];
+    verifications: CoveVerification[];
+    final_response: string;
+}
+
 const CoveOraclePage: React.FC = () => {
   const { t } = useTranslation();
   const [question, setQuestion] = useState('');
   const [mediaType, setMediaType] = useState('anime');
-  const [trace, setTrace] = useState<any>(null);
+  const [trace, setTrace] = useState<CoveTrace | null>(null);
 
-  const mutation = useMutation({
+  const mutation = useMutation<CoveTrace, Error, { question: string; media_type: string }>({
     mutationFn: (data: { question: string; media_type: string }) => 
         apiClient('/api/v1/cognition/cove-oracle/', {
             method: 'POST',
@@ -80,8 +90,9 @@ const CoveOraclePage: React.FC = () => {
                     
                     <form onSubmit={onSubmit} className="space-y-6">
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black uppercase tracking-widest opacity-30 ml-4">{t('labs.cove_oracle.lore_question')}</label>
+                            <label htmlFor="lore-question" className="text-[10px] font-black uppercase tracking-widest opacity-30 ml-4">{t('labs.cove_oracle.lore_question')}</label>
                             <textarea 
+                                id="lore-question"
                                 value={question}
                                 onChange={(e) => setQuestion(e.target.value)}
                                 rows={4}
@@ -216,7 +227,7 @@ const CoveOraclePage: React.FC = () => {
                                     <h2 className="text-xl font-black italic manga-font uppercase tracking-tighter text-emerald-500">{t('labs.cove_oracle.graph_validation')} <span className="text-white/20">{t('labs.cove_oracle.neo4j_cross_ref')}</span></h2>
                                 </div>
                                 <div className="space-y-4">
-                                    {trace.verifications.map((v: any, i: number) => (
+                                    {trace.verifications.map((v: CoveVerification, i: number) => (
                                         <Card key={i} padding="none" className="bg-black border-white/5 overflow-hidden">
                                             <div className="p-4 border-b border-white/5 flex items-center justify-between">
                                                 <div className="flex items-center gap-3">

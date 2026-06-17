@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Video, Wand2, Upload, Play, Film, Sparkles } from 'lucide-react';
+import { Video, Wand2, Play, Film, Sparkles } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { apiClient } from "../../utils/apiClient";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
-import { useTranslation } from 'react-i18next';
+
 
 interface VideoLabResult {
   status: string;
@@ -14,7 +14,6 @@ interface VideoLabResult {
 }
 
 const VideoLabPage: React.FC = () => {
-  const { t } = useTranslation();
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
   const [studioStyle, setStudioStyle] = useState<string>('Ghibli');
@@ -56,7 +55,7 @@ const VideoLabPage: React.FC = () => {
   ];
 
   const [searchQuery, setSearchQuery] = useState('');
-  const searchMutation = useMutation({
+  const searchMutation = useMutation<VideoSearchResponse, Error, string>({
     mutationFn: async (q: string) => {
         return apiClient(`/api/v1/labs/video/search/?q=${encodeURIComponent(q)}`, {
             method: 'GET'
@@ -92,7 +91,7 @@ const VideoLabPage: React.FC = () => {
                 <input type="file" id="video-upload" className="hidden" accept="video/*" onChange={handleUpload} />
 
                 <div className="space-y-4 mb-8">
-                    <label className="text-[10px] font-black uppercase opacity-40 tracking-widest">Studio Artistique</label>
+                    <span className="text-[10px] font-black uppercase opacity-40 tracking-widest block">Studio Artistique</span>
                     <div className="grid grid-cols-1 gap-2">
                         {STYLES.map((s) => (
                             <button
@@ -197,7 +196,7 @@ const VideoLabPage: React.FC = () => {
                 </div>
                 {searchMutation.isSuccess && searchMutation.data.results && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                        {searchMutation.data.results.map((res: any, i: number) => (
+                        {searchMutation.data.results.map((res: VideoSegment, i: number) => (
                             <div key={i} className="p-3 bg-white/5 rounded-xl border border-white/5 hover:border-white/20 transition-all cursor-pointer group">
                                 <div className="flex justify-between items-center mb-1">
                                     <span className="text-[10px] font-black text-red-400">[{res.start}s - {res.end}s]</span>

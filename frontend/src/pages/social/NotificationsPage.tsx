@@ -5,14 +5,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from "../../utils/apiClient";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
-import { Badge } from "../../components/ui/Badge";
 import { CardSkeleton } from "../../components/ui/Skeleton";
 import { useNotificationStore } from "../../store/notificationStore";
 
-import { useTranslation } from 'react-i18next';
+
 
 const NotificationsPage: React.FC = () => {
-  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { clearUnread } = useNotificationStore();
 
@@ -79,7 +77,7 @@ const NotificationsPage: React.FC = () => {
               <p className="text-lg font-bold opacity-30 italic">Aucune notification pour le moment.</p>
             </Card>
           ) : (
-            notifications.map((n: any) => (
+            notifications.map((n: Notification) => (
               <Card 
                 key={n.id} 
                 padding="md" 

@@ -30,8 +30,9 @@ const LoginPage: React.FC = () => {
     try {
       await login({ email, password });
       navigate(from, { replace: true });
-    } catch (err: any) {
-      setError(err.message || t('auth.loginFailed', 'Identifiants incorrects.'));
+    } catch (err) {
+      const error = err as Error;
+      setError(error.message || t('auth.loginFailed', 'Identifiants incorrects.'));
     }
   };
 
@@ -40,8 +41,9 @@ const LoginPage: React.FC = () => {
     try {
       await loginWithGoogle();
       navigate(from, { replace: true });
-    } catch (err: any) {
-      setError(err.message || t('auth.loginFailed', 'Connexion Google échouée.'));
+    } catch (err) {
+      const error = err as Error;
+      setError(error.message || t('auth.loginFailed', 'Connexion Google échouée.'));
     }
   };
 
@@ -50,8 +52,9 @@ const LoginPage: React.FC = () => {
     try {
       await loginWithDiscord();
       navigate(from, { replace: true });
-    } catch (err: any) {
-      setError(err.message || t('auth.loginFailed', 'Connexion Discord échouée.'));
+    } catch (err) {
+      const error = err as Error;
+      setError(error.message || t('auth.loginFailed', 'Connexion Discord échouée.'));
     }
   };
 
@@ -60,8 +63,9 @@ const LoginPage: React.FC = () => {
     try {
       await loginWithX();
       navigate(from, { replace: true });
-    } catch (err: any) {
-      setError(err.message || t('auth.loginFailed', 'Connexion X échouée.'));
+    } catch (err) {
+      const error = err as Error;
+      setError(error.message || t('auth.loginFailed', 'Connexion X échouée.'));
     }
   };
 
@@ -70,8 +74,9 @@ const LoginPage: React.FC = () => {
     try {
       await loginWithMyAnimeList();
       navigate(from, { replace: true });
-    } catch (err: any) {
-      setError(err.message || t('auth.loginFailed', 'Connexion MyAnimeList échouée.'));
+    } catch (err) {
+      const error = err as Error;
+      setError(error.message || t('auth.loginFailed', 'Connexion MyAnimeList échouée.'));
     }
   };
 

@@ -1,10 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { 
   Search, 
-  Filter, 
   Grid, 
-  List as ListIcon, 
   Sparkles, 
   ChevronRight,
   Tv,
@@ -20,17 +18,31 @@ import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { CardSkeleton } from "../../components/ui/Skeleton";
-import { useTranslation } from 'react-i18next';
+
+import { SearchItem } from '../../types';
 
 const SearchResultsPage: React.FC = () => {
-  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get('q') || '';
   const [inputValue, setInputValue] = useState(query);
   const [activeTab, setActiveTab] = useState<string>('all');
 
+  const { data, isLoading } = useQuery<SearchItem[] | { results: SearchItem[] }>({
+    queryKey: ['global-search', query],
+    queryFn: () => apiClient(`/api/v1/search/?q=${encodeURIComponent(query)}`),
+    enabled: !!query,
+  });
+
+  // Synchronisation de l'input sans déclencher l'erreur de cascade
   useEffect(() => {
-    setInputValue(query);
+    let isMounted = true;
+    const sync = async () => {
+        if (isMounted) {
+            setInputValue(query);
+        }
+    };
+    sync();
+    return () => { isMounted = false; };
   }, [query]);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -40,17 +52,12 @@ const SearchResultsPage: React.FC = () => {
     }
   };
 
-  const { data, isLoading, isError } = useQuery<any>({
-    queryKey: ['global-search', query],
-    queryFn: () => apiClient(`/api/v1/search/?q=${encodeURIComponent(query)}`),
-    enabled: !!query,
-  });
-
-  const results = Array.isArray(data) ? data : (data as any)?.results || [];
+  const results = Array.isArray(data) ? data : data?.results || [];
 
   const filteredResults = activeTab === 'all' 
     ? results 
-    : results.filter((item: any) => item.type?.toLowerCase() === activeTab.toLowerCase());
+    : results.filter((item) => item.type?.toLowerCase() === activeTab.toLowerCase());
+
 
   const TABS = [
     { id: 'all', label: 'TOUT', icon: Grid },
@@ -120,7 +127,7 @@ const SearchResultsPage: React.FC = () => {
             </div>
         ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 animate-fade-in">
-                {filteredResults.map((item: any, i: number) => (
+                {filteredResults.map((item: SearchItem, i: number) => (
                     <Link 
                         key={i} 
                         to={

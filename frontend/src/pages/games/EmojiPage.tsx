@@ -7,11 +7,10 @@ import { Input } from "../../components/ui/Input";
 import { Badge } from "../../components/ui/Badge";
 import { CardSkeleton } from "../../components/ui/Skeleton";
 
-import { useTranslation } from 'react-i18next';
+
 import { EmojiState } from "../../types";
 
 const EmojiPage: React.FC = () => {
-  const { t } = useTranslation();
   const { gameState, loading, handleGuess } = useEmoji() as unknown as {
     gameState: EmojiState | undefined;
     loading: boolean;

@@ -31,7 +31,7 @@ export const VideoIndexing: React.FC = () => {
       } else {
         addToast(response.error || "Erreur lors de l'indexation", 'error');
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Indexing error:', error);
       // Erreur déjà gérée par apiClient globalement, mais on peut ajouter un log spécifique
     } finally {
@@ -48,8 +48,9 @@ export const VideoIndexing: React.FC = () => {
 
       <div className="space-y-4">
         <div>
-          <label className="text-[10px] font-black uppercase opacity-40 tracking-widest block mb-2">ID Unique du Média</label>
+          <label htmlFor="video-id" className="text-[10px] font-black uppercase opacity-40 tracking-widest block mb-2">ID Unique du Média</label>
           <input
+            id="video-id"
             type="text"
             value={videoId}
             onChange={(e) => setVideoId(e.target.value)}
@@ -59,9 +60,10 @@ export const VideoIndexing: React.FC = () => {
         </div>
 
         <div>
-          <label className="text-[10px] font-black uppercase opacity-40 tracking-widest block mb-2">Fichier Vidéo (.mp4, .mkv)</label>
+          <label htmlFor="video-file" className="text-[10px] font-black uppercase opacity-40 tracking-widest block mb-2">Fichier Vidéo (.mp4, .mkv)</label>
           <div className="relative group">
             <input
+              id="video-file"
               type="file"
               accept="video/*"
               onChange={(e) => setFile(e.target.files?.[0] || null)}

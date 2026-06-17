@@ -88,16 +88,17 @@ const XaiReportDisplay: React.FC<XaiReportDisplayProps> = ({ xaiReport }) => {
 
   return (
     <Card padding="lg" className="bg-navy-950/50 border-white/5 shadow-2xl rounded-3xl mt-8">
-      <div 
-        className="flex justify-between items-center cursor-pointer" 
+      <button 
+        className="w-full flex justify-between items-center cursor-pointer bg-transparent border-none p-0 outline-none group" 
         onClick={() => setExpanded(!expanded)}
+        aria-expanded={expanded}
       >
-        <h3 className="text-xl font-bold italic text-white flex items-center gap-3">
+        <h3 className="text-xl font-bold italic text-white flex items-center gap-3 transition-colors group-hover:text-blue-400">
           <Layers className="w-6 h-6 text-blue-500" />
           <span className="text-glow">Diagnostics XAI Avancés</span>
         </h3>
         <ChevronRight className={`w-6 h-6 text-white/50 transition-transform ${expanded ? 'rotate-90' : ''}`} />
-      </div>
+      </button>
 
       <AnimatePresence>
         {expanded && (

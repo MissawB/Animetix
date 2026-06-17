@@ -8,12 +8,11 @@ import {
   Clock, 
   ChevronRight, 
   Play,
-  Upload,
   Cpu,
   Eye,
   Layers
 } from 'lucide-react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { apiClient } from "../../utils/apiClient";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";

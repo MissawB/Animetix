@@ -28,8 +28,9 @@ const RegisterPage: React.FC = () => {
     try {
       await register({ username, email, password });
       navigate('/');
-    } catch (err: any) {
-      setError(err.message || t('auth.registerFailed', "Erreur lors de l'inscription."));
+    } catch (err) {
+      const error = err as Error;
+      setError(error.message || t('auth.registerFailed', "Erreur lors de l'inscription."));
     }
   };
 

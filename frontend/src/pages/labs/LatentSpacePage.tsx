@@ -1,18 +1,19 @@
 import React, { useState } from 'react';
 import _Plot from 'react-plotly.js';
 import { Link } from 'react-router-dom';
-import { Box, Sliders, Info, Globe, ArrowRight } from 'lucide-react';
+import { Box,  Info, Globe, ArrowRight } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from "../../utils/apiClient";
-import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion, AnimatePresence } from 'framer-motion';
 
-import { useTranslation } from 'react-i18next';
 
-const Plot = (_Plot as any).default || _Plot;
+
+import { PlotlyEvent } from '../../types';
+
+const Plot = (_Plot as unknown as { default: React.ComponentType<unknown> }).default || _Plot;
 
 interface LatentPoint {
   x: number;
@@ -28,7 +29,6 @@ interface LatentPoint {
 }
 
 const LatentSpacePage: React.FC = () => {
-  const { t } = useTranslation();
   const [media, setMedia] = useState<string>('anime');
   const [type, setType] = useState<string>('thematic');
   const [selectedItem, setSelectedItem] = useState<LatentPoint | null>(null);
@@ -38,9 +38,9 @@ const LatentSpacePage: React.FC = () => {
     queryFn: () => apiClient(`/api/v1/latent-space/?media=${media}&type=${type}`),
   });
 
-  const handlePointClick = (event: any) => {
+  const handlePointClick = (event: PlotlyEvent) => {
     if (event.points && event.points[0]) {
-      const item = event.points[0].customdata;
+      const item = event.points[0].customdata as LatentPoint;
       if (item) {
         setSelectedItem(item);
       } else {
@@ -55,7 +55,7 @@ const LatentSpacePage: React.FC = () => {
   const uniqueCategories = data ? Array.from(new Set(data.map(d => d.category || d.cluster || 'Unknown'))) : [];
   const getCategoryIndex = (category: string | number | undefined) => uniqueCategories.indexOf(category || 'Unknown');
 
-  const plotData = data ? [
+  const plotData: Array<Partial<Plotly.Data>> = data ? [
     {
       x: data.map(d => d.x),
       y: data.map(d => d.y),
@@ -77,7 +77,7 @@ const LatentSpacePage: React.FC = () => {
           width: 0.5
         }
       }
-    }
+    } as unknown as Partial<Plotly.Data>
   ] : [];
 
   return (
@@ -144,7 +144,7 @@ const LatentSpacePage: React.FC = () => {
           {/* PLOT CONTAINER */}
           <div className="w-full h-full cursor-crosshair">
             <Plot
-                data={plotData as any}
+                data={plotData as unknown as Partial<Plotly.Data>[]}
                 onClick={handlePointClick}
                 layout={{
                     autosize: true,

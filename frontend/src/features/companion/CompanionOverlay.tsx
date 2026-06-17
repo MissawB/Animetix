@@ -1,7 +1,7 @@
 import React from 'react';
 import { useCompanionStore } from './companionStore';
 import CompanionDialogue from './CompanionDialogue';
-import { Bot, MessageCircle, X } from 'lucide-react';
+import { MessageCircle, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const CompanionOverlay: React.FC = () => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Save, Moon, Sun, Bot, Award, Sparkles } from 'lucide-react';
 import { useCustomConfig } from '../../features/utils/hooks/useCustomConfig';
 import { Card } from "../../components/ui/Card";
@@ -11,13 +11,15 @@ const CustomConfigPage: React.FC = () => {
   const { t } = useTranslation();
   const { config: serverConfig, isLoading, saveConfig, isSaving } = useCustomConfig();
   const [localConfig, setLocalConfig] = useState<UserConfig | null>(null);
+  const isInitialized = useRef(false);
 
-  // Synchronize local state with server data only once or when server data changes
+  // Synchronize local state with server data once on load
   useEffect(() => {
-    if (serverConfig && !localConfig) {
+    if (serverConfig && !isInitialized.current) {
       setLocalConfig(serverConfig);
+      isInitialized.current = true;
     }
-  }, [serverConfig, localConfig]);
+  }, [serverConfig]);
 
   // Appliquer le thème visuel dynamiquement pour l'aperçu
   useEffect(() => {

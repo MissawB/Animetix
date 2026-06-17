@@ -6,13 +6,12 @@ import {
   ChevronRight, 
   Info,
   X,
-  Target,
   Network,
   Sparkles
 } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import _ForceGraph2D from 'react-force-graph-2d';
-const ForceGraph2D = (_ForceGraph2D as any).default || _ForceGraph2D;
+const ForceGraph2D = (_ForceGraph2D as unknown as { default: React.ElementType }).default || _ForceGraph2D;
 import { apiClient } from "../../utils/apiClient";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
@@ -31,8 +30,8 @@ interface ToTNode {
 }
 
 interface ToTLink {
-  source: string;
-  target: string;
+  source: string | ToTNode;
+  target: string | ToTNode;
 }
 
 interface ToTGraphData {
@@ -40,13 +39,18 @@ interface ToTGraphData {
   links: ToTLink[];
 }
 
+interface ToTResponse {
+    full_tree: ToTGraphData;
+    final_answer: string;
+}
+
 const TreeOfThoughtsPage: React.FC = () => {
   const [query, setQuery] = useState('');
   const [selectedNode, setSelectedNode] = useState<ToTNode | null>(null);
   const [graphData, setGraphData] = useState<ToTGraphData | null>(null);
-  const fgRef = useRef<any>(null);
+  const fgRef = useRef<unknown>(null); // Type complexe de la bibliothèque tierce
 
-  const totMutation = useMutation({
+  const totMutation = useMutation<ToTResponse, Error, { query: string }>({
     mutationFn: (body: { query: string }) => apiClient('/api/v1/labs/tot/', { 
         method: 'POST', 
         body: JSON.stringify(body) 
@@ -64,10 +68,10 @@ const TreeOfThoughtsPage: React.FC = () => {
     }
   });
 
-  const handleNodeClick = useCallback((node: any) => {
+  const handleNodeClick = useCallback((node: ToTNode) => {
     setSelectedNode(node);
     // Center camera on node
-    if (fgRef.current) {
+    if (fgRef.current && node.x !== undefined && node.y !== undefined) {
         fgRef.current.centerAt(node.x, node.y, 1000);
         fgRef.current.zoom(2, 1000);
     }
@@ -114,10 +118,11 @@ const TreeOfThoughtsPage: React.FC = () => {
 
             <div className="space-y-6">
               <div className="space-y-3">
-                <label className="text-[10px] font-black opacity-30 uppercase tracking-widest px-2 flex items-center gap-2">
+                <label htmlFor="cognitive-query" className="text-[10px] font-black opacity-30 uppercase tracking-widest px-2 flex items-center gap-2">
                   <Search className="w-3 h-3" /> Requête Cognitive
                 </label>
                 <textarea
+                  id="cognitive-query"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Entrez un problème complexe..."
@@ -181,10 +186,10 @@ const TreeOfThoughtsPage: React.FC = () => {
               ref={fgRef}
               graphData={graphData}
               backgroundColor="rgba(0,0,0,0)"
-              nodeLabel={(node: any) => `${node.type.toUpperCase()} | Score: ${node.score}`}
-              nodeColor={(node: any) => getNodeColor(node.type)}
+              nodeLabel={(node: ToTNode) => `${node.type.toUpperCase()} | Score: ${node.score}`}
+              nodeColor={(node: ToTNode) => getNodeColor(node.type)}
               nodeRelSize={1}
-              nodeCanvasObject={(node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
+              nodeCanvasObject={(node: ToTNode, ctx: CanvasRenderingContext2D, globalScale: number) => {
                 const size = getNodeSize(node.type);
                 const color = getNodeColor(node.type);
                 
@@ -198,7 +203,7 @@ const TreeOfThoughtsPage: React.FC = () => {
 
                 ctx.fillStyle = color;
                 ctx.beginPath();
-                ctx.arc(node.x, node.y, size, 0, 2 * Math.PI, false);
+                ctx.arc(node.x || 0, node.y || 0, size, 0, 2 * Math.PI, false);
                 ctx.fill();
 
                 // Draw label for large nodes or when zoomed in
@@ -208,8 +213,8 @@ const TreeOfThoughtsPage: React.FC = () => {
                         ctx.font = `${4 / globalScale}px font-black`;
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'middle';
-                        ctx.fillStyle = node.type === 'root' ? '#000' : '#000';
-                        ctx.fillText(label, node.x, node.y);
+                        ctx.fillStyle = '#000';
+                        ctx.fillText(label, node.x || 0, node.y || 0);
                     }
                 }
               }}
@@ -217,8 +222,9 @@ const TreeOfThoughtsPage: React.FC = () => {
               linkDirectionalParticles={2}
               linkDirectionalParticleSpeed={0.005}
               linkDirectionalParticleWidth={2}
-              linkDirectionalParticleColor={(link: any) => {
-                  const target = graphData.nodes.find(n => n.id === (typeof link.target === 'object' ? link.target.id : link.target));
+              linkDirectionalParticleColor={(link: ToTLink) => {
+                  const targetId = typeof link.target === 'object' ? (link.target as ToTNode).id : link.target;
+                  const target = graphData.nodes.find(n => n.id === targetId);
                   return target?.type === 'selected' || target?.type === 'final' ? '#10b981' : 'rgba(255,255,255,0.1)';
               }}
               onNodeClick={handleNodeClick}

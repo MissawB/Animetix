@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Users, Search, Plus, Loader2, X, Shield, Layout, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -18,7 +18,6 @@ interface Club {
 }
 
 const ClubDiscoveryPage: React.FC = () => {
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
   const [selectedTheme, setSelectedTheme] = useState('All');
   const [isModalOpen, setIsModalOpen] = useState(false);

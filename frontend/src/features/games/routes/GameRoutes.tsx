@@ -21,7 +21,7 @@ const WorldBossPage = lazy(() => import('../../../pages/games/WorldBossPage'));
 const DuelLobbyPage = lazy(() => import('../../../pages/games/DuelLobbyPage'));
 const DuelArenaPage = lazy(() => import('../../../pages/games/DuelArenaPage'));
 
-export const GameRoutes = (
+export const GameRoutes = () => (
   <>
     <Route path="/games/hub/" element={<GamesHubPage />} />
     <Route path="/theater/" element={<TheaterPage />} />

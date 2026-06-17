@@ -85,23 +85,123 @@ export interface CreativeFusion {
   image_url?: string;
   scenario_text?: string;
   likes_count: number;
+  creator_name?: string;
+  is_liked?: boolean;
+}
+
+export interface VideoSegment {
+  id: string;
+  video_id: string | number;
+  start: number;
+  end: number;
+  start_time: number;
+  summary: string;
+  description?: string;
+  media_title?: string;
+  type?: 'emotion' | 'action' | 'dialogue';
+}
+
+export interface ApiResponse<T> {
+  status: string;
+  results: T;
+  message?: string;
+}
+
+export interface CurationTicket {
+  id: number;
+  item_title: string;
+  issue_description: string;
+  source_pg: Record<string, unknown> | null;
+  source_neo4j: Record<string, unknown> | null;
+  is_resolved: boolean;
+  created_at: string;
+}
+
+export interface DeducedRule {
+  id: string;
+  rule: string;
+  source: string;
+  confidence: number;
+}
+
+export interface NeuralSignal {
+  id: number;
+  input_context: string;
+  feedback_type: string;
+  weight: number;
+  is_positive: boolean;
+  is_ignored: boolean;
+  created_at: string;
+}
+
+export interface NeuroMemoryData {
+  total_signals: number;
+  deduced_rules: DeducedRule[];
+  signals: NeuralSignal[];
+}
+
+export interface TransparencyMetrics {
+  total_feedbacks: number;
+  knowledge_nodes: number;
+  community_satisfaction: number;
+  model_version: string;
+  last_training?: string;
+}
+
+export interface ModelBenchmark {
+  model_id: string;
+  provider: string;
+  elo_score: number;
+  mmlu_score: number;
+  context_window: number;
+  is_open_source: boolean;
+  license?: string;
+  status?: string;
+  huggingface_id?: string;
 }
 
 export interface TransparencyData {
-  total_costs: number;
-  monthly_costs: number;
-  api_costs: number;
-  server_costs: number;
+  global_metrics: TransparencyMetrics;
+  evolution_timeline: Array<{ date: string; accuracy: number }>;
+  sota_benchmarks: ModelBenchmark[];
+  embedding_drift: Record<string, { status: string; p_value: number; sample_size: number }>;
   ethics_score: number;
-  rag_fidelity: number;
-  average_latency: number;
   model_uptime: number;
+  ethics_audit?: {
+    bias_score: number;
+    safety_compliance: number;
+    hallucination_rate: number;
+  };
 }
 
 export interface GameState {
   gameOver: boolean;
   mediaType: string;
   isDaily: boolean;
+}
+
+export interface DuelLog {
+  id: string;
+  type: string;
+  player: string;
+  message: string;
+  timestamp: number;
+}
+
+export interface DuelGameState extends GameState {
+  roomCode: string;
+  players: GamePlayer[];
+  currentTurn: string;
+  scores: Record<string, number>;
+  target_item?: string;
+}
+
+export interface VNScene {
+  background_url: string;
+  character_name: string;
+  character_sprite_url: string;
+  dialogue: string;
+  vibe?: string;
 }
 
 export interface AkinetixState extends GameState {
@@ -226,6 +326,14 @@ export interface GraphData {
 }
 
 // --- Club API Types ---
+export interface Seiyuu {
+  id: number;
+  name: string;
+  sample_url: string;
+  image?: string;
+  role?: string;
+}
+
 export interface ClubEvent {
   id: number;
   club: number;
@@ -259,6 +367,156 @@ export interface ClubMembership {
   username: string;
   role: 'member' | 'admin' | 'owner';
   joined_at: string;
+}
+
+export interface GoldDatasetEntry {
+  id: number;
+  entry_type: string;
+  context: string;
+  instruction: string;
+  response: string;
+  metadata: Record<string, unknown>;
+  is_validated: boolean;
+  ai_validation_score: number;
+  ai_critique: string | null;
+  confidence_score: number;
+  is_safe: boolean;
+  created_at: string;
+}
+
+export interface GraphAudit {
+  isolated_nodes: number;
+  temporal_conflicts: number;
+  orphan_entities: number;
+  health_score: number;
+  details: Array<{
+    t1: string;
+    y1: number;
+    t2: string;
+    y2: number;
+  }>;
+}
+
+export interface BenchmarkData {
+  benchmarks: ModelBenchmark[];
+  top_model: ModelBenchmark;
+  best_open_source: ModelBenchmark;
+}
+
+export interface VsBattleArenaEntry {
+  id: number;
+  char_a_name: string;
+  char_a_franchise: string;
+  char_b_name: string;
+  char_b_franchise: string;
+  winner: string;
+  verdict_summary: string;
+  likes_count: number;
+  is_liked: boolean;
+  created_at: string;
+}
+
+export interface GamePlayer {
+  id: string;
+  username: string;
+  is_online: boolean;
+  is_me?: boolean;
+  is_ready?: boolean;
+}
+
+export interface ChatMessage {
+  user: string;
+  text: string;
+  timestamp?: number;
+}
+
+export interface PlotlyEvent {
+  points: Array<{
+    customdata: unknown;
+    pointNumber: number;
+  }>;
+}
+
+export interface DocumentAttribution {
+  title: string;
+  contribution_weight: number;
+}
+
+export interface LogitLensTrajectory {
+  layer: number;
+  top_tokens: string[];
+}
+
+export interface ModelDiagnostics {
+  attention_heatmap: number[][]; 
+  top_influential_tokens: string[];
+  logit_lens_trajectory: LogitLensTrajectory[]; 
+}
+
+export interface Uncertainty {
+  confidence_score: number;
+  is_reliable: boolean;
+  perplexity: number | null;
+  action_required: string;
+  method: string;
+}
+
+export interface AgentTraceStep {
+  agent: string;
+  thought: string;
+}
+
+export interface XaiReport {
+  query_intent: string;
+  retrieval_attribution?: DocumentAttribution[];
+  internal_diagnostics?: ModelDiagnostics;
+  uncertainty?: Uncertainty;
+  agent_trace?: AgentTraceStep[]; 
+  final_confidence: number;
+}
+
+export interface MediaDetail extends MediaItem {
+  genres?: string[];
+  title_english?: string;
+  year?: string;
+  studios?: string[];
+  author?: string;
+  micro_tags?: string[];
+  related_items?: RelatedItem[];
+  metadata?: Record<string, unknown>;
+  title_native?: string;
+  popularity?: number;
+  seiyuu?: Seiyuu[];
+}
+
+export interface Appearance {
+  id: string;
+  title: string;
+  image?: string;
+}
+
+export interface RelatedItem {
+  id: string;
+  title: string;
+  image?: string;
+}
+
+export interface NotableWork {
+  id: string;
+  title: string;
+  image?: string;
+  type?: string;
+  role?: string;
+}
+
+export interface SupportTicket {
+  id: number;
+  subject: string;
+  query: string;
+  ai_response?: string | null;
+  status: 'open' | 'resolved' | 'closed';
+  feedback_score?: number | null;
+  created_at: string;
 }
 
 export interface AIFeedback {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Brain, History, Check, X, HelpCircle, ArrowRight, Sparkles, Target, AlertTriangle } from 'lucide-react';
+import { Brain, History, Check, X, HelpCircle, Sparkles, Target, AlertTriangle } from 'lucide-react';
 import { useAkinetixStore } from '../../features/games/stores/akinetixStore';
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";

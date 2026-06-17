@@ -1,5 +1,5 @@
 import React from 'react';
-import { useSearchParams, useNavigate, Link } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { GraphExplorer } from "../../features/graph/GraphExplorer";
 import { SearchBar } from "../../components/SearchBar";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
@@ -8,7 +8,6 @@ import { Zap } from 'lucide-react';
 
 const GraphPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
   const id = searchParams.get('id');
   const type = searchParams.get('type');
 

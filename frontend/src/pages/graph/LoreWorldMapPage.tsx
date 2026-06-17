@@ -1,13 +1,8 @@
 import React from 'react';
-import { 
-  Map, 
-  Network, 
+import {
   Globe, 
   Layers, 
-  Zap, 
-  Sparkles, 
-  ChevronRight, 
-  Target,
+  Zap,
   Database,
   Search,
   Maximize2
@@ -21,7 +16,7 @@ import { CardSkeleton } from "../../components/ui/Skeleton";
 import { motion } from 'framer-motion';
 
 const LoreWorldMapPage: React.FC = () => {
-  const { data: communities, isLoading, isError } = useQuery<any[]>({
+  const { data: communities, isLoading, isError } = useQuery<Record<string, unknown>[]>({
     queryKey: ['graph-world-map'],
     queryFn: () => apiClient('/api/v1/graph/world-map/'),
   });

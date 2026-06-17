@@ -2,11 +2,9 @@ import React, { useState } from 'react';
 import { 
   Cpu,
   Loader2,
-  ChevronRight,
   ShieldCheck,
   Zap,
   Target,
-  Layers,
   Terminal,
   Code,
   Sparkles
@@ -19,16 +17,19 @@ import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion, AnimatePresence } from 'framer-motion';
 
+import { CompilerResult } from '../../types';
+
 const CompilerLabPage: React.FC = () => {
   const [fnName, setFnName] = useState('semantic_cosine_opt');
   const [cCode, setCCode] = useState('// Version optimisée générée à la volée\ndouble semantic_cosine_opt(double* a, double* b, int n) {\n    double dot = 0.0;\n    // ... calcul matriciel vectorisé C ...\n    return dot;\n}');
-  const [compilerResult, setCompilerResult] = useState<any | null>(null);
+  const [compilerResult, setCompilerResult] = useState<CompilerResult | null>(null);
 
-  const compileMutation = useMutation({
-    mutationFn: (body: any) => apiClient('/api/v1/singularity-lab/', { 
-        method: 'POST', 
-        body: JSON.stringify(body) 
-    }),
+  const compileMutation = useMutation<CompilerResult, Error, { action: string; function_name: string }>({
+    mutationFn: (body: { action: string; function_name: string }) => 
+        apiClient('/api/v1/singularity-lab/', { 
+            method: 'POST', 
+            body: JSON.stringify(body) 
+        }),
     onSuccess: (data) => setCompilerResult(data)
   });
 
@@ -65,8 +66,9 @@ const CompilerLabPage: React.FC = () => {
 
                       <div className="space-y-8">
                           <div className="space-y-4">
-                              <label className="text-[10px] font-black opacity-30 uppercase tracking-[0.2em] px-2">Fonction Cible</label>
+                              <label htmlFor="fn-name" className="text-[10px] font-black opacity-30 uppercase tracking-[0.2em] px-2">Fonction Cible</label>
                               <input 
+                                  id="fn-name"
                                   type="text" 
                                   value={fnName} 
                                   onChange={(e) => setFnName(e.target.value)} 

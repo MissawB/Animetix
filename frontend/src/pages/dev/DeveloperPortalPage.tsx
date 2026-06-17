@@ -26,7 +26,6 @@ import { useAuthStore } from "../../store/authStore";
 
 const DeveloperPortalPage: React.FC = () => {
   const { user } = useAuthStore();
-  const [showKey, setShowKey] = useState(false);
   const [copySuccess, setCopyKeySuccess] = useState(false);
 
   // Fetch API Key Metadata
@@ -39,7 +38,7 @@ const DeveloperPortalPage: React.FC = () => {
   // Generate Key Mutation
   const generateMutation = useMutation({
     mutationFn: () => apiClient('/api/v1/developer/api-key/', { method: 'POST' }),
-    onSuccess: (data) => {
+    onSuccess: () => {
         refetch();
         // Here we could handle displaying the one-time raw key
     }

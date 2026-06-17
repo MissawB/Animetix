@@ -8,11 +8,8 @@ import {
   Target, 
   Fingerprint,
   Layers,
-  ChevronRight,
-  Info,
   Sliders,
   CheckCircle2,
-  AlertTriangle,
   Brain
 } from 'lucide-react';
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -21,7 +18,6 @@ import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface ObservabilityData {
     drift_status: string;
@@ -149,11 +145,12 @@ const ObservabilityConsolePage: React.FC = () => {
                           {Object.entries(thresholds).map(([cat, val]) => (
                               <div key={cat} className="space-y-4">
                                   <div className="flex justify-between items-end">
-                                      <label className="text-[10px] font-black uppercase tracking-widest opacity-40">{cat.replace('_', ' ')} Filter</label>
+                                      <label htmlFor={`${cat}-filter`} className="text-[10px] font-black uppercase tracking-widest opacity-40">{cat.replace('_', ' ')} Filter</label>
                                       <span className="text-sm font-black italic manga-font text-purple-500">{(val * 100).toFixed(0)}%</span>
                                   </div>
                                   <div className="relative group">
                                       <input 
+                                          id={`${cat}-filter`}
                                           type="range" 
                                           min="0" 
                                           max="1" 

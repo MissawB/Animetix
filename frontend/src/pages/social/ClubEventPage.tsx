@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ChevronLeft, Calendar, Clock, MapPin, Users, Send, CheckCircle } from 'lucide-react';
 import { getClubEventDetails, getClubDetails, toggleEventParticipation, ClubEvent } from '../../api';
@@ -19,7 +19,7 @@ const ClubEventPage: React.FC = () => {
   ]);
   const [newMessage, setNewMessage] = useState('');
 
-  const fetchEventData = async () => {
+  const fetchEventData = useCallback(async () => {
     if (!eventId || !id) return;
     try {
       const eventData = await getClubEventDetails(Number(eventId));
@@ -33,11 +33,18 @@ const ClubEventPage: React.FC = () => {
       console.error("Erreur de récupération :", err);
       useToastStore.getState().addToast("Impossible de récupérer l'événement.", "error");
     }
-  };
+  }, [id, eventId]);
 
   useEffect(() => {
-    fetchEventData();
-  }, [id, eventId]);
+    let isMounted = true;
+    const load = async () => {
+      if (isMounted) {
+        await fetchEventData();
+      }
+    };
+    load();
+    return () => { isMounted = false; };
+  }, [fetchEventData]);
 
   // Countdown timer logic
   useEffect(() => {
@@ -72,8 +79,9 @@ const ClubEventPage: React.FC = () => {
         response.status === 'joined' ? "Votre inscription a été enregistrée !" : "Vous ne participez plus à cet événement.",
         response.status === 'joined' ? "success" : "info"
       );
-    } catch (err: any) {
-      useToastStore.getState().addToast(err.error || "Action impossible. Êtes-vous membre du club ?", "error");
+    } catch (err) {
+      const error = err as { error?: string; message?: string };
+      useToastStore.getState().addToast(error.error || "Action impossible. Êtes-vous membre du club ?", "error");
     }
   };
 

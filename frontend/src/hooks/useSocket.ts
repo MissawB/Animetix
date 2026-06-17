@@ -3,8 +3,8 @@ import { useToastStore } from '../store/toastStore';
 
 interface SocketData {
   type: string;
-  state?: any;
-  message?: any;
+  state?: Record<string, unknown>;
+  message?: Record<string, unknown>;
   action?: string;
 }
 
@@ -12,8 +12,8 @@ const MAX_RECONNECT_ATTEMPTS = 5;
 const INITIAL_RECONNECT_DELAY = 1000;
 
 const useSocket = (roomCode: string | undefined, type: 'undercover' | 'codemanga') => {
-  const [messages, setMessages] = useState<any[]>([]);
-  const [gameState, setGameState] = useState<any>(null);
+  const [messages, setMessages] = useState<Record<string, unknown>[]>([]);
+  const [gameState, setGameState] = useState<Record<string, unknown> | null>(null);
   const [connected, setConnected] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
   
@@ -22,13 +22,13 @@ const useSocket = (roomCode: string | undefined, type: 'undercover' | 'codemanga
   const messageQueueRef = useRef<string[]>([]);
   const { addToast } = useToastStore();
 
+  const connectRef = useRef<() => void>(() => {});
+
   const connect = useCallback(() => {
     if (!roomCode) return;
 
     const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
     const host = window.location.host;
-    // Note: In development with Vite proxy, ws might need a different path or direct port 8000
-    // But we'll follow the existing pattern.
     const url = `${protocol}://${host}/ws/${type}/${roomCode}/`;
 
     console.log(`Tentative de connexion WebSocket: ${url}`);
@@ -45,13 +45,11 @@ const useSocket = (roomCode: string | undefined, type: 'undercover' | 'codemanga
         addToast('Connexion rétablie !', 'success');
       }
 
-      // Vider la file d'attente des messages envoyés pendant la déconnexion
       while (messageQueueRef.current.length > 0 && socket.readyState === WebSocket.OPEN) {
         const msg = messageQueueRef.current.shift();
         if (msg) socket.send(msg);
       }
 
-      // Demander une mise à jour d'état immédiate à la reconnexion
       socket.send(JSON.stringify({ type: 'action', action: 'sync_state' }));
     };
 
@@ -59,9 +57,9 @@ const useSocket = (roomCode: string | undefined, type: 'undercover' | 'codemanga
       try {
         const data: SocketData = JSON.parse(event.data);
         if (data.type === 'game_state_update') {
-          setGameState(data.state);
+          setGameState(data.state || null);
         } else if (data.type === 'chat_message') {
-          setMessages((prev) => [...prev, data.message]);
+          setMessages((prev) => [...prev, data.message || {}]);
         }
       } catch (err) {
         console.error("Erreur de parsing WebSocket:", err);
@@ -71,12 +69,10 @@ const useSocket = (roomCode: string | undefined, type: 'undercover' | 'codemanga
     socket.onclose = (event) => {
       setConnected(false);
       
-      // Si la fermeture n'est pas volontaire (code 1000)
       if (event.code !== 1000) {
         if (reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
           setReconnecting(true);
           const delay = INITIAL_RECONNECT_DELAY * Math.pow(2, reconnectAttemptsRef.current);
-          console.warn(`Déconnexion. Nouvelle tentative dans ${delay}ms...`);
           
           if (reconnectAttemptsRef.current === 0) {
             addToast('Connexion perdue. Tentative de reconnexion...', 'info');
@@ -84,7 +80,7 @@ const useSocket = (roomCode: string | undefined, type: 'undercover' | 'codemanga
 
           setTimeout(() => {
             reconnectAttemptsRef.current += 1;
-            connect();
+            connectRef.current();
           }, delay);
         } else {
           setReconnecting(false);
@@ -98,6 +94,10 @@ const useSocket = (roomCode: string | undefined, type: 'undercover' | 'codemanga
     };
 
   }, [roomCode, type, addToast]);
+
+  useEffect(() => {
+    connectRef.current = connect;
+  }, [connect]);
 
   useEffect(() => {
     connect();

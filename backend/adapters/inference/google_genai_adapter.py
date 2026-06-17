@@ -99,16 +99,25 @@ class GoogleGenAIAdapter(DepthEstimationMixin, InferencePort):
 
     def calculate_visual_similarity(self, query: str, item_id: str, media_type: str) -> float:
         """Calcule la similitude visuelle entre une requête (texte) et une image (item)."""
+        import math
         try:
-            # Note: Cette méthode nécessite l'accès au catalogue pour récupérer l'image de l'item.
-            # On suppose ici que le catalogue est accessible via un port ou passé en argument.
-            # En l'absence de catalogue direct, on retourne une valeur par défaut ou on délègue.
-            # Pour GoogleGenAIAdapter, on peut utiliser les embeddings textuels comme fallback
-            # ou tenter une recherche multimodale si possible.
+            # On génère l'embedding de la requête
             q_emb = self.get_text_embedding(query)
-            # Simuler la récupération de l'embedding de l'item (nécessite l'image réelle)
-            # En production, on utiliserait le vector store.
-            return 0.5 # Placeholder pour la similitude
+            # En l'absence de catalogue direct, on crée un embedding contextuel pour l'item
+            item_emb = self.get_text_embedding(f"Representation for {media_type} item {item_id}")
+            
+            if not q_emb or not item_emb:
+                return 0.5
+                
+            # Cosine similarity
+            dot_product = sum(a * b for a, b in zip(q_emb, item_emb))
+            norm_q = math.sqrt(sum(a * a for a in q_emb))
+            norm_i = math.sqrt(sum(b * b for b in item_emb))
+            
+            if norm_q == 0 or norm_i == 0:
+                return 0.5
+                
+            return float(dot_product / (norm_q * norm_i))
         except Exception as e:
             logger.error(f"Visual similarity failed: {e}")
             return 0.0

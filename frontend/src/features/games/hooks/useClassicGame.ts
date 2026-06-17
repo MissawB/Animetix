@@ -1,5 +1,4 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ClassicGameState } from '../../../types';
 import { classicGameService } from '../services/classicService';
 
 export const useClassicGame = () => {

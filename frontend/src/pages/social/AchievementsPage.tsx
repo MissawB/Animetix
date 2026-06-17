@@ -13,6 +13,7 @@ interface Achievement {
   icon: string;
   rarity: string;
   xp_reward: number;
+  is_unlocked?: boolean;
 }
 
 const AchievementsPage: React.FC = () => {
@@ -42,9 +43,9 @@ const AchievementsPage: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {achievements.map((ach: Achievement) => (
-          <Card key={ach.id} padding="md" className={`${true ? 'bg-white' : 'bg-gray-50 opacity-70 grayscale'}`}>
+          <Card key={ach.id} padding="md" className={`${ach.is_unlocked ? 'bg-white' : 'bg-gray-50 opacity-70 grayscale'}`}>
             <div className="flex items-center gap-4">
-              <div className={`w-20 h-20 rounded-2xl flex items-center justify-center shadow-lg ${true ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'}`}>
+              <div className={`w-20 h-20 rounded-2xl flex items-center justify-center shadow-lg ${ach.is_unlocked ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'}`}>
                 <Trophy className="w-8 h-8" />
               </div>
               <div className="flex-1">
@@ -54,7 +55,7 @@ const AchievementsPage: React.FC = () => {
                 </div>
                 <p className="text-xs text-gray-600 dark:text-gray-400 mb-2 font-medium">{ach.description}</p>
                 <div className="text-green-600 font-black text-[10px] flex items-center uppercase tracking-tighter">
-                  <CheckCircle2 className="w-3 h-3 mr-1" /> {true ? "Débloqué" : `Verrouillé (+${ach.xp_reward} XP)`}
+                  <CheckCircle2 className="w-3 h-3 mr-1" /> {ach.is_unlocked ? "Débloqué" : `Verrouillé (+${ach.xp_reward} XP)`}
                 </div>
               </div>
             </div>

@@ -56,10 +56,31 @@ def validate_sql_query(sql: str) -> bool:
         if not isinstance(parsed_sql, exp.Select):
             logger.warning(f"SQL Guardrail: Query is not a SELECT statement: {sql_clean[:200]}")
             return False
-            
-        # 1.1 Ensure at least one expression is selected (reject SELECT FROM table;)
+
+        # 1.1 Ensure at least one expression is selected
         if not parsed_sql.expressions:
             logger.warning(f"SQL Guardrail: Empty SELECT expressions: {sql_clean[:200]}")
+            return False
+
+        # 1.2 JOIN Limitation (Max 5 joins to prevent DoS)
+        joins = list(parsed_sql.find_all(exp.Join))
+        if len(joins) > 5:
+            logger.warning(f"SQL Guardrail: Too many JOINs ({len(joins)}) detected.")
+            return False
+
+        # 1.3 MANDATORY LIMIT Check (Prevent massive data exfiltration/DoS)
+        limit_node = parsed_sql.args.get("limit")
+        if not limit_node:
+            logger.warning("SQL Guardrail: Missing LIMIT clause. Queries must have a LIMIT.")
+            return False
+
+        try:
+            limit_val = int(limit_node.expression.this)
+            if limit_val > 1000:
+                logger.warning(f"SQL Guardrail: LIMIT too high ({limit_val}). Max allowed is 1000.")
+                return False
+        except (ValueError, AttributeError):
+            logger.warning("SQL Guardrail: Invalid or non-static LIMIT clause.")
             return False
 
         # 2. Check for forbidden operations (DDL, DML, and dangerous extensions)

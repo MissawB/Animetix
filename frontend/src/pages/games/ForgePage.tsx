@@ -7,7 +7,6 @@ import { GlitchText } from '../../components/forge/GlitchText';
 import { CyberSlider } from '../../components/forge/CyberSlider';
 import { CyberButton } from '../../components/forge/CyberButton';
 import { startFusion, getFusionStatus, FusionResponse, FusionStatus } from '../../api';
-import { SearchItem } from "../../types";
 
 const ART_STYLES = [
   { id: 'Cyberpunk', name: 'Cyberpunk', desc: 'Néons et technologie futuriste', color: 'bg-purple-500' },
@@ -18,10 +17,14 @@ const ART_STYLES = [
   { id: 'Aquarelle', name: 'Aquarelle', desc: 'Douceur et transparences fluides', color: 'bg-blue-400' },
 ];
 
+import { SearchItem } from '../../types';
+
+// ...
+
 const ForgePage: React.FC = () => {
   const navigate = useNavigate();
-  const [itemA, setItemA] = useState<any>(null);
-  const [itemB, setItemB] = useState<any>(null);
+  const [itemA, setItemA] = useState<SearchItem | null>(null);
+  const [itemB, setItemB] = useState<SearchItem | null>(null);
   const [chaosLevel, setChaosLevel] = useState<number>(50);
   const [balance, setBalance] = useState<number>(50);
   const [artStyle, setArtStyle] = useState<string>('Cyberpunk');
@@ -30,7 +33,7 @@ const ForgePage: React.FC = () => {
   const [fusionData, setFusionData] = useState<FusionResponse | null>(null);
   const [status, setStatus] = useState<FusionStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [showConfetti, setShowConfetti] = useState(false);
+  const [setShowConfetti] = useState(false);
 
   const handleStartFusion = async () => {
     setIsLoading(true);
@@ -44,7 +47,7 @@ const ForgePage: React.FC = () => {
         art_style: artStyle
       });
       setFusionData(res);
-    } catch (err) {
+    } catch (_err) {
       setError("Le réacteur de fusion a surchauffé. Réessayez plus tard.");
       setIsLoading(false);
     }
@@ -62,13 +65,13 @@ const ForgePage: React.FC = () => {
             setShowConfetti(true);
             clearInterval(interval);
           }
-        } catch (err) {
+        } catch (_err) {
           console.error("Polling error:", err);
         }
       }, 3000);
     }
     return () => clearInterval(interval);
-  }, [fusionData, status]);
+  }, [fusionData, status, setShowConfetti]);
 
   const resetForge = () => {
     setFusionData(null);
@@ -244,10 +247,10 @@ const ForgePage: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <label className="text-[10px] font-black uppercase tracking-widest opacity-40">Univers Alpha</label>
+                            <label htmlFor="univers-alpha" className="text-[10px] font-black uppercase tracking-widest opacity-40">Univers Alpha</label>
                             {itemA && <button onClick={() => setItemA(null)} className="text-[10px] font-bold text-red-500 hover:underline flex items-center gap-1"><X className="w-2 h-2" /> Effacer</button>}
                         </div>
-                        <SearchBar onSelect={setItemA} placeholder="Rechercher..." />
+                        <SearchBar id="univers-alpha" onSelect={setItemA} placeholder="Rechercher..." />
                         
                         <div className="h-[180px] relative overflow-hidden rounded-3xl bg-black/5 dark:bg-white/5 border border-dashed border-black/10 dark:border-white/10 flex items-center justify-center group transition-all">
                             {itemA ? (
@@ -275,10 +278,10 @@ const ForgePage: React.FC = () => {
 
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <label className="text-[10px] font-black uppercase tracking-widest opacity-40">Univers Bêta</label>
+                            <label htmlFor="univers-beta" className="text-[10px] font-black uppercase tracking-widest opacity-40">Univers Bêta</label>
                             {itemB && <button onClick={() => setItemB(null)} className="text-[10px] font-bold text-red-500 hover:underline flex items-center gap-1"><X className="w-2 h-2" /> Effacer</button>}
                         </div>
-                        <SearchBar onSelect={setItemB} placeholder="Rechercher..." />
+                        <SearchBar id="univers-beta" onSelect={setItemB} placeholder="Rechercher..." />
                         
                         <div className="h-[180px] relative overflow-hidden rounded-3xl bg-black/5 dark:bg-white/5 border border-dashed border-black/10 dark:border-white/10 flex items-center justify-center group transition-all">
                             {itemB ? (

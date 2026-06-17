@@ -36,6 +36,10 @@ export default defineConfig([
         { allowConstantExport: true },
       ],
       'jsx-a11y/no-autofocus': 'off',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
+      ],
     },
   },
   ...storybook.configs["flat/recommended"]

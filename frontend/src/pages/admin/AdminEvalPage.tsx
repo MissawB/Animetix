@@ -13,15 +13,6 @@ interface Stats {
   avg_prec: number;
 }
 
-interface EvalResult {
-  id: number;
-  faithfulness: number;
-  relevancy: number;
-  precision: number;
-  hallucination_detected: boolean;
-  created_at: string;
-}
-
 const AdminEvalPage: React.FC = () => {
   const { t } = useTranslation();
   const { data, loading } = useAdminEval();

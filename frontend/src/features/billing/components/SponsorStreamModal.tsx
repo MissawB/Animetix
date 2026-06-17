@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Film, CheckCircle2, X, AlertTriangle, Play } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
@@ -21,6 +21,73 @@ const SPONSORS_CLIPS = {
 
 const AD_TAG_URL = 'https://pubads.g.doubleclick.net/gampad/ads?iu=/21775744923/external/single_ad_samples&sz=640x480&ciu_szs=300x250&impl=s&gdfp_req=1&env=vp&output=vast&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ct%3Dlinear&correlator=';
 
+// --- Google IMA SDK Interfaces (Shadow Types) ---
+
+interface ImaAd {
+  getDuration: () => number;
+}
+
+interface ImaAdEvent {
+  getAdData: () => { currentTime: number; duration: number } | null;
+  getAd: () => ImaAd | null;
+}
+
+interface ImaAdErrorEvent {
+  getError: () => { getMessage: () => string };
+}
+
+interface ImaAdDisplayContainer {
+  initialize: () => void;
+}
+
+interface ImaAdsRequest {
+  adTagUrl: string;
+  linearAdSlotWidth: number;
+  linearAdSlotHeight: number;
+  nonLinearAdSlotWidth: number;
+  nonLinearAdSlotHeight: number;
+}
+
+interface ImaAdsRenderingSettings {
+  restoreHeaderAd: boolean;
+}
+
+interface ImaAdsManagerLoadedEvent {
+  getAdsManager: (video: HTMLVideoElement | null, settings: ImaAdsRenderingSettings) => ImaAdsManager;
+}
+
+interface ImaAdsLoader {
+  addEventListener: (type: string, callback: (event: ImaAdsManagerLoadedEvent | ImaAdErrorEvent) => void, capture?: boolean) => void;
+  requestAds: (request: ImaAdsRequest) => void;
+  contentComplete: () => void;
+}
+
+interface ImaAdsManager {
+  addEventListener: (type: string, callback: (event: ImaAdEvent | ImaAdErrorEvent) => void) => void;
+  init: (width: number, height: number, viewMode: string) => void;
+  start: () => void;
+  destroy: () => void;
+}
+
+interface GoogleImaNamespace {
+  AdDisplayContainer: new (container: HTMLElement | null, video: HTMLVideoElement | null) => ImaAdDisplayContainer;
+  AdsLoader: new (container: ImaAdDisplayContainer) => ImaAdsLoader;
+  AdsRequest: new () => ImaAdsRequest;
+  AdsRenderingSettings: new () => ImaAdsRenderingSettings;
+  ViewMode: { NORMAL: string };
+  AdEvent: { Type: Record<string, string> };
+  AdErrorEvent: { Type: Record<string, string> };
+  AdsManagerLoadedEvent: { Type: Record<string, string> };
+}
+
+declare global {
+  interface Window {
+    google?: {
+      ima: GoogleImaNamespace;
+    };
+  }
+}
+
 export const SponsorStreamModal: React.FC<Props> = ({ actionType, onClose, onConfirm }) => {
   const [isSdkLoaded, setIsSdkLoaded] = useState(false);
   const [isAdStarted, setIsAdStarted] = useState(false);
@@ -31,9 +98,9 @@ export const SponsorStreamModal: React.FC<Props> = ({ actionType, onClose, onCon
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const adContainerRef = useRef<HTMLDivElement>(null);
-  const adsLoaderRef = useRef<any>(null);
-  const adsManagerRef = useRef<any>(null);
-  const adDisplayContainerRef = useRef<any>(null);
+  const adsLoaderRef = useRef<ImaAdsLoader | null>(null);
+  const adsManagerRef = useRef<ImaAdsManager | null>(null);
+  const adDisplayContainerRef = useRef<ImaAdDisplayContainer | null>(null);
 
   const sponsor = SPONSORS_CLIPS[actionType];
 
@@ -51,76 +118,7 @@ export const SponsorStreamModal: React.FC<Props> = ({ actionType, onClose, onCon
     }
   }, [hasError]);
 
-  // 1. Chargement dynamique du script Google IMA SDK
-  useEffect(() => {
-    if ((window as any).google && (window as any).google.ima) {
-      setIsSdkLoaded(true);
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = 'https://imasdk.googleapis.com/js/sdkloader/ima3.js';
-    script.async = true;
-    script.onload = () => {
-      if ((window as any).google && (window as any).google.ima) {
-        setIsSdkLoaded(true);
-      } else {
-        console.error("IMA SDK script loaded but window.google.ima is undefined");
-        setHasError(true);
-      }
-    };
-    script.onerror = () => {
-      console.error("Failed to load Google IMA SDK script");
-      setHasError(true);
-    };
-    document.body.appendChild(script);
-
-    return () => {
-      try {
-        document.body.removeChild(script);
-      } catch (e) {
-        // Ignorer si déjà retiré ou absent
-      }
-    };
-  }, []);
-
-  // 2. Initialisation d'AdsLoader
-  useEffect(() => {
-    if (!isSdkLoaded || hasError) return;
-
-    try {
-      const google = (window as any).google;
-      
-      const adDisplayContainer = new google.ima.AdDisplayContainer(
-        adContainerRef.current,
-        videoRef.current
-      );
-      adDisplayContainerRef.current = adDisplayContainer;
-
-      const adsLoader = new google.ima.AdsLoader(adDisplayContainer);
-      adsLoaderRef.current = adsLoader;
-
-      adsLoader.addEventListener(
-        google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED,
-        onAdsManagerLoaded,
-        false
-      );
-      adsLoader.addEventListener(
-        google.ima.AdErrorEvent.Type.AD_ERROR,
-        onAdError,
-        false
-      );
-    } catch (e) {
-      console.error("Error initializing IMA loader:", e);
-      setHasError(true);
-    }
-
-    return () => {
-      destroyAds();
-    };
-  }, [isSdkLoaded, hasError]);
-
-  const destroyAds = () => {
+  const destroyAds = useCallback(() => {
     try {
       if (adsManagerRef.current) {
         adsManagerRef.current.destroy();
@@ -128,15 +126,29 @@ export const SponsorStreamModal: React.FC<Props> = ({ actionType, onClose, onCon
       if (adsLoaderRef.current) {
         adsLoaderRef.current.contentComplete();
       }
-    } catch (e) {
+    } catch (_e) {
       // Ignorer les erreurs d'extinction
     }
-  };
+  }, []);
 
-  const onAdsManagerLoaded = (adsManagerLoadedEvent: any) => {
+  const onAdComplete = useCallback(() => {
+    setIsDone(true);
+    setProgress(100);
+    destroyAds();
+  }, [destroyAds]);
+
+  const onAdError = useCallback((adErrorEvent: ImaAdErrorEvent) => {
+    console.error("IMA SDK Ad Error:", adErrorEvent?.getError?.().getMessage() || adErrorEvent);
+    setHasError(true);
+  }, []);
+
+  const onAdsManagerLoaded = useCallback((adsManagerLoadedEvent: ImaAdsManagerLoadedEvent) => {
     try {
-      const google = (window as any).google;
+      const google = window.google;
+      if (!google) return;
+
       const adsRenderingSettings = new google.ima.AdsRenderingSettings();
+
       adsRenderingSettings.restoreHeaderAd = true;
 
       const adsManager = adsManagerLoadedEvent.getAdsManager(
@@ -172,36 +184,96 @@ export const SponsorStreamModal: React.FC<Props> = ({ actionType, onClose, onCon
       
       adsManager.addEventListener(
         google.ima.AdEvent.Type.AD_PROGRESS,
-        (adEvent: any) => {
+        (adEvent: ImaAdEvent) => {
           const adData = adEvent.getAdData();
           if (adData && adData.duration) {
             setProgress((adData.currentTime / adData.duration) * 100);
           }
         }
       );
-    } catch (e) {
+    } catch (_e) {
       console.error("Error setting up AdsManager:", e);
       setHasError(true);
     }
-  };
+  }, [onAdError, onAdComplete]);
 
-  const onAdComplete = () => {
-    setIsDone(true);
-    setProgress(100);
-    destroyAds();
-  };
+  // 1. Chargement dynamique du script Google IMA SDK
+  useEffect(() => {
+    if (window.google?.ima) {
+      setTimeout(() => setIsSdkLoaded(true), 0);
+      return;
+    }
 
-  const onAdError = (adErrorEvent: any) => {
-    console.error("IMA SDK Ad Error:", adErrorEvent?.getError?.() || adErrorEvent);
-    setHasError(true);
-  };
+    const script = document.createElement('script');
+    script.src = 'https://imasdk.googleapis.com/js/sdkloader/ima3.js';
+    script.async = true;
+    script.onload = () => {
+      if (window.google?.ima) {
+        setIsSdkLoaded(true);
+      } else {
+        console.error("IMA SDK script loaded but window.google.ima is undefined");
+        setHasError(true);
+      }
+    };
+    script.onerror = () => {
+      console.error("Failed to load Google IMA SDK script");
+      setHasError(true);
+    };
+    document.body.appendChild(script);
+
+    return () => {
+      try {
+        document.body.removeChild(script);
+      } catch (_e) {
+        // Ignorer si déjà retiré ou absent
+      }
+    };
+  }, [isSdkLoaded]);
+
+  // 2. Initialisation d'AdsLoader
+  useEffect(() => {
+    if (!isSdkLoaded || hasError) return;
+
+    try {
+      const google = window.google;
+      if (!google) return;
+      
+      const adDisplayContainer = new google.ima.AdDisplayContainer(
+        adContainerRef.current,
+        videoRef.current
+      );
+      adDisplayContainerRef.current = adDisplayContainer;
+
+      const adsLoader = new google.ima.AdsLoader(adDisplayContainer);
+      adsLoaderRef.current = adsLoader;
+
+      adsLoader.addEventListener(
+        google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED,
+        onAdsManagerLoaded,
+        false
+      );
+      adsLoader.addEventListener(
+        google.ima.AdErrorEvent.Type.AD_ERROR,
+        onAdError,
+        false
+      );
+    } catch (_e) {
+      console.error("Error initializing IMA loader:", e);
+      setTimeout(() => setHasError(true), 0);
+    }
+
+    return () => {
+      destroyAds();
+    };
+  }, [isSdkLoaded, hasError, onAdsManagerLoaded, onAdError, destroyAds]);
 
   const startAdPlayback = () => {
     if (hasError) return;
     logVideoImpression();
 
     try {
-      const google = (window as any).google;
+      const google = window.google;
+      if (!google) return;
       
       if (adDisplayContainerRef.current) {
         adDisplayContainerRef.current.initialize();
@@ -219,7 +291,9 @@ export const SponsorStreamModal: React.FC<Props> = ({ actionType, onClose, onCon
 
       setIsAdStarted(true);
 
-      adsLoaderRef.current.requestAds(adsRequest);
+      if (adsLoaderRef.current) {
+        adsLoaderRef.current.requestAds(adsRequest);
+      }
 
       setTimeout(() => {
         if (adsManagerRef.current) {
@@ -233,7 +307,7 @@ export const SponsorStreamModal: React.FC<Props> = ({ actionType, onClose, onCon
         }
       }, 500);
 
-    } catch (e) {
+    } catch (_e) {
       console.error("Error starting ad playback:", e);
       setHasError(true);
     }
@@ -260,7 +334,7 @@ export const SponsorStreamModal: React.FC<Props> = ({ actionType, onClose, onCon
     try {
       await onConfirm();
       onClose();
-    } catch (e) {
+    } catch (_e) {
       console.error(e);
     } finally {
       setIsSubmitting(false);

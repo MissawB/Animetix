@@ -1,13 +1,10 @@
 import React, { useState } from 'react';
 import { 
-  Swords, 
-  ShieldAlert, 
+  Swords,
   Scale, 
-  Zap, 
-  MessageSquare, 
+  Zap,
   CheckCircle2, 
   Sparkles,
-  Bot,
   User,
   Gavel,
   History,
@@ -25,7 +22,7 @@ import { useTranslation } from 'react-i18next'; // Import useTranslation
 const AIDebateArenaPage: React.FC = () => {
   const [mediaTitle, setMediaTitle] = useState('');
   const [topic, setTopic] = useState('');
-  const [debateResult, setDebateResult] = useState<any>(null);
+  const [debateResult, setDebateResult] = useState<Record<string, unknown> | null>(null);
   const { t } = useTranslation(); // Initialize useTranslation
 
   const mutation = useMutation({

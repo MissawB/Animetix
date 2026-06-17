@@ -19,14 +19,14 @@ const MangaReaderPage: React.FC = () => {
   });
 
   // Fetch Chapter Content
-  const { data: chapter, isLoading: isChapterLoading } = useQuery({
+  const { data: chapter} = useQuery({
     queryKey: ['media', 'Manga', mediaId, 'chapters', chapterId],
     queryFn: () => apiClient(`/api/v1/media/Manga/${mediaId}/chapters/${chapterId}/`),
   });
 
   useEffect(() => {
     if (chapter?.pages) {
-      const formattedPages = chapter.pages.map((p: any) => ({
+      const formattedPages = chapter.pages.map((p: { image_url: string; number: number }) => ({
         url: p.image_url,
         index: p.number
       }));

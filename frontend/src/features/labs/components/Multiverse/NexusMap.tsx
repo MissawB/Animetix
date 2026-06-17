@@ -1,18 +1,20 @@
 import React, { useRef, useCallback, useMemo, useState, useEffect } from 'react';
 import _ForceGraph2D from 'react-force-graph-2d';
 
+import { GraphNode, GraphData } from '../../../../types';
+
 // Handle CommonJS/ESM compatibility for react-force-graph-2d
-const ForceGraph2D = (_ForceGraph2D as any).default || _ForceGraph2D;
+const ForceGraph2D = (_ForceGraph2D as unknown as { default: React.ElementType }).default || _ForceGraph2D;
 
 interface NexusMapProps {
-  data: any;
-  loadingNodes: any[];
+  data: GraphData;
+  loadingNodes: Array<{ id: string }>;
   onDropSeed: (seed: string, x: number, y: number) => void;
-  onNodeClick: (node: any) => void;
+  onNodeClick: (node: GraphNode) => void;
 }
 
 export const NexusMap: React.FC<NexusMapProps> = ({ data, loadingNodes, onDropSeed, onNodeClick }) => {
-  const fgRef = useRef<any>(null);
+  const fgRef = useRef<{ screen2GraphCoords: (x: number, y: number) => { x: number, y: number } } | null>(null);
   const [, setFrame] = useState(0);
 
   // Performance: Use a Set for O(1) lookups in the render loop
@@ -53,16 +55,16 @@ export const NexusMap: React.FC<NexusMapProps> = ({ data, loadingNodes, onDropSe
         nodeLabel="name"
         onNodeClick={onNodeClick}
         nodeRelSize={6}
-        nodeCanvasObject={(node: any, ctx: any, globalScale: number) => {
+        nodeCanvasObject={(node: GraphNode, ctx: CanvasRenderingContext2D, globalScale: number) => {
             // Schema mismatch fix
-            const label = node.name || node.label || 'Unknown Universe';
+            const label = (node.properties?.name as string) || (node.properties?.label as string) || 'Unknown Universe';
             const fontSize = 12 / globalScale;
             ctx.font = `${fontSize}px Inter, sans-serif`;
             
             const isLoading = loadingNodesSet.has(node.id);
 
             // Correct Canvas Rendering: Pulsing effect (Separate Path)
-            if (isLoading) {
+            if (isLoading && node.x !== undefined && node.y !== undefined) {
                 const pulse = (Math.sin(Date.now() / 200) + 1) / 2;
                 ctx.beginPath();
                 ctx.arc(node.x, node.y, 8 + pulse * 4, 0, 2 * Math.PI, false);
@@ -71,16 +73,18 @@ export const NexusMap: React.FC<NexusMapProps> = ({ data, loadingNodes, onDropSe
             }
 
             // Core node (Separate Path)
-            ctx.beginPath();
-            ctx.arc(node.x, node.y, 5, 0, 2 * Math.PI, false);
-            ctx.fillStyle = node.type === 'genre' ? '#10b981' : '#06b6d4';
-            ctx.fill();
+            if (node.x !== undefined && node.y !== undefined) {
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, 5, 0, 2 * Math.PI, false);
+                ctx.fillStyle = node.labels?.includes('Genre') ? '#10b981' : '#06b6d4';
+                ctx.fill();
 
-            // Label positioning scale-independent
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-            ctx.fillText(label, node.x, node.y + 12 / globalScale);
+                // Label positioning scale-independent
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.fillText(label, node.x, node.y + 12 / globalScale);
+            }
         }}
       />
     </div>

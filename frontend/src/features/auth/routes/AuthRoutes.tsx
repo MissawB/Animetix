@@ -6,7 +6,7 @@ const RegisterPage = lazy(() => import('../../../pages/auth/RegisterPage'));
 const AccountSettingsPage = lazy(() => import('../../../pages/auth/AccountSettingsPage'));
 const AIUsagePage = lazy(() => import('../../../pages/auth/AIUsagePage'));
 
-export const AuthRoutes = (
+export const AuthRoutes = () => (
   <>
     <Route path="/auth/login/" element={<LoginPage />} />
     <Route path="/auth/register/" element={<RegisterPage />} />

@@ -1,16 +1,11 @@
 import React, { useState } from 'react';
 import { 
-  Zap, 
-  ShieldAlert, 
-  RefreshCw, 
-  Trash2, 
-  Activity, 
-  Database, 
+  Zap,
+  RefreshCw,
   Layers, 
   ShieldCheck, 
   Search,
   Loader2,
-  ChevronRight,
   AlertTriangle,
   CheckCircle2,
   Network
@@ -21,13 +16,15 @@ import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
-import { motion, AnimatePresence } from 'framer-motion';
+
+import { GraphAudit } from '../../types';
 
 const GraphDebuggerPage: React.FC = () => {
   const [healingId, setHealingId] = useState('');
 
-  const { data: audit, isLoading, refetch } = useQuery<any>({
+  const { data: audit, isLoading, refetch } = useQuery<GraphAudit>({
     queryKey: ['graph-audit'],
+
     queryFn: () => apiClient('/api/v1/graph/debugger/'),
   });
 
@@ -174,7 +171,7 @@ const GraphDebuggerPage: React.FC = () => {
                       <div className="p-8">
                           {audit.details && audit.details.length > 0 ? (
                               <div className="space-y-4">
-                                  {audit.details.map((conflict: any, i: number) => (
+                                  {audit.details.map((conflict: { t1: string; y1: number; t2: string; y2: number }, i: number) => (
                                       <div key={i} className="group p-6 bg-gray-50 dark:bg-black/20 rounded-[2rem] border border-black/5 dark:border-white/5 hover:border-red-500/30 transition-all text-black dark:text-white">
                                           <div className="flex items-center justify-between gap-6">
                                               <div className="flex-1">

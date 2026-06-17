@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   Zap, 
   Battery, 
   Play, 
-  CheckCircle2, 
-  CreditCard, 
+  CheckCircle2,
   History, 
   TrendingUp,
   AlertCircle,
@@ -44,7 +43,7 @@ const PowerStationPage: React.FC = () => {
       try {
         const data = await apiClient('/api/v1/billing/wallet/balance/');
         setWalletHistory(data.history || []);
-      } catch (err) {
+      } catch (_err) {
         console.error("Failed to fetch wallet data:", err);
       }
     };
@@ -80,7 +79,7 @@ const PowerStationPage: React.FC = () => {
       // Refresh history
       const data = await apiClient('/api/v1/billing/wallet/balance/');
       setWalletHistory(data.history || []);
-    } catch (err) {
+    } catch (_err) {
       addToast("Erreur lors de la recharge.", "error");
     } finally {
       setIsWatching(false);
@@ -98,7 +97,9 @@ const PowerStationPage: React.FC = () => {
          await apiClient('/api/v1/profiles/refill_quota/', { method: 'POST' }); // Réutilise l'ancien refill pour le test
          addToast("Achat réussi (Simulé) !", "success");
          await refetchUser();
-       } catch(e) {}
+       } catch (_e) {
+         // Erreur gérée par le toast ou silencieuse en simulation
+       }
     }, 2000);
   };
 

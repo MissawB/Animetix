@@ -139,10 +139,13 @@ const VoiceLabPage: React.FC = () => {
                   {isRecording ? 'Stop Recording' : 'Start Recording'}
                 </button>
                 
-                <label className="flex items-center justify-center gap-3 p-4 bg-zinc-800 text-zinc-300 rounded-2xl font-bold cursor-pointer hover:bg-zinc-700 transition-all border border-zinc-700">
+                <label 
+                  htmlFor="audio-upload"
+                  className="flex items-center justify-center gap-3 p-4 bg-zinc-800 text-zinc-300 rounded-2xl font-bold cursor-pointer hover:bg-zinc-700 transition-all border border-zinc-700"
+                >
                   <Upload className="w-5 h-5" />
                   Upload File
-                  <input type="file" accept="audio/*" onChange={handleFileUpload} className="hidden" />
+                  <input id="audio-upload" type="file" accept="audio/*" onChange={handleFileUpload} className="hidden" />
                 </label>
               </div>
             </div>
@@ -158,8 +161,9 @@ const VoiceLabPage: React.FC = () => {
 
               <div className="space-y-6">
                 <div>
-                  <label className="text-sm font-medium text-zinc-500 mb-2 block uppercase tracking-wider">Target Text</label>
+                  <label htmlFor="target-text" className="text-sm font-medium text-zinc-500 mb-2 block uppercase tracking-wider">Target Text</label>
                   <textarea
+                    id="target-text"
                     value={text}
                     onChange={(e) => setText(e.target.value)}
                     placeholder="Enter text to synthesize..."
@@ -169,15 +173,15 @@ const VoiceLabPage: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <label className="text-sm font-medium text-zinc-500 mb-2 block uppercase tracking-wider">Model Selection</label>
-                    <select className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 outline-none text-zinc-300 focus:border-red-500">
+                    <label htmlFor="model-select" className="text-sm font-medium text-zinc-500 mb-2 block uppercase tracking-wider">Model Selection</label>
+                    <select id="model-select" className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 outline-none text-zinc-300 focus:border-red-500">
                       <option>RVC-v2 Default</option>
                       <option>HuggingFace Model X</option>
                     </select>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-zinc-500 mb-2 block uppercase tracking-wider">Index Rate</label>
-                    <select className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 outline-none text-zinc-300 focus:border-red-500">
+                    <label htmlFor="index-rate" className="text-sm font-medium text-zinc-500 mb-2 block uppercase tracking-wider">Index Rate</label>
+                    <select id="index-rate" className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-3 outline-none text-zinc-300 focus:border-red-500">
                       <option>0.75 (Recommended)</option>
                       <option>0.50 (Natural)</option>
                       <option>1.00 (Precise)</option>
@@ -187,10 +191,11 @@ const VoiceLabPage: React.FC = () => {
 
                 <div>
                   <div className="flex justify-between mb-2">
-                    <label className="text-sm font-medium text-zinc-500 uppercase tracking-wider">Pitch Shift</label>
+                    <label htmlFor="pitch-shift" className="text-sm font-medium text-zinc-500 uppercase tracking-wider">Pitch Shift</label>
                     <span className="text-orange-500 font-bold">{pitch > 0 ? `+${pitch}` : pitch} semitones</span>
                   </div>
                   <input
+                    id="pitch-shift"
                     type="range"
                     min="-12"
                     max="12"

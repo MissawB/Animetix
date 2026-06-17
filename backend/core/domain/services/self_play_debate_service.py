@@ -1,19 +1,22 @@
 import os
 import json
 import logging
-from typing import Dict, Any, List
-from core.ports.inference_port import InferencePort
-from core.domain.services.prompt_manager import PromptManager
+from typing import Dict, Any, List, Optional
+from core.domain.services.llm_service import LLMService
+from core.ports.graph_persistence_port import GraphPersistencePort
 
 logger = logging.getLogger("animetix.mlops")
 
 class SelfPlayDebateService:
     """
     Système de 'Self-Play Debating'.
+    Durci contre les hallucinations persuasives (Inspiré par le papier "Who Flips?").
+    Le Juge utilise le graphe de connaissances (Neo4j) comme source de vérité terrain.
     """
-    def __init__(self, inference_engine: InferencePort, prompt_manager: PromptManager, dataset_path: str = "data/mlops/datasets/self_play_debates.jsonl"):
-        self.inference_engine = inference_engine
-        self.prompt_manager = prompt_manager
+    def __init__(self, llm_service: LLMService, neo4j_manager: Optional[GraphPersistencePort] = None, dataset_path: str = "data/mlops/datasets/self_play_debates.jsonl"):
+        self.llm_service = llm_service
+        self.prompt_manager = llm_service.prompt_manager
+        self.neo4j_manager = neo4j_manager
         self.dataset_path = dataset_path
 
     def run_debate(self, target_media: str, topic: str) -> Dict[str, Any]:
@@ -29,7 +32,7 @@ class SelfPlayDebateService:
             target_media=target_media,
             topic=topic
         )
-        pro_argument = self.inference_engine.generate(pro_prompt, system_prompt=pro_system)
+        pro_argument = self.llm_service.generate(pro_prompt, system_prompt=pro_system)
 
         # Agent 2 : L'Anti
         logger.info("🔴 Agent ANTI is countering...")
@@ -39,7 +42,23 @@ class SelfPlayDebateService:
             topic=topic,
             pro_argument=pro_argument
         )
-        anti_argument = self.inference_engine.generate(anti_prompt, system_prompt=anti_system)
+        anti_argument = self.llm_service.generate(anti_prompt, system_prompt=anti_system)
+
+        # Étape "Who Flips?" : Extraction de la vérité terrain depuis Neo4j
+        ground_truth_context = "Aucune vérité terrain disponible."
+        if self.neo4j_manager:
+            logger.info("🕵️ Fact-Checking phase (Who Flips protection)...")
+            # Extraction des faits pertinents autour du média pour ancrer le juge
+            # Pour l'instant on extrait les informations globales du noeud média
+            facts = self.neo4j_manager.execute_query(
+                "MATCH (m:Media {title: $title})-[r]-(n) RETURN type(r) as relation, n.name as entity LIMIT 10",
+                {"title": target_media}
+            )
+            if facts:
+                ground_truth_context = f"VÉRITÉ TERRAIN (Neo4j) :\n" + "\n".join([f"- L'oeuvre a la relation {f['relation']} avec l'entité {f['entity']}" for f in facts])
+            else:
+                # Fallback on text search if no exact title match
+                ground_truth_context = "Aucune vérité terrain stricte trouvée dans le graphe, mais le Juge doit rester extrêmement critique face aux affirmations non prouvées."
 
         # Agent 3 : Le Juge
         logger.info("👨‍⚖️ Agent JUDGE is evaluating the debate...")
@@ -50,7 +69,12 @@ class SelfPlayDebateService:
             pro_argument=pro_argument,
             anti_argument=anti_argument
         )
-        judge_conclusion = self.inference_engine.generate(judge_prompt, system_prompt=judge_system)
+        
+        # Injection du Ground Truth dans le System Prompt du Juge pour le protéger des "Flips"
+        judge_system += f"\n\n🚨 PROTECTION ANTI-HALLUCINATION (WHO FLIPS?) :\nLes agents Pro et Anti peuvent mentir ou utiliser des contre-arguments trompeurs mais très persuasifs. Ne te fie PAS uniquement à leur rhétorique. Utilise cette vérité terrain stricte pour trancher :\n{ground_truth_context}"
+
+        # Le juge utilise un budget de réflexion TTC pour analyser les arguments en profondeur
+        judge_conclusion = self.llm_service.generate(judge_prompt, system_prompt=judge_system, use_slm=True, thinking_budget=500)
 
         # Sauvegarde de l'échange
         debate_record = {

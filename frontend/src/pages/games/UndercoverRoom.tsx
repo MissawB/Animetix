@@ -7,10 +7,12 @@ import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
 import { Badge } from "../../components/ui/Badge";
 
-import { useTranslation } from 'react-i18next';
+
+
+import { GamePlayer, ChatMessage } from '../../types';
 
 const UndercoverRoom: React.FC = () => {
-  const { t } = useTranslation();
+  
   const { roomCode } = useParams<{ roomCode: string }>();
   const { gameState, messages, connected, sendAction } = useSocket(roomCode, 'undercover');
   const [inputMessage, setInputMessage] = useState<string>('');
@@ -25,6 +27,9 @@ const UndercoverRoom: React.FC = () => {
 
   if (!connected) return <div className="text-center py-20 text-white font-black animate-pulse uppercase tracking-[0.4em]">Connexion au réseau...</div>;
 
+  const players = (gameState?.players as GamePlayer[]) || [];
+  const chatMessages = (messages as unknown as ChatMessage[]) || [];
+
   return (
     
       <div className="max-w-6xl mx-auto px-6 py-12">
@@ -36,7 +41,7 @@ const UndercoverRoom: React.FC = () => {
                   <Users className="w-4 h-4" /> Unité d'élite
               </h3>
               <div className="space-y-4">
-                  {gameState?.players?.map((player: any) => (
+                  {players.map((player) => (
                       <div key={player.id} className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-navy-900 rounded-2xl border border-gray-100 dark:border-white/5">
                           <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black italic shadow-lg ${player.is_me ? 'bg-yellow-400 text-black border-2 border-black' : 'bg-gray-200 dark:bg-navy-700'}`}>
                               {player.username[0].toUpperCase()}
@@ -56,13 +61,13 @@ const UndercoverRoom: React.FC = () => {
                   </h2>
 
                   <div className="flex-grow bg-gray-50 dark:bg-navy-900 rounded-3xl p-6 mb-8 overflow-y-auto max-h-80 border border-gray-100 dark:border-white/5 shadow-inner">
-                      {messages.map((msg: any, i: number) => (
+                      {chatMessages.map((msg, i) => (
                           <div key={i} className="mb-4 flex flex-col animate-fade-in">
                               <span className="text-[10px] font-black opacity-30 uppercase tracking-widest">{msg.user}</span>
                               <span className="font-medium text-lg">{msg.text}</span>
                           </div>
                       ))}
-                      {messages.length === 0 && <p className="text-center py-20 opacity-20 italic">En attente de communications...</p>}
+                      {chatMessages.length === 0 && <p className="text-center py-20 opacity-20 italic">En attente de communications...</p>}
                   </div>
 
                   <form onSubmit={handleSendMessage} className="flex gap-4">

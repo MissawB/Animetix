@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, {useState, useEffect, useRef, useCallback} from 'react';
 import { Mic, Square, Volume2, Sparkles, Radio, Loader2, RefreshCw, MessageSquare } from 'lucide-react';
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
@@ -17,16 +17,63 @@ const SpeechToSpeechLabPage: React.FC = () => {
   const isPlayingRef = useRef<boolean>(false);
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Connect to the WebSocket when page mounts
-  useEffect(() => {
-    connectWebSocket();
-    return () => {
-      disconnectWebSocket();
-    };
+  const playNextInQueueRef = useRef<() => void>(() => {});
+  const connectWebSocketRef = useRef<() => void>(() => {});
+
+  const stopAudioPlayback = useCallback(() => {
+    audioQueueRef.current = [];
+    isPlayingRef.current = false;
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current = null;
+    }
   }, []);
 
-  const connectWebSocket = () => {
-    setStatus('connecting');
+  const playNextInQueue = useCallback(() => {
+    if (audioQueueRef.current.length === 0) {
+      isPlayingRef.current = false;
+      return;
+    }
+
+    isPlayingRef.current = true;
+    const nextUrl = audioQueueRef.current.shift()!;
+    const audio = new Audio(nextUrl);
+    currentAudioRef.current = audio;
+
+    audio.onended = () => {
+      playNextInQueueRef.current();
+    };
+
+    audio.play().catch(err => {
+      console.error('Audio playback failed:', err);
+      playNextInQueueRef.current(); // Try next chunk
+    });
+  }, []);
+
+  useEffect(() => {
+    playNextInQueueRef.current = playNextInQueue;
+  }, [playNextInQueue]);
+
+  const queueAudioChunk = useCallback((audioB64: string) => {
+    const audioUrl = `data:audio/wav;base64,${audioB64}`;
+    audioQueueRef.current.push(audioUrl);
+    if (!isPlayingRef.current) {
+      playNextInQueue();
+    }
+  }, [playNextInQueue]);
+
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+      mediaRecorderRef.current = null;
+      setIsRecording(false);
+      setStatus('thinking');
+    }
+  }, []);
+
+  const connectWebSocket = useCallback(() => {
+    setStatus(prev => prev === 'connecting' ? prev : 'connecting');
     setErrorMessage(null);
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -69,9 +116,11 @@ const SpeechToSpeechLabPage: React.FC = () => {
     socket.onclose = (event) => {
       console.log('Gemini Live WebSocket closed:', event);
       if (status !== 'error') {
-        setStatus('connecting');
+        setStatus(prev => prev === 'connecting' ? prev : 'connecting');
         // Auto-reconnect after 3 seconds
-        setTimeout(connectWebSocket, 3000);
+        setTimeout(() => {
+          connectWebSocketRef.current();
+        }, 3000);
       }
     };
 
@@ -80,16 +129,32 @@ const SpeechToSpeechLabPage: React.FC = () => {
       setErrorMessage('WebSocket connection failed.');
       setStatus('error');
     };
-  };
+  }, [status, queueAudioChunk]);
 
-  const disconnectWebSocket = () => {
+  useEffect(() => {
+    connectWebSocketRef.current = connectWebSocket;
+  }, [connectWebSocket]);
+
+  const disconnectWebSocket = useCallback(() => {
     stopRecording();
     stopAudioPlayback();
     if (socketRef.current) {
       socketRef.current.close(1000, "Component unmounted");
       socketRef.current = null;
     }
-  };
+  }, [stopRecording, stopAudioPlayback]);
+
+  // Connect to the WebSocket when page mounts
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      connectWebSocket();
+    }, 0);
+    
+    return () => {
+      clearTimeout(timer);
+      disconnectWebSocket();
+    };
+  }, [connectWebSocket, disconnectWebSocket]);
 
   const startRecording = async () => {
     if (status !== 'ready') return;
@@ -125,62 +190,6 @@ const SpeechToSpeechLabPage: React.FC = () => {
       console.error("Failed to start voice capture", err);
       setErrorMessage("Could not access microphone.");
       setStatus('error');
-    }
-  };
-
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop();
-      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
-      mediaRecorderRef.current = null;
-      setIsRecording(false);
-      setStatus('thinking');
-    }
-  };
-
-  // Playback queue management
-  const playNextInQueue = () => {
-    if (audioQueueRef.current.length === 0) {
-      isPlayingRef.current = false;
-      setStatus('ready');
-      return;
-    }
-    
-    isPlayingRef.current = true;
-    setStatus('playing');
-    const audioUrl = audioQueueRef.current.shift()!;
-    const audio = new Audio(audioUrl);
-    currentAudioRef.current = audio;
-
-    audio.onended = () => {
-      playNextInQueue();
-    };
-
-    audio.onerror = () => {
-      console.error("Audio chunk playback error, skipping to next chunk");
-      playNextInQueue();
-    };
-
-    audio.play().catch(err => {
-      console.error("Audio playback failed", err);
-      playNextInQueue();
-    });
-  };
-
-  const queueAudioChunk = (audioB64: string) => {
-    const audioUrl = `data:audio/wav;base64,${audioB64}`;
-    audioQueueRef.current.push(audioUrl);
-    if (!isPlayingRef.current) {
-      playNextInQueue();
-    }
-  };
-
-  const stopAudioPlayback = () => {
-    audioQueueRef.current = [];
-    isPlayingRef.current = false;
-    if (currentAudioRef.current) {
-      currentAudioRef.current.pause();
-      currentAudioRef.current = null;
     }
   };
 

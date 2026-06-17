@@ -3,18 +3,14 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { 
   Search, 
   Eye, 
-  Sparkles, 
-  Zap, 
+  Sparkles,
   Tv, 
   Grid, 
   Layers, 
   Film,
-  ArrowRight,
   Terminal,
-  Activity,
   Play,
   Clock,
-  ChevronRight,
   Video
 } from 'lucide-react';
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -26,6 +22,8 @@ import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { CardSkeleton } from "../../components/ui/Skeleton";
 import { motion, AnimatePresence } from 'framer-motion';
 
+import { SearchItem, VideoSegment } from '../../types';
+
 type SearchMode = 'global' | 'visual';
 
 const UniversalSearchHubPage: React.FC = () => {
@@ -36,10 +34,10 @@ const UniversalSearchHubPage: React.FC = () => {
   const [query, setQuery] = useState(initialQuery);
   const [mode, setMode] = useState<SearchMode>(initialMode);
   const [activeTab, setActiveTab] = useState<string>('all');
-  const [visualResults, setVisualResults] = useState<any[]>([]);
+  const [visualResults, setVisualResults] = useState<VideoSegment[]>([]);
 
   // Global Search Query
-  const { data: globalData, isLoading: isGlobalLoading } = useQuery<any>({
+  const { data: globalData, isLoading: isGlobalLoading } = useQuery<SearchItem[] | { results: SearchItem[] }>({
     queryKey: ['global-search', query],
     queryFn: () => apiClient(`/api/v1/search/?q=${encodeURIComponent(query)}`),
     enabled: mode === 'global' && !!query,
@@ -49,6 +47,7 @@ const UniversalSearchHubPage: React.FC = () => {
   const visualMutation = useMutation({
     mutationFn: (q: string) => apiClient(`/api/v1/labs/video/search/?q=${encodeURIComponent(q)}`),
     onSuccess: (data) => {
+        // Map backend temporal segment to VideoSegment if needed, or update VideoSegment interface
         setVisualResults(data.results || []);
     }
   });
@@ -57,7 +56,8 @@ const UniversalSearchHubPage: React.FC = () => {
     if (initialQuery && initialMode === 'visual') {
         visualMutation.mutate(initialQuery);
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Intentional mount-only initialization from URL params
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,10 +69,11 @@ const UniversalSearchHubPage: React.FC = () => {
     }
   };
 
-  const globalResults = Array.isArray(globalData) ? globalData : (globalData as any)?.results || [];
+  const globalResults = Array.isArray(globalData) ? globalData : globalData?.results || [];
   const filteredGlobalResults = activeTab === 'all' 
     ? globalResults 
-    : globalResults.filter((item: any) => item.type?.toLowerCase() === activeTab.toLowerCase());
+    : globalResults.filter((item: SearchItem) => item.type?.toLowerCase() === activeTab.toLowerCase());
+
 
   const TABS = [
     { id: 'all', label: 'TOUT', icon: Grid },
@@ -180,7 +181,7 @@ const UniversalSearchHubPage: React.FC = () => {
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                            {filteredGlobalResults.map((item: any, i: number) => (
+                            {filteredGlobalResults.map((item: SearchItem, i: number) => (
                                 <Link key={i} to={`/media/${item.type}/${item.id}/`} className="no-underline group">
                                     <Card padding="none" className="h-full overflow-hidden bg-navy-900/40 border-white/5 hover:border-blue-500/30 transition-all duration-500 hover:-translate-y-2 relative rounded-3xl shadow-2xl">
                                         <div className="aspect-[2/3] relative overflow-hidden bg-black shadow-inner">

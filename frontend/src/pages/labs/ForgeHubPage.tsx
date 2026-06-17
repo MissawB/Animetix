@@ -37,11 +37,11 @@ const ForgeHubPage: React.FC = () => {
     { id: 'experimental', icon: Flask, color: 'text-red-600', glow: 'bg-red-600' }
   ];
 
-  const particleConfig = useMemo(() => [...Array(20)].map(() => ({
-    left: Math.random() * 100,
-    top: Math.random() * 100,
-    duration: 10 + Math.random() * 10,
-    delay: Math.random() * 10
+  const particleConfig = useMemo(() => [...Array(20)].map((_, i) => ({
+    left: (i * 7) % 100,
+    top: (i * 13) % 100,
+    duration: 10 + (i % 10),
+    delay: i * 0.5
   })), []);
 
   return (

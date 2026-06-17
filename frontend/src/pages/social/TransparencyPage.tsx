@@ -2,33 +2,26 @@ import React from 'react';
 import { 
   ShieldCheck, 
   TrendingUp, 
-  DollarSign, 
   AlertCircle, 
-  PieChart, 
   Zap, 
   Activity, 
-  RefreshCw, 
-  Wrench,
+  Clock,
   BarChart3,
   Cpu,
   Trophy,
   ExternalLink,
-  ChevronRight,
   Users,
   Database,
-  MessageSquare,
   Lock,
-  Scale
-} from 'lucide-react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+  Scale} from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { apiClient } from "../../utils/apiClient";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
-import { CardSkeleton } from "../../components/ui/Skeleton";
-import { useAuthStore } from "../../store/authStore";
-import { useTranslation } from 'react-i18next';
-import { motion, AnimatePresence } from 'framer-motion';
+
+
+import { motion } from 'framer-motion';
 import { 
     AreaChart, 
     Area, 
@@ -39,26 +32,15 @@ import {
     ResponsiveContainer 
 } from 'recharts';
 
-const TransparencyPage: React.FC = () => {
-  const { t } = useTranslation();
-  const { user } = useAuthStore();
+import { TransparencyData, ModelBenchmark } from '../../types';
 
-  const { data, isLoading, refetch } = useQuery<any>({
+const TransparencyPage: React.FC = () => {
+  
+  
+
+  const { data, isLoading } = useQuery<TransparencyData>({
     queryKey: ['transparency'],
     queryFn: () => apiClient('/api/v1/transparency/'),
-  });
-
-  const adminActionMutation = useMutation({
-    mutationFn: async (action: string) => {
-        return apiClient('/api/v1/transparency/', {
-            method: 'POST',
-            body: JSON.stringify({ action }),
-            headers: { 'Content-Type': 'application/json' }
-        });
-    },
-    onSuccess: () => {
-        refetch();
-    }
   });
 
   if (isLoading) return (
@@ -163,7 +145,7 @@ const TransparencyPage: React.FC = () => {
                 </header>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {data.sota_benchmarks?.map((model: any, i: number) => (
+                    {data.sota_benchmarks?.map((model: ModelBenchmark, i: number) => (
                         <motion.div
                             key={model.model_id}
                             initial={{ opacity: 0, y: 20 }}
@@ -213,7 +195,7 @@ const TransparencyPage: React.FC = () => {
                 </header>
 
                 <div className="space-y-4">
-                    {data.embedding_drift && Object.entries(data.embedding_drift).map(([key, info]: [string, any]) => (
+                    {data.embedding_drift && Object.entries(data.embedding_drift).map(([key, info]: [string, { status: string; p_value: number; sample_size: number }]) => (
                         <div key={key} className="p-6 bg-white/5 rounded-3xl border border-white/5 flex flex-col gap-4 group hover:bg-white/10 transition-all">
                             <div className="flex justify-between items-center">
                                 <span className="font-black italic uppercase text-xs tracking-widest">{key}</span>
@@ -309,7 +291,7 @@ const TransparencyPage: React.FC = () => {
   );
 };
 
-const AuditRow = ({ label, value, suffix, icon }: { label: string, value: any, suffix: string, icon: React.ReactNode }) => (
+const AuditRow = ({ label, value, suffix, icon }: { label: string, value: number | string, suffix: string, icon: React.ReactNode }) => (
     <div className="flex items-center justify-between group">
         <div className="flex items-center gap-4">
             <div className="p-3 bg-white/5 rounded-2xl group-hover:bg-purple-500/10 transition-colors">{icon}</div>
@@ -320,6 +302,3 @@ const AuditRow = ({ label, value, suffix, icon }: { label: string, value: any, s
 );
 
 export default TransparencyPage;
-
-
-

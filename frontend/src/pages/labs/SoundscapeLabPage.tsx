@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Volume2, Music, Sparkles, Video, Play, Wand2, ArrowRight } from 'lucide-react';
+import { Volume2, Music, Sparkles, Video, Wand2 } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { apiClient } from "../../utils/apiClient";
 import { Card } from "../../components/ui/Card";

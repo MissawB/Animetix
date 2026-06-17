@@ -3,8 +3,15 @@ import { motion } from 'framer-motion';
 import { Shield, Cpu, CheckCircle, Sparkles, X } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 
+interface PricingTier {
+  id: string;
+  name: string;
+  price: number;
+  features: string[];
+}
+
 interface Props {
-  tier: any;
+  tier: PricingTier;
   onClose: () => void;
   onConfirm: () => Promise<void>;
 }
@@ -18,7 +25,7 @@ export const NexusGatewayModal: React.FC<Props> = ({ tier, onClose, onConfirm })
     try {
         await onConfirm();
         setStatus('success');
-    } catch (e) {
+    } catch (_e) {
         setStatus('idle');
     }
   };

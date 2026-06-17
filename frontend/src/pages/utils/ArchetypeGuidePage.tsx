@@ -11,15 +11,11 @@ import {
   Search, 
   Database,
   CheckCircle2,
-  ChevronRight,
   ArrowLeft,
-  Info,
   Sparkles,
   Gamepad2,
-  BookOpen
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";

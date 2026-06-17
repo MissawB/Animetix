@@ -61,8 +61,9 @@ export const apiClient = async (url: string, options: RequestInit & { skipToast?
     }
 
     return data;
-  } catch (error: any) {
-    if (error.name === 'TypeError') {
+  } catch (error) {
+    const err = error as Error;
+    if (err.name === 'TypeError') {
       // Erreur de réseau (API injoignable, CORS, etc.)
       if (!skipToast) {
         useToastStore.getState().addToast('Serveur injoignable. Vérifiez votre connexion.', 'error');

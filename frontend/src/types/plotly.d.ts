@@ -1,5 +1,5 @@
 declare module 'plotly.js' {
-  export type Data = any;
-  export type Layout = any;
-  export type Config = any;
+  export type Data = Record<string, unknown>;
+  export type Layout = Record<string, unknown>;
+  export type Config = Record<string, unknown>;
 }

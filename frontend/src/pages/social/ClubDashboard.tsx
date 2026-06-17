@@ -17,7 +17,7 @@ interface Member {
 const ClubDashboard: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const clubId = Number(id);
-  const { club, isLoadingClub, events, createEvent } = useClub(clubId);
+  const { club, isLoadingClub, events } = useClub(clubId);
   
   const [activeTab, setActiveTab] = useState<'chat' | 'events'>('chat');
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -58,9 +58,10 @@ const ClubDashboard: React.FC = () => {
       // or we just call the API directly and then manual invalidate is needed.
       // For now, let's keep it simple as the hook isn't fully wired for creation yet.
       window.location.reload(); 
-    } catch (err: any) {
-      console.error(err);
-      useToastStore.getState().addToast(err?.error || err?.message || "Erreur lors de la création de l'événement.", "error");
+    } catch (err) {
+      const error = err as { error?: string; message?: string };
+      console.error(error);
+      useToastStore.getState().addToast(error?.error || error?.message || "Erreur lors de la création de l'événement.", "error");
     } finally {
       setIsSubmitting(false);
     }

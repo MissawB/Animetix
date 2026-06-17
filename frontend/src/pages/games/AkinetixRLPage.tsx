@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Brain, Zap, History, Loader2, Sparkles, Check, X, Info, LayoutDashboard, Target, Cpu, TrendingUp } from 'lucide-react';
+import React, {useState, useEffect, useCallback} from 'react';
+import { Brain, Zap, History, Loader2, Sparkles, Check, Info, LayoutDashboard, Target, Cpu, TrendingUp } from 'lucide-react';
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
@@ -17,20 +17,12 @@ interface RLState {
 const AkinetixRLPage: React.FC = () => {
     const [state, setState] = useState<RLState | null>(null);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [showDashboard, setShowDashboard] = useState(false);
+    const [, setError] = useState<string | null>(null);
+    const [showDashboard, setShowDashboard] = useState(() => {
+        return !localStorage.getItem('akinetix_rl_onboarding');
+    });
 
-    useEffect(() => {
-        const hasSeenOnboarding = localStorage.getItem('akinetix_rl_onboarding');
-        if (!hasSeenOnboarding) {
-            setShowDashboard(true);
-            localStorage.setItem('akinetix_rl_onboarding', 'true');
-        } else {
-            startRLGame();
-        }
-    }, []);
-
-    const startRLGame = async (mediaType = 'Anime') => {
+    const startRLGame = useCallback(async (mediaType = 'Anime') => {
         setLoading(true);
         setShowDashboard(false);
         try {
@@ -41,12 +33,12 @@ const AkinetixRLPage: React.FC = () => {
             });
             const data = await res.json();
             setState(data);
-        } catch (err) {
+        } catch {
             setError("Échec de l'initialisation du cerveau RL.");
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     const submitAnswer = async (answer: string) => {
         setLoading(true);
@@ -58,12 +50,26 @@ const AkinetixRLPage: React.FC = () => {
             });
             const data = await res.json();
             setState(data);
-        } catch (err) {
+        } catch {
             setError("Perte de connexion avec le réseau neuronal.");
         } finally {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        let isMounted = true;
+        const hasSeenOnboarding = localStorage.getItem('akinetix_rl_onboarding');
+        if (!hasSeenOnboarding) {
+            localStorage.setItem('akinetix_rl_onboarding', 'true');
+        } else if (!state && !loading && isMounted) {
+            const init = async () => {
+                await startRLGame();
+            };
+            init();
+        }
+        return () => { isMounted = false; };
+    }, [startRLGame, state, loading]);
 
     if (showDashboard) {
         return (
@@ -263,5 +269,3 @@ const AkinetixRLPage: React.FC = () => {
 };
 
 export default AkinetixRLPage;
-
-

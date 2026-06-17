@@ -1,6 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
-import { motion } from 'framer-motion';
+import React, { useMemo } from 'react';
+
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { Card } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
@@ -52,13 +51,12 @@ const cognitiveModules = [
 ];
 
 const CognitionHubPage: React.FC = () => {
-  const { t } = useTranslation();
 
-  const particleConfig = useMemo(() => [...Array(20)].map(() => ({
-    left: Math.random() * 100,
-    top: Math.random() * 100,
-    duration: 10 + Math.random() * 10,
-    delay: Math.random() * 10
+  const particleConfig = useMemo(() => [...Array(20)].map((_, i) => ({
+    left: (i * 7) % 100, // Deterministic "random" left
+    top: (i * 13) % 100,  // Deterministic "random" top
+    duration: 10 + (i % 10), // Deterministic duration between 10 and 20
+    delay: i * 0.5 // Deterministic delay
   })), []);
 
   return (

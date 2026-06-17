@@ -5,10 +5,11 @@ import { apiClient } from "../../utils/apiClient";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
-import { useTranslation } from 'react-i18next';
+
 import { Link } from 'react-router-dom';
 import '@google/model-viewer';
 
+/* eslint-disable @typescript-eslint/no-namespace */
 declare global {
   namespace JSX {
     interface IntrinsicElements {
@@ -35,6 +36,7 @@ declare global {
     }
   }
 }
+/* eslint-enable @typescript-eslint/no-namespace */
 
 interface SpatialResult {
   original?: string;
@@ -53,7 +55,7 @@ interface Model3DResult {
 }
 
 const SpatialLabPage: React.FC = () => {
-  const { t } = useTranslation();
+  
   const [image, setImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [depthResult, setDepthResult] = useState<SpatialResult | null>(null);

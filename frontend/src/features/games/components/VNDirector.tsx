@@ -1,5 +1,5 @@
 import React from 'react';
-import { Edit3, RefreshCw, Trash2, Plus, Save } from 'lucide-react';
+import { RefreshCw, Trash2, Plus, Save } from 'lucide-react';
 
 interface VNScene {
   background_url: string;

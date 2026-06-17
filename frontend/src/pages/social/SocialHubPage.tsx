@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+
 import { Users, UserPlus, Search, UserMinus, ChevronRight } from 'lucide-react';
 import { searchUsers } from '../../api';
 import { Card } from "../../components/ui/Card";
@@ -10,7 +10,6 @@ import { useToastStore } from "../../store/toastStore";
 import { useSocialDashboard } from "../../features/social/hooks/useSocialDashboard";
 
 const SocialHubPage: React.FC = () => {
-  const { t } = useTranslation();
   const { addToast } = useToastStore();
   const { data: dashboardData, isLoading: isDashboardLoading, toggleFollow } = useSocialDashboard();
   
@@ -28,7 +27,7 @@ const SocialHubPage: React.FC = () => {
       const results = await searchUsers(searchQuery);
       setSearchUsers(results);
       setActiveTab('discovery');
-    } catch (err) {
+    } catch (_err) {
       addToast("Erreur lors de la recherche.", "error");
     }
   };
@@ -47,7 +46,7 @@ const SocialHubPage: React.FC = () => {
           addToast("Action impossible.", "error");
         }
       });
-    } catch (err) {
+    } catch (_err) {
       addToast("Action impossible.", "error");
     }
   };
@@ -85,23 +84,24 @@ const SocialHubPage: React.FC = () => {
 
       {/* Tabs */}
       <div className="flex gap-4 mb-8 overflow-x-auto pb-2 no-scrollbar">
-        {[
-          { id: 'following', label: 'Abonnements', count: following.length },
-          { id: 'followers', label: 'Abonnés', count: followers.length },
-          { id: 'discovery', label: 'Découverte', count: searchResults.length }
-        ].map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
-            className={`px-6 py-3 rounded-xl font-black uppercase text-xs tracking-widest transition-all whitespace-nowrap ${
-              activeTab === tab.id 
-                ? 'bg-yellow-500 text-white shadow-lg' 
-                : 'bg-white dark:bg-navy-900 text-gray-500 hover:bg-gray-50 dark:hover:bg-navy-800'
-            }`}
-          >
-            {tab.label} ({tab.count})
-          </button>
-        ))}
+        {(['following', 'followers', 'discovery'] as const).map(tabId => {
+          const tabLabel = tabId === 'following' ? 'Abonnements' : tabId === 'followers' ? 'Abonnés' : 'Découverte';
+          const tabCount = tabId === 'following' ? following.length : tabId === 'followers' ? followers.length : searchResults.length;
+          
+          return (
+            <button
+              key={tabId}
+              onClick={() => setActiveTab(tabId)}
+              className={`px-6 py-3 rounded-xl font-black uppercase text-xs tracking-widest transition-all whitespace-nowrap ${
+                activeTab === tabId 
+                  ? 'bg-yellow-500 text-white shadow-lg' 
+                  : 'bg-white dark:bg-navy-900 text-gray-500 hover:bg-gray-50 dark:hover:bg-navy-800'
+              }`}
+            >
+              {tabLabel} ({tabCount})
+            </button>
+          );
+        })}
       </div>
 
       {/* Grid Content */}

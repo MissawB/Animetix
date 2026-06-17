@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { GraphExplorer } from "../../features/graph/GraphExplorer";
 import { SearchBar } from "../../components/SearchBar";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
-import { Network, ArrowLeft, Info, Share2, Download, Zap } from 'lucide-react';
+import { ArrowLeft, Info, Share2, Download, Zap } from 'lucide-react';
 
 const GraphNeighborhoodPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();

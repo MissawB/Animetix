@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { utilsService } from '../services/utilsService';
 import { useToastStore } from '../../../store/toastStore';
 import { useAuthStore } from '../../../store/authStore';
+import { UserConfig } from '../../../types';
 
 export const useCustomConfig = () => {
   const queryClient = useQueryClient();
@@ -15,7 +16,7 @@ export const useCustomConfig = () => {
   });
 
   const mutation = useMutation({
-    mutationFn: async (newConfig: any) => {
+    mutationFn: async (newConfig: Partial<UserConfig>) => {
         // En un vrai projet, utilsService aurait une méthode updateConfig
         return fetch('/api/v1/custom-config/', {
             method: 'POST',

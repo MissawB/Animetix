@@ -37,7 +37,7 @@ export const HeroSection: React.FC = () => {
         <DynamicAuraWrapper>
           <img 
             src="/static/img/hero.png" 
-            alt="Hero Image" 
+            alt="Hero Illustration" 
             className="w-[500px] md:w-[600px] z-10 relative hero-img transform"
           />
         </DynamicAuraWrapper>

@@ -2,7 +2,6 @@ import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
   Calendar, 
-  User, 
   TrendingUp, 
   Tag, 
   ArrowLeft, 
@@ -11,7 +10,8 @@ import {
   Sparkles,
   Bookmark,
   Heart,
-  Share2
+  Share2,
+  BookOpen
 } from 'lucide-react';
 import { useMediaDetail } from '../../features/media/hooks/useMediaDetail';
 import { Card } from "../../components/ui/Card";
@@ -20,9 +20,11 @@ import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { CardSkeleton } from "../../components/ui/Skeleton";
 
+import { RelatedItem, MediaDetail } from '../../types';
+
 const MediaDetailPage: React.FC = () => {
   const { mediaType, itemId } = useParams<{ mediaType: string; itemId: string }>();
-  const { data: item, isLoading, isError } = useMediaDetail(mediaType, itemId);
+  const { data: item, isLoading, isError } = useMediaDetail(mediaType || 'Anime', itemId || '') as { data: MediaDetail | undefined, isLoading: boolean, isError: boolean };
 
   if (isLoading) return (
     <div className="max-w-7xl mx-auto px-6 py-16">
@@ -184,8 +186,8 @@ const MediaDetailPage: React.FC = () => {
                             <Network className="w-4 h-4 text-purple-400" /> Œuvres Liées dans le Graphe
                         </h3>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-                            {item.related_items.map((rel: any, i: number) => (
-                                <Link key={i} to={`/media/${mediaType}/${rel.id}/`} className="no-underline group">
+                            {item.related_items.map((rel: RelatedItem) => (
+                                <Link key={rel.id} to={`/media/${mediaType}/${rel.id}/`} className="no-underline group">
                                     <div className="aspect-[2/3] rounded-2xl overflow-hidden bg-gray-900 mb-3 border border-white/5 group-hover:border-purple-500/30 transition-all group-hover:scale-105 shadow-xl">
                                         <img src={rel.image} className="w-full h-full object-cover" alt={rel.title} />
                                     </div>
@@ -203,5 +205,3 @@ const MediaDetailPage: React.FC = () => {
 };
 
 export default MediaDetailPage;
-
-

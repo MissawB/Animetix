@@ -9,10 +9,7 @@ import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { CardSkeleton } from "../../components/ui/Skeleton";
 
-import { useTranslation } from 'react-i18next';
-
 const CollectionPage: React.FC = () => {
-  const { t } = useTranslation();
 
   const { data: fusions, isLoading } = useQuery<CreativeFusion[]>({
     queryKey: ['collection'],
@@ -47,7 +44,7 @@ const CollectionPage: React.FC = () => {
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {fusions.map((fusion: any) => (
+            {fusions.map((fusion: CreativeFusion) => (
               <Card key={fusion.id} padding="none" className="group overflow-hidden transition-all hover:scale-[1.05] hover:rotate-1">
                 <div className="aspect-[3/4] relative overflow-hidden bg-black shadow-inner">
                   {fusion.image_url ? (

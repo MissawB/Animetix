@@ -53,10 +53,11 @@ export const useCompanionStore = create<CompanionState>((set, get) => ({
         history: response.history as Message[],
         isLoading: false 
       });
-    } catch (err: any) {
+    } catch (err) {
+      const error = err as Error;
       set({ 
         isLoading: false, 
-        error: err.message || 'Failed to get response from companion' 
+        error: error.message || 'Failed to get response from companion' 
       });
     }
   },

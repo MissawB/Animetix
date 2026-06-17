@@ -1,5 +1,4 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { AudioLabState } from '../../../types';
 import { audioLabService } from '../services/audioLabService';
 
 export const useAudioLab = () => {

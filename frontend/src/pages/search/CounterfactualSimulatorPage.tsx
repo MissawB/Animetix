@@ -2,18 +2,12 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   Zap, 
-  RefreshCw, 
-  ArrowRight, 
-  MessageCircle, 
-  ShieldAlert, 
-  TrendingUp, 
-  AlertCircle,
+  RefreshCw,
+  TrendingUp,
   Clock,
-  Sparkles,
   Search,
   Split,
-  Brain, // Added for explainer cards
-  Activity // Added for explainer cards
+  Brain // Added for explainer cards
 } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { apiClient } from "../../utils/apiClient";
@@ -23,13 +17,19 @@ import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion, AnimatePresence } from 'framer-motion';
 
+interface CounterfactualResult {
+    what_if: string;
+    analysis: string;
+    butterfly_effect: string[];
+}
+
 const CounterfactualSimulatorPage: React.FC = () => {
   const { t } = useTranslation();
   const [whatIf, setWhatIf] = useState('');
-  const [actualContext, setActualContext] = useState<string>(t('labs.counterfactual_simulator.initial_context'));
-  const [result, setResult] = useState<any>(null);
+  const [actualContext] = useState<string>(t('labs.counterfactual_simulator.initial_context'));
+  const [result, setResult] = useState<CounterfactualResult | null>(null);
 
-  const simulateMutation = useMutation({
+  const simulateMutation = useMutation<CounterfactualResult, Error>({
     mutationFn: async () => {
         return apiClient('/api/v1/cognition/counterfactual/', {
             method: 'POST',

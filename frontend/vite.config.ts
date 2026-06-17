@@ -1,5 +1,5 @@
 /// <reference types="vitest/config" />
-import { defineConfig } from 'vite';
+import { defineConfig, PluginOption } from 'vite';
 import react from '@vitejs/plugin-react';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -48,7 +48,7 @@ export default defineConfig({
     // Fichier d'analyse généré après le build
     open: false,
     gzipSize: true
-  }) as any],
+  }) as unknown as PluginOption],
   server: {
     port: 5173,
     proxy: {

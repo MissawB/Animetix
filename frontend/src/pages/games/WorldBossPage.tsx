@@ -2,7 +2,7 @@ import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion, AnimatePresence } from 'framer-motion';
-import { Skull, Shield, Zap, Info, Target, Trophy } from 'lucide-react';
+import { Skull, Zap, Info, Target, Trophy } from 'lucide-react';
 import { apiClient } from '../../utils/apiClient';
 
 const WorldBossPage: React.FC = () => {

@@ -66,13 +66,12 @@ jobs:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       with:
         args: --file=frontend/package.json --severity-threshold=high --sarif-file-output=snyk-javascript.sarif
-      working-directory: ./frontend
       continue-on-error: true
 
     - name: Upload Snyk Node.js results to GitHub Code Scanning
       uses: github/codeql-action/upload-sarif@v3
       with:
-        sarif_file: frontend/snyk-javascript.sarif
+        sarif_file: snyk-javascript.sarif
       if: always() # Upload results even if the Snyk test fails
 
   container-security:

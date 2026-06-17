@@ -37,7 +37,7 @@ interface EconomicData {
 }
 
 const EconomicAuditPage: React.FC = () => {
-  const { data, isLoading, refetch } = useQuery<EconomicData>({
+  const { data, isLoading } = useQuery<EconomicData>({
     queryKey: ['admin', 'economics'],
     queryFn: () => apiClient('/api/v1/admin/economics/')
   });
@@ -113,7 +113,7 @@ const EconomicAuditPage: React.FC = () => {
                               </h3>
 
                               <div className="space-y-6 relative z-10">
-                                  {Object.entries(data.repartition).map(([type, amount], i) => (
+                                  {Object.entries(data.repartition).map(([type, amount]) => (
                                       <div key={type} className="group/item">
                                           <div className="flex justify-between items-end mb-2">
                                               <span className="text-[10px] font-black uppercase tracking-widest opacity-40">{type.replace('_', ' ')}</span>
@@ -219,7 +219,15 @@ const EconomicAuditPage: React.FC = () => {
   );
 };
 
-const EconomicMetricCard: React.FC<{label: string, value: string, icon: any, color: string, desc: string}> = ({ label, value, icon: Icon, color, desc }) => (
+interface EconomicMetricCardProps {
+    label: string;
+    value: string;
+    icon: React.ElementType;
+    color: string;
+    desc: string;
+}
+
+const EconomicMetricCard: React.FC<EconomicMetricCardProps> = ({ label, value, icon: Icon, color, desc }) => (
     <Card padding="lg" className="bg-white dark:bg-navy-950 border-none shadow-xl rounded-[2.5rem] relative overflow-hidden group hover:scale-105 transition-all duration-300">
         <div className={`absolute -right-2 -bottom-2 opacity-5 ${color}`}>
             <Icon size={64} />

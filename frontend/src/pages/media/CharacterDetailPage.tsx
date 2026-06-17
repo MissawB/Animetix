@@ -1,18 +1,14 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
-  User, 
-  BookOpen, 
-  Play, 
-  Calendar, 
+  User,
+  Play,
   Fingerprint, 
   Network, 
   ArrowLeft,
   Sparkles,
   Info,
-  TrendingUp,
-  Star,
-  ExternalLink
+  TrendingUp
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../utils/apiClient';
@@ -21,6 +17,8 @@ import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { CardSkeleton } from "../../components/ui/Skeleton";
+
+import { Appearance, Seiyuu } from '../../types';
 
 const CharacterDetailPage: React.FC = () => {
   const { characterId } = useParams<{ characterId: string }>();
@@ -128,8 +126,8 @@ const CharacterDetailPage: React.FC = () => {
                         <Play className="w-4 h-4 text-emerald-400" /> Apparitions majeures
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        {character.metadata?.appearances?.map((app: any, i: number) => (
-                            <Link key={i} to={`/media/Anime/${app.id}/`} className="no-underline group">
+                        {character.metadata?.appearances?.map((app: Appearance) => (
+                            <Link key={app.id} to={`/media/Anime/${app.id}/`} className="no-underline group">
                                 <Card className="p-4 bg-gray-900/50 border-white/5 group-hover:border-anime-accent/30 transition-all flex items-center gap-4">
                                     <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
                                         <img src={app.image || 'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?auto=format&fit=crop&q=80&w=200'} className="w-full h-full object-cover" alt="" />
@@ -156,8 +154,8 @@ const CharacterDetailPage: React.FC = () => {
                             <Sparkles className="w-4 h-4 text-yellow-400" /> Voix Originale (Seiyuu)
                         </h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                            {character.metadata.seiyuu.map((actor: any, i: number) => (
-                                <Link key={i} to={`/staff/${actor.id}/`} className="no-underline group">
+                            {character.metadata.seiyuu.map((actor: Seiyuu) => (
+                                <Link key={actor.id} to={`/staff/${actor.id}/`} className="no-underline group">
                                     <Card className="p-4 bg-gray-900/50 border-white/5 group-hover:border-yellow-500/30 transition-all flex items-center gap-4">
                                         <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-yellow-500/10 flex items-center justify-center">
                                             <User className="w-8 h-8 opacity-20" />

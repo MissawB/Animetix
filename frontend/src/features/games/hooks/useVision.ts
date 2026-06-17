@@ -1,5 +1,4 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { VisionState } from '../../../types';
 import { visionService } from '../services/visionService';
 
 export const useVision = () => {

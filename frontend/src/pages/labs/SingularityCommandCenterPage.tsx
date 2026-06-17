@@ -7,17 +7,14 @@ import { Badge } from "../../components/ui/Badge";
 import { 
     Activity, 
     Zap, 
-    Shield, 
-    Server, 
+    Shield,
     Cpu, 
     Radio, 
-    Terminal, 
-    Clock, 
+    Terminal,
     ChevronRight,
     AlertTriangle,
     Database,
-    Binary,
-    Workflow
+    Binary
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -26,7 +23,7 @@ interface AIServiceStatus {
     name: string;
     status: 'online' | 'offline' | 'warning';
     load: number;
-    metrics: Record<string, any>;
+    metrics: Record<string, unknown>;
 }
 
 interface SingularityHealth {

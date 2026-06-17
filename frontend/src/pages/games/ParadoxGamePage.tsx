@@ -48,10 +48,18 @@ const ParadoxGamePage: React.FC = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {gameState.items.map((item: any) => (
+          {gameState.items.map((item) => (
             <div 
                 key={item.id} 
                 onClick={() => submitGuess(item.id)}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        submitGuess(item.id);
+                    }
+                }}
+                role="button"
+                tabIndex={0}
+                aria-label={`Sélectionner ${item.title}`}
                 className="group relative bg-white dark:bg-navy-800 rounded-[2.5rem] overflow-hidden shadow-xl cursor-pointer transition-all hover:scale-105 hover:shadow-2xl border-4 border-transparent hover:border-red-500/50"
             >
                 <img src={item.image} className="w-full h-80 object-cover grayscale group-hover:grayscale-0 transition-all duration-700" alt={item.title} />

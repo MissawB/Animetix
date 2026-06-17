@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './Layout';
 import { GameRoutes } from '../features/games/routes/GameRoutes';
 import { SocialRoutes } from '../features/social/routes/SocialRoutes';
@@ -14,6 +14,7 @@ import { GraphRoutes } from '../features/graph/routes/GraphRoutes';
 import { BillingRoutes } from '../features/billing/routes/BillingRoutes';
 import { ExploreRoutes } from '../features/explore/routes/ExploreRoutes';
 import { SupportRoutes } from '../features/support/routes/SupportRoutes';
+import { ResearchRoutes } from '../features/research/routes/ResearchRoutes';
 import App from '../App';
 
 const Loading: React.FC = () => <div className="p-20 text-center text-white font-black animate-pulse uppercase tracking-[0.3em]">Initialisation du système...</div>;
@@ -49,19 +50,20 @@ const AppRouter: React.FC = () => {
         <Suspense fallback={<Loading />}>
           <Routes>
             <Route path="/" element={<App />} />
-            {AuthRoutes}
-            {SocialRoutes}
-            {MediaRoutes}
-            {SearchRoutes}
-            {CompanionRoutes}
-            {GraphRoutes}
-            {GameRoutes}
-            {LabRoutes}
-            {UtilsRoutes}
-            {AdminRoutes}
-            {BillingRoutes}
-            {ExploreRoutes}
-            {SupportRoutes}
+            {AuthRoutes()}
+            {SocialRoutes()}
+            {MediaRoutes()}
+            {SearchRoutes()}
+            {CompanionRoutes()}
+            {GraphRoutes()}
+            {GameRoutes()}
+            {LabRoutes()}
+            {UtilsRoutes()}
+            {AdminRoutes()}
+            {BillingRoutes()}
+            {ExploreRoutes()}
+            {SupportRoutes()}
+            {ResearchRoutes()}
             {/* Catch-all is removed for debugging if it causes loops */}
           </Routes>
         </Suspense>

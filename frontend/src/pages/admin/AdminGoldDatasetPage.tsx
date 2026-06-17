@@ -1,12 +1,10 @@
 import React from 'react';
 import { 
-  Database, 
-  CheckCircle2, 
+  Database,
   Trash2, 
   RefreshCw, 
   ShieldCheck, 
   ChevronRight,
-  AlertCircle,
   Clock,
   Sparkles
 } from 'lucide-react';
@@ -19,8 +17,10 @@ import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { CardSkeleton } from "../../components/ui/Skeleton";
 import { queryClient } from "../../utils/queryClient";
 
+import { GoldDatasetEntry } from '../../types';
+
 const AdminGoldDatasetPage: React.FC = () => {
-  const { data: entries, isLoading, refetch } = useQuery<any[]>({
+  const { data: entries, isLoading } = useQuery<GoldDatasetEntry[]>({
     queryKey: ['gold-dataset'],
     queryFn: goldDatasetService.getList,
   });
@@ -42,7 +42,7 @@ const AdminGoldDatasetPage: React.FC = () => {
   const deleteMutation = useMutation({
     mutationFn: (id: number) => goldDatasetService.deleteEntry(id),
     onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['gold-dataset'] });
+        queryClient.invalidateQueries({queryKey: ['gold-dataset']}).then();
     }
   });
 

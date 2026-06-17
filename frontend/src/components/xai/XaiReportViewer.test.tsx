@@ -1,8 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import { XaiReportViewer } from './XaiReportViewer';
 import { describe, it, expect } from 'vitest';
+import { XaiReport } from '../../types';
 
-const mockReport = {
+const mockReport: XaiReport = {
   query_intent: 'Test Intent',
   final_confidence: 0.85,
   agent_trace: [
@@ -12,13 +13,15 @@ const mockReport = {
     { title: 'Source 1', contribution_weight: 0.6 }
   ],
   internal_diagnostics: {
+    attention_heatmap: [],
+    logit_lens_trajectory: [],
     top_influential_tokens: ['test', 'unit']
   }
 };
 
 describe('XaiReportViewer', () => {
   it('renders correctly with all fields', () => {
-    render(<XaiReportViewer report={mockReport as any} />);
+    render(<XaiReportViewer report={mockReport} />);
     
     // Header
     expect(screen.getByText('Test Intent')).toBeInTheDocument();
@@ -38,12 +41,12 @@ describe('XaiReportViewer', () => {
   });
 
   it('handles missing optional fields gracefully', () => {
-    const minimalReport = {
+    const minimalReport: XaiReport = {
       query_intent: 'Minimal Intent',
       final_confidence: 0.5,
     };
     
-    render(<XaiReportViewer report={minimalReport as any} />);
+    render(<XaiReportViewer report={minimalReport} />);
     
     expect(screen.getByText('Minimal Intent')).toBeInTheDocument();
     expect(screen.getByText('50%')).toBeInTheDocument();

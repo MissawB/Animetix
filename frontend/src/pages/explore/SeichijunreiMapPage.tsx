@@ -4,11 +4,12 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from "../../utils/apiClient";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { Card } from "../../components/ui/Card";
-import { MapPin, Info, ArrowLeft, Camera, Navigation, Globe } from 'lucide-react';
+import { MapPin, ArrowLeft, Camera, Navigation, Globe } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { PlotlyEvent } from '../../types';
 
-const Plot = (_Plot as any).default || _Plot;
+const Plot = (_Plot as unknown as { default: React.ComponentType<unknown> }).default || _Plot;
 
 interface PilgrimageLocation {
   id: string;
@@ -31,7 +32,7 @@ const SeichijunreiMapPage: React.FC = () => {
     queryFn: () => apiClient('/api/v1/explore/seichijunrei/'),
   });
 
-  const handlePointClick = (event: any) => {
+  const handlePointClick = (event: PlotlyEvent) => {
     if (event.points && event.points[0]) {
       const loc = event.points[0].customdata as PilgrimageLocation;
       setSelectedLoc(loc);
@@ -41,12 +42,12 @@ const SeichijunreiMapPage: React.FC = () => {
   // Filter locations with coordinates
   const validLocations = locations?.filter(l => l.lat !== null && l.lng !== null) || [];
 
-  const plotData = validLocations.length > 0 ? [
+  const plotData: Array<Partial<Plotly.Data>> = validLocations.length > 0 ? [
     {
       type: 'scattergeo',
       mode: 'markers',
-      lat: validLocations.map(l => l.lat),
-      lon: validLocations.map(l => l.lng),
+      lat: validLocations.map(l => l.lat as number),
+      lon: validLocations.map(l => l.lng as number),
       customdata: validLocations,
       text: validLocations.map(l => `${l.location_name} (${l.media_title})`),
       hoverinfo: 'text',
@@ -60,7 +61,7 @@ const SeichijunreiMapPage: React.FC = () => {
         opacity: 0.9,
         symbol: 'circle'
       }
-    }
+    } as unknown as Partial<Plotly.Data>
   ] : [];
 
   return (
@@ -210,7 +211,7 @@ const SeichijunreiMapPage: React.FC = () => {
           
           <div className="w-full h-full">
             <Plot
-              data={plotData as any}
+              data={plotData}
               onClick={handlePointClick}
               layout={{
                 autosize: true,

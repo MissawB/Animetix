@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { ChevronRight, ChevronLeft, Play, Pause, SkipForward } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ChevronRight, ChevronLeft } from 'lucide-react';
 
 interface VNScene {
   background_url: string;
@@ -19,10 +19,17 @@ export const VNPlayer: React.FC<VNPlayerProps> = ({ scenes }) => {
   const [isTyping, setIsTyping] = useState(false);
 
   const currentScene = scenes[currentIndex];
+  const dialogueRef = useRef(currentScene?.dialogue || '');
 
   useEffect(() => {
     if (!currentScene) return;
     
+    // Check if dialogue has actually changed to avoid restart on same content
+    if (dialogueRef.current === currentScene.dialogue && displayedText !== '') {
+      return;
+    }
+    dialogueRef.current = currentScene.dialogue;
+
     setIsTyping(true);
     setDisplayedText('');
     let i = 0;
@@ -38,7 +45,7 @@ export const VNPlayer: React.FC<VNPlayerProps> = ({ scenes }) => {
     }, 30);
 
     return () => clearInterval(interval);
-  }, [currentIndex, currentScene]);
+  }, [currentIndex, currentScene, displayedText]);
 
   const nextScene = () => {
     if (isTyping) {
@@ -82,6 +89,14 @@ export const VNPlayer: React.FC<VNPlayerProps> = ({ scenes }) => {
       <div 
         className="absolute bottom-6 left-6 right-6 bg-black/60 backdrop-blur-md border border-white/20 p-8 rounded-3xl cursor-pointer pointer-events-auto"
         onClick={nextScene}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            nextScene();
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        aria-label="Passer à la scène suivante"
       >
         <div className="flex justify-between items-center mb-2">
           <span className="bg-anime-accent text-black px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest">

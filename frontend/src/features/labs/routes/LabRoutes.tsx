@@ -35,7 +35,7 @@ const SeiyuuDiscoveryPage = lazy(() => import('../../../pages/labs/SeiyuuDiscove
 const ObservabilityConsolePage = lazy(() => import('../../../pages/dev/ObservabilityConsolePage'));
 const MLOpsConsolePage = lazy(() => import('../../../pages/dev/MLOpsConsolePage'));
 
-export const LabRoutes = (
+export const LabRoutes = () => (
   <>
     <Route path="/lab/" element={<LabHubPage />} />
     <Route path="/lab/audio/" element={<AudioLabPage />} />

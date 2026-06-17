@@ -13,9 +13,7 @@ import {
   Trophy,
   ArrowRight,
   Flame,
-  Star,
   Calendar,
-  User,
   ShieldCheck,
   Search,
   Swords

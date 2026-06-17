@@ -17,9 +17,10 @@ interface SearchItem {
 interface SearchBarProps {
   onSelect?: (item: SearchItem) => void;
   placeholder?: string;
+  id?: string;
 }
 
-export const SearchBar: React.FC<SearchBarProps> = ({ onSelect, placeholder }) => {
+export const SearchBar: React.FC<SearchBarProps> = ({ onSelect, placeholder, id }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [query, setQuery] = useState<string>('');
@@ -46,7 +47,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSelect, placeholder }) =
       setIsLoading(true);
       try {
         const data = await searchMedia(val);
-        setResults(Array.isArray(data) ? data : (data as any).results || []);
+        // data is already MediaItem[] which is compatible with SearchItem
+        setResults(data);
         setIsOpen(true);
       } catch {
         setResults([]);
@@ -120,6 +122,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSelect, placeholder }) =
         </div>
         
         <Input
+          id={id}
           value={query}
           onChange={handleChange}
           onKeyDown={handleKeyDown}

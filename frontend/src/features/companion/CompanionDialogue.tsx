@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useCompanionStore } from './companionStore';
-import { Send, Loader2, X, Trash2, User as UserIcon, Bot, Maximize2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Send, Loader2, Trash2, Bot, Maximize2 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
 const CompanionDialogue: React.FC = () => {

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Swords, Trophy, Loader2, AlertCircle, Heart, Share2, TrendingUp, Clock, History, Flame } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { Swords, Trophy, Loader2, AlertCircle, Heart, History, Flame } from 'lucide-react';
 import { Card } from "../../components/ui/Card";
 import { CardSkeleton } from "../../components/ui/Skeleton";
 import { Button } from "../../components/ui/Button";
@@ -11,8 +10,9 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { vsBattleService } from '../../features/games/services/vsBattleService';
 import { queryClient } from "../../utils/queryClient";
 
+import { VsBattleArenaEntry, VsBattleResult } from '../../types';
+
 const VsBattlePage: React.FC = () => {
-  const { t } = useTranslation();
   
   const [charA, setCharA] = useState('');
   const [franchiseA, setFranchiseA] = useState('');
@@ -20,10 +20,10 @@ const VsBattlePage: React.FC = () => {
   const [franchiseB, setFranchiseB] = useState('');
   
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<any | null>(null);
+  const [result, setResult] = useState<VsBattleResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const { data: arenaFeed, isLoading: isFeedLoading } = useQuery({
+  const { data: arenaFeed, isLoading: isFeedLoading } = useQuery<VsBattleArenaEntry[]>({
     queryKey: ['vs-arena-feed'],
     queryFn: vsBattleService.getArenaFeed
   });
@@ -47,9 +47,10 @@ const VsBattlePage: React.FC = () => {
       const data = await vsBattleService.runBattle(charA, charB, franchiseA, franchiseB);
       setResult(data);
       queryClient.invalidateQueries({ queryKey: ['vs-arena-feed'] });
-    } catch (err: any) {
-      console.error(err);
-      setError(err.message || 'An error occurred during the battle.');
+    } catch (err) {
+      const error = err as Error;
+      console.error(error);
+      setError(error.message || 'An error occurred during the battle.');
     } finally {
       setIsLoading(false);
     }
@@ -228,7 +229,7 @@ const VsBattlePage: React.FC = () => {
                 <div className="space-y-4">
                     {isFeedLoading ? (
                         [...Array(3)].map((_, i) => <CardSkeleton key={i} />)
-                    ) : arenaFeed?.map((battle: any) => (
+                    ) : arenaFeed?.map((battle: VsBattleArenaEntry) => (
                         <Card key={battle.id} padding="md" className="bg-navy-900/50 border-white/5 hover:border-white/10 transition-all group">
                             <div className="flex justify-between items-start mb-4">
                                 <div className="text-[10px] font-black uppercase opacity-30 italic">{new Date(battle.created_at).toLocaleDateString()}</div>

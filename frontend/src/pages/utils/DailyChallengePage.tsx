@@ -2,11 +2,12 @@ import React from 'react';
 import { Calendar, Layers, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useDailyChallenge } from '../../features/utils/hooks/useDailyChallenge';
-import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { Skeleton } from "../../components/ui/Skeleton";
 import { useTranslation } from 'react-i18next';
+
+import { DailyMode } from '../../types';
 
 const DailyChallengePage: React.FC = () => {
   const { t } = useTranslation();
@@ -52,7 +53,7 @@ const DailyChallengePage: React.FC = () => {
       {/* Grid Selection */}
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {data.modes.map((mode: any) => (
+          {data.modes.map((mode: DailyMode) => (
             <Link 
               key={mode.id} 
               to={`/game/${mode.id}/`} 
@@ -101,5 +102,3 @@ const DailyChallengePage: React.FC = () => {
 };
 
 export default DailyChallengePage;
-
-

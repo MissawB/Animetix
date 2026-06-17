@@ -4,7 +4,7 @@ import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
 
-import { useTranslation } from 'react-i18next';
+
 import { animinatorService } from "../../features/games/services/animinatorService";
 
 interface Message {
@@ -13,7 +13,6 @@ interface Message {
 }
 
 const AniminatorPage: React.FC = () => {
-  const { t } = useTranslation();
   const [messages, setMessages] = useState<Message[]>([
     { role: 'ai', text: "Je suis l'Animinator. Pense à un animé, un manga ou un personnage, et je devinerai ce que c'est !" }
   ]);

@@ -41,8 +41,9 @@ const DuelLobbyPage: React.FC = () => {
     onSuccess: (data) => {
       navigate(`/game/duel/arena/${data.room_code}/`);
     },
-    onError: (err: any) => {
-      setError(err.message);
+    onError: (err) => {
+      const error = err as Error;
+      setError(error.message);
     }
   });
 

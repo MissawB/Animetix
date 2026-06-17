@@ -16,16 +16,14 @@ import {
 import { useHealth } from '../../features/admin/hooks/useHealth';
 import { Card } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
-import { Button } from "../../components/ui/Button";
 import { Skeleton } from "../../components/ui/Skeleton";
-import { useTranslation } from 'react-i18next';
+
 import { useMutation } from '@tanstack/react-query';
 import { apiClient } from "../../utils/apiClient";
 
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 
 const HealthPage: React.FC = () => {
-  const { t } = useTranslation();
   const { data, isLoading } = useHealth();
   const [lastAction, setLastAction] = useState<{msg: string, status: 'success'|'error'} | null>(null);
 
@@ -33,7 +31,10 @@ const HealthPage: React.FC = () => {
     mutationFn: (action: string) => 
         apiClient(`/api/v1/admin/pipelines/control/${action}/`, { method: 'POST' }),
     onSuccess: (res) => setLastAction({ msg: res.status || "Action réussie", status: 'success' }),
-    onError: (err: any) => setLastAction({ msg: err.message || "Échec de l'action", status: 'error' })
+    onError: (err) => {
+        const error = err as Error;
+        setLastAction({ msg: error.message || "Échec de l'action", status: 'error' });
+    }
   });
 
   return (
@@ -159,7 +160,15 @@ const HealthCard: React.FC<HealthCardProps> = ({ title, status, Icon, color, loa
     </Card>
 );
 
-const ControlButton: React.FC<{label: string, desc: string, icon: any, onClick: () => void, loading: boolean}> = ({ label, desc, icon: Icon, onClick, loading }) => (
+interface ControlButtonProps {
+    label: string;
+    desc: string;
+    icon: React.ElementType;
+    onClick: () => void;
+    loading: boolean;
+}
+
+const ControlButton: React.FC<ControlButtonProps> = ({ label, desc, icon: Icon, onClick, loading }) => (
     <button 
         onClick={onClick}
         disabled={loading}

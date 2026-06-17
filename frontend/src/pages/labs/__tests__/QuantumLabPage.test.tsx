@@ -16,11 +16,11 @@ vi.mock('@tanstack/react-query', () => ({
 // Mock framer-motion
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-    h1: ({ children, ...props }: any) => <h1 {...props}>{children}</h1>,
-    p: ({ children, ...props }: any) => <p {...props}>{children}</p>,
+    div: ({ children, ...props }: React.PropsWithChildren<React.HTMLAttributes<HTMLDivElement>>) => <div {...props}>{children}</div>,
+    h1: ({ children, ...props }: React.PropsWithChildren<React.HTMLAttributes<HTMLHeadingElement>>) => <h1 {...props}>{children}</h1>,
+    p: ({ children, ...props }: React.PropsWithChildren<React.HTMLAttributes<HTMLParagraphElement>>) => <p {...props}>{children}</p>,
   },
-  AnimatePresence: ({ children }: any) => <>{children}</>,
+  AnimatePresence: ({ children }: React.PropsWithChildren<unknown>) => <>{children}</>,
 }));
 
 describe('QuantumLabPage', () => {

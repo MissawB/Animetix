@@ -8,7 +8,7 @@ const mockNavigate = vi.fn();
 
 // Mock react-router-dom
 vi.mock('react-router-dom', async (importOriginal) => {
-  const actual = await importOriginal<any>();
+  const actual = await importOriginal<typeof import('react-router-dom')>();
   return {
     ...actual,
     useNavigate: () => mockNavigate,
@@ -26,11 +26,11 @@ vi.mock('@tanstack/react-query', () => ({
 // Mock framer-motion to avoid animation issues in tests
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-    h2: ({ children, ...props }: any) => <h2 {...props}>{children}</h2>,
-    p: ({ children, ...props }: any) => <p {...props}>{children}</p>,
+    div: ({ children, ...props }: React.PropsWithChildren<React.HTMLAttributes<HTMLDivElement>>) => <div {...props}>{children}</div>,
+    h2: ({ children, ...props }: React.PropsWithChildren<React.HTMLAttributes<HTMLHeadingElement>>) => <h2 {...props}>{children}</h2>,
+    p: ({ children, ...props }: React.PropsWithChildren<React.HTMLAttributes<HTMLParagraphElement>>) => <p {...props}>{children}</p>,
   },
-  AnimatePresence: ({ children }: any) => <>{children}</>,
+  AnimatePresence: ({ children }: React.PropsWithChildren<unknown>) => <>{children}</>,
 }));
 
 // Mock personalization store

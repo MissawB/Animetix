@@ -17,7 +17,7 @@ const AISafetyAuditPage = lazy(() => import('../../../pages/admin/AISafetyAuditP
 const EconomicAuditPage = lazy(() => import('../../../pages/admin/EconomicAuditPage'));
 const ObservabilityConsolePage = lazy(() => import('../../../pages/dev/ObservabilityConsolePage'));
 
-export const AdminRoutes = (
+export const AdminRoutes = () => (
   <>
     <Route path="/admin/" element={<AdminDashboardPage />} />
     <Route path="/admin/dashboard/" element={<AdminDashboardPage />} />

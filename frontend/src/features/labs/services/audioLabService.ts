@@ -1,4 +1,4 @@
-import { AudioLabState } from '../../../types';
+import { AudioLabState, Seiyuu } from '../../../types';
 import { apiClient } from '../../../utils/apiClient';
 
 const API_BASE = '/api/v1/labs/audio';
@@ -16,7 +16,7 @@ export const audioLabService = {
   process: async (data: AudioProcessPayload): Promise<AudioLabState> => {
     return apiClient(`${API_BASE}/process/`, { method: 'POST', body: JSON.stringify(data) });
   },
-  searchSeiyuu: async (query: string): Promise<any> => {
+  searchSeiyuu: async (query: string): Promise<Seiyuu[]> => {
     return apiClient(`${API_BASE}/seiyuu/?q=${encodeURIComponent(query)}`);
   }
 };

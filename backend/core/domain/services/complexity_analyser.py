@@ -34,6 +34,7 @@ class ComplexityAnalyser:
             complexity_score = 1
             
         # Si le LLM et le PromptManager sont configurés, on utilise l'analyse cognitive
+        predicted_budget = None
         if self.prompt_manager and self.llm_service:
             try:
                 prompt, sys = self.prompt_manager.get_prompt("complexity_analyzer", query=query)
@@ -46,11 +47,17 @@ class ComplexityAnalyser:
                 if match:
                     data = json.loads(match.group(0))
                     complexity_score = int(data.get("complexity_score", complexity_score))
+                    budget_val = data.get("thinking_budget")
+                    if budget_val is not None:
+                        predicted_budget = int(budget_val)
             except Exception as e:
                 logger.error(f"Error in cognitive complexity analysis: {e}. Falling back to keyword metrics.")
 
         # Calcul du budget dynamique TTC (DynamicBudgetTTCSelector)
-        thinking_budget = self.select_dynamic_budget(complexity_score, query)
+        if predicted_budget is not None and predicted_budget > 0:
+            thinking_budget = predicted_budget
+        else:
+            thinking_budget = self.select_dynamic_budget(complexity_score, query)
         
         logger.info(f"🧠 TTC Analysis: Complexity {complexity_score} -> Allocated Budget: {thinking_budget} tokens.")
         return thinking_budget, complexity_score
