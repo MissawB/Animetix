@@ -25,19 +25,24 @@ jobs:
     - name: Install Python dependencies
       run: pip install -r requirements.txt
 
-    - name: Snyk Python Test
-      uses: snyk/actions/python@master # Using snyk action for python
-      env:
-        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      with:
-        args: --file=requirements.txt --severity-threshold=high --sarif-file-output=snyk-python.sarif
-      continue-on-error: true
+    # --- SNYK SCAN DISABLED ---
+    # Snyk tests require a valid SNYK_TOKEN configured in GitHub Secrets.
+    # Currently disabled as the token is not available in the environment.
+    # Uncomment the block below once the token is added.
+    
+    # - name: Snyk Python Test
+    #   uses: snyk/actions/python@master # Using snyk action for python
+    #   env:
+    #     SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+    #   with:
+    #     args: --file=requirements.txt --severity-threshold=high --sarif-file-output=snyk-python.sarif
+    #   continue-on-error: true
 
-    - name: Upload Snyk Python results to GitHub Code Scanning
-      uses: github/codeql-action/upload-sarif@v4
-      with:
-        sarif_file: snyk-python.sarif
-      if: ${{ always() && hashFiles('snyk-python.sarif') != '' }}
+    # - name: Upload Snyk Python results to GitHub Code Scanning
+    #   uses: github/codeql-action/upload-sarif@v4
+    #   with:
+    #     sarif_file: snyk-python.sarif
+    #   if: ${{ always() && hashFiles('snyk-python.sarif') != '' }}
 
     - name: Static Analysis (Bandit)
       run: bandit -r backend/ -ll -ii
@@ -60,19 +65,20 @@ jobs:
       working-directory: ./frontend
       run: npm ci --legacy-peer-deps
 
-    - name: Snyk Node.js Test
-      uses: snyk/actions/node@master # Using snyk action for node.js
-      env:
-        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      with:
-        args: --file=frontend/package.json --severity-threshold=high --sarif-file-output=snyk-javascript.sarif
-      continue-on-error: true
+    # --- SNYK SCAN DISABLED ---
+    # - name: Snyk Node.js Test
+    #   uses: snyk/actions/node@master # Using snyk action for node.js
+    #   env:
+    #     SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+    #   with:
+    #     args: --file=frontend/package.json --severity-threshold=high --sarif-file-output=snyk-javascript.sarif
+    #   continue-on-error: true
 
-    - name: Upload Snyk Node.js results to GitHub Code Scanning
-      uses: github/codeql-action/upload-sarif@v4
-      with:
-        sarif_file: snyk-javascript.sarif
-      if: ${{ always() && hashFiles('snyk-javascript.sarif') != '' }}
+    # - name: Upload Snyk Node.js results to GitHub Code Scanning
+    #   uses: github/codeql-action/upload-sarif@v4
+    #   with:
+    #     sarif_file: snyk-javascript.sarif
+    #   if: ${{ always() && hashFiles('snyk-javascript.sarif') != '' }}
 
   container-security:
     name: Container Image Audit
