@@ -4,13 +4,13 @@ from django.conf.urls.i18n import i18n_patterns
 from rest_framework import routers
 from animetix import api_views
 from animetix.api.monitoring import PipelineControlView
-from animetix.api.observability import ObservabilityView
-from django.views.generic.base import RedirectView
+from animetix.api.observability import ObservabilityView  # noqa: E402
+from django.views.generic.base import RedirectView  # noqa: E402
 from animetix.tasks_views import (
     run_task_view,
     poll_workflow_view,
     eventarc_gcs_upload_view,
-)
+)  # noqa: E402
 
 # REST Router
 router = routers.DefaultRouter()
@@ -23,23 +23,23 @@ router.register(r"fusions", api_views.CreativeFusionViewSet, basename="fusions")
 router.register(r"curation", api_views.DataCurationTicketViewSet, basename="curation")
 
 
-from drf_spectacular.views import (
+from drf_spectacular.views import (  # noqa: E402
     SpectacularAPIView,
     SpectacularRedocView,
     SpectacularSwaggerView,
-)  # noqa: E402
+)  # noqa: E402  # noqa: E402
 from django.contrib.admin.views.decorators import staff_member_required  # noqa: E402
 from django_prometheus import exports as prometheus_exports  # noqa: E402
 from animetix.api.mlops import DPOFeedbackLoopView, AdaptersView  # noqa: E402
-from animetix.api.admin_api import (
+from animetix.api.admin_api import (  # noqa: E402
     AdEventLoggingAPIView,
-)  # Directly import AdEventLoggingAPIView  # noqa: E402
+)  # noqa: E402  # Directly import AdEventLoggingAPIView  # noqa: E402
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("favicon.ico", RedirectView.as_view(url="/static/animetix/img/logo/logo.png")),
     path(
-        "i18n/", include("django.conf.urls.i18n")
+        "i18n/", include("django.conf.urls.i18n")  # noqa: E402
     ),  # Permet le switch de langue via POST
     # --- PROFESSIONNALISATION : API REST (Headless) ---
     path("api/v1/", include(router.urls)),

@@ -1,4 +1,4 @@
-from .settings import *
+from .settings import *  # noqa: F403
 
 # Clear everything and set a fresh test DB
 DATABASES = {
@@ -18,14 +18,14 @@ FEATURES = {
 }
 
 # Mock out heavy logging/tracking
-sentry_sdk.init = lambda **kwargs: None
+sentry_sdk.init = lambda **kwargs: None  # noqa: F405
 
 # Allow session-based authentication in tests for Django test client compatibility
 REST_FRAMEWORK = {
-    **REST_FRAMEWORK,
+    **REST_FRAMEWORK,  # noqa: F405
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.SessionAuthentication",
-        *REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"],
+        *REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"],  # noqa: F405
     ],
 }
 

@@ -64,8 +64,8 @@ class QuantumCognitiveService:
         if outcome:
             collapsed = np.dot(P, self.state)
         else:
-            I = np.eye(self.dimension, dtype=complex)
-            collapsed = np.dot(I - P, self.state)
+            identity_matrix = np.eye(self.dimension, dtype=complex)
+            collapsed = np.dot(identity_matrix - P, self.state)
 
         norm = np.linalg.norm(collapsed)
         if norm > 0.0:

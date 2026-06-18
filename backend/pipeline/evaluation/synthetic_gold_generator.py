@@ -20,15 +20,15 @@ sys.path.insert(0, BASE_DIR)
 logger.info("Initializing Synthetic Gold Dataset Generator...")
 
 try:
-    from pipeline.mlops.french_market_db import FRENCH_VOICE_ACTORS  # noqa: E402
-    from pipeline.mlops.songs_and_seiyuu_db import (
+    from pipeline.mlops.french_market_db import FRENCH_VOICE_ACTORS  # noqa: E402, F401
+    from pipeline.mlops.songs_and_seiyuu_db import (  # noqa: F401, E402
         SEIYUU_PROFILES,
         ANIME_SONGS_AND_SINGERS,
-    )  # noqa: E402
-    from pipeline.mlops.magazines_and_awards_db import (
+    )  # noqa: E402, F401
+    from pipeline.mlops.magazines_and_awards_db import (  # noqa: F401, E402
         SERIALIZATION_MAGAZINES,
         POP_CULTURE_AWARDS,
-    )  # noqa: E402
+    )  # noqa: E402, F401
 except ImportError as e:
     logger.warning(f"Import error: {e}. Attempting manual path injection...")
     sys.path.insert(0, os.path.join(BASE_DIR, "backend", "pipeline", "mlops"))

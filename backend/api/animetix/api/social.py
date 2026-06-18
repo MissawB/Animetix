@@ -10,6 +10,7 @@ from ..models import (
     DiscoveryClub,
     ClubMembership,
     ClubEvent,
+)
 from ..serializers import (
     ProfileSerializer,
     CreativeFusionSerializer,
@@ -18,7 +19,6 @@ from ..serializers import (
     NotificationSerializer,
     DiscoveryClubSerializer,
     SocialUserSerializer,
-)
     ClubEventSerializer,
 )
 from django.contrib.auth.models import User  # noqa: E402

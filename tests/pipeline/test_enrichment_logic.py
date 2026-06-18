@@ -6,12 +6,12 @@ import sys
 from unittest.mock import Mock
 
 mock_neo4j = Mock()
-sys.modules["neo4j"] = mock_neo4j
-sys.modules["pipeline.neo4j_client"] = Mock(neo4j_manager=Mock())
+sys.modules["neo4j"] = mock_neo4j  # noqa: E402
+sys.modules["pipeline.neo4j_client"] = Mock(neo4j_manager=Mock())  # noqa: E402
 
-from core.domain.services.graph_construction_service import (
+from core.domain.services.graph_construction_service import (  # noqa: E402
     KnowledgeGraphConstructionService,
-)  # noqa: E402
+)  # noqa: E402  # noqa: E402
 
 
 @pytest.fixture

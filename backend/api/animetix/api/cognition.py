@@ -3,15 +3,15 @@ from rest_framework.views import APIView
 from rest_framework import permissions, status
 
 logger = logging.getLogger("animetix.api.cognition")
-from rest_framework.response import Response
-from ..containers import get_container
-from ..models import ArchetypeDriftSnapshot, AIFeedback
-from ..serializers import (
+from rest_framework.response import Response  # noqa: E402
+from ..containers import get_container  # noqa: E402  # noqa: E402
+from ..models import ArchetypeDriftSnapshot, AIFeedback  # noqa: E402  # noqa: E402
+from ..serializers import (  # noqa: E402
     AIDebateSerializer,
     CounterfactualSerializer,
     CoveOracleSerializer,
     CFRStrategySerializer,
-)
+)  # noqa: E402  # noqa: E402
 
 
 class ArchetypeNexusView(APIView):

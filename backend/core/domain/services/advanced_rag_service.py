@@ -74,7 +74,7 @@ class AdvancedRAGService:
         # 1. Gestion des modèles injectés (ou désactivés via None)
         q = self._injected_quantum
         p = self._injected_plasticity
-        l = self._injected_lnn
+        lnn_layer = self._injected_lnn
 
         # Si explicitement None, on désactive
         if q is None and p is None:
@@ -86,7 +86,7 @@ class AdvancedRAGService:
                 LiquidNeuralNetworkService,
             )  # noqa: E402
 
-            lnn = l if l != "default" else LiquidNeuralNetworkService(4, 2)
+            lnn = lnn_layer if lnn_layer != "default" else LiquidNeuralNetworkService(4, 2)
             return q, p, lnn
 
         # 2. Sinon, on va chercher dans le cache ou on crée par défaut

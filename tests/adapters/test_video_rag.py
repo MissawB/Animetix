@@ -7,12 +7,12 @@ from PIL import Image
 # Force modules to exist in sys.modules so they can be imported and patched
 mock_imageio = MagicMock()
 
-sys.modules["imageio"] = mock_imageio
+sys.modules["imageio"] = mock_imageio  # noqa: E402
 
 
-from backend.adapters.inference.vision_transformers_adapter import (
+from backend.adapters.inference.vision_transformers_adapter import (  # noqa: E402
     VisionTransformersAdapter,
-)  # noqa: E402
+)  # noqa: E402  # noqa: E402
 from backend.core.domain.services.rag.video_rag_service import VideoRAGService  # noqa: E402
 
 

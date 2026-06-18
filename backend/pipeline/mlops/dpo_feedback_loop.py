@@ -25,6 +25,8 @@ try:
     django_available = True
     from animetix.models import AIFeedback  # noqa: E402
 except Exception as e:
+    import logging
+    logger = logging.getLogger("animetix.mlops")
     logger.warning(f"Django initialization skipped or failed in DPO loop: {e}")
 
 try:

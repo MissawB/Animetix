@@ -2,9 +2,9 @@ import logging
 from typing import List, Dict, Any, Optional
 
 logger = logging.getLogger("animetix.persistence.safety")
-from core.ports.safety_port import SafetyPort
-from animetix.models import AISafetyEvent
-from django.contrib.auth.models import User
+from core.ports.safety_port import SafetyPort  # noqa: E402
+from animetix.models import AISafetyEvent  # noqa: E402
+from django.contrib.auth.models import User  # noqa: E402
 
 
 class DjangoSafetyAdapter(SafetyPort):

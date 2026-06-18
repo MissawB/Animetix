@@ -14,7 +14,7 @@ class FormalLogicSolver:
     def is_available(self) -> bool:
         """Vérifie si Z3 est installé et fonctionnel."""
         try:
-            import z3  # noqa: E402
+            import z3  # noqa: E402, F401
 
             return True
         except ImportError:
@@ -28,7 +28,7 @@ class FormalLogicSolver:
         Retourne (nom_intrus, preuve, metadonnées).
         """
         try:
-            import z3  # noqa: E402
+            import z3  # noqa: E402, F401
         except ImportError:
             logger.warning("⚠️ z3-solver not installed. Using heuristic fallback.")
             intruder, proof = self._mock_solver(items, properties)

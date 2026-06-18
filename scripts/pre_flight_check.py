@@ -89,9 +89,9 @@ def check_ai_engines():
 def check_dependencies():
     logger.info("📦 Checking critical Python dependencies...")
     try:
-        import bleach  # noqa: E402
-        import pydantic  # noqa: E402
-        import yaml  # noqa: E402
+        import bleach  # noqa: E402, F401
+        import pydantic  # noqa: E402, F401
+        import yaml  # noqa: E402, F401
 
         logger.info("✅ Dependencies (bleach, pydantic, pyyaml) OK.")
         return True

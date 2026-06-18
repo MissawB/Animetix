@@ -17,13 +17,26 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Free Disk Space
+      uses: jlumbroso/free-disk-space@main
+      with:
+        tool-cache: false
+        android: true
+        dotnet: true
+        haskell: true
+        large-packages: true
+        docker-images: true
+        swap-storage: true
+
     - name: Set up Python
       uses: actions/setup-python@v4 # Changed to v4 as v5 might not be available or stable in all runners yet
       with:
         python-version: '3.12'
 
     - name: Install Python dependencies
-      run: pip install -r requirements.txt
+      run: |
+        pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
+        pip install --no-cache-dir -r requirements.txt
 
     # --- SNYK SCAN DISABLED ---
     # Snyk tests require a valid SNYK_TOKEN configured in GitHub Secrets.

@@ -38,7 +38,7 @@ def measure_performance(name: str, results_list: List):
     if HAS_TORCH and torch.cuda.is_available():
         try:
             torch.cuda.memory_allocated() / (1024 * 1024)  # MB
-        except:
+        except Exception:
             pass
 
     metrics = {"name": name, "status": "PASS"}
@@ -63,7 +63,7 @@ def measure_performance(name: str, results_list: List):
                 logger.info(
                     f"BENCHMARK [{name}]: {latency:.2f}ms | RAM: {end_mem:.2f}MB | VRAM: {end_vram:.2f}MB"
                 )
-            except:
+            except Exception:
                 logger.info(
                     f"BENCHMARK [{name}]: {latency:.2f}ms | RAM: {end_mem:.2f}MB"
                 )

@@ -13,7 +13,7 @@ logger = logging.getLogger("animetix." + __name__)
 # --- OPENTELEMETRY TRACING ---
 try:
     from opentelemetry import trace  # noqa: E402
-    from opentelemetry.trace import Status, StatusCode  # noqa: E402
+    from opentelemetry.trace import Status, StatusCode  # noqa: E402, F401
 
     tracer = trace.get_tracer("animetix.llm_service")
 except ImportError as e:

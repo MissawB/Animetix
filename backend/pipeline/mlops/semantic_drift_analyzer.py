@@ -285,7 +285,7 @@ def compute_fingerprint(
         if n % 2 == 1
         else (sorted_lengths[n // 2 - 1] + sorted_lengths[n // 2]) / 2
     )
-    variance = sum((l - avg_len) ** 2 for l in lengths) / n
+    variance = sum((length - avg_len) ** 2 for length in lengths) / n
     std_len = math.sqrt(variance)
 
     # Language distribution

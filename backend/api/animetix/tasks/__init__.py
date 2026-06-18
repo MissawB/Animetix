@@ -123,4 +123,4 @@ def trigger_club_event(club_id, event_id):
     logger.info(f"Triggered event {event_id} for club {club_id}")
 
 
-from . import telemetry_tasks  # noqa: E402
+from . import telemetry_tasks as telemetry_tasks  # noqa: E402

@@ -167,21 +167,21 @@ from otaku_concepts import OTAKU_VOCABULARY  # noqa: E402
 from creators_db import CREATORS_AND_STUDIOS  # noqa: E402
 from transmedia_db import TRANSMEDIA_RELATIONS  # noqa: E402
 from magazines_and_awards_db import AWARDS_AND_MAGAZINES_RELATIONS  # noqa: E402
-from songs_and_seiyuu_db import (
+from songs_and_seiyuu_db import (  # noqa: E402
     SONGS_AND_SEIYUU_RELATIONS,
     SEIYUU_PROFILES as JAPANESE_VOICE_ACTORS,
-)  # noqa: E402
+)  # noqa: E402  # noqa: E402
 from french_market_db import (  # noqa: E402
     FRENCH_VOICE_ACTORS,
     FRENCH_MANGA_PUBLISHERS,
     FRENCH_ANIME_DISTRIBUTORS,
     FRENCH_MARKET_RELATIONS,
-)
+)  # noqa: E402
 from japanese_market_db import (  # noqa: E402
     JAPANESE_MANGA_PUBLISHERS,
     JAPANESE_ANIME_DISTRIBUTORS,
     JAPANESE_MARKET_RELATIONS,
-)
+)  # noqa: E402
 from volumes_and_episodes_db import VOLUMES_AND_EPISODES_DATA  # noqa: E402
 
 CACHE_FILE = os.path.join(

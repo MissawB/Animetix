@@ -14,7 +14,7 @@ import numpy as np  # noqa: E402
 logger = logging.getLogger("animetix.evolving.compiler")
 
 try:
-    import numba  # noqa: E402
+    import numba  # noqa: E402, F401
     from numba import njit  # noqa: E402
 
     HAS_NUMBA = True

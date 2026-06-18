@@ -385,6 +385,7 @@ class TransparencyDataView(APIView):
 
     def get(self, request):
         from ..models import AIFeedback, VectorRecord  # noqa: E402
+
         # 1. Statistiques de feedback (données réelles)
         total_feedbacks = AIFeedback.objects.count()
         positive_rate = 0.82  # Mock default

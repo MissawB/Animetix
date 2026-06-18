@@ -4,18 +4,18 @@ from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from dependency_injector.wiring import inject, Provide
-from ...containers import Container
-from animetix.api.dependencies import get_session_service
-from ...models import GameplaySession
-from animetix_project.logging_config import get_logger
+from ...containers import Container  # noqa: E402
+from animetix.api.dependencies import get_session_service  # noqa: E402
+from ...models import GameplaySession  # noqa: E402
+from animetix_project.logging_config import get_logger  # noqa: E402
 
 logger = get_logger("animetix." + __name__)
 
-from ...serializers import (
+from ...serializers import (  # noqa: E402
     AkinetixStartSerializer,
     AkinetixAnswerSerializer,
     AkinetixConfirmSerializer,
-)  # noqa: E402
+)  # noqa: E402  # noqa: E402
 
 # ... (rest of imports unchanged)
 
