@@ -1,5 +1,5 @@
 # Stage 1: Frontend Builder
-FROM node:20-alpine AS frontend-builder
+FROM node:22-alpine AS frontend-builder
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm ci --legacy-peer-deps || npm install --legacy-peer-deps
@@ -7,7 +7,7 @@ COPY frontend/ ./
 RUN npm run build
 
 # Stage 2: Python Builder
-FROM python:3.11-slim-bookworm AS builder
+FROM python:3.12-slim-bookworm AS builder
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 # hadolint ignore=DL3008
@@ -17,6 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc=4:12.2.* \
     libsndfile1=1.2.0* \
     ffmpeg=7:5.1.* \
+    zlib1g \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 RUN python -m venv /opt/venv
@@ -25,13 +26,14 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Stage 3: Runtime
-FROM python:3.11-slim-bookworm
+FROM python:3.12-slim-bookworm
 # hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5=15.* \
     curl=7.88.1* \
     libsndfile1=1.2.0* \
     ffmpeg=7:5.1.* \
+    zlib1g \
     && rm -rf /var/lib/apt/lists/*
 RUN groupadd -r appuser && useradd -r -g appuser appuser
 WORKDIR /app
