@@ -23,3 +23,7 @@ ignore = ["E501"]  # Handled by black; strings/comments intentionally left long
 [tool.ruff.lint.isort]
 combine-as-imports = true
 force-single-line = false
+# Force wandb as third-party: a local gitignored `wandb/` runtime dir otherwise
+# makes ruff auto-detect it as first-party locally but not in CI (clean checkout),
+# causing I001 to pass locally yet fail in CI.
+known-third-party = ["wandb"]

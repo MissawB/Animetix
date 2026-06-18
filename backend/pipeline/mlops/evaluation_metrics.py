@@ -4,9 +4,8 @@ import os
 import sys
 
 import pandas as pd
-from sentence_transformers import SentenceTransformer
-
 import wandb
+from sentence_transformers import SentenceTransformer
 
 # Fix path for internal imports
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))

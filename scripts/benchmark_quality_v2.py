@@ -18,6 +18,7 @@ from django.conf import settings  # noqa: E402
 
 print(f"📌 Using Database: {settings.DATABASES['default']['NAME']}")
 
+import wandb  # noqa: E402
 from animetix.containers import get_container  # noqa: E402
 from datasets import Dataset  # noqa: E402
 from langchain_google_genai import (  # noqa: E402
@@ -27,8 +28,6 @@ from langchain_google_genai import (  # noqa: E402
 from ragas import evaluate  # noqa: E402
 from ragas.embeddings import LangchainEmbeddingsWrapper  # noqa: E402
 from ragas.metrics import answer_relevancy, context_recall, faithfulness  # noqa: E402
-
-import wandb  # noqa: E402
 
 
 def run_targeted_quality_benchmark():
