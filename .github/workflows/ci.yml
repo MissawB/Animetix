@@ -35,7 +35,9 @@ jobs:
       run: |
         ruff check .
         black --check .
-        mypy backend/
+        # Run from backend/ so first-party imports (core.*, adapters.*) resolve
+        # to single module names; config (incl. type-debt baseline) is in pyproject.
+        cd backend && mypy . --config-file ../pyproject.toml
 
   docker-build:
     name: Validate Docker Build
