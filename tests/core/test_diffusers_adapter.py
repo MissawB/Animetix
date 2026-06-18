@@ -1,6 +1,7 @@
-import pytest
 import sys
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 # Mock missing modules for environment independence
 mock_diffusers = MagicMock()

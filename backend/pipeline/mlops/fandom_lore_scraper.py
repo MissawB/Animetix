@@ -1,7 +1,7 @@
-import os
-import sys
-import re
 import logging
+import os
+import re
+import sys
 from typing import List, Optional
 
 try:
@@ -14,10 +14,9 @@ BASE_DIR = r"C:\Users\bahma\PycharmProjects\Projet solo\Double_scenario_Project"
 sys.path.insert(0, os.path.join(BASE_DIR, "src"))
 sys.path.insert(0, os.path.join(BASE_DIR, "src", "backend"))
 
-from core.utils.security import safe_http_request  # noqa: E402
-
 # Configuration Django
 import django  # noqa: E402
+from core.utils.security import safe_http_request  # noqa: E402
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "animetix_project.settings")
 
@@ -25,8 +24,8 @@ logger = logging.getLogger("animetix.pipeline." + __name__)
 
 try:
     django.setup()
-    from animetix.models import MediaItem  # noqa: E402
     from animetix.containers import get_container  # noqa: E402
+    from animetix.models import MediaItem  # noqa: E402
 except Exception as e:
     logger.warning(f"⚠️ Django init warning: {e}. Running in simulated catalog mode.")
     MediaItem = None

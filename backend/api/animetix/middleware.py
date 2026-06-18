@@ -1,11 +1,13 @@
 import contextvars
 import json
-import sys
 import logging
-from typing import Optional, Any
+import sys
+from typing import Any, Optional
+
 from asgiref.sync import iscoroutinefunction
-from dependency_injector.wiring import inject, Provide
+from dependency_injector.wiring import Provide, inject
 from django.core.cache import cache
+
 from .containers import Container
 
 logger = logging.getLogger("animetix.middleware.personalization")

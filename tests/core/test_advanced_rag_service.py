@@ -1,4 +1,5 @@
 from unittest.mock import MagicMock
+
 from core.domain.services.advanced_rag_service import AdvancedRAGService
 
 

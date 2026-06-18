@@ -1,9 +1,10 @@
 import logging
-import orjson
 from typing import Optional
+
+import orjson
+from core.domain.exceptions import InferenceError, InfrastructureError
 from core.domain.services.llm_service import LLMService
 from core.domain.services.prompt_manager import PromptManager
-from core.domain.exceptions import InferenceError, InfrastructureError
 
 logger = logging.getLogger("animetix.rag.graph_expert")
 

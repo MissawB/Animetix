@@ -1,9 +1,10 @@
 import json
+import logging
 import os
 import sys
 import time
-import logging
-from sentence_transformers import SentenceTransformer, InputExample, losses
+
+from sentence_transformers import InputExample, SentenceTransformer, losses
 from torch.utils.data import DataLoader
 
 # Setup logging

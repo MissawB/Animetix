@@ -1,7 +1,8 @@
 import json
+import logging
 import os
 import sys
-import logging
+
 from dotenv import load_dotenv
 
 # Logger configuration
@@ -73,14 +74,16 @@ def run_ingestion_vg():
             "id": f"vg_{c['id']}",
             "name": c["name"],
             "description": c.get("description"),
-            "image": f"https:{c['mug_shot']['url'].replace('t_thumb', 't_cover_big')}"
-            if c.get("mug_shot")
-            else None,
-            "gender": "Male"
-            if c.get("gender") == 1
-            else "Female"
-            if c.get("gender") == 2
-            else "Other",
+            "image": (
+                f"https:{c['mug_shot']['url'].replace('t_thumb', 't_cover_big')}"
+                if c.get("mug_shot")
+                else None
+            ),
+            "gender": (
+                "Male"
+                if c.get("gender") == 1
+                else "Female" if c.get("gender") == 2 else "Other"
+            ),
             "origin": c["games"][0]["name"] if c.get("games") else "Video Game",
             "metadata": {
                 "source": "IGDB",

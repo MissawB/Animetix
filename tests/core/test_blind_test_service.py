@@ -1,6 +1,7 @@
-import pytest
 import datetime
 from unittest.mock import MagicMock
+
+import pytest
 from core.domain.services.blind_test_service import BlindTestDomainService
 
 

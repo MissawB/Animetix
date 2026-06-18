@@ -1,8 +1,9 @@
+import logging
 import os
 import sys
-import logging
-import django
 from pathlib import Path
+
+import django
 
 # Setup Django environment
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -10,9 +11,9 @@ sys.path.append(str(PROJECT_ROOT / "src" / "backend"))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "animetix_project.settings")
 django.setup()
 
-from django.db import connection  # noqa: E402
-from django.core.cache import cache  # noqa: E402
 from animetix.containers import get_container  # noqa: E402
+from django.core.cache import cache  # noqa: E402
+from django.db import connection  # noqa: E402
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger("pre-flight")

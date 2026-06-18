@@ -1,6 +1,7 @@
-from typing import Optional, List
-import logging
 import hashlib
+import logging
+from typing import List, Optional
+
 from core.ports.cache_port import SemanticCachePort
 
 logger = logging.getLogger("animetix.adapters")

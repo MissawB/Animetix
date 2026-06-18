@@ -1,25 +1,24 @@
-import os
-import time
-import logging
-import json
-import re
 import base64
-from typing import Optional, List, Dict, Any
-from google import genai
-from google.genai import types
-
-from core.ports.inference_port import InferencePort, InferenceNotImplementedError
-from core.ports.usage_port import UsagePort
-from core.domain.entities.ai_schemas import (
-    InferenceResponse,
-    InferenceMetadata,
-    TokenLogProb,
-)
-from core.utils.security import safe_http_request
-from core.domain.exceptions import InferenceError
+import json
+import logging
+import os
+import re
+import time
+from typing import Any, Dict, List, Optional
 
 # Focused Mixin imports
 from adapters.inference.depth_estimation import DepthEstimationMixin
+from core.domain.entities.ai_schemas import (
+    InferenceMetadata,
+    InferenceResponse,
+    TokenLogProb,
+)
+from core.domain.exceptions import InferenceError
+from core.ports.inference_port import InferenceNotImplementedError, InferencePort
+from core.ports.usage_port import UsagePort
+from core.utils.security import safe_http_request
+from google import genai
+from google.genai import types
 
 logger = logging.getLogger("animetix.inference.google_genai")
 

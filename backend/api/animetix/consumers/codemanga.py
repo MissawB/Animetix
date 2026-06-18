@@ -1,8 +1,10 @@
 import json
 import random
+
 from asgiref.sync import sync_to_async
-from .base import BaseConsumer, state_adapter
+
 from ..containers import get_container
+from .base import BaseConsumer, state_adapter
 
 
 class CodeMangaConsumer(BaseConsumer):

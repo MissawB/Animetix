@@ -1,7 +1,8 @@
-import os
 import json
 import logging
-from typing import Dict, Any, Optional
+import os
+from typing import Any, Dict, Optional
+
 from core.domain.services.llm_service import LLMService
 from core.ports.graph_persistence_port import GraphPersistencePort
 
@@ -30,7 +31,9 @@ class SelfPlayDebateService:
         """
         Orchestre le débat entre les 3 agents.
         """
-        logger.info(f"⚖️ Starting Self-Play Debate on '{target_media}' - Topic: {topic}")
+        logger.info(
+            f"⚖️ Starting Self-Play Debate on '{target_media}' - Topic: {topic}"
+        )
 
         # Agent 1 : Le Pro
         logger.info("🟢 Agent PRO is drafting arguments...")

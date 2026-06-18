@@ -1,7 +1,7 @@
 import pytest
-from django.core.cache import cache
 from animetix.tasks_client import enqueue_task
 from animetix.tasks_registry import register_task
+from django.core.cache import cache
 
 
 @pytest.fixture(autouse=True)

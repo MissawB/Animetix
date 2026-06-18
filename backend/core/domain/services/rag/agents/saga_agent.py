@@ -1,5 +1,6 @@
 import logging
 from typing import Optional
+
 from core.domain.services.llm_service import LLMService
 from core.ports.graph_persistence_port import GraphPersistencePort
 

@@ -3,6 +3,7 @@
 import logging  # noqa: E402
 import os  # noqa: E402
 from typing import List  # noqa: E402
+
 from core.utils.lazy_import import lazy_import  # noqa: E402
 from core.utils.security import safe_http_request  # noqa: E402
 
@@ -75,8 +76,8 @@ class RerankMixin:
                     prompt += f"ID {i}: {doc[:500]}\n"
                 prompt += "\nDonne un score de pertinence entre 0.0 et 1.0 pour chaque document. Réponds avec une liste JSON: [score0, score1, ...]"
                 try:
-                    import re  # noqa: E402
                     import json  # noqa: E402
+                    import re  # noqa: E402
 
                     raw = self.generate(
                         prompt, system_prompt="Tu es un reranker expert."

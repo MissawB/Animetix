@@ -1,6 +1,7 @@
-import random
 import logging
-from typing import List, Dict
+import random
+from typing import Dict, List
+
 from .catalog_service import CatalogService
 from .similarity_service import SimilarityService
 

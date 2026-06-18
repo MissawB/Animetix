@@ -9,13 +9,14 @@ Compare un snapshot baseline à l'état courant du dataset pour détecter :
   - régression de qualité (ratio de samples filtrés)
 """
 
-import os  # noqa: E402
 import json  # noqa: E402
-import math  # noqa: E402
 import logging  # noqa: E402
-from datetime import datetime  # noqa: E402
-from typing import Dict, Any, Optional, List  # noqa: E402
+import math  # noqa: E402
+import os  # noqa: E402
 from collections import Counter  # noqa: E402
+from datetime import datetime  # noqa: E402
+from typing import Any, Dict, List, Optional  # noqa: E402
+
 from pydantic import BaseModel  # noqa: E402
 
 logger = logging.getLogger("animetix.pipeline.mlops.semantic_drift_analyzer")

@@ -1,12 +1,12 @@
 import logging
-import re
-from neo4j import GraphDatabase
 import os
-from typing import List, Dict, Optional, Any
-from dotenv import load_dotenv
+import re
+from typing import Any, Dict, List, Optional
 
 from core.ports.graph_database_port import GraphDatabasePort
 from core.utils.security import sanitize_cypher_identifier, sanitize_for_prompt
+from dotenv import load_dotenv
+from neo4j import GraphDatabase
 
 logger = logging.getLogger("animetix." + __name__)
 

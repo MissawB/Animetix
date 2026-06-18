@@ -1,7 +1,8 @@
-import pytest
 from unittest.mock import MagicMock
-from pydantic import BaseModel
+
+import pytest
 from adapters.inference.fallback_adapter import FallbackInferenceAdapter
+from pydantic import BaseModel
 
 
 class User(BaseModel):
@@ -91,8 +92,9 @@ def test_fallback_call_routes_directly_to_capable_adapters():
     adapter2.estimate_depth.assert_called_once_with(b"sample_image")
 
 
-from core.ports.inference_port import InferenceNotImplementedError  # noqa: E402
 from unittest.mock import patch  # noqa: E402
+
+from core.ports.inference_port import InferenceNotImplementedError  # noqa: E402
 
 
 def test_not_implemented_exception_is_silent_and_does_not_log_error():

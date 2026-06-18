@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 from core.domain.services.long_term_memory_service import LongTermMemoryService
 from core.domain.services.prompt_manager import PromptManager
 

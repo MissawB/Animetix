@@ -1,6 +1,7 @@
-import pytest
 from unittest.mock import MagicMock
-from core.domain.services.ragas_eval_service import RagasEvalService, EvaluationResult
+
+import pytest
+from core.domain.services.ragas_eval_service import EvaluationResult, RagasEvalService
 
 
 @pytest.fixture

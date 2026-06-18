@@ -11,9 +11,9 @@ from unittest.mock import MagicMock  # noqa: E402
 # 1. TESTS TREE-OF-THOUGHTS (MCTS)
 # ==========================================
 def test_tree_of_thoughts_search():
-    from core.domain.services.tree_of_thoughts_service import (
+    from core.domain.services.tree_of_thoughts_service import (  # noqa: E402
         TreeOfThoughtsSearchService,
-    )  # noqa: E402
+    )
 
     mock_engine = MagicMock()
     # Simuler des retours LLM :
@@ -45,7 +45,9 @@ def test_tree_of_thoughts_search():
 # 2. TESTS COMPRESSEUR DE MEMOIRE EPISODIQUE
 # ==========================================
 def test_episodic_memory_compressor():
-    from core.domain.services.episodic_memory_compressor import EpisodicMemoryCompressor  # noqa: E402
+    from core.domain.services.episodic_memory_compressor import (  # noqa: E402
+        EpisodicMemoryCompressor,
+    )
 
     mock_chroma = MagicMock()
     # Simuler deux souvenirs vectoriels dans Chroma
@@ -83,9 +85,9 @@ def test_episodic_memory_compressor():
 # 3. TESTS PROFILER NEURO-SYMBOLIQUE (SAT SOLVER)
 # ==========================================
 def test_neuro_symbolic_user_profiler():
-    from core.domain.services.neuro_symbolic_user_profiler import (
+    from core.domain.services.neuro_symbolic_user_profiler import (  # noqa: E402
         NeuroSymbolicUserProfiler,
-    )  # noqa: E402
+    )
 
     feedbacks = [
         {

@@ -7,18 +7,15 @@ pour les architectures GPU à VRAM limitée.
 import os  # noqa: E402
 
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
-import torch  # noqa: E402
-import time  # noqa: E402
 import logging  # noqa: E402
+import time  # noqa: E402
+
+import torch  # noqa: E402
 from datasets import load_dataset  # noqa: E402
-from transformers import (  # noqa: E402
-    AutoModelForCausalLM,
-    AutoTokenizer,
-    BitsAndBytesConfig,
-    TrainingArguments,
-)
 from peft import LoraConfig  # noqa: E402
-from trl import SFTTrainer, DataCollatorForCompletionOnlyLM  # noqa: E402
+from transformers import AutoTokenizer  # noqa: E402
+from transformers import AutoModelForCausalLM, BitsAndBytesConfig, TrainingArguments
+from trl import DataCollatorForCompletionOnlyLM, SFTTrainer  # noqa: E402
 
 # Configuration du logger
 logger = logging.getLogger("animetix.pipeline.mlops.train_expert")
@@ -232,9 +229,9 @@ def run_expert_training():
             model = AutoModelForCausalLM.from_pretrained(
                 model_name,
                 device_map=device_map,
-                torch_dtype=torch.bfloat16
-                if torch.cuda.is_bf16_supported()
-                else torch.float16,
+                torch_dtype=(
+                    torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
+                ),
                 trust_remote_code=True,
                 low_cpu_mem_usage=True if device_map == "auto" else False,
                 revision="main",

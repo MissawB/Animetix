@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from unittest.mock import MagicMock
+
 from core.domain.services.tree_of_thoughts_service import TreeOfThoughtsSearchService
 
 
@@ -15,12 +16,12 @@ def test_tot_returns_full_tree_structure():
     result = service.solve_with_tree_of_thoughts(query="Test query", breadth=1, depth=1)
 
     assert "full_tree" in result, "Le résultat ToT doit inclure la clé 'full_tree'"
-    assert "nodes" in result["full_tree"], (
-        "L'arbre complet doit contenir une liste de nœuds"
-    )
-    assert "links" in result["full_tree"], (
-        "L'arbre complet doit contenir une liste de liens"
-    )
+    assert (
+        "nodes" in result["full_tree"]
+    ), "L'arbre complet doit contenir une liste de nœuds"
+    assert (
+        "links" in result["full_tree"]
+    ), "L'arbre complet doit contenir une liste de liens"
 
     # Vérification du nœud racine
     nodes = result["full_tree"]["nodes"]
@@ -34,9 +35,10 @@ def test_tot_returns_full_tree_structure():
 def test_tot_captures_generated_nodes():
     """Vérifie que les pensées générées sont ajoutées comme nœuds et liées correctement."""
     from unittest.mock import MagicMock  # noqa: E402
-    from core.domain.services.tree_of_thoughts_service import (
+
+    from core.domain.services.tree_of_thoughts_service import (  # noqa: E402
         TreeOfThoughtsSearchService,
-    )  # noqa: E402
+    )
 
     mock_engine = MagicMock()
     # Scénario : 1 étape, 2 branches

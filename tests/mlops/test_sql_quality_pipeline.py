@@ -2,7 +2,8 @@
 import os
 import sys
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from django.core.management import call_command
 from django.core.management.base import CommandError
 
@@ -46,7 +47,9 @@ class TestSQLDataQualityPipeline(unittest.TestCase):
 
     @patch("backend.pipeline.mlops.rlhf_pipeline.run_sql_quality_checks")
     def test_pipeline_integration_runs_checks_first(self, mock_checks):
-        from backend.pipeline.mlops.rlhf_pipeline import validated_dpo_dataset  # noqa: E402
+        from backend.pipeline.mlops.rlhf_pipeline import (  # noqa: E402
+            validated_dpo_dataset,
+        )
 
         mock_feedback = {
             "feedback": "dummy_path.jsonl",

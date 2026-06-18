@@ -1,4 +1,5 @@
 from unittest.mock import MagicMock, patch
+
 from adapters.inference.workflows_client import GCPWorkflowsClient
 
 

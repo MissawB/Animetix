@@ -1,9 +1,10 @@
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
+from animetix.admin import GoldDatasetEntryAdmin
+from animetix.models import AIFeedback, AIREvalResult, AISafetyEvent, GoldDatasetEntry
 from django.contrib import admin
 from django.test import RequestFactory
-from animetix.models import GoldDatasetEntry, AIFeedback, AISafetyEvent, AIREvalResult
-from animetix.admin import GoldDatasetEntryAdmin
 
 
 # Helper to mock request messages

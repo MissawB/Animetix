@@ -1,6 +1,7 @@
 import logging
+from typing import Any, Dict, List
+
 import orjson
-from typing import Dict, List, Any
 from core.domain.services.llm_service import LLMService
 from core.domain.services.prompt_manager import PromptManager
 from core.ports.graph_persistence_port import GraphPersistencePort

@@ -19,7 +19,9 @@ def test_scheduled_dpo_optimization_no_feedbacks(mocker):
 
     # Mock AIFeedback.objects.filter...
     mock_filter = mocker.patch("animetix.models.AIFeedback.objects.filter")
-    mock_filter.return_value.values.return_value.annotate.return_value.filter.return_value = []
+    mock_filter.return_value.values.return_value.annotate.return_value.filter.return_value = (
+        []
+    )
 
     res = scheduled_dpo_optimization()
     assert res == "No prompts needed optimization today."

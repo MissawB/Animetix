@@ -1,8 +1,9 @@
+import os
+import shutil
 import subprocess
 import sys
-import shutil
+
 import yaml
-import os
 
 
 def run_command(cmd_args, check=True):

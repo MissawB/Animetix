@@ -1,6 +1,7 @@
-import os
 import logging
-from typing import List, Dict
+import os
+from typing import Dict, List
+
 from core.ports.web_search_port import WebSearchPort
 from core.utils.security import is_safe_url, safe_http_request
 
@@ -109,9 +110,11 @@ class UnifiedWebSearchAdapter(WebSearchPort):
                                     {
                                         "title": title,
                                         "url": uri,
-                                        "snippet": response.text[:200]
-                                        if hasattr(response, "text")
-                                        else "",
+                                        "snippet": (
+                                            response.text[:200]
+                                            if hasattr(response, "text")
+                                            else ""
+                                        ),
                                     }
                                 )
                     return mapped_results

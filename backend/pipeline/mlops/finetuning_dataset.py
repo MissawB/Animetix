@@ -11,8 +11,9 @@ import json  # noqa: E402
 import logging  # noqa: E402
 import os  # noqa: E402
 import random
+
 random = random.SystemRandom()
-  # noqa: E402
+# noqa: E402
 import re  # noqa: E402
 import sys  # noqa: E402
 import time  # noqa: E402
@@ -167,23 +168,21 @@ OUTPUT_DATASET = os.path.join(
 # Ajout du répertoire courant pour l'import des modules de base de données locales
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from creators_db import CREATORS_AND_STUDIOS  # noqa: E402
-from french_market_db import (
-    FRENCH_ANIME_DISTRIBUTORS,  # noqa: E402
-    FRENCH_MANGA_PUBLISHERS,
+from french_market_db import FRENCH_ANIME_DISTRIBUTORS  # noqa: E402
+from french_market_db import FRENCH_MANGA_PUBLISHERS  # noqa: E402
+from french_market_db import (  # noqa: E402
     FRENCH_MARKET_RELATIONS,
     FRENCH_VOICE_ACTORS,
 )
-from japanese_market_db import (
-    JAPANESE_ANIME_DISTRIBUTORS,  # noqa: E402
-    JAPANESE_MANGA_PUBLISHERS,
+from japanese_market_db import JAPANESE_ANIME_DISTRIBUTORS  # noqa: E402
+from japanese_market_db import JAPANESE_MANGA_PUBLISHERS  # noqa: E402
+from japanese_market_db import (  # noqa: E402
     JAPANESE_MARKET_RELATIONS,
 )
 from magazines_and_awards_db import AWARDS_AND_MAGAZINES_RELATIONS  # noqa: E402
 from otaku_concepts import OTAKU_VOCABULARY  # noqa: E402
-from songs_and_seiyuu_db import (
-    SEIYUU_PROFILES as JAPANESE_VOICE_ACTORS,
-)  # noqa: E402; noqa: E402  # noqa: E402
-from songs_and_seiyuu_db import SONGS_AND_SEIYUU_RELATIONS
+from songs_and_seiyuu_db import SEIYUU_PROFILES as JAPANESE_VOICE_ACTORS  # noqa: E402
+from songs_and_seiyuu_db import SONGS_AND_SEIYUU_RELATIONS  # noqa: E402
 from transmedia_db import TRANSMEDIA_RELATIONS  # noqa: E402
 from volumes_and_episodes_db import VOLUMES_AND_EPISODES_DATA  # noqa: E402
 
@@ -2779,9 +2778,9 @@ def generate_multiturn_dialogues(
             )
 
             # Check if we have volume/episode count from database or use a realistic dummy
-            from backend.pipeline.mlops.volumes_and_episodes_db import (
+            from backend.pipeline.mlops.volumes_and_episodes_db import (  # noqa: E402
                 VOLUMES_AND_EPISODES_DATA,
-            )  # noqa: E402
+            )
 
             episodes2 = "12 épisodes" if lang == "Français" else "12 episodes"
             if anime2.get("title") in VOLUMES_AND_EPISODES_DATA:
@@ -2966,8 +2965,9 @@ def generate_rag_context_instructions(animes, characters) -> List[dict]:
     ]
 
     import random
+
     random = random.SystemRandom()
-  # noqa: E402
+    # noqa: E402
 
     # Scenario A: Synopsis extraction with noise
     for idx in range(120):
@@ -3135,8 +3135,9 @@ def generate_negative_refusal_examples(count=800) -> List[dict]:
     cadrant l'expertise exclusive d'Animetix sur l'univers anime/manga.
     """
     import random
+
     random = random.SystemRandom()
-  # noqa: E402
+    # noqa: E402
 
     refusals = []
 

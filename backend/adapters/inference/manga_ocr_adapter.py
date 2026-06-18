@@ -1,10 +1,11 @@
 import logging
-from typing import Dict, Any, List, Optional
-from core.ports.inference_port import InferencePort, InferenceNotImplementedError
-from core.ports.usage_port import UsagePort
+from typing import Any, Dict, List, Optional
+
 from core.domain.entities.ai_schemas import InferenceResponse
-from transformers import pipeline
 from core.domain.exceptions import InferenceError
+from core.ports.inference_port import InferenceNotImplementedError, InferencePort
+from core.ports.usage_port import UsagePort
+from transformers import pipeline
 
 logger = logging.getLogger("animetix.inference")
 

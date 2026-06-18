@@ -1,7 +1,7 @@
 import json
+import logging
 import os
 import sys
-import logging
 
 # Détection robuste de la racine du projet
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

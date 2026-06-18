@@ -1,18 +1,19 @@
 # Fix path for internal imports
-import sys
 import os
+import sys
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(CURRENT_DIR)))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, os.path.join(PROJECT_ROOT, "backend"))
 
-from core.utils.security import safe_http_request  # noqa: E402
 import json  # noqa: E402
-import time  # noqa: E402
+import logging  # noqa: E402
 import os  # noqa: E402
 import sys  # noqa: E402
-import logging  # noqa: E402
+import time  # noqa: E402
+
+from core.utils.security import safe_http_request  # noqa: E402
 
 logger = logging.getLogger("animetix.pipeline." + __name__)
 

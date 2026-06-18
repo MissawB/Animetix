@@ -1,10 +1,12 @@
 import logging
+from typing import Dict, List, Optional, Tuple
+
 import numpy as np
-from typing import List, Dict, Optional, Tuple
+from core.ports.game_state_port import GameStatePort
+
+from ..entities.akinetix import AkinetixGameState, AkinetixQuestion
 from .akinetix_engine import AkinetixEngine
 from .catalog_service import CatalogService
-from core.ports.game_state_port import GameStatePort
-from ..entities.akinetix import AkinetixGameState, AkinetixQuestion
 
 logger = logging.getLogger("animetix.akinetix")
 

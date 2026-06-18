@@ -1,8 +1,10 @@
 import json
+
 from asgiref.sync import sync_to_async
-from .base import BaseConsumer, state_adapter
+
 from ..containers import get_container
 from ..services import DIFFICULTY_SETTINGS
+from .base import BaseConsumer, state_adapter
 
 
 class UndercoverConsumer(BaseConsumer):

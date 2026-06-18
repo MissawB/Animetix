@@ -1,10 +1,12 @@
 import json
+import logging
 import os
 import sys
-import wandb
-import logging
-from sentence_transformers import SentenceTransformer
+
 import pandas as pd
+from sentence_transformers import SentenceTransformer
+
+import wandb
 
 # Fix path for internal imports
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -52,10 +54,10 @@ def ragas_performance_comparison():
 
     # Setup custom LLM Judge Service
     from animetix.containers import get_container  # noqa: E402
-    from core.domain.services.ragas_eval_service import (
-        RagasEvalService,
+    from core.domain.services.ragas_eval_service import (  # noqa: E402
         EvaluationResult,
-    )  # noqa: E402
+        RagasEvalService,
+    )
 
     eval_service = RagasEvalService(judge_engine=get_container().inference_engine())
 

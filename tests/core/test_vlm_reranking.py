@@ -1,7 +1,8 @@
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
+from core.domain.entities.ai_schemas import JudgeAction, SearchPlan
 from core.domain.services.agentic_rag_service import AgenticRAGService
-from core.domain.entities.ai_schemas import SearchPlan, JudgeAction
 
 
 @pytest.fixture
@@ -122,9 +123,9 @@ def test_vlm_reranking_end_to_end(mock_dependencies):
         for step in steps
         if step["type"] == "thought" and "[State Machine]" in step["content"]
     ]
-    assert any("État: RAGState.VLM_RERANK" in s for s in states), (
-        "VLM_RERANK state was not reached"
-    )
+    assert any(
+        "État: RAGState.VLM_RERANK" in s for s in states
+    ), "VLM_RERANK state was not reached"
 
     # 2. Verify visual_rerank was called with correct image URLs
     inference_engine.visual_rerank.assert_called_once()

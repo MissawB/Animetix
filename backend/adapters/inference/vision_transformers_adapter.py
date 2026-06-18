@@ -1,18 +1,23 @@
 """Vision Transformers adapter – composes focused mixins for each capability."""
 
 import logging  # noqa: E402
+from typing import List, Optional  # noqa: E402
+
 import httpx  # noqa: E402
-from typing import Optional, List  # noqa: E402
-from core.ports.inference_port import InferencePort, InferenceNotImplementedError  # noqa: E402
-from core.ports.usage_port import UsagePort  # noqa: E402
 from core.domain.entities.ai_schemas import InferenceResponse  # noqa: E402
+from core.ports.inference_port import (  # noqa: E402
+    InferenceNotImplementedError,
+    InferencePort,
+)
+from core.ports.usage_port import UsagePort  # noqa: E402
+
+from .clip_vision import ClipVisionMixin  # noqa: E402
+from .depth_estimation import DepthEstimationMixin  # noqa: E402
+from .manga_ocr import MangaOcrMixin  # noqa: E402
+from .video_analysis import VideoAnalysisMixin  # noqa: E402
 
 # Capability mixins
 from .vlm_mixin import VlmMixin  # noqa: E402
-from .video_analysis import VideoAnalysisMixin  # noqa: E402
-from .manga_ocr import MangaOcrMixin  # noqa: E402
-from .depth_estimation import DepthEstimationMixin  # noqa: E402
-from .clip_vision import ClipVisionMixin  # noqa: E402
 
 logger = logging.getLogger("animetix.inference.vision")
 

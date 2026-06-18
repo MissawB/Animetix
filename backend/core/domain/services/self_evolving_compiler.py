@@ -5,10 +5,11 @@ Generates, compiles, and links performance-optimized native execution loops at r
 Now supports dynamic code generation and Numba JIT.
 """
 
-import os  # noqa: E402
 import logging  # noqa: E402
+import os  # noqa: E402
 import re  # noqa: E402
-from typing import Dict, Any, Callable, Optional  # noqa: E402
+from typing import Any, Callable, Dict, Optional  # noqa: E402
+
 import numpy as np  # noqa: E402
 
 logger = logging.getLogger("animetix.evolving.compiler")

@@ -1,5 +1,6 @@
 import logging
-from typing import List, Dict, Any
+from typing import Any, Dict, List
+
 from core.ports.inference_port import InferencePort
 
 logger = logging.getLogger("animetix.rag.video")
@@ -118,9 +119,10 @@ class VideoRAGService:
         NOTE: Cette version utilise un ré-encodage via imageio pour garantir
         que chaque segment est un fichier MP4 lisible par le VLM.
         """
-        import imageio  # noqa: E402
-        import tempfile  # noqa: E402
         import os  # noqa: E402
+        import tempfile  # noqa: E402
+
+        import imageio  # noqa: E402
 
         try:
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp_in:

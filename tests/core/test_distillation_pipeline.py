@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 
 @pytest.fixture
@@ -22,7 +23,9 @@ def mock_gold_dataset_port():
 def test_generate_distillation_data(
     mock_teacher, mock_prompt_manager, mock_gold_dataset_port
 ):
-    from core.domain.services.distillation_pipeline import ModelDistillationPipeline  # noqa: E402
+    from core.domain.services.distillation_pipeline import (  # noqa: E402
+        ModelDistillationPipeline,
+    )
 
     distillation_pipeline = ModelDistillationPipeline(
         teacher_engine=mock_teacher,
@@ -48,7 +51,9 @@ def test_generate_distillation_data(
 
 def test_fine_tune_student(mock_teacher, mock_prompt_manager, mock_gold_dataset_port):
     pytest.importorskip("datasets")
-    from core.domain.services.distillation_pipeline import ModelDistillationPipeline  # noqa: E402
+    from core.domain.services.distillation_pipeline import (  # noqa: E402
+        ModelDistillationPipeline,
+    )
 
     ModelDistillationPipeline(
         teacher_engine=mock_teacher,

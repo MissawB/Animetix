@@ -1,6 +1,7 @@
-import pytest
-import numpy as np
 from unittest.mock import MagicMock, patch
+
+import numpy as np
+import pytest
 
 # Define mocks
 mock_moshi = MagicMock()
@@ -30,7 +31,9 @@ def mock_dependencies():
         yield
 
 
-from adapters.inference.audio_transformers_adapter import AudioTransformersAdapter  # noqa: E402
+from adapters.inference.audio_transformers_adapter import (  # noqa: E402
+    AudioTransformersAdapter,
+)  # noqa: E402
 from core.domain.exceptions import InferenceError  # noqa: E402
 
 

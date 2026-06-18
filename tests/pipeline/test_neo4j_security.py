@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 from pipeline.neo4j_client import Neo4jManager
 
 

@@ -1,11 +1,12 @@
-import pytest
-from unittest.mock import patch, MagicMock
-from django.contrib.auth import get_user_model
-from rest_framework.test import APIClient
-from rest_framework.exceptions import AuthenticationFailed
-from django.test import RequestFactory
+from unittest.mock import MagicMock, patch
 
+import pytest
 from animetix.models import Profile
+from django.contrib.auth import get_user_model
+from django.test import RequestFactory
+from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.test import APIClient
+
 from backend.api.animetix.auth import DeveloperApiKeyAuthentication
 
 User = get_user_model()

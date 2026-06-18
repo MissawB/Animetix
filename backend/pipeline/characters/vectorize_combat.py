@@ -1,6 +1,7 @@
 import json
-import os
 import logging
+import os
+
 from pipeline.chroma_client import chroma_manager
 from sentence_transformers import SentenceTransformer
 

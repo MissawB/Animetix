@@ -1,6 +1,8 @@
 import logging
-from typing import Dict, Any
+from typing import Any, Dict
+
 from core.ports.inference_port import InferencePort
+
 from .prompt_manager import PromptManager
 
 logger = logging.getLogger("animetix.agent")

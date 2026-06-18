@@ -1,15 +1,14 @@
+import importlib
 import os
 import sys
-import importlib
-import pytest
 from unittest.mock import MagicMock, patch
-from django.core.management import call_command, CommandError
+
+import pytest
+from animetix.db.postgresql.base import DatabaseWrapper
 from django.core.exceptions import ImproperlyConfigured
 from django.core.files.base import ContentFile
-
+from django.core.management import CommandError, call_command
 from google.auth.exceptions import DefaultCredentialsError
-
-from animetix.db.postgresql.base import DatabaseWrapper
 
 # --- 1. CLOUD SQL (UNIX SOCKET & IAM) ---
 

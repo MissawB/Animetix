@@ -1,4 +1,5 @@
 from unittest.mock import MagicMock, patch
+
 from adapters.inference.vision_transformers_adapter import VisionTransformersAdapter
 
 

@@ -1,7 +1,8 @@
 import logging
-from typing import List, Dict, Any, Optional
-from core.ports.graph_persistence_port import GraphPersistencePort
+from typing import Any, Dict, List, Optional
+
 from core.domain.services.llm_service import LLMService
+from core.ports.graph_persistence_port import GraphPersistencePort
 
 logger = logging.getLogger("animetix.mlops.graph_community_partitioner")
 

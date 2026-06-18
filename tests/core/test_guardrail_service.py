@@ -1,6 +1,7 @@
-import pytest
 import json
 from unittest.mock import MagicMock
+
+import pytest
 from core.domain.services.guardrail_service import GuardrailService, RedTeamingAgent
 
 

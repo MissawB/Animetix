@@ -1,9 +1,10 @@
-import os
 import json
 import logging
+import os
+
 import numpy as np
-from sklearn.manifold import TSNE
 from pipeline.chroma_client import chroma_manager
+from sklearn.manifold import TSNE
 
 logger = logging.getLogger("animetix.mlops.viz")
 
@@ -37,7 +38,9 @@ def run_visualization():
             results = coll.get(include=["embeddings", "metadatas", "documents"])
 
             if not results["embeddings"] or len(results["embeddings"]) < 5:
-                logger.warning(f"⚠️ Collection {coll_name} too small for visualization.")
+                logger.warning(
+                    f"⚠️ Collection {coll_name} too small for visualization."
+                )
                 continue
 
             logger.info(

@@ -1,7 +1,8 @@
+from unittest.mock import MagicMock, patch
+
 import pytest
-from django.urls import reverse
-from unittest.mock import patch, MagicMock
 from django.contrib.auth.models import User
+from django.urls import reverse
 
 
 @pytest.fixture

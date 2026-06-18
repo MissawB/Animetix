@@ -1,10 +1,11 @@
-import os
 import logging
+import os
+from typing import Any, Dict
+
 import numpy as np
-from typing import Dict, Any
-from scipy.stats import ks_2samp
 from django.conf import settings
 from pipeline.chroma_client import chroma_manager
+from scipy.stats import ks_2samp
 
 logger = logging.getLogger("animetix.mlops.drift")
 

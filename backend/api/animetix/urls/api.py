@@ -1,9 +1,8 @@
 from django.urls import path
+
 from .. import api_views
+from ..api import billing, monitoring, observability
 from ..views.billing import billing_alert_webhook
-from ..api import billing
-from ..api import monitoring
-from ..api import observability
 
 urlpatterns = [
     # --- ECONOMY & BILLING ---
@@ -124,9 +123,11 @@ urlpatterns = [
     ),
     path(
         "latent-space/",
-        api_views.SampleView.as_view()
-        if not hasattr(api_views, "LatentSpaceDataView")
-        else api_views.LatentSpaceDataView.as_view(),
+        (
+            api_views.SampleView.as_view()
+            if not hasattr(api_views, "LatentSpaceDataView")
+            else api_views.LatentSpaceDataView.as_view()
+        ),
         name="api_latent_space",
     ),
     path(

@@ -1,6 +1,7 @@
 import logging
-from typing import Dict, Any
-from ..entities.personalization import VisualConfig, ARCHETYPE_VISUAL_MAP
+from typing import Any, Dict
+
+from ..entities.personalization import ARCHETYPE_VISUAL_MAP, VisualConfig
 
 logger = logging.getLogger("animetix.personalization.drift")
 
@@ -27,16 +28,22 @@ class ArchetypeDriftService:
             vibe = ARCHETYPE_VISUAL_MAP.get(dominant, {})
             return VisualConfig(
                 archetype_id=dominant,
-                primary_accent=vibe.get("primary_accent", "#FD7706")
-                if feature_toggles.get("accent", True)
-                else "#FD7706",
-                aura_type=vibe.get("aura_type", "none")
-                if feature_toggles.get("aura", True)
-                else "none",
+                primary_accent=(
+                    vibe.get("primary_accent", "#FD7706")
+                    if feature_toggles.get("accent", True)
+                    else "#FD7706"
+                ),
+                aura_type=(
+                    vibe.get("aura_type", "none")
+                    if feature_toggles.get("aura", True)
+                    else "none"
+                ),
                 aura_intensity=intensity_mult,
-                font_vibe=vibe.get("font_vibe", "default")
-                if feature_toggles.get("font", True)
-                else "default",
+                font_vibe=(
+                    vibe.get("font_vibe", "default")
+                    if feature_toggles.get("font", True)
+                    else "default"
+                ),
             )
 
         # Default fallback if auto mode fails
@@ -105,14 +112,20 @@ class ArchetypeDriftService:
 
         return VisualConfig(
             archetype_id=dominant,
-            primary_accent=vibe.get("primary_accent", "#FD7706")
-            if feature_toggles.get("accent", True)
-            else "#FD7706",
-            aura_type=vibe.get("aura_type", "none")
-            if feature_toggles.get("aura", True)
-            else "none",
+            primary_accent=(
+                vibe.get("primary_accent", "#FD7706")
+                if feature_toggles.get("accent", True)
+                else "#FD7706"
+            ),
+            aura_type=(
+                vibe.get("aura_type", "none")
+                if feature_toggles.get("aura", True)
+                else "none"
+            ),
             aura_intensity=intensity,
-            font_vibe=vibe.get("font_vibe", "default")
-            if feature_toggles.get("font", True)
-            else "default",
+            font_vibe=(
+                vibe.get("font_vibe", "default")
+                if feature_toggles.get("font", True)
+                else "default"
+            ),
         )

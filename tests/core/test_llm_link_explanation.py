@@ -1,8 +1,8 @@
-import pytest
 from unittest.mock import MagicMock
-from core.domain.services.llm_service import LLMService
 
+import pytest
 from core.domain.entities.ai_schemas import InferenceResponse
+from core.domain.services.llm_service import LLMService
 
 
 @pytest.fixture

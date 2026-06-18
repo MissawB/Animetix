@@ -1,8 +1,8 @@
-import re
 import json
-import os
-import sys
 import logging
+import os
+import re
+import sys
 
 logger = logging.getLogger("animetix.pipeline." + __name__)
 
@@ -93,13 +93,15 @@ def run_refinement():
                 "popularity": m["popularity"],
                 "year": m["startDate"]["year"] if m["startDate"] else None,
                 "image": m["coverImage"]["large"] if m["coverImage"] else None,
-                "recommendations": {
-                    r["mediaRecommendation"]["title"]["romaji"]: r["rating"]
-                    for r in m["recommendations"]["nodes"]
-                    if r.get("mediaRecommendation")
-                }
-                if m.get("recommendations")
-                else {},
+                "recommendations": (
+                    {
+                        r["mediaRecommendation"]["title"]["romaji"]: r["rating"]
+                        for r in m["recommendations"]["nodes"]
+                        if r.get("mediaRecommendation")
+                    }
+                    if m.get("recommendations")
+                    else {}
+                ),
             }
             clean_root_mangas.append(clean_data)
 

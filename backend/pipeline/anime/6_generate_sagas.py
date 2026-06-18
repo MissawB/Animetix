@@ -1,7 +1,8 @@
-import os
-import sys
 import json
 import logging
+import os
+import sys
+
 from tqdm import tqdm
 
 # Setup logging
@@ -23,8 +24,9 @@ import django  # noqa: E402
 
 django.setup()
 
-from backend.animetix.containers import get_container  # noqa: E402
 from pipeline.neo4j_client import neo4j_manager  # noqa: E402
+
+from backend.animetix.containers import get_container  # noqa: E402
 
 
 def run_saga_ingestion():

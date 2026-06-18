@@ -1,5 +1,6 @@
 import random
 from typing import Dict, Optional
+
 from ...ports.inference_port import InferencePort
 from .advanced_vision_service import AdvancedVisionService
 

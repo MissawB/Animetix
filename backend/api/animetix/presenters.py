@@ -330,7 +330,9 @@ class GamePresenter:
     @staticmethod
     def get_score_color(score: float) -> str:
         """Returns a Tailwind color class based on the similarity score."""
-        from core.domain.services.scoring_service import ScoringDomainService  # noqa: E402
+        from core.domain.services.scoring_service import (  # noqa: E402
+            ScoringDomainService,
+        )
 
         return ScoringDomainService.get_ui_score_color_class(score)
 

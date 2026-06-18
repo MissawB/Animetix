@@ -1,12 +1,13 @@
-import pytest
 from unittest.mock import MagicMock
-from core.domain.services.xai_service import XaiDiagnosticService, XaiCollector
+
+import pytest
 from core.domain.entities.ai_schemas import (
-    InferenceResponse,
     InferenceMetadata,
-    XaiReport,
+    InferenceResponse,
     ModelDiagnostics,
+    XaiReport,
 )
+from core.domain.services.xai_service import XaiCollector, XaiDiagnosticService
 
 
 @pytest.fixture

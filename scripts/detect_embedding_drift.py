@@ -1,7 +1,8 @@
-import numpy as np
-from scipy.stats import ks_2samp
 import os
 import sys
+
+import numpy as np
+from scipy.stats import ks_2samp
 
 # Ajout du dossier root au path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

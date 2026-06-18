@@ -1,6 +1,6 @@
-import os
 import json
 import logging
+import os
 from typing import Optional
 
 logger = logging.getLogger("animetix." + __name__)

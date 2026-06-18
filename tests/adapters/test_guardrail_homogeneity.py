@@ -1,8 +1,9 @@
 from unittest.mock import MagicMock, patch
+
+from adapters.inference.local_guardrail_adapter import LocalGuardrailAdapter
 from adapters.inference.local_text_adapter import LocalTextAdapter
 from adapters.inference.qwen3_vl_adapter import Qwen3VLAdapter
 from adapters.inference.unified_inference_adapter import UnifiedInferenceAdapter
-from adapters.inference.local_guardrail_adapter import LocalGuardrailAdapter
 
 
 def test_local_text_adapter_moderate_content_keyword_fallback():

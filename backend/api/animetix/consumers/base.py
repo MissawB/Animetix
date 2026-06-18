@@ -1,6 +1,7 @@
 import json
-from channels.generic.websocket import AsyncWebsocketConsumer
+
 from adapters.persistence.django_cache_state_adapter import DjangoCacheStateAdapter
+from channels.generic.websocket import AsyncWebsocketConsumer
 
 state_adapter = DjangoCacheStateAdapter()
 

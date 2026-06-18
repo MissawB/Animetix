@@ -1,13 +1,14 @@
-import os
 import asyncio
-import time
-import wandb
 import logging
-from typing import Dict
+import os
 
 # --- DJANGO SETUP FOR MLOPS CONTAINERS ---
 import sys
+import time
 from pathlib import Path
+from typing import Dict
+
+import wandb
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
@@ -17,8 +18,10 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "animetix_project.settings")
 django.setup()
 
 from animetix.containers import get_container  # noqa: E402
-from core.domain.services.ragas_eval_service import RagasEvalService, EvaluationResult  # noqa: E402
-
+from core.domain.services.ragas_eval_service import (  # noqa: E402
+    EvaluationResult,
+    RagasEvalService,
+)
 from dotenv import load_dotenv  # noqa: E402
 
 load_dotenv()
@@ -152,9 +155,9 @@ async def evaluate_model(engine_name: str, config: Dict):
 
     result = {
         "faithfulness": sum(faith_scores) / len(faith_scores) if faith_scores else 0.0,
-        "answer_relevancy": sum(relevance_scores) / len(relevance_scores)
-        if relevance_scores
-        else 0.0,
+        "answer_relevancy": (
+            sum(relevance_scores) / len(relevance_scores) if relevance_scores else 0.0
+        ),
     }
 
     # Logging results to W&B

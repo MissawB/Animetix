@@ -1,6 +1,7 @@
 from typing import Any, Optional
-from django.core.cache import cache
+
 from core.ports.state_port import StatePort
+from django.core.cache import cache
 
 
 class DjangoCacheStateAdapter(StatePort):

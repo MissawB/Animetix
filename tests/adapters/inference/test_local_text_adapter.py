@@ -1,5 +1,6 @@
 import unittest
 from unittest.mock import MagicMock, patch
+
 from backend.adapters.inference.local_text_adapter import LocalTextAdapter
 
 

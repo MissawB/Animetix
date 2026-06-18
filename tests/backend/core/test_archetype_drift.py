@@ -1,4 +1,5 @@
 from unittest.mock import MagicMock
+
 from core.domain.services.archetype_drift_service import ArchetypeDriftService
 
 

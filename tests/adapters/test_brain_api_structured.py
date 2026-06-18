@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock, patch
-from pydantic import BaseModel
+
 from adapters.inference.brain_api_adapter import BrainAPIAdapter
+from pydantic import BaseModel
 
 
 class User(BaseModel):

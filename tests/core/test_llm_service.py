@@ -1,8 +1,9 @@
-import pytest
 from unittest.mock import MagicMock
-from core.domain.services.llm_service import LLMService
+
+import pytest
+from core.domain.entities.ai_schemas import InferenceMetadata, InferenceResponse
 from core.domain.exceptions import InferenceError
-from core.domain.entities.ai_schemas import InferenceResponse, InferenceMetadata
+from core.domain.services.llm_service import LLMService
 
 
 @pytest.fixture
@@ -63,9 +64,10 @@ def test_get_status(llm_service, mock_engine):
 
 
 def test_generate_logs_usage_correctly(llm_service, mock_engine):
-    from core.ports.usage_port import UsagePort  # noqa: E402
-    from core.domain.entities.ai_schemas import InferenceResponse  # noqa: E402
     from unittest.mock import MagicMock  # noqa: E402
+
+    from core.domain.entities.ai_schemas import InferenceResponse  # noqa: E402
+    from core.ports.usage_port import UsagePort  # noqa: E402
 
     usage_port = MagicMock(spec=UsagePort)
     llm_service.usage_port = usage_port

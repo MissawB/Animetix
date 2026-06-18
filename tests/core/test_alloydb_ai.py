@@ -1,5 +1,6 @@
 from unittest.mock import patch
-from pipeline.chroma_client import is_alloydb_ai_supported, PGVectorCollectionWrapper
+
+from pipeline.chroma_client import PGVectorCollectionWrapper, is_alloydb_ai_supported
 
 
 @patch("django.db.connection.vendor", "postgresql")

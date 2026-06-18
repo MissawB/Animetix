@@ -1,8 +1,8 @@
 import json
-import time
+import logging
 import os
 import sys
-import logging
+import time
 
 # Logger
 logger = logging.getLogger("animetix." + __name__)
@@ -65,7 +65,9 @@ def fetch_page(page, retries=3):
                 return response.json()
             elif response.status_code == 429:
                 wait_time = (i + 1) * 30  # Attente progressive : 30s, 60s, 90s
-                logger.warning(f"⚠️ Erreur 429 (Rate Limit). Attente de {wait_time}s...")
+                logger.warning(
+                    f"⚠️ Erreur 429 (Rate Limit). Attente de {wait_time}s..."
+                )
                 time.sleep(wait_time)
                 continue
             else:

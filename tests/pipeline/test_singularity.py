@@ -4,16 +4,19 @@ Tests unitaires pour les modules d'IA de Cinquième Génération (Singularité S
 Couvre SelfEvolvingCompiler, SynapticPlasticitySimulator, et AutonomousDomainSynthesizer.
 """
 
-import pytest  # noqa: E402
-import numpy as np  # noqa: E402
 from unittest.mock import MagicMock  # noqa: E402
+
+import numpy as np  # noqa: E402
+import pytest  # noqa: E402
 
 
 # ==========================================
 # 1. TESTS AUTO-COMPILATION (SELF-EVOLVING COMPILER)
 # ==========================================
 def test_self_evolving_compiler():
-    from core.domain.services.self_evolving_compiler import SelfEvolvingCompiler  # noqa: E402
+    from core.domain.services.self_evolving_compiler import (  # noqa: E402
+        SelfEvolvingCompiler,
+    )
 
     compiler = SelfEvolvingCompiler(build_dir="data/mlops/build_test")
 
@@ -37,7 +40,9 @@ def test_self_evolving_compiler():
 
 
 def test_self_evolving_compiler_llm_evolution():
-    from core.domain.services.self_evolving_compiler import SelfEvolvingCompiler  # noqa: E402
+    from core.domain.services.self_evolving_compiler import (  # noqa: E402
+        SelfEvolvingCompiler,
+    )
 
     compiler = SelfEvolvingCompiler(build_dir="data/mlops/build_test")
 
@@ -74,7 +79,9 @@ def matrix_row_norm(x):
 # 2. TESTS PLASTICITÉ SYNAPTIQUE (HEBBIAN & STDP)
 # ==========================================
 def test_synaptic_plasticity_hebbian_and_stdp():
-    from core.domain.services.synaptic_plasticity import SynapticPlasticitySimulator  # noqa: E402
+    from core.domain.services.synaptic_plasticity import (  # noqa: E402
+        SynapticPlasticitySimulator,
+    )
 
     simulator = SynapticPlasticitySimulator(
         num_concepts=5, tau_plus=10.0, tau_minus=10.0
@@ -120,7 +127,9 @@ def test_synaptic_plasticity_hebbian_and_stdp():
 # 3. TESTS SYNTHÉTISEUR DE MULTIVERS AUTONOME (ADMS)
 # ==========================================
 def test_autonomous_domain_synthesizer():
-    from core.domain.services.domain_synthesizer import AutonomousDomainSynthesizer  # noqa: E402
+    from core.domain.services.domain_synthesizer import (  # noqa: E402
+        AutonomousDomainSynthesizer,
+    )
 
     # Mocks du moteur d'inférence LLM
     mock_inference = MagicMock()

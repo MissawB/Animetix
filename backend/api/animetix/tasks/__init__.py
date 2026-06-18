@@ -1,5 +1,5 @@
-from animetix_project.logging_config import get_logger
 from animetix.tasks_registry import register_task
+from animetix_project.logging_config import get_logger
 
 
 def get_container():
@@ -101,8 +101,8 @@ def trigger_club_event(club_id, event_id):
     """
     Signals all members of a club via WebSocket that an event has started.
     """
-    from channels.layers import get_channel_layer  # noqa: E402
     from asgiref.sync import async_to_sync  # noqa: E402
+    from channels.layers import get_channel_layer  # noqa: E402
 
     channel_layer = get_channel_layer()
     if not channel_layer:

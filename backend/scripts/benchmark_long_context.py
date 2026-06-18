@@ -1,5 +1,6 @@
-import json
 import argparse
+import json
+
 from animetix.containers import get_container
 from core.domain.services.long_context_service import LongContextDiscoveryService
 

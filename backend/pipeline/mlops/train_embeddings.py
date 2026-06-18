@@ -1,6 +1,6 @@
-import os
 import logging
-from typing import List, Dict
+import os
+from typing import Dict, List
 
 logger = logging.getLogger("animetix.mlops.train_embeddings")
 
@@ -104,7 +104,8 @@ def train_custom_embeddings():
     logger.info(f"📊 Dataset loaded: {len(dataset)} expert triplets.")
 
     try:
-        from sentence_transformers import SentenceTransformer, InputExample, losses  # noqa: E402
+        from sentence_transformers import InputExample  # noqa: E402
+        from sentence_transformers import SentenceTransformer, losses
         from torch.utils.data import DataLoader  # noqa: E402
 
         logger.info(

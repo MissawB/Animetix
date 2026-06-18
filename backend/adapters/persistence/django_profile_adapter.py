@@ -1,5 +1,5 @@
-from core.domain.entities.user import UserProfile
 from animetix.models import Profile
+from core.domain.entities.user import UserProfile
 
 
 class DjangoProfileAdapter:

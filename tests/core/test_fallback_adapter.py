@@ -1,9 +1,9 @@
-import pytest
 from unittest.mock import MagicMock
-from adapters.inference.fallback_adapter import FallbackInferenceAdapter
-from core.ports.inference_port import InferencePort
 
+import pytest
+from adapters.inference.fallback_adapter import FallbackInferenceAdapter
 from core.domain.entities.ai_schemas import InferenceResponse
+from core.ports.inference_port import InferencePort
 
 
 @pytest.fixture

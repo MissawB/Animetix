@@ -2,9 +2,10 @@
 
 import logging  # noqa: E402
 import struct  # noqa: E402
-from typing import Dict, Any  # noqa: E402
-from core.utils.lazy_import import lazy_import  # noqa: E402
+from typing import Any, Dict  # noqa: E402
+
 from core.domain.exceptions import InferenceError  # noqa: E402
+from core.utils.lazy_import import lazy_import  # noqa: E402
 
 torch = lazy_import("torch")
 transformers = lazy_import("transformers")
@@ -19,8 +20,9 @@ class DepthEstimationMixin:
     def estimate_depth(self, image_data: bytes) -> bytes:
         """Estime la profondeur d'une image en utilisant Depth-Anything."""
         try:
-            from PIL import Image  # noqa: E402
             from io import BytesIO  # noqa: E402
+
+            from PIL import Image  # noqa: E402
 
             img = Image.open(BytesIO(image_data)).convert("RGB")
 
@@ -61,16 +63,17 @@ class DepthEstimationMixin:
     ) -> Dict[str, Any]:
         """Génère un nuage de points PLY binaire (Legacy)."""
         try:
-            from PIL import Image  # noqa: E402
-            import numpy as np  # noqa: E402
             import base64  # noqa: E402
             from io import BytesIO  # noqa: E402
-            from core.constants import (  # noqa: E402
-                DEFAULT_FOCAL_LENGTH,
-                DEFAULT_DEPTH_RESIZE,
+
+            import numpy as np  # noqa: E402
+            from core.constants import DEFAULT_DEPTH_RESIZE  # noqa: E402
+            from core.constants import (
                 DEFAULT_DEPTH_THRESHOLD,
+                DEFAULT_FOCAL_LENGTH,
                 PLY_HEADER_TEMPLATE,
             )
+            from PIL import Image  # noqa: E402
 
             resize = DEFAULT_DEPTH_RESIZE
             rgb = Image.open(BytesIO(image_data)).convert("RGB").resize(resize)
@@ -117,19 +120,20 @@ class DepthEstimationMixin:
         Chaque pixel devient une gaussienne avec SH, opacité, échelle et rotation.
         """
         try:
-            from PIL import Image  # noqa: E402
-            import numpy as np  # noqa: E402
             import base64  # noqa: E402
             from io import BytesIO  # noqa: E402
-            from core.constants import (  # noqa: E402
-                DEFAULT_FOCAL_LENGTH,
-                DEFAULT_DEPTH_RESIZE,
+
+            import numpy as np  # noqa: E402
+            from core.constants import DEFAULT_DEPTH_RESIZE  # noqa: E402
+            from core.constants import (
                 DEFAULT_DEPTH_THRESHOLD,
-                GAUSSIAN_PLY_HEADER,
-                SH_C0,
-                GAUSSIAN_SCALE_FACTOR,
+                DEFAULT_FOCAL_LENGTH,
                 DEFAULT_GAUSSIAN_OPACITY,
+                GAUSSIAN_PLY_HEADER,
+                GAUSSIAN_SCALE_FACTOR,
+                SH_C0,
             )
+            from PIL import Image  # noqa: E402
 
             resize = DEFAULT_DEPTH_RESIZE
             rgb = Image.open(BytesIO(image_data)).convert("RGB").resize(resize)

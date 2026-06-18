@@ -1,5 +1,5 @@
-from transformers import CLIPProcessor, CLIPModel
 from peft import LoraConfig, get_peft_model
+from transformers import CLIPModel, CLIPProcessor
 
 
 def finetune_clip_lora(artist_name="Makoto Shinkai"):

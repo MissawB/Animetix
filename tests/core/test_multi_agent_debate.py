@@ -1,12 +1,13 @@
-import pytest
 from unittest.mock import MagicMock
-from core.domain.services.agentic_rag_service import AgenticRAGService
+
+import pytest
 from core.domain.entities.ai_schemas import JudgeAction, JudgeEvaluation, SearchPlan
+from core.domain.services.advanced_rag_service import AdvancedRAGService  # noqa: E402
+from core.domain.services.agentic_rag_service import AgenticRAGService
+from core.domain.services.llm_service import LLMService  # noqa: E402
+from core.domain.services.prompt_manager import PromptManager  # noqa: E402
 from core.ports.inference_port import InferencePort  # noqa: E402
 from core.ports.web_search_port import WebSearchPort  # noqa: E402
-from core.domain.services.advanced_rag_service import AdvancedRAGService  # noqa: E402
-from core.domain.services.prompt_manager import PromptManager  # noqa: E402
-from core.domain.services.llm_service import LLMService  # noqa: E402
 
 
 class TestMultiAgentDebateIntegration:
@@ -158,9 +159,9 @@ class TestMultiAgentDebateIntegration:
             for e in events
             if e["type"] == "thought" and "État: RAGState.JUDGE" in e["content"]
         ]
-        assert len(judge_states) >= 2, (
-            f"Should have reached JUDGE state at least twice. Events: {events}"
-        )
+        assert (
+            len(judge_states) >= 2
+        ), f"Should have reached JUDGE state at least twice. Events: {events}"
 
         # Check for REWRITE consensus
         rewrite_consensus = [
@@ -169,9 +170,9 @@ class TestMultiAgentDebateIntegration:
             if e["type"] == "thought"
             and "Consensus : JudgeAction.REWRITE" in e["content"]
         ]
-        assert len(rewrite_consensus) == 1, (
-            f"Should have a REWRITE consensus once. Events: {events}"
-        )
+        assert (
+            len(rewrite_consensus) == 1
+        ), f"Should have a REWRITE consensus once. Events: {events}"
 
         # Check for APPROVE consensus
         approve_consensus = [
@@ -180,9 +181,9 @@ class TestMultiAgentDebateIntegration:
             if e["type"] == "thought"
             and "Consensus : JudgeAction.APPROVE" in e["content"]
         ]
-        assert len(approve_consensus) == 1, (
-            f"Should have an APPROVE consensus once. Events: {events}"
-        )
+        assert (
+            len(approve_consensus) == 1
+        ), f"Should have an APPROVE consensus once. Events: {events}"
 
         # Check if eval event contains DebateOutcome
         eval_events = [e for e in events if e["type"] == "eval"]

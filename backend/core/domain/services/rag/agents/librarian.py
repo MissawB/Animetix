@@ -1,14 +1,16 @@
 import json
 import logging
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
+
 from core.domain.services.llm_service import LLMService
 from core.domain.services.prompt_manager import PromptManager
 from core.ports.web_search_port import WebSearchPort
 
 logger = logging.getLogger("animetix.rag.librarian")
 
-from core.utils.security import safe_http_request  # noqa: E402
 from urllib.parse import quote  # noqa: E402
+
+from core.utils.security import safe_http_request  # noqa: E402
 
 
 class LibrarianAgent:

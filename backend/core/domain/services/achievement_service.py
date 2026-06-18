@@ -1,7 +1,8 @@
 from typing import List, Optional
-from ..entities.achievement import AchievementDefinition, GameEvent
+
 from ...ports.achievement_port import AchievementPort
 from ...ports.notification_port import NotificationPort
+from ..entities.achievement import AchievementDefinition, GameEvent
 
 
 class AchievementDomainService:

@@ -1,8 +1,9 @@
 import logging
+
 from core.domain.entities.ai_schemas import CritiqueResult
+from core.domain.exceptions import InferenceError, InfrastructureError
 from core.domain.services.llm_service import LLMService
 from core.domain.services.prompt_manager import PromptManager
-from core.domain.exceptions import InferenceError, InfrastructureError
 
 logger = logging.getLogger("animetix.rag.critic")
 

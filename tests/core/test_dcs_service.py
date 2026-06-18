@@ -1,5 +1,6 @@
-import numpy as np
 from unittest.mock import MagicMock, patch
+
+import numpy as np
 from core.domain.services.cinematic_volumetric_reconstruction_service import (
     CinematicVolumetricReconstructionService,
 )

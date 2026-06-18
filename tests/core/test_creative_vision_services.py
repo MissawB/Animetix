@@ -1,10 +1,11 @@
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 from core.domain.services.creative import (
-    VideoQuestService,
-    StudioTransformService,
-    SoundscapeGenerationService,
     MangaFlowService,
+    SoundscapeGenerationService,
+    StudioTransformService,
+    VideoQuestService,
 )
 
 
@@ -110,6 +111,7 @@ def test_soundscape_generation(soundscape_service, mock_engine):
 
 def test_translate_manga_page(manga_service, mock_engine):
     from io import BytesIO  # noqa: E402
+
     from PIL import Image  # noqa: E402
 
     # Create valid image bytes

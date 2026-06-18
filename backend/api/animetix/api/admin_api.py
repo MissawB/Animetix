@@ -1,11 +1,13 @@
-from rest_framework import viewsets, permissions, response, status, decorators
-from rest_framework.views import APIView
-from django.utils import timezone
 from datetime import timedelta
-from django.db.models import Sum
-from ..models import DataCurationTicket, AITokenUsage, AdEvent, Profile
-from ..serializers import DataCurationTicketSerializer, UserAdminSerializer
+
 from django.contrib.auth.models import User
+from django.db.models import Sum
+from django.utils import timezone
+from rest_framework import decorators, permissions, response, status, viewsets
+from rest_framework.views import APIView
+
+from ..models import AdEvent, AITokenUsage, DataCurationTicket, Profile
+from ..serializers import DataCurationTicketSerializer, UserAdminSerializer
 
 
 class UserManagementViewSet(viewsets.ModelViewSet):
@@ -65,9 +67,9 @@ class DataCurationTicketViewSet(viewsets.ModelViewSet):
                 "total_tickets": total,
                 "pending_tickets": pending,
                 "resolved_tickets": resolved,
-                "health_score": round((resolved / total * 100), 1)
-                if total > 0
-                else 100,
+                "health_score": (
+                    round((resolved / total * 100), 1) if total > 0 else 100
+                ),
             }
         )
 
@@ -91,9 +93,11 @@ class TTCMonitoringAPIView(APIView):
                 "summary": {
                     "total_allocated": total_allocated,
                     "total_consumed": total_consumed,
-                    "efficiency": round((total_consumed / total_allocated * 100), 1)
-                    if total_allocated > 0
-                    else 100,
+                    "efficiency": (
+                        round((total_consumed / total_allocated * 100), 1)
+                        if total_allocated > 0
+                        else 100
+                    ),
                 },
                 "logs": [
                     {
@@ -211,6 +215,7 @@ class AdminEconomicAuditAPIView(APIView):
 
     def get(self, request):
         from django.db.models import Avg, Max  # noqa: E402
+
         from ..models import WalletTransaction  # noqa: E402
 
         # 1. Masse Monétaire

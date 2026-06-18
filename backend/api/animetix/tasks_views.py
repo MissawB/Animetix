@@ -1,15 +1,16 @@
 import json
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.core.cache import cache
-from django.conf import settings
+
+from animetix.tasks_client import enqueue_task
 from animetix.tasks_registry import get_registered_task
 from animetix_project.logging_config import get_logger
+from django.conf import settings
+from django.core.cache import cache
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from google.auth.transport import requests as google_requests
 
 # Eventarc imports
 from google.oauth2 import id_token
-from google.auth.transport import requests as google_requests
-from animetix.tasks_client import enqueue_task
 
 logger = get_logger("animetix." + __name__)
 
@@ -30,8 +31,8 @@ def run_task_view(request):
 
         token = auth_header.split(" ")[1]
         try:
-            from google.oauth2 import id_token  # noqa: E402
             from google.auth.transport import requests  # noqa: E402
+            from google.oauth2 import id_token  # noqa: E402
 
             # Verify the token against Google with STATIC audience
             audience = settings.GCP_TASKS_WORKER_URL
@@ -104,8 +105,8 @@ def run_task_view(request):
             return JsonResponse({"error": str(run_err)}, status=500)
 
 
-from django.http import HttpResponse  # noqa: E402
 from adapters.inference.workflows_client import GCPWorkflowsClient  # noqa: E402
+from django.http import HttpResponse  # noqa: E402
 
 
 @csrf_exempt

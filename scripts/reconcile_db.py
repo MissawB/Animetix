@@ -1,7 +1,8 @@
 import os
 import sys
-import django
 from pathlib import Path
+
+import django
 
 # Setup Project Paths
 PROJECT_ROOT = Path(__file__).resolve().parent.parent

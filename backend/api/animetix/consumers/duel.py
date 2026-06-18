@@ -1,7 +1,9 @@
 import json
+
 from asgiref.sync import sync_to_async
-from .base import BaseConsumer
+
 from ..containers import get_container
+from .base import BaseConsumer
 
 
 class DuelConsumer(BaseConsumer):

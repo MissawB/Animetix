@@ -1,5 +1,6 @@
 import pytest
 from pydantic import ValidationError
+
 from backend.api.animetix.schemas import OfflineSyncSchema
 
 

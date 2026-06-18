@@ -1,12 +1,13 @@
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
-from django.test import RequestFactory
 from animetix.api.labs import (
-    SpatialLabDataView,
-    Generate3DDataView,
     CinematicReconstructionView,
+    Generate3DDataView,
+    SpatialLabDataView,
 )
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import RequestFactory
 
 
 @pytest.fixture

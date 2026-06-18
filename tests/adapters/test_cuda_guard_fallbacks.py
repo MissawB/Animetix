@@ -1,10 +1,11 @@
-import pytest
 from unittest.mock import patch
-from core.domain.exceptions import InferenceError
-from adapters.inference.diffusers_adapter import DiffusersAdapter
+
+import pytest
 from adapters.inference.audio_transformers_adapter import AudioTransformersAdapter
-from adapters.inference.fallback_adapter import FallbackInferenceAdapter
 from adapters.inference.brain_api_adapter import BrainAPIAdapter
+from adapters.inference.diffusers_adapter import DiffusersAdapter
+from adapters.inference.fallback_adapter import FallbackInferenceAdapter
+from core.domain.exceptions import InferenceError
 
 
 class FakeBrainAPIAdapter(BrainAPIAdapter):
@@ -35,8 +36,9 @@ def test_audio_no_cuda_raises():
 
 
 def test_diffusers_inpaint_pillow_fallback_on_no_cuda():
-    from PIL import Image  # noqa: E402
     from io import BytesIO  # noqa: E402
+
+    from PIL import Image  # noqa: E402
 
     # Create valid dummy JPEG image bytes
     img = Image.new("RGB", (100, 100), "white")

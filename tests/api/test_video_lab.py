@@ -1,8 +1,9 @@
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
-from django.test import RequestFactory
 from animetix.api.labs import VideoFateZeroLabView, VideoLabDataView
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import RequestFactory
 
 
 @pytest.fixture
@@ -23,8 +24,8 @@ def test_video_lab_data_view():
     assert any(tool["id"] == "fatezero" for tool in response.data["tools"])
 
 
-from rest_framework.test import force_authenticate  # noqa: E402
 from django.contrib.auth.models import User  # noqa: E402
+from rest_framework.test import force_authenticate  # noqa: E402
 
 
 @pytest.mark.django_db

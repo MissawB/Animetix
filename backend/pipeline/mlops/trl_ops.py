@@ -4,9 +4,11 @@ TRL (Transformer Reinforcement Learning) Ops for Animetix MLOps.
 Handles dataset preparation and model triggering for DPO fine-tuning.
 """
 
-import os  # noqa: E402
 import logging  # noqa: E402
+import os  # noqa: E402
+
 from pydantic import BaseModel  # noqa: E402
+
 from .dpo_feedback_loop import DPOFeedbackLoop  # noqa: E402
 
 logger = logging.getLogger("animetix.mlops.trl")

@@ -1,8 +1,9 @@
-import pytest
 from unittest.mock import patch
-from django.contrib.auth.models import User
-from animetix.models import DuelRoom, ArchetypeDriftSnapshot
+
+import pytest
+from animetix.models import ArchetypeDriftSnapshot, DuelRoom
 from animetix.pubsub_service import PubSubPublisherService
+from django.contrib.auth.models import User
 
 
 def test_pubsub_service_local_mode_logs():

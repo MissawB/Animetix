@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
-import time
-import numpy as np
-import sys
 import os
+import sys
+import time
+
+import numpy as np
 
 # Ajout du path src
 sys.path.append(os.path.abspath("src"))
 
-from core.domain.services.self_evolving_compiler import SelfEvolvingCompiler  # noqa: E402
+from core.domain.services.self_evolving_compiler import (  # noqa: E402
+    SelfEvolvingCompiler,
+)
 
 
 def benchmark_performance():

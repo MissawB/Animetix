@@ -1,4 +1,5 @@
 import logging
+
 from core.domain.entities.ai_schemas import SearchPlan
 from core.domain.services.llm_service import LLMService
 from core.domain.services.prompt_manager import PromptManager
@@ -84,6 +85,7 @@ class SearchPlanner:
             try:
                 import json  # noqa: E402
                 import re  # noqa: E402
+
                 from core.domain.exceptions import ParsingError  # noqa: E402
 
                 clean_raw = plan_raw.strip()

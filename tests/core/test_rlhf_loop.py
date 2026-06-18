@@ -1,7 +1,8 @@
-import pytest
-from unittest.mock import MagicMock, patch
-import os
 import json
+import os
+from unittest.mock import MagicMock, patch
+
+import pytest
 from animetix.models import AIFeedback
 from django.contrib.auth.models import User
 
@@ -69,9 +70,9 @@ def test_rlhf_loop_integration(mock_container):
             curate_dpo_dataset()
 
             # 5. Verify the results
-            assert os.path.exists(output_path), (
-                f"Output file not found at {output_path}"
-            )
+            assert os.path.exists(
+                output_path
+            ), f"Output file not found at {output_path}"
 
             with open(output_path, "r", encoding="utf-8") as f:
                 lines = f.readlines()

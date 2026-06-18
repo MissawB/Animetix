@@ -1,6 +1,7 @@
-from rest_framework.views import APIView
+from dependency_injector.wiring import Provide, inject
 from rest_framework.response import Response
-from dependency_injector.wiring import inject, Provide
+from rest_framework.views import APIView
+
 from ..containers import Container
 
 

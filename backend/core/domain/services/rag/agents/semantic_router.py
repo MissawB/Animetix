@@ -1,7 +1,8 @@
 import logging
-from pydantic import BaseModel, Field
+
 from core.domain.services.llm_service import LLMService
 from core.domain.services.prompt_manager import PromptManager
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger("animetix.rag.semantic_router")
 

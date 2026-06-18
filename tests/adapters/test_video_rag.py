@@ -1,7 +1,8 @@
-import pytest
 import sys
-import numpy as np
 from unittest.mock import MagicMock, patch
+
+import numpy as np
+import pytest
 from PIL import Image
 
 # Force modules to exist in sys.modules so they can be imported and patched
@@ -12,8 +13,10 @@ sys.modules["imageio"] = mock_imageio  # noqa: E402
 
 from backend.adapters.inference.vision_transformers_adapter import (  # noqa: E402
     VisionTransformersAdapter,
-)  # noqa: E402  # noqa: E402
-from backend.core.domain.services.rag.video_rag_service import VideoRAGService  # noqa: E402
+)
+from backend.core.domain.services.rag.video_rag_service import (  # noqa: E402
+    VideoRAGService,
+)
 
 
 @pytest.fixture
@@ -98,7 +101,10 @@ def test_video_rag_service_orchestration(video_service):
 
 def test_video_rag_indexing_and_search():
     from unittest.mock import MagicMock  # noqa: E402
-    from backend.core.domain.services.rag.video_rag_service import VideoRAGService  # noqa: E402
+
+    from backend.core.domain.services.rag.video_rag_service import (  # noqa: E402
+        VideoRAGService,
+    )
 
     mock_engine = MagicMock()
     mock_repo = MagicMock()

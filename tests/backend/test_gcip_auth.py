@@ -1,9 +1,11 @@
-import pytest
 from unittest.mock import patch
+
 import jwt
+import pytest
+from django.contrib.auth import get_user_model
 from django.test import RequestFactory
 from rest_framework.exceptions import AuthenticationFailed
-from django.contrib.auth import get_user_model
+
 from backend.api.animetix.auth import GoogleIdentityAuthentication
 
 User = get_user_model()

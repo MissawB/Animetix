@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock
-from core.domain.services.llm_service import LLMService
 
-from core.domain.entities.ai_schemas import InferenceResponse, InferenceMetadata
+from core.domain.entities.ai_schemas import InferenceMetadata, InferenceResponse
+from core.domain.services.llm_service import LLMService
 
 
 def test_llm_service_propagation():

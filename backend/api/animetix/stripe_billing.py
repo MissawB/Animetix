@@ -1,6 +1,7 @@
+import logging
 import time
 import uuid
-import logging
+
 from django.conf import settings
 
 logger = logging.getLogger("animetix.stripe_billing")

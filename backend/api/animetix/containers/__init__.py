@@ -1,9 +1,10 @@
 from dependency_injector import containers, providers
-from .infrastructure import InfrastructureContainer
-from .persistence import PersistenceContainer
-from .inference import InferenceContainer
+
 from .agentic import AgenticContainer
 from .core_services import CoreServicesContainer
+from .inference import InferenceContainer
+from .infrastructure import InfrastructureContainer
+from .persistence import PersistenceContainer
 
 
 class Container(containers.DeclarativeContainer):

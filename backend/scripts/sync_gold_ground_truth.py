@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-import os
-import sys
 import json
 import logging
-from typing import List, Dict, Any
+import os
+import sys
+from typing import Any, Dict, List
+
 from pydantic import BaseModel, Field
 
 # Root setup
@@ -171,9 +172,9 @@ def run_synchronization(dry_run: bool = False) -> Dict[str, Any]:
     stats = []
 
     # Let's import regression benchmark to sync in memory first
-    from backend.pipeline.evaluation.regression_benchmark import (
+    from backend.pipeline.evaluation.regression_benchmark import (  # noqa: E402
         GOLD_SET as benchmark_gold_set,
-    )  # noqa: E402
+    )
 
     updated_benchmark_set = list(benchmark_gold_set)
 

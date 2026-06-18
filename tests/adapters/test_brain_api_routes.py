@@ -1,10 +1,10 @@
-from fastapi.testclient import TestClient
-
 import os
+
+from fastapi.testclient import TestClient
 
 os.environ["BRAIN_API_KEY"] = "test-env-key-12345"
 
-from adapters.inference.brain_api import app, verify_api_key, brain_engine  # noqa: E402
+from adapters.inference.brain_api import app, brain_engine, verify_api_key  # noqa: E402
 
 client = TestClient(app)
 

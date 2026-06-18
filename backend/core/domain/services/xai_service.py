@@ -1,13 +1,14 @@
-import numpy as np
 import logging
-from typing import Dict, List, Any, Optional
-from core.ports.inference_port import InferencePort
+from typing import Any, Dict, List, Optional
+
+import numpy as np
 from core.domain.entities.ai_schemas import (
-    InferenceResponse,
-    XaiReport,
     DocumentAttribution,
+    InferenceResponse,
     ModelDiagnostics,
+    XaiReport,
 )
+from core.ports.inference_port import InferencePort
 
 logger = logging.getLogger("animetix.xai")
 
@@ -29,11 +30,8 @@ class XaiDiagnosticService:
         Calcule les métriques d'incertitude. Utilise les logprobs si disponibles,
         sinon assume une incertitude maximale par sécurité (Secure by Default).
         """
-        from animetix.metrics import (
-            MODEL_REASONING_CONFIDENCE,
-            MODEL_REASONING_ENTROPY,
-            MODEL_REASONING_PERPLEXITY,
-        )  # noqa: E402
+        from animetix.metrics import MODEL_REASONING_CONFIDENCE  # noqa: E402
+        from animetix.metrics import MODEL_REASONING_ENTROPY, MODEL_REASONING_PERPLEXITY
 
         # Utilisation des logprobs réels si disponibles (InferenceResponse)
         if response and response.metadata and response.metadata.logprobs:
@@ -136,9 +134,9 @@ class XaiDiagnosticService:
                     {
                         "token": lp.token,
                         "entropy": float(entropy),
-                        "logprob": float(lp.logprob)
-                        if lp.logprob is not None
-                        else -5.0,
+                        "logprob": (
+                            float(lp.logprob) if lp.logprob is not None else -5.0
+                        ),
                     }
                 )
                 if lp.logprob is not None:
@@ -224,9 +222,11 @@ class XaiDiagnosticService:
             weight = (
                 score / total_score
                 if total_score > 0
-                else 1.0 / len(collector.retrieved_docs)
-                if collector.retrieved_docs
-                else 0.0
+                else (
+                    1.0 / len(collector.retrieved_docs)
+                    if collector.retrieved_docs
+                    else 0.0
+                )
             )
 
             attributions.append(

@@ -1,8 +1,9 @@
 import json
-import os
 import logging
-from backend.core.domain.services.creative.vs_battle_service import VsBattleService
+import os
+
 from backend.api.animetix.containers import get_container
+from backend.core.domain.services.creative.vs_battle_service import VsBattleService
 
 logger = logging.getLogger("animetix.pipeline.combat")
 

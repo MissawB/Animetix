@@ -6,12 +6,13 @@ Seconde Suite de Scraping Spécialisé pour Animetix (Avancée).
 - Scraper F : Tropes & Clichés scénaristiques (TV Tropes via Gemini).
 """
 
-import os  # noqa: E402
-import sys  # noqa: E402
 import argparse  # noqa: E402
-import time  # noqa: E402
 import json  # noqa: E402
 import logging  # noqa: E402
+import os  # noqa: E402
+import sys  # noqa: E402
+import time  # noqa: E402
+
 from core.utils.security import safe_http_request  # noqa: E402
 from dotenv import load_dotenv  # noqa: E402
 

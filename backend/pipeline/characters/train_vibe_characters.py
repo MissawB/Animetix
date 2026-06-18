@@ -1,6 +1,6 @@
 import json
-import os
 import logging
+import os
 import sys
 
 # Force UTF-8 for Windows output
@@ -32,7 +32,8 @@ try:
 except Exception as e:
     logger.error(f"Vibe character training failed: {e}")
 
-from sentence_transformers import SentenceTransformer, InputExample, losses  # noqa: E402
+from sentence_transformers import InputExample  # noqa: E402
+from sentence_transformers import SentenceTransformer, losses  # noqa: E402
 from torch.utils.data import DataLoader  # noqa: E402
 
 # Configuration

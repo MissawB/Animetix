@@ -1,14 +1,15 @@
 """Audio processing mixin for Inference adapters."""
 
-import os  # noqa: E402
-import logging  # noqa: E402
-import tempfile  # noqa: E402
-import io  # noqa: E402
-import wave  # noqa: E402
 import base64  # noqa: E402
-from typing import Optional, Dict, Any  # noqa: E402
-from core.utils.lazy_import import lazy_import  # noqa: E402
+import io  # noqa: E402
+import logging  # noqa: E402
+import os  # noqa: E402
+import tempfile  # noqa: E402
+import wave  # noqa: E402
+from typing import Any, Dict, Optional  # noqa: E402
+
 from core.domain.exceptions import InferenceError  # noqa: E402
+from core.utils.lazy_import import lazy_import  # noqa: E402
 from core.utils.model_security import get_verified_revision  # noqa: E402
 
 torch = lazy_import("torch")
@@ -75,9 +76,9 @@ class AudioMixin:
             self._audioldm_pipeline = AudioLDMPipeline.from_pretrained(
                 model_id,
                 revision=revision,
-                torch_dtype=torch.float16
-                if torch.cuda.is_available()
-                else torch.float32,
+                torch_dtype=(
+                    torch.float16 if torch.cuda.is_available() else torch.float32
+                ),
             )
             if torch.cuda.is_available():
                 self._audioldm_pipeline.to("cuda")

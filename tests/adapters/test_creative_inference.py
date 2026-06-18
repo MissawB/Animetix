@@ -1,8 +1,9 @@
-import pytest
 import io
 import sys
-import numpy as np
 from unittest.mock import MagicMock, patch
+
+import numpy as np
+import pytest
 from PIL import Image
 
 # Force modules to exist in sys.modules so they can be imported and patched
@@ -92,10 +93,14 @@ def mock_sys_modules(monkeypatch):
 
 pytest.importorskip("scipy")
 
+from adapters.inference.audio_transformers_adapter import (  # noqa: E402
+    AudioTransformersAdapter,
+)
 from adapters.inference.diffusers_adapter import DiffusersAdapter  # noqa: E402
-from adapters.inference.audio_transformers_adapter import AudioTransformersAdapter  # noqa: E402
-from adapters.inference.vision_transformers_adapter import VisionTransformersAdapter  # noqa: E402
 from adapters.inference.fallback_adapter import FallbackInferenceAdapter  # noqa: E402
+from adapters.inference.vision_transformers_adapter import (  # noqa: E402
+    VisionTransformersAdapter,
+)
 from core.domain.exceptions import InferenceError  # noqa: E402
 
 
@@ -121,7 +126,9 @@ def fallback_adapter(diffusers_adapter, vision_adapter):
 
 def test_generate_3d_scene_logic():
     """Vérifie la logique de projection RGB-D en PLY transférée dans SpatialComputingService."""
-    from core.domain.services.spatial_computing_service import SpatialComputingService  # noqa: E402
+    from core.domain.services.spatial_computing_service import (  # noqa: E402
+        SpatialComputingService,
+    )
 
     mock_engine = MagicMock()
     service = SpatialComputingService(inference_engine=mock_engine)
@@ -261,6 +268,7 @@ def test_vision_manga_ocr_mocked(vision_adapter):
 def test_vision_3d_scene_mocked(vision_adapter):
     """Vérifie la structure de retour de la génération de scène 3D avec des images valides."""
     import io  # noqa: E402
+
     from PIL import Image as PILImage  # noqa: E402
 
     # Créer des images valides pour le test
@@ -298,9 +306,10 @@ def test_fallback_rerank_documents_chain():
 
 
 def test_fatezero_video_logic(diffusers_adapter):
-    from unittest.mock import patch, MagicMock  # noqa: E402
-    from PIL import Image  # noqa: E402
+    from unittest.mock import MagicMock, patch  # noqa: E402
+
     import numpy as np  # noqa: E402
+    from PIL import Image  # noqa: E402
 
     # Mocking a small video buffer
     dummy_video = b"fake video data"
@@ -333,7 +342,8 @@ def test_fatezero_video_logic(diffusers_adapter):
 
 
 def test_video_temporal_embeddings_includes_vectors(vision_adapter):
-    from unittest.mock import patch, MagicMock  # noqa: E402
+    from unittest.mock import MagicMock, patch  # noqa: E402
+
     import numpy as np  # noqa: E402
 
     with (

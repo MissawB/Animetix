@@ -1,9 +1,10 @@
 import json
+import logging
 import os
 import sys
-import logging
-from PIL import Image
 from io import BytesIO
+
+from PIL import Image
 
 # Logger configuration
 logger = logging.getLogger("animetix." + __name__)

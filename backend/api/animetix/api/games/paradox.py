@@ -1,13 +1,15 @@
 import random
+
+from animetix.api.dependencies import get_session_service
 from animetix_project.logging_config import get_logger
+from core.ports.usage_port import UsagePort
+from dependency_injector.wiring import Provide, inject
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from dependency_injector.wiring import inject, Provide
+
 from ...containers import Container
-from animetix.api.dependencies import get_session_service
 from ...models import GameplaySession
-from core.ports.usage_port import UsagePort
 
 logger = get_logger("animetix." + __name__)
 
@@ -40,9 +42,11 @@ class ParadoxGameStateView(APIView):
             options.append(
                 {
                     "title": t,
-                    "image": data["title_to_full_data"].get(t, {}).get("image")
-                    if data
-                    else None,
+                    "image": (
+                        data["title_to_full_data"].get(t, {}).get("image")
+                        if data
+                        else None
+                    ),
                 }
             )
 
@@ -129,9 +133,11 @@ class ParadoxGameStartView(APIView):
             options.append(
                 {
                     "title": t,
-                    "image": data["title_to_full_data"].get(t, {}).get("image")
-                    if data
-                    else None,
+                    "image": (
+                        data["title_to_full_data"].get(t, {}).get("image")
+                        if data
+                        else None
+                    ),
                 }
             )
 
@@ -204,9 +210,11 @@ class ParadoxGameGuessView(APIView):
                                     "name": ach.name,
                                     "description": ach.description,
                                     "xp_reward": ach.xp_reward,
-                                    "badge_url": ach.badge_url
-                                    if hasattr(ach, "badge_url")
-                                    else None,
+                                    "badge_url": (
+                                        ach.badge_url
+                                        if hasattr(ach, "badge_url")
+                                        else None
+                                    ),
                                 }
                             )
                 except Exception as e:
@@ -228,9 +236,11 @@ class ParadoxGameGuessView(APIView):
                     "title": t,
                     "is_intruder": (t == answer),
                     "is_user_choice": (t == choice),
-                    "image": data["title_to_full_data"].get(t, {}).get("image")
-                    if data
-                    else None,
+                    "image": (
+                        data["title_to_full_data"].get(t, {}).get("image")
+                        if data
+                        else None
+                    ),
                 }
             )
 

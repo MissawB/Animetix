@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-import sys
-import os
 import logging
+import os
+import sys
 
 # Configurer le logging pour voir les alertes du guardrail
 logging.basicConfig(level=logging.WARNING)

@@ -6,12 +6,13 @@ Suite Tripartite de Scraping Spécialisé pour Animetix.
 - Scraper C : Critiques & Avis FR via synthèse intelligente sémantique (Gemini).
 """
 
-import os  # noqa: E402
-import sys  # noqa: E402
 import argparse  # noqa: E402
-import time  # noqa: E402
 import json  # noqa: E402
 import logging  # noqa: E402
+import os  # noqa: E402
+import sys  # noqa: E402
+import time  # noqa: E402
+
 from core.utils.security import safe_http_request  # noqa: E402
 from dotenv import load_dotenv  # noqa: E402
 
@@ -150,7 +151,9 @@ class ScraperA_Casting:
                     )
                 return cast_list
             elif response.status_code == 429:
-                logger.warning(f"⚠️ Rate limit Jikan sur casting {mal_id}. Pause 10s...")
+                logger.warning(
+                    f"⚠️ Rate limit Jikan sur casting {mal_id}. Pause 10s..."
+                )
                 time.sleep(10)
                 return ScraperA_Casting.scrape_casting(mal_id, media_type)
             return []

@@ -1,16 +1,13 @@
-from django.contrib import admin
-from django.urls import path, include
-from django.conf.urls.i18n import i18n_patterns
-from rest_framework import routers
 from animetix import api_views
 from animetix.api.monitoring import PipelineControlView
 from animetix.api.observability import ObservabilityView  # noqa: E402
+from animetix.tasks_views import eventarc_gcs_upload_view  # noqa: E402
+from animetix.tasks_views import poll_workflow_view, run_task_view
+from django.conf.urls.i18n import i18n_patterns
+from django.contrib import admin
+from django.urls import include, path
 from django.views.generic.base import RedirectView  # noqa: E402
-from animetix.tasks_views import (
-    run_task_view,
-    poll_workflow_view,
-    eventarc_gcs_upload_view,
-)  # noqa: E402
+from rest_framework import routers
 
 # REST Router
 router = routers.DefaultRouter()
@@ -23,17 +20,17 @@ router.register(r"fusions", api_views.CreativeFusionViewSet, basename="fusions")
 router.register(r"curation", api_views.DataCurationTicketViewSet, basename="curation")
 
 
-from drf_spectacular.views import (  # noqa: E402
-    SpectacularAPIView,
-    SpectacularRedocView,
-    SpectacularSwaggerView,
-)  # noqa: E402  # noqa: E402
-from django.contrib.admin.views.decorators import staff_member_required  # noqa: E402
-from django_prometheus import exports as prometheus_exports  # noqa: E402
-from animetix.api.mlops import DPOFeedbackLoopView, AdaptersView  # noqa: E402
 from animetix.api.admin_api import (  # noqa: E402
     AdEventLoggingAPIView,
-)  # noqa: E402  # Directly import AdEventLoggingAPIView  # noqa: E402
+)
+from animetix.api.mlops import AdaptersView, DPOFeedbackLoopView  # noqa: E402
+from django.contrib.admin.views.decorators import staff_member_required  # noqa: E402
+from django_prometheus import exports as prometheus_exports  # noqa: E402
+from drf_spectacular.views import SpectacularAPIView  # noqa: E402
+from drf_spectacular.views import (  # noqa: E402
+    SpectacularRedocView,
+    SpectacularSwaggerView,
+)
 
 urlpatterns = [
     path("admin/", admin.site.urls),

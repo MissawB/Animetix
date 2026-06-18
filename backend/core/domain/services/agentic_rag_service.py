@@ -1,25 +1,20 @@
 import logging
 import time
-from typing import Dict, Optional, Generator
+from typing import Dict, Generator, Optional
+
+from core.ports.graph_persistence_port import GraphPersistencePort
 from core.ports.inference_port import InferencePort
 from core.ports.web_search_port import WebSearchPort
-from core.ports.graph_persistence_port import GraphPersistencePort
+
+from ..entities.ai_schemas import RAGContext  # noqa: E402
+from ..entities.ai_schemas import InferenceResponse, RAGState, StreamStep
+from ..exceptions import InferenceError, InfrastructureError
 from .advanced_rag_service import AdvancedRAGService
-from .prompt_manager import PromptManager
 from .llm_service import LLMService
-from .xai_service import XaiDiagnosticService, XaiCollector
-from .rag_orchestrator import RAGOrchestrator  # Updated import
-from ..exceptions import (
-    InfrastructureError,
-    InferenceError,
-)
-from ..entities.ai_schemas import (  # noqa: E402
-    StreamStep,
-    RAGState,
-    RAGContext,
-    InferenceResponse,
-)
+from .prompt_manager import PromptManager
 from .rag.agents import SemanticRouter  # noqa: E402
+from .rag_orchestrator import RAGOrchestrator  # Updated import
+from .xai_service import XaiCollector, XaiDiagnosticService
 
 logger = logging.getLogger("animetix.rag")
 
@@ -51,7 +46,7 @@ class AgenticRAGService:
         self.web_search = web_search
         self.prompt_manager = prompt_manager
         self.llm_service = llm_service
-        from unittest.mock import Mock, DEFAULT  # noqa: E402
+        from unittest.mock import DEFAULT, Mock  # noqa: E402
 
         if isinstance(self.llm_service, Mock):
 
@@ -103,53 +98,60 @@ class AgenticRAGService:
         # Mock-compatibility for testing:
         # If the orchestrator is a Mock/MagicMock, construct a real RAGOrchestrator populated with real agents
         # using the mocked dependency parameters, so that the state machine can run during unit tests.
-        from unittest.mock import Mock, MagicMock  # noqa: E402
+        from unittest.mock import MagicMock, Mock  # noqa: E402
 
         if isinstance(self.orchestrator, Mock):
-            from core.domain.services.rag_orchestrator import RAGOrchestrator  # noqa: E402
-            from core.domain.services.rag.processors.plan_processor import PlanProcessor  # noqa: E402
-            from core.domain.services.rag.processors.saga_lookup_processor import (
-                SagaLookupProcessor,
-            )  # noqa: E402
-            from core.domain.services.rag.processors.graph_explore_processor import (
-                GraphExploreProcessor,
-            )  # noqa: E402
-            from core.domain.services.rag.processors.research_processor import (
-                ResearchProcessor,
-            )  # noqa: E402
-            from core.domain.services.rag.processors.acquire_knowledge_processor import (
-                AcquireKnowledgeProcessor,
-            )  # noqa: E402
-            from core.domain.services.rag.processors.speculate_processor import (
-                SpeculateProcessor,
-            )  # noqa: E402
-            from core.domain.services.rag.processors.vlm_rerank_processor import (
-                VlmRerankProcessor,
-            )  # noqa: E402
-            from core.domain.services.rag.processors.synthesize_processor import (
-                SynthesizeProcessor,
-            )  # noqa: E402
-            from core.domain.services.rag.processors.judge_processor import (
-                JudgeProcessor,
-            )  # noqa: E402
-            from core.domain.services.rag.processors.fallback_rag_processor import (
-                FallbackRagProcessor,
-            )  # noqa: E402
-
             from core.domain.services.rag.agents import (  # noqa: E402
-                SearchPlanner,
-                ResponseSynthesizer,
-                ScoutAgent,
+                ContextCompressor,
                 GraphExpert,
                 LibrarianAgent,
-                ResponseJudge,
                 ResponseCritic,
-                ContextCompressor,
+                ResponseJudge,
+                ResponseSynthesizer,
                 RetrievalEvaluator,
+                ScoutAgent,
+                SearchPlanner,
             )
-            from core.domain.services.rag.agents.saga_agent import SagaAgent  # noqa: E402
+            from core.domain.services.rag.agents.debate_manager import (  # noqa: E402
+                DebateManager,
+            )
             from core.domain.services.rag.agents.forge import ForgeAgent  # noqa: E402
-            from core.domain.services.rag.agents.debate_manager import DebateManager  # noqa: E402
+            from core.domain.services.rag.agents.saga_agent import (  # noqa: E402
+                SagaAgent,
+            )
+            from core.domain.services.rag.processors.acquire_knowledge_processor import (  # noqa: E402
+                AcquireKnowledgeProcessor,
+            )
+            from core.domain.services.rag.processors.fallback_rag_processor import (  # noqa: E402
+                FallbackRagProcessor,
+            )
+            from core.domain.services.rag.processors.graph_explore_processor import (  # noqa: E402
+                GraphExploreProcessor,
+            )
+            from core.domain.services.rag.processors.judge_processor import (  # noqa: E402
+                JudgeProcessor,
+            )
+            from core.domain.services.rag.processors.plan_processor import (  # noqa: E402
+                PlanProcessor,
+            )
+            from core.domain.services.rag.processors.research_processor import (  # noqa: E402
+                ResearchProcessor,
+            )
+            from core.domain.services.rag.processors.saga_lookup_processor import (  # noqa: E402
+                SagaLookupProcessor,
+            )
+            from core.domain.services.rag.processors.speculate_processor import (  # noqa: E402
+                SpeculateProcessor,
+            )
+            from core.domain.services.rag.processors.synthesize_processor import (  # noqa: E402
+                SynthesizeProcessor,
+            )
+            from core.domain.services.rag.processors.vlm_rerank_processor import (  # noqa: E402
+                VlmRerankProcessor,
+            )
+            from core.domain.services.rag_orchestrator import (  # noqa: E402
+                RAGOrchestrator,
+            )
 
             planner_agent = SearchPlanner(self.llm_service, self.prompt_manager)
             scout_agent = ScoutAgent(
@@ -506,12 +508,12 @@ class AgenticRAGService:
             in [1, 2],  # On utilise le SLM pour les niveaux 1 et 2 (déchargement)
             memories=self._get_memories(user_id, query),
             current_state=RAGState.PLAN,
-            graph_expert=self.orchestrator.processors[
-                RAGState.GRAPH_EXPLORE
-            ].graph_expert
-            if self.orchestrator
-            and RAGState.GRAPH_EXPLORE in self.orchestrator.processors
-            else None,
+            graph_expert=(
+                self.orchestrator.processors[RAGState.GRAPH_EXPLORE].graph_expert
+                if self.orchestrator
+                and RAGState.GRAPH_EXPLORE in self.orchestrator.processors
+                else None
+            ),
             truth_path=user_context,
             language=language,
         )

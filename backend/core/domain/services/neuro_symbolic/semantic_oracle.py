@@ -1,9 +1,9 @@
-import orjson
 import logging
 from typing import Dict, List
-from core.ports.inference_port import InferencePort
-from core.domain.services.prompt_manager import PromptManager
 
+import orjson
+from core.domain.services.prompt_manager import PromptManager
+from core.ports.inference_port import InferencePort
 
 logger = logging.getLogger("animetix.neuro_symbolic.oracle")
 

@@ -1,9 +1,11 @@
-from typing import Dict
-import orjson
 import logging
+from typing import Dict
+
+import orjson
 from core.ports.inference_port import InferencePort
-from .prompt_manager import PromptManager
+
 from ..entities.ai_schemas import CoVePlan
+from .prompt_manager import PromptManager
 
 logger = logging.getLogger("animetix.oracle")
 

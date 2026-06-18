@@ -1,6 +1,7 @@
-import re
 import logging
+import re
 from typing import Dict
+
 from ...ports.repository_port import RepositoryPort
 
 logger = logging.getLogger("animetix.similarity")

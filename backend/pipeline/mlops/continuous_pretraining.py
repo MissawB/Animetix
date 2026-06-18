@@ -1,9 +1,10 @@
-import os
-import torch
 import json
 import logging
-from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments, Trainer
+import os
+
+import torch
 from datasets import Dataset
+from transformers import AutoModelForCausalLM, AutoTokenizer, Trainer, TrainingArguments
 
 logger = logging.getLogger("animetix.pipeline." + __name__)
 
@@ -50,7 +51,9 @@ def run_cpt(draft_model_id="checkpoints/animetix-draft-135m", limit=5000):
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
-    model = AutoModelForCausalLM.from_pretrained(model_path, revision="main")  # nosec B615
+    model = AutoModelForCausalLM.from_pretrained(
+        model_path, revision="main"
+    )  # nosec B615
 
     # 3. Tokenisation
     def tokenize_function(examples):

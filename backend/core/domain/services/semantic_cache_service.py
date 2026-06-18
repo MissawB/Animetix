@@ -1,7 +1,8 @@
 import logging
 from typing import Optional
-from core.ports.inference_port import InferencePort
+
 from core.ports.cache_port import SemanticCachePort
+from core.ports.inference_port import InferencePort
 
 logger = logging.getLogger("animetix.cache")
 

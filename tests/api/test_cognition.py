@@ -1,10 +1,11 @@
-from unittest.mock import patch, MagicMock
-from django.test import RequestFactory
+from unittest.mock import MagicMock, patch
+
 from animetix.api.cognition import (
-    ArchetypeNexusView,
     AIDebateArenaView,
+    ArchetypeNexusView,
     NeuroMemoryManagementView,
 )
+from django.test import RequestFactory
 
 
 def test_archetype_nexus_view_unauthenticated():

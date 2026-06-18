@@ -1,7 +1,8 @@
-import pytest
 from unittest.mock import MagicMock
-from core.domain.services.catalog_service import CatalogService
+
+import pytest
 from core.domain.exceptions import CatalogNotFoundError
+from core.domain.services.catalog_service import CatalogService
 
 
 @pytest.fixture

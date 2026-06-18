@@ -1,6 +1,7 @@
 import logging
+from typing import Any, Dict, List
+
 import numpy as np
-from typing import List, Dict, Any
 from core.ports.inference_port import InferencePort
 
 logger = logging.getLogger("animetix.vision")

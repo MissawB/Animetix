@@ -1,13 +1,14 @@
-import pytest
 from unittest.mock import MagicMock, patch
-from django.conf import settings
-from core.utils.sql_guard import validate_sql_query
+
+import pytest
 from adapters.persistence.django_repository_adapter import (
     DjangoRepositoryAdapter,
     is_alloydb_nl_query_supported,
 )
 from adapters.persistence.pgvector_repository_adapter import PGVectorRepositoryAdapter
 from adapters.persistence.unified_repository_adapter import UnifiedRepositoryAdapter
+from core.utils.sql_guard import validate_sql_query
+from django.conf import settings
 
 # ==============================================================================
 # 1. SQL GUARDRAIL SECURITY UTILITY TESTS

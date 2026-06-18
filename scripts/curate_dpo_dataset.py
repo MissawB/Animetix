@@ -1,7 +1,8 @@
+import json
 import os
 import sys
+
 import django
-import json
 from tqdm import tqdm
 
 # Setup environment
@@ -12,8 +13,8 @@ sys.path.append(os.path.join(base_dir, "src", "backend"))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "animetix_project.settings")
 django.setup()
 
-from animetix.models import AIFeedback  # noqa: E402
 from animetix.containers import get_container  # noqa: E402
+from animetix.models import AIFeedback  # noqa: E402
 from core.domain.services.dpo_feedback_loop import DPOFeedbackLoop  # noqa: E402
 
 

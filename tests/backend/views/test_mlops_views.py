@@ -1,6 +1,6 @@
 import pytest
-from django.urls import reverse
 from animetix.models import AIFeedback
+from django.urls import reverse
 
 
 @pytest.mark.django_db

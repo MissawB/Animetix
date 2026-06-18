@@ -13,11 +13,11 @@ class Command(BaseCommand):
         # Import dynamically to support clean testing and avoid early import side effects
         from animetix.tasks.meta_tasks import scheduled_dpo_optimization  # noqa: E402
         from animetix.tasks.pipeline_tasks import (  # noqa: E402
+            check_dpo_feedback_sensor_task,
+            check_gold_dataset_sensor_task,
             run_daily_ingestion_workflow,
             run_daily_maintenance_workflow,
             run_hourly_monitoring_workflow,
-            check_gold_dataset_sensor_task,
-            check_dpo_feedback_sensor_task,
         )
 
         task_mapping = {

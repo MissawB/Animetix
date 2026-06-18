@@ -1,9 +1,11 @@
 import logging
 from typing import Optional
-from .local_text_adapter import LocalTextAdapter
-from core.ports.usage_port import UsagePort
+
 from core.domain.entities.ai_schemas import InferenceResponse
 from core.domain.exceptions import InferenceError
+from core.ports.usage_port import UsagePort
+
+from .local_text_adapter import LocalTextAdapter
 
 logger = logging.getLogger("animetix.inference.compact_reasoning")
 

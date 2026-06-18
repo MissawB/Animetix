@@ -1,8 +1,9 @@
 import json
 import os
-from django.core.management.base import BaseCommand
+
 from animetix.models import AIFeedback, GameplaySession
 from django.conf import settings
+from django.core.management.base import BaseCommand
 
 
 class Command(BaseCommand):

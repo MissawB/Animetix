@@ -1,6 +1,6 @@
-import sys
-import os
 import asyncio
+import os
+import sys
 
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 
@@ -10,8 +10,8 @@ if sys.platform == "win32":
     except Exception:
         pass
 
-from importlib.abc import MetaPathFinder, Loader  # noqa: E402
 import importlib  # noqa: E402
+from importlib.abc import Loader, MetaPathFinder  # noqa: E402
 from importlib.machinery import ModuleSpec  # noqa: E402
 
 
@@ -58,8 +58,9 @@ try:
 except Exception:
     pass
 
-import pytest  # noqa: E402
 import tracemalloc  # noqa: E402
+
+import pytest  # noqa: E402
 
 
 def create_image_bytes(
@@ -69,6 +70,7 @@ def create_image_bytes(
     Used by test fixtures to avoid filesystem I/O.
     """
     from io import BytesIO  # noqa: E402
+
     from PIL import Image  # noqa: E402
 
     img = Image.new(mode, (width, height), color=(73, 109, 137))

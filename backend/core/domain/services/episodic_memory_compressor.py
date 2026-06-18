@@ -6,6 +6,7 @@ Consolidates vector memories and links user preference profiles directly in the 
 
 import logging  # noqa: E402
 from typing import Optional  # noqa: E402
+
 from core.ports.graph_persistence_port import GraphPersistencePort  # noqa: E402
 
 logger = logging.getLogger("animetix.memory.compressor")

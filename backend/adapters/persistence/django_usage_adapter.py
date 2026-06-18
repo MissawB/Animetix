@@ -1,10 +1,11 @@
-from typing import Optional
 from datetime import datetime
-from django.db.models import Sum, Count
-from django.utils import timezone
-from core.ports.usage_port import UsagePort
-from core.domain.services.pricing_service import PricingService
+from typing import Optional
+
 from animetix.models import AITokenUsage
+from core.domain.services.pricing_service import PricingService
+from core.ports.usage_port import UsagePort
+from django.db.models import Count, Sum
+from django.utils import timezone
 
 
 class DjangoUsageAdapter(UsagePort):

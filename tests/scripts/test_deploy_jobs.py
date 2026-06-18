@@ -1,4 +1,5 @@
 from unittest.mock import MagicMock
+
 from scripts.deploy.deploy_jobs import main
 
 

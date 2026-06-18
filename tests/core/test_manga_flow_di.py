@@ -1,5 +1,5 @@
-from animetix.containers import get_container
 from adapters.inference.fallback_adapter import FallbackInferenceAdapter
+from animetix.containers import get_container
 
 
 def test_manga_flow_service_wires_fallback_engine():

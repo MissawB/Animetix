@@ -1,8 +1,9 @@
 import logging
 import time
-from typing import List, Optional, Dict, Any
-from core.ports.inference_port import InferencePort, InferenceNotImplementedError
+from typing import Any, Dict, List, Optional
+
 from core.domain.entities.ai_schemas import InferenceResponse
+from core.ports.inference_port import InferenceNotImplementedError, InferencePort
 
 logger = logging.getLogger("animetix.inference.fallback")
 
@@ -77,6 +78,7 @@ class FallbackInferenceAdapter(InferencePort):
 
     def _build_capability_cache(self) -> None:
         import inspect  # noqa: E402
+
         from core.ports.inference_port import InferencePort  # noqa: E402
 
         port_methods = [

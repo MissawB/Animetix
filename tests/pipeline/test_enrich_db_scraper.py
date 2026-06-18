@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 # Configuration pour le test
@@ -19,10 +20,8 @@ def mock_django_media_item():
 @patch("src.pipeline.enrich_db_scraper.gemini_client")
 @patch("pipeline.enrich_db_scraper.httpx.get")
 def test_jikan_fetching_and_translation(mock_get, mock_gemini, mock_django_media_item):
-    from pipeline.enrich_db_scraper import (
-        fetch_jikan_details,
-        translate_synopsis_via_gemini,
-    )  # noqa: E402
+    from pipeline.enrich_db_scraper import fetch_jikan_details  # noqa: E402
+    from pipeline.enrich_db_scraper import translate_synopsis_via_gemini
 
     # 1. Test Jikan fetching
     mock_response = MagicMock()

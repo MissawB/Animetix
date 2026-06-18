@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-import os
-import sys
 import json
 import logging
+import os
+import sys
 
 # Force UTF-8 for console output on Windows
 sys.stdout.reconfigure(encoding="utf-8")
@@ -21,14 +21,14 @@ logger.info("Initializing Synthetic Gold Dataset Generator...")
 
 try:
     from pipeline.mlops.french_market_db import FRENCH_VOICE_ACTORS  # noqa: E402, F401
-    from pipeline.mlops.songs_and_seiyuu_db import (  # noqa: F401, E402
-        SEIYUU_PROFILES,
-        ANIME_SONGS_AND_SINGERS,
-    )  # noqa: E402, F401
     from pipeline.mlops.magazines_and_awards_db import (  # noqa: F401, E402
-        SERIALIZATION_MAGAZINES,
         POP_CULTURE_AWARDS,
-    )  # noqa: E402, F401
+        SERIALIZATION_MAGAZINES,
+    )
+    from pipeline.mlops.songs_and_seiyuu_db import (  # noqa: F401, E402
+        ANIME_SONGS_AND_SINGERS,
+        SEIYUU_PROFILES,
+    )
 except ImportError as e:
     logger.warning(f"Import error: {e}. Attempting manual path injection...")
     sys.path.insert(0, os.path.join(BASE_DIR, "backend", "pipeline", "mlops"))
@@ -281,17 +281,21 @@ Règles critiques :
         "contexts": [fact],
         "expected_entities": entry.get(
             "expected_entities",
-            [entry["expected_title"]]
-            if entry["expected_title"]
-            and entry["expected_title"] not in ["None", "Multiple", "0"]
-            else [],
+            (
+                [entry["expected_title"]]
+                if entry["expected_title"]
+                and entry["expected_title"] not in ["None", "Multiple", "0"]
+                else []
+            ),
         ),
         "expected_contexts": [fact],
         "expected_chunks": entry.get(
             "expected_chunks",
-            [entry["expected_id"]]
-            if entry["expected_id"] and entry["expected_id"] != "0"
-            else [],
+            (
+                [entry["expected_id"]]
+                if entry["expected_id"] and entry["expected_id"] != "0"
+                else []
+            ),
         ),
         "multi_turn_history": [],
     }

@@ -1,5 +1,6 @@
 import os
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from scripts.deploy.deploy_brain import main
 
 

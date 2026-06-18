@@ -1,8 +1,9 @@
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
+from core.domain.entities.akinetix import AkinetixGameState
 from core.domain.services.akinetix_engine import AkinetixEngine
 from core.domain.services.catalog_service import CatalogService
-from core.domain.entities.akinetix import AkinetixGameState
 
 
 @pytest.fixture

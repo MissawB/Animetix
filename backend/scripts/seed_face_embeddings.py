@@ -1,5 +1,5 @@
-import os
 import json
+import os
 
 
 def seed_face_embeddings():

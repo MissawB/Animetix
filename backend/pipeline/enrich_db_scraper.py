@@ -4,12 +4,13 @@ Pipeline d'enrichissement sémantique et de scraping.
 Scrape l'API Jikan pour les métadonnées et utilise l'API Gemini pour générer des synopsis français.
 """
 
-import os  # noqa: E402
-import sys  # noqa: E402
 import argparse  # noqa: E402
-import time  # noqa: E402
 import json  # noqa: E402
 import logging  # noqa: E402
+import os  # noqa: E402
+import sys  # noqa: E402
+import time  # noqa: E402
+
 from core.utils.security import safe_http_request  # noqa: E402
 from dotenv import load_dotenv  # noqa: E402
 

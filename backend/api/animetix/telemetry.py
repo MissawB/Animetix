@@ -1,9 +1,10 @@
-import os
 import logging
+import os
+
 from opentelemetry import trace
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.sdk.resources import Resource
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 
 logger = logging.getLogger("animetix.telemetry")
@@ -34,7 +35,9 @@ def init_telemetry(service_name: str):
         trace.set_tracer_provider(provider)
 
         if os.getenv("DJANGO_ENV") == "production":
-            from opentelemetry.exporter.gcp.trace import CloudTraceSpanExporter  # noqa: E402
+            from opentelemetry.exporter.gcp.trace import (  # noqa: E402
+                CloudTraceSpanExporter,
+            )
 
             exporter = CloudTraceSpanExporter()
             provider.add_span_processor(BatchSpanProcessor(exporter))

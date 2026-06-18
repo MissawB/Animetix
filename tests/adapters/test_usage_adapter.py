@@ -1,7 +1,7 @@
 import pytest
-from django.contrib.auth.models import User
 from adapters.persistence.django_usage_adapter import DjangoUsageAdapter
 from animetix.models import AITokenUsage
+from django.contrib.auth.models import User
 from django.utils import timezone
 
 

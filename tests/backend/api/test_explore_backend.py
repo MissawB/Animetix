@@ -1,7 +1,7 @@
 import pytest
+from animetix.models import MediaItem
 from django.urls import reverse
 from rest_framework.test import APIClient
-from animetix.models import MediaItem
 
 
 @pytest.fixture

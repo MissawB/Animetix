@@ -1,8 +1,9 @@
-import os
 import argparse
-import torch
-import numpy as np
+import os
 import sys
+
+import numpy as np
+import torch
 
 # Setup environment for Django-related imports
 base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -17,11 +18,13 @@ try:
 except Exception as e:
     print(f"RL Training encountered an error: {e}")
 
-from datasets import load_dataset  # noqa: E402
-from trl import DPOTrainer, DPOConfig  # noqa: E402
-from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig  # noqa: E402
-from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training  # noqa: E402
 from animetix.containers import get_container  # noqa: E402
+from datasets import load_dataset  # noqa: E402
+from peft import get_peft_model  # noqa: E402
+from peft import LoraConfig, prepare_model_for_kbit_training  # noqa: E402
+from transformers import AutoTokenizer  # noqa: E402
+from transformers import AutoModelForCausalLM, BitsAndBytesConfig  # noqa: E402
+from trl import DPOConfig, DPOTrainer  # noqa: E402
 
 
 def run_rl_training_simulation(episodes: int = 100):

@@ -1,13 +1,15 @@
-import numpy as np
 import logging
 import time
-from typing import List, Dict, Optional, Any, Tuple
-from core.ports.repository_port import RepositoryPort
+from typing import Any, Dict, List, Optional, Tuple
+
+import numpy as np
 from core.ports.graph_persistence_port import GraphPersistencePort
+from core.ports.repository_port import RepositoryPort
+
 from .llm_service import LLMService
+from .prompt_manager import PromptManager
 from .rag.hybrid_index import HybridSearchIndex
 from .rag.rerank_cache import RerankingCache
-from .prompt_manager import PromptManager
 
 logger = logging.getLogger("animetix")
 
@@ -82,9 +84,9 @@ class AdvancedRAGService:
 
         # Si injectés (et non "default"), on les utilise
         if q != "default" and p != "default":
-            from core.domain.services.neuromorphic_lnn_service import (
+            from core.domain.services.neuromorphic_lnn_service import (  # noqa: E402
                 LiquidNeuralNetworkService,
-            )  # noqa: E402
+            )
 
             lnn = (
                 lnn_layer
@@ -94,15 +96,15 @@ class AdvancedRAGService:
             return q, p, lnn
 
         # 2. Sinon, on va chercher dans le cache ou on crée par défaut
-        from core.domain.services.neuromorphic_plasticity_service import (
-            SynapticPlasticityService,
-        )  # noqa: E402
-        from core.domain.services.quantum_cognitive_service import (
-            QuantumCognitiveService,
-        )  # noqa: E402
-        from core.domain.services.neuromorphic_lnn_service import (
+        from core.domain.services.neuromorphic_lnn_service import (  # noqa: E402
             LiquidNeuralNetworkService,
-        )  # noqa: E402
+        )
+        from core.domain.services.neuromorphic_plasticity_service import (  # noqa: E402
+            SynapticPlasticityService,
+        )
+        from core.domain.services.quantum_cognitive_service import (  # noqa: E402
+            QuantumCognitiveService,
+        )
 
         if not user_id:
             return (

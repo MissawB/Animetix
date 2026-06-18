@@ -1,6 +1,7 @@
 from typing import Dict
-from backend.core.domain.services.rag.processors.base import StateProcessor
+
 from backend.core.domain.entities.ai_schemas import RAGContext, RAGState, StreamStep
+from backend.core.domain.services.rag.processors.base import StateProcessor
 
 
 class RAGOrchestrator:

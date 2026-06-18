@@ -1,12 +1,13 @@
+from unittest.mock import MagicMock
+
 import pytest
+from animetix.containers import container
+from animetix.models import CreativeFusion
+from dependency_injector import providers
+from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
-from unittest.mock import MagicMock
-from animetix.containers import container
-from dependency_injector import providers
-from animetix.models import CreativeFusion
-from django.contrib.auth.models import User
 
 
 @pytest.fixture
@@ -81,7 +82,9 @@ class TestForgeVNAPI:
 
         # Configure the global mock_container
         mock_container.visual_novel_service.generate_script.return_value = MockScript()
-        mock_container.visual_novel_service.return_value.generate_script.return_value = MockScript()
+        mock_container.visual_novel_service.return_value.generate_script.return_value = (
+            MockScript()
+        )
 
         mock_guardrail = MagicMock()
         mock_guardrail.validate_input.return_value = {"is_safe": True}

@@ -1,7 +1,8 @@
-import pytest
 from unittest.mock import MagicMock
-from core.domain.services.rag.agents.judge import ResponseJudge
+
+import pytest
 from core.domain.entities.ai_schemas import JudgeEvaluation
+from core.domain.services.rag.agents.judge import ResponseJudge
 
 
 @pytest.fixture

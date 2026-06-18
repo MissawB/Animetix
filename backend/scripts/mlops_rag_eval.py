@@ -15,9 +15,10 @@ import django  # noqa: E402
 
 django.setup()
 
+from datetime import datetime  # noqa: E402
+
 from animetix.containers import get_container  # noqa: E402
 from core.domain.services.ragas_eval_service import RagasEvalService  # noqa: E402
-from datetime import datetime  # noqa: E402
 
 
 def run_mlops_eval():

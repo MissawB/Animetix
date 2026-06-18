@@ -5,8 +5,9 @@ Models user decisions using non-commutative Quantum Probability Theory and Born'
 """
 
 import logging  # noqa: E402
+from typing import Any, Dict, Tuple  # noqa: E402
+
 import numpy as np  # noqa: E402
-from typing import Dict, Any, Tuple  # noqa: E402
 
 logger = logging.getLogger("animetix.quantum.cognition")
 

@@ -1,4 +1,5 @@
 from django.core.management.base import BaseCommand
+
 from scripts.sync_gold_ground_truth import run_synchronization
 
 

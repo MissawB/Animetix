@@ -4,16 +4,19 @@ Tests unitaires pour les modules d'IA Ultra-SOTA (Horizons 2028-2030) d'Animetix
 Couvre DSPyPromptOptimizer, CFRGameSolver, et LiquidNeuralNetworkSimulator.
 """
 
-import pytest  # noqa: E402
-import numpy as np  # noqa: E402
 from unittest.mock import MagicMock  # noqa: E402
+
+import numpy as np  # noqa: E402
+import pytest  # noqa: E402
 
 
 # ==========================================
 # 1. TESTS DSPY PROMPT OPTIMIZER
 # ==========================================
 def test_dspy_prompt_optimizer():
-    from core.domain.services.dspy_prompt_optimizer import DSPyPromptOptimizer  # noqa: E402
+    from core.domain.services.dspy_prompt_optimizer import (  # noqa: E402
+        DSPyPromptOptimizer,
+    )
 
     mock_engine = MagicMock()
     # Simuler des retours LLM :
@@ -83,7 +86,9 @@ def test_cfr_game_solver():
 # 3. TESTS LIQUID NEURAL NETWORK (LNN)
 # ==========================================
 def test_liquid_neural_network_simulator():
-    from core.domain.services.liquid_neural_network import LiquidNeuralNetworkSimulator  # noqa: E402
+    from core.domain.services.liquid_neural_network import (  # noqa: E402
+        LiquidNeuralNetworkSimulator,
+    )
 
     simulator = LiquidNeuralNetworkSimulator(state_dimension=4, input_dimension=2)
 

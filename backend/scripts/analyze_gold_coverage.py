@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-import os
-import sys
 import json
 import logging
-from typing import List, Dict, Any
+import os
+import sys
+from typing import Any, Dict, List
+
 from pydantic import BaseModel, Field
 
 # Root setups

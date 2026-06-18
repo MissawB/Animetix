@@ -1,7 +1,8 @@
-import io
 import base64
-from PIL import Image
+import io
+
 from adapters.inference.vision_transformers_adapter import VisionTransformersAdapter
+from PIL import Image
 
 
 def test_generate_3d_scene_returns_valid_ply():

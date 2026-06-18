@@ -1,7 +1,8 @@
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
-from rest_framework.test import APIClient
 from django.contrib.auth.models import User
+from rest_framework.test import APIClient
 
 
 @pytest.fixture

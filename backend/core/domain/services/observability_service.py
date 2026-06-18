@@ -1,6 +1,7 @@
-import os
 import logging
-from typing import Dict, Any, Optional
+import os
+from typing import Any, Dict, Optional
+
 import wandb
 
 logger = logging.getLogger("animetix.observability")
@@ -112,9 +113,9 @@ class ObservabilityService:
             {
                 "eval/faithfulness": getattr(evaluation, "faithfulness_score", 0.0),
                 "eval/relevancy": getattr(evaluation, "relevancy_score", 0.0),
-                "eval/hallucination_detected": 1
-                if getattr(evaluation, "hallucination_detected", False)
-                else 0,
+                "eval/hallucination_detected": (
+                    1 if getattr(evaluation, "hallucination_detected", False) else 0
+                ),
                 "eval/query": query[:100],
             }
         )

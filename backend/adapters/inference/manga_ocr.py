@@ -1,7 +1,8 @@
 """Manga OCR processing mixin for VisionTransformersAdapter."""
 
 import logging  # noqa: E402
-from typing import Dict, Any  # noqa: E402
+from typing import Any, Dict  # noqa: E402
+
 from core.utils.lazy_import import lazy_import  # noqa: E402
 
 torch = lazy_import("torch")
@@ -17,8 +18,9 @@ class MangaOcrMixin:
     def process_manga_page(self, image_data: bytes) -> Dict[str, Any]:
         """Generic fallback OCR - NO LONGER simulates manga layout."""
         try:
-            from PIL import Image  # noqa: E402
             from io import BytesIO  # noqa: E402
+
+            from PIL import Image  # noqa: E402
 
             img = Image.open(BytesIO(image_data)).convert("RGB")
 

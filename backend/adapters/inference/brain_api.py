@@ -1,11 +1,12 @@
+import base64
+import logging
 import os
 import sys
-import logging
-import base64
-from fastapi import FastAPI, HTTPException, Request, Depends, status
+from typing import Any, Dict, List, Optional
+
+from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.security import APIKeyHeader
 from pydantic import BaseModel
-from typing import List, Optional, Dict, Any
 
 # Ajout du chemin src pour l'import des adapters et ports
 sys.path.append(
@@ -18,7 +19,9 @@ sys.path.append(
     )
 )
 
-from adapters.inference.unified_inference_adapter import UnifiedInferenceAdapter  # noqa: E402
+from adapters.inference.unified_inference_adapter import (  # noqa: E402
+    UnifiedInferenceAdapter,
+)
 
 logger = logging.getLogger("animetix.brain")
 
@@ -253,16 +256,18 @@ def generate(req: GenerateRequest):
         return {
             "text": res.text,
             "usage": res.metadata.usage if res.metadata else {},
-            "logprobs": [
-                {
-                    "token": lp.token,
-                    "logprob": lp.logprob,
-                    "top_logprobs": lp.top_logprobs,
-                }
-                for lp in res.metadata.logprobs
-            ]
-            if res.metadata and res.metadata.logprobs
-            else None,
+            "logprobs": (
+                [
+                    {
+                        "token": lp.token,
+                        "logprob": lp.logprob,
+                        "top_logprobs": lp.top_logprobs,
+                    }
+                    for lp in res.metadata.logprobs
+                ]
+                if res.metadata and res.metadata.logprobs
+                else None
+            ),
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -525,8 +530,9 @@ def vision_generate(req: ImageGenerateRequest):
 
 
 if __name__ == "__main__":
-    import uvicorn  # noqa: E402
     import os  # noqa: E402
+
+    import uvicorn  # noqa: E402
 
     host = os.getenv("BRAIN_API_HOST", "127.0.0.1")
     uvicorn.run(app, host=host, port=7861)

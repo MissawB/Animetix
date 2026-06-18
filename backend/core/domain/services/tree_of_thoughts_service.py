@@ -5,9 +5,10 @@ Explores multiple reasoning paths and evaluates thought nodes to find the optima
 """
 
 import logging  # noqa: E402
-from typing import List, Dict, Any  # noqa: E402
-from core.ports.inference_port import InferencePort  # noqa: E402
+from typing import Any, Dict, List  # noqa: E402
+
 from core.domain.services.prompt_manager import PromptManager  # noqa: E402
+from core.ports.inference_port import InferencePort  # noqa: E402
 
 logger = logging.getLogger("animetix.cognition.tot")
 

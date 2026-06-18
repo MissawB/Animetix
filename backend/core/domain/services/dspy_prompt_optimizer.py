@@ -5,7 +5,8 @@ Automates prompt engineering by mutating templates and selecting the version wit
 """
 
 import logging  # noqa: E402
-from typing import List, Dict, Tuple  # noqa: E402
+from typing import Dict, List, Tuple  # noqa: E402
+
 from core.ports.inference_port import InferencePort  # noqa: E402
 
 logger = logging.getLogger("animetix.meta.dspy")

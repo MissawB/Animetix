@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 import logging
-from typing import Dict, Any
-from core.ports.inference_port import InferencePort
+from typing import Any, Dict
+
 from core.ports.gold_dataset_port import GoldDatasetPort
+from core.ports.inference_port import InferencePort
+
 from .guardrail_service import GuardrailService
 from .xai_service import XaiDiagnosticService
 

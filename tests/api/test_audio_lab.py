@@ -1,13 +1,14 @@
-import pytest
 import base64
-from unittest.mock import patch, MagicMock
-from django.test import RequestFactory
+from unittest.mock import MagicMock, patch
+
+import pytest
 from animetix.api.labs import (
     AudioLabDataView,
     SoundscapeGenerationView,
     SpeechToSpeechLabView,
 )
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import RequestFactory
 
 
 @pytest.fixture

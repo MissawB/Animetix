@@ -5,7 +5,8 @@ Simulates alternative dialogue branches to measure conversation regrets and opti
 """
 
 import logging  # noqa: E402
-from typing import List, Dict, Any  # noqa: E402
+from typing import Any, Dict, List  # noqa: E402
+
 from core.ports.inference_port import InferencePort  # noqa: E402
 
 logger = logging.getLogger("animetix.counterfactual.simulator")

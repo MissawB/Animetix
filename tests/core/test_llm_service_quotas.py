@@ -1,9 +1,9 @@
-import pytest
 from unittest.mock import MagicMock, patch
-from core.domain.services.llm_service import LLMService
-from core.domain.exceptions import QuotaExceededError
 
+import pytest
 from core.domain.entities.ai_schemas import InferenceResponse
+from core.domain.exceptions import QuotaExceededError
+from core.domain.services.llm_service import LLMService
 
 
 @pytest.fixture

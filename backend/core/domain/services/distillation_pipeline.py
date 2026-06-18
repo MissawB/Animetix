@@ -1,9 +1,11 @@
-import os
 import json
 import logging
+import os
 from typing import List, Optional
-from core.ports.inference_port import InferencePort
+
 from core.ports.gold_dataset_port import GoldDatasetPort
+from core.ports.inference_port import InferencePort
+
 from .prompt_manager import PromptManager
 
 logger = logging.getLogger("animetix.mlops")
@@ -107,7 +109,9 @@ class ModelDistillationPipeline:
         )
 
         # Appel de la logique d'entraînement (Import local)
-        from scripts.distill_draft_model import train_speculative_draft_model  # noqa: E402
+        from scripts.distill_draft_model import (  # noqa: E402
+            train_speculative_draft_model,
+        )
 
         output_dir = f"checkpoints/distilled-{student_model_id.split('/')[-1]}"
 

@@ -1,8 +1,8 @@
-from django.db import models
+from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.auth.models import User
+from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.contrib.auth.hashers import make_password, check_password
 
 
 # --- RELATIONAL CATALOG ---
@@ -151,8 +151,11 @@ class Profile(models.Model):
         media_type="Anime",
         attempts=0,
     ):
+        from adapters.persistence.django_profile_adapter import (  # noqa: E402
+            DjangoProfileAdapter,
+        )
         from core.domain.services.ranking_service import RankingService  # noqa: E402
-        from adapters.persistence.django_profile_adapter import DjangoProfileAdapter  # noqa: E402
+
         from .services import check_achievements  # noqa: E402
 
         service = RankingService()
@@ -164,11 +167,7 @@ class Profile(models.Model):
         item_rarity = (
             "Legendary"
             if item_rank > 2000
-            else "Epic"
-            if item_rank > 1000
-            else "Rare"
-            if item_rank > 500
-            else "Common"
+            else "Epic" if item_rank > 1000 else "Rare" if item_rank > 500 else "Common"
         )
         return check_achievements(
             self.user,

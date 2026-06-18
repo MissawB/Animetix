@@ -1,33 +1,33 @@
 from unittest.mock import MagicMock
+
 from backend.core.domain.entities.ai_schemas import (
+    DebateOutcome,
+    JudgeAction,
     RAGContext,
     RAGState,
-    JudgeAction,
     SearchPlan,
-    DebateOutcome,
 )
-
-from backend.core.domain.services.rag.processors.saga_lookup_processor import (
-    SagaLookupProcessor,
+from backend.core.domain.services.rag.processors.acquire_knowledge_processor import (
+    AcquireKnowledgeProcessor,
+)
+from backend.core.domain.services.rag.processors.fallback_rag_processor import (
+    FallbackRagProcessor,
 )
 from backend.core.domain.services.rag.processors.graph_explore_processor import (
     GraphExploreProcessor,
 )
+from backend.core.domain.services.rag.processors.judge_processor import JudgeProcessor
 from backend.core.domain.services.rag.processors.research_processor import (
     ResearchProcessor,
+)
+from backend.core.domain.services.rag.processors.saga_lookup_processor import (
+    SagaLookupProcessor,
 )
 from backend.core.domain.services.rag.processors.synthesize_processor import (
     SynthesizeProcessor,
 )
-from backend.core.domain.services.rag.processors.judge_processor import JudgeProcessor
-from backend.core.domain.services.rag.processors.fallback_rag_processor import (
-    FallbackRagProcessor,
-)
 from backend.core.domain.services.rag.processors.vlm_rerank_processor import (
     VlmRerankProcessor,
-)
-from backend.core.domain.services.rag.processors.acquire_knowledge_processor import (
-    AcquireKnowledgeProcessor,
 )
 
 
@@ -320,8 +320,11 @@ def test_rag_context_language():
 
 
 def test_agentic_rag_service_propagates_language(monkeypatch):
-    from backend.core.domain.services.agentic_rag_service import AgenticRAGService  # noqa: E402
     from unittest.mock import MagicMock  # noqa: E402
+
+    from backend.core.domain.services.agentic_rag_service import (  # noqa: E402
+        AgenticRAGService,
+    )
 
     # Mock dependencies
     mock_engine = MagicMock()
@@ -358,8 +361,11 @@ def test_agentic_rag_service_propagates_language(monkeypatch):
 
 
 def test_response_synthesizer_respects_language():
-    from backend.core.domain.services.rag.agents.synthesizer import ResponseSynthesizer  # noqa: E402
     from unittest.mock import MagicMock  # noqa: E402
+
+    from backend.core.domain.services.rag.agents.synthesizer import (  # noqa: E402
+        ResponseSynthesizer,
+    )
 
     mock_engine = MagicMock()
     mock_prompt_mgr = MagicMock()
@@ -378,11 +384,12 @@ def test_response_synthesizer_respects_language():
 
 
 def test_fallback_processor_english():
-    from backend.core.domain.services.rag.processors.fallback_rag_processor import (
-        FallbackRagProcessor,
-    )  # noqa: E402
-    from backend.core.domain.entities.ai_schemas import RAGContext  # noqa: E402
     from unittest.mock import MagicMock  # noqa: E402
+
+    from backend.core.domain.entities.ai_schemas import RAGContext  # noqa: E402
+    from backend.core.domain.services.rag.processors.fallback_rag_processor import (  # noqa: E402
+        FallbackRagProcessor,
+    )
 
     mock_rag = MagicMock()
     mock_rag.hybrid_search.return_value = [{"title": "Title", "description": "Desc"}]

@@ -1,7 +1,8 @@
-import pytest
 from unittest.mock import MagicMock
-from adapters.inference.unified_inference_adapter import UnifiedInferenceAdapter
+
+import pytest
 from adapters.inference.fallback_adapter import FallbackInferenceAdapter
+from adapters.inference.unified_inference_adapter import UnifiedInferenceAdapter
 
 
 def test_unified_observability_success():

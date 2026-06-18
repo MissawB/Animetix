@@ -1,5 +1,6 @@
 import logging
-from typing import Optional, Any
+from typing import Any, Optional
+
 from core.ports.notification_port import NotificationPort
 
 logger = logging.getLogger("animetix.adapters.notification")
@@ -19,10 +20,10 @@ class DjangoNotificationAdapter(NotificationPort):
         link: Optional[str] = None,
         **kwargs,
     ) -> Any:
+        from animetix.models import Notification  # noqa: E402
         from asgiref.sync import async_to_sync  # noqa: E402
         from channels.layers import get_channel_layer  # noqa: E402
         from django.contrib.auth import get_user_model  # noqa: E402
-        from animetix.models import Notification  # noqa: E402
 
         User = get_user_model()
         try:

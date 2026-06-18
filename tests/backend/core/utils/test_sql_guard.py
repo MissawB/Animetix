@@ -1,4 +1,5 @@
 import pytest
+
 from backend.core.utils.sql_guard import validate_sql_query
 
 

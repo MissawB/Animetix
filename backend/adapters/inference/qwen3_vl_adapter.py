@@ -1,12 +1,13 @@
 import base64
 import logging
 import os
-from typing import List, Dict, Any, Optional
-from core.ports.inference_port import InferencePort, InferenceNotImplementedError
-from core.ports.usage_port import UsagePort
+from typing import Any, Dict, List, Optional
+
 from core.domain.entities.ai_schemas import InferenceResponse
-from huggingface_hub import InferenceClient
+from core.ports.inference_port import InferenceNotImplementedError, InferencePort
+from core.ports.usage_port import UsagePort
 from core.utils.model_security import get_verified_revision
+from huggingface_hub import InferenceClient
 
 logger = logging.getLogger("animetix.inference.qwen3vl")
 

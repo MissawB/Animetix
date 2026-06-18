@@ -1,8 +1,9 @@
 import json
+import logging
 import os
 import sys
-import logging
 import time
+
 from tqdm import tqdm
 
 # Add src and backend to Python path
@@ -13,13 +14,14 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(SCRIPT_DIR))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, os.path.join(PROJECT_ROOT, "backend"))
 
-from core.utils.security import safe_http_request  # noqa: E402
 import django  # noqa: E402
+from core.utils.security import safe_http_request  # noqa: E402
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "animetix_project.settings")
 django.setup()
 
 from pipeline.neo4j_client import neo4j_manager  # noqa: E402
+
 from backend.animetix.containers import get_container  # noqa: E402
 
 # Configuration

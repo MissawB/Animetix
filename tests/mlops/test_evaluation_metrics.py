@@ -1,7 +1,8 @@
 import os
 import sys
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 # Ensure correct backend imports
 PROJECT_ROOT = os.path.dirname(
@@ -116,7 +117,9 @@ def test_ragas_performance_comparison_metrics_logging(
         json.dump(mock_gold_data, f)
 
     with patch("pipeline.mlops.evaluation_metrics.GOLD_DATASET", str(mock_gold_file)):
-        from pipeline.mlops.evaluation_metrics import ragas_performance_comparison  # noqa: E402
+        from pipeline.mlops.evaluation_metrics import (  # noqa: E402
+            ragas_performance_comparison,
+        )
 
         # Execute the metrics comparison logic
         res = ragas_performance_comparison()

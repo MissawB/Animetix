@@ -1,5 +1,6 @@
 import logging
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
+
 from core.ports.inference_port import InferencePort
 
 logger = logging.getLogger("animetix.orchestration")

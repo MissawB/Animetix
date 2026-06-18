@@ -1,4 +1,4 @@
-from animetix.templatetags.custom_filters import cdn_url, blur_cdn_url, mul, sub, modulo
+from animetix.templatetags.custom_filters import blur_cdn_url, cdn_url, modulo, mul, sub
 
 
 def test_mul_filter():

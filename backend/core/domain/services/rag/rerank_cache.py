@@ -1,6 +1,7 @@
-import logging
 import hashlib
-from typing import List, Dict
+import logging
+from typing import Dict, List
+
 from django.core.cache import cache
 
 logger = logging.getLogger("animetix.rerank.cache")

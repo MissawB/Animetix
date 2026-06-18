@@ -1,6 +1,7 @@
+from unittest.mock import MagicMock, patch
+
 import pytest
 from django.urls import reverse
-from unittest.mock import patch, MagicMock
 
 
 @pytest.mark.django_db

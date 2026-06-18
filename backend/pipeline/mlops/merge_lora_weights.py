@@ -1,8 +1,9 @@
-import os
-import torch
 import logging
-from transformers import AutoModelForCausalLM, AutoTokenizer
+import os
+
+import torch
 from peft import PeftModel
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 # Configuration du logger
 logger = logging.getLogger("animetix." + __name__)
@@ -57,10 +58,14 @@ def merge_lora():
         else:
             raise e
 
-    tokenizer = AutoTokenizer.from_pretrained(base_model_name, revision="main")  # nosec B615
+    tokenizer = AutoTokenizer.from_pretrained(
+        base_model_name, revision="main"
+    )  # nosec B615
 
     logger.info(f"📦 Loading adapter from {adapter_path}...")
-    model = PeftModel.from_pretrained(base_model, adapter_path, revision="main")  # nosec B615
+    model = PeftModel.from_pretrained(
+        base_model, adapter_path, revision="main"
+    )  # nosec B615
 
     logger.info("🚀 Merging weights...")
     merged_model = model.merge_and_unload()

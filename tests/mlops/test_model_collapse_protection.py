@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-import pytest
 from unittest.mock import MagicMock
-from core.domain.services.domain_synthesizer import AutonomousDomainSynthesizer
+
+import pytest
 from core.domain.services.distillation_pipeline import ModelDistillationPipeline
+from core.domain.services.domain_synthesizer import AutonomousDomainSynthesizer
 from core.domain.services.synthetic_promotion_service import (
     SyntheticDataPromotionService,
 )

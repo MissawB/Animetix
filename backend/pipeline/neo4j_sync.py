@@ -1,6 +1,7 @@
 import json
-import os
 import logging
+import os
+
 from tqdm import tqdm
 
 # Logger

@@ -1,9 +1,10 @@
 import logging
 from typing import List
-from django.contrib.auth.models import User
+
 from animetix.models import Achievement, UserAchievement
-from core.ports.achievement_port import AchievementPort
 from core.domain.entities.achievement import AchievementDefinition
+from core.ports.achievement_port import AchievementPort
+from django.contrib.auth.models import User
 
 logger = logging.getLogger("animetix")
 

@@ -4,18 +4,19 @@ Tests unitaires pour les modules d'IA de Quatrième Génération (SOTA 2030+) d'
 Couvre QuantumCognitivePreferenceModel, SwarmConsensusOrchestrator, et CounterfactualConversationSimulator.
 """
 
-import pytest  # noqa: E402
-import numpy as np  # noqa: E402
 from unittest.mock import MagicMock  # noqa: E402
+
+import numpy as np  # noqa: E402
+import pytest  # noqa: E402
 
 
 # ==========================================
 # 1. TESTS COGNITION QUANTIQUE (BORN'S RULE & NON-COMMUTATIVITÉ)
 # ==========================================
 def test_quantum_cognitive_model():
-    from core.domain.services.quantum_cognitive_model import (
+    from core.domain.services.quantum_cognitive_model import (  # noqa: E402
         QuantumCognitivePreferenceModel,
-    )  # noqa: E402
+    )
 
     np.random.seed(42)
     model = QuantumCognitivePreferenceModel(dimension=4)
@@ -34,9 +35,9 @@ def test_quantum_cognitive_model():
 
 
 def test_quantum_order_effects():
-    from core.domain.services.quantum_cognitive_model import (
+    from core.domain.services.quantum_cognitive_model import (  # noqa: E402
         QuantumCognitivePreferenceModel,
-    )  # noqa: E402
+    )
 
     np.random.seed(42)
     model = QuantumCognitivePreferenceModel(dimension=4)
@@ -46,16 +47,18 @@ def test_quantum_order_effects():
     p_ba, p_ab = model.order_effects_demonstration("ghibli", "seinen")
 
     # La non-commutativité implique que l'état d'arrivée et les probabilités dépendent de l'ordre de mesure
-    assert not np.isclose(p_ba, p_ab), (
-        f"Order effects not demonstrated: p_ba={p_ba}, p_ab={p_ab}"
-    )
+    assert not np.isclose(
+        p_ba, p_ab
+    ), f"Order effects not demonstrated: p_ba={p_ba}, p_ab={p_ab}"
 
 
 # ==========================================
 # 2. TESTS SWARM CONSENSUS ORCHESTRATOR (PAXOS)
 # ==========================================
 def test_swarm_consensus_paxos():
-    from core.domain.services.swarm_consensus import SwarmConsensusOrchestrator  # noqa: E402
+    from core.domain.services.swarm_consensus import (  # noqa: E402
+        SwarmConsensusOrchestrator,
+    )
 
     orchestrator = SwarmConsensusOrchestrator()
 
@@ -80,10 +83,10 @@ def test_swarm_consensus_paxos():
 # 3. TESTS SIMULATEUR CONTREFACTUEL
 # ==========================================
 def test_counterfactual_conversation_simulator():
-    from core.domain.services.counterfactual_simulator import (
-        CounterfactualConversationSimulator,
-    )  # noqa: E402
     from core.domain.entities.ai_schemas import InferenceResponse  # noqa: E402
+    from core.domain.services.counterfactual_simulator import (  # noqa: E402
+        CounterfactualConversationSimulator,
+    )
 
     mock_engine = MagicMock()
     mock_engine.generate.side_effect = [
@@ -112,10 +115,10 @@ def test_counterfactual_conversation_simulator():
 
 
 def test_swarm_consensus_llm_success():
-    from core.domain.services.swarm_consensus import (
+    from core.domain.services.swarm_consensus import (  # noqa: E402
         SwarmConsensusOrchestrator,
         SwarmConsensusVotes,
-    )  # noqa: E402
+    )
 
     mock_engine = MagicMock()
     mock_votes = SwarmConsensusVotes(
@@ -137,7 +140,9 @@ def test_swarm_consensus_llm_success():
 
 
 def test_swarm_consensus_llm_failure_fallback():
-    from core.domain.services.swarm_consensus import SwarmConsensusOrchestrator  # noqa: E402
+    from core.domain.services.swarm_consensus import (  # noqa: E402
+        SwarmConsensusOrchestrator,
+    )
 
     mock_engine = MagicMock()
     mock_engine.generate_structured.side_effect = Exception("LLM connection timed out")

@@ -1,13 +1,14 @@
-import pytest
 import asyncio
-from django.contrib.auth.models import User
-from django.test import RequestFactory
+
+import pytest
 from animetix.middleware import (
-    UserTrackingMiddleware,
     UserTierMiddleware,
+    UserTrackingMiddleware,
     user_id_var,
     user_tier_var,
 )
+from django.contrib.auth.models import User
+from django.test import RequestFactory
 
 
 @pytest.mark.django_db

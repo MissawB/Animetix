@@ -1,7 +1,9 @@
-import pytest
-import os
 import json
+import os
 from unittest.mock import MagicMock, patch
+
+import pytest
+
 from scripts.sync_gold_ground_truth import (
     run_synchronization,
     update_regression_benchmark_file,

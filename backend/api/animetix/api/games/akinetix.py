@@ -1,21 +1,22 @@
+from animetix.api.dependencies import get_session_service  # noqa: E402
+from animetix_project.logging_config import get_logger  # noqa: E402
+from dependency_injector.wiring import Provide, inject
 from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from dependency_injector.wiring import inject, Provide
+
 from ...containers import Container  # noqa: E402
-from animetix.api.dependencies import get_session_service  # noqa: E402
 from ...models import GameplaySession  # noqa: E402
-from animetix_project.logging_config import get_logger  # noqa: E402
 
 logger = get_logger("animetix." + __name__)
 
+from ...serializers import AkinetixAnswerSerializer  # noqa: E402
 from ...serializers import (  # noqa: E402
-    AkinetixStartSerializer,
-    AkinetixAnswerSerializer,
     AkinetixConfirmSerializer,
-)  # noqa: E402  # noqa: E402
+    AkinetixStartSerializer,
+)
 
 # ... (rest of imports unchanged)
 
@@ -226,9 +227,11 @@ class AkinetixGameConfirmView(APIView):
                                     "name": ach.name,
                                     "description": ach.description,
                                     "xp_reward": ach.xp_reward,
-                                    "badge_url": ach.badge_url
-                                    if hasattr(ach, "badge_url")
-                                    else None,
+                                    "badge_url": (
+                                        ach.badge_url
+                                        if hasattr(ach, "badge_url")
+                                        else None
+                                    ),
                                 }
                             )
                 except Exception as e:

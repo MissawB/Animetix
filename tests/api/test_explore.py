@@ -1,9 +1,9 @@
 import pytest
+from animetix.models import MediaItem, UserRecommendation
+from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
-from animetix.models import UserRecommendation, MediaItem
-from django.contrib.auth.models import User
 
 
 @pytest.fixture

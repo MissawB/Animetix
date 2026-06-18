@@ -1,10 +1,10 @@
-from .classic import *  # noqa: F401, F403
 from .akinetix import *  # noqa: F401, F403
+from .akinetix_rl import *  # noqa: F401, F403
+from .archetypist import *  # noqa: F401, F403
+from .blindtest import *  # noqa: F401, F403
+from .classic import *  # noqa: F401, F403
+from .covertest import *  # noqa: F401, F403
 from .emoji import *  # noqa: F401, F403
 from .paradox import *  # noqa: F401, F403
 from .vision import *  # noqa: F401, F403
-from .blindtest import *  # noqa: F401, F403
-from .covertest import *  # noqa: F401, F403
-from .akinetix_rl import *  # noqa: F401, F403
-from .archetypist import *  # noqa: F401, F403
 from .vs_battle import *  # noqa: F401, F403

@@ -1,6 +1,7 @@
-import sys
 import os
+import sys
 from unittest.mock import MagicMock, patch
+
 import pytest
 
 # Setup paths to ensure imports work correctly
@@ -35,8 +36,8 @@ if not settings.configured:
     )
     django.setup()
 
-from vision_quest_worker import process_video_for_combat_lore  # noqa: E402
 from animetix.containers import get_container  # noqa: E402
+from vision_quest_worker import process_video_for_combat_lore  # noqa: E402
 
 
 @pytest.fixture

@@ -1,10 +1,11 @@
 import logging
-from typing import Optional, List
-from core.ports.inference_port import InferencePort, InferenceNotImplementedError
-from core.ports.usage_port import UsagePort
+from typing import List, Optional
+
 from core.domain.entities.ai_schemas import InferenceResponse
-from core.utils.lazy_import import lazy_import
 from core.domain.exceptions import InferenceError
+from core.ports.inference_port import InferenceNotImplementedError, InferencePort
+from core.ports.usage_port import UsagePort
+from core.utils.lazy_import import lazy_import
 
 torch = lazy_import("torch")
 transformers = lazy_import("transformers")
@@ -28,17 +29,17 @@ class MoondreamAdapter(InferencePort):
         if self.model:
             return
         try:
-            from transformers import AutoModelForVision2Seq, AutoProcessor  # noqa: E402
             import torch as _torch  # noqa: E402
+            from transformers import AutoModelForVision2Seq, AutoProcessor  # noqa: E402
 
             self.model = AutoModelForVision2Seq.from_pretrained(
                 self.model_id,
                 revision="main",
                 trust_remote_code=True,
                 device_map="auto",
-                torch_dtype=_torch.bfloat16
-                if _torch.cuda.is_available()
-                else _torch.float32,
+                torch_dtype=(
+                    _torch.bfloat16 if _torch.cuda.is_available() else _torch.float32
+                ),
             )  # nosec B615
             self.processor = AutoProcessor.from_pretrained(
                 self.model_id, revision="main"
@@ -86,6 +87,7 @@ class MoondreamAdapter(InferencePort):
         self._load_model()
         try:
             import io  # noqa: E402
+
             from PIL import Image  # noqa: E402
 
             image = Image.open(io.BytesIO(image_data)).convert("RGB")

@@ -1,5 +1,5 @@
 import pytest
-from django.core.management import call_command, CommandError
+from django.core.management import CommandError, call_command
 
 
 def test_run_scheduled_task_invalid_key():

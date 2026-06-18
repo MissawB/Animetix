@@ -1,5 +1,7 @@
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from django.test import RequestFactory
+
 from backend.api.animetix.api.companion import CompanionInteractView
 
 

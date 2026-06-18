@@ -1,11 +1,12 @@
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
-from rest_framework.test import APIClient
 from core.domain.entities.ai_schemas import (
-    InferenceResponse,
     InferenceMetadata,
+    InferenceResponse,
     TokenLogProb,
 )
+from rest_framework.test import APIClient
 
 
 @pytest.fixture

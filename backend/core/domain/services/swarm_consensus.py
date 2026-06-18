@@ -6,10 +6,10 @@ Applies a Paxos-style semantic voting consensus protocol to validate sémantique
 
 import logging  # noqa: E402
 import time  # noqa: E402
-from typing import List, Dict, Any, Tuple, Optional  # noqa: E402
+from typing import Any, Dict, List, Optional, Tuple  # noqa: E402
+
 import numpy as np  # noqa: E402
 from pydantic import BaseModel, Field  # noqa: E402
-
 
 logger = logging.getLogger("animetix.swarm.consensus")
 
@@ -107,9 +107,11 @@ class SwarmConsensusOrchestrator:
             "consensus_achieved": consensus_achieved,
             "consensus_score": consensus_score,
             "paxos_state": "DECIDED" if consensus_achieved else "REJECTED",
-            "message": "Fact integrated to Knowledge Graph"
-            if consensus_achieved
-            else "Consensus not reached",
+            "message": (
+                "Fact integrated to Knowledge Graph"
+                if consensus_achieved
+                else "Consensus not reached"
+            ),
         }
 
         return {

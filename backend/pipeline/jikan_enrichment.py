@@ -1,8 +1,8 @@
 import json
-import time
+import logging
 import os
 import sys
-import logging
+import time
 
 # Fix path for internal imports
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))

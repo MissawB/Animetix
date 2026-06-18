@@ -1,8 +1,8 @@
-import os
-import sys
-import re
 import logging
-from typing import List, Dict
+import os
+import re
+import sys
+from typing import Dict, List
 
 # Configuration des chemins d'importation
 BASE_DIR = r"C:\Users\bahma\PycharmProjects\Projet solo\Double_scenario_Project"
@@ -29,29 +29,23 @@ except Exception as e:
 # Importation dynamique sécurisée des 7 bases de données d'élite locales
 try:
     from creators_db import CREATORS_AND_STUDIOS  # noqa: E402
-    from songs_and_seiyuu_db import (
-        ANIME_SONGS_AND_SINGERS,
-        SEIYUU_PROFILES,
-        SONGS_AND_SEIYUU_RELATIONS,
-    )  # noqa: E402
-    from magazines_and_awards_db import (
-        SERIALIZATION_MAGAZINES,
-        POP_CULTURE_AWARDS,
-        AWARDS_AND_MAGAZINES_RELATIONS,
-    )  # noqa: E402
-    from french_market_db import (  # noqa: E402
-        FRENCH_VOICE_ACTORS,
+    from french_market_db import FRENCH_ANIME_DISTRIBUTORS  # noqa: E402
+    from french_market_db import (
         FRENCH_MANGA_PUBLISHERS,
-        FRENCH_ANIME_DISTRIBUTORS,
         FRENCH_MARKET_RELATIONS,
+        FRENCH_VOICE_ACTORS,
     )
-    from japanese_market_db import (  # noqa: E402
-        JAPANESE_MANGA_PUBLISHERS,
-        JAPANESE_ANIME_DISTRIBUTORS,
-        JAPANESE_MARKET_RELATIONS,
+    from japanese_market_db import JAPANESE_ANIME_DISTRIBUTORS  # noqa: E402
+    from japanese_market_db import JAPANESE_MANGA_PUBLISHERS, JAPANESE_MARKET_RELATIONS
+    from magazines_and_awards_db import (  # noqa: E402
+        AWARDS_AND_MAGAZINES_RELATIONS,
+        POP_CULTURE_AWARDS,
+        SERIALIZATION_MAGAZINES,
     )
-    from volumes_and_episodes_db import VOLUMES_AND_EPISODES_DATA  # noqa: E402
+    from songs_and_seiyuu_db import ANIME_SONGS_AND_SINGERS  # noqa: E402
+    from songs_and_seiyuu_db import SEIYUU_PROFILES, SONGS_AND_SEIYUU_RELATIONS
     from transmedia_db import TRANSMEDIA_RELATIONS  # noqa: E402
+    from volumes_and_episodes_db import VOLUMES_AND_EPISODES_DATA  # noqa: E402
 except ImportError as e:
     logger.error(f"Failed to import local meta databases: {e}")
     sys.exit(1)

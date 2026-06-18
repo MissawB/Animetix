@@ -1,9 +1,10 @@
 """Video analysis mixin for VisionTransformersAdapter."""
 
 import logging  # noqa: E402
-from typing import List, Dict, Any  # noqa: E402
-from core.utils.lazy_import import lazy_import  # noqa: E402
+from typing import Any, Dict, List  # noqa: E402
+
 from core.domain.exceptions import InferenceError  # noqa: E402
+from core.utils.lazy_import import lazy_import  # noqa: E402
 
 torch = lazy_import("torch")
 transformers = lazy_import("transformers")
@@ -19,12 +20,9 @@ class VideoAnalysisMixin:
         if hasattr(self, "_video_vlm"):
             return
         try:
-            from transformers import (
-                Qwen2VLForConditionalGeneration,
-                AutoProcessor,
-                BitsAndBytesConfig,
-            )  # noqa: E402
             import torch as _torch  # noqa: E402
+            from transformers import AutoProcessor  # noqa: E402
+            from transformers import BitsAndBytesConfig, Qwen2VLForConditionalGeneration
 
             logger.info("📽️ Loading Qwen3-VL-8B for Temporal RAG...")
             model_id = "Qwen/Qwen3-VL-8B-Instruct"
@@ -44,9 +42,9 @@ class VideoAnalysisMixin:
             self._video_vlm = Qwen2VLForConditionalGeneration.from_pretrained(
                 model_id,
                 revision="main",
-                torch_dtype=_torch.float16
-                if _torch.cuda.is_available()
-                else _torch.float32,
+                torch_dtype=(
+                    _torch.float16 if _torch.cuda.is_available() else _torch.float32
+                ),
                 device_map="auto",
                 quantization_config=quantization_config,
                 trust_remote_code=True,
@@ -58,9 +56,10 @@ class VideoAnalysisMixin:
     def _sample_video_frames(self, video_data: bytes, max_frames: int = 8) -> List:
         """Helper pour extraire des frames uniformément d'un buffer vidéo."""
         try:
-            import imageio  # noqa: E402
-            import tempfile  # noqa: E402
             import os  # noqa: E402
+            import tempfile  # noqa: E402
+
+            import imageio  # noqa: E402
             from PIL import Image  # noqa: E402
 
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp:

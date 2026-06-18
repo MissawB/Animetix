@@ -1,6 +1,7 @@
-import random
 import hashlib
-from typing import Optional, Dict
+import random
+from typing import Dict, Optional
+
 from ...ports.repository_port import RepositoryPort
 
 

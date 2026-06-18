@@ -1,5 +1,6 @@
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 from adapters.inference.brain_api_adapter import BrainAPIAdapter
 from core.domain.entities.ai_schemas import InferenceResponse
 

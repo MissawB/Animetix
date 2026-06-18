@@ -1,18 +1,19 @@
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+
 from .models import (
-    MediaItem,
-    ChallengeResult,
-    GlobalBoss,
-    Friendship,
-    Notification,
-    ArchetypeDriftSnapshot,
-    DuelRoom,
     AIFeedback,
+    ArchetypeDriftSnapshot,
+    ChallengeResult,
+    DuelRoom,
+    Friendship,
+    GlobalBoss,
     GoldDatasetEntry,
+    MediaItem,
+    Notification,
 )
-from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
 
 # ... [existing signal handlers are unmodified] ...
 
@@ -183,8 +184,10 @@ def flag_and_stage_complex_user_query(sender, instance, created, **kwargs):
 
         try:
             # 1. Évaluation de la complexité via le ComplexityAnalyser ou des règles heuristiques
-            from core.domain.services.complexity_analyser import ComplexityAnalyser  # noqa: E402
             from animetix.containers import get_container  # noqa: E402
+            from core.domain.services.complexity_analyser import (  # noqa: E402
+                ComplexityAnalyser,
+            )
 
             container = get_container()
             pm = getattr(container, "prompt_manager", None)

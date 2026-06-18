@@ -1,4 +1,5 @@
 from unittest.mock import MagicMock
+
 from adapters.inference.local_guardrail_adapter import LocalGuardrailAdapter
 
 

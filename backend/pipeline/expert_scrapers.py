@@ -6,12 +6,13 @@ Troisième Suite de Scraping Spécialisé pour Animetix (Expert).
 - Scraper I : Lieux Réels & Pèlerinage Otaku (Gemini).
 """
 
-import os  # noqa: E402
-import sys  # noqa: E402
 import argparse  # noqa: E402
-import time  # noqa: E402
 import json  # noqa: E402
 import logging  # noqa: E402
+import os  # noqa: E402
+import sys  # noqa: E402
+import time  # noqa: E402
+
 from core.utils.security import safe_http_request  # noqa: E402
 from dotenv import load_dotenv  # noqa: E402
 
@@ -354,12 +355,16 @@ def run_tripartite_enrichment(limit: int = 5, dry_run: bool = False):
                         session.run(
                             "MATCH (m:Media {id: $id}) SET m.primary_platform = $platform, m.featured_location = $loc",
                             id=item.external_id,
-                            platform=streaming_data[0].get("platform")
-                            if streaming_data
-                            else "N/A",
-                            loc=pilgrimage_data[0].get("location_name")
-                            if pilgrimage_data
-                            else "N/A",
+                            platform=(
+                                streaming_data[0].get("platform")
+                                if streaming_data
+                                else "N/A"
+                            ),
+                            loc=(
+                                pilgrimage_data[0].get("location_name")
+                                if pilgrimage_data
+                                else "N/A"
+                            ),
                         )
                     logger.info(
                         "   🕸️ Graphe Neo4j synchronisé pour les métadonnées d'expertises."

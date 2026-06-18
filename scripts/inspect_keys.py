@@ -6,12 +6,14 @@ try:
         print("KEYS:", results[0].keys() if results else "empty")
         print(
             "SAMPLE:",
-            {
-                k: v.encode("ascii", "ignore").decode("ascii")
-                for k, v in results[0].items()
-            }
-            if results
-            else "empty",
+            (
+                {
+                    k: v.encode("ascii", "ignore").decode("ascii")
+                    for k, v in results[0].items()
+                }
+                if results
+                else "empty"
+            ),
         )
 except Exception as e:
     print("ERROR:", e)

@@ -1,7 +1,8 @@
-import pytest
 import re
-from playwright.sync_api import Page, expect
+
+import pytest
 from animetix.models import MediaItem
+from playwright.sync_api import Page, expect
 
 
 @pytest.mark.django_db(transaction=True)

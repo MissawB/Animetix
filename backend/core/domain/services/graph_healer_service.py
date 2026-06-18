@@ -1,5 +1,6 @@
 import logging
-from typing import List, Dict, Any
+from typing import Any, Dict, List
+
 from ...ports.inference_port import InferencePort
 
 logger = logging.getLogger("animetix.graph.healer")

@@ -1,8 +1,8 @@
 from core.domain.entities.ai_schemas import (
-    CombatStats,
     CombatCharacter,
-    DebateTurn,
     CombatResult,
+    CombatStats,
+    DebateTurn,
 )
 
 

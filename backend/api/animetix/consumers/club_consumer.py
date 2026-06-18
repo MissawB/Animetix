@@ -1,8 +1,10 @@
 import json
 import logging
+
 from channels.db import database_sync_to_async
-from .base import BaseConsumer
+
 from ..models import ClubMembership
+from .base import BaseConsumer
 
 logger = logging.getLogger(__name__)
 

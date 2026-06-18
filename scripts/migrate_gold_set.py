@@ -1,5 +1,5 @@
-import os
 import json
+import os
 
 
 def migrate_gold_set():

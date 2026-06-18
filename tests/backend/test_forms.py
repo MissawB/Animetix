@@ -1,4 +1,4 @@
-from animetix.forms import GameGuessForm, VisionQuestForm, AkinetixAnswerForm
+from animetix.forms import AkinetixAnswerForm, GameGuessForm, VisionQuestForm
 
 
 def test_game_guess_form_valid():

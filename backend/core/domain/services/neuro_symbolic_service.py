@@ -1,7 +1,9 @@
 import logging
-from typing import Tuple, Optional, Dict, Any
-from core.ports.inference_port import InferencePort
+from typing import Any, Dict, Optional, Tuple
+
 from core.domain.services.prompt_manager import PromptManager
+from core.ports.inference_port import InferencePort
+
 from .neuro_symbolic.formal_solver import FormalLogicSolver
 from .neuro_symbolic.semantic_oracle import SemanticOracle
 

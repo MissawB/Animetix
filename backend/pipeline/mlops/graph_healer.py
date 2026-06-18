@@ -1,8 +1,9 @@
+import json
+import logging
 import os
 import sys
-import json
+
 import django
-import logging
 from tqdm import tqdm
 
 logger = logging.getLogger("animetix.pipeline." + __name__)

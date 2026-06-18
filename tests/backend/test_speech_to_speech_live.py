@@ -1,9 +1,10 @@
-import pytest
-import base64
 import asyncio
+import base64
 from unittest.mock import MagicMock, patch
-from channels.testing import WebsocketCommunicator
+
+import pytest
 from animetix_project.asgi import application
+from channels.testing import WebsocketCommunicator
 
 
 # Mock structures for testing

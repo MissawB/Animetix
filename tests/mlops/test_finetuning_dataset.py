@@ -1,7 +1,7 @@
-import unittest
 import os
 import sys
-from unittest.mock import patch, MagicMock
+import unittest
+from unittest.mock import MagicMock, patch
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, BASE_DIR)
@@ -18,11 +18,13 @@ class TestFinetuningDataset(unittest.TestCase):
         self.assertEqual(clean_description(raw_text), expected)
 
     def test_gemini_paraphrase_cache(self):
-        from backend.pipeline.mlops.finetuning_dataset import paraphrase_text_via_gemini  # noqa: E402
         from unittest.mock import MagicMock  # noqa: E402
 
         # Initialiser un cache temporaire pour le test
         import backend.pipeline.mlops.finetuning_dataset as fd  # noqa: E402
+        from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
+            paraphrase_text_via_gemini,
+        )
 
         fd.PARAPHRASE_CACHE = {
             "Le texte original||naturel": "Texte paraphrase en cache"
@@ -54,8 +56,9 @@ class TestFinetuningDataset(unittest.TestCase):
             )
 
     def test_configurable_ratios(self):
-        import backend.pipeline.mlops.finetuning_dataset as fd  # noqa: E402
         from unittest.mock import patch  # noqa: E402
+
+        import backend.pipeline.mlops.finetuning_dataset as fd  # noqa: E402
 
         env_vars = {
             "ANIMETIX_RATIO_SPECIALIZED": "70",
@@ -69,9 +72,9 @@ class TestFinetuningDataset(unittest.TestCase):
             self.assertEqual(gen_req, 200)
 
     def test_mcp_error_scenarios(self):
-        from backend.pipeline.mlops.finetuning_dataset import (
+        from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
             generate_mcp_tool_instructions,
-        )  # noqa: E402
+        )
 
         instructions = generate_mcp_tool_instructions()
 
@@ -100,8 +103,8 @@ class TestFinetuningDataset(unittest.TestCase):
     def test_bilingual_generators(self):
         from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
             make_english_anime_profile,
-            make_english_manga_profile,
             make_english_character_bio,
+            make_english_manga_profile,
         )
 
         # Test anime profile
@@ -143,7 +146,9 @@ class TestFinetuningDataset(unittest.TestCase):
 
         mock_load_dataset.side_effect = side_effect
 
-        from backend.pipeline.mlops.finetuning_dataset import fetch_general_instructions  # noqa: E402
+        from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
+            fetch_general_instructions,
+        )
 
         res = fetch_general_instructions(2)
         self.assertEqual(len(res), 2)
@@ -151,9 +156,9 @@ class TestFinetuningDataset(unittest.TestCase):
         self.assertEqual(res[1]["language"], "English")
 
     def test_generate_otaku_meta_instructions_bilingual(self):
-        from backend.pipeline.mlops.finetuning_dataset import (
+        from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
             generate_otaku_meta_instructions,
-        )  # noqa: E402
+        )
 
         res = generate_otaku_meta_instructions(client=None)
 
@@ -173,7 +178,9 @@ class TestFinetuningDataset(unittest.TestCase):
         )
 
     def test_deduplicate_dataset_multiturn(self):
-        from backend.pipeline.mlops.finetuning_dataset import deduplicate_dataset  # noqa: E402
+        from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
+            deduplicate_dataset,
+        )
 
         dataset = [
             {"turns": [{"user": "Hi", "assistant": "Hello"}], "language": "English"},
@@ -189,9 +196,9 @@ class TestFinetuningDataset(unittest.TestCase):
         self.assertEqual(len(res), 2)
 
     def test_generate_multiturn_dialogues(self):
-        from backend.pipeline.mlops.finetuning_dataset import (
+        from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
             generate_multiturn_dialogues,
-        )  # noqa: E402
+        )
 
         animes = [
             {
@@ -237,9 +244,9 @@ class TestFinetuningDataset(unittest.TestCase):
             self.assertIn(d["language"], ["Français", "English"])
 
     def test_generate_multiturn_dialogues_complex_scenarios(self):
-        from backend.pipeline.mlops.finetuning_dataset import (
+        from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
             generate_multiturn_dialogues,
-        )  # noqa: E402
+        )
 
         animes = [
             {
@@ -336,8 +343,11 @@ class TestFinetuningDataset(unittest.TestCase):
         self.assertIn("occupé", d_corr_fr["turns"][0]["user"])
 
     def test_run_generate_instruction_dataset_contains_multiturn(self):
-        from backend.pipeline.mlops.finetuning_dataset import OUTPUT_DATASET  # noqa: E402
         import json  # noqa: E402
+
+        from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
+            OUTPUT_DATASET,
+        )
 
         if os.path.exists(OUTPUT_DATASET):
             multiturn_found = False
@@ -352,9 +362,9 @@ class TestFinetuningDataset(unittest.TestCase):
             )
 
     def test_generate_negative_refusal_examples(self):
-        from backend.pipeline.mlops.finetuning_dataset import (
+        from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
             generate_negative_refusal_examples,
-        )  # noqa: E402
+        )
 
         refusals = generate_negative_refusal_examples(count=10)
         self.assertEqual(len(refusals), 10)
@@ -372,9 +382,9 @@ class TestFinetuningDataset(unittest.TestCase):
             )
 
     def test_refusal_topic_diversity(self):
-        from backend.pipeline.mlops.finetuning_dataset import (
+        from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
             generate_negative_refusal_examples,
-        )  # noqa: E402
+        )
 
         # Generate enough refusals to cover all categories (11 categories * 2 languages = 22 variations)
         refusals = generate_negative_refusal_examples(count=400)
@@ -436,8 +446,11 @@ class TestFinetuningDataset(unittest.TestCase):
         )
 
     def test_run_generate_instruction_dataset_contains_refusals(self):
-        from backend.pipeline.mlops.finetuning_dataset import OUTPUT_DATASET  # noqa: E402
         import json  # noqa: E402
+
+        from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
+            OUTPUT_DATASET,
+        )
 
         if os.path.exists(OUTPUT_DATASET):
             refusal_found = False
@@ -523,8 +536,11 @@ class TestFinetuningDataset(unittest.TestCase):
         self.assertEqual(get_effective_pop(retro_manga), 100000)  # Boosted retro work
 
     def test_run_generate_instruction_dataset_rebalanced_ratio(self):
-        from backend.pipeline.mlops.finetuning_dataset import OUTPUT_DATASET  # noqa: E402
         import json  # noqa: E402
+
+        from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
+            OUTPUT_DATASET,
+        )
 
         if os.path.exists(OUTPUT_DATASET):
             underrepresented_count = 0
@@ -561,7 +577,9 @@ class TestFinetuningDataset(unittest.TestCase):
             )
 
     def test_validate_factual_alignment_success(self):
-        from backend.pipeline.mlops.finetuning_dataset import validate_factual_alignment  # noqa: E402
+        from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
+            validate_factual_alignment,
+        )
 
         mock_client = MagicMock()
         mock_response = MagicMock()
@@ -574,7 +592,9 @@ class TestFinetuningDataset(unittest.TestCase):
         mock_client.models.generate_content.assert_called_once()
 
     def test_validate_factual_alignment_failure(self):
-        from backend.pipeline.mlops.finetuning_dataset import validate_factual_alignment  # noqa: E402
+        from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
+            validate_factual_alignment,
+        )
 
         mock_client = MagicMock()
         mock_response = MagicMock()
@@ -589,8 +609,11 @@ class TestFinetuningDataset(unittest.TestCase):
         mock_client.models.generate_content.assert_called_once()
 
     def test_inject_query_noise(self):
-        from backend.pipeline.mlops.finetuning_dataset import inject_query_noise  # noqa: E402
         import random  # noqa: E402
+
+        from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
+            inject_query_noise,
+        )
 
         random.seed(42)  # Deterministic for reproducibility
 
@@ -626,9 +649,9 @@ class TestFinetuningDataset(unittest.TestCase):
         self.assertEqual(inject_query_noise("", "Français"), "")
 
     def test_generate_rag_context_instructions(self):
-        from backend.pipeline.mlops.finetuning_dataset import (
+        from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
             generate_rag_context_instructions,
-        )  # noqa: E402
+        )
 
         animes = [
             {

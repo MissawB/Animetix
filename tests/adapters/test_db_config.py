@@ -1,6 +1,7 @@
-import os
 import importlib
+import os
 from unittest.mock import patch
+
 from animetix_project import settings
 
 

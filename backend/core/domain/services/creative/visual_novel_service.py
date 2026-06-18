@@ -1,8 +1,9 @@
-from typing import Optional, Dict
 import logging
-from ...entities.ai_schemas import VNScript, VNScene
-from ..llm_service import LLMService
+from typing import Dict, Optional
+
 from ....ports.repository_port import RepositoryPort
+from ...entities.ai_schemas import VNScene, VNScript
+from ..llm_service import LLMService
 
 logger = logging.getLogger("animetix.creative.visual_novel")
 

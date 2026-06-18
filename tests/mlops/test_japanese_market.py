@@ -1,46 +1,48 @@
 # -*- coding: utf-8 -*-
-import sys
 import os
+import sys
 
 # Configuration des chemins pour importer les modules du pipeline
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.join(BASE_DIR, "backend"))
 sys.path.insert(0, os.path.join(BASE_DIR, "backend", "pipeline", "mlops"))
 
-from backend.pipeline.mlops.japanese_market_db import (  # noqa: E402
-    JAPANESE_MANGA_PUBLISHERS,
-    JAPANESE_ANIME_DISTRIBUTORS,
-    JAPANESE_MARKET_RELATIONS,
-    JAPANESE_VOICE_ACTORS,
+from backend.pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
+    DISTRIBUTORS_LIST,
+    JAPANESE_DISTRIBUTORS_SET,
+    JAPANESE_PUBLISHERS_SET,
+    PUBLISHERS_LIST,
+    RELATED_ENTITIES_MAP,
 )
-from backend.pipeline.mlops.index_otaku_knowledge import OtakuKnowledgeIndexer  # noqa: E402
 from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
     generate_japanese_market_profile_instructions,
     generate_japanese_market_relations_instructions,
 )
-from backend.pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
-    PUBLISHERS_LIST,
-    DISTRIBUTORS_LIST,
-    RELATED_ENTITIES_MAP,
-    JAPANESE_PUBLISHERS_SET,
-    JAPANESE_DISTRIBUTORS_SET,
+from backend.pipeline.mlops.index_otaku_knowledge import (  # noqa: E402
+    OtakuKnowledgeIndexer,
+)
+from backend.pipeline.mlops.japanese_market_db import (  # noqa: E402
+    JAPANESE_ANIME_DISTRIBUTORS,
+    JAPANESE_MANGA_PUBLISHERS,
+    JAPANESE_MARKET_RELATIONS,
+    JAPANESE_VOICE_ACTORS,
 )
 
 
 def test_japanese_market_db_size():
     """Vérifie que la base de données japonaise contient les bons effectifs."""
-    assert len(JAPANESE_MANGA_PUBLISHERS) == 15, (
-        "Doit contenir exactement 15 éditeurs japonais"
-    )
-    assert len(JAPANESE_ANIME_DISTRIBUTORS) == 10, (
-        "Doit contenir exactement 10 diffuseurs japonais"
-    )
-    assert len(JAPANESE_MARKET_RELATIONS) == 40, (
-        "Doit contenir exactement 40 relations japonaises"
-    )
-    assert len(JAPANESE_VOICE_ACTORS) >= 10, (
-        "Doit réutiliser les seiyuu japonais (au moins 10)"
-    )
+    assert (
+        len(JAPANESE_MANGA_PUBLISHERS) == 15
+    ), "Doit contenir exactement 15 éditeurs japonais"
+    assert (
+        len(JAPANESE_ANIME_DISTRIBUTORS) == 10
+    ), "Doit contenir exactement 10 diffuseurs japonais"
+    assert (
+        len(JAPANESE_MARKET_RELATIONS) == 40
+    ), "Doit contenir exactement 40 relations japonaises"
+    assert (
+        len(JAPANESE_VOICE_ACTORS) >= 10
+    ), "Doit réutiliser les seiyuu japonais (au moins 10)"
 
 
 def test_indexer_integration():
@@ -69,13 +71,13 @@ def test_sft_instruction_generators():
     relations_instructions = generate_japanese_market_relations_instructions()
 
     # 15 seiyuu * 15 + 15 éditeurs * 15 + 10 diffuseurs * 15 = 600
-    assert len(profile_instructions) == 600, (
-        f"Attendu 600 profils, obtenu {len(profile_instructions)}"
-    )
+    assert (
+        len(profile_instructions) == 600
+    ), f"Attendu 600 profils, obtenu {len(profile_instructions)}"
     # 40 relations * 4 variations = 160
-    assert len(relations_instructions) == 160, (
-        f"Attendu 160 relations, obtenu {len(relations_instructions)}"
-    )
+    assert (
+        len(relations_instructions) == 160
+    ), f"Attendu 160 relations, obtenu {len(relations_instructions)}"
 
     # Vérification du format
     for item in profile_instructions + relations_instructions:
@@ -100,22 +102,22 @@ def test_dpo_corruption_regional_partition():
     for jp_pub in JAPANESE_PUBLISHERS_SET:
         related = RELATED_ENTITIES_MAP.get(jp_pub, [])
         for item in related:
-            assert item in JAPANESE_PUBLISHERS_SET, (
-                f"Un éditeur japonais ({jp_pub}) ne peut être remplacé que par un autre éditeur japonais. Obtenu: {item}"
-            )
+            assert (
+                item in JAPANESE_PUBLISHERS_SET
+            ), f"Un éditeur japonais ({jp_pub}) ne peut être remplacé que par un autre éditeur japonais. Obtenu: {item}"
 
     for jp_dist in JAPANESE_DISTRIBUTORS_SET:
         related = RELATED_ENTITIES_MAP.get(jp_dist, [])
         for item in related:
-            assert item in JAPANESE_DISTRIBUTORS_SET, (
-                f"Un diffuseur japonais ({jp_dist}) ne peut être remplacé que par un autre diffuseur japonais. Obtenu: {item}"
-            )
+            assert (
+                item in JAPANESE_DISTRIBUTORS_SET
+            ), f"Un diffuseur japonais ({jp_dist}) ne peut être remplacé que par un autre diffuseur japonais. Obtenu: {item}"
 
     # Vérifier réciproquement pour le marché français
     french_pubs = [p for p in PUBLISHERS_LIST if p not in JAPANESE_PUBLISHERS_SET]
     for fr_pub in french_pubs:
         related = RELATED_ENTITIES_MAP.get(fr_pub, [])
         for item in related:
-            assert item not in JAPANESE_PUBLISHERS_SET, (
-                f"Un éditeur français ({fr_pub}) ne peut pas être remplacé par un éditeur japonais. Obtenu: {item}"
-            )
+            assert (
+                item not in JAPANESE_PUBLISHERS_SET
+            ), f"Un éditeur français ({fr_pub}) ne peut pas être remplacé par un éditeur japonais. Obtenu: {item}"

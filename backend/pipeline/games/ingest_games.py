@@ -1,17 +1,18 @@
 # Fix path for internal imports
-import sys
 import os
+import sys
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(CURRENT_DIR)))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, os.path.join(PROJECT_ROOT, "backend"))
 
-from core.utils.security import safe_http_request  # noqa: E402
 import json  # noqa: E402
-import time  # noqa: E402
-import os  # noqa: E402
 import logging  # noqa: E402
+import os  # noqa: E402
+import time  # noqa: E402
+
+from core.utils.security import safe_http_request  # noqa: E402
 from dotenv import load_dotenv  # noqa: E402
 
 logger = logging.getLogger("animetix.pipeline." + __name__)
@@ -97,12 +98,16 @@ def run_ingestion():
                 "themes": [t["name"] for t in game.get("themes", [])],
                 "platforms": [p["name"] for p in game.get("platforms", [])],
                 "rating": game.get("total_rating"),
-                "year": time.strftime("%Y", time.gmtime(game["first_release_date"]))
-                if game.get("first_release_date")
-                else "0000",
-                "image": f"https:{game['cover']['url'].replace('t_thumb', 't_cover_big')}"
-                if game.get("cover")
-                else None,
+                "year": (
+                    time.strftime("%Y", time.gmtime(game["first_release_date"]))
+                    if game.get("first_release_date")
+                    else "0000"
+                ),
+                "image": (
+                    f"https:{game['cover']['url'].replace('t_thumb', 't_cover_big')}"
+                    if game.get("cover")
+                    else None
+                ),
                 "similar": [s["name"] for s in game.get("similar_games", [])[:5]],
             }
             new_raw_data.append(formatted)

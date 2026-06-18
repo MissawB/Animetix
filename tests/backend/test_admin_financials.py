@@ -1,7 +1,7 @@
 import pytest
-from rest_framework.test import APIClient
-from django.contrib.auth import get_user_model
 from animetix.models import AdEvent, AITokenUsage
+from django.contrib.auth import get_user_model
+from rest_framework.test import APIClient
 
 User = get_user_model()
 

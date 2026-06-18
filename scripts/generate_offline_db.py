@@ -1,6 +1,6 @@
-import sqlite3
 import json
 import os
+import sqlite3
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(BASE_DIR, "data", "processed")
@@ -83,9 +83,11 @@ def generate_sqlite_catalog(limit=2000):
                         item.get("title_native"),
                         item.get("image"),
                         pop,
-                        item.get("description")[:500]
-                        if item.get("description")
-                        else "",
+                        (
+                            item.get("description")[:500]
+                            if item.get("description")
+                            else ""
+                        ),
                     ),
                 )
 

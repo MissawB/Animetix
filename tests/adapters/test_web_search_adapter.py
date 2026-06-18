@@ -1,4 +1,5 @@
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from adapters.persistence.web_search_adapter import UnifiedWebSearchAdapter
 
 

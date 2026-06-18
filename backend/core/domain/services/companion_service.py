@@ -1,5 +1,6 @@
-from typing import Optional, List
 import re
+from typing import List, Optional
+
 from .llm_service import LLMService
 from .prompt_manager import PromptManager
 

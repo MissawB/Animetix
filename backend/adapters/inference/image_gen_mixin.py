@@ -4,9 +4,10 @@ import base64  # noqa: E402
 import os  # noqa: E402
 import tempfile  # noqa: E402
 from io import BytesIO  # noqa: E402
-from typing import List, Dict  # noqa: E402
-from core.utils.lazy_import import lazy_import  # noqa: E402
+from typing import Dict, List  # noqa: E402
+
 from core.domain.exceptions import InferenceError  # noqa: E402
+from core.utils.lazy_import import lazy_import  # noqa: E402
 
 torch = lazy_import("torch")
 np = lazy_import("numpy")
@@ -122,9 +123,7 @@ class ImageGenMixin:
             num_steps = (
                 4
                 if "schnell" in model_id.lower()
-                else 1
-                if "turbo" in model_id.lower()
-                else 30
+                else 1 if "turbo" in model_id.lower() else 30
             )
             guidance_scale = (
                 0.0
@@ -215,11 +214,9 @@ class ImageGenMixin:
             return ""
 
     def inpaint_text_bubbles(self, image_data: bytes, bubbles: List[Dict]) -> str:
-        from PIL import (
-            Image as PILImage,
-            ImageDraw as PILImageDraw,
-            ImageFont as PILImageFont,
-        )  # noqa: E402
+        from PIL import Image as PILImage  # noqa: E402
+        from PIL import ImageDraw as PILImageDraw
+        from PIL import ImageFont as PILImageFont
 
         try:
             init_image = PILImage.open(BytesIO(image_data)).convert("RGB")

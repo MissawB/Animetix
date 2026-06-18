@@ -1,12 +1,13 @@
+import base64
+import binascii
 import json
 import logging
 import re
-import base64
-import binascii
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
+
 from ...ports.inference_port import InferencePort
-from .prompt_manager import PromptManager
 from ..exceptions import ContentModerationError
+from .prompt_manager import PromptManager
 
 logger = logging.getLogger("animetix.guardrail")
 

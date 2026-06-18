@@ -1,8 +1,9 @@
 import json
-from sentence_transformers import SentenceTransformer
+import logging
 import os
 import sys
-import logging
+
+from sentence_transformers import SentenceTransformer
 
 logger = logging.getLogger("animetix." + __name__)
 

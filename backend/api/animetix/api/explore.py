@@ -1,8 +1,9 @@
-from rest_framework import views, response, status, permissions
-from ..containers import Container
-from dependency_injector.wiring import inject, Provide
-from ..models import MediaItem, UserRecommendation
 from animetix_project.logging_config import get_logger
+from dependency_injector.wiring import Provide, inject
+from rest_framework import permissions, response, status, views
+
+from ..containers import Container
+from ..models import MediaItem, UserRecommendation
 
 logger = get_logger("animetix.explore")
 
@@ -121,14 +122,14 @@ class MarketWikiView(views.APIView):
 
     def get(self, request):
         try:
-            from backend.pipeline.mlops.japanese_market_db import (
-                JAPANESE_MANGA_PUBLISHERS,
-                JAPANESE_ANIME_DISTRIBUTORS,
-            )  # noqa: E402
-            from backend.pipeline.mlops.french_market_db import (
-                FRENCH_MANGA_PUBLISHERS,
+            from backend.pipeline.mlops.french_market_db import (  # noqa: E402
                 FRENCH_ANIME_DISTRIBUTORS,
-            )  # noqa: E402
+                FRENCH_MANGA_PUBLISHERS,
+            )
+            from backend.pipeline.mlops.japanese_market_db import (  # noqa: E402
+                JAPANESE_ANIME_DISTRIBUTORS,
+                JAPANESE_MANGA_PUBLISHERS,
+            )
 
             return response.Response(
                 {
@@ -145,14 +146,14 @@ class MarketWikiView(views.APIView):
         except ImportError:
             # Fallback if path is different (depends on how it's executed)
             try:
-                from pipeline.mlops.japanese_market_db import (
-                    JAPANESE_MANGA_PUBLISHERS,
-                    JAPANESE_ANIME_DISTRIBUTORS,
-                )  # noqa: E402
-                from pipeline.mlops.french_market_db import (
-                    FRENCH_MANGA_PUBLISHERS,
+                from pipeline.mlops.french_market_db import (  # noqa: E402
                     FRENCH_ANIME_DISTRIBUTORS,
-                )  # noqa: E402
+                    FRENCH_MANGA_PUBLISHERS,
+                )
+                from pipeline.mlops.japanese_market_db import (  # noqa: E402
+                    JAPANESE_ANIME_DISTRIBUTORS,
+                    JAPANESE_MANGA_PUBLISHERS,
+                )
 
                 return response.Response(
                     {

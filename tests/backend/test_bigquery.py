@@ -1,5 +1,6 @@
+from unittest.mock import ANY, patch
+
 import pytest
-from unittest.mock import patch, ANY
 from animetix.bigquery_service import BigQueryTelemetryService
 
 
@@ -23,8 +24,8 @@ def test_telemetry_service_local_mode_logs():
 
 @pytest.mark.django_db
 def test_signals_trigger_tasks():
+    from animetix.models import ArchetypeDriftSnapshot, DuelRoom  # noqa: E402
     from django.contrib.auth.models import User  # noqa: E402
-    from animetix.models import DuelRoom, ArchetypeDriftSnapshot  # noqa: E402
 
     user = User.objects.create_user(username="sig_tester", password="pwd")
 
@@ -56,9 +57,9 @@ def test_signals_trigger_tasks():
 
 @pytest.mark.django_db
 def test_sync_recommendations_command():
-    from django.core.management import call_command  # noqa: E402
-    from animetix.models import UserRecommendation, MediaItem  # noqa: E402
+    from animetix.models import MediaItem, UserRecommendation  # noqa: E402
     from django.contrib.auth.models import User  # noqa: E402
+    from django.core.management import call_command  # noqa: E402
 
     user = User.objects.create_user(username="command_tester", password="pwd")
     media = MediaItem.objects.create(

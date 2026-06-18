@@ -1,7 +1,8 @@
-import pytest
-import os
 import json
+import os
 from unittest.mock import MagicMock
+
+import pytest
 from core.domain.services.self_play_debate_service import SelfPlayDebateService
 
 

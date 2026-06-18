@@ -1,9 +1,8 @@
-import pytest
-from unittest.mock import MagicMock, patch
-
 # Mocking heavy dependencies before imports
 import sys
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
 
 mock_neo4j = Mock()
 sys.modules["neo4j"] = mock_neo4j  # noqa: E402
@@ -11,7 +10,7 @@ sys.modules["pipeline.neo4j_client"] = Mock(neo4j_manager=Mock())  # noqa: E402
 
 from core.domain.services.graph_construction_service import (  # noqa: E402
     KnowledgeGraphConstructionService,
-)  # noqa: E402  # noqa: E402
+)
 
 
 @pytest.fixture

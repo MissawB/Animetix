@@ -1,8 +1,9 @@
 import logging
-from typing import List, Dict, Optional, Any
-from django.conf import settings
-from core.ports.repository_port import RepositoryPort
+from typing import Any, Dict, List, Optional
+
 from animetix.models import MediaItem
+from core.ports.repository_port import RepositoryPort
+from django.conf import settings
 from django.db.models import Q
 
 logger = logging.getLogger("animetix")
@@ -223,8 +224,8 @@ class DjangoRepositoryAdapter(RepositoryPort):
         # TODO: This feature uses LLM-generated SQL and is HIGH-RISK.
         # The `validate_sql_query` guardrail is CRITICAL for preventing SQL injection.
         # This function requires rigorous security review and testing, especially any changes to `validate_sql_query`.
-        from django.db import connection  # noqa: E402
         from core.utils.sql_guard import validate_sql_query  # noqa: E402
+        from django.db import connection  # noqa: E402
 
         nl_query_active = getattr(settings, "ALLOYDB_NL_QUERY_ACTIVE", False)
         config_name = getattr(settings, "ALLOYDB_NL_CONFIG_NAME", "animetix_catalog")

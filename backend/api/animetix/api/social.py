@@ -1,28 +1,29 @@
-from rest_framework import viewsets, permissions, status
+from django.contrib.auth.models import User  # noqa: E402
+from pydantic import BaseModel, Field, ValidationError  # noqa: E402
+from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
 from ..models import (
-    Profile,
-    CreativeFusion,
     Achievement,
-    Notification,
-    DiscoveryClub,
-    ClubMembership,
     ClubEvent,
+    ClubMembership,
+    CreativeFusion,
+    DiscoveryClub,
+    Notification,
+    Profile,
 )
 from ..serializers import (
-    ProfileSerializer,
-    CreativeFusionSerializer,
     AchievementSerializer,
+    ClubEventSerializer,
+    CreativeFusionSerializer,
+    DiscoveryClubSerializer,
     FriendshipSerializer,
     NotificationSerializer,
-    DiscoveryClubSerializer,
+    ProfileSerializer,
     SocialUserSerializer,
-    ClubEventSerializer,
 )
-from django.contrib.auth.models import User  # noqa: E402
-from pydantic import BaseModel, Field, ValidationError  # noqa: E402
 
 
 class PersonalizationSchema(BaseModel):
@@ -262,6 +263,7 @@ class ProfileViewSet(viewsets.ModelViewSet):
         et crédite un bonus de secours de 1000 Bx.
         """
         from django.utils import timezone  # noqa: E402
+
         from ..models import AITokenUsage, WalletTransaction  # noqa: E402
 
         today = timezone.now().date()

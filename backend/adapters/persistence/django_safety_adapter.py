@@ -1,9 +1,9 @@
 import logging
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger("animetix.persistence.safety")
-from core.ports.safety_port import SafetyPort  # noqa: E402
 from animetix.models import AISafetyEvent  # noqa: E402
+from core.ports.safety_port import SafetyPort  # noqa: E402
 from django.contrib.auth.models import User  # noqa: E402
 
 
@@ -67,9 +67,11 @@ class DjangoSafetyAdapter(SafetyPort):
                 "event_type": e.event_type,
                 "action": e.action_taken,
                 "categories": e.detected_categories,
-                "input_snippet": e.input_text[:100] + "..."
-                if len(e.input_text) > 100
-                else e.input_text,
+                "input_snippet": (
+                    e.input_text[:100] + "..."
+                    if len(e.input_text) > 100
+                    else e.input_text
+                ),
                 "reasoning": e.reasoning,
             }
             for e in events

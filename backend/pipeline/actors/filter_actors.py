@@ -1,7 +1,7 @@
 import json
+import logging
 import os
 import sys
-import logging
 
 # Forcer l'encodage UTF-8 pour éviter les erreurs sur Windows avec les emojis
 if hasattr(sys.stdout, "reconfigure"):

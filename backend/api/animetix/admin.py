@@ -1,10 +1,9 @@
-from django.contrib import admin
-from django.urls import path
-from django.shortcuts import redirect
-from django.contrib import messages
-from django.utils.html import format_html
 from animetix.containers import get_container
-from animetix.models import GoldDatasetEntry, AIFeedback, AISafetyEvent, AIREvalResult
+from animetix.models import AIFeedback, AIREvalResult, AISafetyEvent, GoldDatasetEntry
+from django.contrib import admin, messages
+from django.shortcuts import redirect
+from django.urls import path
+from django.utils.html import format_html
 
 
 @admin.register(GoldDatasetEntry)
@@ -77,9 +76,7 @@ class GoldDatasetEntryAdmin(admin.ModelAdmin):
         color = (
             "green"
             if obj.ai_validation_score >= 0.7
-            else "orange"
-            if obj.ai_validation_score >= 0.4
-            else "red"
+            else "orange" if obj.ai_validation_score >= 0.4 else "red"
         )
         return format_html(
             '<span style="color: {}; font-weight: bold;">{:.2f}</span>',
@@ -94,9 +91,7 @@ class GoldDatasetEntryAdmin(admin.ModelAdmin):
         color = (
             "green"
             if obj.confidence_score >= 0.7
-            else "orange"
-            if obj.confidence_score >= 0.4
-            else "red"
+            else "orange" if obj.confidence_score >= 0.4 else "red"
         )
         return format_html(
             '<span style="color: {}; font-weight: bold;">{:.2f}</span>',

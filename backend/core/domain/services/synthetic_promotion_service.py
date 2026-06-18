@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
-from typing import Dict, Any
+from typing import Any, Dict
+
 from core.ports.gold_dataset_port import GoldDatasetPort
 
 logger = logging.getLogger("animetix.mlops.promotion")

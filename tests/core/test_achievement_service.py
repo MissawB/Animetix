@@ -1,10 +1,11 @@
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
+from core.domain.entities.achievement import AchievementDefinition, GameEvent
 from core.domain.services.achievement_service import (
     AchievementDomainService,
     GameEventListener,
 )
-from core.domain.entities.achievement import AchievementDefinition, GameEvent
 
 
 @pytest.fixture

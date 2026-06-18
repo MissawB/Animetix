@@ -1,10 +1,11 @@
 from unittest.mock import MagicMock
-from core.domain.services.xai_service import XaiDiagnosticService
+
 from core.domain.entities.ai_schemas import (
-    InferenceResponse,
     InferenceMetadata,
+    InferenceResponse,
     TokenLogProb,
 )
+from core.domain.services.xai_service import XaiDiagnosticService
 
 
 def test_get_diagnostics_report_structure():

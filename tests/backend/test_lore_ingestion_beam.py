@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import patch
+
+import pytest
 
 
 class MockResponse:
@@ -28,9 +29,9 @@ def test_beam_pipeline_execution():
 
         with patch.object(repo.chroma, "upsert_items") as mock_upsert:
             from backend.pipeline.mlops.lore_ingestion_beam import (  # noqa: E402
-                ScrapeAndCleanDoFn,
                 ChunkTextDoFn,
                 GenerateEmbeddingsDoFn,
+                ScrapeAndCleanDoFn,
                 WriteToVectorDBDoFn,
             )
 
@@ -68,10 +69,10 @@ def test_beam_pipeline_execution():
 
 
 def test_dofn_parameter_propagation():
-    from backend.pipeline.mlops.lore_ingestion_beam import (
+    from backend.pipeline.mlops.lore_ingestion_beam import (  # noqa: E402
         GenerateEmbeddingsDoFn,
         WriteToVectorDBDoFn,
-    )  # noqa: E402
+    )
 
     # Test GenerateEmbeddingsDoFn
     embedder = GenerateEmbeddingsDoFn(

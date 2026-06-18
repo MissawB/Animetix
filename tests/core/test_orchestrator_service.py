@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 from core.domain.services.orchestrator_agent_service import OrchestratorAgentService
 
 

@@ -1,10 +1,12 @@
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
-from django.test import RequestFactory
-from django.core.exceptions import PermissionDenied
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
-from backend.api.animetix.auth import IAPRemoteUserMiddleware, IAPRemoteUserBackend
+from django.core.exceptions import PermissionDenied
+from django.test import RequestFactory
+
+from backend.api.animetix.auth import IAPRemoteUserBackend, IAPRemoteUserMiddleware
 
 User = get_user_model()
 

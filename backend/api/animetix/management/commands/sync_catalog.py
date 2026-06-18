@@ -1,8 +1,8 @@
-import os
 import json
-from django.core.management.base import BaseCommand
-from animetix.models import MediaItem
+import os
 
+from animetix.models import MediaItem
+from django.core.management.base import BaseCommand
 from django.db import transaction
 
 

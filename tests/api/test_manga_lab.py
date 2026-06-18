@@ -1,11 +1,12 @@
-import pytest
 import base64
-from unittest.mock import patch, MagicMock
-from django.test import RequestFactory
+from unittest.mock import MagicMock, patch
+
+import pytest
 from animetix.api.labs import MangaCleanLabView, MangaTranslateLabView
-from django.core.files.uploadedfile import SimpleUploadedFile
-from rest_framework.test import force_authenticate
 from django.contrib.auth.models import User
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import RequestFactory
+from rest_framework.test import force_authenticate
 
 
 @pytest.fixture

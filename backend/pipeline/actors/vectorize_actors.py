@@ -1,8 +1,9 @@
 import json
-from sentence_transformers import SentenceTransformer
+import logging
 import os
 import sys
-import logging
+
+from sentence_transformers import SentenceTransformer
 
 # Détection robuste de la racine du projet
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

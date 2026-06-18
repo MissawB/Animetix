@@ -1,8 +1,8 @@
-import re
 import json
-import os
-import sys
 import logging
+import os
+import re
+import sys
 
 # Setup logging
 logger = logging.getLogger("animetix." + __name__)
@@ -115,13 +115,15 @@ def run_refinement():
                     for s in anime.get("studios", {}).get("edges", [])
                     if s["node"]["isAnimationStudio"]
                 ],
-                "recommendations": {
-                    r["mediaRecommendation"]["title"]["romaji"]: r["rating"]
-                    for r in anime["recommendations"]["nodes"]
-                    if r.get("mediaRecommendation")
-                }
-                if anime.get("recommendations")
-                else {},
+                "recommendations": (
+                    {
+                        r["mediaRecommendation"]["title"]["romaji"]: r["rating"]
+                        for r in anime["recommendations"]["nodes"]
+                        if r.get("mediaRecommendation")
+                    }
+                    if anime.get("recommendations")
+                    else {}
+                ),
             }
 
             # Construction des nœuds du graphe

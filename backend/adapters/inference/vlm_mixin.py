@@ -1,7 +1,8 @@
 """VLM (Visual Language Model) and Object Detection mixin for Inference adapters."""
 
 import logging  # noqa: E402
-from typing import Optional, List, Dict  # noqa: E402
+from typing import Dict, List, Optional  # noqa: E402
+
 from core.utils.lazy_import import lazy_import  # noqa: E402
 
 torch = lazy_import("torch")
@@ -22,8 +23,9 @@ class VlmMixin:
     ) -> List[Dict]:
         """Détecte des objets via OwlViT."""
         try:
-            from PIL import Image  # noqa: E402
             from io import BytesIO  # noqa: E402
+
+            from PIL import Image  # noqa: E402
             from transformers import pipeline  # noqa: E402
 
             img = Image.open(BytesIO(image_data)).convert("RGB")
@@ -64,8 +66,9 @@ class VlmMixin:
     ) -> str:
         """Génère une description d'image via SmolVLM."""
         try:
-            from PIL import Image  # noqa: E402
             from io import BytesIO  # noqa: E402
+
+            from PIL import Image  # noqa: E402
             from transformers import AutoModelForVision2Seq, AutoProcessor  # noqa: E402
 
             img = Image.open(BytesIO(image_data)).convert("RGB")
@@ -80,9 +83,9 @@ class VlmMixin:
                     vlm_id,
                     revision="main",
                     trust_remote_code=True,  # nosec B615
-                    torch_dtype=torch.bfloat16
-                    if torch.cuda.is_available()
-                    else torch.float32,
+                    torch_dtype=(
+                        torch.bfloat16 if torch.cuda.is_available() else torch.float32
+                    ),
                 ).to("cuda" if torch.cuda.is_available() else "cpu")
 
             messages = [

@@ -1,8 +1,9 @@
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 from core.domain.services.spatial_audio_service import (
-    VoiceCloningService,
     NativeSpeechLLMService,
+    VoiceCloningService,
 )
 
 

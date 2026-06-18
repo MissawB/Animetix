@@ -1,11 +1,12 @@
-import os
-import orjson
-import numpy as np
 import logging
-from typing import Optional, Dict, List, Any
+import os
+from typing import Any, Dict, List, Optional
+
+import numpy as np
+import orjson
 from core.ports.repository_port import RepositoryPort
-from pipeline.chroma_client import chroma_manager
 from django.core.cache import cache
+from pipeline.chroma_client import chroma_manager
 
 logger = logging.getLogger("animetix")
 

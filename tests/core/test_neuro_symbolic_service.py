@@ -1,7 +1,8 @@
-import pytest
 from unittest.mock import MagicMock
-from core.domain.services.neuro_symbolic_service import NeuroSymbolicService
+
+import pytest
 from core.domain.services.neuro_symbolic.formal_solver import FormalLogicSolver
+from core.domain.services.neuro_symbolic_service import NeuroSymbolicService
 
 
 @pytest.fixture

@@ -1,11 +1,13 @@
-import random
 import logging
+import random
+from typing import Any, Dict, Optional, Tuple
+
 import orjson
-from typing import Dict, Tuple, Optional, Any
 from core.ports.game_state_port import GameStatePort
+
+from ..entities.ai_schemas import ParadoxLogic
 from .llm_service import LLMService
 from .neuro_symbolic_service import NeuroSymbolicService
-from ..entities.ai_schemas import ParadoxLogic
 
 logger = logging.getLogger("animetix.paradox")
 

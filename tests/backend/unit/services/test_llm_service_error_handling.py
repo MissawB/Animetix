@@ -1,10 +1,11 @@
-import pytest
 import logging
 from unittest.mock import MagicMock
-from pydantic import BaseModel
-from core.domain.services.llm_service import LLMService
-from core.domain.exceptions import InferenceError, ParsingError
+
+import pytest
 from core.domain.entities.ai_schemas import InferenceResponse
+from core.domain.exceptions import InferenceError, ParsingError
+from core.domain.services.llm_service import LLMService
+from pydantic import BaseModel
 
 
 class MockSchema(BaseModel):

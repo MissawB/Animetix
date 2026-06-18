@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 from core.domain.services.companion_service import CompanionService
 
 

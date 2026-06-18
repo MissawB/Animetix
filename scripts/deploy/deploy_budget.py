@@ -1,6 +1,6 @@
+import shutil
 import subprocess
 import sys
-import shutil
 
 
 def run_command(cmd_args, check=True):

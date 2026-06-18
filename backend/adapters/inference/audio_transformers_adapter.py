@@ -1,9 +1,10 @@
 import logging
-from typing import Optional, List
-from core.ports.inference_port import InferencePort, InferenceNotImplementedError
-from core.ports.usage_port import UsagePort
-from core.domain.entities.ai_schemas import InferenceResponse
+from typing import List, Optional
+
 from adapters.inference.audio_mixin import AudioMixin
+from core.domain.entities.ai_schemas import InferenceResponse
+from core.ports.inference_port import InferenceNotImplementedError, InferencePort
+from core.ports.usage_port import UsagePort
 
 logger = logging.getLogger("animetix.inference.audio")
 
@@ -57,8 +58,10 @@ class AudioTransformersAdapter(AudioMixin, InferencePort):
 
     def health_check(self) -> dict:
         return {
-            "status": "online"
-            if self._tts_model or self._audioldm_pipeline or self._moshi_model
-            else "offline",
+            "status": (
+                "online"
+                if self._tts_model or self._audioldm_pipeline or self._moshi_model
+                else "offline"
+            ),
             "engine": "audio_transformers",
         }

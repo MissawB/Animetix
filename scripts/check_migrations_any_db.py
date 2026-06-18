@@ -1,5 +1,5 @@
-import sqlite3
 import os
+import sqlite3
 import sys
 
 db_path = sys.argv[1] if len(sys.argv) > 1 else "backend/api/db.sqlite3"

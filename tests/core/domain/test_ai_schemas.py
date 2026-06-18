@@ -1,12 +1,13 @@
 import pytest
 from pydantic import ValidationError
+
 from backend.core.domain.entities.ai_schemas import (
-    InferenceResponse,
-    InferenceMetadata,
-    TokenLogProb,
-    RAGContext,
     CombatCharacter,
     CombatStats,
+    InferenceMetadata,
+    InferenceResponse,
+    RAGContext,
+    TokenLogProb,
 )
 
 

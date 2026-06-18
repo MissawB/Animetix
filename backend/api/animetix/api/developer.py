@@ -1,19 +1,21 @@
 import json
-import secrets
 import logging
+import secrets
+
+from animetix.auth import DeveloperApiKeyAuthentication
+from animetix.models import Profile
+from animetix.stripe_billing import StripeBillingService
 from django.conf import settings
 from django.http import HttpResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import permissions
-from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from animetix.models import Profile
-from animetix.auth import DeveloperApiKeyAuthentication
-from animetix.stripe_billing import StripeBillingService
 from backend.adapters.persistence.django_usage_adapter import DjangoUsageAdapter
+
 from ..containers import get_container
 
 logger = logging.getLogger("animetix.api.developer")

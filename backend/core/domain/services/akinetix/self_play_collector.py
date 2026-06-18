@@ -1,7 +1,8 @@
 import logging
 from typing import Callable
-from core.domain.services.akinetix_rl_env import AkinetixRLEnvironment
+
 import numpy as np
+from core.domain.services.akinetix_rl_env import AkinetixRLEnvironment
 
 logger = logging.getLogger("animetix.rl.selfplay")
 

@@ -1,5 +1,6 @@
-from animetix.tasks import generate_fusion_scenario_task, generate_fusion_image_task
 from unittest.mock import MagicMock
+
+from animetix.tasks import generate_fusion_image_task, generate_fusion_scenario_task
 
 
 def test_generate_fusion_scenario_task(mocker):

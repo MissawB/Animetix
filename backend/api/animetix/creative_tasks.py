@@ -1,5 +1,5 @@
-from animetix_project.logging_config import get_logger
 from animetix.tasks_registry import register_task
+from animetix_project.logging_config import get_logger
 
 logger = get_logger("animetix." + __name__)
 
@@ -8,6 +8,7 @@ logger = get_logger("animetix." + __name__)
 def process_video_search_task(video_data_b64, query):
     """Tâche asynchrone pour Video-RAG."""
     import base64  # noqa: E402
+
     from .containers import get_container  # noqa: E402
 
     container = get_container()
@@ -25,6 +26,7 @@ def process_video_search_task(video_data_b64, query):
 def transform_user_image_task(image_data_b64, studio_name):
     """Tâche asynchrone pour Anime-to-Real transformation."""
     import base64  # noqa: E402
+
     from .containers import get_container  # noqa: E402
 
     container = get_container()
@@ -40,6 +42,7 @@ def transform_user_image_task(image_data_b64, studio_name):
 def translate_manga_page_task(image_data_b64, target_lang):
     """Tâche asynchrone pour le pipeline Manga Flow."""
     import base64  # noqa: E402
+
     from .containers import get_container  # noqa: E402
 
     container = get_container()
@@ -55,6 +58,7 @@ def translate_manga_page_task(image_data_b64, target_lang):
 def localize_video_action_task(video_data_b64, actions):
     """Tâche asynchrone pour la Temporal Action Localization (TAL)."""
     import base64  # noqa: E402
+
     from .containers import get_container  # noqa: E402
 
     container = get_container()
@@ -71,6 +75,7 @@ def localize_video_action_task(video_data_b64, actions):
 def transform_video_task(video_data_b64, studio_name):
     """Tâche asynchrone pour le Neural Style Transfer sur vidéo avec consistance temporelle."""
     import base64  # noqa: E402
+
     from .containers import get_container  # noqa: E402
 
     container = get_container()
@@ -88,6 +93,7 @@ def transform_video_task(video_data_b64, studio_name):
 def generate_video_soundscape_task(video_data_b64):
     """Tâche asynchrone pour générer une ambiance sonore à partir d'une vidéo."""
     import base64  # noqa: E402
+
     from .containers import get_container  # noqa: E402
 
     container = get_container()
@@ -103,6 +109,7 @@ def generate_video_soundscape_task(video_data_b64):
 def generate_3d_scene_task(image_data_b64, title):
     """Tâche asynchrone pour la reconstruction de scène 3D (Spatial Computing)."""
     import base64  # noqa: E402
+
     from .containers import get_container  # noqa: E402
 
     container = get_container()
@@ -130,9 +137,11 @@ def process_gcs_upload_task(bucket, name):
     Asynchronously processes a raw manga page uploaded to GCS.
     Downloads the image, translates it via MangaFlowService, and uploads the result back.
     """
-    import os  # noqa: E402
     import base64  # noqa: E402
+    import os  # noqa: E402
+
     from django.conf import settings  # noqa: E402
+
     from .containers import get_container  # noqa: E402
 
     logger.info(f"Processing GCS upload event: gs://{bucket}/{name}")
@@ -141,8 +150,9 @@ def process_gcs_upload_task(bucket, name):
 
     if not is_prod:
         logger.info("Local development fallback active. Simulating image retrieval.")
-        from PIL import Image as PILImage  # noqa: E402
         from io import BytesIO  # noqa: E402
+
+        from PIL import Image as PILImage  # noqa: E402
 
         img = PILImage.new("RGB", (100, 100), color="white")
         buf = BytesIO()

@@ -10,11 +10,12 @@
 # ]
 # ///
 
-import os
 import logging
+import os
+
 from datasets import load_dataset
+from trl import SFTConfig, SFTTrainer
 from unsloth import FastLanguageModel
-from trl import SFTTrainer, SFTConfig
 
 # Configuration du logger
 logger = logging.getLogger("animetix." + __name__)

@@ -1,8 +1,8 @@
 import pytest
+from animetix.models import AITokenUsage
 from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.test import APIClient
-from animetix.models import AITokenUsage
 
 
 @pytest.mark.django_db

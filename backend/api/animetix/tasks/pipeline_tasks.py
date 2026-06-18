@@ -6,9 +6,10 @@ Migrated from Dagster pipelines to achieve a lightweight orchestration engine.
 
 import sys  # noqa: E402
 from pathlib import Path  # noqa: E402
-from animetix_project.logging_config import get_logger  # noqa: E402
-from animetix.tasks_registry import register_task  # noqa: E402
+
 from animetix.tasks_client import enqueue_task  # noqa: E402
+from animetix.tasks_registry import register_task  # noqa: E402
+from animetix_project.logging_config import get_logger  # noqa: E402
 
 logger = get_logger("animetix." + __name__)
 
@@ -38,13 +39,13 @@ def run_daily_ingestion_workflow():
 
     # 1. Characters Ingestion & Vectorization
     try:
+        from characters import filter_characters  # noqa: E402
         from characters import (
             ingest_characters,
             refine_characters,
-            filter_characters,
             train_vibe_characters,
             vectorize_characters,
-        )  # noqa: E402
+        )
 
         logger.info("Ingesting raw characters...")
         ingest_characters.run_ingestion()
@@ -62,12 +63,8 @@ def run_daily_ingestion_workflow():
 
     # 2. Actors Ingestion & Mapping
     try:
-        from actors import (
-            ingest_actors,
-            filter_actors,
-            vectorize_actors,
-            cross_media_mapping,
-        )  # noqa: E402
+        from actors import filter_actors  # noqa: E402
+        from actors import cross_media_mapping, ingest_actors, vectorize_actors
 
         logger.info("Ingesting raw actors...")
         ingest_actors.run_ingestion()
@@ -95,7 +92,7 @@ def run_daily_ingestion_workflow():
 
     # 4. Games Ingestion
     try:
-        from games import ingest_games, filter_games, vectorize_games  # noqa: E402
+        from games import filter_games, ingest_games, vectorize_games  # noqa: E402
 
         logger.info("Ingesting games...")
         ingest_games.run_ingestion()
@@ -109,14 +106,14 @@ def run_daily_ingestion_workflow():
 
     # 5. Anime Ingestion & Reconciliation
     try:
+        from anime import filter_anime  # noqa: E402
         from anime import (
+            fetch_themes,
             ingest_anime,
             reconcile_drift,
-            filter_anime,
-            fetch_themes,
             train_vibe_anime,
             vectorize_anime,
-        )  # noqa: E402
+        )
 
         logger.info("Ingesting anime...")
         ingest_anime.run_ingestion()
@@ -136,13 +133,8 @@ def run_daily_ingestion_workflow():
 
     # 6. Manga Ingestion
     try:
-        from manga import (
-            ingest_manga,
-            filter_manga,
-            fetch_covers,
-            train_vibe_manga,
-            vectorize_manga,
-        )  # noqa: E402
+        from manga import filter_manga  # noqa: E402
+        from manga import fetch_covers, ingest_manga, train_vibe_manga, vectorize_manga
 
         logger.info("Ingesting manga...")
         ingest_manga.run_ingestion()
@@ -160,10 +152,10 @@ def run_daily_ingestion_workflow():
 
     # 7. Enrichment Scrapers
     try:
-        import enrich_db_scraper  # noqa: E402
-        import specialized_scrapers  # noqa: E402
         import advanced_scrapers  # noqa: E402
+        import enrich_db_scraper  # noqa: E402
         import expert_scrapers  # noqa: E402
+        import specialized_scrapers  # noqa: E402
 
         logger.info("Running general semantic enrichment...")
         enrich_db_scraper.run_enrichment(limit=10)
@@ -339,8 +331,8 @@ def check_gold_dataset_sensor_task():
     Enregistre l'état en cache pour éviter les doublons.
     """
     logger.info("🔍 Running Gold Dataset Sensor...")
-    from django.core.cache import cache  # noqa: E402
     from animetix.models import GoldDatasetEntry  # noqa: E402
+    from django.core.cache import cache  # noqa: E402
 
     validated_count = GoldDatasetEntry.objects.filter(is_validated=True).count()
     last_count = cache.get("auto_lora_last_count", 0)
@@ -372,8 +364,8 @@ def check_dpo_feedback_sensor_task():
     Enregistre l'état en cache pour éviter les doublons.
     """
     logger.info("🔍 Running DPO Feedback Sensor...")
-    from django.core.cache import cache  # noqa: E402
     from animetix.models import AIFeedback  # noqa: E402
+    from django.core.cache import cache  # noqa: E402
 
     try:
         total_feedbacks = AIFeedback.objects.count()
@@ -390,7 +382,10 @@ def check_dpo_feedback_sensor_task():
 
         # Déclenche l'entraînement
         try:
-            from pipeline.mlops.trl_ops import trl_ready_dataset, trigger_lora_training  # noqa: E402
+            from pipeline.mlops.trl_ops import (  # noqa: E402
+                trigger_lora_training,
+                trl_ready_dataset,
+            )
 
             dataset_path = trl_ready_dataset(config=None)
             trigger_lora_training(dataset_path=dataset_path)

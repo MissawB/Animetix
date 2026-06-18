@@ -1,10 +1,11 @@
-import logging
 import datetime
 import json
-from django.db import connection, transaction
-from sklearn.metrics.pairwise import cosine_similarity
+import logging
+
 import numpy as np
 from core.utils.security import sanitize_for_prompt
+from django.db import connection, transaction
+from sklearn.metrics.pairwise import cosine_similarity
 
 logger = logging.getLogger("animetix." + __name__)
 
@@ -79,8 +80,8 @@ def is_vertex_ai_supported():
 
 class VertexAICollectionWrapper:
     def __init__(self, name):
-        from google.cloud import aiplatform  # noqa: E402
         from django.conf import settings  # noqa: E402
+        from google.cloud import aiplatform  # noqa: E402
 
         self.name = name
         self.project = settings.VERTEX_AI_PROJECT_ID

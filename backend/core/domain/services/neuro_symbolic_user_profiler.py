@@ -5,7 +5,7 @@ Deduces formal logical preference rules from user positive/negative feedbacks.
 """
 
 import logging  # noqa: E402
-from typing import List, Dict, Any  # noqa: E402
+from typing import Any, Dict, List  # noqa: E402
 
 logger = logging.getLogger("animetix.neurosymbolic.profiler")
 

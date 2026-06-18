@@ -7,17 +7,15 @@ utilisant Unsloth pour l'accélération et le déchargement mémoire GPU.
 import os  # noqa: E402
 
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
-import torch  # noqa: E402
-import time  # noqa: E402
 import json  # noqa: E402
 import logging  # noqa: E402
+import time  # noqa: E402
+
+import torch  # noqa: E402
 from datasets import load_dataset  # noqa: E402
-from transformers import (  # noqa: E402
-    AutoModelForCausalLM,
-    AutoTokenizer,
-    BitsAndBytesConfig,
-)
 from peft import LoraConfig  # noqa: E402
+from transformers import AutoTokenizer  # noqa: E402
+from transformers import AutoModelForCausalLM, BitsAndBytesConfig
 
 # Configuration du logger
 logger = logging.getLogger("animetix.pipeline.mlops.train_preference")

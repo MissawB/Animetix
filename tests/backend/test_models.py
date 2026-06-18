@@ -1,8 +1,8 @@
 import pytest
-from django.contrib.auth.models import User
+from adapters.persistence.django_profile_adapter import DjangoProfileAdapter
 from animetix.models import Profile
 from core.domain.entities.user import UserProfile
-from adapters.persistence.django_profile_adapter import DjangoProfileAdapter
+from django.contrib.auth.models import User
 
 
 @pytest.mark.django_db
@@ -91,7 +91,7 @@ class TestDjangoProfileAdapter:
 
 @pytest.mark.django_db
 def test_user_recommendation_creation():
-    from animetix.models import UserRecommendation, MediaItem  # noqa: E402
+    from animetix.models import MediaItem, UserRecommendation  # noqa: E402
 
     user = User.objects.create_user(username="rec_tester", password="pwd")
     media = MediaItem.objects.create(

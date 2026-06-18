@@ -1,4 +1,5 @@
 from unittest.mock import MagicMock
+
 from core.domain.services.creative.manga_flow import MangaFlowService
 
 

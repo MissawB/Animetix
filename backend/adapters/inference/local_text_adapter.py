@@ -1,8 +1,9 @@
 import logging
-from typing import Optional, List
-from core.ports.inference_port import InferencePort
-from core.domain.exceptions import InferenceError
+from typing import List, Optional
+
 from core.domain.entities.ai_schemas import InferenceResponse
+from core.domain.exceptions import InferenceError
+from core.ports.inference_port import InferencePort
 from core.utils.lazy_import import lazy_import
 
 torch = lazy_import("torch")
@@ -31,11 +32,8 @@ class LocalTextAdapter(InferencePort):
         if self.model:
             return
         try:
-            from transformers import (
-                BitsAndBytesConfig,
-                AutoModelForCausalLM,
-                AutoTokenizer,
-            )  # noqa: E402
+            from transformers import AutoModelForCausalLM  # noqa: E402
+            from transformers import AutoTokenizer, BitsAndBytesConfig
 
             logger.info(f"🏗️ Loading Local Text Model: {self.model_id}")
             self.tokenizer = AutoTokenizer.from_pretrained(

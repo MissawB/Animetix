@@ -1,6 +1,6 @@
 import pytest
+from core.domain.entities.ai_schemas import GraphEntity, GraphExtraction, GraphRelation
 from pydantic import ValidationError
-from core.domain.entities.ai_schemas import GraphEntity, GraphRelation, GraphExtraction
 
 
 def test_graph_entity_validation():

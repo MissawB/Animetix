@@ -1,6 +1,6 @@
 import pytest
-from django.contrib.auth.models import User
 from animetix.models import CreativeFusion
+from django.contrib.auth.models import User
 
 
 @pytest.mark.django_db
@@ -29,6 +29,7 @@ def test_creative_fusion_model_creation():
 
 
 from unittest.mock import patch  # noqa: E402
+
 from animetix.tasks import generate_fusion_scenario_task  # noqa: E402
 
 

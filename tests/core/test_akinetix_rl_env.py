@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 from core.domain.services.akinetix_rl_env import AkinetixRLEnvironment
 from core.domain.services.akinetix_rl_service import AkinetixRLService
 

@@ -1,5 +1,5 @@
-from django.core.management.base import BaseCommand
 from animetix.models import Achievement
+from django.core.management.base import BaseCommand
 
 
 class Command(BaseCommand):

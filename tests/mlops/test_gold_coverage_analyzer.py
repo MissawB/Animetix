@@ -1,8 +1,9 @@
+import json
 import os
 import sys
-import json
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 # Ensure correct backend imports
 PROJECT_ROOT = os.path.dirname(
@@ -94,10 +95,10 @@ def test_analyze_coverage_identifies_gaps(mock_neo4j, mock_inference_engine, tmp
 
     with patch("scripts.analyze_gold_coverage.PROJECT_ROOT", str(tmp_path)):
         # Import inside patch
-        from scripts.analyze_gold_coverage import (
+        from scripts.analyze_gold_coverage import (  # noqa: E402
             analyze_coverage,
             generate_and_append_missing,
-        )  # noqa: E402
+        )
 
         # Verify coverage identification
         report = analyze_coverage(threshold=0.01)

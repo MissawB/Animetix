@@ -1,10 +1,11 @@
+from unittest.mock import MagicMock
+
 import pytest
+from animetix.containers import container
+from dependency_injector import providers
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
-from unittest.mock import MagicMock
-from animetix.containers import container
-from dependency_injector import providers
 
 
 @pytest.fixture

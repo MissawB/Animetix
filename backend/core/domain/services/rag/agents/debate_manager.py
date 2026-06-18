@@ -1,9 +1,10 @@
-import logging
 import json
+import logging
 import re
 from typing import Dict
+
+from core.domain.entities.ai_schemas import DebateOutcome, JudgeAction, JudgeEvaluation
 from core.domain.exceptions import InferenceError, InfrastructureError
-from core.domain.entities.ai_schemas import JudgeEvaluation, JudgeAction, DebateOutcome
 from core.domain.services.llm_service import LLMService  # noqa: E402
 from core.domain.services.prompt_manager import PromptManager  # noqa: E402
 

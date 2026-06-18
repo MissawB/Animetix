@@ -1,5 +1,6 @@
 from unittest.mock import MagicMock, patch
-from pipeline.mlops.trl_ops import trl_ready_dataset, DPOConfig
+
+from pipeline.mlops.trl_ops import DPOConfig, trl_ready_dataset
 
 
 def test_trl_ready_dataset_op():

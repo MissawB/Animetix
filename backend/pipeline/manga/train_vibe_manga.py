@@ -1,8 +1,9 @@
 import json
+import logging
 import os
 import sys
-import logging
-from sentence_transformers import SentenceTransformer, InputExample, losses
+
+from sentence_transformers import InputExample, SentenceTransformer, losses
 from torch.utils.data import DataLoader
 
 logger = logging.getLogger("animetix.pipeline." + __name__)

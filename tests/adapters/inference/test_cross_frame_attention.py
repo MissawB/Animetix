@@ -1,6 +1,8 @@
 from unittest.mock import MagicMock
-from backend.adapters.inference.image_gen_mixin import CrossFrameAttentionProcessor
+
 import torch
+
+from backend.adapters.inference.image_gen_mixin import CrossFrameAttentionProcessor
 
 
 def test_cross_frame_attention_processor_call():

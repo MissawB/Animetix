@@ -1,9 +1,9 @@
-import pytest
 from unittest.mock import MagicMock, patch
-from django.core.files.storage import default_storage
-from django.core.files.base import ContentFile
 
+import pytest
 from animetix.models import CreativeFusion
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 
 
 @pytest.mark.django_db

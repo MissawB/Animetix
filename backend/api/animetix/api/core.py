@@ -1,24 +1,25 @@
-from django.views.decorators.csrf import ensure_csrf_cookie
-from django.utils.decorators import method_decorator
-from rest_framework import permissions, status
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from dependency_injector.wiring import inject, Provide
-
-from ..serializers import ProfileSerializer, MediaItemSerializer, MangaChapterSerializer
-from ..containers import get_container, Container
-from core.domain.services.guardrail_service import GuardrailService
-from core.ports.usage_port import UsagePort
-from django.contrib.auth.models import User
 import base64
 import hashlib
+
 from animetix_project.logging_config import get_logger
+from core.domain.services.guardrail_service import GuardrailService
+from core.ports.usage_port import UsagePort
 from core.utils.security import (
-    validate_file_mime_type,
     safe_http_request,
+    validate_file_mime_type,
     validate_file_size,
     verify_proxy_signature,
 )
+from dependency_injector.wiring import Provide, inject
+from django.contrib.auth.models import User
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import ensure_csrf_cookie
+from rest_framework import permissions, status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from ..containers import Container, get_container
+from ..serializers import MangaChapterSerializer, MediaItemSerializer, ProfileSerializer
 
 ALLOWED_IMAGE_MIMES = ["image/jpeg", "image/png", "image/webp", "image/gif"]
 MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10 Mo
@@ -300,9 +301,9 @@ class ConfigView(APIView):
             "language": "fr",
             "user": {
                 "is_authenticated": request.user.is_authenticated,
-                "username": request.user.username
-                if request.user.is_authenticated
-                else None,
+                "username": (
+                    request.user.username if request.user.is_authenticated else None
+                ),
                 "rank": getattr(request.user, "profile", None)
                 and request.user.profile.rank
                 or None,

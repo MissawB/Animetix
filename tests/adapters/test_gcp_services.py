@@ -1,5 +1,6 @@
-from unittest.mock import patch, MagicMock
-from animetix.services import shutdown_brain_service, restore_brain_service
+from unittest.mock import MagicMock, patch
+
+from animetix.services import restore_brain_service, shutdown_brain_service
 
 
 @patch("google.auth.default")

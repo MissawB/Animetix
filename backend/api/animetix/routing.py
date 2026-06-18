@@ -1,11 +1,12 @@
 from django.urls import re_path
+
 from .consumers import (
-    UndercoverConsumer,
-    CodeMangaConsumer,
-    NotificationConsumer,
-    DuelConsumer,
     ClubConsumer,
+    CodeMangaConsumer,
+    DuelConsumer,
+    NotificationConsumer,
     SpeechToSpeechLiveConsumer,
+    UndercoverConsumer,
 )
 
 websocket_urlpatterns = [

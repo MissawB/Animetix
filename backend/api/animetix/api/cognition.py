@@ -1,17 +1,19 @@
 import logging
-from rest_framework.views import APIView
+
 from rest_framework import permissions, status
+from rest_framework.views import APIView
 
 logger = logging.getLogger("animetix.api.cognition")
 from rest_framework.response import Response  # noqa: E402
-from ..containers import get_container  # noqa: E402  # noqa: E402
-from ..models import ArchetypeDriftSnapshot, AIFeedback  # noqa: E402  # noqa: E402
+
+from ..containers import get_container  # noqa: E402
+from ..models import AIFeedback, ArchetypeDriftSnapshot  # noqa: E402
+from ..serializers import AIDebateSerializer  # noqa: E402
 from ..serializers import (  # noqa: E402
-    AIDebateSerializer,
+    CFRStrategySerializer,
     CounterfactualSerializer,
     CoveOracleSerializer,
-    CFRStrategySerializer,
-)  # noqa: E402  # noqa: E402
+)
 
 
 class ArchetypeNexusView(APIView):
@@ -51,6 +53,7 @@ class ArchetypeNexusView(APIView):
         # 5. Enregistrement d'un Snapshot historique (si pas de snapshot récent)
         # On limite à un snapshot par heure pour éviter de polluer la DB
         import datetime  # noqa: E402
+
         from django.utils import timezone  # noqa: E402
 
         one_hour_ago = timezone.now() - datetime.timedelta(hours=1)

@@ -1,8 +1,8 @@
 import json
-import time
+import logging
 import os
 import sys
-import logging
+import time
 
 # Setup logging
 logger = logging.getLogger("animetix." + __name__)

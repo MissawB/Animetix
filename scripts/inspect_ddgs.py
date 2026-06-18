@@ -1,5 +1,6 @@
-from duckduckgo_search import DDGS
 import inspect
+
+from duckduckgo_search import DDGS
 
 with DDGS() as ddgs:
     print(

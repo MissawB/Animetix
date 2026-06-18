@@ -1,11 +1,12 @@
 """CLIP and ColPali vision mixin for VisionTransformersAdapter."""
 
-import logging  # noqa: E402
-import httpx  # noqa: E402
 import asyncio  # noqa: E402
-from typing import Optional, List, Dict, Any  # noqa: E402
-from core.utils.lazy_import import lazy_import  # noqa: E402
+import logging  # noqa: E402
+from typing import Any, Dict, List, Optional  # noqa: E402
+
+import httpx  # noqa: E402
 from core.domain.exceptions import InferenceError  # noqa: E402
+from core.utils.lazy_import import lazy_import  # noqa: E402
 from core.utils.security import safe_http_request, safe_http_request_async  # noqa: E402
 
 torch = lazy_import("torch")
@@ -20,8 +21,9 @@ class ClipVisionMixin:
         self, image_data: bytes, model_id: Optional[str] = None
     ) -> List[float]:
         try:
-            from PIL import Image  # noqa: E402
             from io import BytesIO  # noqa: E402
+
+            from PIL import Image  # noqa: E402
             from sentence_transformers import SentenceTransformer  # noqa: E402
 
             img = Image.open(BytesIO(image_data)).convert("RGB")
@@ -110,8 +112,9 @@ class ClipVisionMixin:
         self, client: Optional[httpx.AsyncClient], url: str
     ) -> Optional[Any]:
         try:
-            from PIL import Image  # noqa: E402
             from io import BytesIO  # noqa: E402
+
+            from PIL import Image  # noqa: E402
 
             # Utilisation de safe_http_request_async pour validation SSRF des redirections
             response = await safe_http_request_async("GET", url, timeout=10)
@@ -123,8 +126,9 @@ class ClipVisionMixin:
         return None
 
     def _fetch_images_sync(self, urls: List[str]) -> List[Any]:
-        from PIL import Image  # noqa: E402
         from io import BytesIO  # noqa: E402
+
+        from PIL import Image  # noqa: E402
 
         results = []
         for url in urls:
@@ -188,9 +192,9 @@ class ClipVisionMixin:
 
             self._colpali_model = ColPali.from_pretrained(
                 model_id,
-                torch_dtype=torch.float16
-                if torch.cuda.is_available()
-                else torch.float32,
+                torch_dtype=(
+                    torch.float16 if torch.cuda.is_available() else torch.float32
+                ),
                 device_map="auto",
             )
             self._colpali_processor = ColPaliProcessor.from_pretrained(model_id)
@@ -202,8 +206,9 @@ class ClipVisionMixin:
     def get_multimodal_late_interaction(self, image_data: bytes) -> List[List[float]]:
         """Implémentation réelle ColPali late interaction."""
         try:
-            from PIL import Image  # noqa: E402
             from io import BytesIO  # noqa: E402
+
+            from PIL import Image  # noqa: E402
 
             self._load_colpali_engine()
             img = Image.open(BytesIO(image_data)).convert("RGB")

@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 from core.domain.services.advanced_vision_service import AdvancedVisionService
 
 

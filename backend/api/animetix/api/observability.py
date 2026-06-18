@@ -1,9 +1,9 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
+from animetix.containers import Container
+from dependency_injector.wiring import Provide, inject
 from django.contrib.admin.views.decorators import staff_member_required
 from django.utils.decorators import method_decorator
-from dependency_injector.wiring import inject, Provide
-from animetix.containers import Container
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 
 @method_decorator(staff_member_required, name="dispatch")

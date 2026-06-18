@@ -1,7 +1,8 @@
+import logging
 import os
 import sys
-import logging
 from typing import Dict
+
 from core.ports.sync_port import SyncPort
 
 logger = logging.getLogger("animetix")

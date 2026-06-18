@@ -1,19 +1,20 @@
+from django.contrib.auth.models import User
 from rest_framework import serializers
+
 from .models import (
-    Profile,
-    DailyChallenge,
     Achievement,
-    CreativeFusion,
-    DiscoveryClub,
-    ClubMembership,
-    ClubEvent,
-    GlobalBoss,
     BossParticipation,
+    ClubEvent,
+    ClubMembership,
+    CreativeFusion,
+    DailyChallenge,
     DataCurationTicket,
+    DiscoveryClub,
+    GlobalBoss,
     MangaChapter,
     MangaPage,
+    Profile,
 )
-from django.contrib.auth.models import User
 
 
 class MangaPageSerializer(serializers.ModelSerializer):
@@ -203,12 +204,12 @@ class VsBattleSerializer(serializers.ModelSerializer):
         return False
 
 
+from .models import AISafetyEvent  # noqa: E402
+from .models import GameplaySession  # noqa: E402
 from .models import (  # noqa: E402
+    AIFeedback,
     AIREvalResult,
     GoldDatasetEntry,
-    AIFeedback,
-    GameplaySession,
-    AISafetyEvent,
 )
 
 

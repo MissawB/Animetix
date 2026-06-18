@@ -1,6 +1,7 @@
-import random
 import logging
-from typing import List, Dict, Optional
+import random
+from typing import Dict, List, Optional
+
 from ...ports.repository_port import RepositoryPort
 from .catalog_service import CatalogService
 from .similarity_service import SimilarityService

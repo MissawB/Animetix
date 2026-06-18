@@ -1,10 +1,11 @@
+from datetime import timedelta
+
 import pytest
-from django.urls import reverse
-from rest_framework.test import APIClient
 from animetix.models import GlobalBoss
 from django.contrib.auth.models import User
+from django.urls import reverse
 from django.utils import timezone
-from datetime import timedelta
+from rest_framework.test import APIClient
 
 
 @pytest.fixture

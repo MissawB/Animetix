@@ -1,6 +1,8 @@
 import logging
+from typing import Dict, List
+
 import numpy as np
-from typing import List, Dict
+
 from .akinetix_rl_env import AkinetixRLEnvironment
 from .catalog_service import CatalogService
 

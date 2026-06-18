@@ -1,7 +1,8 @@
 import json
-import uuid
 import logging
+import uuid
 from datetime import datetime
+
 from django.conf import settings
 
 logger = logging.getLogger("animetix.pubsub")

@@ -5,8 +5,9 @@ Calculates token-level MaxSim similarity scores between query and documents.
 """
 
 import logging  # noqa: E402
+from typing import Dict, List  # noqa: E402
+
 import numpy as np  # noqa: E402
-from typing import List, Dict  # noqa: E402
 
 logger = logging.getLogger("animetix.colbert")
 
@@ -26,12 +27,14 @@ class LateInteractionColBERTAdapter:
         if self._initialized:
             return
         try:
-            from transformers import AutoTokenizer, AutoModel  # noqa: E402
+            from transformers import AutoModel, AutoTokenizer  # noqa: E402
 
             self._tokenizer = AutoTokenizer.from_pretrained(
                 self.model_name, revision="main"
             )  # nosec B615
-            self._model = AutoModel.from_pretrained(self.model_name, revision="main")  # nosec B615
+            self._model = AutoModel.from_pretrained(
+                self.model_name, revision="main"
+            )  # nosec B615
             self._initialized = True
             logger.info(
                 f"ColBERT Adapter initialized successfully with model {self.model_name}."

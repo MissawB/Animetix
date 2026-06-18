@@ -1,7 +1,8 @@
-import pytest
 from unittest.mock import patch
-from pydantic import BaseModel
+
+import pytest
 from adapters.inference.unified_inference_adapter import UnifiedInferenceAdapter
+from pydantic import BaseModel
 
 
 class User(BaseModel):

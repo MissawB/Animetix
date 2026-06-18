@@ -7,9 +7,10 @@ Validates narrative coherence and community interest before persisting.
 """
 
 import logging  # noqa: E402
-from typing import Dict, Any, Optional  # noqa: E402
-from core.ports.inference_port import InferencePort  # noqa: E402
+from typing import Any, Dict, Optional  # noqa: E402
+
 from core.ports.gold_dataset_port import GoldDatasetPort  # noqa: E402
+from core.ports.inference_port import InferencePort  # noqa: E402
 
 logger = logging.getLogger("animetix.evolving.synthesizer")
 

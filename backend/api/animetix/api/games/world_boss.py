@@ -1,7 +1,8 @@
-from rest_framework import views, response, status, permissions
-from ...models import GlobalBoss, BossParticipation
-from ...serializers import GlobalBossSerializer
 from django.utils import timezone
+from rest_framework import permissions, response, status, views
+
+from ...models import BossParticipation, GlobalBoss
+from ...serializers import GlobalBossSerializer
 
 
 class ActiveWorldBossView(views.APIView):

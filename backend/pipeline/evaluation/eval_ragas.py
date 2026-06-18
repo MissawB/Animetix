@@ -1,13 +1,14 @@
-import os
 import asyncio
 import logging
-from typing import List, Dict, Optional, Tuple
-from pipeline.chroma_client import chroma_manager
-from pipeline.neo4j_client import neo4j_manager
+import os
 
 # --- DJANGO SETUP FOR MLOPS CONTAINERS ---
 import sys
 from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+
+from pipeline.chroma_client import chroma_manager
+from pipeline.neo4j_client import neo4j_manager
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
@@ -17,9 +18,12 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "animetix_project.settings")
 django.setup()
 
 from animetix.containers import get_container  # noqa: E402
-from core.domain.services.ragas_eval_service import RagasEvalService, EvaluationResult  # noqa: E402
-from sentence_transformers import SentenceTransformer  # noqa: E402
+from core.domain.services.ragas_eval_service import (  # noqa: E402
+    EvaluationResult,
+    RagasEvalService,
+)
 from core.utils.security import safe_http_request  # noqa: E402
+from sentence_transformers import SentenceTransformer  # noqa: E402
 
 logger = logging.getLogger("animetix." + __name__)
 
@@ -66,9 +70,11 @@ class RAGEvaluator:
         try:
             graph_context = neo4j_manager.get_enriched_context(media_ids)
             if graph_context:
-                return vector_contexts + [
-                    f"Informations Graph complémentaires:\n{graph_context}"
-                ], media_ids
+                return (
+                    vector_contexts
+                    + [f"Informations Graph complémentaires:\n{graph_context}"],
+                    media_ids,
+                )
         except Exception as e:
             logger.warning(f"Neo4j graph enrichment failed: {e}")
 
@@ -259,24 +265,28 @@ class RAGEvaluator:
                 recall_scores.append(0.0)
 
         result = {
-            "faithfulness": sum(faith_scores) / len(faith_scores)
-            if faith_scores
-            else 0.0,
-            "answer_relevancy": sum(relevance_scores) / len(relevance_scores)
-            if relevance_scores
-            else 0.0,
-            "context_precision": sum(precision_scores) / len(precision_scores)
-            if precision_scores
-            else 0.0,
-            "context_recall": sum(recall_scores) / len(recall_scores)
-            if recall_scores
-            else 0.0,
-            "deterministic_context_recall": sum(det_recalls) / len(det_recalls)
-            if det_recalls
-            else 0.0,
-            "deterministic_context_precision": sum(det_precisions) / len(det_precisions)
-            if det_precisions
-            else 0.0,
+            "faithfulness": (
+                sum(faith_scores) / len(faith_scores) if faith_scores else 0.0
+            ),
+            "answer_relevancy": (
+                sum(relevance_scores) / len(relevance_scores)
+                if relevance_scores
+                else 0.0
+            ),
+            "context_precision": (
+                sum(precision_scores) / len(precision_scores)
+                if precision_scores
+                else 0.0
+            ),
+            "context_recall": (
+                sum(recall_scores) / len(recall_scores) if recall_scores else 0.0
+            ),
+            "deterministic_context_recall": (
+                sum(det_recalls) / len(det_recalls) if det_recalls else 0.0
+            ),
+            "deterministic_context_precision": (
+                sum(det_precisions) / len(det_precisions) if det_precisions else 0.0
+            ),
         }
 
         logger.info(f"📊 Results ({mode}):")

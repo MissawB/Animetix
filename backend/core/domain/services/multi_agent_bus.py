@@ -1,9 +1,10 @@
 import asyncio
-import orjson
-import logging
 import json
-from typing import Dict, Any, Callable, Optional
+import logging
 import time
+from typing import Any, Callable, Dict, Optional
+
+import orjson
 
 # --- STRUCTURED LOGGING FOR LOKI ---
 logger = logging.getLogger("animetix." + __name__)

@@ -1,9 +1,10 @@
-from typing import Optional, Dict, Type, Any
 import logging
+from typing import Any, Dict, Optional, Type
+
 import orjson
 from pydantic import BaseModel
-from ...ports.inference_port import InferencePort
 
+from ...ports.inference_port import InferencePort
 from ...ports.usage_port import UsagePort
 from ..exceptions import ParsingError
 from .prompt_manager import PromptManager

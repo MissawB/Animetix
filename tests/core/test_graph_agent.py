@@ -1,7 +1,8 @@
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
+from core.domain.entities.ai_schemas import JudgeAction, SearchPlan
 from core.domain.services.agentic_rag_service import AgenticRAGService
-from core.domain.entities.ai_schemas import SearchPlan, JudgeAction
 
 
 @pytest.fixture
@@ -137,8 +138,8 @@ def test_graph_exploration_flow(agentic_rag, mock_llm_service, mock_neo4j):
 
 
 if __name__ == "__main__":
-    import sys  # noqa: E402
     import os  # noqa: E402
+    import sys  # noqa: E402
 
     # Add src to sys.path if running as script
     sys.path.append(os.path.join(os.getcwd(), "src"))

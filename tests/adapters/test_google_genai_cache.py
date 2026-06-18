@@ -1,7 +1,8 @@
 import os
 import time
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 from adapters.inference.google_genai_adapter import GoogleGenAIAdapter
 
 

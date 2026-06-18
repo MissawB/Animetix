@@ -1,8 +1,9 @@
-import numpy as np
 import logging
-from typing import List, Dict, Optional
-from core.ports.inference_port import InferencePort
+from typing import Dict, List, Optional
+
+import numpy as np
 from core.domain.services.prompt_manager import PromptManager
+from core.ports.inference_port import InferencePort
 
 logger = logging.getLogger("animetix.cross_modal")
 

@@ -1,5 +1,6 @@
 import unittest
 from unittest.mock import MagicMock
+
 from adapters.persistence.neo4j_graph_adapter import Neo4jGraphAdapter
 
 

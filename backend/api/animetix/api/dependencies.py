@@ -1,5 +1,5 @@
-from dependency_injector.wiring import inject, Provide
 from animetix.containers import Container
+from dependency_injector.wiring import Provide, inject
 
 
 @inject

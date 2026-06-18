@@ -1,12 +1,11 @@
-import pytest
 from io import BytesIO
-from PIL import Image
 from unittest.mock import MagicMock, patch
+
+import pytest
 from adapters.inference.diffusers_adapter import DiffusersAdapter
 from adapters.inference.vision_transformers_adapter import VisionTransformersAdapter
-
-
 from core.ports.inference_port import InferenceNotImplementedError
+from PIL import Image
 
 
 def test_diffusers_adapter_depth_estimation_unsupported(sample_image):

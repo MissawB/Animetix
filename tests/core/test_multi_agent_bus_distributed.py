@@ -1,7 +1,8 @@
-import pytest
 import asyncio
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import orjson
-from unittest.mock import AsyncMock, patch, MagicMock
+import pytest
 from core.domain.services.multi_agent_bus import MultiAgentBus
 
 

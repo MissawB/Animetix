@@ -1,8 +1,9 @@
 import json
-import yaml
+import logging
 import os
 import sys
-import logging
+
+import yaml
 
 logger = logging.getLogger("animetix.pipeline.expert_enrichment")
 

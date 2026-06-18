@@ -5,8 +5,9 @@ Optimizes question selection paths under incomplete information and user bluffin
 """
 
 import logging  # noqa: E402
+from typing import Any, Dict, List, Tuple  # noqa: E402
+
 import numpy as np  # noqa: E402
-from typing import Dict, Any, List, Tuple  # noqa: E402
 
 logger = logging.getLogger("animetix.gametheory.cfr")
 

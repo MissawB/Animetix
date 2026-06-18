@@ -1,11 +1,14 @@
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 from core.domain.services.dpo_feedback_loop import DPOFeedbackLoop
 
 
 @pytest.fixture
 def dpo_loop(tmp_path):
-    from adapters.persistence.django_feedback_adapter import DjangoFeedbackAdapter  # noqa: E402
+    from adapters.persistence.django_feedback_adapter import (  # noqa: E402
+        DjangoFeedbackAdapter,
+    )
 
     return DPOFeedbackLoop(
         data_dir=str(tmp_path), feedback_port=DjangoFeedbackAdapter()

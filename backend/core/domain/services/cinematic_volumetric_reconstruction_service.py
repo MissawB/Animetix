@@ -5,7 +5,8 @@ Reconstructs entire dynamic 3D scenes and environments from 2D video clips.
 """
 
 import logging  # noqa: E402
-from typing import Dict, Any, Optional  # noqa: E402
+from typing import Any, Dict, Optional  # noqa: E402
+
 from core.ports.inference_port import InferencePort  # noqa: E402
 
 logger = logging.getLogger("animetix.spatial.dynamic")
@@ -31,11 +32,12 @@ class CinematicVolumetricReconstructionService:
         """
         Pipeline dynamique 2D Vidéo -> Analyse Temporelle -> Volumétrie Dynamique (Time-based PLY sequence).
         """
-        import imageio  # noqa: E402
-        from io import BytesIO  # noqa: E402
-        from PIL import Image  # noqa: E402
-        import tempfile  # noqa: E402
         import os  # noqa: E402
+        import tempfile  # noqa: E402
+        from io import BytesIO  # noqa: E402
+
+        import imageio  # noqa: E402
+        from PIL import Image  # noqa: E402
 
         logger.info(
             f"🌌 DCS Spatial: Starting Dynamic Volumetric Cinematic reconstruction for '{title}'..."

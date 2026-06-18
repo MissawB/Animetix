@@ -1,7 +1,8 @@
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
+from core.domain.entities.ai_schemas import DebateOutcome, JudgeAction, SearchPlan
 from core.domain.services.agentic_rag_service import AgenticRAGService
-from core.domain.entities.ai_schemas import SearchPlan, DebateOutcome, JudgeAction
 
 
 @pytest.fixture

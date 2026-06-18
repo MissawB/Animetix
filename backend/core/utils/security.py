@@ -1,18 +1,19 @@
-import socket
+import contextlib
 import ipaddress
 import logging
-import httpx
-import filetype
-import contextlib
 import re
-from urllib.parse import urlparse, urljoin
-from typing import List, Optional, Any
+import socket
+from typing import Any, List, Optional
+from urllib.parse import urljoin, urlparse
+
+import filetype
+import httpx
 from django.conf import settings
 
 logger = logging.getLogger("animetix.security")
 
-import hmac  # noqa: E402
 import hashlib  # noqa: E402
+import hmac  # noqa: E402
 
 
 def sign_proxy_url(url: str) -> str:

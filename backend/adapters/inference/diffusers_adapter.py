@@ -1,9 +1,10 @@
 import logging
-from typing import Optional, List
-from core.ports.inference_port import InferencePort, InferenceNotImplementedError
-from core.ports.usage_port import UsagePort
-from core.domain.entities.ai_schemas import InferenceResponse
+from typing import List, Optional
+
 from adapters.inference.image_gen_mixin import ImageGenMixin
+from core.domain.entities.ai_schemas import InferenceResponse
+from core.ports.inference_port import InferenceNotImplementedError, InferencePort
+from core.ports.usage_port import UsagePort
 
 logger = logging.getLogger("animetix.inference.image")
 
@@ -59,9 +60,11 @@ class DiffusersAdapter(ImageGenMixin, InferencePort):
 
     def health_check(self) -> dict:
         return {
-            "status": "online"
-            if self.pipe or self._img2img_pipe or self._inpaint_pipe
-            else "offline",
+            "status": (
+                "online"
+                if self.pipe or self._img2img_pipe or self._inpaint_pipe
+                else "offline"
+            ),
             "engine": "diffusers",
             "model": self.model_id,
         }

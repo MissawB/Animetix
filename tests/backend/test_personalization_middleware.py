@@ -1,15 +1,15 @@
-import pytest
 import json
-from django.contrib.auth.models import User
-from django.test import RequestFactory
-from django.core.cache import cache
 from unittest.mock import MagicMock
-from django.http import JsonResponse, HttpResponse
 
-from animetix.middleware import PersonalizationMiddleware
+import pytest
 from animetix.containers import container
-from dependency_injector import providers
+from animetix.middleware import PersonalizationMiddleware
 from core.domain.entities.personalization import VisualConfig
+from dependency_injector import providers
+from django.contrib.auth.models import User
+from django.core.cache import cache
+from django.http import HttpResponse, JsonResponse
+from django.test import RequestFactory
 
 
 @pytest.mark.django_db

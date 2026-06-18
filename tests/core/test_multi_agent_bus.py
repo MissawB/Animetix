@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 from core.domain.services.multi_agent_bus import MultiAgentBus
 
 

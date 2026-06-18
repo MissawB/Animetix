@@ -1,8 +1,8 @@
-import pytest
 from unittest.mock import MagicMock, patch
 
+import pytest
+from core.domain.entities.ai_schemas import DebateOutcome, JudgeAction, SearchPlan
 from core.domain.services.agentic_rag_service import AgenticRAGService
-from core.domain.entities.ai_schemas import SearchPlan, DebateOutcome, JudgeAction
 
 
 @pytest.fixture
@@ -69,14 +69,14 @@ def test_world_brain_cascading_flow(mock_dependencies):
 
         # 3. Mock SagaAgent
         mock_dependencies["saga_agent"].lookup_saga.return_value = "One Piece"
-        mock_dependencies[
-            "saga_agent"
-        ].get_saga_context.return_value = "One Piece est l'histoire de Monkey D. Luffy qui veut devenir le Roi des Pirates."
+        mock_dependencies["saga_agent"].get_saga_context.return_value = (
+            "One Piece est l'histoire de Monkey D. Luffy qui veut devenir le Roi des Pirates."
+        )
 
         # 4. Mock GraphExpert and Neo4j
-        mock_dependencies[
-            "graph_expert"
-        ].generate_cypher.return_value = "MATCH (p:Personnage {name: 'Luffy'})-[:PARTICIPE_A]->(a:Arc {name: 'Egghead'}) RETURN p, a"
+        mock_dependencies["graph_expert"].generate_cypher.return_value = (
+            "MATCH (p:Personnage {name: 'Luffy'})-[:PARTICIPE_A]->(a:Arc {name: 'Egghead'}) RETURN p, a"
+        )
         mock_dependencies["neo4j_manager"].execute_read.return_value = [
             {
                 "p": {"name": "Luffy"},

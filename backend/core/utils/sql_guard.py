@@ -1,5 +1,6 @@
 import logging
-from sqlglot import parse, exp, ParseError
+
+from sqlglot import ParseError, exp, parse
 
 logger = logging.getLogger("animetix.sql_guard")
 

@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
-from typing import Optional, List, Dict, Any
-from .usage_port import UsagePort
+from typing import Any, Dict, List, Optional
+
 from ..domain.entities.ai_schemas import InferenceResponse
+from .usage_port import UsagePort
 
 
 class InferenceNotImplementedError(NotImplementedError):

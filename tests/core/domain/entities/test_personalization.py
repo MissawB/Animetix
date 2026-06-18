@@ -1,6 +1,7 @@
 import pytest
 from pydantic import ValidationError
-from backend.core.domain.entities.personalization import VisualConfig, ArchetypeScore
+
+from backend.core.domain.entities.personalization import ArchetypeScore, VisualConfig
 
 
 def test_visual_config_valid():

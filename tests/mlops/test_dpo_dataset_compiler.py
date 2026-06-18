@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-import unittest
+import json
 import os
 import tempfile
-import json
+import unittest
 
 
 class TestDPODatasetCompiler(unittest.TestCase):
@@ -11,9 +11,9 @@ class TestDPODatasetCompiler(unittest.TestCase):
         pass
 
     def test_corrupt_fact_substitution(self):
-        from backend.pipeline.mlops.dpo_dataset_compiler import (
+        from backend.pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
             corrupt_fact_substitution,
-        )  # noqa: E402
+        )
 
         # Test years/numbers substitution (fallback)
         text_num = "Cet anime est sorti en 2018 avec 24 épisodes."
@@ -81,7 +81,9 @@ class TestDPODatasetCompiler(unittest.TestCase):
         )
 
     def test_corrupt_tonal_deviation(self):
-        from backend.pipeline.mlops.dpo_dataset_compiler import corrupt_tonal_deviation  # noqa: E402
+        from backend.pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
+            corrupt_tonal_deviation,
+        )
 
         text = "Cet anime est un chef-d'œuvre avec d'excellents personnages. C'est incroyable !"
 
@@ -124,9 +126,9 @@ class TestDPODatasetCompiler(unittest.TestCase):
         )
 
     def test_corrupt_abrupt_truncation(self):
-        from backend.pipeline.mlops.dpo_dataset_compiler import (
+        from backend.pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
             corrupt_abrupt_truncation,
-        )  # noqa: E402
+        )
 
         text = "C'est un long texte informatif sur la japanimation avec beaucoup de détails techniques sur les doubleurs français."
         corr = corrupt_abrupt_truncation(text)
@@ -137,7 +139,9 @@ class TestDPODatasetCompiler(unittest.TestCase):
         self.assertFalse(corr.endswith("."))
 
     def test_corrupt_evasive_refusal(self):
-        from backend.pipeline.mlops.dpo_dataset_compiler import corrupt_evasive_refusal  # noqa: E402
+        from backend.pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
+            corrupt_evasive_refusal,
+        )
 
         text = "Voici les informations complètes sur Sword Art Online."
 
@@ -148,7 +152,9 @@ class TestDPODatasetCompiler(unittest.TestCase):
         self.assertTrue(any(x in corr_en.lower() for x in ["sorry", "don't know"]))
 
     def test_compile_dpo_pairs(self):
-        from backend.pipeline.mlops.dpo_dataset_compiler import compile_dpo_pairs  # noqa: E402
+        from backend.pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
+            compile_dpo_pairs,
+        )
 
         # Setup mock SFT dataset
         mock_data = [
@@ -223,8 +229,8 @@ class TestDPODatasetCompiler(unittest.TestCase):
                 self.assertNotEqual(item["chosen"], item["rejected"])
 
     def test_compile_dpo_pairs_with_db_feedback(self):
-        import sys  # noqa: E402
         import os  # noqa: E402
+        import sys  # noqa: E402
 
         # Ensure mlops directory is in path for mock import resolution
         mlops_path = os.path.abspath(
@@ -235,8 +241,11 @@ class TestDPODatasetCompiler(unittest.TestCase):
         if mlops_path not in sys.path:
             sys.path.insert(0, mlops_path)
 
-        from unittest.mock import patch, MagicMock  # noqa: E402
-        from backend.pipeline.mlops.dpo_dataset_compiler import compile_dpo_pairs  # noqa: E402
+        from unittest.mock import MagicMock, patch  # noqa: E402
+
+        from backend.pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
+            compile_dpo_pairs,
+        )
 
         # Mocking fetch_db_feedbacks to simulate user feedback entries
         mock_feedbacks = [
@@ -335,8 +344,9 @@ class TestDPODatasetCompiler(unittest.TestCase):
                     self.assertEqual(p2["rejected"], "C'est MAPPA, non ?")
 
     def test_dpo_cache_read_write(self):
-        import tempfile  # noqa: E402
         import os  # noqa: E402
+        import tempfile  # noqa: E402
+
         import backend.pipeline.mlops.dpo_dataset_compiler as compiler  # noqa: E402
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -358,6 +368,7 @@ class TestDPODatasetCompiler(unittest.TestCase):
 
     def test_corrupt_llm_critic(self):
         from unittest.mock import MagicMock  # noqa: E402
+
         import backend.pipeline.mlops.dpo_dataset_compiler as compiler  # noqa: E402
 
         # Reset mock state
@@ -392,8 +403,9 @@ class TestDPODatasetCompiler(unittest.TestCase):
 
     def test_compile_dpo_pairs_llm_strategy_in_rotation(self):
         """Verify that the 'llm' strategy is part of compile_dpo_pairs rotation (~20%)."""
-        from unittest.mock import patch  # noqa: E402
         import tempfile  # noqa: E402
+        from unittest.mock import patch  # noqa: E402
+
         import backend.pipeline.mlops.dpo_dataset_compiler as compiler  # noqa: E402
 
         # Create a SFT dataset with 10 valid entries to observe strategy distribution
@@ -481,7 +493,9 @@ class TestDPOSampleValidator(unittest.TestCase):
     """Tests for Pydantic schema validation of DPO samples."""
 
     def test_valid_sample_passes(self):
-        from backend.pipeline.mlops.dpo_dataset_compiler import DPOSampleValidator  # noqa: E402
+        from backend.pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
+            DPOSampleValidator,
+        )
 
         sample = DPOSampleValidator(
             prompt="Qui est le créateur de Naruto ?",
@@ -491,8 +505,11 @@ class TestDPOSampleValidator(unittest.TestCase):
         self.assertEqual(sample.prompt, "Qui est le créateur de Naruto ?")
 
     def test_rejects_html_residues_in_chosen(self):
-        from backend.pipeline.mlops.dpo_dataset_compiler import DPOSampleValidator  # noqa: E402
         from pydantic import ValidationError  # noqa: E402
+
+        from backend.pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
+            DPOSampleValidator,
+        )
 
         with self.assertRaises(ValidationError) as ctx:
             DPOSampleValidator(
@@ -503,8 +520,11 @@ class TestDPOSampleValidator(unittest.TestCase):
         self.assertIn("chosen", str(ctx.exception))
 
     def test_rejects_html_residues_in_rejected(self):
-        from backend.pipeline.mlops.dpo_dataset_compiler import DPOSampleValidator  # noqa: E402
         from pydantic import ValidationError  # noqa: E402
+
+        from backend.pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
+            DPOSampleValidator,
+        )
 
         with self.assertRaises(ValidationError) as ctx:
             DPOSampleValidator(
@@ -515,8 +535,11 @@ class TestDPOSampleValidator(unittest.TestCase):
         self.assertIn("rejected", str(ctx.exception))
 
     def test_rejects_malformed_code_blocks(self):
-        from backend.pipeline.mlops.dpo_dataset_compiler import DPOSampleValidator  # noqa: E402
         from pydantic import ValidationError  # noqa: E402
+
+        from backend.pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
+            DPOSampleValidator,
+        )
 
         # Unclosed code block
         with self.assertRaises(ValidationError):
@@ -527,8 +550,11 @@ class TestDPOSampleValidator(unittest.TestCase):
             )
 
     def test_rejects_failed_api_response(self):
-        from backend.pipeline.mlops.dpo_dataset_compiler import DPOSampleValidator  # noqa: E402
         from pydantic import ValidationError  # noqa: E402
+
+        from backend.pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
+            DPOSampleValidator,
+        )
 
         api_failures = [
             "Error: Internal Server Error",
@@ -547,8 +573,11 @@ class TestDPOSampleValidator(unittest.TestCase):
                 )
 
     def test_rejects_empty_or_whitespace(self):
-        from backend.pipeline.mlops.dpo_dataset_compiler import DPOSampleValidator  # noqa: E402
         from pydantic import ValidationError  # noqa: E402
+
+        from backend.pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
+            DPOSampleValidator,
+        )
 
         with self.assertRaises(ValidationError):
             DPOSampleValidator(
@@ -562,8 +591,11 @@ class TestDPOSampleValidator(unittest.TestCase):
             )
 
     def test_rejects_identical_chosen_rejected(self):
-        from backend.pipeline.mlops.dpo_dataset_compiler import DPOSampleValidator  # noqa: E402
         from pydantic import ValidationError  # noqa: E402
+
+        from backend.pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
+            DPOSampleValidator,
+        )
 
         with self.assertRaises(ValidationError):
             DPOSampleValidator(
@@ -574,8 +606,9 @@ class TestDPOSampleValidator(unittest.TestCase):
 
     def test_compile_dpo_pairs_filters_invalid_samples(self):
         """Integration: compile_dpo_pairs should skip samples that fail Pydantic validation."""
-        from unittest.mock import patch  # noqa: E402
         import tempfile  # noqa: E402
+        from unittest.mock import patch  # noqa: E402
+
         import backend.pipeline.mlops.dpo_dataset_compiler as compiler  # noqa: E402
 
         # 5 entries: the corruption function will return HTML for some

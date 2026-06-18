@@ -1,5 +1,6 @@
 import logging
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
+
 from core.ports.graph_persistence_port import GraphPersistencePort
 from pipeline.neo4j_client import Neo4jManager
 

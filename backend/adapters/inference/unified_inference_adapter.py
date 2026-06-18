@@ -1,27 +1,28 @@
-import os
-import httpx
 import json
-import time
 import logging
-from typing import Optional, List, Dict, Any
-from core.ports.inference_port import InferencePort
-from core.utils.security import is_safe_url, safe_http_request
-from core.domain.exceptions import InferenceError
-from core.domain.entities.ai_schemas import (
-    InferenceResponse,
-    InferenceMetadata,
-    TokenLogProb,
-)
+import os
+import time
+from typing import Any, Dict, List, Optional
+
+import httpx
+from adapters.inference.audio_mixin import AudioMixin
 
 # Focused Mixin imports
 from adapters.inference.clip_vision import ClipVisionMixin
 from adapters.inference.depth_estimation import DepthEstimationMixin
-from adapters.inference.manga_ocr import MangaOcrMixin
-from adapters.inference.video_analysis import VideoAnalysisMixin
-from adapters.inference.audio_mixin import AudioMixin
 from adapters.inference.image_gen_mixin import ImageGenMixin
-from adapters.inference.vlm_mixin import VlmMixin
+from adapters.inference.manga_ocr import MangaOcrMixin
 from adapters.inference.rerank_mixin import RerankMixin
+from adapters.inference.video_analysis import VideoAnalysisMixin
+from adapters.inference.vlm_mixin import VlmMixin
+from core.domain.entities.ai_schemas import (
+    InferenceMetadata,
+    InferenceResponse,
+    TokenLogProb,
+)
+from core.domain.exceptions import InferenceError
+from core.ports.inference_port import InferencePort
+from core.utils.security import is_safe_url, safe_http_request
 
 logger = logging.getLogger("animetix." + __name__)
 

@@ -4,9 +4,10 @@ Service de Spatial Computing & Génération 3D.
 Permet la reconstruction de scènes 3D à partir d'images 2D.
 """
 
+from typing import Any, Dict  # noqa: E402
+
 from animetix_project.logging_config import get_logger  # noqa: E402
 from core.ports.inference_port import InferencePort  # noqa: E402
-from typing import Dict, Any  # noqa: E402
 
 logger = get_logger("animetix.spatial")
 

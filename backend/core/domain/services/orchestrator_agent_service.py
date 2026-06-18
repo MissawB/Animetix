@@ -1,7 +1,9 @@
-import orjson
 import logging
 from typing import Dict, Optional
+
+import orjson
 from core.ports.inference_port import InferencePort
+
 from .prompt_manager import PromptManager
 
 logger = logging.getLogger("animetix")

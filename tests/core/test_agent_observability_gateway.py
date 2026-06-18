@@ -1,8 +1,9 @@
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
-from django.test import override_settings
-from core.domain.services.guardrail_service import GuardrailService
 from core.domain.services.agentic_rag_service import AgenticRAGService
+from core.domain.services.guardrail_service import GuardrailService
+from django.test import override_settings
 
 
 @pytest.mark.django_db

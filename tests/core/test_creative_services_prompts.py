@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 from core.domain.services.creative.fusion_service import FusionDomainService
 from core.domain.services.creative.manga_flow import MangaFlowService
 from core.domain.services.creative.soundscape import SoundscapeGenerationService

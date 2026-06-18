@@ -1,5 +1,6 @@
 import logging
-from typing import List, Dict
+from typing import Dict, List
+
 from core.domain.services.llm_service import LLMService
 from core.domain.services.prompt_manager import PromptManager
 from core.ports.gold_dataset_port import GoldDatasetPort

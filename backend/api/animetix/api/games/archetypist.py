@@ -215,12 +215,12 @@ class ArchetypistTaskStatusView(APIView):
                                     import base64  # noqa: E402
                                     import time  # noqa: E402
 
-                                    from django.core.files.base import (
+                                    from django.core.files.base import (  # noqa: E402
                                         ContentFile,
-                                    )  # noqa: E402
-                                    from django.core.files.storage import (
+                                    )
+                                    from django.core.files.storage import (  # noqa: E402
                                         default_storage,
-                                    )  # noqa: E402
+                                    )
 
                                     header, base64_data = image_url_val.split(
                                         ";base64,"

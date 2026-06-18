@@ -4,11 +4,12 @@ Neuromorphic Synaptic Plasticity Service for Animetix.
 Implements dynamic weight adjustment via STDP and Hebbian learning rules.
 """
 
-import os
 import logging  # noqa: E402
 import math  # noqa: E402
+import os
+from typing import Any, Dict, List, Optional  # noqa: E402
+
 import numpy as np  # noqa: E402
-from typing import Dict, Any, List, Optional  # noqa: E402
 
 logger = logging.getLogger("animetix.neuromorphic.plasticity")
 

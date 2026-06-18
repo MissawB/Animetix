@@ -1,7 +1,8 @@
-import pytest
 from unittest.mock import MagicMock
-from core.domain.services.cove_oracle_service import CoveOracleService
+
+import pytest
 from core.domain.entities.ai_schemas import InferenceResponse
+from core.domain.services.cove_oracle_service import CoveOracleService
 
 
 @pytest.fixture

@@ -1,9 +1,10 @@
-import json
 import base64
-import pytest
-from django.urls import reverse
-from django.test import Client
+import json
 from unittest.mock import patch
+
+import pytest
+from django.test import Client
+from django.urls import reverse
 
 
 @pytest.fixture

@@ -4,14 +4,17 @@ Tests unitaires et d'intégration pour l'interconnexion sémantique
 de la plasticité synaptique et de la cognition quantique au RAG d'Animetix.
 """
 
-import pytest  # noqa: E402
-import numpy as np  # noqa: E402
 from unittest.mock import MagicMock  # noqa: E402
+
+import numpy as np  # noqa: E402
+import pytest  # noqa: E402
 from core.domain.services.advanced_rag_service import AdvancedRAGService  # noqa: E402
-from core.domain.services.quantum_cognitive_service import QuantumCognitiveService  # noqa: E402
-from core.domain.services.neuromorphic_plasticity_service import (
+from core.domain.services.neuromorphic_plasticity_service import (  # noqa: E402
     SynapticPlasticityService,
-)  # noqa: E402
+)
+from core.domain.services.quantum_cognitive_service import (  # noqa: E402
+    QuantumCognitiveService,
+)
 
 
 @pytest.fixture

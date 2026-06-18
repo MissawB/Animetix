@@ -1,8 +1,9 @@
-import pytest
 from unittest.mock import MagicMock
-from core.domain.services.rag.agents.critic import ResponseCritic
+
+import pytest
 from core.domain.entities.ai_schemas import CritiqueResult
 from core.domain.exceptions import InferenceError
+from core.domain.services.rag.agents.critic import ResponseCritic
 
 
 @pytest.fixture

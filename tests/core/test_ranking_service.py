@@ -1,7 +1,8 @@
-import pytest
 from datetime import date, timedelta
-from core.domain.services.ranking_service import RankingService
+
+import pytest
 from core.domain.entities.user import UserProfile
+from core.domain.services.ranking_service import RankingService
 
 
 @pytest.fixture

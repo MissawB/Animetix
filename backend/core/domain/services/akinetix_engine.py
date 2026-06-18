@@ -1,10 +1,12 @@
-import numpy as np
 import logging
-from typing import List, Dict, Any, Tuple, Optional
-from .akinetix.question_formatter import QuestionFormatter
-from .catalog_service import CatalogService
+from typing import Any, Dict, List, Optional, Tuple
+
+import numpy as np
+
 from ..entities.akinetix import AkinetixGameState, AkinetixQuestion
+from .akinetix.question_formatter import QuestionFormatter
 from .akinetix_rl_env import AkinetixRLEnvironment
+from .catalog_service import CatalogService
 
 logger = logging.getLogger("animetix.akinetix.engine")
 
@@ -173,9 +175,11 @@ class AkinetixEngine:
                 item.get("genres"),
                 item.get("micro_tags"),
                 item.get("studios"),
-                item.get("metadata", {}).get("themes")
-                if isinstance(item.get("metadata"), dict)
-                else False,
+                (
+                    item.get("metadata", {}).get("themes")
+                    if isinstance(item.get("metadata"), dict)
+                    else False
+                ),
             ]
         )
 

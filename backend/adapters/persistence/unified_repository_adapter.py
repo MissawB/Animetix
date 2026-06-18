@@ -1,8 +1,10 @@
 import logging
-from typing import List, Dict, Optional, Any
+from typing import Any, Dict, List, Optional
+
 from core.ports.repository_port import RepositoryPort
-from .pgvector_repository_adapter import PGVectorRepositoryAdapter
+
 from .django_repository_adapter import DjangoRepositoryAdapter
+from .pgvector_repository_adapter import PGVectorRepositoryAdapter
 
 logger = logging.getLogger("animetix")
 

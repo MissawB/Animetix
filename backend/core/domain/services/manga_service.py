@@ -1,6 +1,7 @@
 import logging
 from typing import List, Optional
-from animetix.models import MediaItem, MangaChapter, MangaPage
+
+from animetix.models import MangaChapter, MangaPage, MediaItem
 
 logger = logging.getLogger("animetix.manga")
 

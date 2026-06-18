@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List, Tuple, Optional, Any
+from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger("animetix.neuro_symbolic.solver")
 

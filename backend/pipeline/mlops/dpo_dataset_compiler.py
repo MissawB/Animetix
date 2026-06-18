@@ -4,12 +4,12 @@ Compilateur de jeu de données de préférence DPO / RLHF.
 Génère offline des paires (chosen, rejected) à partir du jeu de données SFT.
 """
 
-import os  # noqa: E402
-import sys  # noqa: E402
 import json  # noqa: E402
+import logging  # noqa: E402
+import os  # noqa: E402
 import random  # noqa: E402
 import re  # noqa: E402
-import logging  # noqa: E402
+import sys  # noqa: E402
 from typing import List  # noqa: E402
 
 # Insert paths at 0 to avoid name conflicts with virtualenv packages
@@ -24,6 +24,7 @@ logger = logging.getLogger("animetix.pipeline.mlops.dpo_dataset_compiler")
 logging.basicConfig(level=logging.INFO)
 
 import hashlib  # noqa: E402
+
 from pydantic import BaseModel, field_validator, model_validator  # noqa: E402
 
 # Cache variables
@@ -163,39 +164,36 @@ try:
     from creators_db import CREATORS_AND_STUDIOS  # noqa: E402
 except ImportError:
     try:
-        from backend.pipeline.mlops.creators_db import CREATORS_AND_STUDIOS  # noqa: E402
+        from backend.pipeline.mlops.creators_db import (  # noqa: E402
+            CREATORS_AND_STUDIOS,
+        )
     except ImportError:
         CREATORS_AND_STUDIOS = {}
 
 try:
-    from french_market_db import (
-        FRENCH_VOICE_ACTORS,
-        FRENCH_MANGA_PUBLISHERS,
-        FRENCH_ANIME_DISTRIBUTORS,
-    )  # noqa: E402
+    from french_market_db import FRENCH_ANIME_DISTRIBUTORS  # noqa: E402
+    from french_market_db import FRENCH_MANGA_PUBLISHERS, FRENCH_VOICE_ACTORS
 except ImportError:
     try:
-        from backend.pipeline.mlops.french_market_db import (
-            FRENCH_VOICE_ACTORS,
-            FRENCH_MANGA_PUBLISHERS,
+        from backend.pipeline.mlops.french_market_db import (  # noqa: E402
             FRENCH_ANIME_DISTRIBUTORS,
-        )  # noqa: E402
+            FRENCH_MANGA_PUBLISHERS,
+            FRENCH_VOICE_ACTORS,
+        )
     except ImportError:
         FRENCH_VOICE_ACTORS = {}
         FRENCH_MANGA_PUBLISHERS = {}
         FRENCH_ANIME_DISTRIBUTORS = {}
 
 try:
-    from japanese_market_db import (
-        JAPANESE_MANGA_PUBLISHERS,
-        JAPANESE_ANIME_DISTRIBUTORS,
-    )  # noqa: E402
+    from japanese_market_db import JAPANESE_ANIME_DISTRIBUTORS  # noqa: E402
+    from japanese_market_db import JAPANESE_MANGA_PUBLISHERS
 except ImportError:
     try:
-        from backend.pipeline.mlops.japanese_market_db import (
-            JAPANESE_MANGA_PUBLISHERS,
+        from backend.pipeline.mlops.japanese_market_db import (  # noqa: E402
             JAPANESE_ANIME_DISTRIBUTORS,
-        )  # noqa: E402
+            JAPANESE_MANGA_PUBLISHERS,
+        )
     except ImportError:
         JAPANESE_MANGA_PUBLISHERS = {}
         JAPANESE_ANIME_DISTRIBUTORS = {}
@@ -921,7 +919,9 @@ def compile_dpo_pairs(
         from dpo_feedback_loop import DPOFeedbackLoop  # noqa: E402
     except ImportError:
         try:
-            from backend.pipeline.mlops.dpo_feedback_loop import DPOFeedbackLoop  # noqa: E402
+            from backend.pipeline.mlops.dpo_feedback_loop import (  # noqa: E402
+                DPOFeedbackLoop,
+            )
         except ImportError:
             DPOFeedbackLoop = None
 

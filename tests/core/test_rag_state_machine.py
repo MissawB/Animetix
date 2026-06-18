@@ -1,30 +1,31 @@
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
+from core.domain.entities.ai_schemas import DebateOutcome, JudgeAction, StreamStep
 from core.domain.services.agentic_rag_service import (
     AgenticRAGService,
-    RAGState,
     RAGContext,
+    RAGState,
 )
-from core.domain.entities.ai_schemas import JudgeAction, StreamStep, DebateOutcome
-from core.domain.services.rag_orchestrator import RAGOrchestrator
-from core.domain.services.rag.processors.plan_processor import PlanProcessor
-from core.domain.services.rag.processors.research_processor import ResearchProcessor
-from core.domain.services.rag.processors.synthesize_processor import SynthesizeProcessor
-from core.domain.services.rag.processors.judge_processor import JudgeProcessor
 from core.domain.services.rag.processors.acquire_knowledge_processor import (
     AcquireKnowledgeProcessor,
-)
-from core.domain.services.rag.processors.speculate_processor import SpeculateProcessor
-from core.domain.services.rag.processors.vlm_rerank_processor import VlmRerankProcessor
-from core.domain.services.rag.processors.saga_lookup_processor import (
-    SagaLookupProcessor,
-)
-from core.domain.services.rag.processors.graph_explore_processor import (
-    GraphExploreProcessor,
 )
 from core.domain.services.rag.processors.fallback_rag_processor import (
     FallbackRagProcessor,
 )
+from core.domain.services.rag.processors.graph_explore_processor import (
+    GraphExploreProcessor,
+)
+from core.domain.services.rag.processors.judge_processor import JudgeProcessor
+from core.domain.services.rag.processors.plan_processor import PlanProcessor
+from core.domain.services.rag.processors.research_processor import ResearchProcessor
+from core.domain.services.rag.processors.saga_lookup_processor import (
+    SagaLookupProcessor,
+)
+from core.domain.services.rag.processors.speculate_processor import SpeculateProcessor
+from core.domain.services.rag.processors.synthesize_processor import SynthesizeProcessor
+from core.domain.services.rag.processors.vlm_rerank_processor import VlmRerankProcessor
+from core.domain.services.rag_orchestrator import RAGOrchestrator
 
 
 @pytest.fixture
@@ -115,10 +116,8 @@ def mock_deps():
     )
     # The JUDGE.process side_effect will be set in individual tests as it varies.
     # Placeholder for other processors:
-    mock_processors[
-        RAGState.ACQUIRE_KNOWLEDGE
-    ].process.side_effect = mock_generator_factory(
-        RAGState.ACQUIRE_KNOWLEDGE.name, RAGState.SPECULATE
+    mock_processors[RAGState.ACQUIRE_KNOWLEDGE].process.side_effect = (
+        mock_generator_factory(RAGState.ACQUIRE_KNOWLEDGE.name, RAGState.SPECULATE)
     )
     mock_processors[RAGState.SPECULATE].process.side_effect = mock_generator_factory(
         RAGState.SPECULATE.name, RAGState.VLM_RERANK
@@ -129,10 +128,8 @@ def mock_deps():
     mock_processors[RAGState.SAGA_LOOKUP].process.side_effect = mock_generator_factory(
         RAGState.SAGA_LOOKUP.name, RAGState.GRAPH_EXPLORE
     )
-    mock_processors[
-        RAGState.GRAPH_EXPLORE
-    ].process.side_effect = mock_generator_factory(
-        RAGState.GRAPH_EXPLORE.name, RAGState.RESEARCH
+    mock_processors[RAGState.GRAPH_EXPLORE].process.side_effect = (
+        mock_generator_factory(RAGState.GRAPH_EXPLORE.name, RAGState.RESEARCH)
     )
     mock_processors[RAGState.FALLBACK_RAG].process.side_effect = mock_generator_factory(
         RAGState.FALLBACK_RAG.name, RAGState.FINALIZE

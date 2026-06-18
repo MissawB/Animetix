@@ -1,10 +1,11 @@
-import os
-import re
 import json
 import logging
+import os
+import re
+from typing import Dict, List
+
 import apache_beam as beam
 from apache_beam.options.pipeline_options import PipelineOptions
-from typing import Dict, List
 
 logger = logging.getLogger("animetix.pipeline.beam")
 

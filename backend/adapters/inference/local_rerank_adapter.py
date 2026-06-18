@@ -1,11 +1,11 @@
 import logging
 import os
 from typing import List, Optional
-from core.ports.inference_port import InferencePort, InferenceNotImplementedError
-from core.ports.usage_port import UsagePort
-from core.domain.entities.ai_schemas import InferenceResponse
 
 from adapters.inference.rerank_mixin import RerankMixin
+from core.domain.entities.ai_schemas import InferenceResponse
+from core.ports.inference_port import InferenceNotImplementedError, InferencePort
+from core.ports.usage_port import UsagePort
 
 logger = logging.getLogger("animetix.inference.rerank")
 

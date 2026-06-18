@@ -5,8 +5,9 @@ Handles continuous time-continuous signals and ODE-based state transitions.
 """
 
 import logging  # noqa: E402
+from typing import Any, Dict, List, Optional  # noqa: E402
+
 import numpy as np  # noqa: E402
-from typing import List, Dict, Any, Optional  # noqa: E402
 
 logger = logging.getLogger("animetix.neuromorphic.lnn")
 

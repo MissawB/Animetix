@@ -1,5 +1,6 @@
-import polib
 from pathlib import Path
+
+import polib
 
 
 def compile_translations():

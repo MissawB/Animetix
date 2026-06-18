@@ -1,10 +1,11 @@
 import json
-import re
-import os
-import sys
 import logging
-from tqdm import tqdm
+import os
+import re
+import sys
+
 from dotenv import load_dotenv
+from tqdm import tqdm
 
 # Setup logging
 logger = logging.getLogger("animetix." + __name__)

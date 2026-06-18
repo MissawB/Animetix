@@ -1,10 +1,10 @@
 import logging
-from typing import Dict, Any, Optional
-from pydantic import BaseModel, Field
+from typing import Any, Dict, Optional
 
-from core.ports.inference_port import InferencePort
 from core.ports.eval_port import EvalResultPort
 from core.ports.gold_dataset_port import GoldDatasetPort
+from core.ports.inference_port import InferencePort
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger("animetix.ragas")
 

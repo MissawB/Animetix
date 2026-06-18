@@ -1,14 +1,15 @@
-import time
-import logging
 import argparse
-import sys
-import os
 import io
+import logging
+import os
+import sys
+import time
 import wave
+from contextlib import contextmanager
+from typing import List
+
 import numpy as np
 import psutil
-from typing import List
-from contextlib import contextmanager
 
 # Set up logging
 logging.basicConfig(
@@ -102,7 +103,9 @@ def create_dummy_audio() -> bytes:
 def benchmark_video_style_transfer(results):
     """Benchmarks the Video Style Transfer module."""
     try:
-        from adapters.inference.transformers_adapter import TransformersAdapter  # noqa: E402
+        from adapters.inference.transformers_adapter import (  # noqa: E402
+            TransformersAdapter,
+        )
 
         adapter = TransformersAdapter()
         video_data = create_dummy_video()
@@ -125,7 +128,9 @@ def benchmark_video_style_transfer(results):
 def benchmark_voice_ai(results):
     """Benchmarks the Voice AI (Speech-to-Speech) module."""
     try:
-        from adapters.inference.transformers_adapter import TransformersAdapter  # noqa: E402
+        from adapters.inference.transformers_adapter import (  # noqa: E402
+            TransformersAdapter,
+        )
 
         adapter = TransformersAdapter()
         audio_data = create_dummy_audio()
@@ -148,7 +153,9 @@ def benchmark_voice_ai(results):
 def benchmark_distillation(results):
     """Benchmarks a single training step of the Distillation loop."""
     try:
-        from scripts.distill_draft_model import train_speculative_draft_model  # noqa: E402
+        from scripts.distill_draft_model import (  # noqa: E402
+            train_speculative_draft_model,
+        )
 
         logger.info("Starting Distillation benchmark (1 step)...")
         with measure_performance("Model Distillation (SFT)", results):
@@ -169,7 +176,9 @@ def benchmark_distillation(results):
 def benchmark_video_rag(results):
     """Benchmarks Video Temporal Reasoning with Qwen2-VL."""
     try:
-        from adapters.inference.transformers_adapter import TransformersAdapter  # noqa: E402
+        from adapters.inference.transformers_adapter import (  # noqa: E402
+            TransformersAdapter,
+        )
 
         adapter = TransformersAdapter()
         video_data = create_dummy_video()

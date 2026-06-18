@@ -1,7 +1,7 @@
-from animetix_project.logging_config import get_logger
-from animetix.tasks_registry import register_task
 from animetix.bigquery_service import BigQueryTelemetryService
-from animetix.models import DuelRoom, ArchetypeDriftSnapshot, MediaItem
+from animetix.models import ArchetypeDriftSnapshot, DuelRoom, MediaItem
+from animetix.tasks_registry import register_task
+from animetix_project.logging_config import get_logger
 
 logger = get_logger("animetix." + __name__)
 
@@ -28,9 +28,9 @@ def ingest_duel_telemetry(room_id):
             service.stream_interaction(
                 user_id=room.player1.id,
                 media_item_id=media_item_id,
-                interaction_type="duel_win"
-                if room.winner == room.player1
-                else "duel_play",
+                interaction_type=(
+                    "duel_win" if room.winner == room.player1 else "duel_play"
+                ),
                 weight=weight,
             )
 
@@ -39,9 +39,9 @@ def ingest_duel_telemetry(room_id):
             service.stream_interaction(
                 user_id=room.player2.id,
                 media_item_id=media_item_id,
-                interaction_type="duel_win"
-                if room.winner == room.player2
-                else "duel_play",
+                interaction_type=(
+                    "duel_win" if room.winner == room.player2 else "duel_play"
+                ),
                 weight=weight,
             )
 

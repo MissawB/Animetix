@@ -9,8 +9,9 @@ def test_inpaint_text_bubbles_pillow_fallback_when_pipe_none():
     adapter._inpaint_pipe = None  # S'assurer qu'il est à None pour forcer le fallback
 
     # Créer de fausses données d'image 100x100 en bytes
-    from PIL import Image  # noqa: E402
     from io import BytesIO  # noqa: E402
+
+    from PIL import Image  # noqa: E402
 
     img = Image.new("RGB", (100, 100), "black")
     buf = BytesIO()

@@ -1,5 +1,6 @@
+from typing import Dict, List
+
 import numpy as np
-from typing import List, Dict
 from core.utils.lazy_import import lazy_import
 
 # Lazy import for sklearn's TfidfVectorizer

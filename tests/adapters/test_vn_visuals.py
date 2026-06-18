@@ -1,8 +1,9 @@
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 from adapters.inference.diffusers_adapter import DiffusersAdapter
-from core.domain.services.creative.visual_novel_service import VisualNovelService
 from core.domain.entities.ai_schemas import VNScene
+from core.domain.services.creative.visual_novel_service import VisualNovelService
 
 
 @pytest.fixture

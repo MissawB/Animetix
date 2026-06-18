@@ -1,9 +1,10 @@
-from typing import Dict, Optional
 import logging
 import os
+from typing import Dict, Optional
+
 from ....ports.inference_port import InferencePort
-from ..prompt_manager import PromptManager
 from ..multi_lora_manager import MultiLoraManager
+from ..prompt_manager import PromptManager
 
 logger = logging.getLogger("animetix.creative.fusion")
 

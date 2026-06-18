@@ -1,5 +1,6 @@
 import logging
-from typing import Dict, Any
+from typing import Any, Dict
+
 from core.ports.inference_port import InferencePort
 
 logger = logging.getLogger("animetix.audio")

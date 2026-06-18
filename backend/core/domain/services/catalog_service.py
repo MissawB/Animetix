@@ -1,8 +1,9 @@
 import json
 import logging
-from typing import Dict, Optional, List
+from typing import Dict, List, Optional
+
 from ...ports.repository_port import RepositoryPort
-from ..exceptions import CatalogNotFoundError, GameLogicError, AnimetixError
+from ..exceptions import AnimetixError, CatalogNotFoundError, GameLogicError
 
 logger = logging.getLogger("animetix")
 

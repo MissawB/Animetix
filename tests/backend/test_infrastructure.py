@@ -1,8 +1,9 @@
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 from adapters.persistence.session_state_adapter import DjangoSessionStateAdapter
-from core.domain.services.game_session_service import GameSessionService
 from animetix.presenters import GamePresenter
+from core.domain.services.game_session_service import GameSessionService
 
 
 class MockSession:

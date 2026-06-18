@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock
-from backend.core.domain.services.rag.processors.plan_processor import PlanProcessor
+
 from backend.core.domain.entities.ai_schemas import RAGContext, RAGState
+from backend.core.domain.services.rag.processors.plan_processor import PlanProcessor
 
 
 def consume_generator(gen):

@@ -1,11 +1,11 @@
 from unittest.mock import MagicMock, patch
-from pydantic import BaseModel
 
 from adapters.inference.google_genai_adapter import (
     GoogleGenAIAdapter,
     get_image_mime_type,
 )
 from core.domain.entities.ai_schemas import InferenceResponse
+from pydantic import BaseModel
 
 
 class DummyModel(BaseModel):

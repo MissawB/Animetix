@@ -1,8 +1,9 @@
-from backend.core.domain.services.rag.processors.base import StateProcessor
+import logging
+from typing import Generator
+
 from backend.core.domain.entities.ai_schemas import RAGContext, RAGState, StreamStep
 from backend.core.domain.exceptions import InferenceError, InfrastructureError
-from typing import Generator
-import logging
+from backend.core.domain.services.rag.processors.base import StateProcessor
 
 logger = logging.getLogger("animetix.rag_workflow")
 

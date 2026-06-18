@@ -1,8 +1,8 @@
 import pytest
-from django.urls import reverse
-from rest_framework.test import APIClient
 from animetix.models import DuelRoom
 from django.contrib.auth.models import User
+from django.urls import reverse
+from rest_framework.test import APIClient
 
 
 @pytest.fixture

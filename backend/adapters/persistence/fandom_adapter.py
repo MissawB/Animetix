@@ -1,5 +1,6 @@
 import logging
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
+
 from core.ports.fandom_port import FandomPort
 
 logger = logging.getLogger("animetix.fandom")

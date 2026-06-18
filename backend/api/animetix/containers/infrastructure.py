@@ -1,6 +1,7 @@
 import os
-from django.conf import settings
+
 from dependency_injector import containers, providers
+from django.conf import settings
 
 
 class InfrastructureContainer(containers.DeclarativeContainer):

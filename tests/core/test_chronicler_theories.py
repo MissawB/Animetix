@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock
-from core.domain.services.agentic_rag_service import AgenticRAGService
+
 from core.domain.entities.ai_schemas import RAGContext, SearchPlan
+from core.domain.services.agentic_rag_service import AgenticRAGService
 
 
 def test_chronicler_theories_integration():
@@ -45,9 +46,9 @@ def test_chronicler_theories_integration():
     )
 
     # Directly trigger ResearchProcessor.process
-    from backend.core.domain.services.rag.processors.research_processor import (
+    from backend.core.domain.services.rag.processors.research_processor import (  # noqa: E402
         ResearchProcessor,
-    )  # noqa: E402
+    )
 
     processor = ResearchProcessor(
         planner=MagicMock(),

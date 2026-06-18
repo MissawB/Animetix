@@ -1,12 +1,14 @@
+import logging
+
+from django_ratelimit.decorators import ratelimit
+from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import status
-from django_ratelimit.decorators import ratelimit
+
 from ...containers import get_container
 from ...models import VsBattle
 from ...serializers import VsBattleSerializer
-import logging
 
 logger = logging.getLogger(__name__)
 

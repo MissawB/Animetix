@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 from core.domain.services.reasoning_agent_service import ReasoningAgentService
 
 

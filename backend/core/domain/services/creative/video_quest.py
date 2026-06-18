@@ -1,5 +1,6 @@
 import logging
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
+
 from ....ports.inference_port import InferencePort
 from ..prompt_manager import PromptManager
 
@@ -74,6 +75,7 @@ class VideoQuestService:
         res_raw = results[0]["answer"]
         try:
             import orjson  # noqa: E402
+
             from ...exceptions import ParsingError  # noqa: E402
 
             # Robust JSON extraction

@@ -1,6 +1,6 @@
 # Fix path for internal imports
-import sys
 import os
+import sys
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(CURRENT_DIR)))
@@ -8,10 +8,11 @@ if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, os.path.join(PROJECT_ROOT, "backend"))
 
 import json  # noqa: E402
-from core.utils.security import safe_http_request  # noqa: E402
 import logging  # noqa: E402
-from PIL import Image  # noqa: E402
 from io import BytesIO  # noqa: E402
+
+from core.utils.security import safe_http_request  # noqa: E402
+from PIL import Image  # noqa: E402
 
 # Force UTF-8 for Windows output
 if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):

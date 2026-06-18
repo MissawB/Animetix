@@ -1,10 +1,11 @@
-import json
 import base64
+import json
+
+from animetix.services import shutdown_brain_service
+from animetix_project.logging_config import get_logger
+from django.conf import settings
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.conf import settings
-from animetix_project.logging_config import get_logger
-from animetix.services import shutdown_brain_service
 
 logger = get_logger("animetix." + __name__)
 
@@ -28,8 +29,8 @@ def billing_alert_webhook(request):
 
         token = auth_header.split(" ")[1]
         try:
-            from google.oauth2 import id_token  # noqa: E402
             from google.auth.transport import requests  # noqa: E402
+            from google.oauth2 import id_token  # noqa: E402
 
             # Verify token signature against the exact webhook URL audience (STATIC from settings)
             audience = settings.GCP_BILLING_WEBHOOK_URL

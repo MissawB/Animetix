@@ -1,8 +1,9 @@
-import re
 import logging
+import re
 from typing import Optional
-from ...ports.inference_port import InferencePort
+
 from ...ports.graph_persistence_port import GraphPersistencePort
+from ...ports.inference_port import InferencePort
 from .prompt_manager import PromptManager
 
 logger = logging.getLogger("animetix.reasoning")
@@ -117,9 +118,9 @@ class ReasoningAgentService:
         final_prompt, sys = self.prompt_manager.get_prompt(
             "reasoning_final",
             query=query,
-            context=context_data
-            if context_data
-            else "Aucun contexte additionnel trouvé.",
+            context=(
+                context_data if context_data else "Aucun contexte additionnel trouvé."
+            ),
             thought="\n".join(history),
         )
 

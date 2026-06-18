@@ -1,6 +1,7 @@
-import random
 import logging
-from typing import Dict, Optional, List
+import random
+from typing import Dict, List, Optional
+
 from .llm_service import LLMService
 
 logger = logging.getLogger("animetix.emoji")

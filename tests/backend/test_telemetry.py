@@ -1,9 +1,10 @@
-import pytest
 from unittest.mock import MagicMock
-from django.test import RequestFactory
-from django.http import HttpResponse
-from animetix.telemetry import inject_trace_context, extract_trace_context
+
+import pytest
 from animetix.middleware import TracingMiddleware
+from animetix.telemetry import extract_trace_context, inject_trace_context
+from django.http import HttpResponse
+from django.test import RequestFactory
 
 
 @pytest.fixture

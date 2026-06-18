@@ -1,8 +1,9 @@
 import json
-import time
+import logging
 import os
 import sys
-import logging
+import time
+
 from dotenv import load_dotenv
 
 # Détection robuste de la racine du projet
@@ -88,9 +89,11 @@ def run_ingestion():
                 "name": details.get("name"),
                 "popularity": details.get("popularity"),
                 "biography": details.get("biography"),
-                "image": f"https://image.tmdb.org/t/p/w500{details.get('profile_path')}"
-                if details.get("profile_path")
-                else None,
+                "image": (
+                    f"https://image.tmdb.org/t/p/w500{details.get('profile_path')}"
+                    if details.get("profile_path")
+                    else None
+                ),
                 "gender": "Female" if details.get("gender") == 1 else "Male",
                 "known_for": [
                     m.get("title") or m.get("name") for m in item.get("known_for", [])

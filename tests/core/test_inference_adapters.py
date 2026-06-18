@@ -1,10 +1,10 @@
-import pytest
-from unittest.mock import patch, MagicMock
-from adapters.inference.qwen3_vl_adapter import Qwen3VLAdapter
-from adapters.inference.brain_api_adapter import BrainAPIAdapter
-from adapters.inference.local_text_adapter import LocalTextAdapter
-from adapters.inference.local_rerank_adapter import LocalRerankAdapter
+from unittest.mock import MagicMock, patch
 
+import pytest
+from adapters.inference.brain_api_adapter import BrainAPIAdapter
+from adapters.inference.local_rerank_adapter import LocalRerankAdapter
+from adapters.inference.local_text_adapter import LocalTextAdapter
+from adapters.inference.qwen3_vl_adapter import Qwen3VLAdapter
 from core.ports.inference_port import InferenceNotImplementedError
 
 

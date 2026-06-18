@@ -5,10 +5,13 @@ Uses graph partition detection to summarize global themes and inject them into R
 """
 
 import logging  # noqa: E402
-from typing import List, Dict, Any, Optional  # noqa: E402
-from core.ports.graph_persistence_port import GraphPersistencePort  # noqa: E402
+from typing import Any, Dict, List, Optional  # noqa: E402
+
 from core.domain.services.llm_service import LLMService  # noqa: E402
-from pipeline.mlops.graph_community_partitioner import GraphCommunityPartitioner  # noqa: E402
+from core.ports.graph_persistence_port import GraphPersistencePort  # noqa: E402
+from pipeline.mlops.graph_community_partitioner import (  # noqa: E402
+    GraphCommunityPartitioner,
+)
 
 logger = logging.getLogger("animetix.graphrag")
 

@@ -1,6 +1,6 @@
 import pytest
-from channels.testing import WebsocketCommunicator
 from animetix_project.asgi import application
+from channels.testing import WebsocketCommunicator
 
 
 @pytest.mark.asyncio

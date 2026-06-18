@@ -1,11 +1,13 @@
 import logging
 import re
+from typing import List, Optional
+
 import orjson
-from typing import Optional, List
+
+from backend.core.domain.entities.ai_schemas import ForgeHypothesis
 from backend.core.domain.services.llm_service import LLMService
 from backend.core.domain.services.prompt_manager import PromptManager
 from backend.core.ports.graph_persistence_port import GraphPersistencePort
-from backend.core.domain.entities.ai_schemas import ForgeHypothesis
 
 logger = logging.getLogger("animetix.rag.forge")
 

@@ -1,5 +1,6 @@
 import unittest
 from unittest.mock import MagicMock, patch
+
 from adapters.inference.manga_ocr_adapter import MangaOCRAdapter
 
 
