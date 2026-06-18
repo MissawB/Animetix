@@ -97,9 +97,16 @@ wandb/
 # read by tests/mlops/test_gold_set_integrity.py and must exist in CI checkouts.
 data/mlops/
 
-# Superpowers documentation
-# docs/superpowers/
+# Superpowers / agent-generated plans and specs
+docs/superpowers/
 
 # Node modules at root
 node_modules/
+
+# Backups, scratch and debug dumps
+*.bak
+error_latent.html
+brainstorming_status.txt
+# Accidental nested copy of the project dir
+/Double_scenario_Project/
 
