@@ -20,9 +20,9 @@ print(f"📌 Using Database: {settings.DATABASES['default']['NAME']}")
 
 from animetix.containers import get_container  # noqa: E402
 from datasets import Dataset  # noqa: E402
-from langchain_google_genai import (
-    ChatGoogleGenerativeAI,  # noqa: E402
-    GoogleGenerativeAIEmbeddings,  # noqa: E402
+from langchain_google_genai import (  # noqa: E402
+    ChatGoogleGenerativeAI,
+    GoogleGenerativeAIEmbeddings,
 )
 from ragas import evaluate  # noqa: E402
 from ragas.embeddings import LangchainEmbeddingsWrapper  # noqa: E402

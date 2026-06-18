@@ -13,9 +13,9 @@ from ...models import GameplaySession  # noqa: E402
 
 logger = get_logger("animetix." + __name__)
 
-from ...serializers import (
-    AkinetixAnswerSerializer,  # noqa: E402
-    AkinetixConfirmSerializer,  # noqa: E402
+from ...serializers import (  # noqa: E402
+    AkinetixAnswerSerializer,
+    AkinetixConfirmSerializer,
     AkinetixStartSerializer,
 )
 

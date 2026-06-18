@@ -27,9 +27,9 @@ from animetix.api.admin_api import AdEventLoggingAPIView  # noqa: E402
 from animetix.api.mlops import AdaptersView, DPOFeedbackLoopView  # noqa: E402
 from django.contrib.admin.views.decorators import staff_member_required  # noqa: E402
 from django_prometheus import exports as prometheus_exports  # noqa: E402
-from drf_spectacular.views import (
-    SpectacularAPIView,  # noqa: E402
-    SpectacularRedocView,  # noqa: E402
+from drf_spectacular.views import (  # noqa: E402
+    SpectacularAPIView,
+    SpectacularRedocView,
     SpectacularSwaggerView,
 )
 

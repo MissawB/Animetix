@@ -2430,12 +2430,12 @@ NICHE_SUBCULTURES = {
 # --- FUSION DES CATÉGORIES POUR OBTENIR LE DICTIONNAIRE EXHAUSTIF ---
 
 # Importation dynamique des modules d'awards, magazines, musiques et seiyuu
-from magazines_and_awards_db import (
-    POP_CULTURE_AWARDS,  # noqa: E402
-    SERIALIZATION_MAGAZINES,  # noqa: E402
+from magazines_and_awards_db import (  # noqa: E402
+    POP_CULTURE_AWARDS,
+    SERIALIZATION_MAGAZINES,
 )
-from songs_and_seiyuu_db import (
-    ANIME_SONGS_AND_SINGERS,  # noqa: E402
+from songs_and_seiyuu_db import (  # noqa: E402
+    ANIME_SONGS_AND_SINGERS,
     SEIYUU_PROFILES,
 )
 

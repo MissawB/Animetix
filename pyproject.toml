@@ -18,7 +18,7 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]
-ignore = []
+ignore = ["E501"]  # Handled by black; strings/comments intentionally left long
 
 [tool.ruff.lint.isort]
 combine-as-imports = true
