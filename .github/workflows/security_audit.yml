@@ -58,7 +58,9 @@ jobs:
     #   if: ${{ always() && hashFiles('snyk-python.sarif') != '' }}
 
     - name: Static Analysis (Bandit)
-      run: bandit -r backend/ -ll -ii
+      run: |
+        pip install bandit
+        bandit -r backend/ -ll -ii
       # -ll: logical lines
       # -ii: include low confidence
 
