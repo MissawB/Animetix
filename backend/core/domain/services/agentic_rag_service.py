@@ -95,6 +95,7 @@ class AgenticRAGService:
         if not self.guardrail_service:
             try:
                 from backend.api.animetix.containers import get_container
+
                 self.guardrail_service = get_container().core.guardrail_service()
             except Exception:
                 self.guardrail_service = None

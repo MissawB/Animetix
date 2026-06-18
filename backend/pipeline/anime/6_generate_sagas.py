@@ -20,6 +20,7 @@ sys.path.append(os.path.join(base_dir, "src"))
 sys.path.append(os.path.join(base_dir, "src", "backend"))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "animetix_project.settings")
 import django  # noqa: E402
+
 django.setup()
 
 from backend.animetix.containers import get_container  # noqa: E402

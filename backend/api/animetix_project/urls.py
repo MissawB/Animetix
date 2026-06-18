@@ -39,7 +39,8 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("favicon.ico", RedirectView.as_view(url="/static/animetix/img/logo/logo.png")),
     path(
-        "i18n/", include("django.conf.urls.i18n")  # noqa: E402
+        "i18n/",
+        include("django.conf.urls.i18n"),  # noqa: E402
     ),  # Permet le switch de langue via POST
     # --- PROFESSIONNALISATION : API REST (Headless) ---
     path("api/v1/", include(router.urls)),

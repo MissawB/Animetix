@@ -86,7 +86,11 @@ class AdvancedRAGService:
                 LiquidNeuralNetworkService,
             )  # noqa: E402
 
-            lnn = lnn_layer if lnn_layer != "default" else LiquidNeuralNetworkService(4, 2)
+            lnn = (
+                lnn_layer
+                if lnn_layer != "default"
+                else LiquidNeuralNetworkService(4, 2)
+            )
             return q, p, lnn
 
         # 2. Sinon, on va chercher dans le cache ou on crée par défaut

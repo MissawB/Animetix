@@ -198,6 +198,7 @@ def flag_and_stage_complex_user_query(sender, instance, created, **kwargs):
             _, complexity_score = analyser.assess_complexity(query)
         except Exception as e:
             import logging
+
             logger = logging.getLogger("animetix.signals")
             logger.warning(
                 f"Failed to use ComplexityAnalyser in signal, falling back to simple rules: {e}"

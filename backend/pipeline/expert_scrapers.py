@@ -32,6 +32,7 @@ try:
     from animetix.models import MediaItem  # noqa: E402
 except Exception as e:
     import logging
+
     logger = logging.getLogger("animetix.pipeline")
     logger.warning(f"Django setup warning: {e}. Running in standalone simulated mode.")
     MediaItem = None
