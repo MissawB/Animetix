@@ -92,7 +92,9 @@ wandb/
 .pytest_cache/
 *.sqlite3
 
-# ML Ops artifacts
+# ML Ops artifacts (generated reports, datasets, training data)
+# Exception: data/mlops/gold_dataset.json stays tracked — it is a test fixture
+# read by tests/mlops/test_gold_set_integrity.py and must exist in CI checkouts.
 data/mlops/
 
 # Superpowers documentation
