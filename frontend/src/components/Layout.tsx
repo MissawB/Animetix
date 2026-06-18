@@ -198,6 +198,20 @@ const LayoutContent: React.FC<{ children: ReactNode }> = ({ children }) => {
           <Link to="/research/papers/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/research/papers/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
             <Microscope className="w-4 h-4 text-cyan-500" /> {t('nav.research', 'Labo de Recherche')}
           </Link>
+          
+          {/* Ghost Labs Links */}
+          <Link to="/lab/audio/seiyuu/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-emerald-400/10 dark:hover:bg-emerald-400/5 ${location.pathname === '/lab/audio/seiyuu/' ? 'bg-gradient-to-r from-emerald-400 to-teal-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
+            <Mic className="w-4 h-4 text-emerald-500" /> {t('nav.seiyuu', 'Seiyuu Discovery')}
+          </Link>
+          <Link to="/lab/compiler/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-blue-400/10 dark:hover:bg-blue-400/5 ${location.pathname === '/lab/compiler/' ? 'bg-gradient-to-r from-blue-400 to-cyan-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
+            <Monitor className="w-4 h-4 text-blue-500" /> {t('nav.compiler', 'Compilateur IA')}
+          </Link>
+          <Link to="/lab/video-rag/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-red-400/10 dark:hover:bg-red-400/5 ${location.pathname === '/lab/video-rag/' ? 'bg-gradient-to-r from-red-400 to-rose-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
+            <Film className="w-4 h-4 text-red-500" /> {t('nav.video_rag', 'Video RAG')}
+          </Link>
+          <Link to="/lab/cove-oracle/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-indigo-400/10 dark:hover:bg-indigo-400/5 ${location.pathname === '/lab/cove-oracle/' ? 'bg-gradient-to-r from-indigo-400 to-violet-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
+            <Shield className="w-4 h-4 text-indigo-500" /> {t('nav.cove', 'Oracle CoVe')}
+          </Link>
 
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2 mt-6">Système & Diagnostics</p>
           <Link to="/social/nexus/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/social/nexus/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>

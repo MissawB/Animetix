@@ -188,6 +188,16 @@ const creativeLabs = [
         badge: 'Computer Vision'
     },
     {
+        id: 'video-rag',
+        title: 'Video RAG',
+        desc: 'Recherche augmentée par récupération directement sur des flux vidéo.',
+        icon: SearchCode,
+        url: '/lab/video-rag/',
+        color: 'text-red-500',
+        bg: 'from-red-500/20 to-transparent',
+        badge: 'Video Retrieval'
+    },
+    {
         id: 'spatial',
         title: 'Spatial Lab',
         desc: 'Reconstruction 3D et Gaussian Splatting à partir de sources 2D.',
