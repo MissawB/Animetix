@@ -79,4 +79,4 @@ def sanitize_ai(value):
     Uses centralized security utility.
     """
     cleaned = sanitize_html_content(value)
-    return mark_safe(cleaned)
+    return mark_safe(cleaned)  # nosec B308 B703

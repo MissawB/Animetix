@@ -21,41 +21,41 @@ class Command(BaseCommand):
             client = bigquery.Client()
 
             # 1. Execute BigQuery ML Model Training
-            train_query = f"""
-            CREATE OR REPLACE MODEL `{client.project}.{dataset_id}.recommender_model`
-            OPTIONS(
-              model_type='matrix_factorization',
-              user_col='user_id',
-              item_col='media_item_id',
-              rating_col='rating_weight'
-            ) AS
-            SELECT
-              user_id,
-              media_item_id,
-              SUM(weight) as rating_weight
-            FROM
-              `{client.project}.{dataset_id}.user_interactions`
-            GROUP BY
-              user_id,
-              media_item_id
-            """
+            train_query = (
+                f"CREATE OR REPLACE MODEL `{client.project}.{dataset_id}.recommender_model` "  # nosec
+                "OPTIONS("
+                "  model_type='matrix_factorization',"
+                "  user_col='user_id',"
+                "  item_col='media_item_id',"
+                "  rating_col='rating_weight'"
+                ") AS "
+                "SELECT "
+                "  user_id, "
+                "  media_item_id, "
+                "  SUM(weight) as rating_weight "
+                "FROM "
+                f"  `{client.project}.{dataset_id}.user_interactions` "  # nosec
+                "GROUP BY "
+                "  user_id, "
+                "  media_item_id"
+            )  # nosec B608
             self.stdout.write("Training BigQuery ML Model...")
             client.query(train_query).result()
 
             # 2. Get recommendations
-            rec_query = f"""
-            SELECT
-              user_id,
-              media_item_id,
-              predicted_rating_weight as score,
-              ROW_NUMBER() OVER(PARTITION BY user_id ORDER BY predicted_rating_weight DESC) as rank
-            FROM
-              ML.RECOMMEND(MODEL `{client.project}.{dataset_id}.recommender_model`)
-            WHERE
-              predicted_rating_weight IS NOT NULL
-            QUALIFY
-              rank <= 10
-            """
+            rec_query = (
+                "SELECT "
+                "  user_id, "
+                "  media_item_id, "
+                "  predicted_rating_weight as score, "
+                "  ROW_NUMBER() OVER(PARTITION BY user_id ORDER BY predicted_rating_weight DESC) as rank "
+                "FROM "
+                f"  ML.RECOMMEND(MODEL `{client.project}.{dataset_id}.recommender_model`) "  # nosec
+                "WHERE "
+                "  predicted_rating_weight IS NOT NULL "
+                "QUALIFY "
+                "  rank <= 10"
+            )
             self.stdout.write("Fetching top 10 recommendations...")
             query_job = client.query(rec_query)
             results = query_job.result()

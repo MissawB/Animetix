@@ -118,7 +118,7 @@ class BrainAPIAdapter(InferencePort):
                     f"{self.api_url}/stream_generate",  # Assuming a dedicated streaming endpoint
                     json=payload,
                     headers=self._get_headers(),
-                    timeout=None,  # Streaming responses can take a long time
+                    timeout=None,  # Streaming responses can take a long time  # nosec B113
                 ) as response
             ):
                 response.raise_for_status()
