@@ -1,8 +1,8 @@
+import json
+import logging
 import os
 import sys
-import json
 import time
-import logging
 
 logger = logging.getLogger("animetix." + __name__)
 
@@ -315,7 +315,7 @@ def run_regression_test(model_adapter=None):
         try:
             idx = sys.argv.index("--threshold")
             threshold = float(sys.argv[idx + 1])
-        except Exception:
+        except Exception:  # nosec B110
             pass
 
     is_ci = os.getenv("CI") == "true"

@@ -84,7 +84,7 @@ def run_sql_quality_checks():
         if exclude_bq:
             cmd.append("--exclude-bigquery")
 
-        subprocess.run(cmd, check=True, capture_output=True, text=True)
+        subprocess.run(cmd, check=True, capture_output=True, text=True)  # nosec B603
         logger.info("[SUCCESS] SQL database quality checks passed.")
         return True
     except subprocess.CalledProcessError as e:

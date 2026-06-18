@@ -1,23 +1,25 @@
 import random
+
+from animetix.api.dependencies import get_session_service
 from animetix_project.logging_config import get_logger
+from core.domain.services.guardrail_service import GuardrailService
+from core.ports.usage_port import UsagePort
+from dependency_injector.wiring import Provide, inject
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from dependency_injector.wiring import inject, Provide
-from ...containers import Container
-from animetix.api.dependencies import get_session_service
-from ...models import CreativeFusion
-from core.domain.services.guardrail_service import GuardrailService
 
-from core.ports.usage_port import UsagePort
+from ...containers import Container
+from ...models import CreativeFusion
 
 logger = get_logger("animetix." + __name__)
+
+from animetix.api.billing import deduct_berrix  # noqa: E402
 
 from ...serializers import ArchetypistFusionSerializer  # noqa: E402
 
 # ... (rest of imports unchanged)
 
-from animetix.api.billing import deduct_berrix  # noqa: E402
 
 # --- ARCHETYPIST / CREATIVE FUSION ---
 
@@ -90,8 +92,8 @@ class ArchetypistStartFusionView(APIView):
             if t in data_B.get("title_to_full_data", {})
         ]
 
-        t1 = title_A if title_A else random.choice(valid_A[:500])
-        t2 = title_B if title_B else random.choice(valid_B[:500])
+        t1 = title_A if title_A else random.choice(valid_A[:500])  # nosec B311
+        t2 = title_B if title_B else random.choice(valid_B[:500])  # nosec B311
 
         item1 = data_A["title_to_full_data"].get(t1)
         item2 = data_B["title_to_full_data"].get(t2)
@@ -212,10 +214,13 @@ class ArchetypistTaskStatusView(APIView):
                                 try:
                                     import base64  # noqa: E402
                                     import time  # noqa: E402
+
+                                    from django.core.files.base import (
+                                        ContentFile,
+                                    )  # noqa: E402
                                     from django.core.files.storage import (
                                         default_storage,
                                     )  # noqa: E402
-                                    from django.core.files.base import ContentFile  # noqa: E402
 
                                     header, base64_data = image_url_val.split(
                                         ";base64,"

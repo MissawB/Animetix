@@ -8,9 +8,9 @@ project_root = os.path.dirname(
 if project_root not in sys.path:
     sys.path.append(project_root)
 
-from django.core.asgi import get_asgi_application  # noqa: E402
-from channels.routing import ProtocolTypeRouter, URLRouter  # noqa: E402
 from channels.auth import AuthMiddlewareStack  # noqa: E402
+from channels.routing import ProtocolTypeRouter, URLRouter  # noqa: E402
+from django.core.asgi import get_asgi_application  # noqa: E402
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "animetix_project.settings")
 
@@ -25,7 +25,7 @@ if sys.platform == "win32":
     try:
         policy = asyncio.WindowsProactorEventLoopPolicy()
         asyncio.set_event_loop_policy(policy)
-    except Exception:
+    except Exception:  # nosec B110
         # Policy might already be set or not supported on this Windows version
         pass
 

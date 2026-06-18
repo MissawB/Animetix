@@ -2,8 +2,9 @@
 Django settings for animetix_project project.
 """
 
-from pathlib import Path  # noqa: E402
 import os  # noqa: E402
+from pathlib import Path  # noqa: E402
+
 import environ  # noqa: E402
 
 # Initialize environ
@@ -101,7 +102,9 @@ else:
     )
     DEBUG = True
     ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]"]
-    logger.info("🛠️  Running in DEVELOPMENT mode (DEBUG=True). Restricted to localhost.")
+    logger.info(
+        "🛠️  Running in DEVELOPMENT mode (DEBUG=True). Restricted to localhost."
+    )
 
 # --- DOS PREVENTION (OOM) ---
 # Limite stricte de 50 Mo par requête pour éviter les payloads massifs
@@ -334,7 +337,9 @@ if os.getenv("DATABASE_URL"):
             "GCP_TASKS_SERVICE_ACCOUNT",
             default="animetix-tasks-invoker@animetix.iam.gserviceaccount.com",
         )
-        DATABASES["default"]["PASSWORD"] = ""  # Will be dynamically set by wrapper
+        DATABASES["default"][
+            "PASSWORD"
+        ] = ""  # nosec B105 # Will be dynamically set by wrapper
 else:
     DATABASES = {
         "default": {
@@ -353,9 +358,9 @@ if REDIS_URL:
             "LOCATION": REDIS_URL,
             "OPTIONS": {
                 "CLIENT_CLASS": "django_redis.client.DefaultClient",
-                "CONNECTION_POOL_KWARGS": {"ssl_cert_reqs": None}
-                if REDIS_URL.startswith("rediss://")
-                else {},
+                "CONNECTION_POOL_KWARGS": (
+                    {"ssl_cert_reqs": None} if REDIS_URL.startswith("rediss://") else {}
+                ),
             },
         }
     }
@@ -427,9 +432,11 @@ if IS_PRODUCTION or GS_BUCKET_NAME:
             },
         },
         "staticfiles": {
-            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
-            if not DEBUG
-            else "django.contrib.staticfiles.storage.StaticFilesStorage",
+            "BACKEND": (
+                "whitenoise.storage.CompressedManifestStaticFilesStorage"
+                if not DEBUG
+                else "django.contrib.staticfiles.storage.StaticFilesStorage"
+            ),
         },
     }
 else:
@@ -438,9 +445,11 @@ else:
             "BACKEND": "django.core.files.storage.FileSystemStorage",
         },
         "staticfiles": {
-            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
-            if not DEBUG
-            else "django.contrib.staticfiles.storage.StaticFilesStorage",
+            "BACKEND": (
+                "whitenoise.storage.CompressedManifestStaticFilesStorage"
+                if not DEBUG
+                else "django.contrib.staticfiles.storage.StaticFilesStorage"
+            ),
         },
     }
 
@@ -455,9 +464,10 @@ FEATURE_FLAGS = {
 
 ALLOYDB_EMBEDDING_MODEL = env("ALLOYDB_EMBEDDING_MODEL", default="text-embedding-005")
 
+import asyncio  # noqa: E402
+
 # Sentry
 import sentry_sdk  # noqa: E402
-import asyncio  # noqa: E402
 from sentry_sdk.integrations.django import DjangoIntegration  # noqa: E402
 from sentry_sdk.integrations.logging import LoggingIntegration  # noqa: E402
 

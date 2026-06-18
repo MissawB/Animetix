@@ -1,9 +1,10 @@
-import logging
 import json
-from typing import Dict, Any, Optional
-from core.ports.inference_port import InferencePort
+import logging
+from typing import Any, Dict, Optional
+
 from core.domain.services.prompt_manager import PromptManager
 from core.ports.feedback_port import FeedbackRepositoryPort
+from core.ports.inference_port import InferencePort
 
 logger = logging.getLogger("animetix.video_indexing")
 
@@ -110,7 +111,7 @@ class VideoLanguageIndexingService:
                 context_parts.append(
                     f"- Échec précédent: {skill['input_context']} -> Correction: {data['correction']}"
                 )
-            except Exception:
+            except Exception:  # nosec B112
                 continue
 
         return "\n".join(context_parts)

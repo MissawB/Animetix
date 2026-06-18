@@ -1,18 +1,19 @@
-import os
-import json
-import random
 import datetime
+import json
+import os
+import random
 import time
+
 import numpy as np
-from animetix_project.logging_config import get_logger
-from django.conf import settings
 from adapters.inference.workflows_client import GCPWorkflowsClient
+from animetix_project.logging_config import get_logger
+from core.utils.security import validate_file_mime_type, validate_file_size
+from django.conf import settings
 from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
-from rest_framework import viewsets, permissions, status
+from rest_framework import permissions, status, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from core.utils.security import validate_file_mime_type, validate_file_size
 
 ALLOWED_IMAGE_MIMES = ["image/jpeg", "image/png", "image/webp"]
 ALLOWED_VIDEO_MIMES = ["video/mp4", "video/webm", "video/x-msvideo"]
@@ -22,10 +23,11 @@ MAX_IMAGE_SIZE = 10 * 1024 * 1024
 MAX_VIDEO_SIZE = 50 * 1024 * 1024
 MAX_AUDIO_SIZE = 15 * 1024 * 1024
 
+from dependency_injector.wiring import Provide, inject  # noqa: E402
+
+from ..containers import Container, get_container  # noqa: E402
 from ..models import DailyChallenge  # noqa: E402
 from ..serializers import DailyChallengeSerializer  # noqa: E402
-from ..containers import get_container, Container  # noqa: E402
-from dependency_injector.wiring import inject, Provide  # noqa: E402
 
 logger = get_logger("animetix." + __name__)
 
@@ -298,9 +300,11 @@ class SingularityLabDataView(APIView):
                         "universe": universe_data,
                         "evaluation": evaluation,
                         "persisted": persisted,
-                        "message": f"Univers '{universe_name}' synthétisé et stagé pour validation."
-                        if persisted
-                        else f"Univers '{universe_name}' synthétisé mais rejeté par les filtres de cohérence.",
+                        "message": (
+                            f"Univers '{universe_name}' synthétisé et stagé pour validation."
+                            if persisted
+                            else f"Univers '{universe_name}' synthétisé mais rejeté par les filtres de cohérence."
+                        ),
                     }
                 )
             except Exception as e:
@@ -376,6 +380,7 @@ class MangaVoiceLabView(APIView):
 
     def post(self, request):
         import uuid  # noqa: E402
+
         from django.core.cache import cache  # noqa: E402
 
         image = request.data.get("image")
@@ -913,7 +918,7 @@ class SingularityCommandCenterView(APIView):
                     "id": "quantum",
                     "name": "Quantum Cognitive",
                     "status": "online",
-                    "load": random.randint(5, 25),
+                    "load": random.randint(5, 25),  # nosec B311
                     "metrics": {"coherence": 0.98, "dimension": 4},
                 }
             )
@@ -983,7 +988,7 @@ class SingularityCommandCenterView(APIView):
                 "status": "operational",
                 "services": services,
                 "events": events,
-                "system_load": random.randint(30, 50),
+                "system_load": random.randint(30, 50),  # nosec B311
             }
         )
 

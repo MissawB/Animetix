@@ -1,9 +1,10 @@
 import os
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from django.core.management import call_command
+
 from django.contrib.admin.views.decorators import staff_member_required
+from django.core.management import call_command
 from django.utils.decorators import method_decorator
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 
 @method_decorator(staff_member_required, name="dispatch")
@@ -26,6 +27,7 @@ class PipelineControlView(APIView):
                 # Trigger the Beam pipeline (lore_ingestion_beam.py)
                 # In production, this would use DataflowRunner
                 import subprocess  # noqa: E402
+
                 from django.conf import settings  # noqa: E402
 
                 # Check if we should use Dataflow or DirectRunner
@@ -49,7 +51,7 @@ class PipelineControlView(APIView):
                     f"--database_url={getattr(settings, 'DATABASE_URL', '')}",
                     f"--django_env={'production' if not settings.DEBUG else 'development'}",
                 ]
-                subprocess.Popen(cmd)
+                subprocess.Popen(cmd)  # nosec B603
                 return Response(
                     {"status": f"Beam pipeline ({runner}) triggered in background"}
                 )

@@ -37,7 +37,7 @@ class TranslationService:
                 "ai_confidence": "Confidence level",
                 "game_over_win": "Victory! Congratulations.",
                 "game_over_loss": "Lost... Try again!",
-                "game_over_secret_was": "The secret title was:",
+                "game_over_secret_was": "The secret title was:",  # nosec B105
                 "hint_poster": "Blurred poster",
                 "hint_character": "A key character",
                 "hint_rec": "Similar recommendation",

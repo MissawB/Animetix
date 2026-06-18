@@ -2430,7 +2430,10 @@ NICHE_SUBCULTURES = {
 # --- FUSION DES CATÉGORIES POUR OBTENIR LE DICTIONNAIRE EXHAUSTIF ---
 
 # Importation dynamique des modules d'awards, magazines, musiques et seiyuu
-from magazines_and_awards_db import SERIALIZATION_MAGAZINES, POP_CULTURE_AWARDS  # noqa: E402
+from magazines_and_awards_db import (
+    POP_CULTURE_AWARDS,  # noqa: E402
+    SERIALIZATION_MAGAZINES,
+)
 from songs_and_seiyuu_db import ANIME_SONGS_AND_SINGERS, SEIYUU_PROFILES  # noqa: E402
 
 OTAKU_VOCABULARY.update(DERE_ARCHETYPES)
@@ -2448,6 +2451,6 @@ OTAKU_VOCABULARY.update(ANIME_SONGS_AND_SINGERS)
 OTAKU_VOCABULARY.update(SEIYUU_PROFILES)
 
 # --- VALIDATION TECHNIQUE DU NOMBRE DE TERMES (457 STRICTS) ---
-assert len(OTAKU_VOCABULARY) >= 457, (
-    f"Le dictionnaire contient seulement {len(OTAKU_VOCABULARY)} termes uniques. Complétez pour atteindre 457."
-)
+assert (
+    len(OTAKU_VOCABULARY) >= 457
+), f"Le dictionnaire contient seulement {len(OTAKU_VOCABULARY)} termes uniques. Complétez pour atteindre 457."  # nosec B101

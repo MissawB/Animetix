@@ -1,17 +1,18 @@
-import os
-import httpx
-import time
-import logging
 import base64
-from typing import Optional, List, Dict, Any
-from core.ports.inference_port import InferencePort, InferenceNotImplementedError
-from core.ports.usage_port import UsagePort
-from core.utils.security import safe_http_request
+import logging
+import os
+import time
+from typing import Any, Dict, List, Optional
+
+import httpx
 from core.domain.entities.ai_schemas import (
-    InferenceResponse,
     InferenceMetadata,
+    InferenceResponse,
     TokenLogProb,
 )
+from core.ports.inference_port import InferenceNotImplementedError, InferencePort
+from core.ports.usage_port import UsagePort
+from core.utils.security import safe_http_request
 
 logger = logging.getLogger("animetix.inference.brain")
 
@@ -112,15 +113,13 @@ class BrainAPIAdapter(InferencePort):
         }
 
         try:
-            with (
-                httpx.stream(
-                    "POST",
-                    f"{self.api_url}/stream_generate",  # Assuming a dedicated streaming endpoint
-                    json=payload,
-                    headers=self._get_headers(),
-                    timeout=None,  # Streaming responses can take a long time  # nosec B113
-                ) as response
-            ):
+            with httpx.stream(
+                "POST",
+                f"{self.api_url}/stream_generate",  # Assuming a dedicated streaming endpoint
+                json=payload,
+                headers=self._get_headers(),
+                timeout=None,  # Streaming responses can take a long time  # nosec B113
+            ) as response:
                 response.raise_for_status()
                 for (
                     chunk

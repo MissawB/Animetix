@@ -1,12 +1,12 @@
+from animetix.api.dependencies import get_session_service
+from core.utils.security import sanitize_html_content
+from dependency_injector.wiring import Provide, inject
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from dependency_injector.wiring import inject, Provide
-from ...containers import Container
-from animetix.api.dependencies import get_session_service
-from ...models import GameplaySession
 
-from core.utils.security import sanitize_html_content
+from ...containers import Container
+from ...models import GameplaySession
 
 
 class AniminatorAskView(APIView):
@@ -37,7 +37,9 @@ class AniminatorAskView(APIView):
                 )
             import random  # noqa: E402
 
-            secret = random.choice(list(data["title_to_full_data"].keys()))
+            secret = random.choice(
+                list(data["title_to_full_data"].keys())
+            )  # nosec B311
             session.set("animinator_secret", secret)
             session.set("animinator_questions_left", 20)
             session.set("animinator_chat", [])

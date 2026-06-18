@@ -6,15 +6,18 @@ les musiques (anisongs), les seiyuu, et l'écosystème du Marché Français (dou
 Proportions mathématiques parfaites garanties : 80% spécialisé, 5% vocabulaire méta, 15% général.
 """
 
-import json  # noqa: E402
-import os  # noqa: E402
-import random  # noqa: E402
-import sys  # noqa: E402
-import logging  # noqa: E402
-import time  # noqa: E402
 import html  # noqa: E402
+import json  # noqa: E402
+import logging  # noqa: E402
+import os  # noqa: E402
+import random
+random = random.SystemRandom()
+  # noqa: E402
 import re  # noqa: E402
+import sys  # noqa: E402
+import time  # noqa: E402
 from typing import List  # noqa: E402
+
 from datasets import load_dataset  # noqa: E402
 from dotenv import load_dotenv  # noqa: E402
 
@@ -163,25 +166,25 @@ OUTPUT_DATASET = os.path.join(
 
 # Ajout du répertoire courant pour l'import des modules de base de données locales
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from otaku_concepts import OTAKU_VOCABULARY  # noqa: E402
 from creators_db import CREATORS_AND_STUDIOS  # noqa: E402
-from transmedia_db import TRANSMEDIA_RELATIONS  # noqa: E402
-from magazines_and_awards_db import AWARDS_AND_MAGAZINES_RELATIONS  # noqa: E402
-from songs_and_seiyuu_db import (  # noqa: E402
-    SONGS_AND_SEIYUU_RELATIONS,
-    SEIYUU_PROFILES as JAPANESE_VOICE_ACTORS,
-)  # noqa: E402  # noqa: E402
-from french_market_db import (  # noqa: E402
-    FRENCH_VOICE_ACTORS,
+from french_market_db import (
+    FRENCH_ANIME_DISTRIBUTORS,  # noqa: E402
     FRENCH_MANGA_PUBLISHERS,
-    FRENCH_ANIME_DISTRIBUTORS,
     FRENCH_MARKET_RELATIONS,
-)  # noqa: E402
-from japanese_market_db import (  # noqa: E402
+    FRENCH_VOICE_ACTORS,
+)
+from japanese_market_db import (
+    JAPANESE_ANIME_DISTRIBUTORS,  # noqa: E402
     JAPANESE_MANGA_PUBLISHERS,
-    JAPANESE_ANIME_DISTRIBUTORS,
     JAPANESE_MARKET_RELATIONS,
-)  # noqa: E402
+)
+from magazines_and_awards_db import AWARDS_AND_MAGAZINES_RELATIONS  # noqa: E402
+from otaku_concepts import OTAKU_VOCABULARY  # noqa: E402
+from songs_and_seiyuu_db import (
+    SEIYUU_PROFILES as JAPANESE_VOICE_ACTORS,
+)  # noqa: E402; noqa: E402  # noqa: E402
+from songs_and_seiyuu_db import SONGS_AND_SEIYUU_RELATIONS
+from transmedia_db import TRANSMEDIA_RELATIONS  # noqa: E402
 from volumes_and_episodes_db import VOLUMES_AND_EPISODES_DATA  # noqa: E402
 
 CACHE_FILE = os.path.join(
@@ -1771,7 +1774,9 @@ def fetch_general_instructions(count):
         logger.info(f"[INFO] Loading {en_count} English general instructions...")
         try:
             # Using revision="main" to ensure secure, reproducible download
-            ds_en = load_dataset("yahma/alpaca-cleaned", split="train", revision="main")  # nosec B615
+            ds_en = load_dataset(
+                "yahma/alpaca-cleaned", split="train", revision="main"
+            )  # nosec B615
             for i in range(min(en_count, len(ds_en))):
                 item = ds_en[i]
                 general_samples.append(
@@ -2767,8 +2772,10 @@ def generate_multiturn_dialogues(
 
             studio2 = ", ".join(anime2.get("studios", ["MAPPA"]))
             year2 = anime2.get("year", 2021)
-            ", ".join(clean_tags(tags2, lang)[:3]) if tags2 else (
-                "animation" if lang == "English" else "animation"
+            (
+                ", ".join(clean_tags(tags2, lang)[:3])
+                if tags2
+                else ("animation" if lang == "English" else "animation")
             )
 
             # Check if we have volume/episode count from database or use a realistic dummy
@@ -2958,7 +2965,9 @@ def generate_rag_context_instructions(animes, characters) -> List[dict]:
         "Advertisement: Download the Manga-Reader app now on iOS and Android.",
     ]
 
-    import random  # noqa: E402
+    import random
+    random = random.SystemRandom()
+  # noqa: E402
 
     # Scenario A: Synopsis extraction with noise
     for idx in range(120):
@@ -3125,7 +3134,9 @@ def generate_negative_refusal_examples(count=800) -> List[dict]:
     Génère procéduralement des exemples négatifs (hors-sujet) avec des refus polis
     cadrant l'expertise exclusive d'Animetix sur l'univers anime/manga.
     """
-    import random  # noqa: E402
+    import random
+    random = random.SystemRandom()
+  # noqa: E402
 
     refusals = []
 

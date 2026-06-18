@@ -1,5 +1,6 @@
 import logging
 import time
+
 import jwt
 import requests
 from django.conf import settings
@@ -9,8 +10,7 @@ from django.contrib.auth.middleware import RemoteUserMiddleware
 from django.core.exceptions import PermissionDenied
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
-from rest_framework import authentication
-from rest_framework import exceptions
+from rest_framework import authentication, exceptions
 
 logger = logging.getLogger("animetix.auth")
 User = get_user_model()
@@ -133,8 +133,8 @@ def get_google_public_keys():
             if "max-age" in part:
                 try:
                     max_age = int(part.split("=")[1].strip())
-                except Exception:
-                    pass
+                except (ValueError, IndexError):
+                    logger.debug(f"Could not parse max-age from: {part}")
 
         _public_keys_cache = response.json()
         _public_keys_expiry = now + max_age

@@ -1,8 +1,8 @@
-from django.core.management.base import BaseCommand
+from animetix.models import MediaItem, UserRecommendation
 from django.conf import settings
-from django.db import transaction
 from django.contrib.auth.models import User
-from animetix.models import UserRecommendation, MediaItem
+from django.core.management.base import BaseCommand
+from django.db import transaction
 
 
 class Command(BaseCommand):

@@ -1,13 +1,17 @@
 import random
 import string
-from rest_framework import views, response, status, permissions
-from ...models import DuelRoom
+
+from dependency_injector.wiring import Provide, inject
+from rest_framework import permissions, response, status, views
+
 from ...containers import Container
-from dependency_injector.wiring import inject, Provide
+from ...models import DuelRoom
 
 
 def generate_room_code():
-    return "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    return "".join(
+        random.choices(string.ascii_uppercase + string.digits, k=6)
+    )  # nosec B311
 
 
 class CreateDuelRoomView(views.APIView):
@@ -25,7 +29,7 @@ class CreateDuelRoomView(views.APIView):
             )
 
         titles = list(data["title_to_full_data"].keys())
-        secret_title = random.choice(titles)
+        secret_title = random.choice(titles)  # nosec B311
 
         room_code = generate_room_code()
         while DuelRoom.objects.filter(room_code=room_code).exists():

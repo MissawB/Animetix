@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 import os
-import sys
-import yaml
 import subprocess
-from django.core.management.base import BaseCommand, CommandError
+import sys
+
+import yaml
 from django.conf import settings
+from django.core.management.base import BaseCommand, CommandError
 
 
 class Command(BaseCommand):
@@ -120,7 +121,9 @@ class Command(BaseCommand):
             "source:django_source",
         ]
 
-        res_rel = subprocess.run(cmd_relational, capture_output=True, text=True)
+        res_rel = subprocess.run(
+            cmd_relational, capture_output=True, text=True
+        )  # nosec B603
         if res_rel.returncode != 0:
             self.stdout.write(self.style.ERROR(res_rel.stdout))
             self.stdout.write(self.style.ERROR(res_rel.stderr))
@@ -149,7 +152,9 @@ class Command(BaseCommand):
                 "--select",
                 "source:telemetry_source archetype_drift_values_check",
             ]
-            res_bq = subprocess.run(cmd_bq, capture_output=True, text=True)
+            res_bq = subprocess.run(
+                cmd_bq, capture_output=True, text=True
+            )  # nosec B603
             if res_bq.returncode != 0:
                 self.stdout.write(self.style.ERROR(res_bq.stdout))
                 self.stdout.write(self.style.ERROR(res_bq.stderr))
