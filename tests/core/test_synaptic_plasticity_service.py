@@ -1,6 +1,8 @@
-import pytest
 from unittest.mock import MagicMock
-from backend.core.domain.services.neuromorphic_plasticity_service import SynapticPlasticityService
+from backend.core.domain.services.neuromorphic_plasticity_service import (
+    SynapticPlasticityService,
+)
+
 
 def test_plasticity_service_integration():
     mock_inference = MagicMock()

@@ -1,19 +1,21 @@
 """Vision Transformers adapter – composes focused mixins for each capability."""
-import logging
-import httpx
-from typing import Optional, List, Dict, Any
-from core.ports.inference_port import InferencePort, InferenceNotImplementedError
-from core.ports.usage_port import UsagePort
-from core.domain.entities.ai_schemas import InferenceResponse
+
+import logging  # noqa: E402
+import httpx  # noqa: E402
+from typing import Optional, List  # noqa: E402
+from core.ports.inference_port import InferencePort, InferenceNotImplementedError  # noqa: E402
+from core.ports.usage_port import UsagePort  # noqa: E402
+from core.domain.entities.ai_schemas import InferenceResponse  # noqa: E402
 
 # Capability mixins
-from .vlm_mixin import VlmMixin
-from .video_analysis import VideoAnalysisMixin
-from .manga_ocr import MangaOcrMixin
-from .depth_estimation import DepthEstimationMixin
-from .clip_vision import ClipVisionMixin
+from .vlm_mixin import VlmMixin  # noqa: E402
+from .video_analysis import VideoAnalysisMixin  # noqa: E402
+from .manga_ocr import MangaOcrMixin  # noqa: E402
+from .depth_estimation import DepthEstimationMixin  # noqa: E402
+from .clip_vision import ClipVisionMixin  # noqa: E402
 
 logger = logging.getLogger("animetix.inference.vision")
+
 
 class VisionTransformersAdapter(
     DepthEstimationMixin,
@@ -31,29 +33,35 @@ class VisionTransformersAdapter(
         self._http_client: Optional[httpx.AsyncClient] = None
 
     def generate(
-        self, 
-        prompt: str, 
-        system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.", 
-        thinking_budget: int = 0, 
-        thinking_mode: bool = False, 
+        self,
+        prompt: str,
+        system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.",
+        thinking_budget: int = 0,
+        thinking_mode: bool = False,
         include_logprobs: bool = False,
-        **kwargs
+        **kwargs,
     ) -> InferenceResponse:
-        raise InferenceNotImplementedError("Text generation not supported by VisionTransformersAdapter")
+        raise InferenceNotImplementedError(
+            "Text generation not supported by VisionTransformersAdapter"
+        )
 
     def stream_generate(
-        self, 
-        prompt: str, 
-        system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.", 
-        thinking_budget: int = 0, 
-        thinking_mode: bool = False, 
+        self,
+        prompt: str,
+        system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.",
+        thinking_budget: int = 0,
+        thinking_mode: bool = False,
         include_logprobs: bool = False,
-        **kwargs
+        **kwargs,
     ):
-        raise InferenceNotImplementedError("Streaming generation not supported by VisionTransformersAdapter")
+        raise InferenceNotImplementedError(
+            "Streaming generation not supported by VisionTransformersAdapter"
+        )
 
     def get_text_embedding(self, text: str) -> List[float]:
-        raise InferenceNotImplementedError("Text embedding not supported by VisionTransformersAdapter")
+        raise InferenceNotImplementedError(
+            "Text embedding not supported by VisionTransformersAdapter"
+        )
 
     def health_check(self) -> dict:
         return {"status": "online", "engine": "vision_transformers"}

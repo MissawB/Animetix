@@ -2,6 +2,7 @@ from typing import Any, Optional
 from django.core.cache import cache
 from core.ports.state_port import StatePort
 
+
 class DjangoCacheStateAdapter(StatePort):
     async def get_state(self, key: str) -> Optional[Any]:
         return await cache.aget(key)

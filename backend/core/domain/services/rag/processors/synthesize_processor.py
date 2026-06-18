@@ -2,34 +2,41 @@ from backend.core.domain.services.rag.processors.base import StateProcessor
 from backend.core.domain.entities.ai_schemas import RAGContext, RAGState, StreamStep
 from typing import Generator
 import logging
-import time
 
-logger = logging.getLogger('animetix.rag_workflow')
+logger = logging.getLogger("animetix.rag_workflow")
+
 
 class SynthesizeProcessor(StateProcessor):
     def __init__(self, synthesizer, xai_service):
         self.synthesizer = synthesizer
         self.xai_service = xai_service
 
-    def process(self, ctx: RAGContext, xai_collector=None) -> Generator[dict, None, RAGState]:
+    def process(
+        self, ctx: RAGContext, xai_collector=None
+    ) -> Generator[dict, None, RAGState]:
         if ctx.correction_feedback:
-            yield StreamStep(type="thought", content="[Synthesizer] Tentative d'auto-correction...").model_dump()
+            yield StreamStep(
+                type="thought", content="[Synthesizer] Tentative d'auto-correction..."
+            ).model_dump()
         else:
-            yield StreamStep(type="thought", content="[Synthesizer] Rédaction de la réponse expert...").model_dump()
-        
+            yield StreamStep(
+                type="thought",
+                content="[Synthesizer] Rédaction de la réponse expert...",
+            ).model_dump()
+
         ctx.full_answer = ""
         in_thought = False
         token_count = 0
 
         for token in self.synthesizer.synthesize_stream(
-            ctx.query, 
-            ctx.truth_path, 
-            thinking_budget=ctx.thinking_budget, 
+            ctx.query,
+            ctx.truth_path,
+            thinking_budget=ctx.thinking_budget,
             thinking_mode=ctx.thinking_mode,
             use_slm=ctx.use_slm,
             correction_feedback=ctx.correction_feedback,
             language=ctx.language,
-            xai_collector=xai_collector
+            xai_collector=xai_collector,
         ):
             token_count += 1
             if "<thought>" in token and not in_thought:
@@ -57,12 +64,19 @@ class SynthesizeProcessor(StateProcessor):
             else:
                 ctx.full_answer += token
                 yield StreamStep(type="token", content=token).model_dump()
-        
+
         if not ctx.knowledge_acquired:
             res = self.xai_service.measure_confidence(ctx.query, ctx.full_answer)
-            confidence = res.get("confidence_score", 1.0) if isinstance(res, dict) else float(res)
+            confidence = (
+                res.get("confidence_score", 1.0)
+                if isinstance(res, dict)
+                else float(res)
+            )
             if confidence < 0.6:
-                yield StreamStep(type="thought", content=f"[Uncertainty] Basse confiance détectée ({confidence:.2f}). Déclenchement du Librarian...").model_dump()
+                yield StreamStep(
+                    type="thought",
+                    content=f"[Uncertainty] Basse confiance détectée ({confidence:.2f}). Déclenchement du Librarian...",
+                ).model_dump()
                 ctx.knowledge_acquired = True
                 return RAGState.ACQUIRE_KNOWLEDGE
 

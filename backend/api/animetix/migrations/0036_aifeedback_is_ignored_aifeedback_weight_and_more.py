@@ -4,40 +4,39 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('animetix', '0035_mangachapter_mangapage'),
+        ("animetix", "0035_mangachapter_mangapage"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='aifeedback',
-            name='is_ignored',
+            model_name="aifeedback",
+            name="is_ignored",
             field=models.BooleanField(default=False),
         ),
         migrations.AddField(
-            model_name='aifeedback',
-            name='weight',
+            model_name="aifeedback",
+            name="weight",
             field=models.FloatField(default=1.0),
         ),
         migrations.AddField(
-            model_name='golddatasetentry',
-            name='ai_critique',
+            model_name="golddatasetentry",
+            name="ai_critique",
             field=models.TextField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='golddatasetentry',
-            name='ai_validation_score',
+            model_name="golddatasetentry",
+            name="ai_validation_score",
             field=models.FloatField(default=0.0),
         ),
         migrations.AddField(
-            model_name='golddatasetentry',
-            name='confidence_score',
+            model_name="golddatasetentry",
+            name="confidence_score",
             field=models.FloatField(default=0.0),
         ),
         migrations.AddField(
-            model_name='golddatasetentry',
-            name='is_safe',
+            model_name="golddatasetentry",
+            name="is_safe",
             field=models.BooleanField(default=True),
         ),
     ]

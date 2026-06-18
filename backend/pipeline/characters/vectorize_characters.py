@@ -1,5 +1,4 @@
 import json
-import numpy as np
 import os
 import sys
 import logging
@@ -14,81 +13,105 @@ if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
 # Détection robuste de la racine du projet
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+BASE_DIR = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 sys.path.append(os.path.join(BASE_DIR, "backend"))
-from core.utils.security import safe_http_request
-SRC_DIR = os.path.join(BASE_DIR, 'src')
-BACKEND_DIR = os.path.join(SRC_DIR, 'backend')
+from core.utils.security import safe_http_request  # noqa: E402
+
+SRC_DIR = os.path.join(BASE_DIR, "src")
+BACKEND_DIR = os.path.join(SRC_DIR, "backend")
 
 for path in [SRC_DIR, BACKEND_DIR]:
     if path not in sys.path:
         sys.path.append(path)
 
+
 # Initialisation différée
 def get_repo():
-    from animetix.containers import get_container
+    from animetix.containers import get_container  # noqa: E402
+
     return get_container().repository()
 
+
 def get_pipeline_resources():
-    from pipeline.models_registry import models_registry
-    from pipeline.neo4j_client import neo4j_manager
+    from pipeline.models_registry import models_registry  # noqa: E402
+    from pipeline.neo4j_client import neo4j_manager  # noqa: E402
+
     return models_registry, neo4j_manager
 
-CLEAN_DB = os.path.join(BASE_DIR, 'data', 'processed', 'filtered_characters.json')
+
+CLEAN_DB = os.path.join(BASE_DIR, "data", "processed", "filtered_characters.json")
 BATCH_SIZE = 32
+
 
 def run_vectorization():
     repo = get_repo()
     models_registry, neo4j_manager = get_pipeline_resources()
-    if hasattr(sys.stdout, 'reconfigure'): sys.stdout.reconfigure(encoding='utf-8')
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     if not os.path.exists(CLEAN_DB):
-        logger.error(f"❌ {CLEAN_DB} not found."); return
+        logger.error(f"❌ {CLEAN_DB} not found.")
+        return
 
-    with open(CLEAN_DB, 'r', encoding='utf-8') as f:
+    with open(CLEAN_DB, "r", encoding="utf-8") as f:
         db = json.load(f)
 
     # Collections
     existing_ids = repo.get_all_ids("character_vibe")
     existing_vision_ids = repo.get_all_ids("character_visual_vibe")
-    
-    new_items = [item for item in db if str(item['id']) not in existing_ids or str(item['id']) not in existing_vision_ids]
+
+    new_items = [
+        item
+        for item in db
+        if str(item["id"]) not in existing_ids
+        or str(item["id"]) not in existing_vision_ids
+    ]
 
     if not new_items:
-        logger.info("ℹ️ Character database up to date."); return
+        logger.info("ℹ️ Character database up to date.")
+        return
 
-    logger.info(f"🚀 Multimodal Vectorization of {len(new_items)} characters (Batching mode: {BATCH_SIZE})...")
+    logger.info(
+        f"🚀 Multimodal Vectorization of {len(new_items)} characters (Batching mode: {BATCH_SIZE})..."
+    )
     text_model = models_registry.text_model
     vision_model = models_registry.vision_model
-    
+
     for i in range(0, len(new_items), BATCH_SIZE):
-        batch = new_items[i:i + BATCH_SIZE]
-        
+        batch = new_items[i : i + BATCH_SIZE]
+
         batch_ids, batch_metas, batch_texts = [], [], []
         vision_ids, vision_images, vision_metas = [], [], []
 
         for item in batch:
-            c_id = str(item['id'])
-            
+            c_id = str(item["id"])
+
             # Extraction de la popularité
-            pop = item.get('popularity', 0)
+            pop = item.get("popularity", 0)
             if isinstance(pop, dict):
-                pop = pop.get('favourites', 0)
-                
+                pop = pop.get("favourites", 0)
+
             meta = {
-                "id": c_id, "title": item['name'], "image": item['image'] or "",
-                "popularity": pop, "type": "Character",
-                "affiliations": ", ".join(item.get('metadata', {}).get('affiliations') or [])
+                "id": c_id,
+                "title": item["name"],
+                "image": item["image"] or "",
+                "popularity": pop,
+                "type": "Character",
+                "affiliations": ", ".join(
+                    item.get("metadata", {}).get("affiliations") or []
+                ),
             }
-            
+
             if c_id not in existing_ids:
                 t_input = f"Character Vibe: {item.get('name')}. {item.get('clean_description', '')}"
                 batch_ids.append(c_id)
                 batch_texts.append(t_input)
                 batch_metas.append(meta)
 
-            if c_id not in existing_vision_ids and item['image']:
+            if c_id not in existing_vision_ids and item["image"]:
                 try:
-                    res = safe_http_request("GET", item['image'], timeout=5)
+                    res = safe_http_request("GET", item["image"], timeout=5)
                     if res.status_code == 200:
                         img = Image.open(BytesIO(res.content)).convert("RGB")
                         vision_ids.append(c_id)
@@ -97,8 +120,9 @@ def run_vectorization():
                 except Exception as e:
                     logger.warning(f"⚠️ Error fetching image for {c_id}: {e}")
                     pass
-            
-            try: neo4j_manager.sync_character_to_graph(item)
+
+            try:
+                neo4j_manager.sync_character_to_graph(item)
             except Exception as e:
                 logger.warning(f"⚠️ Neo4j Sync Error for {c_id}: {e}")
                 pass
@@ -106,14 +130,21 @@ def run_vectorization():
         if batch_texts:
             embeddings = text_model.encode(batch_texts, convert_to_numpy=True).tolist()
             repo.upsert_items("character_vibe", batch_ids, embeddings, batch_metas)
-            
+
         if vision_images:
-            v_embeddings = vision_model.encode(vision_images, convert_to_numpy=True).tolist()
-            repo.upsert_items("character_visual_vibe", vision_ids, v_embeddings, vision_metas)
+            v_embeddings = vision_model.encode(
+                vision_images, convert_to_numpy=True
+            ).tolist()
+            repo.upsert_items(
+                "character_visual_vibe", vision_ids, v_embeddings, vision_metas
+            )
 
-        logger.info(f"   📦 Processed {min(i + BATCH_SIZE, len(new_items))}/{len(new_items)}...")
+        logger.info(
+            f"   📦 Processed {min(i + BATCH_SIZE, len(new_items))}/{len(new_items)}..."
+        )
 
-    logger.info(f"✅ Character Multimodal Sync Complete.")
+    logger.info("✅ Character Multimodal Sync Complete.")
+
 
 if __name__ == "__main__":
     run_vectorization()

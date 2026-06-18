@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional, List
 
+
 class SemanticCachePort(ABC):
     @abstractmethod
     def get(self, query: str) -> Optional[str]:
@@ -8,7 +9,9 @@ class SemanticCachePort(ABC):
         pass
 
     @abstractmethod
-    def get_semantic(self, query_embedding: List[float], threshold: float) -> Optional[str]:
+    def get_semantic(
+        self, query_embedding: List[float], threshold: float
+    ) -> Optional[str]:
         """Récupère la réponse la plus proche sémantiquement."""
         pass
 

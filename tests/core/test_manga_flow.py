@@ -1,6 +1,6 @@
-import pytest
 from unittest.mock import MagicMock
 from core.domain.services.creative.manga_flow import MangaFlowService
+
 
 def test_translate_manga_page_iterates_bubbles():
     mock_inference = MagicMock()
@@ -9,22 +9,22 @@ def test_translate_manga_page_iterates_bubbles():
         "text": "Full text",
         "layout": [
             {"text": "Hello", "bbox": [10, 10, 50, 50]},
-            {"text": "World", "bbox": [60, 60, 100, 100]}
-        ]
+            {"text": "World", "bbox": [60, 60, 100, 100]},
+        ],
     }
     mock_inference.inpaint_text_bubbles.return_value = "base64_image_data"
-    
+
     mock_llm = MagicMock()
     # LLM translates sequentially
     mock_llm.generate.side_effect = ["Bonjour", "Monde"]
-    
+
     mock_prompt_mgr = MagicMock()
     mock_prompt_mgr.get_prompt.return_value = ("prompt", "system")
-    
+
     service = MangaFlowService(mock_inference, mock_llm, mock_prompt_mgr)
-    
+
     res = service.translate_manga_page(b"fake_image", "French")
-    
+
     assert res == "base64_image_data"
     # Ensure LLM was called for each bubble
     assert mock_llm.generate.call_count == 2

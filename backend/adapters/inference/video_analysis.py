@@ -1,11 +1,12 @@
 """Video analysis mixin for VisionTransformersAdapter."""
-import logging
-from typing import List, Dict, Any
-from core.utils.lazy_import import lazy_import
-from core.domain.exceptions import InferenceError
 
-torch = lazy_import('torch')
-transformers = lazy_import('transformers')
+import logging  # noqa: E402
+from typing import List, Dict, Any  # noqa: E402
+from core.utils.lazy_import import lazy_import  # noqa: E402
+from core.domain.exceptions import InferenceError  # noqa: E402
+
+torch = lazy_import("torch")
+transformers = lazy_import("transformers")
 
 logger = logging.getLogger("animetix.inference.video_analysis")
 
@@ -15,11 +16,15 @@ class VideoAnalysisMixin:
 
     def _load_video_vlm(self):
         """Chargement paresseux de Qwen3-VL pour le RAG temporel."""
-        if hasattr(self, '_video_vlm'):
+        if hasattr(self, "_video_vlm"):
             return
         try:
-            from transformers import Qwen2VLForConditionalGeneration, AutoProcessor, BitsAndBytesConfig
-            import torch as _torch
+            from transformers import (
+                Qwen2VLForConditionalGeneration,
+                AutoProcessor,
+                BitsAndBytesConfig,
+            )  # noqa: E402
+            import torch as _torch  # noqa: E402
 
             logger.info("📽️ Loading Qwen3-VL-8B for Temporal RAG...")
             model_id = "Qwen/Qwen3-VL-8B-Instruct"
@@ -33,15 +38,19 @@ class VideoAnalysisMixin:
                     bnb_4bit_quant_type="nf4",
                 )
 
-            self._video_processor = AutoProcessor.from_pretrained(model_id, revision="main") # nosec B615
+            self._video_processor = AutoProcessor.from_pretrained(
+                model_id, revision="main"
+            )  # nosec B615
             self._video_vlm = Qwen2VLForConditionalGeneration.from_pretrained(
                 model_id,
                 revision="main",
-                torch_dtype=_torch.float16 if _torch.cuda.is_available() else _torch.float32,
+                torch_dtype=_torch.float16
+                if _torch.cuda.is_available()
+                else _torch.float32,
                 device_map="auto",
                 quantization_config=quantization_config,
-                trust_remote_code=True
-            ) # nosec B615
+                trust_remote_code=True,
+            )  # nosec B615
         except Exception as e:
             logger.error(f"❌ Failed to load Qwen3-VL: {e}")
             raise InferenceError(f"Video VLM loading failed: {str(e)}")
@@ -49,10 +58,10 @@ class VideoAnalysisMixin:
     def _sample_video_frames(self, video_data: bytes, max_frames: int = 8) -> List:
         """Helper pour extraire des frames uniformément d'un buffer vidéo."""
         try:
-            import imageio
-            import tempfile
-            import os
-            from PIL import Image
+            import imageio  # noqa: E402
+            import tempfile  # noqa: E402
+            import os  # noqa: E402
+            from PIL import Image  # noqa: E402
 
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp:
                 tmp.write(video_data)
@@ -60,8 +69,8 @@ class VideoAnalysisMixin:
 
             reader = imageio.get_reader(tmp_path)
             meta = reader.get_meta_data()
-            fps = meta.get('fps', 24)
-            duration = meta.get('duration', 0)
+            fps = meta.get("fps", 24)
+            duration = meta.get("duration", 0)
 
             total_frames = int(duration * fps)
             indices = [int(i * total_frames / max_frames) for i in range(max_frames)]
@@ -93,17 +102,27 @@ class VideoAnalysisMixin:
                     "role": "user",
                     "content": [
                         {"type": "video", "video": frames, "fps": 1.0},
-                        {"type": "text", "text": "Describe the main actions and key moments in this video segment with timestamps."}
-                    ]
+                        {
+                            "type": "text",
+                            "text": "Describe the main actions and key moments in this video segment with timestamps.",
+                        },
+                    ],
                 }
             ]
 
-            import torch as _torch
-            text = self._video_processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-            inputs = self._video_processor(text=[text], videos=[frames], padding=True, return_tensors="pt").to(self._video_vlm.device)
+            text = self._video_processor.apply_chat_template(
+                messages, tokenize=False, add_generation_prompt=True
+            )
+            inputs = self._video_processor(
+                text=[text], videos=[frames], padding=True, return_tensors="pt"
+            ).to(self._video_vlm.device)
 
             generated_ids = self._video_vlm.generate(**inputs, max_new_tokens=256)
-            output_text = self._video_processor.batch_decode(generated_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
+            output_text = self._video_processor.batch_decode(
+                generated_ids,
+                skip_special_tokens=True,
+                clean_up_tokenization_spaces=False,
+            )[0]
 
             self._log_usage(engine="transformers:Qwen3-VL-8B:temporal", units=1)
 
@@ -111,30 +130,34 @@ class VideoAnalysisMixin:
             embedding = []
             try:
                 # Assuming this mixin is used in an adapter that also has ClipVisionMixin
-                if hasattr(self, '_load_clip_model'):
+                if hasattr(self, "_load_clip_model"):
                     self._load_clip_model()
-                    if hasattr(self, '_clip_model'):
+                    if hasattr(self, "_clip_model"):
                         embedding = self._clip_model.encode(output_text).tolist()
             except Exception as e:
                 logger.warning(f"Could not generate embedding for video summary: {e}")
 
-            return [{
-                "start": 0, 
-                "end": -1, 
-                "summary": output_text, 
-                "confidence": 0.9,
-                "embedding": embedding
-            }]
+            return [
+                {
+                    "start": 0,
+                    "end": -1,
+                    "summary": output_text,
+                    "confidence": 0.9,
+                    "embedding": embedding,
+                }
+            ]
 
         except Exception as e:
             logger.error(f"❌ Video temporal analysis failed: {e}")
             raise InferenceError(f"Video reasoning failed: {str(e)}")
 
-    def localize_video_actions(self, video_data: bytes, action_queries: List[str]) -> List[Dict[str, Any]]:
+    def localize_video_actions(
+        self, video_data: bytes, action_queries: List[str]
+    ) -> List[Dict[str, Any]]:
         """Localise des actions spécifiques dans une vidéo via raisonnement par fenêtre glissante."""
         try:
             self._load_video_vlm()
-            import orjson
+            import orjson  # noqa: E402
 
             frames = self._sample_video_frames(video_data, max_frames=8)
             if not frames:
@@ -154,28 +177,40 @@ class VideoAnalysisMixin:
                         "role": "user",
                         "content": [
                             {"type": "video", "video": frames, "fps": 1.0},
-                            {"type": "text", "text": prompt}
-                        ]
+                            {"type": "text", "text": prompt},
+                        ],
                     }
                 ]
 
-                text = self._video_processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-                inputs = self._video_processor(text=[text], videos=[frames], padding=True, return_tensors="pt").to(self._video_vlm.device)
+                text = self._video_processor.apply_chat_template(
+                    messages, tokenize=False, add_generation_prompt=True
+                )
+                inputs = self._video_processor(
+                    text=[text], videos=[frames], padding=True, return_tensors="pt"
+                ).to(self._video_vlm.device)
 
                 generated_ids = self._video_vlm.generate(**inputs, max_new_tokens=128)
-                response = self._video_processor.batch_decode(generated_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
+                response = self._video_processor.batch_decode(
+                    generated_ids,
+                    skip_special_tokens=True,
+                    clean_up_tokenization_spaces=False,
+                )[0]
 
                 self._log_usage(engine="transformers:Qwen3-VL-8B:localize", units=1)
 
                 try:
-                    if '[' in response and ']' in response:
-                        json_str = response[response.find('['):response.rfind(']')+1]
+                    if "[" in response and "]" in response:
+                        json_str = response[
+                            response.find("[") : response.rfind("]") + 1
+                        ]
                         localizations = orjson.loads(json_str)
                         for loc in localizations:
                             loc["action"] = query
                             all_found_actions.append(loc)
                 except Exception as e:
-                    logger.warning(f"Failed to parse VLM localization for '{query}': {e}")
+                    logger.warning(
+                        f"Failed to parse VLM localization for '{query}': {e}"
+                    )
 
             return all_found_actions
 
@@ -183,7 +218,9 @@ class VideoAnalysisMixin:
             logger.error(f"❌ Action localization failed: {e}")
             raise InferenceError(f"Video action localization failed: {str(e)}")
 
-    def generate_video_description(self, video_data: bytes, prompt: str = "Décris cette vidéo d'anime.") -> str:
+    def generate_video_description(
+        self, video_data: bytes, prompt: str = "Décris cette vidéo d'anime."
+    ) -> str:
         """Utilise Qwen3-VL pour décrire une vidéo."""
         try:
             self._load_video_vlm()
@@ -196,18 +233,28 @@ class VideoAnalysisMixin:
                     "role": "user",
                     "content": [
                         {"type": "video", "video": frames, "fps": 1.0},
-                        {"type": "text", "text": prompt}
-                    ]
+                        {"type": "text", "text": prompt},
+                    ],
                 }
             ]
 
-            text = self._video_processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-            inputs = self._video_processor(text=[text], videos=[frames], padding=True, return_tensors="pt").to(self._video_vlm.device)
+            text = self._video_processor.apply_chat_template(
+                messages, tokenize=False, add_generation_prompt=True
+            )
+            inputs = self._video_processor(
+                text=[text], videos=[frames], padding=True, return_tensors="pt"
+            ).to(self._video_vlm.device)
 
             generated_ids = self._video_vlm.generate(**inputs, max_new_tokens=512)
-            output_text = self._video_processor.batch_decode(generated_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
+            output_text = self._video_processor.batch_decode(
+                generated_ids,
+                skip_special_tokens=True,
+                clean_up_tokenization_spaces=False,
+            )[0]
 
-            self._log_usage(engine="transformers:Qwen3-VL-8B:video_description", units=1)
+            self._log_usage(
+                engine="transformers:Qwen3-VL-8B:video_description", units=1
+            )
 
             return output_text
         except Exception as e:

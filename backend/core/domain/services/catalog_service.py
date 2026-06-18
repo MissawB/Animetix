@@ -4,14 +4,21 @@ from typing import Dict, Optional, List
 from ...ports.repository_port import RepositoryPort
 from ..exceptions import CatalogNotFoundError, GameLogicError, AnimetixError
 
-logger = logging.getLogger('animetix')
+logger = logging.getLogger("animetix")
+
 
 class CatalogService:
     """
     Service dédié à la gestion, au chargement et à la mise en cache des catalogues de médias.
     Décharge GameService de la manipulation brute des données.
     """
-    def __init__(self, repository: RepositoryPort, sql_repository: Optional[RepositoryPort] = None, cache_service=None):
+
+    def __init__(
+        self,
+        repository: RepositoryPort,
+        sql_repository: Optional[RepositoryPort] = None,
+        cache_service=None,
+    ):
         self.repository = repository
         self.sql_repository = sql_repository or repository
         self.cache = cache_service
@@ -36,7 +43,7 @@ class CatalogService:
         # 1. Cache RAM (processus courant)
         if media_type in self._cached_catalogs:
             return self._cached_catalogs[media_type]
-            
+
         # 2. Cache distribué (Redis)
         if self.cache:
             try:
@@ -51,38 +58,43 @@ class CatalogService:
         try:
             # Récupération brute des données (limité à 2000 pour les performances de l'UI)
             db = self.sql_repository.get_catalog_by_type(media_type, limit=2000)
-            
+
             if not db:
                 catalog_data = self.repository.load_catalog(media_type)
                 if not catalog_data:
                     raise CatalogNotFoundError(media_type)
-                db = catalog_data['db']
-                lookup = catalog_data['lookup']
+                db = catalog_data["db"]
+                lookup = catalog_data["lookup"]
             else:
-                lookup = [{"id": item['id'], "title": item['title']} for item in db]
+                lookup = [{"id": item["id"], "title": item["title"]} for item in db]
                 catalog_data = {"db": db, "lookup": lookup}
 
             # Enrichissement pour accès rapide O(1)
-            title_to_data = {str(item.get('title') or item.get('name')): item for item in db}
-            titles = [str(item.get('title') or item.get('name')) for item in db]
-            
-            catalog_data.update({
-                "title_to_full_data": title_to_data,
-                "titles": titles,
-                "title_to_index": {t: i for i, t in enumerate(titles)},
-                "id_to_full_data": {str(item['id']): item for item in db}
-            })
-            
+            title_to_data = {
+                str(item.get("title") or item.get("name")): item for item in db
+            }
+            titles = [str(item.get("title") or item.get("name")) for item in db]
+
+            catalog_data.update(
+                {
+                    "title_to_full_data": title_to_data,
+                    "titles": titles,
+                    "title_to_index": {t: i for i, t in enumerate(titles)},
+                    "id_to_full_data": {str(item["id"]): item for item in db},
+                }
+            )
+
             # Préparation de l'autocomplete JSON
             autocomplete_items = [
                 {
-                    'title': item.get('title') or item.get('name'), 
-                    'title_english': item.get('title_english'), 
-                    'image': item.get('image')
-                } for item in db
+                    "title": item.get("title") or item.get("name"),
+                    "title_english": item.get("title_english"),
+                    "image": item.get("image"),
+                }
+                for item in db
             ]
             catalog_data["autocomplete_json"] = json.dumps(autocomplete_items)
-            
+
             # 4. Sauvegarde dans les caches
             self._cached_catalogs[media_type] = catalog_data
             if self.cache:
@@ -90,20 +102,28 @@ class CatalogService:
                     self.cache.set(f"catalog_{media_type}", catalog_data, timeout=3600)
                 except Exception as e:
                     logger.error(f"Failed to cache catalog {media_type}: {e}")
-                
+
             return catalog_data
         except Exception as e:
             if isinstance(e, AnimetixError):
                 raise
-            raise GameLogicError(f"Critical error loading catalog {media_type}: {str(e)}")
+            raise GameLogicError(
+                f"Critical error loading catalog {media_type}: {str(e)}"
+            )
 
     def get_akinetix_attributes(self) -> Dict:
         """Charge les attributs fins Akinetix depuis les fichiers traités."""
-        import os
-        path = os.path.join(self.repository.project_root, 'data', 'processed', 'akinetix_attributes.json')
+        import os  # noqa: E402
+
+        path = os.path.join(
+            self.repository.project_root,
+            "data",
+            "processed",
+            "akinetix_attributes.json",
+        )
         if os.path.exists(path):
             try:
-                with open(path, 'r', encoding='utf-8') as f:
+                with open(path, "r", encoding="utf-8") as f:
                     return json.load(f)
             except Exception as e:
                 logger.error(f"Failed to load Akinetix attributes: {e}")
@@ -119,7 +139,9 @@ class CatalogService:
             self._cached_catalogs.clear()
             # Note: On ne vide pas tout Redis pour ne pas impacter les sessions
 
-    def search_items(self, query: str, media_type: Optional[str] = None, limit: int = 10) -> List[Dict]:
+    def search_items(
+        self, query: str, media_type: Optional[str] = None, limit: int = 10
+    ) -> List[Dict]:
         """Recherche des éléments dans le catalogue SQL (Source of Truth) pour autocomplétion."""
         try:
             return self.sql_repository.search_media_items(query, media_type, limit)

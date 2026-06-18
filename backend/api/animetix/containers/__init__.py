@@ -5,31 +5,31 @@ from .inference import InferenceContainer
 from .agentic import AgenticContainer
 from .core_services import CoreServicesContainer
 
+
 class Container(containers.DeclarativeContainer):
     infrastructure = providers.Container(InfrastructureContainer)
     persistence = providers.Container(PersistenceContainer)
-    inference = providers.Container(
-        InferenceContainer, 
-        infrastructure=infrastructure
-    )
+    inference = providers.Container(InferenceContainer, infrastructure=infrastructure)
     agentic = providers.Container(
-        AgenticContainer, 
-        infrastructure=infrastructure, 
-        persistence=persistence, 
-        inference=inference
+        AgenticContainer,
+        infrastructure=infrastructure,
+        persistence=persistence,
+        inference=inference,
     )
     core = providers.Container(
-        CoreServicesContainer, 
-        infrastructure=infrastructure, 
-        persistence=persistence, 
-        inference=inference, 
-        agentic=agentic
+        CoreServicesContainer,
+        infrastructure=infrastructure,
+        persistence=persistence,
+        inference=inference,
+        agentic=agentic,
     )
+
 
 class ProviderDelegate:
     """Wrapper to expose sub-container providers directly on the root container
     without being detected as a Provider by dependency_injector's wiring.
     """
+
     def __init__(self, provider):
         self._provider = provider
 
@@ -38,6 +38,7 @@ class ProviderDelegate:
 
     def __getattr__(self, name):
         return getattr(self._provider(), name)
+
 
 container = Container()
 
@@ -51,7 +52,6 @@ container.video_quest_service = ProviderDelegate(container.core.video_quest_serv
 container.inference_engine = ProviderDelegate(container.inference.inference_engine)
 container.neo4j_manager = ProviderDelegate(container.persistence.graph_persistence_port)
 
+
 def get_container():
     return container
-
-

@@ -5,11 +5,13 @@ import numpy as np
 
 logger = logging.getLogger("animetix.rl.selfplay")
 
+
 class AkinetixSelfPlayCollector:
     """
     Collecteur de données de self-play. Joue des parties et enregistre
     les trajectoires (state, action, reward) en base pour le RL.
     """
+
     def __init__(self, catalog_db: list, session_creator: Callable = None):
         self.env = AkinetixRLEnvironment(catalog_db)
         self.session_creator = session_creator
@@ -21,20 +23,22 @@ class AkinetixSelfPlayCollector:
             state, info = self.env.reset()
             trajectory = []
             done = False
-            
+
             while not done:
                 # Politique aléatoire pour récolter de l'exploration (à remplacer par le modèle)
                 action = np.random.randint(0, self.env.action_dim)
                 next_state, reward, terminated, truncated, _ = self.env.step(action)
-                
-                trajectory.append({
-                    "state": state.tolist(),
-                    "action": int(action),
-                    "reward": float(reward)
-                })
+
+                trajectory.append(
+                    {
+                        "state": state.tolist(),
+                        "action": int(action),
+                        "reward": float(reward),
+                    }
+                )
                 state = next_state
                 done = terminated or truncated
-            
+
             # Persistance via Django Model / Port
             if self.session_creator:
                 self.session_creator(
@@ -42,8 +46,10 @@ class AkinetixSelfPlayCollector:
                     media_type="Anime",
                     target_item=info["target"],
                     history=trajectory,
-                    was_won=True # Simplified for collection
+                    was_won=True,  # Simplified for collection
                 )
             else:
-                logger.warning(f"No session_creator provided. Episode result: {info['target']} won in {len(trajectory)} steps.")
+                logger.warning(
+                    f"No session_creator provided. Episode result: {info['target']} won in {len(trajectory)} steps."
+                )
         logger.info("Self-play collection completed.")

@@ -1,6 +1,5 @@
 import sys
 import os
-import json
 from unittest.mock import MagicMock, patch
 import pytest
 
@@ -19,8 +18,8 @@ if SCRIPTS_PATH not in sys.path:
     sys.path.insert(0, SCRIPTS_PATH)
 
 # Mock Django settings before any imports that might trigger it
-import django
-from django.conf import settings
+import django  # noqa: E402
+from django.conf import settings  # noqa: E402
 
 if not settings.configured:
     settings.configure(
@@ -28,14 +27,17 @@ if not settings.configured:
         CHROMA_DB_PATH=os.path.join(BASE_DIR, "data", "chroma_db"),
         MODELS_DIR=os.path.join(BASE_DIR, "data", "models"),
         DEBUG=True,
-        DATABASES={'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': ':memory:'}},
-        INSTALLED_APPS=['animetix'],
-        SECRET_KEY='dummy-secret-key',
+        DATABASES={
+            "default": {"ENGINE": "django.db.backends.sqlite3", "NAME": ":memory:"}
+        },
+        INSTALLED_APPS=["animetix"],
+        SECRET_KEY="dummy-secret-key",
     )
     django.setup()
 
-from vision_quest_worker import process_video_for_combat_lore
-from animetix.containers import get_container
+from vision_quest_worker import process_video_for_combat_lore  # noqa: E402
+from animetix.containers import get_container  # noqa: E402
+
 
 @pytest.fixture
 def mock_vlm_response():
@@ -45,23 +47,24 @@ def mock_vlm_response():
                 "technique": "Kamehameha",
                 "character": "Goku",
                 "visual_description": "Blue beam",
-                "timestamp": "05:20"
+                "timestamp": "05:20",
             }
         ]
     }
+
 
 def test_process_video_for_combat_lore_e2e(mock_vlm_response, tmp_path):
     # 1. Prepare dummy video file
     video_file = tmp_path / "test_video.mp4"
     video_file.write_bytes(b"dummy video content")
-    
+
     media_id = "anime_123"
-    
+
     # 2. Mock VLM Adapter
     container = get_container()
     # Reset container cache to ensure mocks are used
     container._cache = {}
-    
+
     mock_v_service = MagicMock()
     mock_v_service.extract_combat_lore.return_value = mock_vlm_response["combats"]
     container.video_quest_service = mock_v_service
@@ -70,14 +73,15 @@ def test_process_video_for_combat_lore_e2e(mock_vlm_response, tmp_path):
     with patch("vision_quest_worker.neo4j_manager") as mock_neo4j:
         # 4. Run the worker logic
         process_video_for_combat_lore(media_id, str(video_file))
-        
+
         # 5. Verification
         expected_combats = mock_vlm_response["combats"]
-        
+
         # Verify Neo4j sync was called with correct arguments
         mock_neo4j.sync_combat_lore.assert_called_once_with(media_id, expected_combats)
-        
+
         print("\n✅ End-to-End Verification Successful!")
+
 
 if __name__ == "__main__":
     # If run directly, execute with pytest

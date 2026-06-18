@@ -4,20 +4,27 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('animetix', '0012_datacurationticket_aitokenusage_golddatasetentry'),
+        ("animetix", "0012_datacurationticket_aitokenusage_golddatasetentry"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='SemanticCache',
+            name="SemanticCache",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('query_text', models.TextField(unique=True)),
-                ('response_text', models.TextField()),
-                ('query_embedding', models.JSONField(blank=True, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("query_text", models.TextField(unique=True)),
+                ("response_text", models.TextField()),
+                ("query_embedding", models.JSONField(blank=True, null=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
             ],
         ),
     ]

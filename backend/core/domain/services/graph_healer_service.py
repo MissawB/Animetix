@@ -1,20 +1,23 @@
 import logging
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from ...ports.inference_port import InferencePort
-from .prompt_manager import PromptManager
 
 logger = logging.getLogger("animetix.graph.healer")
+
 
 class GraphHealerService:
     """
     Service de domaine gérant l'auto-guérison et la construction résiliente du Knowledge Graph.
     Il surveille les lacunes dans Neo4j et déclenche des extractions IA si nécessaire.
     """
-    def __init__(self, 
-                 neo4j_manager, 
-                 construction_service, 
-                 repository,
-                 inference_engine: InferencePort):
+
+    def __init__(
+        self,
+        neo4j_manager,
+        construction_service,
+        repository,
+        inference_engine: InferencePort,
+    ):
         self.neo4j = neo4j_manager
         self.construction_service = construction_service
         self.repository = repository
@@ -33,7 +36,9 @@ class GraphHealerService:
         if not missing_ids:
             return
 
-        logger.info(f"🕸️ Self-Healing: {len(missing_ids)} nodes missing in KG. Healing starts...")
+        logger.info(
+            f"🕸️ Self-Healing: {len(missing_ids)} nodes missing in KG. Healing starts..."
+        )
         for mid in missing_ids:
             try:
                 self.heal_node(mid)
@@ -49,14 +54,16 @@ class GraphHealerService:
             return
 
         # 2. Extract base relations (Sync from metadata)
-        self.neo4j.sync_media_to_graph(media_data, media_data.get('media_type', 'Anime'))
+        self.neo4j.sync_media_to_graph(
+            media_data, media_data.get("media_type", "Anime")
+        )
 
         # 3. Extract complex relations via IA (if description is long enough)
-        if len(media_data.get('description', '')) > 50:
+        if len(media_data.get("description", "")) > 50:
             extracted = self.construction_service.extract_entities_and_relations(
-                title=media_data['title'],
-                description=media_data['description'],
-                media_type=media_data.get('media_type', 'Anime')
+                title=media_data["title"],
+                description=media_data["description"],
+                media_type=media_data.get("media_type", "Anime"),
             )
             self.neo4j.sync_ai_extracted_graph(media_id, extracted)
             logger.info(f"✅ Healed {media_id} with IA extraction.")
@@ -65,7 +72,7 @@ class GraphHealerService:
         """Retourne les IDs qui n'existent pas dans Neo4j."""
         query = "MATCH (m:Media) WHERE m.id IN $ids RETURN m.id as id"
         existing = self.neo4j.execute_query(query, {"ids": [str(i) for i in media_ids]})
-        existing_ids = {r['id'] for r in existing}
+        existing_ids = {r["id"] for r in existing}
         return [mid for mid in media_ids if str(mid) not in existing_ids]
 
     def audit_graph_quality(self) -> Dict[str, Any]:
@@ -75,7 +82,7 @@ class GraphHealerService:
 
         # 1. Compte des nœuds isolés
         query_isolated = "MATCH (n) WHERE NOT (n)--() RETURN count(n) as count"
-        isolated_count = self.neo4j.execute_query(query_isolated)[0]['count']
+        isolated_count = self.neo4j.execute_query(query_isolated)[0]["count"]
 
         # 2. Détection de conflits temporels (ex: suite sortie avant l'original)
         query_time_conflict = """
@@ -87,14 +94,14 @@ class GraphHealerService:
 
         # 3. Nœuds sans lien avec une œuvre (Entities orphelines)
         query_orphans = "MATCH (e:Entity) WHERE NOT (e)<-[:FEATURES]-(:Media) RETURN count(e) as count"
-        orphan_entities = self.neo4j.execute_query(query_orphans)[0]['count']
+        orphan_entities = self.neo4j.execute_query(query_orphans)[0]["count"]
 
         return {
             "status": "success",
             "isolated_nodes": isolated_count,
             "temporal_conflicts": len(conflicts),
             "orphan_entities": orphan_entities,
-            "details": conflicts[:5]
+            "details": conflicts[:5],
         }
 
     def check_and_fix_broken_relations(self):
@@ -121,8 +128,8 @@ class GraphHealerService:
         # 3. Réparer les nœuds Media sans relations de base (re-sync)
         query_no_base = "MATCH (m:Media) WHERE NOT (m)-[:PRODUCED_BY|HAS_THEME]->() RETURN m.id as id LIMIT 20"
         to_resync = self.neo4j.execute_query(query_no_base)
-        
+
         for record in to_resync:
-            self.heal_node(record['id'])
-            
+            self.heal_node(record["id"])
+
         logger.info(f"✅ Re-synced {len(to_resync)} incomplete media nodes.")

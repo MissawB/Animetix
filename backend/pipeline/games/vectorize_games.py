@@ -9,23 +9,26 @@ logger = logging.getLogger("animetix.pipeline." + __name__)
 
 # Détection robuste de la racine du projet
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-sys.path.append(os.path.dirname(BASE_DIR)) # Pour importer chroma_client si besoin (ou ajuster selon structure)
+sys.path.append(
+    os.path.dirname(BASE_DIR)
+)  # Pour importer chroma_client si besoin (ou ajuster selon structure)
 # Plus simple:
-sys.path.append(os.path.join(BASE_DIR, 'pipeline'))
-from chroma_client import chroma_manager
+sys.path.append(os.path.join(BASE_DIR, "pipeline"))
+from chroma_client import chroma_manager  # noqa: E402
 
-CLEAN_DB = os.path.join(BASE_DIR, 'data', 'processed', 'clean_root_games.json')
-LOOKUP_FILE = os.path.join(BASE_DIR, 'data', 'artifacts', 'game_data_for_lookup.json')
-VEC_THEMATIC = os.path.join(BASE_DIR, 'data', 'artifacts', 'game_thematic_vectors.npy')
-VEC_PLOT = os.path.join(BASE_DIR, 'data', 'artifacts', 'game_plot_vectors.npy')
-VEC_VIBE = os.path.join(BASE_DIR, 'data', 'artifacts', 'game_vibe_vectors.npy')
+CLEAN_DB = os.path.join(BASE_DIR, "data", "processed", "clean_root_games.json")
+LOOKUP_FILE = os.path.join(BASE_DIR, "data", "artifacts", "game_data_for_lookup.json")
+VEC_THEMATIC = os.path.join(BASE_DIR, "data", "artifacts", "game_thematic_vectors.npy")
+VEC_PLOT = os.path.join(BASE_DIR, "data", "artifacts", "game_plot_vectors.npy")
+VEC_VIBE = os.path.join(BASE_DIR, "data", "artifacts", "game_vibe_vectors.npy")
+
 
 def run_vectorization(chroma_res=None):
     if not os.path.exists(CLEAN_DB):
         logger.error(f"❌ {CLEAN_DB} not found.")
         return False
 
-    with open(CLEAN_DB, 'r', encoding='utf-8') as f:
+    with open(CLEAN_DB, "r", encoding="utf-8") as f:
         db = json.load(f)
 
     # --- CHARGEMENT DES DONNÉES EXISTANTES ---
@@ -36,12 +39,14 @@ def run_vectorization(chroma_res=None):
     old_vibe = None
 
     if os.path.exists(LOOKUP_FILE):
-        logger.info(f"📂 Loading existing lookup and vectors...")
+        logger.info("📂 Loading existing lookup and vectors...")
         try:
-            with open(LOOKUP_FILE, 'r', encoding='utf-8') as f:
+            with open(LOOKUP_FILE, "r", encoding="utf-8") as f:
                 existing_lookup = json.load(f)
-                existing_ids = {item.get('id') for item in existing_lookup if item.get('id')}
-            
+                existing_ids = {
+                    item.get("id") for item in existing_lookup if item.get("id")
+                }
+
             if os.path.exists(VEC_THEMATIC):
                 old_thematic = np.load(VEC_THEMATIC)
                 old_plot = np.load(VEC_PLOT)
@@ -51,7 +56,7 @@ def run_vectorization(chroma_res=None):
             logger.warning(f"⚠️ Error loading existing artifacts: {e}")
 
     # --- FILTRAGE DU DELTA ---
-    new_items = [item for item in db if item['id'] not in existing_ids]
+    new_items = [item for item in db if item["id"] not in existing_ids]
 
     if not new_items:
         logger.info("ℹ️ No new games to vectorize. Everything is up to date.")
@@ -63,30 +68,34 @@ def run_vectorization(chroma_res=None):
     new_data_for_lookup = []
     thematic_corpus = []
     plot_corpus = []
-    vibe_corpus = [] 
+    vibe_corpus = []
 
     for item in new_items:
-        new_data_for_lookup.append({
-            "id": item['id'],
-            "title": item['title'],
-            "image": item['image'],
-            "year": item['year'],
-            "popularity": item.get('rating', 0)
-        })
+        new_data_for_lookup.append(
+            {
+                "id": item["id"],
+                "title": item["title"],
+                "image": item["image"],
+                "year": item["year"],
+                "popularity": item.get("rating", 0),
+            }
+        )
 
-        genres = ", ".join(item.get('genres', []))
-        themes = ", ".join(item.get('themes', []))
-        platforms = ", ".join(item.get('platforms', []))
-        description = item.get('description', "")
-        similar = ", ".join(item.get('similar', []))
+        genres = ", ".join(item.get("genres", []))
+        themes = ", ".join(item.get("themes", []))
+        platforms = ", ".join(item.get("platforms", []))
+        description = item.get("description", "")
+        similar = ", ".join(item.get("similar", []))
 
-        thematic_corpus.append(f"Genres: {genres}. Themes: {themes}. Platforms: {platforms}. Similar to: {similar}.")
+        thematic_corpus.append(
+            f"Genres: {genres}. Themes: {themes}. Platforms: {platforms}. Similar to: {similar}."
+        )
         plot_corpus.append(description)
         vibe_corpus.append(f"Mood: {genres}, {themes}")
 
     # --- Calculating Embeddings ---
     logger.info("Loading model (paraphrase-multilingual-mpnet-base-v2)...")
-    model = SentenceTransformer('paraphrase-multilingual-mpnet-base-v2')
+    model = SentenceTransformer("paraphrase-multilingual-mpnet-base-v2")
 
     logger.info(f"✨ Encoding {len(new_items)} vectors...")
     new_thematic = model.encode(thematic_corpus, show_progress_bar=True)
@@ -96,8 +105,8 @@ def run_vectorization(chroma_res=None):
     # --- STOCKAGE CHROMADB ---
     logger.info("🚀 Syncing with ChromaDB...")
     try:
-        ids = [str(item['id']) for item in new_data_for_lookup]
-        metadatas = new_data_for_lookup 
+        ids = [str(item["id"]) for item in new_data_for_lookup]
+        metadatas = new_data_for_lookup
 
         manager = chroma_res.manager if chroma_res else chroma_manager
         manager.add_to_collection("game_thematic", ids, new_thematic, metadatas)
@@ -125,8 +134,10 @@ def run_vectorization(chroma_res=None):
     np.save(VEC_PLOT, final_plot)
     np.save(VEC_VIBE, final_vibe)
 
-    with open(LOOKUP_FILE, 'w', encoding='utf-8') as f:
+    with open(LOOKUP_FILE, "w", encoding="utf-8") as f:
         json.dump(final_lookup, f, indent=2, ensure_ascii=False)
 
-    logger.info(f"✅ Incremental Game Vectorization Complete! Total: {len(final_lookup)}")
+    logger.info(
+        f"✅ Incremental Game Vectorization Complete! Total: {len(final_lookup)}"
+    )
     return True

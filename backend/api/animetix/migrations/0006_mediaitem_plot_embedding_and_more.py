@@ -2,31 +2,34 @@
 
 from django.db import migrations, models
 
+
 def enable_vector_extension(apps, schema_editor):
     """Désactivé : Extension vectorielle supprimée."""
     pass
 
-class Migration(migrations.Migration):
 
+class Migration(migrations.Migration):
     dependencies = [
-        ('animetix', '0005_mediaitem_popularity'),
+        ("animetix", "0005_mediaitem_popularity"),
     ]
 
     operations = [
-        migrations.RunPython(enable_vector_extension, reverse_code=migrations.RunPython.noop),
+        migrations.RunPython(
+            enable_vector_extension, reverse_code=migrations.RunPython.noop
+        ),
         migrations.AddField(
-            model_name='mediaitem',
-            name='plot_embedding',
+            model_name="mediaitem",
+            name="plot_embedding",
             field=models.JSONField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='mediaitem',
-            name='thematic_embedding',
+            model_name="mediaitem",
+            name="thematic_embedding",
             field=models.JSONField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='mediaitem',
-            name='visual_embedding',
+            model_name="mediaitem",
+            name="visual_embedding",
             field=models.JSONField(blank=True, null=True),
         ),
     ]

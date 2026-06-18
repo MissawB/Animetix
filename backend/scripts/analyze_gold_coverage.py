@@ -3,7 +3,7 @@ import os
 import sys
 import json
 import logging
-from typing import List, Dict, Set, Any
+from typing import List, Dict, Any
 from pydantic import BaseModel, Field
 
 # Root setups
@@ -13,30 +13,44 @@ sys.path.insert(0, os.path.join(PROJECT_ROOT, "backend"))
 sys.path.insert(0, os.path.join(PROJECT_ROOT, "backend", "api"))
 sys.path.insert(0, PROJECT_ROOT)
 
-import django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'animetix_project.settings')
+import django  # noqa: E402
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "animetix_project.settings")
 try:
     django.setup()
 except Exception:
-    os.environ['DJANGO_SETTINGS_MODULE'] = 'animetix_project.test_settings'
+    os.environ["DJANGO_SETTINGS_MODULE"] = "animetix_project.test_settings"
     django.setup()
 
-from animetix.containers import get_container
-from animetix.models import VectorRecord
-from django.db.models import Count
+from animetix.containers import get_container  # noqa: E402
+from animetix.models import VectorRecord  # noqa: E402
 
 logger = logging.getLogger("animetix.scripts.coverage")
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
+)
+
 
 # Pydantic schema for LLM structured output
 class GoldSetEntrySchema(BaseModel):
     query: str = Field(description="The question testing the RAG system.")
-    ground_truth: str = Field(description="Detailed factual answer summarizing the fact/subgraph.")
-    expected_entities: List[str] = Field(description="Named entities in the question/answer that must be traversed.")
-    expected_contexts: List[str] = Field(description="Context blocks used for generation.")
-    expected_chunks: List[str] = Field(description="Database chunk IDs associated with the source documents.")
-    query_type: str = Field(description="Must be either 'graph' or 'thematic' or 'cross-media'.")
+    ground_truth: str = Field(
+        description="Detailed factual answer summarizing the fact/subgraph."
+    )
+    expected_entities: List[str] = Field(
+        description="Named entities in the question/answer that must be traversed."
+    )
+    expected_contexts: List[str] = Field(
+        description="Context blocks used for generation."
+    )
+    expected_chunks: List[str] = Field(
+        description="Database chunk IDs associated with the source documents."
+    )
+    query_type: str = Field(
+        description="Must be either 'graph' or 'thematic' or 'cross-media'."
+    )
     difficulty: str = Field(description="Must be 'easy', 'medium', or 'hard'.")
+
 
 def analyze_coverage(threshold: float = 0.05) -> Dict[str, Any]:
     gold_path = os.path.join(PROJECT_ROOT, "data", "mlops", "gold_dataset.json")
@@ -54,14 +68,23 @@ def analyze_coverage(threshold: float = 0.05) -> Dict[str, Any]:
             gold_entities.add(ent.lower().strip())
         # Try to infer covered genres from queries
         query = entry.get("query", "").lower()
-        for g in ["action", "comedy", "romance", "cyberpunk", "mecha", "shonen", "shojo", "isekai"]:
+        for g in [
+            "action",
+            "comedy",
+            "romance",
+            "cyberpunk",
+            "mecha",
+            "shonen",
+            "shojo",
+            "isekai",
+        ]:
             if g in query:
                 gold_genres.add(g)
 
     # 2. Query Neo4j for Media
     container = get_container()
     neo4j_manager = container.persistence.graph_persistence_port()
-    
+
     missing_media = []
     if neo4j_manager.check_health():
         try:
@@ -85,14 +108,16 @@ def analyze_coverage(threshold: float = 0.05) -> Dict[str, Any]:
     records = VectorRecord.objects.filter(collection_name="anime_thematic")
     total_vectors = records.count()
     under_represented_genres = []
-    
+
     if total_vectors > 0:
         db_genres = {}
         for r in records:
             genre = r.metadata.get("genre")
             if genre:
-                db_genres[genre.lower().strip()] = db_genres.get(genre.lower().strip(), 0) + 1
-                
+                db_genres[genre.lower().strip()] = (
+                    db_genres.get(genre.lower().strip(), 0) + 1
+                )
+
         # Compare proportion in DB vs Gold Set
         for genre, count in db_genres.items():
             db_ratio = count / total_vectors
@@ -101,37 +126,43 @@ def analyze_coverage(threshold: float = 0.05) -> Dict[str, Any]:
 
     return {
         "missing_media": missing_media,
-        "under_represented_genres": under_represented_genres
+        "under_represented_genres": under_represented_genres,
     }
+
 
 def generate_and_append_missing(report: Dict[str, Any]):
     gold_path = os.path.join(PROJECT_ROOT, "data", "mlops", "gold_dataset.json")
     if not os.path.exists(gold_path):
         return
-        
+
     with open(gold_path, "r", encoding="utf-8") as f:
         gold_data = json.load(f)
 
     container = get_container()
     inference_engine = container.inference_engine()
     neo4j_manager = container.persistence.graph_persistence_port()
-    
+
     new_entries = []
 
     # A. Generate for missing media nodes
-    for media in report.get("missing_media", [])[:3]:  # Limit to 3 to prevent token exhaustion
+    for media in report.get("missing_media", [])[
+        :3
+    ]:  # Limit to 3 to prevent token exhaustion
         title = media["title"]
         m_id = media["id"]
-        
+
         # Query Neo4j for 1-hop facts
         facts = []
         if neo4j_manager.check_health():
             try:
-                res = neo4j_manager.execute_read("""
+                res = neo4j_manager.execute_read(
+                    """
                     MATCH (m:Media {id: $mid})-[r]->(target)
                     RETURN type(r) AS rel_type, target.name AS target_name, target.title AS target_title
                     LIMIT 5
-                """, {"mid": str(m_id)})
+                """,
+                    {"mid": str(m_id)},
+                )
                 for row in res:
                     rel = row["rel_type"]
                     name = row.get("target_name") or row.get("target_title")
@@ -139,7 +170,7 @@ def generate_and_append_missing(report: Dict[str, Any]):
                         facts.append(f"{title} is {rel} {name}")
             except Exception as e:
                 logger.warning(f"Failed to query relations for {title}: {e}")
-                
+
         if not facts:
             facts = [f"{title} is a popular anime/manga series."]
 
@@ -151,7 +182,7 @@ def generate_and_append_missing(report: Dict[str, Any]):
             res_obj = inference_engine.generate_structured(
                 prompt=prompt,
                 response_model=GoldSetEntrySchema,
-                system_prompt="Tu es un générateur de dataset RAG précis."
+                system_prompt="Tu es un générateur de dataset RAG précis.",
             )
             entry = res_obj.dict()
             entry["is_architectural"] = False
@@ -171,10 +202,10 @@ def generate_and_append_missing(report: Dict[str, Any]):
                 matching.append(r)
                 if len(matching) >= 2:
                     break
-        
+
         contexts = [r.document for r in matching if r.document]
         chunks = [r.item_id for r in matching]
-        
+
         if not contexts:
             contexts = [f"Le genre {genre} est caractérisé par des thèmes spécifiques."]
             chunks = ["fallback-chunk"]
@@ -187,7 +218,7 @@ def generate_and_append_missing(report: Dict[str, Any]):
             res_obj = inference_engine.generate_structured(
                 prompt=prompt,
                 response_model=GoldSetEntrySchema,
-                system_prompt="Tu es un générateur de dataset RAG précis."
+                system_prompt="Tu es un générateur de dataset RAG précis.",
             )
             entry = res_obj.dict()
             entry["expected_contexts"] = contexts
@@ -203,17 +234,21 @@ def generate_and_append_missing(report: Dict[str, Any]):
         gold_data.extend(new_entries)
         with open(gold_path, "w", encoding="utf-8") as f:
             json.dump(gold_data, f, indent=2, ensure_ascii=False)
-        logger.info(f"Successfully appended {len(new_entries)} new entries to the Gold Set.")
+        logger.info(
+            f"Successfully appended {len(new_entries)} new entries to the Gold Set."
+        )
+
 
 if __name__ == "__main__":
-    import argparse
+    import argparse  # noqa: E402
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--threshold", type=float, default=0.05)
     parser.add_argument("--generate-missing", action="store_true")
     args = parser.parse_args()
-    
+
     report = analyze_coverage(threshold=args.threshold)
     print(json.dumps(report, indent=2))
-    
+
     if args.generate_missing:
         generate_and_append_missing(report)

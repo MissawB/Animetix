@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, List, Dict
+from typing import Optional, List
 from core.ports.inference_port import InferencePort, InferenceNotImplementedError
 from core.ports.usage_port import UsagePort
 from core.domain.entities.ai_schemas import InferenceResponse
@@ -7,15 +7,17 @@ from adapters.inference.image_gen_mixin import ImageGenMixin
 
 logger = logging.getLogger("animetix.inference.image")
 
+
 class DiffusersAdapter(ImageGenMixin, InferencePort):
     """
     Dedicated image generation adapter using local diffusion models via ImageGenMixin.
     """
+
     def __init__(
-        self, 
-        model_id: str = "black-forest-labs/FLUX.1-schnell", 
+        self,
+        model_id: str = "black-forest-labs/FLUX.1-schnell",
         use_fp16: bool = True,
-        usage_port: Optional[UsagePort] = None
+        usage_port: Optional[UsagePort] = None,
     ):
         super().__init__(usage_port=usage_port)
         self.model_id = model_id
@@ -25,33 +27,41 @@ class DiffusersAdapter(ImageGenMixin, InferencePort):
         self._inpaint_pipe = None
 
     def generate(
-        self, 
-        prompt: str, 
-        system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.", 
-        thinking_budget: int = 0, 
-        thinking_mode: bool = False, 
+        self,
+        prompt: str,
+        system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.",
+        thinking_budget: int = 0,
+        thinking_mode: bool = False,
         include_logprobs: bool = False,
-        **kwargs
+        **kwargs,
     ) -> InferenceResponse:
-        raise InferenceNotImplementedError("Text generation not supported by DiffusersAdapter")
+        raise InferenceNotImplementedError(
+            "Text generation not supported by DiffusersAdapter"
+        )
 
     def stream_generate(
-        self, 
-        prompt: str, 
-        system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.", 
-        thinking_budget: int = 0, 
-        thinking_mode: bool = False, 
+        self,
+        prompt: str,
+        system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.",
+        thinking_budget: int = 0,
+        thinking_mode: bool = False,
         include_logprobs: bool = False,
-        **kwargs
+        **kwargs,
     ):
-        raise InferenceNotImplementedError("Streaming generation not supported by DiffusersAdapter")
+        raise InferenceNotImplementedError(
+            "Streaming generation not supported by DiffusersAdapter"
+        )
 
     def get_text_embedding(self, text: str) -> List[float]:
-        raise InferenceNotImplementedError("Text embedding not supported by DiffusersAdapter")
+        raise InferenceNotImplementedError(
+            "Text embedding not supported by DiffusersAdapter"
+        )
 
     def health_check(self) -> dict:
         return {
-            "status": "online" if self.pipe or self._img2img_pipe or self._inpaint_pipe else "offline", 
-            "engine": "diffusers", 
-            "model": self.model_id
+            "status": "online"
+            if self.pipe or self._img2img_pipe or self._inpaint_pipe
+            else "offline",
+            "engine": "diffusers",
+            "model": self.model_id,
         }

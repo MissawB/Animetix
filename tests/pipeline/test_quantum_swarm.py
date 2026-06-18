@@ -4,141 +4,151 @@ Tests unitaires pour les modules d'IA de Quatrième Génération (SOTA 2030+) d'
 Couvre QuantumCognitivePreferenceModel, SwarmConsensusOrchestrator, et CounterfactualConversationSimulator.
 """
 
-import pytest
-import numpy as np
-from unittest.mock import MagicMock, patch
+import pytest  # noqa: E402
+import numpy as np  # noqa: E402
+from unittest.mock import MagicMock  # noqa: E402
+
 
 # ==========================================
 # 1. TESTS COGNITION QUANTIQUE (BORN'S RULE & NON-COMMUTATIVITÉ)
 # ==========================================
 def test_quantum_cognitive_model():
-    from core.domain.services.quantum_cognitive_model import QuantumCognitivePreferenceModel
+    from core.domain.services.quantum_cognitive_model import (
+        QuantumCognitivePreferenceModel,
+    )  # noqa: E402
+
     np.random.seed(42)
     model = QuantumCognitivePreferenceModel(dimension=4)
-    
+
     # 1. Norme de l'état d'esprit doit être 1.0
     norm = np.linalg.norm(model.state)
     assert pytest.approx(norm) == 1.0
-    
+
     # 2. Mesure de préférence via règle de Born
     prob_shonen, outcome_shonen = model.measure_preference("shonen")
     assert 0.0 <= prob_shonen <= 1.0
-    
+
     # L'état doit s'effondrer et rester normalisé
     new_norm = np.linalg.norm(model.state)
     assert pytest.approx(new_norm) == 1.0
 
+
 def test_quantum_order_effects():
-    from core.domain.services.quantum_cognitive_model import QuantumCognitivePreferenceModel
-    
+    from core.domain.services.quantum_cognitive_model import (
+        QuantumCognitivePreferenceModel,
+    )  # noqa: E402
+
     np.random.seed(42)
     model = QuantumCognitivePreferenceModel(dimension=4)
-    
+
     # Démonstration sémantique de non-commutativité (effet d'ordre)
     # Mesurer Ghibli puis Seinen donne une probabilité différente de Seinen puis Ghibli
     p_ba, p_ab = model.order_effects_demonstration("ghibli", "seinen")
-    
+
     # La non-commutativité implique que l'état d'arrivée et les probabilités dépendent de l'ordre de mesure
-    assert not np.isclose(p_ba, p_ab), f"Order effects not demonstrated: p_ba={p_ba}, p_ab={p_ab}"
+    assert not np.isclose(p_ba, p_ab), (
+        f"Order effects not demonstrated: p_ba={p_ba}, p_ab={p_ab}"
+    )
+
 
 # ==========================================
 # 2. TESTS SWARM CONSENSUS ORCHESTRATOR (PAXOS)
 # ==========================================
 def test_swarm_consensus_paxos():
-    from core.domain.services.swarm_consensus import SwarmConsensusOrchestrator
-    
+    from core.domain.services.swarm_consensus import SwarmConsensusOrchestrator  # noqa: E402
+
     orchestrator = SwarmConsensusOrchestrator()
-    
+
     fact_visuel = "L'animation de Demon Slayer par Ufotable présente des graphismes et des couleurs époustouflantes, soutenue par un scénario et un lore d'exception."
     success, score = orchestrator.propose_fact(
-        proposer="VisualExpert",
-        fact=fact_visuel,
-        media_title="Demon Slayer"
+        proposer="VisualExpert", fact=fact_visuel, media_title="Demon Slayer"
     )
 
-    
     assert success is True
     assert score >= 0.6
-    
+
     fact_inconnu = "Ce manga s'est bien vendu en boutique en 2012."
 
     success_fail, score_fail = orchestrator.propose_fact(
-        proposer="AcousticExpert",
-        fact=fact_inconnu,
-        media_title="Unknown Media"
+        proposer="AcousticExpert", fact=fact_inconnu, media_title="Unknown Media"
     )
-    
+
     assert success_fail is False
+
 
 # ==========================================
 # 3. TESTS SIMULATEUR CONTREFACTUEL
 # ==========================================
 def test_counterfactual_conversation_simulator():
-    from core.domain.services.counterfactual_simulator import CounterfactualConversationSimulator
-    from core.domain.entities.ai_schemas import InferenceResponse
-    
+    from core.domain.services.counterfactual_simulator import (
+        CounterfactualConversationSimulator,
+    )  # noqa: E402
+    from core.domain.entities.ai_schemas import InferenceResponse  # noqa: E402
+
     mock_engine = MagicMock()
     mock_engine.generate.side_effect = [
-        InferenceResponse(text="Réponse alternative : Steins;Gate intègre une ligne temporelle complexe."), # response
-        InferenceResponse(text="0.92") # judge utility score
+        InferenceResponse(
+            text="Réponse alternative : Steins;Gate intègre une ligne temporelle complexe."
+        ),  # response
+        InferenceResponse(text="0.92"),  # judge utility score
     ]
-    
+
     simulator = CounterfactualConversationSimulator(inference_engine=mock_engine)
-    
+
     actual_dialogue = [
         {"role": "user", "content": "Recommande un anime de voyage temporel."},
-        {"role": "assistant", "content": "Je te conseille Erased."}
+        {"role": "assistant", "content": "Je te conseille Erased."},
     ]
-    
+
     result = simulator.simulate_counterfactual_path(
         actual_dialogue=actual_dialogue,
-        what_if_query="Et si on demandait Steins;Gate ?"
+        what_if_query="Et si on demandait Steins;Gate ?",
     )
-    
+
     assert result["what_if_query"] == "Et si on demandait Steins;Gate ?"
     assert "Steins;Gate" in result["alternative_response"]
     assert result["alternative_utility"] == 0.92
-    assert result["counterfactual_regret"] == pytest.approx(0.07) # 0.92 - 0.85 = 0.07
+    assert result["counterfactual_regret"] == pytest.approx(0.07)  # 0.92 - 0.85 = 0.07
 
 
 def test_swarm_consensus_llm_success():
-    from core.domain.services.swarm_consensus import SwarmConsensusOrchestrator, SwarmConsensusVotes
-    
+    from core.domain.services.swarm_consensus import (
+        SwarmConsensusOrchestrator,
+        SwarmConsensusVotes,
+    )  # noqa: E402
+
     mock_engine = MagicMock()
-    mock_votes = SwarmConsensusVotes(votes={
-        "VisualExpert": 0.85,
-        "AcousticExpert": 0.35,
-        "LoreExpert": 0.90
-    })
+    mock_votes = SwarmConsensusVotes(
+        votes={"VisualExpert": 0.85, "AcousticExpert": 0.35, "LoreExpert": 0.90}
+    )
     mock_engine.generate_structured.return_value = mock_votes
-    
+
     orchestrator = SwarmConsensusOrchestrator(inference_engine=mock_engine)
-    
+
     success, score = orchestrator.propose_fact(
         proposer="VisualExpert",
         fact="L'animation est magnifique.",
-        media_title="Bleach"
+        media_title="Bleach",
     )
-    
+
     assert success is True
     assert score == pytest.approx((1.0 + 0.35 + 0.90) / 3)
     mock_engine.generate_structured.assert_called_once()
 
 
 def test_swarm_consensus_llm_failure_fallback():
-    from core.domain.services.swarm_consensus import SwarmConsensusOrchestrator
-    
+    from core.domain.services.swarm_consensus import SwarmConsensusOrchestrator  # noqa: E402
+
     mock_engine = MagicMock()
     mock_engine.generate_structured.side_effect = Exception("LLM connection timed out")
-    
+
     orchestrator = SwarmConsensusOrchestrator(inference_engine=mock_engine)
-    
+
     success, score = orchestrator.propose_fact(
         proposer="VisualExpert",
         fact="La musique de cet anime est magique.",
-        media_title="Bleach"
+        media_title="Bleach",
     )
-    
+
     assert success is True
     assert score == pytest.approx((1.0 + 0.90 + 0.52) / 3)
-

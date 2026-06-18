@@ -11,12 +11,15 @@ from animetix.containers import container
 from dependency_injector import providers
 from core.domain.entities.personalization import VisualConfig
 
+
 @pytest.mark.django_db
 class TestPersonalizationMiddleware:
     @pytest.fixture(autouse=True)
     def setup_method(self, db):
         self.factory = RequestFactory()
-        self.user = User.objects.create_user(username='test_personalization_user', password='password')
+        self.user = User.objects.create_user(
+            username="test_personalization_user", password="password"
+        )
         # Ensure cache is completely clear before each test
         cache.clear()
 
@@ -28,18 +31,20 @@ class TestPersonalizationMiddleware:
 
         # Setup mock drift service
         mock_drift_service = MagicMock()
-        
+
         middleware = PersonalizationMiddleware(get_response)
-        request = self.factory.get('/')
+        request = self.factory.get("/")
         request.user = MagicMock()
         request.user.is_authenticated = False
 
-        with container.core.archetype_drift_service.override(providers.Object(mock_drift_service)):
+        with container.core.archetype_drift_service.override(
+            providers.Object(mock_drift_service)
+        ):
             response = middleware(request)
-            
+
             # Verify calculate_drift was not called
             mock_drift_service.calculate_drift.assert_not_called()
-            
+
             # Response should remain unchanged
             data = json.loads(response.content)
             assert "meta" not in data
@@ -57,15 +62,17 @@ class TestPersonalizationMiddleware:
             primary_accent="#FD7706",
             aura_type="fire",
             aura_intensity=1.0,
-            font_vibe="manga"
+            font_vibe="manga",
         )
         mock_drift_service.calculate_drift.return_value = mock_config
 
         middleware = PersonalizationMiddleware(get_response)
-        request = self.factory.get('/')
+        request = self.factory.get("/")
         request.user = self.user
 
-        with container.core.archetype_drift_service.override(providers.Object(mock_drift_service)):
+        with container.core.archetype_drift_service.override(
+            providers.Object(mock_drift_service)
+        ):
             # First request: should hit service and write to cache
             response1 = middleware(request)
             data1 = json.loads(response1.content)
@@ -93,10 +100,12 @@ class TestPersonalizationMiddleware:
 
         mock_drift_service = MagicMock()
         middleware = PersonalizationMiddleware(get_response)
-        request = self.factory.get('/')
+        request = self.factory.get("/")
         request.user = self.user
 
-        with container.core.archetype_drift_service.override(providers.Object(mock_drift_service)):
+        with container.core.archetype_drift_service.override(
+            providers.Object(mock_drift_service)
+        ):
             response = middleware(request)
             mock_drift_service.calculate_drift.assert_not_called()
             assert response.content == b"Hello World"

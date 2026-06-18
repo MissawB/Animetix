@@ -1,34 +1,45 @@
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from django.test import override_settings
+
 
 @pytest.mark.django_db
 def test_vertex_ai_detection_disabled():
     with override_settings(VERTEX_AI_VECTOR_SEARCH_ACTIVE=False):
-        import pipeline.chroma_client
+        import pipeline.chroma_client  # noqa: E402
+
         pipeline.chroma_client._vertex_ai_supported = None
-        from pipeline.chroma_client import is_vertex_ai_supported
+        from pipeline.chroma_client import is_vertex_ai_supported  # noqa: E402
+
         assert is_vertex_ai_supported() is False
 
+
 @pytest.mark.django_db
-@patch('google.cloud.aiplatform.init')
+@patch("google.cloud.aiplatform.init")
 def test_vertex_ai_detection_enabled_success(mock_init):
     with override_settings(
         VERTEX_AI_VECTOR_SEARCH_ACTIVE=True,
-        VERTEX_AI_PROJECT_ID='test-project',
-        VERTEX_AI_LOCATION='europe-west1'
+        VERTEX_AI_PROJECT_ID="test-project",
+        VERTEX_AI_LOCATION="europe-west1",
     ):
-        import pipeline.chroma_client
+        import pipeline.chroma_client  # noqa: E402
+
         pipeline.chroma_client._vertex_ai_supported = None
-        from pipeline.chroma_client import is_vertex_ai_supported
+        from pipeline.chroma_client import is_vertex_ai_supported  # noqa: E402
+
         assert is_vertex_ai_supported() is True
-        mock_init.assert_called_once_with(project='test-project', location='europe-west1')
+        mock_init.assert_called_once_with(
+            project="test-project", location="europe-west1"
+        )
+
 
 @pytest.mark.django_db
 def test_vertex_ai_fallback_to_pgvector():
-    import pipeline.chroma_client
+    import pipeline.chroma_client  # noqa: E402
+
     pipeline.chroma_client._vertex_ai_supported = False
-    from pipeline.chroma_client import PGVectorManager
+    from pipeline.chroma_client import PGVectorManager  # noqa: E402
+
     manager = PGVectorManager()
-    coll = manager.get_collection('test_fallback')
-    assert coll.__class__.__name__ == 'PGVectorCollectionWrapper'
+    coll = manager.get_collection("test_fallback")
+    assert coll.__class__.__name__ == "PGVectorCollectionWrapper"

@@ -4,22 +4,30 @@ Celery Pipeline Tasks for Animetix.
 Migrated from Dagster pipelines to achieve a lightweight orchestration engine.
 """
 
-import os
-import sys
-from pathlib import Path
-from animetix_project.logging_config import get_logger
-from animetix.tasks_registry import register_task
-from animetix.tasks_client import enqueue_task
+import sys  # noqa: E402
+from pathlib import Path  # noqa: E402
+from animetix_project.logging_config import get_logger  # noqa: E402
+from animetix.tasks_registry import register_task  # noqa: E402
+from animetix.tasks_client import enqueue_task  # noqa: E402
 
-logger = get_logger('animetix.' + __name__)
+logger = get_logger("animetix." + __name__)
 
 # Setup python path to import pipeline modules cleanly
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 PIPELINE_DIR = BASE_DIR / "pipeline"
 
-for path in [str(PIPELINE_DIR), str(PIPELINE_DIR / "mlops"), str(PIPELINE_DIR / "anime"), str(PIPELINE_DIR / "manga"), str(PIPELINE_DIR / "games"), str(PIPELINE_DIR / "actors"), str(PIPELINE_DIR / "characters")]:
+for path in [
+    str(PIPELINE_DIR),
+    str(PIPELINE_DIR / "mlops"),
+    str(PIPELINE_DIR / "anime"),
+    str(PIPELINE_DIR / "manga"),
+    str(PIPELINE_DIR / "games"),
+    str(PIPELINE_DIR / "actors"),
+    str(PIPELINE_DIR / "characters"),
+]:
     if path not in sys.path:
         sys.path.insert(0, path)
+
 
 @register_task("run_daily_ingestion_workflow")
 def run_daily_ingestion_workflow():
@@ -27,10 +35,17 @@ def run_daily_ingestion_workflow():
     Orchestration globale de l'ingestion quotidienne de données (3h00).
     """
     logger.info("🚀 Starting Daily Ingestion Workflow...")
-    
+
     # 1. Characters Ingestion & Vectorization
     try:
-        from characters import ingest_characters, refine_characters, filter_characters, train_vibe_characters, vectorize_characters
+        from characters import (
+            ingest_characters,
+            refine_characters,
+            filter_characters,
+            train_vibe_characters,
+            vectorize_characters,
+        )  # noqa: E402
+
         logger.info("Ingesting raw characters...")
         ingest_characters.run_ingestion()
         logger.info("Refining characters...")
@@ -44,10 +59,16 @@ def run_daily_ingestion_workflow():
         logger.info("✅ Characters Ingestion & Vectorization Complete.")
     except Exception as e:
         logger.error(f"❌ Error in Characters Ingestion: {e}", exc_info=True)
-        
+
     # 2. Actors Ingestion & Mapping
     try:
-        from actors import ingest_actors, filter_actors, vectorize_actors, cross_media_mapping
+        from actors import (
+            ingest_actors,
+            filter_actors,
+            vectorize_actors,
+            cross_media_mapping,
+        )  # noqa: E402
+
         logger.info("Ingesting raw actors...")
         ingest_actors.run_ingestion()
         logger.info("Filtering actors...")
@@ -59,10 +80,11 @@ def run_daily_ingestion_workflow():
         logger.info("✅ Actors Ingestion & Mapping Complete.")
     except Exception as e:
         logger.error(f"❌ Error in Actors Ingestion: {e}", exc_info=True)
-        
+
     # 3. Combat Data Ingestion
     try:
-        from characters import combat_data, vectorize_combat
+        from characters import combat_data, vectorize_combat  # noqa: E402
+
         logger.info("Ingesting raw combat data...")
         combat_data.run_combat_data_ingestion(limit=20)
         logger.info("Vectorizing combat data...")
@@ -70,10 +92,11 @@ def run_daily_ingestion_workflow():
         logger.info("✅ Combat Ingestion Complete.")
     except Exception as e:
         logger.error(f"❌ Error in Combat Ingestion: {e}", exc_info=True)
-        
+
     # 4. Games Ingestion
     try:
-        from games import ingest_games, filter_games, vectorize_games
+        from games import ingest_games, filter_games, vectorize_games  # noqa: E402
+
         logger.info("Ingesting games...")
         ingest_games.run_ingestion()
         logger.info("Filtering games...")
@@ -86,7 +109,15 @@ def run_daily_ingestion_workflow():
 
     # 5. Anime Ingestion & Reconciliation
     try:
-        from anime import ingest_anime, reconcile_drift, filter_anime, fetch_themes, train_vibe_anime, vectorize_anime
+        from anime import (
+            ingest_anime,
+            reconcile_drift,
+            filter_anime,
+            fetch_themes,
+            train_vibe_anime,
+            vectorize_anime,
+        )  # noqa: E402
+
         logger.info("Ingesting anime...")
         ingest_anime.run_ingestion()
         logger.info("Reconciling anime drift...")
@@ -105,7 +136,14 @@ def run_daily_ingestion_workflow():
 
     # 6. Manga Ingestion
     try:
-        from manga import ingest_manga, filter_manga, fetch_covers, train_vibe_manga, vectorize_manga
+        from manga import (
+            ingest_manga,
+            filter_manga,
+            fetch_covers,
+            train_vibe_manga,
+            vectorize_manga,
+        )  # noqa: E402
+
         logger.info("Ingesting manga...")
         ingest_manga.run_ingestion()
         logger.info("Filtering manga...")
@@ -122,11 +160,11 @@ def run_daily_ingestion_workflow():
 
     # 7. Enrichment Scrapers
     try:
-        import enrich_db_scraper
-        import specialized_scrapers
-        import advanced_scrapers
-        import expert_scrapers
-        
+        import enrich_db_scraper  # noqa: E402
+        import specialized_scrapers  # noqa: E402
+        import advanced_scrapers  # noqa: E402
+        import expert_scrapers  # noqa: E402
+
         logger.info("Running general semantic enrichment...")
         enrich_db_scraper.run_enrichment(limit=10)
         logger.info("Running specialized scrapers (Casting VO/VF)...")
@@ -141,7 +179,8 @@ def run_daily_ingestion_workflow():
 
     # 8. Sync Neo4j Graph
     try:
-        import neo4j_sync
+        import neo4j_sync  # noqa: E402
+
         logger.info("Syncing Anime to Graph DB...")
         neo4j_sync.run_sync_type_to_graph("Anime")
         logger.info("Syncing Manga to Graph DB...")
@@ -157,16 +196,18 @@ def run_daily_ingestion_workflow():
     logger.info("🎉 Daily Ingestion Workflow Finished.")
     return "SUCCESS"
 
+
 @register_task("run_daily_maintenance_workflow")
 def run_daily_maintenance_workflow():
     """
     Orchestration globale de la maintenance MLOps quotidienne (5h00).
     """
     logger.info("🚀 Starting Daily Maintenance & MLOps Workflow...")
-    
+
     # 1. Graph Healer Agent
     try:
-        from mlops import graph_healer
+        from mlops import graph_healer  # noqa: E402
+
         logger.info("Running self-healing graph healer...")
         graph_healer.run_graph_healer()
     except Exception as e:
@@ -174,7 +215,8 @@ def run_daily_maintenance_workflow():
 
     # 2. Continuous Pre-training (CPT)
     try:
-        from mlops import continuous_pretraining
+        from mlops import continuous_pretraining  # noqa: E402
+
         logger.info("Running continuous pre-training...")
         continuous_pretraining.run_cpt()
     except Exception as e:
@@ -182,7 +224,8 @@ def run_daily_maintenance_workflow():
 
     # 3. Fine-tuning Instruction Dataset generation & Expert training
     try:
-        from mlops import finetuning_dataset, train_expert_model
+        from mlops import finetuning_dataset, train_expert_model  # noqa: E402
+
         logger.info("Generating fine-tuning instruction dataset...")
         finetuning_dataset.run_generate_instruction_dataset()
         logger.info("Triggering expert model training...")
@@ -192,7 +235,8 @@ def run_daily_maintenance_workflow():
 
     # 4. Latent Space Visualisation
     try:
-        from mlops import latent_space_viz
+        from mlops import latent_space_viz  # noqa: E402
+
         logger.info("Running latent space visualization sync...")
         latent_space_viz.run_visualization()
     except Exception as e:
@@ -200,7 +244,8 @@ def run_daily_maintenance_workflow():
 
     # 5. Speculative Draft Distillation
     try:
-        from mlops import distillation
+        from mlops import distillation  # noqa: E402
+
         logger.info("Running speculative draft model distillation...")
         distillation.run_distillation()
     except Exception as e:
@@ -208,7 +253,8 @@ def run_daily_maintenance_workflow():
 
     # 6. Evaluation metrics (RAGAS / custom judge, Legacy Retrieval)
     try:
-        from mlops import evaluation_metrics
+        from mlops import evaluation_metrics  # noqa: E402
+
         logger.info("Running RAGAS and custom judge performance comparison...")
         evaluation_metrics.ragas_performance_comparison()
         logger.info("Running legacy retrieval metrics...")
@@ -218,7 +264,8 @@ def run_daily_maintenance_workflow():
 
     # 7. Regression Benchmark
     try:
-        from evaluation import regression_benchmark
+        from evaluation import regression_benchmark  # noqa: E402
+
         logger.info("Running AI regression benchmarks...")
         regression_benchmark.run_regression_test()
     except Exception as e:
@@ -227,21 +274,22 @@ def run_daily_maintenance_workflow():
     logger.info("🎉 Daily Maintenance Workflow Finished.")
     return "SUCCESS"
 
+
 @register_task("run_hourly_monitoring_workflow")
 def run_hourly_monitoring_workflow():
     """
     Monitoring de santé et détection de dérive (Toutes les heures).
     """
     logger.info("🚀 Starting Hourly Monitoring Workflow...")
-    
+
     # 0. Global Alert & Health Check
     try:
-        from animetix.containers import get_container
-        from django.contrib.auth import get_user_model
-        
+        from animetix.containers import get_container  # noqa: E402
+        from django.contrib.auth import get_user_model  # noqa: E402
+
         container = get_container()
         alert_service = container.core.alert_service()
-        
+
         # On récupère le premier administrateur pour envoyer les alertes
         User = get_user_model()
         admin = User.objects.filter(is_superuser=True).first()
@@ -255,7 +303,8 @@ def run_hourly_monitoring_workflow():
 
     # 1. Monitor Inference Health
     try:
-        from mlops import rlhf_pipeline
+        from mlops import rlhf_pipeline  # noqa: E402
+
         logger.info("Monitoring inference API health...")
         rlhf_pipeline.monitor_inference_health()
     except Exception as e:
@@ -263,7 +312,8 @@ def run_hourly_monitoring_workflow():
 
     # 2. Knowledge Drift Check
     try:
-        from evaluation import drift_detection
+        from evaluation import drift_detection  # noqa: E402
+
         logger.info("Checking knowledge drift...")
         drift_detection.run_drift_detection()
     except Exception as e:
@@ -271,7 +321,8 @@ def run_hourly_monitoring_workflow():
 
     # 3. AI Regression Test
     try:
-        from evaluation import regression_benchmark
+        from evaluation import regression_benchmark  # noqa: E402
+
         logger.info("Running AI regression test...")
         regression_benchmark.run_regression_test()
     except Exception as e:
@@ -280,6 +331,7 @@ def run_hourly_monitoring_workflow():
     logger.info("🎉 Hourly Monitoring Workflow Finished.")
     return "SUCCESS"
 
+
 @register_task("check_gold_dataset_sensor_task")
 def check_gold_dataset_sensor_task():
     """
@@ -287,16 +339,18 @@ def check_gold_dataset_sensor_task():
     Enregistre l'état en cache pour éviter les doublons.
     """
     logger.info("🔍 Running Gold Dataset Sensor...")
-    from django.core.cache import cache
-    from animetix.models import GoldDatasetEntry
-    
+    from django.core.cache import cache  # noqa: E402
+    from animetix.models import GoldDatasetEntry  # noqa: E402
+
     validated_count = GoldDatasetEntry.objects.filter(is_validated=True).count()
     last_count = cache.get("auto_lora_last_count", 0)
-    
+
     if validated_count >= last_count + 100:
-        logger.info(f"🚀 LoRA Trigger condition met: {validated_count} validated, last count was {last_count}.")
+        logger.info(
+            f"🚀 LoRA Trigger condition met: {validated_count} validated, last count was {last_count}."
+        )
         cache.set("auto_lora_last_count", validated_count)
-        
+
         # Déclenche l'entraînement
         try:
             enqueue_task("run_star_training_cycle_task")
@@ -304,9 +358,12 @@ def check_gold_dataset_sensor_task():
         except Exception as e:
             logger.error(f"❌ Error triggering training from sensor: {e}")
         return "TRIGGERED"
-        
-    logger.info(f"ℹ️ Gold Dataset Sensor finished. Count={validated_count}, Last={last_count}. Threshold (100) not met.")
+
+    logger.info(
+        f"ℹ️ Gold Dataset Sensor finished. Count={validated_count}, Last={last_count}. Threshold (100) not met."
+    )
     return "NO_TRIGGER"
+
 
 @register_task("check_dpo_feedback_sensor_task")
 def check_dpo_feedback_sensor_task():
@@ -315,29 +372,34 @@ def check_dpo_feedback_sensor_task():
     Enregistre l'état en cache pour éviter les doublons.
     """
     logger.info("🔍 Running DPO Feedback Sensor...")
-    from django.core.cache import cache
-    from animetix.models import AIFeedback
-    
+    from django.core.cache import cache  # noqa: E402
+    from animetix.models import AIFeedback  # noqa: E402
+
     try:
         total_feedbacks = AIFeedback.objects.count()
-    except Exception as e:
+    except Exception:
         total_feedbacks = 0
-        
+
     last_count = cache.get("auto_dpo_last_count", 0)
-    
+
     if total_feedbacks >= last_count + 100:
-        logger.info(f"🚀 DPO Trigger condition met: {total_feedbacks} feedbacks, last count was {last_count}.")
+        logger.info(
+            f"🚀 DPO Trigger condition met: {total_feedbacks} feedbacks, last count was {last_count}."
+        )
         cache.set("auto_dpo_last_count", total_feedbacks)
-        
+
         # Déclenche l'entraînement
         try:
-            from pipeline.mlops.trl_ops import trl_ready_dataset, trigger_lora_training
+            from pipeline.mlops.trl_ops import trl_ready_dataset, trigger_lora_training  # noqa: E402
+
             dataset_path = trl_ready_dataset(config=None)
             trigger_lora_training(dataset_path=dataset_path)
             logger.info("✅ DPO training triggered successfully.")
         except Exception as e:
             logger.error(f"❌ Error triggering DPO training from sensor: {e}")
         return "TRIGGERED"
-        
-    logger.info(f"ℹ️ DPO Feedback Sensor finished. Count={total_feedbacks}, Last={last_count}. Threshold (100) not met.")
+
+    logger.info(
+        f"ℹ️ DPO Feedback Sensor finished. Count={total_feedbacks}, Last={last_count}. Threshold (100) not met."
+    )
     return "NO_TRIGGER"

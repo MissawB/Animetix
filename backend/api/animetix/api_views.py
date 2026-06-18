@@ -1,22 +1,11 @@
 # Proxy file for modular API views
-from .api.core import *
-from .api.social import *
-from .api.games import *
-from .api.labs import *
-from .api.labs import MangaCleanLabView, MangaTranslateLabView, SingularityCommandCenterView
-from .api.labs import AudioLabDataView, SoundscapeGenerationView, SpeechToSpeechLabView, SeiyuuDiscoveryView
-from .api.labs import VideoFateZeroLabView, VideoLabDataView
-from .api.labs import SpatialLabDataView, Generate3DDataView, CinematicReconstructionView
-from .api.streams import *
-from .api.mlops import *
-from .api.graph import *
-from .api.companion import *
-from .api.forge_vn import *
-from .api.cognition import *
-from .api.multiverse import MultiverseGalleryView
-from .api.games.world_boss import ActiveWorldBossView, WorldBossAttackView
-from .api.games.animinator import AniminatorAskView
-from .api.explore import MediaExploreView, SeichijunreiMapView, MarketWikiView
-from .api.admin_api import DataCurationTicketViewSet, TTCMonitoringAPIView, UserManagementViewSet, AdEventLoggingAPIView, AdminFinancialsAPIView, AdminEconomicAuditAPIView
-from .api.games.duel import CreateDuelRoomView, JoinDuelRoomView, MatchmakingView
-from .api.developer import DeveloperRAGView, DeveloperApiKeyView, DeveloperSubscriptionMockView, CreateBxCheckoutView, StripeWebhookView, CreateProSubscriptionCheckoutView
+from .api.core import *  # noqa: F401, F403
+from .api.social import *  # noqa: F401, F403
+from .api.games import *  # noqa: F401, F403
+from .api.labs import *  # noqa: F401, F403
+from .api.streams import *  # noqa: F401, F403
+from .api.mlops import *  # noqa: F401, F403
+from .api.graph import *  # noqa: F401, F403
+from .api.companion import *  # noqa: F401, F403
+from .api.forge_vn import *  # noqa: F401, F403
+from .api.cognition import *  # noqa: F401, F403

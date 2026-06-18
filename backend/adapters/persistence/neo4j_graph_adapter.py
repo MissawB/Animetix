@@ -5,6 +5,7 @@ from pipeline.neo4j_client import Neo4jManager
 
 logger = logging.getLogger("animetix.neo4j_adapter")
 
+
 class Neo4jGraphAdapter(GraphPersistencePort):
     """
     Adapter pour Neo4j implémentant GraphPersistencePort.
@@ -14,13 +15,19 @@ class Neo4jGraphAdapter(GraphPersistencePort):
     def __init__(self, neo4j_manager: Optional[Neo4jManager] = None):
         self._manager = neo4j_manager or Neo4jManager()
 
-    def execute_query(self, query: str, parameters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+    def execute_query(
+        self, query: str, parameters: Optional[Dict[str, Any]] = None
+    ) -> List[Dict[str, Any]]:
         return self._manager.execute_query(query, parameters)
 
-    def execute_read(self, query: str, parameters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+    def execute_read(
+        self, query: str, parameters: Optional[Dict[str, Any]] = None
+    ) -> List[Dict[str, Any]]:
         return self._manager.execute_read(query, parameters)
 
-    def execute_write(self, query: str, parameters: Optional[Dict[str, Any]] = None) -> None:
+    def execute_write(
+        self, query: str, parameters: Optional[Dict[str, Any]] = None
+    ) -> None:
         self._manager.execute_query(query, parameters)
 
     def find_logical_connections(self, media_id: str) -> List[Dict[str, Any]]:
@@ -38,16 +45,22 @@ class Neo4jGraphAdapter(GraphPersistencePort):
     def sync_media_to_graph(self, media_item: Any, media_type: str) -> None:
         self._manager.sync_media_to_graph(media_item, media_type)
 
-    def sync_ai_extracted_graph(self, media_id: str, extracted_data: Dict[str, Any]) -> None:
+    def sync_ai_extracted_graph(
+        self, media_id: str, extracted_data: Dict[str, Any]
+    ) -> None:
         self._manager.sync_ai_extracted_graph(media_id, extracted_data)
 
     def sync_fan_theory(self, saga_name: str, theory_data: Dict[str, Any]) -> None:
         self._manager.sync_fan_theory(saga_name, theory_data)
 
-    def sync_saga(self, saga_name: str, executive_summary: str, media_ids: List[str]) -> None:
+    def sync_saga(
+        self, saga_name: str, executive_summary: str, media_ids: List[str]
+    ) -> None:
         self._manager.sync_saga(saga_name, executive_summary, media_ids)
 
-    def sync_combat_lore(self, media_id: str, lore_data_list: List[Dict[str, Any]]) -> None:
+    def sync_combat_lore(
+        self, media_id: str, lore_data_list: List[Dict[str, Any]]
+    ) -> None:
         self._manager.sync_combat_lore(media_id, lore_data_list)
 
     def get_creator_network_context(self, person_name: str) -> str:
@@ -59,14 +72,16 @@ class Neo4jGraphAdapter(GraphPersistencePort):
         try:
             self._manager.driver.verify_connectivity()
             return True
-        except Exception as e:
+        except Exception:
             logger.debug("Neo4j connectivity check failed.", exc_info=True)
             return False
 
     def close(self) -> None:
         self._manager.close()
 
-    def sync_user_interaction(self, user_id: str, media_title: str, interaction_type: str) -> None:
+    def sync_user_interaction(
+        self, user_id: str, media_title: str, interaction_type: str
+    ) -> None:
         """Synchronise l'interaction de l'utilisateur dans le graphe (User -> Media)."""
         query = """
         MERGE (u:User {id: $user_id})
@@ -74,8 +89,17 @@ class Neo4jGraphAdapter(GraphPersistencePort):
         CREATE (u)-[:INTERACTED_WITH {type: $interaction_type, timestamp: timestamp()}]->(m)
         """
         try:
-            self.execute_write(query, {"user_id": user_id, "media_title": media_title, "interaction_type": interaction_type})
-            logger.info(f"📊 Graph User Memory: Logged interaction for user={user_id} with media={media_title}")
+            self.execute_write(
+                query,
+                {
+                    "user_id": user_id,
+                    "media_title": media_title,
+                    "interaction_type": interaction_type,
+                },
+            )
+            logger.info(
+                f"📊 Graph User Memory: Logged interaction for user={user_id} with media={media_title}"
+            )
         except Exception as e:
             logger.warning(f"⚠️ Graph User Memory: Failed to sync interaction: {e}")
 
@@ -91,13 +115,17 @@ class Neo4jGraphAdapter(GraphPersistencePort):
             results = self.execute_read(query, {"user_id": user_id})
             if not results:
                 return ""
-            history_str = ", ".join([f"'{item['title']}' ({item['type']})" for item in results])
+            history_str = ", ".join(
+                [f"'{item['title']}' ({item['type']})" for item in results]
+            )
             return f"\n[Préférences Utilisateur RAG]: L'utilisateur '{user_id}' a récemment interagi avec : {history_str}.\n"
         except Exception as e:
             logger.warning(f"⚠️ Graph User Memory: Failed to retrieve preferences: {e}")
             return ""
 
-    def get_neighborhood(self, item_id: str, media_type: str, depth: int = 1) -> Dict[str, Any]:
+    def get_neighborhood(
+        self, item_id: str, media_type: str, depth: int = 1
+    ) -> Dict[str, Any]:
         """Retrieves nodes and relationships within a certain depth using APOC."""
         query = """
         MATCH (start:Media {id: $id, type: $type})
@@ -107,11 +135,14 @@ class Neo4jGraphAdapter(GraphPersistencePort):
                [r in relationships | {id: id(r), source: id(startNode(r)), target: id(endNode(r)), type: type(r), properties: properties(r)}] as links
         """
         try:
-            results = self.execute_read(query, {"id": item_id, "type": media_type, "depth": depth})
+            results = self.execute_read(
+                query, {"id": item_id, "type": media_type, "depth": depth}
+            )
             if not results:
                 return {"nodes": [], "links": []}
             return results[0]
         except Exception as e:
-            logger.error(f"❌ Neo4j Adapter: Failed to fetch neighborhood for {item_id}: {e}")
+            logger.error(
+                f"❌ Neo4j Adapter: Failed to fetch neighborhood for {item_id}: {e}"
+            )
             return {"nodes": [], "links": []}
-

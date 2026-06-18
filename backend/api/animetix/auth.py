@@ -12,17 +12,20 @@ from google.oauth2 import id_token
 from rest_framework import authentication
 from rest_framework import exceptions
 
-logger = logging.getLogger('animetix.auth')
+logger = logging.getLogger("animetix.auth")
 User = get_user_model()
 
 # --- GCP Identity-Aware Proxy (IAP) Helpers ---
+
 
 def verify_iap_jwt(jwt_assertion, expected_audience):
     """
     Verifies the IAP JWT assertion against Google's public keys.
     """
     if not expected_audience:
-        logger.warning("IAP expected audience is not configured. JWT verification skipped.")
+        logger.warning(
+            "IAP expected audience is not configured. JWT verification skipped."
+        )
         return None
     try:
         # verify_token fetches Google's IAP public keys and verifies signature/expiration
@@ -30,12 +33,13 @@ def verify_iap_jwt(jwt_assertion, expected_audience):
             jwt_assertion,
             request=google_requests.Request(),
             audience=expected_audience,
-            certs_url="https://www.gstatic.com/iap/verify/public_key"
+            certs_url="https://www.gstatic.com/iap/verify/public_key",
         )
         return payload
     except Exception as e:
         logger.error(f"IAP JWT verification failed: {e}")
         return None
+
 
 class IAPRemoteUserMiddleware(RemoteUserMiddleware):
     def process_request(self, request):
@@ -44,7 +48,7 @@ class IAPRemoteUserMiddleware(RemoteUserMiddleware):
             # Bypass IAP login in local development or routes where IAP is inactive
             return
 
-        expected_audience = getattr(settings, 'GCP_IAP_AUDIENCE', None)
+        expected_audience = getattr(settings, "GCP_IAP_AUDIENCE", None)
         payload = verify_iap_jwt(jwt_assertion, expected_audience)
         if not payload:
             raise PermissionDenied("Invalid IAP JWT Assertion.")
@@ -57,18 +61,19 @@ class IAPRemoteUserMiddleware(RemoteUserMiddleware):
         request.META[self.header] = email
         super().process_request(request)
 
+
 class IAPRemoteUserBackend(RemoteUserBackend):
     create_unknown_user = True
 
     def clean_username(self, username):
         # Extract prefix if username is an email address
-        if '@' in username:
-            return username.split('@')[0]
+        if "@" in username:
+            return username.split("@")[0]
         return username
 
     def configure_user(self, request, user, created=True):
         # Set email if we captured it during authenticate
-        email = getattr(self, 'current_email', None)
+        email = getattr(self, "current_email", None)
         if email:
             user.email = email
             user.save()
@@ -79,26 +84,30 @@ class IAPRemoteUserBackend(RemoteUserBackend):
         self.current_email = remote_user
         user = super().authenticate(request, remote_user, **kwargs)
         if user:
-            if remote_user and '@' in remote_user:
+            if remote_user and "@" in remote_user:
                 user.email = remote_user
                 user.save()
             self._update_user_permissions(user)
         return user
 
     def _update_user_permissions(self, user):
-        approved_admins = getattr(settings, 'IAP_APPROVED_ADMIN_EMAILS', [])
+        approved_admins = getattr(settings, "IAP_APPROVED_ADMIN_EMAILS", [])
         if user.email in approved_admins:
             if not user.is_staff or not user.is_superuser:
                 user.is_staff = True
                 user.is_superuser = True
                 user.save()
-                logger.info(f"Granted administrative privileges to IAP user: {user.email}")
+                logger.info(
+                    f"Granted administrative privileges to IAP user: {user.email}"
+                )
         else:
             if user.is_staff or user.is_superuser:
                 user.is_staff = False
                 user.is_superuser = False
                 user.save()
-                logger.info(f"Revoked administrative privileges from IAP user: {user.email}")
+                logger.info(
+                    f"Revoked administrative privileges from IAP user: {user.email}"
+                )
 
 
 # --- Google Identity Platform (GCIP) Authentication ---
@@ -106,6 +115,7 @@ class IAPRemoteUserBackend(RemoteUserBackend):
 GOOGLE_CERTS_URL = "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com"
 _public_keys_cache = {}
 _public_keys_expiry = 0
+
 
 def get_google_public_keys():
     global _public_keys_cache, _public_keys_expiry
@@ -115,8 +125,8 @@ def get_google_public_keys():
 
     try:
         response = requests.get(GOOGLE_CERTS_URL, timeout=5)
-        response.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
-        
+        response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
+
         cache_control = response.headers.get("Cache-Control", "")
         max_age = 3600
         for part in cache_control.split(","):
@@ -125,13 +135,14 @@ def get_google_public_keys():
                     max_age = int(part.split("=")[1].strip())
                 except Exception:
                     pass
-        
+
         _public_keys_cache = response.json()
         _public_keys_expiry = now + max_age
         return _public_keys_cache
     except Exception as e:
         logger.error(f"Failed to fetch Google public keys: {e}")
         return _public_keys_cache
+
 
 class GoogleIdentityAuthentication(authentication.BaseAuthentication):
     def authenticate(self, request):
@@ -144,16 +155,18 @@ class GoogleIdentityAuthentication(authentication.BaseAuthentication):
             return None
 
         id_token = parts[1]
-        project_id = getattr(settings, 'GOOGLE_CLOUD_PROJECT', 'animetix')
+        project_id = getattr(settings, "GOOGLE_CLOUD_PROJECT", "animetix")
 
         # Support Local Emulator
-        emulator_host = getattr(settings, 'FIREBASE_AUTH_EMULATOR_HOST', None)
+        emulator_host = getattr(settings, "FIREBASE_AUTH_EMULATOR_HOST", None)
         if emulator_host:
             try:
                 payload = jwt.decode(id_token, options={"verify_signature": False})
                 email = payload.get("email")
                 if not email:
-                    raise exceptions.AuthenticationFailed("Emulator token missing email claim.")
+                    raise exceptions.AuthenticationFailed(
+                        "Emulator token missing email claim."
+                    )
                 user = self._get_or_create_user(email)
                 return (user, payload)
             except Exception as e:
@@ -171,13 +184,13 @@ class GoogleIdentityAuthentication(authentication.BaseAuthentication):
                 raise exceptions.AuthenticationFailed("Invalid kid in token header.")
 
             cert = public_keys[kid]
-            
+
             payload = jwt.decode(
                 id_token,
                 cert,
                 algorithms=["RS256"],
                 audience=project_id,
-                issuer=f"https://securetoken.google.com/{project_id}"
+                issuer=f"https://securetoken.google.com/{project_id}",
             )
         except jwt.ExpiredSignatureError:
             raise exceptions.AuthenticationFailed("ID Token has expired.")
@@ -199,10 +212,10 @@ class GoogleIdentityAuthentication(authentication.BaseAuthentication):
         except User.DoesNotExist:
             logger.debug(f"New user registration flow for email: {email}")
 
-        base_username = email.split('@')[0]
+        base_username = email.split("@")[0]
         username = base_username
         suffix_counter = 1
-        
+
         while User.objects.filter(username=username).exists():
             username = f"{base_username}_{suffix_counter}"
             suffix_counter += 1
@@ -222,6 +235,7 @@ class DeveloperApiKeyAuthentication(authentication.BaseAuthentication):
     Authentication backend that validates API keys passed in the 'X-API-Key' header.
     Format: ax_pro_<profile_id>_<secret>
     """
+
     def authenticate(self, request):
         api_key = request.META.get("HTTP_X_API_KEY")
         if not api_key:
@@ -235,7 +249,7 @@ class DeveloperApiKeyAuthentication(authentication.BaseAuthentication):
             raise exceptions.AuthenticationFailed("Invalid API Key structure.")
 
         profile_id = parts[2]
-        from animetix.models import Profile
+        from animetix.models import Profile  # noqa: E402
 
         try:
             profile = Profile.objects.select_related("user").get(pk=profile_id)
@@ -244,7 +258,9 @@ class DeveloperApiKeyAuthentication(authentication.BaseAuthentication):
 
         # Check if the user is in the 'pro' tier
         if profile.tier != "pro":
-            raise exceptions.AuthenticationFailed("API access is restricted to Pro tier developers.")
+            raise exceptions.AuthenticationFailed(
+                "API access is restricted to Pro tier developers."
+            )
 
         # Verify the key using Django's password hasher
         if not profile.check_api_key(api_key):
@@ -254,5 +270,3 @@ class DeveloperApiKeyAuthentication(authentication.BaseAuthentication):
             raise exceptions.AuthenticationFailed("User account is disabled.")
 
         return (profile.user, api_key)
-
-

@@ -1,5 +1,5 @@
-import pytest
 from adapters.inference.local_rerank_adapter import LocalRerankAdapter
+
 
 def test_local_rerank_adapter_health_check():
     adapter = LocalRerankAdapter()

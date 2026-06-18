@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('animetix', '0015_profile_collected_fusions'),
+        ("animetix", "0015_profile_collected_fusions"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='mediaitem',
-            name='visual_embedding',
+            model_name="mediaitem",
+            name="visual_embedding",
             field=models.JSONField(blank=True, null=True),
         ),
     ]

@@ -34,7 +34,7 @@ jobs:
       continue-on-error: true
 
     - name: Upload Snyk Python results to GitHub Code Scanning
-      uses: github/codeql-action/upload-sarif@v3
+      uses: github/codeql-action/upload-sarif@v4
       with:
         sarif_file: snyk-python.sarif
       if: always() # Upload results even if the Snyk test fails
@@ -53,12 +53,12 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        node-version: '22'
         cache: 'npm'
         cache-dependency-path: 'frontend/package-lock.json'
     - name: Install Node.js dependencies
       working-directory: ./frontend
-      run: npm ci
+      run: npm ci --legacy-peer-deps
 
     - name: Snyk Node.js Test
       uses: snyk/actions/node@master # Using snyk action for node.js
@@ -69,7 +69,7 @@ jobs:
       continue-on-error: true
 
     - name: Upload Snyk Node.js results to GitHub Code Scanning
-      uses: github/codeql-action/upload-sarif@v3
+      uses: github/codeql-action/upload-sarif@v4
       with:
         sarif_file: snyk-javascript.sarif
       if: always() # Upload results even if the Snyk test fails

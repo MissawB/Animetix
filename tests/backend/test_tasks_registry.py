@@ -1,5 +1,5 @@
-import pytest
 from animetix.tasks_registry import get_registered_task, register_task
+
 
 def test_registry_registration():
     @register_task("dummy_task")

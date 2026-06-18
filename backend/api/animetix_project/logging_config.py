@@ -1,6 +1,5 @@
 import logging
 import logging.config
-import json
 
 # Central logging configuration for the backend project
 LOGGING_CONFIG = {
@@ -25,6 +24,7 @@ LOGGING_CONFIG = {
 }
 
 logging.config.dictConfig(LOGGING_CONFIG)
+
 
 def get_logger(name: str = __name__) -> logging.Logger:
     """Return a logger configured with the project settings."""

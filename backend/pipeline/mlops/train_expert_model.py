@@ -4,50 +4,75 @@ Script d'entraînement expert QLoRA hautement optimisé intégrant 14 techniques
 pour les architectures GPU à VRAM limitée.
 """
 
-import os
+import os  # noqa: E402
+
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
-import sys
-import torch
-import time
-import logging
-from datasets import load_dataset
-from transformers import (
+import torch  # noqa: E402
+import time  # noqa: E402
+import logging  # noqa: E402
+from datasets import load_dataset  # noqa: E402
+from transformers import (  # noqa: E402
     AutoModelForCausalLM,
     AutoTokenizer,
     BitsAndBytesConfig,
     TrainingArguments,
 )
-from peft import LoraConfig, get_peft_model
-from trl import SFTTrainer, DataCollatorForCompletionOnlyLM
+from peft import LoraConfig  # noqa: E402
+from trl import SFTTrainer, DataCollatorForCompletionOnlyLM  # noqa: E402
 
 # Configuration du logger
 logger = logging.getLogger("animetix.pipeline.mlops.train_expert")
 
 # Essayer d'importer liger_kernel pour la fusion d'opérateurs Triton
 try:
-    from liger_kernel.transformers import monkey_patch_liger
+    from liger_kernel.transformers import monkey_patch_liger  # noqa: E402
+
     monkey_patch_liger()
-    logger.info("⚙️ Liger Kernel fused successfully (Triton mathematical operators optimized).")
+    logger.info(
+        "⚙️ Liger Kernel fused successfully (Triton mathematical operators optimized)."
+    )
 except ImportError:
-    logger.info("ℹ️ Liger Kernel not available, skipping Triton mathematical operator fusion.")
+    logger.info(
+        "ℹ️ Liger Kernel not available, skipping Triton mathematical operator fusion."
+    )
 
 # Import hf_trackio pour le suivi MLOps
 try:
-    from hf_trackio import trackio
+    from hf_trackio import trackio  # noqa: E402
 except ImportError:
+
     class MockTrackio:
-        def log(self, *args, **kwargs): pass
-        def start_run(self, *args, **kwargs): pass
-        def end_run(self, *args, **kwargs): pass
-        def init(self, *args, **kwargs): return self
-        def finish(self, *args, **kwargs): pass
-        def log_artifact(self, *args, **kwargs): pass
-        def log_param(self, *args, **kwargs): pass
-        def log_metric(self, *args, **kwargs): pass
+        def log(self, *args, **kwargs):
+            pass
+
+        def start_run(self, *args, **kwargs):
+            pass
+
+        def end_run(self, *args, **kwargs):
+            pass
+
+        def init(self, *args, **kwargs):
+            return self
+
+        def finish(self, *args, **kwargs):
+            pass
+
+        def log_artifact(self, *args, **kwargs):
+            pass
+
+        def log_param(self, *args, **kwargs):
+            pass
+
+        def log_metric(self, *args, **kwargs):
+            pass
+
     trackio = MockTrackio()
 
 # Base directory (4 levels up from backend/pipeline/mlops/)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+BASE_DIR = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
+
 
 def format_chatml_messages(item) -> list:
     """
@@ -59,11 +84,9 @@ def format_chatml_messages(item) -> list:
         system_prompt = "You are Animetix, an absolute expert in otaku culture, Japanese manga, and anime. You answer in a very comprehensive and precise manner in English."
     else:
         system_prompt = "Tu es Animetix, un expert absolu de la culture otaku, des mangas et des animés japonais. Tu réponds de manière très complète et précise en français."
-        
-    messages = [
-        {"role": "system", "content": system_prompt}
-    ]
-    
+
+    messages = [{"role": "system", "content": system_prompt}]
+
     if "turns" in item:
         for turn in item["turns"]:
             messages.append({"role": "user", "content": turn["user"]})
@@ -77,21 +100,28 @@ def format_chatml_messages(item) -> list:
                 user_content = f"{item['instruction']}\n\nContexte : {item['input']}"
         messages.append({"role": "user", "content": user_content})
         messages.append({"role": "assistant", "content": item["output"]})
-        
+
     return messages
+
 
 def run_expert_training():
     model_name = os.getenv("BASE_MODEL_NAME", "unsloth/DeepSeek-R1-Distill-Qwen-8B")
     default_seq_len = 1024 if "deepseek" in model_name.lower() else 768
     max_seq_length = int(os.getenv("MAX_SEQ_LENGTH", str(default_seq_len)))
-    
-    dataset_path = os.path.join(BASE_DIR, "data", "mlops", "datasets", "animetix_expert_ft.jsonl")
+
+    dataset_path = os.path.join(
+        BASE_DIR, "data", "mlops", "datasets", "animetix_expert_ft.jsonl"
+    )
     output_dir = os.path.join(BASE_DIR, "data", "models", "otaku-expert-adapter")
-    
-    tracker = trackio.init(project="animetix-expert", job_name=f"expert-qlora-{int(time.time())}")
+
+    tracker = trackio.init(
+        project="animetix-expert", job_name=f"expert-qlora-{int(time.time())}"
+    )
 
     if not os.path.exists(dataset_path):
-        logger.error(f"❌ Dataset not found at {dataset_path}. Run finetuning_dataset.py first.")
+        logger.error(
+            f"❌ Dataset not found at {dataset_path}. Run finetuning_dataset.py first."
+        )
         tracker.finish(status="FAILED")
         return
 
@@ -101,23 +131,30 @@ def run_expert_training():
 
     # 1. Configuration et chargement du tokenizer
     logger.info("📂 Loading tokenizer...")
-    tokenizer = AutoTokenizer.from_pretrained(model_name, revision="main") # nosec B615
+    tokenizer = AutoTokenizer.from_pretrained(model_name, revision="main")  # nosec B615
     tokenizer.pad_token = tokenizer.eos_token
     tokenizer.padding_side = "right"
 
     # 2. Chargement et fractionnement Train/Eval (95/05)
     logger.info("📂 Loading and splitting dataset...")
-    full_dataset = load_dataset("json", data_files=dataset_path, split="train", revision="main") # nosec B615
+    full_dataset = load_dataset(
+        "json", data_files=dataset_path, split="train", revision="main"
+    )  # nosec B615
     split_dataset = full_dataset.train_test_split(test_size=0.05, seed=42)
     train_ds = split_dataset["train"]
     eval_ds = split_dataset["test"]
-    logger.info(f"✅ Dataset loaded: {len(train_ds)} training samples, {len(eval_ds)} validation samples.")
+    logger.info(
+        f"✅ Dataset loaded: {len(train_ds)} training samples, {len(eval_ds)} validation samples."
+    )
 
     # 3. Application du patron de discussion ChatML natif de Qwen
     logger.info("⚙️ Formatting dataset with native ChatML templates...")
+
     def process_chatml(item):
         messages = format_chatml_messages(item)
-        formatted = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=False)
+        formatted = tokenizer.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=False
+        )
         return {"text": formatted}
 
     train_ds = train_ds.map(process_chatml, remove_columns=train_ds.column_names)
@@ -126,54 +163,82 @@ def run_expert_training():
     # 4. Chargement optimisé via Unsloth (avec repli PEFT/BitsAndBytes standard en cas d'absence ou distribué)
     model = None
     peft_config = None
-    
+
     local_rank = int(os.environ.get("LOCAL_RANK", "-1"))
     world_size = int(os.environ.get("WORLD_SIZE", "1"))
-    is_distributed = local_rank != -1 or world_size > 1 or (torch.cuda.is_available() and torch.cuda.device_count() > 1)
-    
+    is_distributed = (
+        local_rank != -1
+        or world_size > 1
+        or (torch.cuda.is_available() and torch.cuda.device_count() > 1)
+    )
+
     try:
         if is_distributed:
-            logger.info("ℹ️ Distributed training detected. Bypassing Unsloth to avoid single-GPU constraints.")
+            logger.info(
+                "ℹ️ Distributed training detected. Bypassing Unsloth to avoid single-GPU constraints."
+            )
             raise ImportError("Bypass Unsloth under distributed training")
-            
-        from unsloth import FastLanguageModel
-        logger.info("🚀 Unsloth detected. Loading model with native GPU optimizations...")
+
+        from unsloth import FastLanguageModel  # noqa: E402
+
+        logger.info(
+            "🚀 Unsloth detected. Loading model with native GPU optimizations..."
+        )
         model, tokenizer = FastLanguageModel.from_pretrained(
             model_name=model_name,
             max_seq_length=max_seq_length,
             dtype=None,  # Détection automatique de précision (float16/bfloat16)
             load_in_4bit=True,
             revision="main",
-        ) # nosec B615
+        )  # nosec B615
         # Injection LoRA via Unsloth
         model = FastLanguageModel.get_peft_model(
             model,
             r=16,
-            target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+            target_modules=[
+                "q_proj",
+                "k_proj",
+                "v_proj",
+                "o_proj",
+                "gate_proj",
+                "up_proj",
+                "down_proj",
+            ],
             lora_alpha=32,
             lora_dropout=0.0,  # Unsloth recommande lora_dropout=0 pour des performances optimales
             bias="none",
             use_gradient_checkpointing="unsloth",
             random_state=42,
-            use_rslora=True,   # Rank-Stabilized LoRA activé
+            use_rslora=True,  # Rank-Stabilized LoRA activé
         )
-        logger.info("✅ Model loaded and LoRA adapters injected using Unsloth FastLanguageModel.")
+        logger.info(
+            "✅ Model loaded and LoRA adapters injected using Unsloth FastLanguageModel."
+        )
     except ImportError:
-        logger.info("ℹ️ Unsloth not available or bypassed. Falling back to standard Hugging Face PEFT + BitsAndBytesConfig/Full precision...")
-        
+        logger.info(
+            "ℹ️ Unsloth not available or bypassed. Falling back to standard Hugging Face PEFT + BitsAndBytesConfig/Full precision..."
+        )
+
         device_map = {"": local_rank} if local_rank != -1 else "auto"
-        disable_quant = os.getenv("ANIMETIX_DISABLE_QUANT", "False").lower() in ("true", "1", "yes") or is_distributed
-        
+        disable_quant = (
+            os.getenv("ANIMETIX_DISABLE_QUANT", "False").lower() in ("true", "1", "yes")
+            or is_distributed
+        )
+
         if disable_quant:
-            logger.info("Loading model in full/mixed precision (no quantization) for distributed training compatibility...")
+            logger.info(
+                "Loading model in full/mixed precision (no quantization) for distributed training compatibility..."
+            )
             model = AutoModelForCausalLM.from_pretrained(
                 model_name,
                 device_map=device_map,
-                torch_dtype=torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16,
+                torch_dtype=torch.bfloat16
+                if torch.cuda.is_bf16_supported()
+                else torch.float16,
                 trust_remote_code=True,
                 low_cpu_mem_usage=True if device_map == "auto" else False,
-                revision="main"
-            ) # nosec B615
+                revision="main",
+            )  # nosec B615
         else:
             logger.info("Loading model with standard 4-bit quantization...")
             bnb_config = BitsAndBytesConfig(
@@ -188,78 +253,106 @@ def run_expert_training():
                 device_map=device_map,
                 trust_remote_code=True,
                 low_cpu_mem_usage=True,
-                revision="main"
-            ) # nosec B615
-            
+                revision="main",
+            )  # nosec B615
+
         model.gradient_checkpointing_enable()
         model.enable_input_require_grads()
-        
+
         peft_config = LoraConfig(
             r=16,
             lora_alpha=32,
-            target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+            target_modules=[
+                "q_proj",
+                "k_proj",
+                "v_proj",
+                "o_proj",
+                "gate_proj",
+                "up_proj",
+                "down_proj",
+            ],
             lora_dropout=0.05,
             bias="none",
-            use_rslora=True,   # Rank-Stabilized LoRA activé
+            use_rslora=True,  # Rank-Stabilized LoRA activé
             task_type="CAUSAL_LM",
         )
         logger.info("✅ Model loaded with standard PEFT configuration.")
 
     # 5. Assistant-Only Loss Masking (Data Collator ciblant uniquement la réponse de l'assistant)
     # Validation dynamique du patron pour éviter les échecs de tokenisation silencieux
-    enable_packing = os.getenv("ANIMETIX_PACKING", "False").lower() in ("true", "1", "yes")
-    
+    enable_packing = os.getenv("ANIMETIX_PACKING", "False").lower() in (
+        "true",
+        "1",
+        "yes",
+    )
+
     collator = None
     if enable_packing:
-        logger.info("📦 Sequence Packing is enabled. Bypassing DataCollatorForCompletionOnlyLM to prevent TRL conflicts.")
+        logger.info(
+            "📦 Sequence Packing is enabled. Bypassing DataCollatorForCompletionOnlyLM to prevent TRL conflicts."
+        )
     else:
         logger.info("🔍 Checking DataCollator response template tokenization...")
         test_messages = [
             {"role": "user", "content": "Test"},
-            {"role": "assistant", "content": "Réponse"}
+            {"role": "assistant", "content": "Réponse"},
         ]
         test_text = tokenizer.apply_chat_template(test_messages, tokenize=False)
         test_tokenized = tokenizer(test_text, return_tensors="pt")
-        
+
         possible_templates = [
             "<|im_start|>assistant\n",
             "<|im_start|>assistant",
             "assistant\n",
-            "assistant"
+            "assistant",
         ]
-        
+
         for template in possible_templates:
             try:
                 candidate_collator = DataCollatorForCompletionOnlyLM(
-                    response_template=template,
-                    tokenizer=tokenizer
+                    response_template=template, tokenizer=tokenizer
                 )
-                outputs = candidate_collator.torch_call([test_tokenized["input_ids"][0].tolist()])
+                outputs = candidate_collator.torch_call(
+                    [test_tokenized["input_ids"][0].tolist()]
+                )
                 labels = outputs["labels"][0]
                 trained_tokens = (labels != -100).sum().item()
                 if trained_tokens > 0:
-                    logger.info(f"✅ DataCollator validated with template: {repr(template)} ({trained_tokens} tokens trained)")
+                    logger.info(
+                        f"✅ DataCollator validated with template: {repr(template)} ({trained_tokens} tokens trained)"
+                    )
                     collator = candidate_collator
                     break
             except Exception as e:
                 logger.debug(f"Failed template {repr(template)}: {e}")
-                
+
         if collator is None:
-            logger.warning("⚠️ Warning: DataCollator template verification failed for all options. Falling back to standard DataCollator (training on prompts too to prevent crash).")
-            from transformers import DataCollatorForLanguageModeling
+            logger.warning(
+                "⚠️ Warning: DataCollator template verification failed for all options. Falling back to standard DataCollator (training on prompts too to prevent crash)."
+            )
+            from transformers import DataCollatorForLanguageModeling  # noqa: E402
+
             collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
 
     # 6. Configuration des hyperparamètres d'entraînement de pointe
     # Batch size=1 avec gradient accumulation=8 permet d'atteindre un batch virtuel stable de 8
     # Paged AdamW 8-bit prévient les pannes de VRAM locale, standard adamw_torch utilisé en distribué
-    enable_eval = os.getenv("ANIMETIX_ENABLE_EVAL", "False").lower() in ("true", "1", "yes")
+    enable_eval = os.getenv("ANIMETIX_ENABLE_EVAL", "False").lower() in (
+        "true",
+        "1",
+        "yes",
+    )
     eval_strategy = "steps" if enable_eval else "no"
     eval_steps = 100 if enable_eval else 9999
-    
+
     if enable_eval:
-        logger.info(f"📊 Evaluation activated: strategy={eval_strategy}, steps={eval_steps}")
+        logger.info(
+            f"📊 Evaluation activated: strategy={eval_strategy}, steps={eval_steps}"
+        )
     else:
-        logger.info("ℹ️ Evaluation deactivated to conserve VRAM (set env ANIMETIX_ENABLE_EVAL=True to enable).")
+        logger.info(
+            "ℹ️ Evaluation deactivated to conserve VRAM (set env ANIMETIX_ENABLE_EVAL=True to enable)."
+        )
 
     optim = "adamw_torch" if is_distributed else "paged_adamw_8bit"
     deepspeed_config = os.getenv("ANIMETIX_DEEPSPEED_CONFIG", None)
@@ -295,7 +388,9 @@ def run_expert_training():
             logger.info(f"Injecting FSDP configuration parameters: {fsdp_config_env}")
             training_args_kwargs["fsdp"] = fsdp_config_env
             training_args_kwargs["fsdp_config"] = {
-                "transformer_layer_cls_to_wrap": os.getenv("ANIMETIX_FSDP_WRAP_CLASS", "Qwen2DecoderLayer"),
+                "transformer_layer_cls_to_wrap": os.getenv(
+                    "ANIMETIX_FSDP_WRAP_CLASS", "Qwen2DecoderLayer"
+                ),
             }
 
     training_args = TrainingArguments(**training_args_kwargs)
@@ -317,13 +412,16 @@ def run_expert_training():
     # Lancement de l'entraînement
     logger.info("🚀 Launching training steps...")
     trainer.train()
-    
+
     tracker.log_artifact("adapter", output_dir)
     tracker.finish(status="COMPLETED")
     logger.info(f"✅ Model successfully trained and adapter saved at {output_dir}")
+
 
 if __name__ == "__main__":
     if torch.cuda.is_available():
         run_expert_training()
     else:
-        logger.warning("⚠️ CUDA is not available. This training script is optimized and ready for GPU execution.")
+        logger.warning(
+            "⚠️ CUDA is not available. This training script is optimized and ready for GPU execution."
+        )

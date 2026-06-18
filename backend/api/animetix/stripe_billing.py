@@ -12,33 +12,33 @@ class StripeBillingService:
         """
         Creates a Stripe Checkout Session for a Bx pack.
         """
-        stripe_key = getattr(settings, 'STRIPE_SECRET_KEY', None)
+        stripe_key = getattr(settings, "STRIPE_SECRET_KEY", None)
         if not stripe_key:
             return None, "mock_checkout_url"
 
-        import stripe
+        import stripe  # noqa: E402
+
         stripe.api_key = stripe_key
 
         try:
             session = stripe.checkout.Session.create(
-                payment_method_types=['card'],
-                line_items=[{
-                    'price_data': {
-                        'currency': currency,
-                        'product_data': {
-                            'name': f'Pack {amount_bx} Berrix (Bx) - Animetix',
-                            'description': 'Crédits pour l\'utilisation des fonctionnalités IA d\'Animetix.',
+                payment_method_types=["card"],
+                line_items=[
+                    {
+                        "price_data": {
+                            "currency": currency,
+                            "product_data": {
+                                "name": f"Pack {amount_bx} Berrix (Bx) - Animetix",
+                                "description": "Crédits pour l'utilisation des fonctionnalités IA d'Animetix.",
+                            },
+                            "unit_amount": price_cents,
                         },
-                        'unit_amount': price_cents,
-                    },
-                    'quantity': 1,
-                }],
-                mode='payment',
+                        "quantity": 1,
+                    }
+                ],
+                mode="payment",
                 client_reference_id=user_id,
-                metadata={
-                    'transaction_type': 'bx_purchase',
-                    'amount_bx': amount_bx
-                },
+                metadata={"transaction_type": "bx_purchase", "amount_bx": amount_bx},
                 success_url=f"{settings.FRONTEND_URL}/power-station?status=success",
                 cancel_url=f"{settings.FRONTEND_URL}/power-station?status=cancel",
             )
@@ -52,25 +52,26 @@ class StripeBillingService:
         """
         Creates a Stripe Checkout Session for a recurring subscription (Pro API).
         """
-        stripe_key = getattr(settings, 'STRIPE_SECRET_KEY', None)
+        stripe_key = getattr(settings, "STRIPE_SECRET_KEY", None)
         if not stripe_key:
             return None, "mock_checkout_url"
 
-        import stripe
+        import stripe  # noqa: E402
+
         stripe.api_key = stripe_key
 
         try:
             session = stripe.checkout.Session.create(
-                payment_method_types=['card'],
-                line_items=[{
-                    'price': price_id,
-                    'quantity': 1,
-                }],
-                mode='subscription',
+                payment_method_types=["card"],
+                line_items=[
+                    {
+                        "price": price_id,
+                        "quantity": 1,
+                    }
+                ],
+                mode="subscription",
                 client_reference_id=user_id,
-                metadata={
-                    'transaction_type': 'pro_subscription_upgrade'
-                },
+                metadata={"transaction_type": "pro_subscription_upgrade"},
                 success_url=f"{settings.FRONTEND_URL}/developer?status=success",
                 cancel_url=f"{settings.FRONTEND_URL}/developer?status=cancel",
             )
@@ -85,8 +86,8 @@ class StripeBillingService:
         Reports metered usage to Stripe.
         If STRIPE_SECRET_KEY is not set (mock/local mode), logs the event locally.
         """
-        stripe_key = getattr(settings, 'STRIPE_SECRET_KEY', None)
-        
+        stripe_key = getattr(settings, "STRIPE_SECRET_KEY", None)
+
         # Local mock mode
         if not stripe_key:
             logger.info(
@@ -95,44 +96,51 @@ class StripeBillingService:
             )
             return True, "mock_success"
 
-        import stripe
+        import stripe  # noqa: E402
+
         stripe.api_key = stripe_key
-        
-        use_meters = getattr(settings, 'STRIPE_USE_METERS', True)
-        
+
+        use_meters = getattr(settings, "STRIPE_USE_METERS", True)
+
         try:
             if use_meters:
                 # Use modern Stripe Billing Meters API
                 if not profile.stripe_customer_id:
-                    logger.warning(f"No stripe_customer_id for profile ID={profile.id}. Cannot report usage.")
+                    logger.warning(
+                        f"No stripe_customer_id for profile ID={profile.id}. Cannot report usage."
+                    )
                     return False, "missing_customer_id"
-                
-                event_name = getattr(settings, 'STRIPE_METER_EVENT_NAME', 'rag_api_requests')
+
+                event_name = getattr(
+                    settings, "STRIPE_METER_EVENT_NAME", "rag_api_requests"
+                )
                 event = stripe.billing.MeterEvent.create(
                     event_name=event_name,
                     payload={
                         "value": str(quantity),
                         "stripe_customer_id": profile.stripe_customer_id,
                     },
-                    identifier=f"evt_{profile.id}_{int(time.time())}_{uuid.uuid4().hex[:8]}"
+                    identifier=f"evt_{profile.id}_{int(time.time())}_{uuid.uuid4().hex[:8]}",
                 )
                 logger.info(f"Successfully reported meter event to Stripe: {event.id}")
                 return True, event.id
             else:
                 # Fallback to subscription item usage record (classic)
                 if not profile.stripe_subscription_item_id:
-                    logger.warning(f"No stripe_subscription_item_id for profile ID={profile.id}. Cannot report usage.")
+                    logger.warning(
+                        f"No stripe_subscription_item_id for profile ID={profile.id}. Cannot report usage."
+                    )
                     return False, "missing_subscription_item_id"
-                
+
                 record = stripe.SubscriptionItem.create_usage_record(
                     profile.stripe_subscription_item_id,
                     quantity=quantity,
                     timestamp=int(time.time()),
-                    action="increment"
+                    action="increment",
                 )
                 logger.info(f"Successfully created Stripe Usage Record: {record.id}")
                 return True, record.id
-                
+
         except Exception as e:
             logger.error(f"Failed to report usage to Stripe: {e}")
             return False, str(e)

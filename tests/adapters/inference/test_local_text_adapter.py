@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 from backend.adapters.inference.local_text_adapter import LocalTextAdapter
 
+
 class TestLocalTextAdapter(unittest.TestCase):
     def setUp(self):
         self.usage_port = MagicMock()
@@ -21,7 +22,9 @@ class TestLocalTextAdapter(unittest.TestCase):
         self.assertEqual(embedding, [0.1, 0.2, 0.3])
         mock_transformer_cls.assert_called_once_with("all-MiniLM-L6-v2")
         mock_model.encode.assert_called_once_with(text)
-        self.usage_port.log_usage.assert_called_once_with("local:all-MiniLM-L6-v2", 0, 0, 1, allocated_budget=0)
+        self.usage_port.log_usage.assert_called_once_with(
+            "local:all-MiniLM-L6-v2", 0, 0, 1, allocated_budget=0
+        )
 
         # Second call should NOT load the model again
         self.adapter.get_text_embedding("Another text")
@@ -36,6 +39,7 @@ class TestLocalTextAdapter(unittest.TestCase):
         self.adapter._embedding_model = MagicMock()
         hc = self.adapter.health_check()
         self.assertEqual(hc["status"], "online")
+
 
 if __name__ == "__main__":
     unittest.main()

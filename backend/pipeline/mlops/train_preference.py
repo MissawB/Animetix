@@ -4,21 +4,20 @@ Script d'alignement par préférences (SimPO / ORPO / DPO) expert et résilient,
 utilisant Unsloth pour l'accélération et le déchargement mémoire GPU.
 """
 
-import os
+import os  # noqa: E402
+
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
-import sys
-import torch
-import time
-import json
-import logging
-from datasets import load_dataset
-from transformers import (
+import torch  # noqa: E402
+import time  # noqa: E402
+import json  # noqa: E402
+import logging  # noqa: E402
+from datasets import load_dataset  # noqa: E402
+from transformers import (  # noqa: E402
     AutoModelForCausalLM,
     AutoTokenizer,
     BitsAndBytesConfig,
-    TrainingArguments,
 )
-from peft import LoraConfig, get_peft_model
+from peft import LoraConfig  # noqa: E402
 
 # Configuration du logger
 logger = logging.getLogger("animetix.pipeline.mlops.train_preference")
@@ -26,113 +25,164 @@ logging.basicConfig(level=logging.INFO)
 
 # Essayer d'importer liger_kernel pour la fusion d'opérateurs Triton
 try:
-    from liger_kernel.transformers import monkey_patch_liger
+    from liger_kernel.transformers import monkey_patch_liger  # noqa: E402
+
     monkey_patch_liger()
-    logger.info("⚙️ Liger Kernel fused successfully (Triton mathematical operators optimized).")
+    logger.info(
+        "⚙️ Liger Kernel fused successfully (Triton mathematical operators optimized)."
+    )
 except ImportError:
-    logger.info("ℹ️ Liger Kernel not available, skipping Triton mathematical operator fusion.")
+    logger.info(
+        "ℹ️ Liger Kernel not available, skipping Triton mathematical operator fusion."
+    )
 
 # Import hf_trackio pour le suivi MLOps
 try:
-    from hf_trackio import trackio
+    from hf_trackio import trackio  # noqa: E402
 except ImportError:
+
     class MockTrackio:
-        def log(self, *args, **kwargs): pass
-        def start_run(self, *args, **kwargs): pass
-        def end_run(self, *args, **kwargs): pass
-        def init(self, *args, **kwargs): return self
-        def finish(self, *args, **kwargs): pass
-        def log_param(self, *args, **kwargs): pass
-        def log_artifact(self, *args, **kwargs): pass
+        def log(self, *args, **kwargs):
+            pass
+
+        def start_run(self, *args, **kwargs):
+            pass
+
+        def end_run(self, *args, **kwargs):
+            pass
+
+        def init(self, *args, **kwargs):
+            return self
+
+        def finish(self, *args, **kwargs):
+            pass
+
+        def log_param(self, *args, **kwargs):
+            pass
+
+        def log_artifact(self, *args, **kwargs):
+            pass
+
     trackio = MockTrackio()
 
 # Base directory (4 levels up from backend/pipeline/mlops/)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+BASE_DIR = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
+
 
 def run_preference_training():
     model_name = os.getenv("BASE_MODEL_NAME", "unsloth/DeepSeek-R1-Distill-Qwen-8B")
     default_seq_len = 1024 if "deepseek" in model_name.lower() else 768
     max_seq_length = int(os.getenv("MAX_SEQ_LENGTH", str(default_seq_len)))
-    
+
     # Choix dynamique de l'algorithme : simpo, orpo, dpo
     algo = os.getenv("ALIGNMENT_ALGORITHM", "simpo").lower()
     if algo not in ["simpo", "orpo", "dpo"]:
         algo = "simpo"
-        
-    dataset_path = os.path.join(BASE_DIR, "data", "mlops", "datasets", "dpo_train_validated.jsonl")
+
+    dataset_path = os.path.join(
+        BASE_DIR, "data", "mlops", "datasets", "dpo_train_validated.jsonl"
+    )
     output_dir = os.path.join(BASE_DIR, "data", "models", "otaku-preference-adapter")
-    
-    tracker = trackio.init(project="animetix-preference", job_name=f"preference-{algo}-{int(time.time())}")
+
+    tracker = trackio.init(
+        project="animetix-preference", job_name=f"preference-{algo}-{int(time.time())}"
+    )
 
     # Fallback si le dataset n'existe pas ou est vide
     if not os.path.exists(dataset_path) or os.path.getsize(dataset_path) == 0:
-        logger.warning(f"⚠️ Dataset not found or empty at {dataset_path}. Generating a dummy dataset for safety...")
+        logger.warning(
+            f"⚠️ Dataset not found or empty at {dataset_path}. Generating a dummy dataset for safety..."
+        )
         os.makedirs(os.path.dirname(dataset_path), exist_ok=True)
         dummy_data = [
             {
                 "prompt": "Génère une réponse expert pour : Qui est le protagoniste de One Piece ?",
                 "chosen": "Le protagoniste de One Piece est Monkey D. Luffy, un jeune pirate qui rêve de devenir le Roi des Pirates.",
-                "rejected": "Je ne sais pas qui est le protagoniste de cette œuvre."
+                "rejected": "Je ne sais pas qui est le protagoniste de cette œuvre.",
             },
             {
                 "prompt": "Génère une réponse expert pour : Quel studio a produit l'anime Shingeki no Kyojin ?",
                 "chosen": "L'adaptation en animé de Shingeki no Kyojin (L'Attaque des Titans) a été produite par Wit Studio (saisons 1 à 3) puis par le studio MAPPA (saison finale).",
-                "rejected": "C'est un studio inconnu."
-            }
+                "rejected": "C'est un studio inconnu.",
+            },
         ]
         with open(dataset_path, "w", encoding="utf-8") as f:
             for item in dummy_data:
                 f.write(json.dumps(item, ensure_ascii=False) + "\n")
 
-    logger.info(f"🚀 Starting highly-optimized {algo.upper()} Preference Fine-Tuning for {model_name}...")
+    logger.info(
+        f"🚀 Starting highly-optimized {algo.upper()} Preference Fine-Tuning for {model_name}..."
+    )
     tracker.log_param("model_base", model_name)
     tracker.log_param("algorithm", algo)
     tracker.log_artifact("dataset", dataset_path)
 
     # 1. Configuration et chargement du tokenizer
     logger.info("📂 Loading tokenizer...")
-    tokenizer = AutoTokenizer.from_pretrained(model_name, revision="main") # nosec B615
+    tokenizer = AutoTokenizer.from_pretrained(model_name, revision="main")  # nosec B615
     tokenizer.pad_token = tokenizer.eos_token
     tokenizer.padding_side = "right"
 
     # 2. Chargement et fractionnement Train/Eval (90/10)
     logger.info("📂 Loading and splitting dataset...")
-    full_dataset = load_dataset("json", data_files=dataset_path, split="train", revision="main") # nosec B615
+    full_dataset = load_dataset(
+        "json", data_files=dataset_path, split="train", revision="main"
+    )  # nosec B615
     # TRL DPOTrainer requiert au moins quelques exemples pour valider
     if len(full_dataset) < 2:
         logger.warning("Dataset too small for split, duplication applied.")
         # Dupliquer pour éviter le crash en test
-        full_dataset = load_dataset("json", data_files=dataset_path, split="train", revision="main") # nosec B615
-    
+        full_dataset = load_dataset(
+            "json", data_files=dataset_path, split="train", revision="main"
+        )  # nosec B615
+
     split_dataset = full_dataset.train_test_split(test_size=0.1, seed=42)
     train_ds = split_dataset["train"]
     eval_ds = split_dataset["test"]
-    logger.info(f"✅ Dataset loaded: {len(train_ds)} training samples, {len(eval_ds)} validation samples.")
+    logger.info(
+        f"✅ Dataset loaded: {len(train_ds)} training samples, {len(eval_ds)} validation samples."
+    )
 
     # 3. Formatage ChatML des paires de préférences
     logger.info("⚙️ Formatting dataset into ChatML preference format...")
+
     def process_dpo_pair(item):
         messages_prompt = [
-            {"role": "system", "content": "Tu es Animetix, un expert absolu de la culture otaku, des mangas et des animés japonais. Tu réponds de manière très complète et précise en français."},
-            {"role": "user", "content": item["prompt"]}
+            {
+                "role": "system",
+                "content": "Tu es Animetix, un expert absolu de la culture otaku, des mangas et des animés japonais. Tu réponds de manière très complète et précise en français.",
+            },
+            {"role": "user", "content": item["prompt"]},
         ]
-        
-        prompt_str = tokenizer.apply_chat_template(messages_prompt, tokenize=False, add_generation_prompt=True)
-        
-        messages_chosen = messages_prompt + [{"role": "assistant", "content": item["chosen"]}]
-        messages_rejected = messages_prompt + [{"role": "assistant", "content": item["rejected"]}]
-        
-        chosen_str = tokenizer.apply_chat_template(messages_chosen, tokenize=False, add_generation_prompt=False)
-        rejected_str = tokenizer.apply_chat_template(messages_rejected, tokenize=False, add_generation_prompt=False)
-        
+
+        prompt_str = tokenizer.apply_chat_template(
+            messages_prompt, tokenize=False, add_generation_prompt=True
+        )
+
+        messages_chosen = messages_prompt + [
+            {"role": "assistant", "content": item["chosen"]}
+        ]
+        messages_rejected = messages_prompt + [
+            {"role": "assistant", "content": item["rejected"]}
+        ]
+
+        chosen_str = tokenizer.apply_chat_template(
+            messages_chosen, tokenize=False, add_generation_prompt=False
+        )
+        rejected_str = tokenizer.apply_chat_template(
+            messages_rejected, tokenize=False, add_generation_prompt=False
+        )
+
         # Extraction de la réponse assistant uniquement (suffixe)
-        chosen_response = chosen_str[len(prompt_str):]
-        rejected_response = rejected_str[len(prompt_str):]
-        
+        chosen_response = chosen_str[len(prompt_str) :]
+        rejected_response = rejected_str[len(prompt_str) :]
+
         return {
             "prompt": prompt_str,
             "chosen": chosen_response,
-            "rejected": rejected_response
+            "rejected": rejected_response,
         }
 
     train_ds = train_ds.map(process_dpo_pair, remove_columns=train_ds.column_names)
@@ -141,10 +191,13 @@ def run_preference_training():
     # 4. Chargement optimisé via Unsloth (avec repli PEFT/BitsAndBytes standard en cas d'absence)
     model = None
     peft_config = None
-    
+
     try:
-        from unsloth import FastLanguageModel
-        logger.info("🚀 Unsloth detected. Loading model with native GPU optimizations...")
+        from unsloth import FastLanguageModel  # noqa: E402
+
+        logger.info(
+            "🚀 Unsloth detected. Loading model with native GPU optimizations..."
+        )
         model, tokenizer = FastLanguageModel.from_pretrained(
             model_name=model_name,
             max_seq_length=max_seq_length,
@@ -155,7 +208,15 @@ def run_preference_training():
         model = FastLanguageModel.get_peft_model(
             model,
             r=16,
-            target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+            target_modules=[
+                "q_proj",
+                "k_proj",
+                "v_proj",
+                "o_proj",
+                "gate_proj",
+                "up_proj",
+                "down_proj",
+            ],
             lora_alpha=32,
             lora_dropout=0.0,
             bias="none",
@@ -165,44 +226,60 @@ def run_preference_training():
         )
         logger.info("✅ Model loaded and LoRA adapters injected using Unsloth.")
     except ImportError:
-        logger.info("ℹ️ Unsloth not available. Falling back to standard Hugging Face PEFT + BitsAndBytesConfig...")
-        
+        logger.info(
+            "ℹ️ Unsloth not available. Falling back to standard Hugging Face PEFT + BitsAndBytesConfig..."
+        )
+
         bnb_config = BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_quant_type="nf4",
             bnb_4bit_compute_dtype=torch.float16,
             bnb_4bit_use_double_quant=True,
         )
-        
+
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
             quantization_config=bnb_config,
             device_map="auto",
             trust_remote_code=True,
             low_cpu_mem_usage=True,
-            revision="main" # nosec B615
+            revision="main",  # nosec B615
         )
         model.gradient_checkpointing_enable()
         model.enable_input_require_grads()
-        
+
         peft_config = LoraConfig(
             r=16,
             lora_alpha=32,
-            target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+            target_modules=[
+                "q_proj",
+                "k_proj",
+                "v_proj",
+                "o_proj",
+                "gate_proj",
+                "up_proj",
+                "down_proj",
+            ],
             lora_dropout=0.05,
             bias="none",
             use_rslora=True,
             task_type="CAUSAL_LM",
         )
-        logger.info("✅ Model loaded with standard BitsAndBytes and PEFT configuration.")
+        logger.info(
+            "✅ Model loaded with standard BitsAndBytes and PEFT configuration."
+        )
 
     # 5. Configuration des hyperparamètres d'entraînement
-    enable_eval = os.getenv("ANIMETIX_ENABLE_EVAL", "False").lower() in ("true", "1", "yes")
+    enable_eval = os.getenv("ANIMETIX_ENABLE_EVAL", "False").lower() in (
+        "true",
+        "1",
+        "yes",
+    )
     eval_strategy = "steps" if enable_eval else "no"
     eval_steps = 50 if enable_eval else 9999
-    
+
     # Configuration TRL importable en 2026
-    from trl import DPOConfig, DPOTrainer, ORPOConfig, ORPOTrainer
+    from trl import DPOConfig, DPOTrainer, ORPOConfig, ORPOTrainer  # noqa: E402
 
     # Paramètres d'entraînement partagés
     training_args_dict = dict(
@@ -230,7 +307,11 @@ def run_preference_training():
     trainer = None
     if algo == "orpo":
         logger.info("🏋️ Initializing ORPOTrainer (Single-stage SFT + Preference)...")
-        orpo_args = ORPOConfig(**training_args_dict, max_prompt_length=max_seq_length // 2, max_length=max_seq_length)
+        orpo_args = ORPOConfig(
+            **training_args_dict,
+            max_prompt_length=max_seq_length // 2,
+            max_length=max_seq_length,
+        )
         trainer = ORPOTrainer(
             model=model,
             train_dataset=train_ds,
@@ -282,13 +363,18 @@ def run_preference_training():
     # Lancement de l'entraînement
     logger.info("🚀 Launching preference training steps...")
     trainer.train()
-    
+
     tracker.log_artifact("adapter", output_dir)
     tracker.finish(status="COMPLETED")
-    logger.info(f"✅ Model successfully aligned and preference adapter saved at {output_dir}")
+    logger.info(
+        f"✅ Model successfully aligned and preference adapter saved at {output_dir}"
+    )
+
 
 if __name__ == "__main__":
     if torch.cuda.is_available():
         run_preference_training()
     else:
-        logger.warning("⚠️ CUDA is not available. Preference training script is ready for GPU execution.")
+        logger.warning(
+            "⚠️ CUDA is not available. Preference training script is ready for GPU execution."
+        )

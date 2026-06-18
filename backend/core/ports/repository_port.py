@@ -1,9 +1,12 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict, Optional, Any
 
+
 class RepositoryPort(ABC):
     @abstractmethod
-    def get_nearest_neighbors(self, collection_name: str, item_id: str, n_results: int = 5) -> Optional[Dict]:
+    def get_nearest_neighbors(
+        self, collection_name: str, item_id: str, n_results: int = 5
+    ) -> Optional[Dict]:
         pass
 
     @abstractmethod
@@ -19,11 +22,20 @@ class RepositoryPort(ABC):
         pass
 
     @abstractmethod
-    def calculate_similarity(self, collection_name: str, item_a_id: str, item_b_id: str) -> float:
+    def calculate_similarity(
+        self, collection_name: str, item_a_id: str, item_b_id: str
+    ) -> float:
         pass
 
     @abstractmethod
-    def upsert_items(self, collection_name: str, ids: List[str], embeddings: List[List[float]], metadatas: List[Dict], documents: Optional[List[str]] = None):
+    def upsert_items(
+        self,
+        collection_name: str,
+        ids: List[str],
+        embeddings: List[List[float]],
+        metadatas: List[Dict],
+        documents: Optional[List[str]] = None,
+    ):
         """Ajoute ou met à jour des items dans une collection vectorielle."""
         pass
 
@@ -48,12 +60,20 @@ class RepositoryPort(ABC):
         pass
 
     @abstractmethod
-    def get_catalog_by_type(self, media_type: str, limit: int = 1000, offset: int = 0) -> List[Dict]:
+    def get_catalog_by_type(
+        self, media_type: str, limit: int = 1000, offset: int = 0
+    ) -> List[Dict]:
         """Récupère le catalogue complet depuis la source relationnelle avec pagination."""
         pass
 
     @abstractmethod
-    def search_media_items(self, query: str, media_type: Optional[str] = None, limit: int = 10, offset: int = 0) -> List[Dict]:
+    def search_media_items(
+        self,
+        query: str,
+        media_type: Optional[str] = None,
+        limit: int = 10,
+        offset: int = 0,
+    ) -> List[Dict]:
         """Recherche textuelle dans le catalogue relationnel avec pagination."""
         pass
 
@@ -63,7 +83,9 @@ class RepositoryPort(ABC):
         pass
 
     @abstractmethod
-    def sync_latent_space(self, media_type: str, vibe_type: str, data: List[Dict]) -> int:
+    def sync_latent_space(
+        self, media_type: str, vibe_type: str, data: List[Dict]
+    ) -> int:
         """Synchronise les données de l'espace latent vers le stockage robuste."""
         pass
 
@@ -83,6 +105,8 @@ class RepositoryPort(ABC):
         pass
 
     @abstractmethod
-    def query_data_natural_language(self, query: str, llm_service: Optional[Any] = None) -> List[Dict]:
+    def query_data_natural_language(
+        self, query: str, llm_service: Optional[Any] = None
+    ) -> List[Dict]:
         """Interroge le catalogue en langage naturel (Text-to-SQL) et renvoie les résultats."""
         pass

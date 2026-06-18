@@ -1,7 +1,7 @@
 import sqlite3
 import os
 
-db_path = 'backend/api/db.sqlite3'
+db_path = "backend/api/db.sqlite3"
 if not os.path.exists(db_path):
     print(f"Error: {db_path} not found.")
 else:
@@ -12,7 +12,7 @@ else:
     print("Tables found:")
     for t in tables:
         print(f" - {t}")
-    if 'animetix_aitokenusage' in tables:
+    if "animetix_aitokenusage" in tables:
         print("\n✅ Table animetix_aitokenusage EXISTS.")
     else:
         print("\n❌ Table animetix_aitokenusage MISSING.")

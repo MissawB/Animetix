@@ -1,12 +1,13 @@
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
+
 
 class GraphDatabasePort(ABC):
     """
     Port (Interface) pour les opérations sur la base de données de graphe (ex: Neo4j).
     Définit les besoins du domaine sans dépendre d'une implémentation concrète.
     """
-    
+
     @abstractmethod
     def find_logical_connections(self, media_id: str) -> List[Dict[str, Any]]:
         """Trouve les médias connectés logiquement dans le graphe."""

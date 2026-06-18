@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import List, Dict, Optional
+from typing import List, Dict
+
 
 class WebSearchPort(ABC):
     @abstractmethod

@@ -8,19 +8,21 @@ import sys
 base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(os.path.join(base_dir, "src"))
 sys.path.append(os.path.join(base_dir, "src", "backend"))
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'animetix_project.settings')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "animetix_project.settings")
 
 try:
-    import django
+    import django  # noqa: E402
+
     django.setup()
 except Exception as e:
     print(f"RL Training encountered an error: {e}")
 
-from datasets import load_dataset
-from trl import DPOTrainer, DPOConfig
-from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
-from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
-from animetix.containers import get_container
+from datasets import load_dataset  # noqa: E402
+from trl import DPOTrainer, DPOConfig  # noqa: E402
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig  # noqa: E402
+from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training  # noqa: E402
+from animetix.containers import get_container  # noqa: E402
+
 
 def run_rl_training_simulation(episodes: int = 100):
     """
@@ -31,62 +33,70 @@ def run_rl_training_simulation(episodes: int = 100):
     container = get_container()
     rl_service = container.core.akinetix_rl_env_service()
     env = rl_service.create_env("Anime")
-    
+
     # Simple Q-Table mapping State -> Action values
     # In reality, state is continuous (entropy), so we'd use DQN/PPO.
     # Here we mock a learning loop.
-    
+
     print(f"📊 Action Space Size: {len(env.attributes)} attributes")
     print(f"🚀 Starting training loop for {episodes} episodes...")
-    
+
     wins = 0
     total_steps = 0
-    
+
     for episode in range(episodes):
         state, info = env.reset()
         done = False
         truncated = False
         episode_reward = 0
-        
+
         while not (done or truncated):
             # Politique e-greedy simulée : on choisit une action (attribut à deviner)
             action = np.random.randint(0, len(env.attributes))
-            
+
             next_state, reward, done, truncated, step_info = env.step(action)
             episode_reward += reward
-            
-            state = next_state
-            
+
         if reward > 0:
             wins += 1
         total_steps += env.steps
-            
+
         if (episode + 1) % 10 == 0:
-            print(f"Episode {episode + 1}/{episodes} | Avg Steps: {env.steps} | Reward: {episode_reward:.2f}")
+            print(
+                f"Episode {episode + 1}/{episodes} | Avg Steps: {env.steps} | Reward: {episode_reward:.2f}"
+            )
 
-    print("\n" + "="*40)
+    print("\n" + "=" * 40)
     print("📈 TRAINING COMPLETED")
-    print(f"Win Rate: {(wins/episodes)*100:.2f}%")
-    print(f"Average steps per game: {total_steps/episodes:.2f}")
-    print("="*40)
+    print(f"Win Rate: {(wins / episodes) * 100:.2f}%")
+    print(f"Average steps per game: {total_steps / episodes:.2f}")
+    print("=" * 40)
 
-def train_dpo(model_id: str = "Qwen/Qwen3-0.6B", dataset_path: str = "data/mlops/datasets/dpo_train_swarm.jsonl"):
+
+def train_dpo(
+    model_id: str = "Qwen/Qwen3-0.6B",
+    dataset_path: str = "data/mlops/datasets/dpo_train_swarm.jsonl",
+):
     """
     Exécute le fine-tuning DPO (Direct Preference Optimization) pour le SLM local.
     Utilise le dataset généré par le loop Swarm-to-DPO.
     """
     print(f"🎯 Starting DPO Fine-tuning on {model_id}...")
-    
+
     # Resolve absolute path for dataset
-    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    base_dir = os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    )
     abs_dataset_path = os.path.join(base_dir, dataset_path)
-    
+
     if not os.path.exists(abs_dataset_path):
         print(f"❌ Dataset not found at {abs_dataset_path}")
         return
 
     # Load dataset
-    dataset = load_dataset("json", data_files=abs_dataset_path, split="train", revision="main") # nosec B615
+    dataset = load_dataset(
+        "json", data_files=abs_dataset_path, split="train", revision="main"
+    )  # nosec B615
     print(f"📊 Dataset loaded: {len(dataset)} preference pairs")
 
     # Device configuration
@@ -105,18 +115,18 @@ def train_dpo(model_id: str = "Qwen/Qwen3-0.6B", dataset_path: str = "data/mlops
 
     # Load model and tokenizer
     print(f"📦 Loading model {model_id}...")
-    tokenizer = AutoTokenizer.from_pretrained(model_id, revision="main") # nosec B615
+    tokenizer = AutoTokenizer.from_pretrained(model_id, revision="main")  # nosec B615
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
-    
+
     model = AutoModelForCausalLM.from_pretrained(
         model_id,
         quantization_config=bnb_config,
         device_map="auto" if device == "cuda" else None,
         trust_remote_code=True,
-        revision="main" # nosec B615
+        revision="main",  # nosec B615
     )
-    
+
     if device == "cuda":
         model = prepare_model_for_kbit_training(model)
 
@@ -124,7 +134,15 @@ def train_dpo(model_id: str = "Qwen/Qwen3-0.6B", dataset_path: str = "data/mlops
     peft_config = LoraConfig(
         r=16,
         lora_alpha=32,
-        target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+        target_modules=[
+            "q_proj",
+            "k_proj",
+            "v_proj",
+            "o_proj",
+            "gate_proj",
+            "up_proj",
+            "down_proj",
+        ],
         lora_dropout=0.05,
         bias="none",
         task_type="CAUSAL_LM",
@@ -152,7 +170,7 @@ def train_dpo(model_id: str = "Qwen/Qwen3-0.6B", dataset_path: str = "data/mlops
         max_prompt_length=512,
         max_length=1024,
         fp16=True if device == "cuda" else False,
-        report_to="none"
+        report_to="none",
     )
 
     # Initialize DPOTrainer
@@ -173,14 +191,30 @@ def train_dpo(model_id: str = "Qwen/Qwen3-0.6B", dataset_path: str = "data/mlops
     trainer.save_model(final_output_path)
     print(f"✅ DPO Training complete. Adapter saved to {final_output_path}")
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--mode", type=str, choices=["rl-sim", "dpo"], default="rl-sim", help="Training mode")
-    parser.add_argument("--episodes", type=int, default=100, help="Number of episodes for RL sim")
-    parser.add_argument("--model", type=str, default="Qwen/Qwen3-0.6B", help="Model ID for DPO")
-    parser.add_argument("--dataset", type=str, default="data/mlops/datasets/dpo_train_swarm.jsonl", help="Dataset path for DPO")
+    parser.add_argument(
+        "--mode",
+        type=str,
+        choices=["rl-sim", "dpo"],
+        default="rl-sim",
+        help="Training mode",
+    )
+    parser.add_argument(
+        "--episodes", type=int, default=100, help="Number of episodes for RL sim"
+    )
+    parser.add_argument(
+        "--model", type=str, default="Qwen/Qwen3-0.6B", help="Model ID for DPO"
+    )
+    parser.add_argument(
+        "--dataset",
+        type=str,
+        default="data/mlops/datasets/dpo_train_swarm.jsonl",
+        help="Dataset path for DPO",
+    )
     args = parser.parse_args()
-    
+
     if args.mode == "rl-sim":
         run_rl_training_simulation(episodes=args.episodes)
     elif args.mode == "dpo":

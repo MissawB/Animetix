@@ -6,70 +6,87 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('animetix', '0001_initial'),
+        ("animetix", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name='challengeresult',
-            old_name='timestamp',
-            new_name='completed_at',
+            model_name="challengeresult",
+            old_name="timestamp",
+            new_name="completed_at",
         ),
         migrations.AlterUniqueTogether(
-            name='challengeresult',
+            name="challengeresult",
             unique_together=set(),
         ),
         migrations.AlterUniqueTogether(
-            name='userachievement',
+            name="userachievement",
             unique_together=set(),
         ),
         migrations.AddField(
-            model_name='challengeresult',
-            name='time_taken',
+            model_name="challengeresult",
+            name="time_taken",
             field=models.FloatField(default=0.0),
         ),
         migrations.AddField(
-            model_name='dailychallenge',
-            name='game_mode',
-            field=models.CharField(default='classic', max_length=20),
+            model_name="dailychallenge",
+            name="game_mode",
+            field=models.CharField(default="classic", max_length=20),
         ),
         migrations.AddField(
-            model_name='profile',
-            name='ranked_max_points',
+            model_name="profile",
+            name="ranked_max_points",
             field=models.IntegerField(default=0),
         ),
         migrations.AddField(
-            model_name='profile',
-            name='ranked_points',
+            model_name="profile",
+            name="ranked_points",
             field=models.IntegerField(default=0),
         ),
         migrations.AlterField(
-            model_name='achievement',
-            name='rarity',
-            field=models.CharField(default='Common', max_length=20),
+            model_name="achievement",
+            name="rarity",
+            field=models.CharField(default="Common", max_length=20),
         ),
         migrations.AlterField(
-            model_name='userachievement',
-            name='user',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
+            model_name="userachievement",
+            name="user",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL
+            ),
         ),
         migrations.CreateModel(
-            name='AIFeedback',
+            name="AIFeedback",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('feedback_type', models.CharField(max_length=50)),
-                ('input_context', models.TextField()),
-                ('output_text', models.TextField()),
-                ('is_positive', models.BooleanField()),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('user', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("feedback_type", models.CharField(max_length=50)),
+                ("input_context", models.TextField()),
+                ("output_text", models.TextField()),
+                ("is_positive", models.BooleanField()),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.RemoveField(
-            model_name='challengeresult',
-            name='won',
+            model_name="challengeresult",
+            name="won",
         ),
     ]

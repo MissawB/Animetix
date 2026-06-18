@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional
 
+
 class GraphPersistencePort(ABC):
     """
     Port (Interface) pour les opérations de persistance sur le graphe (Neo4j).
@@ -8,17 +9,23 @@ class GraphPersistencePort(ABC):
     """
 
     @abstractmethod
-    def execute_query(self, query: str, parameters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+    def execute_query(
+        self, query: str, parameters: Optional[Dict[str, Any]] = None
+    ) -> List[Dict[str, Any]]:
         """Exécute une requête Cypher brute."""
         pass
 
     @abstractmethod
-    def execute_read(self, query: str, parameters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+    def execute_read(
+        self, query: str, parameters: Optional[Dict[str, Any]] = None
+    ) -> List[Dict[str, Any]]:
         """Exécute une requête Cypher en mode lecture seule."""
         pass
 
     @abstractmethod
-    def execute_write(self, query: str, parameters: Optional[Dict[str, Any]] = None) -> None:
+    def execute_write(
+        self, query: str, parameters: Optional[Dict[str, Any]] = None
+    ) -> None:
         """Exécute une requête Cypher en mode écriture."""
         pass
 
@@ -48,7 +55,9 @@ class GraphPersistencePort(ABC):
         pass
 
     @abstractmethod
-    def sync_ai_extracted_graph(self, media_id: str, extracted_data: Dict[str, Any]) -> None:
+    def sync_ai_extracted_graph(
+        self, media_id: str, extracted_data: Dict[str, Any]
+    ) -> None:
         """Injecte les entités et relations extraites par l'IA."""
         pass
 
@@ -58,12 +67,16 @@ class GraphPersistencePort(ABC):
         pass
 
     @abstractmethod
-    def sync_saga(self, saga_name: str, executive_summary: str, media_ids: List[str]) -> None:
+    def sync_saga(
+        self, saga_name: str, executive_summary: str, media_ids: List[str]
+    ) -> None:
         """Crée ou met à jour une saga et ses relations avec les médias."""
         pass
 
     @abstractmethod
-    def sync_combat_lore(self, media_id: str, lore_data_list: List[Dict[str, Any]]) -> None:
+    def sync_combat_lore(
+        self, media_id: str, lore_data_list: List[Dict[str, Any]]
+    ) -> None:
         """Injecte les faits de combat extraits dans le graphe."""
         pass
 
@@ -83,7 +96,9 @@ class GraphPersistencePort(ABC):
         pass
 
     @abstractmethod
-    def sync_user_interaction(self, user_id: str, media_title: str, interaction_type: str) -> None:
+    def sync_user_interaction(
+        self, user_id: str, media_title: str, interaction_type: str
+    ) -> None:
         """Synchronise l'interaction et les préférences de l'utilisateur dans le graphe."""
         pass
 
@@ -93,7 +108,8 @@ class GraphPersistencePort(ABC):
         pass
 
     @abstractmethod
-    def get_neighborhood(self, item_id: str, media_type: str, depth: int = 1) -> Dict[str, Any]:
+    def get_neighborhood(
+        self, item_id: str, media_type: str, depth: int = 1
+    ) -> Dict[str, Any]:
         """Retrieves nodes and relationships within a certain depth."""
         pass
-

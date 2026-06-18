@@ -4,15 +4,17 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('animetix', '0024_remove_profile_api_key_profile_api_key_hash_vsbattle_and_more'),
+        (
+            "animetix",
+            "0024_remove_profile_api_key_profile_api_key_hash_vsbattle_and_more",
+        ),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='profile',
-            name='personalization_settings',
+            model_name="profile",
+            name="personalization_settings",
             field=models.JSONField(blank=True, default=dict),
         ),
     ]

@@ -6,20 +6,23 @@ from adapters.inference.diffusers_adapter import DiffusersAdapter
 from adapters.inference.vision_transformers_adapter import VisionTransformersAdapter
 
 
-
 from core.ports.inference_port import InferenceNotImplementedError
+
 
 def test_diffusers_adapter_depth_estimation_unsupported(sample_image):
     adapter = DiffusersAdapter()
     with pytest.raises(InferenceNotImplementedError):
         adapter.estimate_depth(sample_image)
 
+
 def test_vision_transformers_adapter_depth_estimation(sample_image):
     mock_pipeline = MagicMock()
-    dummy_depth = Image.new('L', (256, 256), color=128)
+    dummy_depth = Image.new("L", (256, 256), color=128)
     mock_pipeline.return_value = {"depth": dummy_depth}
 
-    with patch("adapters.inference.depth_estimation.pipeline", return_value=mock_pipeline):
+    with patch(
+        "adapters.inference.depth_estimation.pipeline", return_value=mock_pipeline
+    ):
         adapter = VisionTransformersAdapter()
         depth_map = adapter.estimate_depth(sample_image)
         assert depth_map is not None
@@ -27,12 +30,15 @@ def test_vision_transformers_adapter_depth_estimation(sample_image):
         img = Image.open(BytesIO(depth_map))
         assert img.size == (256, 256)
 
+
 def test_vision_transformers_adapter_generate_3d_scene(sample_image):
     mock_pipeline = MagicMock()
-    dummy_depth = Image.new('L', (256, 256), color=128)
+    dummy_depth = Image.new("L", (256, 256), color=128)
     mock_pipeline.return_value = {"depth": dummy_depth}
 
-    with patch("adapters.inference.depth_estimation.pipeline", return_value=mock_pipeline):
+    with patch(
+        "adapters.inference.depth_estimation.pipeline", return_value=mock_pipeline
+    ):
         adapter = VisionTransformersAdapter()
         depth_map = adapter.estimate_depth(sample_image)
         scene = adapter.generate_3d_scene(sample_image, depth_map)

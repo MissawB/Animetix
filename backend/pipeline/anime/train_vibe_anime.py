@@ -10,13 +10,19 @@ from torch.utils.data import DataLoader
 logger = logging.getLogger("animetix." + __name__)
 
 try:
-    from hf_trackio import trackio
+    from hf_trackio import trackio  # noqa: E402
 except ImportError:
     # Mock trackio if not available
     class MockTrackio:
-        def log(self, *args, **kwargs): pass
-        def start_run(self, *args, **kwargs): pass
-        def end_run(self, *args, **kwargs): pass
+        def log(self, *args, **kwargs):
+            pass
+
+        def start_run(self, *args, **kwargs):
+            pass
+
+        def end_run(self, *args, **kwargs):
+            pass
+
     trackio = MockTrackio()
 
 # Force UTF-8 for Windows output
@@ -27,27 +33,30 @@ if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Configuration
-MODEL_NAME = 'paraphrase-multilingual-mpnet-base-v2'
-OUTPUT_PATH = os.path.join(BASE_DIR, 'data', 'models', 'anime-vibe-model')
+MODEL_NAME = "paraphrase-multilingual-mpnet-base-v2"
+OUTPUT_PATH = os.path.join(BASE_DIR, "data", "models", "anime-vibe-model")
 BATCH_SIZE = 16
 EPOCHS = 2
 
+
 def run_training():
     logger.info("--- Début du Fine-Tuning des Embeddings (Vibe) ---")
-    
+
     # Initialize Tracking
-    tracker = trackio.init(project="animetix-vibe", job_name=f"anime-vibe-{int(time.time())}")
+    tracker = trackio.init(
+        project="animetix-vibe", job_name=f"anime-vibe-{int(time.time())}"
+    )
 
     # 1. Chargement des données
-    clean_db = os.path.join(BASE_DIR, 'data', 'processed', 'clean_root_animes.json')
+    clean_db = os.path.join(BASE_DIR, "data", "processed", "clean_root_animes.json")
     try:
-        with open(clean_db, 'r', encoding='utf-8') as f:
+        with open(clean_db, "r", encoding="utf-8") as f:
             data = json.load(f)
     except FileNotFoundError:
         logger.error(f"Erreur : {clean_db} introuvable.")
         tracker.finish(status="FAILED")
         return
-    
+
     tracker.log_artifact("clean_db", clean_db)
     tracker.log_param("epochs", EPOCHS)
     tracker.log_param("batch_size", BATCH_SIZE)
@@ -55,8 +64,8 @@ def run_training():
     # 2. Préparation des exemples d'entraînement
     train_examples = []
     for anime in data:
-        title = anime['title']
-        for review in anime.get('reviews', []):
+        title = anime["title"]
+        for review in anime.get("reviews", []):
             if len(review) > 20:
                 train_examples.append(InputExample(texts=[review, title]))
 
@@ -82,12 +91,13 @@ def run_training():
         epochs=EPOCHS,
         warmup_steps=100,
         output_path=OUTPUT_PATH,
-        show_progress_bar=True
+        show_progress_bar=True,
     )
 
     tracker.log_artifact("final_model", OUTPUT_PATH)
     tracker.finish(status="COMPLETED")
     logger.info(f"✅ Modèle fine-tuné sauvegardé dans : {OUTPUT_PATH}")
+
 
 if __name__ == "__main__":
     run_training()

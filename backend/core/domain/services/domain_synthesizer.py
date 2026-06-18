@@ -6,19 +6,22 @@ cosmologies, and relational links, storing them directly in Neo4j.
 Validates narrative coherence and community interest before persisting.
 """
 
-import logging
-from typing import Dict, Any, List, Optional
-from core.ports.inference_port import InferencePort
-from core.ports.gold_dataset_port import GoldDatasetPort
+import logging  # noqa: E402
+from typing import Dict, Any, Optional  # noqa: E402
+from core.ports.inference_port import InferencePort  # noqa: E402
+from core.ports.gold_dataset_port import GoldDatasetPort  # noqa: E402
 
 logger = logging.getLogger("animetix.evolving.synthesizer")
 
+
 class AutonomousDomainSynthesizer:
-    def __init__(self, 
-                 inference_engine: Optional[InferencePort] = None, 
-                 neo4j_manager: Optional[Any] = None,
-                 gold_dataset_port: Optional[GoldDatasetPort] = None,
-                 validation_gate: Optional[Any] = None):
+    def __init__(
+        self,
+        inference_engine: Optional[InferencePort] = None,
+        neo4j_manager: Optional[Any] = None,
+        gold_dataset_port: Optional[GoldDatasetPort] = None,
+        validation_gate: Optional[Any] = None,
+    ):
         """
         Initialise le synthétiseur de multivers autonome.
         :param inference_engine: Adaptateur d'inférence LLM pour générer le contenu narratif.
@@ -31,14 +34,16 @@ class AutonomousDomainSynthesizer:
         self.gold_dataset_port = gold_dataset_port
         self.validation_gate = validation_gate
 
-    def evaluate_coherence_and_interest(self, universe: Dict[str, Any]) -> Dict[str, Any]:
+    def evaluate_coherence_and_interest(
+        self, universe: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
-        Évalue la cohérence narrative et l'intérêt de l'univers généré 
+        Évalue la cohérence narrative et l'intérêt de l'univers généré
         selon une IA (moteur d'inférence) et la communauté d'utilisateurs.
         Retourne les scores et une décision finale.
         """
         logger.info(f"📊 Evaluating universe '{universe['name']}'...")
-        
+
         # 1. Évaluation IA (narrative & logique)
         ai_score = 0.5
         if self.inference_engine:
@@ -48,11 +53,13 @@ class AutonomousDomainSynthesizer:
                     f"Nom : {universe['name']}\nDescription : {universe['description']}\n"
                     f"Donne une note entre 0.0 (incohérent/cliché) et 1.0 (chef-d'œuvre cohérent)."
                 )
-                raw_score = self.inference_engine.generate(prompt=evaluation_prompt, max_tokens=10)
+                raw_score = self.inference_engine.generate(
+                    prompt=evaluation_prompt, max_tokens=10
+                )
                 try:
                     ai_score = float(raw_score.strip())
                 except ValueError:
-                    ai_score = 0.85 # Fallback si le format est textuel
+                    ai_score = 0.85  # Fallback si le format est textuel
             except Exception as e:
                 logger.warning(f"⚠️ AI evaluation failed: {e}. Using heuristic.")
                 ai_score = 0.8
@@ -72,12 +79,16 @@ class AutonomousDomainSynthesizer:
             try:
                 # Analyse de popularité du genre dans la base
                 popular_query = "MATCH (:User)-[r:LIKES]->(g:Genre {name: $genre}) RETURN count(r) as likes"
-                res = self.neo4j_manager.execute_query(popular_query, {"genre": universe["genre"]})
+                res = self.neo4j_manager.execute_query(
+                    popular_query, {"genre": universe["genre"]}
+                )
                 likes_count = res[0].get("likes", 0) if res else 0
                 if likes_count > 0:
                     community_score = min(0.95, 0.7 + (likes_count * 0.05))
             except Exception as e:
-                logger.warning(f"⚠️ Community Neo4j query failed: {e}. Using simulated score.")
+                logger.warning(
+                    f"⚠️ Community Neo4j query failed: {e}. Using simulated score."
+                )
                 community_score = 0.78
         else:
             # Simulation basée sur l'intérêt typique des genres populaires
@@ -88,60 +99,80 @@ class AutonomousDomainSynthesizer:
                 community_score = 0.65
 
         is_coherent_and_interesting = (ai_score >= 0.7) and (community_score >= 0.7)
-        
-        logger.info(f"📊 Evaluation results: AI Score = {ai_score:.2f}, Community Score = {community_score:.2f} -> Worthy of saving: {is_coherent_and_interesting}")
+
+        logger.info(
+            f"📊 Evaluation results: AI Score = {ai_score:.2f}, Community Score = {community_score:.2f} -> Worthy of saving: {is_coherent_and_interesting}"
+        )
         return {
             "ai_score": ai_score,
             "community_score": community_score,
-            "is_worthy": is_coherent_and_interesting
+            "is_worthy": is_coherent_and_interesting,
         }
 
-    def synthesize_multiverse(self, universe_name: str, primary_genre: str) -> Dict[str, Any]:
+    def synthesize_multiverse(
+        self, universe_name: str, primary_genre: str
+    ) -> Dict[str, Any]:
         """
-        Génère de manière autonome une cosmologie, des factions et des personnages 
+        Génère de manière autonome une cosmologie, des factions et des personnages
         pour un univers d'anime fictif et inédit.
         """
-        logger.info(f"🌌 Synthesizing new multiverse: '{universe_name}' [{primary_genre}]...")
-        
-        prompt = f"Génère un univers de type {primary_genre} nommé {universe_name}."
-        
+        logger.info(
+            f"🌌 Synthesizing new multiverse: '{universe_name}' [{primary_genre}]..."
+        )
+
         universe_data = {
             "name": universe_name,
             "genre": primary_genre,
             "description": f"Un univers révolutionnaire de type {primary_genre} se déroulant dans les confins de la galaxie de {universe_name}.",
-            "cosmology": f"Régie par des lois physiques instables où l'énergie spirituelle remplace l'entropie.",
+            "cosmology": "Régie par des lois physiques instables où l'énergie spirituelle remplace l'entropie.",
             "factions": [
-                {"name": f"L'Alliance de {universe_name}", "description": "Gardiens de la paix cosmique et de l'équilibre dimensionnel."},
-                {"name": "Les Disciples du Vide", "description": "Faction extrémiste cherchant à effondrer les dimensions de l'univers."}
+                {
+                    "name": f"L'Alliance de {universe_name}",
+                    "description": "Gardiens de la paix cosmique et de l'équilibre dimensionnel.",
+                },
+                {
+                    "name": "Les Disciples du Vide",
+                    "description": "Faction extrémiste cherchant à effondrer les dimensions de l'univers.",
+                },
             ],
             "characters": [
                 {
                     "name": f"Shinji of {universe_name}",
                     "role": "Protagoniste principal, capable de plier la gravité par sa pure volonté.",
-                    "power_level": 9500
+                    "power_level": 9500,
                 },
                 {
                     "name": "Rei Zero",
                     "role": "Mystérieuse prêtresse gardienne du noyau énergétique de la faction ennemie.",
-                    "power_level": 8900
-                }
+                    "power_level": 8900,
+                },
             ],
             "episodes": [
-                {"number": 1, "title": "L'Éveil du Vide", "summary": "Shinji découvre un artéfact de gravité ancienne qui change sa vie à jamais."},
-                {"number": 2, "title": "La Première Frontière", "summary": "L'Alliance de l'univers livre bataille contre l'incursion de Rei Zero."}
-            ]
+                {
+                    "number": 1,
+                    "title": "L'Éveil du Vide",
+                    "summary": "Shinji découvre un artéfact de gravité ancienne qui change sa vie à jamais.",
+                },
+                {
+                    "number": 2,
+                    "title": "La Première Frontière",
+                    "summary": "L'Alliance de l'univers livre bataille contre l'incursion de Rei Zero.",
+                },
+            ],
         }
-        
+
         if self.inference_engine:
             try:
                 enriched_summary = self.inference_engine.generate(
                     prompt=f"Écris une description ultra-détaillée de 3 lignes pour le premier épisode de l'anime de science-fiction '{universe_name}':",
-                    max_tokens=150
+                    max_tokens=150,
                 )
                 if enriched_summary:
                     universe_data["episodes"][0]["summary"] = enriched_summary
             except Exception as e:
-                logger.warning(f"⚠️ Inference engine enrichment failed, using high-fidelity fallback. Error: {e}")
+                logger.warning(
+                    f"⚠️ Inference engine enrichment failed, using high-fidelity fallback. Error: {e}"
+                )
 
         logger.info(f"✅ Multiverse '{universe_name}' successfully synthesized.")
         return universe_data
@@ -154,7 +185,9 @@ class AutonomousDomainSynthesizer:
         # 1. Évaluer la cohérence et l'intérêt (pré-filtre IA rapide)
         evaluation = self.evaluate_coherence_and_interest(universe)
         if not evaluation["is_worthy"]:
-            logger.warning(f"❌ Universe '{universe['name']}' rejected due to insufficient AI/Community score ({evaluation['ai_score']:.2f}/{evaluation['community_score']:.2f}).")
+            logger.warning(
+                f"❌ Universe '{universe['name']}' rejected due to insufficient AI/Community score ({evaluation['ai_score']:.2f}/{evaluation['community_score']:.2f})."
+            )
             return False
 
         # 2. Utiliser le Validation Gate (HITL Gate) s'il est disponible
@@ -164,16 +197,20 @@ class AutonomousDomainSynthesizer:
                     entry_type="MULTIVERSE",
                     context=f"Genre: {universe['genre']}",
                     instruction=f"Valider la création de l'univers '{universe['name']}'",
-                    response=universe['description'],
-                    metadata=universe
+                    response=universe["description"],
+                    metadata=universe,
                 )
                 return True
             except Exception as e:
-                logger.error(f"❌ HITL Gate validation failed: {e}. Falling back to direct port staging.")
+                logger.error(
+                    f"❌ HITL Gate validation failed: {e}. Falling back to direct port staging."
+                )
 
         # 3. Fallback sur le port direct si le gate échoue ou n'est pas injecté
         if not self.gold_dataset_port:
-            logger.error("❌ GoldDatasetPort and ValidationGate missing. Cannot stage synthetic universe.")
+            logger.error(
+                "❌ GoldDatasetPort and ValidationGate missing. Cannot stage synthetic universe."
+            )
             return False
 
         try:
@@ -181,10 +218,12 @@ class AutonomousDomainSynthesizer:
                 entry_type="MULTIVERSE",
                 context=f"Genre: {universe['genre']}",
                 instruction=f"Valider la création de l'univers '{universe['name']}'",
-                response=universe['description'],
-                metadata=universe
+                response=universe["description"],
+                metadata=universe,
             )
-            logger.info(f"⏳ Universe '{universe['name']}' staged for human validation (direct port fallback).")
+            logger.info(
+                f"⏳ Universe '{universe['name']}' staged for human validation (direct port fallback)."
+            )
             return True
         except Exception as e:
             logger.error(f"❌ Failed to stage synthetic universe via port: {e}")
@@ -195,7 +234,9 @@ class AutonomousDomainSynthesizer:
         Logique réelle de persistance Neo4j, appelée UNIQUEMENT après validation HITL.
         """
         if not self.neo4j_manager or not hasattr(self.neo4j_manager, "execute_query"):
-            logger.warning("⚠️ Neo4j non disponible pour persister l'univers synthétique.")
+            logger.warning(
+                "⚠️ Neo4j non disponible pour persister l'univers synthétique."
+            )
             return False
 
         try:
@@ -209,12 +250,15 @@ class AutonomousDomainSynthesizer:
                 m.created_at = timestamp()
             RETURN m
             """
-            self.neo4j_manager.execute_query(media_query, {
-                "name": universe["name"],
-                "description": universe["description"],
-                "genre": universe["genre"],
-                "cosmology": universe["cosmology"]
-            })
+            self.neo4j_manager.execute_query(
+                media_query,
+                {
+                    "name": universe["name"],
+                    "description": universe["description"],
+                    "genre": universe["genre"],
+                    "cosmology": universe["cosmology"],
+                },
+            )
 
             # 2. Persister le Genre et le Studio d'origine
             genre_query = """
@@ -222,10 +266,9 @@ class AutonomousDomainSynthesizer:
             MATCH (m:Media {name: $name})
             MERGE (m)-[:BELONGS_TO]->(g)
             """
-            self.neo4j_manager.execute_query(genre_query, {
-                "genre": universe["genre"],
-                "name": universe["name"]
-            })
+            self.neo4j_manager.execute_query(
+                genre_query, {"genre": universe["genre"], "name": universe["name"]}
+            )
 
             studio_query = """
             MERGE (s:Studio {name: "Animetix Multiverse Synthesizer"})
@@ -233,9 +276,7 @@ class AutonomousDomainSynthesizer:
             MATCH (m:Media {name: $name})
             MERGE (m)-[:PRODUCED_BY]->(s)
             """
-            self.neo4j_manager.execute_query(studio_query, {
-                "name": universe["name"]
-            })
+            self.neo4j_manager.execute_query(studio_query, {"name": universe["name"]})
 
             # 3. Persister chaque Personnage et l'associer au Média
             for char in universe["characters"]:
@@ -248,14 +289,19 @@ class AutonomousDomainSynthesizer:
                 MATCH (m:Media {name: $media_name})
                 MERGE (c)-[:APPEARS_IN]->(m)
                 """
-                self.neo4j_manager.execute_query(char_query, {
-                    "char_name": char["name"],
-                    "role": char["role"],
-                    "power_level": char["power_level"],
-                    "media_name": universe["name"]
-                })
+                self.neo4j_manager.execute_query(
+                    char_query,
+                    {
+                        "char_name": char["name"],
+                        "role": char["role"],
+                        "power_level": char["power_level"],
+                        "media_name": universe["name"],
+                    },
+                )
 
-            logger.info(f"🕸️ Neo4j graph updated: Connected synthesized universe '{universe['name']}' with characters and genres.")
+            logger.info(
+                f"🕸️ Neo4j graph updated: Connected synthesized universe '{universe['name']}' with characters and genres."
+            )
             return True
         except Exception as e:
             logger.error(f"❌ Failed to persist synthetic universe to Neo4j: {e}")

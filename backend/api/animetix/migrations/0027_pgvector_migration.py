@@ -3,35 +3,49 @@
 from django.db import migrations, models
 import animetix.models
 
+
 def enable_vector_extension(apps, schema_editor):
-    if schema_editor.connection.vendor == 'postgresql':
+    if schema_editor.connection.vendor == "postgresql":
         with schema_editor.connection.cursor() as cursor:
             cursor.execute("CREATE EXTENSION IF NOT EXISTS vector;")
 
-class Migration(migrations.Migration):
 
+class Migration(migrations.Migration):
     dependencies = [
-        ('animetix', '0026_delete_donation_table'),
+        ("animetix", "0026_delete_donation_table"),
     ]
 
     operations = [
-        migrations.RunPython(enable_vector_extension, reverse_code=migrations.RunPython.noop),
+        migrations.RunPython(
+            enable_vector_extension, reverse_code=migrations.RunPython.noop
+        ),
         migrations.CreateModel(
-            name='VectorRecord',
+            name="VectorRecord",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('collection_name', models.CharField(db_index=True, max_length=100)),
-                ('item_id', models.CharField(db_index=True, max_length=100)),
-                ('embedding', animetix.models.PGVectorField()),
-                ('metadata', models.JSONField(blank=True, default=dict)),
-                ('document', models.TextField(blank=True, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("collection_name", models.CharField(db_index=True, max_length=100)),
+                ("item_id", models.CharField(db_index=True, max_length=100)),
+                ("embedding", animetix.models.PGVectorField()),
+                ("metadata", models.JSONField(blank=True, default=dict)),
+                ("document", models.TextField(blank=True, null=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
             ],
             options={
-                'indexes': [
-                    models.Index(fields=['collection_name', 'item_id'], name='animetix_ve_collect_20560a_idx')
+                "indexes": [
+                    models.Index(
+                        fields=["collection_name", "item_id"],
+                        name="animetix_ve_collect_20560a_idx",
+                    )
                 ],
-                'unique_together': {('collection_name', 'item_id')},
+                "unique_together": {("collection_name", "item_id")},
             },
         ),
     ]

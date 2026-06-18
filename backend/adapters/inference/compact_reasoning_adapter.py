@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, List, Dict, Any
+from typing import Optional
 from .local_text_adapter import LocalTextAdapter
 from core.ports.usage_port import UsagePort
 from core.domain.entities.ai_schemas import InferenceResponse
@@ -7,24 +7,31 @@ from core.domain.exceptions import InferenceError
 
 logger = logging.getLogger("animetix.inference.compact_reasoning")
 
+
 class CompactReasoningAdapter(LocalTextAdapter):
     """
     Adaptateur spécialisé pour le raisonnement compact (Inspiré par VibeThinker-3B).
     Optimisé pour les tâches de logique et de vérification avec un faible nombre de paramètres.
     """
-    def __init__(self, model_id: str = "WeiboAI/VibeThinker-3B", use_4bit: bool = True, usage_port: Optional[UsagePort] = None):
+
+    def __init__(
+        self,
+        model_id: str = "WeiboAI/VibeThinker-3B",
+        use_4bit: bool = True,
+        usage_port: Optional[UsagePort] = None,
+    ):
         # On utilise VibeThinker-3B par défaut si disponible, sinon un fallback raisonnable comme Qwen2.5-3B-Instruct
         super().__init__(model_id=model_id, use_4bit=use_4bit, usage_port=usage_port)
         self.engine_name = "compact-reasoning-core"
 
     def generate(
-        self, 
-        prompt: str, 
-        system_prompt: str = "Tu es un expert en raisonnement logique et culture Anime.", 
-        thinking_budget: int = 0, 
-        thinking_mode: bool = False, 
+        self,
+        prompt: str,
+        system_prompt: str = "Tu es un expert en raisonnement logique et culture Anime.",
+        thinking_budget: int = 0,
+        thinking_mode: bool = False,
         include_logprobs: bool = False,
-        **kwargs
+        **kwargs,
     ) -> InferenceResponse:
         """
         Génère une réponse en forçant un format de pensée structuré si nécessaire.
@@ -48,15 +55,14 @@ class CompactReasoningAdapter(LocalTextAdapter):
                 thinking_budget=thinking_budget,
                 thinking_mode=thinking_mode,
                 include_logprobs=include_logprobs,
-                **kwargs
+                **kwargs,
             )
-            
+
             # On surcharge le logging d'usage pour marquer le moteur compact
             self._log_usage(
-                engine=f"compact:{self.model_id}",
-                allocated_budget=thinking_budget
+                engine=f"compact:{self.model_id}", allocated_budget=thinking_budget
             )
-            
+
             return response
         except Exception as e:
             logger.error(f"Compact reasoning generation failed: {e}")

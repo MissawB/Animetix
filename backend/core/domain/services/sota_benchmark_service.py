@@ -3,11 +3,13 @@ from typing import List, Dict, Any
 
 logger = logging.getLogger("animetix.mlops.sota")
 
+
 class SOTABenchmarkService:
     """
     Fournit les benchmarks SOTA (State of the Art) pour les modèles IA.
     Centralise les scores HuggingFace Best, Chatbot Arena ELO et capacités techniques.
     """
+
     def __init__(self):
         # Données SOTA (simulées basées sur les tendances 2026)
         self._benchmarks = [
@@ -20,7 +22,7 @@ class SOTABenchmarkService:
                 "context_window": 128000,
                 "license": "Apache 2.0",
                 "is_open_source": True,
-                "status": "Active"
+                "status": "Active",
             },
             {
                 "model_id": "meta-llama/Llama-3.1-405B-Instruct",
@@ -31,7 +33,7 @@ class SOTABenchmarkService:
                 "context_window": 128000,
                 "license": "Llama 3.1",
                 "is_open_source": True,
-                "status": "Active"
+                "status": "Active",
             },
             {
                 "model_id": "gpt-4o",
@@ -42,7 +44,7 @@ class SOTABenchmarkService:
                 "context_window": 128000,
                 "license": "Proprietary",
                 "is_open_source": False,
-                "status": "Active"
+                "status": "Active",
             },
             {
                 "model_id": "claude-3-5-sonnet-20240620",
@@ -53,7 +55,7 @@ class SOTABenchmarkService:
                 "context_window": 200000,
                 "license": "Proprietary",
                 "is_open_source": False,
-                "status": "Active"
+                "status": "Active",
             },
             {
                 "model_id": "mistralai/Mistral-Large-2",
@@ -64,7 +66,7 @@ class SOTABenchmarkService:
                 "context_window": 128000,
                 "license": "Mistral Research",
                 "is_open_source": True,
-                "status": "Active"
+                "status": "Active",
             },
             {
                 "model_id": "deepseek-ai/DeepSeek-V2.5",
@@ -75,8 +77,8 @@ class SOTABenchmarkService:
                 "context_window": 128000,
                 "license": "MIT",
                 "is_open_source": True,
-                "status": "Active"
-            }
+                "status": "Active",
+            },
         ]
 
     def get_all_benchmarks(self) -> List[Dict[str, Any]]:

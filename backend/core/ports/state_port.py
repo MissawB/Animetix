@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Optional
 
+
 class StatePort(ABC):
     @abstractmethod
     async def get_state(self, key: str) -> Optional[Any]:

@@ -1,10 +1,12 @@
 import logging
 from django.conf import settings
 
-logger = logging.getLogger('animetix.security.models')
+logger = logging.getLogger("animetix.security.models")
+
 
 class ModelSecurityError(Exception):
     pass
+
 
 VERIFIED_MODEL_HASHES = {
     # Legacy models (kept for backward compatibility)
@@ -26,19 +28,20 @@ VERIFIED_MODEL_HASHES = {
     "Qwen/Qwen3-VL-30B-A3B-Instruct": "a1b2c3d4ca9b3dd8059ad90a75d4983776a23d44",
 }
 
+
 def get_verified_revision(model_id: str) -> str | None:
     """
     Returns the verified commit SHA for a given Hugging Face model ID.
     If STRICT_MODEL_VERIFICATION is True, raises an error for unverified models.
     """
     sha = VERIFIED_MODEL_HASHES.get(model_id)
-    
+
     if sha:
         return sha
-        
-    strict_mode = getattr(settings, 'STRICT_MODEL_VERIFICATION', False)
+
+    strict_mode = getattr(settings, "STRICT_MODEL_VERIFICATION", False)
     msg = f"No verified signature found for model: {model_id}"
-    
+
     if strict_mode:
         logger.error(f"SECURITY ALERT: {msg}. Loading blocked.")
         raise ModelSecurityError(msg)

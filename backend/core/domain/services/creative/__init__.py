@@ -7,5 +7,5 @@ __all__ = [
     "VideoQuestService",
     "StudioTransformService",
     "SoundscapeGenerationService",
-    "MangaFlowService"
+    "MangaFlowService",
 ]

@@ -1,11 +1,18 @@
 import pytest
 from unittest.mock import MagicMock
 from core.domain.services.xai_service import XaiDiagnosticService, XaiCollector
-from core.domain.entities.ai_schemas import InferenceResponse, InferenceMetadata, XaiReport, DocumentAttribution, ModelDiagnostics
+from core.domain.entities.ai_schemas import (
+    InferenceResponse,
+    InferenceMetadata,
+    XaiReport,
+    ModelDiagnostics,
+)
+
 
 @pytest.fixture
 def mock_inference_engine():
     return MagicMock()
+
 
 @pytest.fixture
 def xai_service(mock_inference_engine):
@@ -18,21 +25,26 @@ def test_generate_advanced_report(xai_service, mock_inference_engine):
     response_text = "Naruto est un ninja de Konoha."
 
     # Mocking native logprobs
-    from core.domain.entities.ai_schemas import TokenLogProb
+    from core.domain.entities.ai_schemas import TokenLogProb  # noqa: E402
+
     logprobs_data = [
         TokenLogProb(token="Naruto", logprob=-0.1, top_logprobs=[{"Naruto": -0.1}]),
         TokenLogProb(token=" ninja", logprob=-0.5, top_logprobs=[{" ninja": -0.5}]),
-        TokenLogProb(token=" de", logprob=-0.01, top_logprobs=[{" de": -0.01}])
+        TokenLogProb(token=" de", logprob=-0.01, top_logprobs=[{" de": -0.01}]),
     ]
 
-    response = InferenceResponse(text=response_text, metadata=InferenceMetadata(logprobs=logprobs_data))
+    response = InferenceResponse(
+        text=response_text, metadata=InferenceMetadata(logprobs=logprobs_data)
+    )
 
     collector = XaiCollector()
     collector.log_intent("information_retrieval")
-    collector.log_retrieval([
-        {"id": "doc1", "title": "Naruto Uzumaki", "score": 0.9},
-        {"id": "doc2", "title": "Konoha", "score": 0.6}
-    ])
+    collector.log_retrieval(
+        [
+            {"id": "doc1", "title": "Naruto Uzumaki", "score": 0.9},
+            {"id": "doc2", "title": "Konoha", "score": 0.6},
+        ]
+    )
     collector.log_agent_thought("RAG_Expert", "Searching for Naruto's origin.")
 
     # Execution
@@ -47,7 +59,11 @@ def test_generate_advanced_report(xai_service, mock_inference_engine):
 
     assert isinstance(report.internal_diagnostics, ModelDiagnostics)
     # Expected tokens based on sorting logprobs ascending
-    assert report.internal_diagnostics.top_influential_tokens == [" ninja", "Naruto", " de"]
+    assert report.internal_diagnostics.top_influential_tokens == [
+        " ninja",
+        "Naruto",
+        " de",
+    ]
 
     # Verify uncertainty calculation from logprobs
     assert report.uncertainty["method"] == "real_logprobs"

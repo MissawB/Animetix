@@ -1,5 +1,3 @@
-import os
-
 prompt_path = "backend/core/domain/services/prompts/prompts.yaml"
 with open(prompt_path, "a", encoding="utf-8") as f:
     f.write("""

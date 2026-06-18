@@ -29,6 +29,7 @@ export const SocialRoutes = () => (
     <Route path="/social/collection/" element={<CollectionPage />} />
     <Route path="/notifications/" element={<NotificationsPage />} />
     <Route path="/social/transparency/" element={<TransparencyPage />} />
+    <Route path="/social/nexus/" element={<ArchetypeNexusPage />} />
     <Route path="/social/archetype-nexus/" element={<ArchetypeNexusPage />} />
     <Route path="/social/neuro-memory/" element={<NeuroMemoryPage />} />
     <Route path="/social/debate-arena/" element={<AIDebateArenaPage />} />

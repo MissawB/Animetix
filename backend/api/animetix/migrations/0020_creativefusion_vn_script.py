@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('animetix', '0019_profile_api_key_profile_tier_latentspacepoint'),
+        ("animetix", "0019_profile_api_key_profile_tier_latentspacepoint"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='creativefusion',
-            name='vn_script',
+            model_name="creativefusion",
+            name="vn_script",
             field=models.JSONField(blank=True, null=True),
         ),
     ]

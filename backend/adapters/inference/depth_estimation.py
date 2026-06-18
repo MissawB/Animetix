@@ -1,12 +1,13 @@
 """Depth estimation and 3D scene generation mixin for VisionTransformersAdapter."""
-import logging
-import struct
-from typing import Dict, Any
-from core.utils.lazy_import import lazy_import
-from core.domain.exceptions import InferenceError
 
-torch = lazy_import('torch')
-transformers = lazy_import('transformers')
+import logging  # noqa: E402
+import struct  # noqa: E402
+from typing import Dict, Any  # noqa: E402
+from core.utils.lazy_import import lazy_import  # noqa: E402
+from core.domain.exceptions import InferenceError  # noqa: E402
+
+torch = lazy_import("torch")
+transformers = lazy_import("transformers")
 pipeline = transformers.pipeline
 
 logger = logging.getLogger("animetix.inference.depth")
@@ -18,17 +19,18 @@ class DepthEstimationMixin:
     def estimate_depth(self, image_data: bytes) -> bytes:
         """Estime la profondeur d'une image en utilisant Depth-Anything."""
         try:
-            from PIL import Image
-            from io import BytesIO
+            from PIL import Image  # noqa: E402
+            from io import BytesIO  # noqa: E402
+
             img = Image.open(BytesIO(image_data)).convert("RGB")
 
             model_id = "LiheYoung/depth-anything-small-hf"
-            if not hasattr(self, '_depth_pipeline'):
+            if not hasattr(self, "_depth_pipeline"):
                 logger.info(f"🏗️ Loading {model_id}...")
                 self._depth_pipeline = pipeline(
                     "depth-estimation",
                     model=model_id,
-                    device=0 if torch.cuda.is_available() else -1
+                    device=0 if torch.cuda.is_available() else -1,
                 )
 
             result = self._depth_pipeline(img)
@@ -43,7 +45,9 @@ class DepthEstimationMixin:
             logger.error(f"❌ Depth estimation failed: {e}")
             raise InferenceError(f"Depth estimation failed: {str(e)}")
 
-    def generate_3d_scene(self, image_data: bytes, depth_map: bytes, mode: str = "point_cloud") -> Dict[str, Any]:
+    def generate_3d_scene(
+        self, image_data: bytes, depth_map: bytes, mode: str = "point_cloud"
+    ) -> Dict[str, Any]:
         """
         Génère une scène 3D.
         Modes supportés: 'point_cloud' (Standard) ou 'gaussian_splatting' (SOTA).
@@ -52,15 +56,19 @@ class DepthEstimationMixin:
             return self.generate_3d_splats(image_data, depth_map)
         return self._generate_point_cloud(image_data, depth_map)
 
-    def _generate_point_cloud(self, image_data: bytes, depth_map: bytes) -> Dict[str, Any]:
+    def _generate_point_cloud(
+        self, image_data: bytes, depth_map: bytes
+    ) -> Dict[str, Any]:
         """Génère un nuage de points PLY binaire (Legacy)."""
         try:
-            from PIL import Image
-            import numpy as np
-            import base64
-            from io import BytesIO
-            from core.constants import (
-                DEFAULT_FOCAL_LENGTH, DEFAULT_DEPTH_RESIZE, DEFAULT_DEPTH_THRESHOLD,
+            from PIL import Image  # noqa: E402
+            import numpy as np  # noqa: E402
+            import base64  # noqa: E402
+            from io import BytesIO  # noqa: E402
+            from core.constants import (  # noqa: E402
+                DEFAULT_FOCAL_LENGTH,
+                DEFAULT_DEPTH_RESIZE,
+                DEFAULT_DEPTH_THRESHOLD,
                 PLY_HEADER_TEMPLATE,
             )
 
@@ -86,7 +94,7 @@ class DepthEstimationMixin:
                     points.append((X, Y, Z, r, g, b))
 
             header = PLY_HEADER_TEMPLATE.format(vertex_count=len(points))
-            ply_data = header.encode('ascii')
+            ply_data = header.encode("ascii")
             for p in points:
                 ply_data += struct.pack("<fffBBB", *p)
 
@@ -97,7 +105,7 @@ class DepthEstimationMixin:
                 "model_url": f"data:application/octet-stream;base64,{base64.b64encode(ply_data).decode('utf-8')}",
                 "point_count": len(points),
                 "format": "point_cloud",
-                "metadata": {"original_size": len(image_data)}
+                "metadata": {"original_size": len(image_data)},
             }
         except Exception as e:
             logger.error(f"❌ Point cloud generation failed: {e}")
@@ -109,13 +117,18 @@ class DepthEstimationMixin:
         Chaque pixel devient une gaussienne avec SH, opacité, échelle et rotation.
         """
         try:
-            from PIL import Image
-            import numpy as np
-            import base64
-            from io import BytesIO
-            from core.constants import (
-                DEFAULT_FOCAL_LENGTH, DEFAULT_DEPTH_RESIZE, DEFAULT_DEPTH_THRESHOLD,
-                GAUSSIAN_PLY_HEADER, SH_C0, GAUSSIAN_SCALE_FACTOR, DEFAULT_GAUSSIAN_OPACITY,
+            from PIL import Image  # noqa: E402
+            import numpy as np  # noqa: E402
+            import base64  # noqa: E402
+            from io import BytesIO  # noqa: E402
+            from core.constants import (  # noqa: E402
+                DEFAULT_FOCAL_LENGTH,
+                DEFAULT_DEPTH_RESIZE,
+                DEFAULT_DEPTH_THRESHOLD,
+                GAUSSIAN_PLY_HEADER,
+                SH_C0,
+                GAUSSIAN_SCALE_FACTOR,
+                DEFAULT_GAUSSIAN_OPACITY,
             )
 
             resize = DEFAULT_DEPTH_RESIZE
@@ -126,46 +139,62 @@ class DepthEstimationMixin:
             h, w = depth_arr.shape
             fx = fy = DEFAULT_FOCAL_LENGTH
             cx, cy = w / 2, h / 2
-            
+
             gaussians = []
-            
+
             for y in range(h):
                 for x in range(w):
                     z = depth_arr[y, x]
-                    if z <= DEFAULT_DEPTH_THRESHOLD: continue
-                    
+                    if z <= DEFAULT_DEPTH_THRESHOLD:
+                        continue
+
                     # Position 3D
                     X = (x - cx) * z / fx
                     Y = (y - cy) * z / fy
                     Z = z
-                    
+
                     # Normal (pointant vers la caméra par défaut pour une projection 2D)
                     nx, ny, nz = 0.0, 0.0, -1.0
-                    
+
                     # Couleurs SH (Harmoniques sphériques base dc)
                     # Formule simplifiée : (color - 0.5) / SH_C0
                     r, g, b = rgb_arr[y, x]
                     f_dc_0 = (r - 0.5) / SH_C0
                     f_dc_1 = (g - 0.5) / SH_C0
                     f_dc_2 = (b - 0.5) / SH_C0
-                    
-                    opacity = DEFAULT_GAUSSIAN_OPACITY # Pleine opacité pour les surfaces franches
-                    
+
+                    opacity = DEFAULT_GAUSSIAN_OPACITY  # Pleine opacité pour les surfaces franches
+
                     # Échelle (adaptée à la densité de la grille)
                     scale_0 = scale_1 = scale_2 = np.log(GAUSSIAN_SCALE_FACTOR * z)
-                    
+
                     # Rotation (quaternion identité : [1, 0, 0, 0])
                     rot_0, rot_1, rot_2, rot_3 = 1.0, 0.0, 0.0, 0.0
-                    
-                    gaussians.append((
-                        X, Y, Z, nx, ny, nz, 
-                        f_dc_0, f_dc_1, f_dc_2, 
-                        opacity, scale_0, scale_1, scale_2, 
-                        rot_0, rot_1, rot_2, rot_3
-                    ))
+
+                    gaussians.append(
+                        (
+                            X,
+                            Y,
+                            Z,
+                            nx,
+                            ny,
+                            nz,
+                            f_dc_0,
+                            f_dc_1,
+                            f_dc_2,
+                            opacity,
+                            scale_0,
+                            scale_1,
+                            scale_2,
+                            rot_0,
+                            rot_1,
+                            rot_2,
+                            rot_3,
+                        )
+                    )
 
             header = GAUSSIAN_PLY_HEADER.format(vertex_count=len(gaussians))
-            ply_data = header.encode('ascii')
+            ply_data = header.encode("ascii")
             for g in gaussians:
                 # 17 floats: x,y,z, nx,ny,nz, f_dc_0,1,2, opacity, scale_0,1,2, rot_0,1,2,3
                 ply_data += struct.pack("<17f", *g)
@@ -177,7 +206,7 @@ class DepthEstimationMixin:
                 "model_url": f"data:application/octet-stream;base64,{base64.b64encode(ply_data).decode('utf-8')}",
                 "point_count": len(gaussians),
                 "format": "gaussian_splatting",
-                "metadata": {"sota_version": "2026.1"}
+                "metadata": {"sota_version": "2026.1"},
             }
         except Exception as e:
             logger.error(f"❌ Gaussian Splatting generation failed: {e}")

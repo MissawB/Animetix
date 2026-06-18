@@ -1,6 +1,5 @@
 import json
 from sentence_transformers import SentenceTransformer
-import numpy as np
 import os
 import sys
 import logging
@@ -9,32 +8,33 @@ logger = logging.getLogger("animetix." + __name__)
 
 # Détection robuste de la racine du projet
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-sys.path.append(os.path.join(BASE_DIR, 'pipeline'))
-from chroma_client import chroma_manager
+sys.path.append(os.path.join(BASE_DIR, "pipeline"))
+from chroma_client import chroma_manager  # noqa: E402
 
 logger.info("🚀 Starting Movie Vectorization (Full Chroma Mode)...")
 
-CLEAN_DB = os.path.join(BASE_DIR, 'data', 'processed', 'clean_root_movies.json')
+CLEAN_DB = os.path.join(BASE_DIR, "data", "processed", "clean_root_movies.json")
+
 
 def main():
     if not os.path.exists(CLEAN_DB):
         logger.error(f"❌ {CLEAN_DB} not found.")
         return
 
-    with open(CLEAN_DB, 'r', encoding='utf-8') as f:
+    with open(CLEAN_DB, "r", encoding="utf-8") as f:
         db = json.load(f)
 
     # --- RÉCUPÉRATION DES IDS DÉJÀ DANS CHROMA ---
     collection = chroma_manager.get_collection("movie_thematic")
-    existing_ids = set(collection.get()['ids'])
+    existing_ids = set(collection.get()["ids"])
     logger.info(f"📂 {len(existing_ids)} movies already in ChromaDB.")
 
     # --- FILTRAGE DU DELTA & DE-DUPLICATION ---
     new_items = []
     seen_ids_in_batch = set()
-    
+
     for item in db:
-        item_id = str(item['id'])
+        item_id = str(item["id"])
         if item_id not in existing_ids and item_id not in seen_ids_in_batch:
             new_items.append(item)
             seen_ids_in_batch.add(item_id)
@@ -44,35 +44,41 @@ def main():
         return
 
     logger.info(f"🚀 Found {len(new_items)} new movies to vectorize.")
-    model = SentenceTransformer('paraphrase-multilingual-mpnet-base-v2')
+    model = SentenceTransformer("paraphrase-multilingual-mpnet-base-v2")
 
     CHUNK_SIZE = 100
     for i in range(0, len(new_items), CHUNK_SIZE):
-        chunk = new_items[i:i + CHUNK_SIZE]
-        logger.info(f"📦 Processing chunk {i//CHUNK_SIZE + 1}/{(len(new_items)-1)//CHUNK_SIZE + 1}...")
-        
+        chunk = new_items[i : i + CHUNK_SIZE]
+        logger.info(
+            f"📦 Processing chunk {i // CHUNK_SIZE + 1}/{(len(new_items) - 1) // CHUNK_SIZE + 1}..."
+        )
+
         thematic_corpus, plot_corpus, vibe_corpus, metadatas, ids = [], [], [], [], []
 
         for item in chunk:
-            item_id = str(item['id'])
+            item_id = str(item["id"])
             ids.append(item_id)
-            
-            metadatas.append({
-                "id": item_id,
-                "title": item['title'],
-                "image": item['image'] or "",
-                "year": str(item.get('year', "0000")),
-                "popularity": item.get('popularity', 0),
-                "type": item.get('media_type', 'Movie')
-            })
 
-            genres = ", ".join(item.get('genres', []))
-            tags = ", ".join(item.get('tags', []))
-            description = item.get('description', "")
-            cast = ", ".join(item.get('cast', []))
-            recs = ", ".join(item.get('recommendations', {}).keys())
+            metadatas.append(
+                {
+                    "id": item_id,
+                    "title": item["title"],
+                    "image": item["image"] or "",
+                    "year": str(item.get("year", "0000")),
+                    "popularity": item.get("popularity", 0),
+                    "type": item.get("media_type", "Movie"),
+                }
+            )
 
-            thematic_corpus.append(f"Genres: {genres}. Keywords: {tags}. Similar to: {recs}.")
+            genres = ", ".join(item.get("genres", []))
+            tags = ", ".join(item.get("tags", []))
+            description = item.get("description", "")
+            cast = ", ".join(item.get("cast", []))
+            recs = ", ".join(item.get("recommendations", {}).keys())
+
+            thematic_corpus.append(
+                f"Genres: {genres}. Keywords: {tags}. Similar to: {recs}."
+            )
             plot_corpus.append(f"{description} Starring: {cast}")
             vibe_corpus.append(f"Mood: {genres}, {tags}")
 
@@ -83,13 +89,16 @@ def main():
 
         # Injection directe dans ChromaDB
         try:
-            chroma_manager.add_to_collection("movie_thematic", ids, vec_thematic, metadatas)
+            chroma_manager.add_to_collection(
+                "movie_thematic", ids, vec_thematic, metadatas
+            )
             chroma_manager.add_to_collection("movie_plot", ids, vec_plot, metadatas)
             chroma_manager.add_to_collection("movie_vibe", ids, vec_vibe, metadatas)
         except Exception as e:
             logger.warning(f"⚠️ ChromaDB sync failed for this chunk: {e}")
 
-    logger.info(f"✅ Movie Chroma Sync Complete!")
+    logger.info("✅ Movie Chroma Sync Complete!")
+
 
 if __name__ == "__main__":
     main()

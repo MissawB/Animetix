@@ -4,15 +4,19 @@ from core.ports.inference_port import InferencePort
 
 logger = logging.getLogger("animetix.orchestration")
 
+
 class MultimodalOrchestrator:
     """
     Façade unifiée pour orchestrer les capacités IA du système.
     Délègue les tâches complexes aux adaptateurs via InferencePort.
     """
+
     def __init__(self, inference_adapter: InferencePort):
         self.adapter = inference_adapter
 
-    def analyze_video_content(self, video_data: bytes, queries: List[str]) -> List[Dict[str, Any]]:
+    def analyze_video_content(
+        self, video_data: bytes, queries: List[str]
+    ) -> List[Dict[str, Any]]:
         """Orchestre l'analyse temporelle et l'action locale d'une vidéo."""
         try:
             temporal_embeddings = self.adapter.get_video_temporal_embeddings(video_data)
@@ -22,7 +26,9 @@ class MultimodalOrchestrator:
             logger.error(f"Error orchestrating video analysis: {e}")
             return {"error": str(e)}
 
-    def transform_to_anime(self, image_data: bytes, style: str, prompt: str = "") -> Optional[str]:
+    def transform_to_anime(
+        self, image_data: bytes, style: str, prompt: str = ""
+    ) -> Optional[str]:
         """Orchestre la transformation d'image avec vérification de sécurité."""
         try:
             # Check moderation before processing

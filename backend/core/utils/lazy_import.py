@@ -2,18 +2,19 @@
 
 Usage::
 
-    from core.utils.lazy_import import lazy_import
+    from core.utils.lazy_import import lazy_import  # noqa: E402
     torch = lazy_import('torch')
     # ``torch`` is imported on first attribute access. If the module is not
     # installed, an ImportError with a clear message is raised.
 """
-import importlib
-import sys
-from types import ModuleType
-from typing import Any
+
+import importlib  # noqa: E402
+from types import ModuleType  # noqa: E402
+from typing import Any  # noqa: E402
 
 _lazy_cache = {}
 _loaded_modules = {}
+
 
 def lazy_import(module_name: str) -> ModuleType:
     """Return a proxy object that lazily imports *module_name*.
@@ -61,30 +62,30 @@ def lazy_import(module_name: str) -> ModuleType:
         @property
         def __file__(self) -> Any:
             if module_name in _loaded_modules:
-                return getattr(_loaded_modules[module_name], '__file__', None)
+                return getattr(_loaded_modules[module_name], "__file__", None)
             return None
 
         @property
         def __path__(self) -> Any:
             if module_name in _loaded_modules:
-                return getattr(_loaded_modules[module_name], '__path__', None)
+                return getattr(_loaded_modules[module_name], "__path__", None)
             return []
 
         @property
         def __loader__(self) -> Any:
             if module_name in _loaded_modules:
-                return getattr(_loaded_modules[module_name], '__loader__', None)
+                return getattr(_loaded_modules[module_name], "__loader__", None)
             return None
 
         @property
         def __package__(self) -> Any:
             if module_name in _loaded_modules:
-                return getattr(_loaded_modules[module_name], '__package__', None)
+                return getattr(_loaded_modules[module_name], "__package__", None)
             return None
 
         def __getattr__(self, item: str) -> Any:
-            if item.startswith('__') and item.endswith('__'):
-                if item == '__path__':
+            if item.startswith("__") and item.endswith("__"):
+                if item == "__path__":
                     return []
                 raise AttributeError(item)
             return getattr(self._load(), item)

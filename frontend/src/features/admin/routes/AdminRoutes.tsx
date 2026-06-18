@@ -23,6 +23,7 @@ export const AdminRoutes = () => (
     <Route path="/admin/dashboard/" element={<AdminDashboardPage />} />
     <Route path="/admin/mlops/" element={<MLOpsDashboard />} />
     <Route path="/admin/safety/" element={<AISafetyAuditPage />} />
+    <Route path="/admin/safety-audit/" element={<AISafetyAuditPage />} />
     <Route path="/admin/economics/" element={<EconomicAuditPage />} />
     <Route path="/admin/observability/" element={<ObservabilityConsolePage />} />
     <Route path="/admin/curation/" element={<AdminCurationPage />} />

@@ -4,20 +4,35 @@ Ce document liste toutes les tâches techniques, architecturales et fonctionnell
 
 ---
 
-## 🏗️ Dette Technique & Architecture
-
-### 🎨 Frontend (Assainissement Linter - ~350 problèmes restants)
-
-- [x] **Stabilisation Initiale :** Correction de `Math.random()`, `set-state-in-effect` (coeur), et accès avant déclaration.
-- [x] **Typage Strict :** Élimination massive du type `any` dans les services, stores et pages métier (Couverture > 95%).
-- [x] **TypeScript & Qualité (Priorité Haute) :**
-    - [x] Éliminer les occurrences résiduelles de `any` dans les tests et intégrations SDK tierces.
-    - [ ] Nettoyer les variables et imports inutilisés restants (`@typescript-eslint/no-unused-vars`).
-- [x] **Accessibilité (Conformité WCAG) :** Finalisation de la première passe de mise en conformité des interactions clavier et des rôles ARIA.
-
----
-
 ## ✨ Fonctionnalités Manquantes (Expérience Utilisateur)
+
+### 🧩 Navigation & Découvrabilité (Audit Juin 2026)
+
+- [x] **Exposition des Fonctionnalités Orphelines :**
+    - Ajouter des entrées Sidebar pour **Nexus Pro** (`/social/nexus/`) et **Transparence Système** (`/social/transparency/`).
+    - Créer une section **"Outils Admin & Monitoring"** dans la Sidebar (visible pour le staff) incluant :
+        - Audit de Sécurité IA (`/admin/safety-audit/`)
+        - Monitoring TTC / Latence (`/admin/ttc-monitoring/`)
+        - Gestion Financière & Coûts API (`/admin/financials/`)
+- [ ] **Raccordement des "Ghost Labs" (Beta) :**
+    - Rendre accessibles via le menu principal ou une navigation secondaire :
+        - Synthèse Vocale Seiyuu (`/lab/audio/seiyuu/`)
+        - Compilateur Numba/IA (`/lab/compiler/`)
+        - Video RAG (Recherche flux vidéo) (`/lab/video-rag/`)
+        - Oracle de Cove (Prédictions) (`/lab/cove-oracle/`)
+
+### 🛠️ Nouvelles Pages Dédiées (Backend Mapping)
+
+- [ ] **Centre de Synchronisation de Données :**
+    - Créer une page permettant de visualiser les données locales/hors-ligne en attente de synchronisation et de forcer la réconciliation manuelle (`sync_offline_data`).
+- [ ] **Historique des Feedbacks IA :**
+    - Implémenter la vue pour `/social/ai-feedback-history/` permettant aux utilisateurs de revoir leurs interactions passées avec les agents de validation.
+- [ ] **Portail de Données Ouvertes (Open Data) :**
+    - Page de téléchargement des datasets publics (paires DPO, logs anonymisés) pour la conformité académique.
+- [ ] **Tableau de Bord "État du Cluster" :**
+    - Visualisation temps réel de la santé des instances NVIDIA H100, Ollama, et du Knowledge Graph (Neo4j).
+
+### 🌌 Autres Fonctionnalités
 
 - [ ] **Catalogue de la Galerie Multivers (Multiverse Gallery) :**
     - Implémenter une véritable page "Catalogue" (grille/liste) avec filtres et recherche pour explorer les univers synthétiques générés par la communauté.
@@ -27,7 +42,7 @@ Ce document liste toutes les tâches techniques, architecturales et fonctionnell
 ---
 
 ## 🚀 Expansion & Futur
-- [ ] **Déploiement Multi-Régions :** Préparer les scripts d'infrastructure pour un déploiement sur plusieurs régions Google Cloud.
+- [ ] **Déploiement Multi-Régions :** Préparer les scripts d'infrastructure pour un déployement sur plusieurs régions Google Cloud.
 - [ ] **Rapports de Conformité :** Automatiser les rapports hebdomadaires de conformité sécurité.
 
 ---

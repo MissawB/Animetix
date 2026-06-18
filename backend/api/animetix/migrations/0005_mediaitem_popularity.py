@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('animetix', '0004_mediaitem'),
+        ("animetix", "0004_mediaitem"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='mediaitem',
-            name='popularity',
+            model_name="mediaitem",
+            name="popularity",
             field=models.FloatField(default=0.0),
         ),
     ]

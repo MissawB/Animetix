@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional, List, Dict, Any
+
 
 @dataclass
 class GameEvent:
@@ -15,6 +15,7 @@ class GameEvent:
     total_wins: int = 0
     total_games: int = 0
     item_rarity: str = "Common"
+
 
 @dataclass
 class AchievementDefinition:

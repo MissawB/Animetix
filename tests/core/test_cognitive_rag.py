@@ -4,20 +4,25 @@ Tests unitaires et d'intégration pour l'interconnexion sémantique
 de la plasticité synaptique et de la cognition quantique au RAG d'Animetix.
 """
 
-import pytest
-import numpy as np
-from unittest.mock import MagicMock
-from core.domain.services.advanced_rag_service import AdvancedRAGService
-from core.domain.services.quantum_cognitive_service import QuantumCognitiveService
-from core.domain.services.neuromorphic_plasticity_service import SynapticPlasticityService
+import pytest  # noqa: E402
+import numpy as np  # noqa: E402
+from unittest.mock import MagicMock  # noqa: E402
+from core.domain.services.advanced_rag_service import AdvancedRAGService  # noqa: E402
+from core.domain.services.quantum_cognitive_service import QuantumCognitiveService  # noqa: E402
+from core.domain.services.neuromorphic_plasticity_service import (
+    SynapticPlasticityService,
+)  # noqa: E402
+
 
 @pytest.fixture
 def quantum_model():
     return QuantumCognitiveService(dimension=4)
 
+
 @pytest.fixture
 def plasticity_simulator():
     return SynapticPlasticityService(num_concepts=10)
+
 
 def test_cognitive_biasing_score_adjustment(quantum_model, plasticity_simulator):
     """Vérifie que _adjust_scores_cognitively applique correctement les boosts Hebb et Born."""
@@ -29,7 +34,7 @@ def test_cognitive_biasing_score_adjustment(quantum_model, plasticity_simulator)
         mock_repo,
         mock_llm,
         quantum_model=quantum_model,
-        plasticity_simulator=plasticity_simulator
+        plasticity_simulator=plasticity_simulator,
     )
 
     # 2. Préparer des candidats (un Shonen, un Seinen)
@@ -41,10 +46,10 @@ def test_cognitive_biasing_score_adjustment(quantum_model, plasticity_simulator)
     # 3. Simuler une préférence marquée pour le Shonen dans les modèles
     # On force le vecteur d'état quantique sur |Shonen>
     quantum_model.state = np.array([1.0, 0.0, 0.0, 0.0], dtype=complex)
-    
+
     # On booste le poids synaptique du concept "Action" (0) dans la plasticité
     # (Supposons que query="action" stimule concept 0)
-    plasticity_simulator.W[0, 0] = 0.8 
+    plasticity_simulator.W[0, 0] = 0.8
 
     # 4. Exécuter l'ajustement pour une requête "action"
     adjusted = service._adjust_scores_cognitively(candidates, query="action")
@@ -66,7 +71,9 @@ def test_graceful_degradation_without_cognitive_models():
     mock_llm = MagicMock()
 
     # On passe explicitement None pour désactiver
-    service = AdvancedRAGService(mock_repo, mock_llm, quantum_model=None, plasticity_simulator=None)
+    service = AdvancedRAGService(
+        mock_repo, mock_llm, quantum_model=None, plasticity_simulator=None
+    )
     candidates = [{"id": "1", "title": "Bleach", "genres": ["Shonen"], "score": 0.8}]
 
     adjusted = service._adjust_scores_cognitively(candidates, query="action")
@@ -76,7 +83,9 @@ def test_graceful_degradation_without_cognitive_models():
     assert "cognitive_boost" not in adjusted[0]
 
 
-def test_workflow_manager_triggers_cognitive_evolution(quantum_model, plasticity_simulator):
+def test_workflow_manager_triggers_cognitive_evolution(
+    quantum_model, plasticity_simulator
+):
     """Vérifie que la plasticité et l'effondrement quantique sont déclenchés en fin de workflow."""
     mock_repo = MagicMock()
     mock_llm = MagicMock()
@@ -84,7 +93,7 @@ def test_workflow_manager_triggers_cognitive_evolution(quantum_model, plasticity
         mock_repo,
         mock_llm,
         quantum_model=quantum_model,
-        plasticity_simulator=plasticity_simulator
+        plasticity_simulator=plasticity_simulator,
     )
 
     # 1. Définir l'état initial des modèles
@@ -93,7 +102,9 @@ def test_workflow_manager_triggers_cognitive_evolution(quantum_model, plasticity
     # 2. Exécuter la mise à jour cognitive pour une requête de "action"
     # On passe user_id="test_user" pour s'assurer que ça ne retourne pas early
     candidates = {"genres": ["Action", "Adventure", "Shonen"]}
-    rag_service.update_cognitive_state(user_id="test_user", query="action", clicked_item_metadata=candidates)
+    rag_service.update_cognitive_state(
+        user_id="test_user", query="action", clicked_item_metadata=candidates
+    )
 
     # 3. Vérifications :
     # A. Modèle Quantique : L'état quantique doit avoir subi une mesure sur le thème "shonen",

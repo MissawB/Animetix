@@ -6,31 +6,42 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('animetix', '0021_clubmembership_discoveryclub_clubmembership_club_and_more'),
+        ("animetix", "0021_clubmembership_discoveryclub_clubmembership_club_and_more"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='discoveryclub',
-            name='theme',
-            field=models.CharField(default='General', max_length=50),
+            model_name="discoveryclub",
+            name="theme",
+            field=models.CharField(default="General", max_length=50),
         ),
         migrations.AlterField(
-            model_name='clubmembership',
-            name='club',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='memberships', to='animetix.discoveryclub'),
+            model_name="clubmembership",
+            name="club",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="memberships",
+                to="animetix.discoveryclub",
+            ),
         ),
         migrations.AlterField(
-            model_name='clubmembership',
-            name='role',
-            field=models.CharField(choices=[('Member', 'Member'), ('Officer', 'Officer')], default='Member', max_length=20),
+            model_name="clubmembership",
+            name="role",
+            field=models.CharField(
+                choices=[("Member", "Member"), ("Officer", "Officer")],
+                default="Member",
+                max_length=20,
+            ),
         ),
         migrations.AlterField(
-            model_name='clubmembership',
-            name='user',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='club_memberships', to=settings.AUTH_USER_MODEL),
+            model_name="clubmembership",
+            name="user",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="club_memberships",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
     ]

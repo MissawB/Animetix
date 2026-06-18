@@ -14,49 +14,54 @@ api_path = os.path.join(backend_path, "api")
 if api_path not in sys.path:
     sys.path.insert(0, api_path)
 
+
 class TestSQLDataQualityPipeline(unittest.TestCase):
     def test_run_command_generates_profiles_and_runs(self):
         # We test django command execution with mock subprocess to verify target routes
-        with patch('subprocess.run') as mock_run:
+        with patch("subprocess.run") as mock_run:
             # Setup mock outputs
             mock_res = MagicMock()
             mock_res.returncode = 0
             mock_run.return_value = mock_res
-            
+
             # Run command
-            call_command('run_data_quality_tests', exclude_bigquery=True)
-            
+            call_command("run_data_quality_tests", exclude_bigquery=True)
+
             # Verify subprocess ran dbt test on relational target
             mock_run.assert_called_once()
             args = mock_run.call_args[0][0]
-            self.assertIn('test', args)
-            self.assertIn('dev', args)
+            self.assertIn("test", args)
+            self.assertIn("dev", args)
 
     def test_command_failure_raises_error(self):
-        with patch('subprocess.run') as mock_run:
+        with patch("subprocess.run") as mock_run:
             mock_res = MagicMock()
             mock_res.returncode = 1
             mock_res.stdout = "Failed test details"
             mock_res.stderr = "Errors"
             mock_run.return_value = mock_res
-            
-            with self.assertRaises(CommandError):
-                call_command('run_data_quality_tests', exclude_bigquery=True)
 
-    @patch('backend.pipeline.mlops.rlhf_pipeline.run_sql_quality_checks')
+            with self.assertRaises(CommandError):
+                call_command("run_data_quality_tests", exclude_bigquery=True)
+
+    @patch("backend.pipeline.mlops.rlhf_pipeline.run_sql_quality_checks")
     def test_pipeline_integration_runs_checks_first(self, mock_checks):
-        from backend.pipeline.mlops.rlhf_pipeline import validated_dpo_dataset
-        
-        mock_feedback = {"feedback": "dummy_path.jsonl", "sessions": "dummy_sessions.jsonl"}
-        
-        with patch('backend.pipeline.mlops.rlhf_pipeline.DPOFeedbackLoop') as mock_loop_class:
+        from backend.pipeline.mlops.rlhf_pipeline import validated_dpo_dataset  # noqa: E402
+
+        mock_feedback = {
+            "feedback": "dummy_path.jsonl",
+            "sessions": "dummy_sessions.jsonl",
+        }
+
+        with patch(
+            "backend.pipeline.mlops.rlhf_pipeline.DPOFeedbackLoop"
+        ) as mock_loop_class:
             mock_loop = MagicMock()
             mock_loop.process_and_export.return_value = 10
             mock_loop_class.return_value = mock_loop
-            
+
             res = validated_dpo_dataset(mock_feedback)
-            
+
             # Assert quality checks executed before compiling loop
             mock_checks.assert_called_once()
             self.assertEqual(res["count"], 10)
-

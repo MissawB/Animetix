@@ -1,14 +1,16 @@
 from typing import Dict, Optional
 
+
 class PricingService:
     """
     Industrialized pricing registry for all AI models used in the project.
     Stores costs in USD per 1M tokens or per unit (image, audio request, etc.).
     """
+
     TIER_LIMITS = {
-        'free': {'daily_tokens': 50000, 'daily_requests': 30},
-        'premium': {'daily_tokens': 1000000, 'daily_requests': 500},
-        'pro': {'daily_tokens': 10000000, 'daily_requests': 5000},
+        "free": {"daily_tokens": 50000, "daily_requests": 30},
+        "premium": {"daily_tokens": 1000000, "daily_requests": 500},
+        "pro": {"daily_tokens": 10000000, "daily_requests": 5000},
     }
 
     def __init__(self):
@@ -30,19 +32,16 @@ class PricingService:
             "local-llama": {"input": 0.0, "output": 0.0},
             "brain-api": {"input": 1.0, "output": 2.0},
             "brain-api-slm": {"input": 0.1, "output": 0.1},
-            
             # Generative Models - USD per Unit
-            "black-forest-labs/FLUX.1-schnell": {"unit_cost": 0.03}, # High quality fast gen
-            "stabilityai/sdxl-turbo": {"unit_cost": 0.01},           # Legacy fast gen
-            "xtts-v2": {"unit_cost": 0.005},                        # USD per voice cloning request
+            "black-forest-labs/FLUX.1-schnell": {
+                "unit_cost": 0.03
+            },  # High quality fast gen
+            "stabilityai/sdxl-turbo": {"unit_cost": 0.01},  # Legacy fast gen
+            "xtts-v2": {"unit_cost": 0.005},  # USD per voice cloning request
         }
 
     def calculate_cost(
-        self, 
-        engine: str, 
-        input_tokens: int = 0, 
-        output_tokens: int = 0, 
-        units: int = 0
+        self, engine: str, input_tokens: int = 0, output_tokens: int = 0, units: int = 0
     ) -> float:
         """
         Calculates the estimated cost based on engine and usage metrics.
@@ -51,18 +50,19 @@ class PricingService:
         if not pricing:
             # Fallback for unknown engines
             return 0.0
-        
+
         # Unit-based pricing (Image, Audio, etc.)
         if "unit_cost" in pricing:
             return units * pricing["unit_cost"]
-        
+
         # Token-based pricing
         input_rate = pricing.get("input", 0.0)
         output_rate = pricing.get("output", 0.0)
-        
-        cost = (input_tokens / 1_000_000 * input_rate) + \
-               (output_tokens / 1_000_000 * output_rate)
-        
+
+        cost = (input_tokens / 1_000_000 * input_rate) + (
+            output_tokens / 1_000_000 * output_rate
+        )
+
         return cost
 
     def get_pricing_info(self, engine: str) -> Optional[Dict[str, float]]:
@@ -73,4 +73,4 @@ class PricingService:
         Retrieves daily limits for a given user tier.
         Defaults to 'free' tier if unknown.
         """
-        return self.TIER_LIMITS.get(tier, self.TIER_LIMITS['free'])
+        return self.TIER_LIMITS.get(tier, self.TIER_LIMITS["free"])

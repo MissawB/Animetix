@@ -7,8 +7,7 @@ PROJECT_ROOT = os.path.dirname(CURRENT_DIR)
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, os.path.join(PROJECT_ROOT, "backend"))
 
-from core.utils.security import safe_http_request
-import httpx
+from core.utils.security import safe_http_request  # noqa: E402
 
 url = "https://html.duckduckgo.com/html/"
 params = {"q": "neon genesis evangelion"}

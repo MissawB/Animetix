@@ -5,40 +5,75 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('animetix', '0034_profile_wallet_balance_wallettransaction'),
+        ("animetix", "0034_profile_wallet_balance_wallettransaction"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='MangaChapter',
+            name="MangaChapter",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('number', models.FloatField()),
-                ('title', models.CharField(blank=True, max_length=255, null=True)),
-                ('external_id', models.CharField(blank=True, db_index=True, max_length=100, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('manga', models.ForeignKey(limit_choices_to={'media_type': 'Manga'}, on_delete=django.db.models.deletion.CASCADE, related_name='chapters', to='animetix.mediaitem')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("number", models.FloatField()),
+                ("title", models.CharField(blank=True, max_length=255, null=True)),
+                (
+                    "external_id",
+                    models.CharField(
+                        blank=True, db_index=True, max_length=100, null=True
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "manga",
+                    models.ForeignKey(
+                        limit_choices_to={"media_type": "Manga"},
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="chapters",
+                        to="animetix.mediaitem",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['number'],
-                'unique_together': {('manga', 'number')},
+                "ordering": ["number"],
+                "unique_together": {("manga", "number")},
             },
         ),
         migrations.CreateModel(
-            name='MangaPage',
+            name="MangaPage",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('number', models.IntegerField()),
-                ('image_url', models.URLField(max_length=500)),
-                ('metadata', models.JSONField(blank=True, default=dict)),
-                ('chapter', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='pages', to='animetix.mangachapter')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("number", models.IntegerField()),
+                ("image_url", models.URLField(max_length=500)),
+                ("metadata", models.JSONField(blank=True, default=dict)),
+                (
+                    "chapter",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="pages",
+                        to="animetix.mangachapter",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['number'],
-                'unique_together': {('chapter', 'number')},
+                "ordering": ["number"],
+                "unique_together": {("chapter", "number")},
             },
         ),
     ]

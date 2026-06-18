@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Optional
 
+
 @dataclass
 class UserProfile:
     id: int
@@ -14,14 +15,21 @@ class UserProfile:
     total_games: int = 0
     ranked_points: int = 0
     ranked_max_points: int = 0
-    tier: str = 'free'
-    api_key: Optional[str] = None # Stores the raw key on creation, or hash when loaded from DB
+    tier: str = "free"
+    api_key: Optional[str] = (
+        None  # Stores the raw key on creation, or hash when loaded from DB
+    )
 
     @property
     def rank_label(self) -> str:
-        if self.ranked_points < 500: return "Bronze 🥉"
-        if self.ranked_points < 1500: return "Argent 🥈"
-        if self.ranked_points < 3000: return "Or 🥇"
-        if self.ranked_points < 6000: return "Platine 💎"
-        if self.ranked_points < 10000: return "Diamant 💠"
+        if self.ranked_points < 500:
+            return "Bronze 🥉"
+        if self.ranked_points < 1500:
+            return "Argent 🥈"
+        if self.ranked_points < 3000:
+            return "Or 🥇"
+        if self.ranked_points < 6000:
+            return "Platine 💎"
+        if self.ranked_points < 10000:
+            return "Diamant 💠"
         return "Maître de la Data 👑"

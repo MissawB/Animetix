@@ -6,11 +6,13 @@ from core.utils.security import is_safe_url, safe_http_request
 
 logger = logging.getLogger("animetix.persistence.web_search")
 
+
 class UnifiedWebSearchAdapter(WebSearchPort):
     """
     Unified Web Search Adapter that acts as a real-time information retriever for Agentic RAG.
     Supports Tavily Search API and Google Search Grounding (Gemini).
     """
+
     def __init__(self):
         # Read API keys from environment
         self.tavily_api_key = os.getenv("TAVILY_API_KEY")
@@ -25,16 +27,22 @@ class UnifiedWebSearchAdapter(WebSearchPort):
         if self.tavily_api_key:
             results = self._search_tavily(query, limit)
             if results:
-                logger.info(f"🚀 [Tavily] Search successful for: '{query}' ({len(results)} results)")
+                logger.info(
+                    f"🚀 [Tavily] Search successful for: '{query}' ({len(results)} results)"
+                )
                 return results
 
         if self.gemini_api_key:
             results = self._search_gemini_grounding(query, limit)
             if results:
-                logger.info(f"🚀 [Gemini Grounding] Search successful for: '{query}' ({len(results)} results)")
+                logger.info(
+                    f"🚀 [Gemini Grounding] Search successful for: '{query}' ({len(results)} results)"
+                )
                 return results
 
-        logger.warning(f"⚠️ [WebSearch] No active search credentials found for: '{query}'")
+        logger.warning(
+            f"⚠️ [WebSearch] No active search credentials found for: '{query}'"
+        )
         return []
 
     def _search_tavily(self, query: str, limit: int = 5) -> List[Dict]:
@@ -45,7 +53,7 @@ class UnifiedWebSearchAdapter(WebSearchPort):
                 "api_key": self.tavily_api_key,
                 "query": query,
                 "search_depth": "basic",
-                "max_results": limit
+                "max_results": limit,
             }
             # We use safe_http_request to ensure SSRF/redirection protections
             response = safe_http_request("POST", url, json=payload, timeout=10)
@@ -55,11 +63,13 @@ class UnifiedWebSearchAdapter(WebSearchPort):
                 for r in data.get("results", []):
                     url_val = r.get("url", "")
                     if is_safe_url(url_val):
-                        mapped_results.append({
-                            "title": r.get("title", ""),
-                            "url": url_val,
-                            "snippet": r.get("content", "")
-                        })
+                        mapped_results.append(
+                            {
+                                "title": r.get("title", ""),
+                                "url": url_val,
+                                "snippet": r.get("content", ""),
+                            }
+                        )
                 return mapped_results
         except Exception as e:
             logger.error(f"❌ Error during Tavily search: {e}")
@@ -68,37 +78,42 @@ class UnifiedWebSearchAdapter(WebSearchPort):
     def _search_gemini_grounding(self, query: str, limit: int = 5) -> List[Dict]:
         """Performs search using Google Search Grounding with Gemini GenAI SDK."""
         try:
-            from google import genai
-            from google.genai import types
-            
+            from google import genai  # noqa: E402
+            from google.genai import types  # noqa: E402
+
             client = genai.Client(api_key=self.gemini_api_key)
             prompt = f"Perform a search on: '{query}' and return relevant information."
-            
+
             response = client.models.generate_content(
-                model='gemini-2.5-flash',
+                model="gemini-2.5-flash",
                 contents=prompt,
-                config=types.GenerateContentConfig(
-                    tools=[{"google_search": {}}]
-                )
+                config=types.GenerateContentConfig(tools=[{"google_search": {}}]),
             )
-            
+
             if response.candidates and len(response.candidates) > 0:
                 candidate = response.candidates[0]
-                if hasattr(candidate, 'grounding_metadata') and candidate.grounding_metadata:
+                if (
+                    hasattr(candidate, "grounding_metadata")
+                    and candidate.grounding_metadata
+                ):
                     metadata = candidate.grounding_metadata
-                    chunks = getattr(metadata, 'grounding_chunks', [])
+                    chunks = getattr(metadata, "grounding_chunks", [])
                     mapped_results = []
                     for chunk in chunks[:limit]:
-                        web = getattr(chunk, 'web', None)
+                        web = getattr(chunk, "web", None)
                         if web:
-                            title = getattr(web, 'title', '')
-                            uri = getattr(web, 'uri', '')
+                            title = getattr(web, "title", "")
+                            uri = getattr(web, "uri", "")
                             if is_safe_url(uri):
-                                mapped_results.append({
-                                    "title": title,
-                                    "url": uri,
-                                    "snippet": response.text[:200] if hasattr(response, 'text') else ""
-                                })
+                                mapped_results.append(
+                                    {
+                                        "title": title,
+                                        "url": uri,
+                                        "snippet": response.text[:200]
+                                        if hasattr(response, "text")
+                                        else "",
+                                    }
+                                )
                     return mapped_results
         except Exception as e:
             logger.error(f"❌ Error during Gemini Grounding search: {e}")

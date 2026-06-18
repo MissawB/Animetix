@@ -6,52 +6,71 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('animetix', '0028_alloydb_scann_and_ml'),
+        ("animetix", "0028_alloydb_scann_and_ml"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='UserRecommendation',
+            name="UserRecommendation",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('score', models.FloatField()),
-                ('rank', models.IntegerField()),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("score", models.FloatField()),
+                ("rank", models.IntegerField()),
+                ("updated_at", models.DateTimeField(auto_now=True)),
             ],
             options={
-                'ordering': ['rank'],
+                "ordering": ["rank"],
             },
         ),
         migrations.RenameIndex(
-            model_name='vectorrecord',
-            new_name='animetix_ve_collect_7406aa_idx',
-            old_name='animetix_ve_collect_20560a_idx',
+            model_name="vectorrecord",
+            new_name="animetix_ve_collect_7406aa_idx",
+            old_name="animetix_ve_collect_20560a_idx",
         ),
         migrations.AddField(
-            model_name='clubevent',
-            name='participants',
-            field=models.ManyToManyField(blank=True, related_name='event_participations', to=settings.AUTH_USER_MODEL),
+            model_name="clubevent",
+            name="participants",
+            field=models.ManyToManyField(
+                blank=True,
+                related_name="event_participations",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AlterField(
-            model_name='vectorrecord',
-            name='id',
-            field=models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
+            model_name="vectorrecord",
+            name="id",
+            field=models.AutoField(
+                auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+            ),
         ),
         migrations.AddField(
-            model_name='userrecommendation',
-            name='media_item',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='animetix.mediaitem'),
+            model_name="userrecommendation",
+            name="media_item",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to="animetix.mediaitem"
+            ),
         ),
         migrations.AddField(
-            model_name='userrecommendation',
-            name='user',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='recommendations', to=settings.AUTH_USER_MODEL),
+            model_name="userrecommendation",
+            name="user",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="recommendations",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AlterUniqueTogether(
-            name='userrecommendation',
-            unique_together={('user', 'media_item')},
+            name="userrecommendation",
+            unique_together={("user", "media_item")},
         ),
     ]

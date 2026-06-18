@@ -1,10 +1,12 @@
 from typing import Any, Dict
 from core.ports.game_state_port import GameStatePort
 
+
 class DjangoSessionStateAdapter(GameStatePort):
     """
     Infrastructure adapter using Django's request.session for state storage.
     """
+
     def __init__(self, session):
         self.session = session
 

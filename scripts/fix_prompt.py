@@ -1,12 +1,11 @@
 import yaml
-import os
 
-prompt_path = 'backend/core/domain/services/prompts/prompts.yaml'
-with open(prompt_path, 'r', encoding='utf-8') as f:
+prompt_path = "backend/core/domain/services/prompts/prompts.yaml"
+with open(prompt_path, "r", encoding="utf-8") as f:
     data = yaml.safe_load(f)
 
-data['vs_battle_ai_generator'] = {
-    'template': '''Tu es un expert en Powerscaling et membre éminent de VS Battles Wiki.
+data["vs_battle_ai_generator"] = {
+    "template": """Tu es un expert en Powerscaling et membre éminent de VS Battles Wiki.
 Le personnage '{name}' (Franchise: {franchise}) n'a pas de fiche officielle.
 GÉNÈRE une fiche technique crédible en respectant les conventions du site.
 
@@ -26,10 +25,10 @@ TU DOIS RÉPONDRE EXCLUSIVEMENT AVEC UN OBJET JSON VALIDE, SANS AUCUN AUTRE TEXT
     "abilities": ["...", "..."]
   }},
   "summary": "..."
-}}''',
-    'system_prompt': 'Tu es le Créateur de Profils VS Battles. Tu génères du JSON valide sans markdown.'
+}}""",
+    "system_prompt": "Tu es le Créateur de Profils VS Battles. Tu génères du JSON valide sans markdown.",
 }
 
-with open(prompt_path, 'w', encoding='utf-8') as f:
+with open(prompt_path, "w", encoding="utf-8") as f:
     yaml.dump(data, f, allow_unicode=True, sort_keys=False)
-print('✅ Prompt vs_battle_ai_generator updated successfully via YAML dump.')
+print("✅ Prompt vs_battle_ai_generator updated successfully via YAML dump.")

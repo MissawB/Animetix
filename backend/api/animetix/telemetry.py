@@ -8,6 +8,7 @@ from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapProp
 
 logger = logging.getLogger("animetix.telemetry")
 
+
 def init_telemetry(service_name: str):
     """
     Initializes Google Cloud Profiler and OpenTelemetry tracing.
@@ -15,7 +16,8 @@ def init_telemetry(service_name: str):
     # 1. Start Google Cloud Profiler in production
     if os.getenv("DJANGO_ENV") == "production":
         try:
-            import googlecloudprofiler
+            import googlecloudprofiler  # noqa: E402
+
             googlecloudprofiler.start(
                 service=service_name,
                 verbose=2,
@@ -30,21 +32,26 @@ def init_telemetry(service_name: str):
             resource=Resource.create({"service.name": service_name})
         )
         trace.set_tracer_provider(provider)
-        
+
         if os.getenv("DJANGO_ENV") == "production":
-            from opentelemetry.exporter.gcp.trace import CloudTraceSpanExporter
+            from opentelemetry.exporter.gcp.trace import CloudTraceSpanExporter  # noqa: E402
+
             exporter = CloudTraceSpanExporter()
             provider.add_span_processor(BatchSpanProcessor(exporter))
-            logger.info(f"✅ OpenTelemetry CloudTraceSpanExporter configured for: {service_name}")
+            logger.info(
+                f"✅ OpenTelemetry CloudTraceSpanExporter configured for: {service_name}"
+            )
         else:
             logger.info("ℹ️ Telemetry initialized in local dev mode (no exporter).")
-            
+
     except Exception as e:
         logger.warning(f"Failed to initialize OpenTelemetry: {e}")
+
 
 def inject_trace_context(headers: dict):
     """Injects current W3C trace context into target headers dictionary."""
     TraceContextTextMapPropagator().inject(headers)
+
 
 def extract_trace_context(headers: dict):
     """Extracts W3C trace context from incoming request headers."""

@@ -4,12 +4,13 @@ import shutil
 import yaml
 import os
 
+
 def run_command(cmd_args, check=True):
     # Resolve command path (especially important for gcloud cmd/bat on Windows)
     resolved_cmd = shutil.which(cmd_args[0])
     if resolved_cmd:
         cmd_args[0] = resolved_cmd
-        
+
     print(f"Running: {' '.join(cmd_args)}")
     result = subprocess.run(cmd_args, text=True, capture_output=True)
     if result.returncode != 0:
@@ -25,15 +26,16 @@ def run_command(cmd_args, check=True):
             print(result.stderr)
     return result
 
+
 def main():
     project_id = "animetix"
     region = "europe-west9"
     scheduler_region = "europe-west1"  # Cloud Scheduler is not available in europe-west9, using europe-west1
-    service_account = f"836616987676-compute@developer.gserviceaccount.com"
+    service_account = "836616987676-compute@developer.gserviceaccount.com"
     image = f"{region}-docker.pkg.dev/{project_id}/animetix-repo/web:latest"
     vpc_network = os.getenv("GCP_VPC_NETWORK", "default")
     vpc_subnet = os.getenv("GCP_VPC_SUBNET", "default")
-    
+
     # Configuration for all 7 serverless periodic jobs
     jobs_config = [
         {
@@ -41,71 +43,76 @@ def main():
             "args": "backend/api/manage.py,sync_catalog",
             "schedule": "0 2 * * *",
             "memory": "2Gi",
-            "cpu": "1"
+            "cpu": "1",
         },
         {
             "name": "animetix-dpo-optimization",
             "args": "backend/api/manage.py,run_scheduled_task,dpo-optimization-daily",
             "schedule": "0 3 * * *",
             "memory": "2Gi",
-            "cpu": "1"
+            "cpu": "1",
         },
         {
             "name": "animetix-data-ingestion",
             "args": "backend/api/manage.py,run_scheduled_task,daily-data-ingestion",
             "schedule": "0 3 * * *",
             "memory": "4Gi",
-            "cpu": "2"
+            "cpu": "2",
         },
         {
             "name": "animetix-maintenance-mlops",
             "args": "backend/api/manage.py,run_scheduled_task,daily-maintenance-mlops",
             "schedule": "0 5 * * *",
             "memory": "4Gi",
-            "cpu": "2"
+            "cpu": "2",
         },
         {
             "name": "animetix-health-monitoring",
             "args": "backend/api/manage.py,run_scheduled_task,hourly-health-monitoring",
             "schedule": "0 * * * *",
             "memory": "2Gi",
-            "cpu": "1"
+            "cpu": "1",
         },
         {
             "name": "animetix-lora-sensor",
             "args": "backend/api/manage.py,run_scheduled_task,gold-dataset-lora-sensor",
             "schedule": "*/10 * * * *",
             "memory": "2Gi",
-            "cpu": "1"
+            "cpu": "1",
         },
         {
             "name": "animetix-dpo-sensor",
             "args": "backend/api/manage.py,run_scheduled_task,gold-dataset-dpo-sensor",
             "schedule": "*/10 * * * *",
             "memory": "2Gi",
-            "cpu": "1"
-        }
+            "cpu": "1",
+        },
     ]
 
     # 1. Enable Cloud Scheduler API
     print("Step 1: Enabling Cloud Scheduler API...")
-    run_command([
-        "gcloud", "services", "enable", "cloudscheduler.googleapis.com",
-        f"--project={project_id}"
-    ])
+    run_command(
+        [
+            "gcloud",
+            "services",
+            "enable",
+            "cloudscheduler.googleapis.com",
+            f"--project={project_id}",
+        ]
+    )
 
     # Write env vars to a YAML file to avoid Windows shell escaping/comma issues
     env_vars_data = {
         "ALLOWED_HOSTS": "*.run.app,missawb-animetix-web.hf.space,localhost,127.0.0.1",
         "DJANGO_ENV": "production",
         "HF_SPACES": "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",
-        "SENTRY_DSN": "https://16adfd8a3ea5046c55ba1c7a4a919619@o4511298977202176.ingest.de.sentry.io/4511298998894672"
+        "SENTRY_DSN": "https://16adfd8a3ea5046c55ba1c7a4a919619@o4511298977202176.ingest.de.sentry.io/4511298998894672",
     }
-    
+
     temp_yaml_path = "env_vars_temp.yaml"
     with open(temp_yaml_path, "w", encoding="utf-8") as f:
         yaml.dump(env_vars_data, f, default_flow_style=False)
-        
+
     try:
         secrets = (
             "DJANGO_SECRET_KEY=DJANGO_SECRET_KEY:latest,"
@@ -122,19 +129,33 @@ def main():
 
         for job in jobs_config:
             job_name = job["name"]
-            
+
             # 2. Check and Create/Update Cloud Run Job
             print(f"\nChecking Cloud Run Job status for '{job_name}'...")
-            check_job = run_command([
-                "gcloud", "run", "jobs", "describe", job_name,
-                f"--region={region}", f"--project={project_id}"
-            ], check=False)
-            
+            check_job = run_command(
+                [
+                    "gcloud",
+                    "run",
+                    "jobs",
+                    "describe",
+                    job_name,
+                    f"--region={region}",
+                    f"--project={project_id}",
+                ],
+                check=False,
+            )
+
             action = "update" if check_job.returncode == 0 else "create"
-            print(f"Job '{job_name}' check returned code {check_job.returncode}. Action: {action}")
+            print(
+                f"Job '{job_name}' check returned code {check_job.returncode}. Action: {action}"
+            )
 
             deploy_cmd = [
-                "gcloud", "run", "jobs", action, job_name,
+                "gcloud",
+                "run",
+                "jobs",
+                action,
+                job_name,
                 f"--image={image}",
                 "--command=python",
                 f"--args={job['args']}",
@@ -147,33 +168,46 @@ def main():
                 f"--cpu={job['cpu']}",
                 f"--env-vars-file={temp_yaml_path}",
                 f"--set-secrets={secrets}",
-                f"--project={project_id}"
+                f"--project={project_id}",
             ]
-            
+
             run_command(deploy_cmd)
 
             # 3. Check and Create/Update Cloud Scheduler Job
             scheduler_job_name = f"{job_name}-trigger"
             print(f"Checking Cloud Scheduler Job status for '{scheduler_job_name}'...")
-            check_sched = run_command([
-                "gcloud", "scheduler", "jobs", "describe", scheduler_job_name,
-                f"--location={scheduler_region}", f"--project={project_id}"
-            ], check=False)
+            check_sched = run_command(
+                [
+                    "gcloud",
+                    "scheduler",
+                    "jobs",
+                    "describe",
+                    scheduler_job_name,
+                    f"--location={scheduler_region}",
+                    f"--project={project_id}",
+                ],
+                check=False,
+            )
 
             sched_action = "update" if check_sched.returncode == 0 else "create"
             uri = f"https://{region}-run.googleapis.com/v2/projects/{project_id}/locations/{region}/jobs/{job_name}:run"
-            
+
             sched_cmd = [
-                "gcloud", "scheduler", "jobs", sched_action, "http", scheduler_job_name,
+                "gcloud",
+                "scheduler",
+                "jobs",
+                sched_action,
+                "http",
+                scheduler_job_name,
                 f"--location={scheduler_region}",
                 f"--schedule={job['schedule']}",
                 "--time-zone=Europe/Paris",
                 f"--uri={uri}",
                 "--http-method=POST",
                 f"--oauth-service-account-email={service_account}",
-                f"--project={project_id}"
+                f"--project={project_id}",
             ]
-            
+
             run_command(sched_cmd)
 
         print("\nAll 7 periodic jobs deployed successfully!")
@@ -181,6 +215,7 @@ def main():
     finally:
         if os.path.exists(temp_yaml_path):
             os.remove(temp_yaml_path)
+
 
 if __name__ == "__main__":
     main()

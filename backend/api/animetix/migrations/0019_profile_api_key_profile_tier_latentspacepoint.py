@@ -4,40 +4,60 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('animetix', '0018_notification'),
+        ("animetix", "0018_notification"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='profile',
-            name='api_key',
+            model_name="profile",
+            name="api_key",
             field=models.CharField(blank=True, max_length=100, null=True, unique=True),
         ),
         migrations.AddField(
-            model_name='profile',
-            name='tier',
-            field=models.CharField(choices=[('free', 'Free'), ('premium', 'Premium'), ('pro', 'Professional')], default='free', max_length=20),
+            model_name="profile",
+            name="tier",
+            field=models.CharField(
+                choices=[
+                    ("free", "Free"),
+                    ("premium", "Premium"),
+                    ("pro", "Professional"),
+                ],
+                default="free",
+                max_length=20,
+            ),
         ),
         migrations.CreateModel(
-            name='LatentSpacePoint',
+            name="LatentSpacePoint",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('media_type', models.CharField(max_length=20)),
-                ('vibe_type', models.CharField(max_length=20)),
-                ('external_id', models.CharField(max_length=100)),
-                ('title', models.CharField(max_length=255)),
-                ('x', models.FloatField()),
-                ('y', models.FloatField()),
-                ('z', models.FloatField()),
-                ('cluster', models.IntegerField(default=0)),
-                ('metadata', models.JSONField(default=dict)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("media_type", models.CharField(max_length=20)),
+                ("vibe_type", models.CharField(max_length=20)),
+                ("external_id", models.CharField(max_length=100)),
+                ("title", models.CharField(max_length=255)),
+                ("x", models.FloatField()),
+                ("y", models.FloatField()),
+                ("z", models.FloatField()),
+                ("cluster", models.IntegerField(default=0)),
+                ("metadata", models.JSONField(default=dict)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
             ],
             options={
-                'indexes': [models.Index(fields=['media_type', 'vibe_type'], name='animetix_la_media_t_69117f_idx')],
-                'unique_together': {('media_type', 'vibe_type', 'external_id')},
+                "indexes": [
+                    models.Index(
+                        fields=["media_type", "vibe_type"],
+                        name="animetix_la_media_t_69117f_idx",
+                    )
+                ],
+                "unique_together": {("media_type", "vibe_type", "external_id")},
             },
         ),
     ]

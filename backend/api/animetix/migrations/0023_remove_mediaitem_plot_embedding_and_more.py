@@ -4,31 +4,30 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('animetix', '0022_discoveryclub_theme_alter_clubmembership_club_and_more'),
+        ("animetix", "0022_discoveryclub_theme_alter_clubmembership_club_and_more"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='mediaitem',
-            name='plot_embedding',
+            model_name="mediaitem",
+            name="plot_embedding",
         ),
         migrations.RemoveField(
-            model_name='mediaitem',
-            name='thematic_embedding',
+            model_name="mediaitem",
+            name="thematic_embedding",
         ),
         migrations.RemoveField(
-            model_name='mediaitem',
-            name='visual_embedding',
+            model_name="mediaitem",
+            name="visual_embedding",
         ),
         migrations.RemoveField(
-            model_name='semanticcache',
-            name='query_embedding',
+            model_name="semanticcache",
+            name="query_embedding",
         ),
         migrations.AddField(
-            model_name='creativefusion',
-            name='is_public',
+            model_name="creativefusion",
+            name="is_public",
             field=models.BooleanField(default=True),
         ),
     ]

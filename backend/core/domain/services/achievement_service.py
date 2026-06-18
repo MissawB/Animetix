@@ -3,8 +3,13 @@ from ..entities.achievement import AchievementDefinition, GameEvent
 from ...ports.achievement_port import AchievementPort
 from ...ports.notification_port import NotificationPort
 
+
 class AchievementDomainService:
-    def __init__(self, port: AchievementPort, notification_port: Optional[NotificationPort] = None):
+    def __init__(
+        self,
+        port: AchievementPort,
+        notification_port: Optional[NotificationPort] = None,
+    ):
         self.port = port
         self.notification_port = notification_port
 
@@ -18,72 +23,80 @@ class AchievementDomainService:
 
         unlocked_codes = self.port.get_user_unlocked_codes(event.user_id)
         all_definitions = self.port.get_all_achievements()
-        
+
         newly_unlocked = []
-        
+
         for ach in all_definitions:
             if ach.code in unlocked_codes:
                 continue
-            
+
             should_unlock = False
-            
+
             # --- RÈGLES DE DÉBLOCAGE ---
-            
+
             # Succès de Bienvenue
-            if ach.code == 'first_win':
+            if ach.code == "first_win":
                 should_unlock = True
-                
+
             # Succès de Streak
-            elif ach.code == 'streak_3' and event.streak >= 3:
+            elif ach.code == "streak_3" and event.streak >= 3:
                 should_unlock = True
-            elif ach.code == 'streak_7' and event.streak >= 7:
+            elif ach.code == "streak_7" and event.streak >= 7:
                 should_unlock = True
-            elif ach.code == 'streak_10' and event.streak >= 10:
+            elif ach.code == "streak_10" and event.streak >= 10:
                 should_unlock = True
-                
+
             # Succès de Volume (Total Wins)
-            elif ach.code == 'wins_10' and event.total_wins >= 10:
+            elif ach.code == "wins_10" and event.total_wins >= 10:
                 should_unlock = True
-            elif ach.code == 'wins_50' and event.total_wins >= 50:
+            elif ach.code == "wins_50" and event.total_wins >= 50:
                 should_unlock = True
-            elif ach.code == 'wins_100' and event.total_wins >= 100:
+            elif ach.code == "wins_100" and event.total_wins >= 100:
                 should_unlock = True
-                
+
             # Succès Spécifiques aux Modes
-            elif ach.code == 'daily_master' and event.is_daily:
+            elif ach.code == "daily_master" and event.is_daily:
                 should_unlock = True
-            elif ach.code == 'ranked_warrior' and event.is_ranked:
+            elif ach.code == "ranked_warrior" and event.is_ranked:
                 should_unlock = True
-                
+
             # Succès de Rapidité
-            elif ach.code == 'speed_demon' and event.attempts <= 3 and event.game_mode == 'classic':
+            elif (
+                ach.code == "speed_demon"
+                and event.attempts <= 3
+                and event.game_mode == "classic"
+            ):
                 should_unlock = True
-            
+
             # Succès de Rareté
-            elif ach.code == 'rare_finder' and event.item_rarity in ['Rare', 'Epic', 'Legendary']:
+            elif ach.code == "rare_finder" and event.item_rarity in [
+                "Rare",
+                "Epic",
+                "Legendary",
+            ]:
                 should_unlock = True
-            elif ach.code == 'legendary_hunter' and event.item_rarity == 'Legendary':
+            elif ach.code == "legendary_hunter" and event.item_rarity == "Legendary":
                 should_unlock = True
 
             if should_unlock:
                 self.port.unlock_achievement(event.user_id, ach.code)
                 newly_unlocked.append(ach)
-                
+
                 # --- NOTIFICATION ---
                 if self.notification_port:
                     self.notification_port.send(
                         user_id=event.user_id,
                         title="Succès Débloqué !",
                         message=f"Félicitations ! Vous avez débloqué le succès '{ach.name}' (+{ach.xp_reward} XP).",
-                        notification_type='achievement',
-                        link='/achievements/',
+                        notification_type="achievement",
+                        link="/achievements/",
                         achievement={
                             "name": ach.name,
                             "icon": "🏆",
-                            "xp": ach.xp_reward
-                        }
+                            "xp": ach.xp_reward,
+                        },
                     )
-                
+
         return newly_unlocked
 
     def unlock_by_code(self, user_id: int, achievement_code: str):
@@ -92,10 +105,12 @@ class AchievementDomainService:
         if achievement_code not in unlocked_codes:
             self.port.unlock_achievement(user_id, achievement_code)
 
+
 class GameEventListener:
     """
     Écouteur d'événements de jeu qui déclenche les vérifications de succès.
     """
+
     def __init__(self, achievement_service: AchievementDomainService):
         self.achievement_service = achievement_service
 

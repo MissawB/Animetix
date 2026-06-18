@@ -4,15 +4,16 @@ import asyncio
 
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 
-if sys.platform == 'win32':
+if sys.platform == "win32":
     try:
         asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
     except Exception:
         pass
 
-from importlib.abc import MetaPathFinder, Loader
-import importlib
-from importlib.machinery import ModuleSpec
+from importlib.abc import MetaPathFinder, Loader  # noqa: E402
+import importlib  # noqa: E402
+from importlib.machinery import ModuleSpec  # noqa: E402
+
 
 class AliasLoader(Loader):
     def __init__(self, real_module):
@@ -23,6 +24,7 @@ class AliasLoader(Loader):
 
     def exec_module(self, module):
         pass
+
 
 class SrcPipelineMapper(MetaPathFinder):
     def find_spec(self, fullname, path, target=None):
@@ -36,36 +38,47 @@ class SrcPipelineMapper(MetaPathFinder):
                 pass
         return None
 
+
 sys.meta_path.insert(0, SrcPipelineMapper())
 
 # Map the parent packages
 try:
-    import src
+    import src  # noqa: E402
 except ImportError:
-    import types
+    import types  # noqa: E402
+
     src = types.ModuleType("src")
     sys.modules["src"] = src
 
 try:
-    import pipeline
+    import pipeline  # noqa: E402
+
     src.pipeline = pipeline
     sys.modules["src.pipeline"] = pipeline
 except Exception:
     pass
 
-import pytest
-import tracemalloc
-def create_image_bytes(width: int = 256, height: int = 256, mode: str = "RGB", fmt: str = "JPEG") -> bytes:
+import pytest  # noqa: E402
+import tracemalloc  # noqa: E402
+
+
+def create_image_bytes(
+    width: int = 256, height: int = 256, mode: str = "RGB", fmt: str = "JPEG"
+) -> bytes:
     """Create an image in memory and return its bytes.
     Used by test fixtures to avoid filesystem I/O.
     """
-    from io import BytesIO
-    from PIL import Image
+    from io import BytesIO  # noqa: E402
+    from PIL import Image  # noqa: E402
+
     img = Image.new(mode, (width, height), color=(73, 109, 137))
     buf = BytesIO()
     img.save(buf, format=fmt)
     return buf.getvalue()
-from unittest.mock import MagicMock
+
+
+from unittest.mock import MagicMock  # noqa: E402
+
 
 @pytest.fixture(scope="session", autouse=True)
 def enable_tracemalloc():
@@ -74,13 +87,14 @@ def enable_tracemalloc():
     yield
     tracemalloc.stop()
 
-@pytest.fixture
 
+@pytest.fixture
 def sample_image():
     """Return JPEG bytes of a 256x256 RGB image for tests.
     Uses the helper to keep image creation logic in one place.
     """
     return create_image_bytes(width=256, height=256, mode="RGB", fmt="JPEG")
+
 
 @pytest.fixture
 def mock_pipeline():
@@ -88,12 +102,14 @@ def mock_pipeline():
     Used by both DiffusersAdapter and VisionTransformersAdapter tests.
     """
     pipeline = MagicMock()
-    dummy_depth = MagicMock()
+    MagicMock()
     # Create a simple grayscale image for depth
-    from PIL import Image
-    dummy_depth_image = Image.new('L', (256, 256), color=128)
+    from PIL import Image  # noqa: E402
+
+    dummy_depth_image = Image.new("L", (256, 256), color=128)
     pipeline.return_value = {"depth": dummy_depth_image}
     return pipeline
+
 
 @pytest.fixture
 def mock_container():

@@ -198,6 +198,8 @@ const LayoutContent: React.FC<{ children: ReactNode }> = ({ children }) => {
           <Link to="/research/papers/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/research/papers/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
             <Microscope className="w-4 h-4 text-cyan-500" /> {t('nav.research', 'Labo de Recherche')}
           </Link>
+
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2 mt-6">Système & Diagnostics</p>
           <Link to="/social/nexus/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/social/nexus/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
             <BrainCircuit className="w-4 h-4 text-fuchsia-400" /> {t('nav.nexus', 'Nexus Pro')}
           </Link>
@@ -285,13 +287,37 @@ const LayoutContent: React.FC<{ children: ReactNode }> = ({ children }) => {
 
         {user?.is_staff && (
           <div className="mt-10 pt-8 border-t border-black/5 dark:border-white/5">
-             <Link 
-               to="/admin/dashboard/" 
-               onClick={() => toggleSidebar(true)}
-               className="w-full py-3 rounded-2xl bg-white/50 dark:bg-black/20 flex items-center justify-center gap-3 no-underline text-black dark:text-white font-black italic text-xs hover:bg-yellow-400 dark:hover:bg-yellow-400 hover:text-black dark:hover:text-black transition-all"
-             >
-                <Shield className="w-4 h-4" /> {t('nav.admin', 'ADMINISTRATION')}
-             </Link>
+             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-4">Outils Admin & Monitoring</p>
+             <div className="space-y-1">
+               <Link 
+                 to="/admin/safety-audit/" 
+                 onClick={() => toggleSidebar(true)}
+                 className="nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-red-500/10 dark:hover:bg-red-500/5 text-xs"
+               >
+                  <Shield className="w-4 h-4 text-red-500" /> Audit Sécurité IA
+               </Link>
+               <Link 
+                 to="/admin/ttc-monitoring/" 
+                 onClick={() => toggleSidebar(true)}
+                 className="nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-blue-500/10 dark:hover:bg-blue-500/5 text-xs"
+               >
+                  <Zap className="w-4 h-4 text-blue-500" /> Monitoring TTC
+               </Link>
+               <Link 
+                 to="/admin/financials/" 
+                 onClick={() => toggleSidebar(true)}
+                 className="nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-green-500/10 dark:hover:bg-green-500/5 text-xs"
+               >
+                  <Trophy className="w-4 h-4 text-green-500" /> Gestion Financière
+               </Link>
+               <Link 
+                 to="/admin/dashboard/" 
+                 onClick={() => toggleSidebar(true)}
+                 className="w-full mt-4 py-3 rounded-2xl bg-white/50 dark:bg-black/20 flex items-center justify-center gap-3 no-underline text-black dark:text-white font-black italic text-xs hover:bg-yellow-400 dark:hover:bg-yellow-400 hover:text-black dark:hover:text-black transition-all"
+               >
+                  <Shield className="w-4 h-4" /> {t('nav.admin', 'ADMINISTRATION')}
+               </Link>
+             </div>
           </div>
         )}
       </aside>

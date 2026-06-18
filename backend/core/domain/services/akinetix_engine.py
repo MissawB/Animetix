@@ -1,5 +1,3 @@
-import math
-import random
 import numpy as np
 import logging
 from typing import List, Dict, Any, Tuple, Optional
@@ -8,14 +6,15 @@ from .catalog_service import CatalogService
 from ..entities.akinetix import AkinetixGameState, AkinetixQuestion
 from .akinetix_rl_env import AkinetixRLEnvironment
 
-logger = logging.getLogger('animetix.akinetix.engine')
+logger = logging.getLogger("animetix.akinetix.engine")
+
 
 class AkinetixEngine:
     """
     Unified Engine for Akinetix game logic.
     Combines Bayesian (Classical) and Reinforcement Learning (RL) strategies.
     """
-    
+
     # Decision thresholds
     PROBABILITY_THRESHOLD = 0.8
     MIN_STEPS_BEFORE_GUESS = 5
@@ -23,37 +22,52 @@ class AkinetixEngine:
 
     # Answer mapping
     ANSWER_MAPPING = {
-        'OUI': 'yes',
-        'NON': 'no',
-        'PEUT-ÊTRE': 'probably',
-        'PROBABLEMENT PAS': 'probably_not'
+        "OUI": "yes",
+        "NON": "no",
+        "PEUT-ÊTRE": "probably",
+        "PROBABLEMENT PAS": "probably_not",
     }
 
-    def __init__(self, catalog_service: CatalogService, formatter: Optional[QuestionFormatter] = None, cfr_solver: Any = None):
+    def __init__(
+        self,
+        catalog_service: CatalogService,
+        formatter: Optional[QuestionFormatter] = None,
+        cfr_solver: Any = None,
+    ):
         self.catalog_service = catalog_service
         self.formatter = formatter or QuestionFormatter()
         self.cfr_solver = cfr_solver
 
-    def get_next_question(self, candidates: List[str], game_state: Dict[str, Any]) -> Tuple[str, float]:
+    def get_next_question(
+        self, candidates: List[str], game_state: Dict[str, Any]
+    ) -> Tuple[str, float]:
         """
         Délègue la sélection de la meilleure question au solveur CFR si disponible,
         sinon retourne la première avec une confiance par défaut.
         """
         if self.cfr_solver:
             return self.cfr_solver.solve_best_question(candidates, game_state)
-        
+
         # Fallback si pas de solveur (heuristique simple)
         return candidates[0] if candidates else "Inconnu", 0.5
 
-    def start_game(self, catalog_db: List[Dict], mode: str = "classical") -> AkinetixGameState:
+    def start_game(
+        self, catalog_db: List[Dict], mode: str = "classical"
+    ) -> AkinetixGameState:
         """Starts a new game with the chosen mode."""
         logger.info(f"Starting new Akinetix game session (mode: {mode}).")
-        
+
         if mode == "rl":
             return self._start_rl_game(catalog_db)
         return self._start_classical_game(catalog_db)
 
-    def process_answer(self, catalog_db: List[Dict], state: AkinetixGameState, raw_answer: str, mode: str = "classical") -> AkinetixGameState:
+    def process_answer(
+        self,
+        catalog_db: List[Dict],
+        state: AkinetixGameState,
+        raw_answer: str,
+        mode: str = "classical",
+    ) -> AkinetixGameState:
         """Processes an answer and moves to the next state."""
         if mode == "rl":
             return self._process_rl_answer(catalog_db, state, raw_answer)
@@ -64,13 +78,13 @@ class AkinetixEngine:
     def _start_classical_game(self, catalog_db: List[Dict]) -> AkinetixGameState:
         fine_attrs = self.catalog_service.get_akinetix_attributes()
         items, attributes = self._prepare_classical_data(catalog_db, fine_attrs)
-        
+
         n_items = len(items)
         probs = np.full(n_items, 1.0 / n_items) if n_items > 0 else np.array([])
-        
+
         # Initial question
         next_attr = self._propose_classical_question(items, attributes, probs, set())
-        
+
         return AkinetixGameState(
             history=[],
             current_q=self.formatter.format(next_attr),
@@ -78,78 +92,109 @@ class AkinetixEngine:
             game_over=False,
             ai_guess=None,
             probs=probs.tolist(),
-            asked_attrs=[]
+            asked_attrs=[],
         )
 
-    def _process_classical_answer(self, catalog_db: List[Dict], state: AkinetixGameState, raw_answer: str) -> AkinetixGameState:
-        answer = self.ANSWER_MAPPING.get(raw_answer.upper(), 'dont_know')
+    def _process_classical_answer(
+        self, catalog_db: List[Dict], state: AkinetixGameState, raw_answer: str
+    ) -> AkinetixGameState:
+        answer = self.ANSWER_MAPPING.get(raw_answer.upper(), "dont_know")
         fine_attrs = self.catalog_service.get_akinetix_attributes()
         items, attributes = self._prepare_classical_data(catalog_db, fine_attrs)
-        
+
         probs = np.array(state.probs)
         asked_attrs = set(state.asked_attrs)
-        
+
         if state.current_attr:
-            probs = self._update_classical_probs(items, probs, state.current_attr, answer, fine_attrs)
+            probs = self._update_classical_probs(
+                items, probs, state.current_attr, answer, fine_attrs
+            )
             asked_attrs.add(state.current_attr)
-        
+
         state.history.append(AkinetixQuestion(q=state.current_q, a=raw_answer))
         state.probs = probs.tolist()
         state.asked_attrs = list(asked_attrs)
-        
+
         best_title, best_prob = self._get_classical_best_guess(items, probs)
         steps = len(asked_attrs)
-        
-        if (best_prob > self.PROBABILITY_THRESHOLD and steps >= self.MIN_STEPS_BEFORE_GUESS) or steps >= self.MAX_STEPS_TOTAL:
+
+        if (
+            best_prob > self.PROBABILITY_THRESHOLD
+            and steps >= self.MIN_STEPS_BEFORE_GUESS
+        ) or steps >= self.MAX_STEPS_TOTAL:
             state.current_q = f"Est-ce que tu penses à : {best_title} ?"
             state.ai_guess = best_title
             state.game_over = True
         else:
-            next_attr = self._propose_classical_question(items, attributes, probs, asked_attrs, fine_attrs)
+            next_attr = self._propose_classical_question(
+                items, attributes, probs, asked_attrs, fine_attrs
+            )
             if next_attr:
                 state.current_q = self.formatter.format(next_attr)
                 state.current_attr = next_attr
             else:
-                state.current_q = f"Je ne sais plus quoi demander... Serait-ce {best_title} ?"
+                state.current_q = (
+                    f"Je ne sais plus quoi demander... Serait-ce {best_title} ?"
+                )
                 state.ai_guess = best_title
                 state.game_over = True
-        
+
         return state
 
-    def _prepare_classical_data(self, catalog_db: List[Dict], fine_attributes: Dict) -> Tuple[List[Dict], List[str]]:
-        items = [item for item in catalog_db if self._has_attributes(item, fine_attributes)]
+    def _prepare_classical_data(
+        self, catalog_db: List[Dict], fine_attributes: Dict
+    ) -> Tuple[List[Dict], List[str]]:
+        items = [
+            item for item in catalog_db if self._has_attributes(item, fine_attributes)
+        ]
         attrs = set()
         for item in items:
-            char_id = str(item.get('id'))
+            char_id = str(item.get("id"))
             if char_id in fine_attributes:
                 for k in fine_attributes[char_id].keys():
                     attrs.add(f"fine:{k}")
-            if item.get('genres'): attrs.update([f"genre:{g}" for g in item.get('genres')])
-            if item.get('micro_tags'): attrs.update([f"tag:{t}" for t in item.get('micro_tags')])
-            if item.get('studios'): attrs.update([f"studio:{s}" for s in item.get('studios')])
-            meta = item.get('metadata', {})
-            if isinstance(meta, dict) and meta.get('themes'):
-                attrs.update([f"theme:{t}" for t in meta.get('themes')])
+            if item.get("genres"):
+                attrs.update([f"genre:{g}" for g in item.get("genres")])
+            if item.get("micro_tags"):
+                attrs.update([f"tag:{t}" for t in item.get("micro_tags")])
+            if item.get("studios"):
+                attrs.update([f"studio:{s}" for s in item.get("studios")])
+            meta = item.get("metadata", {})
+            if isinstance(meta, dict) and meta.get("themes"):
+                attrs.update([f"theme:{t}" for t in meta.get("themes")])
         return items, sorted(list(attrs))
 
     def _has_attributes(self, item: Dict, fine_attributes: Dict) -> bool:
-        char_id = str(item.get('id'))
-        if char_id in fine_attributes: return True
-        return any([
-            item.get('genres'), 
-            item.get('micro_tags'), 
-            item.get('studios'),
-            item.get('metadata', {}).get('themes') if isinstance(item.get('metadata'), dict) else False
-        ])
+        char_id = str(item.get("id"))
+        if char_id in fine_attributes:
+            return True
+        return any(
+            [
+                item.get("genres"),
+                item.get("micro_tags"),
+                item.get("studios"),
+                item.get("metadata", {}).get("themes")
+                if isinstance(item.get("metadata"), dict)
+                else False,
+            ]
+        )
 
-    def _update_classical_probs(self, items: List[Dict], probs: np.ndarray, attribute: str, answer: str, fine_attributes: Dict) -> np.ndarray:
-        if len(items) == 0: return probs
+    def _update_classical_probs(
+        self,
+        items: List[Dict],
+        probs: np.ndarray,
+        attribute: str,
+        answer: str,
+        fine_attributes: Dict,
+    ) -> np.ndarray:
+        if len(items) == 0:
+            return probs
         likelihoods = {
-            'yes': (0.9, 0.1),
-            'no': (0.1, 0.9),
-            'dont_know': (0.5, 0.5),
-            'probably': (0.75, 0.25),
-            'probably_not': (0.25, 0.75)
+            "yes": (0.9, 0.1),
+            "no": (0.1, 0.9),
+            "dont_know": (0.5, 0.5),
+            "probably": (0.75, 0.25),
+            "probably_not": (0.25, 0.75),
         }
         p_a_given_h, p_a_given_not_h = likelihoods.get(answer, (0.5, 0.5))
         new_probs = np.zeros(len(items))
@@ -158,42 +203,66 @@ class AkinetixEngine:
             p_a_given_ci = p_a_given_h if has_attr else p_a_given_not_h
             new_probs[i] = probs[i] * p_a_given_ci
         total = np.sum(new_probs)
-        return new_probs / total if total > 1e-9 else np.full(len(items), 1.0 / len(items))
+        return (
+            new_probs / total if total > 1e-9 else np.full(len(items), 1.0 / len(items))
+        )
 
-    def _check_attribute_instance(self, item: Dict, attribute: str, fine_attributes: Dict) -> bool:
-        if ':' not in attribute: return False
-        attr_type, attr_val = attribute.split(':', 1)
-        if attr_type == 'fine':
-            return fine_attributes.get(str(item.get('id')), {}).get(attr_val, False)
-        if attr_type == 'genre': return attr_val in (item.get('genres') or [])
-        if attr_type == 'tag': return attr_val in (item.get('micro_tags') or [])
-        if attr_type == 'studio': return attr_val in (item.get('studios') or [])
-        if attr_type == 'theme':
-            meta = item.get('metadata', {})
-            return attr_val in (meta.get('themes') or []) if isinstance(meta, dict) else False
+    def _check_attribute_instance(
+        self, item: Dict, attribute: str, fine_attributes: Dict
+    ) -> bool:
+        if ":" not in attribute:
+            return False
+        attr_type, attr_val = attribute.split(":", 1)
+        if attr_type == "fine":
+            return fine_attributes.get(str(item.get("id")), {}).get(attr_val, False)
+        if attr_type == "genre":
+            return attr_val in (item.get("genres") or [])
+        if attr_type == "tag":
+            return attr_val in (item.get("micro_tags") or [])
+        if attr_type == "studio":
+            return attr_val in (item.get("studios") or [])
+        if attr_type == "theme":
+            meta = item.get("metadata", {})
+            return (
+                attr_val in (meta.get("themes") or [])
+                if isinstance(meta, dict)
+                else False
+            )
         return False
 
-    def _propose_classical_question(self, items: List[Dict], attributes: List[str], probs: np.ndarray, asked_attrs: set, fine_attributes: Dict = None) -> Optional[str]:
+    def _propose_classical_question(
+        self,
+        items: List[Dict],
+        attributes: List[str],
+        probs: np.ndarray,
+        asked_attrs: set,
+        fine_attributes: Dict = None,
+    ) -> Optional[str]:
         candidates = [a for a in attributes if a not in asked_attrs]
-        if not candidates: return None
-        
+        if not candidates:
+            return None
+
         # 1. Calcul de l'entropie (gain d'information) pour chaque candidat
         scored_candidates = []
-        for attr in candidates[:200]: # Limite pour la performance
-            p_yes = sum(probs[i] for i, item in enumerate(items) if self._check_attribute_instance(item, attr, fine_attributes or {}))
-            gain = 1.0 - abs(p_yes - 0.5) * 2 # 1.0 = entropie max, 0.0 = min
+        for attr in candidates[:200]:  # Limite pour la performance
+            p_yes = sum(
+                probs[i]
+                for i, item in enumerate(items)
+                if self._check_attribute_instance(item, attr, fine_attributes or {})
+            )
+            gain = 1.0 - abs(p_yes - 0.5) * 2  # 1.0 = entropie max, 0.0 = min
             scored_candidates.append((attr, gain))
-            
+
         # Tri par gain d'information décroissant
         scored_candidates.sort(key=lambda x: x[1], reverse=True)
         top_candidates = [x[0] for x in scored_candidates[:10]]
-        
+
         # 2. Utilisation du solveur CFR pour choisir le chemin optimal parmi les meilleurs
         if self.cfr_solver:
             game_state = {
                 "probs": probs.tolist(),
                 "asked_attrs": list(asked_attrs),
-                "items_count": len(items)
+                "items_count": len(items),
             }
             best_attr, _ = self.get_next_question(top_candidates, game_state)
             return best_attr
@@ -201,11 +270,14 @@ class AkinetixEngine:
         # Fallback classique (le meilleur selon l'entropie pure)
         return top_candidates[0] if top_candidates else None
 
-    def _get_classical_best_guess(self, items: List[Dict], probs: np.ndarray) -> Tuple[str, float]:
-        if probs.size == 0: return "Inconnu", 0.0
+    def _get_classical_best_guess(
+        self, items: List[Dict], probs: np.ndarray
+    ) -> Tuple[str, float]:
+        if probs.size == 0:
+            return "Inconnu", 0.0
         idx = np.argmax(probs)
         item = items[idx]
-        title = item.get('title') or item.get('name', 'Inconnu')
+        title = item.get("title") or item.get("name", "Inconnu")
         return title, probs[idx]
 
     # --- RL Strategy Implementation ---
@@ -215,7 +287,7 @@ class AkinetixEngine:
         # Simulation d'une action initiale (gain d'info max)
         action_idx = self._rl_get_best_action(env)
         next_attr = env.attributes[action_idx]
-        
+
         return AkinetixGameState(
             history=[],
             current_q=self._rl_format_question(next_attr),
@@ -223,30 +295,36 @@ class AkinetixEngine:
             game_over=False,
             ai_guess=None,
             probs=[],
-            asked_attrs=[]
+            asked_attrs=[],
         )
 
-    def _process_rl_answer(self, catalog_db: List[Dict], state: AkinetixGameState, raw_answer: str) -> AkinetixGameState:
+    def _process_rl_answer(
+        self, catalog_db: List[Dict], state: AkinetixGameState, raw_answer: str
+    ) -> AkinetixGameState:
         # Simplification: l'env RL est stateless ici, on simule le filtrage
         asked_attrs = state.asked_attrs
         if state.current_attr:
             asked_attrs.append(state.current_attr)
-        
+
         state.history.append(AkinetixQuestion(q=state.current_q, a=raw_answer))
         steps = len(state.history)
 
         # Reconstruire un env partiel pour la décision
         env = AkinetixRLEnvironment(catalog_db)
         # On réduit le pool de candidats manuellement pour l'heuristique
-        filtered_candidates = self._rl_filter_candidates(catalog_db, state.history, asked_attrs)
+        filtered_candidates = self._rl_filter_candidates(
+            catalog_db, state.history, asked_attrs
+        )
         env.active_candidates = filtered_candidates
-        
+
         pool_size = len(filtered_candidates)
 
         if pool_size <= 1 or steps >= 20:
-            best_match = filtered_candidates[0] if filtered_candidates else catalog_db[0]
+            best_match = (
+                filtered_candidates[0] if filtered_candidates else catalog_db[0]
+            )
             state.current_q = f"L'IA prédictive pense à : {best_match['title']}"
-            state.ai_guess = best_match['title']
+            state.ai_guess = best_match["title"]
             state.game_over = True
         else:
             action_idx = self._rl_get_best_action(env)
@@ -254,7 +332,7 @@ class AkinetixEngine:
             state.current_q = self._rl_format_question(next_attr)
             state.current_attr = next_attr
             state.asked_attrs = asked_attrs
-            
+
         return state
 
     def _rl_get_best_action(self, env: AkinetixRLEnvironment) -> int:
@@ -269,36 +347,53 @@ class AkinetixEngine:
                 best_action = idx
         return best_action
 
-    def _rl_simulate_info_gain(self, env: AkinetixRLEnvironment, action_idx: int) -> float:
+    def _rl_simulate_info_gain(
+        self, env: AkinetixRLEnvironment, action_idx: int
+    ) -> float:
         attr = env.attributes[action_idx]
-        attr_type, attr_val = attr.split(':', 1)
-        count = sum(1 for item in env.active_candidates if self._rl_check_attr(item, attr_type, attr_val))
+        attr_type, attr_val = attr.split(":", 1)
+        count = sum(
+            1
+            for item in env.active_candidates
+            if self._rl_check_attr(item, attr_type, attr_val)
+        )
         ratio = count / len(env.active_candidates) if env.active_candidates else 0
         return 1.0 - abs(0.5 - ratio)
 
     def _rl_check_attr(self, item, attr_type, attr_val):
-        if attr_type == 'genre': return attr_val in item.get('genres', [])
-        if attr_type == 'tag': return attr_val in item.get('micro_tags', [])
-        if attr_type == 'studio': return attr_val in item.get('studios', [])
+        if attr_type == "genre":
+            return attr_val in item.get("genres", [])
+        if attr_type == "tag":
+            return attr_val in item.get("micro_tags", [])
+        if attr_type == "studio":
+            return attr_val in item.get("studios", [])
         return False
 
-    def _rl_filter_candidates(self, db: List[Dict], history: List[Any], asked_attrs: List[str]) -> List[Dict]:
+    def _rl_filter_candidates(
+        self, db: List[Dict], history: List[Any], asked_attrs: List[str]
+    ) -> List[Dict]:
         # Filtrage réel basé sur l'historique des réponses utilisateur
         candidates = db
         for i, question_obj in enumerate(history):
             if i >= len(asked_attrs):
                 break
             attr = asked_attrs[i]
-            if ':' not in attr:
+            if ":" not in attr:
                 continue
-            attr_type, attr_val = attr.split(':', 1)
+            attr_type, attr_val = attr.split(":", 1)
             raw_ans = question_obj.a.upper()
-            
-            if raw_ans == 'OUI':
-                candidates = [c for c in candidates if self._rl_check_attr(c, attr_type, attr_val)]
-            elif raw_ans == 'NON':
-                candidates = [c for c in candidates if not self._rl_check_attr(c, attr_type, attr_val)]
-                
+
+            if raw_ans == "OUI":
+                candidates = [
+                    c for c in candidates if self._rl_check_attr(c, attr_type, attr_val)
+                ]
+            elif raw_ans == "NON":
+                candidates = [
+                    c
+                    for c in candidates
+                    if not self._rl_check_attr(c, attr_type, attr_val)
+                ]
+
         return candidates if candidates else db[:1]
 
     def _rl_format_question(self, attribute: str) -> str:

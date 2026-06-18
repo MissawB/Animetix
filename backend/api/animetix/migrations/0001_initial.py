@@ -6,7 +6,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -15,63 +14,146 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Achievement',
+            name="Achievement",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('code', models.CharField(max_length=50, unique=True)),
-                ('name', models.CharField(max_length=100)),
-                ('description', models.TextField()),
-                ('icon', models.CharField(max_length=50)),
-                ('rarity', models.CharField(choices=[('Common', 'Commun'), ('Rare', 'Rare'), ('Epic', 'Épique'), ('Legendary', 'Légendaire')], default='Common', max_length=20)),
-                ('xp_reward', models.IntegerField(default=100)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("code", models.CharField(max_length=50, unique=True)),
+                ("name", models.CharField(max_length=100)),
+                ("description", models.TextField()),
+                ("icon", models.CharField(max_length=50)),
+                (
+                    "rarity",
+                    models.CharField(
+                        choices=[
+                            ("Common", "Commun"),
+                            ("Rare", "Rare"),
+                            ("Epic", "Épique"),
+                            ("Legendary", "Légendaire"),
+                        ],
+                        default="Common",
+                        max_length=20,
+                    ),
+                ),
+                ("xp_reward", models.IntegerField(default=100)),
             ],
         ),
         migrations.CreateModel(
-            name='DailyChallenge',
+            name="DailyChallenge",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('date', models.DateField(unique=True)),
-                ('media_type', models.CharField(max_length=20)),
-                ('secret_title', models.CharField(max_length=255)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("date", models.DateField(unique=True)),
+                ("media_type", models.CharField(max_length=20)),
+                ("secret_title", models.CharField(max_length=255)),
             ],
         ),
         migrations.CreateModel(
-            name='Profile',
+            name="Profile",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('xp', models.IntegerField(default=0)),
-                ('current_streak', models.IntegerField(default=0)),
-                ('max_streak', models.IntegerField(default=0)),
-                ('last_win_date', models.DateField(blank=True, null=True)),
-                ('total_wins', models.IntegerField(default=0)),
-                ('total_games', models.IntegerField(default=0)),
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("xp", models.IntegerField(default=0)),
+                ("current_streak", models.IntegerField(default=0)),
+                ("max_streak", models.IntegerField(default=0)),
+                ("last_win_date", models.DateField(blank=True, null=True)),
+                ("total_wins", models.IntegerField(default=0)),
+                ("total_games", models.IntegerField(default=0)),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='ChallengeResult',
+            name="ChallengeResult",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('attempts', models.IntegerField()),
-                ('won', models.BooleanField(default=False)),
-                ('timestamp', models.DateTimeField(auto_now_add=True)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
-                ('challenge', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='animetix.dailychallenge')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("attempts", models.IntegerField()),
+                ("won", models.BooleanField(default=False)),
+                ("timestamp", models.DateTimeField(auto_now_add=True)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "challenge",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="animetix.dailychallenge",
+                    ),
+                ),
             ],
             options={
-                'unique_together': {('user', 'challenge')},
+                "unique_together": {("user", "challenge")},
             },
         ),
         migrations.CreateModel(
-            name='UserAchievement',
+            name="UserAchievement",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('unlocked_at', models.DateTimeField(auto_now_add=True)),
-                ('achievement', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='animetix.achievement')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='achievements', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("unlocked_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "achievement",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="animetix.achievement",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="achievements",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'unique_together': {('user', 'achievement')},
+                "unique_together": {("user", "achievement")},
             },
         ),
     ]

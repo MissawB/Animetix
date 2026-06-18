@@ -6,48 +6,87 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('animetix', '0011_update_embedding_dimensions'),
+        ("animetix", "0011_update_embedding_dimensions"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='DataCurationTicket',
+            name="DataCurationTicket",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('item_title', models.CharField(max_length=255)),
-                ('issue_description', models.TextField()),
-                ('source_pg', models.JSONField(default=dict)),
-                ('source_neo4j', models.JSONField(default=dict)),
-                ('is_resolved', models.BooleanField(default=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("item_title", models.CharField(max_length=255)),
+                ("issue_description", models.TextField()),
+                ("source_pg", models.JSONField(default=dict)),
+                ("source_neo4j", models.JSONField(default=dict)),
+                ("is_resolved", models.BooleanField(default=False)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
             ],
         ),
         migrations.CreateModel(
-            name='AITokenUsage',
+            name="AITokenUsage",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('engine', models.CharField(max_length=50)),
-                ('input_tokens', models.IntegerField(default=0)),
-                ('output_tokens', models.IntegerField(default=0)),
-                ('total_tokens', models.IntegerField(default=0)),
-                ('cost_estimate', models.FloatField(default=0.0)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('user', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("engine", models.CharField(max_length=50)),
+                ("input_tokens", models.IntegerField(default=0)),
+                ("output_tokens", models.IntegerField(default=0)),
+                ("total_tokens", models.IntegerField(default=0)),
+                ("cost_estimate", models.FloatField(default=0.0)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='GoldDatasetEntry',
+            name="GoldDatasetEntry",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('context', models.TextField()),
-                ('instruction', models.TextField()),
-                ('response', models.TextField()),
-                ('is_validated', models.BooleanField(default=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('source_feedback', models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='animetix.aifeedback')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("context", models.TextField()),
+                ("instruction", models.TextField()),
+                ("response", models.TextField()),
+                ("is_validated", models.BooleanField(default=False)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "source_feedback",
+                    models.OneToOneField(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="animetix.aifeedback",
+                    ),
+                ),
             ],
         ),
     ]

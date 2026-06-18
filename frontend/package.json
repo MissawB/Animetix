@@ -45,7 +45,7 @@
     "react-plotly.js": "^2.6.0",
     "react-router-dom": "^7.15.1",
     "recharts": "^3.8.1",
-    "three": "^0.184.0",
+    "three": "^0.182.0",
     "zod": "^4.4.3",
     "zustand": "^5.0.13"
   },

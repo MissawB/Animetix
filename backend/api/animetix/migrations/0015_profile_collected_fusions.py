@@ -4,15 +4,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('animetix', '0014_creativefusion'),
+        ("animetix", "0014_creativefusion"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='profile',
-            name='collected_fusions',
-            field=models.ManyToManyField(blank=True, related_name='collected_by_profiles', to='animetix.creativefusion'),
+            model_name="profile",
+            name="collected_fusions",
+            field=models.ManyToManyField(
+                blank=True,
+                related_name="collected_by_profiles",
+                to="animetix.creativefusion",
+            ),
         ),
     ]

@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import Dict, Any, List
+from typing import Dict, Any
+
 
 class EvalResultPort(ABC):
     """
@@ -7,7 +8,9 @@ class EvalResultPort(ABC):
     """
 
     @abstractmethod
-    def save_result(self, query: str, context: str, answer: str, metrics: Dict[str, Any]) -> None:
+    def save_result(
+        self, query: str, context: str, answer: str, metrics: Dict[str, Any]
+    ) -> None:
         """
         Enregistre un résultat d'évaluation individuelle.
 

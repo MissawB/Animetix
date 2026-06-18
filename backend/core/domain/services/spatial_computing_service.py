@@ -4,11 +4,12 @@ Service de Spatial Computing & Génération 3D.
 Permet la reconstruction de scènes 3D à partir d'images 2D.
 """
 
-from animetix_project.logging_config import get_logger
-from core.ports.inference_port import InferencePort
-from typing import Dict, Any
+from animetix_project.logging_config import get_logger  # noqa: E402
+from core.ports.inference_port import InferencePort  # noqa: E402
+from typing import Dict, Any  # noqa: E402
 
-logger = get_logger('animetix.spatial')
+logger = get_logger("animetix.spatial")
+
 
 class SpatialComputingService:
     def __init__(self, inference_engine: InferencePort):
@@ -24,11 +25,20 @@ class SpatialComputingService:
         Centralise les métadonnées de rendu.
         """
         try:
-            result = self.inference_engine.generate_3d_scene(image_data, depth_map, mode="gaussian_splatting")
+            result = self.inference_engine.generate_3d_scene(
+                image_data, depth_map, mode="gaussian_splatting"
+            )
             # Ensure result is a dict with a status field; provide fallback if needed
-            if not isinstance(result, dict) or 'status' not in result:
-                logger.warning('Inference engine returned unexpected result, using fallback response')
-                return {"status": "success", "model_url": "data:application/octet-stream;base64,Zm9v", "point_count": 1, "viewer_type": "point_cloud"}
+            if not isinstance(result, dict) or "status" not in result:
+                logger.warning(
+                    "Inference engine returned unexpected result, using fallback response"
+                )
+                return {
+                    "status": "success",
+                    "model_url": "data:application/octet-stream;base64,Zm9v",
+                    "point_count": 1,
+                    "viewer_type": "point_cloud",
+                }
             return result
         except Exception as e:
             logger.error(f"❌ 3D Scene delegation failed: {e}")
@@ -38,12 +48,14 @@ class SpatialComputingService:
         """
         Pipeline complet : 2D -> Estimation de Profondeur -> 3D Gaussian Splatting (Point Cloud PLY).
         """
-        logger.info(f"🌌 Spatial Computing: Starting 3D reconstruction for '{title}'...")
-        
+        logger.info(
+            f"🌌 Spatial Computing: Starting 3D reconstruction for '{title}'..."
+        )
+
         # 1. Estimation de profondeur monoculaire
         logger.info("📏 Estimating Monocular Depth Map...")
         depth_map = self.inference_engine.estimate_depth(image_data)
-        
+
         if not depth_map:
             logger.error("❌ Depth estimation failed. Aborting 3D reconstruction.")
             return {"status": "error", "message": "Failed to generate depth map."}
@@ -51,13 +63,13 @@ class SpatialComputingService:
         # 2. Génération de la scène 3D
         logger.info("🪄 Generating 3D Scene Point Cloud...")
         scene_data = self.generate_3d_scene(image_data, depth_map)
-        
+
         if not scene_data or "model_url" not in scene_data:
             logger.error("❌ 3D Scene generation failed.")
             return {"status": "error", "message": "Failed to generate 3D model."}
 
         logger.info(f"✅ 3D Scene successfully generated for '{title}'.")
-        
+
         return {
             "status": "success",
             "model_url": scene_data["model_url"],
@@ -66,6 +78,6 @@ class SpatialComputingService:
                 "title": title,
                 "navigable": True,
                 "in_painted_areas": scene_data.get("in_painted", True),
-                "point_count": scene_data.get("point_count", 0)
-            }
+                "point_count": scene_data.get("point_count", 0),
+            },
         }

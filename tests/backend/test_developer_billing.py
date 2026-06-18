@@ -7,7 +7,6 @@ from django.test import RequestFactory
 
 from animetix.models import Profile
 from backend.api.animetix.auth import DeveloperApiKeyAuthentication
-from backend.api.animetix.stripe_billing import StripeBillingService
 
 User = get_user_model()
 
@@ -68,7 +67,7 @@ def test_api_key_authentication_valid_flow(rf, authenticator, user_pro):
 
     request = rf.get("/api/v1/developer/rag/")
     request.META["HTTP_X_API_KEY"] = raw_key
-    
+
     auth_user, auth_key = authenticator.authenticate(request)
     assert auth_user == user_pro
     assert auth_key == raw_key
@@ -125,14 +124,16 @@ def test_developer_rag_endpoint(mock_report, mock_container, api_client, user_pr
     mock_agent = MagicMock()
     mock_agent.plan_and_solve_stream.return_value = [
         {"type": "thought", "content": "RAG analysis..."},
-        {"type": "result", "content": "Mocked RAG response about Naruto"}
+        {"type": "result", "content": "Mocked RAG response about Naruto"},
     ]
     mock_container.return_value.agentic.agentic_rag.return_value = mock_agent
 
     # Call view with API Key
     api_client.credentials(HTTP_X_API_KEY=raw_key)
-    res = api_client.post("/api/v1/developer/rag/", {"query": "Tell me about Naruto"}, format="json")
-    
+    res = api_client.post(
+        "/api/v1/developer/rag/", {"query": "Tell me about Naruto"}, format="json"
+    )
+
     assert res.status_code == 200
     assert res.data["answer"] == "Mocked RAG response about Naruto"
     assert res.data["status"] == "success"
@@ -150,12 +151,14 @@ def test_stripe_webhook_upgrade(api_client, user_free):
             "object": {
                 "client_reference_id": user_free.id,
                 "customer": "cus_test_12345",
-                "subscription": "sub_test_12345"
+                "subscription": "sub_test_12345",
             }
-        }
+        },
     }
-    
-    res = api_client.post("/api/v1/developer/webhook/stripe/", webhook_payload, format="json")
+
+    res = api_client.post(
+        "/api/v1/developer/webhook/stripe/", webhook_payload, format="json"
+    )
     assert res.status_code == 200
 
     profile = Profile.objects.get(user_id=user_free.id)
@@ -172,15 +175,12 @@ def test_stripe_webhook_downgrade(api_client, user_pro):
 
     webhook_payload = {
         "type": "customer.subscription.deleted",
-        "data": {
-            "object": {
-                "customer": "cus_test_12345",
-                "status": "canceled"
-            }
-        }
+        "data": {"object": {"customer": "cus_test_12345", "status": "canceled"}},
     }
-    
-    res = api_client.post("/api/v1/developer/webhook/stripe/", webhook_payload, format="json")
+
+    res = api_client.post(
+        "/api/v1/developer/webhook/stripe/", webhook_payload, format="json"
+    )
     assert res.status_code == 200
 
     profile.refresh_from_db()

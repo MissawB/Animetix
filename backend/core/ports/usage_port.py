@@ -2,16 +2,17 @@ from abc import ABC, abstractmethod
 from typing import Optional
 from datetime import datetime
 
+
 class UsagePort(ABC):
     @abstractmethod
     def log_usage(
-        self, 
-        engine: str, 
-        input_tokens: int = 0, 
-        output_tokens: int = 0, 
+        self,
+        engine: str,
+        input_tokens: int = 0,
+        output_tokens: int = 0,
         units: int = 0,
         user_id: Optional[int] = None,
-        allocated_budget: int = 0
+        allocated_budget: int = 0,
     ):
         """Logs AI usage (tokens or units)."""
         pass

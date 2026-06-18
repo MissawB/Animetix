@@ -6,38 +6,100 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('animetix', '0030_aitokenusage_allocated_budget_aisafetyevent'),
+        ("animetix", "0030_aitokenusage_allocated_budget_aisafetyevent"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='AISafetyEvent',
+            name="AISafetyEvent",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('event_type', models.CharField(choices=[('input', 'Entrée Utilisateur'), ('output', 'Sortie Assistant'), ('system', 'Système')], max_length=20)),
-                ('action', models.CharField(choices=[('block', 'Bloqué'), ('warn', 'Avertissement'), ('rewrite', 'Réécriture'), ('none', 'Aucune')], max_length=20)),
-                ('detected_categories', models.JSONField(default=list)),
-                ('input_text', models.TextField(blank=True, null=True)),
-                ('output_text', models.TextField(blank=True, null=True)),
-                ('reasoning', models.TextField(blank=True, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('user', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "event_type",
+                    models.CharField(
+                        choices=[
+                            ("input", "Entrée Utilisateur"),
+                            ("output", "Sortie Assistant"),
+                            ("system", "Système"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "action",
+                    models.CharField(
+                        choices=[
+                            ("block", "Bloqué"),
+                            ("warn", "Avertissement"),
+                            ("rewrite", "Réécriture"),
+                            ("none", "Aucune"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                ("detected_categories", models.JSONField(default=list)),
+                ("input_text", models.TextField(blank=True, null=True)),
+                ("output_text", models.TextField(blank=True, null=True)),
+                ("reasoning", models.TextField(blank=True, null=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='SupportTicket',
+            name="SupportTicket",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('subject', models.CharField(max_length=255)),
-                ('query', models.TextField()),
-                ('ai_response', models.TextField(blank=True, null=True)),
-                ('status', models.CharField(choices=[('open', 'Ouvert'), ('resolved', 'Résolu'), ('closed', 'Fermé')], default='open', max_length=20)),
-                ('feedback_score', models.IntegerField(blank=True, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='support_tickets', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("subject", models.CharField(max_length=255)),
+                ("query", models.TextField()),
+                ("ai_response", models.TextField(blank=True, null=True)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("open", "Ouvert"),
+                            ("resolved", "Résolu"),
+                            ("closed", "Fermé"),
+                        ],
+                        default="open",
+                        max_length=20,
+                    ),
+                ),
+                ("feedback_score", models.IntegerField(blank=True, null=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="support_tickets",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
     ]

@@ -5,23 +5,23 @@ Generates, compiles, and links performance-optimized native execution loops at r
 Now supports dynamic code generation and Numba JIT.
 """
 
-import os
-import sys
-import logging
-import inspect
-import re
-from typing import Dict, Any, Callable, Optional, List
-import numpy as np
+import os  # noqa: E402
+import logging  # noqa: E402
+import re  # noqa: E402
+from typing import Dict, Any, Callable, Optional  # noqa: E402
+import numpy as np  # noqa: E402
 
 logger = logging.getLogger("animetix.evolving.compiler")
 
 try:
-    import numba
-    from numba import njit
+    import numba  # noqa: E402
+    from numba import njit  # noqa: E402
+
     HAS_NUMBA = True
 except ImportError:
     HAS_NUMBA = False
     logger.warning("Numba not found. SelfEvolvingCompiler will use Numpy fallback.")
+
 
 class SelfEvolvingCompiler:
     def __init__(self, build_dir: str = "data/mlops/build"):
@@ -31,46 +31,54 @@ class SelfEvolvingCompiler:
         self.mode = "Numba JIT" if HAS_NUMBA else "Numpy Fallback"
         logger.info(f"Initialized SelfEvolvingCompiler in {self.mode} mode.")
 
-    def compile_dynamic_kernel(self, name: str, source_code: str, namespace: Optional[Dict] = None) -> Callable:
+    def compile_dynamic_kernel(
+        self, name: str, source_code: str, namespace: Optional[Dict] = None
+    ) -> Callable:
         """
         Prend une chaîne de code Python, la compile et l'annote avec @njit si possible.
         """
         logger.info(f"🧬 Compiler: Generating dynamic kernel '{name}'...")
-        
+
         # Nettoyage du code source
         source_code = source_code.strip()
-        
+
         # Préparation de l'espace de noms
         exec_globals = {"np": np, "math": __import__("math")}
         if HAS_NUMBA:
             exec_globals["njit"] = njit
-            
+
         if namespace:
             exec_globals.update(namespace)
 
         # Injection du décorateur dans le code source si HAS_NUMBA
         decorated_source = source_code
         if HAS_NUMBA and "@njit" not in source_code:
-            # Note: On désactive cache=True pour les kernels dynamiques via exec() car Numba 
+            # Note: On désactive cache=True pour les kernels dynamiques via exec() car Numba
             # ne peut pas mettre en cache des fonctions sans fichier source réel sur le disque.
             decorated_source = "@njit(cache=False, fastmath=True)\n" + source_code
 
         try:
-            exec(decorated_source, exec_globals) # nosec B102
+            exec(decorated_source, exec_globals)  # nosec B102
             # Récupération de la fonction compilée
             if name in exec_globals:
                 compiled_fn = exec_globals[name]
                 self.compiled_functions[name] = compiled_fn
-                logger.info(f"✅ Compiler: Kernel '{name}' successfully compiled and linked.")
+                logger.info(
+                    f"✅ Compiler: Kernel '{name}' successfully compiled and linked."
+                )
                 return compiled_fn
             else:
                 # Tentative de trouver la première fonction définie si le nom ne correspond pas exactement
                 for key, val in exec_globals.items():
                     if callable(val) and key != "njit" and not key.startswith("__"):
-                        logger.warning(f"⚠️ Compiler: Requested '{name}' not found, but found '{key}'. Linking '{key}' instead.")
+                        logger.warning(
+                            f"⚠️ Compiler: Requested '{name}' not found, but found '{key}'. Linking '{key}' instead."
+                        )
                         self.compiled_functions[key] = val
                         return val
-                raise ValueError(f"No callable found in executed source for kernel '{name}'.")
+                raise ValueError(
+                    f"No callable found in executed source for kernel '{name}'."
+                )
         except Exception as e:
             logger.error(f"❌ Compiler: Dynamic compilation failed for '{name}': {e}")
             raise
@@ -83,7 +91,7 @@ class SelfEvolvingCompiler:
             return self.compiled_functions[function_name]
 
         # Implémentations statiques existantes converties en dynamic kernels
-        if function_name == 'cosine_similarity':
+        if function_name == "cosine_similarity":
             source = """
 def cosine_similarity(a, b):
     dot = 0.0
@@ -99,7 +107,7 @@ def cosine_similarity(a, b):
 """
             return self.compile_dynamic_kernel(function_name, source)
 
-        elif function_name == 'euclidean_distance':
+        elif function_name == "euclidean_distance":
             source = """
 def euclidean_distance(a, b):
     dist = 0.0
@@ -111,11 +119,15 @@ def euclidean_distance(a, b):
             return self.compile_dynamic_kernel(function_name, source)
 
         # Fallback Numpy direct si non reconnu pour compilation custom
-        logger.warning(f"⚠️ Function '{function_name}' not in registry. Using Numpy fallback.")
-        if function_name == 'vector_norm':
+        logger.warning(
+            f"⚠️ Function '{function_name}' not in registry. Using Numpy fallback."
+        )
+        if function_name == "vector_norm":
             return np.linalg.norm
-            
-        def basic_fallback(*args, **kwargs): return 0.0
+
+        def basic_fallback(*args, **kwargs):
+            return 0.0
+
         return basic_fallback
 
     def evolve_with_llm(self, task_description: str, llm_proxy: Any) -> Callable:
@@ -123,7 +135,7 @@ def euclidean_distance(a, b):
         Génère dynamiquement un kernel de calcul optimisé via LLM, puis le compile.
         """
         logger.info(f"✨ Compiler: Evolving runtime for task: {task_description}")
-        
+
         system_prompt = (
             "Tu es un expert en calcul scientifique et optimisation Numba. "
             "Génère une fonction Python pure optimisée pour Numba @njit. "
@@ -135,13 +147,15 @@ def euclidean_distance(a, b):
             "5. Ne mets pas le décorateur @njit, le compilateur l'ajoutera.\n"
             "6. Donne à la fonction un nom descriptif en snake_case."
         )
-        
+
         user_prompt = f"Génère un kernel de calcul Python pour la tâche suivante : {task_description}"
-        
+
         try:
             # Appel au LLM
-            raw_response = llm_proxy.generate(prompt=user_prompt, system_prompt=system_prompt)
-            
+            raw_response = llm_proxy.generate(
+                prompt=user_prompt, system_prompt=system_prompt
+            )
+
             # Extraction du bloc de code
             code_match = re.search(r"```python\n(.*?)```", raw_response, re.DOTALL)
             if not code_match:
@@ -149,19 +163,25 @@ def euclidean_distance(a, b):
                 code_match = re.search(r"def .*?\):.*", raw_response, re.DOTALL)
                 if not code_match:
                     raise ValueError("Could not extract Python code from LLM response.")
-            
-            source_code = code_match.group(1) if "```python" in raw_response else code_match.group(0)
-            
+
+            source_code = (
+                code_match.group(1)
+                if "```python" in raw_response
+                else code_match.group(0)
+            )
+
             # Détection du nom de la fonction
             name_match = re.search(r"def\s+([a-zA-Z0-9_]+)\s*\(", source_code)
             function_name = name_match.group(1) if name_match else "dynamic_kernel"
-            
+
             # Compilation
             return self.compile_dynamic_kernel(function_name, source_code)
-            
+
         except Exception as e:
             logger.error(f"❌ Compiler Evolution failed: {e}")
-            # Fallback vers une fonction nulle pour éviter de casser le pipeline
-            def error_fallback(*args, **kwargs): return 0.0
-            return error_fallback
 
+            # Fallback vers une fonction nulle pour éviter de casser le pipeline
+            def error_fallback(*args, **kwargs):
+                return 0.0
+
+            return error_fallback

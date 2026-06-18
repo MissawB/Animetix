@@ -3,28 +3,44 @@ import os
 import textwrap
 
 api = HfApi()
-token = os.environ.get('HF_SPACES') or os.environ.get('HF_TOKEN')
+token = os.environ.get("HF_SPACES") or os.environ.get("HF_TOKEN")
 if not token:
     raise ValueError("Neither HF_SPACES nor HF_TOKEN environment variables are set.")
 
+
 def deploy_space(repo_id, docker_content, readme_content, ignore):
-    print(f'🚀 Syncing {repo_id}...')
-    create_repo(repo_id, token=token, repo_type='space', space_sdk='docker', exist_ok=True)
-    
+    print(f"🚀 Syncing {repo_id}...")
+    create_repo(
+        repo_id, token=token, repo_type="space", space_sdk="docker", exist_ok=True
+    )
+
     docker_final = textwrap.dedent(docker_content).strip()
     readme_final = textwrap.dedent(readme_content).strip()
 
     api.upload_folder(
-        folder_path='.',
+        folder_path=".",
         repo_id=repo_id,
-        repo_type='space',
+        repo_type="space",
         token=token,
-        ignore_patterns=ignore + ['Dockerfile', 'README.md']
+        ignore_patterns=ignore + ["Dockerfile", "README.md"],
     )
-    
-    api.upload_file(path_or_fileobj=docker_final.encode(), path_in_repo='Dockerfile', repo_id=repo_id, repo_type='space', token=token)
-    api.upload_file(path_or_fileobj=readme_final.encode(), path_in_repo='README.md', repo_id=repo_id, repo_type='space', token=token)
-    print(f'✅ {repo_id} synced!')
+
+    api.upload_file(
+        path_or_fileobj=docker_final.encode(),
+        path_in_repo="Dockerfile",
+        repo_id=repo_id,
+        repo_type="space",
+        token=token,
+    )
+    api.upload_file(
+        path_or_fileobj=readme_final.encode(),
+        path_in_repo="README.md",
+        repo_id=repo_id,
+        repo_type="space",
+        token=token,
+    )
+    print(f"✅ {repo_id} synced!")
+
 
 # --- CONFIG WEB ---
 web_docker = """
@@ -75,5 +91,55 @@ sdk: docker
 """
 
 # EXÉCUTION
-deploy_space('MissawB/animetix-web', web_docker, web_readme, ['.venv/*', '.env', 'data/models/*', 'data/raw/*', 'core/brain.py', 'pipeline/*', '.github/*', 'node_modules/*', 'frontend/node_modules/*', 'frontend/dist/*', 'checkpoints/*', 'data/chroma_db/*', 'backend/api/db.sqlite3', '**/db.sqlite3', '**/*.pyc', '**/__pycache__/*', 'scripts/*', 'wandb/*'])
-deploy_space('MissawB/animetix-brain', brain_docker, brain_readme, ['.venv/*', '.env', 'backend/*', 'data/raw/*', 'data/processed/*', '.github/*', 'pipeline/*', 'core/__init__.py', 'node_modules/*', 'frontend/node_modules/*', 'checkpoints/*', 'data/chroma_db/*', 'backend/api/db.sqlite3', '**/db.sqlite3', '**/*.pyc', '**/__pycache__/*', 'scripts/*', 'data/models/*', 'frontend/*', 'wandb/*'])
+deploy_space(
+    "MissawB/animetix-web",
+    web_docker,
+    web_readme,
+    [
+        ".venv/*",
+        ".env",
+        "data/models/*",
+        "data/raw/*",
+        "core/brain.py",
+        "pipeline/*",
+        ".github/*",
+        "node_modules/*",
+        "frontend/node_modules/*",
+        "frontend/dist/*",
+        "checkpoints/*",
+        "data/chroma_db/*",
+        "backend/api/db.sqlite3",
+        "**/db.sqlite3",
+        "**/*.pyc",
+        "**/__pycache__/*",
+        "scripts/*",
+        "wandb/*",
+    ],
+)
+deploy_space(
+    "MissawB/animetix-brain",
+    brain_docker,
+    brain_readme,
+    [
+        ".venv/*",
+        ".env",
+        "backend/*",
+        "data/raw/*",
+        "data/processed/*",
+        ".github/*",
+        "pipeline/*",
+        "core/__init__.py",
+        "node_modules/*",
+        "frontend/node_modules/*",
+        "checkpoints/*",
+        "data/chroma_db/*",
+        "backend/api/db.sqlite3",
+        "**/db.sqlite3",
+        "**/*.pyc",
+        "**/__pycache__/*",
+        "scripts/*",
+        "data/models/*",
+        "frontend/*",
+        "wandb/*",
+    ],
+)

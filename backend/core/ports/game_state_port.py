@@ -1,11 +1,13 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict
 
+
 class GameStatePort(ABC):
     """
     Interface for persistent state management (sync).
     Decouples domain services from specific infrastructure (Sessions, Cache, DB).
     """
+
     @abstractmethod
     def get(self, key: str, default: Any = None) -> Any:
         """Retrieves a value from the state store."""

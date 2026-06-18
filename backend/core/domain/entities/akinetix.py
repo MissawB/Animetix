@@ -1,16 +1,20 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 
+
 class AkinetixQuestion(BaseModel):
     """Represents a question and its answer in the history."""
+
     q: str
     a: str
+
 
 class AkinetixGameState(BaseModel):
     """
     Structured state for an Akinetix game session.
     Ensures type safety and validation across domain and adapters.
     """
+
     history: List[AkinetixQuestion] = Field(default_factory=list)
     current_q: Optional[str] = None
     current_attr: Optional[str] = None

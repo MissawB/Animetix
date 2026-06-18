@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import MagicMock
 from adapters.persistence.neo4j_graph_adapter import Neo4jGraphAdapter
 
+
 class TestNeo4jAdapterNeighborhood(unittest.TestCase):
     def setUp(self):
         self.mock_manager = MagicMock()
@@ -12,11 +13,23 @@ class TestNeo4jAdapterNeighborhood(unittest.TestCase):
         item_id = "123"
         media_type = "anime"
         depth = 2
-        
-        mock_result = [{
-            "nodes": [{"id": 1, "properties": {"name": "Naruto"}, "labels": ["Anime"]}],
-            "links": [{"id": 10, "source": 1, "target": 2, "type": "RELATED_TO", "properties": {}}]
-        }]
+
+        mock_result = [
+            {
+                "nodes": [
+                    {"id": 1, "properties": {"name": "Naruto"}, "labels": ["Anime"]}
+                ],
+                "links": [
+                    {
+                        "id": 10,
+                        "source": 1,
+                        "target": 2,
+                        "type": "RELATED_TO",
+                        "properties": {},
+                    }
+                ],
+            }
+        ]
         # Neo4jGraphAdapter calls self.execute_read which calls self._manager.execute_query
         self.mock_manager.execute_read.return_value = mock_result
 
@@ -28,7 +41,7 @@ class TestNeo4jAdapterNeighborhood(unittest.TestCase):
         args, kwargs = self.mock_manager.execute_read.call_args
         query = args[0]
         params = args[1]
-        
+
         self.assertIn("apoc.path.subgraphAll", query)
         self.assertIn("MATCH (start:Media {id: $id, type: $type})", query)
         self.assertEqual(params["id"], item_id)
@@ -55,6 +68,7 @@ class TestNeo4jAdapterNeighborhood(unittest.TestCase):
 
         # Assert
         self.assertEqual(result, {"nodes": [], "links": []})
+
 
 if __name__ == "__main__":
     unittest.main()

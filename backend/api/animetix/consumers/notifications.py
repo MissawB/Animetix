@@ -1,6 +1,7 @@
 import json
 from .base import BaseConsumer
 
+
 class NotificationConsumer(BaseConsumer):
     async def connect(self):
         # 1. Groupe Global (tous les utilisateurs connectés)
@@ -15,8 +16,10 @@ class NotificationConsumer(BaseConsumer):
         await self.accept()
 
     async def disconnect(self, close_code):
-        await self.channel_layer.group_discard("global_notifications", self.channel_name)
-        if hasattr(self, 'group_name'):
+        await self.channel_layer.group_discard(
+            "global_notifications", self.channel_name
+        )
+        if hasattr(self, "group_name"):
             await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
     async def send_notification(self, event):

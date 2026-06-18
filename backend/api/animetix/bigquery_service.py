@@ -1,4 +1,3 @@
-import os
 import uuid
 import logging
 from datetime import datetime
@@ -6,20 +5,24 @@ from django.conf import settings
 
 logger = logging.getLogger("animetix.telemetry.bigquery")
 
+
 class BigQueryTelemetryService:
     def __init__(self):
-        self.is_prod = getattr(settings, 'IS_PRODUCTION', False)
-        self.dataset_id = getattr(settings, 'GCP_BIGQUERY_DATASET', 'telemetry')
+        self.is_prod = getattr(settings, "IS_PRODUCTION", False)
+        self.dataset_id = getattr(settings, "GCP_BIGQUERY_DATASET", "telemetry")
         self.client = None
-        
+
         if self.is_prod:
             try:
-                from google.cloud import bigquery
+                from google.cloud import bigquery  # noqa: E402
+
                 self.client = bigquery.Client()
             except Exception as e:
                 logger.error(f"Failed to initialize BigQuery Client: {e}")
 
-    def stream_interaction(self, user_id: int, media_item_id: int, interaction_type: str, weight: float):
+    def stream_interaction(
+        self, user_id: int, media_item_id: int, interaction_type: str, weight: float
+    ):
         """Streams a user-item interaction row to BigQuery telemetry.user_interactions."""
         row = {
             "event_id": str(uuid.uuid4()),
@@ -27,7 +30,7 @@ class BigQueryTelemetryService:
             "media_item_id": media_item_id,
             "interaction_type": interaction_type,
             "weight": float(weight),
-            "created_at": datetime.utcnow().isoformat()
+            "created_at": datetime.utcnow().isoformat(),
         }
 
         if self.client:
@@ -45,7 +48,15 @@ class BigQueryTelemetryService:
             logger.info(f"Simulating BigQuery Stream [user_interactions]: {row}")
             return True
 
-    def stream_drift(self, user_id: int, archetype_id: str, intensity: float, shonen: float, seinen: float, logic: float):
+    def stream_drift(
+        self,
+        user_id: int,
+        archetype_id: str,
+        intensity: float,
+        shonen: float,
+        seinen: float,
+        logic: float,
+    ):
         """Streams an archetype drift snapshot row to BigQuery telemetry.archetype_drift."""
         row = {
             "event_id": str(uuid.uuid4()),
@@ -55,7 +66,7 @@ class BigQueryTelemetryService:
             "shonen_affinity": float(shonen),
             "seinen_affinity": float(seinen),
             "logic_consistency": float(logic),
-            "created_at": datetime.utcnow().isoformat()
+            "created_at": datetime.utcnow().isoformat(),
         }
 
         if self.client:

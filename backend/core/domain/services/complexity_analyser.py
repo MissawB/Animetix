@@ -4,10 +4,11 @@ Complexity Analyser and Dynamic Budget TTC Selector for Animetix.
 Calculates the required thought process depth and reasoning token budget.
 """
 
-import logging
-from typing import Tuple, Dict, Any
+import logging  # noqa: E402
+from typing import Tuple  # noqa: E402
 
 logger = logging.getLogger("animetix.complexity")
+
 
 class ComplexityAnalyser:
     def __init__(self, prompt_manager=None, llm_service=None):
@@ -22,44 +23,70 @@ class ComplexityAnalyser:
         # Analyse par mots-clés sémantiques en cas d'indisponibilité du LLM
         complexity_score = 0
         q_lower = query.lower()
-        
+
         # Mots-clés indiquant une complexité moyenne (comparaisons, recs)
-        medium_keywords = ["ressemble", "comparaison", "similaire", "recommande", "différence", "pourquoi"]
+        medium_keywords = [
+            "ressemble",
+            "comparaison",
+            "similaire",
+            "recommande",
+            "différence",
+            "pourquoi",
+        ]
         # Mots-clés indiquant une complexité élevée (paradoxes, analyses scénaristiques, intrigues profondes)
-        high_keywords = ["paradoxe", "intrus", "thème", "influence", "explication", "philosophique", "scénar", "scénario", "décors"]
-        
+        high_keywords = [
+            "paradoxe",
+            "intrus",
+            "thème",
+            "influence",
+            "explication",
+            "philosophique",
+            "scénar",
+            "scénario",
+            "décors",
+        ]
+
         if any(w in q_lower for w in high_keywords):
             complexity_score = 2
         elif any(w in q_lower for w in medium_keywords):
             complexity_score = 1
-            
+
         # Si le LLM et le PromptManager sont configurés, on utilise l'analyse cognitive
         predicted_budget = None
         if self.prompt_manager and self.llm_service:
             try:
-                prompt, sys = self.prompt_manager.get_prompt("complexity_analyzer", query=query)
+                prompt, sys = self.prompt_manager.get_prompt(
+                    "complexity_analyzer", query=query
+                )
                 res = self.llm_service.generate(prompt, sys, use_slm=True)
-                
+
                 # Parsing simple du JSON retourné
-                import json
-                import re
-                match = re.search(r'\{.*\}', res, re.DOTALL)
+                import json  # noqa: E402
+                import re  # noqa: E402
+
+                match = re.search(r"\{.*\}", res, re.DOTALL)
                 if match:
                     data = json.loads(match.group(0))
-                    complexity_score = int(data.get("complexity_score", complexity_score))
+                    complexity_score = int(
+                        data.get("complexity_score", complexity_score)
+                    )
                     budget_val = data.get("thinking_budget")
                     if budget_val is not None:
                         predicted_budget = int(budget_val)
             except Exception as e:
-                logger.error(f"Error in cognitive complexity analysis: {e}. Falling back to keyword metrics.")
+                logger.error(
+                    f"Error in cognitive complexity analysis: {e}. Falling back to keyword metrics."
+                )
 
         # Calcul du budget dynamique TTC (DynamicBudgetTTCSelector)
         if predicted_budget is not None and predicted_budget > 0:
             thinking_budget = predicted_budget
         else:
             thinking_budget = self.select_dynamic_budget(complexity_score, query)
-        
-        logger.info(f"🧠 TTC Analysis: Complexity {complexity_score} -> Allocated Budget: {thinking_budget} tokens.")
+
+        logger.info(
+            f"🧠 TTC Analysis: Complexity {complexity_score} -> Allocated Budget: {thinking_budget} tokens."
+        )
         return thinking_budget, complexity_score
 
     def select_dynamic_budget(self, complexity_score: int, query: str) -> int:

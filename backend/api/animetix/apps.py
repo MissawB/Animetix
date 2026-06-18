@@ -2,39 +2,42 @@ from django.apps import AppConfig
 
 
 class AnimetixConfig(AppConfig):
-    name = 'animetix'
-    label = 'animetix'
+    name = "animetix"
+    label = "animetix"
 
     def ready(self):
-        from .containers import get_container
-        container = get_container()
-        container.wire(modules=[
-            "animetix.api.games.classic",
-            "animetix.api.games.akinetix",
-            "animetix.api.games.emoji",
-            "animetix.api.games.paradox",
-            "animetix.api.games.vision",
-            "animetix.api.games.blindtest",
-            "animetix.api.games.covertest",
-            "animetix.api.games.akinetix_rl",
-            "animetix.api.games.archetypist",
-            "animetix.api.games.duel",
-            "animetix.api.games.world_boss",
-            "animetix.api.explore",
-            "animetix.api.core",
-            "animetix.api.social",
-            "animetix.api.labs",
-            "animetix.api.mlops",
-            "animetix.api.graph",
-            "animetix.api.companion",
-            "animetix.api.dependencies",
-            "animetix.api.multiverse",
-            "animetix.api.observability",
-            "animetix.api.forge_vn",
-            "animetix.middleware",
-            "animetix.views.common"
-        ])
-        from animetix.telemetry import init_telemetry
-        init_telemetry("animetix-web")
-        import animetix.signals  # noqa
+        from .containers import get_container  # noqa: E402
 
+        container = get_container()
+        container.wire(
+            modules=[
+                "animetix.api.games.classic",
+                "animetix.api.games.akinetix",
+                "animetix.api.games.emoji",
+                "animetix.api.games.paradox",
+                "animetix.api.games.vision",
+                "animetix.api.games.blindtest",
+                "animetix.api.games.covertest",
+                "animetix.api.games.akinetix_rl",
+                "animetix.api.games.archetypist",
+                "animetix.api.games.duel",
+                "animetix.api.games.world_boss",
+                "animetix.api.explore",
+                "animetix.api.core",
+                "animetix.api.social",
+                "animetix.api.labs",
+                "animetix.api.mlops",
+                "animetix.api.graph",
+                "animetix.api.companion",
+                "animetix.api.dependencies",
+                "animetix.api.multiverse",
+                "animetix.api.observability",
+                "animetix.api.forge_vn",
+                "animetix.middleware",
+                "animetix.views.common",
+            ]
+        )
+        from animetix.telemetry import init_telemetry  # noqa: E402
+
+        init_telemetry("animetix-web")
+        import animetix.signals  # noqa  # noqa: E402

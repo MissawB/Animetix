@@ -1,19 +1,23 @@
 # -*- coding: utf-8 -*-
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any
 from core.ports.gold_dataset_port import GoldDatasetPort
 
 logger = logging.getLogger("animetix.mlops.promotion")
 
+
 class SyntheticDataPromotionService:
     """
-    Service d'orchestration HITL : Pousse les données synthétiques validées 
+    Service d'orchestration HITL : Pousse les données synthétiques validées
     vers leurs destinations finales (Neo4j, Datasets FT, etc.).
     """
-    def __init__(self, 
-                 gold_dataset_port: GoldDatasetPort,
-                 domain_synthesizer=None,
-                 star_mlops_service=None):
+
+    def __init__(
+        self,
+        gold_dataset_port: GoldDatasetPort,
+        domain_synthesizer=None,
+        star_mlops_service=None,
+    ):
         self.gold_dataset_port = gold_dataset_port
         self.domain_synthesizer = domain_synthesizer
         self.star_mlops_service = star_mlops_service
@@ -40,10 +44,10 @@ class SyntheticDataPromotionService:
                 # Ces types sont gérés par le StarMLOpsDomainService lors de l'export global
                 # On les laisse dans la queue de promotion pour l'instant ou on les marque
                 # pour export.
-                success = True # Marqué comme prêt pour export
+                success = True  # Marqué comme prêt pour export
             else:
                 logger.warning(f"Unknown entry type for promotion: {entry_type}")
-                success = True # On évite de bloquer, mais on ne fait rien
+                success = True  # On évite de bloquer, mais on ne fait rien
 
             if success:
                 stats[entry_type] = stats.get(entry_type, 0) + 1
@@ -59,7 +63,9 @@ class SyntheticDataPromotionService:
             self.gold_dataset_port.mark_entries_as_processed(processed_ids)
 
         total = sum(stats.values())
-        logger.info(f"✅ Promotion complete: {total} entries processed. Breakdown: {stats}")
+        logger.info(
+            f"✅ Promotion complete: {total} entries processed. Breakdown: {stats}"
+        )
         return {"promoted": total, "details": stats}
 
     def _promote_multiverse(self, entry: Dict[str, Any]) -> bool:
@@ -67,7 +73,7 @@ class SyntheticDataPromotionService:
         if not self.domain_synthesizer:
             logger.error("DomainSynthesizer missing for MULTIVERSE promotion.")
             return False
-            
+
         universe_data = entry.get("metadata")
         if not universe_data:
             logger.error(f"Missing universe metadata in entry {entry['id']}")

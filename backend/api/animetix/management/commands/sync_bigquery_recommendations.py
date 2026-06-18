@@ -4,20 +4,22 @@ from django.db import transaction
 from django.contrib.auth.models import User
 from animetix.models import UserRecommendation, MediaItem
 
+
 class Command(BaseCommand):
     help = "Trains the BigQuery ML matrix factorization recommender model and syncs top 10 recommendations to AlloyDB."
 
     def handle(self, *args, **options):
-        is_prod = getattr(settings, 'IS_PRODUCTION', False)
-        dataset_id = getattr(settings, 'GCP_BIGQUERY_DATASET', 'telemetry')
-        
+        is_prod = getattr(settings, "IS_PRODUCTION", False)
+        dataset_id = getattr(settings, "GCP_BIGQUERY_DATASET", "telemetry")
+
         self.stdout.write("Initializing BigQuery sync process...")
-        
+
         recs = []
         if is_prod:
-            from google.cloud import bigquery
+            from google.cloud import bigquery  # noqa: E402
+
             client = bigquery.Client()
-            
+
             # 1. Execute BigQuery ML Model Training
             train_query = f"""
             CREATE OR REPLACE MODEL `{client.project}.{dataset_id}.recommender_model`
@@ -39,7 +41,7 @@ class Command(BaseCommand):
             """
             self.stdout.write("Training BigQuery ML Model...")
             client.query(train_query).result()
-            
+
             # 2. Get recommendations
             rec_query = f"""
             SELECT
@@ -57,14 +59,16 @@ class Command(BaseCommand):
             self.stdout.write("Fetching top 10 recommendations...")
             query_job = client.query(rec_query)
             results = query_job.result()
-            
+
             for row in results:
-                recs.append({
-                    "user_id": row["user_id"],
-                    "media_item_id": row["media_item_id"],
-                    "score": row["score"],
-                    "rank": row["rank"]
-                })
+                recs.append(
+                    {
+                        "user_id": row["user_id"],
+                        "media_item_id": row["media_item_id"],
+                        "score": row["score"],
+                        "rank": row["rank"],
+                    }
+                )
         else:
             self.stdout.write("Local dev mode: generating mock recommendations.")
             # Generate mock recommendations for testing/dev
@@ -72,20 +76,24 @@ class Command(BaseCommand):
             items = MediaItem.objects.all()[:10]
             for user in users:
                 for idx, item in enumerate(items):
-                    recs.append({
-                        "user_id": user.id,
-                        "media_item_id": item.id,
-                        "score": 4.5 - (idx * 0.2),
-                        "rank": idx + 1
-                    })
-                    
+                    recs.append(
+                        {
+                            "user_id": user.id,
+                            "media_item_id": item.id,
+                            "score": 4.5 - (idx * 0.2),
+                            "rank": idx + 1,
+                        }
+                    )
+
         # 3. Transaction-safe database synchronization
-        self.stdout.write(f"Syncing {len(recs)} recommendations to AlloyDB/PostgreSQL...")
-        
+        self.stdout.write(
+            f"Syncing {len(recs)} recommendations to AlloyDB/PostgreSQL..."
+        )
+
         with transaction.atomic():
             # Clear old recommendations
             UserRecommendation.objects.all().delete()
-            
+
             # Bulk Insert new ones
             new_objs = []
             for item in recs:
@@ -98,12 +106,12 @@ class Command(BaseCommand):
                             user=user,
                             media_item=media_item,
                             score=item["score"],
-                            rank=item["rank"]
+                            rank=item["rank"],
                         )
                     )
                 except (User.DoesNotExist, MediaItem.DoesNotExist):
                     continue
-            
+
             UserRecommendation.objects.bulk_create(new_objs)
-            
+
         self.stdout.write(self.style.SUCCESS("Successfully synced recommendations!"))

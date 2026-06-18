@@ -6,27 +6,54 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('animetix', '0033_adevent'),
+        ("animetix", "0033_adevent"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='profile',
-            name='wallet_balance',
+            model_name="profile",
+            name="wallet_balance",
             field=models.IntegerField(default=1000),
         ),
         migrations.CreateModel(
-            name='WalletTransaction',
+            name="WalletTransaction",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('amount', models.IntegerField()),
-                ('transaction_type', models.CharField(choices=[('ad_passive', 'Passive Mining'), ('ad_active', 'Rewarded Video'), ('purchase', 'Direct Purchase'), ('ai_usage', 'AI Consumption'), ('daily_grant', 'Daily Grant'), ('welcome_bonus', 'Welcome Bonus')], max_length=20)),
-                ('description', models.CharField(max_length=255)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='wallet_transactions', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("amount", models.IntegerField()),
+                (
+                    "transaction_type",
+                    models.CharField(
+                        choices=[
+                            ("ad_passive", "Passive Mining"),
+                            ("ad_active", "Rewarded Video"),
+                            ("purchase", "Direct Purchase"),
+                            ("ai_usage", "AI Consumption"),
+                            ("daily_grant", "Daily Grant"),
+                            ("welcome_bonus", "Welcome Bonus"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                ("description", models.CharField(max_length=255)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="wallet_transactions",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
     ]

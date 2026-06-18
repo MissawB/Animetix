@@ -1,11 +1,11 @@
-import httpx
 import os
 import sys
 import logging
 from typing import Dict
 from core.ports.sync_port import SyncPort
 
-logger = logging.getLogger('animetix')
+logger = logging.getLogger("animetix")
+
 
 class PipelineSyncAdapter(SyncPort):
     def __init__(self, brain_api_url: str):
@@ -17,12 +17,15 @@ class PipelineSyncAdapter(SyncPort):
     def sync_to_graph_db(self, media_type: str, item_id: str, data: Dict):
         try:
             # On cherche le client neo4j dans le dossier backend/pipeline
-            project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
+            project_root = os.path.abspath(
+                os.path.join(os.path.dirname(__file__), "../../..")
+            )
             src_path = os.path.join(project_root, "src")
             if src_path not in sys.path:
                 sys.path.append(src_path)
-            
-            from pipeline.neo4j_client import neo4j_manager
+
+            from pipeline.neo4j_client import neo4j_manager  # noqa: E402
+
             neo4j_manager.sync_media_to_graph(data, media_type)
             logger.info(f"✅ Synced {media_type} {item_id} to Neo4j.")
         except Exception as e:
