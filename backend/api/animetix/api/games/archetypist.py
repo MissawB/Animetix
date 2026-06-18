@@ -1,6 +1,5 @@
 import random
 
-from animetix.api.dependencies import get_session_service
 from animetix_project.logging_config import get_logger
 from core.domain.services.guardrail_service import GuardrailService
 from core.ports.usage_port import UsagePort
@@ -8,6 +7,8 @@ from dependency_injector.wiring import Provide, inject
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from animetix.api.dependencies import get_session_service
 
 from ...containers import Container
 from ...models import CreativeFusion

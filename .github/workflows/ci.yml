@@ -30,12 +30,11 @@ jobs:
       with:
         python-version: '3.12'
     - name: Install Tools
-      run: pip install ruff black isort mypy
+      run: pip install ruff black mypy
     - name: Run Checks
       run: |
         ruff check .
         black --check .
-        isort --check .
         mypy backend/
 
   docker-build:

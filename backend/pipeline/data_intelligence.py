@@ -11,7 +11,10 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(CURRENT_DIR))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, os.path.join(PROJECT_ROOT, "backend"))
 
-from core.utils.security import safe_http_request, sanitize_for_prompt  # noqa: E402
+from core.utils.security import (
+    safe_http_request,  # noqa: E402
+    sanitize_for_prompt,
+)
 
 logger = logging.getLogger("animetix." + __name__)
 

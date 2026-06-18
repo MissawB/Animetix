@@ -190,8 +190,9 @@ class TracingMiddleware:
         self.tracer = trace.get_tracer("animetix.web.request")
 
     def __call__(self, request):
-        from animetix.telemetry import extract_trace_context  # noqa: E402
         from opentelemetry.trace import Status, StatusCode  # noqa: E402
+
+        from animetix.telemetry import extract_trace_context  # noqa: E402
 
         # Convert request META headers to dictionary for extraction
         headers = {}

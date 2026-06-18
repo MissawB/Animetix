@@ -30,7 +30,10 @@ class MoondreamAdapter(InferencePort):
             return
         try:
             import torch as _torch  # noqa: E402
-            from transformers import AutoModelForVision2Seq, AutoProcessor  # noqa: E402
+            from transformers import (
+                AutoModelForVision2Seq,  # noqa: E402
+                AutoProcessor,
+            )
 
             self.model = AutoModelForVision2Seq.from_pretrained(
                 self.model_id,

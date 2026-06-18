@@ -67,8 +67,8 @@ class DepthEstimationMixin:
             from io import BytesIO  # noqa: E402
 
             import numpy as np  # noqa: E402
-            from core.constants import DEFAULT_DEPTH_RESIZE  # noqa: E402
             from core.constants import (
+                DEFAULT_DEPTH_RESIZE,  # noqa: E402
                 DEFAULT_DEPTH_THRESHOLD,
                 DEFAULT_FOCAL_LENGTH,
                 PLY_HEADER_TEMPLATE,
@@ -124,8 +124,8 @@ class DepthEstimationMixin:
             from io import BytesIO  # noqa: E402
 
             import numpy as np  # noqa: E402
-            from core.constants import DEFAULT_DEPTH_RESIZE  # noqa: E402
             from core.constants import (
+                DEFAULT_DEPTH_RESIZE,  # noqa: E402
                 DEFAULT_DEPTH_THRESHOLD,
                 DEFAULT_FOCAL_LENGTH,
                 DEFAULT_GAUSSIAN_OPACITY,

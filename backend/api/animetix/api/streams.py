@@ -1,11 +1,12 @@
 import json
 
-from animetix.api.dependencies import get_session_service
 from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
 from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
 from rest_framework import permissions
 from rest_framework.views import APIView
+
+from animetix.api.dependencies import get_session_service
 
 from ..containers import get_container
 

@@ -14,8 +14,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from ..containers import Container, get_container  # noqa: E402
-from ..models import AISafetyEvent  # noqa: E402
-from ..models import AIFeedback, AIREvalResult, GoldDatasetEntry
+from ..models import (
+    AIFeedback,
+    AIREvalResult,
+    AISafetyEvent,  # noqa: E402
+    GoldDatasetEntry,
+)
 from ..serializers import (
     AIFeedbackInputSerializer,
     AIFeedbackSerializer,

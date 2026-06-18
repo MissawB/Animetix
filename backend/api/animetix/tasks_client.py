@@ -1,10 +1,11 @@
 import json
 import uuid
 
-from animetix.tasks_registry import get_registered_task
 from animetix_project.logging_config import get_logger
 from django.conf import settings
 from django.core.cache import cache
+
+from animetix.tasks_registry import get_registered_task
 
 logger = get_logger("animetix." + __name__)
 

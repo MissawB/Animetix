@@ -214,9 +214,11 @@ class ImageGenMixin:
             return ""
 
     def inpaint_text_bubbles(self, image_data: bytes, bubbles: List[Dict]) -> str:
-        from PIL import Image as PILImage  # noqa: E402
-        from PIL import ImageDraw as PILImageDraw
-        from PIL import ImageFont as PILImageFont
+        from PIL import (
+            Image as PILImage,  # noqa: E402
+            ImageDraw as PILImageDraw,
+            ImageFont as PILImageFont,
+        )
 
         try:
             init_image = PILImage.open(BytesIO(image_data)).convert("RGB")

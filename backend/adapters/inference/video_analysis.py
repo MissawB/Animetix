@@ -21,8 +21,11 @@ class VideoAnalysisMixin:
             return
         try:
             import torch as _torch  # noqa: E402
-            from transformers import AutoProcessor  # noqa: E402
-            from transformers import BitsAndBytesConfig, Qwen2VLForConditionalGeneration
+            from transformers import (
+                AutoProcessor,  # noqa: E402
+                BitsAndBytesConfig,
+                Qwen2VLForConditionalGeneration,
+            )
 
             logger.info("📽️ Loading Qwen3-VL-8B for Temporal RAG...")
             model_id = "Qwen/Qwen3-VL-8B-Instruct"

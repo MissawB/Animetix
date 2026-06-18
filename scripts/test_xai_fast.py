@@ -14,8 +14,11 @@ try:
 except Exception:
     pass
 
-from core.domain.entities.ai_schemas import InferenceMetadata  # noqa: E402
-from core.domain.entities.ai_schemas import InferenceResponse, TokenLogProb
+from core.domain.entities.ai_schemas import (
+    InferenceMetadata,  # noqa: E402
+    InferenceResponse,
+    TokenLogProb,
+)
 from core.domain.services.agentic_rag_service import AgenticRAGService  # noqa: E402
 from core.domain.services.xai_service import XaiDiagnosticService  # noqa: E402
 

@@ -30,8 +30,11 @@ class XaiDiagnosticService:
         Calcule les métriques d'incertitude. Utilise les logprobs si disponibles,
         sinon assume une incertitude maximale par sécurité (Secure by Default).
         """
-        from animetix.metrics import MODEL_REASONING_CONFIDENCE  # noqa: E402
-        from animetix.metrics import MODEL_REASONING_ENTROPY, MODEL_REASONING_PERPLEXITY
+        from animetix.metrics import (
+            MODEL_REASONING_CONFIDENCE,  # noqa: E402
+            MODEL_REASONING_ENTROPY,
+            MODEL_REASONING_PERPLEXITY,
+        )
 
         # Utilisation des logprobs réels si disponibles (InferenceResponse)
         if response and response.metadata and response.metadata.logprobs:

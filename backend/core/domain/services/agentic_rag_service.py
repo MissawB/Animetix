@@ -6,8 +6,12 @@ from core.ports.graph_persistence_port import GraphPersistencePort
 from core.ports.inference_port import InferencePort
 from core.ports.web_search_port import WebSearchPort
 
-from ..entities.ai_schemas import RAGContext  # noqa: E402
-from ..entities.ai_schemas import InferenceResponse, RAGState, StreamStep
+from ..entities.ai_schemas import (
+    InferenceResponse,
+    RAGContext,  # noqa: E402
+    RAGState,
+    StreamStep,
+)
 from ..exceptions import InferenceError, InfrastructureError
 from .advanced_rag_service import AdvancedRAGService
 from .llm_service import LLMService

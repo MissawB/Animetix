@@ -204,11 +204,11 @@ class VsBattleSerializer(serializers.ModelSerializer):
         return False
 
 
-from .models import AISafetyEvent  # noqa: E402
-from .models import GameplaySession  # noqa: E402
 from .models import (  # noqa: E402
     AIFeedback,
     AIREvalResult,
+    AISafetyEvent,  # noqa: E402
+    GameplaySession,  # noqa: E402
     GoldDatasetEntry,
 )
 

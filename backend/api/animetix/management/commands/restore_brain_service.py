@@ -1,5 +1,6 @@
-from animetix.services import restore_brain_service
 from django.core.management.base import BaseCommand
+
+from animetix.services import restore_brain_service
 
 
 class Command(BaseCommand):

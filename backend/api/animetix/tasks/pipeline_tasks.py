@@ -7,9 +7,10 @@ Migrated from Dagster pipelines to achieve a lightweight orchestration engine.
 import sys  # noqa: E402
 from pathlib import Path  # noqa: E402
 
+from animetix_project.logging_config import get_logger  # noqa: E402
+
 from animetix.tasks_client import enqueue_task  # noqa: E402
 from animetix.tasks_registry import register_task  # noqa: E402
-from animetix_project.logging_config import get_logger  # noqa: E402
 
 logger = get_logger("animetix." + __name__)
 
@@ -39,8 +40,8 @@ def run_daily_ingestion_workflow():
 
     # 1. Characters Ingestion & Vectorization
     try:
-        from characters import filter_characters  # noqa: E402
         from characters import (
+            filter_characters,  # noqa: E402
             ingest_characters,
             refine_characters,
             train_vibe_characters,
@@ -63,8 +64,12 @@ def run_daily_ingestion_workflow():
 
     # 2. Actors Ingestion & Mapping
     try:
-        from actors import filter_actors  # noqa: E402
-        from actors import cross_media_mapping, ingest_actors, vectorize_actors
+        from actors import (
+            cross_media_mapping,
+            filter_actors,  # noqa: E402
+            ingest_actors,
+            vectorize_actors,
+        )
 
         logger.info("Ingesting raw actors...")
         ingest_actors.run_ingestion()
@@ -106,9 +111,9 @@ def run_daily_ingestion_workflow():
 
     # 5. Anime Ingestion & Reconciliation
     try:
-        from anime import filter_anime  # noqa: E402
         from anime import (
             fetch_themes,
+            filter_anime,  # noqa: E402
             ingest_anime,
             reconcile_drift,
             train_vibe_anime,
@@ -133,8 +138,13 @@ def run_daily_ingestion_workflow():
 
     # 6. Manga Ingestion
     try:
-        from manga import filter_manga  # noqa: E402
-        from manga import fetch_covers, ingest_manga, train_vibe_manga, vectorize_manga
+        from manga import (
+            fetch_covers,
+            filter_manga,  # noqa: E402
+            ingest_manga,
+            train_vibe_manga,
+            vectorize_manga,
+        )
 
         logger.info("Ingesting manga...")
         ingest_manga.run_ingestion()
@@ -276,8 +286,9 @@ def run_hourly_monitoring_workflow():
 
     # 0. Global Alert & Health Check
     try:
-        from animetix.containers import get_container  # noqa: E402
         from django.contrib.auth import get_user_model  # noqa: E402
+
+        from animetix.containers import get_container  # noqa: E402
 
         container = get_container()
         alert_service = container.core.alert_service()
@@ -331,8 +342,9 @@ def check_gold_dataset_sensor_task():
     Enregistre l'état en cache pour éviter les doublons.
     """
     logger.info("🔍 Running Gold Dataset Sensor...")
-    from animetix.models import GoldDatasetEntry  # noqa: E402
     from django.core.cache import cache  # noqa: E402
+
+    from animetix.models import GoldDatasetEntry  # noqa: E402
 
     validated_count = GoldDatasetEntry.objects.filter(is_validated=True).count()
     last_count = cache.get("auto_lora_last_count", 0)
@@ -364,8 +376,9 @@ def check_dpo_feedback_sensor_task():
     Enregistre l'état en cache pour éviter les doublons.
     """
     logger.info("🔍 Running DPO Feedback Sensor...")
-    from animetix.models import AIFeedback  # noqa: E402
     from django.core.cache import cache  # noqa: E402
+
+    from animetix.models import AIFeedback  # noqa: E402
 
     try:
         total_feedbacks = AIFeedback.objects.count()

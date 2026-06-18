@@ -13,7 +13,10 @@ logger = logging.getLogger("animetix." + __name__)
 # Détection robuste de la racine du projet
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(os.path.join(BASE_DIR, "backend"))
-from core.utils.security import safe_http_request, sanitize_for_prompt  # noqa: E402
+from core.utils.security import (
+    safe_http_request,  # noqa: E402
+    sanitize_for_prompt,
+)
 
 load_dotenv(os.path.join(BASE_DIR, ".env"))
 

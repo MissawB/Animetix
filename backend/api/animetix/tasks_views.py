@@ -1,7 +1,5 @@
 import json
 
-from animetix.tasks_client import enqueue_task
-from animetix.tasks_registry import get_registered_task
 from animetix_project.logging_config import get_logger
 from django.conf import settings
 from django.core.cache import cache
@@ -11,6 +9,9 @@ from google.auth.transport import requests as google_requests
 
 # Eventarc imports
 from google.oauth2 import id_token
+
+from animetix.tasks_client import enqueue_task
+from animetix.tasks_registry import get_registered_task
 
 logger = get_logger("animetix." + __name__)
 
@@ -72,9 +73,10 @@ def run_task_view(request):
         timeout=86400,
     )
 
-    from animetix.telemetry import extract_trace_context  # noqa: E402
     from opentelemetry import trace  # noqa: E402
     from opentelemetry.trace import Status, StatusCode  # noqa: E402
+
+    from animetix.telemetry import extract_trace_context  # noqa: E402
 
     headers = {k.lower(): v for k, v in request.headers.items()}
     context = extract_trace_context(headers)

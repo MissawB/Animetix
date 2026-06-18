@@ -69,7 +69,10 @@ class VlmMixin:
             from io import BytesIO  # noqa: E402
 
             from PIL import Image  # noqa: E402
-            from transformers import AutoModelForVision2Seq, AutoProcessor  # noqa: E402
+            from transformers import (
+                AutoModelForVision2Seq,  # noqa: E402
+                AutoProcessor,
+            )
 
             img = Image.open(BytesIO(image_data)).convert("RGB")
             vlm_id = "HuggingFaceTB/SmolVLM-Instruct"

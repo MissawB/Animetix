@@ -1,4 +1,3 @@
-from animetix.api.dependencies import get_session_service  # noqa: E402
 from animetix_project.logging_config import get_logger  # noqa: E402
 from dependency_injector.wiring import Provide, inject
 from django.utils.decorators import method_decorator
@@ -7,14 +6,16 @@ from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from animetix.api.dependencies import get_session_service  # noqa: E402
+
 from ...containers import Container  # noqa: E402
 from ...models import GameplaySession  # noqa: E402
 
 logger = get_logger("animetix." + __name__)
 
-from ...serializers import AkinetixAnswerSerializer  # noqa: E402
-from ...serializers import (  # noqa: E402
-    AkinetixConfirmSerializer,
+from ...serializers import (
+    AkinetixAnswerSerializer,  # noqa: E402
+    AkinetixConfirmSerializer,  # noqa: E402
     AkinetixStartSerializer,
 )
 

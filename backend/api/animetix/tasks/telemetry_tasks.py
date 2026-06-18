@@ -1,7 +1,8 @@
+from animetix_project.logging_config import get_logger
+
 from animetix.bigquery_service import BigQueryTelemetryService
 from animetix.models import ArchetypeDriftSnapshot, DuelRoom, MediaItem
 from animetix.tasks_registry import register_task
-from animetix_project.logging_config import get_logger
 
 logger = get_logger("animetix." + __name__)
 

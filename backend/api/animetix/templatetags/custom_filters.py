@@ -36,7 +36,10 @@ def modulo(value, arg):
         return 0
 
 
-from core.utils.security import sanitize_html_content, sign_proxy_url  # noqa: E402
+from core.utils.security import (
+    sanitize_html_content,  # noqa: E402
+    sign_proxy_url,
+)
 
 
 @register.filter

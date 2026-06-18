@@ -4,8 +4,9 @@ Meta-AI Celery Tasks for Animetix.
 Automates prompt optimization and cognitive self-correction using DSPy.
 """
 
-from animetix.tasks_registry import register_task  # noqa: E402
 from animetix_project.logging_config import get_logger  # noqa: E402
+
+from animetix.tasks_registry import register_task  # noqa: E402
 
 from ..containers import get_container  # noqa: E402
 
@@ -70,9 +71,10 @@ def scheduled_dpo_optimization():
     """
     Tâche périodique pour optimiser les prompts à partir des feedbacks négatifs accumulés.
     """
-    from animetix.models import AIFeedback  # noqa: E402
     from django.core.cache import cache  # noqa: E402
     from django.db.models import Count  # noqa: E402
+
+    from animetix.models import AIFeedback  # noqa: E402
 
     lock_id = "scheduled_dpo_optimization_lock"
     if not cache.add(lock_id, "true", 3600):

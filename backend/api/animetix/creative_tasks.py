@@ -1,5 +1,6 @@
-from animetix.tasks_registry import register_task
 from animetix_project.logging_config import get_logger
+
+from animetix.tasks_registry import register_task
 
 logger = get_logger("animetix." + __name__)
 

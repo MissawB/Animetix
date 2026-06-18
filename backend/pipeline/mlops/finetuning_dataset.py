@@ -168,21 +168,23 @@ OUTPUT_DATASET = os.path.join(
 # Ajout du répertoire courant pour l'import des modules de base de données locales
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from creators_db import CREATORS_AND_STUDIOS  # noqa: E402
-from french_market_db import FRENCH_ANIME_DISTRIBUTORS  # noqa: E402
-from french_market_db import FRENCH_MANGA_PUBLISHERS  # noqa: E402
-from french_market_db import (  # noqa: E402
-    FRENCH_MARKET_RELATIONS,
+from french_market_db import (
+    FRENCH_ANIME_DISTRIBUTORS,  # noqa: E402
+    FRENCH_MANGA_PUBLISHERS,  # noqa: E402
+    FRENCH_MARKET_RELATIONS,  # noqa: E402
     FRENCH_VOICE_ACTORS,
 )
-from japanese_market_db import JAPANESE_ANIME_DISTRIBUTORS  # noqa: E402
-from japanese_market_db import JAPANESE_MANGA_PUBLISHERS  # noqa: E402
-from japanese_market_db import (  # noqa: E402
-    JAPANESE_MARKET_RELATIONS,
+from japanese_market_db import (
+    JAPANESE_ANIME_DISTRIBUTORS,  # noqa: E402
+    JAPANESE_MANGA_PUBLISHERS,  # noqa: E402
+    JAPANESE_MARKET_RELATIONS,  # noqa: E402
 )
 from magazines_and_awards_db import AWARDS_AND_MAGAZINES_RELATIONS  # noqa: E402
 from otaku_concepts import OTAKU_VOCABULARY  # noqa: E402
-from songs_and_seiyuu_db import SEIYUU_PROFILES as JAPANESE_VOICE_ACTORS  # noqa: E402
-from songs_and_seiyuu_db import SONGS_AND_SEIYUU_RELATIONS  # noqa: E402
+from songs_and_seiyuu_db import (
+    SEIYUU_PROFILES as JAPANESE_VOICE_ACTORS,  # noqa: E402
+    SONGS_AND_SEIYUU_RELATIONS,  # noqa: E402
+)
 from transmedia_db import TRANSMEDIA_RELATIONS  # noqa: E402
 from volumes_and_episodes_db import VOLUMES_AND_EPISODES_DATA  # noqa: E402
 

@@ -20,10 +20,16 @@ except Exception as e:
 
 from animetix.containers import get_container  # noqa: E402
 from datasets import load_dataset  # noqa: E402
-from peft import get_peft_model  # noqa: E402
-from peft import LoraConfig, prepare_model_for_kbit_training  # noqa: E402
-from transformers import AutoTokenizer  # noqa: E402
-from transformers import AutoModelForCausalLM, BitsAndBytesConfig  # noqa: E402
+from peft import (  # noqa: E402
+    LoraConfig,
+    get_peft_model,  # noqa: E402
+    prepare_model_for_kbit_training,
+)
+from transformers import (  # noqa: E402
+    AutoModelForCausalLM,
+    AutoTokenizer,  # noqa: E402
+    BitsAndBytesConfig,
+)
 from trl import DPOConfig, DPOTrainer  # noqa: E402
 
 

@@ -1,11 +1,12 @@
 import base64
 import json
 
-from animetix.services import shutdown_brain_service
 from animetix_project.logging_config import get_logger
 from django.conf import settings
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+
+from animetix.services import shutdown_brain_service
 
 logger = get_logger("animetix." + __name__)
 

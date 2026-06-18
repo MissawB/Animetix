@@ -28,8 +28,11 @@ def graph_builder(mock_engine, mock_prompt_manager):
 def test_extract_entities_and_relations_success(
     graph_builder, mock_engine, mock_prompt_manager
 ):
-    from core.domain.entities.ai_schemas import GraphEntity  # noqa: E402
-    from core.domain.entities.ai_schemas import GraphExtraction, GraphRelation
+    from core.domain.entities.ai_schemas import (
+        GraphEntity,  # noqa: E402
+        GraphExtraction,
+        GraphRelation,
+    )
 
     mock_extraction = GraphExtraction(
         entities=[GraphEntity(name="Naruto", type="Person", description="Ninja")],

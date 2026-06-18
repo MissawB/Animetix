@@ -1,7 +1,8 @@
 import json
 
-from animetix.containers import get_container
 from django.core.management.base import BaseCommand
+
+from animetix.containers import get_container
 
 
 class Command(BaseCommand):

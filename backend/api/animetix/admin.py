@@ -1,9 +1,10 @@
-from animetix.containers import get_container
-from animetix.models import AIFeedback, AIREvalResult, AISafetyEvent, GoldDatasetEntry
 from django.contrib import admin, messages
 from django.shortcuts import redirect
 from django.urls import path
 from django.utils.html import format_html
+
+from animetix.containers import get_container
+from animetix.models import AIFeedback, AIREvalResult, AISafetyEvent, GoldDatasetEntry
 
 
 @admin.register(GoldDatasetEntry)

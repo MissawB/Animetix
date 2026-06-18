@@ -171,8 +171,11 @@ except ImportError:
         CREATORS_AND_STUDIOS = {}
 
 try:
-    from french_market_db import FRENCH_ANIME_DISTRIBUTORS  # noqa: E402
-    from french_market_db import FRENCH_MANGA_PUBLISHERS, FRENCH_VOICE_ACTORS
+    from french_market_db import (
+        FRENCH_ANIME_DISTRIBUTORS,  # noqa: E402
+        FRENCH_MANGA_PUBLISHERS,
+        FRENCH_VOICE_ACTORS,
+    )
 except ImportError:
     try:
         from backend.pipeline.mlops.french_market_db import (  # noqa: E402
@@ -186,8 +189,10 @@ except ImportError:
         FRENCH_ANIME_DISTRIBUTORS = {}
 
 try:
-    from japanese_market_db import JAPANESE_ANIME_DISTRIBUTORS  # noqa: E402
-    from japanese_market_db import JAPANESE_MANGA_PUBLISHERS
+    from japanese_market_db import (
+        JAPANESE_ANIME_DISTRIBUTORS,  # noqa: E402
+        JAPANESE_MANGA_PUBLISHERS,
+    )
 except ImportError:
     try:
         from backend.pipeline.mlops.japanese_market_db import (  # noqa: E402

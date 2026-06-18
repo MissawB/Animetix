@@ -32,8 +32,11 @@ class LocalTextAdapter(InferencePort):
         if self.model:
             return
         try:
-            from transformers import AutoModelForCausalLM  # noqa: E402
-            from transformers import AutoTokenizer, BitsAndBytesConfig
+            from transformers import (
+                AutoModelForCausalLM,  # noqa: E402
+                AutoTokenizer,
+                BitsAndBytesConfig,
+            )
 
             logger.info(f"🏗️ Loading Local Text Model: {self.model_id}")
             self.tokenizer = AutoTokenizer.from_pretrained(

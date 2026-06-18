@@ -1,5 +1,6 @@
-from animetix.api.dependencies import get_session_service
 from animetix_project.logging_config import get_logger
+
+from animetix.api.dependencies import get_session_service
 
 from ..containers import get_container
 

@@ -7,7 +7,10 @@ from typing import Any, Dict, List, Optional  # noqa: E402
 import httpx  # noqa: E402
 from core.domain.exceptions import InferenceError  # noqa: E402
 from core.utils.lazy_import import lazy_import  # noqa: E402
-from core.utils.security import safe_http_request, safe_http_request_async  # noqa: E402
+from core.utils.security import (
+    safe_http_request,  # noqa: E402
+    safe_http_request_async,
+)
 
 torch = lazy_import("torch")
 
@@ -185,7 +188,10 @@ class ClipVisionMixin:
         if hasattr(self, "_colpali_model"):
             return
         try:
-            from colpali_engine.models import ColPali, ColPaliProcessor  # noqa: E402
+            from colpali_engine.models import (
+                ColPali,  # noqa: E402
+                ColPaliProcessor,
+            )
 
             logger.info("🏗️ Loading ColPali for Late Interaction...")
             model_id = "vidore/colpali-v1.2"

@@ -8,9 +8,9 @@ from rest_framework.response import Response  # noqa: E402
 
 from ..containers import get_container  # noqa: E402
 from ..models import AIFeedback, ArchetypeDriftSnapshot  # noqa: E402
-from ..serializers import AIDebateSerializer  # noqa: E402
-from ..serializers import (  # noqa: E402
-    CFRStrategySerializer,
+from ..serializers import (
+    AIDebateSerializer,  # noqa: E402
+    CFRStrategySerializer,  # noqa: E402
     CounterfactualSerializer,
     CoveOracleSerializer,
 )

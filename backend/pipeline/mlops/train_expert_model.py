@@ -13,8 +13,12 @@ import time  # noqa: E402
 import torch  # noqa: E402
 from datasets import load_dataset  # noqa: E402
 from peft import LoraConfig  # noqa: E402
-from transformers import AutoTokenizer  # noqa: E402
-from transformers import AutoModelForCausalLM, BitsAndBytesConfig, TrainingArguments
+from transformers import (
+    AutoModelForCausalLM,
+    AutoTokenizer,  # noqa: E402
+    BitsAndBytesConfig,
+    TrainingArguments,
+)
 from trl import DataCollatorForCompletionOnlyLM, SFTTrainer  # noqa: E402
 
 # Configuration du logger

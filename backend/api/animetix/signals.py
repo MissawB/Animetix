@@ -184,10 +184,11 @@ def flag_and_stage_complex_user_query(sender, instance, created, **kwargs):
 
         try:
             # 1. Évaluation de la complexité via le ComplexityAnalyser ou des règles heuristiques
-            from animetix.containers import get_container  # noqa: E402
             from core.domain.services.complexity_analyser import (  # noqa: E402
                 ComplexityAnalyser,
             )
+
+            from animetix.containers import get_container  # noqa: E402
 
             container = get_container()
             pm = getattr(container, "prompt_manager", None)

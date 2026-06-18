@@ -1,8 +1,11 @@
 from animetix import api_views
 from animetix.api.monitoring import PipelineControlView
 from animetix.api.observability import ObservabilityView  # noqa: E402
-from animetix.tasks_views import eventarc_gcs_upload_view  # noqa: E402
-from animetix.tasks_views import poll_workflow_view, run_task_view
+from animetix.tasks_views import (
+    eventarc_gcs_upload_view,  # noqa: E402
+    poll_workflow_view,
+    run_task_view,
+)
 from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
 from django.urls import include, path
@@ -20,15 +23,13 @@ router.register(r"fusions", api_views.CreativeFusionViewSet, basename="fusions")
 router.register(r"curation", api_views.DataCurationTicketViewSet, basename="curation")
 
 
-from animetix.api.admin_api import (  # noqa: E402
-    AdEventLoggingAPIView,
-)
+from animetix.api.admin_api import AdEventLoggingAPIView  # noqa: E402
 from animetix.api.mlops import AdaptersView, DPOFeedbackLoopView  # noqa: E402
 from django.contrib.admin.views.decorators import staff_member_required  # noqa: E402
 from django_prometheus import exports as prometheus_exports  # noqa: E402
-from drf_spectacular.views import SpectacularAPIView  # noqa: E402
-from drf_spectacular.views import (  # noqa: E402
-    SpectacularRedocView,
+from drf_spectacular.views import (
+    SpectacularAPIView,  # noqa: E402
+    SpectacularRedocView,  # noqa: E402
     SpectacularSwaggerView,
 )
 
