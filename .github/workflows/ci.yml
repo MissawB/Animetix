@@ -188,4 +188,3 @@ jobs:
         git checkout main || git checkout master
         git merge ${{ github.sha }} --ff-only
         git push origin HEAD
-AD
