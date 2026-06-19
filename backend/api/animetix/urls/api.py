@@ -29,7 +29,6 @@ urlpatterns = [
         api_views.CreativeFusionViewSet.as_view({"get": "list", "post": "create"}),
         name="api-fusions",
     ),
-
     path(
         "clubs/",
         api_views.ClubViewSet.as_view({"get": "list", "post": "create"}),

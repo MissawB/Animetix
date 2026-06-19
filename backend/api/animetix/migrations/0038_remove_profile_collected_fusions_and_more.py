@@ -6,20 +6,30 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('animetix', '0037_alter_wallettransaction_transaction_type_and_more'),
+        ("animetix", "0037_alter_wallettransaction_transaction_type_and_more"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='profile',
-            name='collected_fusions',
+            model_name="profile",
+            name="collected_fusions",
         ),
         migrations.AlterField(
-            model_name='wallettransaction',
-            name='transaction_type',
-            field=models.CharField(choices=[('ad_passive', 'Passive Mining'), ('ad_active', 'Rewarded Video'), ('purchase', 'Direct Purchase'), ('ai_usage', 'AI Consumption'), ('daily_grant', 'Daily Grant'), ('welcome_bonus', 'Welcome Bonus')], max_length=20),
+            model_name="wallettransaction",
+            name="transaction_type",
+            field=models.CharField(
+                choices=[
+                    ("ad_passive", "Passive Mining"),
+                    ("ad_active", "Rewarded Video"),
+                    ("purchase", "Direct Purchase"),
+                    ("ai_usage", "AI Consumption"),
+                    ("daily_grant", "Daily Grant"),
+                    ("welcome_bonus", "Welcome Bonus"),
+                ],
+                max_length=20,
+            ),
         ),
         migrations.DeleteModel(
-            name='MarketListing',
+            name="MarketListing",
         ),
     ]
