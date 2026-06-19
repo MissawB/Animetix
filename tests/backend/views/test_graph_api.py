@@ -46,14 +46,24 @@ def test_graph_neighbors_premium_access(client, premium_user, mock_container):
 
 
 @pytest.mark.django_db
-def test_graph_neighbors_free_denied(client, free_user, mock_container):
+def test_graph_neighbors_free_access(client, free_user, mock_container):
+    # Premium gating was removed: free users can explore the graph too.
     client.force_login(free_user)
 
-    url = reverse("api_graph_neighbors")
-    response = client.get(url, {"id": "123", "type": "Anime"})
+    mock_data = {"nodes": [{"id": "1"}], "links": []}
+    mock_container.graph_persistence_port.get_neighborhood.return_value = mock_data
 
-    assert response.status_code == 403
-    assert "Premium" in response.json()["error"]
+    from animetix.containers import container  # noqa: E402
+    from dependency_injector import providers  # noqa: E402
+
+    with container.persistence.graph_persistence_port.override(
+        providers.Object(mock_container.graph_persistence_port)
+    ):
+        url = reverse("api_graph_neighbors")
+        response = client.get(url, {"id": "123", "type": "Anime"})
+
+        assert response.status_code == 200
+        assert response.json()["nodes"] == mock_data["nodes"]
 
 
 @pytest.mark.django_db

@@ -153,6 +153,7 @@ def test_stripe_webhook_upgrade(api_client, user_free):
                 "client_reference_id": user_free.id,
                 "customer": "cus_test_12345",
                 "subscription": "sub_test_12345",
+                "metadata": {"transaction_type": "pro_subscription_upgrade"},
             }
         },
     }
