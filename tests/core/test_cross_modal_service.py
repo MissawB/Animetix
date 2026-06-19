@@ -53,7 +53,7 @@ def test_deep_multimodal_search_image_only(
     mock_vector_db.search_by_vector.return_value = []
     cross_modal_service.deep_multimodal_search("", image_data=b"img")
     mock_engine.get_image_embedding.assert_called_with(
-        b"img", model_id="openai/clip-vit-base-patch32"
+        b"img", model_id="dudcjs2779/anime-style-tag-clip"
     )
 
 

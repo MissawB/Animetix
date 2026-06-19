@@ -133,7 +133,10 @@ def test_neuro_memory_management_view_post():
     user.is_authenticated = True
     request.user = user
 
-    with patch.object(NeuroMemoryManagementView, "permission_classes", []):
+    with (
+        patch.object(NeuroMemoryManagementView, "permission_classes", []),
+        patch("animetix.api.cognition.AIFeedback"),
+    ):
         from rest_framework.test import force_authenticate  # noqa: E402
 
         view = NeuroMemoryManagementView.as_view()

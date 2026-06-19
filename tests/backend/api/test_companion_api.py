@@ -74,14 +74,12 @@ class TestCompanionAPI:
         api_client.force_authenticate(user=mock_user)
         url = reverse("api_companion_interact")
 
-        mock_usage_port = MagicMock()
-        mock_usage_port.check_quota.return_value = False
+        # The interaction costs Berrix; drain the wallet so the deduction is
+        # refused (HTTP 402) before any LLM call happens.
+        mock_user.profile.wallet_balance = 0
+        mock_user.profile.save()
 
-        with container.infrastructure.usage_port.override(
-            providers.Object(mock_usage_port)
-        ):
-            response = api_client.post(
-                url, {"mentor_id": "sensei", "user_message": "msg"}, format="json"
-            )
-            assert response.status_code == status.HTTP_403_FORBIDDEN
-            assert "quota" in response.data["error"].lower()
+        response = api_client.post(
+            url, {"mentor_id": "sensei", "user_message": "msg"}, format="json"
+        )
+        assert response.status_code == status.HTTP_402_PAYMENT_REQUIRED

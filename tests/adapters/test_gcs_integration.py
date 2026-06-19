@@ -1,5 +1,3 @@
-from unittest.mock import MagicMock, patch
-
 import pytest
 from animetix.models import CreativeFusion
 from django.core.files.base import ContentFile
@@ -28,10 +26,7 @@ def test_django_storage_local_saving():
 
 
 @pytest.mark.django_db
-@patch("animetix.api.games.archetypist.AsyncResult")
-def test_archetypist_task_status_view_saves_to_storage(
-    mock_async_result, client, django_user_model
-):
+def test_archetypist_task_status_view_saves_to_storage(client, django_user_model):
     # Create user and authenticate
     user = django_user_model.objects.create_user(
         username="testuser", password="password"
@@ -48,24 +43,19 @@ def test_archetypist_task_status_view_saves_to_storage(
         creator=user,
     )
 
-    # Mock celery task state and result
-    mock_task = MagicMock()
-    mock_task.ready.return_value = True
-    mock_task.state = "SUCCESS"
-
+    # The view reads task results from the Django cache (not Celery AsyncResult).
     fake_base64_image = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
-    mock_task.result = {
+    task_result = {
         "scenario": "A crossover between Naruto and Luffy.",
         "fusion_image": fake_base64_image,
     }
-    mock_async_result.return_value = mock_task
 
     # Set the mocked task data in Django cache since the view reads from cache
     from django.core.cache import cache  # noqa: E402
 
     cache.set(
         "task_result:mock-task-id",
-        {"state": "SUCCESS", "ready": True, "result": mock_task.result},
+        {"state": "SUCCESS", "ready": True, "result": task_result},
     )
 
     # Make GET request to the ArchetypistTaskStatusView using the correct prefix path /api/v1/

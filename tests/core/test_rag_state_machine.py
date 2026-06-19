@@ -27,6 +27,9 @@ from core.domain.services.rag.processors.synthesize_processor import SynthesizeP
 from core.domain.services.rag.processors.vlm_rerank_processor import VlmRerankProcessor
 from core.domain.services.rag_orchestrator import RAGOrchestrator
 
+# Exercises the RAG state machine end-to-end against a live inference engine (no ollama in CI).
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def mock_deps():

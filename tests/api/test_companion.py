@@ -36,9 +36,10 @@ def test_companion_interact_view_authenticated():
     request.user = user
     request.session = {}
 
-    with patch(
-        "backend.api.animetix.api.companion.get_container"
-    ) as mock_get_container:
+    with (
+        patch("backend.api.animetix.api.companion.get_container") as mock_get_container,
+        patch("animetix.api.billing.deduct_berrix"),
+    ):
         mock_container = MagicMock()
         mock_service = MagicMock()
         mock_service.generate_response.return_value = "Compagnon says hello!"
