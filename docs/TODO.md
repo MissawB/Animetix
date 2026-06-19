@@ -25,7 +25,7 @@ Ce document liste toutes les tâches techniques, architecturales et fonctionnell
 
 - [x] **Centre de Synchronisation de Données :**
     - Créer une page permettant de visualiser les données locales/hors-ligne en attente de synchronisation et de forcer la réconciliation manuelle (`sync_offline_data`).
-- [ ] **Historique des Feedbacks IA :**
+- [x] **Historique des Feedbacks IA :**
     - Implémenter la vue pour `/social/ai-feedback-history/` permettant aux utilisateurs de revoir leurs interactions passées avec les agents de validation.
 - [ ] **Portail de Données Ouvertes (Open Data) :**
     - Page de téléchargement des datasets publics (paires DPO, logs anonymisés) pour la conformité académique.

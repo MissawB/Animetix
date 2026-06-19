@@ -132,6 +132,11 @@ urlpatterns = [
         name="api_social_toggle_follow",
     ),
     path(
+        "sync/offline/",
+        api_views.sync_offline_data,
+        name="sync_offline_data",
+    ),
+    path(
         "latent-space/",
         (
             api_views.SampleView.as_view()

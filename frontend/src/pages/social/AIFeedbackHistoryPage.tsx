@@ -35,7 +35,7 @@ const AIFeedbackHistoryPage: React.FC = () => {
     <div className="max-w-5xl mx-auto px-6 py-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex items-center justify-between mb-12">
         <div>
-          <Link to="/settings" className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-gray-500 hover:text-brand-primary mb-4 no-underline transition-colors">
+          <Link to="/auth/settings/" className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-gray-500 hover:text-brand-primary mb-4 no-underline transition-colors">
             <ChevronLeft className="w-4 h-4" /> Paramètres
           </Link>
           <h1 className="text-4xl font-black italic manga-font tracking-tighter uppercase flex items-center gap-3">
