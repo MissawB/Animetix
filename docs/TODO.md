@@ -14,7 +14,7 @@ Ce document liste toutes les tâches techniques, architecturales et fonctionnell
         - Audit de Sécurité IA (`/admin/safety-audit/`)
         - Monitoring TTC / Latence (`/admin/ttc-monitoring/`)
         - Gestion Financière & Coûts API (`/admin/financials/`)
-- [ ] **Raccordement des "Ghost Labs" (Beta) :**
+- [x] **Raccordement des "Ghost Labs" (Beta) :**
     - Rendre accessibles via le menu principal ou une navigation secondaire :
         - Synthèse Vocale Seiyuu (`/lab/audio/seiyuu/`)
         - Compilateur Numba/IA (`/lab/compiler/`)
@@ -23,7 +23,7 @@ Ce document liste toutes les tâches techniques, architecturales et fonctionnell
 
 ### 🛠️ Nouvelles Pages Dédiées (Backend Mapping)
 
-- [ ] **Centre de Synchronisation de Données :**
+- [x] **Centre de Synchronisation de Données :**
     - Créer une page permettant de visualiser les données locales/hors-ligne en attente de synchronisation et de forcer la réconciliation manuelle (`sync_offline_data`).
 - [ ] **Historique des Feedbacks IA :**
     - Implémenter la vue pour `/social/ai-feedback-history/` permettant aux utilisateurs de revoir leurs interactions passées avec les agents de validation.
@@ -41,9 +41,15 @@ Ce document liste toutes les tâches techniques, architecturales et fonctionnell
 
 ---
 
-## 🚀 Expansion & Futur
-- [ ] **Déploiement Multi-Régions :** Préparer les scripts d'infrastructure pour un déployement sur plusieurs régions Google Cloud.
-- [ ] **Rapports de Conformité :** Automatiser les rapports hebdomadaires de conformité sécurité.
+## 🧹 Résolution de la Dette Technique
+
+- [ ] **Centralisation HTTP (Frontend) :** Remplacer les appels directs à `fetch()` par `apiClient` dans les pages de jeu (`AkinetixRLPage`, `DuelLobbyPage`, `paradoxStore`, etc.) pour assurer la transmission automatique des tokens Firebase/CSRF et l'unification des messages d'erreur..
+- [ ] **Dépréciations Pydantic V2 :** Mettre à jour les modèles héritant de Pydantic V1 (comme `PersonalizationSchema` dans `social.py`) vers la syntaxe standard `ConfigDict`.
+- [ ] **Correction de sync-api.bat :** Aligner le chemin de sortie de génération des types OpenAPI dans `sync-api.bat` sur `src\types\api.d.ts`.
 
 ---
-*Dernière mise à jour : 16 Juin 2026*
+
+## 🚀 Expansion & Futur
+- [ ] **Rapports de Conformité :** Automatiser les rapports hebdomadaires de conformité sécurité.
+---
+*Dernière mise à jour : 19 Juin 2026*
