@@ -283,6 +283,7 @@ google-api-core[grpc]==2.31.0
     #   google-cloud-resource-manager
     #   google-cloud-storage
     #   google-cloud-trace
+    #   google-cloud-workflows
     #   pandas-gbq
 google-api-python-client==2.197.0
     # via google-cloud-profiler
@@ -302,6 +303,7 @@ google-auth[requests]==2.54.0
     #   google-cloud-resource-manager
     #   google-cloud-storage
     #   google-cloud-trace
+    #   google-cloud-workflows
     #   google-genai
     #   pandas-gbq
     #   pydata-google-auth
@@ -341,6 +343,8 @@ google-cloud-storage==3.1.1
     #   google-cloud-aiplatform
 google-cloud-trace==1.19.0
     # via opentelemetry-exporter-gcp-trace
+google-cloud-workflows==1.22.0
+    # via -r requirements.in
 google-crc32c==1.8.0
     # via
     #   google-cloud-storage
@@ -374,6 +378,7 @@ grpcio==1.81.1
     #   google-cloud-pubsub
     #   google-cloud-resource-manager
     #   google-cloud-trace
+    #   google-cloud-workflows
     #   googleapis-common-protos
     #   grpc-google-iam-v1
     #   grpcio-status
@@ -711,6 +716,7 @@ proto-plus==1.28.0
     #   google-cloud-pubsub
     #   google-cloud-resource-manager
     #   google-cloud-trace
+    #   google-cloud-workflows
 protobuf==6.33.6
     # via
     #   apache-beam
@@ -725,6 +731,7 @@ protobuf==6.33.6
     #   google-cloud-pubsub
     #   google-cloud-resource-manager
     #   google-cloud-trace
+    #   google-cloud-workflows
     #   googleapis-common-protos
     #   grpc-google-iam-v1
     #   grpcio-status
