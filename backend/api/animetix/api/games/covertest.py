@@ -21,14 +21,40 @@ class CovertestGameStateView(APIView):
 
     @inject
     def get(
-        self, request, cover_test_service=Provide[Container.core.cover_test_service]
+        self,
+        request,
+        catalog_service=Provide[Container.core.catalog_service],
+        cover_test_service=Provide[Container.core.cover_test_service],
     ):
         session_service = get_session_service(request)
         port = session_service.port
         state = cover_test_service.get_state(port)
         if not state.secret:
+            media_type = "Manga"
+            data = catalog_service.load_data(media_type)
+            if data:
+                is_daily = request.query_params.get("is_daily", "false").lower() in (
+                    "true",
+                    "1",
+                )
+                if is_daily:
+                    cover = cover_test_service.get_daily_cover(datetime.date.today())
+                else:
+                    cover = cover_test_service.get_random_cover()
+                if cover:
+                    state.secret = cover["manga_title"]
+                    state.url = cover["url"]
+                    state.locale = cover["locale"]
+                    state.volume = cover["volume"]
+                    state.guesses = []
+                    state.game_over = False
+                    state.is_daily = is_daily
+                    cover_test_service.save_state(port, state)
+
+        if not state.secret:
             return Response(
-                {"error": "No game in progress"}, status=status.HTTP_400_BAD_REQUEST
+                {"error": "No game in progress and auto-start failed."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         return Response(

@@ -35,8 +35,9 @@ def test_soundscape_generation_view(dummy_video):
     factory = RequestFactory()
     request = factory.post("/api/v1/labs/audio/soundscape/", {"video": dummy_video})
 
-    with patch("animetix.api.labs.get_container") as mock_get_container, patch(
-        "animetix.api.labs.deduct_berrix"
+    with (
+        patch("animetix.api.labs.get_container") as mock_get_container,
+        patch("animetix.api.labs.deduct_berrix"),
     ):
         mock_container = MagicMock()
         mock_service = MagicMock()
@@ -59,8 +60,9 @@ def test_speech_to_speech_lab_view(dummy_audio):
         "/api/v1/labs/audio/s2s/", {"audio": dummy_audio, "persona": "Saber"}
     )
 
-    with patch("animetix.api.labs.get_container") as mock_get_container, patch(
-        "animetix.api.labs.deduct_berrix"
+    with (
+        patch("animetix.api.labs.get_container") as mock_get_container,
+        patch("animetix.api.labs.deduct_berrix"),
     ):
         mock_container = MagicMock()
         mock_service = MagicMock()

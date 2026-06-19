@@ -30,7 +30,9 @@ jobs:
       with:
         python-version: '3.12'
     - name: Install Tools
-      run: pip install ruff==0.15.17 black mypy
+      # Pin black so CI formatting matches local (black's formatting changes
+      # between releases; an unpinned install drifted from the committed style).
+      run: pip install ruff==0.15.17 black==26.5.1 mypy
     - name: Run Checks
       run: |
         ruff check .
