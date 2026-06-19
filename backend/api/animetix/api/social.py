@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User  # noqa: E402
-from pydantic import BaseModel, Field, ValidationError  # noqa: E402
+from pydantic import BaseModel, ConfigDict, Field, ValidationError  # noqa: E402
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -34,9 +34,7 @@ class PersonalizationSchema(BaseModel):
     animations_enabled: bool = Field(default=True)
     sound_enabled: bool = Field(default=False)
 
-    # On interdit explicitement les clés non définies pour bloquer le stockage NoSQL
-    class Config:
-        extra = "forbid"
+    model_config = ConfigDict(extra="forbid")
 
 
 class IsCreatorOrReadOnly(permissions.BasePermission):

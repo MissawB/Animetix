@@ -4,6 +4,7 @@ import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
+import { apiClient } from '../../utils/apiClient';
 
 interface RLState {
     current_q: string;
@@ -26,12 +27,10 @@ const AkinetixRLPage: React.FC = () => {
         setLoading(true);
         setShowDashboard(false);
         try {
-            const res = await fetch('/api/v1/game/akinetix-rl/start/', {
+            const data = await apiClient('/api/v1/game/akinetix-rl/start/', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ media_type: mediaType })
             });
-            const data = await res.json();
             setState(data);
         } catch {
             setError("Échec de l'initialisation du cerveau RL.");
@@ -43,12 +42,10 @@ const AkinetixRLPage: React.FC = () => {
     const submitAnswer = async (answer: string) => {
         setLoading(true);
         try {
-            const res = await fetch('/api/v1/game/akinetix-rl/answer/', {
+            const data = await apiClient('/api/v1/game/akinetix-rl/answer/', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ answer })
             });
-            const data = await res.json();
             setState(data);
         } catch {
             setError("Perte de connexion avec le réseau neuronal.");

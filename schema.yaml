@@ -4,9 +4,98 @@ info:
   version: 1.0.0
   description: Documentation des APIs REST d'Animetix (Media Discovery & AI Games)
 paths:
-  /api/achievements/:
+  /api/mlops/adapters/:
     get:
-      operationId: api_achievements_list
+      operationId: api_mlops_adapters_retrieve
+      description: |-
+        API for managing MLOps Adapters.
+        Allows real-time health checks and dynamic configuration.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_mlops_adapters_create
+      description: |-
+        API for managing MLOps Adapters.
+        Allows real-time health checks and dynamic configuration.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/mlops/dpo-loop/:
+    get:
+      operationId: api_mlops_dpo_loop_retrieve
+      description: |-
+        API for managing the DPO Feedback Loop.
+        Provides status, trends, and manual triggers for optimization.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_mlops_dpo_loop_create
+      description: |-
+        API for managing the DPO Feedback Loop.
+        Provides status, trends, and manual triggers for optimization.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/monitoring/{action}/:
+    post:
+      operationId: api_monitoring_create
+      parameters:
+      - in: path
+        name: action
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/monitoring/cluster-health/:
+    get:
+      operationId: api_monitoring_cluster_health_retrieve
+      description: |-
+        GET /api/monitoring/cluster-health/
+        Returns real-time health status for all cluster components:
+        NVIDIA H100 GPUs, Ollama Inference, Neo4j Knowledge Graph.
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/observability/:
+    get:
+      operationId: api_observability_retrieve
+      description: Retrieve observability status/drift metrics.
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_observability_create
+      description: Update guardrail thresholds.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/achievements/:
+    get:
+      operationId: api_v1_achievements_list
       parameters:
       - name: page
         required: false
@@ -17,8 +106,6 @@ paths:
       tags:
       - api
       security:
-      - cookieAuth: []
-      - basicAuth: []
       - {}
       responses:
         '200':
@@ -27,9 +114,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedAchievementList'
           description: ''
-  /api/achievements/{id}/:
+  /api/v1/achievements/{id}/:
     get:
-      operationId: api_achievements_retrieve
+      operationId: api_v1_achievements_retrieve
       parameters:
       - in: path
         name: id
@@ -40,8 +127,6 @@ paths:
       tags:
       - api
       security:
-      - cookieAuth: []
-      - basicAuth: []
       - {}
       responses:
         '200':
@@ -50,9 +135,312 @@ paths:
               schema:
                 $ref: '#/components/schemas/Achievement'
           description: ''
-  /api/daily-challenges/:
+  /api/v1/admin/ai_eval/data/:
     get:
-      operationId: api_daily_challenges_list
+      operationId: api_v1_admin_ai_eval_data_retrieve
+      description: API for AI Evaluation results and stats.
+      tags:
+      - api
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AIREvalResult'
+          description: ''
+  /api/v1/admin/economics/:
+    get:
+      operationId: api_v1_admin_economics_retrieve
+      description: Analyse macro-économique des flux de Berrix (Bx).
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/admin/financials/:
+    get:
+      operationId: api_v1_admin_financials_retrieve
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/admin/observability/:
+    get:
+      operationId: api_v1_admin_observability_retrieve
+      description: Retrieve observability status/drift metrics.
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_v1_admin_observability_create
+      description: Update guardrail thresholds.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/admin/pipelines/control/{action}/:
+    post:
+      operationId: api_v1_admin_pipelines_control_create
+      parameters:
+      - in: path
+        name: action
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/admin/ttc-monitoring/:
+    get:
+      operationId: api_v1_admin_ttc_monitoring_retrieve
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/admin/users/:
+    get:
+      operationId: api_v1_admin_users_list
+      description: Gestion des comptes utilisateurs pour les administrateurs.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      tags:
+      - api
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUserAdminList'
+          description: ''
+  /api/v1/admin/users/{id}/toggle-active/:
+    post:
+      operationId: api_v1_admin_users_toggle_active_create
+      description: Gestion des comptes utilisateurs pour les administrateurs.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserAdmin'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserAdmin'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserAdmin'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserAdmin'
+          description: ''
+  /api/v1/admin/users/{id}/toggle-staff/:
+    post:
+      operationId: api_v1_admin_users_toggle_staff_create
+      description: Gestion des comptes utilisateurs pour les administrateurs.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserAdmin'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserAdmin'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserAdmin'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserAdmin'
+          description: ''
+  /api/v1/archetypist/start/:
+    post:
+      operationId: api_v1_archetypist_start_create
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/archetypist/status/:
+    get:
+      operationId: api_v1_archetypist_status_retrieve
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/archetypist/theater/:
+    get:
+      operationId: api_v1_archetypist_theater_retrieve
+      description: Returns a list of all public fusions that have a generated Visual
+        Novel script.
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/archetypist/vn/{fusion_id}/:
+    get:
+      operationId: api_v1_archetypist_vn_retrieve
+      description: Returns the VN script for a specific fusion.
+      parameters:
+      - in: path
+        name: fusion_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_v1_archetypist_vn_create
+      description: |-
+        Action 'generate': Generates a script and saves it.
+        Action 'update': Updates the script (Director Mode).
+      parameters:
+      - in: path
+        name: fusion_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/auth/login/:
+    post:
+      operationId: api_v1_auth_login_create
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/auth/logout/:
+    post:
+      operationId: api_v1_auth_logout_create
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/auth/me/:
+    get:
+      operationId: api_v1_auth_me_retrieve
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/auth/register/:
+    post:
+      operationId: api_v1_auth_register_create
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/billing/log_ad_event/:
+    post:
+      operationId: api_v1_billing_log_ad_event_create
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/billing/wallet/balance/:
+    get:
+      operationId: api_v1_billing_wallet_balance_retrieve
+      description: Récupère le solde actuel et l'historique récent des transactions.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/billing/wallet/checkout/:
+    post:
+      operationId: api_v1_billing_wallet_checkout_create
+      description: Crée une session Stripe Checkout pour l'achat d'un pack de Bx.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/billing/wallet/mine/:
+    post:
+      operationId: api_v1_billing_wallet_mine_create
+      description: |-
+        Endpoint pour le minage passif de Berrix (Bx).
+        Crédite le portefeuille de l'utilisateur s'il a passé assez de temps sur le site.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/billing/wallet/watch-ad/:
+    post:
+      operationId: api_v1_billing_wallet_watch_ad_create
+      description: Endpoint pour la recharge active via Reward Ads (Berrix).
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/club-events/:
+    get:
+      operationId: api_v1_club_events_list
+      description: API endpoint pour gérer les événements de clubs.
       parameters:
       - name: page
         required: false
@@ -63,8 +451,650 @@ paths:
       tags:
       - api
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedClubEventList'
+          description: ''
+    post:
+      operationId: api_v1_club_events_create
+      description: API endpoint pour gérer les événements de clubs.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClubEvent'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ClubEvent'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ClubEvent'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClubEvent'
+          description: ''
+  /api/v1/club-events/{id}/:
+    get:
+      operationId: api_v1_club_events_retrieve
+      description: API endpoint pour gérer les événements de clubs.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClubEvent'
+          description: ''
+    put:
+      operationId: api_v1_club_events_update
+      description: API endpoint pour gérer les événements de clubs.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClubEvent'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ClubEvent'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ClubEvent'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClubEvent'
+          description: ''
+    patch:
+      operationId: api_v1_club_events_partial_update
+      description: API endpoint pour gérer les événements de clubs.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedClubEvent'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedClubEvent'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedClubEvent'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClubEvent'
+          description: ''
+    delete:
+      operationId: api_v1_club_events_destroy
+      description: API endpoint pour gérer les événements de clubs.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      responses:
+        '204':
+          description: No response body
+  /api/v1/clubs/:
+    get:
+      operationId: api_v1_clubs_list
+      description: API endpoint pour gérer les clubs de découverte.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDiscoveryClubList'
+          description: ''
+    post:
+      operationId: api_v1_clubs_create
+      description: API endpoint pour gérer les clubs de découverte.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiscoveryClub'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DiscoveryClub'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DiscoveryClub'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscoveryClub'
+          description: ''
+  /api/v1/clubs/{id}/:
+    get:
+      operationId: api_v1_clubs_retrieve
+      description: API endpoint pour gérer les clubs de découverte.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscoveryClub'
+          description: ''
+    put:
+      operationId: api_v1_clubs_update
+      description: API endpoint pour gérer les clubs de découverte.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiscoveryClub'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DiscoveryClub'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DiscoveryClub'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscoveryClub'
+          description: ''
+    patch:
+      operationId: api_v1_clubs_partial_update
+      description: API endpoint pour gérer les clubs de découverte.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDiscoveryClub'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedDiscoveryClub'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDiscoveryClub'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscoveryClub'
+          description: ''
+    delete:
+      operationId: api_v1_clubs_destroy
+      description: API endpoint pour gérer les clubs de découverte.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      responses:
+        '204':
+          description: No response body
+  /api/v1/clubs/{id}/join/:
+    post:
+      operationId: api_v1_clubs_join_create
+      description: API endpoint pour gérer les clubs de découverte.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiscoveryClub'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DiscoveryClub'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DiscoveryClub'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscoveryClub'
+          description: ''
+  /api/v1/clubs/{id}/leave/:
+    post:
+      operationId: api_v1_clubs_leave_create
+      description: API endpoint pour gérer les clubs de découverte.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiscoveryClub'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DiscoveryClub'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DiscoveryClub'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscoveryClub'
+          description: ''
+  /api/v1/cognition/archetype-nexus/:
+    get:
+      operationId: api_v1_cognition_archetype_nexus_retrieve
+      description: |-
+        Interface de profilage cognitif avancé.
+        Expose le drift d'archétype et les règles logiques déduites par Z3.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/cognition/cfr-strategy-lab/:
+    post:
+      operationId: api_v1_cognition_cfr_strategy_lab_create
+      description: |-
+        Interface pour visualiser la convergence du solveur CFR (Counterfactual Regret Minimization).
+        Simule la résolution de dilemmes stratégiques pour Akinetix.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/cognition/counterfactual/:
+    post:
+      operationId: api_v1_cognition_counterfactual_create
+      description: Simulateur de timelines alternatives pour une conversation donnée.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/cognition/cove-oracle/:
+    post:
+      operationId: api_v1_cognition_cove_oracle_create
+      description: |-
+        Interface pour visualiser le processus Chain-of-Verification (CoVe).
+        Réduit les hallucinations en décomposant et vérifiant les assertions.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/cognition/debate-arena/:
+    post:
+      operationId: api_v1_cognition_debate_arena_create
+      description: |-
+        Interface pour orchestrer des débats entre agents IA sur des thématiques de lore.
+        Utilise le SelfPlayDebateService.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/cognition/neuro-memory/:
+    get:
+      operationId: api_v1_cognition_neuro_memory_retrieve
+      description: |-
+        Gestion fine des règles logiques déduites (Neuro-Symbolique).
+        Permet à l'utilisateur de révoquer ce que l'IA a 'compris'.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_v1_cognition_neuro_memory_create
+      description: Révoquer une règle ou réinitialiser le profil logique.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/companion/interact/:
+    post:
+      operationId: api_v1_companion_interact_create
+      description: |-
+        API view for interacting with AI Companions.
+        Manages session memory and user quotas.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/config/:
+    get:
+      operationId: api_v1_config_retrieve
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/curation/:
+    get:
+      operationId: api_v1_curation_list
+      description: Dashboard de curation pour les administrateurs.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      tags:
+      - api
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDataCurationTicketList'
+          description: ''
+    post:
+      operationId: api_v1_curation_create
+      description: Dashboard de curation pour les administrateurs.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataCurationTicket'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DataCurationTicket'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DataCurationTicket'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataCurationTicket'
+          description: ''
+  /api/v1/curation/{id}/:
+    get:
+      operationId: api_v1_curation_retrieve
+      description: Dashboard de curation pour les administrateurs.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) data curation
+          ticket.
+        required: true
+      tags:
+      - api
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataCurationTicket'
+          description: ''
+    put:
+      operationId: api_v1_curation_update
+      description: Dashboard de curation pour les administrateurs.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) data curation
+          ticket.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataCurationTicket'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DataCurationTicket'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DataCurationTicket'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataCurationTicket'
+          description: ''
+    patch:
+      operationId: api_v1_curation_partial_update
+      description: Dashboard de curation pour les administrateurs.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) data curation
+          ticket.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDataCurationTicket'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedDataCurationTicket'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDataCurationTicket'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataCurationTicket'
+          description: ''
+    delete:
+      operationId: api_v1_curation_destroy
+      description: Dashboard de curation pour les administrateurs.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) data curation
+          ticket.
+        required: true
+      tags:
+      - api
+      responses:
+        '204':
+          description: No response body
+  /api/v1/curation/{id}/resolve/:
+    post:
+      operationId: api_v1_curation_resolve_create
+      description: Dashboard de curation pour les administrateurs.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) data curation
+          ticket.
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataCurationTicket'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DataCurationTicket'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DataCurationTicket'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataCurationTicket'
+          description: ''
+  /api/v1/curation/stats/:
+    get:
+      operationId: api_v1_curation_stats_retrieve
+      description: Dashboard de curation pour les administrateurs.
+      tags:
+      - api
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataCurationTicket'
+          description: ''
+  /api/v1/custom-config/:
+    get:
+      operationId: api_v1_custom_config_retrieve
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/daily-challenge/:
+    get:
+      operationId: api_v1_daily_challenge_retrieve
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/daily-challenges/:
+    get:
+      operationId: api_v1_daily_challenges_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
       - {}
       responses:
         '200':
@@ -73,9 +1103,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedDailyChallengeList'
           description: ''
-  /api/daily-challenges/{id}/:
+  /api/v1/daily-challenges/{id}/:
     get:
-      operationId: api_daily_challenges_retrieve
+      operationId: api_v1_daily_challenges_retrieve
       parameters:
       - in: path
         name: id
@@ -86,8 +1116,6 @@ paths:
       tags:
       - api
       security:
-      - cookieAuth: []
-      - basicAuth: []
       - {}
       responses:
         '200':
@@ -96,9 +1124,97 @@ paths:
               schema:
                 $ref: '#/components/schemas/DailyChallenge'
           description: ''
-  /api/fusions/:
+  /api/v1/developer/api-key/:
     get:
-      operationId: api_fusions_list
+      operationId: api_v1_developer_api_key_retrieve
+      description: |-
+        API endpoint for developers to view API key metadata and generate/regenerate keys.
+        Requires session authentication (browser logged-in user).
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_v1_developer_api_key_create
+      description: |-
+        API endpoint for developers to view API key metadata and generate/regenerate keys.
+        Requires session authentication (browser logged-in user).
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/developer/rag/:
+    post:
+      operationId: api_v1_developer_rag_create
+      description: |-
+        Developer B2B API endpoint to query the Animetix RAG engine.
+        Requires authentication via X-API-Key header.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/developer/subscribe/:
+    post:
+      operationId: api_v1_developer_subscribe_create
+      description: |-
+        Mock endpoint to subscribe to the Pro tier (Local / Test Mode).
+        Sets the user's tier to 'pro' and creates mock Stripe IDs.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/developer/subscribe-pro/:
+    post:
+      operationId: api_v1_developer_subscribe_pro_create
+      description: Crée une session Stripe Checkout pour l'abonnement Pro API.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/developer/webhook/stripe/:
+    post:
+      operationId: api_v1_developer_webhook_stripe_create
+      description: |-
+        Stripe Webhook endpoint to handle checkout.session.completed
+        and subscription lifecycle events.
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/explore/:
+    get:
+      operationId: api_v1_explore_retrieve
+      description: Explore le catalogue par popularité et catégories.
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/explore/seichijunrei/:
+    get:
+      operationId: api_v1_explore_seichijunrei_retrieve
+      description: Récupère tous les lieux de pèlerinage réels pour la carte interactive
+        (Seichijunrei).
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/fusions/:
+    get:
+      operationId: api_v1_fusions_list
       description: API endpoint pour visualiser, créer, liker et remixer des fusions
         créatives.
       parameters:
@@ -111,8 +1227,6 @@ paths:
       tags:
       - api
       security:
-      - cookieAuth: []
-      - basicAuth: []
       - {}
       responses:
         '200':
@@ -122,7 +1236,7 @@ paths:
                 $ref: '#/components/schemas/PaginatedCreativeFusionList'
           description: ''
     post:
-      operationId: api_fusions_create
+      operationId: api_v1_fusions_create
       description: API endpoint pour visualiser, créer, liker et remixer des fusions
         créatives.
       tags:
@@ -139,9 +1253,6 @@ paths:
             schema:
               $ref: '#/components/schemas/CreativeFusion'
         required: true
-      security:
-      - cookieAuth: []
-      - basicAuth: []
       responses:
         '201':
           content:
@@ -149,9 +1260,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/CreativeFusion'
           description: ''
-  /api/fusions/{id}/:
+  /api/v1/fusions/{id}/:
     get:
-      operationId: api_fusions_retrieve
+      operationId: api_v1_fusions_retrieve
       description: API endpoint pour visualiser, créer, liker et remixer des fusions
         créatives.
       parameters:
@@ -165,8 +1276,6 @@ paths:
       tags:
       - api
       security:
-      - cookieAuth: []
-      - basicAuth: []
       - {}
       responses:
         '200':
@@ -176,7 +1285,7 @@ paths:
                 $ref: '#/components/schemas/CreativeFusion'
           description: ''
     put:
-      operationId: api_fusions_update
+      operationId: api_v1_fusions_update
       description: API endpoint pour visualiser, créer, liker et remixer des fusions
         créatives.
       parameters:
@@ -201,9 +1310,6 @@ paths:
             schema:
               $ref: '#/components/schemas/CreativeFusion'
         required: true
-      security:
-      - cookieAuth: []
-      - basicAuth: []
       responses:
         '200':
           content:
@@ -212,7 +1318,7 @@ paths:
                 $ref: '#/components/schemas/CreativeFusion'
           description: ''
     patch:
-      operationId: api_fusions_partial_update
+      operationId: api_v1_fusions_partial_update
       description: API endpoint pour visualiser, créer, liker et remixer des fusions
         créatives.
       parameters:
@@ -236,9 +1342,6 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/PatchedCreativeFusion'
-      security:
-      - cookieAuth: []
-      - basicAuth: []
       responses:
         '200':
           content:
@@ -247,7 +1350,7 @@ paths:
                 $ref: '#/components/schemas/CreativeFusion'
           description: ''
     delete:
-      operationId: api_fusions_destroy
+      operationId: api_v1_fusions_destroy
       description: API endpoint pour visualiser, créer, liker et remixer des fusions
         créatives.
       parameters:
@@ -260,15 +1363,12 @@ paths:
         required: true
       tags:
       - api
-      security:
-      - cookieAuth: []
-      - basicAuth: []
       responses:
         '204':
           description: No response body
-  /api/fusions/{id}/like/:
+  /api/v1/fusions/{id}/like/:
     post:
-      operationId: api_fusions_like_create
+      operationId: api_v1_fusions_like_create
       description: API endpoint pour visualiser, créer, liker et remixer des fusions
         créatives.
       parameters:
@@ -293,9 +1393,6 @@ paths:
             schema:
               $ref: '#/components/schemas/CreativeFusion'
         required: true
-      security:
-      - cookieAuth: []
-      - basicAuth: []
       responses:
         '200':
           content:
@@ -303,9 +1400,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/CreativeFusion'
           description: ''
-  /api/fusions/{id}/remix/:
+  /api/v1/fusions/{id}/remix/:
     post:
-      operationId: api_fusions_remix_create
+      operationId: api_v1_fusions_remix_create
       description: API endpoint pour visualiser, créer, liker et remixer des fusions
         créatives.
       parameters:
@@ -330,9 +1427,6 @@ paths:
             schema:
               $ref: '#/components/schemas/CreativeFusion'
         required: true
-      security:
-      - cookieAuth: []
-      - basicAuth: []
       responses:
         '200':
           content:
@@ -340,10 +1434,1227 @@ paths:
               schema:
                 $ref: '#/components/schemas/CreativeFusion'
           description: ''
-  /api/profiles/:
+  /api/v1/game/akinetix-rl/answer/:
+    post:
+      operationId: api_v1_game_akinetix_rl_answer_create
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/akinetix-rl/start/:
+    post:
+      operationId: api_v1_game_akinetix_rl_start_create
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/akinetix-rl/state/:
     get:
-      operationId: api_profiles_list
-      description: API endpoint pour visualiser les profils utilisateurs.
+      operationId: api_v1_game_akinetix_rl_state_retrieve
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/akinetix/answer/:
+    post:
+      operationId: api_v1_game_akinetix_answer_create
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/akinetix/confirm/:
+    post:
+      operationId: api_v1_game_akinetix_confirm_create
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/akinetix/start/:
+    post:
+      operationId: api_v1_game_akinetix_start_create
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/akinetix/state/:
+    get:
+      operationId: api_v1_game_akinetix_state_retrieve
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/animinator/ask/:
+    post:
+      operationId: api_v1_game_animinator_ask_create
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/blindtest/guess/:
+    post:
+      operationId: api_v1_game_blindtest_guess_create
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/blindtest/start/:
+    post:
+      operationId: api_v1_game_blindtest_start_create
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/blindtest/state/:
+    get:
+      operationId: api_v1_game_blindtest_state_retrieve
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/classic/guess/:
+    post:
+      operationId: api_v1_game_classic_guess_create
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/classic/reveal/:
+    post:
+      operationId: api_v1_game_classic_reveal_create
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/classic/start/:
+    post:
+      operationId: api_v1_game_classic_start_create
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/classic/state/:
+    get:
+      operationId: api_v1_game_classic_state_retrieve
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/covertest/guess/:
+    post:
+      operationId: api_v1_game_covertest_guess_create
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/covertest/start/:
+    post:
+      operationId: api_v1_game_covertest_start_create
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/covertest/state/:
+    get:
+      operationId: api_v1_game_covertest_state_retrieve
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/duel/create/:
+    post:
+      operationId: api_v1_game_duel_create_create
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/duel/join/:
+    post:
+      operationId: api_v1_game_duel_join_create
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/duel/matchmaking/:
+    post:
+      operationId: api_v1_game_duel_matchmaking_create
+      description: Trouve une salle disponible ou en crée une.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/emoji/guess/:
+    post:
+      operationId: api_v1_game_emoji_guess_create
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/emoji/start/:
+    post:
+      operationId: api_v1_game_emoji_start_create
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/emoji/state/:
+    get:
+      operationId: api_v1_game_emoji_state_retrieve
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/paradox/move/:
+    post:
+      operationId: api_v1_game_paradox_move_create
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/paradox/start/:
+    post:
+      operationId: api_v1_game_paradox_start_create
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/paradox/state/:
+    get:
+      operationId: api_v1_game_paradox_state_retrieve
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/vision/guess/:
+    post:
+      operationId: api_v1_game_vision_guess_create
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/vision/start/:
+    post:
+      operationId: api_v1_game_vision_start_create
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/vision/state/:
+    get:
+      operationId: api_v1_game_vision_state_retrieve
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/vs_battle/{battle_id}/like/:
+    post:
+      operationId: api_v1_game_vs_battle_like_create
+      description: Aime un combat dans l'Arène.
+      parameters:
+      - in: path
+        name: battle_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/vs_battle/arena/:
+    get:
+      operationId: api_v1_game_vs_battle_arena_retrieve
+      description: Liste les combats publics récents pour l'Arène.
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/vs_battle/run/:
+    post:
+      operationId: api_v1_game_vs_battle_run_create
+      description: |-
+        Exécute un combat entre deux personnages et l'enregistre.
+        Sécurisé par authentification, rate-limit et quotas.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/world-boss/active/:
+    get:
+      operationId: api_v1_game_world_boss_active_retrieve
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/game/world-boss/attack/:
+    post:
+      operationId: api_v1_game_world_boss_attack_create
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/graph/debugger/:
+    get:
+      operationId: api_v1_graph_debugger_retrieve
+      description: |-
+        Interface avancée pour le GraphHealerService.
+        Permet de visualiser et corriger les conflits de lore.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_v1_graph_debugger_create
+      description: |-
+        Interface avancée pour le GraphHealerService.
+        Permet de visualiser et corriger les conflits de lore.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/graph/neighbors/:
+    get:
+      operationId: api_v1_graph_neighbors_retrieve
+      description: |-
+        API view to retrieve neighbors of a media item in the knowledge graph.
+        Available to all authenticated users (costs Berrix per exploration).
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/graph/world-map/:
+    get:
+      operationId: api_v1_graph_world_map_retrieve
+      description: |-
+        Vue macroscopique du Knowledge Graph.
+        Expose les communautés sémantiques (Leiden/Louvain) et leurs résumés.
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/labs/audio/:
+    get:
+      operationId: api_v1_labs_audio_retrieve
+      description: Metadata for the Audio Lab tools.
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/labs/audio/s2s/:
+    post:
+      operationId: api_v1_labs_audio_s2s_create
+      description: Interaction directe voix-à-voix (S2S).
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/labs/audio/seiyuu/:
+    get:
+      operationId: api_v1_labs_audio_seiyuu_retrieve
+      description: Recherche et exploration des Seiyuu et de leurs rôles.
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/labs/audio/soundscape/:
+    post:
+      operationId: api_v1_labs_audio_soundscape_create
+      description: Génère un soundscape ambiant pour une vidéo.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/labs/diagnostics/:
+    post:
+      operationId: api_v1_labs_diagnostics_create
+      description: |-
+        Expose AI diagnostics for the Neural Diagnostics Dashboard.
+        Uses native logprobs and XAI service.
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/labs/liquid-nn/:
+    post:
+      operationId: api_v1_labs_liquid_nn_create
+      description: Simulateur neuromorphique de réseaux de neurones liquides (LNN).
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/labs/manga-lab/:
+    get:
+      operationId: api_v1_labs_manga_lab_retrieve
+      description: Metadata for the Manga Lab tools.
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/labs/manga-lab/clean/:
+    post:
+      operationId: api_v1_labs_manga_lab_clean_create
+      description: Nettoie (inpaint) les bulles de texte d'une planche de manga.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/labs/manga-lab/translate/:
+    post:
+      operationId: api_v1_labs_manga_lab_translate_create
+      description: Traduit les bulles de texte d'une planche de manga.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/labs/manga-voice/:
+    post:
+      operationId: api_v1_labs_manga_voice_create
+      description: Traduction de manga + synthèse vocale orchestrée via GCP Workflows.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/labs/s2s/:
+    post:
+      operationId: api_v1_labs_s2s_create
+      description: Interaction directe voix-à-voix (S2S).
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/labs/soundscape/:
+    post:
+      operationId: api_v1_labs_soundscape_create
+      description: Génère un soundscape ambiant pour une vidéo.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/labs/spatial/:
+    get:
+      operationId: api_v1_labs_spatial_retrieve
+      description: Métadonnées pour les outils de Calcul Spatial.
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/labs/spatial/cinematic/:
+    post:
+      operationId: api_v1_labs_spatial_cinematic_create
+      description: Génère une séquence de scènes 3D à partir d'une vidéo.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/labs/spatial/generate-3d/:
+    post:
+      operationId: api_v1_labs_spatial_generate_3d_create
+      description: Génère une scène 3D (PLY) à partir d'une image.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/labs/tot/:
+    post:
+      operationId: api_v1_labs_tot_create
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/labs/video/:
+    get:
+      operationId: api_v1_labs_video_retrieve
+      description: Métadonnées pour les outils du Video Lab.
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/labs/video/fatezero/:
+    post:
+      operationId: api_v1_labs_video_fatezero_create
+      description: Transforme une vidéo avec transfert de style SOTA (FateZero).
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/labs/video/index/:
+    post:
+      operationId: api_v1_labs_video_index_create
+      description: Endpoint pour indexer une vidéo dans le Video-RAG.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/labs/video/search/:
+    get:
+      operationId: api_v1_labs_video_search_retrieve
+      description: Endpoint pour rechercher des moments précis dans les vidéos indexées.
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/labs/voice-cloning/:
+    post:
+      operationId: api_v1_labs_voice_cloning_create
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/latent-space/:
+    get:
+      operationId: api_v1_latent_space_retrieve
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/leaderboard/:
+    get:
+      operationId: api_v1_leaderboard_retrieve
+      description: Calcul dynamique du classement mondial basé sur les points classés.
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/market/listings/:
+    get:
+      operationId: api_v1_market_listings_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      tags:
+      - api
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedMarketListingList'
+          description: ''
+    post:
+      operationId: api_v1_market_listings_create
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarketListing'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MarketListing'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MarketListing'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketListing'
+          description: ''
+  /api/v1/market/listings/{id}/:
+    get:
+      operationId: api_v1_market_listings_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketListing'
+          description: ''
+    delete:
+      operationId: api_v1_market_listings_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      responses:
+        '204':
+          description: No response body
+  /api/v1/market/listings/{id}/buy/:
+    post:
+      operationId: api_v1_market_listings_buy_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarketListing'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MarketListing'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MarketListing'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketListing'
+          description: ''
+  /api/v1/market/listings/{id}/cancel/:
+    post:
+      operationId: api_v1_market_listings_cancel_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarketListing'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MarketListing'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MarketListing'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketListing'
+          description: ''
+  /api/v1/market/wiki/:
+    get:
+      operationId: api_v1_market_wiki_retrieve
+      description: Expose les données du marché (éditeurs, diffuseurs) pour le Wiki.
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/media/{media_type}/{item_id}/:
+    get:
+      operationId: api_v1_media_retrieve
+      description: Détails complets d'une œuvre.
+      parameters:
+      - in: path
+        name: item_id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: media_type
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/media/Manga/{media_id}/chapters/:
+    get:
+      operationId: api_v1_media_Manga_chapters_retrieve
+      description: Liste des chapitres d'un manga.
+      parameters:
+      - in: path
+        name: media_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/media/Manga/{media_id}/chapters/{chapter_number}/:
+    get:
+      operationId: api_v1_media_Manga_chapters_retrieve_2
+      description: Détails d'un chapitre (incluant les pages).
+      parameters:
+      - in: path
+        name: chapter_number
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: media_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/mlops/adapters/:
+    get:
+      operationId: api_v1_mlops_adapters_retrieve
+      description: |-
+        API for managing MLOps Adapters.
+        Allows real-time health checks and dynamic configuration.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_v1_mlops_adapters_create
+      description: |-
+        API for managing MLOps Adapters.
+        Allows real-time health checks and dynamic configuration.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/mlops/dpo/curation/:
+    get:
+      operationId: api_v1_mlops_dpo_curation_retrieve
+      description: API for DPO Curation (List and Post).
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_v1_mlops_dpo_curation_create
+      description: API for DPO Curation (List and Post).
+      tags:
+      - api
+      responses:
+        '201':
+          description: No response body
+  /api/v1/mlops/dpo/feedback-loop/:
+    get:
+      operationId: api_v1_mlops_dpo_feedback_loop_retrieve
+      description: |-
+        API for managing the DPO Feedback Loop.
+        Provides status, trends, and manual triggers for optimization.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_v1_mlops_dpo_feedback_loop_create
+      description: |-
+        API for managing the DPO Feedback Loop.
+        Provides status, trends, and manual triggers for optimization.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/mlops/dspy/optimizer/:
+    post:
+      operationId: api_v1_mlops_dspy_optimizer_create
+      description: |-
+        Interface pour piloter l'optimisation automatique des prompts via DSPy.
+        Permet de muter des templates et de sélectionner le meilleur variant.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/mlops/eval/failures/:
+    get:
+      operationId: api_v1_mlops_eval_failures_retrieve
+      description: Fetch evaluation logs with low scores or hallucinations.
+      tags:
+      - api
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AIREvalResult'
+          description: ''
+  /api/v1/mlops/feedback/submit/:
+    get:
+      operationId: api_v1_mlops_feedback_submit_retrieve
+      description: Récupère l'historique des feedbacks de l'utilisateur connecté.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_v1_mlops_feedback_submit_create
+      description: API for submitting and retrieving AI feedback.
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/mlops/gold-dataset/:
+    get:
+      operationId: api_v1_mlops_gold_dataset_list
+      description: API for Gold Dataset curation.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      tags:
+      - api
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedGoldDatasetEntryList'
+          description: ''
+    post:
+      operationId: api_v1_mlops_gold_dataset_create
+      description: API for Gold Dataset curation.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoldDatasetEntry'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GoldDatasetEntry'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GoldDatasetEntry'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoldDatasetEntry'
+          description: ''
+  /api/v1/mlops/gold-dataset/{id}/:
+    get:
+      operationId: api_v1_mlops_gold_dataset_retrieve
+      description: API for Gold Dataset curation.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoldDatasetEntry'
+          description: ''
+    put:
+      operationId: api_v1_mlops_gold_dataset_update
+      description: API for Gold Dataset curation.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoldDatasetEntry'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GoldDatasetEntry'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GoldDatasetEntry'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoldDatasetEntry'
+          description: ''
+    patch:
+      operationId: api_v1_mlops_gold_dataset_partial_update
+      description: API for Gold Dataset curation.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedGoldDatasetEntry'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedGoldDatasetEntry'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedGoldDatasetEntry'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoldDatasetEntry'
+          description: ''
+    delete:
+      operationId: api_v1_mlops_gold_dataset_destroy
+      description: API for Gold Dataset curation.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      responses:
+        '204':
+          description: No response body
+  /api/v1/mlops/gold-dataset/{id}/validate/:
+    post:
+      operationId: api_v1_mlops_gold_dataset_validate_create
+      description: API for Gold Dataset curation.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoldDatasetEntry'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GoldDatasetEntry'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GoldDatasetEntry'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoldDatasetEntry'
+          description: ''
+  /api/v1/mlops/gold-dataset/sync_positive_feedback/:
+    post:
+      operationId: api_v1_mlops_gold_dataset_sync_positive_feedback_create
+      description: Syncs all uncurated positive feedback to the gold dataset.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoldDatasetEntry'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GoldDatasetEntry'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GoldDatasetEntry'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoldDatasetEntry'
+          description: ''
+  /api/v1/mlops/open-data/:
+    get:
+      operationId: api_v1_mlops_open_data_retrieve
+      description: List public datasets available for academic compliance.
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/mlops/open-data/download/{dataset_id}/:
+    get:
+      operationId: api_v1_mlops_open_data_download_retrieve
+      description: Download a public dataset file.
+      parameters:
+      - in: path
+        name: dataset_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/mlops/safety/events/:
+    get:
+      operationId: api_v1_mlops_safety_events_list
+      description: API for viewing AI Safety events (Guardrail logs).
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: Un numéro de page de l'ensemble des résultats.
+        schema:
+          type: integer
+      tags:
+      - api
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAISafetyEventList'
+          description: ''
+  /api/v1/mlops/sota/benchmarks/:
+    get:
+      operationId: api_v1_mlops_sota_benchmarks_retrieve
+      description: Récupère les benchmarks SOTA (State of the Art) pour les modèles
+        IA.
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/multiverse/catalog/:
+    get:
+      operationId: api_v1_multiverse_catalog_retrieve
+      description: |-
+        GET /api/v1/multiverse/catalog/
+        Paginated, filterable, searchable catalog of synthetic universes.
+
+        Query params:
+          - search: text search on name/description/cosmology
+          - genre: filter by genre name (exact match)
+          - sort: 'newest' | 'name' | 'characters' (default: newest)
+          - page: page number (1-indexed, default: 1)
+          - page_size: items per page (default: 12, max: 48)
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/multiverse/gallery/:
+    get:
+      operationId: api_v1_multiverse_gallery_retrieve
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/profile/{username}/:
+    get:
+      operationId: api_v1_profile_retrieve
+      description: Récupère les détails publics d'un utilisateur.
+      parameters:
+      - in: path
+        name: username
+        schema:
+          type: string
+        required: true
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/profiles/:
+    get:
+      operationId: api_v1_profiles_list
+      description: API endpoint pour visualiser et modifier les profils utilisateurs.
       parameters:
       - name: page
         required: false
@@ -354,8 +2665,6 @@ paths:
       tags:
       - api
       security:
-      - cookieAuth: []
-      - basicAuth: []
       - {}
       responses:
         '200':
@@ -364,76 +2673,496 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedProfileList'
           description: ''
-  /api/profiles/{id}/:
+    post:
+      operationId: api_v1_profiles_create
+      description: API endpoint pour visualiser et modifier les profils utilisateurs.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Profile'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Profile'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Profile'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+          description: ''
+  /api/v1/profiles/{user__username}/:
     get:
-      operationId: api_profiles_retrieve
-      description: API endpoint pour visualiser les profils utilisateurs.
+      operationId: api_v1_profiles_retrieve
+      description: API endpoint pour visualiser et modifier les profils utilisateurs.
+      parameters:
+      - in: path
+        name: user__username
+        schema:
+          type: string
+          title: Nom d’utilisateur
+          description: Requis. 150 caractères maximum. Uniquement des lettres, nombres
+            et les caractères « @ », « . », « + », « - » et « _ ».
+        required: true
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+          description: ''
+    put:
+      operationId: api_v1_profiles_update
+      description: API endpoint pour visualiser et modifier les profils utilisateurs.
+      parameters:
+      - in: path
+        name: user__username
+        schema:
+          type: string
+          title: Nom d’utilisateur
+          description: Requis. 150 caractères maximum. Uniquement des lettres, nombres
+            et les caractères « @ », « . », « + », « - » et « _ ».
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Profile'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Profile'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Profile'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+          description: ''
+    patch:
+      operationId: api_v1_profiles_partial_update
+      description: API endpoint pour visualiser et modifier les profils utilisateurs.
+      parameters:
+      - in: path
+        name: user__username
+        schema:
+          type: string
+          title: Nom d’utilisateur
+          description: Requis. 150 caractères maximum. Uniquement des lettres, nombres
+            et les caractères « @ », « . », « + », « - » et « _ ».
+        required: true
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProfile'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedProfile'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedProfile'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+          description: ''
+    delete:
+      operationId: api_v1_profiles_destroy
+      description: API endpoint pour visualiser et modifier les profils utilisateurs.
+      parameters:
+      - in: path
+        name: user__username
+        schema:
+          type: string
+          title: Nom d’utilisateur
+          description: Requis. 150 caractères maximum. Uniquement des lettres, nombres
+            et les caractères « @ », « . », « + », « - » et « _ ».
+        required: true
+      tags:
+      - api
+      responses:
+        '204':
+          description: No response body
+  /api/v1/profiles/claim_donation/:
+    post:
+      operationId: api_v1_profiles_claim_donation_create
+      description: API endpoint pour visualiser et modifier les profils utilisateurs.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Profile'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Profile'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Profile'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+          description: ''
+  /api/v1/profiles/generate_api_key/:
+    post:
+      operationId: api_v1_profiles_generate_api_key_create
+      description: API endpoint pour visualiser et modifier les profils utilisateurs.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Profile'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Profile'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Profile'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+          description: ''
+  /api/v1/profiles/me/:
+    get:
+      operationId: api_v1_profiles_me_retrieve
+      description: API endpoint pour visualiser et modifier les profils utilisateurs.
+      tags:
+      - api
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+          description: ''
+  /api/v1/profiles/refill_quota/:
+    post:
+      operationId: api_v1_profiles_refill_quota_create
+      description: |-
+        Réinitialise l'utilisation quotidienne de quota de l'utilisateur
+        et crédite un bonus de secours de 1000 Bx.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Profile'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Profile'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Profile'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+          description: ''
+  /api/v1/profiles/revoke_api_key/:
+    post:
+      operationId: api_v1_profiles_revoke_api_key_create
+      description: API endpoint pour visualiser et modifier les profils utilisateurs.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Profile'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Profile'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Profile'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+          description: ''
+  /api/v1/profiles/update_personalization/:
+    post:
+      operationId: api_v1_profiles_update_personalization_create
+      description: API endpoint pour visualiser et modifier les profils utilisateurs.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Profile'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Profile'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Profile'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+          description: ''
+  /api/v1/profiles/update_settings/:
+    patch:
+      operationId: api_v1_profiles_update_settings_partial_update
+      description: API endpoint pour visualiser et modifier les profils utilisateurs.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProfile'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedProfile'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedProfile'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+          description: ''
+  /api/v1/search/:
+    get:
+      operationId: api_v1_search_retrieve
+      description: Recherche d'œuvres via SQL ou Multi-Modale (CLIP).
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_v1_search_create
+      description: Recherche par image (Cross-Modal). Requiert Authentification +
+        Quota.
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/session/:
+    get:
+      operationId: api_v1_session_retrieve
+      description: Endpoint pour g├®rer l'├®tat du jeu via API.
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/singularity-lab/:
+    post:
+      operationId: api_v1_singularity_lab_create
+      description: Interact with fifth generation Evolving AI and Singularity services
+        (SOTA 2035+).
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/singularity-lab/command-center/:
+    get:
+      operationId: api_v1_singularity_lab_command_center_retrieve
+      description: |-
+        Vue unifiée pour le monitoring et le contrôle des expériences IA avancées.
+        Agrège les données de santé de Quantum, Plasticity, Swarm, LNN, etc.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/social/collection/:
+    get:
+      operationId: api_v1_social_collection_retrieve
+      description: Récupère la collection de fusions de l'utilisateur connecté.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/social/dashboard/:
+    get:
+      operationId: api_v1_social_dashboard_retrieve
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/social/gameplay-history/:
+    get:
+      operationId: api_v1_social_gameplay_history_retrieve
+      description: Liste l'historique des sessions de jeu de l'utilisateur connecté.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/social/notifications/:
+    get:
+      operationId: api_v1_social_notifications_retrieve
+      description: Liste des notifications de l'utilisateur.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: api_v1_social_notifications_create
+      description: Liste des notifications de l'utilisateur.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/social/search/:
+    get:
+      operationId: api_v1_social_search_retrieve
+      description: Recherche d'utilisateurs par pseudo.
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /api/v1/social/toggle_follow/{id}/:
+    post:
+      operationId: api_v1_social_toggle_follow_create
       parameters:
       - in: path
         name: id
         schema:
           type: integer
-        description: Un(une) valeur entière unique identifiant ce(cette) profile.
         required: true
       tags:
       - api
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
       responses:
         '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Profile'
-          description: ''
-  /api/profiles/me/:
+          description: No response body
+  /api/v1/stream/agentic-rag/:
     get:
-      operationId: api_profiles_me_retrieve
-      description: API endpoint pour visualiser les profils utilisateurs.
+      operationId: api_v1_stream_agentic_rag_retrieve
+      description: Streams agentic RAG planning and solving events.
       tags:
       - api
       security:
-      - cookieAuth: []
-      - basicAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Profile'
-          description: ''
-  /api/search/:
-    get:
-      operationId: api_search_retrieve
-      description: Recherche d'œuvres via SQL (Source of Truth) pour autocomplétion
-        performante.
-      tags:
-      - api
-      security:
-      - cookieAuth: []
-      - basicAuth: []
       - {}
       responses:
         '200':
           description: No response body
-  /api/session/:
+  /api/v1/stream/animinator/:
     get:
-      operationId: api_session_retrieve
-      description: Endpoint pour gérer l'état du jeu via API.
+      operationId: api_v1_stream_animinator_retrieve
+      description: Streams the Oracle's response and updates the game state in session.
       tags:
       - api
       security:
-      - cookieAuth: []
-      - basicAuth: []
       - {}
       responses:
         '200':
           description: No response body
-  /fr/api/v1/achievements/:
+  /api/v1/stream/emoji/:
     get:
-      operationId: fr_api_v1_achievements_list
+      operationId: api_v1_stream_emoji_retrieve
+      description: Streams emoji generation events for the UI.
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/stream/paradox/:
+    get:
+      operationId: api_v1_stream_paradox_retrieve
+      description: Streams paradox logic generation events.
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/transparency/:
+    get:
+      operationId: api_v1_transparency_retrieve
+      tags:
+      - api
+      responses:
+        '200':
+          description: No response body
+  /billing/log_ad_event/:
+    post:
+      operationId: billing_log_ad_event_create
+      tags:
+      - billing
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /fr/mlops/dpo-curation/:
+    get:
+      operationId: fr_mlops_dpo_curation_retrieve
+      description: API for DPO Curation (List and Post).
+      tags:
+      - fr
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: fr_mlops_dpo_curation_create
+      description: API for DPO Curation (List and Post).
+      tags:
+      - fr
+      responses:
+        '201':
+          description: No response body
+  /fr/mlops/evaluations/:
+    get:
+      operationId: fr_mlops_evaluations_list
+      description: API for AI Evaluation results and stats.
       parameters:
       - name: page
         required: false
@@ -443,58 +3172,83 @@ paths:
           type: integer
       tags:
       - fr
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
       responses:
         '200':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaginatedAchievementList'
+                $ref: '#/components/schemas/PaginatedAIREvalResultList'
           description: ''
-  /fr/api/v1/config/:
+  /fr/mlops/evaluations/{id}/:
     get:
-      operationId: fr_api_v1_config_retrieve
+      operationId: fr_mlops_evaluations_retrieve
+      description: API for AI Evaluation results and stats.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) air eval
+          result.
+        required: true
+      tags:
+      - fr
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AIREvalResult'
+          description: ''
+  /fr/mlops/evaluations/failures/:
+    get:
+      operationId: fr_mlops_evaluations_failures_retrieve
+      description: Fetch evaluation logs with low scores or hallucinations.
+      tags:
+      - fr
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AIREvalResult'
+          description: ''
+  /fr/mlops/evaluations/stats/:
+    get:
+      operationId: fr_mlops_evaluations_stats_retrieve
+      description: API for AI Evaluation results and stats.
+      tags:
+      - fr
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AIREvalResult'
+          description: ''
+  /fr/mlops/feedback/submit/:
+    get:
+      operationId: fr_mlops_feedback_submit_retrieve
+      description: Récupère l'historique des feedbacks de l'utilisateur connecté.
+      tags:
+      - fr
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: fr_mlops_feedback_submit_create
+      description: API for submitting and retrieving AI feedback.
       tags:
       - fr
       security:
-      - cookieAuth: []
-      - basicAuth: []
       - {}
       responses:
         '200':
           description: No response body
-  /fr/api/v1/custom-config/:
+  /fr/mlops/gold-dataset/:
     get:
-      operationId: fr_api_v1_custom_config_retrieve
-      tags:
-      - fr
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /fr/api/v1/daily-challenge/:
-    get:
-      operationId: fr_api_v1_daily_challenge_retrieve
-      tags:
-      - fr
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /fr/api/v1/fusions/:
-    get:
-      operationId: fr_api_v1_fusions_list
-      description: API endpoint pour visualiser, créer, liker et remixer des fusions
-        créatives.
+      operationId: fr_mlops_gold_dataset_list
+      description: API for Gold Dataset curation.
       parameters:
       - name: page
         required: false
@@ -504,219 +3258,276 @@ paths:
           type: integer
       tags:
       - fr
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
       responses:
         '200':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaginatedCreativeFusionList'
+                $ref: '#/components/schemas/PaginatedGoldDatasetEntryList'
           description: ''
     post:
-      operationId: fr_api_v1_fusions_create
-      description: API endpoint pour visualiser, créer, liker et remixer des fusions
-        créatives.
+      operationId: fr_mlops_gold_dataset_create
+      description: API for Gold Dataset curation.
       tags:
       - fr
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreativeFusion'
+              $ref: '#/components/schemas/GoldDatasetEntry'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/CreativeFusion'
+              $ref: '#/components/schemas/GoldDatasetEntry'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/CreativeFusion'
+              $ref: '#/components/schemas/GoldDatasetEntry'
         required: true
-      security:
-      - cookieAuth: []
-      - basicAuth: []
       responses:
         '201':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreativeFusion'
+                $ref: '#/components/schemas/GoldDatasetEntry'
           description: ''
-  /fr/api/v1/game/akinetix/state/:
+  /fr/mlops/gold-dataset/{id}/:
     get:
-      operationId: fr_api_v1_game_akinetix_state_retrieve
-      tags:
-      - fr
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /fr/api/v1/game/blindtest/state/:
-    get:
-      operationId: fr_api_v1_game_blindtest_state_retrieve
-      tags:
-      - fr
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /fr/api/v1/game/classic/state/:
-    get:
-      operationId: fr_api_v1_game_classic_state_retrieve
-      tags:
-      - fr
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /fr/api/v1/game/covertest/state/:
-    get:
-      operationId: fr_api_v1_game_covertest_state_retrieve
-      tags:
-      - fr
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /fr/api/v1/game/emoji/state/:
-    get:
-      operationId: fr_api_v1_game_emoji_state_retrieve
-      tags:
-      - fr
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /fr/api/v1/game/paradox/state/:
-    get:
-      operationId: fr_api_v1_game_paradox_state_retrieve
-      tags:
-      - fr
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /fr/api/v1/game/vision/state/:
-    get:
-      operationId: fr_api_v1_game_vision_state_retrieve
-      tags:
-      - fr
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /fr/api/v1/latent-space/:
-    get:
-      operationId: fr_api_v1_latent_space_retrieve
-      tags:
-      - fr
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /fr/api/v1/leaderboard/:
-    get:
-      operationId: fr_api_v1_leaderboard_retrieve
-      tags:
-      - fr
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
-      responses:
-        '200':
-          description: No response body
-  /fr/api/v1/profile/{username}/:
-    get:
-      operationId: fr_api_v1_profile_retrieve
+      operationId: fr_mlops_gold_dataset_retrieve
+      description: API for Gold Dataset curation.
       parameters:
       - in: path
-        name: username
+        name: id
         schema:
-          type: string
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) gold dataset
+          entry.
         required: true
       tags:
       - fr
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
       responses:
         '200':
-          description: No response body
-  /fr/api/v1/social/collection/:
-    get:
-      operationId: fr_api_v1_social_collection_retrieve
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoldDatasetEntry'
+          description: ''
+    put:
+      operationId: fr_mlops_gold_dataset_update
+      description: API for Gold Dataset curation.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) gold dataset
+          entry.
+        required: true
       tags:
       - fr
-      security:
-      - cookieAuth: []
-      - basicAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoldDatasetEntry'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GoldDatasetEntry'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GoldDatasetEntry'
+        required: true
       responses:
         '200':
-          description: No response body
-  /fr/api/v1/social/notifications/:
-    get:
-      operationId: fr_api_v1_social_notifications_retrieve
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoldDatasetEntry'
+          description: ''
+    patch:
+      operationId: fr_mlops_gold_dataset_partial_update
+      description: API for Gold Dataset curation.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) gold dataset
+          entry.
+        required: true
       tags:
       - fr
-      security:
-      - cookieAuth: []
-      - basicAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedGoldDatasetEntry'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedGoldDatasetEntry'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedGoldDatasetEntry'
       responses:
         '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoldDatasetEntry'
+          description: ''
+    delete:
+      operationId: fr_mlops_gold_dataset_destroy
+      description: API for Gold Dataset curation.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) gold dataset
+          entry.
+        required: true
+      tags:
+      - fr
+      responses:
+        '204':
           description: No response body
-  /fr/api/v1/spatial-lab/:
+  /fr/mlops/gold-dataset/{id}/validate/:
     post:
-      operationId: fr_api_v1_spatial_lab_create
+      operationId: fr_mlops_gold_dataset_validate_create
+      description: API for Gold Dataset curation.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: Un(une) valeur entière unique identifiant ce(cette) gold dataset
+          entry.
+        required: true
       tags:
       - fr
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoldDatasetEntry'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GoldDatasetEntry'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GoldDatasetEntry'
+        required: true
       responses:
         '200':
-          description: No response body
-  /fr/api/v1/transparency/:
-    get:
-      operationId: fr_api_v1_transparency_retrieve
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoldDatasetEntry'
+          description: ''
+  /fr/mlops/gold-dataset/sync_positive_feedback/:
+    post:
+      operationId: fr_mlops_gold_dataset_sync_positive_feedback_create
+      description: Syncs all uncurated positive feedback to the gold dataset.
       tags:
       - fr
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoldDatasetEntry'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GoldDatasetEntry'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GoldDatasetEntry'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoldDatasetEntry'
+          description: ''
+  /fr/mlops/latent-space/:
+    get:
+      operationId: fr_mlops_latent_space_retrieve
+      description: API for retrieving latent space data for visualization.
+      tags:
+      - fr
       responses:
         '200':
           description: No response body
 components:
   schemas:
+    AIREvalResult:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        game_mode:
+          type: string
+          maxLength: 50
+        input_context:
+          type: string
+        output_text:
+          type: string
+        faithfulness:
+          type: number
+          format: double
+        relevancy:
+          type: number
+          format: double
+        precision:
+          type: number
+          format: double
+        hallucination_detected:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+    AISafetyEvent:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          title: Nom d’utilisateur
+          description: Requis. 150 caractères maximum. Uniquement des lettres, nombres
+            et les caractères « @ », « . », « + », « - » et « _ ».
+          readOnly: true
+        event_type:
+          $ref: '#/components/schemas/EventTypeEnum'
+        action:
+          $ref: '#/components/schemas/ActionEnum'
+        detected_categories: {}
+        input_text:
+          type: string
+          nullable: true
+        output_text:
+          type: string
+          nullable: true
+        reasoning:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        user:
+          type: integer
+          nullable: true
+      required:
+      - action
+      - created_at
+      - event_type
+      - id
+      - username
     Achievement:
       type: object
       properties:
@@ -736,8 +3547,9 @@ components:
           maxLength: 50
         xp_reward:
           type: integer
-          maximum: 2147483647
-          minimum: -2147483648
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
         rarity:
           type: string
           maxLength: 20
@@ -747,6 +3559,53 @@ components:
       - icon
       - id
       - name
+    ActionEnum:
+      enum:
+      - block
+      - warn
+      - rewrite
+      - none
+      type: string
+      description: |-
+        * `block` - Bloqué
+        * `warn` - Avertissement
+        * `rewrite` - Réécriture
+        * `none` - Aucune
+    ClubEvent:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        club:
+          type: integer
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        event_date:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        participants_count:
+          type: integer
+          readOnly: true
+        is_participant:
+          type: string
+          readOnly: true
+      required:
+      - club
+      - created_at
+      - description
+      - event_date
+      - id
+      - is_participant
+      - participants_count
+      - title
     CreativeFusion:
       type: object
       properties:
@@ -762,7 +3621,7 @@ components:
         likes_count:
           type: integer
           readOnly: true
-        is_remix:
+        is_liked:
           type: string
           readOnly: true
         title_a:
@@ -786,15 +3645,21 @@ components:
           maxLength: 500
         chaos_level:
           type: integer
-          maximum: 2147483647
-          minimum: -2147483648
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
         universe_balance:
           type: integer
-          maximum: 2147483647
-          minimum: -2147483648
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
         art_style:
           type: string
           maxLength: 100
+        vn_script:
+          nullable: true
+        is_public:
+          type: boolean
         created_at:
           type: string
           format: date-time
@@ -813,7 +3678,7 @@ components:
       - created_at
       - creator_name
       - id
-      - is_remix
+      - is_liked
       - likes_count
       - media_type_a
       - media_type_b
@@ -843,6 +3708,242 @@ components:
       - id
       - media_type
       - secret_title
+    DataCurationTicket:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        item_title:
+          type: string
+          maxLength: 255
+        issue_description:
+          type: string
+        source_pg: {}
+        source_neo4j: {}
+        is_resolved:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - issue_description
+      - item_title
+    DiscoveryClub:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+        theme:
+          type: string
+          maxLength: 50
+        creator:
+          type: integer
+          readOnly: true
+        creator_name:
+          type: string
+          title: Nom d’utilisateur
+          description: Requis. 150 caractères maximum. Uniquement des lettres, nombres
+            et les caractères « @ », « . », « + », « - » et « _ ».
+          readOnly: true
+        members_count:
+          type: integer
+          readOnly: true
+        image_url:
+          type: string
+          format: uri
+          nullable: true
+          maxLength: 500
+        is_private:
+          type: boolean
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClubEvent'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - creator
+      - creator_name
+      - description
+      - events
+      - id
+      - members_count
+      - name
+      - updated_at
+    EntryTypeEnum:
+      enum:
+      - QA
+      - MULTIVERSE
+      - DISTILLATION
+      - OTHER
+      type: string
+      description: |-
+        * `QA` - Question-Answering
+        * `MULTIVERSE` - Synthetic Universe
+        * `DISTILLATION` - Model Distillation
+        * `OTHER` - Other Synthetic Data
+    EventTypeEnum:
+      enum:
+      - input
+      - output
+      - system
+      type: string
+      description: |-
+        * `input` - Entrée Utilisateur
+        * `output` - Sortie Assistant
+        * `system` - Système
+    GoldDatasetEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        context:
+          type: string
+        instruction:
+          type: string
+        response:
+          type: string
+        entry_type:
+          $ref: '#/components/schemas/EntryTypeEnum'
+        metadata: {}
+        is_validated:
+          type: boolean
+        ai_validation_score:
+          type: number
+          format: double
+        ai_critique:
+          type: string
+          nullable: true
+        confidence_score:
+          type: number
+          format: double
+        is_safe:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        source_feedback:
+          type: integer
+          nullable: true
+      required:
+      - context
+      - created_at
+      - id
+      - instruction
+      - response
+    MarketListing:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        fusion:
+          type: integer
+        fusion_detail:
+          allOf:
+          - $ref: '#/components/schemas/CreativeFusion'
+          readOnly: true
+        seller:
+          type: integer
+          readOnly: true
+        seller_name:
+          type: string
+          title: Nom d’utilisateur
+          description: Requis. 150 caractères maximum. Uniquement des lettres, nombres
+            et les caractères « @ », « . », « + », « - » et « _ ».
+          readOnly: true
+        price:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        is_active:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - fusion
+      - fusion_detail
+      - id
+      - is_active
+      - price
+      - seller
+      - seller_name
+      - updated_at
+    PaginatedAIREvalResultList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AIREvalResult'
+    PaginatedAISafetyEventList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AISafetyEvent'
     PaginatedAchievementList:
       type: object
       required:
@@ -866,6 +3967,29 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Achievement'
+    PaginatedClubEventList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClubEvent'
     PaginatedCreativeFusionList:
       type: object
       required:
@@ -912,6 +4036,98 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DailyChallenge'
+    PaginatedDataCurationTicketList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DataCurationTicket'
+    PaginatedDiscoveryClubList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DiscoveryClub'
+    PaginatedGoldDatasetEntryList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/GoldDatasetEntry'
+    PaginatedMarketListingList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/MarketListing'
     PaginatedProfileList:
       type: object
       required:
@@ -935,6 +4151,55 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Profile'
+    PaginatedUserAdminList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserAdmin'
+    PatchedClubEvent:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        club:
+          type: integer
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        event_date:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        participants_count:
+          type: integer
+          readOnly: true
+        is_participant:
+          type: string
+          readOnly: true
     PatchedCreativeFusion:
       type: object
       properties:
@@ -950,7 +4215,7 @@ components:
         likes_count:
           type: integer
           readOnly: true
-        is_remix:
+        is_liked:
           type: string
           readOnly: true
         title_a:
@@ -974,15 +4239,21 @@ components:
           maxLength: 500
         chaos_level:
           type: integer
-          maximum: 2147483647
-          minimum: -2147483648
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
         universe_balance:
           type: integer
-          maximum: 2147483647
-          minimum: -2147483648
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
         art_style:
           type: string
           maxLength: 100
+        vn_script:
+          nullable: true
+        is_public:
+          type: boolean
         created_at:
           type: string
           format: date-time
@@ -997,47 +4268,247 @@ components:
           type: array
           items:
             type: integer
-    Profile:
+    PatchedDataCurationTicket:
       type: object
       properties:
+        id:
+          type: integer
+          readOnly: true
+        item_title:
+          type: string
+          maxLength: 255
+        issue_description:
+          type: string
+        source_pg: {}
+        source_neo4j: {}
+        is_resolved:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+    PatchedDiscoveryClub:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+        theme:
+          type: string
+          maxLength: 50
+        creator:
+          type: integer
+          readOnly: true
+        creator_name:
+          type: string
+          title: Nom d’utilisateur
+          description: Requis. 150 caractères maximum. Uniquement des lettres, nombres
+            et les caractères « @ », « . », « + », « - » et « _ ».
+          readOnly: true
+        members_count:
+          type: integer
+          readOnly: true
+        image_url:
+          type: string
+          format: uri
+          nullable: true
+          maxLength: 500
+        is_private:
+          type: boolean
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClubEvent'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    PatchedGoldDatasetEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        context:
+          type: string
+        instruction:
+          type: string
+        response:
+          type: string
+        entry_type:
+          $ref: '#/components/schemas/EntryTypeEnum'
+        metadata: {}
+        is_validated:
+          type: boolean
+        ai_validation_score:
+          type: number
+          format: double
+        ai_critique:
+          type: string
+          nullable: true
+        confidence_score:
+          type: number
+          format: double
+        is_safe:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        source_feedback:
+          type: integer
+          nullable: true
+    PatchedProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
         user:
           allOf:
           - $ref: '#/components/schemas/User'
           readOnly: true
         xp:
           type: integer
-          maximum: 2147483647
-          minimum: -2147483648
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
         current_streak:
           type: integer
-          maximum: 2147483647
-          minimum: -2147483648
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
         max_streak:
           type: integer
-          maximum: 2147483647
-          minimum: -2147483648
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        last_win_date:
+          type: string
+          format: date
+          nullable: true
         total_wins:
           type: integer
-          maximum: 2147483647
-          minimum: -2147483648
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
         total_games:
           type: integer
-          maximum: 2147483647
-          minimum: -2147483648
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
         ranked_points:
           type: integer
-          maximum: 2147483647
-          minimum: -2147483648
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
         ranked_max_points:
           type: integer
-          maximum: 2147483647
-          minimum: -2147483648
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
         rank:
           type: string
           readOnly: true
+        unlocked_badges: {}
+        custom_username_color:
+          type: string
+          nullable: true
+          maxLength: 20
+        tier:
+          $ref: '#/components/schemas/TierEnum'
+        personalization_settings: {}
+        has_api_key:
+          type: string
+          readOnly: true
+    Profile:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          readOnly: true
+        xp:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        current_streak:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        max_streak:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        last_win_date:
+          type: string
+          format: date
+          nullable: true
+        total_wins:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        total_games:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        ranked_points:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        ranked_max_points:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        rank:
+          type: string
+          readOnly: true
+        unlocked_badges: {}
+        custom_username_color:
+          type: string
+          nullable: true
+          maxLength: 20
+        tier:
+          $ref: '#/components/schemas/TierEnum'
+        personalization_settings: {}
+        has_api_key:
+          type: string
+          readOnly: true
       required:
+      - has_api_key
+      - id
       - rank
       - user
+    TierEnum:
+      enum:
+      - free
+      - premium
+      - pro
+      type: string
+      description: |-
+        * `free` - Free
+        * `premium` - Premium
+        * `pro` - Professional
     User:
       type: object
       properties:
@@ -1059,82 +4530,47 @@ components:
       required:
       - id
       - username
-    DocumentAttribution:
+    UserAdmin:
       type: object
       properties:
-        document_id:
+        id:
+          type: integer
+          readOnly: true
+        username:
           type: string
-        title:
+          title: Nom d’utilisateur
+          description: Requis. 150 caractères maximum. Uniquement des lettres, nombres
+            et les caractères « @ », « . », « + », « - » et « _ ».
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
           type: string
-        relevance_score:
-          type: number
-          format: float
-        contribution_weight:
-          type: number
-          format: float
-      required:
-      - document_id
-      - title
-      - relevance_score
-      - contribution_weight
-    ModelDiagnostics:
-      type: object
-      properties:
-        attention_heatmap:
-          type: array
-          items:
-            type: array
-            items:
-              type: number
-              format: float
-        top_influential_tokens:
-          type: array
-          items:
-            type: string
-        logit_lens_trajectory:
-          type: array
-          items:
-            type: object
-            additionalProperties: {}
-      required:
-      - attention_heatmap
-      - top_influential_tokens
-      - logit_lens_trajectory
-    XaiReport:
-      type: object
-      properties:
-        query_intent:
+          format: email
+          title: Adresse électronique
+          maxLength: 254
+        is_staff:
+          type: boolean
+          title: Statut équipe
+          description: Précise si l’utilisateur peut se connecter à ce site d'administration.
+        is_active:
+          type: boolean
+          title: Actif
+          description: Précise si l’utilisateur doit être considéré comme actif. Décochez
+            ceci plutôt que de supprimer le compte.
+        date_joined:
           type: string
-        retrieval_attribution:
-          type: array
-          items:
-            $ref: '#/components/schemas/DocumentAttribution'
-        internal_diagnostics:
-          allOf:
-          - $ref: '#/components/schemas/ModelDiagnostics'
-          nullable: true
-        uncertainty:
-          type: object
-          additionalProperties: {}
-        agent_trace:
-          type: array
-          items:
-            type: object
-            additionalProperties: {}
-        final_confidence:
-          type: number
-          format: float
+          format: date-time
+          readOnly: true
+          title: Date d’inscription
+        level:
+          type: integer
+          readOnly: true
+        tier:
+          type: string
+          readOnly: true
       required:
-      - query_intent
-      - retrieval_attribution
-      - uncertainty
-      - agent_trace
-      - final_confidence
-  securitySchemes:
-    basicAuth:
-      type: http
-      scheme: basic
-    cookieAuth:
-      type: apiKey
-      in: cookie
-      name: sessionid
+      - date_joined
+      - id
+      - level
+      - tier
+      - username

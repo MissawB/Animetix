@@ -43,13 +43,9 @@ Ce document liste toutes les tâches techniques, architecturales et fonctionnell
 
 ## 🧹 Résolution de la Dette Technique
 
-- [ ] **Centralisation HTTP (Frontend) :** Remplacer les appels directs à `fetch()` par `apiClient` dans les pages de jeu (`AkinetixRLPage`, `DuelLobbyPage`, `paradoxStore`, etc.) pour assurer la transmission automatique des tokens Firebase/CSRF et l'unification des messages d'erreur..
-- [ ] **Dépréciations Pydantic V2 :** Mettre à jour les modèles héritant de Pydantic V1 (comme `PersonalizationSchema` dans `social.py`) vers la syntaxe standard `ConfigDict`.
-- [ ] **Correction de sync-api.bat :** Aligner le chemin de sortie de génération des types OpenAPI dans `sync-api.bat` sur `src\types\api.d.ts`.
-
----
-
-## 🚀 Expansion & Futur
-- [ ] **Rapports de Conformité :** Automatiser les rapports hebdomadaires de conformité sécurité.
+- [x] **Centralisation HTTP (Frontend) :** Remplacer les appels directs à `fetch()` par `apiClient` dans les pages de jeu (`AkinetixRLPage`, `DuelLobbyPage`, `paradoxStore`, etc.) pour assurer la transmission automatique des tokens Firebase/CSRF et l'unification des messages d'erreur..
+- [x] **Dépréciations Pydantic V2 :** Mettre à jour les modèles héritant de Pydantic V1 (comme `PersonalizationSchema` dans `social.py`) vers la syntaxe standard `ConfigDict`.
+- [x] **Correction de sync-api.bat :** Aligner le chemin de sortie de génération des types OpenAPI dans `sync-api.bat` sur `src\types\api.d.ts`.
+*
 ---
 *Dernière mise à jour : 19 Juin 2026*
