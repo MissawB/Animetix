@@ -195,6 +195,7 @@ django==5.2.14
     #   django-prometheus
     #   django-redis
     #   djangorestframework
+    #   drf-spectacular
 django-allauth==65.14.1
     # via -r requirements.in
 django-cors-headers==4.9.0
@@ -212,7 +213,9 @@ django-ratelimit==4.1.0
 django-redis==6.0.0
     # via -r requirements.in
 djangorestframework==3.17.1
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   drf-spectacular
 dnspython==2.8.0
     # via pymongo
 docopt==0.6.2
@@ -221,6 +224,8 @@ docstring-parser==0.18.0
     # via
     #   google-cloud-aiplatform
     #   instructor
+drf-spectacular==0.29.0
+    # via -r requirements.in
 einops==0.8.2
     # via coqui-tts
 envoy-data-plane==1.0.3
@@ -432,6 +437,8 @@ incremental==24.11.0
     # via twisted
 inflect==7.5.0
     # via coqui-tts
+inflection==0.5.1
+    # via drf-spectacular
 iniconfig==2.3.0
     # via pytest
 instructor==1.15.1
@@ -464,6 +471,7 @@ jsonschema==4.26.0
     #   dbt-common
     #   dbt-core
     #   dbt-semantic-interfaces
+    #   drf-spectacular
     #   nbformat
 jsonschema-specifications==2025.9.1
     # via jsonschema
@@ -824,6 +832,7 @@ pyyaml==6.0.3
     #   datasets
     #   dbt-core
     #   dbt-semantic-interfaces
+    #   drf-spectacular
     #   huggingface-hub
     #   peft
     #   transformers
@@ -1052,7 +1061,9 @@ ultralytics-thop==2.0.20
 unidic-lite==1.0.8
     # via manga-ocr
 uritemplate==4.2.0
-    # via google-api-python-client
+    # via
+    #   drf-spectacular
+    #   google-api-python-client
 urllib3==2.7.0
     # via
     #   requests

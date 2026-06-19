@@ -5,6 +5,7 @@
 # 1. Web Application & API Frameworks
 Django==5.2.14
 djangorestframework==3.17.1
+drf-spectacular==0.29.0
 channels==4.3.2
 daphne==4.2.1
 django-allauth==65.14.1
