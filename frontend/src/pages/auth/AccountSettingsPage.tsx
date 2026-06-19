@@ -216,13 +216,22 @@ const AccountSettingsPage: React.FC = () => {
               <p className="text-sm opacity-60 text-black dark:text-white">
                 Suivez votre utilisation des Bx et vérifiez votre limite quotidienne.
               </p>
-              <Link 
-                to="/auth/usage/" 
-                className="flex items-center justify-between bg-blue-500/5 dark:bg-blue-500/10 p-4 rounded-xl border border-blue-500/10 hover:border-blue-500 transition-all no-underline text-black dark:text-white group"
-              >
-                <span className="font-bold uppercase tracking-widest text-xs text-blue-600 dark:text-blue-400">Voir mes statistiques</span>
-                <ChevronRight className="w-5 h-5 text-blue-400 group-hover:translate-x-1 transition-all" />
-              </Link>
+              <div className="space-y-3">
+                <Link 
+                  to="/auth/usage/" 
+                  className="flex items-center justify-between bg-blue-500/5 dark:bg-blue-500/10 p-4 rounded-xl border border-blue-500/10 hover:border-blue-500 transition-all no-underline text-black dark:text-white group"
+                >
+                  <span className="font-bold uppercase tracking-widest text-xs text-blue-600 dark:text-blue-400">Voir mes statistiques</span>
+                  <ChevronRight className="w-5 h-5 text-blue-400 group-hover:translate-x-1 transition-all" />
+                </Link>
+                <Link 
+                  to="/social/ai-feedback-history/" 
+                  className="flex items-center justify-between bg-purple-500/5 dark:bg-purple-500/10 p-4 rounded-xl border border-purple-500/10 hover:border-purple-500 transition-all no-underline text-black dark:text-white group"
+                >
+                  <span className="font-bold uppercase tracking-widest text-xs text-purple-600 dark:text-purple-400">Historique des Feedbacks IA</span>
+                  <ChevronRight className="w-5 h-5 text-purple-400 group-hover:translate-x-1 transition-all" />
+                </Link>
+              </div>
             </Card>
 
             {/* Portail Développeur */}
