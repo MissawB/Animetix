@@ -1,11 +1,10 @@
-import json
-import pytest
 from unittest.mock import MagicMock
-from django.urls import reverse
-from rest_framework import status
-from django.contrib.auth.models import User
-from dependency_injector import providers
+
+import pytest
 from animetix.containers import container
+from dependency_injector import providers
+from django.contrib.auth.models import User
+from django.urls import reverse
 from rest_framework.test import APIClient
 
 
