@@ -290,6 +290,16 @@ urlpatterns = [
         name="mlops_eval_failures",
     ),
     path(
+        "mlops/open-data/",
+        api_views.OpenDatasetListView.as_view(),
+        name="open_dataset_list",
+    ),
+    path(
+        "mlops/open-data/download/<str:dataset_id>/",
+        api_views.OpenDatasetDownloadView.as_view(),
+        name="open_dataset_download",
+    ),
+    path(
         "mlops/gold-dataset/",
         api_views.GoldDatasetViewSet.as_view({"get": "list", "post": "create"}),
         name="mlops_gold_dataset_list",

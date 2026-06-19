@@ -56,6 +56,8 @@ trl==0.12.1
 coqui-tts==0.27.5
 ultralytics==8.4.51
 manga_ocr==0.1.14
+imageio==2.37.3
+z3-solver==4.16.0.0
 
 # 5. GCP, Observability & Utilities
 google-cloud-aiplatform
@@ -78,3 +80,8 @@ dbt-sqlite
 dbt-postgres
 dbt-bigquery
 beautifulsoup4==4.12.3
+orjson==3.11.8
+filetype==1.2.0
+bleach==6.1.0
+PyJWT==2.12.0
+pydub==0.25.1

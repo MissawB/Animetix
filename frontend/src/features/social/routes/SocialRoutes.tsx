@@ -13,6 +13,7 @@ const ClubDiscoveryPage = lazy(() => import('../../../pages/social/ClubDiscovery
 const ClubDashboard = lazy(() => import('../../../pages/social/ClubDashboard'));
 const ClubEventPage = lazy(() => import('../../../pages/social/ClubEventPage'));
 const AIFeedbackHistoryPage = lazy(() => import('../../../pages/social/AIFeedbackHistoryPage'));
+const OpenDataPage = lazy(() => import('../../../pages/social/OpenDataPage'));
 const SocialHubPage = lazy(() => import('../../../pages/social/SocialHubPage'));
 const ArchetypeNexusPage = lazy(() => import('../../../pages/social/ArchetypeNexusPage'));
 const AIDebateArenaPage = lazy(() => import('../../../pages/social/AIDebateArenaPage'));
@@ -38,6 +39,7 @@ export const SocialRoutes = () => (
     <Route path="/social/neuro-memory/" element={<NeuroMemoryPage />} />
     <Route path="/social/debate-arena/" element={<AIDebateArenaPage />} />
     <Route path="/social/ai-feedback-history/" element={<AIFeedbackHistoryPage />} />
+    <Route path="/social/open-data/" element={<OpenDataPage />} />
     <Route path="/clubs/" element={<ClubDiscoveryPage />} />
     <Route path="/clubs/:id/" element={<ClubDashboard />} />
     <Route path="/clubs/:id/events/:eventId/" element={<ClubEventPage />} />

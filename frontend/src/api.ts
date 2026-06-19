@@ -11,9 +11,11 @@ import {
   DiscoveryClub,
   AIFeedback,
   ClassicGameState,
-  VideoSegment
+  VideoSegment,
+  OpenDataset
 } from './types';
 import { apiClient } from './utils/apiClient';
+import { auth } from './utils/firebase';
 import type { components } from './types/api';
 
 // --- Config API ---
@@ -322,4 +324,39 @@ export async function cloneVoice(text: string, audioFile: File, pitch: number): 
 
 export async function searchVideoSegments(query: string): Promise<{ status: string; results: VideoSegment[] }> {
   return apiClient(`/api/v1/labs/video/search/?q=${encodeURIComponent(query)}`);
+}
+
+export async function getOpenDatasets(): Promise<{ status: string; datasets: OpenDataset[] }> {
+  return apiClient('/api/v1/mlops/open-data/');
+}
+
+export async function downloadDataset(datasetId: string, filename: string): Promise<void> {
+  const url = `/api/v1/mlops/open-data/download/${datasetId}/`;
+  const defaultHeaders: Record<string, string> = {
+    'X-Requested-With': 'XMLHttpRequest',
+  };
+
+  const firebaseUser = auth.currentUser;
+  if (firebaseUser) {
+    try {
+      const token = await firebaseUser.getIdToken();
+      defaultHeaders['Authorization'] = `Bearer ${token}`;
+    } catch (err) {
+      console.error('Failed to get Firebase ID Token', err);
+    }
+  }
+
+  const response = await fetch(url, { headers: defaultHeaders });
+  if (!response.ok) {
+    throw new Error(`Failed to download dataset: ${response.statusText}`);
+  }
+
+  const blob = await response.blob();
+  const downloadUrl = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = downloadUrl;
+  link.setAttribute('download', filename);
+  document.body.appendChild(link);
+  link.click();
+  link.parentNode?.removeChild(link);
 }

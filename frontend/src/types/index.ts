@@ -529,3 +529,12 @@ export interface AIFeedback {
   is_positive: boolean;
   created_at: string;
 }
+
+export interface OpenDataset {
+  id: string;
+  name: string;
+  description: string;
+  format: string;
+  size_bytes: number;
+  updated_at: string;
+}

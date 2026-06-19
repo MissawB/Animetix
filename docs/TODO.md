@@ -27,7 +27,7 @@ Ce document liste toutes les tâches techniques, architecturales et fonctionnell
     - Créer une page permettant de visualiser les données locales/hors-ligne en attente de synchronisation et de forcer la réconciliation manuelle (`sync_offline_data`).
 - [x] **Historique des Feedbacks IA :**
     - Implémenter la vue pour `/social/ai-feedback-history/` permettant aux utilisateurs de revoir leurs interactions passées avec les agents de validation.
-- [ ] **Portail de Données Ouvertes (Open Data) :**
+- [x] **Portail de Données Ouvertes (Open Data) :**
     - Page de téléchargement des datasets publics (paires DPO, logs anonymisés) pour la conformité académique.
 - [ ] **Tableau de Bord "État du Cluster" :**
     - Visualisation temps réel de la santé des instances NVIDIA H100, Ollama, et du Knowledge Graph (Neo4j).
