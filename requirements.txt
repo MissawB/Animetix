@@ -194,6 +194,7 @@ django==5.2.14
     #   django-filter
     #   django-prometheus
     #   django-redis
+    #   django-storages
     #   djangorestframework
     #   drf-spectacular
 django-allauth==65.14.1
@@ -211,6 +212,8 @@ django-prometheus==2.4.1
 django-ratelimit==4.1.0
     # via -r requirements.in
 django-redis==6.0.0
+    # via -r requirements.in
+django-storages==1.14.6
     # via -r requirements.in
 djangorestframework==3.17.1
     # via
