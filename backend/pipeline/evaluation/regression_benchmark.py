@@ -14,6 +14,8 @@ sys.path.insert(0, os.path.join(BASE_DIR, "src"))
 sys.path.insert(0, os.path.join(BASE_DIR, "src", "backend"))
 sys.path.insert(0, os.path.join(BASE_DIR, "backend", "api"))
 sys.path.insert(0, os.path.join(BASE_DIR, "backend"))
+# Repo root, so the `backend.api.animetix.*` paths referenced in settings resolve.
+sys.path.insert(0, BASE_DIR)
 
 import django  # noqa: E402
 
