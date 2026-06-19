@@ -32,3 +32,6 @@ REST_FRAMEWORK = {
 EVENTARC_RECEIVER_URL = "http://localhost:8000/api/events/gcs-upload/"
 
 RATELIMIT_ENABLE = False
+
+# Tests use the in-memory channel layer (no Redis / channels_redis dependency).
+CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}

@@ -4,8 +4,12 @@ import os
 import sys
 
 import pandas as pd
-import wandb
 from sentence_transformers import SentenceTransformer
+
+try:
+    import wandb
+except ImportError:  # W&B is optional; only the standalone eval script uses it
+    wandb = None  # type: ignore[assignment]
 
 # Fix path for internal imports
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
