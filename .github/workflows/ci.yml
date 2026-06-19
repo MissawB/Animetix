@@ -47,6 +47,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    - name: Free Disk Space
+      uses: jlumbroso/free-disk-space@main
+      with:
+        tool-cache: true
+        android: true
+        dotnet: true
+        haskell: true
+        large-packages: true
+        docker-images: true
+        swap-storage: true
     - name: Build Image
       run: docker build -t test-build -f deploy/Dockerfile .
 
@@ -57,18 +67,20 @@ jobs:
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
-    - name: Start Services
-      run: docker-compose -f deploy/docker-compose.test.yml up -d
+    # Free disk space BEFORE pulling images / installing the heavy ML stack,
+    # otherwise the runner (~14 GB free) runs out of space.
     - name: Free Disk Space
       uses: jlumbroso/free-disk-space@main
       with:
-        tool-cache: false
+        tool-cache: true
         android: true
         dotnet: true
         haskell: true
         large-packages: true
         docker-images: true
         swap-storage: true
+    - name: Start Services
+      run: docker-compose -f deploy/docker-compose.test.yml up -d
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
@@ -102,7 +114,7 @@ jobs:
     - name: Free Disk Space
       uses: jlumbroso/free-disk-space@main
       with:
-        tool-cache: false
+        tool-cache: true
         android: true
         dotnet: true
         haskell: true
