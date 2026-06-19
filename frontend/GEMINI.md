@@ -35,3 +35,4 @@ This file defines the development constraints for the React Single Page Applicat
 - **Monitoring:** Integrate `Sentry` for error tracking and `PostHog` for product analytics.
 - **Unit Testing:** `Vitest` for logic and hooks.
 - **E2E & VRT:** `Playwright`. Verify visual regressions (VRT) using visual snapshot comparison on major UI component updates.
+- **Verification:** You **MUST** always run and verify tests (`Vitest`), type checking (`npm run check-types`), and linting (`npm run lint`) before committing code.

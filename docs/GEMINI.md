@@ -64,6 +64,11 @@ All modifications must strictly respect the separation of layers:
     - Example: `feat(auth): add user registration endpoint`
     - Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`.
     - Scope: Optional, specifies the part of the codebase affected.
+- **Verification Before Commit:**
+    - You **MUST** always verify tests, linting, and formatting before committing code.
+    - **Python (Backend):** Run `ruff check . --fix` (linting), `ruff format .` (formatting), and `pytest` (tests).
+    - **TypeScript/React (Frontend):** Run `npm run check-types` (type checking) and `npm run lint` (linting).
+    - Ensure all checks pass and there are no failures before staging and committing changes.
 
 ## 🛠️ Intervention Workflow
 When addressing tasks or issues, follow this structured workflow:
