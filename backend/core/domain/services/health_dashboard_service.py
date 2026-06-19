@@ -1,7 +1,7 @@
 import logging
 import time
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from core.ports.usage_port import UsagePort
 
@@ -80,8 +80,10 @@ class HealthDashboardService:
 
         online_count = sum(1 for n in nodes if n["status"] == "online")
         total_count = len(nodes)
-        global_status = "healthy" if online_count == total_count else (
-            "degraded" if online_count > 0 else "critical"
+        global_status = (
+            "healthy"
+            if online_count == total_count
+            else ("degraded" if online_count > 0 else "critical")
         )
 
         return {
@@ -89,7 +91,9 @@ class HealthDashboardService:
             "global_status": global_status,
             "online_count": online_count,
             "total_count": total_count,
-            "health_percentage": round((online_count / total_count) * 100, 1) if total_count else 0,
+            "health_percentage": (
+                round((online_count / total_count) * 100, 1) if total_count else 0
+            ),
             "nodes": nodes,
         }
 
@@ -104,15 +108,17 @@ class HealthDashboardService:
             temp = random.randint(38, 72)
             util = random.randint(15, 98)
             mem_used = round(random.uniform(8.0, 72.0), 1)
-            gpus.append({
-                "id": i,
-                "name": f"H100-SXM-{i}",
-                "temperature_c": temp,
-                "utilization_pct": util,
-                "memory_used_gb": mem_used,
-                "memory_total_gb": 80.0,
-                "status": "online" if temp < 85 else "throttled",
-            })
+            gpus.append(
+                {
+                    "id": i,
+                    "name": f"H100-SXM-{i}",
+                    "temperature_c": temp,
+                    "utilization_pct": util,
+                    "memory_used_gb": mem_used,
+                    "memory_total_gb": 80.0,
+                    "status": "online" if temp < 85 else "throttled",
+                }
+            )
 
         avg_temp = round(sum(g["temperature_c"] for g in gpus) / len(gpus), 1)
         avg_util = round(sum(g["utilization_pct"] for g in gpus) / len(gpus), 1)
@@ -142,10 +148,11 @@ class HealthDashboardService:
                 result = self.inference_engine.health_check()
                 latency = round((time.time() - start) * 1000, 1)
                 models = result.get("models", [])
-                model_names = [
-                    m.get("name", m.get("model", "unknown"))
-                    for m in models[:10]
-                ] if isinstance(models, list) else []
+                model_names = (
+                    [m.get("name", m.get("model", "unknown")) for m in models[:10]]
+                    if isinstance(models, list)
+                    else []
+                )
 
                 return {
                     "id": "ollama-inference",
@@ -167,7 +174,10 @@ class HealthDashboardService:
                     "type": "inference",
                     "status": "unconfigured",
                     "latency_ms": None,
-                    "details": {"engine": "N/A", "error": "No inference engine injected"},
+                    "details": {
+                        "engine": "N/A",
+                        "error": "No inference engine injected",
+                    },
                 }
         except Exception as e:
             latency = round((time.time() - start) * 1000, 1)
@@ -240,4 +250,3 @@ class HealthDashboardService:
                 "latency_ms": latency,
                 "details": {"error": str(e)},
             }
-

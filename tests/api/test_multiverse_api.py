@@ -1,10 +1,11 @@
-import pytest
 from unittest.mock import MagicMock
-from django.urls import reverse
-from django.contrib.auth.models import User
-from rest_framework.test import APIClient
-from dependency_injector import providers
+
+import pytest
 from animetix.containers import container
+from dependency_injector import providers
+from django.contrib.auth.models import User
+from django.urls import reverse
+from rest_framework.test import APIClient
 
 
 @pytest.fixture
@@ -72,8 +73,8 @@ def test_multiverse_gallery_view(api_client, authenticated_user, mock_container)
         # Verify links formatting
         links = res_json["links"]
         assert any(
-            l["source"] == "Synthetic Naruto" and l["target"] == "genre_Shonen"
-            for l in links
+            link["source"] == "Synthetic Naruto" and link["target"] == "genre_Shonen"
+            for link in links
         )
 
 
@@ -85,7 +86,7 @@ def test_multiverse_catalog_view(api_client, authenticated_user, mock_container)
     # 3. Available genres query
     mock_container.graph_persistence_port.execute_query.side_effect = [
         [{"total": 1}],  # Count result
-        [                # Data result
+        [  # Data result
             {
                 "media": {
                     "name": "Synthetic One Piece",
@@ -94,7 +95,9 @@ def test_multiverse_catalog_view(api_client, authenticated_user, mock_container)
                     "created_at": "2026-06-19T00:00:00Z",
                 },
                 "genre": {"name": "Shonen"},
-                "characters": [{"name": "Luffy", "role": "Protagonist", "power_level": 9000}],
+                "characters": [
+                    {"name": "Luffy", "role": "Protagonist", "power_level": 9000}
+                ],
                 "char_count": 1,
             }
         ],
@@ -105,11 +108,20 @@ def test_multiverse_catalog_view(api_client, authenticated_user, mock_container)
         providers.Object(mock_container.graph_persistence_port)
     ):
         url = reverse("api_multiverse_catalog")
-        response = api_client.get(url, {"search": "Pirate", "genre": "Shonen", "sort": "newest", "page": 1, "page_size": 10})
+        response = api_client.get(
+            url,
+            {
+                "search": "Pirate",
+                "genre": "Shonen",
+                "sort": "newest",
+                "page": 1,
+                "page_size": 10,
+            },
+        )
 
         assert response.status_code == 200
         res_json = response.json()
-        
+
         # Verify pagination
         assert "pagination" in res_json
         assert res_json["pagination"]["total"] == 1

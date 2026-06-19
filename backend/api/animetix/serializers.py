@@ -13,8 +13,8 @@ from .models import (
     GlobalBoss,
     MangaChapter,
     MangaPage,
-    Profile,
     MarketListing,
+    Profile,
 )
 
 

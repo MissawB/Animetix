@@ -46,6 +46,12 @@ Ce document liste toutes les tâches techniques, architecturales et fonctionnell
 - [x] **Centralisation HTTP (Frontend) :** Remplacer les appels directs à `fetch()` par `apiClient` dans les pages de jeu (`AkinetixRLPage`, `DuelLobbyPage`, `paradoxStore`, etc.) pour assurer la transmission automatique des tokens Firebase/CSRF et l'unification des messages d'erreur..
 - [x] **Dépréciations Pydantic V2 :** Mettre à jour les modèles héritant de Pydantic V1 (comme `PersonalizationSchema` dans `social.py`) vers la syntaxe standard `ConfigDict`.
 - [x] **Correction de sync-api.bat :** Aligner le chemin de sortie de génération des types OpenAPI dans `sync-api.bat` sur `src\types\api.d.ts`.
-*
+
+---
+
+## 🚀 Expansion & Futur
+- [ ] **Rapports de Conformité :** Automatiser les rapports hebdomadaires de conformité sécurité.
+- [ ] **Intégration de Tachidesk/Suwayomi (Mihon Backend) :** Connecter le projet à une instance Tachidesk/Suwayomi locale pour connecter les extensions de Mihon/Tachiyomi et accéder à plus de 500 sources de mangas.
+- [ ] **Optimisation du Lecteur Manga (React UX) :** Améliorer le confort de lecture dans le composant frontend (préchargement d'images, infinite scroll pour le mode Webtoon, découpe/affichage double page, et configurations du lecteur).
 ---
 *Dernière mise à jour : 19 Juin 2026*

@@ -1,12 +1,17 @@
 from animetix_project.logging_config import get_logger
 from dependency_injector.wiring import Provide, inject
-from rest_framework import permissions, response, status, views, viewsets, serializers
-from rest_framework.decorators import action
 from django.db import transaction
 from django.db.models import Q
+from rest_framework import permissions, response, serializers, status, views, viewsets
+from rest_framework.decorators import action
 
 from ..containers import Container
-from ..models import MediaItem, UserRecommendation, MarketListing, CreativeFusion, WalletTransaction
+from ..models import (
+    MarketListing,
+    MediaItem,
+    UserRecommendation,
+    WalletTransaction,
+)
 from ..serializers import MarketListingSerializer
 
 logger = get_logger("animetix.explore")
@@ -189,16 +194,18 @@ class MarketListingViewSet(viewsets.ModelViewSet):
         if user_filter == "mine":
             qs = MarketListing.objects.filter(seller=self.request.user)
         elif user_filter == "purchases":
-            qs = MarketListing.objects.filter(fusion__creator=self.request.user, is_active=False).exclude(seller=self.request.user)
+            qs = MarketListing.objects.filter(
+                fusion__creator=self.request.user, is_active=False
+            ).exclude(seller=self.request.user)
         else:
             qs = MarketListing.objects.filter(is_active=True)
 
         search = self.request.query_params.get("search", "").strip()
         if search:
             qs = qs.filter(
-                Q(fusion__title_a__icontains=search) |
-                Q(fusion__title_b__icontains=search) |
-                Q(fusion__art_style__icontains=search)
+                Q(fusion__title_a__icontains=search)
+                | Q(fusion__title_b__icontains=search)
+                | Q(fusion__art_style__icontains=search)
             )
 
         sort_by = self.request.query_params.get("sort", "newest")
@@ -213,7 +220,9 @@ class MarketListingViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         fusion = serializer.validated_data["fusion"]
         if fusion.creator != self.request.user:
-            raise serializers.ValidationError("Vous n'êtes pas le créateur de cet actif.")
+            raise serializers.ValidationError(
+                "Vous n'êtes pas le créateur de cet actif."
+            )
 
         if MarketListing.objects.filter(fusion=fusion, is_active=True).exists():
             raise serializers.ValidationError("Cet actif est déjà en vente.")
@@ -229,7 +238,7 @@ class MarketListingViewSet(viewsets.ModelViewSet):
         if buyer == seller:
             return response.Response(
                 {"error": "Vous ne pouvez pas acheter votre propre actif."},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         price = listing.price
@@ -239,7 +248,7 @@ class MarketListingViewSet(viewsets.ModelViewSet):
         if buyer_profile.wallet_balance < price:
             return response.Response(
                 {"error": "Solde Berrix insuffisant."},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         with transaction.atomic():
@@ -264,20 +273,22 @@ class MarketListingViewSet(viewsets.ModelViewSet):
                 user=buyer,
                 amount=-price,
                 transaction_type="market_purchase",
-                description=f"Achat de la Fusion #{fusion.id} ({fusion.title_a} x {fusion.title_b})"
+                description=f"Achat de la Fusion #{fusion.id} ({fusion.title_a} x {fusion.title_b})",
             )
             WalletTransaction.objects.create(
                 user=seller,
                 amount=price,
                 transaction_type="market_sale",
-                description=f"Vente de la Fusion #{fusion.id} ({fusion.title_a} x {fusion.title_b})"
+                description=f"Vente de la Fusion #{fusion.id} ({fusion.title_a} x {fusion.title_b})",
             )
 
             # Mark listing inactive
             listing.is_active = False
             listing.save()
 
-        return response.Response({"status": "success", "message": "Achat effectué avec succès."})
+        return response.Response(
+            {"status": "success", "message": "Achat effectué avec succès."}
+        )
 
     @action(detail=True, methods=["post"])
     def cancel(self, request, pk=None):
@@ -285,9 +296,8 @@ class MarketListingViewSet(viewsets.ModelViewSet):
         if listing.seller != request.user:
             return response.Response(
                 {"error": "Vous n'êtes pas le vendeur de cet actif."},
-                status=status.HTTP_403_FORBIDDEN
+                status=status.HTTP_403_FORBIDDEN,
             )
         listing.is_active = False
         listing.save()
         return response.Response({"status": "success", "message": "Vente annulée."})
-

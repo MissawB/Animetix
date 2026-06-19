@@ -108,6 +108,7 @@ class TestForgeVNAPI:
             sample_fusion.refresh_from_db()
             assert sample_fusion.vn_script["title"] == "Fusion Script"
 
+    @pytest.mark.integration  # exercises the live VN-script generation pipeline (no ollama in CI)
     def test_update_vn_script_success(self, api_client, mock_user, sample_fusion):
         api_client.force_authenticate(user=mock_user)
         url = reverse("api_forge_vn", kwargs={"fusion_id": sample_fusion.id})

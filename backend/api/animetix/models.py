@@ -529,9 +529,7 @@ class MarketListing(models.Model):
     fusion = models.ForeignKey(
         CreativeFusion, on_delete=models.CASCADE, related_name="listings"
     )
-    seller = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="listings"
-    )
+    seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name="listings")
     price = models.IntegerField()
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -69,7 +69,6 @@ class ClusterHealthView(APIView):
     """
 
     def get(self, request):
-        from dependency_injector.wiring import Provide
 
         from animetix.containers.main import ApplicationContainer
 
@@ -83,4 +82,3 @@ class ClusterHealthView(APIView):
                 {"error": f"Cluster health check failed: {str(e)}"},
                 status=500,
             )
-

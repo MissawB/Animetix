@@ -1,5 +1,7 @@
 from unittest.mock import MagicMock
 
+import pytest
+
 from backend.core.domain.entities.ai_schemas import (
     DebateOutcome,
     JudgeAction,
@@ -320,6 +322,7 @@ def test_rag_context_language():
     assert ctx_en.language == "English"
 
 
+@pytest.mark.integration  # drives the full agentic RAG service against a live engine (no ollama in CI)
 def test_agentic_rag_service_propagates_language(monkeypatch):
     from unittest.mock import MagicMock  # noqa: E402
 

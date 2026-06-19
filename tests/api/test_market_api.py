@@ -1,8 +1,8 @@
 import pytest
-from django.urls import reverse
-from django.contrib.auth.models import User
-from rest_framework.test import APIClient
 from animetix.models import CreativeFusion, MarketListing, WalletTransaction
+from django.contrib.auth.models import User
+from django.urls import reverse
+from rest_framework.test import APIClient
 
 
 @pytest.fixture
@@ -35,7 +35,7 @@ def fusion(seller):
         media_type_a="Anime",
         media_type_b="Anime",
         scenario_text="An epic fusion of strength and rubber.",
-        creator=seller
+        creator=seller,
     )
     seller.profile.collected_fusions.add(fusion)
     return fusion
@@ -49,7 +49,9 @@ def test_create_listing_success(api_client, seller, fusion):
     response = api_client.post(url, payload, format="json")
 
     assert response.status_code == 201
-    assert MarketListing.objects.filter(fusion=fusion, seller=seller, price=150, is_active=True).exists()
+    assert MarketListing.objects.filter(
+        fusion=fusion, seller=seller, price=150, is_active=True
+    ).exists()
 
 
 @pytest.mark.django_db
@@ -67,7 +69,9 @@ def test_create_listing_not_owner(api_client, buyer, fusion):
 @pytest.mark.django_db
 def test_create_listing_already_listed(api_client, seller, fusion):
     # List it once
-    MarketListing.objects.create(fusion=fusion, seller=seller, price=150, is_active=True)
+    MarketListing.objects.create(
+        fusion=fusion, seller=seller, price=150, is_active=True
+    )
 
     api_client.force_authenticate(user=seller)
     url = reverse("api-market-listings")
@@ -80,14 +84,16 @@ def test_create_listing_already_listed(api_client, seller, fusion):
 
 @pytest.mark.django_db
 def test_buy_listing_success(api_client, buyer, seller, fusion):
-    listing = MarketListing.objects.create(fusion=fusion, seller=seller, price=200, is_active=True)
+    listing = MarketListing.objects.create(
+        fusion=fusion, seller=seller, price=200, is_active=True
+    )
 
     api_client.force_authenticate(user=buyer)
     url = reverse("api-market-listing-buy", kwargs={"pk": listing.id})
     response = api_client.post(url)
 
     assert response.status_code == 200
-    
+
     # Reload from DB
     buyer.profile.refresh_from_db()
     seller.profile.refresh_from_db()
@@ -107,14 +113,20 @@ def test_buy_listing_success(api_client, buyer, seller, fusion):
     assert not listing.is_active
 
     # Transactions
-    assert WalletTransaction.objects.filter(user=buyer, amount=-200, transaction_type="market_purchase").exists()
-    assert WalletTransaction.objects.filter(user=seller, amount=200, transaction_type="market_sale").exists()
+    assert WalletTransaction.objects.filter(
+        user=buyer, amount=-200, transaction_type="market_purchase"
+    ).exists()
+    assert WalletTransaction.objects.filter(
+        user=seller, amount=200, transaction_type="market_sale"
+    ).exists()
 
 
 @pytest.mark.django_db
 def test_buy_listing_insufficient_balance(api_client, buyer, seller, fusion):
     # Item costs 600, buyer only has 500
-    listing = MarketListing.objects.create(fusion=fusion, seller=seller, price=600, is_active=True)
+    listing = MarketListing.objects.create(
+        fusion=fusion, seller=seller, price=600, is_active=True
+    )
 
     api_client.force_authenticate(user=buyer)
     url = reverse("api-market-listing-buy", kwargs={"pk": listing.id})
@@ -126,7 +138,9 @@ def test_buy_listing_insufficient_balance(api_client, buyer, seller, fusion):
 
 @pytest.mark.django_db
 def test_buy_own_listing(api_client, seller, fusion):
-    listing = MarketListing.objects.create(fusion=fusion, seller=seller, price=50, is_active=True)
+    listing = MarketListing.objects.create(
+        fusion=fusion, seller=seller, price=50, is_active=True
+    )
 
     api_client.force_authenticate(user=seller)
     url = reverse("api-market-listing-buy", kwargs={"pk": listing.id})
@@ -138,7 +152,9 @@ def test_buy_own_listing(api_client, seller, fusion):
 
 @pytest.mark.django_db
 def test_cancel_listing_success(api_client, seller, fusion):
-    listing = MarketListing.objects.create(fusion=fusion, seller=seller, price=100, is_active=True)
+    listing = MarketListing.objects.create(
+        fusion=fusion, seller=seller, price=100, is_active=True
+    )
 
     api_client.force_authenticate(user=seller)
     url = reverse("api-market-listing-cancel", kwargs={"pk": listing.id})
@@ -151,7 +167,9 @@ def test_cancel_listing_success(api_client, seller, fusion):
 
 @pytest.mark.django_db
 def test_cancel_listing_not_seller(api_client, buyer, seller, fusion):
-    listing = MarketListing.objects.create(fusion=fusion, seller=seller, price=100, is_active=True)
+    listing = MarketListing.objects.create(
+        fusion=fusion, seller=seller, price=100, is_active=True
+    )
 
     api_client.force_authenticate(user=buyer)
     url = reverse("api-market-listing-cancel", kwargs={"pk": listing.id})

@@ -159,10 +159,11 @@ class MultiverseCatalogView(APIView):
         ORDER BY count DESC
         """
         genre_results = self.neo4j_manager.execute_query(genre_query)
-        available_genres = [
-            {"name": r.get("name"), "count": r.get("count", 0)}
-            for r in genre_results
-        ] if genre_results else []
+        available_genres = (
+            [{"name": r.get("name"), "count": r.get("count", 0)} for r in genre_results]
+            if genre_results
+            else []
+        )
 
         # Format results
         universes = []
@@ -172,39 +173,43 @@ class MultiverseCatalogView(APIView):
             characters = record.get("characters", [])
             char_count = record.get("char_count", 0)
 
-            universes.append({
-                "id": media.get("name") or media.get("title", "unknown"),
-                "name": media.get("name") or media.get("title", "Univers Inconnu"),
-                "description": media.get("description", ""),
-                "cosmology": media.get("cosmology", ""),
-                "genre": genre.get("name", "Unknown"),
-                "is_synthetic": True,
-                "character_count": char_count,
-                "characters": [
-                    {
-                        "name": c.get("name", "Unknown"),
-                        "role": c.get("role", ""),
-                        "power_level": c.get("power_level", 0),
-                    }
-                    for c in characters[:8]
-                ],
-                "created_at": media.get("created_at"),
-            })
+            universes.append(
+                {
+                    "id": media.get("name") or media.get("title", "unknown"),
+                    "name": media.get("name") or media.get("title", "Univers Inconnu"),
+                    "description": media.get("description", ""),
+                    "cosmology": media.get("cosmology", ""),
+                    "genre": genre.get("name", "Unknown"),
+                    "is_synthetic": True,
+                    "character_count": char_count,
+                    "characters": [
+                        {
+                            "name": c.get("name", "Unknown"),
+                            "role": c.get("role", ""),
+                            "power_level": c.get("power_level", 0),
+                        }
+                        for c in characters[:8]
+                    ],
+                    "created_at": media.get("created_at"),
+                }
+            )
 
-        return Response({
-            "results": universes,
-            "pagination": {
-                "page": page,
-                "page_size": page_size,
-                "total": total,
-                "total_pages": max(1, -(-total // page_size)),  # Ceil division
-                "has_next": (page * page_size) < total,
-                "has_previous": page > 1,
-            },
-            "filters": {
-                "search": search,
-                "genre": genre_filter,
-                "sort": sort_by,
-            },
-            "available_genres": available_genres,
-        })
+        return Response(
+            {
+                "results": universes,
+                "pagination": {
+                    "page": page,
+                    "page_size": page_size,
+                    "total": total,
+                    "total_pages": max(1, -(-total // page_size)),  # Ceil division
+                    "has_next": (page * page_size) < total,
+                    "has_previous": page > 1,
+                },
+                "filters": {
+                    "search": search,
+                    "genre": genre_filter,
+                    "sort": sort_by,
+                },
+                "available_genres": available_genres,
+            }
+        )

@@ -9,6 +9,9 @@ from core.domain.services.prompt_manager import PromptManager  # noqa: E402
 from core.ports.inference_port import InferencePort  # noqa: E402
 from core.ports.web_search_port import WebSearchPort  # noqa: E402
 
+# Drives the full multi-agent debate / RAG pipeline against a live inference engine (no ollama in CI).
+pytestmark = pytest.mark.integration
+
 
 class TestMultiAgentDebateIntegration:
     @pytest.fixture

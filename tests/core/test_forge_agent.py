@@ -9,6 +9,9 @@ from core.domain.entities.ai_schemas import (
 )
 from core.domain.services.agentic_rag_service import AgenticRAGService
 
+# Drives the full agentic RAG / forge pipeline against a live inference engine (no ollama in CI).
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def mock_engine():
