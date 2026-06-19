@@ -1,15 +1,11 @@
 from animetix_project.logging_config import get_logger
 from dependency_injector.wiring import Provide, inject
-from django.db import transaction
-from django.db.models import Q
-from rest_framework import permissions, response, serializers, status, views, viewsets
-from rest_framework.decorators import action
+from rest_framework import permissions, response, status, views
 
 from ..containers import Container
 from ..models import (
     MediaItem,
     UserRecommendation,
-    WalletTransaction,
 )
 
 logger = get_logger("animetix.explore")
