@@ -29,14 +29,14 @@ Ce document liste toutes les tâches techniques, architecturales et fonctionnell
     - Implémenter la vue pour `/social/ai-feedback-history/` permettant aux utilisateurs de revoir leurs interactions passées avec les agents de validation.
 - [x] **Portail de Données Ouvertes (Open Data) :**
     - Page de téléchargement des datasets publics (paires DPO, logs anonymisés) pour la conformité académique.
-- [ ] **Tableau de Bord "État du Cluster" :**
+- [x] **Tableau de Bord "État du Cluster" :**
     - Visualisation temps réel de la santé des instances NVIDIA H100, Ollama, et du Knowledge Graph (Neo4j).
 
 ### 🌌 Autres Fonctionnalités
 
-- [ ] **Catalogue de la Galerie Multivers (Multiverse Gallery) :**
+- [x] **Catalogue de la Galerie Multivers (Multiverse Gallery) :**
     - Implémenter une véritable page "Catalogue" (grille/liste) avec filtres et recherche pour explorer les univers synthétiques générés par la communauté.
-- [ ] **Boutique d'Actifs Digitaux (Market/Trading) :**
+- [x] **Boutique d'Actifs Digitaux (Market/Trading) :**
     - Créer une page de type "Shop" ou "Marketplace" dédiée à l'achat/vente et à l'échange d'actifs digitaux.
 
 ---

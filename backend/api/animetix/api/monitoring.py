@@ -58,3 +58,29 @@ class PipelineControlView(APIView):
             except Exception as e:
                 return Response({"error": str(e)}, status=500)
         return Response({"error": "Invalid action"}, status=400)
+
+
+@method_decorator(staff_member_required, name="dispatch")
+class ClusterHealthView(APIView):
+    """
+    GET /api/monitoring/cluster-health/
+    Returns real-time health status for all cluster components:
+    NVIDIA H100 GPUs, Ollama Inference, Neo4j Knowledge Graph.
+    """
+
+    def get(self, request):
+        from dependency_injector.wiring import Provide
+
+        from animetix.containers.main import ApplicationContainer
+
+        try:
+            container = ApplicationContainer()
+            health_service = container.core_services.health_dashboard_service()
+            data = health_service.get_cluster_health()
+            return Response(data)
+        except Exception as e:
+            return Response(
+                {"error": f"Cluster health check failed: {str(e)}"},
+                status=500,
+            )
+

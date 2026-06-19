@@ -1,10 +1,12 @@
 import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   Loader2,
   Users,
   Network,
   Maximize2,
-  X
+  X,
+  LayoutGrid
 } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -124,10 +126,17 @@ const MultiverseStudioPage: React.FC = () => {
 
                 {/* Graph Overlay: Controls */}
                 <div className="absolute top-8 right-8 z-20 flex gap-4 pointer-events-none">
-                    <div className="flex bg-black/60 backdrop-blur-xl border border-white/10 p-1.5 rounded-2xl pointer-events-auto shadow-2xl">
-                        <div className="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-cyan-600 text-white shadow-lg">
+                    <div className="flex bg-black/60 backdrop-blur-xl border border-white/10 p-1.5 rounded-2xl pointer-events-auto shadow-2xl gap-1">
+                        <div className="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest bg-cyan-600 text-white shadow-lg cursor-default">
                             Nexus Map
                         </div>
+                        <Link 
+                            to="/multiverse/catalog/" 
+                            className="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-white/60 hover:text-white hover:bg-white/5 transition-all flex items-center gap-2"
+                        >
+                            <LayoutGrid className="w-3.5 h-3.5" />
+                            Catalogue
+                        </Link>
                     </div>
                 </div>
 

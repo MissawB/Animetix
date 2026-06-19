@@ -17,7 +17,7 @@ import {
   X, Home, Zap, Trophy, Settings, Sun, Moon, Monitor, 
   CheckCircle2, Shield, Sparkles, Gamepad2, Search, Compass, 
   Network, Film, Users, UserPlus, FlaskConical, BrainCircuit, Eye, LogIn, Microscope, Mic,
-  Database, MessageSquare, Share2
+  Database, MessageSquare, Share2, ShoppingBag
 } from 'lucide-react';
 
 const Footer: React.FC = () => {
@@ -171,6 +171,9 @@ const LayoutContent: React.FC<{ children: ReactNode }> = ({ children }) => {
           </Link>
           <Link to="/explore/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/explore/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
             <Compass className="w-4 h-4 text-emerald-400" /> {t('nav.explore', 'Explorer')}
+          </Link>
+          <Link to="/explore/shop/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/explore/shop/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
+            <ShoppingBag className="w-4 h-4 text-emerald-400" /> {t('nav.shop', "Boutique d'Actifs")}
           </Link>
           <Link to="/lab/latent-space/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/lab/latent-space/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
             <Network className="w-4 h-4 text-indigo-400" /> {t('navbar.latent', 'Espace Latent')}

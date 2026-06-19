@@ -14,6 +14,7 @@ from .models import (
     MangaChapter,
     MangaPage,
     Profile,
+    MarketListing,
 )
 
 
@@ -183,6 +184,26 @@ class CreativeFusionSerializer(serializers.ModelSerializer):
         if user and user.is_authenticated:
             return obj.likes.filter(id=user.id).exists()
         return False
+
+
+class MarketListingSerializer(serializers.ModelSerializer):
+    fusion_detail = CreativeFusionSerializer(source="fusion", read_only=True)
+    seller_name = serializers.ReadOnlyField(source="seller.username")
+
+    class Meta:
+        model = MarketListing
+        fields = [
+            "id",
+            "fusion",
+            "fusion_detail",
+            "seller",
+            "seller_name",
+            "price",
+            "is_active",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["seller", "is_active", "created_at", "updated_at"]
 
 
 from .models import VsBattle  # noqa: E402

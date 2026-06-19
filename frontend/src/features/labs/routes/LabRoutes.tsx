@@ -31,6 +31,7 @@ const DeveloperPortalPage = lazy(() => import('../../../pages/dev/DeveloperPorta
 const MonitoringConsolePage = lazy(() => import('../../../pages/dev/MonitoringConsolePage'));
 const ApiHubPage = lazy(() => import('../../../pages/dev/ApiHubPage'));
 const MultiverseStudioPage = lazy(() => import('../../../pages/labs/MultiverseStudioPage'));
+const MultiverseCatalogPage = lazy(() => import('../../../pages/labs/MultiverseCatalogPage'));
 const SeiyuuDiscoveryPage = lazy(() => import('../../../pages/labs/SeiyuuDiscoveryPage'));
 const ObservabilityConsolePage = lazy(() => import('../../../pages/dev/ObservabilityConsolePage'));
 const MLOpsConsolePage = lazy(() => import('../../../pages/dev/MLOpsConsolePage'));
@@ -60,7 +61,8 @@ export const LabRoutes = () => (
     <Route path="/lab/tot/" element={<TreeOfThoughtsPage />} />
     <Route path="/lab/multiverse/" element={<MultiverseStudioPage />} />
     <Route path="/lab/multiverse-generator/" element={<Navigate to="/lab/multiverse/" replace />} />
-    <Route path="/lab/multiverse-gallery/" element={<Navigate to="/lab/multiverse/" replace />} />
+    <Route path="/lab/multiverse-gallery/" element={<Navigate to="/multiverse/catalog/" replace />} />
+    <Route path="/multiverse/catalog/" element={<MultiverseCatalogPage />} />
 
     <Route path="/lab/cognition-hub/" element={<CognitionHubPage />} />
     <Route path="/lab/voice/" element={<VoiceLabPage />} />

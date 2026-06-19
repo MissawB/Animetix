@@ -30,6 +30,31 @@ urlpatterns = [
         name="api-fusions",
     ),
     path(
+        "market/listings/",
+        api_views.MarketListingViewSet.as_view({"get": "list", "post": "create"}),
+        name="api-market-listings",
+    ),
+    path(
+        "market/listings/<int:pk>/",
+        api_views.MarketListingViewSet.as_view(
+            {
+                "get": "retrieve",
+                "delete": "destroy",
+            }
+        ),
+        name="api-market-listing-detail",
+    ),
+    path(
+        "market/listings/<int:pk>/buy/",
+        api_views.MarketListingViewSet.as_view({"post": "buy"}),
+        name="api-market-listing-buy",
+    ),
+    path(
+        "market/listings/<int:pk>/cancel/",
+        api_views.MarketListingViewSet.as_view({"post": "cancel"}),
+        name="api-market-listing-cancel",
+    ),
+    path(
         "clubs/",
         api_views.ClubViewSet.as_view({"get": "list", "post": "create"}),
         name="api-clubs",
@@ -599,6 +624,11 @@ urlpatterns = [
         "multiverse/gallery/",
         api_views.MultiverseGalleryView.as_view(),
         name="api_multiverse_gallery",
+    ),
+    path(
+        "multiverse/catalog/",
+        api_views.MultiverseCatalogView.as_view(),
+        name="api_multiverse_catalog",
     ),
     path("billing/webhook/", billing_alert_webhook, name="api_billing_webhook"),
     path(

@@ -1,5 +1,5 @@
 from animetix import api_views
-from animetix.api.monitoring import PipelineControlView
+from animetix.api.monitoring import ClusterHealthView, PipelineControlView
 from animetix.api.observability import ObservabilityView  # noqa: E402
 from animetix.tasks_views import (
     eventarc_gcs_upload_view,  # noqa: E402
@@ -97,6 +97,11 @@ urlpatterns = [
         "api/monitoring/<str:action>/",
         PipelineControlView.as_view(),
         name="pipeline-control",
+    ),
+    path(
+        "api/monitoring/cluster-health/",
+        ClusterHealthView.as_view(),
+        name="cluster-health",
     ),
     path("api/tasks/run/", run_task_view, name="run_task_view"),
     path("api/tasks/poll-workflow/", poll_workflow_view, name="poll-workflow"),

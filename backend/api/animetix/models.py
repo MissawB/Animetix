@@ -443,6 +443,8 @@ class WalletTransaction(models.Model):
         ("ai_usage", "AI Consumption"),
         ("daily_grant", "Daily Grant"),
         ("welcome_bonus", "Welcome Bonus"),
+        ("market_sale", "Market Sale"),
+        ("market_purchase", "Market Purchase"),
     ]
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="wallet_transactions"
@@ -521,6 +523,25 @@ class CreativeFusion(models.Model):
 
     def __str__(self):
         return f"{self.title_a} x {self.title_b} by {self.creator}"
+
+
+class MarketListing(models.Model):
+    fusion = models.ForeignKey(
+        CreativeFusion, on_delete=models.CASCADE, related_name="listings"
+    )
+    seller = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="listings"
+    )
+    price = models.IntegerField()
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Listing: {self.fusion} for {self.price} by {self.seller.username}"
 
 
 class VsBattle(models.Model):
