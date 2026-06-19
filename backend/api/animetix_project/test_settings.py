@@ -30,3 +30,5 @@ REST_FRAMEWORK = {
 }
 
 EVENTARC_RECEIVER_URL = "http://localhost:8000/api/events/gcs-upload/"
+
+RATELIMIT_ENABLE = False
