@@ -4,11 +4,11 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-# Setup paths to ensure imports work correctly
-# We use absolute paths based on the environment context
-BASE_DIR = r"C:\Users\bahma\PycharmProjects\Projet solo\Double_scenario_Project"
+# Setup paths to ensure imports work correctly (resolve the repo root from this
+# file so it works on any machine / CI, not a hard-coded local path).
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SRC_PATH = os.path.join(BASE_DIR, "src")
-BACKEND_PATH = os.path.join(BASE_DIR, "src", "backend")
+BACKEND_PATH = os.path.join(BASE_DIR, "backend")
 SCRIPTS_PATH = os.path.join(BASE_DIR, "scripts")
 
 if SRC_PATH not in sys.path:
