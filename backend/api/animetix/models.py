@@ -94,9 +94,6 @@ class Profile(models.Model):
     ranked_max_points = models.IntegerField(default=0)
     unlocked_badges = models.JSONField(default=list)
     custom_username_color = models.CharField(max_length=20, null=True, blank=True)
-    collected_fusions = models.ManyToManyField(
-        "CreativeFusion", related_name="collected_by_profiles", blank=True
-    )
     tier = models.CharField(max_length=20, choices=TIERS, default="free")
     wallet_balance = models.IntegerField(default=1000)
     api_key_hash = models.CharField(max_length=255, unique=True, null=True, blank=True)
@@ -443,8 +440,6 @@ class WalletTransaction(models.Model):
         ("ai_usage", "AI Consumption"),
         ("daily_grant", "Daily Grant"),
         ("welcome_bonus", "Welcome Bonus"),
-        ("market_sale", "Market Sale"),
-        ("market_purchase", "Market Purchase"),
     ]
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="wallet_transactions"
@@ -525,21 +520,7 @@ class CreativeFusion(models.Model):
         return f"{self.title_a} x {self.title_b} by {self.creator}"
 
 
-class MarketListing(models.Model):
-    fusion = models.ForeignKey(
-        CreativeFusion, on_delete=models.CASCADE, related_name="listings"
-    )
-    seller = models.ForeignKey(User, on_delete=models.CASCADE, related_name="listings")
-    price = models.IntegerField()
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ["-created_at"]
-
-    def __str__(self):
-        return f"Listing: {self.fusion} for {self.price} by {self.seller.username}"
+# MarketListing model has been removed
 
 
 class VsBattle(models.Model):

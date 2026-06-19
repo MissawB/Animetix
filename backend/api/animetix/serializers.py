@@ -13,7 +13,6 @@ from .models import (
     GlobalBoss,
     MangaChapter,
     MangaPage,
-    MarketListing,
     Profile,
 )
 
@@ -186,24 +185,7 @@ class CreativeFusionSerializer(serializers.ModelSerializer):
         return False
 
 
-class MarketListingSerializer(serializers.ModelSerializer):
-    fusion_detail = CreativeFusionSerializer(source="fusion", read_only=True)
-    seller_name = serializers.ReadOnlyField(source="seller.username")
-
-    class Meta:
-        model = MarketListing
-        fields = [
-            "id",
-            "fusion",
-            "fusion_detail",
-            "seller",
-            "seller_name",
-            "price",
-            "is_active",
-            "created_at",
-            "updated_at",
-        ]
-        read_only_fields = ["seller", "is_active", "created_at", "updated_at"]
+# MarketListingSerializer has been removed
 
 
 from .models import VsBattle  # noqa: E402

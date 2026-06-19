@@ -29,31 +29,7 @@ urlpatterns = [
         api_views.CreativeFusionViewSet.as_view({"get": "list", "post": "create"}),
         name="api-fusions",
     ),
-    path(
-        "market/listings/",
-        api_views.MarketListingViewSet.as_view({"get": "list", "post": "create"}),
-        name="api-market-listings",
-    ),
-    path(
-        "market/listings/<int:pk>/",
-        api_views.MarketListingViewSet.as_view(
-            {
-                "get": "retrieve",
-                "delete": "destroy",
-            }
-        ),
-        name="api-market-listing-detail",
-    ),
-    path(
-        "market/listings/<int:pk>/buy/",
-        api_views.MarketListingViewSet.as_view({"post": "buy"}),
-        name="api-market-listing-buy",
-    ),
-    path(
-        "market/listings/<int:pk>/cancel/",
-        api_views.MarketListingViewSet.as_view({"post": "cancel"}),
-        name="api-market-listing-cancel",
-    ),
+
     path(
         "clubs/",
         api_views.ClubViewSet.as_view({"get": "list", "post": "create"}),

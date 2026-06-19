@@ -7,12 +7,10 @@ from rest_framework.decorators import action
 
 from ..containers import Container
 from ..models import (
-    MarketListing,
     MediaItem,
     UserRecommendation,
     WalletTransaction,
 )
-from ..serializers import MarketListingSerializer
 
 logger = get_logger("animetix.explore")
 
@@ -184,120 +182,4 @@ class MarketWikiView(views.APIView):
             return response.Response({"error": str(e)}, status=500)
 
 
-class MarketListingViewSet(viewsets.ModelViewSet):
-    queryset = MarketListing.objects.filter(is_active=True)
-    serializer_class = MarketListingSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        user_filter = self.request.query_params.get("user_filter", "active")
-        if user_filter == "mine":
-            qs = MarketListing.objects.filter(seller=self.request.user)
-        elif user_filter == "purchases":
-            qs = MarketListing.objects.filter(
-                fusion__creator=self.request.user, is_active=False
-            ).exclude(seller=self.request.user)
-        else:
-            qs = MarketListing.objects.filter(is_active=True)
-
-        search = self.request.query_params.get("search", "").strip()
-        if search:
-            qs = qs.filter(
-                Q(fusion__title_a__icontains=search)
-                | Q(fusion__title_b__icontains=search)
-                | Q(fusion__art_style__icontains=search)
-            )
-
-        sort_by = self.request.query_params.get("sort", "newest")
-        if sort_by == "price_asc":
-            qs = qs.order_by("price")
-        elif sort_by == "price_desc":
-            qs = qs.order_by("-price")
-        else:
-            qs = qs.order_by("-created_at")
-        return qs
-
-    def perform_create(self, serializer):
-        fusion = serializer.validated_data["fusion"]
-        if fusion.creator != self.request.user:
-            raise serializers.ValidationError(
-                "Vous n'êtes pas le créateur de cet actif."
-            )
-
-        if MarketListing.objects.filter(fusion=fusion, is_active=True).exists():
-            raise serializers.ValidationError("Cet actif est déjà en vente.")
-
-        serializer.save(seller=self.request.user, is_active=True)
-
-    @action(detail=True, methods=["post"])
-    def buy(self, request, pk=None):
-        listing = self.get_object()
-        buyer = request.user
-        seller = listing.seller
-
-        if buyer == seller:
-            return response.Response(
-                {"error": "Vous ne pouvez pas acheter votre propre actif."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        price = listing.price
-        buyer_profile = buyer.profile
-        seller_profile = seller.profile
-
-        if buyer_profile.wallet_balance < price:
-            return response.Response(
-                {"error": "Solde Berrix insuffisant."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        with transaction.atomic():
-            # Update balances
-            buyer_profile.wallet_balance -= price
-            buyer_profile.save()
-
-            seller_profile.wallet_balance += price
-            seller_profile.save()
-
-            # Transfer ownership
-            fusion = listing.fusion
-            fusion.creator = buyer
-            fusion.save()
-
-            # Update ManyToMany collected_fusions
-            buyer_profile.collected_fusions.add(fusion)
-            seller_profile.collected_fusions.remove(fusion)
-
-            # Record transactions
-            WalletTransaction.objects.create(
-                user=buyer,
-                amount=-price,
-                transaction_type="market_purchase",
-                description=f"Achat de la Fusion #{fusion.id} ({fusion.title_a} x {fusion.title_b})",
-            )
-            WalletTransaction.objects.create(
-                user=seller,
-                amount=price,
-                transaction_type="market_sale",
-                description=f"Vente de la Fusion #{fusion.id} ({fusion.title_a} x {fusion.title_b})",
-            )
-
-            # Mark listing inactive
-            listing.is_active = False
-            listing.save()
-
-        return response.Response(
-            {"status": "success", "message": "Achat effectué avec succès."}
-        )
-
-    @action(detail=True, methods=["post"])
-    def cancel(self, request, pk=None):
-        listing = self.get_object()
-        if listing.seller != request.user:
-            return response.Response(
-                {"error": "Vous n'êtes pas le vendeur de cet actif."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-        listing.is_active = False
-        listing.save()
-        return response.Response({"status": "success", "message": "Vente annulée."})
+# MarketListingViewSet has been removed
