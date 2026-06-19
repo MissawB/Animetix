@@ -100,9 +100,14 @@ jobs:
         NEO4J_URI: bolt://localhost:7687
         NEO4J_USER: neo4j
         NEO4J_PASSWORD: password
+        # Dummy key forces GoogleGenAIAdapter onto the Developer-API path instead
+        # of Vertex AI, whose client init otherwise blocks on the GCP metadata
+        # server (unreachable on CI) and makes the suite take 40+ minutes.
+        GEMINI_API_KEY: ci-dummy-key
       # Exclude integration tests that need services absent from this job
       # (live LLM/ollama, a running app server, subprocess-based commands).
-      run: python -m pytest -m "not integration" --cov=backend --cov-report=term-missing --cov-report=xml
+      # --durations surfaces the slowest tests so we can keep an eye on runtime.
+      run: python -m pytest -m "not integration" --durations=25 --cov=backend --cov-report=term-missing --cov-report=xml
 
   perf-test:
     name: RAG Performance Test
