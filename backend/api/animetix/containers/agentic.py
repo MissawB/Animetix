@@ -175,7 +175,6 @@ class AgenticContainer(containers.DeclarativeContainer):
                 community_partitioner=community_partitioner,
                 graph_expert=graph_expert,
                 neo4j_manager=persistence.graph_persistence_port,
-                xai_collector=None,
             ),
             RAGState.RESEARCH: providers.Singleton(
                 LazyClass(
@@ -190,7 +189,6 @@ class AgenticContainer(containers.DeclarativeContainer):
                 video_rag_service=video_rag_service,
                 scout=scout,
                 neo4j_manager=persistence.graph_persistence_port,
-                xai_collector=None,
             ),
             RAGState.ACQUIRE_KNOWLEDGE: providers.Singleton(
                 LazyClass(
@@ -198,7 +196,6 @@ class AgenticContainer(containers.DeclarativeContainer):
                     "AcquireKnowledgeProcessor",
                 ),
                 librarian=librarian,
-                xai_collector=None,
             ),
             RAGState.SPECULATE: providers.Singleton(
                 LazyClass(
@@ -206,7 +203,6 @@ class AgenticContainer(containers.DeclarativeContainer):
                     "SpeculateProcessor",
                 ),
                 forge=forge,
-                xai_collector=None,
             ),
             RAGState.VLM_RERANK: providers.Singleton(
                 LazyClass(
@@ -215,7 +211,6 @@ class AgenticContainer(containers.DeclarativeContainer):
                 ),
                 inference_engine=inference.inference_engine,
                 prompt_manager=infrastructure.prompt_manager,
-                xai_collector=None,
             ),
             RAGState.SYNTHESIZE: providers.Singleton(
                 LazyClass(
@@ -224,7 +219,6 @@ class AgenticContainer(containers.DeclarativeContainer):
                 ),
                 synthesizer=synthesizer,
                 xai_service=xai_service,
-                rag_service=rag_service,
             ),
             RAGState.JUDGE: providers.Singleton(
                 LazyClass(
@@ -232,7 +226,6 @@ class AgenticContainer(containers.DeclarativeContainer):
                     "JudgeProcessor",
                 ),
                 debate_manager=debate_manager,
-                xai_collector=None,
             ),
             RAGState.FALLBACK_RAG: providers.Singleton(
                 LazyClass(

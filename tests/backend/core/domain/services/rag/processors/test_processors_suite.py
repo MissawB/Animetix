@@ -192,7 +192,7 @@ def test_synthesize_processor_success():
     mock_xai = MagicMock()
     mock_xai.measure_confidence.return_value = {"confidence_score": 0.9}
 
-    processor = SynthesizeProcessor(mock_synth, mock_xai, MagicMock())
+    processor = SynthesizeProcessor(mock_synth, mock_xai)
     ctx = MagicMock(spec=RAGContext)
     ctx.query = "query"
     ctx.truth_path = "truth"
@@ -201,6 +201,7 @@ def test_synthesize_processor_success():
     ctx.correction_feedback = None
     ctx.knowledge_acquired = False
     ctx.language = "Français"
+    ctx.use_slm = False
 
     next_state, steps = consume_generator(processor.process(ctx))
 

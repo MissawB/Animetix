@@ -1,42 +1,43 @@
 import sys
+from importlib.machinery import ModuleSpec
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-# Mock missing modules for environment independence
+# Mock heavy/optional modules for environment independence.
 mock_diffusers = MagicMock()
 mock_pil = MagicMock()
+mock_diffusers.__spec__ = ModuleSpec("diffusers", loader=None)
+mock_pil.__spec__ = ModuleSpec("PIL", loader=None)
 
-# Save original modules to prevent test pollution
-_orig_pil = sys.modules.get("PIL")
-_orig_diffusers = sys.modules.get("diffusers")
+# NOTE: the adapter and its mixin import diffusers/PIL lazily, so we install the
+# mocks ONLY for the duration of each test via patch.dict (see below). Installing
+# them at module import time would leak into sys.modules during pytest's
+# collection phase and break other test modules that need the real PIL/diffusers.
+from adapters.inference.diffusers_adapter import DiffusersAdapter  # noqa: E402
 
-sys.modules["diffusers"] = mock_diffusers
-sys.modules["PIL"] = mock_pil
+
+@pytest.fixture(autouse=True)
+def _mock_heavy_modules():
+    # Install the mocks for the duration of the test only, touching just these
+    # two keys so we don't disturb modules (e.g. torch) imported during the test.
+    saved = {name: sys.modules.get(name) for name in ("diffusers", "PIL")}
+    sys.modules["diffusers"] = mock_diffusers
+    sys.modules["PIL"] = mock_pil
+    try:
+        yield
+    finally:
+        for name, original in saved.items():
+            if original is None:
+                sys.modules.pop(name, None)
+            else:
+                sys.modules[name] = original
 
 
 @pytest.fixture(autouse=True)
 def mock_cuda_available():
     with patch("torch.cuda.is_available", return_value=True):
         yield
-
-
-from adapters.inference.diffusers_adapter import DiffusersAdapter  # noqa: E402
-
-
-@pytest.fixture(scope="module", autouse=True)
-def cleanup_sys_modules():
-    yield
-    # Restore original modules after this module's tests complete
-    if _orig_pil is not None:
-        sys.modules["PIL"] = _orig_pil
-    elif "PIL" in sys.modules:
-        del sys.modules["PIL"]
-
-    if _orig_diffusers is not None:
-        sys.modules["diffusers"] = _orig_diffusers
-    elif "diffusers" in sys.modules:
-        del sys.modules["diffusers"]
 
 
 @pytest.fixture

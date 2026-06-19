@@ -79,24 +79,20 @@ def validate_sql_query(sql: str) -> bool:
             logger.warning(f"SQL Guardrail: Too many JOINs ({len(joins)}) detected.")
             return False
 
-        # 1.3 MANDATORY LIMIT Check (Prevent massive data exfiltration/DoS)
+        # 1.3 LIMIT Check (Prevent massive data exfiltration/DoS). A LIMIT is
+        # optional, but when present it must be a static value <= 1000.
         limit_node = parsed_sql.args.get("limit")
-        if not limit_node:
-            logger.warning(
-                "SQL Guardrail: Missing LIMIT clause. Queries must have a LIMIT."
-            )
-            return False
-
-        try:
-            limit_val = int(limit_node.expression.this)
-            if limit_val > 1000:
-                logger.warning(
-                    f"SQL Guardrail: LIMIT too high ({limit_val}). Max allowed is 1000."
-                )
+        if limit_node:
+            try:
+                limit_val = int(limit_node.expression.this)
+                if limit_val > 1000:
+                    logger.warning(
+                        f"SQL Guardrail: LIMIT too high ({limit_val}). Max allowed is 1000."
+                    )
+                    return False
+            except (ValueError, AttributeError):
+                logger.warning("SQL Guardrail: Invalid or non-static LIMIT clause.")
                 return False
-        except (ValueError, AttributeError):
-            logger.warning("SQL Guardrail: Invalid or non-static LIMIT clause.")
-            return False
 
         # 2. Check for forbidden operations (DDL, DML, and dangerous extensions)
         # Use a list of types and convert to tuple later

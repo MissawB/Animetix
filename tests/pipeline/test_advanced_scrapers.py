@@ -14,7 +14,7 @@ def mock_django_media_item():
 
 
 @patch("src.pipeline.advanced_scrapers.gemini_client")
-@patch("pipeline.advanced_scrapers.httpx.get")
+@patch("pipeline.advanced_scrapers.safe_http_request")
 def test_scraper_d_arcs(mock_get, mock_gemini):
     from pipeline.advanced_scrapers import ScraperD_Arcs  # noqa: E402
 
@@ -46,7 +46,7 @@ def test_scraper_d_arcs(mock_get, mock_gemini):
     assert len(data["fillers"]) == 0
 
 
-@patch("pipeline.advanced_scrapers.httpx.post")
+@patch("pipeline.advanced_scrapers.safe_http_request")
 def test_scraper_e_igdb(mock_post):
     from pipeline.advanced_scrapers import ScraperE_IGDB  # noqa: E402
 
@@ -67,8 +67,9 @@ def test_scraper_e_igdb(mock_post):
         }
     ]
 
-    # Set mock post behavior based on URL
-    def side_effect(url, *args, **kwargs):
+    # Set mock behavior based on URL. safe_http_request is called as
+    # safe_http_request("POST", url, ...), so the URL is the second arg.
+    def side_effect(method, url, *args, **kwargs):
         if "oauth2" in url:
             return mock_oauth_res
         elif "games" in url:

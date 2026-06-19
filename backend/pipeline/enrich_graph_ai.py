@@ -20,9 +20,8 @@ from core.utils.security import safe_http_request  # noqa: E402
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "animetix_project.settings")
 django.setup()
 
+from animetix.containers import get_container  # noqa: E402
 from pipeline.neo4j_client import neo4j_manager  # noqa: E402
-
-from backend.animetix.containers import get_container  # noqa: E402
 
 # Configuration
 logging.basicConfig(level=logging.INFO)

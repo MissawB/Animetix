@@ -33,7 +33,7 @@ def test_scraper_g_streaming(mock_gemini):
     assert data[0]["has_vf"] is True
 
 
-@patch("pipeline.expert_scrapers.httpx.get")
+@patch("pipeline.expert_scrapers.safe_http_request")
 def test_scraper_h_recs(mock_get):
     from pipeline.expert_scrapers import ScraperH_Recs  # noqa: E402
 

@@ -10,7 +10,7 @@ from core.domain.exceptions import InferenceError
 
 class FakeBrainAPIAdapter(BrainAPIAdapter):
     def __init__(self):
-        super().__init__(brain_api_url="http://fake-api")
+        super().__init__(api_url="http://fake-api")
 
     def generate_image(self, prompt: str, style: str = "") -> str:
         return "data:image/jpeg;base64,cloud_image"

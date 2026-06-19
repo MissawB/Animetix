@@ -27,7 +27,7 @@ def test_solve_riddle_with_star_success(
     # Use a temporary file path for testing
     trace_file = tmp_path / "star_traces.jsonl"
     service = StarReasonerService(
-        inference_engine=mock_engine,
+        llm_service=mock_engine,
         prompt_manager=mock_prompt_manager,
         gold_dataset_port=mock_gold_dataset_port,
     )
@@ -48,7 +48,7 @@ def test_solve_riddle_with_star_partial_success(
 ):
     trace_file = tmp_path / "star_traces_partial.jsonl"
     service = StarReasonerService(
-        inference_engine=mock_engine,
+        llm_service=mock_engine,
         prompt_manager=mock_prompt_manager,
         gold_dataset_port=mock_gold_dataset_port,
     )
@@ -73,7 +73,7 @@ def test_solve_riddle_with_star_no_tag(
     mock_engine, mock_prompt_manager, mock_gold_dataset_port, tmp_path
 ):
     service = StarReasonerService(
-        inference_engine=mock_engine,
+        llm_service=mock_engine,
         prompt_manager=mock_prompt_manager,
         gold_dataset_port=mock_gold_dataset_port,
     )
@@ -91,7 +91,7 @@ def test_solve_riddle_with_star_engine_error(
     mock_engine, mock_prompt_manager, mock_gold_dataset_port, tmp_path
 ):
     service = StarReasonerService(
-        inference_engine=mock_engine,
+        llm_service=mock_engine,
         prompt_manager=mock_prompt_manager,
         gold_dataset_port=mock_gold_dataset_port,
     )

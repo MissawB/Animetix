@@ -33,7 +33,7 @@ from unittest.mock import patch  # noqa: E402
 from animetix.tasks import generate_fusion_scenario_task  # noqa: E402
 
 
-@patch("src.backend.animetix.tasks.get_container")
+@patch("animetix.tasks.get_container")
 def test_generate_fusion_scenario_with_params(mock_get_container):
     mock_service = mock_get_container.return_value.llm_service
     mock_service.generate_fusion_scenario.return_value = "Test Scenario"

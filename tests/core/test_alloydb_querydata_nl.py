@@ -232,7 +232,7 @@ def test_pgvector_adapter_query_data_nl_returns_empty():
 def test_unified_adapter_delegates_to_django(mock_query_nl):
     mock_query_nl.return_value = [{"title": "Frieren"}]
 
-    adapter = UnifiedRepositoryAdapter(chroma_db_path=".", project_root=".")
+    adapter = UnifiedRepositoryAdapter(project_root=".")
     results = adapter.query_data_natural_language("test query", llm_service=MagicMock())
 
     assert results == [{"title": "Frieren"}]

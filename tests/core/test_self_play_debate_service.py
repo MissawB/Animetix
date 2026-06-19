@@ -20,9 +20,8 @@ def mock_prompt_manager():
 
 def test_run_debate_full_flow(mock_engine, mock_prompt_manager, tmp_path):
     debate_file = tmp_path / "debates.jsonl"
-    service = SelfPlayDebateService(
-        inference_engine=mock_engine, prompt_manager=mock_prompt_manager
-    )
+    mock_engine.prompt_manager = mock_prompt_manager
+    service = SelfPlayDebateService(llm_service=mock_engine)
     service.dataset_path = str(debate_file)
 
     mock_engine.generate.side_effect = [
@@ -47,9 +46,8 @@ def test_run_debate_full_flow(mock_engine, mock_prompt_manager, tmp_path):
 
 
 def test_run_debate_with_engine_failure(mock_engine, mock_prompt_manager, tmp_path):
-    service = SelfPlayDebateService(
-        inference_engine=mock_engine, prompt_manager=mock_prompt_manager
-    )
+    mock_engine.prompt_manager = mock_prompt_manager
+    service = SelfPlayDebateService(llm_service=mock_engine)
     # Simulate first call working, second failing
     mock_engine.generate.side_effect = [
         "Pro argument",
