@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './Layout';
 import { GameRoutes } from '../features/games/routes/GameRoutes';
@@ -16,6 +16,8 @@ import { ExploreRoutes } from '../features/explore/routes/ExploreRoutes';
 import { SupportRoutes } from '../features/support/routes/SupportRoutes';
 import { ResearchRoutes } from '../features/research/routes/ResearchRoutes';
 import App from '../App';
+
+const NotFoundPage = lazy(() => import('../pages/utils/NotFoundPage'));
 
 const Loading: React.FC = () => <div className="p-20 text-center text-white font-black animate-pulse uppercase tracking-[0.3em]">Initialisation du système...</div>;
 
@@ -64,7 +66,7 @@ const AppRouter: React.FC = () => {
             {ExploreRoutes()}
             {SupportRoutes()}
             {ResearchRoutes()}
-            {/* Catch-all is removed for debugging if it causes loops */}
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
       </Layout>

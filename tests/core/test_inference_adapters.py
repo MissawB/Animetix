@@ -13,8 +13,10 @@ def test_qwen3_vl_not_implemented():
     assert adapter.calculate_visual_similarity("test", "1", "image") == 0.5
 
 
-def test_brain_api_not_implemented():
-    # BrainAPIAdapter return default list when no api_url is provided
+def test_brain_api_not_implemented(monkeypatch):
+    # BrainAPIAdapter returns a default list when no api_url is configured.
+    # Clear the env fallback so the test is independent of the local environment.
+    monkeypatch.delenv("BRAIN_API_URL", raising=False)
     adapter = BrainAPIAdapter(api_url="", api_key="")
     result = adapter.get_image_embedding(b"")
     assert result == []
