@@ -151,9 +151,48 @@ class WalletBalanceView(APIView):
 
     def get(self, request):
         user = request.user
-        transactions = WalletTransaction.objects.filter(user=user).order_by(
-            "-created_at"
-        )[:10]
+
+        page_num = request.query_params.get("page", "1")
+        page_size_num = request.query_params.get("page_size", "10")
+        tx_type = request.query_params.get("type", "all")
+        direction = request.query_params.get("direction", "all")
+
+        try:
+            page = int(page_num)
+            if page < 1:
+                page = 1
+        except ValueError:
+            page = 1
+
+        try:
+            page_size = int(page_size_num)
+            if page_size < 1:
+                page_size = 10
+        except ValueError:
+            page_size = 10
+
+        queryset = WalletTransaction.objects.filter(user=user)
+
+        if tx_type != "all" and tx_type:
+            queryset = queryset.filter(transaction_type=tx_type)
+
+        if direction == "credit":
+            queryset = queryset.filter(amount__gt=0)
+        elif direction == "debit":
+            queryset = queryset.filter(amount__lt=0)
+
+        queryset = queryset.order_by("-created_at")
+
+        from django.core.paginator import Paginator
+
+        paginator = Paginator(queryset, page_size)
+
+        try:
+            tx_page = paginator.page(page)
+        except Exception:
+            tx_page = (
+                paginator.page(paginator.num_pages) if paginator.num_pages > 0 else []
+            )
 
         history = [
             {
@@ -162,7 +201,26 @@ class WalletBalanceView(APIView):
                 "description": t.description,
                 "date": t.created_at,
             }
-            for t in transactions
+            for t in tx_page
         ]
 
-        return Response({"balance": user.profile.wallet_balance, "history": history})
+        return Response(
+            {
+                "balance": user.profile.wallet_balance,
+                "history": history,
+                "pagination": {
+                    "page": page,
+                    "page_size": page_size,
+                    "total_count": paginator.count,
+                    "total_pages": paginator.num_pages,
+                    "has_next": (
+                        tx_page.has_next() if hasattr(tx_page, "has_next") else False
+                    ),
+                    "has_prev": (
+                        tx_page.has_previous()
+                        if hasattr(tx_page, "has_previous")
+                        else False
+                    ),
+                },
+            }
+        )
