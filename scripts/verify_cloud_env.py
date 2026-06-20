@@ -21,6 +21,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import shutil
 import subprocess  # nosec B404 - only fixed, read-only gcloud commands
 import sys
 from pathlib import Path
@@ -80,9 +81,15 @@ def scan_vars(scan_all: bool) -> dict[str, bool]:
 
 
 def _gcloud(args: list[str]) -> str | None:
+    # On Windows gcloud ships as gcloud.cmd (a batch script); subprocess with a
+    # list won't resolve a bare "gcloud" via PATHEXT, so locate it explicitly.
+    exe = shutil.which("gcloud")
+    if exe is None:
+        print("⚠️  gcloud not found on PATH — skipping cloud checks.", file=sys.stderr)
+        return None
     try:
         return subprocess.check_output(  # nosec B603 - fixed args, read-only
-            ["gcloud", *args], text=True, stderr=subprocess.STDOUT
+            [exe, *args], text=True, stderr=subprocess.STDOUT
         )
     except FileNotFoundError:
         print("⚠️  gcloud not found on PATH — skipping cloud checks.", file=sys.stderr)
@@ -137,7 +144,7 @@ def secret_manager(project: str) -> set[str]:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--service", default="web", help="Cloud Run service name")
+    ap.add_argument("--service", default="animetix-web", help="Cloud Run service name")
     ap.add_argument("--region", default="europe-west9")
     ap.add_argument("--project", default="animetix")
     ap.add_argument(
