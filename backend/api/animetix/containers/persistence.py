@@ -61,6 +61,10 @@ class PersistenceContainer(containers.DeclarativeContainer):
         LazyClass("adapters.persistence.fandom_adapter", "FandomAdapter")
     )
 
+    suwayomi_adapter = providers.Singleton(
+        LazyClass("adapters.persistence.suwayomi_adapter", "SuwayomiAdapter")
+    )
+
     safety_adapter = providers.Singleton(
         LazyClass("adapters.persistence.django_safety_adapter", "DjangoSafetyAdapter")
     )
