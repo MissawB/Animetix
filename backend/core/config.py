@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     # AI/ML
     BRAIN_API_URL: Optional[str] = None
 
+    # Tachidesk/Suwayomi
+    SUWAYOMI_URL: str = "http://127.0.0.1:4567"
+    SUWAYOMI_PASSWORD: Optional[str] = None
+
     model_config = SettingsConfigDict(env_file=".env")
 
 
