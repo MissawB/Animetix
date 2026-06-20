@@ -34,6 +34,11 @@ describe('useChapterPages', () => {
     const { result } = renderHook(() => useChapterPages('m1', '3'));
     await waitFor(() => expect(result.current.source).toBe('network'));
     expect(result.current.pages[0]).toEqual({ url: 'http://h/p0.jpg', index: 0 });
+    // The hook owns error presentation, so it must suppress apiClient's global toast.
+    expect(apiMod.apiClient).toHaveBeenCalledWith(
+      '/api/v1/media/Manga/m1/chapters/3/',
+      { skipToast: true },
+    );
   });
 
   it('reports unavailable when offline and not downloaded', async () => {

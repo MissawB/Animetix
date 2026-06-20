@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { apiClient } from '../../../utils/apiClient';
 import { isChapterDownloaded, getChapterPageBlobs } from './offlineLibrary';
 
@@ -11,17 +11,15 @@ interface ReaderPage {
 export function useChapterPages(mediaId: string, chapterNumber: string) {
   const [pages, setPages] = useState<ReaderPage[]>([]);
   const [source, setSource] = useState<PageSource>('loading');
-  const objectUrls = useRef<string[]>([]);
 
   useEffect(() => {
     let active = true;
     setSource('loading');
     setPages([]);
 
-    const revoke = () => {
-      objectUrls.current.forEach((u) => URL.revokeObjectURL(u));
-      objectUrls.current = [];
-    };
+    // Object URLs created by THIS effect run only, so a Strict-Mode double-invoke
+    // (or rapid chapter change) never revokes URLs a later run still uses.
+    const created: string[] = [];
 
     (async () => {
       const num = Number(chapterNumber);
@@ -30,7 +28,7 @@ export function useChapterPages(mediaId: string, chapterNumber: string) {
         if (!active) return;
         const offlinePages = blobs.map((blob, index) => {
           const url = URL.createObjectURL(blob);
-          objectUrls.current.push(url);
+          created.push(url);
           return { url, index };
         });
         setPages(offlinePages);
@@ -39,7 +37,12 @@ export function useChapterPages(mediaId: string, chapterNumber: string) {
       }
 
       try {
-        const chapter = await apiClient(`/api/v1/media/Manga/${mediaId}/chapters/${chapterNumber}/`);
+        // skipToast: this hook owns error presentation (the "unavailable" state);
+        // letting apiClient pop a global error toast would contradict that UI.
+        const chapter = await apiClient(
+          `/api/v1/media/Manga/${mediaId}/chapters/${chapterNumber}/`,
+          { skipToast: true },
+        );
         if (!active) return;
         const networkPages: ReaderPage[] = (chapter?.pages ?? []).map(
           (p: { image_url: string; number: number }) => ({ url: p.image_url, index: p.number }),
@@ -54,7 +57,7 @@ export function useChapterPages(mediaId: string, chapterNumber: string) {
 
     return () => {
       active = false;
-      revoke();
+      created.forEach((u) => URL.revokeObjectURL(u));
     };
   }, [mediaId, chapterNumber]);
 
