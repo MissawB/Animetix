@@ -1,53 +1,67 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useAuthStore } from '../../../store/authStore';
 import { useToastStore } from '../../../store/toastStore';
 import { apiClient } from '../../../utils/apiClient';
+import { usePassiveMiningStore } from '../../../store/passiveMiningStore';
 
 export const PassiveAdMiner: React.FC = () => {
   const { user, refetchUser } = useAuthStore();
   const { addToast } = useToastStore();
-  const [mineCount, setMineCount] = useState(0);
+  const { 
+    isEnabled, 
+    setTimeLeft, 
+    setStatus, 
+    incrementTotalMined, 
+    setLastMinedAt 
+  } = usePassiveMiningStore();
+
+  const isMiningRef = useRef(false);
 
   useEffect(() => {
-    // Ne miner que si l'utilisateur est connecté
-    if (!user) return;
+    if (!user || !isEnabled) {
+      setStatus('OFFLINE');
+      return;
+    }
 
-    // Intervalle de 3 minutes (180000 ms)
-    const MINE_INTERVAL = 180000;
+    setStatus('ONLINE');
+    const interval = setInterval(async () => {
+      if (isMiningRef.current) return;
 
-    const mineBx = async () => {
-      try {
-        const response = await apiClient('/api/v1/billing/wallet/mine/', {
-          method: 'POST'
-        });
-        
-        if (response.status === 'success') {
-          // Silent refresh of the user to update the wallet balance
-          await refetchUser();
-          setMineCount(prev => prev + 1);
+      const currentState = usePassiveMiningStore.getState();
+      const currentTimeLeft = currentState.timeLeft;
+
+      if (currentTimeLeft <= 1) {
+        isMiningRef.current = true;
+        setStatus('ONLINE'); // Processing / Mining
+        try {
+          const response = await apiClient('/api/v1/billing/wallet/mine/', {
+            method: 'POST'
+          });
           
-          // Optionally notify the user every few cycles to remind them they are earning
-          if (mineCount > 0 && mineCount % 3 === 0) {
+          if (response.status === 'success') {
+            await refetchUser();
+            incrementTotalMined(response.earned);
+            setLastMinedAt(new Date().toISOString());
             addToast(`Minage passif : +${response.earned} Bx (Berrix) crédités !`, 'success');
+            setTimeLeft(180);
           }
+        } catch (error) {
+          console.error("Passive mining failed:", error);
+          setStatus('COOLDOWN');
+          setTimeLeft(60); // Check again in 60s
+        } finally {
+          isMiningRef.current = false;
         }
-      } catch (error) {
-        console.error("Passive mining failed:", error);
-        // Silently ignore cooldown errors to not spam the user
+      } else {
+        setTimeLeft(currentTimeLeft - 1);
       }
-    };
-
-    const intervalId = setInterval(mineBx, MINE_INTERVAL);
-
-    // Initial tick after 1 minute just to give them an early reward
-    const initialTimeout = setTimeout(mineBx, 60000);
+    }, 1000);
 
     return () => {
-      clearInterval(intervalId);
-      clearTimeout(initialTimeout);
+      clearInterval(interval);
     };
-  }, [user, mineCount, refetchUser, addToast]);
+  }, [user, isEnabled, setTimeLeft, setStatus, incrementTotalMined, setLastMinedAt, refetchUser, addToast]);
 
-  // Ce composant ne rend rien visuellement par défaut, il tourne en fond.
   return null;
 };
+
