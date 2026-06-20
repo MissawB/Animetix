@@ -1,87 +1,86 @@
-# 📊 Audit des Coûts & Stratégie Économique - Animetix
+# 📊 Cost Audit & Economic Strategy - Animetix
 
-Ce document présente un audit détaillé des coûts opérationnels de la plateforme **Animetix** et définit la viabilité du modèle économique basé sur les **Bx** (Bx).
-
----
-
-## 1. Intelligence Artificielle & Inférence (Coûts Variables)
-
-Animetix utilise une architecture d'inférence hybride pour équilibrer performance "SOTA" et rentabilité. Les coûts sont calculés par le `PricingService` interne.
-
-### 1.1. Modèles de Langage (LLM)
-*Coût moyen pour 1 million de tokens (Entrée + Sortie).*
-
-| Moteur IA | Usage | Coût (USD/1M tokens) |
-| :--- | :--- | :--- |
-| **GPT-4o / Claude 3 Sonnet** | RAG complexe, Scénarios VN | **10.00$ à 18.00$** |
-| **Brain API (Custom)** | Logique métier neuronale | **1.50$ à 3.00$** |
-| **Llama-3-8B / Qwen-2.5** | Chat standard, Akinetix RL | **~0.10$** (si API tiers) |
-| **Local LLM (Ollama)** | Chat de base, NPC | **0.00$** (Coût infra uniquement) |
-
-### 1.2. Modèles Génératifs (Unitaires)
-*Coût par requête unique.*
-
-| Modèle | Action | Coût (USD/unité) |
-| :--- | :--- | :--- |
-| **SDXL Turbo** | Génération d'image (Forge) | **0.01$** |
-| **Coqui XTTS-v2** | Clonage vocal (Voice Lab) | **0.005$** |
-| **Manga OCR** | Extraction de texte | **0.00$** (Calcul local) |
+This document presents a detailed audit of the operational costs for the **Animetix** platform and defines the sustainability of the economic model based on **Bx** (Berrix tokens).
 
 ---
 
-## 2. Infrastructure & Cloud (Coûts Fixes)
+## 1. Artificial Intelligence & Inference (Variable Costs)
 
-Estimation basée sur un déploiement de production sur **Google Cloud Platform (GCP)** ou fournisseur GPU spécialisé (RunPod/Lambda).
+Animetix uses a hybrid inference architecture to balance "SOTA" performance and cost-effectiveness. Costs are calculated by the internal `PricingService`.
 
-| Ressource | Service | Coût Mensuel Est. | Rôle |
+### 1.1. Large Language Models (LLM)
+*Average cost per 1 million tokens (Input + Output).*
+
+| AI Engine | Usage | Cost (USD/1M tokens) |
+| :--- | :--- | :--- |
+| **GPT-4o / Claude 3 Sonnet** | Complex RAG, VN Scenarios | **$10.00 to $18.00** |
+| **Brain API (Custom)** | Neural business logic | **$1.50 to $3.00** |
+| **Llama-3-8B / Qwen-2.5** | Standard Chat, Akinetix RL | **~$0.10** (if third-party API) |
+| **Local LLM (Ollama)** | Basic Chat, NPC | **$0.00** (Infrastructure cost only) |
+
+### 1.2. Generative Models (Per-unit)
+*Cost per single request.*
+
+| Model | Action | Cost (USD/unit) |
+| :--- | :--- | :--- |
+| **SDXL Turbo** | Image Generation (Forge) | **$0.01** |
+| **Coqui XTTS-v2** | Voice Cloning (Voice Lab) | **$0.005** |
+| **Manga OCR** | Text Extraction | **$0.00** (Local execution) |
+
+---
+
+## 2. Infrastructure & Cloud (Fixed Costs)
+
+Estimation based on a production deployment on **Google Cloud Platform (GCP)** or a specialized GPU provider (RunPod/Lambda).
+
+| Resource | Service | Est. Monthly Cost | Role |
 | :--- | :--- | :--- | :--- |
-| **Compute Engine (GPU)** | Instances L4 / A100 | **450$ - 1200$** | Inférence des Ghost Labs & SLMs |
-| **Cloud Run / GKE** | Backend Django | **40$ - 150$** | API, Workers Celery, Websockets |
-| **Bases de Données** | Cloud SQL + Neo4j Aura | **80$ - 200$** | Persistance relationnelle et Graphe |
-| **Vector Store** | ChromaDB (Self-hosted) | **30$ - 60$** | Moteur RAG (Lore & Sémantique) |
-| **Cloud Storage** | GCS Buckets | **15$ - 50$** | Assets média, Planches de manga |
+| **Compute Engine (GPU)** | L4 / A100 Instances | **$450 - $1200** | Inference for Ghost Labs & SLMs |
+| **Cloud Run / GKE** | Django Backend | **$40 - $150** | API, Celery Workers, WebSockets |
+| **Databases** | Cloud SQL + Neo4j Aura | **$80 - $200** | Relational and Graph persistence |
+| **Vector Store** | ChromaDB (Self-hosted) | **$30 - $60** | RAG Engine (Lore & Semantics) |
+| **Cloud Storage** | GCS Buckets | **$15 - $50** | Media assets, manga pages |
 
-**Total Infrastructure estimé : ~600$ à 1600$ / mois.**
+**Total Estimated Infrastructure Cost: ~$600 to $1600 / month.**
 
 ---
 
-## 3. Services Tiers & Observabilité
+## 3. Third-Party Services & Observability
 
-| Service | Coût Mensuel | Rôle |
+| Service | Monthly Cost | Role |
 | :--- | :--- | :--- |
-| **Firebase Auth** | Gratuit (tier standard) | Authentification & Sécurité |
-| **Sentry / PostHog** | **50$ - 100$** | Monitoring d'erreurs et Product Analytics |
-| **Stripe** | 2.9% + 0.30$ / trans. | Gestion des achats de Bx |
+| **Firebase Auth** | Free (standard tier) | Authentication & Security |
+| **Sentry / PostHog** | **$50 - $100** | Error monitoring and Product Analytics |
+| **Stripe** | 2.9% + $0.30 / trans. | Processing Berrix purchases |
 
 ---
 
-## 4. Analyse de Rentabilité : Le Modèle "Bx" (Marge Minimale)
+## 4. Profitability Analysis: The "Berrix" Model (Minimal Margin)
 
-Le système de jetons **Bx** a été recalibré le 13 juin 2026 pour passer d'un modèle profitable à un modèle **"Break-even" (Équilibre Social)**, minimisant les marges au profit de l'utilisateur.
+The **Berrix** (Bx) token system was recalibrated on June 13, 2026, to shift from a profitable model to a **"Break-even" (Social Equilibrium)** model, minimizing margins for the user's benefit.
 
-### 4.1. Ratio Coût/Revenu (Publicité)
-*   **Revenu moyen d'une Rewarded Ad (30s)** : ~0.015$ à 0.025$.
-*   **Crédit utilisateur** : **+250 Bx** (Berrix).
-*   **Coût d'un appel IA standard (5 Bx)** : ~0.00005$.
-*   **Coût d'une Image Forge (50 Bx)** : ~0.0005$.
+### 4.1. Cost/Revenue Ratio (Advertising)
+*   **Average revenue of a Rewarded Ad (30s):** ~$0.015 to $0.025.
+*   **User Credit:** **+250 Bx** (Berrix).
+*   **Cost of a standard AI call (5 Bx):** ~$0.00005.
+*   **Cost of a Forge Image (50 Bx):** ~$0.0005.
 
-**Constat :** Une seule publicité vidéo finance désormais environ 400 à 500 appels IA simples ou 5 fusions créatives. Le surplus généré sert exclusivement à couvrir le maintien du cluster GPU (coût fixe).
+**Observation:** A single video ad now finances approximately 400 to 500 simple AI calls or 5 creative fusions. The generated surplus is used exclusively to cover the GPU cluster maintenance (fixed cost).
 
-### 4.2. Ratio Coût/Revenu (Achat Direct)
-*   **Pack Initié (10 000 Bx pour 4.99€)** :
-    *   Revenu net (après frais Stripe/Apple) : ~4.30$.
-    *   Coût de service max (si tout est utilisé pour des images) : ~1.00$.
-    *   **Marge Brute : ~75%** (Réinjectée dans les coûts fixes d'infrastructure).
-
-
----
-
-## 5. Recommandations pour l'Optimisation
-
-1.  **Priorité au Local** : Migrer systématiquement les tâches de chat vers des modèles **SLM (Small Language Models)** comme Qwen-2.5-1.5B hébergés sur nos propres instances pour réduire la dépendance aux APIs coûteuses (OpenAI/Anthropic).
-2.  **Instances Spot** : Utiliser des instances GPU "Spot" (préemptibles) pour les workers Celery de la Forge afin de réduire les coûts serveur de 60-80%.
-3.  **Caching Sémantique** : Implémenter un cache sémantique pour le RAG afin de ne pas payer deux fois pour la même question posée par différents utilisateurs.
-4.  **Compression d'Images** : Utiliser WebP agressivement pour réduire les coûts de sortie de bande passante et de stockage GCS.
+### 4.2. Cost/Revenue Ratio (Direct Purchase)
+*   **Initiate Pack (10,000 Bx for €4.99):**
+    *   Net revenue (after Stripe/Apple fees): ~$4.30.
+    *   Max service cost (if entirely spent on images): ~$1.00.
+    *   **Gross Margin: ~75%** (Reinvested in fixed infrastructure costs).
 
 ---
-*Dernière mise à jour de l'audit : 13 juin 2026.*
+
+## 5. Recommendations for Optimization
+
+1.  **Prioritize Local:** Systematically migrate chat tasks to **SLMs (Small Language Models)** like Qwen-2.5-1.5B hosted on our own instances to reduce reliance on expensive APIs (OpenAI/Anthropic).
+2.  **Spot Instances:** Use GPU "Spot" instances (preemptible) for Celery workers on the Forge to reduce server costs by 60-80%.
+3.  **Semantic Caching:** Implement a semantic cache for RAG to avoid paying twice for identical queries from different users.
+4.  **Image Compression:** Use WebP aggressively to reduce bandwidth egress and GCS storage costs.
+
+---
+*Last audit update: June 13, 2026.*

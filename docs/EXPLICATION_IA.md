@@ -2,7 +2,7 @@
 
 Welcome to the comprehensive guide to the **Animetix** (Anime Archetype Engine) Artificial Intelligence ecosystem. This document explains the complete data lifecycle and the inner workings of our AI algorithms, from raw ingestion to real-time multimodal user interactions.
 
-👉 **Nouveau :** Pour une analyse détaillée des fondations académiques et scientifiques qui propulsent ce système, consultez notre [Documentation des Papiers de Recherche (RESEARCH_PAPERS.md)](RESEARCH_PAPERS.md).
+👉 **New:** For a detailed analysis of the academic and scientific foundations powering this system, check out our [Research Papers Documentation (RESEARCH_PAPERS.md)](RESEARCH_PAPERS.md).
 
 ---
 

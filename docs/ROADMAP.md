@@ -1,74 +1,73 @@
-# 🗺️ Feuille de Route Globale de l'IA (OPERATIONAL)
+# 🗺️ Global AI Roadmap (OPERATIONAL)
 
-Ce document formalise la planification stratégique et l'architecture technique des améliorations sémantiques, cognitives, immersives et évolutives de la plateforme **Animetix**. 
+This document formalizes the strategic planning and technical architecture of semantic, cognitive, immersive, and evolving enhancements for the **Animetix** platform.
 
 ---
 
-## 📅 Chronologie d'Intégration (Mise à jour : 15 Juin 2026)
+## 📅 Integration Timeline (Last update: June 15, 2026)
 
-L'ensemble de l'architecture cognitive et multimodale est désormais opérationnel. Le projet entre en phase de durcissement (Hardening) et d'optimisation des opérations.
+The entire cognitive and multimodal architecture is now operational. The project is entering the hardening and operations optimization phase.
 
 ```mermaid
 gantt
-    title Chronologie de Développement Animetix 2026
+    title Animetix Development Timeline 2026
     dateFormat  YYYY-MM-DD
     
-    section Fondations IA
-    Phase A: Recherche & RAG                 :done, a1, 2026-06-01, 2026-06-05
-    Phase B: Inférence & Vitesse             :done, b1, 2026-06-05, 2026-06-10
-    Phase C: Apprentissage & DPO             :done, c1, 2026-06-10, 2026-06-12
-    Phase D: Immersion Multimodale           :done, d1, 2026-06-12, 2026-06-13
+    section AI Foundations
+    Phase A: Research & RAG                  :done, a1, 2026-06-01, 2026-06-05
+    Phase B: Inference & Speed              :done, b1, 2026-06-05, 2026-06-10
+    Phase C: Learning & DPO                  :done, c1, 2026-06-10, 2026-06-12
+    Phase D: Multimodal Immersion            :done, d1, 2026-06-12, 2026-06-13
     
     section Convergence & Cloud
-    Phase M: Économie & Monetisation (Stripe):done, m1, 2026-06-13, 2026-06-14
-    Intégration Cloud (GCIP, Vertex, AlloyDB):done, c2, 2026-06-10, 2026-06-15
+    Phase M: Economy & Monetization (Stripe) :done, m1, 2026-06-13, 2026-06-14
+    Cloud Integration (GCIP, Vertex, AlloyDB):done, c2, 2026-06-10, 2026-06-15
     
-    section Robustesse & Sécurité (ACTUEL)
-    Durcissement Sécurité (VPC, SQL Guard)  :active, s1, 2026-06-14, 2026-06-18
-    Monitoring & Alerting MLOps              :active, s2, 2026-06-15, 2026-06-17
-    Audit Accessibilité (WCAG)               :s3, 2026-06-17, 2026-06-20
+    section Robustness & Security (CURRENT)
+    Security Hardening (VPC, SQL Guard)      :active, s1, 2026-06-14, 2026-06-18
+    MLOps Monitoring & Alerting              :active, s2, 2026-06-15, 2026-06-17
+    Accessibility Audit (WCAG)               :s3, 2026-06-17, 2026-06-20
     
-    section Futur & Expansion
-    Stabilisation Ghost Labs                 :f1, 2026-06-20, 2026-07-01
-    Déploiement Multi-Régions                :f2, 2026-07-01, 2026-07-15
+    section Future & Expansion
+    Ghost Labs Stabilization                 :f1, 2026-06-20, 2026-07-01
+    Multi-Region Deployment                  :f2, 2026-07-01, 2026-07-15
 ```
 
 ---
 
-## 🛠️ État des Spécifications Techniques
+## 🛠️ Status of Technical Specifications
 
-#### Phase A-D : Fondations Core (TERMINÉ)
-*   **RAG Hybride & Graphes** : Intégration de `HierarchicalGraphRAGService` (Neo4j + Vertex AI).
-*   **Inférence Unifiée** : Support natif Ollama, OpenAI et Gemini via `InferencePort`.
-*   **Apprentissage DPO** : Boucle de feedback autonome pour l'optimisation des prompts.
-*   **Vision & 3D** : Indexation Video-LLaVA et reconstruction volumétrique DCS opérationnelles.
+#### Phases A-D: Core Foundations (COMPLETED)
+*   **Hybrid RAG & Graphs:** Integration of `HierarchicalGraphRAGService` (Neo4j + Vertex AI).
+*   **Unified Inference:** Native support for Ollama, OpenAI, and Gemini via `InferencePort`.
+*   **DPO Learning:** Autonomous feedback loop for prompt optimization.
+*   **Vision & 3D:** Video-LLaVA indexing and cinematic volumetric reconstruction operational.
 
-#### Phase E-L : Cognition Avancée (TERMINÉ - Intégré)
-*   **Arbres de Réflexion (ToT)** : MCTS pour les requêtes complexes.
-*   **Profilage Neuro-Symbolique** : Solveur Z3 pour la déduction de préférences.
-*   **Plasticité Hebbiene** : Évolution en temps réel des poids sémantiques utilisateur.
-*   **Synthèse de Multivers** : Générateur autonome de mondes fictionnels avec validation HITL.
+#### Phases E-L: Advanced Cognition (COMPLETED - Integrated)
+*   **Tree of Thoughts (ToT):** MCTS for complex queries.
+*   **Neuro-Symbolic Profiling:** Z3 solver for preference deduction.
+*   **Hebbian Plasticity:** Real-time evolution of user semantic weights.
+*   **Multiverse Synthesis:** Autonomous generator of fictional worlds with HITL validation.
 
-#### Phase M & Cloud : Économie & Infrastructure (TERMINÉ)
-*   **Économie Berrix** : Remplacement du Premium par un modèle publicitaire récompensé et jetons Cyber-Yens.
-*   **Expert API** : Facturation à la consommation via Stripe Metered Billing pour les développeurs tiers.
-*   **Google Cloud SOTA** : Migration vers GCIP (Auth), Vertex AI Vector Search 2.0 et AlloyDB AI (Text-to-SQL).
+#### Phase M & Cloud: Economy & Infrastructure (COMPLETED)
+*   **Berrix Economy:** Replacement of Premium tier with a rewarded ad model and Cyber-Yen tokens.
+*   **Expert API:** Consumption-based billing via Stripe Metered Billing for third-party developers.
+*   **SOTA Google Cloud:** Migration to GCIP (Auth), Vertex AI Vector Search 2.0, and AlloyDB AI (Text-to-SQL).
 
-#### Phase S : Robustesse, Sécurité & Observabilité (EN COURS)
-*   **Sécurité Réseau** : Direct VPC Egress et Cloud Armor WAF configurés.
-*   **Hardening SQL** : Parseur `sql_guard.py` et transactions Read-Only pour le Text-to-SQL.
-*   **Alerting MLOps** : Monitoring Prometheus/Grafana pour le drift d'archétype et le Model Collapse.
+#### Phase S: Robustness, Security & Observability (IN PROGRESS)
+*   **Network Security:** Direct VPC Egress and Cloud Armor WAF configured.
+*   **SQL Hardening:** `sql_guard.py` parser and read-only transactions for Text-to-SQL.
+*   **MLOps Alerting:** Prometheus/Grafana monitoring for archetype drift and model collapse.
 
 ---
 
-## 📝 Notes de Révision
+## 📝 Revision Notes
 
-**Statut Global :**
-- L'architecture IA est **100% stabilisée** et conforme aux spécifications 2026.
-- Les dates futures de la précédente roadmap ont été compressées suite à une accélération majeure de l'intégration Cloud.
+**Global Status:**
+- The AI architecture is **100% stabilized** and complies with the 2026 specifications.
+- Future dates from the previous roadmap were compressed due to a major acceleration in cloud integration.
 
-**Priorités Immédiates :**
-1. Finaliser l'audit d'accessibilité (WCAG) via Playwright.
-2. Stabiliser les interfaces expérimentales (Neural Diagnostics, Plasticity Lab) pour retrait des tags "Ghost/Experimental".
-3. Automatiser les rapports de conformité sécurité hebdomadaires.
-
+**Immediate Priorities:**
+1. Finalize the accessibility audit (WCAG) via Playwright.
+2. Stabilize experimental interfaces (Neural Diagnostics, Plasticity Lab) to remove "Ghost/Experimental" tags.
+3. Automate weekly security compliance reports.
