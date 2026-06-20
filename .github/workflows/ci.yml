@@ -13,7 +13,7 @@ on:
       deploy_to_prod:
         description: 'Deploy to prod (animetix-web) after the checks pass'
         type: boolean
-        default: true
+        default: false # opt-in: a prod deploy must be ticked explicitly
 
 jobs:
   lint:
@@ -178,9 +178,9 @@ jobs:
   deploy-to-prod:
     name: Deploy to Production
     needs: [lint, docker-build, test, perf-test, frontend-test]
-    # Manual trigger only ("Run workflow"), and only when the deploy box is ticked.
-    # Never runs on a normal push/PR to main.
-    if: github.event_name == 'workflow_dispatch' && inputs.deploy_to_prod && success()
+    # Manual trigger only ("Run workflow"), only from the protected main branch,
+    # and only when the deploy box is explicitly ticked. Never runs on push/PR.
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.deploy_to_prod && success()
     runs-on: ubuntu-latest
     # Add required reviewers on the "production" environment (repo Settings >
     # Environments) to gate this deploy behind a manual approval.
@@ -207,19 +207,22 @@ jobs:
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v2
     - name: Build & push prod image (Cloud Build)
+      # Tag the image with the exact commit SHA so the deploy below pins this
+      # build's artifact, not the mutable :latest tag.
       run: |
         gcloud builds submit \
           --project "$GCP_PROJECT" \
           --config cloudbuild.yaml \
+          --substitutions=_TAG=${{ github.sha }} \
           .
     - name: Deploy to Cloud Run (animetix-web)
       # Minimal update: only the image changes. The service keeps its existing
-      # env vars, secrets, VPC connector, scaling and port.
+      # env vars, secrets, VPC connector, scaling and port. Pinned to the SHA tag.
       run: |
         gcloud run deploy "$PROD_SERVICE" \
           --project "$GCP_PROJECT" \
           --region "$GCP_REGION" \
-          --image "$PROD_IMAGE:latest"
+          --image "$PROD_IMAGE:${{ github.sha }}"
     - name: Show prod service URL
       run: |
         gcloud run services describe "$PROD_SERVICE" \

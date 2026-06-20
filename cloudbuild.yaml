@@ -1,3 +1,10 @@
+# Build + push the prod container image to Artifact Registry.
+# _TAG defaults to "latest" (backward compatible). The CI deploy-to-prod job
+# passes _TAG=<commit sha> so the image is also tagged immutably and the deploy
+# can pin that exact artifact instead of the mutable :latest tag.
+substitutions:
+  _TAG: latest
+
 steps:
 - name: 'gcr.io/cloud-builders/docker'
   entrypoint: 'bash'
@@ -10,8 +17,10 @@ steps:
     'build',
     '--cache-from', 'europe-west9-docker.pkg.dev/animetix/animetix-repo/web:latest',
     '-t', 'europe-west9-docker.pkg.dev/animetix/animetix-repo/web:latest',
+    '-t', 'europe-west9-docker.pkg.dev/animetix/animetix-repo/web:${_TAG}',
     '-f', 'deploy/Dockerfile',
     '.'
   ]
 images:
 - 'europe-west9-docker.pkg.dev/animetix/animetix-repo/web:latest'
+- 'europe-west9-docker.pkg.dev/animetix/animetix-repo/web:${_TAG}'
