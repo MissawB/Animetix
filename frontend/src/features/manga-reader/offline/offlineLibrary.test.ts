@@ -96,4 +96,18 @@ describe('offlineLibrary', () => {
     await expect(downloadChapter(META, PAGES)).rejects.toBeInstanceOf(OfflineQuotaError);
     expect(await isChapterDownloaded('m1', 3)).toBe(false);
   });
+
+  it('listDownloads parses mediaIds that contain a colon', async () => {
+    mockFetchOk();
+    const colonMeta = { mediaId: 'source:42', mediaTitle: 'Colon Manga', chapterNumber: 7, chapterTitle: 'Ch 7' };
+    await downloadChapter(colonMeta, PAGES);
+    try {
+      const downloads = await listDownloads();
+      const found = downloads.find((d) => d.mediaId === 'source:42' && d.chapterNumber === 7);
+      expect(found).toBeDefined();
+      expect(found?.mediaTitle).toBe('Colon Manga');
+    } finally {
+      await deleteChapter('source:42', 7);
+    }
+  });
 });

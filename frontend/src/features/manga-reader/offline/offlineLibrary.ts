@@ -88,8 +88,12 @@ export async function listDownloads(): Promise<DownloadedChapter[]> {
   const ids = await readIndex();
   const metas = await Promise.all(
     ids.map((id) => {
-      const [mediaId, num] = id.split(':');
-      return getDownloadedChapter(mediaId, Number(num));
+      // chapterId is `${mediaId}:${chapterNumber}`; split on the LAST colon so
+      // mediaIds that themselves contain a colon still parse correctly.
+      const lastColon = id.lastIndexOf(':');
+      const mediaId = id.slice(0, lastColon);
+      const num = Number(id.slice(lastColon + 1));
+      return getDownloadedChapter(mediaId, num);
     }),
   );
   return metas.filter((m): m is DownloadedChapter => m !== null);
