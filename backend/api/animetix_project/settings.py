@@ -189,19 +189,13 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "django.contrib.sites",  # Requis par allauth
+    "django.contrib.sites",
     # THIRD PARTY
     "animetix",
     "channels",
     "rest_framework",
     "drf_spectacular",
     "corsheaders",
-    # ALLAUTH (OAuth)
-    "allauth",
-    "allauth.account",
-    "allauth.socialaccount",
-    "allauth.socialaccount.providers.discord",
-    "allauth.socialaccount.providers.google",
     "storages",
 ]
 
@@ -209,14 +203,11 @@ SITE_ID = 1
 
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
-    "allauth.account.auth_backends.AuthenticationBackend",
     "backend.api.animetix.auth.IAPRemoteUserBackend",
 ]
 
-# ALLAUTH CONFIG
-ACCOUNT_AUTHENTICATION_METHOD = "username_email"
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_EMAIL_VERIFICATION = "optional"
+# Identity is handled client-side by Firebase Auth; the DRF API authenticates
+# Firebase/Google id_tokens via GoogleIdentityAuthentication (see api/animetix/auth.py).
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
 
@@ -246,7 +237,6 @@ MIDDLEWARE = [
     "django.middleware.locale.LocaleMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "backend.api.animetix.auth.IAPRemoteUserMiddleware",
-    "allauth.account.middleware.AccountMiddleware",
     "animetix.middleware.UserTierMiddleware",
     "animetix.middleware.UserTrackingMiddleware",  # Moved after Auth
     "animetix.middleware.PersonalizationMiddleware",
@@ -489,8 +479,10 @@ if sentry_dsn and not os.environ.get("PYTEST_CURRENT_TEST"):
             LoggingIntegration(level=None, event_level=None),
         ],
         before_send=before_send,
-        # Capture 100% des erreurs, mais seulement 10% des performances pour économiser le quota gratuit
-        traces_sample_rate=0.1,
+        # Erreurs uniquement : le tracing de performance est assuré par
+        # OpenTelemetry -> Cloud Trace (voir telemetry.py), pour éviter deux
+        # systèmes de tracing redondants. Sentry reste dédié à la capture d'erreurs.
+        traces_sample_rate=0.0,
         send_default_pii=False,  # Sécurité/RGPD : Ne pas envoyer d'infos personnelles identifiables (IP, emails, etc.)
     )
     print("[SUCCESS] Sentry initialized with Django integration.")

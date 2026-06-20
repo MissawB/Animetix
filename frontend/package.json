@@ -20,7 +20,6 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@google/model-viewer": "^4.2.0",
     "@hookform/resolvers": "^5.4.0",
     "@sentry/react": "^10.53.1",
     "@tanstack/react-query": "^5.100.11",
@@ -44,7 +43,6 @@
     "react-i18next": "^17.0.8",
     "react-plotly.js": "^2.6.0",
     "react-router-dom": "^7.15.1",
-    "recharts": "^3.8.1",
     "three": "^0.182.0",
     "zod": "^4.4.3",
     "zustand": "^5.0.13"
@@ -65,7 +63,7 @@
     "@types/node": "^25.9.1",
     "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
-    "@types/recharts": "^1.8.29",
+    "@types/three": "^0.182.0",
     "@vitejs/plugin-react": "^6.0.1",
     "@vitest/browser-playwright": "^4.1.7",
     "@vitest/coverage-v8": "^4.1.7",
