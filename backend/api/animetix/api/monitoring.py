@@ -70,11 +70,11 @@ class ClusterHealthView(APIView):
 
     def get(self, request):
 
-        from animetix.containers.main import ApplicationContainer
+        from animetix.containers import get_container
 
         try:
-            container = ApplicationContainer()
-            health_service = container.core_services.health_dashboard_service()
+            container = get_container()
+            health_service = container.core.health_dashboard_service()
             data = health_service.get_cluster_health()
             return Response(data)
         except Exception as e:

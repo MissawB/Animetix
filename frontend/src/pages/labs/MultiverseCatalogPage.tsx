@@ -21,6 +21,7 @@ import {
   Eye,
   Star,
   Atom,
+  Download,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -362,6 +363,14 @@ const UniverseDetailPanel: React.FC<{ universe: Universe; onClose: () => void }>
                 <Network className="w-4 h-4 mr-2" /> Explorer dans le Nexus
               </Button>
             </Link>
+            <Button
+              onClick={() => {
+                window.open(`/api/v1/multiverse/${encodeURIComponent(universe.name)}/export-pdf/`, '_blank');
+              }}
+              className="bg-white/5 hover:bg-white/10 text-white border border-white/10 py-4 px-6 rounded-xl font-black italic uppercase shrink-0 flex items-center justify-center"
+            >
+              <Download className="w-4 h-4 mr-2" /> Exporter PDF
+            </Button>
           </div>
         </div>
       </motion.div>

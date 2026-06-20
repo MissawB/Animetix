@@ -78,6 +78,9 @@ class HealthDashboardService:
         # --- Neo4j Knowledge Graph ---
         nodes.append(self._check_graph_database())
 
+        # --- Self-Hosted AI Image Worker ---
+        nodes.append(self._check_self_hosted_image_worker())
+
         online_count = sum(1 for n in nodes if n["status"] == "online")
         total_count = len(nodes)
         global_status = (
@@ -250,3 +253,36 @@ class HealthDashboardService:
                 "latency_ms": latency,
                 "details": {"error": str(e)},
             }
+
+    def _check_self_hosted_image_worker(self) -> Dict[str, Any]:
+        """Check status and queue length of the local self-hosted image worker."""
+        from django.core.cache import cache
+
+        start = time.time()
+
+        worker_status = cache.get("self_hosted_image_worker:status", "idle")
+        queue_length = cache.get("self_hosted_image_worker:queue_length", 0)
+        active_task = cache.get("self_hosted_image_worker:active_task", None)
+        budget_exceeded = cache.get("paid_api_budget_exceeded", False)
+
+        fallback_mode = (
+            "active"
+            if budget_exceeded or cache.get("paid_api_failover_active", False)
+            else "nominal"
+        )
+        latency = round((time.time() - start) * 1000, 1)
+
+        return {
+            "id": "self-hosted-image-worker",
+            "name": "Self-Hosted Image Worker",
+            "type": "worker",
+            "status": "online",
+            "latency_ms": latency,
+            "details": {
+                "worker_status": worker_status,
+                "queue_length": max(0, queue_length),
+                "active_task": active_task,
+                "fallback_mode": fallback_mode,
+                "model_id": "black-forest-labs/FLUX.1-schnell",
+            },
+        }

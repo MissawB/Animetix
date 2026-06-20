@@ -605,6 +605,11 @@ urlpatterns = [
         api_views.MultiverseCatalogView.as_view(),
         name="api_multiverse_catalog",
     ),
+    path(
+        "multiverse/<str:universe_name>/export-pdf/",
+        api_views.MultiverseExportPDFView.as_view(),
+        name="api_multiverse_export_pdf",
+    ),
     path("billing/webhook/", billing_alert_webhook, name="api_billing_webhook"),
     path(
         "billing/log_ad_event/",

@@ -124,4 +124,34 @@ def trigger_club_event(club_id, event_id):
     logger.info(f"Triggered event {event_id} for club {club_id}")
 
 
+@register_task("self_hosted_image_generation_task")
+def self_hosted_image_generation_task(prompt: str, style: str = ""):
+    from django.core.cache import cache
+
+    logger.info(f"Starting self_hosted_image_generation_task for prompt: {prompt}")
+    cache.set("self_hosted_image_worker:status", "active")
+    cache.set("self_hosted_image_worker:active_task", prompt)
+    try:
+        container = get_container()
+        adapter = container.inference.diffusers_adapter()
+        result = adapter.generate_image(prompt, style=style)
+        logger.info("Successfully generated image via diffusers_adapter")
+        return result
+    except Exception as e:
+        logger.error(f"Error in self_hosted_image_generation_task: {e}")
+        raise e
+    finally:
+        cache.delete("self_hosted_image_worker:active_task")
+        try:
+            queue_len = cache.get("self_hosted_image_worker:queue_length", 0)
+            cache.set("self_hosted_image_worker:queue_length", max(0, queue_len - 1))
+        except Exception:
+            pass
+
+        # Re-check queue length to set worker status back to idle if empty
+        new_queue_len = cache.get("self_hosted_image_worker:queue_length", 0)
+        if new_queue_len <= 0:
+            cache.set("self_hosted_image_worker:status", "idle")
+
+
 from . import telemetry_tasks as telemetry_tasks  # noqa: E402

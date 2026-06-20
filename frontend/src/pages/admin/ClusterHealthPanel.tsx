@@ -38,7 +38,7 @@ interface ClusterNodeDetails {
 interface ClusterNode {
   id: string;
   name: string;
-  type: 'gpu' | 'inference' | 'graph_db';
+  type: 'gpu' | 'inference' | 'graph_db' | 'worker';
   status: 'online' | 'offline' | 'unconfigured' | 'throttled' | 'degraded';
   latency_ms: number | null;
   details: ClusterNodeDetails;
@@ -73,12 +73,14 @@ const nodeTypeIcon = {
   gpu: Cpu,
   inference: Zap,
   graph_db: Database,
+  worker: Server,
 };
 
 const nodeTypeAccent = {
   gpu: 'text-green-400',
   inference: 'text-cyan-400',
   graph_db: 'text-purple-400',
+  worker: 'text-pink-400',
 };
 
 // ─── GPU Mini Bar ────────────────────────────────────────────────────
@@ -272,6 +274,43 @@ const NodeCard: React.FC<{ node: ClusterNode }> = ({ node }) => {
               <span className="text-[9px] font-bold text-red-400 uppercase break-all">{node.details.error}</span>
             </div>
           )}
+        </div>
+      )}
+
+      {node.type === 'worker' && node.details && (
+        <div className="space-y-3 relative z-10">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <p className="text-[9px] font-black uppercase opacity-25 mb-1">File d'attente</p>
+              <p className="text-2xl font-black italic manga-font text-pink-400">
+                {node.details.queue_length || 0}
+              </p>
+            </div>
+            <div>
+              <p className="text-[9px] font-black uppercase opacity-25 mb-1">Statut Worker</p>
+              <p className={`text-sm font-black uppercase ${
+                node.details.worker_status === 'active' ? 'text-pink-300' : 'text-emerald-400'
+              }`}>
+                {node.details.worker_status || 'idle'}
+              </p>
+            </div>
+          </div>
+          {node.details.active_task && (
+            <div>
+              <p className="text-[9px] font-black uppercase opacity-25 mb-1">Tâche Active</p>
+              <p className="text-[10px] font-bold opacity-85 break-all line-clamp-2 bg-white/[0.02] p-1.5 rounded border border-white/5">
+                {node.details.active_task}
+              </p>
+            </div>
+          )}
+          <div className="pt-3 border-t border-white/5 flex justify-between items-center">
+            <span className="text-[9px] font-bold opacity-25 uppercase">Repli API</span>
+            <Badge variant="neutral" className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${
+              node.details.fallback_mode === 'active' ? 'text-amber-400 bg-amber-500/10 border-amber-500/30' : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'
+            }`}>
+              {node.details.fallback_mode === 'active' ? 'ACTIF (Budget Dépassé)' : 'NOMINAL'}
+            </Badge>
+          </div>
         </div>
       )}
     </Card>

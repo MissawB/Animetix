@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Hash } from 'lucide-react';
+import { useAuthStore } from '../../../store/authStore';
 
 interface Message {
   id: string;
@@ -14,31 +15,101 @@ interface ClubChatProps {
 }
 
 const ClubChat: React.FC<ClubChatProps> = ({ clubId, clubName }) => {
+  const { user } = useAuthStore();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isConnected, setIsConnected] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<WebSocket | null>(null);
-  const lastInitId = useRef<string | null>(null);
 
   useEffect(() => {
-    if (lastInitId.current === clubId) return;
-    lastInitId.current = clubId;
+    if (!clubId) return;
 
-    // For demo purposes, we'll simulate the connection
-    setIsConnected(true);
+    // Reset local messages for the new club room
     setMessages([
-      { id: '1', sender: 'System', content: `Welcome to the ${clubName} chat!`, timestamp: new Date().toISOString() },
-      { id: '2', sender: 'Alice', content: 'Hey everyone, anyone seen the latest episode?', timestamp: new Date().toISOString() },
+      { 
+        id: 'system-welcome', 
+        sender: 'System', 
+        content: `Welcome to the ${clubName} chat!`, 
+        timestamp: new Date().toISOString() 
+      }
     ]);
 
-    return () => {
-      if (socketRef.current) {
-        socketRef.current.close();
-      }
-      socketRef.current = null;
+    let ws: WebSocket | null = null;
+    let reconnectTimeoutId: any = null;
+    let isMounted = true;
+
+    const connectWebSocket = () => {
+      if (!isMounted) return;
+
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const socketUrl = `${wsProtocol}//${window.location.host}/ws/club/${clubId}/`;
+      
+      console.log(`Connecting to club chat WebSocket: ${socketUrl}`);
+      ws = new WebSocket(socketUrl);
+      socketRef.current = ws;
+
+      ws.onopen = () => {
+        if (isMounted) {
+          setIsConnected(true);
+        }
+      };
+
+      ws.onclose = () => {
+        if (isMounted) {
+          setIsConnected(false);
+          // Only reconnect if the socket reference wasn't updated/closed intentionally
+          if (socketRef.current === ws) {
+            console.log("WebSocket disconnected. Reconnecting in 3 seconds...");
+            reconnectTimeoutId = setTimeout(connectWebSocket, 3000);
+          }
+        }
+      };
+
+      ws.onerror = (error) => {
+        console.error("WebSocket error:", error);
+        ws?.close();
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          // ClubConsumer broadcasts message containing:
+          // { "text": "...", "username": "...", "type": "chat", "club_id": "..." }
+          if (data && data.type === 'chat') {
+            const messageSender = data.username === user?.username ? 'Me' : data.username;
+            const newMsg: Message = {
+              id: `${Date.now()}-${Math.random()}`,
+              sender: messageSender,
+              content: data.text || '',
+              timestamp: new Date().toISOString(),
+            };
+            if (isMounted) {
+              setMessages((prev) => [...prev, newMsg]);
+            }
+          }
+        } catch (e) {
+          console.error("Error parsing WebSocket message:", e);
+        }
+      };
     };
-  }, [clubId, clubName]);
+
+    connectWebSocket();
+
+    return () => {
+      isMounted = false;
+      if (reconnectTimeoutId) {
+        clearTimeout(reconnectTimeoutId);
+      }
+      if (ws) {
+        ws.close();
+      }
+      if (socketRef.current === ws) {
+        socketRef.current = null;
+      }
+    };
+  }, [clubId, clubName, user?.username]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -50,21 +121,12 @@ const ClubChat: React.FC<ClubChatProps> = ({ clubId, clubName }) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
 
-    const msg: Message = {
-      id: Date.now().toString(),
-      sender: 'Me', // Should be fetched from authStore
-      content: newMessage,
-      timestamp: new Date().toISOString(),
-    };
-
-    // Simulation: add message to local state
-    setMessages(prev => [...prev, msg]);
-    setNewMessage('');
-
-    // Real implementation:
-    // if (socketRef.current && isConnected) {
-    //   socketRef.current.send(JSON.stringify({ message: newMessage }));
-    // }
+    if (socketRef.current && isConnected) {
+      socketRef.current.send(JSON.stringify({ message: newMessage }));
+      setNewMessage('');
+    } else {
+      console.warn("Cannot send message: WebSocket is not connected.");
+    }
   };
 
   return (
