@@ -2,6 +2,13 @@
 
 This document archives the major milestones of the project's technical evolution.
 
+## [2026-06-20] Session: Offline Manga Reader (PWA)
+
+- **Mode Hors-ligne du Lecteur Manga (PWA)**:
+  - Added an `offlineLibrary` IndexedDB layer (`idb-keyval`) that stores downloaded chapter page images as blobs with per-chapter metadata, plus a `useChapterDownload` hook exposing download status/progress.
+  - Added a chapter list with a per-chapter download button on the manga detail page, and a `useChapterPages` hook that serves the reader from the local cache (object URLs) when a chapter is downloaded, falling back to the network and showing an "indisponible hors-ligne" state when offline.
+  - Configured the service worker SPA `navigateFallback` so reader routes load offline.
+
 ## [2026-06-20] Session: Mihon/Suwayomi Integration, React Reader UX, Real-Time Chat, and ML Image Worker
 
 - **Manga Reader UX & Suwayomi (Mihon) Integration**:
