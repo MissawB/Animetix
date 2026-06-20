@@ -179,7 +179,16 @@ jobs:
     runs-on: ubuntu-latest
     environment: development
     permissions:
-      contents: write
+      contents: write # push the promoted code to the dev branch
+      id-token: write # mint the OIDC token for Workload Identity Federation (GCP auth)
+    env:
+      GCP_PROJECT: animetix
+      GCP_REGION: europe-west9
+      DEV_SERVICE: animetix-web-dev
+      DEV_IMAGE: europe-west9-docker.pkg.dev/animetix/animetix-repo/web-dev
+      # Same runtime SA + VPC connector as prod so dev can reach the (private) DB/Redis.
+      RUNTIME_SA: 836616987676-compute@developer.gserviceaccount.com
+      VPC_CONNECTOR: animetix-vpc-conn
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
@@ -197,6 +206,48 @@ jobs:
         git checkout dev || git checkout -b dev origin/main
         git merge temp-pr-branch --ff-only
         git push origin dev
+
+    # --- Deploy the promoted code to the dev Cloud Run environment ---------------
+    # Reuses the WIF auth already configured for the Gemini workflows
+    # (vars.GCP_WIF_PROVIDER / vars.SERVICE_ACCOUNT_EMAIL). The auth service account
+    # needs: roles/cloudbuild.builds.editor, roles/run.admin, and
+    # roles/iam.serviceAccountUser on RUNTIME_SA. animetix-web-dev is created on the
+    # first deploy; it reuses the prod Secret Manager secrets (see --set-secrets).
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+        service_account: ${{ vars.SERVICE_ACCOUNT_EMAIL }}
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+    - name: Build & push dev image (Cloud Build)
+      run: |
+        gcloud builds submit \
+          --project "$GCP_PROJECT" \
+          --config deploy/cloudbuild.dev.yaml \
+          --substitutions=_TAG=${{ github.sha }} \
+          .
+    - name: Deploy to Cloud Run (animetix-web-dev)
+      run: |
+        gcloud run deploy "$DEV_SERVICE" \
+          --project "$GCP_PROJECT" \
+          --region "$GCP_REGION" \
+          --image "$DEV_IMAGE:${{ github.sha }}" \
+          --service-account "$RUNTIME_SA" \
+          --vpc-connector "$VPC_CONNECTOR" \
+          --vpc-egress private-ranges-only \
+          --port 7860 \
+          --cpu 2 --memory 4Gi \
+          --max-instances 3 \
+          --cpu-boost \
+          --allow-unauthenticated \
+          --set-env-vars "^@^DJANGO_ENV=production@ALLOWED_HOSTS=*.run.app,localhost,127.0.0.1" \
+          --set-secrets "DJANGO_SECRET_KEY=DJANGO_SECRET_KEY:latest,BRAIN_API_KEY=BRAIN_API_KEY:latest,TMDB_API_KEY=TMDB_API_KEY:latest,DATABASE_URL=DATABASE_URL:latest,REDIS_URL=REDIS_URL:latest,IGDB_CLIENT_ID=IGDB_CLIENT_ID:latest,GEMINI_API_KEY=GEMINI_API_KEY:latest,HF_TOKEN=HF_TOKEN:latest,IGDB_CLIENT_SECRET=IGDB_CLIENT_SECRET:latest,WANDB_API_KEY=WANDB_API_KEY:latest"
+    - name: Show dev service URL
+      run: |
+        gcloud run services describe "$DEV_SERVICE" \
+          --project "$GCP_PROJECT" --region "$GCP_REGION" \
+          --format="value(status.url)"
 
   promote-to-prod:
     name: Promote to Production
