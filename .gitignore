@@ -101,6 +101,9 @@ data/mlops/
 # Superpowers / agent-generated plans and specs
 docs/superpowers/
 
+# Local agent tooling (skills manifests, editor-extension cruft)
+.agents/
+
 # Node modules at root
 node_modules/
 
