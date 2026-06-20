@@ -82,6 +82,7 @@ gha-creds-*.json
 
 # Geminni/Superpowers
 .superpowers/
+.worktrees/
 .tmp_dagster_home_*/
 .venv/
 .idea/
