@@ -62,22 +62,16 @@ export async function getDownloadedChapter(
   return (await idbGet<DownloadedChapter>(metaKey(mediaId, chapterNumber), store)) ?? null;
 }
 
+// Internal storage format — ArrayBuffer survives structuredClone in all environments (jsdom, Node, browsers).
+interface StoredPage { buffer: ArrayBuffer; type: string }
+
 export async function getChapterPageBlobs(mediaId: string, chapterNumber: number): Promise<Blob[]> {
   const meta = await getDownloadedChapter(mediaId, chapterNumber);
   if (!meta) return [];
-  const storedItems = await Promise.all(
-    meta.pageKeys.map((k) => idbGet<{ buffer: ArrayBuffer; type: string } | Blob>(k, store))
-  );
+  const storedItems = await Promise.all(meta.pageKeys.map((k) => idbGet<StoredPage>(k, store)));
   return storedItems
-    .map((item) => {
-      if (!item) return null;
-      if (item instanceof Blob) return item;
-      if (typeof item === 'object' && 'buffer' in item && 'type' in item) {
-        return new Blob([item.buffer], { type: item.type });
-      }
-      return null;
-    })
-    .filter((b): b is Blob => b != null && typeof b.size === 'number' && typeof b.type === 'string');
+    .filter((item): item is StoredPage => item != null && typeof item.type === 'string' && typeof item.buffer === 'object' && item.buffer !== null && typeof (item.buffer as ArrayBuffer).byteLength === 'number')
+    .map((item) => new Blob([item.buffer], { type: item.type }));
 }
 
 export async function deleteChapter(mediaId: string, chapterNumber: number): Promise<void> {
