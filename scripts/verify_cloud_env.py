@@ -43,6 +43,25 @@ GETENV_CALL = re.compile(
 # os.environ["NAME"]  (hard requirement)
 ENVIRON_INDEX = re.compile(r"""os\.environ\[\s*["']([A-Z][A-Z0-9_]{2,})["']\s*\]""")
 
+# Names the regexes pick up that are NOT app configuration: test-runner internals
+# and vars the platform/runtime injects on its own (Cloud Run, App Engine, CI).
+# Filtering them keeps the report to vars a human actually has to set.
+IGNORE = frozenset(
+    {
+        "PYTEST_CURRENT_TEST",  # pytest sets this per-test
+        "CI",  # set by the CI provider
+        "PORT",  # Cloud Run injects this
+        "K_SERVICE",  # Cloud Run runtime metadata
+        "K_REVISION",
+        "K_CONFIGURATION",
+        "GAE_APPLICATION",  # App Engine runtime metadata
+        "GAE_ENV",
+        "PATH",
+        "HOME",
+        "PWD",
+    }
+)
+
 
 def scan_file(path: Path) -> dict[str, bool]:
     """Return {VAR_NAME: required}. required=True when read without a default."""
@@ -77,7 +96,7 @@ def scan_vars(scan_all: bool) -> dict[str, bool]:
                 continue
             for name, req in scan_file(p).items():
                 found[name] = found.get(name, False) or req
-    return found
+    return {n: r for n, r in found.items() if n not in IGNORE}
 
 
 def _gcloud(args: list[str]) -> str | None:
