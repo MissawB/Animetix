@@ -145,9 +145,87 @@ class SingularityLabDataView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     throttle_scope = "gpu"
 
+    def get(self, request):
+        container = get_container()
+        service = container.core.synaptic_plasticity_simulator()
+        drift_service = container.core.archetype_drift_service()
+
+        profile = getattr(request.user, "profile", None)
+        settings = profile.personalization_settings if profile else {}
+        drift_config = drift_service.calculate_drift(request.user.id, settings)
+
+        return Response({
+            "status": "success",
+            "weights": service.W.tolist(),
+            "concepts": [
+                'Shonen', 'Seinen', 'Cyberpunk', 'Mecha', 'Fantasy',
+                'Magic', 'Ghibli', 'Romance', 'Comedy', 'Drama'
+            ],
+            "plasticity_config": {
+                "tau_plus": service.tau_plus,
+                "tau_minus": service.tau_minus,
+                "num_concepts": service.num_concepts,
+            },
+            "personalization_settings": settings,
+            "current_archetype": {
+                "id": drift_config.archetype_id,
+                "accent": drift_config.primary_accent,
+                "aura_type": drift_config.aura_type,
+                "intensity": drift_config.aura_intensity,
+                "font_vibe": drift_config.font_vibe,
+            }
+        })
+
     def post(self, request):
         action = request.data.get("action", "")
         container = get_container()
+
+        if action == "update_config":
+            profile = getattr(request.user, "profile", None)
+            if profile:
+                settings = profile.personalization_settings or {}
+                mode = request.data.get("mode")
+                if mode in ["auto", "manual"]:
+                    settings["mode"] = mode
+                manual_arch = request.data.get("manual_archetype")
+                if manual_arch:
+                    settings["manual_archetype"] = manual_arch
+                intensity = request.data.get("intensity_multiplier")
+                if intensity is not None:
+                    try:
+                        settings["intensity_multiplier"] = float(intensity)
+                    except ValueError:
+                        pass
+                features = request.data.get("features")
+                if isinstance(features, dict):
+                    settings["features"] = {
+                        "aura": bool(features.get("aura", True)),
+                        "font": bool(features.get("font", True)),
+                        "accent": bool(features.get("accent", True)),
+                    }
+                profile.personalization_settings = settings
+                profile.save()
+
+                # Clear cache for middleware
+                from django.core.cache import cache
+                cache.delete(f"personalization_drift_user_{request.user.id}")
+
+            service = container.core.synaptic_plasticity_simulator()
+            tau_plus = request.data.get("tau_plus")
+            if tau_plus is not None:
+                try:
+                    service.tau_plus = float(tau_plus)
+                except ValueError:
+                    pass
+            tau_minus = request.data.get("tau_minus")
+            if tau_minus is not None:
+                try:
+                    service.tau_minus = float(tau_minus)
+                except ValueError:
+                    pass
+
+            service.save_checkpoint()
+            return self.get(request)
 
         if action == "compile":
             deduct_berrix(request.user, 20, "Singularity: Compilation de Kernel")
@@ -586,34 +664,90 @@ class AudioLabDataView(APIView):
 
 
 class SeiyuuDiscoveryView(APIView):
-    """Recherche et exploration des Seiyuu et de leurs rôles."""
+    """Recherche et exploration des Seiyuu/Doubleurs et de leurs rôles."""
 
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
-        query = request.query_params.get("q", "").lower()
-        from pipeline.mlops.songs_and_seiyuu_db import SEIYUU_PROFILES  # noqa: E402
+        query = request.query_params.get("q", "")
+        language = request.query_params.get("language", "")
+        origin = request.query_params.get("origin", "")
 
-        results = []
-        for name, profile in SEIYUU_PROFILES.items():
-            # Search by Seiyuu name OR character roles mentioned in examples/definition
-            if (
-                query in name.lower()
-                or query in profile.get("examples", "").lower()
-                or query in profile.get("definition", "").lower()
-            ):
-                results.append(
-                    {
-                        "name": name,
-                        "description": profile.get("definition"),
-                        "roles": profile.get("examples"),
-                        "impact": profile.get("impact"),
-                        "origin": profile.get("origin"),
-                        "sample_url": f"/static/audio/seiyuu/{name.lower().replace(' ', '_')}_sample.wav",
-                    }
-                )
+        from animetix.models import VoiceProfile
+        from django.db.models import Q
+        from animetix.serializers import VoiceProfileSerializer
 
-        return Response({"query": query, "results": results})
+        profiles = VoiceProfile.objects.all()
+
+        if query:
+            profiles = profiles.filter(
+                Q(name__icontains=query)
+                | Q(roles__icontains=query)
+                | Q(definition__icontains=query)
+            )
+
+        if language:
+            profiles = profiles.filter(language=language)
+        if origin:
+            profiles = profiles.filter(origin=origin)
+
+        serializer = VoiceProfileSerializer(profiles, many=True)
+        return Response({"query": query, "results": serializer.data})
+
+
+class VoiceProfileIngestView(APIView):
+    """Ingestion dynamique de voix à la volée depuis YouTube."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        name = request.data.get("name")
+        language = request.data.get("language", "japanese")
+        youtube_url_or_query = request.data.get("youtube_url") or request.data.get("query")
+        definition = request.data.get("definition", "")
+        roles = request.data.get("roles", "")
+        impact = request.data.get("impact", "Custom")
+
+        if not name or not youtube_url_or_query:
+            return Response(
+                {"error": "Le nom et l'URL/requête YouTube sont obligatoires."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Déduction des Berrix (30 Bx pour l'ingestion/découpage de voix)
+        try:
+            deduct_berrix(request.user, 30, f"Ingestion vocale de {name}")
+        except Exception as e:
+            return Response({"error": f"Fonds insuffisants : {str(e)}"}, status=status.HTTP_402_PAYMENT_REQUIRED)
+
+        from core.domain.services.voice_ingestion_service import VoiceIngestionService
+        from animetix.serializers import VoiceProfileSerializer
+
+        ingestion_service = VoiceIngestionService()
+        try:
+            profile = ingestion_service.ingest_voice(
+                name=name,
+                language=language,
+                youtube_url_or_query=youtube_url_or_query,
+                definition=definition,
+                roles=roles,
+                impact=impact,
+            )
+            serializer = VoiceProfileSerializer(profile)
+            return Response(
+                {
+                    "message": "Ingestion réussie !",
+                    "profile": serializer.data,
+                },
+                status=status.HTTP_201_CREATED,
+            )
+        except Exception as e:
+            logger.error(f"Erreur lors de l'ingestion vocale: {e}")
+            return Response(
+                {"error": f"Erreur lors de l'ingestion: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
 
 
 class SoundscapeGenerationView(APIView):
