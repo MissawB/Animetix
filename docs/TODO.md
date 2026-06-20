@@ -5,15 +5,15 @@ This document lists all the technical, architectural, and functional tasks remai
 ---
 
 ## 🚀 Expansion & Future
-- [ ] **Vocal Library & Seiyuu Integration:** Populate the database with voice actor/seiyuu profiles and wav samples, and integrate voice cloning/synthesis across Audio, Manga Voice, and Speech-to-Speech labs.
+- [x] **Vocal Library & Seiyuu Integration:** Populate the database with voice actor/seiyuu profiles and wav samples, and integrate voice cloning/synthesis across Audio, Manga Voice, and Speech-to-Speech labs.
 - [ ] **Compliance Reports:** Automate weekly security compliance reports.
-- [ ] **Offline Manga Library & Download Manager:** Create a dedicated page to manage local storage (IndexedDB via `idb-keyval`), list downloaded manga chapters, and read offline.
-- [ ] **Graph Repair Console (Graph Healer):** Develop an admin interface to audit Neo4j, merge duplicate entities, and heal structural relations via `GraphHealerService`.
-- [ ] **Plasticity Dashboard & Semantic Profile:** Design a dynamic user view displaying semantic weight evolution (Hebbian/STDP learning) and allowing configuration of cognitive plasticity and archetype drift.
-- [ ] **Berrix Economy Hub:** Integrate a wallet page (Cyber-Yen Wallet & Reward Center) to track the complete transaction ledger (credits/debits) of Berrix tokens (Bx) and manage active/passive attention mining.
+- [x] **Offline Manga Library & Download Manager:** Create a dedicated page to manage local storage (IndexedDB via `idb-keyval`), list downloaded manga chapters, and read offline.
+- [x] **Graph Repair Console (Graph Healer):** Develop an admin interface to audit Neo4j, merge duplicate entities, and heal structural relations via `GraphHealerService`.
+- [x] **Plasticity Dashboard & Semantic Profile:** Design a dynamic user view displaying semantic weight evolution (Hebbian/STDP learning) and allowing configuration of cognitive plasticity and archetype drift. ✅ (2026-06-20)
+- [x] **Berrix Economy Hub:** Integrate a wallet page (Cyber-Yen Wallet & Reward Center) to track the complete transaction ledger (credits/debits) of Berrix tokens (Bx) and manage active/passive attention mining.
 - [x] **Tachidesk/Suwayomi Integration (Mihon Backend):** Connect the project to a local Tachidesk/Suwayomi instance to use Mihon/Tachiyomi extensions and access over 500 manga sources.
 - [x] **Manga Reader Optimization (React UX):** Improve reading comfort in the frontend component (image preloading, infinite scroll for Webtoon mode, double-page split/fit, and reader configurations).
-- [ ] **Manga Extension Manager (Suwayomi):** Allow installing, uninstalling, and updating manga source extensions directly through the Animetix interface.
+- [x] **Manga Extension Manager (Suwayomi):** Allow installing, uninstalling, and updating manga source extensions directly through the Animetix interface. ✅ (2026-06-20)
 - [ ] **Manga Chapter Tracking & Notifications:** Check for updates of favorite mangas in the background via a Celery/Django periodic task and send WebSocket notifications when new chapters are released.
 - [x] **Manga Reader Offline Mode (PWA):** Enable local downloading of chapters for offline reading via Service Workers and IndexedDB/Cache API.
 - [ ] **Synchronize with Trackers (MAL / AniList):** Link users' third-party profiles to automatically synchronize their reading progress upon chapter completion.
