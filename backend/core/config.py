@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     SUWAYOMI_URL: str = "http://127.0.0.1:4567"
     SUWAYOMI_PASSWORD: Optional[str] = None
 
-    model_config = SettingsConfigDict(env_file=".env")
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 
 # Initialisation globale

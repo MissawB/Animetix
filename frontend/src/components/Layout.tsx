@@ -172,6 +172,9 @@ const LayoutContent: React.FC<{ children: ReactNode }> = ({ children }) => {
           <Link to="/explore/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/explore/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
             <Compass className="w-4 h-4 text-emerald-400" /> {t('nav.explore', 'Explorer')}
           </Link>
+          <Link to="/explore/tachidesk/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/explore/tachidesk/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
+            <Globe className="w-4 h-4 text-blue-400" /> {t('nav.tachidesk', 'Tachidesk Explorer')}
+          </Link>
           <Link to="/lab/latent-space/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/lab/latent-space/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
             <Network className="w-4 h-4 text-indigo-400" /> {t('navbar.latent', 'Espace Latent')}
           </Link>

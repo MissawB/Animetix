@@ -80,6 +80,11 @@ urlpatterns = [
     ),
     path("search/", api_views.MediaSearchView.as_view(), name="api_search"),
     path(
+        "media/Manga/suwayomi-image/",
+        api_views.suwayomi_image_proxy,
+        name="api_suwayomi_image_proxy",
+    ),
+    path(
         "media/<str:media_type>/<str:item_id>/",
         api_views.MediaDetailView.as_view(),
         name="api_media_detail",
@@ -93,6 +98,21 @@ urlpatterns = [
         "media/Manga/<str:media_id>/chapters/<str:chapter_number>/",
         api_views.MangaChapterDetailView.as_view(),
         name="api_manga_chapter_detail",
+    ),
+    path(
+        "explore/suwayomi/sources/",
+        api_views.SuwayomiSourcesView.as_view(),
+        name="api_suwayomi_sources",
+    ),
+    path(
+        "explore/suwayomi/search/",
+        api_views.SuwayomiSearchView.as_view(),
+        name="api_suwayomi_search",
+    ),
+    path(
+        "explore/suwayomi/import/",
+        api_views.SuwayomiImportView.as_view(),
+        name="api_suwayomi_import",
     ),
     path("config/", api_views.ConfigView.as_view(), name="api_config"),
     path("auth/login/", api_views.LoginView.as_view(), name="api_auth_login"),
