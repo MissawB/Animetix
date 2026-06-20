@@ -1,13 +1,19 @@
 name: Animetix CI/CD Pipeline
 
 on:
-  # Prod-only pipeline: run the checks when code targets or lands on main.
-  # Deployment to prod (animetix-web) is done manually, not by this workflow.
+  # Prod-only pipeline. On push/PR to main it runs the checks only.
+  # A manual run from the Actions tab ("Run workflow") runs the checks AND, if the
+  # deploy box stays ticked, ends with a deploy to the prod Cloud Run service.
   pull_request:
     branches: [ main ]
   push:
     branches: [ main ]
-  workflow_dispatch: # manual run
+  workflow_dispatch:
+    inputs:
+      deploy_to_prod:
+        description: 'Deploy to prod (animetix-web) after the checks pass'
+        type: boolean
+        default: true
 
 jobs:
   lint:
@@ -168,3 +174,54 @@ jobs:
       run: cd frontend && npx playwright test e2e/a11y.spec.ts
       env:
         CI: true
+
+  deploy-to-prod:
+    name: Deploy to Production
+    needs: [lint, docker-build, test, perf-test, frontend-test]
+    # Manual trigger only ("Run workflow"), and only when the deploy box is ticked.
+    # Never runs on a normal push/PR to main.
+    if: github.event_name == 'workflow_dispatch' && inputs.deploy_to_prod && success()
+    runs-on: ubuntu-latest
+    # Add required reviewers on the "production" environment (repo Settings >
+    # Environments) to gate this deploy behind a manual approval.
+    environment: production
+    permissions:
+      contents: read
+      id-token: write # mint the OIDC token for Workload Identity Federation (GCP auth)
+    env:
+      GCP_PROJECT: animetix
+      GCP_REGION: europe-west9
+      PROD_SERVICE: animetix-web
+      PROD_IMAGE: europe-west9-docker.pkg.dev/animetix/animetix-repo/web
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+    # Reuses the WIF auth already configured for the Gemini workflows. The auth
+    # service account needs: roles/cloudbuild.builds.editor, roles/run.admin, and
+    # roles/iam.serviceAccountUser on the prod runtime service account.
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+        service_account: ${{ vars.SERVICE_ACCOUNT_EMAIL }}
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+    - name: Build & push prod image (Cloud Build)
+      run: |
+        gcloud builds submit \
+          --project "$GCP_PROJECT" \
+          --config cloudbuild.yaml \
+          .
+    - name: Deploy to Cloud Run (animetix-web)
+      # Minimal update: only the image changes. The service keeps its existing
+      # env vars, secrets, VPC connector, scaling and port.
+      run: |
+        gcloud run deploy "$PROD_SERVICE" \
+          --project "$GCP_PROJECT" \
+          --region "$GCP_REGION" \
+          --image "$PROD_IMAGE:latest"
+    - name: Show prod service URL
+      run: |
+        gcloud run services describe "$PROD_SERVICE" \
+          --project "$GCP_PROJECT" --region "$GCP_REGION" \
+          --format="value(status.url)"
