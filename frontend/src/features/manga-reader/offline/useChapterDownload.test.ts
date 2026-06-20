@@ -59,5 +59,7 @@ describe('useChapterDownload', () => {
     });
     expect(del).toHaveBeenCalledWith('m1', 1);
     expect(result.current.status).toBe('idle');
+    expect(result.current.progress).toBe(0);
+    expect(result.current.error).toBeNull();
   });
 });
