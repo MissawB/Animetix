@@ -1,16 +1,13 @@
 name: Animetix CI/CD Pipeline
 
 on:
-  # Run the pipeline ONLY when promoting toward an environment:
-  #  - a PR targeting dev/main is the intent to promote (the gate before merge,
-  #    and what fires promote-to-dev);
-  #  - a push to dev fires promote-to-prod, a push to main is prod itself.
-  # No schedule/feature-branch triggers: CI runs only on a dev/prod promotion.
+  # Prod-only pipeline: run the checks when code targets or lands on main.
+  # Deployment to prod (animetix-web) is done manually, not by this workflow.
   pull_request:
-    branches: [ dev, main ]
+    branches: [ main ]
   push:
-    branches: [ dev, main ]
-  workflow_dispatch: # manual escape hatch (e.g. re-run a promotion)
+    branches: [ main ]
+  workflow_dispatch: # manual run
 
 jobs:
   lint:
@@ -171,103 +168,3 @@ jobs:
       run: cd frontend && npx playwright test e2e/a11y.spec.ts
       env:
         CI: true
-
-  promote-to-dev:
-    name: Promote to Development
-    needs: [lint, docker-build, test, perf-test, frontend-test]
-    if: github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'dev' && success()
-    runs-on: ubuntu-latest
-    environment: development
-    permissions:
-      contents: write # push the promoted code to the dev branch
-      id-token: write # mint the OIDC token for Workload Identity Federation (GCP auth)
-    env:
-      GCP_PROJECT: animetix
-      GCP_REGION: europe-west9
-      DEV_SERVICE: animetix-web-dev
-      DEV_IMAGE: europe-west9-docker.pkg.dev/animetix/animetix-repo/web-dev
-      # Same runtime SA + VPC connector as prod so dev can reach the (private) DB/Redis.
-      RUNTIME_SA: 836616987676-compute@developer.gserviceaccount.com
-      VPC_CONNECTOR: animetix-vpc-conn
-    steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-        # Prefer a PAT (PROMOTE_TOKEN): it isn't capped by the repo's read-only
-        # Actions setting AND its push to `dev` re-triggers CI so promote-to-prod
-        # fires. Falls back to GITHUB_TOKEN (needs repo "Read and write" + won't chain).
-        token: ${{ secrets.PROMOTE_TOKEN || secrets.GITHUB_TOKEN }}
-    - name: Push to Dev Branch
-      run: |
-        git config --global user.name "github-actions[bot]"
-        git config --global user.email "github-actions[bot]@users.noreply.github.com"
-        git fetch origin ${{ github.event.pull_request.head.ref }}:temp-pr-branch
-        git checkout dev || git checkout -b dev origin/main
-        git merge temp-pr-branch --ff-only
-        git push origin dev
-
-    # --- Deploy the promoted code to the dev Cloud Run environment ---------------
-    # Reuses the WIF auth already configured for the Gemini workflows
-    # (vars.GCP_WIF_PROVIDER / vars.SERVICE_ACCOUNT_EMAIL). The auth service account
-    # needs: roles/cloudbuild.builds.editor, roles/run.admin, and
-    # roles/iam.serviceAccountUser on RUNTIME_SA. animetix-web-dev is created on the
-    # first deploy; it reuses the prod Secret Manager secrets (see --set-secrets).
-    - name: Authenticate to Google Cloud
-      uses: google-github-actions/auth@v2
-      with:
-        workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
-        service_account: ${{ vars.SERVICE_ACCOUNT_EMAIL }}
-    - name: Set up Cloud SDK
-      uses: google-github-actions/setup-gcloud@v2
-    - name: Build & push dev image (Cloud Build)
-      run: |
-        gcloud builds submit \
-          --project "$GCP_PROJECT" \
-          --config deploy/cloudbuild.dev.yaml \
-          --substitutions=_TAG=${{ github.sha }} \
-          .
-    - name: Deploy to Cloud Run (animetix-web-dev)
-      run: |
-        gcloud run deploy "$DEV_SERVICE" \
-          --project "$GCP_PROJECT" \
-          --region "$GCP_REGION" \
-          --image "$DEV_IMAGE:${{ github.sha }}" \
-          --service-account "$RUNTIME_SA" \
-          --vpc-connector "$VPC_CONNECTOR" \
-          --vpc-egress private-ranges-only \
-          --port 7860 \
-          --cpu 2 --memory 4Gi \
-          --max-instances 3 \
-          --cpu-boost \
-          --allow-unauthenticated \
-          --set-env-vars "^@^DJANGO_ENV=production@ALLOWED_HOSTS=*.run.app,localhost,127.0.0.1" \
-          --set-secrets "DJANGO_SECRET_KEY=DJANGO_SECRET_KEY:latest,BRAIN_API_KEY=BRAIN_API_KEY:latest,TMDB_API_KEY=TMDB_API_KEY:latest,DATABASE_URL=DATABASE_URL:latest,REDIS_URL=REDIS_URL:latest,IGDB_CLIENT_ID=IGDB_CLIENT_ID:latest,GEMINI_API_KEY=GEMINI_API_KEY:latest,HF_TOKEN=HF_TOKEN:latest,IGDB_CLIENT_SECRET=IGDB_CLIENT_SECRET:latest,WANDB_API_KEY=WANDB_API_KEY:latest"
-    - name: Show dev service URL
-      run: |
-        gcloud run services describe "$DEV_SERVICE" \
-          --project "$GCP_PROJECT" --region "$GCP_REGION" \
-          --format="value(status.url)"
-
-  promote-to-prod:
-    name: Promote to Production
-    needs: [lint, docker-build, test, perf-test, frontend-test]
-    if: github.ref == 'refs/heads/dev' && github.event_name == 'push' && success()
-    runs-on: ubuntu-latest
-    environment: production
-    permissions:
-      contents: write
-    steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-        token: ${{ secrets.PROMOTE_TOKEN || secrets.GITHUB_TOKEN }}
-    - name: Push to Main Branch
-      run: |
-        git config --global user.name "github-actions[bot]"
-        git config --global user.email "github-actions[bot]@users.noreply.github.com"
-        git fetch origin main || true
-        git checkout main || git checkout master
-        git merge ${{ github.sha }} --ff-only
-        git push origin HEAD
