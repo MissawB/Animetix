@@ -1,13 +1,16 @@
 name: Animetix CI/CD Pipeline
 
 on:
-  push:
-    branches: [ main, master, dev ]
+  # Run the pipeline ONLY when promoting toward an environment:
+  #  - a PR targeting dev/main is the intent to promote (the gate before merge,
+  #    and what fires promote-to-dev);
+  #  - a push to dev fires promote-to-prod, a push to main is prod itself.
+  # No schedule/feature-branch triggers: CI runs only on a dev/prod promotion.
   pull_request:
-    branches: [ main, master, dev ]
-  schedule:
-    - cron: '0 0 * * 1' # Run weekly at midnight on Mondays
-  workflow_dispatch:
+    branches: [ dev, main ]
+  push:
+    branches: [ dev, main ]
+  workflow_dispatch: # manual escape hatch (e.g. re-run a promotion)
 
 jobs:
   lint:
