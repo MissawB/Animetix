@@ -13,6 +13,8 @@ import {
   Users,
   Database,
   Lock,
+  Brain,
+  AlertTriangle,
   Scale} from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from "../../utils/apiClient";
@@ -22,17 +24,13 @@ import { Badge } from "../../components/ui/Badge";
 
 
 import { motion } from 'framer-motion';
-import { 
-    AreaChart, 
-    Area, 
-    XAxis, 
-    YAxis, 
-    CartesianGrid, 
-    Tooltip, 
-    ResponsiveContainer 
-} from 'recharts';
+import _Plot from 'react-plotly.js';
 
 import { TransparencyData, ModelBenchmark } from '../../types';
+
+const Plot =
+  (_Plot as unknown as { default?: React.ComponentType<Record<string, unknown>> }).default ??
+  (_Plot as unknown as React.ComponentType<Record<string, unknown>>);
 
 const TransparencyPage: React.FC = () => {
   
@@ -53,6 +51,11 @@ const TransparencyPage: React.FC = () => {
   if (!data) return null;
 
   const metrics = data.global_metrics;
+
+  const timeline = data.evolution_timeline || [
+    { date: '2026-05', accuracy: 0.76 },
+    { date: '2026-06', accuracy: 0.84 },
+  ];
 
   return (
     <div className="min-h-screen bg-[#05050a] text-white">
@@ -110,27 +113,32 @@ const TransparencyPage: React.FC = () => {
             </div>
             
             <Card className="bg-navy-900/20 border-white/5 p-10 h-[450px]">
-                <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={data.evolution_timeline || [
-                        {"date": "2026-05", "accuracy": 0.76},
-                        {"date": "2026-06", "accuracy": 0.84}
-                    ]}>
-                        <defs>
-                            <linearGradient id="colorAcc" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                            </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
-                        <XAxis dataKey="date" stroke="#ffffff20" fontSize={10} tickLine={false} axisLine={false} />
-                        <YAxis stroke="#ffffff20" fontSize={10} tickLine={false} axisLine={false} />
-                        <Tooltip 
-                            contentStyle={{ backgroundColor: '#0a0a1a', border: '1px solid #ffffff10', borderRadius: '12px' }}
-                            itemStyle={{ color: '#3b82f6', fontWeight: 'bold' }}
-                        />
-                        <Area type="monotone" dataKey="accuracy" stroke="#3b82f6" strokeWidth={4} fillOpacity={1} fill="url(#colorAcc)" />
-                    </AreaChart>
-                </ResponsiveContainer>
+                <Plot
+                    data={[{
+                        x: timeline.map((d) => d.date),
+                        y: timeline.map((d) => d.accuracy),
+                        type: 'scatter',
+                        mode: 'lines',
+                        fill: 'tozeroy',
+                        line: { color: '#3b82f6', width: 4, shape: 'spline' },
+                        fillcolor: 'rgba(59,130,246,0.18)',
+                        hovertemplate: 'Accuracy: %{y:.0%}<extra></extra>',
+                    }]}
+                    layout={{
+                        autosize: true,
+                        paper_bgcolor: 'rgba(0,0,0,0)',
+                        plot_bgcolor: 'rgba(0,0,0,0)',
+                        margin: { l: 44, r: 20, t: 10, b: 36 },
+                        xaxis: { gridcolor: 'rgba(255,255,255,0.03)', tickfont: { color: '#ffffff33', size: 10 }, showline: false, zeroline: false },
+                        yaxis: { gridcolor: 'rgba(255,255,255,0.03)', tickfont: { color: '#ffffff33', size: 10 }, showline: false, zeroline: false, tickformat: '.0%' },
+                        font: { family: 'Montserrat', color: '#fff' },
+                        hovermode: 'x unified',
+                        showlegend: false,
+                    }}
+                    config={{ responsive: true, displayModeBar: false }}
+                    style={{ width: '100%', height: '100%' }}
+                    useResizeHandler
+                />
             </Card>
         </section>
 

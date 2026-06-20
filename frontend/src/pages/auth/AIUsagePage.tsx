@@ -12,18 +12,27 @@ import {
   Calendar,
   DollarSign
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { getAIUsage, AIUsageData } from '../../api';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  AreaChart,
-  Area
-} from 'recharts';
+import _Plot from 'react-plotly.js';
+
+const Plot =
+  (_Plot as unknown as { default?: React.ComponentType<Record<string, unknown>> }).default ??
+  (_Plot as unknown as React.ComponentType<Record<string, unknown>>);
+
+const chartLayout = {
+  autosize: true,
+  paper_bgcolor: 'rgba(0,0,0,0)',
+  plot_bgcolor: 'rgba(0,0,0,0)',
+  margin: { l: 10, r: 10, t: 10, b: 30 },
+  xaxis: { tickfont: { color: '#888', size: 10 }, showgrid: false, zeroline: false, showline: false },
+  yaxis: { visible: false },
+  font: { family: 'Montserrat' },
+  hovermode: 'x' as const,
+  showlegend: false,
+};
+
+const fmtDate = (val: string) => val.split('-').slice(1).reverse().join('/');
 
 const AIUsagePage: React.FC = () => {
   const [usageData, setUsageData] = useState<AIUsageData | null>(null);
@@ -149,30 +158,22 @@ const AIUsagePage: React.FC = () => {
                 <History className="w-4 h-4 text-blue-500" /> Historique des Bx (7j)
               </h3>
               <div className="h-64 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={history}>
-                    <defs>
-                      <linearGradient id="colorTokens" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#333" opacity={0.1} />
-                    <XAxis 
-                      dataKey="date" 
-                      tick={{fontSize: 10, fontWeight: 'bold'}} 
-                      axisLine={false}
-                      tickLine={false}
-                      tickFormatter={(val) => val.split('-').slice(1).reverse().join('/')}
-                    />
-                    <YAxis hide />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: '#000', border: 'none', borderRadius: '12px', fontSize: '12px' }}
-                      itemStyle={{ color: '#3b82f6', fontWeight: 'bold' }}
-                    />
-                    <Area type="monotone" dataKey="tokens" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorTokens)" />
-                  </AreaChart>
-                </ResponsiveContainer>
+                <Plot
+                  data={[{
+                    x: history.map((h) => fmtDate(h.date)),
+                    y: history.map((h) => h.tokens),
+                    type: 'scatter',
+                    mode: 'lines',
+                    fill: 'tozeroy',
+                    line: { color: '#3b82f6', width: 3, shape: 'spline' },
+                    fillcolor: 'rgba(59,130,246,0.18)',
+                    hovertemplate: '%{y:,} Bx<extra></extra>',
+                  }]}
+                  layout={chartLayout}
+                  config={{ responsive: true, displayModeBar: false }}
+                  style={{ width: '100%', height: '100%' }}
+                  useResizeHandler
+                />
               </div>
             </Card>
 
@@ -181,24 +182,19 @@ const AIUsagePage: React.FC = () => {
                 <Database className="w-4 h-4 text-emerald-500" /> Appels API par Jour
               </h3>
               <div className="h-64 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={history}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#333" opacity={0.1} />
-                    <XAxis 
-                      dataKey="date" 
-                      tick={{fontSize: 10, fontWeight: 'bold'}} 
-                      axisLine={false}
-                      tickLine={false}
-                      tickFormatter={(val) => val.split('-').slice(1).reverse().join('/')}
-                    />
-                    <YAxis hide />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: '#000', border: 'none', borderRadius: '12px', fontSize: '12px' }}
-                      itemStyle={{ color: '#10b981', fontWeight: 'bold' }}
-                    />
-                    <Bar dataKey="requests" fill="#10b981" radius={[10, 10, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+                <Plot
+                  data={[{
+                    x: history.map((h) => fmtDate(h.date)),
+                    y: history.map((h) => h.requests),
+                    type: 'bar',
+                    marker: { color: '#10b981' },
+                    hovertemplate: '%{y} appels<extra></extra>',
+                  }]}
+                  layout={chartLayout}
+                  config={{ responsive: true, displayModeBar: false }}
+                  style={{ width: '100%', height: '100%' }}
+                  useResizeHandler
+                />
               </div>
             </Card>
 

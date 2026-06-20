@@ -7,36 +7,7 @@ import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 
 import { Link } from 'react-router-dom';
-import '@google/model-viewer';
-
-/* eslint-disable @typescript-eslint/no-namespace */
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      'model-viewer': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & {
-        src?: string;
-        alt?: string;
-        'auto-rotate'?: boolean;
-        'camera-controls'?: boolean;
-        style?: React.CSSProperties;
-      }, HTMLElement>;
-    }
-  }
-  namespace React {
-    namespace JSX {
-      interface IntrinsicElements {
-        'model-viewer': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement> & {
-          src?: string;
-          alt?: string;
-          'auto-rotate'?: boolean;
-          'camera-controls'?: boolean;
-          style?: React.CSSProperties;
-        }, HTMLElement>;
-      }
-    }
-  }
-}
-/* eslint-enable @typescript-eslint/no-namespace */
+import GLBViewer from "../../components/three/GLBViewer";
 
 interface SpatialResult {
   original?: string;
@@ -85,7 +56,7 @@ const SpatialLabPage: React.FC = () => {
         const formData = new FormData();
         if (imageFile) formData.append('image_file', imageFile);
         else if (image) formData.append('image_url', image);
-        formData.append('mode', 'mesh'); // 'gaussian_splatting' is also supported if viewing via WebGL, but model-viewer uses GLB
+        formData.append('mode', 'mesh'); // 'gaussian_splatting' is also supported via WebGL, but the GLB viewer renders mesh output
 
         return apiClient('/api/v1/spatial-lab/generate-3d/', {
             method: 'POST',
@@ -216,13 +187,11 @@ const SpatialLabPage: React.FC = () => {
                               <div className="space-y-4 w-full h-[600px] flex flex-col items-center">
                                   <Badge variant="primary" className="bg-purple-600">Modèle 3D Interactif ({modelResult.format})</Badge>
                                   <div className="w-full h-full relative rounded-2xl overflow-hidden border border-white/10 bg-gray-900/50">
-                                      <model-viewer
+                                      <GLBViewer
                                           src={modelResult.model_url}
-                                          alt="Generated 3D Model"
-                                          auto-rotate
-                                          camera-controls
+                                          autoRotate
                                           style={{ width: '100%', height: '100%' }}
-                                      ></model-viewer>
+                                      />
                                   </div>
                               </div>
                           ) : (

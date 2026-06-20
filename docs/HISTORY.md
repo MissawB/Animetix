@@ -2,6 +2,25 @@
 
 This document archives the major milestones of the project's technical evolution.
 
+## [2026-06-20] Session: Offline Manga Reader (PWA)
+
+- **Mode Hors-ligne du Lecteur Manga (PWA)**:
+  - Added an `offlineLibrary` IndexedDB layer (`idb-keyval`) that stores downloaded chapter page images as blobs with per-chapter metadata, plus a `useChapterDownload` hook exposing download status/progress.
+  - Added a chapter list with a per-chapter download button on the manga detail page, and a `useChapterPages` hook that serves the reader from the local cache (object URLs) when a chapter is downloaded, falling back to the network and showing an "indisponible hors-ligne" state when offline.
+  - Configured the service worker SPA `navigateFallback` so reader routes load offline.
+
+## [2026-06-20] Session: Mihon/Suwayomi Integration, React Reader UX, Real-Time Chat, and ML Image Worker
+
+- **Manga Reader UX & Suwayomi (Mihon) Integration**:
+  - Implemented the Suwayomi explorer integration, image proxy, and extension manager. Added GraphQL queries/mutations to list, install, update, and uninstall manga source extensions, along with Django REST views/routes and explorer dual tabs.
+  - Optimized the Manga Reader React UX with background image preloading (next 3/prev 1 pages), double-page side-by-side view (RTL/LTR), wide-page auto-splitting, and infinite scroll Webtoon mode with synchronized scroll-position states.
+- **Real-Time Club Chat**:
+  - Integrated dynamic chat channels (WebSockets / Django Channels) inside discovery clubs for community interaction.
+- **Self-Hosted AI Image Worker (MLOps)**:
+  - Added a self-hosted fallback worker for Stable Diffusion and ComfyUI using our task queue (`enqueue_task`) monitored via the Cluster Health dashboard.
+- **LLM Speed Optimizations**:
+  - Implemented speculative decoding (EAGLE, Medusa) and KV cache optimization (semantic cache and RadixAttention) to accelerate response times.
+
 ## [2026-06-20] Session: Multiverse Lore Exporter (PDF Wiki) & LLM Acceleration Research
 
 - **Exportateur de Lore Multivers** :

@@ -5,7 +5,8 @@ import { MangaReader } from '../../features/manga-reader';
 import { useReaderStore } from '../../features/manga-reader/stores/useReaderStore';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
 import { apiClient } from '../../utils/apiClient';
-import { ArrowLeft, BookOpen, ChevronRight, Settings } from 'lucide-react';
+import { ArrowLeft, BookOpen, ChevronRight, Settings, WifiOff } from 'lucide-react';
+import { useChapterPages } from '../../features/manga-reader/offline/useChapterPages';
 
 const MangaReaderPage: React.FC = () => {
   const { mediaId, chapterId } = useParams<{ mediaId: string; chapterId: string }>();
@@ -18,22 +19,12 @@ const MangaReaderPage: React.FC = () => {
     queryFn: () => apiClient(`/api/v1/media/Manga/${mediaId}/`),
   });
 
-  // Fetch Chapter Content
-  const { data: chapter} = useQuery({
-    queryKey: ['media', 'Manga', mediaId, 'chapters', chapterId],
-    queryFn: () => apiClient(`/api/v1/media/Manga/${mediaId}/chapters/${chapterId}/`),
-  });
+  const { pages, source } = useChapterPages(mediaId!, chapterId!);
 
   useEffect(() => {
-    if (chapter?.pages) {
-      const formattedPages = chapter.pages.map((p: { image_url: string; number: number }) => ({
-        url: p.image_url,
-        index: p.number
-      }));
-      setPages(formattedPages);
-      setCurrentPageIndex(0);
-    }
-  }, [chapter, setPages, setCurrentPageIndex]);
+    setPages(pages);
+    setCurrentPageIndex(0);
+  }, [pages, setPages, setCurrentPageIndex]);
 
   return (
     <AnimatedPage>
@@ -62,6 +53,11 @@ const MangaReaderPage: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-4">
+            {source === 'offline' && (
+              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-500/10 text-green-400 text-[10px] font-black uppercase tracking-widest">
+                <WifiOff className="w-3 h-3" /> Hors-ligne
+              </span>
+            )}
             <button className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl transition-all border border-white/5">
               <Settings className="w-5 h-5 opacity-60" />
             </button>
@@ -69,7 +65,17 @@ const MangaReaderPage: React.FC = () => {
         </header>
 
         <main className="container mx-auto px-4 py-12">
-          <MangaReader />
+          {source === 'unavailable' ? (
+            <div className="flex flex-col items-center justify-center py-32 text-center gap-4">
+              <WifiOff className="w-12 h-12 text-red-500" />
+              <p className="text-sm font-black uppercase tracking-widest opacity-60">
+                Chapitre indisponible hors-ligne
+              </p>
+              <p className="text-xs opacity-30">Téléchargez ce chapitre lorsque vous êtes connecté.</p>
+            </div>
+          ) : (
+            <MangaReader />
+          )}
         </main>
 
         {/* Bottom Navigation (Quick Chapter Switch) */}
