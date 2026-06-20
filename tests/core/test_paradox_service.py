@@ -55,5 +55,5 @@ def test_generate_logic_fallback(paradox_service, mock_llm_service):
     res = paradox_service.generate_logic(
         "Anime", {"title": "A"}, {"title": "B"}, {"title": "I"}, "Français"
     )
-    assert res.reasoning == "Analyse probabiliste (LLM)"
+    assert res.reasoning == "Analyse probabiliste (SLM)"
     assert res.scenario == "Invalid JSON"

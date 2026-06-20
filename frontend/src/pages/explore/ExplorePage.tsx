@@ -135,7 +135,7 @@ const ExplorePage: React.FC = () => {
                 ))}
             </div>
 
-            <div className="flex gap-4">
+             <div className="flex gap-4">
                 <Link 
                     to="/explore/market/"
                     className="flex items-center gap-3 px-6 py-2 bg-blue-400/10 border border-blue-400/20 rounded-full text-blue-500 font-black uppercase text-[10px] tracking-widest hover:bg-blue-400 hover:text-black transition-all group no-underline shadow-lg shadow-blue-400/5"

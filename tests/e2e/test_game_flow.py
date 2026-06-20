@@ -1,6 +1,10 @@
 import re
 
+import pytest
 from playwright.sync_api import Page, expect
+
+# Browser-driven E2E: needs a Playwright browser and a live server (absent from the unit job).
+pytestmark = pytest.mark.integration
 
 
 def test_home_page_loads(page: Page, live_server):

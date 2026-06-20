@@ -3,7 +3,10 @@ from dependency_injector.wiring import Provide, inject
 from rest_framework import permissions, response, status, views
 
 from ..containers import Container
-from ..models import MediaItem, UserRecommendation
+from ..models import (
+    MediaItem,
+    UserRecommendation,
+)
 
 logger = get_logger("animetix.explore")
 
@@ -173,3 +176,6 @@ class MarketWikiView(views.APIView):
                 )
         except Exception as e:
             return response.Response({"error": str(e)}, status=500)
+
+
+# MarketListingViewSet has been removed

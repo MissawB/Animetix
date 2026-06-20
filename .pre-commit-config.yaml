@@ -1,0 +1,19 @@
+# Auto-format/lint staged files before each commit, mirroring the CI lint job
+# (same pinned ruff/black versions) so formatting issues never reach CI.
+#
+# One-time setup:
+#   pip install pre-commit
+#   pre-commit install
+#
+# If a hook reformats a file, the commit is aborted; `git add` the changes and
+# commit again. Run on the whole repo once with: pre-commit run --all-files
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.17
+    hooks:
+      - id: ruff
+        args: [--fix]
+  - repo: https://github.com/psf/black
+    rev: 26.5.1
+    hooks:
+      - id: black

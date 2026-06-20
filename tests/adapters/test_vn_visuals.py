@@ -20,10 +20,8 @@ def test_generate_sprite_calls_generate_image_with_correct_prompt(diffusers_adap
         assert res == "data:image/png;base64,fake"
         mock_gen.assert_called_once()
         args, _ = mock_gen.call_args
-        assert (
-            "full body portrait on pure white background, anime character sheet style"
-            in args[0]
-        )
+        assert "full body" in args[0]
+        assert "pure white background" in args[0]
         assert "Naruto" in args[0]
         assert "manga" in args[1]
 

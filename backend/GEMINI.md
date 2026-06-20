@@ -22,4 +22,5 @@ This file defines constraints specific to the backend server and AI domain layer
 
 ## 🧪 Testing & Quality
 - **Test Suite:** Execute `pytest` ensuring full code coverage over Domain Use Cases.
+- **Verification:** You **MUST** run and verify all tests (`pytest`), linting (`ruff check . --fix`), and formatting (`ruff format .`) before committing code.
 - **Logging:** Never use `print()`. Systematically route logs via named hierarchical loggers.

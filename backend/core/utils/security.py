@@ -405,5 +405,5 @@ def sanitize_cypher_identifier(identifier: str, allowed_list: List[str]) -> str:
     """Sanitise un identifiant Cypher (label ou relation) par rapport à une liste blanche."""
     if identifier in allowed_list:
         return identifier
-    logger.warning(f"Blocked unsafe Cypher identifier: {identifier}")
-    raise ValueError(f"Unsafe Cypher identifier: {identifier}")
+    logger.warning(f"Blocked unauthorized Cypher identifier: {identifier}")
+    raise ValueError(f"Unauthorized Cypher identifier: {identifier}")

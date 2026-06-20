@@ -8,12 +8,11 @@ def test_visual_rerank_success():
         status_code = 200
         content = b"fake_image_data"
 
-    mock_client = MagicMock()
-    mock_client.__enter__.return_value = mock_client
-    mock_client.get.return_value = MockResponse()
-
     with (
-        patch("adapters.inference.clip_vision.httpx.Client", return_value=mock_client),
+        patch(
+            "adapters.inference.clip_vision.safe_http_request",
+            return_value=MockResponse(),
+        ),
         patch("sentence_transformers.SentenceTransformer") as mock_model,
         patch("sentence_transformers.util.cos_sim") as mock_cos_sim,
         patch("PIL.Image.open") as mock_image_open,

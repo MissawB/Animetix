@@ -4,6 +4,7 @@ import { useMutation } from '@tanstack/react-query';
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion } from 'framer-motion';
 import { Sword, Users, Hash, Zap, Trophy, ShieldAlert } from 'lucide-react';
+import { apiClient } from '../../utils/apiClient';
 
 const DuelLobbyPage: React.FC = () => {
   const navigate = useNavigate();
@@ -12,13 +13,10 @@ const DuelLobbyPage: React.FC = () => {
 
   const createRoomMutation = useMutation({
     mutationFn: async (mediaType: string) => {
-      const res = await fetch('/api/game/duel/create/', {
+      return apiClient('/api/game/duel/create/', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ media_type: mediaType })
       });
-      if (!res.ok) throw new Error('Failed to create room');
-      return res.json();
     },
     onSuccess: (data) => {
       navigate(`/game/duel/arena/${data.room_code}/`);
@@ -27,16 +25,10 @@ const DuelLobbyPage: React.FC = () => {
 
   const joinRoomMutation = useMutation({
     mutationFn: async (code: string) => {
-      const res = await fetch('/api/game/duel/join/', {
+      return apiClient('/api/game/duel/join/', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ room_code: code })
       });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.detail || 'Failed to join room');
-      }
-      return res.json();
     },
     onSuccess: (data) => {
       navigate(`/game/duel/arena/${data.room_code}/`);
@@ -49,13 +41,10 @@ const DuelLobbyPage: React.FC = () => {
 
   const matchmakingMutation = useMutation({
     mutationFn: async (mediaType: string) => {
-      const res = await fetch('/api/game/duel/matchmaking/', {
+      return apiClient('/api/game/duel/matchmaking/', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ media_type: mediaType })
       });
-      if (!res.ok) throw new Error('Matchmaking failed');
-      return res.json();
     },
     onSuccess: (data) => {
       navigate(`/game/duel/arena/${data.room_code}/`);

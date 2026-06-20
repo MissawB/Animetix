@@ -183,15 +183,12 @@ class AgenticRAGService:
             )
 
             processors = {
-                RAGState.PLAN: PlanProcessor(planner=planner_agent, xai_collector=None),
-                RAGState.SAGA_LOOKUP: SagaLookupProcessor(
-                    saga_agent=saga_agent, xai_collector=None
-                ),
+                RAGState.PLAN: PlanProcessor(planner=planner_agent),
+                RAGState.SAGA_LOOKUP: SagaLookupProcessor(saga_agent=saga_agent),
                 RAGState.GRAPH_EXPLORE: GraphExploreProcessor(
                     community_partitioner=MagicMock(),
                     graph_expert=graph_expert,
                     neo4j_manager=self.neo4j_manager,
-                    xai_collector=None,
                 ),
                 RAGState.RESEARCH: ResearchProcessor(
                     planner=planner_agent,
@@ -202,27 +199,20 @@ class AgenticRAGService:
                     video_rag_service=MagicMock(),
                     scout=scout_agent,
                     neo4j_manager=self.neo4j_manager,
-                    xai_collector=None,
                 ),
                 RAGState.ACQUIRE_KNOWLEDGE: AcquireKnowledgeProcessor(
-                    librarian=librarian_agent, xai_collector=None
+                    librarian=librarian_agent
                 ),
-                RAGState.SPECULATE: SpeculateProcessor(
-                    forge=forge_agent, xai_collector=None
-                ),
+                RAGState.SPECULATE: SpeculateProcessor(forge=forge_agent),
                 RAGState.VLM_RERANK: VlmRerankProcessor(
                     inference_engine=self.inference_engine,
                     prompt_manager=self.prompt_manager,
-                    xai_collector=None,
                 ),
                 RAGState.SYNTHESIZE: SynthesizeProcessor(
                     synthesizer=synthesizer_agent,
                     xai_service=self.xai_service,
-                    rag_service=self.rag_service,
                 ),
-                RAGState.JUDGE: JudgeProcessor(
-                    debate_manager=debate_mgr, xai_collector=None
-                ),
+                RAGState.JUDGE: JudgeProcessor(debate_manager=debate_mgr),
                 RAGState.FALLBACK_RAG: FallbackRagProcessor(
                     rag_service=self.rag_service,
                     inference_engine=self.inference_engine,

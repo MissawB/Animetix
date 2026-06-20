@@ -14,6 +14,8 @@ sys.path.insert(0, os.path.join(BASE_DIR, "src"))
 sys.path.insert(0, os.path.join(BASE_DIR, "src", "backend"))
 sys.path.insert(0, os.path.join(BASE_DIR, "backend", "api"))
 sys.path.insert(0, os.path.join(BASE_DIR, "backend"))
+# Repo root, so the `backend.api.animetix.*` paths referenced in settings resolve.
+sys.path.insert(0, BASE_DIR)
 
 import django  # noqa: E402
 
@@ -340,4 +342,18 @@ def run_regression_test(model_adapter=None):
 
 
 if __name__ == "__main__":
+    # In CI with no LLM API key (and no local inference server), every request
+    # fails over to loading a multi-GB local model (CompactReasoningAdapter) per
+    # test — ~40 min on the runner. The accuracy threshold is already skipped in
+    # that case, so skip the whole benchmark instead of running it pointlessly.
+    if os.getenv("CI") == "true" and not (
+        os.getenv("GEMINI_API_KEY")
+        or os.getenv("OPENAI_API_KEY")
+        or os.getenv("BRAIN_API_KEY")
+    ):
+        logger.warning(
+            "⚠️ CI run with no LLM API key — skipping the regression benchmark "
+            "(it would otherwise load a multi-GB local model per test)."
+        )
+        sys.exit(0)
     run_regression_test()

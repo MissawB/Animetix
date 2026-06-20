@@ -2,6 +2,28 @@
 
 This document archives the major milestones of the project's technical evolution.
 
+## [2026-06-20] Session: Multiverse Lore Exporter (PDF Wiki) & LLM Acceleration Research
+
+- **Exportateur de Lore Multivers** :
+  - **Backend PDF Generation** : Added `reportlab` dependency to support native high-quality PDF generation. Implemented `MultiverseExportPDFView` inside `multiverse.py` utilizing the custom `NumberedCanvas` class for dynamic page numbering ("Page X sur Y") and header formatting. The API queries Neo4j for the target synthetic universe, its characters, and its neighborhood graph connections (concepts and relations).
+  - **URL Registration** : Added `/api/v1/multiverse/<str:universe_name>/export-pdf/` to `urls/api.py`.
+  - **React UI Button** : Integrated an "Exporter PDF" button next to the Nexus explorer within the `UniverseDetailPanel` on the `MultiverseCatalogPage.tsx`.
+  - **Testing & Verification** : Added a comprehensive test suite in `test_multiverse_export.py` ensuring successful streaming of `%PDF` content and correct attachment headers. Verified the output using a standalone scratch generation pipeline.
+- **LLM Acceleration Research** : Evaluated recent research (2025-2026) on speculative decoding (EAGLE, Medusa, SSD) and KV Cache optimization techniques, documented in the artifacts index.
+
+## [2026-06-19] Session: Digital Assets Shop, HTTP Centralisation, Pydantic V2 Migration, and UI Navigation Convergence
+
+- **Boutique d'Actifs Digitaux (Marketplace)**: Fully implemented the digital assets trading platform. Added the `MarketListing` model with choice-based wallet transaction types (`market_purchase`, `market_sale`), Django migrations, and DRF serializers/viewsets. Integrated atomic transactions for safe balances debit/credit and creator transfer. Developed `ShopPage.tsx` using a premium cyber-emerald styling, and linked it via routing and Sidebar. Wrote comprehensive pytest coverage in `test_market_api.py`.
+- **Centralisation HTTP (Frontend)**: Refactored game files (`AkinetixRLPage.tsx`, `DuelLobbyPage.tsx`, and `paradoxStore.ts`) to use the centralized `apiClient` wrapper. This eliminates raw `fetch` calls, ensures automatic Firebase and CSRF token transmission, and standardizes error toast feedback.
+- **Dépréciations Pydantic V2**: Migrated the `PersonalizationSchema` model in `social.py` from Pydantic V1 class Config format to Pydantic V2 `ConfigDict` standard, successfully resolving deprecation warnings.
+- **Correction de `sync-api.bat`**: Aligned the OpenAPI TypeScript code generation target to `src/types/api.d.ts` and removed the unrecognized `--quiet` argument from spectacular schema export.
+- **Navigation, Ghost Labs & UI Convergence**:
+  - Exposed sidebar shortcuts for **Nexus Pro** and **Transparence Système**, and created the **Outils Admin & Monitoring** section for staff.
+  - Linked previously orphan "Ghost Labs" interfaces: **Seiyuu Discovery**, **Numba Compiler**, **Video RAG**, and **Cove Oracle**.
+  - Deployed dedicated pages for **Données Hors-ligne** sync status, **AI Feedback History**, and **Open Data** datasets portal.
+  - Built the **Tableau de Bord État du Cluster** displaying real-time metrics for H100 GPUs, Ollama engines, and Neo4j nodes.
+  - Implemented the **Catalogue de la Galerie Multivers** enabling grid-view filtering and searching of communities' generated multiverses.
+
 ## [2026-06-10] Session: SOTA Google Cloud Integrations (GCIP, Vertex AI Vector Search 2.0, Gemini Agent Platform, AlloyDB AI Text-to-SQL, and Cloud KMS CMEK)
 
 - **Google Identity Platform (GCIP) & Firebase Auth**: Migrated local session and allauth authentication to a managed identity platform. Integrated the Firebase JS Client SDK on the frontend and implemented a custom Django REST Framework `GoogleIdentityAuthentication` backend to verify JWT ID Tokens using cached Google certificates (with local Firebase Emulator support). Added OAuth social sign-in support for **Google**, **Discord**, **X (Twitter)**, and **MyAnimeList**.

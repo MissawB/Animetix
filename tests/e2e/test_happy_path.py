@@ -4,6 +4,9 @@ import pytest
 from animetix.models import MediaItem
 from playwright.sync_api import Page, expect
 
+# Browser-driven E2E: needs a running app server (live_server) and a browser.
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.django_db(transaction=True)
 def test_happy_path(page: Page, live_server):

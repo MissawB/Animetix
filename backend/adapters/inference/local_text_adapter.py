@@ -1,4 +1,5 @@
 import logging
+import os
 from typing import List, Optional
 
 from core.domain.entities.ai_schemas import InferenceResponse
@@ -28,6 +29,21 @@ class LocalTextAdapter(InferencePort):
         self._embedding_model = None
         self.use_4bit = use_4bit
 
+        # Speculative Decoding configuration
+        self.speculative_enabled = (
+            os.getenv("SPECULATIVE_DECODING", "True").lower() == "true"
+        )
+        self.draft_model_id = os.getenv("DRAFT_MODEL_ID", "Qwen/Qwen2.5-0.5B-Instruct")
+        self.draft_model = None
+
+        # Radix KV Cache configuration
+        self.kv_cache_enabled = (
+            os.getenv("KV_CACHE_RADIX_ATTENTION", "True").lower() == "true"
+        )
+        from core.utils.radix_cache import RadixCacheManager
+
+        self.radix_cache = RadixCacheManager(max_nodes=16, min_prefix_len=10)
+
     def _load_model(self):
         if self.model:
             return
@@ -52,6 +68,17 @@ class LocalTextAdapter(InferencePort):
                 quantization_config=quantization_config,
                 trust_remote_code=True,
             )  # nosec B615
+
+            # Load assistant model if speculative decoding is enabled
+            if self.speculative_enabled and self.draft_model_id:
+                logger.info(f"🏗️ Loading Draft Assistant Model: {self.draft_model_id}")
+                self.draft_model = AutoModelForCausalLM.from_pretrained(
+                    self.draft_model_id,
+                    revision="main",
+                    device_map="auto",
+                    quantization_config=quantization_config,
+                    trust_remote_code=True,
+                )
         except Exception as e:
             logger.error(f"❌ Failed to load local text model: {e}")
             raise InferenceError(
@@ -71,15 +98,73 @@ class LocalTextAdapter(InferencePort):
         try:
             if thinking_mode or thinking_budget > 0:
                 prompt = f"<think>\nAnalyse en profondeur.\n</think>\n{prompt}"
-            inputs = self.tokenizer(
-                f"{system_prompt}\n\n{prompt}", return_tensors="pt"
-            ).to(self.model.device)
-            input_length = inputs.input_ids.shape[1]
-            outputs = self.model.generate(
-                **inputs, max_new_tokens=512 + thinking_budget
-            )
 
-            output_tokens = outputs[0][input_length:]
+            full_text = f"{system_prompt}\n\n{prompt}"
+            token_ids = self.tokenizer.encode(full_text)
+            input_length = len(token_ids)
+
+            import torch
+
+            device = self.model.device
+
+            # Check Prefix KV Cache
+            cached_pkv = None
+            match_len = 0
+            if self.kv_cache_enabled:
+                cached_pkv, match_len = self.radix_cache.query(token_ids)
+
+            generate_kwargs = {
+                "max_new_tokens": 512 + thinking_budget,
+                "return_dict_in_generate": True,
+            }
+            if self.draft_model:
+                generate_kwargs["assistant_model"] = self.draft_model
+
+            if cached_pkv is not None and match_len > 0:
+                logger.info(f"⚡ [Radix KV Cache] Hit for prefix of length {match_len}")
+                suffix_ids = token_ids[match_len:]
+
+                # Build tensors for suffix tokens
+                input_ids_tensor = torch.tensor(
+                    [suffix_ids], dtype=torch.long, device=device
+                )
+                position_ids = torch.arange(
+                    match_len,
+                    match_len + len(suffix_ids),
+                    dtype=torch.long,
+                    device=device,
+                ).unsqueeze(0)
+                attention_mask = torch.ones(
+                    1, match_len + len(suffix_ids), dtype=torch.long, device=device
+                )
+
+                generate_kwargs["position_ids"] = position_ids
+                generate_kwargs["attention_mask"] = attention_mask
+                generate_kwargs["past_key_values"] = cached_pkv
+
+                outputs = self.model.generate(
+                    input_ids=input_ids_tensor, **generate_kwargs
+                )
+            else:
+                logger.info("🐢 [Radix KV Cache] Miss / full sequence computation")
+                inputs = self.tokenizer(full_text, return_tensors="pt").to(device)
+                outputs = self.model.generate(**inputs, **generate_kwargs)
+
+            # Update Prefix KV Cache with computed prefix keys
+            if self.kv_cache_enabled and hasattr(outputs, "past_key_values"):
+                self.radix_cache.insert(token_ids, outputs.past_key_values)
+
+            # Retrieve generated tokens
+            if hasattr(outputs, "sequences"):
+                sequences = outputs.sequences[0]
+                if cached_pkv is not None and match_len > 0:
+                    suffix_input_len = len(token_ids) - match_len
+                    output_tokens = sequences[suffix_input_len:]
+                else:
+                    output_tokens = sequences[input_length:]
+            else:
+                output_tokens = outputs[0][input_length:]
+
             text = self.tokenizer.decode(
                 output_tokens, skip_special_tokens=True
             ).strip()

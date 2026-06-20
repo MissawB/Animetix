@@ -94,9 +94,6 @@ class Profile(models.Model):
     ranked_max_points = models.IntegerField(default=0)
     unlocked_badges = models.JSONField(default=list)
     custom_username_color = models.CharField(max_length=20, null=True, blank=True)
-    collected_fusions = models.ManyToManyField(
-        "CreativeFusion", related_name="collected_by_profiles", blank=True
-    )
     tier = models.CharField(max_length=20, choices=TIERS, default="free")
     wallet_balance = models.IntegerField(default=1000)
     api_key_hash = models.CharField(max_length=255, unique=True, null=True, blank=True)
@@ -521,6 +518,9 @@ class CreativeFusion(models.Model):
 
     def __str__(self):
         return f"{self.title_a} x {self.title_b} by {self.creator}"
+
+
+# MarketListing model has been removed
 
 
 class VsBattle(models.Model):

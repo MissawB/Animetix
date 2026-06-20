@@ -1,5 +1,7 @@
 from unittest.mock import MagicMock
 
+import pytest
+
 from backend.core.domain.entities.ai_schemas import (
     DebateOutcome,
     JudgeAction,
@@ -192,7 +194,7 @@ def test_synthesize_processor_success():
     mock_xai = MagicMock()
     mock_xai.measure_confidence.return_value = {"confidence_score": 0.9}
 
-    processor = SynthesizeProcessor(mock_synth, mock_xai, MagicMock())
+    processor = SynthesizeProcessor(mock_synth, mock_xai)
     ctx = MagicMock(spec=RAGContext)
     ctx.query = "query"
     ctx.truth_path = "truth"
@@ -201,6 +203,7 @@ def test_synthesize_processor_success():
     ctx.correction_feedback = None
     ctx.knowledge_acquired = False
     ctx.language = "Français"
+    ctx.use_slm = False
 
     next_state, steps = consume_generator(processor.process(ctx))
 
@@ -319,6 +322,7 @@ def test_rag_context_language():
     assert ctx_en.language == "English"
 
 
+@pytest.mark.integration  # drives the full agentic RAG service against a live engine (no ollama in CI)
 def test_agentic_rag_service_propagates_language(monkeypatch):
     from unittest.mock import MagicMock  # noqa: E402
 

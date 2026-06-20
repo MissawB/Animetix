@@ -122,6 +122,21 @@ urlpatterns = [
         name="api_gameplay_history",
     ),
     path(
+        "social/dashboard/",
+        api_views.SocialViewSet.as_view({"get": "dashboard"}),
+        name="api_social_dashboard",
+    ),
+    path(
+        "social/toggle_follow/<int:pk>/",
+        api_views.SocialViewSet.as_view({"post": "toggle_follow"}),
+        name="api_social_toggle_follow",
+    ),
+    path(
+        "sync/offline/",
+        api_views.sync_offline_data,
+        name="sync_offline_data",
+    ),
+    path(
         "latent-space/",
         (
             api_views.SampleView.as_view()
@@ -263,6 +278,58 @@ urlpatterns = [
     ),
     path(
         "mlops/adapters/", api_views.AdaptersView.as_view(), name="api_mlops_adapters"
+    ),
+    path(
+        "mlops/feedback/submit/",
+        api_views.AIFeedbackAPIView.as_view(),
+        name="submit_ai_feedback",
+    ),
+    path(
+        "mlops/eval/failures/",
+        api_views.AIREvaluationViewSet.as_view({"get": "failures"}),
+        name="mlops_eval_failures",
+    ),
+    path(
+        "mlops/open-data/",
+        api_views.OpenDatasetListView.as_view(),
+        name="open_dataset_list",
+    ),
+    path(
+        "mlops/open-data/download/<str:dataset_id>/",
+        api_views.OpenDatasetDownloadView.as_view(),
+        name="open_dataset_download",
+    ),
+    path(
+        "mlops/gold-dataset/",
+        api_views.GoldDatasetViewSet.as_view({"get": "list", "post": "create"}),
+        name="mlops_gold_dataset_list",
+    ),
+    path(
+        "mlops/gold-dataset/<int:pk>/validate/",
+        api_views.GoldDatasetViewSet.as_view({"post": "validate"}),
+        name="mlops_gold_dataset_validate",
+    ),
+    path(
+        "mlops/gold-dataset/sync_positive_feedback/",
+        api_views.GoldDatasetViewSet.as_view({"post": "sync_positive_feedback"}),
+        name="mlops_gold_dataset_sync",
+    ),
+    path(
+        "mlops/gold-dataset/<int:pk>/",
+        api_views.GoldDatasetViewSet.as_view(
+            {
+                "get": "retrieve",
+                "put": "update",
+                "patch": "partial_update",
+                "delete": "destroy",
+            }
+        ),
+        name="mlops_gold_dataset_detail",
+    ),
+    path(
+        "admin/ai_eval/data/",
+        api_views.AIREvaluationViewSet.as_view({"get": "stats"}),
+        name="admin_ai_eval_data",
     ),
     path(
         "graph/neighbors/",
@@ -431,9 +498,29 @@ urlpatterns = [
         name="api_emoji_state",
     ),
     path(
+        "game/emoji/start/",
+        api_views.EmojiGameStartView.as_view(),
+        name="api_emoji_start",
+    ),
+    path(
+        "game/emoji/guess/",
+        api_views.EmojiGameGuessView.as_view(),
+        name="api_emoji_guess",
+    ),
+    path(
         "game/paradox/state/",
         api_views.ParadoxGameStateView.as_view(),
         name="api_paradox_state",
+    ),
+    path(
+        "game/paradox/start/",
+        api_views.ParadoxGameStartView.as_view(),
+        name="api_paradox_start",
+    ),
+    path(
+        "game/paradox/move/",
+        api_views.ParadoxGameGuessView.as_view(),
+        name="api_paradox_guess",
     ),
     path(
         "game/vision/state/",
@@ -441,14 +528,44 @@ urlpatterns = [
         name="api_vision_state",
     ),
     path(
+        "game/vision/start/",
+        api_views.VisionGameStartView.as_view(),
+        name="api_vision_start",
+    ),
+    path(
+        "game/vision/guess/",
+        api_views.VisionGameGuessView.as_view(),
+        name="api_vision_guess",
+    ),
+    path(
         "game/blindtest/state/",
         api_views.BlindtestGameStateView.as_view(),
         name="api_blindtest_state",
     ),
     path(
+        "game/blindtest/start/",
+        api_views.BlindtestGameStartView.as_view(),
+        name="api_blindtest_start",
+    ),
+    path(
+        "game/blindtest/guess/",
+        api_views.BlindtestGameGuessView.as_view(),
+        name="api_blindtest_guess",
+    ),
+    path(
         "game/covertest/state/",
         api_views.CovertestGameStateView.as_view(),
         name="api_covertest_state",
+    ),
+    path(
+        "game/covertest/start/",
+        api_views.CovertestGameStartView.as_view(),
+        name="api_covertest_start",
+    ),
+    path(
+        "game/covertest/guess/",
+        api_views.CovertestGameGuessView.as_view(),
+        name="api_covertest_guess",
     ),
     path(
         "game/world-boss/active/",
@@ -482,6 +599,16 @@ urlpatterns = [
         "multiverse/gallery/",
         api_views.MultiverseGalleryView.as_view(),
         name="api_multiverse_gallery",
+    ),
+    path(
+        "multiverse/catalog/",
+        api_views.MultiverseCatalogView.as_view(),
+        name="api_multiverse_catalog",
+    ),
+    path(
+        "multiverse/<str:universe_name>/export-pdf/",
+        api_views.MultiverseExportPDFView.as_view(),
+        name="api_multiverse_export_pdf",
     ),
     path("billing/webhook/", billing_alert_webhook, name="api_billing_webhook"),
     path(

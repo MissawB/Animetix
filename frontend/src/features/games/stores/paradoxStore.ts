@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { ParadoxState } from '../../../types';
 import { paradoxService } from '../services/paradoxService';
+import { apiClient } from '../../../utils/apiClient';
 
 interface ParadoxStore {
   gameState: ParadoxState | null;
@@ -23,9 +24,7 @@ export const useParadoxStore = create<ParadoxStore>((set) => ({
     } catch {
       try {
         // Fallback pour démarrer si pas d'état actif
-        const res = await fetch('/api/v1/game/paradox/start/', { method: 'POST' });
-        const state = await res.json();
-        if (!res.ok) throw new Error(state.error || 'Failed to start game');
+        const state = await apiClient('/api/v1/game/paradox/start/', { method: 'POST' });
         set({ gameState: state, isLoading: false });
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to start game';

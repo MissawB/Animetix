@@ -10,7 +10,7 @@ from ..containers import Container
 class GraphNeighborsView(APIView):
     """
     API view to retrieve neighbors of a media item in the knowledge graph.
-    Only available to Premium users.
+    Available to all authenticated users (costs Berrix per exploration).
     """
 
     permission_classes = [permissions.IsAuthenticated]

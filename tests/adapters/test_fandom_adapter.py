@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 from adapters.persistence.fandom_adapter import FandomAdapter
 
 
-@patch("adapters.persistence.fandom_adapter.httpx.get")
+@patch("adapters.persistence.fandom_adapter.safe_http_request")
 def test_fetch_character_data_success(mock_get):
     # Setup search response
     mock_search_res = MagicMock()
@@ -38,7 +38,7 @@ def test_fetch_character_data_success(mock_get):
     assert mock_get.call_count == 2
 
 
-@patch("adapters.persistence.fandom_adapter.httpx.get")
+@patch("adapters.persistence.fandom_adapter.safe_http_request")
 def test_fetch_character_data_missing(mock_get):
     mock_search_res = MagicMock()
     mock_search_res.status_code = 200

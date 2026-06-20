@@ -3,6 +3,7 @@ from animetix_project.asgi import application
 from channels.testing import WebsocketCommunicator
 
 
+@pytest.mark.django_db(transaction=True)
 @pytest.mark.asyncio
 async def test_undercover_consumer_logic():
     """Vérifie la connexion et la logique de base du salon Undercover."""
@@ -35,6 +36,7 @@ async def test_undercover_consumer_logic():
     await communicator.disconnect()
 
 
+@pytest.mark.django_db(transaction=True)
 @pytest.mark.asyncio
 async def test_undercover_vote_logic():
     communicator = WebsocketCommunicator(application, "/ws/undercover/ABC/")
@@ -47,3 +49,86 @@ async def test_undercover_vote_logic():
     assert len(response["players"]) > 0
 
     await communicator.disconnect()
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.asyncio
+async def test_club_consumer_authenticated_member():
+    from animetix.models import ClubMembership, DiscoveryClub
+    from channels.db import database_sync_to_async
+    from django.contrib.auth.models import User
+
+    # Create user, club, membership in DB
+    user = await database_sync_to_async(User.objects.create_user)(
+        username="member1", password="password"
+    )
+    club = await database_sync_to_async(DiscoveryClub.objects.create)(
+        name="Club A", description="Desc", creator=user
+    )
+    await database_sync_to_async(ClubMembership.objects.create)(
+        user=user, club=club, role="Member"
+    )
+
+    # Setup communicator
+    communicator = WebsocketCommunicator(application, f"/ws/club/{club.id}/")
+    communicator.scope["user"] = user
+
+    connected, _ = await communicator.connect()
+    assert connected
+
+    # Send message
+    await communicator.send_json_to({"message": "Hello members!"})
+
+    # Wait for broadcast
+    response = await communicator.receive_json_from()
+    assert response["text"] == "Hello members!"
+    assert response["username"] == "member1"
+    assert response["type"] == "chat"
+    assert int(response["club_id"]) == club.id
+
+    await communicator.disconnect()
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.asyncio
+async def test_club_consumer_non_member_rejected():
+    from animetix.models import DiscoveryClub
+    from channels.db import database_sync_to_async
+    from django.contrib.auth.models import User
+
+    user = await database_sync_to_async(User.objects.create_user)(
+        username="nonmember", password="password"
+    )
+    creator = await database_sync_to_async(User.objects.create_user)(
+        username="creator", password="password"
+    )
+    club = await database_sync_to_async(DiscoveryClub.objects.create)(
+        name="Club B", description="Desc", creator=creator
+    )
+
+    communicator = WebsocketCommunicator(application, f"/ws/club/{club.id}/")
+    communicator.scope["user"] = user
+
+    connected, _ = await communicator.connect()
+    assert not connected
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.asyncio
+async def test_club_consumer_anonymous_rejected():
+    from animetix.models import DiscoveryClub
+    from channels.db import database_sync_to_async
+    from django.contrib.auth.models import AnonymousUser, User
+
+    creator = await database_sync_to_async(User.objects.create_user)(
+        username="creator2", password="password"
+    )
+    club = await database_sync_to_async(DiscoveryClub.objects.create)(
+        name="Club C", description="Desc", creator=creator
+    )
+
+    communicator = WebsocketCommunicator(application, f"/ws/club/{club.id}/")
+    communicator.scope["user"] = AnonymousUser()
+
+    connected, _ = await communicator.connect()
+    assert not connected

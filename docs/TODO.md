@@ -4,46 +4,12 @@ Ce document liste toutes les tâches techniques, architecturales et fonctionnell
 
 ---
 
-## ✨ Fonctionnalités Manquantes (Expérience Utilisateur)
-
-### 🧩 Navigation & Découvrabilité (Audit Juin 2026)
-
-- [x] **Exposition des Fonctionnalités Orphelines :**
-    - Ajouter des entrées Sidebar pour **Nexus Pro** (`/social/nexus/`) et **Transparence Système** (`/social/transparency/`).
-    - Créer une section **"Outils Admin & Monitoring"** dans la Sidebar (visible pour le staff) incluant :
-        - Audit de Sécurité IA (`/admin/safety-audit/`)
-        - Monitoring TTC / Latence (`/admin/ttc-monitoring/`)
-        - Gestion Financière & Coûts API (`/admin/financials/`)
-- [ ] **Raccordement des "Ghost Labs" (Beta) :**
-    - Rendre accessibles via le menu principal ou une navigation secondaire :
-        - Synthèse Vocale Seiyuu (`/lab/audio/seiyuu/`)
-        - Compilateur Numba/IA (`/lab/compiler/`)
-        - Video RAG (Recherche flux vidéo) (`/lab/video-rag/`)
-        - Oracle de Cove (Prédictions) (`/lab/cove-oracle/`)
-
-### 🛠️ Nouvelles Pages Dédiées (Backend Mapping)
-
-- [ ] **Centre de Synchronisation de Données :**
-    - Créer une page permettant de visualiser les données locales/hors-ligne en attente de synchronisation et de forcer la réconciliation manuelle (`sync_offline_data`).
-- [ ] **Historique des Feedbacks IA :**
-    - Implémenter la vue pour `/social/ai-feedback-history/` permettant aux utilisateurs de revoir leurs interactions passées avec les agents de validation.
-- [ ] **Portail de Données Ouvertes (Open Data) :**
-    - Page de téléchargement des datasets publics (paires DPO, logs anonymisés) pour la conformité académique.
-- [ ] **Tableau de Bord "État du Cluster" :**
-    - Visualisation temps réel de la santé des instances NVIDIA H100, Ollama, et du Knowledge Graph (Neo4j).
-
-### 🌌 Autres Fonctionnalités
-
-- [ ] **Catalogue de la Galerie Multivers (Multiverse Gallery) :**
-    - Implémenter une véritable page "Catalogue" (grille/liste) avec filtres et recherche pour explorer les univers synthétiques générés par la communauté.
-- [ ] **Boutique d'Actifs Digitaux (Market/Trading) :**
-    - Créer une page de type "Shop" ou "Marketplace" dédiée à l'achat/vente et à l'échange d'actifs digitaux.
-
----
-
 ## 🚀 Expansion & Futur
-- [ ] **Déploiement Multi-Régions :** Préparer les scripts d'infrastructure pour un déployement sur plusieurs régions Google Cloud.
 - [ ] **Rapports de Conformité :** Automatiser les rapports hebdomadaires de conformité sécurité.
-
+- [ ] **Intégration de Tachidesk/Suwayomi (Mihon Backend) :** Connecter le projet à une instance Tachidesk/Suwayomi locale pour connecter les extensions de Mihon/Tachiyomi et accéder à plus de 500 sources de mangas.
+- [ ] **Optimisation du Lecteur Manga (React UX) :** Améliorer le confort de lecture dans le composant frontend (préchargement d'images, infinite scroll pour le mode Webtoon, découpe/affichage double page, et configurations du lecteur).
+- [x] **Chat en Temps Réel pour les Clubs :** Intégrer un canal de discussion instantanée (via WebSockets / Django Channels) au sein de chaque Club de découverte pour favoriser l'aspect communautaire.
+- [x] **Self-Hosted AI Image Worker (MLOps) :** Configurer un travailleur local (Stable Diffusion / ComfyUI) géré par notre file d'attente de tâches (`enqueue_task`) en cas de dépassement de budget ou d'indisponibilité des API payantes, monitoré sur le tableau de bord "État du Cluster".
+- [x] **Optimisation de la rapidité du LLM (Speculative Decoding & KV Cache) :** Accélérer le temps de réponse de nos LLM en implémentant du décodage spéculatif (EAGLE, Medusa) et du cache sémantique/RadixAttention. *Note : Rajouter les papiers de recherche associés dans la page dédiée* [RESEARCH_PAPERS.md](file:///c:/Users/bahma/PycharmProjects/Projet solo/Double_scenario_Project/docs/RESEARCH_PAPERS.md).
 ---
-*Dernière mise à jour : 16 Juin 2026*
+*Dernière mise à jour : 20 Juin 2026*

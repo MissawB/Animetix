@@ -290,7 +290,92 @@ class FallbackInferenceAdapter(InferencePort):
 
     def generate_image(self, prompt: str, style: str = "") -> str:
         """Génère une image avec repli."""
-        return self._fallback_call("generate_image", prompt, style) or ""
+        from django.core.cache import cache
+
+        budget_exceeded = cache.get("paid_api_budget_exceeded", False)
+
+        if budget_exceeded:
+            logger.info(
+                "💸 Paid API budget exceeded! Routing image generation to self-hosted worker."
+            )
+            return self._generate_image_via_worker(prompt, style)
+
+        # Otherwise, try the standard fallback orchestrator chain (paid APIs first)
+        try:
+            res = self._fallback_call("generate_image", prompt, style)
+            if res:
+                return res
+            logger.warning(
+                "Paid API returned empty result. Triggering failover to self-hosted worker."
+            )
+        except Exception as e:
+            logger.warning(
+                f"Paid API failed: {e}. Triggering failover to self-hosted worker."
+            )
+            cache.set("paid_api_failover_active", True, timeout=60)
+
+        return self._generate_image_via_worker(prompt, style)
+
+    def _generate_image_via_worker(self, prompt: str, style: str = "") -> str:
+        from animetix.tasks_client import enqueue_task
+        from django.core.cache import cache
+
+        # Increment queue length
+        try:
+            queue_len = cache.get("self_hosted_image_worker:queue_length", 0)
+            cache.set("self_hosted_image_worker:queue_length", queue_len + 1)
+        except Exception:
+            pass
+
+        try:
+            logger.info("Enqueuing image generation task to self-hosted worker queue.")
+            task_id = enqueue_task(
+                "self_hosted_image_generation_task", prompt=prompt, style=style
+            )
+
+            # Synchronously poll the cache for task completion (up to 30s)
+            start_time = time.time()
+            timeout = 30.0
+            poll_interval = 0.2
+
+            while time.time() - start_time < timeout:
+                task_data = cache.get(f"task_result:{task_id}")
+                if task_data and isinstance(task_data, dict):
+                    if task_data.get("ready") or task_data.get("state") in [
+                        "SUCCESS",
+                        "FAILURE",
+                    ]:
+                        state = task_data.get("state") or task_data.get("status")
+                        if state in ["SUCCESS", "success"]:
+                            result = task_data.get("result")
+                            if isinstance(result, dict) and "error" in result:
+                                raise Exception(result["error"])
+                            return result or ""
+                        else:
+                            error_info = (
+                                task_data.get("result", {}).get("error")
+                                if isinstance(task_data.get("result"), dict)
+                                else task_data.get("error", "Unknown error")
+                            )
+                            raise Exception(f"Worker task failed: {error_info}")
+                time.sleep(poll_interval)
+
+            raise TimeoutError(
+                "Timeout waiting for self-hosted image generation worker task."
+            )
+        except Exception as e:
+            logger.error(f"Failed to generate image via self-hosted worker: {e}")
+            # Decrement queue length on failure (since the finally block of the task might not run if it never started)
+            try:
+                queue_len = cache.get("self_hosted_image_worker:queue_length", 0)
+                cache.set(
+                    "self_hosted_image_worker:queue_length", max(0, queue_len - 1)
+                )
+                if max(0, queue_len - 1) <= 0:
+                    cache.set("self_hosted_image_worker:status", "idle")
+            except Exception:
+                pass
+            raise e
 
     def _fallback_call(self, method_name: str, *args, **kwargs):
         capable_adapters = self._capability_cache.get(method_name, [])

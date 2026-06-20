@@ -18,13 +18,51 @@ class EmojiGameStateView(APIView):
     permission_classes = [permissions.AllowAny]
 
     @inject
-    def get(self, request):
+    def get(
+        self,
+        request,
+        catalog_service=Provide[Container.core.catalog_service],
+        emoji_service=Provide[Container.core.emoji_service],
+    ):
         session_service = get_session_service(request)
         port = session_service.port
         secret = port.get("emoji_secret")
         if not secret:
+            # Auto-start game
+            media_type = port.get("media_type", "Anime")
+            data = catalog_service.load_data(media_type)
+            if not data:
+                for m_type in ["Anime", "Manga", "Character"]:
+                    data = catalog_service.load_data(m_type)
+                    if data:
+                        media_type = m_type
+                        port.set("media_type", media_type)
+                        break
+            if data:
+                secret = emoji_service.select_secret(data)
+                if secret:
+                    secret_data = data["title_to_full_data"].get(secret, {})
+                    description = secret_data.get("description", "")
+                    emoji_list = emoji_service.generate_emojis(
+                        media_type, secret, description
+                    )
+                    port.update(
+                        {
+                            "emoji_secret": secret,
+                            "emoji_list": emoji_list,
+                            "emoji_guesses": [],
+                            "emoji_game_over": False,
+                            "is_daily": False,
+                            "is_ranked": False,
+                        }
+                    )
+            # Recheck secret
+            secret = port.get("emoji_secret")
+
+        if not secret:
             return Response(
-                {"error": "No game in progress"}, status=status.HTTP_400_BAD_REQUEST
+                {"error": "No game in progress and auto-start failed."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         return Response(

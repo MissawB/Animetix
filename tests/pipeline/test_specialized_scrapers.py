@@ -15,7 +15,7 @@ def mock_django_media_item():
 
 
 @patch("src.pipeline.specialized_scrapers.gemini_client")
-@patch("pipeline.specialized_scrapers.httpx.get")
+@patch("pipeline.specialized_scrapers.safe_http_request")
 def test_scraper_a_casting(mock_get, mock_gemini):
     from pipeline.specialized_scrapers import ScraperA_Casting  # noqa: E402
 
@@ -44,7 +44,7 @@ def test_scraper_a_casting(mock_get, mock_gemini):
     assert cast[0]["doubleur_vf"] == "Vincent de Bouard"
 
 
-@patch("pipeline.specialized_scrapers.httpx.get")
+@patch("pipeline.specialized_scrapers.safe_http_request")
 def test_scraper_b_music(mock_get):
     from pipeline.specialized_scrapers import ScraperB_Music  # noqa: E402
 

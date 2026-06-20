@@ -73,6 +73,11 @@ class GoldDatasetEntryAdmin(admin.ModelAdmin):
 
     instruction_preview.short_description = "Instruction"
 
+    def context_preview(self, obj):
+        return obj.context[:80] + "..." if len(obj.context) > 80 else obj.context
+
+    context_preview.short_description = "Contexte"
+
     def ai_validation_score_display(self, obj):
         color = (
             "green"

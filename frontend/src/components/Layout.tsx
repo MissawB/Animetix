@@ -16,7 +16,8 @@ import { SimulatedAdBanner } from '../features/billing/components/SimulatedAdBan
 import { 
   X, Home, Zap, Trophy, Settings, Sun, Moon, Monitor, 
   CheckCircle2, Shield, Sparkles, Gamepad2, Search, Compass, 
-  Network, Film, Users, UserPlus, FlaskConical, BrainCircuit, Eye, LogIn, Microscope
+  Network, Film, Users, UserPlus, FlaskConical, BrainCircuit, Eye, LogIn, Microscope, Mic,
+  Database, MessageSquare, Share2
 } from 'lucide-react';
 
 const Footer: React.FC = () => {
@@ -180,9 +181,17 @@ const LayoutContent: React.FC<{ children: ReactNode }> = ({ children }) => {
             <Users className="w-4 h-4 text-orange-400" /> {t('nav.community', 'Communauté')}
           </Link>
           {isAuthenticated && (
-            <Link to="/social/friends/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/social/friends/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
-              <UserPlus className="w-4 h-4 text-pink-400" /> {t('nav.friends', 'Amis')}
-            </Link>
+            <>
+              <Link to="/social/friends/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/social/friends/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
+                <UserPlus className="w-4 h-4 text-pink-400" /> {t('nav.friends', 'Amis')}
+              </Link>
+              <Link to="/social/sync/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/social/sync/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
+                <Database className="w-4 h-4 text-yellow-400" /> {t('nav.offline_sync', 'Sync Hors-ligne')}
+              </Link>
+              <Link to="/social/ai-feedback-history/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/social/ai-feedback-history/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
+                <MessageSquare className="w-4 h-4 text-purple-400" /> {t('nav.ai_feedback_history', 'Feedbacks IA')}
+              </Link>
+            </>
           )}
           <Link to="/leaderboard/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/leaderboard/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
             <Trophy className="w-4 h-4 text-yellow-500" /> {t('nav.leaderboard', 'Classement')}
@@ -219,6 +228,9 @@ const LayoutContent: React.FC<{ children: ReactNode }> = ({ children }) => {
           </Link>
           <Link to="/social/transparency/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/social/transparency/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
             <Eye className="w-4 h-4 text-slate-400" /> {t('navbar.transparency', 'Transparence')}
+          </Link>
+          <Link to="/social/open-data/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/social/open-data/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
+            <Share2 className="w-4 h-4 text-teal-400" /> {t('nav.open_data', 'Portail Open Data')}
           </Link>
 
           {!isAuthenticated && (

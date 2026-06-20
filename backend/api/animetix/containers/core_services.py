@@ -488,6 +488,8 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         ),
         usage_port=infrastructure.usage_port,
         sota_service=sota_benchmark_service,
+        inference_engine=inference.inference_engine,
+        graph_port=persistence.graph_persistence_port,
     )
 
     quantum_cognitive_model = providers.Singleton(

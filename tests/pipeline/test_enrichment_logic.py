@@ -1,14 +1,7 @@
-# Mocking heavy dependencies before imports
-import sys
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
-
-mock_neo4j = Mock()
-sys.modules["neo4j"] = mock_neo4j  # noqa: E402
-sys.modules["pipeline.neo4j_client"] = Mock(neo4j_manager=Mock())  # noqa: E402
-
-from core.domain.services.graph_construction_service import (  # noqa: E402
+from core.domain.services.graph_construction_service import (
     KnowledgeGraphConstructionService,
 )
 
@@ -49,7 +42,7 @@ def test_graph_extraction_logic(mock_inference_engine):
     assert extracted["relations"][0]["source"] == "Naruto Uzumaki"
 
 
-@patch("src.pipeline.enrich_graph_ai.neo4j_manager")
+@patch("pipeline.enrich_graph_ai.neo4j_manager")
 def test_enrichment_pipeline_sync_call(mock_neo4j_mgr, mock_inference_engine):
     from pipeline.enrich_graph_ai import enrich_media_type  # noqa: E402
 
@@ -60,9 +53,7 @@ def test_enrichment_pipeline_sync_call(mock_neo4j_mgr, mock_inference_engine):
     mock_container.graph_builder = KnowledgeGraphConstructionService(
         inference_engine=mock_inference_engine, prompt_manager=mock_prompt_manager
     )
-    with patch(
-        "src.pipeline.enrich_graph_ai.get_container", return_value=mock_container
-    ):
+    with patch("pipeline.enrich_graph_ai.get_container", return_value=mock_container):
         # We simulate a small catalog
 
         with patch("builtins.open", MagicMock()):

@@ -28,7 +28,8 @@ import {
   Binary,
   Swords,
   Map,
-  Target
+  Target,
+  Search
 } from 'lucide-react';
 import { Card } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
@@ -88,7 +89,8 @@ const labs = [
         color: 'text-amber-500',
         bg: 'from-amber-500/20 to-transparent',
         badge: 'Generative',
-        status: 'Neo4j Sync'
+        status: 'Neo4j Sync',
+        catalogUrl: '/multiverse/catalog/'
     },
     {
         id: 'tot',
@@ -171,7 +173,7 @@ const creativeLabs = [
         id: 'seiyuu',
         title: 'Seiyuu Discovery',
         desc: 'Identifiez les voix iconiques et accédez au catalogue des doubleurs japonais.',
-        icon: Mic2,
+        icon: Mic,
         url: '/lab/audio/seiyuu/',
         color: 'text-emerald-400',
         bg: 'from-emerald-400/20 to-transparent',
@@ -191,7 +193,7 @@ const creativeLabs = [
         id: 'video-rag',
         title: 'Video RAG',
         desc: 'Recherche augmentée par récupération directement sur des flux vidéo.',
-        icon: SearchCode,
+        icon: Search,
         url: '/lab/video-rag/',
         color: 'text-red-500',
         bg: 'from-red-500/20 to-transparent',
@@ -390,7 +392,18 @@ const LabHubPage: React.FC = () => {
                                 <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${lab.color} opacity-0 group-hover:opacity-100 transition-all transform translate-x-[-10px] group-hover:translate-x-0 duration-500`}>
                                     INITIALIZE <ArrowRight className="inline w-3 h-3 ml-2" />
                                 </span>
-                                <span className="text-[9px] font-bold opacity-20 uppercase">{lab.status}</span>
+                                <div className="flex items-center gap-3">
+                                    {'catalogUrl' in lab && (lab as any).catalogUrl && (
+                                        <Link
+                                            to={(lab as any).catalogUrl}
+                                            className="text-[9px] font-black uppercase text-amber-500 hover:text-white transition-colors tracking-widest z-20"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            Catalogue →
+                                        </Link>
+                                    )}
+                                    <span className="text-[9px] font-bold opacity-20 uppercase">{lab.status}</span>
+                                </div>
                             </div>
                         </div>
                     </Card>

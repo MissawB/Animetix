@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ShieldAlert, 
@@ -19,6 +19,7 @@ import {
 import { Card } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
+import ClusterHealthPanel from './ClusterHealthPanel';
 
 const MLOpsDashboard: React.FC = () => {
   const adminModules = [
@@ -168,6 +169,11 @@ const MLOpsDashboard: React.FC = () => {
                     </Card>
                 </Link>
             ))}
+        </div>
+
+        {/* ── Cluster Health Dashboard ─────────────────────── */}
+        <div className="mb-12">
+          <ClusterHealthPanel />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 from ...ports.inference_port import InferencePort
 from ...ports.usage_port import UsagePort
-from ..exceptions import ParsingError
+from ..exceptions import InferenceError, ParsingError
 from .prompt_manager import PromptManager
 
 logger = logging.getLogger("animetix." + __name__)
@@ -52,8 +52,112 @@ class LLMService:
         user_id: int = None,
         tier: str = "free",
     ) -> str:
-        # ... (rest of generate remains same)
-        pass
+        # --- QUOTA CHECK ---
+        if not user_id:
+            try:
+                from animetix.middleware import (
+                    get_current_user_id,
+                    get_current_user_tier,
+                )
+
+                user_id = get_current_user_id()
+                tier = get_current_user_tier()
+            except ImportError as e:
+                logger.warning(f"Handled error: {e}")
+
+        if user_id and self.usage_port:
+            if not self.usage_port.check_quota(user_id, tier):
+                from ..exceptions import QuotaExceededError
+
+                raise QuotaExceededError("You have reached your daily AI limit.")
+
+        import time
+
+        start_time = time.time()
+
+        span = None
+        if tracer:
+            span = tracer.start_span("LLMService.generate")
+            span.set_attribute("llm.prompt", prompt[:1000])
+            span.set_attribute("llm.system_prompt", system_prompt[:1000])
+            span.set_attribute("llm.use_slm", use_slm)
+            span.set_attribute("llm.thinking_mode", thinking_mode)
+            span.set_attribute("llm.thinking_budget", thinking_budget)
+
+        try:
+            engine = self.slm_engine if use_slm else self.inference_engine
+            response = engine.generate(
+                prompt,
+                system_prompt,
+                thinking_budget=thinking_budget,
+                thinking_mode=thinking_mode,
+                include_logprobs=True,
+            )
+            latency = time.time() - start_time
+
+            # The engine returns an InferenceResponse; keep backward compatibility
+            # with engines/mocks that return a raw string.
+            text = getattr(response, "text", response)
+            if not text:
+                raise InferenceError("Engine returned empty response")
+
+            if span:
+                span.set_attribute("llm.response", text[:1000])
+                span.set_attribute("llm.latency", latency)
+                span.set_status(Status(StatusCode.OK))
+                span.end()
+                span = None
+
+            # --- W&B OBSERVABILITY ---
+            if self.obs_service:
+                tokens = (len(prompt) + len(system_prompt) + len(text)) // 4
+                model_id = getattr(engine, "model_name", "local-llama")
+                self.obs_service.log_inference(
+                    model_id, latency, tokens, metadata={"slm": use_slm}
+                )
+
+            # --- TOKEN TRACKING ---
+            if self.usage_port:
+                in_tokens, out_tokens, _ = self._get_token_usage(
+                    response, prompt, system_prompt
+                )
+                engine_name = getattr(engine, "model_name", "brain-api")
+                if use_slm:
+                    engine_name += "-slm"
+                self.usage_port.log_usage(
+                    engine_name,
+                    input_tokens=in_tokens,
+                    output_tokens=out_tokens,
+                    user_id=user_id,
+                )
+
+            # --- LLM GUARDRAILS (Sanitization) ---
+            if forbidden_terms:
+                import re
+
+                for term in forbidden_terms:
+                    if not term:
+                        continue
+                    # Remplacement insensible à la casse avec regex
+                    pattern = re.compile(re.escape(term), re.IGNORECASE)
+                    if pattern.search(text):
+                        text = pattern.sub("[CENSURÉ]", text)
+
+            return text
+        except Exception as e:
+            logger.error(
+                f"AI Generation failed: {str(e)}",
+                extra={"context": {"prompt": prompt[:200], "use_slm": use_slm}},
+            )
+            if span:
+                span.set_status(Status(StatusCode.ERROR, description=str(e)))
+                span.end()
+            if type(e).__name__ == "InferenceTimeoutError":
+                raise e
+            raise InferenceError(
+                f"AI Generation failed: {str(e)}",
+                context={"original_error": str(e)},
+            )
 
     def stream_generate(
         self,

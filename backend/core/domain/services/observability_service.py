@@ -2,7 +2,10 @@ import logging
 import os
 from typing import Any, Dict, Optional
 
-import wandb
+try:
+    import wandb
+except ImportError:  # W&B monitoring is optional and may be absent (e.g. in the image)
+    wandb = None  # type: ignore[assignment]
 
 logger = logging.getLogger("animetix.observability")
 
@@ -16,7 +19,7 @@ class ObservabilityService:
     def __init__(self, project_name: str = "animetix-prod"):
         self.project_name = project_name
         self.api_key = os.getenv("WANDB_API_KEY")
-        self.enabled = bool(self.api_key)
+        self.enabled = bool(self.api_key) and wandb is not None
         self._run = None
 
         # Suivi de la latence en mémoire pour les alertes temps réel

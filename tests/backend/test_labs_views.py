@@ -10,6 +10,7 @@ def user(db):
     return User.objects.create_user(username="test_user", password="password")
 
 
+@pytest.mark.integration  # Boots the full production stack (live LLM, GCP, chroma).
 @pytest.mark.django_db
 @patch("adapters.inference.workflows_client.GCPWorkflowsClient")
 def test_manga_voice_endpoint_production(

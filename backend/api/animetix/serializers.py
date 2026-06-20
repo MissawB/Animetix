@@ -185,6 +185,9 @@ class CreativeFusionSerializer(serializers.ModelSerializer):
         return False
 
 
+# MarketListingSerializer has been removed
+
+
 from .models import VsBattle  # noqa: E402
 
 

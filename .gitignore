@@ -82,6 +82,7 @@ gha-creds-*.json
 
 # Geminni/Superpowers
 .superpowers/
+.worktrees/
 .tmp_dagster_home_*/
 .venv/
 .idea/
@@ -92,12 +93,31 @@ wandb/
 .pytest_cache/
 *.sqlite3
 
-# ML Ops artifacts
+# ML Ops artifacts (generated reports, datasets, training data)
+# Exception: data/mlops/gold_dataset.json stays tracked — it is a test fixture
+# read by tests/mlops/test_gold_set_integrity.py and must exist in CI checkouts.
 data/mlops/
 
-# Superpowers documentation
-# docs/superpowers/
+# Superpowers / agent-generated plans and specs
+docs/superpowers/
 
 # Node modules at root
 node_modules/
+
+# Backups, scratch and debug dumps
+*.bak
+error_latent.html
+brainstorming_status.txt
+# Accidental nested copy of the project dir
+/Double_scenario_Project/
+
+# Frontend lint dumps (scratch output, not source)
+frontend/lint_*.txt
+frontend/lint_*.json
+# Scratch pipeline outputs (re-excluded after the data/processed/*.json allow above)
+data/processed/temp_test_*.json
+data/processed/failed_attempts.json
+# Stray npm install at repo root (real frontend deps live in frontend/)
+/package.json
+/package-lock.json
 

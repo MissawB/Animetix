@@ -177,6 +177,21 @@ L'architecture d'**Animetix** repose sur une combinaison de techniques d'Intelli
 * **Concept Clé :** Quantification de l'incertitude native via l'entropie des logprobs.
 * **Implémentation dans Animetix :** Le `XaiDiagnosticService` s'auto-régule si le score de confiance mathématique chute sous 0.7.
 
+### Medusa: Simple LLM Generation Acceleration with Multiple Decoding Heads
+* **ID / Source :** [arXiv:2401.10774](https://huggingface.co/papers/2401.10774)
+* **Concept Clé :** Décodage spéculatif sans modèle auxiliaire en ajoutant plusieurs têtes de prédiction sur le modèle de base.
+* **Implémentation dans Animetix :** Inspiration pour les paramètres d'accélération et le décodage spéculatif de nos LLMs.
+
+### EAGLE: Speculative Decoding Can Be Light-Speed
+* **ID / Source :** [arXiv:2401.15077](https://huggingface.co/papers/2401.15077)
+* **Concept Clé :** Utilisation d'un modèle draft ultra-léger travaillant au niveau des features pour une spéculation plus rapide.
+* **Implémentation dans Animetix :** Intégré nativement sous forme de décodage spéculatif via assistant model dans `LocalTextAdapter`.
+
+### RadixAttention: Efficiently Serving LLMs in SGLang with RadixAttention
+* **ID / Source :** [arXiv:2402.16646](https://huggingface.co/papers/2402.16646)
+* **Concept Clé :** Partage dynamique de KV cache à travers un arbre Radix pour les requêtes partageant des préfixes communs.
+* **Implémentation dans Animetix :** Implémenté sous forme de `RadixCacheManager` dans `LocalTextAdapter` pour réutiliser le KV cache des system prompts et des contextes RAG.
+
 ---
 
 ## 🔬 6. Réseaux de Neurones Avancés & Sciences Cognitives

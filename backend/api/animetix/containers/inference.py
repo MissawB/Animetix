@@ -68,6 +68,13 @@ class InferenceContainer(containers.DeclarativeContainer):
         usage_port=infrastructure.usage_port,
     )
 
+    diffusers_adapter = providers.Singleton(
+        LazyClass("adapters.inference.diffusers_adapter", "DiffusersAdapter"),
+        model_id=os.getenv("LOCAL_DIFFUSION_MODEL", "black-forest-labs/FLUX.1-schnell"),
+        use_fp16=True,
+        usage_port=infrastructure.usage_port,
+    )
+
     inference_engine = providers.Singleton(
         LazyClass("adapters.inference.fallback_adapter", "FallbackInferenceAdapter"),
         adapters=providers.List(

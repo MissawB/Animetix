@@ -4,6 +4,9 @@ import os
 import pytest
 from pipeline.mlops.rlhf_pipeline import validated_dpo_dataset
 
+# Shells out to `manage.py run_data_quality_tests` (subprocess + populated DB).
+pytestmark = pytest.mark.integration
+
 
 def test_validated_dpo_dataset_transformation(tmp_path):
     """Vérifie que la fonction de transformation du dataset de feedback valide correctement les fichiers JSONL."""

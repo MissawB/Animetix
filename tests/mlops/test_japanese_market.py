@@ -25,7 +25,9 @@ from backend.pipeline.mlops.japanese_market_db import (  # noqa: E402
     JAPANESE_ANIME_DISTRIBUTORS,
     JAPANESE_MANGA_PUBLISHERS,
     JAPANESE_MARKET_RELATIONS,
-    JAPANESE_VOICE_ACTORS,
+)
+from backend.pipeline.mlops.songs_and_seiyuu_db import (  # noqa: E402
+    SEIYUU_PROFILES as JAPANESE_VOICE_ACTORS,
 )
 
 

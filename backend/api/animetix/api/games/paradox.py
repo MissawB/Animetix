@@ -38,14 +38,19 @@ class ParadoxGameStateView(APIView):
         media_type = state.media
         data = catalog_service.load_data(media_type)
 
-        options = []
+        items = []
         for t in state.options:
-            options.append(
+            items.append(
                 {
+                    "id": (
+                        data["title_to_index"].get(t, 0)
+                        if (data and "title_to_index" in data)
+                        else 0
+                    ),
                     "title": t,
                     "image": (
                         data["title_to_full_data"].get(t, {}).get("image")
-                        if data
+                        if (data and "title_to_full_data" in data)
                         else None
                     ),
                 }
@@ -55,7 +60,7 @@ class ParadoxGameStateView(APIView):
             {
                 "media_type": media_type,
                 "scenario": state.scenario,
-                "options": options,
+                "items": items,
                 "game_over": state.game_over,
                 "is_daily": state.is_daily,
             }
@@ -129,14 +134,19 @@ class ParadoxGameStartView(APIView):
 
         paradox_service.save_state(port, state)
 
-        options = []
+        items = []
         for t in state.options:
-            options.append(
+            items.append(
                 {
+                    "id": (
+                        data["title_to_index"].get(t, 0)
+                        if (data and "title_to_index" in data)
+                        else 0
+                    ),
                     "title": t,
                     "image": (
                         data["title_to_full_data"].get(t, {}).get("image")
-                        if data
+                        if (data and "title_to_full_data" in data)
                         else None
                     ),
                 }
@@ -147,7 +157,7 @@ class ParadoxGameStartView(APIView):
                 "status": "started",
                 "media_type": media_type,
                 "scenario": state.scenario,
-                "options": options,
+                "items": items,
                 "game_over": False,
                 "is_daily": state.is_daily,
             }
@@ -179,6 +189,18 @@ class ParadoxGameGuessView(APIView):
             )
 
         guess_title = request.data.get("guess")
+        intruder_id = request.data.get("intruder_id")
+
+        media_type = state.media
+        data = catalog_service.load_data(media_type)
+
+        if not guess_title and intruder_id is not None and data:
+            # Map intruder_id back to guess title
+            for title, idx in data.get("title_to_index", {}).items():
+                if idx == int(intruder_id):
+                    guess_title = title
+                    break
+
         if not guess_title:
             return Response(
                 {"error": "Guess is required"}, status=status.HTTP_400_BAD_REQUEST
@@ -190,9 +212,6 @@ class ParadoxGameGuessView(APIView):
 
         state.game_over = True
         paradox_service.save_state(port, state)
-
-        media_type = state.media
-        data = catalog_service.load_data(media_type)
 
         unlocked_achievements = []
         if is_correct:
@@ -230,16 +249,19 @@ class ParadoxGameGuessView(APIView):
                 was_won=is_correct,
             )
 
-        final_opts = []
+        items = []
         for t in state.options:
-            final_opts.append(
+            items.append(
                 {
+                    "id": (
+                        data["title_to_index"].get(t, 0)
+                        if (data and "title_to_index" in data)
+                        else 0
+                    ),
                     "title": t,
-                    "is_intruder": (t == answer),
-                    "is_user_choice": (t == choice),
                     "image": (
                         data["title_to_full_data"].get(t, {}).get("image")
-                        if data
+                        if (data and "title_to_full_data" in data)
                         else None
                     ),
                 }
@@ -248,10 +270,13 @@ class ParadoxGameGuessView(APIView):
         return Response(
             {
                 "media_type": media_type,
+                "scenario": state.scenario,
+                "items": items,
+                "game_over": state.game_over,
+                "is_daily": state.is_daily,
                 "is_correct": is_correct,
                 "answer": answer,
                 "reasoning": state.reasoning,
-                "final_options": final_opts,
                 "newly_unlocked_achievements": unlocked_achievements,
             }
         )

@@ -54,10 +54,28 @@ class MockCapableAdapter(InferencePort):
     def health_check(self) -> dict:
         return {"status": "online"}
 
+    def generate(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def stream_generate(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def get_text_embedding(self, *args, **kwargs):
+        raise NotImplementedError
+
 
 class MockGenericAdapter(InferencePort):
     def health_check(self) -> dict:
         return {"status": "online"}
+
+    def generate(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def stream_generate(self, *args, **kwargs):
+        raise NotImplementedError
+
+    def get_text_embedding(self, *args, **kwargs):
+        raise NotImplementedError
 
 
 def test_fallback_introspection_capability_mapping():

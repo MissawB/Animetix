@@ -18,7 +18,7 @@ def mock_django_media_item():
 
 
 @patch("src.pipeline.enrich_db_scraper.gemini_client")
-@patch("pipeline.enrich_db_scraper.httpx.get")
+@patch("pipeline.enrich_db_scraper.safe_http_request")
 def test_jikan_fetching_and_translation(mock_get, mock_gemini, mock_django_media_item):
     from pipeline.enrich_db_scraper import (
         fetch_jikan_details,  # noqa: E402
