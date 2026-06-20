@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import httpx
 from core.config import settings
@@ -16,7 +16,9 @@ class SuwayomiAdapter(SuwayomiPort):
         if settings.SUWAYOMI_PASSWORD:
             self.headers["Authorization"] = f"Bearer {settings.SUWAYOMI_PASSWORD}"
 
-    def _query(self, query: str, variables: Dict[str, Any] = None) -> Dict[str, Any]:
+    def _query(
+        self, query: str, variables: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         try:
             with httpx.Client(timeout=15.0) as client:
                 res = client.post(
