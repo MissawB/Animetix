@@ -40,7 +40,9 @@ export default defineConfig({
         ]
       },
       workbox: {
-        maximumFileSizeToCacheInBytes: 6000000 // 6MB pour autoriser plotly
+        maximumFileSizeToCacheInBytes: 6000000, // 6MB pour autoriser plotly
+        navigateFallback: '/static/index.html',
+        navigateFallbackDenylist: [/^\/api\//]
       }
     }),
     visualizer({
