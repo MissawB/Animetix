@@ -110,3 +110,13 @@ brainstorming_status.txt
 # Accidental nested copy of the project dir
 /Double_scenario_Project/
 
+# Frontend lint dumps (scratch output, not source)
+frontend/lint_*.txt
+frontend/lint_*.json
+# Scratch pipeline outputs (re-excluded after the data/processed/*.json allow above)
+data/processed/temp_test_*.json
+data/processed/failed_attempts.json
+# Stray npm install at repo root (real frontend deps live in frontend/)
+/package.json
+/package-lock.json
+
