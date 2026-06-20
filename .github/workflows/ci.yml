@@ -1,16 +1,13 @@
 name: Animetix CI/CD Pipeline
 
 on:
-  # Run the pipeline ONLY when promoting toward an environment:
-  #  - a PR targeting dev/main is the intent to promote (the gate before merge,
-  #    and what fires promote-to-dev);
-  #  - a push to dev fires promote-to-prod, a push to main is prod itself.
-  # No schedule/feature-branch triggers: CI runs only on a dev/prod promotion.
+  # Prod-only pipeline: run the checks when code targets or lands on main.
+  # Deployment to prod (animetix-web) is done manually, not by this workflow.
   pull_request:
-    branches: [ dev, main ]
+    branches: [ main ]
   push:
-    branches: [ dev, main ]
-  workflow_dispatch: # manual escape hatch (e.g. re-run a promotion)
+    branches: [ main ]
+  workflow_dispatch: # manual run
 
 jobs:
   lint:
@@ -171,52 +168,3 @@ jobs:
       run: cd frontend && npx playwright test e2e/a11y.spec.ts
       env:
         CI: true
-
-  promote-to-dev:
-    name: Promote to Development
-    needs: [lint, docker-build, test, perf-test, frontend-test]
-    if: github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'dev' && success()
-    runs-on: ubuntu-latest
-    environment: development
-    permissions:
-      contents: write
-    steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-        # Prefer a PAT (PROMOTE_TOKEN): it isn't capped by the repo's read-only
-        # Actions setting AND its push to `dev` re-triggers CI so promote-to-prod
-        # fires. Falls back to GITHUB_TOKEN (needs repo "Read and write" + won't chain).
-        token: ${{ secrets.PROMOTE_TOKEN || secrets.GITHUB_TOKEN }}
-    - name: Push to Dev Branch
-      run: |
-        git config --global user.name "github-actions[bot]"
-        git config --global user.email "github-actions[bot]@users.noreply.github.com"
-        git fetch origin ${{ github.event.pull_request.head.ref }}:temp-pr-branch
-        git checkout dev || git checkout -b dev origin/main
-        git merge temp-pr-branch --ff-only
-        git push origin dev
-
-  promote-to-prod:
-    name: Promote to Production
-    needs: [lint, docker-build, test, perf-test, frontend-test]
-    if: github.ref == 'refs/heads/dev' && github.event_name == 'push' && success()
-    runs-on: ubuntu-latest
-    environment: production
-    permissions:
-      contents: write
-    steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-        token: ${{ secrets.PROMOTE_TOKEN || secrets.GITHUB_TOKEN }}
-    - name: Push to Main Branch
-      run: |
-        git config --global user.name "github-actions[bot]"
-        git config --global user.email "github-actions[bot]@users.noreply.github.com"
-        git fetch origin main || true
-        git checkout main || git checkout master
-        git merge ${{ github.sha }} --ff-only
-        git push origin HEAD
