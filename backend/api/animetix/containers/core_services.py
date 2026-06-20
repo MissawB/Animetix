@@ -541,7 +541,8 @@ class CoreServicesContainer(containers.DeclarativeContainer):
     )
 
     manga_service = providers.Singleton(
-        LazyClass("core.domain.services.manga_service", "MangaService")
+        LazyClass("core.domain.services.manga_service", "MangaService"),
+        suwayomi_adapter=persistence.suwayomi_adapter,
     )
 
     synthetic_validation_service = providers.Singleton(
