@@ -115,3 +115,67 @@ def test_manga_service_suwayomi_sync():
     assert len(pages) == 2
     assert pages[0].number == 1
     assert "/api/v1/media/Manga/suwayomi-image/?page_url=" in pages[0].image_url
+
+
+def test_suwayomi_adapter_get_extensions():
+    adapter = SuwayomiAdapter()
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {
+        "data": {
+            "extensions": {
+                "nodes": [
+                    {
+                        "pkgName": "com.mangadex",
+                        "name": "MangaDex",
+                        "versionName": "1.4.15",
+                        "isInstalled": True,
+                        "hasUpdate": False,
+                        "lang": "en",
+                        "iconUrl": "http://mangadex/icon.png",
+                        "isNsfw": False,
+                        "isObsolete": False,
+                    }
+                ]
+            }
+        }
+    }
+
+    with patch("httpx.Client.post", return_value=mock_response) as mock_post:
+        exts = adapter.get_extensions()
+        assert len(exts) == 1
+        assert exts[0]["pkgName"] == "com.mangadex"
+        assert exts[0]["isInstalled"] is True
+        mock_post.assert_called_once()
+
+
+def test_suwayomi_adapter_update_extensions():
+    adapter = SuwayomiAdapter()
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {
+        "data": {
+            "updateExtensions": {
+                "extensions": [
+                    {
+                        "pkgName": "com.mangadex",
+                        "name": "MangaDex",
+                        "isInstalled": True,
+                        "hasUpdate": False,
+                    }
+                ]
+            }
+        }
+    }
+
+    with patch("httpx.Client.post", return_value=mock_response) as mock_post:
+        results = adapter.update_extensions(["com.mangadex"], "install")
+        assert len(results) == 1
+        assert results[0]["pkgName"] == "com.mangadex"
+        assert results[0]["isInstalled"] is True
+
+        # Verify post payload
+        called_args, called_kwargs = mock_post.call_args
+        assert "variables" in called_kwargs["json"]
+        assert called_kwargs["json"]["variables"]["ids"] == ["com.mangadex"]
+        assert called_kwargs["json"]["variables"]["patch"]["install"] is True

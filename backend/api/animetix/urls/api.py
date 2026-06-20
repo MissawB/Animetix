@@ -114,6 +114,16 @@ urlpatterns = [
         api_views.SuwayomiImportView.as_view(),
         name="api_suwayomi_import",
     ),
+    path(
+        "explore/suwayomi/extensions/",
+        api_views.SuwayomiExtensionsListView.as_view(),
+        name="api_suwayomi_extensions",
+    ),
+    path(
+        "explore/suwayomi/extensions/action/",
+        api_views.SuwayomiExtensionsActionView.as_view(),
+        name="api_suwayomi_extensions_action",
+    ),
     path("config/", api_views.ConfigView.as_view(), name="api_config"),
     path("auth/login/", api_views.LoginView.as_view(), name="api_auth_login"),
     path("auth/logout/", api_views.LogoutView.as_view(), name="api_auth_logout"),
