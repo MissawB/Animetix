@@ -19,6 +19,7 @@ import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { CardSkeleton } from "../../components/ui/Skeleton";
+import { ChapterList } from '../../features/manga-reader/components/ChapterList';
 
 import { RelatedItem, MediaDetail } from '../../types';
 
@@ -146,6 +147,10 @@ const MediaDetailPage: React.FC = () => {
                         </p>
                     </Card>
                 </section>
+
+                {mediaType?.toLowerCase() === 'manga' && itemId && (
+                  <ChapterList mediaId={itemId} mediaTitle={item.title} />
+                )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                     {/* Technical Stack */}
