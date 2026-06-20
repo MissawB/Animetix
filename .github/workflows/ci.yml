@@ -175,12 +175,17 @@ jobs:
     if: github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'dev' && success()
     runs-on: ubuntu-latest
     environment: development
+    permissions:
+      contents: write
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
-        token: ${{ secrets.GITHUB_TOKEN }}
+        # Prefer a PAT (PROMOTE_TOKEN): it isn't capped by the repo's read-only
+        # Actions setting AND its push to `dev` re-triggers CI so promote-to-prod
+        # fires. Falls back to GITHUB_TOKEN (needs repo "Read and write" + won't chain).
+        token: ${{ secrets.PROMOTE_TOKEN || secrets.GITHUB_TOKEN }}
     - name: Push to Dev Branch
       run: |
         git config --global user.name "github-actions[bot]"
@@ -196,12 +201,14 @@ jobs:
     if: github.ref == 'refs/heads/dev' && github.event_name == 'push' && success()
     runs-on: ubuntu-latest
     environment: production
+    permissions:
+      contents: write
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.PROMOTE_TOKEN || secrets.GITHUB_TOKEN }}
     - name: Push to Main Branch
       run: |
         git config --global user.name "github-actions[bot]"
