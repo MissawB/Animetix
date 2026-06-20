@@ -108,3 +108,67 @@ def test_suwayomi_image_proxy(mock_safe_req, api_client):
     mock_safe_req.assert_called_once_with(
         "GET", "http://127.0.0.1:4567/thumb.png", headers={}, timeout=15
     )
+
+
+@pytest.mark.django_db
+def test_suwayomi_extensions_list_view(authenticated_client, mock_suwayomi_adapter):
+    mock_suwayomi_adapter.get_extensions.return_value = [
+        {
+            "pkgName": "com.mangadex",
+            "name": "MangaDex",
+            "versionName": "1.4.15",
+            "isInstalled": True,
+            "hasUpdate": False,
+            "lang": "en",
+        }
+    ]
+    url = reverse("api_suwayomi_extensions")
+    response = authenticated_client.get(url)
+    assert response.status_code == 200
+    assert response.data[0]["pkgName"] == "com.mangadex"
+    assert response.data[0]["name"] == "MangaDex"
+    mock_suwayomi_adapter.get_extensions.assert_called_once()
+
+
+@pytest.mark.django_db
+def test_suwayomi_extensions_list_view_unauthenticated(
+    api_client, mock_suwayomi_adapter
+):
+    url = reverse("api_suwayomi_extensions")
+    response = api_client.get(url)
+    assert (
+        response.status_code == 403
+    )  # Forbidden because of IsAuthenticated permission class
+
+
+@pytest.mark.django_db
+def test_suwayomi_extensions_action_view(authenticated_client, mock_suwayomi_adapter):
+    mock_suwayomi_adapter.update_extensions.return_value = [
+        {
+            "pkgName": "com.mangadex",
+            "name": "MangaDex",
+            "isInstalled": True,
+            "hasUpdate": False,
+        }
+    ]
+    url = reverse("api_suwayomi_extensions_action")
+
+    # 1. Success case: install
+    response = authenticated_client.post(
+        url, {"ids": ["com.mangadex"], "action": "install"}, format="json"
+    )
+    assert response.status_code == 200
+    assert response.data[0]["pkgName"] == "com.mangadex"
+    mock_suwayomi_adapter.update_extensions.assert_called_once_with(
+        ["com.mangadex"], "install"
+    )
+
+    # 2. Missing parameter case
+    response = authenticated_client.post(url, {"ids": ["com.mangadex"]}, format="json")
+    assert response.status_code == 400
+
+    # 3. Invalid action case
+    response = authenticated_client.post(
+        url, {"ids": ["com.mangadex"], "action": "invalid"}, format="json"
+    )
+    assert response.status_code == 400

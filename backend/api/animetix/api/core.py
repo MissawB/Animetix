@@ -633,3 +633,73 @@ class SuwayomiImportView(APIView):
                 },
             }
         )
+
+
+class SuwayomiExtensionsListView(APIView):
+    """Liste des extensions installées et disponibles dans Suwayomi/Mihon."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    @inject
+    def __init__(
+        self, suwayomi_adapter=Provide[Container.persistence.suwayomi_adapter], **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.suwayomi_adapter = suwayomi_adapter
+
+    def get(self, request):
+        if not self.suwayomi_adapter:
+            return Response(
+                {"error": "Suwayomi integration not configured"}, status=500
+            )
+        try:
+            extensions = self.suwayomi_adapter.get_extensions()
+            return Response(extensions)
+        except Exception as e:
+            logger.error(f"Failed to fetch Suwayomi extensions: {e}")
+            return Response({"error": str(e)}, status=500)
+
+
+class SuwayomiExtensionsActionView(APIView):
+    """Effectue une action (installation, désinstallation, mise à jour) sur une extension Suwayomi."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    @inject
+    def __init__(
+        self, suwayomi_adapter=Provide[Container.persistence.suwayomi_adapter], **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.suwayomi_adapter = suwayomi_adapter
+
+    def post(self, request):
+        ids = request.data.get("ids")
+        action = request.data.get("action")
+
+        if not ids or not isinstance(ids, list) or not action:
+            return Response(
+                {
+                    "error": "Missing or invalid parameters: 'ids' (list) and 'action' (string)"
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if action not in ["install", "uninstall", "update"]:
+            return Response(
+                {
+                    "error": "Invalid action. Must be 'install', 'uninstall', or 'update'"
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not self.suwayomi_adapter:
+            return Response(
+                {"error": "Suwayomi integration not configured"}, status=500
+            )
+
+        try:
+            results = self.suwayomi_adapter.update_extensions(ids, action)
+            return Response(results)
+        except Exception as e:
+            logger.error(f"Failed to update Suwayomi extensions: {e}")
+            return Response({"error": str(e)}, status=500)

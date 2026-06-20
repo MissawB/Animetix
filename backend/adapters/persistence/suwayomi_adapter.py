@@ -152,3 +152,51 @@ class SuwayomiAdapter(SuwayomiPort):
                 else []
             )
         return pages
+
+    def get_extensions(self) -> List[Dict[str, Any]]:
+        q = """
+        query {
+          extensions {
+            nodes {
+              pkgName
+              name
+              versionName
+              isInstalled
+              hasUpdate
+              lang
+              iconUrl
+              isNsfw
+              isObsolete
+            }
+          }
+        }
+        """
+        data = self._query(q)
+        return data.get("extensions", {}).get("nodes", [])
+
+    def update_extensions(self, ids: List[str], action: str) -> List[Dict[str, Any]]:
+        mut = """
+        mutation UpdateExtensions($ids: [String!]!, $patch: UpdateExtensionPatchInput!) {
+          updateExtensions(input: { ids: $ids, patch: $patch }) {
+            extensions {
+              pkgName
+              name
+              isInstalled
+              hasUpdate
+            }
+          }
+        }
+        """
+        patch = {}
+        if action == "install":
+            patch["install"] = True
+        elif action == "uninstall":
+            patch["uninstall"] = True
+        elif action == "update":
+            patch["update"] = True
+        else:
+            raise ValueError(f"Invalid action: {action}")
+
+        vars = {"ids": ids, "patch": patch}
+        data = self._query(mut, vars)
+        return data.get("updateExtensions", {}).get("extensions", [])

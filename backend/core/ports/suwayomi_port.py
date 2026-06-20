@@ -28,3 +28,13 @@ class SuwayomiPort(ABC):
     def get_pages(self, suwayomi_chapter_id: str) -> List[str]:
         """Fetch page image URLs/paths for a given chapter ID."""
         pass
+
+    @abstractmethod
+    def get_extensions(self) -> List[Dict[str, Any]]:
+        """Fetch all extensions (installed and available) from Suwayomi."""
+        pass
+
+    @abstractmethod
+    def update_extensions(self, ids: List[str], action: str) -> List[Dict[str, Any]]:
+        """Perform an action (install, uninstall, update) on specific extensions in Suwayomi."""
+        pass
