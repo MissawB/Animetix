@@ -17,7 +17,10 @@ export const ChapterList: React.FC<{ mediaId: string; mediaTitle: string }> = ({
   if (isLoading) {
     return <p className="text-xs opacity-30 uppercase tracking-widest italic">Chargement des chapitres...</p>;
   }
-  if (isError || !data || data.length === 0) {
+  if (isError) {
+    return <p className="text-xs opacity-30 uppercase tracking-widest italic">Erreur lors du chargement des chapitres.</p>;
+  }
+  if (!data || data.length === 0) {
     return <p className="text-xs opacity-30 uppercase tracking-widest italic">Aucun chapitre disponible.</p>;
   }
 

@@ -50,7 +50,7 @@ export const ChapterDownloadButton: React.FC<{
       type="button"
       onClick={download}
       aria-label="Télécharger le chapitre"
-      title={error ?? undefined}
+      title={error || undefined}
       className={`p-2 rounded-full transition-colors ${
         status === 'error' ? 'text-red-500 hover:bg-red-500/10' : 'opacity-50 hover:opacity-100 hover:bg-white/10'
       }`}
