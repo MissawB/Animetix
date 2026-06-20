@@ -1,12 +1,12 @@
 import numpy as np
 
-from backend.core.domain.services.neuromorphic_lnn_service import (
+from core.domain.services.neuromorphic_lnn_service import (
     LiquidNeuralNetworkService,
 )
-from backend.core.domain.services.neuromorphic_plasticity_service import (
+from core.domain.services.neuromorphic_plasticity_service import (
     SynapticPlasticityService,
 )
-from backend.core.domain.services.quantum_cognitive_service import (
+from core.domain.services.quantum_cognitive_service import (
     QuantumCognitiveService,
 )
 
@@ -93,6 +93,17 @@ def test_plasticity_serialization():
 
     new_service = SynapticPlasticityService.from_dict(data)
     assert np.allclose(service.W, new_service.W)
+
+
+def test_plasticity_constants_persistence():
+    service = SynapticPlasticityService(num_concepts=3, tau_plus=42.0, tau_minus=17.0)
+    data = service.to_dict()
+    assert data["tau_plus"] == 42.0
+    assert data["tau_minus"] == 17.0
+
+    new_service = SynapticPlasticityService.from_dict(data)
+    assert new_service.tau_plus == 42.0
+    assert new_service.tau_minus == 17.0
 
 
 # --- QUANTUM COGNITION TESTS ---

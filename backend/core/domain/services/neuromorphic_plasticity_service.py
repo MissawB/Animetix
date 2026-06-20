@@ -82,6 +82,10 @@ class SynapticPlasticityService:
                 data = json.load(f)
             self.W = np.array(data["W"])
             self.last_spike_times = np.array(data["last_spike_times"])
+            if "tau_plus" in data:
+                self.tau_plus = float(data["tau_plus"])
+            if "tau_minus" in data:
+                self.tau_minus = float(data["tau_minus"])
             logger.info(f"📂 Synaptic checkpoint loaded from {self.checkpoint_path}")
         except Exception as e:
             logger.error(f"❌ Failed to load synaptic checkpoint: {e}")
