@@ -11,10 +11,10 @@ sys.path.insert(0, os.path.join(BASE_DIR, "src", "backend"))
 sys.path.insert(0, os.path.join(BASE_DIR, "src", "pipeline", "mlops"))
 
 # Configuration Django
+from pipeline.logging_setup import setup_logging  # noqa: E402
+
 logger = logging.getLogger("animetix.mlops.knowledge_indexer")
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
-)
+setup_logging()
 
 import django  # noqa: E402
 

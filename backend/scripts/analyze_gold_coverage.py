@@ -25,11 +25,10 @@ except Exception:
 
 from animetix.containers import get_container  # noqa: E402
 from animetix.models import VectorRecord  # noqa: E402
+from pipeline.logging_setup import setup_logging  # noqa: E402
 
 logger = logging.getLogger("animetix.scripts.coverage")
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
-)
+setup_logging()
 
 
 # Pydantic schema for LLM structured output

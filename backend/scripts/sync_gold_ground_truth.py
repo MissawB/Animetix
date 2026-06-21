@@ -24,11 +24,10 @@ except Exception:
     django.setup()
 
 from animetix.containers import get_container  # noqa: E402
+from pipeline.logging_setup import setup_logging  # noqa: E402
 
 logger = logging.getLogger("animetix.scripts.sync_gold")
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
-)
+setup_logging()
 
 
 class CurationSyncSchema(BaseModel):

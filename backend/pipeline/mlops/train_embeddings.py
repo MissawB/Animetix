@@ -2,6 +2,8 @@ import logging
 import os
 from typing import Dict, List
 
+from pipeline.logging_setup import setup_logging
+
 logger = logging.getLogger("animetix.mlops.train_embeddings")
 
 
@@ -162,5 +164,5 @@ def train_custom_embeddings():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+    setup_logging()
     train_custom_embeddings()

@@ -14,6 +14,7 @@ import time  # noqa: E402
 import torch  # noqa: E402
 from datasets import load_dataset  # noqa: E402
 from peft import LoraConfig  # noqa: E402
+from pipeline.logging_setup import setup_logging  # noqa: E402
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,  # noqa: E402
@@ -22,7 +23,7 @@ from transformers import (
 
 # Configuration du logger
 logger = logging.getLogger("animetix.pipeline.mlops.train_preference")
-logging.basicConfig(level=logging.INFO)
+setup_logging()
 
 # Essayer d'importer liger_kernel pour la fusion d'opérateurs Triton
 try:

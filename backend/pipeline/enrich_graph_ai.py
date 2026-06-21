@@ -21,10 +21,11 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "animetix_project.settings")
 django.setup()
 
 from animetix.containers import get_container  # noqa: E402
+from pipeline.logging_setup import setup_logging  # noqa: E402
 from pipeline.neo4j_client import neo4j_manager  # noqa: E402
 
 # Configuration
-logging.basicConfig(level=logging.INFO)
+setup_logging()
 logger = logging.getLogger("animetix.enrichment")
 
 # Paths

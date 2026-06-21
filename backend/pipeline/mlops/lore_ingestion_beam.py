@@ -7,6 +7,7 @@ from typing import Dict, List
 
 import apache_beam as beam
 from apache_beam.options.pipeline_options import PipelineOptions
+from pipeline.logging_setup import setup_logging
 
 logger = logging.getLogger("animetix.pipeline.beam")
 
@@ -261,7 +262,7 @@ def run_pipeline(argv=None, test_input=None):
 
 if __name__ == "__main__":
     # Configure logging
-    logging.basicConfig(level=logging.INFO)
+    setup_logging()
     import sys  # noqa: E402
 
     run_pipeline(sys.argv[1:])

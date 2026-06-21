@@ -39,9 +39,9 @@ except Exception as e:
     MediaItem = None
 
 # Logger
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
-)
+from pipeline.logging_setup import setup_logging  # noqa: E402
+
+setup_logging()
 logger = logging.getLogger("animetix.pipeline.expert_scrapers")
 
 # Charger .env

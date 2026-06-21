@@ -2,11 +2,12 @@ import json
 import logging
 import os
 
+from pipeline.logging_setup import setup_logging
 from pipeline.neo4j_client import neo4j_manager
 from tqdm import tqdm
 
 # Configuration
-logging.basicConfig(level=logging.INFO)
+setup_logging()
 logger = logging.getLogger("animetix.cross_media")
 
 # Paths

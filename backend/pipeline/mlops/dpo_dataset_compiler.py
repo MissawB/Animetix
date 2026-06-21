@@ -20,8 +20,10 @@ api_path = os.path.join(backend_path, "api")
 if api_path not in sys.path:
     sys.path.insert(0, api_path)
 
+from pipeline.logging_setup import setup_logging  # noqa: E402
+
 logger = logging.getLogger("animetix.pipeline.mlops.dpo_dataset_compiler")
-logging.basicConfig(level=logging.INFO)
+setup_logging()
 
 import hashlib  # noqa: E402
 

@@ -25,9 +25,9 @@ if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, os.path.join(PROJECT_ROOT, "backend"))
 
 # Logger
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
-)
+from pipeline.logging_setup import setup_logging  # noqa: E402
+
+setup_logging()
 logger = logging.getLogger("animetix.pipeline.specialized")
 
 # Chargement de Django

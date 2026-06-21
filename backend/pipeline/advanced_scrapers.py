@@ -37,7 +37,9 @@ except Exception as e:
     MediaItem = None
 
 # Logger
-# logging.basicConfig moved to main guard to avoid overriding global logging config
+# Logging is configured in the __main__ guard via pipeline.logging_setup.setup_logging
+from pipeline.logging_setup import setup_logging  # noqa: E402
+
 logger = logging.getLogger("animetix.pipeline.advanced_scrapers")
 
 # Charger .env
@@ -405,6 +407,7 @@ def run_tripartite_enrichment(limit: int = 5, dry_run: bool = False):
 
 
 if __name__ == "__main__":
+    setup_logging()
     parser = argparse.ArgumentParser(
         description="Exécute les 3 scrapers avancés sur la DB."
     )
