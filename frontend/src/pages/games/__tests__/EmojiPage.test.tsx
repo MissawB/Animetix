@@ -1,0 +1,109 @@
+import React from 'react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MemoryRouter } from 'react-router-dom';
+import type { EmojiState } from '../../../types';
+import EmojiPage from '../EmojiPage';
+
+interface EmojiHook {
+  gameState: EmojiState | undefined;
+  loading: boolean;
+  handleGuess: (arg: { guess: string }) => Promise<void>;
+  restart: () => void;
+}
+
+const handleGuess = vi.fn<(arg: { guess: string }) => Promise<void>>(() => Promise.resolve());
+const restart = vi.fn();
+let hookValue: EmojiHook;
+
+vi.mock('../../../features/games/hooks/useEmoji', () => ({
+  useEmoji: () => hookValue,
+}));
+
+const renderPage = () => {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(
+    <QueryClientProvider client={qc}>
+      <MemoryRouter>
+        <EmojiPage />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+};
+
+const baseState = (over: Partial<EmojiState> = {}): EmojiState => ({
+  gameOver: false,
+  mediaType: 'anime',
+  isDaily: false,
+  emojis: '🏴‍☠️👒',
+  guesses: [],
+  ...over,
+});
+
+describe('EmojiPage', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    hookValue = { gameState: baseState(), loading: false, handleGuess, restart };
+  });
+
+  it('renders a skeleton while loading', () => {
+    hookValue = { gameState: undefined, loading: true, handleGuess, restart };
+    const { container } = renderPage();
+    expect(container.querySelector('.animate-pulse')).toBeTruthy();
+  });
+
+  it('renders nothing when there is no game state', () => {
+    hookValue = { gameState: undefined, loading: false, handleGuess, restart };
+    const { container } = renderPage();
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it('renders the emoji puzzle and input when active', () => {
+    renderPage();
+    expect(screen.getByText(/EMOJI/i)).toBeInTheDocument();
+    expect(screen.getByText('🏴‍☠️👒')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Tapez votre proposition/i)).toBeInTheDocument();
+  });
+
+  it('submits a guess and clears the input', async () => {
+    renderPage();
+    fireEvent.change(screen.getByPlaceholderText(/Tapez votre proposition/i), {
+      target: { value: 'One Piece' },
+    });
+    fireEvent.click(screen.getByText(/DEVINER/i));
+    await waitFor(() => expect(handleGuess).toHaveBeenCalledWith({ guess: 'One Piece' }));
+  });
+
+  it('renders prior attempts with badges', () => {
+    hookValue = {
+      gameState: baseState({
+        guesses: [
+          { title: 'Bleach', image: 'b.jpg', is_correct: false },
+          { title: 'Naruto', title_en: 'Naruto EN', image: 'n.jpg', is_correct: true },
+        ],
+      }),
+      loading: false,
+      handleGuess,
+      restart,
+    };
+    renderPage();
+    expect(screen.getByText('Bleach')).toBeInTheDocument();
+    expect(screen.getByText('Naruto EN')).toBeInTheDocument();
+    expect(screen.getByText('TROUVÉ')).toBeInTheDocument();
+    expect(screen.getByText('ÉCHEC')).toBeInTheDocument();
+  });
+
+  it('renders the victory state and triggers restart', () => {
+    hookValue = {
+      gameState: baseState({ gameOver: true, secret_title: 'One Piece' }),
+      loading: false,
+      handleGuess,
+      restart,
+    };
+    renderPage();
+    expect(screen.getByText(/VICTOIRE/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByText(/REJOUER/i));
+    expect(restart).toHaveBeenCalled();
+  });
+});
