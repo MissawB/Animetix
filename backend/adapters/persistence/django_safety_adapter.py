@@ -29,7 +29,7 @@ class DjangoSafetyAdapter(SafetyPort):
         return AISafetyEvent.objects.create(
             user=user,
             event_type=event_type,
-            action_taken=action_taken,
+            action=action_taken,
             detected_categories=detected_categories or [],
             input_text=input_text,
             output_text=output_text,
@@ -38,7 +38,7 @@ class DjangoSafetyAdapter(SafetyPort):
 
     def get_safety_stats(self) -> Dict[str, Any]:
         total_blocked = AISafetyEvent.objects.filter(
-            action_taken__in=["block", "rewrite"]
+            action__in=["block", "rewrite"]
         ).count()
         total_events = AISafetyEvent.objects.count()
 
@@ -65,7 +65,7 @@ class DjangoSafetyAdapter(SafetyPort):
                 "id": e.id,
                 "timestamp": e.created_at.isoformat(),
                 "event_type": e.event_type,
-                "action": e.action_taken,
+                "action": e.action,
                 "categories": e.detected_categories,
                 "input_snippet": (
                     e.input_text[:100] + "..."
