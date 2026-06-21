@@ -24,19 +24,22 @@ Le rangement suit les **couches** de l'architecture (hexagonale + Django), pas l
 **Règle d'or** : un test va là où vit la **couche** qu'il vérifie. Le cœur (`core.*`) →
 `tests/core/`. Un endpoint DRF → `tests/api/`. Un réglage Django → `tests/backend/`.
 
-## Recouvrements connus à consolider (dette, déplacement différé)
+## Consolidation des foyers (faite)
 
-Il n'y a **pas de duplication** (aucun test en double), mais quelques couches ont **deux
-foyers** par héritage historique. Cible de consolidation — **à faire quand la branche
-`coverage-consolidation` aura mergé**, pour éviter les conflits de déplacement :
+La consolidation physique des couches ayant historiquement **deux foyers** a été
+réalisée (2026-06-21, après le merge de `coverage-consolidation`) — collection pytest
+**inchangée à 2313 tests** avant/après, historique git préservé (`git mv`) :
 
-- **Cœur** : `tests/backend/core/…` (≈6 fichiers, layout miroir de la source) → fusionner dans **`tests/core/`** (layout plat).
-- **API** : `tests/backend/api/…` → fusionner dans **`tests/api/`**.
-- **Vues** : `tests/backend/views/…` → conserver sous `tests/backend/` (couche projet Django) **ou** déplacer vers `tests/api/` selon ce qu'elles testent (endpoints = `tests/api/`).
-- **Pipeline** : `tests/pipeline_logic/` (3 fichiers) → fusionner dans **`tests/pipeline/`**.
+- **Cœur** : `tests/backend/core/…` → fusionné dans **`tests/core/`** ✅
+- **API** : `tests/backend/api/…` → fusionné dans **`tests/api/`** ✅
+- **Pipeline** : `tests/pipeline_logic/…` → fusionné dans **`tests/pipeline/`** ✅ (les
+  `__init__.py` redondants/identiques supprimés ; **pas** de `__init__.py` ajouté à
+  `tests/api`/`tests/pipeline`, pour préserver la sémantique d'import existante).
 
-Le déplacement physique n'apporte **aucun gain fonctionnel** (découverte inchangée) ;
-il n'est utile que pour la lisibilité. À planifier comme un sweep unique, hors période
-de forte activité sur `tests/` (sessions parallèles), en vérifiant après coup les
-imports relatifs et les fixtures (attention au piège **dual-namespace** `backend.core.*`
-vs `core.*` — cf. la mémoire projet / `conftest.py`).
+Il n'y a **pas de duplication** (aucun test en double). Le déplacement n'apporte **aucun
+gain fonctionnel** (découverte inchangée via `testpaths = tests`) — uniquement de la
+lisibilité.
+
+**Décision restante (non traitée ici)** : `tests/backend/views/…` — à conserver sous
+`tests/backend/` (couche projet Django) **ou** à déplacer vers `tests/api/` selon ce que
+ces vues testent (endpoints = `tests/api/`). À trancher au cas par cas.
