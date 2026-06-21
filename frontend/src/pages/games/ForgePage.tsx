@@ -105,7 +105,7 @@ const ForgePage: React.FC = () => {
              <div className="flex justify-center items-center gap-12 mb-12">
                 <div className="group relative">
                     <div className="absolute -inset-2 bg-gradient-to-t from-anime-accent to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl blur-md" />
-                    <img src={itemA?.image_url} className="w-28 h-40 object-cover rounded-2xl shadow-xl relative z-10 grayscale brightness-50" alt="" />
+                    <img src={itemA?.image_url} className="w-28 h-40 object-cover rounded-2xl shadow-xl relative z-10 grayscale brightness-50" alt="" loading="lazy" decoding="async" />
                     <p className="mt-3 text-[10px] font-black uppercase opacity-40 max-w-[112px] truncate">{itemA?.title || itemA?.name}</p>
                 </div>
                 <div className="flex flex-col items-center">
@@ -114,7 +114,7 @@ const ForgePage: React.FC = () => {
                 </div>
                 <div className="group relative">
                     <div className="absolute -inset-2 bg-gradient-to-t from-blue-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl blur-md" />
-                    <img src={itemB?.image_url} className="w-28 h-40 object-cover rounded-2xl shadow-xl relative z-10 grayscale brightness-50" alt="" />
+                    <img src={itemB?.image_url} className="w-28 h-40 object-cover rounded-2xl shadow-xl relative z-10 grayscale brightness-50" alt="" loading="lazy" decoding="async" />
                     <p className="mt-3 text-[10px] font-black uppercase opacity-40 max-w-[112px] truncate">{itemB?.title || itemB?.name}</p>
                 </div>
              </div>
@@ -143,7 +143,7 @@ const ForgePage: React.FC = () => {
              <div className="absolute -inset-4 bg-anime-accent/20 blur-3xl rounded-[4rem] opacity-50 group-hover:opacity-100 transition-opacity" />
              <div className="relative overflow-hidden rounded-[3.5rem] shadow-2xl border-8 border-white dark:border-anime-dark-card transform -rotate-1 hover:rotate-0 transition-transform duration-500">
                 {status.image_url ? (
-                  <img src={status.image_url} className="w-full aspect-[3/4] object-cover scale-105 group-hover:scale-100 transition-transform duration-700" alt="Fusion" />
+                  <img src={status.image_url} className="w-full aspect-[3/4] object-cover scale-105 group-hover:scale-100 transition-transform duration-700" alt="Fusion" loading="lazy" decoding="async" />
                 ) : (
                   <div className="w-full aspect-[3/4] bg-anime-dark-bg flex flex-col items-center justify-center gap-4">
                      <ImageIcon className="w-20 h-20 text-white/10" />
@@ -255,7 +255,7 @@ const ForgePage: React.FC = () => {
                         <div className="h-[180px] relative overflow-hidden rounded-3xl bg-black/5 dark:bg-white/5 border border-dashed border-black/10 dark:border-white/10 flex items-center justify-center group transition-all">
                             {itemA ? (
                                 <>
-                                    <img src={itemA.image_url} className="absolute inset-0 w-full h-full object-cover brightness-50 group-hover:scale-110 transition-transform duration-500" alt="" />
+                                    <img src={itemA.image_url} className="absolute inset-0 w-full h-full object-cover brightness-50 group-hover:scale-110 transition-transform duration-500" alt="" loading="lazy" decoding="async" />
                                     <div className="relative z-10 text-center p-4">
                                         <div className="font-black italic text-white uppercase drop-shadow-md leading-tight mb-1">{itemA.title || itemA.name}</div>
                                         <div className="text-[9px] bg-white/20 backdrop-blur-md text-white font-bold px-2 py-0.5 rounded-full inline-block uppercase">{itemA.type}</div>
@@ -286,7 +286,7 @@ const ForgePage: React.FC = () => {
                         <div className="h-[180px] relative overflow-hidden rounded-3xl bg-black/5 dark:bg-white/5 border border-dashed border-black/10 dark:border-white/10 flex items-center justify-center group transition-all">
                             {itemB ? (
                                 <>
-                                    <img src={itemB.image_url} className="absolute inset-0 w-full h-full object-cover brightness-50 group-hover:scale-110 transition-transform duration-500" alt="" />
+                                    <img src={itemB.image_url} className="absolute inset-0 w-full h-full object-cover brightness-50 group-hover:scale-110 transition-transform duration-500" alt="" loading="lazy" decoding="async" />
                                     <div className="relative z-10 text-center p-4">
                                         <div className="font-black italic text-white uppercase drop-shadow-md leading-tight mb-1">{itemB.title || itemB.name}</div>
                                         <div className="text-[9px] bg-white/20 backdrop-blur-md text-white font-bold px-2 py-0.5 rounded-full inline-block uppercase">{itemB.type}</div>

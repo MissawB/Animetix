@@ -45,7 +45,7 @@ const MediaDetailPage: React.FC = () => {
     <AnimatedPage>
       {/* Background Decor */}
       <div className="absolute inset-0 top-0 h-[600px] overflow-hidden pointer-events-none opacity-20">
-          <img src={item.image} className="w-full h-full object-cover blur-3xl scale-110" alt="" />
+          <img src={item.image} className="w-full h-full object-cover blur-3xl scale-110" alt="" loading="lazy" decoding="async" />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-navy-950 to-navy-950" />
       </div>
 
@@ -62,7 +62,7 @@ const MediaDetailPage: React.FC = () => {
                     {/* Frame stylisée */}
                     <div className="absolute -inset-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl blur opacity-20 group-hover:opacity-40 transition-opacity"></div>
                     <Card padding="none" className="relative overflow-hidden rounded-2xl shadow-2xl border-white/10">
-                        <img src={item.image} className="w-full aspect-[2/3] object-cover" alt={item.title} />
+                        <img src={item.image} className="w-full aspect-[2/3] object-cover" alt={item.title} loading="lazy" decoding="async" />
                     </Card>
                     <Badge variant="primary" className="absolute top-6 left-6 shadow-xl bg-blue-600 font-black italic uppercase tracking-tighter">
                         {mediaType?.toUpperCase()}
@@ -194,7 +194,7 @@ const MediaDetailPage: React.FC = () => {
                             {item.related_items.map((rel: RelatedItem) => (
                                 <Link key={rel.id} to={`/media/${mediaType}/${rel.id}/`} className="no-underline group">
                                     <div className="aspect-[2/3] rounded-2xl overflow-hidden bg-gray-900 mb-3 border border-white/5 group-hover:border-purple-500/30 transition-all group-hover:scale-105 shadow-xl">
-                                        <img src={rel.image} className="w-full h-full object-cover" alt={rel.title} />
+                                        <img src={rel.image} className="w-full h-full object-cover" alt={rel.title} loading="lazy" decoding="async" />
                                     </div>
                                     <p className="text-[10px] font-black uppercase tracking-tighter line-clamp-1 opacity-50 group-hover:text-purple-400 group-hover:opacity-100 transition-all">{rel.title}</p>
                                 </Link>

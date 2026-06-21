@@ -26,6 +26,8 @@ export const MultiplayerModes: React.FC = () => {
               src={mode.icon_url} 
               className="absolute -right-4 bottom-0 h-[220px] md:h-[240px] drop-shadow-lg transition-transform group-hover:scale-110 object-contain" 
               alt={mode.titre} 
+              loading="lazy"
+              decoding="async"
             />
           </Link>
         ))}

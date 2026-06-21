@@ -30,7 +30,7 @@ _Rien d'ouvert._
 
 - [x] **MLOps — versioning data/modèles** — couvert : tracking expériences/artefacts via HF Trackio + wandb (`log_param`/`log_metric`/`log_artifact("dataset"…)`/`log_artifact("adapter"…)`), provenance des checkpoints via `run_provenance` (commit git + timestamp UTC + révisions manifest → `run_metadata.json`). Choix d'architecture délibéré « sans dépendance lourde (ni MLflow ni DVC) ». _Reste éventuel : un remote dédié de data-versioning si besoin futur._
 - [x] **État frontend — convention de state** — convention cadrée et documentée dans `frontend/README.md` (§ « Convention de state ») : React Query = état serveur ; Zustand = global client/UI/auth (+ session de jeu tolérée) ; useState = local. Hooks React Query de jeu **morts purgés** (useAkinetix/useBlindtest/useCodeManga/useParadox/useVision + tests). La « duplication » personnalisation était un **faux positif** (`/custom-config/` RQ vs `/profiles/me/` Zustand = concerns distincts). _Les `window.location.reload()` avaient déjà été éliminés._
-- [ ] **Performance frontend — fignolages** _(ROI moindre)_ — `loading="lazy"` sur les `<img>`, `React.memo`/`useMemo` ciblés. _Le gros levier (précache PWA −60 %) est fait._
+- [x] **Performance frontend — fignolages** — `loading="lazy"` + `decoding="async"` ajoutés sur **54 `<img>` de contenu** (36 fichiers) ; héros/logos (HeroSection, Navbar, HomeNav) laissés en **eager** pour ne pas dégrader le LCP. **Memo : non appliqué** — pas de calcul coûteux en render (un seul `reduce` trivial), et le code mémoïse déjà là où ça compte (React.memo ×18, useMemo ×6) ; mémoïser à l'aveugle serait net-négatif sans profilage. _Le gros levier (précache PWA −60 %) était déjà fait._
 
 ## 🟢 Faibles
 

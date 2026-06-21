@@ -20,6 +20,8 @@ const ExtensionRowComponent: React.FC<ExtensionRowProps> = ({ ext, onAction, inP
         onError={(e) => {
           e.currentTarget.src = 'https://via.placeholder.com/150?text=Manga';
         }}
+        loading="lazy"
+        decoding="async"
       />
 
       {/* Info details */}

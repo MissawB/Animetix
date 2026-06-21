@@ -220,7 +220,7 @@ const CinematicReconstructionPage: React.FC = () => {
                                 {reconstructionResult.frames.map((frame: DCSFrame, i: number) => (
                                     <Card key={i} padding="sm" className="bg-navy-900/40 border-white/5 group hover:border-purple-500/30 transition-all">
                                         <div className="aspect-square bg-black rounded-2xl mb-4 overflow-hidden relative">
-                                            <img src={frame.model_url} alt={`Frame ${i}`} className="w-full h-full object-cover opacity-50 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all" />
+                                            <img src={frame.model_url} alt={`Frame ${i}`} className="w-full h-full object-cover opacity-50 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all" loading="lazy" decoding="async" />
                                             <div className="absolute top-3 left-3">
                                                 <Badge variant="neutral" className="bg-black/60 text-white border-none text-[8px]">T+{frame.timestamp.toFixed(1)}s</Badge>
                                             </div>

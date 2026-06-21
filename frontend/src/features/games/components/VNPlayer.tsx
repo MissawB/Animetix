@@ -64,6 +64,8 @@ export const VNPlayer: React.FC<VNPlayerProps> = ({ scenes }) => {
         src={currentScene.background_url} 
         className="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000"
         alt="Background"
+        loading="lazy"
+        decoding="async"
       />
       
       {/* Character Sprite */}
@@ -72,6 +74,8 @@ export const VNPlayer: React.FC<VNPlayerProps> = ({ scenes }) => {
           src={currentScene.character_sprite_url} 
           className="absolute bottom-0 left-1/2 -translate-x-1/2 h-4/5 object-contain transition-all duration-500 animate-in slide-in-from-bottom-10"
           alt={currentScene.character_name}
+          loading="lazy"
+          decoding="async"
         />
       )}
 

@@ -45,6 +45,8 @@ const ExplorePage: React.FC = () => {
         src={item.image || 'https://via.placeholder.com/300x450'} 
         alt={item.title}
         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+        loading="lazy"
+        decoding="async"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
         <h4 className="text-sm font-black uppercase italic leading-tight mb-2">{item.title}</h4>
@@ -73,6 +75,8 @@ const ExplorePage: React.FC = () => {
                     src={data.trending[0].image} 
                     className="absolute inset-0 w-full h-full object-cover opacity-40 blur-sm scale-105"
                     alt="Hero Background"
+                    loading="lazy"
+                    decoding="async"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent" />
                 

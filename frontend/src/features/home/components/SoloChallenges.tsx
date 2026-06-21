@@ -26,6 +26,8 @@ export const SoloChallenges: React.FC = () => {
                   src="https://www.transparenttextures.com/patterns/stardust.png" 
                   className="absolute inset-0 w-full h-full object-cover opacity-40 mix-blend-screen" 
                   alt="Stars"
+                  loading="lazy"
+                  decoding="async"
                 />
               </div>
 
@@ -50,6 +52,8 @@ export const SoloChallenges: React.FC = () => {
                 alt={mode.titre} 
                 className="absolute bottom-0 -right-4 h-[105%] w-auto object-contain z-20 drop-shadow-[0_10px_10px_rgba(0,0,0,0.4)] transition-all duration-500 char-card-render"
                 style={{ clipPath: 'inset(-100% -100% 0% -100%)', maxWidth: 'none' }}
+                loading="lazy"
+                decoding="async"
               />
             </Link>
           </div>

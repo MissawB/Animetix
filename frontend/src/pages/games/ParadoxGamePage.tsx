@@ -62,7 +62,7 @@ const ParadoxGamePage: React.FC = () => {
                 aria-label={`Sélectionner ${item.title}`}
                 className="group relative bg-white dark:bg-navy-800 rounded-[2.5rem] overflow-hidden shadow-xl cursor-pointer transition-all hover:scale-105 hover:shadow-2xl border-4 border-transparent hover:border-red-500/50"
             >
-                <img src={item.image} className="w-full h-80 object-cover grayscale group-hover:grayscale-0 transition-all duration-700" alt={item.title} />
+                <img src={item.image} className="w-full h-80 object-cover grayscale group-hover:grayscale-0 transition-all duration-700" alt={item.title} loading="lazy" decoding="async" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60 group-hover:opacity-80 transition-opacity"></div>
                 <div className="absolute bottom-6 left-6 right-6 text-center">
                     <h3 className="text-white font-black italic manga-font text-xl leading-none mb-2">{item.title}</h3>

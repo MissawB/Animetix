@@ -236,6 +236,8 @@ export const MangaLibraryPage: React.FC = () => {
                       src={fav.manga.image || '/assets/manga-placeholder.png'} 
                       alt={fav.manga.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
+                      decoding="async"
                     />
                     
                     {/* Unread badge */}

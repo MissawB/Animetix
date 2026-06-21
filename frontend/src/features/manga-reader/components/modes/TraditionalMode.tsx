@@ -82,6 +82,8 @@ export const TraditionalMode = () => {
               src={pg.url}
               alt=""
               onLoad={(e) => setPageDimensions(pg.url, e.currentTarget.naturalWidth, e.currentTarget.naturalHeight)}
+              loading="lazy"
+              decoding="async"
             />
           );
         })}
@@ -120,6 +122,8 @@ export const TraditionalMode = () => {
                     alt={`Page ${nextPage.index + 1}`}
                     onLoad={(e) => setPageDimensions(nextPage.url, e.currentTarget.naturalWidth, e.currentTarget.naturalHeight)}
                     className="max-h-[80vh] w-auto object-contain rounded-xl shadow-2xl border border-white/10 hover:border-white/20 transition-colors"
+                    loading="lazy"
+                    decoding="async"
                   />
                 </div>
                 <div className="w-1/2 flex justify-start">
@@ -128,6 +132,8 @@ export const TraditionalMode = () => {
                     alt={`Page ${currentPage.index + 1}`}
                     onLoad={(e) => setPageDimensions(currentPage.url, e.currentTarget.naturalWidth, e.currentTarget.naturalHeight)}
                     className="max-h-[80vh] w-auto object-contain rounded-xl shadow-2xl border border-white/10 hover:border-white/20 transition-colors"
+                    loading="lazy"
+                    decoding="async"
                   />
                 </div>
               </>
@@ -140,6 +146,8 @@ export const TraditionalMode = () => {
                     alt={`Page ${currentPage.index + 1}`}
                     onLoad={(e) => setPageDimensions(currentPage.url, e.currentTarget.naturalWidth, e.currentTarget.naturalHeight)}
                     className="max-h-[80vh] w-auto object-contain rounded-xl shadow-2xl border border-white/10 hover:border-white/20 transition-colors"
+                    loading="lazy"
+                    decoding="async"
                   />
                 </div>
                 <div className="w-1/2 flex justify-start">
@@ -148,6 +156,8 @@ export const TraditionalMode = () => {
                     alt={`Page ${nextPage.index + 1}`}
                     onLoad={(e) => setPageDimensions(nextPage.url, e.currentTarget.naturalWidth, e.currentTarget.naturalHeight)}
                     className="max-h-[80vh] w-auto object-contain rounded-xl shadow-2xl border border-white/10 hover:border-white/20 transition-colors"
+                    loading="lazy"
+                    decoding="async"
                   />
                 </div>
               </>
@@ -180,6 +190,8 @@ export const TraditionalMode = () => {
                   onLoad={(e) => setPageDimensions(currentPage.url, e.currentTarget.naturalWidth, e.currentTarget.naturalHeight)}
                   className="max-w-none h-full object-cover absolute top-0 left-0"
                   style={transformStyle}
+                  loading="lazy"
+                  decoding="async"
                 />
               </div>
             );
@@ -192,6 +204,8 @@ export const TraditionalMode = () => {
               alt={`Page ${currentPage.index + 1}`}
               onLoad={(e) => setPageDimensions(currentPage.url, e.currentTarget.naturalWidth, e.currentTarget.naturalHeight)}
               className="w-full h-auto max-h-[85vh] object-contain rounded-xl shadow-2xl border border-white/10"
+              loading="lazy"
+              decoding="async"
             />
           </div>
         )}

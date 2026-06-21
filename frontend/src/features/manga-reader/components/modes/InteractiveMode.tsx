@@ -15,6 +15,8 @@ export const InteractiveMode = () => {
           src={currentPage.url} 
           alt={`Interactive Page ${currentPage.index + 1}`} 
           className="w-full h-auto rounded-lg shadow-2xl border-4 border-anime-accent/30"
+          loading="lazy"
+          decoding="async"
         />
         
         {/* Interactive Overlays (Mock) */}

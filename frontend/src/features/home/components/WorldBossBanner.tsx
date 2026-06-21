@@ -24,10 +24,12 @@ export const WorldBossBanner: React.FC = () => {
             </p>
           </div>
 
-          <img 
-            src="/static/img/modes/worldboss.png" 
-            className="absolute right-0 bottom-0 h-[110%] md:h-[130%] object-contain drop-shadow-[0_20px_50px_rgba(220,38,38,0.5)] group-hover:scale-110 group-hover:-rotate-3 transition-all duration-700 z-20 pointer-events-none" 
-            alt="World Boss" 
+          <img
+            src="/static/img/modes/worldboss.png"
+            className="absolute right-0 bottom-0 h-[110%] md:h-[130%] object-contain drop-shadow-[0_20px_50px_rgba(220,38,38,0.5)] group-hover:scale-110 group-hover:-rotate-3 transition-all duration-700 z-20 pointer-events-none"
+            alt="World Boss"
+            loading="lazy"
+            decoding="async"
           />
         </div>
       </Link>

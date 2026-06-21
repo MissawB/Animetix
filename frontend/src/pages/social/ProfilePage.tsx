@@ -181,7 +181,7 @@ const ProfilePage: React.FC = () => {
                     <div className="grid grid-cols-2 gap-4">
                         {profile.top_fusions?.map((fusion: ApiCreativeFusion, i: number) => (
                             <div key={i} className="aspect-video rounded-xl overflow-hidden relative group cursor-pointer border border-black/5 dark:border-white/5 hover:border-blue-500 transition-all shadow-sm">
-                                <img src={fusion.image_url ?? undefined} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="" />
+                                <img src={fusion.image_url ?? undefined} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="" loading="lazy" decoding="async" />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
                                 <p className="absolute bottom-3 left-3 text-[8px] font-black uppercase text-white truncate w-[80%]">{fusion.title_a} x {fusion.title_b}</p>
                             </div>

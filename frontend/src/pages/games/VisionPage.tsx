@@ -63,6 +63,8 @@ const VisionPage: React.FC = () => {
                 className="rounded-[2rem] shadow-lg w-full transition-all duration-1000" 
                 style={{ filter: gameState.gameOver ? 'none' : `blur(${Math.max(0, 20 - gameState.best_score / 5)}px)` }} 
                 alt="Target" 
+                loading="lazy"
+                decoding="async"
             />
             <div className="absolute top-8 right-8 bg-black/60 backdrop-blur-md px-6 py-2 rounded-full border border-white/20">
                 <span className="text-3xl font-black text-white">{Math.round(gameState.best_score)}%</span>

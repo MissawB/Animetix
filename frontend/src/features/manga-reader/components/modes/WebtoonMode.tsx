@@ -121,6 +121,8 @@ export const WebtoonMode = () => {
             alt={`Page ${page.index + 1}`}
             className="w-full h-auto block rounded-lg shadow-md border border-white/5"
             onLoad={(e) => setPageDimensions(page.url, e.currentTarget.naturalWidth, e.currentTarget.naturalHeight)}
+            loading="lazy"
+            decoding="async"
           />
         </div>
       ))}

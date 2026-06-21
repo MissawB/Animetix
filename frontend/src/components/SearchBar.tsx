@@ -134,7 +134,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSelect, placeholder, id 
         <div className="absolute right-4 flex items-center gap-2">
             {imagePreview && (
                 <div className="relative w-8 h-8 rounded-lg overflow-hidden border-2 border-yellow-400 group/preview">
-                    <img src={imagePreview} className="w-full h-full object-cover" alt="" />
+                    <img src={imagePreview} className="w-full h-full object-cover" alt="" loading="lazy" decoding="async" />
                     <button onClick={() => setPreviewUrl(null)} className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/preview:opacity-100 transition-opacity">
                         <X className="w-3 h-3 text-white" />
                     </button>
@@ -177,7 +177,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSelect, placeholder, id 
                   >
                     {item.image_url && (
                       <div className="relative">
-                        <img src={item.image_url} alt="" className="w-10 h-14 object-cover rounded-xl flex-shrink-0 shadow-lg group-hover:scale-105 transition-transform" />
+                        <img src={item.image_url} alt="" className="w-10 h-14 object-cover rounded-xl flex-shrink-0 shadow-lg group-hover:scale-105 transition-transform" loading="lazy" decoding="async" />
                         <div className="absolute inset-0 rounded-xl ring-1 ring-inset ring-black/10"></div>
                       </div>
                     )}

@@ -82,7 +82,7 @@ const CommunityFeedPage: React.FC = () => {
               <Card key={fusion.id} padding="none" className="group overflow-hidden bg-navy-900/40 border-white/5 hover:border-yellow-400/30 transition-all duration-500 hover:-translate-y-2">
                 <div className="aspect-video relative overflow-hidden bg-black shadow-inner">
                   {fusion.image_url ? (
-                    <img src={fusion.image_url} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt={fusion.title_a} />
+                    <img src={fusion.image_url} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt={fusion.title_a} loading="lazy" decoding="async" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center opacity-10">
                       <Sparkles className="w-16 h-16 text-white" />

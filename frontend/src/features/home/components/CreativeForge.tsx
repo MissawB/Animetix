@@ -24,6 +24,8 @@ export const CreativeForge: React.FC = () => {
                 src={mode.fusion_image} 
                 className="max-h-full max-w-full object-contain grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" 
                 alt="Fusion" 
+                loading="lazy"
+                decoding="async"
               />
             </div>
 

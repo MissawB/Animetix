@@ -48,7 +48,7 @@ const CharacterDetailPage: React.FC = () => {
     <AnimatedPage>
       {/* Background Decor */}
       <div className="absolute inset-0 top-0 h-[600px] overflow-hidden pointer-events-none opacity-20">
-          <img src={character.image} className="w-full h-full object-cover blur-3xl scale-110" alt="" />
+          <img src={character.image} className="w-full h-full object-cover blur-3xl scale-110" alt="" loading="lazy" decoding="async" />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-navy-950 to-navy-950" />
       </div>
 
@@ -63,7 +63,7 @@ const CharacterDetailPage: React.FC = () => {
                 <div className="relative group">
                     <div className="absolute -inset-2 bg-gradient-to-br from-anime-accent to-purple-600 rounded-3xl blur opacity-20 group-hover:opacity-40 transition-opacity"></div>
                     <Card padding="none" className="relative overflow-hidden rounded-2xl shadow-2xl border-white/10">
-                        <img src={character.image} className="w-full aspect-[3/4] object-cover" alt={character.title} />
+                        <img src={character.image} className="w-full aspect-[3/4] object-cover" alt={character.title} loading="lazy" decoding="async" />
                     </Card>
                     <Badge variant="primary" className="absolute top-6 left-6 shadow-xl bg-anime-accent font-black italic uppercase tracking-tighter">
                         CHARACTÈRES
@@ -130,7 +130,7 @@ const CharacterDetailPage: React.FC = () => {
                             <Link key={app.id} to={`/media/Anime/${app.id}/`} className="no-underline group">
                                 <Card className="p-4 bg-gray-900/50 border-white/5 group-hover:border-anime-accent/30 transition-all flex items-center gap-4">
                                     <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
-                                        <img src={app.image || 'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?auto=format&fit=crop&q=80&w=200'} className="w-full h-full object-cover" alt="" />
+                                        <img src={app.image || 'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?auto=format&fit=crop&q=80&w=200'} className="w-full h-full object-cover" alt="" loading="lazy" decoding="async" />
                                     </div>
                                     <div>
                                         <p className="text-[10px] font-black opacity-30 uppercase mb-1">Anime</p>

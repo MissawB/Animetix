@@ -76,10 +76,12 @@ export const SimulatedAdBanner: React.FC = () => {
           className="relative aspect-[8/3] w-full rounded-lg overflow-hidden border border-white/5 cursor-pointer hover:opacity-90 transition-opacity bg-transparent p-0 block"
           aria-label={`Visiter ${sponsor.name}`}
         >
-          <img 
-            src={sponsor.image} 
-            alt="" 
+          <img
+            src={sponsor.image}
+            alt=""
             className="w-full h-full object-cover"
+            loading="lazy"
+            decoding="async"
             onError={(e) => {
               (e.target as HTMLElement).style.display = 'none';
             }}

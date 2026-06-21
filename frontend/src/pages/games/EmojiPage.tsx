@@ -76,7 +76,7 @@ const EmojiPage: React.FC = () => {
           <h4 className="text-[10px] font-black uppercase opacity-30 tracking-[0.3em] mb-6">Tes tentatives</h4>
           {gameState.guesses.map((g: { title: string; title_en?: string; image: string; is_correct: boolean }, i: number) => (
             <Card key={i} padding="sm" className="flex items-center transition-all hover:scale-[1.02]">
-              <img src={g.image} className="w-14 h-20 object-cover rounded-2xl shadow-md border-2 border-surface-text/10" alt="" />
+              <img src={g.image} className="w-14 h-20 object-cover rounded-2xl shadow-md border-2 border-surface-text/10" alt="" loading="lazy" decoding="async" />
               <div className="flex-grow text-left ml-6">
                 <div className="font-black text-lg truncate uppercase italic manga-font leading-none mb-2">{g.title_en || g.title}</div>
                 <Badge variant={g.is_correct ? 'success' : 'danger'}>

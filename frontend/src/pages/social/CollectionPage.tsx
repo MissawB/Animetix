@@ -48,7 +48,7 @@ const CollectionPage: React.FC = () => {
               <Card key={fusion.id} padding="none" className="group overflow-hidden transition-all hover:scale-[1.05] hover:rotate-1">
                 <div className="aspect-[3/4] relative overflow-hidden bg-black shadow-inner">
                   {fusion.image_url ? (
-                    <img src={fusion.image_url} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt={fusion.title_a} />
+                    <img src={fusion.image_url} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt={fusion.title_a} loading="lazy" decoding="async" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center opacity-20">
                       <ImageIcon className="w-16 h-16 text-white" />

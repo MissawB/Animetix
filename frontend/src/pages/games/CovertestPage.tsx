@@ -33,7 +33,7 @@ const CovertestPage: React.FC = () => {
           {/* Couverture */}
           <div className="relative group">
             <div className="absolute -inset-4 bg-gradient-to-tr from-yellow-400 to-orange-500 rounded-[3rem] blur-2xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
-            <img src={gameState.cover_url} className={`relative w-full rounded-[2.5rem] shadow-2xl transition-all duration-700 ${!gameState.gameOver ? 'blur-2xl' : 'blur-0 scale-105'}`} alt="Couverture" />
+            <img src={gameState.cover_url} className={`relative w-full rounded-[2.5rem] shadow-2xl transition-all duration-700 ${!gameState.gameOver ? 'blur-2xl' : 'blur-0 scale-105'}`} alt="Couverture" loading="lazy" decoding="async" />
             {!gameState.gameOver && (
               <div className="absolute inset-0 flex items-center justify-center">
                   <div className="bg-black/60 backdrop-blur-md p-6 rounded-full border-2 border-white/20">

@@ -72,7 +72,7 @@ const StaffDetailPage: React.FC = () => {
                 <div className="relative group">
                     <Card padding="none" className="relative overflow-hidden rounded-2xl shadow-2xl border-white/10 aspect-square">
                         {staff.image ? (
-                            <img src={staff.image} className="w-full h-full object-cover" alt={staff.title} />
+                            <img src={staff.image} className="w-full h-full object-cover" alt={staff.title} loading="lazy" decoding="async" />
                         ) : (
                             <div className="w-full h-full bg-navy-900 flex items-center justify-center">
                                 <Users className="w-24 h-24 opacity-10" />
@@ -155,7 +155,7 @@ const StaffDetailPage: React.FC = () => {
                             <Link key={work.id} to={`/media/${work.type || 'Anime'}/${work.id}/`} className="no-underline group">
                                 <Card className="p-4 bg-gray-900/50 border-white/5 group-hover:border-emerald-500/30 transition-all flex items-center gap-4">
                                     <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
-                                        <img src={work.image || 'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?auto=format&fit=crop&q=80&w=200'} className="w-full h-full object-cover" alt="" />
+                                        <img src={work.image || 'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?auto=format&fit=crop&q=80&w=200'} className="w-full h-full object-cover" alt="" loading="lazy" decoding="async" />
                                     </div>
                                     <div>
                                         <p className="text-[10px] font-black opacity-30 uppercase mb-1">{work.role || 'Crédit'}</p>

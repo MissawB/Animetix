@@ -140,7 +140,7 @@ const SearchResultsPage: React.FC = () => {
                         <Card padding="none" className="h-full overflow-hidden bg-navy-900/40 border-white/5 hover:border-blue-500/30 transition-all duration-500 hover:-translate-y-2 relative">
                             <div className="aspect-[2/3] relative overflow-hidden bg-black shadow-inner">
                                 {item.image_url ? (
-                                    <img src={item.image_url} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt={item.title} />
+                                    <img src={item.image_url} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt={item.title} loading="lazy" decoding="async" />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center opacity-10">
                                         <Sparkles className="w-16 h-16 text-white" />

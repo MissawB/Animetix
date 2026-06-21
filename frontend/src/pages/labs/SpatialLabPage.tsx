@@ -179,7 +179,7 @@ const SpatialLabPage: React.FC = () => {
                           {!modelResult && (
                               <div className="space-y-4">
                                   <Badge variant="neutral" className="bg-white/10 text-white border-white/10">Original</Badge>
-                                  <img src={image} className="w-full rounded-2xl shadow-2xl border border-white/10" alt="Original" />
+                                  <img src={image} className="w-full rounded-2xl shadow-2xl border border-white/10" alt="Original" loading="lazy" decoding="async" />
                               </div>
                           )}
 
@@ -198,7 +198,7 @@ const SpatialLabPage: React.FC = () => {
                               <div className="space-y-4">
                                   <Badge variant="primary">Profondeur (IA)</Badge>
                                   {depthResult ? (
-                                      <img src={depthResult.depth_map} className="w-full rounded-2xl shadow-2xl border border-white/10" alt="Depth Map" />
+                                      <img src={depthResult.depth_map} className="w-full rounded-2xl shadow-2xl border border-white/10" alt="Depth Map" loading="lazy" decoding="async" />
                                   ) : (
                                       <div className="w-full aspect-square bg-white/5 rounded-2xl flex items-center justify-center border border-white/5 border-dashed">
                                           <ArrowRight className="w-12 h-12 text-white opacity-10" />

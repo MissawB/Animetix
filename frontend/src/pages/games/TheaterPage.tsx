@@ -69,7 +69,7 @@ const TheaterPage: React.FC = () => {
               <Card key={vn.id} padding="none" className="group overflow-hidden bg-navy-900/40 border-white/5 hover:border-red-500/30 transition-all duration-500 hover:-translate-y-2 flex flex-col">
                 <div className="aspect-[16/10] relative overflow-hidden bg-black">
                   {vn.image_url ? (
-                    <img src={vn.image_url} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt={vn.title_a} />
+                    <img src={vn.image_url} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt={vn.title_a} loading="lazy" decoding="async" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center opacity-10">
                       <Film className="w-16 h-16 text-white" />

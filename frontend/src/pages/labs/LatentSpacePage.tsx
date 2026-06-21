@@ -200,6 +200,8 @@ const LatentSpacePage: React.FC = () => {
                       src={selectedItem.image} 
                       alt={selectedItem.title || selectedItem.name} 
                       className="w-full h-full object-cover opacity-60"
+                      loading="lazy"
+                      decoding="async"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">

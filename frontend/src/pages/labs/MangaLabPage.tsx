@@ -186,6 +186,8 @@ const MangaLabPage: React.FC = () => {
                     src={getActiveImageUrl() || ''} 
                     className="rounded-2xl mx-auto max-h-[700px] shadow-2xl transition-transform duration-500 group-hover:scale-[1.01] object-contain" 
                     alt="Manga Page View" 
+                    loading="lazy"
+                    decoding="async"
                   />
               </div>
             </div>

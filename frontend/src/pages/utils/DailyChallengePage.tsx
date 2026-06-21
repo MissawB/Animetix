@@ -78,7 +78,7 @@ const DailyChallengePage: React.FC = () => {
               </div>
 
               {/* Character Icon */}
-              <img src={mode.icon} alt="" className="absolute -right-4 -bottom-4 h-[85%] object-contain z-20 drop-shadow-2xl transition-transform duration-500 group-hover:scale-110" />
+              <img src={mode.icon} alt="" className="absolute -right-4 -bottom-4 h-[85%] object-contain z-20 drop-shadow-2xl transition-transform duration-500 group-hover:scale-110" loading="lazy" decoding="async" />
               
               {mode.completed && (
                 <div className="absolute inset-0 z-40 bg-black/60 backdrop-blur-sm flex items-center justify-center">

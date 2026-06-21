@@ -44,7 +44,7 @@ export const VNDirector: React.FC<VNDirectorProps> = ({ scenes, setScenes, onReg
         {scenes.map((scene, index) => (
           <div key={index} className="bg-white dark:bg-anime-dark-card rounded-3xl p-6 border border-black/5 dark:border-white/5 shadow-xl flex gap-6 group">
             <div className="w-32 aspect-video rounded-xl overflow-hidden relative shrink-0">
-              <img src={scene.background_url} className="w-full h-full object-cover" alt="" />
+              <img src={scene.background_url} className="w-full h-full object-cover" alt="" loading="lazy" decoding="async" />
               <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                 <button onClick={() => onRegenerate(index)} className="p-2 bg-white rounded-full text-black hover:scale-110 transition-transform">
                   <RefreshCw className="w-4 h-4" />
