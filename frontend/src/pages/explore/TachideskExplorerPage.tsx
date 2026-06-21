@@ -46,8 +46,10 @@ const TachideskExplorerPage: React.FC = () => {
     installedExtensions,
     availableExtensions,
     isFavorited,
+    favoriteStatus,
     togglingFavorite,
     toggleFavorite,
+    updateFavoriteStatus,
   } = useTachideskExplorer();
 
   const handleSelectCatalogTab = useCallback(() => {
@@ -132,8 +134,10 @@ const TachideskExplorerPage: React.FC = () => {
                     onReadChapter={handleReadChapter}
                     getProxiedImageUrl={getProxiedImageUrl}
                     isFavorited={isFavorited}
+                    favoriteStatus={favoriteStatus}
                     togglingFavorite={togglingFavorite}
                     onToggleFavorite={toggleFavorite}
+                    onUpdateFavoriteStatus={updateFavoriteStatus}
                   />
                 )}
               </AnimatePresence>

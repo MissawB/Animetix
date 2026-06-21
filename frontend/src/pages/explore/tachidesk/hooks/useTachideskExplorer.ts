@@ -17,6 +17,7 @@ export const useTachideskExplorer = () => {
   const [selectedManga, setSelectedManga] = useState<Manga | null>(null);
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [isFavorited, setIsFavorited] = useState(false);
+  const [favoriteStatus, setFavoriteStatus] = useState<'reading' | 'completed' | 'plan_to_read' | null>(null);
   const [togglingFavorite, setTogglingFavorite] = useState(false);
 
   // Extension States
@@ -119,15 +120,20 @@ export const useTachideskExplorer = () => {
     setLoadingDetails(true);
     setError(null);
     setIsFavorited(false);
+    setFavoriteStatus(null);
 
     try {
       const extId = `suwayomi:${selectedSource}:${manga.id}`;
       void fetch(`/api/v1/media/Manga/${extId}/favorite/`)
-        .then(res => res.ok ? res.json() : { is_favorite: false })
-        .then((data: { is_favorite: boolean }) => {
+        .then(res => res.ok ? res.json() : { is_favorite: false, status: null })
+        .then((data: { is_favorite: boolean; status: 'reading' | 'completed' | 'plan_to_read' | null }) => {
           setIsFavorited(data.is_favorite);
+          setFavoriteStatus(data.status);
         })
-        .catch(() => setIsFavorited(false));
+        .catch(() => {
+          setIsFavorited(false);
+          setFavoriteStatus(null);
+        });
       const res = await fetch(`/api/v1/media/Manga/${extId}/chapters/`);
       if (res.ok) {
         const data: Chapter[] = await res.json();
@@ -173,10 +179,41 @@ export const useTachideskExplorer = () => {
         })
       });
       if (res.ok) {
-        const data: { is_favorite: boolean } = await res.json();
+        const data: { is_favorite: boolean; status: 'reading' | 'completed' | 'plan_to_read' | null } = await res.json();
         setIsFavorited(data.is_favorite);
+        setFavoriteStatus(data.status);
       } else {
         throw new Error('Failed to toggle favorite');
+      }
+    } catch {
+      setError("Impossible de mettre à jour le statut favori");
+    } finally {
+      setTogglingFavorite(false);
+    }
+  }, [selectedManga, selectedSource]);
+
+  const updateFavoriteStatus = useCallback(async (status: 'reading' | 'completed' | 'plan_to_read') => {
+    if (!selectedManga) return;
+    const extId = `suwayomi:${selectedSource}:${selectedManga.id}`;
+    setTogglingFavorite(true);
+    try {
+      const res = await fetch(`/api/v1/media/Manga/${extId}/favorite/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          source_id: selectedSource,
+          suwayomi_manga_id: selectedManga.id,
+          status: status
+        })
+      });
+      if (res.ok) {
+        const data: { is_favorite: boolean; status: 'reading' | 'completed' | 'plan_to_read' | null } = await res.json();
+        setIsFavorited(data.is_favorite);
+        setFavoriteStatus(data.status);
+      } else {
+        throw new Error('Failed to update favorite status');
       }
     } catch {
       setError("Impossible de mettre à jour le statut favori");
@@ -302,7 +339,9 @@ export const useTachideskExplorer = () => {
     installedExtensions,
     availableExtensions,
     isFavorited,
+    favoriteStatus,
     togglingFavorite,
     toggleFavorite,
+    updateFavoriteStatus,
   };
 };

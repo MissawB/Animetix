@@ -111,3 +111,50 @@ def test_manga_chapter_sync(authenticated_client):
     assert res.data["success"] is True
     assert res.data["results"]["anilist"]["success"] is True
     assert res.data["results"]["myanimelist"]["success"] is True
+
+
+@pytest.mark.django_db
+def test_manga_chapter_sync_auto_transitions(authenticated_client):
+    from animetix.models import FavoriteManga, MangaChapter
+
+    manga = MediaItem.objects.create(
+        external_id="sync_manga_1",
+        media_type="Manga",
+        title="Sync Manga",
+    )
+    user = User.objects.get(username="testuser")
+
+    # Create Favorite record
+    fav = FavoriteManga.objects.create(
+        user=user, manga=manga, status="plan_to_read", last_read_chapter=0.0
+    )
+
+    # Add chapters: 1.0, 2.0, 3.0
+    MangaChapter.objects.create(manga=manga, number=1.0)
+    MangaChapter.objects.create(manga=manga, number=2.0)
+    MangaChapter.objects.create(manga=manga, number=3.0)
+
+    url = reverse(
+        "api_manga_chapter_sync",
+        kwargs={"media_id": "sync_manga_1", "chapter_number": "1.0"},
+    )
+    res = authenticated_client.post(url)
+    assert res.status_code == 200
+
+    # Verify transition from plan_to_read -> reading (since chapters 2.0, 3.0 remain)
+    fav.refresh_from_db()
+    assert fav.last_read_chapter == 1.0
+    assert fav.status == "reading"
+
+    # Now read chapter 3.0 (the last one)
+    url_last = reverse(
+        "api_manga_chapter_sync",
+        kwargs={"media_id": "sync_manga_1", "chapter_number": "3.0"},
+    )
+    res_last = authenticated_client.post(url_last)
+    assert res_last.status_code == 200
+
+    # Verify transition from reading -> completed (since no chapters > 3.0 exist)
+    fav.refresh_from_db()
+    assert fav.last_read_chapter == 3.0
+    assert fav.status == "completed"

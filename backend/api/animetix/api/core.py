@@ -774,25 +774,42 @@ class FavoriteMangaToggleView(APIView):
             manga_service = container.core.manga_service()
             manga_service.get_chapters(media_id)
 
-        # 2. Toggle Favori
-        favorite, created = FavoriteManga.objects.get_or_create(
-            user=request.user, manga=manga
-        )
-        if not created:
-            favorite.delete()
-            is_favorite = False
-        else:
+        # 2. Toggle or set status
+        status_payload = request.data.get("status")
+        if status_payload:
+            if status_payload not in ["reading", "completed", "plan_to_read"]:
+                return Response({"error": "Invalid status"}, status=400)
+            favorite, created = FavoriteManga.objects.get_or_create(
+                user=request.user, manga=manga
+            )
+            favorite.status = status_payload
+            favorite.save()
             is_favorite = True
+        else:
+            favorite, created = FavoriteManga.objects.get_or_create(
+                user=request.user, manga=manga
+            )
+            if not created:
+                favorite.delete()
+                is_favorite = False
+            else:
+                is_favorite = True
 
-        return Response({"success": True, "is_favorite": is_favorite})
+        status_val = favorite.status if is_favorite else None
+        return Response(
+            {"success": True, "is_favorite": is_favorite, "status": status_val}
+        )
 
     def get(self, request, media_id):
         from ..models import FavoriteManga
 
-        is_favorite = FavoriteManga.objects.filter(
-            user=request.user, manga__external_id=media_id
-        ).exists()
-        return Response({"is_favorite": is_favorite})
+        try:
+            fav = FavoriteManga.objects.get(
+                user=request.user, manga__external_id=media_id
+            )
+            return Response({"is_favorite": True, "status": fav.status})
+        except FavoriteManga.DoesNotExist:
+            return Response({"is_favorite": False, "status": None})
 
 
 class FavoriteMangaListView(APIView):
@@ -802,13 +819,12 @@ class FavoriteMangaListView(APIView):
 
     def get(self, request):
         from ..models import FavoriteManga
+        from ..serializers import FavoriteMangaSerializer
 
         favorites = FavoriteManga.objects.filter(user=request.user).select_related(
             "manga"
         )
-        mangas = [fav.manga for fav in favorites]
-
-        serializer = MediaItemSerializer(mangas, many=True)
+        serializer = FavoriteMangaSerializer(favorites, many=True)
         return Response(serializer.data)
 
 
@@ -889,7 +905,7 @@ class MangaChapterSyncView(APIView):
     def post(self, request, media_id, chapter_number):
         import httpx
 
-        from ..models import MediaItem, TrackerConnection
+        from ..models import FavoriteManga, MangaChapter, MediaItem, TrackerConnection
 
         # 1. Fetch the manga
         try:
@@ -899,19 +915,38 @@ class MangaChapterSyncView(APIView):
                 {"error": "Manga not found"}, status=status.HTTP_404_NOT_FOUND
             )
 
-        # 2. Get active connections
-        connections = TrackerConnection.objects.filter(user=request.user)
-        if not connections.exists():
-            return Response({"success": True, "message": "No trackers connected."})
-
-        # 3. Parse chapter number
+        # Parse chapter number
         try:
             progress = int(float(chapter_number))
+            progress_float = float(chapter_number)
         except (ValueError, TypeError):
             return Response(
                 {"error": "Invalid chapter number format"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+        # 1.5 Update or create FavoriteManga record and handle auto-transitions
+        favorite, created = FavoriteManga.objects.get_or_create(
+            user=request.user, manga=manga
+        )
+        favorite.last_read_chapter = max(favorite.last_read_chapter, progress_float)
+
+        # Check if there are any chapters with a number strictly greater than progress_float
+        has_future_chapters = MangaChapter.objects.filter(
+            manga=manga, number__gt=progress_float
+        ).exists()
+
+        if not has_future_chapters:
+            favorite.status = "completed"
+        elif favorite.status == "plan_to_read":
+            favorite.status = "reading"
+
+        favorite.save()
+
+        # 2. Get active connections
+        connections = TrackerConnection.objects.filter(user=request.user)
+        if not connections.exists():
+            return Response({"success": True, "message": "No trackers connected."})
 
         results = {}
 

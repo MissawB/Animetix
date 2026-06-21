@@ -42,7 +42,7 @@ const ProfilePage: React.FC = () => {
   const { data: connections } = useQuery({
     queryKey: ['trackerConnections'],
     queryFn: getTrackerConnections,
-    enabled: isOwnProfile,
+    enabled: !!isOwnProfile,
   });
 
   const [linkingTracker, setLinkingTracker] = useState<'myanimelist' | 'anilist' | null>(null);

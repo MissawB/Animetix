@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, X, Loader2, ChevronRight, Heart } from 'lucide-react';
+import { BookOpen, X, Loader2, ChevronRight, Heart, ChevronDown } from 'lucide-react';
 import type { Manga, Chapter } from '../types';
 
 interface MangaDetailDrawerProps {
@@ -13,8 +13,10 @@ interface MangaDetailDrawerProps {
   onReadChapter: (chapter: Chapter) => void;
   getProxiedImageUrl: (url: string) => string;
   isFavorited?: boolean;
+  favoriteStatus?: 'reading' | 'completed' | 'plan_to_read' | null;
   togglingFavorite?: boolean;
   onToggleFavorite?: () => void;
+  onUpdateFavoriteStatus?: (status: 'reading' | 'completed' | 'plan_to_read') => void;
 }
 
 const MangaDetailDrawerComponent: React.FC<MangaDetailDrawerProps> = ({
@@ -27,8 +29,10 @@ const MangaDetailDrawerComponent: React.FC<MangaDetailDrawerProps> = ({
   onReadChapter,
   getProxiedImageUrl,
   isFavorited = false,
+  favoriteStatus = null,
   togglingFavorite = false,
   onToggleFavorite,
+  onUpdateFavoriteStatus,
 }) => {
   return (
     <motion.aside
@@ -63,24 +67,42 @@ const MangaDetailDrawerComponent: React.FC<MangaDetailDrawerProps> = ({
             <h2 className="text-lg font-black uppercase leading-tight italic tracking-tight mb-3">
               {selectedManga.title}
             </h2>
-            {onToggleFavorite && (
-              <button
-                onClick={onToggleFavorite}
-                disabled={togglingFavorite}
-                className={`self-start px-3 py-1.5 rounded-xl border text-[10px] font-black uppercase italic tracking-wider flex items-center gap-1.5 transition-all ${
-                  isFavorited
-                    ? 'bg-blue-500/10 border-blue-500/30 text-blue-400 hover:bg-blue-500/20'
-                    : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-white'
-                }`}
-              >
-                {togglingFavorite ? (
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                ) : (
-                  <Heart className={`w-3 h-3 ${isFavorited ? 'fill-current text-blue-400' : ''}`} />
-                )}
-                {isFavorited ? 'Suivi' : 'Suivre'}
-              </button>
-            )}
+            <div className="flex gap-2 flex-wrap items-center mt-1">
+              {onToggleFavorite && (
+                <button
+                  onClick={onToggleFavorite}
+                  disabled={togglingFavorite}
+                  className={`px-3 py-1.5 rounded-xl border text-[10px] font-black uppercase italic tracking-wider flex items-center gap-1.5 transition-all ${
+                    isFavorited
+                      ? 'bg-blue-500/10 border-blue-500/30 text-blue-400 hover:bg-blue-500/20'
+                      : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-white'
+                  }`}
+                >
+                  {togglingFavorite ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <Heart className={`w-3 h-3 ${isFavorited ? 'fill-current text-blue-400' : ''}`} />
+                  )}
+                  {isFavorited ? 'Suivi' : 'Suivre'}
+                </button>
+              )}
+
+              {isFavorited && onUpdateFavoriteStatus && (
+                <div className="relative">
+                  <select
+                    value={favoriteStatus || 'plan_to_read'}
+                    disabled={togglingFavorite}
+                    onChange={e => onUpdateFavoriteStatus(e.target.value as any)}
+                    className="pl-3 pr-8 py-1.5 bg-white/5 hover:bg-white/10 text-white/80 text-[10px] font-black uppercase tracking-wider rounded-xl border border-white/5 outline-none cursor-pointer appearance-none transition-colors"
+                  >
+                    <option value="reading" className="bg-[#080811] text-white">En cours</option>
+                    <option value="plan_to_read" className="bg-[#080811] text-white">À lire</option>
+                    <option value="completed" className="bg-[#080811] text-white">Terminé</option>
+                  </select>
+                  <ChevronDown className="w-3 h-3 text-white/40 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

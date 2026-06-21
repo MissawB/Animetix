@@ -10,6 +10,7 @@ from .models import (
     DailyChallenge,
     DataCurationTicket,
     DiscoveryClub,
+    FavoriteManga,
     GlobalBoss,
     MangaChapter,
     MangaPage,
@@ -255,6 +256,28 @@ class MediaItemSerializer(serializers.Serializer):
                 ret[key] = [sanitize_html_content(t) for t in ret[key]]
 
         return ret
+
+
+class FavoriteMangaSerializer(serializers.ModelSerializer):
+    manga = MediaItemSerializer(read_only=True)
+    unread_chapters_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = FavoriteManga
+        fields = [
+            "id",
+            "manga",
+            "status",
+            "last_read_chapter",
+            "unread_chapters_count",
+            "created_at",
+            "updated_at",
+        ]
+
+    def get_unread_chapters_count(self, obj):
+        return MangaChapter.objects.filter(
+            manga=obj.manga, number__gt=obj.last_read_chapter
+        ).count()
 
 
 from .models import Friendship, Notification  # noqa: E402

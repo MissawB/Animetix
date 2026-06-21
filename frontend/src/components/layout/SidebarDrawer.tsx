@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import {
   X, Home, Zap, Trophy, Shield, Sparkles, Gamepad2, Search, Compass,
   Network, Film, Users, UserPlus, FlaskConical, BrainCircuit, Eye, LogIn, Microscope, Mic,
-  Database, MessageSquare, Share2, Globe, Download, Monitor
+  Database, MessageSquare, Share2, Globe, Download, Monitor, BookOpen
 } from 'lucide-react';
 import { SimulatedAdBanner } from '../../features/billing/components/SimulatedAdBanner';
 import { User } from '../../types';
@@ -104,6 +104,9 @@ const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
         </Link>
         <Link to="/explore/tachidesk/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/explore/tachidesk/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
           <Globe className="w-4 h-4 text-blue-400" /> {t('nav.tachidesk', 'Tachidesk Explorer')}
+        </Link>
+        <Link to="/media/manga/library/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/media/manga/library/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
+          <BookOpen className="w-4 h-4 text-pink-400" /> {t('nav.library', 'Ma Bibliothèque')}
         </Link>
         <Link to="/media/manga/offline/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/media/manga/offline/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
           <Download className="w-4 h-4 text-orange-400" /> {t('nav.offline_manga', 'Manga Hors-ligne')}

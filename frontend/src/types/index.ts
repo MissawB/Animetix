@@ -526,3 +526,14 @@ export interface OpenDataset {
   size_bytes: number;
   updated_at: string;
 }
+
+export interface FavoriteManga {
+  id: number;
+  manga: MediaDetail;
+  status: 'reading' | 'completed' | 'plan_to_read';
+  last_read_chapter: number;
+  unread_chapters_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
