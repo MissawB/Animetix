@@ -48,7 +48,7 @@ class AdvancedRAGService:
         repository: RepositoryPort,
         llm_service: LLMService,
         neo4j_manager: Optional[GraphPersistencePort] = None,
-        prompt_manager: PromptManager = None,
+        prompt_manager: Optional[PromptManager] = None,
         colbert_adapter=None,
         quantum_model: Any = "default",
         plasticity_simulator: Any = "default",
@@ -307,6 +307,9 @@ class AdvancedRAGService:
             ]
         )
 
+        if self.prompt_manager is None:
+            logger.error("No prompt_manager configured; cannot generate answer.")
+            return ""
         prompt, system_prompt = self.prompt_manager.get_prompt(
             "advanced_rag_generate", context=context, query=query
         )
@@ -322,6 +325,9 @@ class AdvancedRAGService:
         if not self.neo4j_manager:
             return ""
         context = self.neo4j_manager.get_community_summary(media_type, category_name)
+        if self.prompt_manager is None:
+            logger.error("No prompt_manager configured; cannot generate answer.")
+            return ""
         prompt, system_prompt = self.prompt_manager.get_prompt(
             "advanced_rag_generate", context=context, query=query
         )

@@ -4,7 +4,7 @@ import base64  # noqa: E402
 import os  # noqa: E402
 import tempfile  # noqa: E402
 from io import BytesIO  # noqa: E402
-from typing import Dict, List  # noqa: E402
+from typing import TYPE_CHECKING, Dict, List  # noqa: E402
 
 from core.domain.exceptions import InferenceError  # noqa: E402
 from core.utils.lazy_import import lazy_import  # noqa: E402
@@ -45,6 +45,17 @@ class CrossFrameAttentionProcessor:
 
 class ImageGenMixin:
     """Provides image generation, transformation, and inpainting capabilities."""
+
+    if TYPE_CHECKING:
+
+        def _log_usage(
+            self,
+            engine: str,
+            input_tokens: int = 0,
+            output_tokens: int = 0,
+            units: int = 0,
+            allocated_budget: int = 0,
+        ) -> None: ...
 
     def _get_dtype(self):
         return torch.float16 if torch.cuda.is_available() else torch.float32

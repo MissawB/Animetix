@@ -199,7 +199,7 @@ DRIFT_THRESHOLDS = {
 
 def _compute_topic_vector(texts: List[str]) -> Dict[str, float]:
     """Compute a normalized topic frequency vector from text samples."""
-    counts = Counter()
+    counts: Counter[str] = Counter()
     for text in texts:
         text_lower = text.lower()
         for topic, keywords in TOPIC_KEYWORDS.items():
@@ -290,7 +290,7 @@ def compute_fingerprint(
     std_len = math.sqrt(variance)
 
     # Language distribution
-    lang_counts = Counter()
+    lang_counts: Counter[str] = Counter()
     for s in samples:
         lang = s.get("language", "unknown")
         lang_counts[lang] += 1
@@ -304,7 +304,7 @@ def compute_fingerprint(
     corruption_dist = None
     if dataset_type == "dpo":
         # Infer strategy from rejected text patterns
-        strategy_counts = Counter()
+        strategy_counts: Counter[str] = Counter()
         for s in samples:
             rejected = s.get("rejected", "")
             chosen = s.get("chosen", "")

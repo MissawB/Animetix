@@ -1,7 +1,7 @@
 """VLM (Visual Language Model) and Object Detection mixin for Inference adapters."""
 
 import logging  # noqa: E402
-from typing import Dict, List, Optional  # noqa: E402
+from typing import TYPE_CHECKING, Dict, List, Optional  # noqa: E402
 
 from core.utils.lazy_import import lazy_import  # noqa: E402
 
@@ -14,6 +14,17 @@ logger = logging.getLogger("animetix.inference.vlm_mixin")
 
 class VlmMixin:
     """Provides local VLM description and object detection capabilities."""
+
+    if TYPE_CHECKING:
+
+        def _log_usage(
+            self,
+            engine: str,
+            input_tokens: int = 0,
+            output_tokens: int = 0,
+            units: int = 0,
+            allocated_budget: int = 0,
+        ) -> None: ...
 
     def detect_objects(
         self,

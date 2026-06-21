@@ -19,7 +19,7 @@ class DPOConfig(BaseModel):
     export_filename: str = "dpo_export.jsonl"
 
 
-def trl_ready_dataset(context=None, config: DPOConfig = None):
+def trl_ready_dataset(context=None, config: DPOConfig | None = None):
     """
     Export and validate user feedback for DPO fine-tuning.
     """
@@ -51,7 +51,7 @@ def trl_ready_dataset(context=None, config: DPOConfig = None):
         raise Exception(f"Failed to export DPO dataset to {dataset_path}")
 
 
-def trigger_lora_training(context=None, dataset_path: str = None):
+def trigger_lora_training(context=None, dataset_path: str | None = None):
     """
     Trigger LoRA fine-tuning with exported DPO dataset.
     """

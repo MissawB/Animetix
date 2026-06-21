@@ -44,9 +44,9 @@ def is_alloydb_nl_query_supported() -> bool:
 class DjangoRepositoryAdapter(RepositoryPort):
     def get_nearest_neighbors(
         self, collection_name: str, item_id: str, n_results: int = 5
-    ) -> List[Dict]:
+    ) -> Optional[Dict]:
         """Désactivé dans l'adaptateur relationnel. Utiliser ChromaDB."""
-        return []
+        return None
 
     def load_catalog(self, media_type: str) -> Optional[Dict]:
         items = MediaItem.objects.filter(media_type=media_type)

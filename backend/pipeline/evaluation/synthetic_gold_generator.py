@@ -5,8 +5,10 @@ import os
 import sys
 
 # Force UTF-8 for console output on Windows
-sys.stdout.reconfigure(encoding="utf-8")
-sys.stderr.reconfigure(encoding="utf-8")
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8")
 
 logger = logging.getLogger("animetix.pipeline." + __name__)
 

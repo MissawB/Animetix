@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from core.ports.gold_dataset_port import GoldDatasetPort
 from core.ports.inference_port import InferencePort
@@ -36,7 +36,7 @@ class SyntheticValidationService:
         context: str,
         instruction: str,
         response: str,
-        metadata: Dict[str, Any] = None,
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> int:
         """
         Runs systematic AI cross-validation and stages the entry for HITL review.
@@ -88,7 +88,7 @@ class SyntheticValidationService:
 
     def _run_ai_critique(
         self, context: str, instruction: str, response: str
-    ) -> (str, float):
+    ) -> tuple[str, float]:
         """
         Forces a model to critique the generated content for coherence,
         fidelity to context, and quality.

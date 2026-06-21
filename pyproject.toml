@@ -46,59 +46,31 @@ warn_unused_configs = true
 # Modules below are not yet type-clean. They are still parsed (so imports
 # resolve) but their errors are non-fatal.
 # Burn this list down over time; do NOT add new modules to it.
-# Progress: 105 -> 49 modules (56 burned down; ~211 errors remain across the 49).
+# Progress: 105 -> 21 modules (84 burned down; ~141 errors remain across the 21).
 [[tool.mypy.overrides]]
 ignore_errors = true
 module = [
-    "adapters.inference.audio_mixin",
-    "adapters.inference.brain_api_adapter",
     "adapters.inference.clip_vision",
-    "adapters.inference.depth_estimation",
     "adapters.inference.fallback_adapter",
     "adapters.inference.google_genai_adapter",
-    "adapters.inference.image_gen_mixin",
     "adapters.inference.local_text_adapter",
     "adapters.inference.moondream_adapter",
-    "adapters.inference.qwen3_vl_adapter",
-    "adapters.inference.rerank_mixin",
     "adapters.inference.unified_inference_adapter",
-    "adapters.inference.video_analysis",
-    "adapters.inference.vlm_mixin",
-    "adapters.persistence.django_gold_dataset_adapter",
-    "adapters.persistence.django_repository_adapter",
-    "adapters.persistence.django_safety_adapter",
     "api.animetix.admin",
-    "api.animetix.middleware",
     "api.animetix_project.settings",
-    "core.domain.services.advanced_rag_service",
     "core.domain.services.advanced_vision_service",
     "core.domain.services.agentic_rag_service",
     "core.domain.services.akinetix_engine",
-    "core.domain.services.archetype_drift_service",
-    "core.domain.services.catalog_service",
-    "core.domain.services.cinematic_volumetric_reconstruction_service",
-    "core.domain.services.creative.vs_battle_service",
     "core.domain.services.emoji_service",
     "core.domain.services.health_dashboard_service",
     "core.domain.services.llm_service",
-    "core.domain.services.multi_agent_bus",
-    "core.domain.services.orchestrator_agent_service",
     "core.domain.services.paradox_service",
-    "core.domain.services.prompt_manager",
-    "core.domain.services.rag.hybrid_index",
-    "core.domain.services.swarm_consensus",
     "core.domain.services.tree_of_thoughts_service",
-    "core.domain.services.validation_gate",
-    "core.ports.gold_dataset_port",
     "core.utils.lazy_import",
     "pipeline.evaluation.eval_ragas",
-    "pipeline.evaluation.synthetic_gold_generator",
     "pipeline.mlops.dpo_dataset_compiler",
     "pipeline.mlops.ft_dataset.*",
     "pipeline.mlops.lore_ingestion_beam",
-    "pipeline.mlops.semantic_drift_analyzer",
-    "pipeline.mlops.trl_ops",
-    "pipeline.neo4j_client",
 ]
 
 [tool.coverage.run]

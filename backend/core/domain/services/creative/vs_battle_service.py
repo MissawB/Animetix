@@ -243,7 +243,7 @@ class VsBattleService:
                         ):
                             continue
                         is_franchise_ok = self._is_franchise_match(
-                            franchise, cand.get("categories", []), cand_name
+                            franchise or "", cand.get("categories", []), cand_name
                         )
                         if self._is_name_match(
                             name,
@@ -289,7 +289,7 @@ class VsBattleService:
                 )
                 synthetic_char.image_url = self._recover_image(name, franchise)
                 if synthetic_char.stats:
-                    best_tier = self._extract_max_tier(synthetic_char.stats.tier)
+                    best_tier = self._extract_max_tier(synthetic_char.stats.tier or "")
                     synthetic_char.stats.tier_value = self._map_tier_to_value(best_tier)
                 return [synthetic_char]
             except Exception as e:
@@ -352,7 +352,7 @@ class VsBattleService:
                     character.image_url = self._recover_image(character.name, franchise)
                 if character.stats:
                     character.stats.tier_value = self._map_tier_to_value(
-                        self._extract_max_tier(character.stats.tier)
+                        self._extract_max_tier(character.stats.tier or "")
                     )
                     logger.info(
                         f"✅ Parsed version: {character.name} (Value: {character.stats.tier_value})"

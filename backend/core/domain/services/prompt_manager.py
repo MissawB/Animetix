@@ -17,7 +17,7 @@ class PromptManager:
     def __init__(self, prompts_dir: str):
         self.prompts_dir = prompts_dir
         self.prompts: Dict[str, Any] = {}
-        self.few_shot_examples: Dict[str, List[Dict[str, str]]] = {}
+        self.few_shot_examples: Dict[str, List[Dict[str, Any]]] = {}
         self.load_all()
 
     def load_all(self):
@@ -96,7 +96,7 @@ class PromptManager:
 
         try:
             with lock:
-                overrides = {}
+                overrides: Dict[str, Any] = {}
                 if os.path.exists(overrides_path):
                     with open(overrides_path, "r", encoding="utf-8") as f:
                         try:

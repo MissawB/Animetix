@@ -42,8 +42,8 @@ class MultiAgentBus:
     def __init__(self, redis_url: Optional[str] = None):
         self.redis_url = redis_url
         self._redis_client = None
-        self._shared_memory_store = {}  # Fallback in-memory
-        self._subscribers = {}
+        self._shared_memory_store: Dict[str, Dict[str, Any]] = {}  # Fallback in-memory
+        self._subscribers: Dict[str, Callable] = {}
         self._listen_tasks: Dict[str, asyncio.Task] = {}
         self.message_counter = 0
 
@@ -69,6 +69,11 @@ class MultiAgentBus:
 
     async def _listen_loop(self, agent_id: str, callback: Callable):
         """Boucle d'écoute asynchrone pour un agent via Redis Pub/Sub."""
+        if self._redis_client is None:
+            logger.warning(
+                f"Cannot start listen loop for agent '{agent_id}': no Redis client."
+            )
+            return
         channel = f"animetix:bus:agent:{agent_id}"
         pubsub = self._redis_client.pubsub()
         await pubsub.subscribe(channel)

@@ -12,7 +12,7 @@ class DjangoSafetyAdapter(SafetyPort):
         self,
         event_type: str,
         action_taken: str,
-        detected_categories: List[str] = None,
+        detected_categories: Optional[List[str]] = None,
         input_text: str = "",
         output_text: str = "",
         reasoning: str = "",
@@ -43,7 +43,7 @@ class DjangoSafetyAdapter(SafetyPort):
         total_events = AISafetyEvent.objects.count()
 
         # Categories distribution
-        categories = {}
+        categories: Dict[str, int] = {}
         events = AISafetyEvent.objects.all()
         for event in events:
             for cat in event.detected_categories:

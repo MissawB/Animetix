@@ -65,9 +65,9 @@ class DjangoGoldDatasetAdapter(GoldDatasetPort):
         context: str,
         instruction: str,
         response: str,
-        metadata: Dict[str, Any] = None,
+        metadata: Optional[Dict[str, Any]] = None,
         ai_validation_score: float = 0.0,
-        ai_critique: str = None,
+        ai_critique: Optional[str] = None,
         confidence_score: float = 0.0,
         is_safe: bool = True,
     ) -> int:

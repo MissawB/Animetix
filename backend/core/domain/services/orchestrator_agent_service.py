@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import orjson
 from core.ports.inference_port import InferencePort
@@ -15,10 +15,10 @@ class State:
     def __init__(self, query: str, media_type: str):
         self.query = query
         self.media_type = media_type
-        self.plan = []
+        self.plan: List[Any] = []
         self.context = ""
         self.final_answer = ""
-        self.history = []
+        self.history: List[str] = []
         self.next_node = "PLANNER"
 
 
@@ -145,7 +145,7 @@ class OrchestratorAgentService:
     def _safe_json_generate(
         self, prompt: str, system_prompt: Optional[str] = None
     ) -> Dict:
-        res = self.inference_engine.generate(prompt, system_prompt=system_prompt)
+        res = self.inference_engine.generate(prompt, system_prompt=system_prompt or "")
         try:
             if "{" in res and "}" in res:
                 json_str = res[res.find("{") : res.rfind("}") + 1]

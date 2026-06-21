@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from ..entities.personalization import ARCHETYPE_VISUAL_MAP, VisualConfig
 
@@ -13,7 +13,7 @@ class ArchetypeDriftService:
         self.repository = repository
 
     def calculate_drift(
-        self, user_id: int, user_settings: Dict[str, Any] = None
+        self, user_id: int, user_settings: Optional[Dict[str, Any]] = None
     ) -> VisualConfig:
         # 0. Initial Default or Manual Mode
         user_settings = user_settings or {}
@@ -100,7 +100,7 @@ class ArchetypeDriftService:
         if total_score == 0:
             return default_config
 
-        dominant = max(scores, key=scores.get)
+        dominant = max(scores, key=lambda a: scores[a])
         vibe = ARCHETYPE_VISUAL_MAP.get(dominant, {})
 
         # Normalize intensity (max 1.0) and apply multiplier

@@ -45,6 +45,8 @@ class SwarmConsensusOrchestrator:
             f"{agents_desc}\n\n"
             f"Retourne un objet JSON contenant les scores pour chaque agent dans le champ 'votes'."
         )
+        if self.inference_engine is None:
+            return {}
         try:
             result = self.inference_engine.generate_structured(
                 prompt=prompt,
@@ -92,15 +94,16 @@ class SwarmConsensusOrchestrator:
             else:
                 votes[agent] = self._simulate_agent_vote(agent, fact, media_title)
 
+        quorum_required = len(self.agents) // 2 + 1
         accept_phase = {
             "votes": votes,
             "threshold": 0.6,
-            "quorum_required": len(self.agents) // 2 + 1,
+            "quorum_required": quorum_required,
         }
 
         # Phase 3: Learn (Outcome)
         positive_votes = sum(1 for score in votes.values() if score >= 0.6)
-        consensus_achieved = positive_votes >= accept_phase["quorum_required"]
+        consensus_achieved = positive_votes >= quorum_required
         consensus_score = sum(votes.values()) / len(self.agents)
 
         outcome = {

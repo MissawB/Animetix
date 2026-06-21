@@ -24,8 +24,8 @@ class BrainAPIAdapter(InferencePort):
 
     def __init__(
         self,
-        api_url: str = None,
-        api_key: str = None,
+        api_url: Optional[str] = None,
+        api_key: Optional[str] = None,
         usage_port: Optional[UsagePort] = None,
     ):
         super().__init__(usage_port=usage_port)
