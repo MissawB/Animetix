@@ -17,6 +17,39 @@ const CATEGORIES = [
   { id: 'advanced', label: 'Sciences Avancées', icon: <Atom className="w-4 h-4" /> },
 ];
 
+const CATEGORY_STYLES: Record<string, { border: string; bg: string; iconColor: string }> = {
+  reasoning: {
+    border: 'hover:border-pink-500/30',
+    bg: 'bg-pink-500/10 dark:bg-pink-500/5',
+    iconColor: 'text-pink-500'
+  },
+  agents: {
+    border: 'hover:border-cyan-500/30',
+    bg: 'bg-cyan-500/10 dark:bg-cyan-500/5',
+    iconColor: 'text-cyan-500'
+  },
+  multimodal: {
+    border: 'hover:border-purple-500/30',
+    bg: 'bg-purple-500/10 dark:bg-purple-500/5',
+    iconColor: 'text-purple-500'
+  },
+  rag: {
+    border: 'hover:border-emerald-500/30',
+    bg: 'bg-emerald-500/10 dark:bg-emerald-500/5',
+    iconColor: 'text-emerald-500'
+  },
+  mlops: {
+    border: 'hover:border-blue-500/30',
+    bg: 'bg-blue-500/10 dark:bg-blue-500/5',
+    iconColor: 'text-blue-500'
+  },
+  advanced: {
+    border: 'hover:border-orange-500/30',
+    bg: 'bg-orange-500/10 dark:bg-orange-500/5',
+    iconColor: 'text-orange-500'
+  }
+};
+
 const ResearchPapersPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -27,6 +60,11 @@ const ResearchPapersPage: React.FC = () => {
                           paper.keyConcept.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesTab && matchesSearch;
   });
+
+  const getCategoryCount = (catId: string) => {
+    if (catId === 'all') return researchPapers.length;
+    return researchPapers.filter(p => p.category === catId).length;
+  };
 
   return (
     <div className="min-h-screen bg-surface-bg pt-32 pb-20 px-6 md:px-10 transition-colors duration-500">
@@ -48,7 +86,7 @@ const ResearchPapersPage: React.FC = () => {
             "L'architecture d'Animetix n'est pas le fruit du hasard. Découvrez les fondations académiques et les publications scientifiques qui propulsent nos algorithmes."
           </p>
         </motion.div>
-
+ 
         {/* Search & Filter Bar */}
         <div className="mb-12 flex flex-col xl:flex-row gap-6 items-center justify-between sticky top-24 z-40 bg-surface-bg/80 backdrop-blur-xl p-4 rounded-3xl border border-surface-text/5 shadow-2xl">
           <div className="relative w-full xl:w-96 shrink-0">
@@ -75,84 +113,99 @@ const ResearchPapersPage: React.FC = () => {
               >
                 {cat.icon}
                 {cat.label}
+                <span className={`ml-1.5 px-1.5 py-0.5 rounded-md text-[9px] ${
+                  activeTab === cat.id 
+                    ? 'bg-black/20 text-black font-black' 
+                    : 'bg-black/5 dark:bg-white/10 text-gray-400 dark:text-gray-400'
+                }`}>
+                  {getCategoryCount(cat.id)}
+                </span>
               </button>
             ))}
           </div>
         </div>
-
+ 
         {/* Papers Grid */}
         <motion.div 
           layout
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
         >
           <AnimatePresence mode="popLayout">
-            {filteredPapers.map((paper, index) => (
-              <motion.div
-                key={paper.id}
-                layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.3, delay: index * 0.05 }}
-                className="group relative bg-white dark:bg-surface-card/40 rounded-[2.5rem] p-8 border border-surface-text/5 dark:border-white/5 shadow-xl hover:shadow-2xl transition-all hover:-translate-y-2 flex flex-col overflow-hidden"
-              >
-                {/* Background Decoration */}
-                <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-yellow-400/10 rounded-full blur-3xl group-hover:bg-yellow-400/20 transition-colors" />
-                
-                <div className="mb-6 flex justify-between items-start relative z-10">
-                  <div className="p-3 bg-gray-50 dark:bg-black/30 rounded-2xl border border-black/5 dark:border-white/10">
-                    {paper.category === 'reasoning' && <Brain className="w-6 h-6 text-pink-500" />}
-                    {paper.category === 'agents' && <Cpu className="w-6 h-6 text-cyan-500" />}
-                    {paper.category === 'multimodal' && <Video className="w-6 h-6 text-purple-500" />}
-                    {paper.category === 'rag' && <Database className="w-6 h-6 text-emerald-500" />}
-                    {paper.category === 'mlops' && <ShieldCheck className="w-6 h-6 text-blue-500" />}
-                    {paper.category === 'advanced' && <Atom className="w-6 h-6 text-orange-500" />}
-                  </div>
-                  <a 
-                    href={paper.url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="p-2 text-gray-400 hover:text-yellow-400 transition-colors bg-white dark:bg-black/20 rounded-xl"
-                  >
-                    <ExternalLink className="w-5 h-5" />
-                  </a>
-                </div>
+            {filteredPapers.map((paper, index) => {
+              const style = CATEGORY_STYLES[paper.category] || {
+                border: 'hover:border-yellow-400/30',
+                bg: 'bg-yellow-400/10',
+                iconColor: 'text-yellow-400'
+              };
 
-                <div className="flex-grow relative z-10">
-                  <span className="text-[10px] font-bold text-yellow-600 dark:text-yellow-400 uppercase tracking-widest mb-2 block">
-                    {paper.source}
-                  </span>
-                  <h3 className="manga-font text-xl leading-tight mb-4 text-black dark:text-white group-hover:text-yellow-400 transition-colors">
-                    {paper.title}
-                  </h3>
+              return (
+                <motion.div
+                  key={paper.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                  className={`group relative bg-white dark:bg-surface-card/40 rounded-[2.5rem] p-8 border border-surface-text/5 dark:border-white/5 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 flex flex-col overflow-hidden ${style.border}`}
+                >
+                  {/* Background Decoration */}
+                  <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-yellow-400/10 rounded-full blur-3xl group-hover:bg-yellow-400/20 transition-colors" />
                   
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className="text-[10px] font-black uppercase text-gray-400 mb-1 flex items-center gap-1">
-                        <Info className="w-3 h-3" /> Concept Clé
-                      </h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-300 italic">
-                        {paper.keyConcept}
-                      </p>
+                  <div className="mb-6 flex justify-between items-start relative z-10">
+                    <div className={`p-3 rounded-2xl border border-black/5 dark:border-white/10 ${style.bg}`}>
+                      {paper.category === 'reasoning' && <Brain className={`w-6 h-6 ${style.iconColor}`} />}
+                      {paper.category === 'agents' && <Cpu className={`w-6 h-6 ${style.iconColor}`} />}
+                      {paper.category === 'multimodal' && <Video className={`w-6 h-6 ${style.iconColor}`} />}
+                      {paper.category === 'rag' && <Database className={`w-6 h-6 ${style.iconColor}`} />}
+                      {paper.category === 'mlops' && <ShieldCheck className={`w-6 h-6 ${style.iconColor}`} />}
+                      {paper.category === 'advanced' && <Atom className={`w-6 h-6 ${style.iconColor}`} />}
                     </div>
+                    <a 
+                      href={paper.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="p-2 text-gray-400 hover:text-yellow-400 transition-colors bg-white dark:bg-black/20 rounded-xl"
+                    >
+                      <ExternalLink className="w-5 h-5" />
+                    </a>
+                  </div>
+  
+                  <div className="flex-grow relative z-10">
+                    <span className="text-[10px] font-bold text-yellow-600 dark:text-yellow-400 uppercase tracking-widest mb-2 block">
+                      {paper.source}
+                    </span>
+                    <h3 className="manga-font text-xl leading-tight mb-4 text-black dark:text-white group-hover:text-yellow-400 transition-colors">
+                      {paper.title}
+                    </h3>
                     
-                    <div className="bg-yellow-400/5 dark:bg-black/30 p-4 rounded-2xl border border-yellow-400/10">
-                      <h4 className="text-[10px] font-black uppercase text-yellow-600 dark:text-yellow-400 mb-2 flex items-center gap-1">
-                        <Layers className="w-3 h-3" /> Implémentation Animetix
-                      </h4>
-                      <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
-                        {paper.implementation}
-                      </p>
+                    <div className="space-y-4">
+                      <div>
+                        <h4 className="text-[10px] font-black uppercase text-gray-400 mb-1 flex items-center gap-1">
+                          <Info className="w-3 h-3" /> Concept Clé
+                        </h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-300 italic">
+                          {paper.keyConcept}
+                        </p>
+                      </div>
+                      
+                      <div className="bg-yellow-400/5 dark:bg-black/30 p-4 rounded-2xl border border-yellow-400/10">
+                        <h4 className="text-[10px] font-black uppercase text-yellow-600 dark:text-yellow-400 mb-2 flex items-center gap-1">
+                          <Layers className="w-3 h-3" /> Implémentation Animetix
+                        </h4>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
+                          {paper.implementation}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-
-                {/* Bottom Number */}
-                <div className="absolute bottom-6 right-8 text-5xl font-black opacity-[0.03] dark:opacity-[0.05] pointer-events-none select-none">
-                  #{index + 1}
-                </div>
-              </motion.div>
-            ))}
+  
+                  {/* Bottom Number */}
+                  <div className="absolute bottom-6 right-8 text-5xl font-black opacity-[0.03] dark:opacity-[0.05] pointer-events-none select-none">
+                    #{index + 1}
+                  </div>
+                </motion.div>
+              );
+            })}
           </AnimatePresence>
         </motion.div>
 
