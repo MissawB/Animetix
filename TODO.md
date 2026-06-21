@@ -8,8 +8,7 @@ _Rien d'ouvert._
 
 ## 🟠 Élevés
 
-- [ ] **CI couverture — job d'intégration optionnel** _(le gate `--cov-fail-under=75` + upload Codecov sont posés)_
-  - Hook `conftest` qui ping ollama et **skip gracieusement** les tests `@pytest.mark.integration` s'il est injoignable, + job CI dédié non-bloquant.
+- [x] **CI couverture — job d'intégration optionnel** — ✅ hook `conftest.pytest_collection_modifyitems` qui teste la connexion TCP au backend LLM (`LLM_API_BASE`, défaut ollama `localhost:11434`) et **skippe gracieusement** les tests `@pytest.mark.integration` s'il est injoignable (vérifié : ollama up → run, down → skip). ✅ job CI **`integration-test` non-bloquant** (`continue-on-error`, ignoré sur les PR, tourne sur push main + dispatch) : démarre les services compose + lance `pytest -m integration` (les tests LLM se skippent faute d'ollama, les autres exercent chromadb/neo4j/redis).
 
 ## 🟡 Moyens
 

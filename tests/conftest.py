@@ -63,6 +63,44 @@ import tracemalloc  # noqa: E402
 import pytest  # noqa: E402
 
 
+def _llm_backend_reachable() -> bool:
+    """True si le backend LLM (ollama via ``LLM_API_BASE``) accepte une connexion TCP.
+
+    Permet de *skipper* (au lieu d'échouer durement) les tests
+    ``@pytest.mark.integration`` qui exigent un LLM live, quand celui-ci est absent
+    (CI sans ollama, dev hors-ligne).
+    """
+    import socket  # noqa: E402
+    from urllib.parse import urlparse  # noqa: E402
+
+    base = os.getenv("LLM_API_BASE", "http://localhost:11434/v1")
+    parsed = urlparse(base)
+    host = parsed.hostname or "localhost"
+    port = parsed.port or (443 if parsed.scheme == "https" else 11434)
+    try:
+        with socket.create_connection((host, port), timeout=0.75):
+            return True
+    except OSError:
+        return False
+
+
+def pytest_collection_modifyitems(config, items):
+    """Skip gracieux des tests ``integration`` si le backend LLM est injoignable.
+
+    La CI unitaire les exclut déjà via ``-m "not integration"`` ; ce hook permet en
+    plus de lancer la suite **complète** n'importe où (et le job CI d'intégration
+    non-bloquant) sans échec dur quand ollama n'est pas démarré.
+    """
+    if _llm_backend_reachable():
+        return
+    skip_integration = pytest.mark.skip(
+        reason="LLM backend (ollama @ LLM_API_BASE) injoignable — test d'intégration skippé"
+    )
+    for item in items:
+        if "integration" in item.keywords:
+            item.add_marker(skip_integration)
+
+
 def create_image_bytes(
     width: int = 256, height: int = 256, mode: str = "RGB", fmt: str = "JPEG"
 ) -> bytes:
