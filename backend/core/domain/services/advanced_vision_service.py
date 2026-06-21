@@ -82,7 +82,7 @@ class AdvancedVisionService:
         scores = self.inference_engine.classify_image(
             image_data, candidate_labels=styles, model_id=self.clip_anime_model
         )
-        return max(scores, key=scores.get) if scores else "Inconnu"
+        return max(scores, key=lambda label: scores[label]) if scores else "Inconnu"
 
     def get_character_face_embedding(self, image_data: bytes) -> List[float]:
         return self.inference_engine.get_image_embedding(
@@ -118,19 +118,24 @@ class AdvancedVisionService:
         Reranking Visuel Direct (VLM-as-a-Reranker).
         Demande au modèle de 'regarder' les posters et de choisir le meilleur.
         """
-        image_urls = [
-            item.get("image") for item in candidate_items if item.get("image")
-        ]
+        image_urls: List[str] = []
+        for item in candidate_items:
+            url = item.get("image")
+            if url:
+                image_urls.append(url)
         if not image_urls:
             return candidate_items
 
-        ranked_indices = self.inference_engine.visual_rerank(query, image_urls)
+        ranked_items = self.inference_engine.visual_rerank(query, image_urls)
 
-        # Reconstruction de la liste ordonnée
+        # Reconstruction de la liste ordonnée.
+        # visual_rerank renvoie une liste de dicts (triés par pertinence) du
+        # type {"index": int, "score": float, ...} ; on en extrait l'index.
         reranked = []
         try:
-            for idx in ranked_indices:
-                if 0 <= idx < len(candidate_items):
+            for ranked in ranked_items:
+                idx = ranked.get("index")
+                if isinstance(idx, int) and 0 <= idx < len(candidate_items):
                     reranked.append(candidate_items[idx])
 
             # Ajout des items restants (si le VLM en a oublié)

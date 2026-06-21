@@ -57,8 +57,13 @@ class EmojiDomainService:
 
     def generate_emojis(
         self, media_type: str, title: str, description: str
-    ) -> List[str]:
-        """Génère la suite d'emojis pour une œuvre donnée avec robustesse."""
+    ) -> List[str] | str:
+        """Génère la suite d'emojis pour une œuvre donnée avec robustesse.
+
+        Retourne la chaîne d'emojis brute du LLM si elle est non vide, sinon une
+        liste de repli ``["❓", "❓", "❓"]`` — d'où le type de retour ``List[str] | str``.
+        (La variante streaming ``generate_emojis_stream`` parse, elle, en ``List[str]``.)
+        """
         try:
             res = self.llm_service.generate_emojis(media_type, title, description)
             return res if res else ["❓", "❓", "❓"]

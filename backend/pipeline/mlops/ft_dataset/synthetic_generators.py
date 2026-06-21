@@ -8,11 +8,11 @@ contextes RAG) — aucun appel LLM.
 
 import json
 import random
-from typing import List
+from typing import Any, List
 
 from ..french_market_db import FRENCH_VOICE_ACTORS  # noqa: F401
 
-random = random.SystemRandom()
+random = random.SystemRandom()  # type: ignore[assignment]  # intentional module-shadow: use CSPRNG
 
 
 def generate_mcp_tool_instructions() -> List[dict]:
@@ -416,7 +416,9 @@ def generate_mcp_tool_instructions() -> List[dict]:
     return instructions
 
 
-def generate_rag_context_instructions(animes, characters) -> List[dict]:
+def generate_rag_context_instructions(
+    animes: List[dict[str, Any]], characters: List[dict[str, Any]]
+) -> List[dict]:
     """
     Génère des exemples d'entraînement SFT pour le RAG (Retrieval-Augmented Generation).
     Le modèle doit répondre à une question sur une œuvre ou un personnage en s'appuyant
@@ -446,13 +448,13 @@ def generate_rag_context_instructions(animes, characters) -> List[dict]:
 
     import random
 
-    random = random.SystemRandom()
+    random = random.SystemRandom()  # type: ignore[assignment]  # intentional module-shadow: use CSPRNG
     # noqa: E402
 
     # Scenario A: Synopsis extraction with noise
     for idx in range(120):
         lang = "English" if idx % 2 == 1 else "Français"
-        anime = (
+        anime: dict[str, Any] = (
             random.choice(animes)
             if animes
             else {
@@ -554,7 +556,7 @@ def generate_rag_context_instructions(animes, characters) -> List[dict]:
     # Scenario C: Character Bio with multiple documents
     for idx in range(100):
         lang = "English" if idx % 2 == 1 else "Français"
-        char = (
+        char: dict[str, Any] = (
             random.choice(characters)
             if characters
             else {
@@ -615,7 +617,7 @@ def generate_negative_refusal_examples(count=800) -> List[dict]:
     """
     import random
 
-    random = random.SystemRandom()
+    random = random.SystemRandom()  # type: ignore[assignment]  # intentional module-shadow: use CSPRNG
     # noqa: E402
 
     refusals = []

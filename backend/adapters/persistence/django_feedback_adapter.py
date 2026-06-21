@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from core.ports.feedback_port import FeedbackRepositoryPort
 
@@ -23,7 +23,7 @@ class DjangoFeedbackAdapter(FeedbackRepositoryPort):
         )
 
     def get_recent_feedback(
-        self, limit: int = 100, feedback_type: str = None
+        self, limit: int = 100, feedback_type: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         from animetix.models import AIFeedback  # noqa: E402
 

@@ -89,7 +89,7 @@ class AkinetixEngine:
 
         return AkinetixGameState(
             history=[],
-            current_q=self.formatter.format(next_attr),
+            current_q=self.formatter.format(next_attr or ""),
             current_attr=next_attr,
             game_over=False,
             ai_guess=None,
@@ -156,14 +156,14 @@ class AkinetixEngine:
                 for k in fine_attributes[char_id].keys():
                     attrs.add(f"fine:{k}")
             if item.get("genres"):
-                attrs.update([f"genre:{g}" for g in item.get("genres")])
+                attrs.update([f"genre:{g}" for g in (item.get("genres") or [])])
             if item.get("micro_tags"):
-                attrs.update([f"tag:{t}" for t in item.get("micro_tags")])
+                attrs.update([f"tag:{t}" for t in (item.get("micro_tags") or [])])
             if item.get("studios"):
-                attrs.update([f"studio:{s}" for s in item.get("studios")])
+                attrs.update([f"studio:{s}" for s in (item.get("studios") or [])])
             meta = item.get("metadata", {})
             if isinstance(meta, dict) and meta.get("themes"):
-                attrs.update([f"theme:{t}" for t in meta.get("themes")])
+                attrs.update([f"theme:{t}" for t in (meta.get("themes") or [])])
         return items, sorted(list(attrs))
 
     def _has_attributes(self, item: Dict, fine_attributes: Dict) -> bool:
@@ -240,7 +240,7 @@ class AkinetixEngine:
         attributes: List[str],
         probs: np.ndarray,
         asked_attrs: set,
-        fine_attributes: Dict = None,
+        fine_attributes: Optional[Dict] = None,
     ) -> Optional[str]:
         candidates = [a for a in attributes if a not in asked_attrs]
         if not candidates:
@@ -341,7 +341,7 @@ class AkinetixEngine:
 
     def _rl_get_best_action(self, env: AkinetixRLEnvironment) -> int:
         best_action = 0
-        max_gain = -1
+        max_gain = -1.0
         sample_size = min(20, len(env.attributes))
         indices = np.random.choice(len(env.attributes), sample_size, replace=False)
         for idx in indices:

@@ -123,7 +123,7 @@ class AkinetixRLService:
         # Dans un vrai déploiement RL, on ferait self.policy(state)
         # Ici on simule l'agent 'Expert' par recherche gloutonne d'entropie
         best_action = 0
-        max_gain = -1
+        max_gain = -1.0
 
         # On sample quelques attributs pour la performance
         sample_size = min(20, len(env.attributes))

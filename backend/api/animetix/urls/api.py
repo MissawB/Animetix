@@ -198,11 +198,7 @@ urlpatterns = [
     ),
     path(
         "latent-space/",
-        (
-            api_views.SampleView.as_view()
-            if not hasattr(api_views, "LatentSpaceDataView")
-            else api_views.LatentSpaceDataView.as_view()
-        ),
+        api_views.LatentSpaceDataView.as_view(),
         name="api_latent_space",
     ),
     path(

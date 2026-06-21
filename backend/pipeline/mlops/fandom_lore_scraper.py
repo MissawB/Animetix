@@ -150,7 +150,7 @@ class FandomLoreScraper:
         sentences = sentence_end.split(text)
 
         chunks = []
-        current_chunk = []
+        current_chunk: list[str] = []
         current_length = 0
 
         for sentence in sentences:

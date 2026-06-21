@@ -49,7 +49,7 @@ class ReasoningAgentService:
         self, query: str, media_type: str = "Anime", max_iterations: int = 3
     ) -> str:
         """Boucle itérative de raisonnement (Reasoning + Acting)."""
-        history = []
+        history: list[str] = []
         context_data = ""
         sources = []
 

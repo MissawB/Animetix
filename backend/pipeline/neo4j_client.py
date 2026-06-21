@@ -297,7 +297,7 @@ class Neo4jManager(GraphDatabasePort):
     def get_community_summary(self, category_type: str, category_name: str) -> str:
         if not self.driver:
             return ""
-        safe_label = sanitize_cypher_identifier(category_type, ALLOWED_LABELS)
+        safe_label = sanitize_cypher_identifier(category_type, list(ALLOWED_LABELS))
         query = f"""
         MATCH (cat:{safe_label} {{name: $name}})<-[:PRODUCED_BY|HAS_THEME|CREATED_BY*1..2]-(m:Media)
         OPTIONAL MATCH (m)-[:HAS_THEME]->(t:MicroTag)
@@ -323,9 +323,8 @@ class Neo4jManager(GraphDatabasePort):
     def multi_hop_traversal(self, start_node: str, steps: List[str]) -> str:
         if not self.driver or not steps:
             return ""
-        safe_steps = [
-            sanitize_cypher_identifier(s, ALLOWED_RELATIONSHIPS) for s in steps
-        ]
+        allowed_rels = list(ALLOWED_RELATIONSHIPS)
+        safe_steps = [sanitize_cypher_identifier(s, allowed_rels) for s in steps]
         rel_chain = "-[:" + "]-() -[:".join(safe_steps) + "]-"
         query = f"""
         MATCH (start {{name: $name}}){rel_chain}(target)
@@ -398,7 +397,7 @@ class Neo4jManager(GraphDatabasePort):
                 obj = claim.get("object")
                 try:
                     safe_rel = sanitize_cypher_identifier(
-                        rel_raw, ALLOWED_RELATIONSHIPS
+                        rel_raw, list(ALLOWED_RELATIONSHIPS)
                     )
                     query = f"MATCH (s:Media {{title: $subj}})-[:{safe_rel}]->(o {{name: $obj}}) RETURN count(o) > 0 as verified"
                     res = session.run(query, {"subj": subj, "obj": obj}).single()

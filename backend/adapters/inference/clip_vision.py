@@ -2,7 +2,7 @@
 
 import asyncio  # noqa: E402
 import logging  # noqa: E402
-from typing import Any, Dict, List, Optional  # noqa: E402
+from typing import TYPE_CHECKING, Any, Dict, List, Optional  # noqa: E402
 
 import httpx  # noqa: E402
 from core.domain.exceptions import InferenceError  # noqa: E402
@@ -19,6 +19,17 @@ logger = logging.getLogger("animetix.inference.clip_vision")
 
 class ClipVisionMixin:
     """Provides CLIP-based similarity, classification, reranking, and ColPali late interaction."""
+
+    if TYPE_CHECKING:
+
+        def _log_usage(
+            self,
+            engine: str,
+            input_tokens: int = 0,
+            output_tokens: int = 0,
+            units: int = 0,
+            allocated_budget: int = 0,
+        ) -> None: ...
 
     def get_image_embedding(
         self, image_data: bytes, model_id: Optional[str] = None

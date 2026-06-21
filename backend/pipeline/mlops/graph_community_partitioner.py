@@ -49,7 +49,7 @@ class GraphCommunityPartitioner:
                 return self._generate_mock_communities()
 
             # Regroupement simple par labels et thèmes pour le partitionnement sémantique
-            raw_groups = {}
+            raw_groups: dict[str, list[str]] = {}
             for item in nodes:
                 lbl = item.get("type", "General")
                 if lbl not in raw_groups:

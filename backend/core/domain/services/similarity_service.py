@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import Dict
+from typing import Dict, Optional
 
 from ...ports.repository_port import RepositoryPort
 
@@ -78,6 +78,18 @@ class SimilarityService:
 
         # Pondération hybride : 70% Vecteur + 30% Graphe
         return (0.7 * vec_sim) + (0.3 * graph_sim)
+
+    def find_similar_items(
+        self, media_type: str, item_id: str, count: int = 5
+    ) -> Optional[Dict]:
+        """Voisins sémantiques d'un item via la recherche vectorielle du repository.
+
+        Retourne le résultat brut du store vectoriel (format Chroma :
+        ``{"metadatas": [[...]], "distances": [[...]], ...}``) ou ``None`` si
+        l'item est introuvable. Comme :meth:`calculate_similarity`, ``media_type``
+        sert directement de nom de collection.
+        """
+        return self.repository.get_nearest_neighbors(media_type, str(item_id), count)
 
     def check_title_match(self, user_input: str, media_item: Dict) -> bool:
         """Vérifie si la saisie utilisateur correspond aux titres ou synonymes de l'œuvre."""

@@ -63,8 +63,8 @@ class UnifiedInferenceAdapter(
         self.timeout = timeout
 
         # Cache for diagnostics & advanced uncertainty
-        self._last_completion = None
-        self._last_logprobs = None
+        self._last_completion: str = ""
+        self._last_logprobs: List[TokenLogProb] = []
 
         if not is_safe_url(self.api_base, allow_internal=True):
             logger.warning(
@@ -242,7 +242,7 @@ class UnifiedInferenceAdapter(
                     raw_content = raw_content.split("---")[0].strip()
 
                 self._last_completion = raw_content
-                self._last_logprobs = parsed_logprobs
+                self._last_logprobs = parsed_logprobs or []
 
                 return InferenceResponse(
                     text=raw_content,

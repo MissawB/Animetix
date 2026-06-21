@@ -10,6 +10,7 @@ import logging  # noqa: E402
 import os  # noqa: E402
 import sys  # noqa: E402
 import time  # noqa: E402
+from typing import Any, Dict  # noqa: E402
 
 from core.utils.security import safe_http_request  # noqa: E402
 from dotenv import load_dotenv  # noqa: E402
@@ -218,7 +219,7 @@ def run_enrichment(limit: int = 20, dry_run: bool = False):
             continue
 
         # 4. Enregistrement en base de données
-        updates = {}
+        updates: Dict[str, Any] = {}
         if synopsis_fr:
             item.synopsis_fr = synopsis_fr
             updates["synopsis_fr"] = synopsis_fr

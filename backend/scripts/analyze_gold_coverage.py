@@ -111,7 +111,7 @@ def analyze_coverage(threshold: float = 0.05) -> Dict[str, Any]:
     under_represented_genres = []
 
     if total_vectors > 0:
-        db_genres = {}
+        db_genres: dict[str, int] = {}
         for r in records:
             genre = r.metadata.get("genre")
             if genre:

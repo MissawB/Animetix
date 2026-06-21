@@ -1,3 +1,5 @@
+from typing import List, cast
+
 from .settings import *  # noqa: F403
 
 # Clear everything and set a fresh test DB
@@ -25,7 +27,10 @@ REST_FRAMEWORK = {
     **REST_FRAMEWORK,  # noqa: F405
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.SessionAuthentication",
-        *REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"],  # noqa: F405
+        *cast(
+            List[str],
+            REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"],  # noqa: F405
+        ),
     ],
 }
 

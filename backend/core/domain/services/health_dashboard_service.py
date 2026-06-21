@@ -1,7 +1,7 @@
 import logging
 import time
 from datetime import datetime, timedelta
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional
 
 from core.ports.generic_cache_port import CachePort, InMemoryCache
 from core.ports.usage_port import UsagePort
@@ -15,10 +15,10 @@ class HealthDashboardService:
     def __init__(
         self,
         usage_port: UsagePort,
-        sota_service: SOTABenchmarkService = None,
+        sota_service: Optional[SOTABenchmarkService] = None,
         inference_engine=None,
         graph_port=None,
-        cache_port: CachePort = None,
+        cache_port: Optional[CachePort] = None,
     ):
         self.usage_port = usage_port
         self.sota_service = sota_service or SOTABenchmarkService()
@@ -109,7 +109,7 @@ class HealthDashboardService:
         import random
 
         gpu_count = 8
-        gpus = []
+        gpus: List[Dict[str, Any]] = []
         for i in range(gpu_count):
             temp = random.randint(38, 72)
             util = random.randint(15, 98)

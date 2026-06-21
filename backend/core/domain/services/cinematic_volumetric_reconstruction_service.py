@@ -43,6 +43,15 @@ class CinematicVolumetricReconstructionService:
             f"🌌 DCS Spatial: Starting Dynamic Volumetric Cinematic reconstruction for '{title}'..."
         )
 
+        if self.inference_engine is None:
+            logger.error(
+                f"❌ DCS Reconstruction unavailable for '{title}': no inference engine configured."
+            )
+            return {
+                "status": "error",
+                "message": "No inference engine configured.",
+            }
+
         try:
             # 1. Sauvegarde temporaire pour lecture
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp:
@@ -54,7 +63,7 @@ class CinematicVolumetricReconstructionService:
             meta = reader.get_meta_data()
             fps = meta.get("fps", 24)
 
-            frames_3d = []
+            frames_3d: list[Dict[str, Any]] = []
             max_frames = 5  # Limite pour la démo / performance
 
             for i, frame in enumerate(reader):

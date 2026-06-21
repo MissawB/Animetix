@@ -16,7 +16,7 @@ class Qwen3VLAdapter(InferencePort):
     def __init__(
         self,
         model_id: str = "Qwen/Qwen3-VL-30B-A3B-Instruct",
-        token: str = None,
+        token: Optional[str] = None,
         usage_port: Optional[UsagePort] = None,
     ):
         super().__init__(usage_port=usage_port)
@@ -144,7 +144,7 @@ class Qwen3VLAdapter(InferencePort):
                 'Réponds uniquement sous forme de JSON avec la structure suivante : {"scores": [{"index": 0, "score": 0.95}, ...]}'
             )
 
-        content = [{"type": "text", "text": prompt}]
+        content: List[Dict[str, Any]] = [{"type": "text", "text": prompt}]
         for url in image_urls:
             content.append({"type": "image_url", "image_url": {"url": url}})
 

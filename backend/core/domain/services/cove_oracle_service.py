@@ -1,5 +1,5 @@
 import logging
-from typing import Dict
+from typing import Any, Dict
 
 import orjson
 from core.ports.inference_port import InferencePort
@@ -38,7 +38,7 @@ class CoveOracleService:
         """
         logger.info(f"🛡️ CoVe Trace: Processing question: '{question}'")
 
-        trace = {
+        trace: Dict[str, Any] = {
             "question": question,
             "baseline": "",
             "verification_plan": [],

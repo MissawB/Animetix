@@ -45,11 +45,11 @@ class LLMService:
         self,
         prompt: str,
         system_prompt: str = "",
-        forbidden_terms: list = None,
+        forbidden_terms: Optional[list] = None,
         use_slm: bool = False,
         thinking_budget: int = 0,
         thinking_mode: bool = False,
-        user_id: int = None,
+        user_id: Optional[int] = None,
         tier: str = "free",
     ) -> str:
         # --- QUOTA CHECK ---
@@ -97,7 +97,8 @@ class LLMService:
 
             # The engine returns an InferenceResponse; keep backward compatibility
             # with engines/mocks that return a raw string.
-            text = getattr(response, "text", response)
+            raw_text = getattr(response, "text", response)
+            text: str = raw_text if isinstance(raw_text, str) else str(raw_text)
             if not text:
                 raise InferenceError("Engine returned empty response")
 

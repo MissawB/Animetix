@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import re
+from collections.abc import Iterator
 from typing import Dict, List
 
 import apache_beam as beam
@@ -11,11 +12,11 @@ logger = logging.getLogger("animetix.pipeline.beam")
 
 
 class ScrapeAndCleanDoFn(beam.DoFn):
-    def process(self, element: Dict) -> List[Dict]:
+    def process(self, element: Dict) -> Iterator[Dict]:
         url = element.get("url")
         franchise = element.get("franchise")
         if not url:
-            return []
+            return
 
         logger.info(f"Beam: Scraping URL {url} for franchise {franchise}")
         try:
@@ -55,11 +56,11 @@ class ScrapeAndCleanDoFn(beam.DoFn):
             yield {"url": url, "franchise": franchise, "text": clean_text}
         except Exception as e:
             logger.error(f"Beam error scraping {url}: {e}")
-            return []
+            return
 
 
 class ChunkTextDoFn(beam.DoFn):
-    def process(self, element: Dict) -> List[Dict]:
+    def process(self, element: Dict) -> Iterator[Dict]:
         text = element["text"]
         url = element["url"]
         franchise = element["franchise"]
@@ -68,7 +69,7 @@ class ChunkTextDoFn(beam.DoFn):
         sentences = sentence_end.split(text)
 
         chunks = []
-        current_chunk = []
+        current_chunk: List[str] = []
         current_length = 0
 
         for sentence in sentences:
@@ -124,7 +125,7 @@ class GenerateEmbeddingsDoFn(beam.DoFn):
             logger.warning(f"Django setup warning in Beam worker: {e}")
             self.container = None
 
-    def process(self, element: Dict) -> List[Dict]:
+    def process(self, element: Dict) -> Iterator[Dict]:
         chunks = element["chunks"]
         url = element["url"]
         franchise = element["franchise"]
@@ -195,10 +196,10 @@ class WriteToVectorDBDoFn(beam.DoFn):
             logger.warning(f"Django setup warning in Beam worker: {e}")
             self.container = None
 
-    def process(self, element: Dict) -> List[Dict]:
+    def process(self, element: Dict) -> Iterator[Dict]:
         items = element["items"]
         if not items:
-            return []
+            return
 
         if self.container:
             try:

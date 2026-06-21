@@ -23,7 +23,7 @@ class ObservabilityService:
         self._run = None
 
         # Suivi de la latence en mémoire pour les alertes temps réel
-        self._recent_latencies = []
+        self._recent_latencies: list[float] = []
         self._max_history = 50
 
         if self.enabled:

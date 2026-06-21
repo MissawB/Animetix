@@ -10,7 +10,7 @@ import os  # noqa: E402
 import random  # noqa: E402
 import re  # noqa: E402
 import sys  # noqa: E402
-from typing import List  # noqa: E402
+from typing import Callable, Dict, List  # noqa: E402
 
 # Insert paths at 0 to avoid name conflicts with virtualenv packages
 backend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -29,7 +29,7 @@ from pydantic import BaseModel, field_validator, model_validator  # noqa: E402
 
 # Cache variables
 DPO_CACHE_FILE = None
-DPO_CACHE = {}
+DPO_CACHE: Dict[str, str] = {}
 
 # --- Regex patterns for sample validation ---
 _HTML_TAG_RE = re.compile(r"<[a-zA-Z][^>]*>")
@@ -353,8 +353,8 @@ if CREATORS_AND_STUDIOS:
 else:
     STUDIOS_ONLY_LIST = STUDIOS_LIST
 
-title_genres = {}
-studio_genres = {}
+title_genres: Dict[str, set[str]] = {}
+studio_genres: Dict[str, set[str]] = {}
 
 if os.path.exists(ANIME_DB):
     try:
@@ -407,7 +407,7 @@ if FRENCH_VOICE_ACTORS:
 
 for va_name in VOICE_ACTORS_LIST:
     va_titles = va_series.get(va_name, set())
-    similarities = []
+    similarities: list[tuple[str, float]] = []
     for other_va in VOICE_ACTORS_LIST:
         if other_va.lower() == va_name.lower():
             continue
@@ -450,7 +450,7 @@ if CREATORS_AND_STUDIOS:
     for name, info in CREATORS_AND_STUDIOS.items():
         examples = info.get("examples", "")
         titles = re.findall(r"\*(.*?)\*", examples)
-        clean_titles = [t.lower().strip() for t in titles if t]
+        clean_titles = {t.lower().strip() for t in titles if t}
         genres_tags = set()
         for t in clean_titles:
             if t in title_genres:
@@ -711,7 +711,7 @@ def corrupt_tonal_deviation(text: str, language: str = "Français") -> str:
 
     if strategy == "code_switching":
         if language == "Français":
-            swaps = {
+            swaps: Dict[str, str | Callable[[re.Match[str]], str]] = {
                 r"\bpersonnages?\b": lambda m: (
                     "characters" if m.group(0).endswith("s") else "character"
                 ),

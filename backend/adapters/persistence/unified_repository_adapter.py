@@ -87,7 +87,9 @@ class UnifiedRepositoryAdapter(RepositoryPort):
     ) -> List[Dict]:
         return self.django.get_catalog_by_type(media_type, limit, offset)
 
-    def load_latent_space(self, media_type: str, vibe_type: str) -> Optional[Dict]:
+    def load_latent_space(
+        self, media_type: str, vibe_type: str
+    ) -> Optional[List[Dict]]:
         """Charge l'espace latent, en privilégiant la DB relationnelle robuste."""
         db_res = self.django.load_latent_space(media_type, vibe_type)
         if db_res:

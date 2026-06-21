@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 
 class FeedbackRepositoryPort(ABC):
@@ -16,7 +16,7 @@ class FeedbackRepositoryPort(ABC):
 
     @abstractmethod
     def get_recent_feedback(
-        self, limit: int = 100, feedback_type: str = None
+        self, limit: int = 100, feedback_type: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         pass
 

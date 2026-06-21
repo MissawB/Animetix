@@ -15,7 +15,7 @@ from .paths import CACHE_FILE
 
 logger = logging.getLogger("animetix.pipeline.ft_dataset.paraphrase")
 
-PARAPHRASE_CACHE = {}
+PARAPHRASE_CACHE: dict[str, str] = {}
 
 
 def load_paraphrase_cache():

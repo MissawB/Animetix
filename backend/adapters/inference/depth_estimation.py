@@ -2,7 +2,7 @@
 
 import logging  # noqa: E402
 import struct  # noqa: E402
-from typing import Any, Dict  # noqa: E402
+from typing import TYPE_CHECKING, Any, Dict  # noqa: E402
 
 from core.domain.exceptions import InferenceError  # noqa: E402
 from core.utils.lazy_import import lazy_import  # noqa: E402
@@ -16,6 +16,17 @@ logger = logging.getLogger("animetix.inference.depth")
 
 class DepthEstimationMixin:
     """Provides depth estimation and 3D point cloud generation."""
+
+    if TYPE_CHECKING:
+
+        def _log_usage(
+            self,
+            engine: str,
+            input_tokens: int = 0,
+            output_tokens: int = 0,
+            units: int = 0,
+            allocated_budget: int = 0,
+        ) -> None: ...
 
     def estimate_depth(self, image_data: bytes) -> bytes:
         """Estime la profondeur d'une image en utilisant Depth-Anything."""

@@ -13,6 +13,9 @@ from .containers import Container
 logger = logging.getLogger("animetix.middleware.personalization")
 
 # Synchronize contextvars across double-import namespaces (e.g. animetix.middleware vs backend.api.animetix.middleware)
+# Declared once so the branch assignments below don't trip mypy's no-redef.
+user_id_var: contextvars.ContextVar[Optional[Any]]
+user_tier_var: contextvars.ContextVar[str]
 if "animetix.middleware" in sys.modules and __name__ != "animetix.middleware":
     _other = sys.modules["animetix.middleware"]
     user_id_var = getattr(_other, "user_id_var")
@@ -25,12 +28,8 @@ elif (
     user_id_var = getattr(_other, "user_id_var")
     user_tier_var = getattr(_other, "user_tier_var")
 else:
-    user_id_var: contextvars.ContextVar[Optional[Any]] = contextvars.ContextVar(
-        "user_id", default=None
-    )
-    user_tier_var: contextvars.ContextVar[str] = contextvars.ContextVar(
-        "user_tier", default="free"
-    )
+    user_id_var = contextvars.ContextVar("user_id", default=None)
+    user_tier_var = contextvars.ContextVar("user_tier", default="free")
 
 
 def get_current_user_id():

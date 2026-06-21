@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from core.domain.entities.ai_schemas import InferenceResponse
 from core.domain.exceptions import InferenceError
@@ -24,9 +24,9 @@ class LocalTextAdapter(InferencePort):
     ):
         super().__init__(usage_port=usage_port)
         self.model_id = model_id
-        self.model = None
-        self.tokenizer = None
-        self._embedding_model = None
+        self.model: Any = None
+        self.tokenizer: Any = None
+        self._embedding_model: Any = None
         self.use_4bit = use_4bit
 
         # Speculative Decoding configuration
@@ -34,7 +34,7 @@ class LocalTextAdapter(InferencePort):
             os.getenv("SPECULATIVE_DECODING", "True").lower() == "true"
         )
         self.draft_model_id = os.getenv("DRAFT_MODEL_ID", "Qwen/Qwen2.5-0.5B-Instruct")
-        self.draft_model = None
+        self.draft_model: Any = None
 
         # Radix KV Cache configuration
         self.kv_cache_enabled = (

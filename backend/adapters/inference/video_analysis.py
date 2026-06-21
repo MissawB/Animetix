@@ -1,7 +1,7 @@
 """Video analysis mixin for VisionTransformersAdapter."""
 
 import logging  # noqa: E402
-from typing import Any, Dict, List  # noqa: E402
+from typing import TYPE_CHECKING, Any, Dict, List  # noqa: E402
 
 from core.domain.exceptions import InferenceError  # noqa: E402
 from core.utils.lazy_import import lazy_import  # noqa: E402
@@ -14,6 +14,17 @@ logger = logging.getLogger("animetix.inference.video_analysis")
 
 class VideoAnalysisMixin:
     """Provides video temporal analysis, action localization, and description."""
+
+    if TYPE_CHECKING:
+
+        def _log_usage(
+            self,
+            engine: str,
+            input_tokens: int = 0,
+            output_tokens: int = 0,
+            units: int = 0,
+            allocated_budget: int = 0,
+        ) -> None: ...
 
     def _load_video_vlm(self):
         """Chargement paresseux de Qwen3-VL pour le RAG temporel."""

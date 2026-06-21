@@ -115,6 +115,7 @@ def test_singularity_unknown_action(api_client, authenticated_user):
 @pytest.mark.django_db
 def test_singularity_lab_get_unified_state(api_client, authenticated_user):
     import numpy as np
+
     url = "/api/v1/singularity-lab/"
 
     with patch("animetix.api.labs.get_container") as mock_get_container:
@@ -151,6 +152,7 @@ def test_singularity_lab_get_unified_state(api_client, authenticated_user):
 @pytest.mark.django_db
 def test_singularity_lab_update_config(api_client, authenticated_user):
     import numpy as np
+
     url = "/api/v1/singularity-lab/"
     payload = {
         "action": "update_config",
@@ -159,11 +161,7 @@ def test_singularity_lab_update_config(api_client, authenticated_user):
         "mode": "manual",
         "manual_archetype": "cyberpunk_rebel",
         "intensity_multiplier": 1.5,
-        "features": {
-            "aura": True,
-            "font": False,
-            "accent": True
-        }
+        "features": {"aura": True, "font": False, "accent": True},
     }
 
     # Verify profile exists

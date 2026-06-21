@@ -99,8 +99,8 @@ class HybridSearchIndex:
         lexical_list: List[Dict], semantic_list: List[Dict], k: int = 60
     ) -> List[Dict]:
         """Fusionne deux listes de résultats en utilisant le Reciprocal Rank Fusion (RRF)."""
-        rrf_scores = {}
-        doc_map = {}
+        rrf_scores: Dict[str, float] = {}
+        doc_map: Dict[str, Dict] = {}
 
         def get_doc_id(doc):
             return str(doc.get("id") or doc.get("external_id") or "")
@@ -144,8 +144,8 @@ class HybridSearchIndex:
         sentence_end = re.compile(r"(?<=[.!?])\s+")
         sentences = sentence_end.split(text)
 
-        chunks = []
-        current_chunk = []
+        chunks: List[str] = []
+        current_chunk: List[str] = []
         current_length = 0
 
         for sentence in sentences:

@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from ...ports.repository_port import RepositoryPort
 from ..exceptions import AnimetixError, CatalogNotFoundError, GameLogicError
@@ -23,7 +23,7 @@ class CatalogService:
         self.repository = repository
         self.sql_repository = sql_repository or repository
         self.cache = cache_service
-        self._cached_catalogs = {}
+        self._cached_catalogs: Dict[str, Any] = {}
 
     def load_data(self, media_type: str) -> Optional[Dict]:
         """Backward compatibility method for AnimetixService.load_data."""
@@ -117,7 +117,7 @@ class CatalogService:
         import os  # noqa: E402
 
         path = os.path.join(
-            self.repository.project_root,
+            getattr(self.repository, "project_root", ""),
             "data",
             "processed",
             "akinetix_attributes.json",

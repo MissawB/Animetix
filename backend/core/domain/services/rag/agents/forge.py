@@ -89,7 +89,7 @@ class ForgeAgent:
         if not results:
             return ""
 
-        grouped = {}
+        grouped: dict[str, list[str]] = {}
         for r in results:
             entity = r["entity"]
             if entity not in grouped:

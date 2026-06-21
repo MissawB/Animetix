@@ -135,7 +135,9 @@ Réponds UNIQUEMENT avec le nouveau System Prompt, sans explications.
 
         return True
 
-    def create_dpo_pair(self, entry: Dict, chosen_override: str = None) -> Dict:
+    def create_dpo_pair(
+        self, entry: Dict, chosen_override: Optional[str] = None
+    ) -> Dict:
         """Creates a DPO pair (Chosen/Rejected)."""
         context = entry.get("context") or entry.get("input_context")
         output = entry.get("output") or entry.get("output_text")

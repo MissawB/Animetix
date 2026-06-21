@@ -4,7 +4,7 @@
 """
 
 import random
-from typing import List
+from typing import Any, List
 
 from .profile_builders import (
     get_display_character,
@@ -16,7 +16,7 @@ from .profile_builders import (
 )
 from .text_cleaning import clean_tags
 
-random = random.SystemRandom()
+random = random.SystemRandom()  # type: ignore[assignment]  # intentional module-shadow: use CSPRNG
 
 
 def generate_multiturn_dialogues(
@@ -355,7 +355,7 @@ def generate_multiturn_dialogues(
 
             elif sub_scenario == "character_name":
                 # Clarification about character names that are ambiguous
-                choices = [
+                choices: list[dict[str, Any]] = [
                     {
                         "common_name": "Sakura",
                         "char1": "Sakura Haruno",

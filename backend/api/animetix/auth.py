@@ -1,5 +1,6 @@
 import logging
 import time
+from typing import Any
 
 import jwt
 import requests
@@ -113,7 +114,7 @@ class IAPRemoteUserBackend(RemoteUserBackend):
 # --- Google Identity Platform (GCIP) Authentication ---
 
 GOOGLE_CERTS_URL = "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com"
-_public_keys_cache = {}
+_public_keys_cache: dict[str, Any] = {}
 _public_keys_expiry = 0
 
 

@@ -94,7 +94,7 @@ class GoogleGenAIAdapter(DepthEstimationMixin, InferencePort):
             logger.error(f"Failed to initialize google-genai Client: {e}")
             self.client = None
 
-        self._context_caches = {}
+        self._context_caches: Dict[str, Any] = {}
         self.cache_ttl_seconds = int(os.getenv("GEMINI_CACHE_TTL", "300"))
         self.cache_threshold_chars = int(os.getenv("GEMINI_CACHE_THRESHOLD", "120000"))
 
@@ -204,7 +204,7 @@ class GoogleGenAIAdapter(DepthEstimationMixin, InferencePort):
                 "Google GenAI client is not initialized."
             )
 
-        config_args = {"temperature": 0.7}
+        config_args: Dict[str, Any] = {"temperature": 0.7}
         cache_name = self._get_or_create_cache(system_prompt)
         if cache_name:
             config_args["cached_content"] = cache_name
@@ -260,7 +260,7 @@ class GoogleGenAIAdapter(DepthEstimationMixin, InferencePort):
             raise InferenceNotImplementedError(
                 "Google GenAI client is not initialized."
             )
-        config_args = {"temperature": 0.7}
+        config_args: Dict[str, Any] = {"temperature": 0.7}
         cache_name = self._get_or_create_cache(system_prompt)
         if cache_name:
             config_args["cached_content"] = cache_name

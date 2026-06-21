@@ -64,6 +64,7 @@ class GoldDatasetEntryAdmin(admin.ModelAdmin):
         ),
     )
 
+    @admin.display(description="Instruction")
     def instruction_preview(self, obj):
         return (
             obj.instruction[:80] + "..."
@@ -71,13 +72,11 @@ class GoldDatasetEntryAdmin(admin.ModelAdmin):
             else obj.instruction
         )
 
-    instruction_preview.short_description = "Instruction"
-
+    @admin.display(description="Contexte")
     def context_preview(self, obj):
         return obj.context[:80] + "..." if len(obj.context) > 80 else obj.context
 
-    context_preview.short_description = "Contexte"
-
+    @admin.display(description="Score IA", ordering="ai_validation_score")
     def ai_validation_score_display(self, obj):
         color = (
             "green"
@@ -90,9 +89,7 @@ class GoldDatasetEntryAdmin(admin.ModelAdmin):
             obj.ai_validation_score,
         )
 
-    ai_validation_score_display.short_description = "Score IA"
-    ai_validation_score_display.admin_order_field = "ai_validation_score"
-
+    @admin.display(description="Confiance XAI", ordering="confidence_score")
     def confidence_score_display(self, obj):
         color = (
             "green"
@@ -105,9 +102,7 @@ class GoldDatasetEntryAdmin(admin.ModelAdmin):
             obj.confidence_score,
         )
 
-    confidence_score_display.short_description = "Confiance XAI"
-    confidence_score_display.admin_order_field = "confidence_score"
-
+    @admin.display(description="Sécurité")
     def is_safe_display(self, obj):
         if obj.is_safe:
             return format_html('<span style="color: green;">✔ Safe</span>')
@@ -115,8 +110,7 @@ class GoldDatasetEntryAdmin(admin.ModelAdmin):
             '<span style="color: red; font-weight: bold;">✖ UNSAFE</span>'
         )
 
-    is_safe_display.short_description = "Sécurité"
-
+    @admin.display(description="Statut")
     def validation_status_display(self, obj):
         from django.utils.safestring import mark_safe  # noqa: E402
 
@@ -128,8 +122,7 @@ class GoldDatasetEntryAdmin(admin.ModelAdmin):
             '<span style="color: orange; font-weight: bold;">⏳ En attente</span>'
         )  # nosec B308
 
-    validation_status_display.short_description = "Statut"
-
+    @admin.action(description="Valider les entrées sélectionnées")
     def validate_selected(self, request, queryset):
         rows_updated = queryset.update(is_validated=True)
         if rows_updated == 1:
@@ -138,8 +131,7 @@ class GoldDatasetEntryAdmin(admin.ModelAdmin):
             message_bit = f"{rows_updated} entrées ont été validées."
         self.message_user(request, f"Succès : {message_bit}", messages.SUCCESS)
 
-    validate_selected.short_description = "Valider les entrées sélectionnées"
-
+    @admin.action(description="Invalider les entrées sélectionnées")
     def invalidate_selected(self, request, queryset):
         rows_updated = queryset.update(is_validated=False)
         if rows_updated == 1:
@@ -148,8 +140,7 @@ class GoldDatasetEntryAdmin(admin.ModelAdmin):
             message_bit = f"{rows_updated} entrées ont été invalidées."
         self.message_user(request, f"Succès : {message_bit}", messages.SUCCESS)
 
-    invalidate_selected.short_description = "Invalider les entrées sélectionnées"
-
+    @admin.action(description="Promouvoir les entrées sélectionnées validées")
     def promote_selected_entries(self, request, queryset):
         validated_subset = queryset.filter(is_validated=True)
         if not validated_subset.exists():
@@ -176,10 +167,6 @@ class GoldDatasetEntryAdmin(admin.ModelAdmin):
             self.message_user(
                 request, f"Erreur lors de la promotion : {str(e)}", messages.ERROR
             )
-
-    promote_selected_entries.short_description = (
-        "Promouvoir les entrées sélectionnées validées"
-    )
 
     def get_urls(self):
         urls = super().get_urls()
@@ -246,14 +233,13 @@ class AIFeedbackAdmin(admin.ModelAdmin):
     search_fields = ("input_context", "output_text", "user__username")
     readonly_fields = ("created_at",)
 
+    @admin.display(description="Prompt/Contexte")
     def input_context_truncated(self, obj):
         return (
             obj.input_context[:100] + "..."
             if len(obj.input_context) > 100
             else obj.input_context
         )
-
-    input_context_truncated.short_description = "Prompt/Contexte"
 
 
 @admin.register(AISafetyEvent)

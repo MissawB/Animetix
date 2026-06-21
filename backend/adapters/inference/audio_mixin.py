@@ -6,7 +6,7 @@ import logging  # noqa: E402
 import os  # noqa: E402
 import tempfile  # noqa: E402
 import wave  # noqa: E402
-from typing import Any, Dict, Optional  # noqa: E402
+from typing import TYPE_CHECKING, Any, Dict, Optional  # noqa: E402
 
 from core.domain.exceptions import InferenceError  # noqa: E402
 from core.utils.lazy_import import lazy_import  # noqa: E402
@@ -25,6 +25,17 @@ class AudioMixin:
     - Soundscapes (AudioLDM)
     - Native S2S (Moshi)
     """
+
+    if TYPE_CHECKING:
+
+        def _log_usage(
+            self,
+            engine: str,
+            input_tokens: int = 0,
+            output_tokens: int = 0,
+            units: int = 0,
+            allocated_budget: int = 0,
+        ) -> None: ...
 
     def _load_xtts(self):
         if not torch.cuda.is_available():
