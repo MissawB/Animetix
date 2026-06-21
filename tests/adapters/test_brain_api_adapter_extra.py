@@ -26,6 +26,16 @@ def _resp(payload, status=200):
     return r
 
 
+@pytest.fixture(autouse=True)
+def _clean_brain_env(monkeypatch):
+    # The repo `.env` defines BRAIN_API_URL/BRAIN_API_KEY, and the adapter falls
+    # back to them when api_url/api_key are None. Clear both for every test so the
+    # "url/key missing" cases stay deterministic regardless of ambient env /
+    # whichever earlier test loaded .env into os.environ.
+    monkeypatch.delenv("BRAIN_API_URL", raising=False)
+    monkeypatch.delenv("BRAIN_API_KEY", raising=False)
+
+
 @pytest.fixture
 def adapter():
     return BrainAPIAdapter(api_url="http://brain:5000", api_key="dev-secret-key")
