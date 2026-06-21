@@ -37,10 +37,12 @@ def trl_ready_dataset(context=None, config: DPOConfig = None):
     log = context.log if (context and hasattr(context, "log")) else logger
     log.info(f"🚀 Starting DPO dataset export (threshold: {config.min_samples})...")
 
-    # Export réel via le port (si branché) ou via la logique interne de loop
-    loop.export_preference_dataset()
-
+    # Valide les feedbacks bruts et écrit le dataset DPO. La méthode est
+    # `process_and_export(raw_data_path, output_path)` (convention partagée avec
+    # dpo_feedback_loop / rlhf_pipeline ; entrée brute : ai_feedback.jsonl).
+    raw_data_path = os.path.join(data_dir, "ai_feedback.jsonl")
     dataset_path = os.path.join(data_dir, config.export_filename)
+    loop.process_and_export(raw_data_path=raw_data_path, output_path=dataset_path)
 
     if os.path.exists(dataset_path):
         log.info(f"✅ DPO Dataset exported successfully to {dataset_path}")

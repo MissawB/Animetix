@@ -47,10 +47,12 @@ class UndercoverService:
             similar = self.similarity_service.find_similar_items(
                 media_type, str(civil_id), count=10
             )
-            # On prend un voisin proche qui n'est pas le mot civil lui-même
+            # On prend un voisin proche qui n'est pas le mot civil lui-même.
+            # find_similar_items peut renvoyer None (item absent du store vectoriel).
+            neighbors = (similar or {}).get("metadatas") or [[]]
             options = [
                 (m.get("title") or m.get("name"))
-                for m in similar["metadatas"][0]
+                for m in neighbors[0]
                 if str(m["id"]) != str(civil_id)
             ]
             if options:

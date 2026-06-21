@@ -373,8 +373,8 @@ class FallbackInferenceAdapter(InferencePort):
                 )
                 if max(0, queue_len - 1) <= 0:
                     cache.set("self_hosted_image_worker:status", "idle")
-            except Exception as e:
-                logger.debug(f"Could not decrement worker queue length: {e}")
+            except Exception as cache_err:
+                logger.debug(f"Could not decrement worker queue length: {cache_err}")
             raise e
 
     def _fallback_call(self, method_name: str, *args, **kwargs):

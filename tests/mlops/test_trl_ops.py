@@ -19,4 +19,8 @@ def test_trl_ready_dataset_op():
             res = trl_ready_dataset(context, config=config)
 
         assert "test_dpo.jsonl" in res
-        mock_loop.export_preference_dataset.assert_called_once()
+        # The pipeline DPOFeedbackLoop exposes `process_and_export(raw_data_path,
+        # output_path)` — NOT `export_preference_dataset` (that's the core service).
+        mock_loop.process_and_export.assert_called_once()
+        _, kwargs = mock_loop.process_and_export.call_args
+        assert kwargs["output_path"].endswith("test_dpo.jsonl")
