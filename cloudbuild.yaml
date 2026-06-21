@@ -15,6 +15,11 @@ steps:
 - name: 'gcr.io/cloud-builders/docker'
   args: [
     'build',
+    # `--pull` force la récupération de l'image de base la plus récente
+    # (python:3.12-slim-bookworm) à CHAQUE build : sans ça, `--cache-from`
+    # réutilise l'ancienne couche de base et les correctifs de sécurité Debian
+    # (zlib, openssl, sqlite3, krb5…) ne sont jamais appliqués.
+    '--pull',
     '--cache-from', 'europe-west9-docker.pkg.dev/animetix/animetix-repo/web:latest',
     '-t', 'europe-west9-docker.pkg.dev/animetix/animetix-repo/web:latest',
     '-t', 'europe-west9-docker.pkg.dev/animetix/animetix-repo/web:${_TAG}',

@@ -64,7 +64,7 @@ jobs:
         docker-images: true
         swap-storage: true
     - name: Build Image
-      run: docker build -t test-build -f deploy/Dockerfile .
+      run: docker build --pull -t test-build -f deploy/Dockerfile .
 
   test:
     name: Run Unit Tests
