@@ -44,7 +44,7 @@ class ParadoxDomainService:
         )
 
     def prepare_challenge(
-        self, catalog: Dict, is_daily: bool = False, secret_title: str = None
+        self, catalog: Dict, is_daily: bool = False, secret_title: Optional[str] = None
     ) -> Tuple[Optional[str], Optional[str], Optional[str]]:
         """Prépare les 3 œuvres (2 normales + 1 intrus)."""
         valid = [
@@ -146,9 +146,9 @@ class ParadoxDomainService:
         self, media_type: str, item_a: Dict, item_b: Dict, intruder: Dict, language: str
     ) -> ParadoxLogic:
         """Génère le scénario paradoxal via IA Neuro-Symbolique ou fallback LLM (SLM)."""
-        label_a = item_a.get("title") or item_a.get("name")
-        label_b = item_b.get("title") or item_b.get("name")
-        label_i = intruder.get("title") or intruder.get("name")
+        label_a = item_a.get("title") or item_a.get("name") or ""
+        label_b = item_b.get("title") or item_b.get("name") or ""
+        label_i = intruder.get("title") or intruder.get("name") or ""
 
         if self.neuro_symbolic_service:
             # Approche Hybride (Neuro-Symbolic AI)

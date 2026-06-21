@@ -5,12 +5,21 @@ Explores multiple reasoning paths and evaluates thought nodes to find the optima
 """
 
 import logging  # noqa: E402
-from typing import Any, Dict, List  # noqa: E402
+from typing import Any, Dict, List, TypedDict  # noqa: E402
 
 from core.domain.services.prompt_manager import PromptManager  # noqa: E402
 from core.ports.inference_port import InferencePort  # noqa: E402
 
 logger = logging.getLogger("animetix.cognition.tot")
+
+
+class ThoughtPath(TypedDict):
+    """A single reasoning trace explored by the Tree-of-Thoughts search."""
+
+    thought_path: List[str]
+    score: float
+    text: str
+    node_id: str
 
 
 class TreeOfThoughtsSearchService:
@@ -41,13 +50,13 @@ class TreeOfThoughtsSearchService:
             "links": [],
         }
 
-        current_paths = [
+        current_paths: List[ThoughtPath] = [
             {"thought_path": [], "score": 1.0, "text": "Start", "node_id": "node_0_0"}
         ]
 
         for step in range(1, depth + 1):
             logger.info(f"🪜 ToT: Processing Depth Level {step}/{depth}...")
-            new_paths = []
+            new_paths: List[ThoughtPath] = []
 
             for path_idx, path in enumerate(current_paths):
                 parent_id = path["node_id"]
@@ -116,12 +125,13 @@ class TreeOfThoughtsSearchService:
             current_paths = new_paths[:breadth]
 
         # Sélection de la meilleure trace de raisonnement
-        best_path = (
+        best_path: ThoughtPath = (
             current_paths[0]
             if current_paths
             else {
                 "thought_path": ["Calcul direct"],
                 "score": 0.5,
+                "text": "Calcul direct",
                 "node_id": "node_0_0",
             }
         )
@@ -138,7 +148,7 @@ class TreeOfThoughtsSearchService:
             final_answer = self.inference_engine.generate(
                 prompt=synthesis_prompt,
                 system_prompt="Tu es le Synthétiseur final d'Animetix.",
-            )
+            ).text
         except Exception as e:
             logger.error(f"Synthesis failed in ToT: {e}")
             final_answer = "Désolé, la synthèse arborescente a échoué."

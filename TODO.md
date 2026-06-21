@@ -8,16 +8,19 @@ _Rien d'ouvert._
 
 ## 🟠 Élevés
 
-- [~] **Renforcer le typage** _(backend : gros burn-down fait — branche `typing-burndown`)_
-  - ✅ Burn-down backend : **105 → 49 modules** en `ignore_errors` (56 brûlés). Fait dans un venv propre type-CI (`pip install mypy` → mypy 2.1.0 + pathspec 1.1.1, sans dbt) ; le conflit dbt/pathspec n'existe que dans le venv projet. CI `cd backend && mypy .` **verte**.
+- [~] **Renforcer le typage** _(backend : burn-down quasi terminé — branche `typing-burndown`)_
+  - ✅ Burn-down backend : **105 → 10 modules** en `ignore_errors` (95 brûlés, cible atteinte). Fait dans un venv propre type-CI (`pip install mypy` → mypy 2.1.0 + pathspec 1.1.1, sans dbt) ; le conflit dbt/pathspec n'existe que dans le venv projet. CI `cd backend && mypy .` **verte**.
   - ✅ Contrat de streaming harmonisé sur `dict` (le runtime réel : les processors yieldent `StreamStep(...).model_dump()`, l'orchestrateur fait `yield from`, `streams.py` `json.dumps`). `StateProcessor.process` annonce désormais `Generator[dict, None, RAGState]` ; orchestrateur simplifié (tous les processors sont des générateurs). **Ces 11 erreurs bloquaient mypy en CI.**
   - 🐞✅ **Bugs runtime corrigés (révélés par le typage strict)** :
     - `SimilarityService.find_similar_items` **manquait** alors que `game_service`/`undercover_service` l'appelaient (`AttributeError`) → implémentée par délégation à `repository.get_nearest_neighbors` (format chroma `{"metadatas": [[...]]}`), + garde `None` dans `undercover` (n'indexait plus à l'aveugle).
     - `fallback_adapter` : `raise e` après un `except … as e` interne qui **supprimait** `e` → `NameError` si le décrément de cache échouait. Exception interne renommée (`cache_err`).
     - `trl_ops.trl_ready_dataset` appelait `loop.export_preference_dataset()` **inexistante** sur le `DPOFeedbackLoop` du pipeline (le test la masquait en mockant la classe) → corrigé en `process_and_export(raw_data_path, output_path)` (convention `ai_feedback.jsonl`) + test mis à jour.
     - Vue morte : `urls/api.py` référençait `api_views.SampleView` (inexistante) en fallback de `LatentSpaceDataView` (toujours présente) → simplifié.
-  - 🔎 Faux positifs / dette (laissés en baseline, pas des bugs) : `admin.py` (idiome Django `method.short_description`), adapters d'inférence (`self._model = None` lazy), `middleware` (sync contextvars double-namespace), `catalog.project_root`/`agentic.graph_expert` (duck-typing OK sur l'impl concrète).
-  - ⏭️ Reste 49 modules en baseline (~211 erreurs) pour atteindre la cible → 10. `emoji_service` reporté (le fix correct = parser la str LLM en liste, mais ça change le comportement et casse un test qui encode l'ancien comportement → décision produit).
+    - `advanced_vision_service.vlm_rerank` traitait le retour de `visual_rerank` (liste de **dicts** `{"index", "score"}`) comme des **index entiers** (`0 <= idx < len`, `candidate_items[idx]`) → `TypeError` au runtime. Corrigé en extrayant `ranked.get("index")` (comme `VlmRerankProcessor`).
+    - `tree_of_thoughts_service:144` : `InferenceResponse` réassignée puis utilisée comme `str` dans la branche `except` → `.text` ajouté.
+    - `validation_gate._run_ai_critique` annoté `-> (str, float)` (un tuple-valeur, pas un type) → `tuple[str, float]`. `django_repository_adapter.get_nearest_neighbors` renvoyait `[]` contre un contrat de port `Optional[Dict]` → `None`.
+  - 🔎 Faux positifs / dette assumée (10 modules restants, pas des bugs) : 6 adapters d'inférence ML (`self._model = None` chargé en lazy → Optional partout), `admin.py` (idiome Django `method.short_description`), `settings.py` (Django dynamique), `core.utils.lazy_import` (métaprogrammation), `emoji_service`. Plusieurs déréférencements `None` latents (multi_agent_bus, cinematic, advanced_rag, swarm_consensus) ont été **gardés** au passage.
+  - ⏭️ `emoji_service` reporté (le fix correct = parser la str LLM en liste, mais ça change le comportement et casse un test qui encode l'ancien comportement → décision produit).
   - Frontend : durcir progressivement les interfaces les plus laxistes (les `any` bloquants sont déjà résorbés). _(non traité ici)_
 
 - [ ] **CI couverture — job d'intégration optionnel** _(le gate `--cov-fail-under=75` + upload Codecov sont posés)_

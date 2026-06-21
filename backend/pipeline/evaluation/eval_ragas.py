@@ -5,7 +5,7 @@ import os
 # --- DJANGO SETUP FOR MLOPS CONTAINERS ---
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from pipeline.chroma_client import chroma_manager
 from pipeline.neo4j_client import neo4j_manager
@@ -30,8 +30,8 @@ logger = logging.getLogger("animetix." + __name__)
 
 class RAGEvaluator:
     def __init__(self, brain_url: Optional[str] = None):
-        self.brain_url = brain_url or os.getenv(
-            "BRAIN_API_URL", "http://127.0.0.1:7861"
+        self.brain_url: str = (
+            brain_url or os.getenv("BRAIN_API_URL") or "http://127.0.0.1:7861"
         )
         # Assurez-vous que l'URL se termine par /generate
         if not self.brain_url.endswith("/generate"):
@@ -134,7 +134,10 @@ class RAGEvaluator:
         }
 
     def generate_answer(
-        self, query: str, contexts: List[str], history: List[Dict[str, str]] = None
+        self,
+        query: str,
+        contexts: List[str],
+        history: Optional[List[Dict[str, str]]] = None,
     ) -> str:
         """Appelle l'API brain pour générer une réponse avec le contexte et l'historique de dialogue."""
         context_str = "\n".join(contexts)
@@ -170,11 +173,11 @@ class RAGEvaluator:
         return "Erreur de génération."
 
     async def run_evaluation(
-        self, test_questions: List[Dict[str, str]], mode: str = "vector"
+        self, test_questions: List[Dict[str, Any]], mode: str = "vector"
     ):
         """Lance l'évaluation RAGAS sur un set de questions."""
         logger.info(f"🚀 Starting evaluation in mode: {mode.upper()}")
-        data = {
+        data: Dict[str, List[Any]] = {
             "question": [],
             "answer": [],
             "contexts": [],

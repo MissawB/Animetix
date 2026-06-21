@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Dict, Generator, Optional
+from typing import Dict, Generator, Optional, cast
 
 from core.config import get_config
 from core.ports.config_port import ConfigPort
@@ -169,10 +169,18 @@ class AgenticRAGService:
             librarian_agent = LibrarianAgent(
                 self.llm_service, self.prompt_manager, self.web_search
             )
+            # ForgeAgent/SagaAgent tolerate a missing graph manager at runtime
+            # (they guard ``self.neo4j_manager`` before use), but their __init__
+            # signatures require a non-None port. In the test/mock path the port
+            # may legitimately be None, so cast to preserve that behavior.
             forge_agent = ForgeAgent(
-                self.llm_service, self.prompt_manager, self.neo4j_manager
+                self.llm_service,
+                self.prompt_manager,
+                cast(GraphPersistencePort, self.neo4j_manager),
             )
-            saga_agent = SagaAgent(self.llm_service, self.neo4j_manager)
+            saga_agent = SagaAgent(
+                self.llm_service, cast(GraphPersistencePort, self.neo4j_manager)
+            )
             graph_expert = GraphExpert(self.llm_service, self.prompt_manager)
             context_compressor = ContextCompressor(
                 self.llm_service, self.prompt_manager
@@ -499,7 +507,11 @@ class AgenticRAGService:
             memories=self._get_memories(user_id, query),
             current_state=RAGState.PLAN,
             graph_expert=(
-                self.orchestrator.processors[RAGState.GRAPH_EXPLORE].graph_expert
+                getattr(
+                    self.orchestrator.processors[RAGState.GRAPH_EXPLORE],
+                    "graph_expert",
+                    None,
+                )
                 if self.orchestrator
                 and RAGState.GRAPH_EXPLORE in self.orchestrator.processors
                 else None
@@ -570,12 +582,12 @@ class AgenticRAGService:
             yield StreamStep(type="token", content=token + " ").model_dump()
             time.sleep(0.01)
 
-    def _get_memories(self, user_id: str, query: str) -> str:
+    def _get_memories(self, user_id: Optional[str], query: str) -> str:
         if self.memory_service and user_id:
             return self.memory_service.retrieve_relevant_memories(user_id, query)
         return ""
 
-    def _store_results(self, query: str, answer: str, user_id: str):
+    def _store_results(self, query: str, answer: str, user_id: Optional[str]):
         if self.semantic_cache:
             try:
                 self.semantic_cache.set_cached_response(query, answer)
