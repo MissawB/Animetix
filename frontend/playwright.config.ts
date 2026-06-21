@@ -6,10 +6,17 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: 'html',
+  // En CI : rapport HTML (jamais auto-ouvert) + annotations GitHub sur les échecs.
+  reporter: process.env.CI
+    ? [['html', { open: 'never' }], ['github']]
+    : 'html',
   use: {
     baseURL: 'http://localhost:5173',
-    trace: 'on-first-retry',
+    // Artefacts de debug produits UNIQUEMENT en cas d'échec (coût ~nul en succès) :
+    // trace rejouable, capture d'écran et vidéo — récupérés en CI via upload-artifact.
+    trace: 'retain-on-failure',
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
   },
 
   projects: [
