@@ -74,6 +74,10 @@ stripe==15.2.0
 dependency-injector==4.49.0
 accelerate==1.13.0
 supervisor==4.2.5
+# apache-beam 2.74.0 cape `jsonpickle<4.0.0` → jsonpickle reste en 3.4.2 (CVE CWE-502,
+# Snyk). Résiduel ACCEPTÉ : jsonpickle est purement transitif (jamais importé par notre
+# code) et la CVE exige de désérialiser de l'input non fiable, ce que nous ne faisons pas.
+# Non corrigeable sans monter apache-beam (gros chantier, fige Dockerfile.dataflow). Cf. TODO.
 apache-beam
 dbt-core
 dbt-sqlite
