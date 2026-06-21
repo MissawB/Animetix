@@ -1,4 +1,9 @@
 # --- Stage 1: Get Python Flex Template Launcher Binary ---
+# `:latest` est la forme recommandée par Google pour ce launcher. Pour une build
+# 100 % reproductible, l'épingler par digest :
+#   docker pull gcr.io/dataflow-templates-base/python3-template-launcher-base:latest
+#   docker inspect --format='{{index .RepoDigests 0}}' <image>
+# puis remplacer `:latest` par `@sha256:<digest>`. (Le SDK Beam, lui, est déjà épinglé.)
 FROM gcr.io/dataflow-templates-base/python3-template-launcher-base:latest AS launcher
 
 # --- Stage 2: Build Application Image ---
@@ -23,9 +28,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy requirements.txt
 COPY requirements.txt ./
 
-# Install requirements + bs4
-RUN pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir beautifulsoup4
+# Install pinned Python deps. beautifulsoup4 (==4.12.3) est déjà dans requirements.txt :
+# pas de réinstallation séparée non épinglée (build reproductible).
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy backend codebase
 COPY backend/ ./backend/
@@ -34,6 +39,11 @@ COPY backend/ ./backend/
 ENV PYTHONPATH="/template/backend:/template/backend/api:$PYTHONPATH"
 
 # Specify Pipeline Entrypoint
+# Une image Flex Template = un pipeline (convention Dataflow) ; ce projet n'a qu'un
+# seul pipeline Beam (lore_ingestion_beam). Ce n'est donc pas un "figement" subi.
 ENV FLEX_TEMPLATE_PYTHON_PY_FILE=/template/backend/pipeline/mlops/lore_ingestion_beam.py
 
+# Pas de HEALTHCHECK : ce conteneur est un worker Dataflow Flex Template, orchestré
+# et supervisé par le runner Dataflow — le HEALTHCHECK Docker n'est pas utilisé pour
+# ce type d'image (il n'aurait aucun effet).
 ENTRYPOINT ["/opt/google/dataflow/python_template_launcher"]
