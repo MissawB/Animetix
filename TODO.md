@@ -17,16 +17,22 @@ _Rien d'ouvert._
 - [ ] **CI couverture — job d'intégration optionnel** _(le gate `--cov-fail-under=75` + upload Codecov sont posés)_
   - Hook `conftest` qui ping ollama et **skip gracieusement** les tests `@pytest.mark.integration` s'il est injoignable, + job CI dédié non-bloquant.
 
-- [ ] **Consolidation de la couverture backend → 75 %** _(branche `worktree-coverage-consolidation`)_
-  - **Mesure 2026-06-21 : 55,05 % global** (14 467 / 26 282 lignes ; plancher local, 114 échecs infra redis/neo4j → CI un peu plus haut). **~5 200 lignes à couvrir** pour atteindre le gate 75 %.
-  - **Lot 🟢 — fortement testable (mock-based, méthode P1-P3 prouvée) :**
-    - [ ] Adaptateurs inférence : `google_genai_adapter` (215 manq., 44 %), `brain_api.py` (169, 52 %), `fallback_adapter` (140, 59 %), `unified_inference_adapter` (138, 31 %).
-    - [ ] Agents RAG : `rag/agents/debate_manager` (103, 13 %), `rag/agents/planner` (93, 10 %), `rag/hybrid_index` (103, 13 %).
-    - [ ] Scrapers/extracteurs 0 % : `pipeline/mlops/fandom_lore_scraper` (143), `pipeline/characters/extract_akinetix_attributes` (89), `pipeline/characters/vectorize_characters` (86).
-  - **Lot 🟡 — gros volume, plus lourd (vues DRF : APIClient + `@django_db` + mock conteneur) — ~1 800 lignes :**
-    - [ ] `api/labs.py` (416, 22 %), `api/core.py` (349, 30 %), `api/social.py` (192, 33 %), `api/multiverse.py` (161, 17 %), `api/developer.py` (120, 24 %), `api/mlops.py` (105, 42 %), `api/games/*` (classic 102, archetypist 100…), `api/cognition.py` (97).
-    - [ ] Tasks Celery `tasks/pipeline_tasks.py` (232, 8 %) ; persistence `pgvector_repository_adapter` (128, 31 %), `neo4j_client` (160, 37 %), `chroma_client` (109, 63 %).
-  - **Lot 🔴 — difficile (torch/GPU, faux-vert risqué) :** `pipeline/mlops/train_expert_model` (175, 0 %), orchestrateur `finetuning_dataset.run_generate_instruction_dataset` (433, 14 %). _À traiter au cas par cas, sans gonfler la couverture._
+- [x] **Consolidation de la couverture backend → 75 % — ✅ ATTEINT : 75,33 %** _(branche `worktree-coverage-consolidation`, 2285 tests verts)_
+  - **Mesure finale 2026-06-21 : 75,33 % global** (`--cov=backend`, le flag exact du gate CI ; 19 831 / 26 325 lignes). Point de départ 55,05 %.
+  - ⚠️ **Méthodologie** : mesurer **par chemin** (`--cov=backend`), PAS par nom de package (`--cov=pipeline` sous-compte les modules importés `backend.pipeline.*` à 0 % à cause du dual-namespace ; CI utilise déjà `--cov=backend`, donc le gate n'est pas affecté).
+  - Modules portés à 100 %/quasi cette campagne : `auth` (0→100), games `vision`/`akinetix`/`blindtest` (100), `librarian`, `akinetix_rl_service`, `tasks_views`, `creative_tasks` (100), `dpo_dataset_compiler` (81→95), `api/core` (79→100), `video_analysis` (44→100), `index_otaku_knowledge` (51→96).
+  - ⚠️ Seul rouge restant : `tests/backend/test_speech_to_speech_live.py::test_speech_to_speech_live_consumer` — flaky e2e connu (timeout), sans rapport avec la couverture.
+  - **Lot 🟢 — fortement testable (mock-based, méthode P1-P3 prouvée) — ✅ FAIT (commit `245e92f3`) :**
+    - [x] Adaptateurs inférence : `google_genai_adapter`, `brain_api.py`, `fallback_adapter`, `unified_inference_adapter`.
+    - [x] Agents RAG : `rag/agents/debate_manager`, `rag/agents/planner`, `rag/hybrid_index`.
+    - [x] Scrapers/extracteurs : `pipeline/mlops/fandom_lore_scraper`, `pipeline/characters/extract_akinetix_attributes`, `pipeline/characters/vectorize_characters`.
+  - **Lot 🟡 — gros volume, vues DRF (APIClient + `@django_db` + mock conteneur) — ✅ FAIT (commits `903001b9`, `b614dcb1`, `9dcb953d`, `e488853a`, `06aef310`) :**
+    - [x] `api/labs.py`, `api/core.py`, `api/social.py`, `api/multiverse.py`, `api/developer.py`, `api/mlops.py`, `api/cognition.py`, `views.api`.
+    - [x] `api/games/*` : classic, archetypist, emoji, paradox, covertest (conftest partagé de re-wiring DI).
+    - [x] Tasks Celery `tasks/pipeline_tasks.py` ; persistence `neo4j_client`, `chroma_client`, `pgvector_repository_adapter` (99 % combiné `tests/adapters/` + `tests/core/`).
+  - **Lot 🔴 — difficile (torch/GPU, faux-vert risqué) :**
+    - [x] `pipeline/mlops/train_expert_model` (0 → 88 %, commit `82c463e5`, tout I/O torch mocké).
+    - [ ] Orchestrateur `finetuning_dataset.run_generate_instruction_dataset` (433, 14 %). _À traiter au cas par cas, sans gonfler la couverture._
   - _Méthode : mesurer par module ciblé (`--cov=<module>`), pas de full-run (17 min). Mêmes garde-fous : vrais tests de comportement, tout I/O mocké, pas de faux-vert._
 
 ## 🟡 Moyens

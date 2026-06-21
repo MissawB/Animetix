@@ -32,6 +32,14 @@ This document archives the major milestones of the project's technical evolution
 - **P4 — Frontend** (vitest 69 → 191): Zustand stores, `ErrorBoundary`, offline `idb-keyval`/persister.
 - **🐛 Production bug found via tests**: `DjangoSafetyAdapter` used field `action_taken` (`create()`/`filter()`/read) while the `AISafetyEvent` model field is `action` → `TypeError`/`FieldError` on **every** safety-event write. Fixed + added a `@pytest.mark.django_db` round-trip regression lock.
 
+### Coverage consolidation → 75 % gate cleared (branch `worktree-coverage-consolidation`)
+- **Global line coverage 55,05 % → 75,33 %** (`--cov=backend`, the exact CI-gate flag; 19 831 / 26 325 lines, 2 285 tests green). The hard `--cov-fail-under=75` gate now passes.
+- **Measurement-methodology fix**: targeted runs must scope coverage **by path** (`--cov=backend`), not by package name (`--cov=pipeline`). The name-based form attributes `backend.pipeline.*`-imported modules to a separate module object and reports them at 0 % (dual-namespace) — e.g. `dpo_dataset_compiler`/`semantic_drift_analyzer`/`run_provenance` looked uncovered but were already 81–92 %. CI already uses `--cov=backend`, so the gate itself was never mis-measured.
+- **DI game-view wiring**: a shared `tests/api/games/conftest.py` re-wires the `@inject` view modules and resets cached service Singletons before each test; the harmful `container.reset_override()` autouse fixtures were removed (that call detaches the `core→persistence` sub-container on this `dependency_injector` version and broke the views in isolation). All 8 game modes green alone and combined.
+- **Modules raised to 100 %/near** this push: `animetix.auth` (0→100, IAP/Google/API-key auth), game modes `vision`/`akinetix`/`blindtest` (100), `librarian` RAG agent + `akinetix_rl_service` (100), `tasks_views` + `creative_tasks` (100), `dpo_dataset_compiler` (81→95), `api/core` (79→100), `video_analysis` adapter (44→100), `index_otaku_knowledge` (51→96). All model/HTTP/DB/torch I/O mocked; real-behavior assertions, no false-green.
+- Confirmed `pgvector_repository_adapter` is already at 99 % (combined `tests/adapters/` + `tests/core/`) — the earlier 31 % was a single-file stale reading.
+- ⚠️ Known unrelated red: `test_speech_to_speech_live_consumer` (flaky e2e timeout), tracked separately.
+
 ### Robustness & process hardening
 - **Test pollution**: Proactor event-loop policy made fail-fast; added an autouse fixture clearing `Mock` leaks from `sys.modules` + the `lazy_import` cache; fixed a real `imageio` `sys.modules` leak. The 2 baseline `test_prompt_loading` failures disappeared.
 - **Error handling**: `ErrorBoundary` + React-Query cache now report to Sentry with smart retry (no retry on 4xx); 5 genuine silent `except Exception: pass` made observable (0 remaining).
