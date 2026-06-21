@@ -8,11 +8,13 @@ _Rien d'ouvert._
 
 ## 🟠 Élevés
 
-- [ ] **Renforcer le typage**
-  - Backend : ~105 modules en `ignore_errors=true` (mypy), baseline ~445 erreurs. Burn-down progressif (105 → 50 → 10).
-  - ⚠️ Burn-down bloqué localement (dbt épingle `pathspec<0.13`, incompatible avec le mypy courant ; le seul mypy qui tourne localement est non-standard et **diverge de la CI**). → **À faire dans un venv propre type-CI** (`pip install mypy`, sans dbt) : désactiver l'override `ignore_errors`, `cd backend && mypy .`, retirer de la liste tout module à 0 erreur, vérifier vert.
-  - 🔎 Piste : contrat de streaming incohérent — `StateProcessor.process` annonce `Generator[StreamStep,…]` mais des processors (`judge/graph_explore/fallback/acquire_knowledge`) annotent `Generator[dict,…]` et yieldent des `StreamStep(...).model_dump()` (dicts). Harmoniser.
-  - Frontend : durcir progressivement les interfaces les plus laxistes (les `any` bloquants sont déjà résorbés).
+- [~] **Renforcer le typage** _(backend : gros burn-down fait — branche `typing-burndown`)_
+  - ✅ Burn-down backend : **105 → 51 modules** en `ignore_errors` (54 brûlés). Fait dans un venv propre type-CI (`pip install mypy` → mypy 2.1.0 + pathspec 1.1.1, sans dbt) ; le conflit dbt/pathspec n'existe que dans le venv projet. CI `cd backend && mypy .` **verte**.
+  - ✅ Contrat de streaming harmonisé sur `dict` (le runtime réel : les processors yieldent `StreamStep(...).model_dump()`, l'orchestrateur fait `yield from`, `streams.py` `json.dumps`). `StateProcessor.process` annonce désormais `Generator[dict, None, RAGState]` ; orchestrateur simplifié (tous les processors sont des générateurs). **Ces 11 erreurs bloquaient mypy en CI.**
+  - 🐞 **Bug réel surfacé (non corrigé — décision produit)** : `SimilarityService` n'a pas de méthode `find_similar_items`, pourtant `game_service.find_similar_items` et `undercover_service` l'appellent → `AttributeError` au runtime. Aucune implémentation nulle part. `game_service`/`undercover_service` laissés dans la baseline. À implémenter (requête vectorielle format `{"metadatas": [[...]]}`).
+  - 🐞 Vue morte supprimée : `urls/api.py` référençait `api_views.SampleView` (inexistante) en fallback de `LatentSpaceDataView` (toujours présente) → simplifié.
+  - ⏭️ Reste 51 modules en baseline (~213 erreurs) pour atteindre la cible → 10. `emoji_service` reporté (le fix correct = parser la str LLM en liste, mais ça change le comportement et casse un test qui encode l'ancien comportement → décision produit).
+  - Frontend : durcir progressivement les interfaces les plus laxistes (les `any` bloquants sont déjà résorbés). _(non traité ici)_
 
 - [ ] **CI couverture — job d'intégration optionnel** _(le gate `--cov-fail-under=75` + upload Codecov sont posés)_
   - Hook `conftest` qui ping ollama et **skip gracieusement** les tests `@pytest.mark.integration` s'il est injoignable, + job CI dédié non-bloquant.

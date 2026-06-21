@@ -10,7 +10,7 @@ import html
 import random
 import re
 
-random = random.SystemRandom()
+random = random.SystemRandom()  # type: ignore[assignment]  # intentional secure-RNG module shadowing
 
 
 def clean_description(text: str) -> str:

@@ -11,7 +11,7 @@ from typing import List
 
 from .text_cleaning import clean_tags
 
-random = random.SystemRandom()
+random = random.SystemRandom()  # type: ignore[assignment]  # intentional secure-RNG module shadowing
 
 MULTI_TITLE_MAP = {
     "Shingeki no Kyojin": ["L'Attaque des Titans", "Attack on Titan", "SnK"],

@@ -11,7 +11,7 @@ import logging  # noqa: E402
 import os  # noqa: E402
 import random
 
-random = random.SystemRandom()
+random = random.SystemRandom()  # type: ignore[assignment]  # intentional secure-RNG module shadowing
 # noqa: E402
 import sys  # noqa: E402
 

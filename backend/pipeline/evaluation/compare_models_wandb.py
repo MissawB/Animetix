@@ -6,7 +6,7 @@ import os
 import sys
 import time
 from pathlib import Path
-from typing import Dict
+from typing import Any, Dict
 
 import wandb
 
@@ -65,7 +65,7 @@ async def evaluate_model(engine_name: str, config: Dict):
 
     logger.info(f"🚀 Evaluating Engine: {engine_name}")
 
-    data = {
+    data: Dict[str, list[Any]] = {
         "question": [],
         "answer": [],
         "contexts": [],  # We simulate context for now or keep empty if model has its own RAG

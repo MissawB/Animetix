@@ -31,7 +31,7 @@ class AkinetixRLEnvironment:
         """Réinitialise l'environnement pour une nouvelle partie."""
         self.target_item = random.choice(self.catalog)
         self.active_candidates = self.catalog.copy()
-        self.asked_questions = set()
+        self.asked_questions: set[str] = set()
         self.steps = 0
         return self._get_state(), {"target": self.target_item["title"]}
 

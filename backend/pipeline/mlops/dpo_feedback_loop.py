@@ -3,7 +3,7 @@ import logging
 import os
 import sys
 import time
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from dotenv import load_dotenv
 
@@ -172,7 +172,7 @@ class DPOFeedbackLoop:
 
         return "Désolé, je ne dispose pas d'informations supplémentaires sur ce sujet."
 
-    def create_dpo_pair(self, entry: Dict, corrupt_fn=None) -> Dict:
+    def create_dpo_pair(self, entry: Dict, corrupt_fn=None) -> Optional[Dict]:
         """
         Creates a DPO pair (Chosen/Rejected) based on user satisfaction.
         """

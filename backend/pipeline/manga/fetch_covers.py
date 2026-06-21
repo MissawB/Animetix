@@ -12,6 +12,7 @@ import logging  # noqa: E402
 import os  # noqa: E402
 import sys  # noqa: E402
 import time  # noqa: E402
+from typing import Any  # noqa: E402
 
 from core.utils.security import safe_http_request  # noqa: E402
 
@@ -66,7 +67,7 @@ def fetch_covers(mangadex_id: str) -> dict:
         Un dictionnaire avec les URLs des covers.
     """
     params = {"manga[]": [mangadex_id], "locales[]": ["ja", "fr"], "limit": 100}
-    covers = {"ja": [], "fr": []}
+    covers: dict[str, list[dict[str, Any]]] = {"ja": [], "fr": []}
     try:
         url = f"{MANGADEX_API_URL}/cover"
         response = safe_http_request("GET", url, params=params, timeout=10)

@@ -23,7 +23,7 @@ class SyntheticDataPromotionService:
         self.domain_synthesizer = domain_synthesizer
         self.star_mlops_service = star_mlops_service
 
-    def promote_validated_entries(self) -> Dict[str, int]:
+    def promote_validated_entries(self) -> Dict[str, Any]:
         """
         Scanne les entrées validées et les distribue selon leur type.
         """

@@ -8,7 +8,7 @@ class SafetyPort(ABC):
         self,
         event_type: str,
         action_taken: str,
-        detected_categories: List[str] = None,
+        detected_categories: Optional[List[str]] = None,
         input_text: str = "",
         output_text: str = "",
         reasoning: str = "",

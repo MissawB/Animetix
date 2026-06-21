@@ -178,10 +178,12 @@ class PGVectorRepositoryAdapter(RepositoryPort):
             return catalog["id_to_full_data"].get(str(external_id))
         return None
 
-    def get_catalog_by_type(self, media_type: str, limit: int = 1000) -> List[Dict]:
+    def get_catalog_by_type(
+        self, media_type: str, limit: int = 1000, offset: int = 0
+    ) -> List[Dict]:
         catalog = self.load_catalog(media_type)
         if catalog:
-            return list(catalog["id_to_full_data"].values())[:limit]
+            return list(catalog["id_to_full_data"].values())[offset : offset + limit]
         return []
 
     def load_themes(self) -> Dict:
@@ -256,7 +258,9 @@ class PGVectorRepositoryAdapter(RepositoryPort):
             )
             return []
 
-    def load_latent_space(self, media_type: str, vibe_type: str) -> Optional[Dict]:
+    def load_latent_space(
+        self, media_type: str, vibe_type: str
+    ) -> Optional[List[Dict]]:
         media = media_type.lower()
         vibe = vibe_type.lower()
         file_map = {

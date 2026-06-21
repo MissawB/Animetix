@@ -78,7 +78,9 @@ class RepositoryPort(ABC):
         pass
 
     @abstractmethod
-    def load_latent_space(self, media_type: str, vibe_type: str) -> Optional[Dict]:
+    def load_latent_space(
+        self, media_type: str, vibe_type: str
+    ) -> Optional[List[Dict]]:
         """Charge les données de l'espace latent pour la visualisation."""
         pass
 

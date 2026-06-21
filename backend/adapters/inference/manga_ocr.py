@@ -1,7 +1,7 @@
 """Manga OCR processing mixin for VisionTransformersAdapter."""
 
 import logging  # noqa: E402
-from typing import Any, Dict  # noqa: E402
+from typing import TYPE_CHECKING, Any, Dict  # noqa: E402
 
 from core.utils.lazy_import import lazy_import  # noqa: E402
 
@@ -13,7 +13,24 @@ logger = logging.getLogger("animetix.inference.manga_ocr")
 
 
 class MangaOcrMixin:
-    """Provides manga page OCR and text extraction."""
+    """Provides manga page OCR and text extraction.
+
+    Designed to be combined with ``InferencePort`` (which supplies
+    ``_log_usage``) in the concrete vision adapter. The ``TYPE_CHECKING``
+    declaration below tells the type checker about that inherited method
+    without affecting runtime behavior.
+    """
+
+    if TYPE_CHECKING:
+
+        def _log_usage(
+            self,
+            engine: str,
+            input_tokens: int = 0,
+            output_tokens: int = 0,
+            units: int = 0,
+            allocated_budget: int = 0,
+        ) -> None: ...
 
     def process_manga_page(self, image_data: bytes) -> Dict[str, Any]:
         """Generic fallback OCR - NO LONGER simulates manga layout."""

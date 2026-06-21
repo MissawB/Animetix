@@ -1,4 +1,6 @@
-TASK_REGISTRY = {}
+from typing import Any, Callable
+
+TASK_REGISTRY: dict[str, Callable[..., Any]] = {}
 
 
 def register_task(name):

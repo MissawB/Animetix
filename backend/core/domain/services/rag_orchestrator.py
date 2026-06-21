@@ -37,13 +37,11 @@ class RAGOrchestrator:
             if not processor:
                 ctx.current_state = RAGState.FINALIZE
                 break
-            # Delegate to processor and yield its steps if it's a generator
+            # Every processor is a generator: it yields StreamStep dicts and
+            # returns the next RAGState (delivered as the value of `yield from`).
             try:
                 res = processor.process(ctx, xai_collector=xai_collector)
-                if hasattr(res, "__next__") or hasattr(res, "__iter__"):
-                    ctx.current_state = yield from res
-                else:
-                    ctx.current_state = res
+                ctx.current_state = yield from res
             except Exception as e:
                 if ctx.current_state == RAGState.FALLBACK_RAG:
                     ctx.current_state = RAGState.FAILED

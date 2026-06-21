@@ -121,7 +121,7 @@ class AutonomousDomainSynthesizer:
             f"🌌 Synthesizing new multiverse: '{universe_name}' [{primary_genre}]..."
         )
 
-        universe_data = {
+        universe_data: Dict[str, Any] = {
             "name": universe_name,
             "genre": primary_genre,
             "description": f"Un univers révolutionnaire de type {primary_genre} se déroulant dans les confins de la galaxie de {universe_name}.",
