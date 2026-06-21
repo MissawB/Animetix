@@ -33,6 +33,7 @@ class MockLiveSession:
         # Raw 24kHz PCM simulation bytes
         mock_part.inline_data.data = b"\x00" * 480
         mock_part.inline_data.mime_type = "audio/pcm"
+        mock_part.text = None
 
         mock_response.server_content.model_turn.parts = [mock_part]
         mock_response.server_content.output_transcription = "Simulation de réponse"
@@ -58,19 +59,25 @@ async def test_speech_to_speech_live_consumer(mock_client_class):
 
     # Establish connection via Channels test communicator
     communicator = WebsocketCommunicator(application, "/ws/labs/s2s/live/")
-    connected, _ = await communicator.connect()
+    connected, _ = await communicator.connect(timeout=5)
     assert connected
 
-    # Wait for the session_ready notification from consumer
-    response = await communicator.receive_json_from()
+    # Wait for the session_ready notification from consumer.
+    # Generous timeouts (default is 1s): the consumer's background gemini-session
+    # task can be slow to produce output when the suite runs under load, which
+    # otherwise makes this Channels test flaky.
+    response = await communicator.receive_json_from(timeout=5)
     assert response["type"] == "session_ready"
     assert "connected" in response["message"]
 
     # Send a text message from the client
     await communicator.send_json_to({"type": "text", "data": "Hello Live Gemini"})
 
-    # Wait briefly for async tasks to process the input
-    await asyncio.sleep(0.1)
+    # Wait for async tasks to process the input
+    for _ in range(40):
+        if len(mock_session.sent_inputs) > 0:
+            break
+        await asyncio.sleep(0.05)
 
     # Assert the session received the text input
     assert len(mock_session.sent_inputs) > 0
@@ -83,8 +90,11 @@ async def test_speech_to_speech_live_consumer(mock_client_class):
 
     await communicator.send_json_to({"type": "audio", "data": b64_audio})
 
-    # Wait briefly for audio processing
-    await asyncio.sleep(0.1)
+    # Wait for audio processing
+    for _ in range(40):
+        if len(mock_session.sent_inputs) > 1:
+            break
+        await asyncio.sleep(0.05)
 
     # Assert the session received the audio input
     assert len(mock_session.sent_inputs) > 1
@@ -92,10 +102,10 @@ async def test_speech_to_speech_live_consumer(mock_client_class):
 
     # Check that the consumer sent back audio and text chunks to the client
     # First message: text or audio chunk
-    received_msg_1 = await communicator.receive_json_from()
+    received_msg_1 = await communicator.receive_json_from(timeout=5)
     assert received_msg_1["type"] in ["audio_chunk", "text_chunk"]
 
-    received_msg_2 = await communicator.receive_json_from()
+    received_msg_2 = await communicator.receive_json_from(timeout=5)
     assert received_msg_2["type"] in ["audio_chunk", "text_chunk"]
 
     # Disconnect client
