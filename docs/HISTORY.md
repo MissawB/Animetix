@@ -2,6 +2,28 @@
 
 This document archives the major milestones of the project's technical evolution.
 
+## [2026-06-21] Session: mypy Type-Debt Elimination, Frontend Coverage Campaign & CI Hardening
+
+### Typing (Élevés)
+- **mypy type-debt baseline 105 → 0 modules**: the `[[tool.mypy.overrides]] ignore_errors` block was removed entirely — `cd backend && mypy .` is fully green on ~474 files with no per-module ignores. Done in a clean CI-equivalent venv (`pip install mypy` → 2.1.0); the project venv can't run mypy/black locally due to a dbt `pathspec<0.13` pin. ML lazy-`None` inference adapters typed (`self._model: Any = None`), Django `admin` modernized (`@admin.display`/`@admin.action`), `lazy_import` (ModuleType proxy) + a Django logging filter carry targeted `# type: ignore[...]`, `emoji_service` typed honestly `List[str] | str`.
+- **Streaming contract harmonized on `dict`**: `StateProcessor.process` → `Generator[dict, None, RAGState]`, orchestrator simplified (all processors are generators). These 11 errors were breaking CI mypy.
+- **8 runtime bugs surfaced by strict typing**: missing `SimilarityService.find_similar_items` (AttributeError) + undercover None-guard; `fallback_adapter` `raise e` after the exception var was deleted (NameError); `trl_ops` calling a non-existent `export_preference_dataset` (a mock hid it); `advanced_vision.vlm_rerank` treating dicts as int indices (TypeError); `tree_of_thoughts` missing `.text`; `validation_gate` `-> (str, float)` (tuple-value, not a type); dead `SampleView` ref; `django_repository.get_nearest_neighbors` returning `[]` against an `Optional[Dict]` port. Several latent None-derefs guarded along the way.
+
+### Frontend test coverage (18% → 29%, 188 → 492 unit tests)
+- Added `vitest --coverage` tooling: `test:coverage` script, v8 config (text/html/lcov, include/exclude), anti-regression **ratchet thresholds** (now 28/22/27/28), `coverage/` gitignored.
+- 3 high-ROI campaigns (all behavior-only, no source changes): services/utils/hooks (+112), presentational components (+95), route-level pages (+97).
+- **Wired frontend unit tests + coverage gate into CI** (`frontend-checks` job) — previously `vitest` never ran in CI — plus a non-blocking Codecov upload (flag `frontend`).
+
+### Other hardening
+- **Frontend state convention** documented in `frontend/README.md` (React Query = server state, Zustand = global/UI, useState = local); dead React Query game hooks purged; the "personalization duplication" was a false positive (`/custom-config/` vs `/profiles/me/` — distinct concerns).
+- **Frontend perf**: `loading="lazy"` + `decoding="async"` on 54 content `<img>` (36 files); heroes/logos kept eager for LCP. Memo deliberately not broadened (no expensive in-render compute; already memoized where it matters).
+- **Accessibility**: the real scope was 115 `control-has-associated-label` across 68 files (not "a few") — all given meaningful FR `aria-label`s (+ `role`/keyboard for non-native interactives, `htmlFor`/`id` for labels); rule hardened `warn` → `error`. Also fixed the 23 pre-existing eslint errors → `eslint .` fully green.
+- **MLOps logging** centralized via `backend/pipeline/logging_setup.py` (`setup_logging()`, single format); 11 inline `logging.basicConfig` calls + 2 comment-only files migrated.
+- **Playwright e2e**: on-failure screenshot/video/trace, CI `Upload Playwright artifacts` step, GitHub reporter (Chromium-only kept by design for the single a11y spec).
+- **k6 load test**: replaced the unrealistic global `p(95)<500` with tagged per-endpoint thresholds (search/game/rag/ws); added a manual `workflow_dispatch` `load-test.yml` (the test needs a deployed target + incurs LLM costs, so not a PR gate).
+- **`Dockerfile.dataflow`**: removed a redundant, UNPINNED `pip install beautifulsoup4` (already `==4.12.3` in requirements); documented why a HEALTHCHECK is inappropriate (Dataflow-managed) and how to digest-pin the `:latest` launcher base.
+- **Backend test organization**: corrected the premise (no duplication — `tests/core` vs `tests/backend` are different layers); documented the "one home per layer" convention in `tests/README.md`; physical consolidation deferred until the `coverage-consolidation` branch merges.
+
 ## [2026-06-21] Session: Hexagonal Core, CI Guardrails, Test-Coverage Campaign & Hardening
 
 ### Architecture & security (Critiques)
