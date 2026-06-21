@@ -123,13 +123,13 @@ export default defineConfig({
         'src/types/**',
         'src/main.tsx',
       ],
-      // Plancher anti-régression (baseline ≈ 21.5 % stmts après la campagne
-      // services/utils/hooks). À remonter au fur et à mesure — ne JAMAIS baisser.
+      // Plancher anti-régression (baseline ≈ 24 % stmts après les campagnes
+      // services/utils/hooks + composants présentationnels). Remonter, jamais baisser.
       thresholds: {
-        statements: 21,
-        branches: 12,
-        functions: 19,
-        lines: 21,
+        statements: 24,
+        branches: 15,
+        functions: 22,
+        lines: 24,
       },
     },
     projects: [{
