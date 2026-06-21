@@ -46,20 +46,15 @@ warn_unused_configs = true
 # Modules below are not yet type-clean. They are still parsed (so imports
 # resolve) but their errors are non-fatal.
 # Burn this list down over time; do NOT add new modules to it.
-# Progress: 105 -> 10 modules (95 burned down; ~62 errors remain across the 10).
-# The remaining 10 are the hard cases: lazy-loaded heavy-ML inference adapters
-# (self._model = None until loaded -> pervasive Optional), Django dynamic modules
-# (admin metaclass idiom, settings), core.utils.lazy_import (metaprogramming), and
-# emoji_service (a behavior change pending product sign-off).
+# Progress: 105 -> 4 modules (101 burned down; ~27 errors remain across the 4).
+# The remaining 4 are the hard/by-design cases:
+#  - api.animetix.admin: Django ModelAdmin display idiom (method.short_description).
+#  - api.animetix_project.settings: Django settings (star-imports / dynamic).
+#  - core.utils.lazy_import: metaprogramming (dynamic module/attribute proxying).
+#  - core.domain.services.emoji_service: a behavior change pending product sign-off.
 [[tool.mypy.overrides]]
 ignore_errors = true
 module = [
-    "adapters.inference.clip_vision",
-    "adapters.inference.fallback_adapter",
-    "adapters.inference.google_genai_adapter",
-    "adapters.inference.local_text_adapter",
-    "adapters.inference.moondream_adapter",
-    "adapters.inference.unified_inference_adapter",
     "api.animetix.admin",
     "api.animetix_project.settings",
     "core.domain.services.emoji_service",

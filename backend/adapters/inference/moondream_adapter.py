@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from core.domain.entities.ai_schemas import InferenceResponse
 from core.domain.exceptions import InferenceError
@@ -22,8 +22,8 @@ class MoondreamAdapter(InferencePort):
     ):
         super().__init__(usage_port=usage_port)
         self.model_id = model_id
-        self.model = None
-        self.processor = None
+        self.model: Any = None
+        self.processor: Any = None
 
     def _load_model(self):
         if self.model:

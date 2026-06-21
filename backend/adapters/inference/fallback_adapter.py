@@ -2,7 +2,7 @@ import logging
 import time
 from typing import Any, Dict, List, Optional
 
-from core.domain.entities.ai_schemas import InferenceResponse
+from core.domain.entities.ai_schemas import InferenceResponse, TokenLogProb
 from core.ports.inference_port import InferenceNotImplementedError, InferencePort
 
 logger = logging.getLogger("animetix.inference.fallback")
@@ -20,12 +20,12 @@ class FallbackInferenceAdapter(InferencePort):
     ):
         self.adapters = [a for a in adapters if a is not None]
         self.obs_service = obs_service
-        self._capability_cache = {}
-        self._online_adapters = set()
+        self._capability_cache: Dict[str, List[InferencePort]] = {}
+        self._online_adapters: set[InferencePort] = set()
 
         # Cache for diagnostics & advanced uncertainty
-        self._last_completion = None
-        self._last_logprobs = None
+        self._last_completion: Optional[str] = None
+        self._last_logprobs: Optional[List[TokenLogProb]] = None
 
         self._check_initial_health()
         self._build_capability_cache()
@@ -158,7 +158,7 @@ class FallbackInferenceAdapter(InferencePort):
                 import inspect  # noqa: E402
 
                 sig = inspect.signature(adapter.generate)
-                call_kwargs = {
+                call_kwargs: Dict[str, Any] = {
                     "thinking_budget": thinking_budget,
                     "thinking_mode": thinking_mode,
                 }
@@ -232,7 +232,7 @@ class FallbackInferenceAdapter(InferencePort):
                 import inspect  # noqa: E402
 
                 sig = inspect.signature(adapter.stream_generate)
-                call_kwargs = {
+                call_kwargs: Dict[str, Any] = {
                     "thinking_budget": thinking_budget,
                     "thinking_mode": thinking_mode,
                 }
@@ -350,7 +350,7 @@ class FallbackInferenceAdapter(InferencePort):
                             result = task_data.get("result")
                             if isinstance(result, dict) and "error" in result:
                                 raise Exception(result["error"])
-                            return result or ""
+                            return str(result) if result else ""
                         else:
                             error_info = (
                                 task_data.get("result", {}).get("error")
@@ -538,9 +538,7 @@ class FallbackInferenceAdapter(InferencePort):
         return self._fallback_call("get_diagnostics", prompt, completion) or {}
 
     def calculate_uncertainty(self, prompt: str, completion: str) -> Dict[str, float]:
-        if getattr(self, "_last_completion", None) == completion and getattr(
-            self, "_last_logprobs", None
-        ):
+        if self._last_completion == completion and self._last_logprobs:
             logprobs = [
                 lp.logprob for lp in self._last_logprobs if lp.logprob is not None
             ]
@@ -575,8 +573,12 @@ class FallbackInferenceAdapter(InferencePort):
     def estimate_depth(self, image_data: bytes) -> bytes:
         return self._fallback_call("estimate_depth", image_data) or b""
 
-    def generate_3d_scene(self, image_data: bytes, depth_map: bytes) -> Dict[str, Any]:
-        return self._fallback_call("generate_3d_scene", image_data, depth_map) or {}
+    def generate_3d_scene(
+        self, image_data: bytes, depth_map: bytes, mode: str = "gaussian_splatting"
+    ) -> Dict[str, Any]:
+        return (
+            self._fallback_call("generate_3d_scene", image_data, depth_map, mode) or {}
+        )
 
     def visual_rerank(
         self, query: str, image_urls: List[str], system_prompt: str = ""
