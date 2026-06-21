@@ -2,6 +2,54 @@
 
 This document archives the major milestones of the project's technical evolution.
 
+## [2026-06-21] Session: Hexagonal Core, CI Guardrails, Test-Coverage Campaign & Hardening
+
+### Architecture & security (Critiques)
+- **Hexagonal core isolation**: the `core` no longer imports Django (`settings`/`cache`), the MLOps `pipeline`, or the DI container (`get_container()`). Introduced `Cache`/`Config`/`VectorStore` ports with Django/Chroma adapters; moved `guardrail_service` into the `agentic` container, resolving the `core`↔`agentic` circular dependency (back-compat alias kept).
+- **`backend.core.*` → `core.*`**: removed the dual-namespace that produced duplicate modules and broken `isinstance`/mocks (15 source + 19 test files).
+- **SSRF in `sample_url` (Animetix Voice)**: user-controlled URL fetch hardened via `safe_http_request` (rejects private/loopback/link-local IPs at every redirect hop), both at ingestion and fetch.
+- **Backend ↔ frontend schema desync**: exposed `wallet_balance` (serializer + mapping); added DRF serializers + `@extend_schema` for `vs_battle` and the `xai_report` SSE event; regenerated `api.d.ts`.
+
+### Frontend health gate
+- New CI job **`frontend-checks`** (`check-types` + `lint`) gating `deploy-to-prod` — previously nothing ran `tsc` before prod (Vite doesn't type-check).
+- **`tsc` 131 → 0**: fixed runtime `ReferenceError`s (broken `catch` vars, missing imports `Globe`/`motion`/`Button`/`useCallback`…), Plotly namespace, app types, deduplicated XAI cluster, `Button` variants, force-graph refs; removed dead/broken `useAniminator.ts`.
+- **ESLint 132 → 0**: `no-explicit-any`, `no-unused-vars`, `react-hooks/*`, `jsx-a11y`.
+- Fixed 6 broken/flaky frontend tests (incl. a `SynapticLabPage` infinite-render regression and an orphaned `MultiverseLabPage` test → `MultiverseStudioPage`).
+
+### Monolith decomposition
+- `pipeline/mlops/finetuning_dataset.py` **4650 → 1316 l. (−72%)** via a façade re-export pattern (9 modules under `ft_dataset/`, zero caller changes).
+- DI container: shared `LazyClass` extracted to `containers/lazy.py`; `core_services.py` 524 → 440 l.
+- Frontend: `MultiverseCatalogPage` 740→161, `TachideskExplorerPage` 724→157, `Layout` 475→118 — memoized sub-components + custom hooks, strictly behavior-preserving.
+
+### RAG services / dead-code audit
+- Corrected the audit premise: the 3 RAG services don't overlap, they **compose** (merge abandoned on purpose). Removed real dead code: 2 orphan modules, 3 test-only modules, 2 registered-but-never-resolved modules+providers, 2 duplicate dead providers, 1 dead injected wire. `test_container_wiring` 3/3.
+
+### Test-coverage campaign (≈443 new tests; 17 backend modules 0% → 92-100%)
+- Established a hard **`--cov-fail-under=75`** gate + non-blocking **Codecov** upload; `pytest-cov` confirmed in `requirements.txt`.
+- **P1 — MLOps & Ingestion** (8 modules): `jikan_enrichment`, `expert_enrichment`, `manga/{fetch_covers,ingest_manga,vectorize_manga}`, `mlops/{merge_lora_weights,train_preference,rlhf_pipeline}` (HTTP/sleeps/embeddings/vector-store/Neo4j/torch all mocked).
+- **P2 — Async consumers** (3 modules): `consumers/{duel,codemanga,speech_to_speech_live}`; also fixed a flaky Channels e2e (1s → 5s `receive_json_from` timeouts).
+- **P3 — Adapters** (6 modules): `inference/{moondream,qwen3_vl,brain_api}`, `persistence/{django_safety,django_semantic_cache,colbert}`.
+- **P4 — Frontend** (vitest 69 → 191): Zustand stores, `ErrorBoundary`, offline `idb-keyval`/persister.
+- **🐛 Production bug found via tests**: `DjangoSafetyAdapter` used field `action_taken` (`create()`/`filter()`/read) while the `AISafetyEvent` model field is `action` → `TypeError`/`FieldError` on **every** safety-event write. Fixed + added a `@pytest.mark.django_db` round-trip regression lock.
+
+### Robustness & process hardening
+- **Test pollution**: Proactor event-loop policy made fail-fast; added an autouse fixture clearing `Mock` leaks from `sys.modules` + the `lazy_import` cache; fixed a real `imageio` `sys.modules` leak. The 2 baseline `test_prompt_loading` failures disappeared.
+- **Error handling**: `ErrorBoundary` + React-Query cache now report to Sentry with smart retry (no retry on 4xx); 5 genuine silent `except Exception: pass` made observable (0 remaining).
+- **Pre-commit**: ruff+black on `pre-commit`, mypy+pytest (`-m "not integration"`) on `pre-push` — the pytest hook caught a real `test_deploy_jobs` regression.
+- **MLOps provenance**: `run_provenance.py` writes git-commit + UTC timestamp + manifest revisions next to each checkpoint (wired into the training scripts).
+- **dbt**: added telemetry source freshness + a 2nd singular drift-affinity test.
+- **`requirements.txt`**: confirmed it's a clean canonical `pip-compile` output (audit was misleading); removed stale `requirements.txt.bak`.
+- **Async strategy**: audited (only 5 async core files, no boundary violations) and documented the canonical sync-core / async-edges model in `ARCHITECTURE.md`.
+- **`features/` vs `pages/`**: confirmed no duplication (healthy layering); convention documented in `frontend/README.md`.
+- **Frontend performance**: PWA precache trimmed 7.5 MB → ~3.0 MB (−60%) by excluding the lazy-loaded Plotly chunk and adding runtime caching.
+- **Accessibility**: hardened `jsx-a11y` interaction rules to `error` (0 violations) + fixed clear `aria-label` cases.
+
+### Repository metadata
+- GitHub `MissawB/Animetix`: refreshed description, set homepage (Cloud Run), added 18 topics; repointed `origin` to the current repo name.
+
+### Product features delivered (also detailed in earlier sessions below)
+Vocal Library & Seiyuu integration, Graph Repair Console (Graph Healer), Plasticity Dashboard & Semantic Profile, Berrix Economy Hub, Tachidesk/Suwayomi integration, Manga Reader UX optimization, Manga Extension Manager, background Manga Chapter Tracking & notifications (periodic trigger wired via Cloud Run job + Scheduler), Offline Manga Library (PWA), Real-time Club Chat, Self-Hosted AI Image Worker, LLM speed optimizations.
+
 ## [2026-06-20] Session: Offline Manga Reader (PWA)
 
 - **Mode Hors-ligne du Lecteur Manga (PWA)**:
