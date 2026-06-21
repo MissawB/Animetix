@@ -27,11 +27,14 @@ import pytest
 @pytest.fixture(autouse=True)
 def _rewire_game_modules():
     import animetix.api.dependencies as dependencies_mod
+    import animetix.api.games.akinetix as akinetix_mod
     import animetix.api.games.archetypist as archetypist_mod
+    import animetix.api.games.blindtest as blindtest_mod
     import animetix.api.games.classic as classic_mod
     import animetix.api.games.covertest as covertest_mod
     import animetix.api.games.emoji as emoji_mod
     import animetix.api.games.paradox as paradox_mod
+    import animetix.api.games.vision as vision_mod
     from animetix.containers import container
 
     container.wire(
@@ -42,6 +45,9 @@ def _rewire_game_modules():
             emoji_mod,
             paradox_mod,
             covertest_mod,
+            vision_mod,
+            akinetix_mod,
+            blindtest_mod,
         ]
     )
 
@@ -59,6 +65,9 @@ def _rewire_game_modules():
         "emoji_service",
         "paradox_service",
         "cover_test_service",
+        "vision_service",
+        "akinetix_service",
+        "blind_test_service",
     ):
         getattr(container.core, name).reset()
     yield
