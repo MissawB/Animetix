@@ -21,7 +21,7 @@ _Rien d'ouvert._
   - **Mesure finale 2026-06-21 : 75,33 % global** (`--cov=backend`, le flag exact du gate CI ; 19 831 / 26 325 lignes). Point de départ 55,05 %.
   - ⚠️ **Méthodologie** : mesurer **par chemin** (`--cov=backend`), PAS par nom de package (`--cov=pipeline` sous-compte les modules importés `backend.pipeline.*` à 0 % à cause du dual-namespace ; CI utilise déjà `--cov=backend`, donc le gate n'est pas affecté).
   - Modules portés à 100 %/quasi cette campagne : `auth` (0→100), games `vision`/`akinetix`/`blindtest` (100), `librarian`, `akinetix_rl_service`, `tasks_views`, `creative_tasks` (100), `dpo_dataset_compiler` (81→95), `api/core` (79→100), `video_analysis` (44→100), `index_otaku_knowledge` (51→96).
-  - ⚠️ Seul rouge restant : `tests/backend/test_speech_to_speech_live.py::test_speech_to_speech_live_consumer` — flaky e2e connu (timeout), sans rapport avec la couverture.
+  - [x] ✅ Flaky e2e `test_speech_to_speech_live_consumer` **corrigé** : cause racine = accès DB du background task ASGI/auth sans `django_db` (visible seulement selon l'ordre de suite). Fix : `@pytest.mark.django_db(transaction=True)` + mock du `voice_cloning_service` lourd + mock `process_client_audio` (anti-ffmpeg). Vert sur 3 runs `tests/backend/` complets.
   - **Lot 🟢 — fortement testable (mock-based, méthode P1-P3 prouvée) — ✅ FAIT (commit `245e92f3`) :**
     - [x] Adaptateurs inférence : `google_genai_adapter`, `brain_api.py`, `fallback_adapter`, `unified_inference_adapter`.
     - [x] Agents RAG : `rag/agents/debate_manager`, `rag/agents/planner`, `rag/hybrid_index`.
