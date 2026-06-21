@@ -1,1 +1,6 @@
 *.npy filter=lfs diff=lfs merge=lfs -text
+
+# Large generated data artifacts — stored via Git LFS to keep the core repo light.
+# (kept tracked because they are consumed at runtime by the offline DB / catalog sync)
+data/processed/*.json filter=lfs diff=lfs merge=lfs -text
+data/artifacts/*.json filter=lfs diff=lfs merge=lfs -text
