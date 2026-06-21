@@ -1,19 +1,50 @@
-# Auto-format/lint staged files before each commit, mirroring the CI lint job
-# (same pinned ruff/black versions) so formatting issues never reach CI.
+# Hooks Git locaux, alignés sur les jobs CI.
 #
-# One-time setup:
+#   - pre-commit (rapide, à chaque commit) : ruff + black sur les fichiers stagés.
+#   - pre-push  (plus lourd, avant push)   : mypy (type-debt baseline) + pytest
+#     (tests unitaires, hors `integration`) — pour attraper avant la CI.
+#
+# Setup unique :
 #   pip install pre-commit
-#   pre-commit install
+#   pre-commit install            # installe pre-commit ET pre-push (cf. default_install_hook_types)
 #
-# If a hook reformats a file, the commit is aborted; `git add` the changes and
-# commit again. Run on the whole repo once with: pre-commit run --all-files
+# Lancer à la demande :
+#   pre-commit run --all-files                     # hooks pre-commit
+#   pre-commit run --hook-stage pre-push --all-files
+#
+# Pour sauter ponctuellement un hook lent : SKIP=pytest git push  (ou SKIP=mypy)
+#
+# NOTE mypy : nécessite un mypy fonctionnel. Le venv local du projet inclut dbt,
+# qui épingle `pathspec<0.13` incompatible avec le mypy courant ; la CI installe
+# mypy seul (sans dbt) et fonctionne. En cas d'échec local du hook mypy, utiliser
+# SKIP=mypy ou un venv propre type-CI.
+default_install_hook_types: [pre-commit, pre-push]
+
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.17
     hooks:
       - id: ruff
         args: [--fix]
+        stages: [pre-commit]
   - repo: https://github.com/psf/black
     rev: 26.5.1
     hooks:
       - id: black
+        stages: [pre-commit]
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy (backend, type-debt baseline — miroir CI)
+        entry: bash -c 'cd backend && mypy . --config-file ../pyproject.toml'
+        language: system
+        types: [python]
+        pass_filenames: false
+        stages: [pre-push]
+      - id: pytest
+        name: pytest (tests unitaires, hors integration — miroir CI)
+        entry: python -m pytest -m "not integration" -q
+        language: system
+        types: [python]
+        pass_filenames: false
+        stages: [pre-push]
