@@ -12,8 +12,8 @@ import importlib  # noqa: E402
 from types import ModuleType  # noqa: E402
 from typing import Any  # noqa: E402
 
-_lazy_cache = {}
-_loaded_modules = {}
+_lazy_cache: dict[str, ModuleType] = {}
+_loaded_modules: dict[str, ModuleType] = {}
 
 
 def lazy_import(module_name: str) -> ModuleType:
@@ -50,8 +50,10 @@ def lazy_import(module_name: str) -> ModuleType:
                     self._loading = False
             return _loaded_modules[module_name]
 
+        # Intentional: a lazy module proxy overrides ModuleType's writeable
+        # dunders with read-only properties that trigger the real import.
         @property
-        def __spec__(self) -> Any:
+        def __spec__(self) -> Any:  # type: ignore[override]
             if self._loading:
                 return None
             try:
@@ -60,25 +62,25 @@ def lazy_import(module_name: str) -> ModuleType:
                 return None
 
         @property
-        def __file__(self) -> Any:
+        def __file__(self) -> Any:  # type: ignore[override]
             if module_name in _loaded_modules:
                 return getattr(_loaded_modules[module_name], "__file__", None)
             return None
 
         @property
-        def __path__(self) -> Any:
+        def __path__(self) -> Any:  # type: ignore[override]
             if module_name in _loaded_modules:
                 return getattr(_loaded_modules[module_name], "__path__", None)
             return []
 
         @property
-        def __loader__(self) -> Any:
+        def __loader__(self) -> Any:  # type: ignore[override]
             if module_name in _loaded_modules:
                 return getattr(_loaded_modules[module_name], "__loader__", None)
             return None
 
         @property
-        def __package__(self) -> Any:
+        def __package__(self) -> Any:  # type: ignore[override]
             if module_name in _loaded_modules:
                 return getattr(_loaded_modules[module_name], "__package__", None)
             return None

@@ -41,7 +41,7 @@ LOGGING = {
         "duration_filter": {
             "()": "django.utils.log.CallbackFilter",
             "callback": lambda record: (
-                setattr(record, "duration_ms", getattr(record, "duration_ms", 0))
+                setattr(record, "duration_ms", getattr(record, "duration_ms", 0))  # type: ignore[func-returns-value]
                 or True
             ),
         },
@@ -499,18 +499,18 @@ CSP_STYLE_SRC = (
 # En production, on retire 'unsafe-eval' pour bloquer les exécutions de scripts non sécurisées.
 # On autorise uniquement si nécessaire via env.
 _ALLOW_UNSAFE_EVAL = env.bool("DJANGO_CSP_ALLOW_UNSAFE_EVAL", default=not IS_PRODUCTION)
-CSP_SCRIPT_SRC = [
+_csp_script_src = [
     "'self'",
     "'unsafe-inline'",
     "https://cdn.jsdelivr.net",
     "https://huggingface.co",
 ]
 if _ALLOW_UNSAFE_EVAL:
-    CSP_SCRIPT_SRC.append("'unsafe-eval'")
-CSP_SCRIPT_SRC = tuple(CSP_SCRIPT_SRC)
+    _csp_script_src.append("'unsafe-eval'")
+CSP_SCRIPT_SRC = tuple(_csp_script_src)
 
 _EXTRA_IMG = env.list("EXTRA_CSP_IMG_SRC", default=[])
-CSP_IMG_SRC = [
+_csp_img_src = [
     "'self'",
     "data:",
     "blob:",
@@ -519,34 +519,34 @@ CSP_IMG_SRC = [
     "https://m.media-amazon.com",
 ]
 if not IS_PRODUCTION:
-    CSP_IMG_SRC.append("https://*.hf.space")
-CSP_IMG_SRC = tuple(CSP_IMG_SRC + _EXTRA_IMG)
+    _csp_img_src.append("https://*.hf.space")
+CSP_IMG_SRC = tuple(_csp_img_src + _EXTRA_IMG)
 
 CSP_FONT_SRC = ("'self'", "https://fonts.gstatic.com", "https://cdn.jsdelivr.net")
 
 _EXTRA_CONNECT = env.list("EXTRA_CSP_CONNECT_SRC", default=[])
-CSP_CONNECT_SRC = ["'self'", "https://*.huggingface.co", "https://huggingface.co"]
+_csp_connect_src = ["'self'", "https://*.huggingface.co", "https://huggingface.co"]
 if not IS_PRODUCTION:
-    CSP_CONNECT_SRC.append("https://*.hf.space")
-CSP_CONNECT_SRC = tuple(CSP_CONNECT_SRC + _EXTRA_CONNECT)
+    _csp_connect_src.append("https://*.hf.space")
+CSP_CONNECT_SRC = tuple(_csp_connect_src + _EXTRA_CONNECT)
 
-CSP_FRAME_SRC = ["'self'", "https://*.huggingface.co"]
+_csp_frame_src = ["'self'", "https://*.huggingface.co"]
 if not IS_PRODUCTION:
-    CSP_FRAME_SRC.append("https://*.hf.space")
-CSP_FRAME_SRC = tuple(CSP_FRAME_SRC)
+    _csp_frame_src.append("https://*.hf.space")
+CSP_FRAME_SRC = tuple(_csp_frame_src)
 
-CSP_MEDIA_SRC = ["'self'", "data:", "blob:", "https://*.huggingface.co"]
+_csp_media_src = ["'self'", "data:", "blob:", "https://*.huggingface.co"]
 if not IS_PRODUCTION:
-    CSP_MEDIA_SRC.append("https://*.hf.space")
-CSP_MEDIA_SRC = tuple(CSP_MEDIA_SRC)
+    _csp_media_src.append("https://*.hf.space")
+CSP_MEDIA_SRC = tuple(_csp_media_src)
 
 CSP_OBJECT_SRC = ("'none'",)
 CSP_BASE_URI = ("'self'",)
 
-CSP_FRAME_ANCESTORS = ["'self'", "https://huggingface.co"]
+_csp_frame_ancestors = ["'self'", "https://huggingface.co"]
 if not IS_PRODUCTION:
-    CSP_FRAME_ANCESTORS.append("https://*.hf.space")
-CSP_FRAME_ANCESTORS = tuple(CSP_FRAME_ANCESTORS)
+    _csp_frame_ancestors.append("https://*.hf.space")
+CSP_FRAME_ANCESTORS = tuple(_csp_frame_ancestors)
 
 # Report-only mode is useful for testing without blocking
 CSP_REPORT_ONLY = env.bool("DJANGO_CSP_REPORT_ONLY", default=False)
