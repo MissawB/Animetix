@@ -120,6 +120,15 @@ export const researchPapers: ResearchPaper[] = [
     keyConcept: 'Collaboration en cascade de multiples LLMs spécialistes.',
     implementation: 'Utilisé dans le SwarmConsensusOrchestrator (Visual, Acoustic, Lore experts).'
   },
+  {
+    id: 'eureka',
+    title: 'Eureka: Human-Level Reward Design via Coding Large Language Models',
+    source: 'arXiv:2310.12931',
+    url: 'https://huggingface.co/papers/2310.12931',
+    category: 'agents',
+    keyConcept: 'Utilisation des LLMs comme planificateurs de haut niveau pour écrire, compiler et auto-améliorer du code source ou des fonctions de récompense de manière itérative et évolutive.',
+    implementation: 'Le SelfEvolvingCompiler s\'en inspire pour compiler et mettre à jour des noyaux mathématiques à la volée via Numba (JIT).'
+  },
 
   // --- MULTIMODALITÉ ---
   {
@@ -278,6 +287,51 @@ export const researchPapers: ResearchPaper[] = [
     category: 'mlops',
     keyConcept: 'Quantification de l\'incertitude native via l\'entropie des logprobs.',
     implementation: 'Mesure de confiance native dans le XaiDiagnosticService.'
+  },
+  {
+    id: 'distilling-step-by-step',
+    title: 'Distilling Step-by-Step! Outperforming Larger Language Models',
+    source: 'arXiv:2305.02301',
+    url: 'https://huggingface.co/papers/2305.02301',
+    category: 'mlops',
+    keyConcept: 'Distillation de la connaissance via la supervision des "rationales" des modèles géants.',
+    implementation: 'La ModelDistillationPipeline s\'en sert pour former nos SLMs locaux.'
+  },
+  {
+    id: 'who-flips',
+    title: 'Who Flips? Self- and Cross-Model Counterarguments Reveal Answer Instability in LLMs',
+    source: 'arXiv:2606.16011',
+    url: 'https://huggingface.co/papers/2606.16011',
+    category: 'mlops',
+    keyConcept: 'Étude mesurant la vulnérabilité des LLMs face à des contre-arguments plausibles mais faux (Flip Rate).',
+    implementation: 'Informent la conception de notre SelfPlayDebateService pour résister aux hallucinations persuasives de l\'agent "Avocat du Diable" en se basant sur le graphe Neo4j.'
+  },
+  {
+    id: 'medusa',
+    title: 'Medusa: Simple LLM Generation Acceleration with Multiple Decoding Heads',
+    source: 'arXiv:2401.10774',
+    url: 'https://huggingface.co/papers/2401.10774',
+    category: 'mlops',
+    keyConcept: 'Décodage spéculatif sans modèle auxiliaire en ajoutant plusieurs têtes de prédiction sur le modèle de base.',
+    implementation: 'Inspiration pour les paramètres d\'accélération et le décodage spéculatif de nos LLMs.'
+  },
+  {
+    id: 'eagle',
+    title: 'EAGLE: Speculative Decoding Can Be Light-Speed',
+    source: 'arXiv:2401.15077',
+    url: 'https://huggingface.co/papers/2401.15077',
+    category: 'mlops',
+    keyConcept: 'Utilisation d\'un modèle draft ultra-léger travaillant au niveau des features pour une spéculation plus rapide.',
+    implementation: 'Intégré nativement sous forme de décodage spéculatif via assistant model dans LocalTextAdapter.'
+  },
+  {
+    id: 'radix-attention',
+    title: 'RadixAttention: Efficiently Serving LLMs in SGLang with RadixAttention',
+    source: 'arXiv:2402.16646',
+    url: 'https://huggingface.co/papers/2402.16646',
+    category: 'mlops',
+    keyConcept: 'Partage dynamique de KV cache à travers un arbre Radix pour les requêtes partageant des préfixes communs.',
+    implementation: 'Implémenté sous forme de RadixCacheManager dans LocalTextAdapter pour réutiliser le KV cache.'
   },
 
   // --- SCIENCES AVANCÉES ---
