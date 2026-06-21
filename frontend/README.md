@@ -79,6 +79,24 @@ frontend/src/
 > la séparation est saine et un déplacement massif (≈265 fichiers + imports/routing/lazy/PWA)
 > serait à haut risque pour un gain marginal.
 
+## 🧠 Convention de state (Zustand vs React Query vs useState)
+
+Choisir l'outil selon la **nature** de la donnée, pas par habitude :
+
+| Nature de l'état | Outil | Exemples |
+|------------------|-------|----------|
+| **État serveur** (données d'API : CRUD, listes, détails) | **React Query** (`useQuery`/`useMutation`) | profil, dashboard social, clubs, achievements, leaderboard, détail média, admin, `custom-config` |
+| **État global client** (UI/préférences, auth, transverse) | **Zustand** (`store/`) | `authStore`, `uiStore` (sidebar/thème/langue), `toastStore`, `notificationStore` (WebSocket), `personalizationStore` |
+| **État local d'un composant** (form, toggle, focus) | **`useState`/`useReducer`** | inputs, visibilité d'un menu |
+| **Session transient** d'un jeu/lab piloté par un service | **Zustand de feature** _(toléré)_ **ou** React Query | `akinetix/paradox/vision/blindtestStore` (Zustand) ; `useClassicGame/useCovertest/useEmoji` (React Query) |
+
+Garde-fous :
+- **Jamais** de données serveur brutes dans un `useState` partagé entre composants → React Query.
+- **Sessions de jeu** : les deux approches coexistent (choix historique assumé). Pour un *nouveau* jeu, préférer un hook React Query (cf. `useClassicGame`) ; ne garder Zustand que si la session est fortement couplée à un flux de service local sans besoin du cache/stale/refetch.
+- `custom-config` (`/api/v1/custom-config/`, React Query, thème visuel) et `personalizationStore` (`/api/v1/profiles/me/`, Zustand, archétype/aura) sont **deux concerns distincts** — ce **n'est pas** une duplication.
+- **Clés React Query** : tableaux simples (`['profile', username]`). Si le nombre de clés croît, factoriser une *query-key factory* par domaine pour éviter les bugs d'invalidation.
+- **WebSocket** : l'état de connexion vit en Zustand (`notificationStore`) et déclenche des `invalidateQueries` pour rafraîchir le cache serveur (séparation temps-réel / cache).
+
 ## 🔌 Endpoints utilisés
 
 | Endpoint | Usage |

@@ -28,8 +28,8 @@ _Rien d'ouvert._
 
 ## 🟡 Moyens
 
-- [ ] **MLOps — versioning data/modèles (DVC/MLflow)** _(optionnel, lourd)_ — la provenance des checkpoints (commit/timestamp) est faite ; reste le versioning data/modèles avec remotes (infra à configurer, non vérifiable en local).
-- [ ] **État frontend — convention de state** — harmoniser 9 stores Zustand vs React Query vs useState (décision de design à cadrer, pas un sweep mécanique). _Les `window.location.reload()` ont déjà été éliminés._
+- [x] **MLOps — versioning data/modèles** — couvert : tracking expériences/artefacts via HF Trackio + wandb (`log_param`/`log_metric`/`log_artifact("dataset"…)`/`log_artifact("adapter"…)`), provenance des checkpoints via `run_provenance` (commit git + timestamp UTC + révisions manifest → `run_metadata.json`). Choix d'architecture délibéré « sans dépendance lourde (ni MLflow ni DVC) ». _Reste éventuel : un remote dédié de data-versioning si besoin futur._
+- [x] **État frontend — convention de state** — convention cadrée et documentée dans `frontend/README.md` (§ « Convention de state ») : React Query = état serveur ; Zustand = global client/UI/auth (+ session de jeu tolérée) ; useState = local. Hooks React Query de jeu **morts purgés** (useAkinetix/useBlindtest/useCodeManga/useParadox/useVision + tests). La « duplication » personnalisation était un **faux positif** (`/custom-config/` RQ vs `/profiles/me/` Zustand = concerns distincts). _Les `window.location.reload()` avaient déjà été éliminés._
 - [ ] **Performance frontend — fignolages** _(ROI moindre)_ — `loading="lazy"` sur les `<img>`, `React.memo`/`useMemo` ciblés. _Le gros levier (précache PWA −60 %) est fait._
 
 ## 🟢 Faibles
