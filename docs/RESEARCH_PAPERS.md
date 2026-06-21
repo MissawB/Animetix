@@ -41,6 +41,11 @@ L'architecture d'**Animetix** repose sur une combinaison de techniques d'Intelli
 * **Concept Clé :** Calcul de l'attention distribué pour traiter des séquences infinies sans saturer la VRAM.
 * **Implémentation dans Animetix :** Sous-tend le `LongContextDiscoveryService` et validé par notre test "Multimodal Needle in a Haystack" (arXiv:2406.11230).
 
+### ReSearch: Learning to Reason with Search for LLMs via Reinforcement Learning
+* **ID / Source :** [arXiv:2503.19470](https://huggingface.co/papers/2503.19470)
+* **Concept Clé :** Intégration d'outils de recherche web directement au cœur des processus de raisonnement par apprentissage par renforcement (descendant de DeepSeek-R1).
+* **Implémentation dans Animetix :** Permet au `DynamicToolAgent` et au Thinking Mode d'activer de manière autonome des outils Jikan/MAL ou la recherche d'actualités au cours de leur trace pensée `<thought>`.
+
 ---
 
 ## 🤖 2. Agents Autonomes & Théorie des Jeux
@@ -123,6 +128,16 @@ L'architecture d'**Animetix** repose sur une combinaison de techniques d'Intelli
 * **Concept Clé :** Cache sémantique évitant le rappel de l'API LLM sur des requêtes de sens similaire.
 * **Implémentation dans Animetix :** `SemanticCacheService` pour réduire les coûts d'inférence.
 
+### Agentic Retrieval-Augmented Generation: A Survey on Agentic RAG
+* **ID / Source :** [arXiv:2501.09136](https://huggingface.co/papers/2501.09136)
+* **Concept Clé :** Modélisation et taxonomie des architectures de RAG Agentic selon leur autonomie, leur granularité et leurs structures de contrôle.
+* **Implémentation dans Animetix :** Sert de cadre de référence théorique pour la restructuration et l'audit de notre `AgenticRAGService`.
+
+### Experience as a Compass: Multi-agent RAG with Evolving Orchestration and Agent Prompts
+* **ID / Source :** [arXiv:2604.00901](https://huggingface.co/papers/2604.00901)
+* **Concept Clé :** Topologie évolutive et adaptation dynamique des invites (prompts) des agents selon l'historique des requêtes et les échecs passés pour les tâches complexes multi-sauts.
+* **Implémentation dans Animetix :** Améliore la coordination du `SwarmConsensusOrchestrator` et de l'agent Scout lors de l'extraction de faits sur des sagas d'anime denses.
+
 ---
 
 ## ⚙️ 5. MLOps, Sécurité & Inférence à l'Échelle
@@ -192,6 +207,11 @@ L'architecture d'**Animetix** repose sur une combinaison de techniques d'Intelli
 * **Concept Clé :** Partage dynamique de KV cache à travers un arbre Radix pour les requêtes partageant des préfixes communs.
 * **Implémentation dans Animetix :** Implémenté sous forme de `RadixCacheManager` dans `LocalTextAdapter` pour réutiliser le KV cache des system prompts et des contextes RAG.
 
+### Understanding R1-Zero-Like Training: A Critical Perspective (Dr. GRPO)
+* **ID / Source :** [arXiv:2503.20783](https://huggingface.co/papers/2503.20783)
+* **Concept Clé :** Analyse critique de l'entraînement de type R1-Zero, corrigeant les biais d'optimisation de GRPO pour stabiliser l'apprentissage et optimiser l'efficacité des jetons.
+* **Implémentation dans Animetix :** Améliore la robustesse de notre boucle de fine-tuning locale et d'alignement via `DPOFeedbackLoop`.
+
 ---
 
 ## 🔬 6. Réseaux de Neurones Avancés & Sciences Cognitives
@@ -215,6 +235,11 @@ L'architecture d'**Animetix** repose sur une combinaison de techniques d'Intelli
 * **ID / Source :** [arXiv:2407.00938](https://huggingface.co/papers/2407.00938)
 * **Concept Clé :** Raisonnement sur des événements irréels (what-if) logiquement cohérents.
 * **Implémentation dans Animetix :** Le `CounterfactualConversationSimulator` calcule les uchronies du lore.
+
+### MEMO: Memory-augmented model context optimization for robust multi-turn multi-agent LLM games
+* **ID / Source :** [arXiv:2603.09022](https://huggingface.co/papers/2603.09022)
+* **Concept Clé :** Utilisation de mémoires de travail sélectives pour optimiser les contextes de modèles de langage lors de jeux multi-agents en multi-tours.
+* **Implémentation dans Animetix :** Intégré dans l'architecture contextuelle de `AkinetixEngine` afin de retenir de manière robuste l'historique des questions/réponses sans dépasser les limites de fenêtres de contextes.
 
 ---
 *Document généré et maintenu par le système IA d'Animetix. Mises à jour continues en fonction de l'état de l'art.*

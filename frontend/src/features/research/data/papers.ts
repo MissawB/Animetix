@@ -82,6 +82,15 @@ export const researchPapers: ResearchPaper[] = [
     keyConcept: 'Calcul distribué de l\'attention pour traiter des séquences quasi-infinies.',
     implementation: 'Supporte le LongContextDiscoveryService pour l\'analyse de sagas entières.'
   },
+  {
+    id: 'research-rl',
+    title: 'ReSearch: Learning to Reason with Search for LLMs via Reinforcement Learning',
+    source: 'arXiv:2503.19470',
+    url: 'https://huggingface.co/papers/2503.19470',
+    category: 'reasoning',
+    keyConcept: 'Intégration d\'outils de recherche web directement au cœur des processus de raisonnement par apprentissage par renforcement (descendant de DeepSeek-R1).',
+    implementation: 'Permet au DynamicToolAgent et au Thinking Mode d\'activer de manière autonome des outils Jikan/MAL ou la recherche d\'actualités au cours de leur trace pensée <thought>.'
+  },
 
   // --- AGENTS & THÉORIE DES JEUX ---
   {
@@ -214,6 +223,24 @@ export const researchPapers: ResearchPaper[] = [
     keyConcept: 'Cache sémantique évitant le rappel de l\'API sur des requêtes similaires.',
     implementation: 'Utilisé dans le SemanticCacheService pour réduire les coûts.'
   },
+  {
+    id: 'agentic-rag-survey',
+    title: 'Agentic Retrieval-Augmented Generation: A Survey on Agentic RAG',
+    source: 'arXiv:2501.09136',
+    url: 'https://huggingface.co/papers/2501.09136',
+    category: 'rag',
+    keyConcept: 'Modélisation et taxonomie des architectures de RAG Agentic selon leur autonomie, leur granularité et leurs structures de contrôle.',
+    implementation: 'Sert de cadre de référence théorique pour la restructuration et l\'audit de notre AgenticRAGService.'
+  },
+  {
+    id: 'evolving-orchestration',
+    title: 'Experience as a Compass: Multi-agent RAG with Evolving Orchestration and Agent Prompts',
+    source: 'arXiv:2604.00901',
+    url: 'https://huggingface.co/papers/2604.00901',
+    category: 'rag',
+    keyConcept: 'Topologie évolutive et adaptation dynamique des invites (prompts) des agents selon l\'historique des requêtes et les échecs passés pour les tâches complexes multi-sauts.',
+    implementation: 'Améliore la coordination du SwarmConsensusOrchestrator et de l\'agent Scout lors de l\'extraction de faits sur des sagas d\'anime denses.'
+  },
 
   // --- MLOPS & SÉCURITÉ ---
   {
@@ -333,6 +360,15 @@ export const researchPapers: ResearchPaper[] = [
     keyConcept: 'Partage dynamique de KV cache à travers un arbre Radix pour les requêtes partageant des préfixes communs.',
     implementation: 'Implémenté sous forme de RadixCacheManager dans LocalTextAdapter pour réutiliser le KV cache.'
   },
+  {
+    id: 'dr-grpo',
+    title: 'Understanding R1-Zero-Like Training: A Critical Perspective (Dr. GRPO)',
+    source: 'arXiv:2503.20783',
+    url: 'https://huggingface.co/papers/2503.20783',
+    category: 'mlops',
+    keyConcept: 'Analyse critique de l\'entraînement de type R1-Zero, corrigeant les biais d\'optimisation de GRPO pour stabiliser l\'apprentissage et optimiser l\'efficacité des jetons.',
+    implementation: 'Améliore la robustesse de notre boucle de fine-tuning locale et d\'alignement via DPOFeedbackLoop.'
+  },
 
   // --- SCIENCES AVANCÉES ---
   {
@@ -370,5 +406,14 @@ export const researchPapers: ResearchPaper[] = [
     category: 'advanced',
     keyConcept: 'Raisonnement sur des uchronies (What-if) cohérentes.',
     implementation: 'CounterfactualConversationSimulator pour les simulations de lore.'
+  },
+  {
+    id: 'memo-games',
+    title: 'MEMO: Memory-augmented model context optimization for robust multi-turn multi-agent LLM games',
+    source: 'arXiv:2603.09022',
+    url: 'https://huggingface.co/papers/2603.09022',
+    category: 'advanced',
+    keyConcept: 'Utilisation de mémoires de travail sélectives pour optimiser les contextes de modèles de langage lors de jeux multi-agents en multi-tours.',
+    implementation: 'Intégré dans l\'architecture contextuelle de AkinetixEngine afin de retenir de manière robuste l\'historique des questions/réponses sans dépasser les limites de fenêtres de contextes.'
   }
 ];
