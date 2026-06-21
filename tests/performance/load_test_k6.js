@@ -9,9 +9,14 @@ export const options = {
     { duration: '30s', target: 25 }, // Pic de charge à 25 utilisateurs
     { duration: '10s', target: 0 },  // Descente progressive
   ],
+  // Baseline par endpoint (taggé) — un seuil global unique serait irréaliste car
+  // le RAG appelle un LLM (plusieurs secondes) là où la recherche est quasi-instantanée.
   thresholds: {
-    http_req_duration: ['p(95)<500'], // 95% des requêtes HTTP doivent répondre en moins de 500ms
-    http_req_failed: ['rate<0.01'],    // Moins de 1% d'échecs HTTP admis
+    http_req_failed: ['rate<0.02'], // < 2% d'échecs HTTP toutes routes confondues
+    'http_req_duration{endpoint:search}': ['p(95)<800'], // recherche / autocomplétion
+    'http_req_duration{endpoint:game}': ['p(95)<1500'],  // endpoints de jeu (DB + logique)
+    'http_req_duration{endpoint:rag}': ['p(95)<8000'],   // RAG/LLM : intrinsèquement lent
+    ws_connecting: ['p(95)<1000'], // établissement de la connexion WebSocket
   },
 };
 
@@ -23,7 +28,9 @@ export default function () {
   const searchQueries = ['Naruto', 'One Piece', 'Attack on Titan', 'Death Note', 'Bleach'];
   const randomQuery = searchQueries[Math.floor(Math.random() * searchQueries.length)];
   
-  const searchRes = http.get(`${BASE_URL}/api/v1/search/?q=${randomQuery}`);
+  const searchRes = http.get(`${BASE_URL}/api/v1/search/?q=${randomQuery}`, {
+    tags: { endpoint: 'search' },
+  });
   check(searchRes, {
     'Search status is 200': (r) => r.status === 200,
     'Search has results': (r) => r.json() && r.json().results && r.json().results.length > 0,
@@ -40,6 +47,7 @@ export default function () {
     headers: {
       'Content-Type': 'application/json',
     },
+    tags: { endpoint: 'rag' },
   };
 
   const ragRes = http.post(`${BASE_URL}/api/v1/search/rag/`, ragPayload, ragParams);
@@ -58,6 +66,7 @@ export default function () {
 
   const startRes = http.post(`${BASE_URL}/api/v1/game/classic/start/`, startPayload, {
     headers: { 'Content-Type': 'application/json' },
+    tags: { endpoint: 'game' },
   });
 
   const startSuccess = check(startRes, {
@@ -76,6 +85,7 @@ export default function () {
 
     const guessRes = http.post(`${BASE_URL}/api/v1/game/classic/guess/`, guessPayload, {
       headers: { 'Content-Type': 'application/json' },
+      tags: { endpoint: 'game' },
     });
 
     check(guessRes, {

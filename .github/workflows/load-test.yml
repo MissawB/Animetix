@@ -1,0 +1,42 @@
+name: Load Test (k6)
+
+# Déclenchement MANUEL uniquement. Un test de charge a besoin d'une cible déployée
+# (staging / preview) et n'a pas sa place dans la CI bloquante de chaque PR
+# (stack complète à provisionner + coûts LLM sur l'endpoint RAG).
+# Lancer via l'onglet Actions → "Load Test (k6)" → Run workflow, en fournissant l'URL.
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'URL HTTP de la cible (ex. https://animetix-staging.example.com)'
+        required: true
+        type: string
+      ws_url:
+        description: 'URL WebSocket de la cible (ex. wss://animetix-staging.example.com) — requise pour l''étape temps-réel'
+        required: false
+        default: ''
+        type: string
+
+jobs:
+  k6:
+    name: k6 load test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup k6
+      uses: grafana/setup-k6-action@v1
+    - name: Run load test
+      # k6 sort en code non-zéro si un seuil (thresholds par endpoint) est franchi,
+      # ce qui fait échouer le run → la baseline est réellement appliquée.
+      run: k6 run tests/performance/load_test_k6.js --summary-export=k6-summary.json
+      env:
+        BASE_URL: ${{ inputs.base_url }}
+        WS_URL: ${{ inputs.ws_url }}
+    - name: Upload k6 summary
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: k6-summary
+        path: k6-summary.json
+        retention-days: 30
+        if-no-files-found: ignore
