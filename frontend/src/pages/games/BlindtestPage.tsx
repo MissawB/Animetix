@@ -40,7 +40,7 @@ const BlindtestPage: React.FC = () => {
         {/* LECTEUR */}
         <Card padding="md">
           {gameState.gameOver ? (
-            <video ref={videoRef} src={gameState.video_url} controls className="w-full rounded-3xl shadow-lg">
+            <video ref={videoRef} src={gameState.video_url} controls className="w-full rounded-3xl shadow-lg" aria-label="Lecteur vidéo de l'extrait">
               <track kind="captions" />
             </video>
           ) : (
@@ -62,12 +62,13 @@ const BlindtestPage: React.FC = () => {
           </h2>
           {!gameState.gameOver ? (
             <div className="space-y-6">
-              <input 
-                type="text" 
-                value={guess} 
+              <input
+                type="text"
+                value={guess}
                 onChange={(e) => setGuess(e.target.value)}
-                className="w-full p-4 rounded-2xl bg-gray-50 dark:bg-navy-900 border-2 border-transparent focus:border-yellow-400 outline-none font-bold" 
+                className="w-full p-4 rounded-2xl bg-gray-50 dark:bg-navy-900 border-2 border-transparent focus:border-yellow-400 outline-none font-bold"
                 placeholder="Titre de l'animé..."
+                aria-label="Titre de l'animé"
               />
               <Button variant="primary" fullWidth onClick={onSubmit}>
                 VALIDER MA RÉPONSE

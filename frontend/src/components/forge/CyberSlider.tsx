@@ -18,6 +18,7 @@ export const CyberSlider: React.FC<CyberSliderProps> = ({ min, max, value, onCha
         max={max}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
+        aria-label="Curseur de réglage"
         className={`w-full h-2 rounded-lg appearance-none cursor-pointer bg-cyberpunk-panelBorder ${accentClass}`}
       />
       <style>{`

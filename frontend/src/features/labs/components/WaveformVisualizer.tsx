@@ -45,5 +45,5 @@ export const WaveformVisualizer: React.FC<Props> = ({ stream, isActive }) => {
     return () => { audioContext.close(); };
   }, [stream, isActive]);
 
-  return <canvas ref={canvasRef} width={600} height={150} className="w-full h-full rounded-2xl" />;
+  return <canvas ref={canvasRef} width={600} height={150} className="w-full h-full rounded-2xl" aria-label="Visualisation de la forme d'onde audio" />;
 };

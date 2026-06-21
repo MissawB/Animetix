@@ -82,13 +82,14 @@ export const PersonalizationPanel: React.FC = () => {
           <span className="text-xs font-mono font-black italic text-blue-500 bg-blue-500/5 px-2 py-0.5 rounded-lg border border-blue-500/10">{Math.round(settings.intensity_multiplier * 100)}%</span>
         </div>
         <div className="px-1">
-          <input 
-            type="range" 
-            min="0" 
-            max="2" 
-            step="0.1" 
+          <input
+            type="range"
+            min="0"
+            max="2"
+            step="0.1"
             value={settings.intensity_multiplier}
             onChange={(e) => updateSettings({ intensity_multiplier: parseFloat(e.target.value) })}
+            aria-label={t('personalization.intensity_title', 'Aura Intensity')}
             className="w-full h-2 bg-gray-200 dark:bg-black/40 rounded-full appearance-none cursor-pointer accent-blue-500"
           />
         </div>

@@ -182,10 +182,11 @@ const CompanionChatPage: React.FC = () => {
                                 <div className="absolute left-6 top-1/2 -translate-y-1/2">
                                     <Sparkles className="w-5 h-5 text-blue-500 opacity-20 group-focus-within:opacity-100 transition-opacity" />
                                 </div>
-                                <input 
+                                <input
                                     type="text"
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}
+                                    aria-label="Message au compagnon"
                                     placeholder="Posez une question sur le Lore, les fusions ou demandez conseil..."
                                     className="w-full bg-black border-2 border-white/5 rounded-[2.5rem] py-5 pl-16 pr-8 text-sm font-bold focus:border-blue-600 outline-none transition-all placeholder:opacity-20"
                                 />

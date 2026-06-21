@@ -91,9 +91,10 @@ const ResearchPapersPage: React.FC = () => {
         <div className="mb-12 flex flex-col xl:flex-row gap-6 items-center justify-between sticky top-24 z-40 bg-surface-bg/80 backdrop-blur-xl p-4 rounded-3xl border border-surface-text/5 shadow-2xl">
           <div className="relative w-full xl:w-96 shrink-0">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input 
+            <input
               type="text"
               placeholder="Rechercher un concept ou un papier..."
+              aria-label="Rechercher un concept ou un papier"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-surface-card dark:bg-black/40 border-2 border-transparent focus:border-yellow-400 rounded-2xl py-3 pl-12 pr-4 text-surface-text transition-all outline-none shadow-sm"

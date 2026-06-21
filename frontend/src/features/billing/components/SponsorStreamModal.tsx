@@ -387,6 +387,7 @@ export const SponsorStreamModal: React.FC<Props> = ({ actionType, onClose, onCon
                   src={fallbackVideoUrl}
                   autoPlay
                   muted
+                  aria-label="Vidéo sponsor de repli"
                   onTimeUpdate={handleFallbackTimeUpdate}
                   onEnded={handleFallbackEnded}
                   className="absolute inset-0 w-full h-full object-cover"
@@ -422,6 +423,7 @@ export const SponsorStreamModal: React.FC<Props> = ({ actionType, onClose, onCon
                   className="absolute inset-0 w-full h-full object-cover pointer-events-none"
                   muted
                   playsInline
+                  aria-label="Vidéo sponsor"
                 />
                 <div 
                   ref={adContainerRef} 

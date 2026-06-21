@@ -61,8 +61,9 @@ const UserManagementPage: React.FC = () => {
             <div className="flex items-center gap-4">
                <div className="relative">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
+                    aria-label="Rechercher un utilisateur"
                     placeholder="Rechercher un utilisateur..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -101,8 +102,8 @@ const UserManagementPage: React.FC = () => {
                       </td>
                     </tr>
                   ) : filteredUsers?.map((user) => (
-                    <tr key={user.id} className="hover:bg-gray-50/50 dark:hover:bg-white/5 transition-colors group">
-                      <td className="px-8 py-6">
+                    <tr key={user.id} aria-label={`Utilisateur ${user.username}`} className="hover:bg-gray-50/50 dark:hover:bg-white/5 transition-colors group">
+                      <td aria-label={`Profil de ${user.username}`} className="px-8 py-6">
                         <div className="flex items-center gap-4">
                           <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black italic text-sm border-2 transform group-hover:rotate-6 transition-transform ${user.is_staff ? 'bg-blue-500/10 border-blue-500 text-blue-500' : 'bg-gray-100 dark:bg-white/5 border-transparent text-gray-400'}`}>
                             {user.username[0].toUpperCase()}

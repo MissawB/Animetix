@@ -245,8 +245,9 @@ const ExpertNexusPage: React.FC = () => {
             <form onSubmit={onSubmit} className="flex gap-4">
                 <div className="relative flex-grow group">
                     <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-white/20 group-focus-within:text-blue-500 transition-colors" />
-                    <input 
-                        type="text" 
+                    <input
+                        type="text"
+                        aria-label="Rechercher"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         placeholder="Posez une question profonde sur un univers, une relation ou un arc narratif..."

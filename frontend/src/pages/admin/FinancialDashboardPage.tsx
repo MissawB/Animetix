@@ -187,8 +187,9 @@ const FinancialDashboardPage: React.FC = () => {
                       <span>CPM Vidéo (pour 1000 vues)</span>
                       <span className="text-blue-500 font-mono">${videoCpm.toFixed(2)}</span>
                     </div>
-                    <input 
-                      type="range" min="0.50" max="15.00" step="0.10" value={videoCpm} 
+                    <input
+                      type="range" min="0.50" max="15.00" step="0.10" value={videoCpm}
+                      aria-label="CPM Vidéo (pour 1000 vues)"
                       onChange={(e) => setVideoCpm(parseFloat(e.target.value))}
                       className="w-full h-1.5 bg-gray-200 dark:bg-gray-800 rounded-lg appearance-none cursor-pointer accent-blue-500" 
                     />
@@ -200,8 +201,9 @@ const FinancialDashboardPage: React.FC = () => {
                       <span>CPM Bannière (pour 1000 vues)</span>
                       <span className="text-blue-500 font-mono">${bannerCpm.toFixed(2)}</span>
                     </div>
-                    <input 
-                      type="range" min="0.10" max="5.00" step="0.10" value={bannerCpm} 
+                    <input
+                      type="range" min="0.10" max="5.00" step="0.10" value={bannerCpm}
+                      aria-label="CPM Bannière (pour 1000 vues)"
                       onChange={(e) => setBannerCpm(parseFloat(e.target.value))}
                       className="w-full h-1.5 bg-gray-200 dark:bg-gray-800 rounded-lg appearance-none cursor-pointer accent-blue-500" 
                     />
@@ -213,8 +215,9 @@ const FinancialDashboardPage: React.FC = () => {
                       <span>CPC (Revenu par clic pub)</span>
                       <span className="text-blue-500 font-mono">${cpc.toFixed(2)}</span>
                     </div>
-                    <input 
-                      type="range" min="0.05" max="2.00" step="0.05" value={cpc} 
+                    <input
+                      type="range" min="0.05" max="2.00" step="0.05" value={cpc}
+                      aria-label="CPC (Revenu par clic pub)"
                       onChange={(e) => setCpc(parseFloat(e.target.value))}
                       className="w-full h-1.5 bg-gray-200 dark:bg-gray-800 rounded-lg appearance-none cursor-pointer accent-blue-500" 
                     />
@@ -226,8 +229,9 @@ const FinancialDashboardPage: React.FC = () => {
                       <span>Valeur Don Unique (Sponsor Or)</span>
                       <span className="text-blue-500 font-mono">${donationVal.toFixed(2)}</span>
                     </div>
-                    <input 
-                      type="range" min="1.00" max="30.00" step="0.50" value={donationVal} 
+                    <input
+                      type="range" min="1.00" max="30.00" step="0.50" value={donationVal}
+                      aria-label="Valeur Don Unique (Sponsor Or)"
                       onChange={(e) => setDonationVal(parseFloat(e.target.value))}
                       className="w-full h-1.5 bg-gray-200 dark:bg-gray-800 rounded-lg appearance-none cursor-pointer accent-blue-500" 
                     />

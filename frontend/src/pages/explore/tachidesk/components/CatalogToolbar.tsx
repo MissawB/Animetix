@@ -53,6 +53,7 @@ const CatalogToolbarComponent: React.FC<CatalogToolbarProps> = ({
             type="text"
             value={searchQuery}
             onChange={(e) => onSearchQueryChange(e.target.value)}
+            aria-label="Rechercher un manga"
             placeholder="Rechercher un manga (ex: Solo Leveling)..."
             className="w-full bg-[#0d0d1b] border border-white/10 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-blue-500 font-medium"
           />

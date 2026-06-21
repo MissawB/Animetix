@@ -49,6 +49,7 @@ const LeaderboardPage: React.FC = () => {
                       <span className="font-black italic">#{index + 1}</span>
                     </div>
                   </td>
+                  {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
                   <td className="py-5">
                     <Link to={`/profile/${player.username}/`} className="flex items-center gap-4 no-underline text-current group">
                       <div className="w-10 h-10 bg-black dark:bg-white/10 rounded-xl flex items-center justify-center font-black italic text-white dark:text-yellow-400">
@@ -57,6 +58,7 @@ const LeaderboardPage: React.FC = () => {
                       <span className="font-bold group-hover:text-yellow-500 transition-colors">{player.username}</span>
                     </Link>
                   </td>
+                  {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
                   <td className="py-5 text-right pr-6 rounded-r-2xl">
                     <div className="flex flex-col items-end">
                       <span className="font-black text-blue-600 dark:text-blue-400">{player.xp} XP</span>

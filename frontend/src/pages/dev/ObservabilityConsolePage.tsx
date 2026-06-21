@@ -149,9 +149,10 @@ const ObservabilityConsolePage: React.FC = () => {
                                       <span className="text-sm font-black italic manga-font text-purple-500">{(val * 100).toFixed(0)}%</span>
                                   </div>
                                   <div className="relative group">
-                                      <input 
+                                      <input
                                           id={`${cat}-filter`}
-                                          type="range" 
+                                          aria-label={`Seuil de filtre ${cat.replace('_', ' ')}`}
+                                          type="range"
                                           min="0" 
                                           max="1" 
                                           step="0.01" 

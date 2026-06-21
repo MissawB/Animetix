@@ -44,8 +44,11 @@ export const NexusMap: React.FC<NexusMapProps> = ({ data, loadingNodes, onDropSe
   }, [onDropSeed]);
 
   return (
-    <div 
-      className="w-full h-full relative bg-[#05050a]" 
+    <div
+      className="w-full h-full relative bg-[#05050a]"
+      role="button"
+      tabIndex={0}
+      aria-label="Zone de dépôt de la carte du nexus multivers"
       onDragOver={(e) => e.preventDefault()}
       onDrop={handleDrop}
     >

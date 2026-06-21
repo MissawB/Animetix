@@ -91,8 +91,9 @@ const CoveOraclePage: React.FC = () => {
                     <form onSubmit={onSubmit} className="space-y-6">
                         <div className="space-y-2">
                             <label htmlFor="lore-question" className="text-[10px] font-black uppercase tracking-widest opacity-30 ml-4">{t('labs.cove_oracle.lore_question')}</label>
-                            <textarea 
+                            <textarea
                                 id="lore-question"
+                                aria-label={t('labs.cove_oracle.lore_question')}
                                 value={question}
                                 onChange={(e) => setQuestion(e.target.value)}
                                 rows={4}

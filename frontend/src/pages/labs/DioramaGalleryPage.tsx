@@ -96,8 +96,9 @@ const DioramaGalleryPage: React.FC = () => {
                   <div className="relative bg-navy-900/50 border border-white/10 rounded-xl px-4 py-2 flex items-center gap-3 w-64 backdrop-blur-md">
                     <Search className="w-4 h-4 text-gray-500" />
                     <input 
-                      type="text" 
-                      placeholder="RECHERCHER..." 
+                      type="text"
+                      placeholder="RECHERCHER..."
+                      aria-label="Rechercher une reconstruction"
                       className="bg-transparent border-none outline-none text-[10px] font-black uppercase tracking-widest w-full placeholder:opacity-30"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}

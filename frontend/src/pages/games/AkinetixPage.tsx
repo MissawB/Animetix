@@ -164,12 +164,13 @@ const AkinetixPage: React.FC = () => {
                   </div>
                 ) : showActualTargetInput ? (
                   <div className="flex flex-col gap-4 animate-fade-in">
-                    <input 
-                      type="text" 
-                      value={actualTarget} 
+                    <input
+                      type="text"
+                      value={actualTarget}
                       onChange={(e) => setActualTarget(e.target.value)}
-                      className="w-full p-6 rounded-2xl bg-black/50 border-2 border-white/10 focus:border-yellow-400 outline-none font-bold text-xl text-center text-white placeholder-white/20 backdrop-blur-md transition-all" 
+                      className="w-full p-6 rounded-2xl bg-black/50 border-2 border-white/10 focus:border-yellow-400 outline-none font-bold text-xl text-center text-white placeholder-white/20 backdrop-blur-md transition-all"
                       placeholder="Nom exact du personnage..."
+                      aria-label="Nom exact du personnage"
                       autoFocus
                     />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">

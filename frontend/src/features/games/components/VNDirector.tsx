@@ -54,7 +54,8 @@ export const VNDirector: React.FC<VNDirectorProps> = ({ scenes, setScenes, onReg
 
             <div className="flex-1 space-y-4">
               <div className="flex justify-between">
-                <input 
+                <input
+                  aria-label="Nom du personnage"
                   value={scene.character_name}
                   onChange={(e) => {
                     const newScenes = [...scenes];
@@ -67,7 +68,8 @@ export const VNDirector: React.FC<VNDirectorProps> = ({ scenes, setScenes, onReg
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
-              <textarea 
+              <textarea
+                aria-label="Dialogue"
                 value={scene.dialogue}
                 onChange={(e) => handleDialogueChange(index, e.target.value)}
                 className="w-full bg-black/5 dark:bg-white/5 border border-transparent focus:border-anime-accent/30 rounded-2xl p-4 text-sm font-medium leading-relaxed focus:outline-none transition-all resize-none h-24"

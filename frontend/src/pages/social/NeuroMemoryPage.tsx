@@ -209,11 +209,12 @@ const NeuroMemoryPage: React.FC = () => {
 
                                               <div className="flex items-center gap-6 shrink-0">
                                                   <div className="flex flex-col gap-1 w-32">
-                                                      <input 
-                                                          type="range" 
-                                                          min="0.1" 
-                                                          max="2.0" 
-                                                          step="0.1" 
+                                                      <input
+                                                          type="range"
+                                                          aria-label="Poids du signal"
+                                                          min="0.1"
+                                                          max="2.0"
+                                                          step="0.1"
                                                           defaultValue={signal.weight}
                                                           onChange={(e) => signalMutation.mutate({ action: 'update_weight', feedback_id: signal.id, weight: parseFloat(e.target.value) })}
                                                           className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-emerald-500"

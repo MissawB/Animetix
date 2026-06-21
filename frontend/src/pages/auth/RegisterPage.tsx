@@ -60,6 +60,7 @@ const RegisterPage: React.FC = () => {
                 </label>
                 <input
                   id="username"
+                  aria-label="Nom d'utilisateur"
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
@@ -74,6 +75,7 @@ const RegisterPage: React.FC = () => {
                 </label>
                 <input
                   id="email"
+                  aria-label="Adresse email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -88,6 +90,7 @@ const RegisterPage: React.FC = () => {
                 </label>
                 <input
                   id="password"
+                  aria-label="Mot de passe"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}

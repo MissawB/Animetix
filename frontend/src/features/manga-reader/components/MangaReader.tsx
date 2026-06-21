@@ -167,6 +167,7 @@ export const MangaReader: React.FC = () => {
                         type="checkbox"
                         checked={splitWidePages}
                         onChange={(e) => setSplitWidePages(e.target.checked)}
+                        aria-label="Découper doubles pages"
                         className="w-4 h-4 accent-anime-accent cursor-pointer"
                       />
                     </div>
@@ -222,6 +223,7 @@ export const MangaReader: React.FC = () => {
                     max="100"
                     value={brightness}
                     onChange={(e) => setBrightness(parseInt(e.target.value))}
+                    aria-label="Luminosité"
                     className="w-full accent-anime-accent cursor-pointer"
                   />
                 </div>

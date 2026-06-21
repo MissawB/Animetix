@@ -29,19 +29,25 @@ export const Card: React.FC<CardProps> = ({
     lg: 'p-8 md:p-10',
   };
 
-  let content = (
-    <div 
+  const cardClassName = `bg-surface-card rounded-token-card shadow-token-card border-token-card border-surface-text/[var(--opacity-card-border)] ${paddings[padding]} ${className}`;
+
+  let content = onClick ? (
+    <div
       {...props}
-      className={`bg-surface-card rounded-token-card shadow-token-card border-token-card border-surface-text/[var(--opacity-card-border)] ${paddings[padding]} ${className}`}
+      className={cardClassName}
       onClick={onClick}
       onKeyDown={(e) => {
-        if (onClick && (e.key === 'Enter' || e.key === ' ')) {
+        if (e.key === 'Enter' || e.key === ' ') {
           onClick();
         }
       }}
-      role={onClick ? 'button' : undefined}
-      tabIndex={onClick ? 0 : undefined}
+      role="button"
+      tabIndex={0}
     >
+      {children}
+    </div>
+  ) : (
+    <div {...props} className={cardClassName}>
       {children}
     </div>
   );

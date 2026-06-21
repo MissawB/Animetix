@@ -104,6 +104,7 @@ const VideoRagPage: React.FC = () => {
                 <div className="relative">
                   <input
                     type="text"
+                    aria-label="Recherche sémantique d'un moment"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSearch(query)}

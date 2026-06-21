@@ -102,6 +102,7 @@ const DuelLobbyPage: React.FC = () => {
                   value={roomCode}
                   onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
                   placeholder="CODE DU SALON"
+                  aria-label="Code du salon"
                   className="w-full bg-black border-2 border-gray-800 rounded-2xl px-6 py-4 focus:border-blue-600 outline-none transition-all font-mono font-bold tracking-[0.5em] text-center placeholder:text-gray-700 placeholder:tracking-normal"
                 />
                 {error && (

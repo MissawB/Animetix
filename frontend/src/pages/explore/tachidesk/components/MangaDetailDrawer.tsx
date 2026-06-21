@@ -94,7 +94,7 @@ const MangaDetailDrawerComponent: React.FC<MangaDetailDrawerProps> = ({
                   <select
                     value={favoriteStatus || 'plan_to_read'}
                     disabled={togglingFavorite}
-                    onChange={e => onUpdateFavoriteStatus(e.target.value as any)}
+                    onChange={e => onUpdateFavoriteStatus(e.target.value as 'reading' | 'completed' | 'plan_to_read')}
                     className="pl-3 pr-8 py-1.5 bg-white/5 hover:bg-white/10 text-white/80 text-[10px] font-black uppercase tracking-wider rounded-xl border border-white/5 outline-none cursor-pointer appearance-none transition-colors"
                   >
                     <option value="reading" className="bg-[#080811] text-white">En cours</option>

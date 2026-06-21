@@ -135,14 +135,14 @@ const SOTABenchmarkPage: React.FC = () => {
                       </thead>
                       <tbody className="divide-y divide-black/5 dark:divide-white/5">
                           {[...benchmarks].sort((a: ModelBenchmark, b: ModelBenchmark) => b.elo_score - a.elo_score).map((m: ModelBenchmark, i: number) => (
-                              <tr key={m.model_id} className="group hover:bg-gray-50/50 dark:hover:bg-white/[0.02] transition-colors">
+                              <tr key={m.model_id} aria-label={`Classement du modèle ${m.model_id}`} className="group hover:bg-gray-50/50 dark:hover:bg-white/[0.02] transition-colors">
                                   <td className="px-12 py-6">
 
                                       <span className={`text-xl font-black italic manga-font ${i === 0 ? 'text-yellow-500' : 'opacity-20'}`}>
                                           #0{i + 1}
                                       </span>
                                   </td>
-                                  <td className="px-8 py-6">
+                                  <td aria-label={`Modèle ${m.model_id}`} className="px-8 py-6">
                                       <div className="flex flex-col">
                                           <span className="text-sm font-black italic uppercase tracking-wider group-hover:text-blue-500 transition-colors">{m.model_id}</span>
                                           <span className="text-[9px] font-bold opacity-30 uppercase tracking-widest">{m.provider}</span>

@@ -145,7 +145,7 @@ const VoiceLabPage: React.FC = () => {
                 >
                   <Upload className="w-5 h-5" />
                   Upload File
-                  <input id="audio-upload" type="file" accept="audio/*" onChange={handleFileUpload} className="hidden" />
+                  <input id="audio-upload" aria-label="Importer un fichier audio" type="file" accept="audio/*" onChange={handleFileUpload} className="hidden" />
                 </label>
               </div>
             </div>
@@ -164,6 +164,7 @@ const VoiceLabPage: React.FC = () => {
                   <label htmlFor="target-text" className="text-sm font-medium text-zinc-500 mb-2 block uppercase tracking-wider">Target Text</label>
                   <textarea
                     id="target-text"
+                    aria-label="Texte cible à synthétiser"
                     value={text}
                     onChange={(e) => setText(e.target.value)}
                     placeholder="Enter text to synthesize..."
@@ -196,6 +197,7 @@ const VoiceLabPage: React.FC = () => {
                   </div>
                   <input
                     id="pitch-shift"
+                    aria-label="Décalage de hauteur (pitch)"
                     type="range"
                     min="-12"
                     max="12"
@@ -259,7 +261,7 @@ const VoiceLabPage: React.FC = () => {
                           <p className="text-sm opacity-80">Download or preview below</p>
                         </div>
                       </div>
-                      <audio controls className="h-10 accent-green-500" src={result?.audio_data}>
+                      <audio controls aria-label="Audio synthétisé" className="h-10 accent-green-500" src={result?.audio_data}>
                         <track kind="captions" />
                       </audio>
                     </div>

@@ -127,8 +127,9 @@ const UniversalSearchHubPage: React.FC = () => {
             <form onSubmit={handleSearch} className="max-w-3xl mx-auto flex gap-4">
                 <div className="relative flex-grow group">
                     <Search className={`absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 transition-colors ${mode === 'global' ? 'text-blue-500/20 group-focus-within:text-blue-500' : 'text-purple-500/20 group-focus-within:text-purple-500'}`} />
-                    <input 
-                        type="text" 
+                    <input
+                        type="text"
+                        aria-label="Rechercher"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         placeholder={mode === 'global' ? "Rechercher un anime, manga, seiyuu..." : "Décrivez une scène visuelle ou un moment précis..."}

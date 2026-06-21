@@ -85,9 +85,10 @@ const SwarmLabPage: React.FC = () => {
                           <div className="space-y-6">
                               <div className="space-y-2">
                                   <label htmlFor="swarm-media" className="text-[10px] font-black opacity-30 uppercase tracking-widest px-2">Média Cible</label>
-                                  <input 
+                                  <input
                                       id="swarm-media"
-                                      type="text" 
+                                      aria-label="Média cible"
+                                      type="text"
                                       value={swarmMedia} 
                                       onChange={(e) => setSwarmMedia(e.target.value)} 
                                       placeholder="Nom de l'anime/manga..." 
@@ -96,9 +97,10 @@ const SwarmLabPage: React.FC = () => {
                               </div>
                               <div className="space-y-2">
                                   <label htmlFor="swarm-fact" className="text-[10px] font-black opacity-30 uppercase tracking-widest px-2">Fait Sémantique</label>
-                                  <textarea 
+                                  <textarea
                                       id="swarm-fact"
-                                      value={swarmFact} 
+                                      aria-label="Fait sémantique"
+                                      value={swarmFact}
                                       onChange={(e) => setSwarmFact(e.target.value)} 
                                       rows={4} 
                                       placeholder="Ex: Le Gear 5 représente la liberté absolue..." 

@@ -100,16 +100,17 @@ const CinematicReconstructionPage: React.FC = () => {
                     <form onSubmit={onSubmit} className="space-y-8">
                         <div className="relative group">
                             <input 
-                                type="file" 
+                                type="file"
                                 accept="video/*"
                                 onChange={onFileChange}
+                                aria-label="Importer une vidéo source"
                                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                             />
                             <div className={`w-full aspect-video rounded-[2rem] border-2 border-dashed transition-all flex flex-col items-center justify-center p-6 ${
                                 videoFile ? 'border-purple-500/50 bg-purple-500/5' : 'border-white/10 bg-white/5 group-hover:border-white/20'
                             }`}>
                                 {videoPreview ? (
-                                    <video src={videoPreview} className="w-full h-full object-cover rounded-xl" muted />
+                                    <video src={videoPreview} className="w-full h-full object-cover rounded-xl" muted aria-label="Aperçu de la vidéo source" />
                                 ) : (
                                     <>
                                         <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center mb-4">

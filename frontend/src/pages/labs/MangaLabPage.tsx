@@ -107,7 +107,7 @@ const MangaLabPage: React.FC = () => {
           >
             <Upload className="w-5 h-5" /> IMPORTER PAGE
           </Button>
-          <input type="file" id="upload" className="hidden" onChange={handleFileChange} />
+          <input type="file" id="upload" className="hidden" onChange={handleFileChange} aria-label="Importer une page de manga" />
           
           <div className="space-y-4">
               <h4 className="text-[10px] font-black uppercase opacity-30 tracking-widest">Outils IA</h4>

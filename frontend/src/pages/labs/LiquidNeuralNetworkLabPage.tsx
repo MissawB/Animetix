@@ -112,9 +112,10 @@ const LiquidNeuralNetworkLabPage: React.FC = () => {
                     <div className="space-y-6">
                         <div>
                             <label htmlFor="dt-slider" className="text-[10px] font-black uppercase opacity-30 mb-2 block">Pas temporel (dt)</label>
-                            <input 
+                            <input
                                 id="dt-slider"
-                                type="range" min="0.01" max="0.2" step="0.01" 
+                                aria-label="Pas temporel (dt)"
+                                type="range" min="0.01" max="0.2" step="0.01"
                                 value={dt} onChange={(e) => setDt(parseFloat(e.target.value))}
                                 className="w-full h-1.5 bg-white/5 rounded-lg appearance-none cursor-pointer accent-blue-500"
                             />

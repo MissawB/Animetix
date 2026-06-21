@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { 
   ArrowLeft, BookOpen, Compass, Loader2, Folder, 
-  Search, SlidersHorizontal, Trash2, CheckCircle2, Bookmark, Eye, BookmarkCheck
+  Search, SlidersHorizontal, Trash2, CheckCircle2, Bookmark, BookmarkCheck
 } from 'lucide-react';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
 import { FavoriteManga } from '../../types';
@@ -33,6 +33,8 @@ export const MangaLibraryPage: React.FC = () => {
   };
 
   useEffect(() => {
+    // Legitimate on-mount data load; setState occurs in the async callback.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchFavorites();
   }, []);
 
@@ -177,6 +179,7 @@ export const MangaLibraryPage: React.FC = () => {
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
                 <input
                   type="text"
+                  aria-label={t('library.search_placeholder', 'Rechercher un manga...')}
                   placeholder={t('library.search_placeholder', 'Rechercher un manga...')}
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
@@ -188,8 +191,9 @@ export const MangaLibraryPage: React.FC = () => {
               <div className="flex items-center gap-2 bg-white/5 border border-white/5 rounded-2xl px-4 py-2.5 w-full sm:w-auto justify-between">
                 <SlidersHorizontal className="w-4 h-4 text-white/40" />
                 <select
+                  aria-label={t('library.sort_label', 'Trier par')}
                   value={sortBy}
-                  onChange={e => setSortBy(e.target.value as any)}
+                  onChange={e => setSortBy(e.target.value as 'title' | 'unread' | 'date_added')}
                   className="bg-transparent text-xs font-black uppercase tracking-wider text-white border-none outline-none cursor-pointer"
                 >
                   <option value="title" className="bg-[#05050a]">{t('library.sort_title', 'Titre')}</option>

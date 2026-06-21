@@ -71,7 +71,7 @@ const SoundscapeLabPage: React.FC = () => {
                     >
                         {videoFile ? 'CHANGER LA VIDÉO' : 'CHARGER UNE VIDÉO'}
                     </Button>
-                    <input type="file" id="video-sound-upload" className="hidden" accept="video/*" onChange={handleUpload} />
+                    <input type="file" id="video-sound-upload" aria-label="Charger une vidéo" className="hidden" accept="video/*" onChange={handleUpload} />
 
                     <Button 
                         onClick={() => mutation.mutate()}
@@ -113,7 +113,7 @@ const SoundscapeLabPage: React.FC = () => {
                             <div className="space-y-4">
                                 <Badge variant="neutral" className="bg-white/10 text-white border-white/10">Vidéo Source</Badge>
                                 <div className="aspect-video bg-gray-900 rounded-3xl overflow-hidden border border-white/5">
-                                    <video src={videoPreview} controls className="w-full h-full object-cover">
+                                    <video src={videoPreview} controls aria-label="Vidéo source" className="w-full h-full object-cover">
                                         <track kind="captions" />
                                     </video>
                                 </div>
@@ -130,7 +130,7 @@ const SoundscapeLabPage: React.FC = () => {
                                             <Volume2 className="w-8 h-8 text-white" />
                                         </div>
                                         <div className="flex-grow">
-                                            <audio src={result.audio_url} controls className="w-full h-12 custom-audio-player">
+                                            <audio src={result.audio_url} controls aria-label="Ambiance sonore générée" className="w-full h-12 custom-audio-player">
                                                 <track kind="captions" />
                                             </audio>
                                         </div>

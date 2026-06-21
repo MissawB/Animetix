@@ -176,10 +176,11 @@ const GraphDebuggerPage: React.FC = () => {
                       </h3>
                       <div className="space-y-6">
                           <div className="relative">
-                              <input 
+                              <input
                                   type="text"
                                   value={healingId}
                                   onChange={(e) => setHealingId(e.target.value)}
+                                  aria-label="Identifiant du média à réparer"
                                   placeholder="Media ID (ex: anime-123)"
                                   className="w-full bg-gray-50 dark:bg-black/20 border-2 border-black/5 dark:border-white/5 rounded-2xl px-6 py-4 text-sm font-bold focus:border-purple-500 outline-none transition-all"
                               />

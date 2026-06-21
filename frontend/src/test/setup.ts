@@ -30,7 +30,7 @@ afterEach(() => {
 });
 
 // Fallback fetch mock to prevent relative URL fetch failures in JSDOM tests
-global.fetch = vi.fn(async (input) => {
+global.fetch = vi.fn(async (_input) => {
   return {
     ok: true,
     status: 200,

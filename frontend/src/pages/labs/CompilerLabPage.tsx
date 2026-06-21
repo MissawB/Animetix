@@ -69,8 +69,9 @@ const CompilerLabPage: React.FC = () => {
                               <label htmlFor="fn-name" className="text-[10px] font-black opacity-30 uppercase tracking-[0.2em] px-2">Fonction Cible</label>
                               <input 
                                   id="fn-name"
-                                  type="text" 
-                                  value={fnName} 
+                                  type="text"
+                                  aria-label="Fonction cible"
+                                  value={fnName}
                                   onChange={(e) => setFnName(e.target.value)} 
                                   className="w-full bg-black border-2 border-white/5 rounded-2xl px-6 py-4 text-sm font-bold focus:border-red-500 outline-none transition-all text-white" 
                               />
@@ -111,9 +112,10 @@ const CompilerLabPage: React.FC = () => {
                               <Badge variant="neutral" className="bg-white/5 border-none text-[8px] uppercase">Read Only</Badge>
                           </div>
                           <div className="relative flex-1 group min-h-[450px]">
-                              <textarea 
+                              <textarea
                                   readOnly
-                                  value={cCode} 
+                                  aria-label="Microcode source en C"
+                                  value={cCode}
                                   onChange={(e) => setCCode(e.target.value)} 
                                   className="w-full h-full bg-navy-950 border border-white/10 rounded-[2.5rem] p-10 font-mono text-sm text-green-400 focus:outline-none focus:border-red-500 transition-all custom-scrollbar resize-none" 
                               />

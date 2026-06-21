@@ -45,9 +45,9 @@ export default defineConfig([
       'jsx-a11y/click-events-have-key-events': 'error',
       'jsx-a11y/no-noninteractive-element-interactions': 'error',
       'jsx-a11y/no-noninteractive-tabindex': 'error',
-      // Contrôles icône sans nom accessible : en `warn` (quelques cas existants à
-      // résorber ; `eslint .` ne casse pas sur les warnings) → à passer en `error` ensuite.
-      'jsx-a11y/control-has-associated-label': 'warn',
+      // Contrôles sans nom accessible : tous les cas existants ont été étiquetés
+      // (aria-label), la règle est donc durcie en `error` pour empêcher les régressions.
+      'jsx-a11y/control-has-associated-label': 'error',
       '@typescript-eslint/no-unused-vars': [
         'error',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },

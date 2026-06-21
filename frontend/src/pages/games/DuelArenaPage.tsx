@@ -197,6 +197,7 @@ const DuelArenaPage: React.FC = () => {
                                     value={guess}
                                     onChange={(e) => setGuess(e.target.value)}
                                     placeholder="VOTRE RÉPONSE..."
+                                    aria-label="Votre réponse"
                                     className="w-full bg-black border-2 border-gray-800 rounded-2xl px-6 py-5 focus:border-red-600 outline-none transition-all font-bold tracking-widest uppercase placeholder:text-gray-700"
                                 />
                                 <button 

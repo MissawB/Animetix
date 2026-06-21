@@ -122,6 +122,7 @@ const CompanionDialogue: React.FC = () => {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Type a message..."
+          aria-label="Message"
           className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500 transition-colors"
           disabled={isLoading}
         />

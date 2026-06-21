@@ -193,6 +193,7 @@ const SeiyuuDiscoveryPage: React.FC = () => {
                         <label htmlFor="ingest-name" className="text-[10px] font-black uppercase tracking-wider opacity-60">Nom du Doubleur / Seiyuu</label>
                         <input
                           id="ingest-name"
+                          aria-label="Nom du doubleur ou seiyuu"
                           type="text"
                           value={ingestName}
                           onChange={(e) => setIngestName(e.target.value)}
@@ -219,6 +220,7 @@ const SeiyuuDiscoveryPage: React.FC = () => {
                       <label htmlFor="ingest-source" className="text-[10px] font-black uppercase tracking-wider opacity-60">URL YouTube ou requête de recherche</label>
                       <input
                         id="ingest-source"
+                        aria-label="URL YouTube ou requête de recherche"
                         type="text"
                         value={ingestSource}
                         onChange={(e) => setIngestSource(e.target.value)}
@@ -232,6 +234,7 @@ const SeiyuuDiscoveryPage: React.FC = () => {
                         <label htmlFor="ingest-def" className="text-[10px] font-black uppercase tracking-wider opacity-60">Définition / Description (optionnel)</label>
                         <textarea
                           id="ingest-def"
+                          aria-label="Définition ou description du doubleur"
                           value={ingestDef}
                           onChange={(e) => setIngestDef(e.target.value)}
                           placeholder="Ex: Acteur français à voix claire, connu pour doubler Sora..."
@@ -242,6 +245,7 @@ const SeiyuuDiscoveryPage: React.FC = () => {
                         <label htmlFor="ingest-roles" className="text-[10px] font-black uppercase tracking-wider opacity-60">Iconic Roles (séparés par des virgules)</label>
                         <textarea
                           id="ingest-roles"
+                          aria-label="Rôles emblématiques (séparés par des virgules)"
                           value={ingestRoles}
                           onChange={(e) => setIngestRoles(e.target.value)}
                           placeholder="Ex: Sora, Spider-Man, Titeuf, Reese"
@@ -296,6 +300,7 @@ const SeiyuuDiscoveryPage: React.FC = () => {
               <div className="absolute inset-0 bg-emerald-500/20 blur-3xl opacity-0 group-focus-within:opacity-100 transition-opacity -z-10" />
               <input
                 type="text"
+                aria-label="Chercher par nom de doubleur ou de personnage"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Chercher par nom de doubleur ou nom de personnage..."

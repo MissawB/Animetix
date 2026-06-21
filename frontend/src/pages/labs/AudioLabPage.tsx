@@ -270,7 +270,7 @@ const AudioLabPage: React.FC = () => {
                 >
                   Importer .wav
                 </Button>
-                <input type="file" id="audio-upload" className="hidden" accept=".wav,.mp3" onChange={handleFileChange} />
+                <input type="file" id="audio-upload" className="hidden" accept=".wav,.mp3" onChange={handleFileChange} aria-label="Importer un fichier audio" />
 
                 <div className="mt-8 space-y-3">
                   {recordings.map((rec) => (
@@ -394,6 +394,7 @@ const AudioLabPage: React.FC = () => {
                     <input
                       type="text"
                       placeholder="Nom de l'acteur"
+                      aria-label="Nom de l'acteur"
                       value={quickName}
                       onChange={(e) => setQuickName(e.target.value)}
                       className="w-full bg-black/45 border border-white/5 rounded-lg px-3 py-2 text-xs font-bold text-white"
@@ -413,6 +414,7 @@ const AudioLabPage: React.FC = () => {
                     <input
                       type="text"
                       placeholder="Lien YouTube ou recherche"
+                      aria-label="Lien YouTube ou recherche"
                       value={quickSource}
                       onChange={(e) => setQuickSource(e.target.value)}
                       className="w-full bg-black/45 border border-white/5 rounded-lg px-3 py-2 text-xs font-bold text-white"
@@ -457,6 +459,7 @@ const AudioLabPage: React.FC = () => {
               <input
                 type="text"
                 placeholder="Seiyuu ou personnage..."
+                aria-label="Rechercher un seiyuu ou un personnage"
                 value={seiyuuQuery}
                 onChange={(e) => {
                   setSeiyuuQuery(e.target.value);
@@ -475,6 +478,7 @@ const AudioLabPage: React.FC = () => {
                 draggable
                 role="button"
                 tabIndex={0}
+                aria-label={`Sélectionner ou glisser le profil vocal ${s.name}`}
                 onDragStart={(e) => onDragStart(e, s)}
                 className="cursor-grab active:cursor-grabbing"
                 onClick={() => selectVoiceProfile(s)}

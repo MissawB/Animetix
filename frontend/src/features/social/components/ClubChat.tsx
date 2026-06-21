@@ -189,9 +189,10 @@ const ClubChat: React.FC<ClubChatProps> = ({ clubId, clubName }) => {
         className="p-4 bg-gray-50 dark:bg-navy-800/50 border-t border-gray-100 dark:border-white/5"
       >
         <div className="relative">
-          <input 
-            type="text" 
+          <input
+            type="text"
             placeholder="Type a message..."
+            aria-label="Message"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             className="w-full bg-white dark:bg-navy-900 border-none rounded-2xl px-6 py-4 text-sm focus:ring-2 focus:ring-blue-500/20 transition-all pr-16"

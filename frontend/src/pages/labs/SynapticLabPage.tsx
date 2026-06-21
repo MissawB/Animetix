@@ -244,9 +244,10 @@ const SynapticLabPage: React.FC = () => {
                                   <label htmlFor="tau-plus-slider" className="text-[9px] font-black opacity-40 uppercase tracking-widest">LTP Time Constant (τ+)</label>
                                   <span className="text-xs font-mono text-red-500 font-bold">{tauPlus.toFixed(1)} ms</span>
                               </div>
-                              <input 
+                              <input
                                   id="tau-plus-slider"
-                                  type="range" 
+                                  aria-label="Constante de temps LTP (τ+)"
+                                  type="range"
                                   min="5.0" 
                                   max="50.0" 
                                   step="1.0" 
@@ -261,9 +262,10 @@ const SynapticLabPage: React.FC = () => {
                                   <label htmlFor="tau-minus-slider" className="text-[9px] font-black opacity-40 uppercase tracking-widest">LTD Time Constant (τ-)</label>
                                   <span className="text-xs font-mono text-red-500 font-bold">{tauMinus.toFixed(1)} ms</span>
                               </div>
-                              <input 
+                              <input
                                   id="tau-minus-slider"
-                                  type="range" 
+                                  aria-label="Constante de temps LTD (τ-)"
+                                  type="range"
                                   min="5.0" 
                                   max="50.0" 
                                   step="1.0" 
@@ -326,9 +328,10 @@ const SynapticLabPage: React.FC = () => {
                                   <label htmlFor="intensity-slider" className="text-[9px] font-black opacity-40 uppercase tracking-widest">Intensity Multiplier</label>
                                   <span className="text-xs font-mono text-red-500 font-bold">{intensityMult.toFixed(1)}x</span>
                               </div>
-                              <input 
+                              <input
                                   id="intensity-slider"
-                                  type="range" 
+                                  aria-label="Multiplicateur d'intensité"
+                                  type="range"
                                   min="0.0" 
                                   max="3.0" 
                                   step="0.1" 
@@ -427,9 +430,10 @@ const SynapticLabPage: React.FC = () => {
                                   <label htmlFor="learning-rate-slider" className="text-[8px] font-black opacity-30 uppercase tracking-widest">Step Learning Rate (η)</label>
                                   <span className="text-[9px] font-mono text-red-500 font-bold">{lr.toFixed(3)}</span>
                               </div>
-                              <input 
+                              <input
                                   id="learning-rate-slider"
-                                  type="range" 
+                                  aria-label="Taux d'apprentissage par étape (η)"
+                                  type="range"
                                   min="0.01" 
                                   max="0.2" 
                                   step="0.01" 

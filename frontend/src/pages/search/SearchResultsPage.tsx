@@ -83,8 +83,9 @@ const SearchResultsPage: React.FC = () => {
             <form onSubmit={handleSearch} className="mt-8 max-w-xl flex gap-4">
                 <div className="relative flex-grow">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20" />
-                    <input 
-                        type="text" 
+                    <input
+                        type="text"
+                        aria-label="Rechercher"
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
                         placeholder="Rechercher à nouveau..."

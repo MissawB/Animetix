@@ -142,6 +142,7 @@ const AccountSettingsPage: React.FC = () => {
                         <span className="text-[10px] font-black uppercase opacity-50 block text-black dark:text-white">Couleur Personnalisée</span>
                         <input
                           type="color"
+                          aria-label="Couleur personnalisée"
                           value={customColor || '#FFD700'}
                           onChange={(e) => setCustomColor(e.target.value)}
                           className="w-12 h-10 rounded-xl border border-gray-200 dark:border-white/10 cursor-pointer bg-transparent"
@@ -151,6 +152,7 @@ const AccountSettingsPage: React.FC = () => {
                         <span className="text-[10px] font-black uppercase opacity-50 block text-black dark:text-white">Code Hex</span>
                         <input
                           type="text"
+                          aria-label="Code hexadécimal de la couleur"
                           value={customColor}
                           onChange={(e) => {
                             const val = e.target.value;

@@ -13,6 +13,8 @@ const ExtensionRowComponent: React.FC<ExtensionRowProps> = ({ ext, onAction, inP
   return (
     <div className="p-4 bg-[#0c0c1b]/60 hover:bg-[#0c0c1b]/95 border border-white/5 hover:border-white/10 rounded-2xl flex items-center gap-4 transition-all group">
       {/* Icon */}
+      {/* onError est un repli d'image (événement média), pas une interaction utilisateur. */}
+      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
       <img
         src={getProxiedImageUrl(ext.iconUrl)}
         alt={ext.name}

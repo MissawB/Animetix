@@ -39,6 +39,7 @@ const ExtensionsTabComponent: React.FC<ExtensionsTabProps> = ({
             type="text"
             value={extensionSearchQuery}
             onChange={(e) => onSearchQueryChange(e.target.value)}
+            aria-label="Rechercher une extension"
             placeholder="Rechercher une extension par nom ou langue (ex: en, fr)..."
             className="w-full bg-[#0d0d1b] border border-white/10 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-blue-500 font-medium"
           />

@@ -77,9 +77,10 @@ const AIDebateArenaPage: React.FC = () => {
                     <form onSubmit={onSubmit} className="space-y-6">
                         <div className="space-y-2">
                             <label htmlFor="media-title" className="text-[10px] font-black uppercase tracking-widest opacity-30 ml-4">Œuvre Cible</label>
-                            <input 
+                            <input
                                 id="media-title"
-                                type="text" 
+                                type="text"
+                                aria-label="Œuvre cible"
                                 value={mediaTitle}
                                 onChange={(e) => setMediaTitle(e.target.value)}
                                 placeholder="ex: Attack on Titan"
@@ -88,8 +89,9 @@ const AIDebateArenaPage: React.FC = () => {
                         </div>
                         <div className="space-y-2">
                             <label htmlFor="debate-topic" className="text-[10px] font-black uppercase tracking-widest opacity-30 ml-4">Thématique du Débat</label>
-                            <textarea 
+                            <textarea
                                 id="debate-topic"
+                                aria-label="Thématique du débat"
                                 value={topic}
                                 onChange={(e) => setTopic(e.target.value)}
                                 rows={4}

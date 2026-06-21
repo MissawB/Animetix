@@ -80,10 +80,11 @@ const MarketWikiPage: React.FC = () => {
 
             <div className="flex gap-4">
                  <div className="relative">
-                    <input 
-                        type="text" 
+                    <input
+                        type="text"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
+                        aria-label="Rechercher une entité"
                         placeholder="Rechercher une entité..."
                         className="bg-white/5 border border-white/10 rounded-xl px-10 py-2.5 text-sm outline-none focus:border-anime-accent transition-all w-64"
                     />

@@ -48,6 +48,7 @@ const CatalogControls: React.FC<CatalogControlsProps> = ({
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 opacity-30" />
             <input
               id="catalog-search"
+              aria-label="Rechercher un univers ou une cosmologie"
               type="text"
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}

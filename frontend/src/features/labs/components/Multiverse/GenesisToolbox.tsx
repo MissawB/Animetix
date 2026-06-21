@@ -23,12 +23,15 @@ export const GenesisToolbox: React.FC<GenesisToolboxProps> = () => {
       </header>
       <div className="space-y-3">
         {SEEDS.map((seed) => (
-          <div 
+          <div
             key={seed.id}
             draggable
             onDragStart={(e) => {
               e.dataTransfer.setData('seed', seed.id);
             }}
+            role="button"
+            tabIndex={0}
+            aria-label={`Glisser la graine ${seed.label}`}
             className="flex items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10 transition-all cursor-grab active:cursor-grabbing group"
           >
             <seed.icon className="w-5 h-5" style={{ color: seed.color }} />

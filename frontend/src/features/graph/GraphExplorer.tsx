@@ -46,6 +46,7 @@ export function GraphExplorer({ initialId, initialType }: GraphExplorerProps) {
             step="1"
             value={depth}
             onChange={(e) => setDepth(Number(e.target.value))}
+            aria-label="Profondeur du graphe"
             className="w-32 cursor-pointer"
           />
         </div>

@@ -72,10 +72,11 @@ const ClubDiscoveryPage: React.FC = () => {
                   <form className="p-10 space-y-8" onSubmit={(e) => { e.preventDefault(); createMutation.mutate(newClub); }}>
                       <div className="space-y-2">
                           <label htmlFor="club-name" className="text-[10px] font-black uppercase opacity-40 tracking-widest ml-1">Nom du Club</label>
-                          <input 
+                          <input
                             id="club-name"
                             required
-                            type="text" 
+                            type="text"
+                            aria-label="Nom du club"
                             className="w-full bg-black border-2 border-white/5 rounded-2xl py-4 px-6 text-sm font-bold focus:border-blue-500 outline-none transition-all"
                             placeholder="ex: Les Héritiers du Lore"
                             value={newClub.name}
@@ -112,10 +113,11 @@ const ClubDiscoveryPage: React.FC = () => {
                       </div>
                       <div className="space-y-2">
                           <label htmlFor="club-description" className="text-[10px] font-black uppercase opacity-40 tracking-widest ml-1">Description (Lore)</label>
-                          <textarea 
+                          <textarea
                             id="club-description"
                             required
                             rows={4}
+                            aria-label="Description du club"
                             className="w-full bg-black border-2 border-white/5 rounded-3xl py-4 px-6 text-sm font-bold focus:border-blue-500 outline-none transition-all resize-none"
                             placeholder="Décrivez l'objectif du club..."
                             value={newClub.description}
@@ -146,9 +148,10 @@ const ClubDiscoveryPage: React.FC = () => {
             <div className="space-y-8">
               <div className="space-y-2">
                 <label htmlFor="nexus-search" className="sr-only">Rechercher un club</label>
-                <input 
+                <input
                   id="nexus-search"
-                  type="text" 
+                  type="text"
+                  aria-label="Rechercher un club"
                   placeholder="Rechercher un club..."
                   className="w-full bg-gray-100 dark:bg-black/40 border-none rounded-xl px-4 py-4 text-xs font-bold focus:ring-2 ring-blue-500/20"
                   value={filter}

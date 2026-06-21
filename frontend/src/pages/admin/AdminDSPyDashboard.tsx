@@ -120,8 +120,9 @@ const AdminDSPyDashboard: React.FC = () => {
                       <form onSubmit={onSubmit} className="space-y-6">
                           <div>
                               <label htmlFor="template-editor" className="text-[10px] font-black uppercase opacity-30 mb-2 block tracking-widest">Template d'origine</label>
-                              <textarea 
+                              <textarea
                                   id="template-editor"
+                                  aria-label="Template d'origine de l'optimiseur"
                                   value={template}
                                   onChange={(e) => setTemplate(e.target.value)}
                                   className="w-full bg-gray-50 dark:bg-black/20 border-2 border-black/5 dark:border-white/5 rounded-2xl p-6 text-sm font-bold min-h-[150px] focus:border-blue-500 outline-none transition-all font-mono text-black dark:text-white"

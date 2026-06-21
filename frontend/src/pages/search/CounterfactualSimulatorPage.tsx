@@ -96,7 +96,8 @@ const CounterfactualSimulatorPage: React.FC = () => {
                         <Zap className="w-4 h-4 text-yellow-400" /> {t('labs.counterfactual_simulator.what_if_scenario')}
                     </h3>
                     <form onSubmit={onSubmit} className="space-y-6">
-                        <textarea 
+                        <textarea
+                            aria-label={t('labs.counterfactual_simulator.what_if_scenario')}
                             value={whatIf}
                             onChange={(e) => setWhatIf(e.target.value)}
                             placeholder={t('labs.counterfactual_simulator.what_if_placeholder')}

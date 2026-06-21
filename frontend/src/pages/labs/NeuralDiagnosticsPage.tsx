@@ -52,6 +52,7 @@ const NeuralDiagnosticsPage: React.FC = () => {
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 placeholder={t('labs.diagnostics.placeholder')}
+                aria-label={t('labs.diagnostics.input_prompt')}
                 className="w-full h-40 bg-black/40 border border-white/10 rounded-xl p-4 text-sm font-medium focus:border-blue-500/50 outline-none transition-colors resize-none"
               />
               <Button

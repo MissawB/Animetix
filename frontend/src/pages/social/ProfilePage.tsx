@@ -60,8 +60,8 @@ const ProfilePage: React.FC = () => {
       setTrackerToken('');
       setLinkError('');
     },
-    onError: (err: any) => {
-      setLinkError(err.message || "Failed to link tracker");
+    onError: (err: unknown) => {
+      setLinkError(err instanceof Error ? err.message : "Failed to link tracker");
     }
   });
 
@@ -303,9 +303,11 @@ const ProfilePage: React.FC = () => {
                     <form onSubmit={handleLinkSubmit} className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="flex flex-col gap-1.5">
-                          <label className="text-[9px] font-black uppercase tracking-widest opacity-60">Nom d'utilisateur</label>
+                          <label htmlFor="tracker-username" className="text-[9px] font-black uppercase tracking-widest opacity-60">Nom d'utilisateur</label>
                           <input
+                            id="tracker-username"
                             type="text"
+                            aria-label="Nom d'utilisateur"
                             value={trackerUsername}
                             onChange={(e) => setTrackerUsername(e.target.value)}
                             required
@@ -314,9 +316,11 @@ const ProfilePage: React.FC = () => {
                           />
                         </div>
                         <div className="flex flex-col gap-1.5">
-                          <label className="text-[9px] font-black uppercase tracking-widest opacity-60">Jeton d'accès (Access Token)</label>
+                          <label htmlFor="tracker-token" className="text-[9px] font-black uppercase tracking-widest opacity-60">Jeton d'accès (Access Token)</label>
                           <input
+                            id="tracker-token"
                             type="password"
+                            aria-label="Jeton d'accès"
                             value={trackerToken}
                             onChange={(e) => setTrackerToken(e.target.value)}
                             required

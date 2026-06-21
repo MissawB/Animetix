@@ -73,8 +73,9 @@ const VisualNexusPage: React.FC = () => {
                 <div className="flex gap-4">
                     <div className="relative flex-grow group">
                         <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-white/20 group-focus-within:text-purple-500 transition-colors" />
-                        <input 
-                            type="text" 
+                        <input
+                            type="text"
+                            aria-label="Décrire une scène à rechercher"
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                             placeholder="Décrivez une scène (ex: 'Un combat sous la pluie avec des éclairs bleus' ou 'Un personnage qui sourit tristement au coucher du soleil')..."

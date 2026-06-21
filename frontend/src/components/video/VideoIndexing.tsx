@@ -55,6 +55,7 @@ export const VideoIndexing: React.FC = () => {
             value={videoId}
             onChange={(e) => setVideoId(e.target.value)}
             placeholder="ex: OP_1_NARUTO"
+            aria-label="ID Unique du Média"
             className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm focus:border-red-500 outline-none transition-all"
           />
         </div>
@@ -67,6 +68,7 @@ export const VideoIndexing: React.FC = () => {
               type="file"
               accept="video/*"
               onChange={(e) => setFile(e.target.files?.[0] || null)}
+              aria-label="Fichier Vidéo (.mp4, .mkv)"
               className="w-full text-xs text-white/60 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-black file:bg-red-500/20 file:text-red-500 hover:file:bg-red-500/30 cursor-pointer"
             />
           </div>

@@ -79,6 +79,7 @@ export const SimulatedAdBanner: React.FC = () => {
           <img
             src={sponsor.image}
             alt=""
+            role="presentation"
             className="w-full h-full object-cover"
             loading="lazy"
             decoding="async"

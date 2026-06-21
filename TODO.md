@@ -34,7 +34,7 @@ _Rien d'ouvert._
 
 ## 🟢 Faibles
 
-- [ ] **Accessibilité — labels restants** — quelques `control-has-associated-label` en `warn` (contrôles icône / lignes de tableau / div draggable `AudioLabPage`) à étiqueter, puis passer la règle en `error`.
+- [x] **Accessibilité — labels restants** — périmètre réel **115** `control-has-associated-label` sur **68 fichiers** (pas « quelques ») : tous étiquetés via `aria-label` FR pertinents (+ `role`/clavier pour les éléments interactifs non-natifs, `htmlFor`/`id` pour les labels). Règle **passée en `error`**. Au passage, les **23 autres erreurs eslint préexistantes** (sessions parallèles : `no-(non)interactive-element-interactions`, `no-explicit-any`, `no-unused-vars`, `label-has-associated-control`, `set-state-in-effect`) ont aussi été corrigées → **lint front entièrement vert** (`eslint .` exit 0), tsc vert, 188 tests OK.
 - [ ] **Couverture de tests frontend** — ajouter `vitest --coverage` et élargir (la campagne P4 a déjà ajouté stores/ErrorBoundary/offline ; vitest 69 → 191).
 - [ ] **Organisation des tests backend** — `tests/backend/` vs `tests/core/` se recouvrent.
 - [ ] **Logging MLOps** — `logging.basicConfig` répété par script ; centraliser.

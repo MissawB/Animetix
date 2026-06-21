@@ -148,7 +148,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSelect, placeholder, id 
             >
                 <Camera className="w-5 h-5" />
             </button>
-            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageSearch} />
+            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageSearch} aria-label="Rechercher par image" />
 
             {query && (
                 <button onClick={clearSearch} className="p-2 text-black/30 dark:text-white/30 hover:text-black/60 dark:hover:text-white/60 transition-colors">

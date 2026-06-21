@@ -71,6 +71,7 @@ const SocialHubPage: React.FC = () => {
         <form onSubmit={handleSearch} className="w-full md:w-96 relative">
           <input
             type="text"
+            aria-label="Rechercher un utilisateur"
             placeholder="Rechercher un utilisateur..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}

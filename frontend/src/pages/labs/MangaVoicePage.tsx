@@ -143,6 +143,7 @@ const MangaVoicePage: React.FC = () => {
               <input
                 type="text"
                 placeholder="Rechercher une voix..."
+                aria-label="Rechercher une voix"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-black/40 border border-white/5 rounded-xl pl-10 pr-4 py-3 font-bold text-xs outline-none focus:border-orange-500/50"
@@ -196,7 +197,7 @@ const MangaVoicePage: React.FC = () => {
               >
                 <Mic className="w-4 h-4" /> {refAudio && !selectedProfile ? 'VOIX MANUELLE CHARGÉE' : 'CHARGER UN WAV/MP3'}
               </Button>
-              <input type="file" id="audio-upload" className="hidden" accept="audio/*" onChange={handleFileChange} />
+              <input type="file" id="audio-upload" className="hidden" accept="audio/*" onChange={handleFileChange} aria-label="Charger un fichier audio de référence" />
               {refAudio && (
                 <div className="p-3 bg-white/5 rounded-xl flex items-center justify-between text-xs font-bold">
                   <span className="truncate max-w-[200px] opacity-60">{refAudio.name}</span>
@@ -219,6 +220,7 @@ const MangaVoicePage: React.FC = () => {
               <textarea
                 value={text}
                 onChange={(e) => setText(e.target.value)}
+                aria-label="Script du dialogue"
                 placeholder={refAudio ? `Entrez le texte que ${character} doit dire...` : "Sélectionnez d'abord un doubleur dans le menu de gauche..."}
                 disabled={!refAudio}
                 className="w-full h-40 bg-gray-900/50 border border-white/5 rounded-2xl p-6 text-lg font-bold text-white outline-none focus:border-orange-500/50 transition-all resize-none placeholder:opacity-20"
@@ -255,7 +257,7 @@ const MangaVoicePage: React.FC = () => {
                       <p className="text-xs font-bold opacity-50 uppercase tracking-widest">Le personnage de {character} est prêt à parler.</p>
                     </div>
 
-                    <audio controls src={audioUrl} className="w-full max-w-xl accent-orange-500">
+                    <audio controls src={audioUrl} className="w-full max-w-xl accent-orange-500" aria-label="Lecteur audio du doublage généré">
                       <track kind="captions" />
                     </audio>
 

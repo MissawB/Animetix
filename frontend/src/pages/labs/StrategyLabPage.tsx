@@ -130,9 +130,10 @@ const StrategyLabPage: React.FC = () => {
                                 <label htmlFor="iter-slider" className="text-[10px] font-black uppercase tracking-widest opacity-30">Itérations de Convergence</label>
                                 <span className="text-sm font-black text-red-500">{iterations}</span>
                             </div>
-                            <input 
+                            <input
                                 id="iter-slider"
-                                type="range" 
+                                aria-label="Itérations de convergence"
+                                type="range"
                                 min="50" 
                                 max="500" 
                                 step="50"

@@ -243,6 +243,7 @@ const ClubEventPage: React.FC = () => {
             <form onSubmit={handleSendMessage} className="flex gap-2 pt-4 border-t border-gray-100 dark:border-white/5">
               <input
                 type="text"
+                aria-label="Votre message"
                 placeholder="Posez vos questions ou discutez du concept..."
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}

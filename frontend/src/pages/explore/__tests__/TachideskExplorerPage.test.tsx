@@ -199,7 +199,7 @@ describe('TachideskExplorerPage', () => {
   });
 
   it('calls extension action endpoint on install, uninstall, or update clicks', async () => {
-    let actionPayload: any = null;
+    let actionPayload: { ids: string[]; action: string } | null = null;
 
     vi.mocked(global.fetch).mockImplementation(async (url, options) => {
       if (typeof url === 'string' && url.includes('/sources/')) {

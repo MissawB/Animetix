@@ -103,7 +103,7 @@ const SpatialLabPage: React.FC = () => {
                   >
                       CHOISIR UNE IMAGE
                   </Button>
-                  <input type="file" id="spatial-upload" className="hidden" accept="image/*" onChange={handleUpload} />
+                  <input type="file" id="spatial-upload" aria-label="Choisir une image" className="hidden" accept="image/*" onChange={handleUpload} />
 
                   <div className="space-y-3">
                       <Button 

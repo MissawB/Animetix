@@ -123,6 +123,7 @@ const TreeOfThoughtsPage: React.FC = () => {
                 </label>
                 <textarea
                   id="cognitive-query"
+                  aria-label="Requête cognitive"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Entrez un problème complexe..."

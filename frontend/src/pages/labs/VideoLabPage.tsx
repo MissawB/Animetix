@@ -93,7 +93,7 @@ const VideoLabPage: React.FC = () => {
                 >
                     {videoFile ? 'CHANGER LA VIDÉO' : 'CHARGER UNE VIDÉO'}
                 </Button>
-                <input type="file" id="video-upload" className="hidden" accept="video/*" onChange={handleUpload} />
+                <input type="file" id="video-upload" aria-label="Charger une vidéo" className="hidden" accept="video/*" onChange={handleUpload} />
 
                 <div className="space-y-4 mb-8">
                     <span className="text-[10px] font-black uppercase opacity-40 tracking-widest block">Studio Artistique</span>
@@ -151,7 +151,7 @@ const VideoLabPage: React.FC = () => {
                         <div className="space-y-4 flex flex-col">
                             <Badge variant="neutral" className="bg-white/10 text-white border-white/10 w-fit">Source Originale</Badge>
                             <div className="flex-grow bg-gray-900 rounded-3xl overflow-hidden border border-white/5">
-                                <video src={videoPreview} controls className="w-full h-full object-cover">
+                                <video src={videoPreview} controls aria-label="Vidéo source originale" className="w-full h-full object-cover">
                                     <track kind="captions" />
                                 </video>
                             </div>
@@ -163,7 +163,7 @@ const VideoLabPage: React.FC = () => {
                             </div>
                             <div className="flex-grow bg-gray-900 rounded-3xl overflow-hidden border-2 border-red-500/20 flex items-center justify-center relative">
                                 {result ? (
-                                    <video src={result.video_url} controls autoPlay loop className="w-full h-full object-cover">
+                                    <video src={result.video_url} controls autoPlay loop aria-label="Vidéo anime générée" className="w-full h-full object-cover">
                                         <track kind="captions" />
                                     </video>
                                 ) : (
@@ -184,8 +184,9 @@ const VideoLabPage: React.FC = () => {
                     <Video className="w-4 h-4" /> Video-RAG Search
                 </h3>
                 <div className="flex gap-2 mb-4">
-                    <input 
-                        type="text" 
+                    <input
+                        type="text"
+                        aria-label="Chercher un moment dans la vidéo"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Chercher un moment..."

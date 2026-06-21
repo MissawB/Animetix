@@ -273,6 +273,7 @@ const ClubDashboard: React.FC = () => {
                   id="event-title"
                   type="text"
                   required
+                  aria-label="Titre de l'événement"
                   placeholder="Ex : Soirée analyse Scan Shonen Jump 125"
                   value={newEventTitle}
                   onChange={(e) => setNewEventTitle(e.target.value)}
@@ -288,6 +289,7 @@ const ClubDashboard: React.FC = () => {
                   id="event-description"
                   required
                   rows={4}
+                  aria-label="Description de l'activité"
                   placeholder="Expliquez le concept, le déroulement, ou les prérequis pour cet événement..."
                   value={newEventDescription}
                   onChange={(e) => setNewEventDescription(e.target.value)}
@@ -303,6 +305,7 @@ const ClubDashboard: React.FC = () => {
                   id="event-date"
                   type="datetime-local"
                   required
+                  aria-label="Date et heure"
                   value={newEventDate}
                   onChange={(e) => setNewEventDate(e.target.value)}
                   className="w-full bg-gray-50 dark:bg-navy-950 border border-gray-100 dark:border-white/5 p-4 rounded-xl text-sm font-bold focus:outline-none focus:border-brand-primary"
