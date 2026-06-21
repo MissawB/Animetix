@@ -1,6 +1,6 @@
 # Task List (TODO) - Animetix
 
-This document lists the technical, architectural, and functional tasks remaining to be implemented or fixed. Completed tasks are archived in [HISTORY.md](HISTORY.md).
+This document lists the technical, architectural, and functional tasks remaining to be implemented or fixed. Completed tasks are archived in [docs/HISTORY.md](docs/HISTORY.md).
 
 ---
 
