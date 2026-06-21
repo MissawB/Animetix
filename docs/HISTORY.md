@@ -23,6 +23,9 @@ This document archives the major milestones of the project's technical evolution
 - **k6 load test**: replaced the unrealistic global `p(95)<500` with tagged per-endpoint thresholds (search/game/rag/ws); added a manual `workflow_dispatch` `load-test.yml` (the test needs a deployed target + incurs LLM costs, so not a PR gate).
 - **`Dockerfile.dataflow`**: removed a redundant, UNPINNED `pip install beautifulsoup4` (already `==4.12.3` in requirements); documented why a HEALTHCHECK is inappropriate (Dataflow-managed) and how to digest-pin the `:latest` launcher base.
 - **Backend test organization**: corrected the premise (no duplication — `tests/core` vs `tests/backend` are different layers); documented the "one home per layer" convention in `tests/README.md`; physical consolidation deferred until the `coverage-consolidation` branch merges.
+- **Security — leaked HF token**: removed the hardcoded Hugging Face token from `scripts/deploy/deploy_jobs.py` (moved to Secret Manager `HF_SPACES:latest`); old token revoked. The Snyk Python scan was stale (9/10 packages already fixed); the only residual, `jsonpickle`, is transitive (capped `<4` by apache-beam) and never imported by our code → documented as accepted.
+- **Base-image OS CVEs**: the prod build used `--cache-from` WITHOUT `--pull`, so Debian security patches (zlib/openssl/sqlite3/krb5/…) were never re-pulled. Added `--pull` to `cloudbuild.yaml` (web), `cloudbuild.brain.yaml`, and the CI image build → each deploy picks up the patched base.
+- **Optional integration CI**: `conftest` now TCP-pings the LLM backend (`LLM_API_BASE`, default ollama) and skips `@pytest.mark.integration` tests gracefully when it's unreachable; added a non-blocking `integration-test` job (skipped on PRs; runs on push to main + dispatch) — never gates the pipeline.
 
 ## [2026-06-21] Session: Hexagonal Core, CI Guardrails, Test-Coverage Campaign & Hardening
 
