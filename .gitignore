@@ -137,3 +137,7 @@ backend/pipeline/dbt_project/.user.yml
 
 # Uploaded media (generated at runtime, not source)
 backend/api/media/
+
+# Frontend test coverage reports
+frontend/coverage/
+coverage/

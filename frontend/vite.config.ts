@@ -108,6 +108,30 @@ export default defineConfig({
   },
   test: {
     exclude: ['node_modules/**', 'dist/**', '.git/**', '.cache/**', 'e2e/**'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text-summary', 'text', 'html', 'lcov'],
+      reportsDirectory: './coverage',
+      include: ['src/**/*.{ts,tsx}'],
+      // On exclut le non-testable (types, stories, tests, bootstrap, déclarations)
+      exclude: [
+        'src/**/*.d.ts',
+        'src/**/*.stories.{ts,tsx}',
+        'src/**/*.test.{ts,tsx}',
+        'src/**/__tests__/**',
+        'src/test/**',
+        'src/types/**',
+        'src/main.tsx',
+      ],
+      // Plancher anti-régression (baseline actuelle ≈ 18 % stmts). À remonter au
+      // fur et à mesure que la couverture s'élargit — ne JAMAIS baisser.
+      thresholds: {
+        statements: 18,
+        branches: 10,
+        functions: 14,
+        lines: 18,
+      },
+    },
     projects: [{
       extends: true,
       test: {
