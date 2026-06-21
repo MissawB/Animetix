@@ -365,10 +365,23 @@ def run_preference_training():
     logger.info("🚀 Launching preference training steps...")
     trainer.train()
 
+    # Provenance : commit git + timestamp + révisions des modèles de base, écrits
+    # à côté du checkpoint et loggés au tracker (traçabilité / reproductibilité).
+    try:
+        from pipeline.mlops.run_provenance import write_run_metadata
+    except ImportError:  # exécuté comme script : `mlops/` est sur sys.path[0]
+        from run_provenance import write_run_metadata
+
+    provenance = write_run_metadata(
+        output_dir, model_base=model_name, dataset=dataset_path, algorithm=algo
+    )
+    tracker.log_param("git_commit", provenance["git_commit"])
+
     tracker.log_artifact("adapter", output_dir)
     tracker.finish(status="COMPLETED")
     logger.info(
-        f"✅ Model successfully aligned and preference adapter saved at {output_dir}"
+        f"✅ Model aligned and preference adapter saved at {output_dir} "
+        f"(commit {provenance['git_commit'][:8]})"
     )
 
 

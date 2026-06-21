@@ -39,6 +39,7 @@ Commands to manage the headless API server, apply migrations, and seed the catal
 | `python backend/api/manage.py restore_brain_service` | Root | Restores the brain service from a backup. |
 | `python backend/api/manage.py run_red_teaming` | Root | Executes red teaming exercises against the AI models. |
 | `python backend/api/manage.py run_scheduled_task` | Root | Manually triggers a specific scheduled background task. |
+| `python backend/api/manage.py run_scheduled_task manga-updates-check` | Root | Checks favorited mangas for new chapters (via Suwayomi) and pushes WebSocket notifications. In prod this runs every 6 h via the `animetix-manga-updates` Cloud Run Job + Scheduler (see `scripts/deploy/deploy_jobs.py`). |
 | `python backend/api/manage.py sync_bigquery_recommendations` | Root | Synchronizes recommendations with BigQuery. |
 | `python backend/api/manage.py check` | Root | Checks the entire Django project for potential problems. |
 | `python backend/api/manage.py dumpdata` | Root | Dumps database contents to a fixture file (e.g., JSON). |

@@ -11,6 +11,8 @@ export interface User {
   is_staff?: boolean;
   unlocked_badges?: string[];
   custom_username_color?: string;
+  // Returned by the wallet/balance endpoint; backend serializer must expose it.
+  wallet_balance?: number;
 }
 
 export interface AppConfig {
@@ -334,6 +336,21 @@ export interface Seiyuu {
   role?: string;
 }
 
+export interface VoiceProfile {
+  id: number;
+  name: string;
+  language: 'japanese' | 'french' | 'other';
+  origin: 'dataset' | 'youtube' | 'upload';
+  definition?: string;
+  roles?: string;
+  impact?: string;
+  origin_detail?: string;
+  sample_url: string;
+  created_at: string;
+  updated_at: string;
+}
+
+
 export interface ClubEvent {
   id: number;
   club: number;
@@ -388,6 +405,7 @@ export interface GraphAudit {
   isolated_nodes: number;
   temporal_conflicts: number;
   orphan_entities: number;
+  duplicate_entities: number;
   health_score: number;
   details: Array<{
     t1: string;
@@ -437,43 +455,13 @@ export interface PlotlyEvent {
   }>;
 }
 
-export interface DocumentAttribution {
-  title: string;
-  contribution_weight: number;
-}
-
-export interface LogitLensTrajectory {
-  layer: number;
-  top_tokens: string[];
-}
-
-export interface ModelDiagnostics {
-  attention_heatmap: number[][]; 
-  top_influential_tokens: string[];
-  logit_lens_trajectory: LogitLensTrajectory[]; 
-}
-
-export interface Uncertainty {
-  confidence_score: number;
-  is_reliable: boolean;
-  perplexity: number | null;
-  action_required: string;
-  method: string;
-}
-
-export interface AgentTraceStep {
-  agent: string;
-  thought: string;
-}
-
-export interface XaiReport {
-  query_intent: string;
-  retrieval_attribution?: DocumentAttribution[];
-  internal_diagnostics?: ModelDiagnostics;
-  uncertainty?: Uncertainty;
-  agent_trace?: AgentTraceStep[]; 
-  final_confidence: number;
-}
+// Types XAI générés depuis le schéma OpenAPI backend (évènement SSE `xai_report`).
+export type DocumentAttribution = components["schemas"]["DocumentAttribution"];
+export type LogitLensTrajectory = components["schemas"]["LogitLensTrajectory"];
+export type ModelDiagnostics = components["schemas"]["ModelDiagnostics"];
+export type Uncertainty = components["schemas"]["Uncertainty"];
+export type AgentTraceStep = components["schemas"]["AgentTraceStep"];
+export type XaiReport = components["schemas"]["XaiReport"];
 
 export interface MediaDetail extends MediaItem {
   genres?: string[];

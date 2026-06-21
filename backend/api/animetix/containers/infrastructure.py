@@ -39,3 +39,11 @@ class InfrastructureContainer(containers.DeclarativeContainer):
     web_search = providers.Singleton(
         "adapters.persistence.web_search_adapter.UnifiedWebSearchAdapter"
     )
+
+    cache_port = providers.Singleton(
+        "adapters.infrastructure.django_cache_adapter.DjangoCacheAdapter"
+    )
+
+    config_port = providers.Singleton(
+        "adapters.infrastructure.django_config_adapter.DjangoConfigAdapter"
+    )

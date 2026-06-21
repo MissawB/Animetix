@@ -15,9 +15,18 @@ import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion, AnimatePresence } from 'framer-motion';
 import _Plot from 'react-plotly.js';
+import type * as Plotly from 'plotly.js';
 
 
-const Plot = (_Plot as unknown as { default: React.ComponentType<unknown> }).default || _Plot;
+interface PlotProps {
+  data: Plotly.Data[];
+  layout?: Partial<Plotly.Layout>;
+  config?: Partial<Plotly.Config>;
+  style?: React.CSSProperties;
+}
+
+const Plot = (_Plot as unknown as { default: React.ComponentType<PlotProps> }).default
+  || (_Plot as unknown as React.ComponentType<PlotProps>);
 
 interface CFRResult {
     history: Array<{
@@ -204,7 +213,7 @@ const StrategyLabPage: React.FC = () => {
                                 </div>
                                 <Card padding="lg" className="bg-black border-white/5 min-h-[400px]">
                                     <Plot
-                                        data={getStrategyPlotData()}
+                                        data={getStrategyPlotData() as Plotly.Data[]}
                                         layout={{
                                             autosize: true,
                                             height: 400,
@@ -239,7 +248,7 @@ const StrategyLabPage: React.FC = () => {
                                 </div>
                                 <Card padding="lg" className="bg-black border-white/5 min-h-[300px]">
                                     <Plot
-                                        data={getRegretPlotData()}
+                                        data={getRegretPlotData() as Plotly.Data[]}
                                         layout={{
                                             autosize: true,
                                             height: 300,

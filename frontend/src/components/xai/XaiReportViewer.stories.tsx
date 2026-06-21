@@ -15,7 +15,13 @@ type Story = StoryObj<typeof meta>;
 const mockReport = {
   query_intent: "Expliquer le Nen",
   final_confidence: 0.85,
-  uncertainty: { method: "gpt2_proxy", is_reliable: true },
+  uncertainty: {
+    method: "gpt2_proxy",
+    is_reliable: true,
+    confidence_score: 0.85,
+    perplexity: 12.4,
+    action_required: "none",
+  },
   agent_trace: [
     { agent: "Planner", thought: "Recherche d'informations basiques." },
     { agent: "Searcher", thought: "Extraction de Wiki Nen." },

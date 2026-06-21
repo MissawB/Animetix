@@ -14,9 +14,9 @@ import {
   VideoSegment,
   OpenDataset
 } from './types';
+import type { components } from './types/api';
 import { apiClient } from './utils/apiClient';
 import { auth } from './utils/firebase';
-import type { components } from './types/api';
 
 // --- Config API ---
 export async function getAppConfig(): Promise<AppConfig> {
@@ -184,6 +184,7 @@ export async function getAuthUser(): Promise<User> {
     is_authenticated: true,
     xp: profile.xp,
     tier: profile.tier,
+    wallet_balance: profile.wallet_balance,
     has_api_key: profile.has_api_key,
     unlocked_badges: profile.unlocked_badges,
     custom_username_color: profile.custom_username_color,
@@ -242,13 +243,10 @@ export interface VsBattleRequest {
   char_b_franchise?: string;
 }
 
-export interface VsBattleResult {
-  character_a: components["schemas"]["CombatCharacter"];
-  character_b: components["schemas"]["CombatCharacter"];
-  winner: string;
-  verdict_summary: string;
-  debate_history: components["schemas"]["DebateTurn"][];
-}
+// Types générés depuis le schéma OpenAPI backend (run_vs_battle).
+export type CombatCharacter = components["schemas"]["CombatCharacter"];
+export type DebateTurn = components["schemas"]["DebateTurn"];
+export type VsBattleResult = components["schemas"]["VsBattleResult"];
 
 export async function runVsBattle(params: VsBattleRequest): Promise<VsBattleResult> {
   return apiClient('/api/v1/game/vs_battle/run/', {
@@ -359,4 +357,35 @@ export async function downloadDataset(datasetId: string, filename: string): Prom
   document.body.appendChild(link);
   link.click();
   link.parentNode?.removeChild(link);
+}
+
+export interface TrackerConnection {
+  id: number;
+  tracker: 'myanimelist' | 'anilist';
+  username?: string;
+  created_at: string;
+}
+
+export async function getTrackerConnections(): Promise<TrackerConnection[]> {
+  return apiClient('/api/v1/profile/trackers/');
+}
+
+export async function linkTracker(tracker: string, username: string, token: string): Promise<{ success: boolean }> {
+  return apiClient('/api/v1/profile/trackers/link/', {
+    method: 'POST',
+    body: JSON.stringify({ tracker, username, token }),
+  });
+}
+
+export async function unlinkTracker(tracker: string): Promise<{ success: boolean }> {
+  return apiClient('/api/v1/profile/trackers/unlink/', {
+    method: 'POST',
+    body: JSON.stringify({ tracker }),
+  });
+}
+
+export async function syncMangaProgress(mediaId: string, chapterNumber: string): Promise<{ success: boolean; results: Record<string, { success: boolean; error?: string }> }> {
+  return apiClient(`/api/v1/media/Manga/${mediaId}/chapters/${chapterNumber}/sync/`, {
+    method: 'POST',
+  });
 }

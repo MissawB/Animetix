@@ -3,6 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { GraphExplorer } from "../../features/graph/GraphExplorer";
 import { SearchBar } from "../../components/SearchBar";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
+import type { SearchItem } from "../../types";
 
 import { Zap } from 'lucide-react';
 
@@ -11,9 +12,9 @@ const GraphPage: React.FC = () => {
   const id = searchParams.get('id');
   const type = searchParams.get('type');
 
-  const handleSelect = (item: Record<string, unknown>) => {
+  const handleSelect = (item: SearchItem) => {
     if (item.id && item.type) {
-      setSearchParams({ id: item.id.toString(), type: item.type });
+      setSearchParams({ id: String(item.id), type: String(item.type) });
     }
   };
 

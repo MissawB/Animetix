@@ -3,6 +3,7 @@ import time
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
+from core.ports.generic_cache_port import CachePort, InMemoryCache
 from core.ports.graph_persistence_port import GraphPersistencePort
 from core.ports.repository_port import RepositoryPort
 
@@ -52,6 +53,7 @@ class AdvancedRAGService:
         quantum_model: Any = "default",
         plasticity_simulator: Any = "default",
         lnn_service: Any = "default",
+        cache_port: Optional[CachePort] = None,
     ):
         self.repository = repository
         self.llm_service = llm_service
@@ -66,8 +68,10 @@ class AdvancedRAGService:
         self._injected_plasticity = plasticity_simulator
         self._injected_lnn = lnn_service
 
+        self.cache = cache_port or InMemoryCache()
+
         self._indices: Dict[str, HybridSearchIndex] = {}
-        self.rerank_cache = RerankingCache()
+        self.rerank_cache = RerankingCache(cache_port=self.cache)
 
     def _get_cognitive_models(
         self, user_id: Optional[str] = None
@@ -113,9 +117,7 @@ class AdvancedRAGService:
                 LiquidNeuralNetworkService(state_dimension=4, input_dimension=2),
             )
 
-        from django.core.cache import cache  # noqa: E402
-
-        state_data = cache.get(f"cognitive_state_{user_id}")
+        state_data = self.cache.get(f"cognitive_state_{user_id}")
 
         if state_data:
             try:
@@ -146,15 +148,13 @@ class AdvancedRAGService:
             or not lnn_service
         ):
             return
-        from django.core.cache import cache  # noqa: E402
-
         state_data = {
             "quantum": quantum_model.to_dict(),
             "plasticity": plasticity_service.to_dict(),
             "lnn": lnn_service.to_dict(),
             "last_updated": time.time(),
         }
-        cache.set(f"cognitive_state_{user_id}", state_data, timeout=86400 * 30)
+        self.cache.set(f"cognitive_state_{user_id}", state_data, timeout=86400 * 30)
 
     def update_cognitive_state(
         self, user_id: Optional[str], query: str, clicked_item_metadata: Dict[str, Any]

@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock
 
-from backend.core.domain.services.neuromorphic_plasticity_service import (
+from core.domain.services.neuromorphic_plasticity_service import (
     SynapticPlasticityService,
 )
 

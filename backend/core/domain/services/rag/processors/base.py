@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Generator
 
-from backend.core.domain.entities.ai_schemas import RAGContext, RAGState, StreamStep
+from core.domain.entities.ai_schemas import RAGContext, RAGState, StreamStep
 
 
 class StateProcessor(ABC):

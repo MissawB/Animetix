@@ -3,12 +3,14 @@ import json
 from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
 from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
+from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import permissions
 from rest_framework.views import APIView
 
 from animetix.api.dependencies import get_session_service
 
 from ..containers import get_container
+from ..serializers import XaiReportSerializer
 
 
 @method_decorator(
@@ -97,6 +99,16 @@ class AgenticRAGStreamView(APIView):
 
     permission_classes = [permissions.AllowAny]
 
+    @extend_schema(
+        responses=OpenApiResponse(
+            response=XaiReportSerializer,
+            description=(
+                "Flux SSE (text/event-stream). Évènements : `thought`, `eval`, "
+                "`token` et `xai_report`. Le schéma décrit la charge de l'évènement "
+                "`xai_report` (les autres portent du texte)."
+            ),
+        )
+    )
     def get(self, request):
         session = get_session_service(request)
         query = request.GET.get("q", "")

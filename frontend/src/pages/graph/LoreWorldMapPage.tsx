@@ -15,8 +15,15 @@ import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { CardSkeleton } from "../../components/ui/Skeleton";
 import { motion } from 'framer-motion';
 
+interface LoreCommunity {
+  id: string | number;
+  name: string;
+  summary: string;
+  entities?: string[];
+}
+
 const LoreWorldMapPage: React.FC = () => {
-  const { data: communities, isLoading, isError } = useQuery<Record<string, unknown>[]>({
+  const { data: communities, isLoading, isError } = useQuery<LoreCommunity[]>({
     queryKey: ['graph-world-map'],
     queryFn: () => apiClient('/api/v1/graph/world-map/'),
   });
@@ -141,7 +148,7 @@ const LoreWorldMapPage: React.FC = () => {
                                                 {entity}
                                             </span>
                                         ))}
-                                        {community.entities?.length > 3 && (
+                                        {community.entities && community.entities.length > 3 && (
                                             <span className="text-[8px] font-black uppercase opacity-20 py-1">+{community.entities.length - 3} PLUS</span>
                                         )}
                                     </div>

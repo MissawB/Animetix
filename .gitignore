@@ -127,3 +127,13 @@ data/processed/failed_attempts.json
 
 # Local agent tooling (skills manifests, editor-extension cruft)
 .agents/
+
+# Claude Code session/harness directory
+.claude/
+
+# dbt build artifacts & local state
+backend/pipeline/dbt_project/target/
+backend/pipeline/dbt_project/.user.yml
+
+# Uploaded media (generated at runtime, not source)
+backend/api/media/

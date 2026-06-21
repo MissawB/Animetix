@@ -107,6 +107,12 @@ class GraphDebuggerView(APIView):
                 {"status": "success", "message": "Global cleanup cycle executed."}
             )
 
+        if action == "merge_duplicates":
+            merged = self.healer.merge_duplicate_entities()
+            return Response(
+                {"status": "success", "message": f"Merged {merged} duplicate entities."}
+            )
+
         if action == "heal" and media_id:
             self.healer.heal_node(media_id)
             return Response(

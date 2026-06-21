@@ -5,12 +5,17 @@ import { apiClient } from "../../utils/apiClient";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
+import { VideoSegment } from '../../types';
 
 
 interface VideoLabResult {
   status: string;
   video_url: string;
   error?: string;
+}
+
+interface VideoSearchResponse {
+  results: VideoSegment[];
 }
 
 const VideoLabPage: React.FC = () => {

@@ -1,7 +1,7 @@
 import React, { ButtonHTMLAttributes, ElementType } from 'react';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'outline';
+  variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'outline' | 'ghost';
   size?: 'sm' | 'md' | 'lg';
   fullWidth?: boolean;
   as?: ElementType;
@@ -25,6 +25,7 @@ export const Button: React.FC<ButtonProps> = ({
     danger: 'bg-brand-danger hover:bg-brand-danger/90 text-white',
     success: 'bg-brand-success hover:bg-brand-success/90 text-white',
     outline: 'border-2 border-surface-text/20 hover:bg-surface-text/10 text-surface-text bg-transparent',
+    ghost: 'bg-transparent hover:bg-black/5 dark:hover:bg-white/10 text-current',
   };
 
   const sizes = {

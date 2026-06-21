@@ -46,7 +46,7 @@ def test_chronicler_theories_integration():
     )
 
     # Directly trigger ResearchProcessor.process
-    from backend.core.domain.services.rag.processors.research_processor import (  # noqa: E402
+    from core.domain.services.rag.processors.research_processor import (  # noqa: E402
         ResearchProcessor,
     )
 
@@ -56,7 +56,6 @@ def test_chronicler_theories_integration():
         context_compressor=MagicMock(),
         retrieval_evaluator=MagicMock(),
         web_search=mock_web_search,
-        video_rag_service=MagicMock(),
         scout=MagicMock(),
         neo4j_manager=mock_neo4j,
     )

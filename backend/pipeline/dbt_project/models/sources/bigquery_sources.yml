@@ -2,6 +2,12 @@ version: 2
 sources:
   - name: telemetry_source
     schema: telemetry
+    # Données streamées en continu (cf. api/animetix/bigquery_service.py) : la
+    # fraîcheur est un signal pertinent — alerte si le flux télémétrie s'arrête.
+    loaded_at_field: created_at
+    freshness:
+      warn_after: {count: 6, period: hour}
+      error_after: {count: 24, period: hour}
     tables:
       - name: user_interactions
         description: "BigQuery user interaction telemetry logs"
@@ -21,6 +27,9 @@ sources:
               - not_null
               - accepted_values:
                   values: ['thumbs_up', 'thumbs_down', 'game_win', 'game_loss', 'recommendation_view', 'search_query', 'detail_view']
+          - name: created_at
+            tests:
+              - not_null
       - name: archetype_drift
         description: "BigQuery user archetype drift metrics"
         columns:
@@ -35,5 +44,8 @@ sources:
             tests:
               - not_null
           - name: logic_consistency
+            tests:
+              - not_null
+          - name: created_at
             tests:
               - not_null

@@ -1,6 +1,5 @@
 import pytest
-
-from backend.core.utils.sql_guard import validate_sql_query
+from core.utils.sql_guard import validate_sql_query
 
 FUZZ_PAYLOADS = [
     # 1. CTE / WITH bypass attempts

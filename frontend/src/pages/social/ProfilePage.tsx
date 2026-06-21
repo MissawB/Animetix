@@ -9,6 +9,12 @@ import { CardSkeleton } from "../../components/ui/Skeleton";
 import { GameHistoryPanel } from '../../features/social/components/GameHistoryPanel';
 import type { components } from '../../types/api';
 
+import { useAuthStore } from '../../store/authStore';
+import { getTrackerConnections, linkTracker, unlinkTracker } from '../../api';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import { Link2, Link2Off, RefreshCw } from 'lucide-react';
+
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 
 type ApiAchievement = components["schemas"]["Achievement"];
@@ -28,6 +34,53 @@ const ProfilePage: React.FC = () => {
   const { t } = useTranslation();
   const { username } = useParams<{ username: string }>();
   const { data: profile, isLoading, isError } = useProfile(username);
+
+  const queryClient = useQueryClient();
+  const { user: currentUser } = useAuthStore();
+  const isOwnProfile = currentUser && currentUser.username === username;
+
+  const { data: connections } = useQuery({
+    queryKey: ['trackerConnections'],
+    queryFn: getTrackerConnections,
+    enabled: isOwnProfile,
+  });
+
+  const [linkingTracker, setLinkingTracker] = useState<'myanimelist' | 'anilist' | null>(null);
+  const [trackerUsername, setTrackerUsername] = useState('');
+  const [trackerToken, setTrackerToken] = useState('');
+  const [linkError, setLinkError] = useState('');
+
+  const linkMutation = useMutation({
+    mutationFn: ({ tracker, username, token }: { tracker: string; username: string; token: string }) =>
+      linkTracker(tracker, username, token),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['trackerConnections'] });
+      setLinkingTracker(null);
+      setTrackerUsername('');
+      setTrackerToken('');
+      setLinkError('');
+    },
+    onError: (err: any) => {
+      setLinkError(err.message || "Failed to link tracker");
+    }
+  });
+
+  const unlinkMutation = useMutation({
+    mutationFn: (tracker: string) => unlinkTracker(tracker),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['trackerConnections'] });
+    }
+  });
+
+  const handleLinkSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!trackerUsername || !trackerToken || !linkingTracker) return;
+    linkMutation.mutate({
+      tracker: linkingTracker,
+      username: trackerUsername,
+      token: trackerToken,
+    });
+  };
 
   if (isLoading) return (
     <div className="min-h-[calc(100vh-64px)] bg-[#fffcf0] dark:bg-[#1a1a2e] flex items-center justify-center">
@@ -128,7 +181,7 @@ const ProfilePage: React.FC = () => {
                     <div className="grid grid-cols-2 gap-4">
                         {profile.top_fusions?.map((fusion: ApiCreativeFusion, i: number) => (
                             <div key={i} className="aspect-video rounded-xl overflow-hidden relative group cursor-pointer border border-black/5 dark:border-white/5 hover:border-blue-500 transition-all shadow-sm">
-                                <img src={fusion.image_url} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="" />
+                                <img src={fusion.image_url ?? undefined} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="" />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
                                 <p className="absolute bottom-3 left-3 text-[8px] font-black uppercase text-white truncate w-[80%]">{fusion.title_a} x {fusion.title_b}</p>
                             </div>
@@ -149,6 +202,142 @@ const ProfilePage: React.FC = () => {
             <div className="mt-12">
                 <GameHistoryPanel />
             </div>
+
+            {isOwnProfile && (
+              <Card padding="lg" className="mt-12 bg-gray-50 dark:bg-black/20 border-none shadow-xl text-black dark:text-white">
+                <h3 className="text-xs font-black uppercase opacity-40 mb-8 tracking-widest flex items-center gap-2">
+                  <Link2 className="w-4 h-4 text-blue-500" /> Synchronisation des Trackers
+                </h3>
+                <p className="text-xs opacity-60 mb-6">
+                  Associez vos comptes pour synchroniser automatiquement votre progression de lecture de mangas.
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* MyAnimeList */}
+                  <div className="p-6 bg-white dark:bg-white/5 rounded-2xl border border-black/5 dark:border-white/5 flex flex-col justify-between min-h-[160px]">
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-black italic uppercase text-sm">MyAnimeList</span>
+                        {connections?.some(c => c.tracker === 'myanimelist') ? (
+                          <span className="text-[10px] bg-green-500/10 text-green-400 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">Connecté</span>
+                        ) : (
+                          <span className="text-[10px] bg-gray-500/10 text-gray-400 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">Non connecté</span>
+                        )}
+                      </div>
+                      {connections?.some(c => c.tracker === 'myanimelist') ? (
+                        <p className="text-xs opacity-60">
+                          Utilisateur : <span className="font-bold">{connections.find(c => c.tracker === 'myanimelist')?.username}</span>
+                        </p>
+                      ) : (
+                        <p className="text-xs opacity-40 italic">Mettez à jour votre liste MAL en lisant vos mangas.</p>
+                      )}
+                    </div>
+                    <div className="mt-4">
+                      {connections?.some(c => c.tracker === 'myanimelist') ? (
+                        <button
+                          onClick={() => unlinkMutation.mutate('myanimelist')}
+                          className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 border-none cursor-pointer"
+                        >
+                          <Link2Off className="w-3.5 h-3.5" /> Dissocier
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setLinkingTracker('myanimelist')}
+                          className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 border-none cursor-pointer"
+                        >
+                          <Link2 className="w-3.5 h-3.5" /> Associer MAL
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* AniList */}
+                  <div className="p-6 bg-white dark:bg-white/5 rounded-2xl border border-black/5 dark:border-white/5 flex flex-col justify-between min-h-[160px]">
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-black italic uppercase text-sm">AniList</span>
+                        {connections?.some(c => c.tracker === 'anilist') ? (
+                          <span className="text-[10px] bg-green-500/10 text-green-400 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">Connecté</span>
+                        ) : (
+                          <span className="text-[10px] bg-gray-500/10 text-gray-400 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">Non connecté</span>
+                        )}
+                      </div>
+                      {connections?.some(c => c.tracker === 'anilist') ? (
+                        <p className="text-xs opacity-60">
+                          Utilisateur : <span className="font-bold">{connections.find(c => c.tracker === 'anilist')?.username}</span>
+                        </p>
+                      ) : (
+                        <p className="text-xs opacity-40 italic">Mettez à jour votre liste AniList automatiquement.</p>
+                      )}
+                    </div>
+                    <div className="mt-4">
+                      {connections?.some(c => c.tracker === 'anilist') ? (
+                        <button
+                          onClick={() => unlinkMutation.mutate('anilist')}
+                          className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 border-none cursor-pointer"
+                        >
+                          <Link2Off className="w-3.5 h-3.5" /> Dissocier
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setLinkingTracker('anilist')}
+                          className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 border-none cursor-pointer"
+                        >
+                          <Link2 className="w-3.5 h-3.5" /> Associer AniList
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Linking Form Overlay/Modal */}
+                {linkingTracker && (
+                  <div className="mt-8 p-6 bg-white/50 dark:bg-black/30 rounded-2xl border border-blue-500/30">
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="text-xs font-black uppercase tracking-wider text-blue-400">
+                        Associer {linkingTracker === 'anilist' ? 'AniList' : 'MyAnimeList'}
+                      </h4>
+                      <button onClick={() => setLinkingTracker(null)} className="text-gray-400 hover:text-white text-xs border-none bg-transparent cursor-pointer font-bold">Annuler</button>
+                    </div>
+
+                    <form onSubmit={handleLinkSubmit} className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-[9px] font-black uppercase tracking-widest opacity-60">Nom d'utilisateur</label>
+                          <input
+                            type="text"
+                            value={trackerUsername}
+                            onChange={(e) => setTrackerUsername(e.target.value)}
+                            required
+                            placeholder="Ex: OtakuMaster"
+                            className="bg-[#05050a]/50 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 font-semibold"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-[9px] font-black uppercase tracking-widest opacity-60">Jeton d'accès (Access Token)</label>
+                          <input
+                            type="password"
+                            value={trackerToken}
+                            onChange={(e) => setTrackerToken(e.target.value)}
+                            required
+                            placeholder="Entrez votre jeton API"
+                            className="bg-[#05050a]/50 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 font-semibold"
+                          />
+                        </div>
+                      </div>
+                      {linkError && <p className="text-[10px] text-red-400 font-bold">{linkError}</p>}
+                      <button
+                        type="submit"
+                        disabled={linkMutation.isPending}
+                        className="w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer border-none flex items-center justify-center gap-2"
+                      >
+                        {linkMutation.isPending ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : 'Enregistrer la connexion'}
+                      </button>
+                    </form>
+                  </div>
+                )}
+              </Card>
+            )}
 
               <div className="flex flex-col sm:flex-row justify-center gap-4 mt-16">
                   <Link to="/social/dashboard/" className="font-black rounded-2xl transition-all shadow-xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 border-2 border-gray-800 dark:border-white/20 hover:bg-gray-800 hover:text-white bg-transparent px-10 py-4 italic no-underline text-black dark:text-white">

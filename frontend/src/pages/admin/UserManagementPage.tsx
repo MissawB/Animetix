@@ -143,18 +143,20 @@ const UserManagementPage: React.FC = () => {
                       </td>
                       <td className="px-8 py-6 text-right">
                         <div className="flex justify-end gap-2">
-                           <button 
+                           <button
                              onClick={() => toggleStaffMutation.mutate(user.id)}
                              disabled={toggleStaffMutation.isPending}
                              title={user.is_staff ? "Retirer les droits Admin" : "Donner les droits Admin"}
+                             aria-label={user.is_staff ? "Retirer les droits Admin" : "Donner les droits Admin"}
                              className={`p-2 rounded-lg border-2 transition-all ${user.is_staff ? 'border-blue-500/20 bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white' : 'border-gray-100 dark:border-white/5 text-gray-400 hover:border-blue-500/50 hover:text-blue-500'}`}
                            >
                               <Shield className="w-4 h-4" />
                            </button>
-                           <button 
+                           <button
                              onClick={() => toggleActiveMutation.mutate(user.id)}
                              disabled={toggleActiveMutation.isPending}
                              title={user.is_active ? "Désactiver le compte" : "Réactiver le compte"}
+                             aria-label={user.is_active ? "Désactiver le compte" : "Réactiver le compte"}
                              className={`p-2 rounded-lg border-2 transition-all ${!user.is_active ? 'border-red-500/20 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white' : 'border-gray-100 dark:border-white/5 text-gray-400 hover:border-red-500/50 hover:text-red-500'}`}
                            >
                               {user.is_active ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}

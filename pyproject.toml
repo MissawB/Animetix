@@ -86,11 +86,9 @@ module = [
     "core.domain.services.advanced_rag_service",
     "core.domain.services.advanced_vision_service",
     "core.domain.services.agentic_rag_service",
-    "core.domain.services.akinetix.self_play_collector",
     "core.domain.services.akinetix_engine",
     "core.domain.services.akinetix_rl_env",
     "core.domain.services.akinetix_rl_service",
-    "core.domain.services.akinetix_rl_trainer",
     "core.domain.services.archetype_drift_service",
     "core.domain.services.catalog_service",
     "core.domain.services.cinematic_volumetric_reconstruction_service",
@@ -108,7 +106,6 @@ module = [
     "core.domain.services.llm_service",
     "core.domain.services.long_context_service",
     "core.domain.services.multi_agent_bus",
-    "core.domain.services.multimodal_orchestrator",
     "core.domain.services.neuro_symbolic.semantic_oracle",
     "core.domain.services.neuro_symbolic_user_profiler",
     "core.domain.services.observability_service",
@@ -126,7 +123,6 @@ module = [
     "core.domain.services.rag.video_rag_service",
     "core.domain.services.reasoning_agent_service",
     "core.domain.services.self_evolving_compiler",
-    "core.domain.services.static_diorama_3d_service",
     "core.domain.services.swarm_consensus",
     "core.domain.services.synthetic_promotion_service",
     "core.domain.services.tree_of_thoughts_service",
@@ -147,6 +143,7 @@ module = [
     "pipeline.mlops.dpo_feedback_loop",
     "pipeline.mlops.fandom_lore_scraper",
     "pipeline.mlops.finetuning_dataset",
+    "pipeline.mlops.ft_dataset.*",
     "pipeline.mlops.graph_community_partitioner",
     "pipeline.mlops.index_otaku_knowledge",
     "pipeline.mlops.lore_ingestion_beam",
@@ -158,3 +155,20 @@ module = [
     "scripts.analyze_gold_coverage",
     "scripts.train_akinetix_rl",
 ]
+
+[tool.coverage.run]
+source = ["backend"]
+omit = [
+    "**/tests/*",
+    "**/migrations/*",
+    "**/animetix_project/settings.py",
+    "**/animetix_project/test_settings.py",
+    "**/wsgi.py",
+    "**/asgi.py",
+    "**/manage.py",
+]
+
+[tool.coverage.report]
+fail_under = 75
+show_missing = true
+

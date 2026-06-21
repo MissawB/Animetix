@@ -393,9 +393,9 @@ const LabHubPage: React.FC = () => {
                                     INITIALIZE <ArrowRight className="inline w-3 h-3 ml-2" />
                                 </span>
                                 <div className="flex items-center gap-3">
-                                    {'catalogUrl' in lab && (lab as any).catalogUrl && (
+                                    {(lab as { catalogUrl?: string }).catalogUrl && (
                                         <Link
-                                            to={(lab as any).catalogUrl}
+                                            to={(lab as { catalogUrl?: string }).catalogUrl!}
                                             className="text-[9px] font-black uppercase text-amber-500 hover:text-white transition-colors tracking-widest z-20"
                                             onClick={(e) => e.stopPropagation()}
                                         >

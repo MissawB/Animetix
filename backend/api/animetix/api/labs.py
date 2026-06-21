@@ -154,27 +154,37 @@ class SingularityLabDataView(APIView):
         settings = profile.personalization_settings if profile else {}
         drift_config = drift_service.calculate_drift(request.user.id, settings)
 
-        return Response({
-            "status": "success",
-            "weights": service.W.tolist(),
-            "concepts": [
-                'Shonen', 'Seinen', 'Cyberpunk', 'Mecha', 'Fantasy',
-                'Magic', 'Ghibli', 'Romance', 'Comedy', 'Drama'
-            ],
-            "plasticity_config": {
-                "tau_plus": service.tau_plus,
-                "tau_minus": service.tau_minus,
-                "num_concepts": service.num_concepts,
-            },
-            "personalization_settings": settings,
-            "current_archetype": {
-                "id": drift_config.archetype_id,
-                "accent": drift_config.primary_accent,
-                "aura_type": drift_config.aura_type,
-                "intensity": drift_config.aura_intensity,
-                "font_vibe": drift_config.font_vibe,
+        return Response(
+            {
+                "status": "success",
+                "weights": service.W.tolist(),
+                "concepts": [
+                    "Shonen",
+                    "Seinen",
+                    "Cyberpunk",
+                    "Mecha",
+                    "Fantasy",
+                    "Magic",
+                    "Ghibli",
+                    "Romance",
+                    "Comedy",
+                    "Drama",
+                ],
+                "plasticity_config": {
+                    "tau_plus": service.tau_plus,
+                    "tau_minus": service.tau_minus,
+                    "num_concepts": service.num_concepts,
+                },
+                "personalization_settings": settings,
+                "current_archetype": {
+                    "id": drift_config.archetype_id,
+                    "accent": drift_config.primary_accent,
+                    "aura_type": drift_config.aura_type,
+                    "intensity": drift_config.aura_intensity,
+                    "font_vibe": drift_config.font_vibe,
+                },
             }
-        })
+        )
 
     def post(self, request):
         action = request.data.get("action", "")
@@ -208,6 +218,7 @@ class SingularityLabDataView(APIView):
 
                 # Clear cache for middleware
                 from django.core.cache import cache
+
                 cache.delete(f"personalization_drift_user_{request.user.id}")
 
             service = container.core.synaptic_plasticity_simulator()
@@ -673,8 +684,9 @@ class SeiyuuDiscoveryView(APIView):
         language = request.query_params.get("language", "")
         origin = request.query_params.get("origin", "")
 
-        from animetix.models import VoiceProfile
         from django.db.models import Q
+
+        from animetix.models import VoiceProfile
         from animetix.serializers import VoiceProfileSerializer
 
         profiles = VoiceProfile.objects.all()
@@ -703,7 +715,9 @@ class VoiceProfileIngestView(APIView):
     def post(self, request):
         name = request.data.get("name")
         language = request.data.get("language", "japanese")
-        youtube_url_or_query = request.data.get("youtube_url") or request.data.get("query")
+        youtube_url_or_query = request.data.get("youtube_url") or request.data.get(
+            "query"
+        )
         definition = request.data.get("definition", "")
         roles = request.data.get("roles", "")
         impact = request.data.get("impact", "Custom")
@@ -718,9 +732,13 @@ class VoiceProfileIngestView(APIView):
         try:
             deduct_berrix(request.user, 30, f"Ingestion vocale de {name}")
         except Exception as e:
-            return Response({"error": f"Fonds insuffisants : {str(e)}"}, status=status.HTTP_402_PAYMENT_REQUIRED)
+            return Response(
+                {"error": f"Fonds insuffisants : {str(e)}"},
+                status=status.HTTP_402_PAYMENT_REQUIRED,
+            )
 
         from core.domain.services.voice_ingestion_service import VoiceIngestionService
+
         from animetix.serializers import VoiceProfileSerializer
 
         ingestion_service = VoiceIngestionService()
@@ -747,7 +765,6 @@ class VoiceProfileIngestView(APIView):
                 {"error": f"Erreur lors de l'ingestion: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-
 
 
 class SoundscapeGenerationView(APIView):

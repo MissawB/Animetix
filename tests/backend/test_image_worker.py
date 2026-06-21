@@ -103,10 +103,14 @@ def test_health_dashboard_service_with_worker():
     cache.set("self_hosted_image_worker:active_task", "generer un robot")
     cache.set("paid_api_budget_exceeded", True)
 
+    from adapters.infrastructure.django_cache_adapter import DjangoCacheAdapter
+
     usage_port = MagicMock()
     usage_port.get_total_cost.return_value = 100.0
 
-    health_service = HealthDashboardService(usage_port=usage_port)
+    health_service = HealthDashboardService(
+        usage_port=usage_port, cache_port=DjangoCacheAdapter()
+    )
 
     # Mock sub-checks to avoid database/external calls in simple unit test
     health_service._check_gpu_cluster = MagicMock(

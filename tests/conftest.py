@@ -5,10 +5,10 @@ import sys
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 
 if sys.platform == "win32":
-    try:
-        asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
-    except Exception:
-        pass
+    # Fail-fast : on impose la Proactor loop et on laisse toute erreur remonter,
+    # plutôt que de la masquer silencieusement (ce qui ferait tourner la suite sur
+    # la mauvaise policy d'event-loop → pollution async difficile à diagnostiquer).
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
 import importlib  # noqa: E402
 from importlib.abc import Loader, MetaPathFinder  # noqa: E402
@@ -88,6 +88,31 @@ def enable_tracemalloc():
     tracemalloc.start()
     yield
     tracemalloc.stop()
+
+
+@pytest.fixture(autouse=True)
+def _cleanup_module_pollution():
+    """Garde-fou anti-pollution entre tests (défense en profondeur).
+
+    Certains tests injectent des mocks dans ``sys.modules`` (ex. mocker une dépendance
+    lourde non installée) ; s'ils ne sont pas restaurés, ils cassent les tests suivants
+    qui importent la vraie dépendance. Après chaque test, on retire les modules de type
+    ``Mock`` ajoutés pendant le test et on vide le cache de ``lazy_import`` afin
+    qu'aucun mock ne persiste.
+    """
+    from unittest.mock import Mock
+
+    before = set(sys.modules)
+    yield
+    for name in set(sys.modules) - before:
+        if isinstance(sys.modules.get(name), Mock):
+            del sys.modules[name]
+    try:
+        from core.utils.lazy_import import _loaded_modules
+
+        _loaded_modules.clear()
+    except Exception:
+        pass
 
 
 @pytest.fixture

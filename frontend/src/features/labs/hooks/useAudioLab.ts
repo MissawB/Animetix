@@ -19,15 +19,24 @@ export const useAudioLab = () => {
   });
 
   const seiyuuSearchMutation = useMutation({
-    mutationFn: (q: string) => audioLabService.searchSeiyuu(q),
+    mutationFn: ({ q, language, origin }: { q: string; language?: string; origin?: string }) =>
+      audioLabService.searchSeiyuu(q, language, origin),
+  });
+
+  const ingestVoiceMutation = useMutation({
+    mutationFn: audioLabService.ingestVoice,
   });
 
   return {
     data,
     loading,
     processAudio: processMutation.mutateAsync,
-    searchSeiyuu: seiyuuSearchMutation.mutateAsync,
+    searchSeiyuu: (q: string, language?: string, origin?: string) =>
+      seiyuuSearchMutation.mutateAsync({ q, language, origin }),
+    ingestVoice: ingestVoiceMutation.mutateAsync,
     seiyuuResults: seiyuuSearchMutation.data?.results || [],
     isSearchingSeiyuu: seiyuuSearchMutation.isPending,
+    isIngestingVoice: ingestVoiceMutation.isPending,
   };
 };
+

@@ -3,6 +3,7 @@ import time
 from datetime import datetime, timedelta
 from typing import Any, Dict
 
+from core.ports.generic_cache_port import CachePort, InMemoryCache
 from core.ports.usage_port import UsagePort
 
 from .sota_benchmark_service import SOTABenchmarkService
@@ -17,11 +18,13 @@ class HealthDashboardService:
         sota_service: SOTABenchmarkService = None,
         inference_engine=None,
         graph_port=None,
+        cache_port: CachePort = None,
     ):
         self.usage_port = usage_port
         self.sota_service = sota_service or SOTABenchmarkService()
         self.inference_engine = inference_engine
         self.graph_port = graph_port
+        self.cache = cache_port or InMemoryCache()
 
     def get_health_stats(self) -> Dict[str, Any]:
         """
@@ -217,8 +220,8 @@ class HealthDashboardService:
                         )
                         if rels:
                             rel_count = rels[0].get("cnt", 0)
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.debug(f"Neo4j relationship count unavailable: {e}")
 
                 return {
                     "id": "neo4j-knowledge-graph",
@@ -256,18 +259,16 @@ class HealthDashboardService:
 
     def _check_self_hosted_image_worker(self) -> Dict[str, Any]:
         """Check status and queue length of the local self-hosted image worker."""
-        from django.core.cache import cache
-
         start = time.time()
 
-        worker_status = cache.get("self_hosted_image_worker:status", "idle")
-        queue_length = cache.get("self_hosted_image_worker:queue_length", 0)
-        active_task = cache.get("self_hosted_image_worker:active_task", None)
-        budget_exceeded = cache.get("paid_api_budget_exceeded", False)
+        worker_status = self.cache.get("self_hosted_image_worker:status", "idle")
+        queue_length = self.cache.get("self_hosted_image_worker:queue_length", 0)
+        active_task = self.cache.get("self_hosted_image_worker:active_task", None)
+        budget_exceeded = self.cache.get("paid_api_budget_exceeded", False)
 
         fallback_mode = (
             "active"
-            if budget_exceeded or cache.get("paid_api_failover_active", False)
+            if budget_exceeded or self.cache.get("paid_api_failover_active", False)
             else "nominal"
         )
         latency = round((time.time() - start) * 1000, 1)

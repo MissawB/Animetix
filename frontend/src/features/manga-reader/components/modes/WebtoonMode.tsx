@@ -3,15 +3,19 @@ import { useReaderStore, ImageWidth, GapSize } from '../../stores/useReaderStore
 
 export const WebtoonMode = () => {
   const { pages, gapSize, imageWidth, setPageDimensions } = useReaderStore();
-  const [visibleCount, setVisibleCount] = useState(3);
-  
+  const [visibleCount, setVisibleCount] = useState(() => Math.min(pages.length, 3));
+
   const sentinelRef = useRef<HTMLDivElement>(null);
   const pageRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
-  // Reset visibility count when page list changes
-  useEffect(() => {
+  // Reset visibility count when the page list changes. Adjusting state during render
+  // (React's "storing previous value" pattern) avoids the cascading-render that an
+  // effect-based setState would cause.
+  const [prevPages, setPrevPages] = useState(pages);
+  if (prevPages !== pages) {
+    setPrevPages(pages);
     setVisibleCount(Math.min(pages.length, 3));
-  }, [pages]);
+  }
 
   // Infinite Scroll Sentinel Observer
   useEffect(() => {

@@ -50,6 +50,21 @@
       "render": "Rendu Manga IA",
       "generate": "Générer la planche"
     },
+    "offline_manga": {
+      "title": "Manga Hors-ligne",
+      "subtitle": "Gestionnaire de stockage local & Lecture hors-ligne",
+      "stats_chapters": "Chapitres téléchargés",
+      "stats_storage": "Espace disque utilisé",
+      "clear_all": "Tout supprimer",
+      "clear_all_confirm": "Êtes-vous sûr de vouloir supprimer tous les chapitres téléchargés ?",
+      "empty_title": "Aucun chapitre téléchargé",
+      "empty_subtitle": "Parcourez le catalogue pour télécharger des chapitres et les lire sans connexion internet.",
+      "btn_explore": "Parcourir les mangas",
+      "item_pages": "{{count}} pages",
+      "item_date": "Téléchargé le {{date}}",
+      "btn_read": "Lire",
+      "btn_delete": "Supprimer"
+    },
     "diagnostics": {
       "title": "Diagnostics Neuronaux",
       "subtitle": "Analyse d'entropie avancée et cartographie de confiance cognitive pour réseaux neuronaux.",
@@ -270,6 +285,7 @@
     "exploration": "Exploration",
     "search": "Recherche",
     "explore": "Explorer",
+    "offline_manga": "Manga Hors-ligne",
     "community_section": "Communauté",
     "community": "Communauté",
     "friends": "Amis",

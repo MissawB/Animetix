@@ -12,7 +12,7 @@ interface AkinetixStore {
   submitConfirmation: (isCorrect: boolean, actualTarget?: string) => Promise<void>;
 }
 
-export const useAkinetixStore = create<AkinetixStore>((set) => ({
+export const useAkinetixStore = create<AkinetixStore>((set, get) => ({
   gameState: null,
   isLoading: true,
   error: null,
@@ -59,8 +59,9 @@ export const useAkinetixStore = create<AkinetixStore>((set) => ({
     set({ isLoading: true, error: null });
     try {
       await akinetixService.submitConfirmation(isCorrect, actualTarget);
-      // Backend resets state on confirmation, we just reload the app state or restart
-      window.location.reload();
+      // Le backend réinitialise l'état à la confirmation : on relance une partie
+      // proprement (au lieu d'un window.location.reload() qui rechargeait l'app).
+      await get().restartGame();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to confirm';
       // Don't reload on error (e.g. cheat detected) so user sees the message

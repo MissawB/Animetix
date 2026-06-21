@@ -145,8 +145,8 @@ def self_hosted_image_generation_task(prompt: str, style: str = ""):
         try:
             queue_len = cache.get("self_hosted_image_worker:queue_length", 0)
             cache.set("self_hosted_image_worker:queue_length", max(0, queue_len - 1))
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Could not decrement worker queue length: {e}")
 
         # Re-check queue length to set worker status back to idle if empty
         new_queue_len = cache.get("self_hosted_image_worker:queue_length", 0)
@@ -154,4 +154,7 @@ def self_hosted_image_generation_task(prompt: str, style: str = ""):
             cache.set("self_hosted_image_worker:status", "idle")
 
 
-from . import telemetry_tasks as telemetry_tasks  # noqa: E402
+from . import (  # noqa: E402
+    manga_tasks as manga_tasks,
+    telemetry_tasks as telemetry_tasks,
+)

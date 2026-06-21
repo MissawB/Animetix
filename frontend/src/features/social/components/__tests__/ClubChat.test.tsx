@@ -10,8 +10,8 @@ class MockWebSocket {
   url: string;
   onopen: (() => void) | null = null;
   onclose: (() => void) | null = null;
-  onerror: ((err: any) => void) | null = null;
-  onmessage: ((event: any) => void) | null = null;
+  onerror: ((err: Event) => void) | null = null;
+  onmessage: ((event: MessageEvent) => void) | null = null;
   send = vi.fn();
   close = vi.fn();
   static instances: MockWebSocket[] = [];
@@ -27,11 +27,11 @@ class MockWebSocket {
 }
 
 describe('ClubChat Component', () => {
-  let originalWebSocket: any;
+  let originalWebSocket: typeof global.WebSocket;
 
   beforeEach(() => {
     originalWebSocket = global.WebSocket;
-    global.WebSocket = MockWebSocket as any;
+    global.WebSocket = MockWebSocket as unknown as typeof global.WebSocket;
     MockWebSocket.instances = [];
 
     // Set authenticated user in authStore
@@ -119,7 +119,7 @@ describe('ClubChat Component', () => {
     });
 
     const socketInstance = MockWebSocket.instances[0];
-    const input = screen.getByPlaceholderType ? screen.getByPlaceholderType('Type a message...') : screen.getByPlaceholderText('Type a message...');
+    const input = screen.getByPlaceholderText('Type a message...');
     const form = input.closest('form');
 
     fireEvent.change(input, { target: { value: 'Hello WebSockets!' } });

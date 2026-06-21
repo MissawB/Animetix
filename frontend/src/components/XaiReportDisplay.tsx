@@ -13,46 +13,11 @@ import {
     BarChart,
     Lightbulb
 } from 'lucide-react';
-import type { components } from '../types/api';
+// Type généré depuis le schéma OpenAPI backend ; ré-exporté pour les consommateurs
+// existants (ex. ExpertNexusPage importe `XaiReport` depuis ce module).
+import type { XaiReport } from '../types';
 
-type ApiXaiReport = components["schemas"]["XaiReport"];
-type ApiDocumentAttribution = components["schemas"]["DocumentAttribution"];
-
-interface LogitLensTrajectory {
-  layer: number;
-  top_tokens: string[];
-  internal_probabilities: number[];
-}
-
-interface Uncertainty {
-  confidence_score: number;
-  is_reliable: boolean;
-  perplexity: number | null;
-  action_required: string;
-  method: string;
-}
-
-interface AgentTraceStep {
-  agent?: string;
-  thought?: string;
-  action?: string;
-  observation?: string;
-  [key: string]: unknown;
-}
-
-// We refine the generated types for the UI components to avoid 'unknown' issues
-interface XaiReport extends Omit<ApiXaiReport, 'internal_diagnostics' | 'uncertainty' | 'retrieval_attribution' | 'agent_trace'> {
-  query_intent: string;
-  retrieval_attribution: ApiDocumentAttribution[];
-  internal_diagnostics: {
-    attention_heatmap: number[][];
-    top_influential_tokens: string[];
-    logit_lens_trajectory: LogitLensTrajectory[];
-  };
-  uncertainty: Uncertainty;
-  agent_trace: AgentTraceStep[];
-  final_confidence: number;
-}
+export type { XaiReport };
 
 interface XaiReportDisplayProps {
   xaiReport: XaiReport | null;
@@ -73,10 +38,11 @@ const XaiReportDisplay: React.FC<XaiReportDisplayProps> = ({ xaiReport }) => {
     final_confidence 
   } = xaiReport;
 
-  const confidenceColor = uncertainty.confidence_score >= 0.7 ? 'bg-emerald-500' : 
-                          uncertainty.confidence_score >= 0.4 ? 'bg-yellow-500' : 'bg-red-500';
+  const confidenceScore = uncertainty?.confidence_score ?? 0;
+  const confidenceColor = confidenceScore >= 0.7 ? 'bg-emerald-500' :
+                          confidenceScore >= 0.4 ? 'bg-yellow-500' : 'bg-red-500';
 
-  const reliabilityBadge = uncertainty.is_reliable ? (
+  const reliabilityBadge = uncertainty?.is_reliable ? (
     <Badge className="bg-emerald-500/20 text-emerald-500 border-emerald-500/30">
       <ShieldCheck className="w-3 h-3 mr-1" /> Fiable
     </Badge>
@@ -117,15 +83,17 @@ const XaiReportDisplay: React.FC<XaiReportDisplayProps> = ({ xaiReport }) => {
                   Confiance Finale: {(final_confidence * 100).toFixed(1)}%
                 </Badge>
                 {reliabilityBadge}
-                {uncertainty.perplexity && (
+                {uncertainty?.perplexity != null && (
                     <Badge variant="neutral" className="bg-white/10 text-white/80">
                         Perplexité: {uncertainty.perplexity.toFixed(2)}
                     </Badge>
                 )}
               </div>
-              <p className="text-sm text-white/60 mt-2">
-                Action requise: <span className="font-semibold">{uncertainty.action_required.replace('_', ' ')}</span>. Méthode: {uncertainty.method.replace('_', ' ')}.
-              </p>
+              {uncertainty && (
+                <p className="text-sm text-white/60 mt-2">
+                  Action requise: <span className="font-semibold">{uncertainty.action_required.replace('_', ' ')}</span>. Méthode: {uncertainty.method.replace('_', ' ')}.
+                </p>
+              )}
             </div>
 
             {/* Query Intent */}
@@ -145,7 +113,7 @@ const XaiReportDisplay: React.FC<XaiReportDisplayProps> = ({ xaiReport }) => {
                     <div key={index} className="bg-white/5 p-4 rounded-xl border border-white/10 flex items-center justify-between">
                       <div>
                         <p className="text-sm font-semibold text-white">{doc.title} <span className="opacity-50">({doc.document_id})</span></p>
-                        <p className="text-xs text-white/70">Score de pertinence: {doc.relevance_score.toFixed(2)} | Contribution: {(doc.contribution_weight * 100).toFixed(1)}%</p>
+                        <p className="text-xs text-white/70">Score de pertinence: {(doc.relevance_score ?? 0).toFixed(2)} | Contribution: {(doc.contribution_weight * 100).toFixed(1)}%</p>
                       </div>
                       <Badge variant="primary" className="text-blue-400 border-blue-400/30">Source</Badge>
                     </div>
@@ -180,7 +148,7 @@ const XaiReportDisplay: React.FC<XaiReportDisplayProps> = ({ xaiReport }) => {
                       <div className="flex flex-wrap gap-1 mt-1">
                         {entry.top_tokens.map((token, tokenIndex) => (
                           <Badge key={tokenIndex} variant="neutral" className="text-purple-300 border-purple-300/30">
-                            {token} ({(entry.internal_probabilities[tokenIndex] * 100).toFixed(1)}%)
+                            {token} ({((entry.internal_probabilities?.[tokenIndex] ?? 0) * 100).toFixed(1)}%)
                           </Badge>
                         ))}
                       </div>

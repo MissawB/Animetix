@@ -19,10 +19,16 @@ import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next'; // Import useTranslation
 
+interface DebateResult {
+  pro_argument: string;
+  anti_argument: string;
+  judge_conclusion: string;
+}
+
 const AIDebateArenaPage: React.FC = () => {
   const [mediaTitle, setMediaTitle] = useState('');
   const [topic, setTopic] = useState('');
-  const [debateResult, setDebateResult] = useState<Record<string, unknown> | null>(null);
+  const [debateResult, setDebateResult] = useState<DebateResult | null>(null);
   const { t } = useTranslation(); // Initialize useTranslation
 
   const mutation = useMutation({

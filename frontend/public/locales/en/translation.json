@@ -50,6 +50,21 @@
       "render": "AI Manga Render",
       "generate": "Generate Page"
     },
+    "offline_manga": {
+      "title": "Offline Manga",
+      "subtitle": "Local storage manager & Offline reading",
+      "stats_chapters": "Downloaded chapters",
+      "stats_storage": "Disk space used",
+      "clear_all": "Clear all",
+      "clear_all_confirm": "Are you sure you want to delete all downloaded chapters?",
+      "empty_title": "No downloaded chapters",
+      "empty_subtitle": "Browse the catalog to download chapters and read them without an internet connection.",
+      "btn_explore": "Browse mangas",
+      "item_pages": "{{count}} pages",
+      "item_date": "Downloaded on {{date}}",
+      "btn_read": "Read",
+      "btn_delete": "Delete"
+    },
     "diagnostics": {
       "title": "Neural Diagnostics",
       "subtitle": "Advanced entropy analysis and cognitive confidence mapping for neural networks.",
@@ -274,6 +289,7 @@
     "exploration": "Exploration",
     "search": "Search",
     "explore": "Explore",
+    "offline_manga": "Offline Manga",
     "community_section": "Community",
     "community": "Community",
     "friends": "Friends",

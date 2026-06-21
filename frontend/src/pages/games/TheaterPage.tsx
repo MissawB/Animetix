@@ -16,10 +16,11 @@ import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { CardSkeleton } from "../../components/ui/Skeleton";
+import type { CreativeFusion } from "../../types";
 
 const TheaterPage: React.FC = () => {
 
-  const { data: vns, isLoading } = useQuery<Record<string, unknown>[]>({
+  const { data: vns, isLoading } = useQuery<CreativeFusion[]>({
     queryKey: ['theater-list'],
     queryFn: () => apiClient('/api/v1/archetypist/theater/'),
   });

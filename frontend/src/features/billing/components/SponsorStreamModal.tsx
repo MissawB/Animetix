@@ -57,13 +57,22 @@ interface ImaAdsManagerLoadedEvent {
 }
 
 interface ImaAdsLoader {
-  addEventListener: (type: string, callback: (event: ImaAdsManagerLoadedEvent | ImaAdErrorEvent) => void, capture?: boolean) => void;
+  // Generic so a handler narrowed to one concrete event type (e.g. only
+  // ImaAdsManagerLoadedEvent) is accepted for its corresponding event.
+  addEventListener<E extends ImaAdsManagerLoadedEvent | ImaAdErrorEvent>(
+    type: string,
+    callback: (event: E) => void,
+    capture?: boolean,
+  ): void;
   requestAds: (request: ImaAdsRequest) => void;
   contentComplete: () => void;
 }
 
 interface ImaAdsManager {
-  addEventListener: (type: string, callback: (event: ImaAdEvent | ImaAdErrorEvent) => void) => void;
+  addEventListener<E extends ImaAdEvent | ImaAdErrorEvent>(
+    type: string,
+    callback: (event: E) => void,
+  ): void;
   init: (width: number, height: number, viewMode: string) => void;
   start: () => void;
   destroy: () => void;
@@ -191,7 +200,7 @@ export const SponsorStreamModal: React.FC<Props> = ({ actionType, onClose, onCon
           }
         }
       );
-    } catch (_e) {
+    } catch (e) {
       console.error("Error setting up AdsManager:", e);
       setHasError(true);
     }
@@ -257,7 +266,7 @@ export const SponsorStreamModal: React.FC<Props> = ({ actionType, onClose, onCon
         onAdError,
         false
       );
-    } catch (_e) {
+    } catch (e) {
       console.error("Error initializing IMA loader:", e);
       setTimeout(() => setHasError(true), 0);
     }
@@ -307,7 +316,7 @@ export const SponsorStreamModal: React.FC<Props> = ({ actionType, onClose, onCon
         }
       }, 500);
 
-    } catch (_e) {
+    } catch (e) {
       console.error("Error starting ad playback:", e);
       setHasError(true);
     }
@@ -334,7 +343,7 @@ export const SponsorStreamModal: React.FC<Props> = ({ actionType, onClose, onCon
     try {
       await onConfirm();
       onClose();
-    } catch (_e) {
+    } catch (e) {
       console.error(e);
     } finally {
       setIsSubmitting(false);

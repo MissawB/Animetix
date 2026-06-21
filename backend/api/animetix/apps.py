@@ -6,6 +6,15 @@ class AnimetixConfig(AppConfig):
     label = "animetix"
 
     def ready(self):
+        # Injecte l'accès aux settings Django dans le core via ConfigPort,
+        # afin que les utilitaires du domaine ne dépendent pas du framework.
+        from adapters.infrastructure.django_config_adapter import (  # noqa: E402
+            DjangoConfigAdapter,
+        )
+        from core.config import configure as configure_core  # noqa: E402
+
+        configure_core(DjangoConfigAdapter())
+
         from .containers import get_container  # noqa: E402
 
         container = get_container()

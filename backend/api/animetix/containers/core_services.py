@@ -2,20 +2,7 @@ import os
 
 from dependency_injector import containers, providers
 
-
-class LazyClass:
-    def __init__(self, module_name, class_name):
-        self.module_name = module_name
-        self.class_name = class_name
-        self._class = None
-
-    def __call__(self, *args, **kwargs):
-        if self._class is None:
-            import importlib  # noqa: E402
-
-            module = importlib.import_module(self.module_name)
-            self._class = getattr(module, self.class_name)
-        return self._class(*args, **kwargs)
+from .lazy import LazyClass
 
 
 class CoreServicesContainer(containers.DeclarativeContainer):
@@ -170,11 +157,6 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         engine=akinetix_engine,
     )
 
-    akinetix_expert_service = providers.Singleton(
-        LazyClass("core.domain.services.akinetix_rl_service", "AkinetixRLService"),
-        catalog_service=catalog_service,
-    )
-
     game_service = providers.Singleton(
         LazyClass("core.domain.services.game_service", "GameService"),
         repository=persistence.repository,
@@ -237,13 +219,9 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         prompt_manager=infrastructure.prompt_manager,
     )
 
-    guardrail_service = providers.Singleton(
-        LazyClass("core.domain.services.guardrail_service", "GuardrailService"),
-        inference_engine=inference.inference_engine,
-        prompt_manager=infrastructure.prompt_manager,
-        neo4j_manager=persistence.graph_persistence_port,
-        safety_engine=inference.local_guardrail_adapter,
-    )
+    # Défini dans le conteneur `agentic` (cf. dépendance circulaire core ↔ agentic).
+    # Alias rétro-compatible : `Container.core.guardrail_service` reste valide.
+    guardrail_service = agentic.guardrail_service
 
     red_teaming_agent = providers.Singleton(
         LazyClass("core.domain.services.guardrail_service", "RedTeamingAgent"),
@@ -287,22 +265,9 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         repository=persistence.repository,
     )
 
-    vlm_indexing_service = providers.Singleton(
-        LazyClass("core.domain.services.cross_modal_service", "VlmIndexingService"),
-        vision_service=vision_service,
-        repository=persistence.repository,
-    )
-
     spatial_computing_service = providers.Singleton(
         LazyClass(
             "core.domain.services.spatial_computing_service", "SpatialComputingService"
-        ),
-        vision_service=vision_service,
-    )
-
-    static_diorama_3d_service = providers.Singleton(
-        LazyClass(
-            "core.domain.services.static_diorama_3d_service", "StaticDiorama3DService"
         ),
         vision_service=vision_service,
     )
@@ -437,7 +402,8 @@ class CoreServicesContainer(containers.DeclarativeContainer):
 
     drift_service = providers.Singleton(
         LazyClass("core.domain.services.drift_service", "DriftService"),
-        repository=persistence.repository,
+        vector_store=persistence.chroma_vector_store,
+        config_port=infrastructure.config_port,
     )
 
     archetype_drift_service = providers.Singleton(
@@ -490,6 +456,7 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         sota_service=sota_benchmark_service,
         inference_engine=inference.inference_engine,
         graph_port=persistence.graph_persistence_port,
+        cache_port=infrastructure.cache_port,
     )
 
     quantum_cognitive_model = providers.Singleton(
@@ -521,23 +488,13 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         ),
         neo4j_manager=persistence.graph_persistence_port,
         llm_service=agentic.llm_service,
+        partitioner=agentic.community_partitioner,
     )
 
     complexity_analyser = providers.Singleton(
         LazyClass("core.domain.services.complexity_analyser", "ComplexityAnalyser"),
         prompt_manager=infrastructure.prompt_manager,
         llm_service=agentic.llm_service,
-    )
-
-    video_language_indexing_service = providers.Singleton(
-        LazyClass(
-            "core.domain.services.video_language_indexing_service",
-            "VideoLanguageIndexingService",
-        ),
-        inference_engine=inference.inference_engine,
-        prompt_manager=infrastructure.prompt_manager,
-        repository=persistence.repository,
-        feedback_port=persistence.feedback_adapter,
     )
 
     manga_service = providers.Singleton(

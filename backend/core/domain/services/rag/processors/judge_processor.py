@@ -1,13 +1,13 @@
 import logging
 from typing import Generator
 
-from backend.core.domain.entities.ai_schemas import (
+from core.domain.entities.ai_schemas import (
     JudgeAction,
     RAGContext,
     RAGState,
     StreamStep,
 )
-from backend.core.domain.services.rag.processors.base import StateProcessor
+from core.domain.services.rag.processors.base import StateProcessor
 
 logger = logging.getLogger("animetix.rag_workflow")
 

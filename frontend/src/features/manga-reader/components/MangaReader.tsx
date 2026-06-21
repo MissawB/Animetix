@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useReaderStore } from '../stores/useReaderStore';
+import { useReaderStore, type ImageWidth } from '../stores/useReaderStore';
 import { WebtoonMode } from './modes/WebtoonMode';
 import { TraditionalMode } from './modes/TraditionalMode';
 import { InteractiveMode } from './modes/InteractiveMode';
@@ -114,8 +114,8 @@ export const MangaReader: React.FC = () => {
 
                 {/* Reading Direction */}
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Sens de lecture</label>
-                  <div className="grid grid-cols-2 gap-2 bg-[#0c0c1b] p-1 rounded-xl border border-white/5">
+                  <label htmlFor="reader-reading-direction" className="text-[10px] font-black uppercase tracking-widest text-gray-400">Sens de lecture</label>
+                  <div id="reader-reading-direction" className="grid grid-cols-2 gap-2 bg-[#0c0c1b] p-1 rounded-xl border border-white/5">
                     <button
                       onClick={() => setReadingDirection('rtl')}
                       className={`py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
@@ -139,8 +139,8 @@ export const MangaReader: React.FC = () => {
                 {mode !== 'webtoon' && (
                   <>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Affichage</label>
-                      <div className="grid grid-cols-2 gap-2 bg-[#0c0c1b] p-1 rounded-xl border border-white/5">
+                      <label htmlFor="reader-page-layout" className="text-[10px] font-black uppercase tracking-widest text-gray-400">Affichage</label>
+                      <div id="reader-page-layout" className="grid grid-cols-2 gap-2 bg-[#0c0c1b] p-1 rounded-xl border border-white/5">
                         <button
                           onClick={() => setPageLayout('single')}
                           className={`py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
@@ -176,8 +176,8 @@ export const MangaReader: React.FC = () => {
                 {/* Gap Size (Only visible in webtoon mode) */}
                 {mode === 'webtoon' && (
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Espacement</label>
-                    <div className="grid grid-cols-3 gap-2 bg-[#0c0c1b] p-1 rounded-xl border border-white/5">
+                    <label htmlFor="reader-gap-size" className="text-[10px] font-black uppercase tracking-widest text-gray-400">Espacement</label>
+                    <div id="reader-gap-size" className="grid grid-cols-3 gap-2 bg-[#0c0c1b] p-1 rounded-xl border border-white/5">
                       {(['none', 'small', 'medium'] as const).map((size) => (
                         <button
                           key={size}
@@ -195,10 +195,11 @@ export const MangaReader: React.FC = () => {
 
                 {/* Image Width */}
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Largeur max</label>
+                  <label htmlFor="reader-image-width" className="text-[10px] font-black uppercase tracking-widest text-gray-400">Largeur max</label>
                   <select
+                    id="reader-image-width"
                     value={imageWidth}
-                    onChange={(e) => setImageWidth(e.target.value as any)}
+                    onChange={(e) => setImageWidth(e.target.value as ImageWidth)}
                     className="w-full bg-[#0c0c1b] border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-anime-accent font-semibold text-white"
                   >
                     <option value="scale-80">Étroite (80%)</option>

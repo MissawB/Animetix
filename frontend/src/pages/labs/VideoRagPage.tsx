@@ -64,7 +64,7 @@ const VideoRagPage: React.FC = () => {
           end: Number(res.end) || 0,
           description: res.summary || '',
           type: determineSegmentType(res.summary || ''),
-          video_id: res.video_id,
+          video_id: String(res.video_id),
         }));
         setSegments(mapped);
         selectSegment(null); // Clear selected segment

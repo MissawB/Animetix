@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import _Plot from 'react-plotly.js';
+import type * as Plotly from 'plotly.js';
 import { 
   Cpu, 
   Activity, 
@@ -20,7 +21,15 @@ import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 
-const Plot = (_Plot as unknown as { default: React.ComponentType<unknown> }).default || _Plot;
+interface PlotProps {
+  data: Plotly.Data[];
+  layout?: Partial<Plotly.Layout>;
+  config?: Partial<Plotly.Config>;
+  style?: React.CSSProperties;
+}
+
+const Plot = (_Plot as unknown as { default: React.ComponentType<PlotProps> }).default
+  || (_Plot as unknown as React.ComponentType<PlotProps>);
 
 interface LNNResult {
     state_history: number[][];
@@ -173,7 +182,7 @@ const LiquidNeuralNetworkLabPage: React.FC = () => {
                     <div className="flex-grow relative">
                         {simulationResult ? (
                             <Plot
-                                data={getPlotData()}
+                                data={getPlotData() as Plotly.Data[]}
                                 layout={{
                                     autosize: true,
                                     height: 400,

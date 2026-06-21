@@ -19,6 +19,7 @@ import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { CardSkeleton } from "../../components/ui/Skeleton";
+import { MediaDetail } from '../../types';
 
 import { NotableWork } from '../../types';
 
@@ -44,6 +45,15 @@ const StaffDetailPage: React.FC = () => {
           <Button as={Link} to="/explore/" variant="outline">RETOURNER AU NEXUS</Button>
       </div>
   );
+
+  // `metadata` is a generic Record<string, unknown>; project the fields this
+  // page renders into concrete types.
+  const meta = staff.metadata as {
+    location?: string;
+    birth_date?: string;
+    roles?: string[];
+    notable_works?: NotableWork[];
+  } | undefined;
 
   return (
     <AnimatedPage>
@@ -81,7 +91,7 @@ const StaffDetailPage: React.FC = () => {
                         </div>
                         <div>
                             <p className="text-[10px] font-black opacity-30 uppercase">Origine</p>
-                            <p className="font-bold italic text-sm">{staff.metadata?.location || 'Japon'}</p>
+                            <p className="font-bold italic text-sm">{meta?.location || 'Japon'}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-4">
@@ -90,7 +100,7 @@ const StaffDetailPage: React.FC = () => {
                         </div>
                         <div>
                             <p className="text-[10px] font-black opacity-30 uppercase">Anniversaire</p>
-                            <p className="font-bold italic text-sm">{staff.metadata?.birth_date || '?? / ??'}</p>
+                            <p className="font-bold italic text-sm">{meta?.birth_date || '?? / ??'}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-4">
@@ -118,7 +128,7 @@ const StaffDetailPage: React.FC = () => {
                     {staff.title_native && <p className="text-xl font-bold opacity-30 uppercase tracking-[0.2em] mb-8">{staff.title_native}</p>}
                     
                     <div className="flex flex-wrap gap-3">
-                        {staff.metadata?.roles?.map((role: string) => (
+                        {meta?.roles?.map((role: string) => (
                             <Badge key={role} className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 px-4 py-2 uppercase text-[10px] font-black">{role}</Badge>
                         )) || <Badge className="bg-white/5 text-white/40 border-white/10 px-4 py-2 uppercase text-[10px] font-black">Professionnel de l'industrie</Badge>}
                     </div>
@@ -141,7 +151,7 @@ const StaffDetailPage: React.FC = () => {
                         <Star className="w-4 h-4 text-yellow-400" /> Œuvres Notables
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        {staff.metadata?.notable_works?.map((work: NotableWork) => (
+                        {meta?.notable_works?.map((work: NotableWork) => (
                             <Link key={work.id} to={`/media/${work.type || 'Anime'}/${work.id}/`} className="no-underline group">
                                 <Card className="p-4 bg-gray-900/50 border-white/5 group-hover:border-emerald-500/30 transition-all flex items-center gap-4">
                                     <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">

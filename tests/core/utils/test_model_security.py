@@ -1,6 +1,5 @@
 import pytest
-
-from backend.core.utils.model_security import ModelSecurityError, get_verified_revision
+from core.utils.model_security import ModelSecurityError, get_verified_revision
 
 
 def test_get_verified_revision_returns_sha():

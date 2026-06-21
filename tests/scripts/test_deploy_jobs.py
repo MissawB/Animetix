@@ -24,9 +24,9 @@ def test_deploy_jobs_main(mocker):
         "--project=animetix",
     ]
 
-    # We should have calls for 7 jobs (each has 1 describe run, 1 deploy run, 1 describe scheduler, 1 deploy scheduler = 4 calls per job)
-    # Total calls: 1 (enable api) + 7 * 4 = 29 calls
-    assert len(mock_run.call_args_list) == 29
+    # We should have calls for 8 jobs (each has 1 describe run, 1 deploy run, 1 describe scheduler, 1 deploy scheduler = 4 calls per job)
+    # Total calls: 1 (enable api) + 8 * 4 = 33 calls
+    assert len(mock_run.call_args_list) == 33
 
     # Check details of specific jobs
     # animetix-sync-catalog

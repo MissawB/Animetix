@@ -1,6 +1,5 @@
 import pytest
-
-from backend.core.ports.inference_port import (
+from core.ports.inference_port import (
     InferenceNotImplementedError,
     InferencePort,
 )

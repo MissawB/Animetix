@@ -1,8 +1,7 @@
 from unittest.mock import MagicMock
 
 import numpy as np
-
-from backend.core.domain.services.neuromorphic_lnn_service import (
+from core.domain.services.neuromorphic_lnn_service import (
     LiquidNeuralNetworkService,
 )
 

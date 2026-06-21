@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { GraphExplorer } from "../../features/graph/GraphExplorer";
 import { SearchBar } from "../../components/SearchBar";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
+import type { SearchItem } from "../../types";
 import { ArrowLeft, Info, Share2, Download, Zap } from 'lucide-react';
 
 const GraphNeighborhoodPage: React.FC = () => {
@@ -10,9 +11,9 @@ const GraphNeighborhoodPage: React.FC = () => {
   const id = searchParams.get('id');
   const type = searchParams.get('type');
   
-  const handleSelect = (item: Record<string, unknown>) => {
+  const handleSelect = (item: SearchItem) => {
     if (item.id && item.type) {
-      setSearchParams({ id: item.id.toString(), type: item.type });
+      setSearchParams({ id: String(item.id), type: String(item.type) });
     }
   };
 
@@ -78,7 +79,7 @@ const GraphNeighborhoodPage: React.FC = () => {
 
             {/* Main Graph View */}
             <div className="flex-grow relative z-0">
-              <GraphExplorer initialId={id} initialType={type} hideHeader maxDepth={5} />
+              <GraphExplorer initialId={id} initialType={type} />
             </div>
           </div>
         )}

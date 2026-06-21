@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock
 
-from backend.core.domain.services.self_evolving_compiler import SelfEvolvingCompiler
+from core.domain.services.self_evolving_compiler import SelfEvolvingCompiler
 
 
 def test_compiler_initialization():

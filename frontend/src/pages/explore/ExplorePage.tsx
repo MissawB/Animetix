@@ -155,7 +155,7 @@ const ExplorePage: React.FC = () => {
         {/* Categories Rows */}
         <section className="space-y-12">
             {/* Recommendations Row */}
-            {data?.recommendations?.length > 0 && (
+            {(data?.recommendations?.length ?? 0) > 0 && (
                 <div className="space-y-4">
                     <h2 className="text-2xl font-black italic uppercase tracking-widest flex items-center gap-3">
                         Choisi pour vous
@@ -174,7 +174,7 @@ const ExplorePage: React.FC = () => {
                             id="recs-row"
                             className="flex gap-6 overflow-x-auto no-scrollbar pb-4"
                         >
-                            {data.recommendations.map((item) => (
+                            {data?.recommendations?.map((item) => (
                                 <MediaCard key={item.id} item={item} />
                             ))}
                         </div>

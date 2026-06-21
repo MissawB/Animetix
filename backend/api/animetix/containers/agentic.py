@@ -1,20 +1,7 @@
 from core.domain.entities.ai_schemas import RAGState
 from dependency_injector import containers, providers
 
-
-class LazyClass:
-    def __init__(self, module_name, class_name):
-        self.module_name = module_name
-        self.class_name = class_name
-        self._class = None
-
-    def __call__(self, *args, **kwargs):
-        if self._class is None:
-            import importlib  # noqa: E402
-
-            module = importlib.import_module(self.module_name)
-            self._class = getattr(module, self.class_name)
-        return self._class(*args, **kwargs)
+from .lazy import LazyClass
 
 
 class AgenticContainer(containers.DeclarativeContainer):
@@ -41,6 +28,7 @@ class AgenticContainer(containers.DeclarativeContainer):
         llm_service=llm_service,
         neo4j_manager=persistence.graph_persistence_port,
         colbert_adapter=persistence.colbert_adapter,
+        cache_port=infrastructure.cache_port,
     )
 
     graph_expert = providers.Singleton(
@@ -186,7 +174,6 @@ class AgenticContainer(containers.DeclarativeContainer):
                 context_compressor=context_compressor,
                 retrieval_evaluator=retrieval_evaluator,
                 web_search=infrastructure.web_search,
-                video_rag_service=video_rag_service,
                 scout=scout,
                 neo4j_manager=persistence.graph_persistence_port,
             ),
@@ -261,6 +248,18 @@ class AgenticContainer(containers.DeclarativeContainer):
         cache_port=persistence.semantic_cache_adapter,
     )
 
+    # Défini ici (et non dans core_services) car `agentic_rag` en dépend : éviter
+    # une dépendance circulaire de conteneurs (core → agentic). core_services
+    # l'expose via un alias `agentic.guardrail_service`.
+    guardrail_service = providers.Singleton(
+        LazyClass("core.domain.services.guardrail_service", "GuardrailService"),
+        inference_engine=inference.inference_engine,
+        prompt_manager=infrastructure.prompt_manager,
+        neo4j_manager=persistence.graph_persistence_port,
+        safety_engine=inference.local_guardrail_adapter,
+        config_port=infrastructure.config_port,
+    )
+
     agentic_rag = providers.Singleton(
         LazyClass("core.domain.services.agentic_rag_service", "AgenticRAGService"),
         inference_engine=inference.inference_engine,
@@ -275,4 +274,6 @@ class AgenticContainer(containers.DeclarativeContainer):
         obs_service=infrastructure.obs_service,
         xai_service=xai_service,
         semantic_router=semantic_router,
+        config_port=infrastructure.config_port,
+        guardrail_service=guardrail_service,
     )

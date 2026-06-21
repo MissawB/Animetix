@@ -97,11 +97,26 @@ class GraphHealerService:
         query_orphans = "MATCH (e:Entity) WHERE NOT (e)<-[:FEATURES]-(:Media) RETURN count(e) as count"
         orphan_entities = self.neo4j.execute_query(query_orphans)[0]["count"]
 
+        # 4. Compte des Entités dupliquées (partageant le même nom)
+        query_dup_entities = """
+        MATCH (e:Entity)
+        WITH e.name AS name, count(*) AS count
+        WHERE count > 1 AND name IS NOT NULL
+        RETURN sum(count - 1) as dup_count
+        """
+        res_dup = self.neo4j.execute_query(query_dup_entities)
+        duplicate_entities = (
+            res_dup[0]["dup_count"]
+            if res_dup and res_dup[0]["dup_count"] is not None
+            else 0
+        )
+
         return {
             "status": "success",
             "isolated_nodes": isolated_count,
             "temporal_conflicts": len(conflicts),
             "orphan_entities": orphan_entities,
+            "duplicate_entities": duplicate_entities,
             "details": conflicts[:5],
         }
 
@@ -134,3 +149,32 @@ class GraphHealerService:
             self.heal_node(record["id"])
 
         logger.info(f"✅ Re-synced {len(to_resync)} incomplete media nodes.")
+
+    def merge_duplicate_entities(
+        self, label: str = "Entity", property_name: str = "name"
+    ) -> int:
+        """Recherche et fusionne les entités en doublon partageant la même propriété name/title."""
+        if not self.neo4j or not self.neo4j.driver:
+            return 0
+
+        find_query = f"""
+        MATCH (n:{label})
+        WITH n.{property_name} AS val, collect(n) AS nodes, count(*) AS count
+        WHERE count > 1 AND val IS NOT NULL
+        RETURN val, [node IN nodes | id(node)] AS ids
+        """
+        duplicates = self.neo4j.execute_query(find_query)
+
+        merged_count = 0
+        for dup in duplicates:
+            merge_query = f"""
+            MATCH (n:{label}) WHERE id(n) IN $ids
+            WITH collect(n) AS nodes
+            CALL apoc.refactor.mergeNodes(nodes, {{properties: 'combine', mergeRels: true}})
+            YIELD node
+            RETURN count(node) as count
+            """
+            self.neo4j.execute_query(merge_query, {"ids": dup["ids"]})
+            merged_count += len(dup["ids"]) - 1
+
+        return merged_count

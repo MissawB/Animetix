@@ -1,6 +1,7 @@
 import logging
 
 from django_ratelimit.decorators import ratelimit
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -8,7 +9,7 @@ from rest_framework.response import Response
 
 from ...containers import get_container
 from ...models import VsBattle
-from ...serializers import VsBattleSerializer
+from ...serializers import VsBattleResultSerializer, VsBattleSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +23,7 @@ def list_vs_battles(request):
     return Response(serializer.data)
 
 
+@extend_schema(responses=VsBattleResultSerializer)
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 @ratelimit(key="user", rate="1/m", block=True)

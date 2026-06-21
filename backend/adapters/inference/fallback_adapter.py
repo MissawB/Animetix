@@ -324,8 +324,8 @@ class FallbackInferenceAdapter(InferencePort):
         try:
             queue_len = cache.get("self_hosted_image_worker:queue_length", 0)
             cache.set("self_hosted_image_worker:queue_length", queue_len + 1)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Could not increment worker queue length: {e}")
 
         try:
             logger.info("Enqueuing image generation task to self-hosted worker queue.")
@@ -373,8 +373,8 @@ class FallbackInferenceAdapter(InferencePort):
                 )
                 if max(0, queue_len - 1) <= 0:
                     cache.set("self_hosted_image_worker:status", "idle")
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Could not decrement worker queue length: {e}")
             raise e
 
     def _fallback_call(self, method_name: str, *args, **kwargs):

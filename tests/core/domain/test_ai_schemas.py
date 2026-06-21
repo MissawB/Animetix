@@ -1,7 +1,5 @@
 import pytest
-from pydantic import ValidationError
-
-from backend.core.domain.entities.ai_schemas import (
+from core.domain.entities.ai_schemas import (
     CombatCharacter,
     CombatStats,
     InferenceMetadata,
@@ -9,6 +7,7 @@ from backend.core.domain.entities.ai_schemas import (
     RAGContext,
     TokenLogProb,
 )
+from pydantic import ValidationError
 
 
 def test_token_logprob_schema():

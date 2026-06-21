@@ -12,10 +12,20 @@ export function useChapterPages(mediaId: string, chapterNumber: string) {
   const [pages, setPages] = useState<ReaderPage[]>([]);
   const [source, setSource] = useState<PageSource>('loading');
 
-  useEffect(() => {
-    let active = true;
+  // Reset to the loading state synchronously when the chapter changes by adjusting
+  // state during render (React's "storing previous value" pattern). Doing this here
+  // instead of in the effect avoids a cascading-render and guarantees the new
+  // chapter never briefly shows the previous chapter's pages.
+  const chapterKey = `${mediaId}:${chapterNumber}`;
+  const [prevChapterKey, setPrevChapterKey] = useState(chapterKey);
+  if (prevChapterKey !== chapterKey) {
+    setPrevChapterKey(chapterKey);
     setSource('loading');
     setPages([]);
+  }
+
+  useEffect(() => {
+    let active = true;
 
     // Object URLs created by THIS effect run only, so a Strict-Mode double-invoke
     // (or rapid chapter change) never revokes URLs a later run still uses.

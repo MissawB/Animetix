@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ChevronLeft, Calendar, Clock, MapPin, Users, Send, CheckCircle } from 'lucide-react';
-import { getClubEventDetails, getClubDetails, toggleEventParticipation, ClubEvent } from '../../api';
+import { getClubEventDetails, getClubDetails, toggleEventParticipation } from '../../api';
+import { ClubEvent } from '../../types';
 import { useToastStore } from "../../store/toastStore";
 import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";

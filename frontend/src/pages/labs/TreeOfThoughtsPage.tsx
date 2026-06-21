@@ -10,7 +10,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
-import _ForceGraph2D from 'react-force-graph-2d';
+import _ForceGraph2D, { type ForceGraphMethods } from 'react-force-graph-2d';
 const ForceGraph2D = (_ForceGraph2D as unknown as { default: React.ElementType }).default || _ForceGraph2D;
 import { apiClient } from "../../utils/apiClient";
 import { Card } from "../../components/ui/Card";
@@ -48,7 +48,7 @@ const TreeOfThoughtsPage: React.FC = () => {
   const [query, setQuery] = useState('');
   const [selectedNode, setSelectedNode] = useState<ToTNode | null>(null);
   const [graphData, setGraphData] = useState<ToTGraphData | null>(null);
-  const fgRef = useRef<unknown>(null); // Type complexe de la bibliothèque tierce
+  const fgRef = useRef<ForceGraphMethods | undefined>(undefined); // react-force-graph-2d imperative handle
 
   const totMutation = useMutation<ToTResponse, Error, { query: string }>({
     mutationFn: (body: { query: string }) => apiClient('/api/v1/labs/tot/', { 

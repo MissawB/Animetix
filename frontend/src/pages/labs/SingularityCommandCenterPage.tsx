@@ -135,7 +135,7 @@ const SingularityCommandCenterPage: React.FC = () => {
                                                 {Object.entries(svc.metrics).map(([key, val]) => (
                                                     <div key={key} className="bg-white/5 p-3 rounded-xl border border-white/5">
                                                         <span className="block text-[7px] font-black uppercase opacity-20 mb-1">{key.replace('_', ' ')}</span>
-                                                        <span className="text-xs font-black italic">{val}</span>
+                                                        <span className="text-xs font-black italic">{String(val)}</span>
                                                     </div>
                                                 ))}
                                             </div>

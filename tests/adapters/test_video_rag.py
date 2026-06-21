@@ -3,20 +3,26 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
+from core.domain.services.rag.video_rag_service import (  # noqa: E402
+    VideoRAGService,
+)
 from PIL import Image
-
-# Force modules to exist in sys.modules so they can be imported and patched
-mock_imageio = MagicMock()
-
-sys.modules["imageio"] = mock_imageio  # noqa: E402
-
 
 from backend.adapters.inference.vision_transformers_adapter import (  # noqa: E402
     VisionTransformersAdapter,
 )
-from backend.core.domain.services.rag.video_rag_service import (  # noqa: E402
-    VideoRAGService,
-)
+
+# `video_rag_service` importe `imageio` paresseusement (dans une méthode), donc le
+# mock n'est nécessaire que pendant les tests — injecté via monkeypatch (auto-restauré)
+# plutôt qu'en écrasant `sys.modules` au niveau module (qui fuyait sur toute la suite).
+mock_imageio = MagicMock()
+
+
+@pytest.fixture(autouse=True)
+def _mock_imageio(monkeypatch):
+    monkeypatch.setitem(sys.modules, "imageio", mock_imageio)
+    yield
+    mock_imageio.reset_mock()
 
 
 @pytest.fixture
@@ -102,7 +108,7 @@ def test_video_rag_service_orchestration(video_service):
 def test_video_rag_indexing_and_search():
     from unittest.mock import MagicMock  # noqa: E402
 
-    from backend.core.domain.services.rag.video_rag_service import (  # noqa: E402
+    from core.domain.services.rag.video_rag_service import (  # noqa: E402
         VideoRAGService,
     )
 

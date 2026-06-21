@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock
 
-from backend.core.domain.services.voice_cloning_service import VoiceCloningService
+from core.domain.services.voice_cloning_service import VoiceCloningService
 
 
 def test_voice_cloning_service_calls_port():

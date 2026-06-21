@@ -1,9 +1,9 @@
 import logging
 from typing import Generator
 
-from backend.core.domain.entities.ai_schemas import RAGContext, RAGState, StreamStep
-from backend.core.domain.exceptions import InferenceError, InfrastructureError
-from backend.core.domain.services.rag.processors.base import StateProcessor
+from core.domain.entities.ai_schemas import RAGContext, RAGState, StreamStep
+from core.domain.exceptions import InferenceError, InfrastructureError
+from core.domain.services.rag.processors.base import StateProcessor
 
 logger = logging.getLogger("animetix.rag_workflow")
 
@@ -16,7 +16,6 @@ class ResearchProcessor(StateProcessor):
         context_compressor,
         retrieval_evaluator,
         web_search,
-        video_rag_service,
         scout,
         neo4j_manager,
     ):
@@ -25,7 +24,6 @@ class ResearchProcessor(StateProcessor):
         self.context_compressor = context_compressor
         self.retrieval_evaluator = retrieval_evaluator
         self.web_search = web_search
-        self.video_rag_service = video_rag_service
         self.scout = scout
         self.neo4j_manager = neo4j_manager
 

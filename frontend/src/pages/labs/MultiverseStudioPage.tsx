@@ -19,6 +19,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 import { NexusMap } from '../../features/labs/components/Multiverse/NexusMap';
 import { GenesisToolbox } from '../../features/labs/components/Multiverse/GenesisToolbox';
+import type { GraphData, GraphNode } from '../../types';
 
 // --- Types ---
 
@@ -101,8 +102,8 @@ const MultiverseStudioPage: React.FC = () => {
 
   // --- Graph Helpers ---
 
-  const handleNodeClick = useCallback((node: MultiverseNode) => {
-    setSelectedNode(node);
+  const handleNodeClick = useCallback((node: GraphNode) => {
+    setSelectedNode(node as unknown as MultiverseNode);
   }, []);
 
   const mergedData = useMemo(() => {
@@ -148,8 +149,8 @@ const MultiverseStudioPage: React.FC = () => {
                             <p className="text-[10px] font-black uppercase tracking-widest text-cyan-500/50">Synchronisation du Nexus...</p>
                         </div>
                     ) : (
-                        <NexusMap 
-                          data={mergedData}
+                        <NexusMap
+                          data={mergedData as unknown as GraphData}
                           loadingNodes={activeSynthesis}
                           onDropSeed={handleDropSeed}
                           onNodeClick={handleNodeClick}

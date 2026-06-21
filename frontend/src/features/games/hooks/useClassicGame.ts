@@ -24,9 +24,14 @@ export const useClassicGame = () => {
     },
   });
 
+  // Rejoue une nouvelle partie : on ré-exécute la queryFn (comme le ferait un
+  // remount) au lieu d'un window.location.reload() qui rechargeait toute l'app.
+  const restart = () => queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+
   return {
     gameState,
     loading,
     handleGuess: guessMutation.mutateAsync,
+    restart,
   };
 };

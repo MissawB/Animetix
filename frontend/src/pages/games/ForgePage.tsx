@@ -33,7 +33,7 @@ const ForgePage: React.FC = () => {
   const [fusionData, setFusionData] = useState<FusionResponse | null>(null);
   const [status, setStatus] = useState<FusionStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [setShowConfetti] = useState(false);
+  const [, setShowConfetti] = useState(false);
 
   const handleStartFusion = async () => {
     setIsLoading(true);
@@ -65,7 +65,7 @@ const ForgePage: React.FC = () => {
             setShowConfetti(true);
             clearInterval(interval);
           }
-        } catch (_err) {
+        } catch (err) {
           console.error("Polling error:", err);
         }
       }, 3000);

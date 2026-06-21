@@ -20,13 +20,13 @@ class TestFinetuningDataset(unittest.TestCase):
     def test_gemini_paraphrase_cache(self):
         from unittest.mock import MagicMock  # noqa: E402
 
-        # Initialiser un cache temporaire pour le test
-        import backend.pipeline.mlops.finetuning_dataset as fd  # noqa: E402
+        # Cache + fonctions paraphrase vivent désormais dans ft_dataset.paraphrase
+        import backend.pipeline.mlops.ft_dataset.paraphrase as pmod  # noqa: E402
         from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
             paraphrase_text_via_gemini,
         )
 
-        fd.PARAPHRASE_CACHE = {
+        pmod.PARAPHRASE_CACHE = {
             "Le texte original||naturel": "Texte paraphrase en cache"
         }
 
@@ -44,15 +44,15 @@ class TestFinetuningDataset(unittest.TestCase):
         mock_client.models.generate_content.return_value = mock_response
 
         with patch(
-            "backend.pipeline.mlops.finetuning_dataset.validate_factual_alignment",
+            "backend.pipeline.mlops.ft_dataset.paraphrase.validate_factual_alignment",
             return_value=True,
         ):
             res2 = paraphrase_text_via_gemini("Un autre texte", mock_client, "naturel")
             self.assertEqual(res2, "Nouvelle paraphrase")
             mock_client.models.generate_content.assert_called_once()
-            self.assertIn("Un autre texte||naturel", fd.PARAPHRASE_CACHE)
+            self.assertIn("Un autre texte||naturel", pmod.PARAPHRASE_CACHE)
             self.assertEqual(
-                fd.PARAPHRASE_CACHE["Un autre texte||naturel"], "Nouvelle paraphrase"
+                pmod.PARAPHRASE_CACHE["Un autre texte||naturel"], "Nouvelle paraphrase"
             )
 
     def test_configurable_ratios(self):

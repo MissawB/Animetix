@@ -5,7 +5,6 @@ import {
   Database,
   Activity,
   RefreshCw,
-  Wifi,
   WifiOff,
   Thermometer,
   HardDrive,
@@ -32,7 +31,29 @@ interface GpuInfo {
 }
 
 interface ClusterNodeDetails {
-  [key: string]: any;
+  // GPU node
+  gpu_count?: number;
+  total_vram_gb?: number;
+  avg_temperature_c?: number;
+  avg_utilization_pct?: number;
+  cuda_version?: string;
+  driver_version?: string;
+  // Inference node
+  engine?: string;
+  loaded_models?: string[];
+  model_count?: number;
+  // Graph DB node
+  node_count?: number;
+  relationship_count?: number;
+  database?: string;
+  bolt_uri?: string;
+  // Worker node
+  queue_length?: number;
+  worker_status?: string;
+  active_task?: string;
+  fallback_mode?: string;
+  // Shared
+  error?: string;
 }
 
 interface ClusterNode {
@@ -142,7 +163,6 @@ const NodeCard: React.FC<{ node: ClusterNode }> = ({ node }) => {
   const config = statusConfig[node.status as keyof typeof statusConfig] || statusConfig.offline;
   const IconComponent = nodeTypeIcon[node.type] || Server;
   const accentColor = nodeTypeAccent[node.type] || 'text-white';
-  const StatusIcon = config.icon;
 
   return (
     <Card padding="lg" className={`bg-black/40 border-white/5 hover:${config.border} transition-all duration-500 group relative overflow-hidden`}>
@@ -200,7 +220,7 @@ const NodeCard: React.FC<{ node: ClusterNode }> = ({ node }) => {
             <div>
               <p className="text-[9px] font-black uppercase opacity-25 mb-1">Temp Moy.</p>
               <p className={`text-lg font-black ${
-                node.details.avg_temperature_c > 75 ? 'text-red-400' : node.details.avg_temperature_c > 55 ? 'text-amber-400' : 'text-emerald-400'
+                (node.details.avg_temperature_c ?? 0) > 75 ? 'text-red-400' : (node.details.avg_temperature_c ?? 0) > 55 ? 'text-amber-400' : 'text-emerald-400'
               }`}>
                 {node.details.avg_temperature_c}°C
               </p>
@@ -325,8 +345,7 @@ const ClusterHealthPanel: React.FC = () => {
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const fetchHealth = useCallback(async (showSpinner = false) => {
-    if (showSpinner) setIsRefreshing(true);
+  const fetchHealth = useCallback(async () => {
     try {
       const result = await apiClient('/api/monitoring/cluster-health/', { skipToast: true });
       setData(result);
@@ -341,9 +360,21 @@ const ClusterHealthPanel: React.FC = () => {
     }
   }, []);
 
+  const refresh = useCallback(() => {
+    setIsRefreshing(true);
+    void fetchHealth();
+  }, [fetchHealth]);
+
   useEffect(() => {
-    fetchHealth();
-    const interval = setInterval(() => fetchHealth(), 15000); // Auto-refresh every 15s
+    // Kick off the initial fetch in a microtask so the effect body does not
+    // synchronously reach setState (avoids cascading renders). The interval
+    // then drives subsequent auto-refreshes (every 15s).
+    queueMicrotask(() => {
+      void fetchHealth();
+    });
+    const interval = setInterval(() => {
+      void fetchHealth();
+    }, 15000);
     return () => clearInterval(interval);
   }, [fetchHealth]);
 
@@ -373,7 +404,7 @@ const ClusterHealthPanel: React.FC = () => {
             <p className="text-[10px] font-bold uppercase opacity-40 mt-1">{error}</p>
           </div>
           <button
-            onClick={() => fetchHealth(true)}
+            onClick={refresh}
             className="ml-auto p-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 transition-all"
           >
             <RefreshCw className="w-4 h-4 text-red-400" />
@@ -414,7 +445,7 @@ const ClusterHealthPanel: React.FC = () => {
             </span>
           )}
           <button
-            onClick={() => fetchHealth(true)}
+            onClick={refresh}
             disabled={isRefreshing}
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all text-[10px] font-black uppercase tracking-widest disabled:opacity-30"
           >

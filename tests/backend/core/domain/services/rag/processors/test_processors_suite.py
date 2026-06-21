@@ -1,34 +1,33 @@
 from unittest.mock import MagicMock
 
 import pytest
-
-from backend.core.domain.entities.ai_schemas import (
+from core.domain.entities.ai_schemas import (
     DebateOutcome,
     JudgeAction,
     RAGContext,
     RAGState,
     SearchPlan,
 )
-from backend.core.domain.services.rag.processors.acquire_knowledge_processor import (
+from core.domain.services.rag.processors.acquire_knowledge_processor import (
     AcquireKnowledgeProcessor,
 )
-from backend.core.domain.services.rag.processors.fallback_rag_processor import (
+from core.domain.services.rag.processors.fallback_rag_processor import (
     FallbackRagProcessor,
 )
-from backend.core.domain.services.rag.processors.graph_explore_processor import (
+from core.domain.services.rag.processors.graph_explore_processor import (
     GraphExploreProcessor,
 )
-from backend.core.domain.services.rag.processors.judge_processor import JudgeProcessor
-from backend.core.domain.services.rag.processors.research_processor import (
+from core.domain.services.rag.processors.judge_processor import JudgeProcessor
+from core.domain.services.rag.processors.research_processor import (
     ResearchProcessor,
 )
-from backend.core.domain.services.rag.processors.saga_lookup_processor import (
+from core.domain.services.rag.processors.saga_lookup_processor import (
     SagaLookupProcessor,
 )
-from backend.core.domain.services.rag.processors.synthesize_processor import (
+from core.domain.services.rag.processors.synthesize_processor import (
     SynthesizeProcessor,
 )
-from backend.core.domain.services.rag.processors.vlm_rerank_processor import (
+from core.domain.services.rag.processors.vlm_rerank_processor import (
     VlmRerankProcessor,
 )
 
@@ -124,7 +123,7 @@ def test_graph_explore_processor_success():
 
 # 3. ResearchProcessor Tests
 def test_research_processor_no_plan():
-    processor = ResearchProcessor(None, None, None, None, None, None, None, None)
+    processor = ResearchProcessor(None, None, None, None, None, None, None)
     ctx = MagicMock(spec=RAGContext)
     ctx.plan = None
 
@@ -151,7 +150,6 @@ def test_research_processor_web_search():
         context_compressor=MagicMock(),
         retrieval_evaluator=MagicMock(),
         web_search=mock_web_search,
-        video_rag_service=MagicMock(),
         scout=mock_scout,
         neo4j_manager=None,
     )
@@ -313,7 +311,7 @@ def test_acquire_knowledge_processor_gap_found():
 
 # 9. Bilingual / Language Tests
 def test_rag_context_language():
-    from backend.core.domain.entities.ai_schemas import RAGContext  # noqa: E402
+    from core.domain.entities.ai_schemas import RAGContext  # noqa: E402
 
     ctx = RAGContext(query="test", media_type="Anime")
     assert ctx.language == "Français"
@@ -326,7 +324,7 @@ def test_rag_context_language():
 def test_agentic_rag_service_propagates_language(monkeypatch):
     from unittest.mock import MagicMock  # noqa: E402
 
-    from backend.core.domain.services.agentic_rag_service import (  # noqa: E402
+    from core.domain.services.agentic_rag_service import (  # noqa: E402
         AgenticRAGService,
     )
 
@@ -367,7 +365,7 @@ def test_agentic_rag_service_propagates_language(monkeypatch):
 def test_response_synthesizer_respects_language():
     from unittest.mock import MagicMock  # noqa: E402
 
-    from backend.core.domain.services.rag.agents.synthesizer import (  # noqa: E402
+    from core.domain.services.rag.agents.synthesizer import (  # noqa: E402
         ResponseSynthesizer,
     )
 
@@ -390,8 +388,8 @@ def test_response_synthesizer_respects_language():
 def test_fallback_processor_english():
     from unittest.mock import MagicMock  # noqa: E402
 
-    from backend.core.domain.entities.ai_schemas import RAGContext  # noqa: E402
-    from backend.core.domain.services.rag.processors.fallback_rag_processor import (  # noqa: E402
+    from core.domain.entities.ai_schemas import RAGContext  # noqa: E402
+    from core.domain.services.rag.processors.fallback_rag_processor import (  # noqa: E402
         FallbackRagProcessor,
     )
 

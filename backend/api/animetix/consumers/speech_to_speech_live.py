@@ -3,8 +3,10 @@ import base64
 import io
 import json
 import logging
+import os
 import wave
 
+from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 from google import genai
 from google.genai import types
@@ -95,12 +97,45 @@ class SpeechToSpeechLiveConsumer(AsyncWebsocketConsumer):
         self.gemini_client = None
         self.receiver_task = None
 
+        # Parse query params
+        from urllib.parse import parse_qs
+
+        query_string = self.scope.get("query_string", b"").decode("utf-8")
+        query_params = parse_qs(query_string)
+        profile_id_str = query_params.get("voice_profile_id", [None])[0]
+        self.voice_profile_id = (
+            int(profile_id_str)
+            if (profile_id_str and profile_id_str.isdigit())
+            else None
+        )
+
         # Start the Gemini session in the background
         self.receiver_task = asyncio.create_task(self.run_gemini_session())
         logger.info("SpeechToSpeechLiveConsumer client connected.")
 
+    @database_sync_to_async
+    def get_voice_profile_data(self, profile_id):
+        from animetix.models import VoiceProfile
+
+        try:
+            profile = VoiceProfile.objects.get(id=profile_id)
+            return {
+                "name": profile.name,
+                "language": profile.language,
+                "roles": profile.roles,
+                "sample_url": profile.sample_url,
+                "sample_file_path": (
+                    profile.sample_file.path if profile.sample_file else None
+                ),
+            }
+        except VoiceProfile.DoesNotExist:
+            return None
+
     async def run_gemini_session(self):
-        import os  # noqa: E402
+        from animetix.containers import get_container
+
+        container = get_container()
+        self.voice_cloning_service = container.core.voice_cloning_service()
 
         api_key = os.getenv("GEMINI_API_KEY")
         try:
@@ -119,8 +154,27 @@ class SpeechToSpeechLiveConsumer(AsyncWebsocketConsumer):
                 )
                 self.gemini_client = genai.Client(api_key=api_key)
 
+            # If a voice profile is selected, we configure Gemini Live for roleplay and text-only response
+            voice_profile_data = None
+            if self.voice_profile_id:
+                voice_profile_data = await self.get_voice_profile_data(
+                    self.voice_profile_id
+                )
+
             model = os.getenv("GEMINI_LIVE_MODEL", "gemini-2.0-flash-exp")
             config = {"response_modalities": ["AUDIO"]}
+            system_prompt = "You are a helpful AI assistant."
+
+            if voice_profile_data:
+                config["response_modalities"] = ["TEXT"]
+                system_prompt = (
+                    f"You are roleplaying as {voice_profile_data['name']}. "
+                    f"Your roles/traits: {voice_profile_data['roles'] or 'unknown'}. "
+                    "Respond to the user with the personality, tone, and traits of this character. "
+                    "Make your answers short, expressive, and conversational."
+                )
+
+            config["system_instruction"] = {"parts": [{"text": system_prompt}]}
 
             logger.info(f"Connecting to Gemini Live API with model {model}...")
             async with self.gemini_client.aio.live.connect(
@@ -137,6 +191,8 @@ class SpeechToSpeechLiveConsumer(AsyncWebsocketConsumer):
                         }
                     )
                 )
+
+                accumulated_text = ""
 
                 async for response in session.receive():
                     if not self.client_connected:
@@ -162,6 +218,17 @@ class SpeechToSpeechLiveConsumer(AsyncWebsocketConsumer):
                                         )
                                     )
 
+                                if part.text:
+                                    accumulated_text += part.text
+                                    await self.send(
+                                        json.dumps(
+                                            {
+                                                "type": "text_chunk",
+                                                "text": part.text,
+                                            }
+                                        )
+                                    )
+
                         if server_content.output_transcription:
                             await self.send(
                                 json.dumps(
@@ -173,6 +240,66 @@ class SpeechToSpeechLiveConsumer(AsyncWebsocketConsumer):
                                     }
                                 )
                             )
+
+                        if getattr(server_content, "turn_complete", False):
+                            if accumulated_text and voice_profile_data:
+                                try:
+                                    logger.info(
+                                        f"Generating cloned voice for: {accumulated_text}"
+                                    )
+                                    ref_audio_bytes = None
+                                    if voice_profile_data[
+                                        "sample_file_path"
+                                    ] and os.path.exists(
+                                        voice_profile_data["sample_file_path"]
+                                    ):
+                                        with open(
+                                            voice_profile_data["sample_file_path"], "rb"
+                                        ) as f:
+                                            ref_audio_bytes = f.read()
+                                    else:
+                                        # Use safe requests/httpx here
+                                        from core.utils.security import (
+                                            safe_http_request,
+                                        )
+
+                                        resp = safe_http_request(
+                                            "GET",
+                                            voice_profile_data["sample_url"],
+                                            timeout=10,
+                                        )
+                                        if resp.status_code == 200:
+                                            ref_audio_bytes = resp.content
+
+                                    if ref_audio_bytes:
+                                        loop = asyncio.get_running_loop()
+                                        cloned_audio = await loop.run_in_executor(
+                                            None,
+                                            self.voice_cloning_service.clone,
+                                            ref_audio_bytes,
+                                            accumulated_text,
+                                            0,
+                                            "rvc_v2",
+                                            0.75,
+                                        )
+                                        audio_b64 = base64.b64encode(
+                                            cloned_audio
+                                        ).decode("utf-8")
+                                        await self.send(
+                                            json.dumps(
+                                                {
+                                                    "type": "audio_chunk",
+                                                    "audio": audio_b64,
+                                                    "mime_type": "audio/wav",
+                                                }
+                                            )
+                                        )
+                                except Exception as ex:
+                                    logger.error(
+                                        f"Failed to clone voice in live turn: {ex}"
+                                    )
+                                accumulated_text = ""
+
         except asyncio.CancelledError:
             logger.info("Gemini Live session task cancelled.")
         except Exception as e:

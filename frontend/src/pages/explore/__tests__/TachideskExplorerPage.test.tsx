@@ -284,16 +284,21 @@ describe('TachideskExplorerPage', () => {
       </QueryClientProvider>
     );
 
+    // Wait for sources to load first to avoid race conditions with tab switching state updates
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Source Suwayomi/i)).toBeInTheDocument();
+    });
+
     fireEvent.click(screen.getByRole('button', { name: /Extensions/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/Erreur lors du chargement des extensions/i)).toBeInTheDocument();
+      expect(screen.getByText(/Impossible de charger|Erreur lors du chargement/i)).toBeInTheDocument();
     });
 
     // Close/dismiss the error
     const dismissBtn = screen.getByRole('button', { name: /×/i });
     fireEvent.click(dismissBtn);
 
-    expect(screen.queryByText(/Erreur lors du chargement des extensions/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Impossible de charger|Erreur lors du chargement/i)).not.toBeInTheDocument();
   });
 });

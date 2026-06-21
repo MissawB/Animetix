@@ -31,9 +31,8 @@ export const useAkinetix = () => {
   const confirmMutation = useMutation({
     mutationFn: (isCorrect: boolean) => akinetixService.submitConfirmation(isCorrect),
     onSuccess: () => {
-      // Invalider pour forcer un rechargement propre
+      // Invalider suffit à refetch un état de jeu propre (plus de full reload).
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-      window.location.reload();
     },
   });
 

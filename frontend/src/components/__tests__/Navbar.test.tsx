@@ -50,6 +50,6 @@ describe('Navbar', () => {
     
     const gamesLink = screen.getByText(/Games/i);
     expect(gamesLink).toBeInTheDocument();
-    expect(gamesLink.closest('a')).toHaveAttribute('href', '/games/');
+    expect(gamesLink.closest('a')).toHaveAttribute('href', '/games/hub/');
   });
 });

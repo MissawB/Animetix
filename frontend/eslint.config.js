@@ -8,7 +8,10 @@ import tseslint from 'typescript-eslint';
 import { defineConfig, globalIgnores } from 'eslint/config';
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  // `dist` is the build output; `src/types/api.d.ts` is generated from schema.yaml
+  // (`npm run generate:api`) and would otherwise drown lint output in
+  // no-irregular-whitespace noise we don't control.
+  globalIgnores(['dist', 'src/types/api.d.ts']),
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
@@ -36,6 +39,15 @@ export default defineConfig([
         { allowConstantExport: true },
       ],
       'jsx-a11y/no-autofocus': 'off',
+      // --- Durcissement a11y (au-delà du recommended) ---
+      // Règles déjà à 0 violation → en `error` (enforcement, sans risque).
+      'jsx-a11y/no-static-element-interactions': 'error',
+      'jsx-a11y/click-events-have-key-events': 'error',
+      'jsx-a11y/no-noninteractive-element-interactions': 'error',
+      'jsx-a11y/no-noninteractive-tabindex': 'error',
+      // Contrôles icône sans nom accessible : en `warn` (quelques cas existants à
+      // résorber ; `eslint .` ne casse pas sur les warnings) → à passer en `error` ensuite.
+      'jsx-a11y/control-has-associated-label': 'warn',
       '@typescript-eslint/no-unused-vars': [
         'error',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },

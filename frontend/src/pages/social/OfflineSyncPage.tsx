@@ -21,7 +21,15 @@ interface SyncResponse {
 }
 
 const OfflineSyncPage: React.FC = () => {
-  const [offlineGames, setOfflineGames] = useState<OfflineGame[]>([]);
+  const [offlineGames, setOfflineGames] = useState<OfflineGame[]>(() => {
+    try {
+      const stored = localStorage.getItem('ANIMETIX_OFFLINE_GAMES');
+      return stored ? JSON.parse(stored) : [];
+    } catch (e) {
+      console.error("Failed to load offline games cache", e);
+      return [];
+    }
+  });
   const [isSyncing, setIsSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [syncResult, setSyncResult] = useState<SyncResponse | null>(null);
@@ -34,16 +42,6 @@ const OfflineSyncPage: React.FC = () => {
     const handleOffline = () => setIsOnline(false);
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
-
-    // Initial load from localStorage
-    try {
-      const stored = localStorage.getItem('ANIMETIX_OFFLINE_GAMES');
-      if (stored) {
-        setOfflineGames(JSON.parse(stored));
-      }
-    } catch (e) {
-      console.error("Failed to load offline games cache", e);
-    }
 
     return () => {
       window.removeEventListener('online', handleOnline);
@@ -107,8 +105,9 @@ const OfflineSyncPage: React.FC = () => {
       } else {
         throw new Error(response?.error || 'Une erreur inconnue est survenue.');
       }
-    } catch (err: any) {
-      setError(err?.message || 'Erreur de connexion avec le serveur de synchronisation.');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : '';
+      setError(message || 'Erreur de connexion avec le serveur de synchronisation.');
     } finally {
       setIsSyncing(false);
     }

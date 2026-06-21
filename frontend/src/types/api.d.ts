@@ -1046,6 +1046,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/explore/suwayomi/extensions/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Liste des extensions installées et disponibles dans Suwayomi/Mihon. */
+        get: operations["api_v1_explore_suwayomi_extensions_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/explore/suwayomi/extensions/action/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Effectue une action (installation, désinstallation, mise à jour) sur une extension Suwayomi. */
+        post: operations["api_v1_explore_suwayomi_extensions_action_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/explore/suwayomi/import/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Importe un manga depuis Suwayomi dans le catalogue local. */
+        post: operations["api_v1_explore_suwayomi_import_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/explore/suwayomi/search/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Recherche des mangas dans une source spécifique Suwayomi. */
+        get: operations["api_v1_explore_suwayomi_search_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/explore/suwayomi/sources/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Liste des sources de mangas installées dans Suwayomi. */
+        get: operations["api_v1_explore_suwayomi_sources_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/fusions/": {
         parameters: {
             query?: never;
@@ -1790,10 +1875,27 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Recherche et exploration des Seiyuu et de leurs rôles. */
+        /** @description Recherche et exploration des Seiyuu/Doubleurs et de leurs rôles. */
         get: operations["api_v1_labs_audio_seiyuu_retrieve"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/labs/audio/seiyuu/ingest/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Ingestion dynamique de voix à la volée depuis YouTube. */
+        post: operations["api_v1_labs_audio_seiyuu_ingest_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2140,70 +2242,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/market/listings/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["api_v1_market_listings_list"];
-        put?: never;
-        post: operations["api_v1_market_listings_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/market/listings/{id}/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["api_v1_market_listings_retrieve"];
-        put?: never;
-        post?: never;
-        delete: operations["api_v1_market_listings_destroy"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/market/listings/{id}/buy/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["api_v1_market_listings_buy_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/market/listings/{id}/cancel/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["api_v1_market_listings_cancel_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/market/wiki/": {
         parameters: {
             query?: never;
@@ -2533,6 +2571,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/multiverse/{universe_name}/export-pdf/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description GET /api/v1/multiverse/<str:universe_name>/export-pdf/
+         *     Génère et télécharge une fiche scénaristique PDF stylisée comme un Wiki
+         *     contenant la description, la cosmologie, les personnages et les relations Neo4j.
+         */
+        get: operations["api_v1_multiverse_export_pdf_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/multiverse/catalog/": {
         parameters: {
             query?: never;
@@ -2795,7 +2854,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** @description Interact with fifth generation Evolving AI and Singularity services (SOTA 2035+). */
+        get: operations["api_v1_singularity_lab_retrieve"];
         put?: never;
         /** @description Interact with fifth generation Evolving AI and Singularity services (SOTA 2035+). */
         post: operations["api_v1_singularity_lab_create"];
@@ -3273,6 +3333,10 @@ export interface components {
          * @enum {string}
          */
         ActionEnum: "block" | "warn" | "rewrite" | "none";
+        AgentTraceStep: {
+            agent: string;
+            thought: string;
+        };
         ClubEvent: {
             readonly id: number;
             club: number;
@@ -3284,6 +3348,22 @@ export interface components {
             readonly created_at: string;
             readonly participants_count: number;
             readonly is_participant: string;
+        };
+        CombatCharacter: {
+            name: string;
+            franchise?: string | null;
+            image_url?: string | null;
+            wiki_url?: string | null;
+            stats: components["schemas"]["CombatStats"];
+            summary?: string;
+        };
+        CombatStats: {
+            tier?: string | null;
+            tier_value: number;
+            speed?: string | null;
+            durability?: string | null;
+            intelligence?: string | null;
+            abilities?: string[];
         };
         CreativeFusion: {
             readonly id: number;
@@ -3332,6 +3412,10 @@ export interface components {
             /** Format: date-time */
             readonly created_at: string;
         };
+        DebateTurn: {
+            agent: string;
+            content: string;
+        };
         DiscoveryClub: {
             readonly id: number;
             name: string;
@@ -3352,6 +3436,14 @@ export interface components {
             readonly created_at: string;
             /** Format: date-time */
             readonly updated_at: string;
+        };
+        DocumentAttribution: {
+            title: string;
+            /** Format: double */
+            contribution_weight: number;
+            /** Format: double */
+            relevance_score?: number;
+            document_id?: string;
         };
         /**
          * @description * `QA` - Question-Answering
@@ -3386,23 +3478,15 @@ export interface components {
             readonly created_at: string;
             source_feedback?: number | null;
         };
-        MarketListing: {
-            readonly id: number;
-            fusion: number;
-            readonly fusion_detail: components["schemas"]["CreativeFusion"];
-            readonly seller: number;
-            /**
-             * Nom d’utilisateur
-             * @description Requis. 150 caractères maximum. Uniquement des lettres, nombres et les caractères « @ », « . », « + », « - » et « _ ».
-             */
-            readonly seller_name: string;
-            /** Format: int64 */
-            price: number;
-            readonly is_active: boolean;
-            /** Format: date-time */
-            readonly created_at: string;
-            /** Format: date-time */
-            readonly updated_at: string;
+        LogitLensTrajectory: {
+            layer: number;
+            top_tokens: string[];
+            internal_probabilities: number[];
+        };
+        ModelDiagnostics: {
+            attention_heatmap: number[][];
+            top_influential_tokens: string[];
+            logit_lens_trajectory: components["schemas"]["LogitLensTrajectory"][];
         };
         PaginatedAIREvalResultList: {
             /** @example 123 */
@@ -3538,21 +3622,6 @@ export interface components {
              */
             previous?: string | null;
             results: components["schemas"]["GoldDatasetEntry"][];
-        };
-        PaginatedMarketListingList: {
-            /** @example 123 */
-            count: number;
-            /**
-             * Format: uri
-             * @example http://api.example.org/accounts/?page=4
-             */
-            next?: string | null;
-            /**
-             * Format: uri
-             * @example http://api.example.org/accounts/?page=2
-             */
-            previous?: string | null;
-            results: components["schemas"]["MarketListing"][];
         };
         PaginatedProfileList: {
             /** @example 123 */
@@ -3697,6 +3766,8 @@ export interface components {
             unlocked_badges?: unknown;
             custom_username_color?: string | null;
             tier?: components["schemas"]["TierEnum"];
+            /** Format: int64 */
+            wallet_balance?: number;
             personalization_settings?: unknown;
             readonly has_api_key?: string;
         };
@@ -3723,6 +3794,8 @@ export interface components {
             unlocked_badges?: unknown;
             custom_username_color?: string | null;
             tier?: components["schemas"]["TierEnum"];
+            /** Format: int64 */
+            wallet_balance?: number;
             personalization_settings?: unknown;
             readonly has_api_key: string;
         };
@@ -3733,6 +3806,15 @@ export interface components {
          * @enum {string}
          */
         TierEnum: "free" | "premium" | "pro";
+        Uncertainty: {
+            /** Format: double */
+            confidence_score: number;
+            is_reliable: boolean;
+            /** Format: double */
+            perplexity: number | null;
+            action_required: string;
+            method: string;
+        };
         User: {
             readonly id: number;
             /**
@@ -3775,6 +3857,23 @@ export interface components {
             readonly date_joined: string;
             readonly level: number;
             readonly tier: string;
+        };
+        VsBattleResult: {
+            id: number;
+            character_a: components["schemas"]["CombatCharacter"];
+            character_b: components["schemas"]["CombatCharacter"];
+            winner: string;
+            verdict_summary: string;
+            debate_history: components["schemas"]["DebateTurn"][];
+        };
+        XaiReport: {
+            query_intent: string;
+            retrieval_attribution?: components["schemas"]["DocumentAttribution"][];
+            internal_diagnostics?: components["schemas"]["ModelDiagnostics"];
+            uncertainty?: components["schemas"]["Uncertainty"];
+            agent_trace?: components["schemas"]["AgentTraceStep"][];
+            /** Format: double */
+            final_confidence: number;
         };
     };
     responses: never;
@@ -5353,6 +5452,96 @@ export interface operations {
             };
         };
     };
+    api_v1_explore_suwayomi_extensions_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_explore_suwayomi_extensions_action_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_explore_suwayomi_import_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_explore_suwayomi_search_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_explore_suwayomi_sources_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     api_v1_fusions_list: {
         parameters: {
             query?: {
@@ -6142,12 +6331,13 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description No response body */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["VsBattleResult"];
+                };
             };
         };
     };
@@ -6296,6 +6486,24 @@ export interface operations {
         };
     };
     api_v1_labs_audio_seiyuu_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    api_v1_labs_audio_seiyuu_ingest_create: {
         parameters: {
             query?: never;
             header?: never;
@@ -6670,148 +6878,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
-            };
-        };
-    };
-    api_v1_market_listings_list: {
-        parameters: {
-            query?: {
-                /** @description Un numéro de page de l'ensemble des résultats. */
-                page?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedMarketListingList"];
-                };
-            };
-        };
-    };
-    api_v1_market_listings_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MarketListing"];
-                "application/x-www-form-urlencoded": components["schemas"]["MarketListing"];
-                "multipart/form-data": components["schemas"]["MarketListing"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MarketListing"];
-                };
-            };
-        };
-    };
-    api_v1_market_listings_retrieve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MarketListing"];
-                };
-            };
-        };
-    };
-    api_v1_market_listings_destroy: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No response body */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    api_v1_market_listings_buy_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MarketListing"];
-                "application/x-www-form-urlencoded": components["schemas"]["MarketListing"];
-                "multipart/form-data": components["schemas"]["MarketListing"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MarketListing"];
-                };
-            };
-        };
-    };
-    api_v1_market_listings_cancel_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MarketListing"];
-                "application/x-www-form-urlencoded": components["schemas"]["MarketListing"];
-                "multipart/form-data": components["schemas"]["MarketListing"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MarketListing"];
-                };
             };
         };
     };
@@ -7348,6 +7414,26 @@ export interface operations {
             };
         };
     };
+    api_v1_multiverse_export_pdf_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                universe_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     api_v1_multiverse_catalog_retrieve: {
         parameters: {
             query?: never;
@@ -7769,6 +7855,24 @@ export interface operations {
             };
         };
     };
+    api_v1_singularity_lab_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     api_v1_singularity_lab_create: {
         parameters: {
             query?: never;
@@ -7942,12 +8046,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description No response body */
+            /** @description Flux SSE (text/event-stream). Évènements : `thought`, `eval`, `token` et `xai_report`. Le schéma décrit la charge de l'évènement `xai_report` (les autres portent du texte). */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["XaiReport"];
+                };
             };
         };
     };

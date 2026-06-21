@@ -1,5 +1,4 @@
 import numpy as np
-
 from core.domain.services.neuromorphic_lnn_service import (
     LiquidNeuralNetworkService,
 )

@@ -37,18 +37,47 @@ npm run build
 # Génère le dossier dist/ prêt à être servi par Django ou un CDN
 ```
 
-## 🗂️ Structure
+## 🗂️ Structure & conventions
 
 ```
 frontend/src/
-├── api.js               # Client REST (search, classic game)
-├── index.css            # Design system Tailwind
-├── main.jsx             # Entry point React
-├── App.jsx              # App principale : NavBar, Dashboard, OraclePanel
-└── components/
-    ├── SearchBar.jsx    # Autocomplete avec debounce
-    └── ClassicGame.jsx  # Jeu classique complet
+├── main.tsx              # Entry point (ErrorBoundary + observabilité + AuthProvider + Router)
+├── index.css             # Design system Tailwind
+├── api.ts                # Client REST haut-niveau + types générés (components["schemas"][…])
+├── types/                # Types app + api.d.ts (généré depuis l'OpenAPI backend)
+├── context/              # Providers React (Auth…)
+├── i18n/                 # Internationalisation
+├── store/                # Stores Zustand GLOBAUX (auth, ui, toast, notification)
+├── hooks/                # Hooks transverses (non liés à un domaine)
+├── utils/                # Utilitaires transverses (apiClient, queryClient, observability…)
+├── components/           # UI partagée TRANSVERSE
+│   ├── ui/               #   primitives (Button, Card, ErrorBoundary…)
+│   ├── layout/           #   layout applicatif (Sidebar, Settings…)
+│   └── …                 #   xai/, three/, video/…
+├── features/<domaine>/   # LOGIQUE d'un domaine, réutilisable
+│   ├── hooks/            #   React Query + logique (useClassicGame…)
+│   ├── services/         #   appels API du domaine (classicService…)
+│   ├── stores/           #   stores Zustand spécifiques au domaine
+│   ├── components/       #   sous-composants réutilisables du domaine
+│   └── routes/           #   câblage des routes du domaine (→ importe les pages)
+└── pages/<domaine>/      # COMPOSANTS D'ÉCRAN (un par route), qui composent les features
+    └── <page>/           #   (optionnel) sous-composants/hooks PROPRES à une grosse page
 ```
+
+**Où mettre quoi ?** (`features/` et `pages/` se **complètent**, ils ne se dupliquent pas — 0 fichier en double)
+
+| Question | Emplacement |
+|----------|-------------|
+| Ça rend une **route/écran** ? | `pages/<domaine>/XxxPage.tsx` |
+| **Logique de domaine** (hook React Query, appel API, store) réutilisée ? | `features/<domaine>/{hooks,services,stores}` |
+| Sous-composant **réutilisable** d'un domaine ? | `features/<domaine>/components/` |
+| UI **transverse** (multi-domaines) ? | `components/ui` ou `components/<thème>` |
+| State **global** (auth, toasts, UI) ? | `store/` (Zustand) ; sinon préférer React Query pour l'état serveur |
+| Sous-composant/hook **propre à une seule grosse page** ? | co-localisé sous `pages/<domaine>/<page>/` |
+
+> Convention validée : `features/` = logique, `pages/` = écrans. Pas de migration `modules/` —
+> la séparation est saine et un déplacement massif (≈265 fichiers + imports/routing/lazy/PWA)
+> serait à haut risque pour un gain marginal.
 
 ## 🔌 Endpoints utilisés
 

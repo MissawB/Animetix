@@ -90,6 +90,16 @@ urlpatterns = [
         name="api_media_detail",
     ),
     path(
+        "media/favorites/",
+        api_views.FavoriteMangaListView.as_view(),
+        name="api_favorite_manga_list",
+    ),
+    path(
+        "media/Manga/<str:media_id>/favorite/",
+        api_views.FavoriteMangaToggleView.as_view(),
+        name="api_manga_favorite_toggle",
+    ),
+    path(
         "media/Manga/<str:media_id>/chapters/",
         api_views.MangaChapterListView.as_view(),
         name="api_manga_chapters",
@@ -98,6 +108,26 @@ urlpatterns = [
         "media/Manga/<str:media_id>/chapters/<str:chapter_number>/",
         api_views.MangaChapterDetailView.as_view(),
         name="api_manga_chapter_detail",
+    ),
+    path(
+        "media/Manga/<str:media_id>/chapters/<str:chapter_number>/sync/",
+        api_views.MangaChapterSyncView.as_view(),
+        name="api_manga_chapter_sync",
+    ),
+    path(
+        "profile/trackers/",
+        api_views.TrackerConnectionListView.as_view(),
+        name="api_tracker_connections",
+    ),
+    path(
+        "profile/trackers/link/",
+        api_views.TrackerConnectionLinkView.as_view(),
+        name="api_tracker_link",
+    ),
+    path(
+        "profile/trackers/unlink/",
+        api_views.TrackerConnectionUnlinkView.as_view(),
+        name="api_tracker_unlink",
     ),
     path(
         "explore/suwayomi/sources/",
@@ -232,6 +262,11 @@ urlpatterns = [
         "labs/audio/seiyuu/",
         api_views.SeiyuuDiscoveryView.as_view(),
         name="api_audio_seiyuu",
+    ),
+    path(
+        "labs/audio/seiyuu/ingest/",
+        api_views.VoiceProfileIngestView.as_view(),
+        name="api_audio_seiyuu_ingest",
     ),
     path(
         "singularity-lab/",

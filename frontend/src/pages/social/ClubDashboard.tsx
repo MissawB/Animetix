@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useParams, Link } from 'react-router-dom';
 import { ChevronLeft, Users, Settings, Bell, Info, Calendar, Plus, Clock, FileText } from 'lucide-react';
 import ClubChat from '../../features/social/components/ClubChat';
@@ -18,7 +19,8 @@ const ClubDashboard: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const clubId = Number(id);
   const { club, isLoadingClub, events } = useClub(clubId);
-  
+  const queryClient = useQueryClient();
+
   const [activeTab, setActiveTab] = useState<'chat' | 'events'>('chat');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newEventTitle, setNewEventTitle] = useState('');
@@ -54,10 +56,9 @@ const ClubDashboard: React.FC = () => {
       setNewEventDescription('');
       setNewEventDate('');
       setShowCreateModal(false);
-      // useClub uses invalidateQueries, so events will refresh automatically if we use its mutation
-      // or we just call the API directly and then manual invalidate is needed.
-      // For now, let's keep it simple as the hook isn't fully wired for creation yet.
-      window.location.reload(); 
+      // L'événement est créé via l'API ; on invalide la query events de useClub
+      // (même clé) pour rafraîchir la liste sans recharger toute la page.
+      queryClient.invalidateQueries({ queryKey: ['club', clubId, 'events'] });
     } catch (err) {
       const error = err as { error?: string; message?: string };
       console.error(error);

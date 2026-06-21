@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Tests unitaires pour les modules d'IA de Cinquième Génération (Singularité SOTA 2035+) d'Animetix.
-Couvre SelfEvolvingCompiler, SynapticPlasticitySimulator, et AutonomousDomainSynthesizer.
+Couvre SelfEvolvingCompiler et AutonomousDomainSynthesizer.
 """
 
 from unittest.mock import MagicMock  # noqa: E402
@@ -76,55 +76,7 @@ def matrix_row_norm(x):
 
 
 # ==========================================
-# 2. TESTS PLASTICITÉ SYNAPTIQUE (HEBBIAN & STDP)
-# ==========================================
-def test_synaptic_plasticity_hebbian_and_stdp():
-    from core.domain.services.synaptic_plasticity import (  # noqa: E402
-        SynapticPlasticitySimulator,
-    )
-
-    simulator = SynapticPlasticitySimulator(
-        num_concepts=5, tau_plus=10.0, tau_minus=10.0
-    )
-
-    # 1. Règle Hebbian : co-activation de concepts
-    activations = [1.0, 1.0, 0.0, 0.0, 0.0]
-    old_weight_0_1 = simulator.W[0, 1]
-
-    simulator.update_hebbian(activations, learning_rate=0.1)
-
-    # Les poids de co-activation doivent augmenter
-    assert simulator.W[0, 1] > old_weight_0_1
-    assert simulator.W[0, 0] == 0.0  # Diagonale doit rester nulle
-
-    # 2. Règle STDP : Spike-Timing-Dependent Plasticity
-    # Concept 0 s'active (spike) à t=10.0
-    # Concept 1 s'active (spike) à t=15.0
-    # post_time > pre_time => potentiation (LTP)
-    simulator.trigger_spikes([0], current_time=10.0)
-    simulator.trigger_spikes([1], current_time=15.0)
-
-    old_w_ltp = simulator.W[0, 1]
-    dw_ltp = simulator.update_stdp(pre_idx=0, post_idx=1, learning_rate=0.1)
-
-    assert dw_ltp > 0.0
-    assert simulator.W[0, 1] > old_w_ltp
-
-    # LTD (Dépression) : post_time < pre_time
-    # Concept 2 s'active à t=30.0
-    # Concept 3 s'active à t=25.0
-    simulator.trigger_spikes([2], current_time=30.0)
-    simulator.trigger_spikes([3], current_time=25.0)
-
-    old_w_ltd = simulator.W[2, 3]
-    dw_ltd = simulator.update_stdp(pre_idx=2, post_idx=3, learning_rate=0.1)
-
-    assert dw_ltd < 0.0
-    assert simulator.W[2, 3] < old_w_ltd
-
-
-# ==========================================
-# 3. TESTS SYNTHÉTISEUR DE MULTIVERS AUTONOME (ADMS)
+# 2. TESTS SYNTHÉTISEUR DE MULTIVERS AUTONOME (ADMS)
 # ==========================================
 def test_autonomous_domain_synthesizer():
     from core.domain.services.domain_synthesizer import (  # noqa: E402

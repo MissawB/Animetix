@@ -20,8 +20,11 @@ describe('AdminCurationPage', () => {
         </MemoryRouter>
       </QueryClientProvider>
     );
-    expect(screen.getByText(/CURATION/i)).toBeInTheDocument();
-    expect(screen.getByText(/CENTER/i)).toBeInTheDocument();
+    // Target the page heading specifically: /CURATION/i also matches raw i18n
+    // keys elsewhere (the test i18n mock returns keys verbatim).
+    expect(
+      screen.getByRole('heading', { name: /CURATION CENTER/i }),
+    ).toBeInTheDocument();
   });
 
   it('renders the tab buttons', () => {

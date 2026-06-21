@@ -1,9 +1,8 @@
 from unittest.mock import MagicMock
 
 import pytest
-
-from backend.core.domain.entities.ai_schemas import RAGContext, RAGState
-from backend.core.domain.services.rag.processors.base import StateProcessor
+from core.domain.entities.ai_schemas import RAGContext, RAGState
+from core.domain.services.rag.processors.base import StateProcessor
 
 
 def test_state_processor_is_abstract():

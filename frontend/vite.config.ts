@@ -40,9 +40,28 @@ export default defineConfig({
         ]
       },
       workbox: {
-        maximumFileSizeToCacheInBytes: 6000000, // 6MB pour autoriser plotly
+        // On NE précache PAS les très gros chunks (ex. plotly-vendor ~4,6 Mo) : ils
+        // alourdissaient l'install du SW (~7,5 Mo) pour tous les visiteurs, même ceux
+        // qui n'ouvrent jamais de page Plotly/3D (routes lazy). Limite à 2 Mo →
+        // ces chunks sont mis en cache à la demande via runtimeCaching ci-dessous
+        // (offline préservé après la 1re visite de la page concernée).
+        maximumFileSizeToCacheInBytes: 2000000, // 2 Mo
+        // Exclusion explicite du chunk plotly (~4,6 Mo) du manifeste de précache
+        // (sinon vite-plugin-pwa lève une erreur de build). Servi via runtimeCaching.
+        globIgnores: ['**/plotly-vendor-*.js'],
         navigateFallback: '/static/index.html',
-        navigateFallbackDenylist: [/^\/api\//]
+        navigateFallbackDenylist: [/^\/api\//],
+        runtimeCaching: [
+          {
+            // Chunks JS/CSS hashés non précachés (plotly, three.js, pages lourdes…)
+            urlPattern: /\/static\/assets\/.*\.(?:js|css)$/,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'static-assets-runtime',
+              expiration: { maxEntries: 80, maxAgeSeconds: 60 * 60 * 24 * 30 }
+            }
+          }
+        ]
       }
     }),
     visualizer({

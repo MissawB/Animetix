@@ -2,16 +2,15 @@ import json
 from unittest.mock import MagicMock, patch
 
 import pytest
-
-from backend.core.domain.entities.ai_schemas import (
+from core.domain.entities.ai_schemas import (
     CombatCharacter,
     CombatResult,
     CombatStats,
 )
-from backend.core.domain.services.creative.vs_battle_service import VsBattleService
-from backend.core.domain.services.prompt_manager import PromptManager  # noqa: E402
-from backend.core.ports.fandom_port import FandomPort  # noqa: E402
-from backend.core.ports.inference_port import InferencePort  # noqa: E402
+from core.domain.services.creative.vs_battle_service import VsBattleService
+from core.domain.services.prompt_manager import PromptManager  # noqa: E402
+from core.ports.fandom_port import FandomPort  # noqa: E402
+from core.ports.inference_port import InferencePort  # noqa: E402
 
 
 @pytest.fixture

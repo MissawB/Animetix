@@ -14,29 +14,36 @@ interface ClubChatProps {
   clubName: string;
 }
 
+const buildWelcomeMessages = (clubName: string): Message[] => [
+  {
+    id: 'system-welcome',
+    sender: 'System',
+    content: `Welcome to the ${clubName} chat!`,
+    timestamp: new Date().toISOString(),
+  },
+];
+
 const ClubChat: React.FC<ClubChatProps> = ({ clubId, clubName }) => {
   const { user } = useAuthStore();
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(() => buildWelcomeMessages(clubName));
   const [newMessage, setNewMessage] = useState('');
   const [isConnected, setIsConnected] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<WebSocket | null>(null);
 
+  // Reset local messages for the new club room during render (avoids cascading
+  // renders from setState-in-effect). React re-renders before committing.
+  const [renderedClubId, setRenderedClubId] = useState(clubId);
+  if (renderedClubId !== clubId) {
+    setRenderedClubId(clubId);
+    setMessages(buildWelcomeMessages(clubName));
+  }
+
   useEffect(() => {
     if (!clubId) return;
 
-    // Reset local messages for the new club room
-    setMessages([
-      { 
-        id: 'system-welcome', 
-        sender: 'System', 
-        content: `Welcome to the ${clubName} chat!`, 
-        timestamp: new Date().toISOString() 
-      }
-    ]);
-
     let ws: WebSocket | null = null;
-    let reconnectTimeoutId: any = null;
+    let reconnectTimeoutId: ReturnType<typeof setTimeout> | null = null;
     let isMounted = true;
 
     const connectWebSocket = () => {

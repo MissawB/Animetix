@@ -4,6 +4,21 @@ import { useAuthStore } from "../../store/authStore";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sword, User, Zap, Trophy, Timer, XCircle, Users, Radio } from 'lucide-react';
+// Shapes pushed over the duel WebSocket (snake_case, distinct from the generic
+// turn-based DuelGameState in src/types).
+interface DuelGameState {
+  player1: string;
+  player2?: string;
+  secret_title: string;
+  media_type: string;
+}
+
+interface DuelLog {
+  type: string;
+  player: string;
+  winner: string;
+  score: number;
+}
 
 const DuelArenaPage: React.FC = () => {
   const { roomCode } = useParams<{ roomCode: string }>();

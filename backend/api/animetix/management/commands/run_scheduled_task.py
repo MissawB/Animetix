@@ -11,6 +11,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # Import dynamically to support clean testing and avoid early import side effects
+        from animetix.tasks.manga_tasks import check_manga_updates_task  # noqa: E402
         from animetix.tasks.meta_tasks import scheduled_dpo_optimization  # noqa: E402
         from animetix.tasks.pipeline_tasks import (  # noqa: E402
             check_dpo_feedback_sensor_task,
@@ -27,6 +28,7 @@ class Command(BaseCommand):
             "hourly-health-monitoring": run_hourly_monitoring_workflow,
             "gold-dataset-lora-sensor": check_gold_dataset_sensor_task,
             "gold-dataset-dpo-sensor": check_dpo_feedback_sensor_task,
+            "manga-updates-check": check_manga_updates_task,
         }
 
         task_key = options["task_key"]

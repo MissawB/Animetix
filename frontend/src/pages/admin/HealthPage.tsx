@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { 
+import { motion } from 'framer-motion';
+import {
   Cpu, 
   Database, 
   Settings, 

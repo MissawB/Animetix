@@ -1,17 +1,19 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { MangaReader } from '../../features/manga-reader';
 import { useReaderStore } from '../../features/manga-reader/stores/useReaderStore';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
 import { apiClient } from '../../utils/apiClient';
+import { syncMangaProgress } from '../../api';
 import { ArrowLeft, BookOpen, ChevronRight, Settings, WifiOff } from 'lucide-react';
 import { useChapterPages } from '../../features/manga-reader/offline/useChapterPages';
 
 const MangaReaderPage: React.FC = () => {
   const { mediaId, chapterId } = useParams<{ mediaId: string; chapterId: string }>();
   const navigate = useNavigate();
-  const { setPages, setCurrentPageIndex } = useReaderStore();
+  const { setPages, setCurrentPageIndex, currentPageIndex, pages: readerPages } = useReaderStore();
+  const syncedRef = useRef<string | null>(null);
 
   // Fetch Manga Metadata
   const { data: manga } = useQuery({
@@ -25,6 +27,28 @@ const MangaReaderPage: React.FC = () => {
     setPages(pages);
     setCurrentPageIndex(0);
   }, [pages, setPages, setCurrentPageIndex]);
+
+  // Synchronize progress on reaching the last page of the chapter
+  useEffect(() => {
+    if (mediaId && chapterId && readerPages.length > 0 && currentPageIndex === readerPages.length - 1) {
+      const syncKey = `${mediaId}-${chapterId}`;
+      if (syncedRef.current !== syncKey) {
+        syncedRef.current = syncKey;
+        syncMangaProgress(mediaId, chapterId).catch((err) => {
+          console.error("Failed to sync manga reading progress:", err);
+        });
+      }
+    }
+  }, [currentPageIndex, readerPages.length, mediaId, chapterId]);
+
+  const handleNextChapter = () => {
+    if (mediaId && chapterId) {
+      syncMangaProgress(mediaId, chapterId).catch((err) => {
+        console.error("Failed to sync manga reading progress on next chapter:", err);
+      });
+      navigate(`/media/manga/${mediaId}/${parseFloat(chapterId) + 1}/`);
+    }
+  };
 
   return (
     <AnimatedPage>
@@ -90,7 +114,7 @@ const MangaReaderPage: React.FC = () => {
                 </button>
                 <div className="w-px h-4 bg-white/10"></div>
                 <button 
-                  onClick={() => navigate(`/media/manga/${mediaId}/${parseFloat(chapterId!) + 1}/`)}
+                  onClick={handleNextChapter}
                   className="text-xs font-black uppercase tracking-tighter opacity-40 hover:opacity-100 transition-opacity"
                 >
                   Chapitre Suivant

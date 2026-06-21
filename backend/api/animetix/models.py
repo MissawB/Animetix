@@ -80,6 +80,46 @@ class MangaPage(models.Model):
         return f"{self.chapter} - Page {self.number}"
 
 
+class FavoriteManga(models.Model):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="favorite_mangas"
+    )
+    manga = models.ForeignKey(
+        MediaItem,
+        on_delete=models.CASCADE,
+        related_name="favorited_by",
+        limit_choices_to={"media_type": "Manga"},
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "manga")
+
+    def __str__(self):
+        return f"{self.user.username} - {self.manga.title}"
+
+
+class TrackerConnection(models.Model):
+    TRACKER_CHOICES = [
+        ("myanimelist", "MyAnimeList"),
+        ("anilist", "AniList"),
+    ]
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="tracker_connections"
+    )
+    tracker = models.CharField(max_length=20, choices=TRACKER_CHOICES)
+    token = models.TextField(blank=True, null=True)
+    username = models.CharField(max_length=150, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("user", "tracker")
+
+    def __str__(self):
+        return f"{self.user.username} - {self.tracker} ({self.username or 'Connected'})"
+
+
 # --- USER SYSTEM ---
 class Profile(models.Model):
     TIERS = [("free", "Free"), ("premium", "Premium"), ("pro", "Professional")]
@@ -746,3 +786,60 @@ class SupportTicket(models.Model):
 
     def __str__(self):
         return f"Ticket {self.id}: {self.subject}"
+
+
+class VoiceProfile(models.Model):
+    ORIGIN_CHOICES = [
+        ("dataset", "Dataset (Hugging Face)"),
+        ("youtube", "YouTube Ingestion"),
+        ("upload", "Manual Upload"),
+    ]
+    LANGUAGE_CHOICES = [
+        ("japanese", "Japanese (Seiyuu)"),
+        ("french", "French (Doubleur)"),
+        ("other", "Other"),
+    ]
+
+    name = models.CharField(max_length=255, unique=True)
+    language = models.CharField(
+        max_length=20, choices=LANGUAGE_CHOICES, default="japanese"
+    )
+    origin = models.CharField(max_length=20, choices=ORIGIN_CHOICES, default="dataset")
+    definition = models.TextField(null=True, blank=True)
+    roles = models.TextField(null=True, blank=True)
+    impact = models.CharField(max_length=100, null=True, blank=True)
+    origin_detail = models.CharField(
+        max_length=500, null=True, blank=True
+    )  # HF path or YT URL
+    sample_file = models.FileField(upload_to="audio/samples/", null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.get_language_display()})"
+
+    @property
+    def sample_url(self) -> str:
+        if self.sample_file:
+            return self.sample_file.url
+        if self.origin_detail and self.origin_detail.startswith("http"):
+            try:
+                from core.utils.security import safe_http_request
+                from django.core.files.base import ContentFile
+                from django.utils.text import slugify
+
+                response = safe_http_request("GET", self.origin_detail, timeout=10)
+                if response.status_code == 200:
+                    file_name = f"{slugify(self.name)}_sample.wav"
+                    self.sample_file.save(
+                        file_name, ContentFile(response.content), save=True
+                    )
+                    return self.sample_file.url
+            except Exception as e:
+                import logging
+
+                logging.getLogger("animetix.models").warning(
+                    f"Failed to fetch/save voice sample from {self.origin_detail}: {e}"
+                )
+            return self.origin_detail
+        return ""

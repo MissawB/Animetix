@@ -63,6 +63,23 @@ To optimize startup performance and keep memory usage low, heavy AI libraries (`
 
 ---
 
+## 4bis. Async / Sync Strategy
+
+The codebase is **synchronous by default**, with `async` deliberately confined to two edges. This is the canonical Django + Channels model — keep it; do **not** "async-ify" the core.
+
+- **Core domain & DRF views are SYNC.** Domain services (`core/domain/services/`) expose synchronous public APIs (e.g. `ReasoningAgentService.solve_complex_query`, the RAG services, game logic). DRF request handling is sync. Inference adapters are sync.
+- **Async edge #1 — ASGI / Channels consumers** (`api/animetix/consumers/`): WebSocket consumers are `async` because they run on the ASGI event loop (real-time duel, codemanga, notifications, Gemini Live…). This is the *only* place async is the default.
+- **Async edge #2 — Multi-agent bus subsystem** (`multi_agent_bus`, `orchestrator_agent_service.execute_workflow`, `reasoning_agent_service._on_bus_message`): Redis pub/sub over `asyncio`. Its `async` methods run **only inside an async context** (the bus loop / a consumer). Note: this subsystem is currently *not wired to any HTTP/WS endpoint* (experimental) — its services expose sync entry points (`solve_complex_query`) for normal use, and the async methods are bus-internal.
+
+**Boundary rules (to keep it coherent):**
+1. Never call an `async` method directly from sync request code. If a sync view ever needs the bus, wrap with `asgiref.sync.async_to_sync` — do not spin up `asyncio.run()` per request (it breaks the running loop under ASGI). *(Current count of boundary crossings: zero — the edges don't leak into the core.)*
+2. Never perform blocking I/O (DB, sync HTTP) directly inside an async consumer; wrap with `asgiref.sync.sync_to_async`.
+3. If the multi-agent bus is ever exposed to users, drive it from an **async consumer**, not a sync DRF view.
+
+For SSRF-safe HTTP, both sync (`safe_http_request`) and async (`safe_http_request_async`) helpers exist in `core/utils/security.py`; pick the one matching your context.
+
+---
+
 ## 5. Extensibility & Port Implementation
 
 Adapters implement the abstract ports. Any method not implemented by a specific adapter raises an `InferenceNotImplementedError`. Extending the platform follows a strict pattern:

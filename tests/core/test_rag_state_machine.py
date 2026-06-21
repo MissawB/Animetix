@@ -69,7 +69,6 @@ def mock_deps():
             retrieval_evaluator=MagicMock(),
             context_compressor=MagicMock(),
             scout=mock_scout,
-            video_rag_service=MagicMock(),
             neo4j_manager=MagicMock(),
             rag_service=mock_rag,
         ),

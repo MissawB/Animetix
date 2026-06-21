@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import _Plot from 'react-plotly.js';
+import type * as Plotly from 'plotly.js';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from "../../utils/apiClient";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
@@ -9,7 +10,16 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PlotlyEvent } from '../../types';
 
-const Plot = (_Plot as unknown as { default: React.ComponentType<unknown> }).default || _Plot;
+interface PlotProps {
+  data: Plotly.Data[];
+  layout?: Partial<Plotly.Layout>;
+  config?: Partial<Plotly.Config>;
+  style?: React.CSSProperties;
+  onClick?: (event: PlotlyEvent) => void;
+}
+
+const Plot = (_Plot as unknown as { default: React.ComponentType<PlotProps> }).default
+  || (_Plot as unknown as React.ComponentType<PlotProps>);
 
 interface PilgrimageLocation {
   id: string;
@@ -211,7 +221,7 @@ const SeichijunreiMapPage: React.FC = () => {
           
           <div className="w-full h-full">
             <Plot
-              data={plotData}
+              data={plotData as Plotly.Data[]}
               onClick={handlePointClick}
               layout={{
                 autosize: true,

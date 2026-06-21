@@ -126,6 +126,7 @@ const AccountSettingsPage: React.FC = () => {
                             key={preset.hex}
                             onClick={() => setCustomColor(preset.hex)}
                             title={preset.name}
+                            aria-label={`Couleur ${preset.name}`}
                             className={`w-8 h-8 rounded-full border-2 transition-all ${
                               customColor === preset.hex ? 'border-black dark:border-white scale-110 shadow-lg' : 'border-transparent hover:scale-105'
                             }`}

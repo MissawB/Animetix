@@ -3,11 +3,10 @@ import re
 from typing import List, Optional
 
 import orjson
-
-from backend.core.domain.entities.ai_schemas import ForgeHypothesis
-from backend.core.domain.services.llm_service import LLMService
-from backend.core.domain.services.prompt_manager import PromptManager
-from backend.core.ports.graph_persistence_port import GraphPersistencePort
+from core.domain.entities.ai_schemas import ForgeHypothesis
+from core.domain.services.llm_service import LLMService
+from core.domain.services.prompt_manager import PromptManager
+from core.ports.graph_persistence_port import GraphPersistencePort
 
 logger = logging.getLogger("animetix.rag.forge")
 

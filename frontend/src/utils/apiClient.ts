@@ -45,8 +45,12 @@ export const apiClient = async (url: string, options: RequestInit & { skipToast?
       if (!skipToast) {
         useToastStore.getState().addToast(errorMessage, 'error');
       }
-      
-      throw new Error(errorMessage);
+
+      // On attache le code HTTP à l'erreur pour permettre une gestion fine en aval
+      // (ex. ne pas retenter les 4xx dans React Query).
+      const error = new Error(errorMessage) as Error & { status?: number };
+      error.status = response.status;
+      throw error;
     }
 
     // Gérer les retours 204 No Content

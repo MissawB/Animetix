@@ -9,7 +9,7 @@ import { CardSkeleton } from "../../components/ui/Skeleton";
 
 
 const CovertestPage: React.FC = () => {
-  const { gameState, loading, handleGuess } = useCovertest();
+  const { gameState, loading, handleGuess, restart } = useCovertest();
   const [guess, setGuess] = useState<string>('');
 
   const onSubmit = async () => {
@@ -53,7 +53,7 @@ const CovertestPage: React.FC = () => {
               <div className="text-center py-8">
                   <h3 className="text-4xl font-black text-green-500 mb-2 uppercase italic manga-font">TROUVÉ !</h3>
                   <p className="text-2xl font-bold text-gray-800 dark:text-white mb-8">{gameState.secret_title}</p>
-                  <Button variant="primary" className="mx-auto px-12 py-4 italic" onClick={() => window.location.reload()}>
+                  <Button variant="primary" className="mx-auto px-12 py-4 italic" onClick={() => restart()}>
                       <RotateCcw className="w-5 h-5" /> REJOUER
                   </Button>
               </div>

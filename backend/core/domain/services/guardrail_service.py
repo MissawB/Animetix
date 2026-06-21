@@ -5,6 +5,8 @@ import logging
 import re
 from typing import Any, Dict, List, Optional
 
+from ...config import get_config
+from ...ports.config_port import ConfigPort
 from ...ports.inference_port import InferencePort
 from ..exceptions import ContentModerationError
 from .prompt_manager import PromptManager
@@ -34,11 +36,13 @@ class GuardrailService:
         prompt_manager: Optional[PromptManager] = None,
         neo4j_manager=None,
         safety_engine: Optional[InferencePort] = None,
+        config_port: Optional[ConfigPort] = None,
     ):
         self.inference_engine = inference_engine
         self.prompt_manager = prompt_manager
         self.neo4j = neo4j_manager
         self.safety_engine = safety_engine or inference_engine
+        self.config = config_port or get_config()
         self.enabled_categories = [
             "SPOILER",
             "INAPPROPRIATE_CONTENT",
@@ -50,9 +54,7 @@ class GuardrailService:
     def _check_agent_gateway(
         self, text: str, mode: str = "input"
     ) -> Optional[Dict[str, Any]]:
-        from django.conf import settings  # noqa: E402
-
-        if not getattr(settings, "VERTEX_AI_AGENT_GATEWAY_ACTIVE", False):
+        if not self.config.get("VERTEX_AI_AGENT_GATEWAY_ACTIVE", False):
             return None
         try:
             # Simulate or execute policy check via Agent Gateway

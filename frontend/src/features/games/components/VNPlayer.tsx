@@ -1,13 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
-
-interface VNScene {
-  background_url: string;
-  character_name: string;
-  character_sprite_url: string;
-  dialogue: string;
-  vibe: string;
-}
+import { VNScene } from '../../../types';
 
 interface VNPlayerProps {
   scenes: VNScene[];

@@ -10,7 +10,7 @@ import { CardSkeleton } from "../../components/ui/Skeleton";
 
 
 const ClassicGamePage: React.FC = () => {
-  const { gameState, loading, handleGuess } = useClassicGame();
+  const { gameState, loading, handleGuess, restart } = useClassicGame();
   const [guess, setGuess] = useState<string>('');
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -58,7 +58,7 @@ const ClassicGamePage: React.FC = () => {
                           <Trophy className="w-20 h-20 text-green-500 mx-auto mb-6" />
                           <h2 className="text-4xl font-black text-green-600 mb-2">VICTOIRE !</h2>
                           <p className="text-xl font-bold opacity-70 mb-8">C'était bien {gameState.secret_title}</p>
-                          <Button variant="success" className="mx-auto" onClick={() => window.location.reload()}>
+                          <Button variant="success" className="mx-auto" onClick={() => restart()}>
                               REJOUER
                           </Button>
                       </div>

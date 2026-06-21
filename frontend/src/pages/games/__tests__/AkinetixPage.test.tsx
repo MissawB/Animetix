@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeAll } from 'vitest';
+import type { MockInstance } from 'vitest';
 import AkinetixPage from '../AkinetixPage';
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -34,7 +35,7 @@ describe('AkinetixPage', () => {
     expect(question).toBeInTheDocument();
 
     // Mock pour la réponse suivante
-    (global.fetch as unknown).mockResolvedValueOnce({
+    (global.fetch as unknown as MockInstance<typeof fetch>).mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({
             history: [{ q: "Est-ce un personnage masculin ?", a: "OUI" }],

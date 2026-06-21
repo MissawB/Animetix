@@ -21,6 +21,11 @@ interface CounterfactualResult {
     what_if: string;
     analysis: string;
     butterfly_effect: string[];
+    what_if_query: string;
+    counterfactual_regret: number;
+    actual_utility: number;
+    alternative_utility: number;
+    alternative_response: string;
 }
 
 const CounterfactualSimulatorPage: React.FC = () => {

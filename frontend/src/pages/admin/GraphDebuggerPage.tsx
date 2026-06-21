@@ -8,7 +8,8 @@ import {
   Loader2,
   AlertTriangle,
   CheckCircle2,
-  Network
+  Network,
+  GitMerge
 } from 'lucide-react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiClient } from "../../utils/apiClient";
@@ -47,7 +48,15 @@ const GraphDebuggerPage: React.FC = () => {
     }
   });
 
-  if (isLoading) return (
+  const mergeDuplicatesMutation = useMutation({
+    mutationFn: () => apiClient('/api/v1/graph/debugger/', {
+        method: 'POST',
+        body: JSON.stringify({ action: 'merge_duplicates' })
+    }),
+    onSuccess: () => refetch()
+  });
+
+  if (isLoading || !audit) return (
     <div className="max-w-7xl mx-auto px-6 py-32 flex flex-col items-center justify-center">
         <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mb-8 shadow-[0_0_20px_rgba(168,85,247,0.5)]"></div>
         <p className="text-sm font-black uppercase tracking-[0.3em] animate-pulse opacity-40">Auditing Knowledge Graph...</p>
@@ -74,7 +83,7 @@ const GraphDebuggerPage: React.FC = () => {
           </header>
 
           {/* Top Stats Dashboard */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16 text-black dark:text-white">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mb-16 text-black dark:text-white">
               <Card padding="lg" className="bg-white dark:bg-[#0f0f1a] border-none shadow-xl relative overflow-hidden group">
                   <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform">
                       <AlertTriangle className="w-32 h-32" />
@@ -110,6 +119,18 @@ const GraphDebuggerPage: React.FC = () => {
                   </div>
                   <p className="text-[10px] font-bold opacity-30 mt-4 leading-relaxed uppercase">Entités extraites non rattachées à un média parent.</p>
               </Card>
+
+              <Card padding="lg" className="bg-white dark:bg-[#0f0f1a] border-none shadow-xl relative overflow-hidden group">
+                  <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform text-purple-500">
+                      <GitMerge className="w-32 h-32" />
+                  </div>
+                  <p className="text-[10px] font-black uppercase opacity-40 mb-4 tracking-widest text-purple-500">Duplicate Entities</p>
+                  <div className="flex items-baseline gap-2">
+                      <span className="text-6xl font-black italic manga-font text-purple-500">{audit.duplicate_entities ?? 0}</span>
+                      <span className="text-xs font-bold opacity-30 uppercase">Entities</span>
+                  </div>
+                  <p className="text-[10px] font-bold opacity-30 mt-4 leading-relaxed uppercase">Entités doublons possédant le même nom/titre.</p>
+              </Card>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 text-black dark:text-white">
@@ -129,6 +150,23 @@ const GraphDebuggerPage: React.FC = () => {
                           className="bg-black text-white hover:bg-navy-900 py-6 rounded-2xl font-black italic text-lg uppercase shadow-xl hover:scale-105 active:scale-95 transition-all border-none"
                       >
                           {cleanupMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : "EXECUTE CLEANUP"}
+                      </Button>
+                  </Card>
+
+                  <Card padding="lg" className="bg-indigo-600 text-white border-none shadow-2xl">
+                      <h3 className="text-2xl font-black italic manga-font uppercase mb-6 flex items-center gap-3">
+                          <GitMerge className="w-8 h-8" /> Merge Duplicates
+                      </h3>
+                      <p className="text-sm font-bold opacity-90 leading-relaxed uppercase mb-8">
+                          Fusionner les entités en doublon partageant le même nom et combiner leurs relations sémantiques.
+                      </p>
+                      <Button 
+                          onClick={() => mergeDuplicatesMutation.mutate()}
+                          disabled={mergeDuplicatesMutation.isPending}
+                          fullWidth
+                          className="bg-black text-white hover:bg-navy-900 py-6 rounded-2xl font-black italic text-lg uppercase shadow-xl hover:scale-105 active:scale-95 transition-all border-none"
+                      >
+                          {mergeDuplicatesMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : "MERGE DUPLICATES"}
                       </Button>
                   </Card>
 

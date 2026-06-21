@@ -11,10 +11,11 @@ import { CardSkeleton } from "../../components/ui/Skeleton";
 import { EmojiState } from "../../types";
 
 const EmojiPage: React.FC = () => {
-  const { gameState, loading, handleGuess } = useEmoji() as unknown as {
+  const { gameState, loading, handleGuess, restart } = useEmoji() as unknown as {
     gameState: EmojiState | undefined;
     loading: boolean;
     handleGuess: (arg: { guess: string }) => Promise<void>;
+    restart: () => void;
   };
   const [guess, setGuess] = useState<string>('');
 
@@ -65,7 +66,7 @@ const EmojiPage: React.FC = () => {
             <Trophy className="w-16 h-16 mx-auto mb-4" />
             <h3 className="text-5xl font-black italic manga-font mb-2 uppercase">VICTOIRE !</h3>
             <p className="text-2xl font-bold">C'était : <span className="text-yellow-200">{gameState.secret_title}</span></p>
-            <Button variant="success" className="mt-8 bg-white text-green-600 border-none px-12" onClick={() => window.location.reload()}>
+            <Button variant="success" className="mt-8 bg-white text-green-600 border-none px-12" onClick={() => restart()}>
               REJOUER
             </Button>
           </Card>

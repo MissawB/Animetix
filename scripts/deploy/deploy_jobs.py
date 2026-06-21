@@ -37,7 +37,7 @@ def main():
     vpc_network = os.getenv("GCP_VPC_NETWORK", "default")
     vpc_subnet = os.getenv("GCP_VPC_SUBNET", "default")
 
-    # Configuration for all 7 serverless periodic jobs
+    # Configuration for all 8 serverless periodic jobs
     jobs_config = [
         {
             "name": "animetix-sync-catalog",
@@ -85,6 +85,13 @@ def main():
             "name": "animetix-dpo-sensor",
             "args": "backend/api/manage.py,run_scheduled_task,gold-dataset-dpo-sensor",
             "schedule": "*/10 * * * *",
+            "memory": "2Gi",
+            "cpu": "1",
+        },
+        {
+            "name": "animetix-manga-updates",
+            "args": "backend/api/manage.py,run_scheduled_task,manga-updates-check",
+            "schedule": "0 */6 * * *",  # toutes les 6 h
             "memory": "2Gi",
             "cpu": "1",
         },
@@ -211,7 +218,7 @@ def main():
 
             run_command(sched_cmd)
 
-        print("\nAll 7 periodic jobs deployed successfully!")
+        print("\nAll 8 periodic jobs deployed successfully!")
 
     finally:
         if os.path.exists(temp_yaml_path):

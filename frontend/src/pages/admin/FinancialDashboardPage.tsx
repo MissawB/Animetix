@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Shield, Sparkles, AlertTriangle, Coins, RefreshCw, BarChart2, TrendingUp, HelpCircle } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';

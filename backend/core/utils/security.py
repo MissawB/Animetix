@@ -8,7 +8,7 @@ from urllib.parse import urljoin, urlparse
 
 import filetype
 import httpx
-from django.conf import settings
+from core.config import get_config
 
 logger = logging.getLogger("animetix.security")
 
@@ -18,7 +18,7 @@ import hmac  # noqa: E402
 
 def sign_proxy_url(url: str) -> str:
     """Génère une signature HMAC pour une URL de proxy."""
-    secret = settings.SECRET_KEY.encode()
+    secret = get_config().get("SECRET_KEY").encode()
     signature = hmac.new(secret, url.encode(), hashlib.sha256).hexdigest()
     return signature
 

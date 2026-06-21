@@ -3,20 +3,7 @@ import os
 from dependency_injector import containers, providers
 from django.conf import settings
 
-
-class LazyClass:
-    def __init__(self, module_name, class_name):
-        self.module_name = module_name
-        self.class_name = class_name
-        self._class = None
-
-    def __call__(self, *args, **kwargs):
-        if self._class is None:
-            import importlib  # noqa: E402
-
-            module = importlib.import_module(self.module_name)
-            self._class = getattr(module, self.class_name)
-        return self._class(*args, **kwargs)
+from .lazy import LazyClass
 
 
 class InferenceContainer(containers.DeclarativeContainer):

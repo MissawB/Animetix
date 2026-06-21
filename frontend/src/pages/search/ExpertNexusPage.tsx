@@ -12,48 +12,12 @@ import {
 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import ForceGraph2D from 'react-force-graph-2d';
+import ForceGraph2D, { type ForceGraphMethods, type NodeObject, type LinkObject } from 'react-force-graph-2d';
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
-import XaiReportDisplay from "../../components/XaiReportDisplay";
-
-interface DocumentAttribution {
-  document_id: string;
-  title: string;
-  relevance_score: number;
-  contribution_weight: number;
-}
-
-interface LogitLensTrajectory {
-  layer: number;
-  top_tokens: string[];
-  internal_probabilities: number[];
-}
-
-interface ModelDiagnostics {
-  attention_heatmap: number[][]; 
-  top_influential_tokens: string[];
-  logit_lens_trajectory: LogitLensTrajectory[]; 
-}
-
-interface Uncertainty {
-  confidence_score: number;
-  is_reliable: boolean;
-  perplexity: number | null;
-  action_required: string;
-  method: string;
-}
-
-interface XaiReport {
-  query_intent: string;
-  retrieval_attribution: DocumentAttribution[];
-  internal_diagnostics: ModelDiagnostics;
-  uncertainty: Uncertainty;
-  agent_trace: string[]; 
-  final_confidence: number;
-}
+import XaiReportDisplay, { type XaiReport } from "../../components/XaiReportDisplay";
 
 interface Step {
   id: string;
@@ -71,8 +35,11 @@ interface GraphNode {
   label: string;
   agent: string;
   type: string;
-  val: number; 
+  val: number;
   color: string;
+  // Populated by the force-graph engine at render time.
+  x?: number;
+  y?: number;
 }
 
 interface GraphLink {
@@ -93,7 +60,7 @@ const ExpertNexusPage: React.FC = () => {
   
   // Graph state
   const [graphData, setGraphData] = useState<{ nodes: GraphNode[], links: GraphLink[] }>({ nodes: [], links: [] });
-  const graphRef = useRef<{ zoomToFit: (duration: number, padding?: number) => void } | null>(null);
+  const graphRef = useRef<ForceGraphMethods<NodeObject<GraphNode>, LinkObject<GraphNode, GraphLink>> | undefined>(undefined);
 
   const eventSourceRef = useRef<EventSource | null>(null);
 

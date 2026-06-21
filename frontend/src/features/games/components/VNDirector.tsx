@@ -1,13 +1,6 @@
 import React from 'react';
 import { RefreshCw, Trash2, Plus, Save } from 'lucide-react';
-
-interface VNScene {
-  background_url: string;
-  character_name: string;
-  character_sprite_url: string;
-  dialogue: string;
-  vibe: string;
-}
+import { VNScene } from '../../../types';
 
 interface VNDirectorProps {
   scenes: VNScene[];

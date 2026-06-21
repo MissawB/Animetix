@@ -1,6 +1,6 @@
 import logging
 
-from django.conf import settings
+from core.config import get_config
 
 logger = logging.getLogger("animetix.security.models")
 
@@ -40,7 +40,7 @@ def get_verified_revision(model_id: str) -> str | None:
     if sha:
         return sha
 
-    strict_mode = getattr(settings, "STRICT_MODEL_VERIFICATION", False)
+    strict_mode = get_config().get("STRICT_MODEL_VERIFICATION", False)
     msg = f"No verified signature found for model: {model_id}"
 
     if strict_mode:

@@ -2,6 +2,8 @@ import logging
 import time
 from typing import Dict, Generator, Optional
 
+from core.config import get_config
+from core.ports.config_port import ConfigPort
 from core.ports.graph_persistence_port import GraphPersistencePort
 from core.ports.inference_port import InferencePort
 from core.ports.web_search_port import WebSearchPort
@@ -43,8 +45,11 @@ class AgenticRAGService:
         obs_service=None,
         xai_service: Optional[XaiDiagnosticService] = None,
         semantic_router: Optional[SemanticRouter] = None,
+        config_port: Optional[ConfigPort] = None,
+        guardrail_service=None,
         **kwargs,
     ):
+        self.config = config_port or get_config()
         self.inference_engine = inference_engine
         self.rag_service = rag_service
         self.web_search = web_search
@@ -89,15 +94,9 @@ class AgenticRAGService:
         )
         self.orchestrator = workflow_orchestrator  # Updated assignment
 
-        # Resolve guardrail service
-        self.guardrail_service = kwargs.get("guardrail_service")
-        if not self.guardrail_service:
-            try:
-                from backend.api.animetix.containers import get_container
-
-                self.guardrail_service = get_container().core.guardrail_service()
-            except Exception:
-                self.guardrail_service = None
+        # Injecté par le conteneur DI (cf. AgenticContainer.guardrail_service).
+        # Rétro-compat : accepte aussi un passage via kwargs.
+        self.guardrail_service = guardrail_service or kwargs.get("guardrail_service")
 
         # Mock-compatibility for testing:
         # If the orchestrator is a Mock/MagicMock, construct a real RAGOrchestrator populated with real agents
@@ -196,7 +195,6 @@ class AgenticRAGService:
                     context_compressor=context_compressor,
                     retrieval_evaluator=retrieval_evaluator,
                     web_search=self.web_search,
-                    video_rag_service=MagicMock(),
                     scout=scout_agent,
                     neo4j_manager=self.neo4j_manager,
                 ),
@@ -233,9 +231,7 @@ class AgenticRAGService:
         return [], ""
 
     def _record_agent_trace(self, state_name: str, details: dict):
-        from django.conf import settings  # noqa: E402
-
-        if not getattr(settings, "VERTEX_AI_AGENT_OBSERVABILITY_ACTIVE", False):
+        if not self.config.get("VERTEX_AI_AGENT_OBSERVABILITY_ACTIVE", False):
             return
 
         try:
@@ -243,8 +239,8 @@ class AgenticRAGService:
 
             span = trace.get_current_span()
             if span and span.is_recording():
-                agent_id = getattr(
-                    settings, "VERTEX_AI_AGENT_ID", "animetix-core-rag-agent"
+                agent_id = self.config.get(
+                    "VERTEX_AI_AGENT_ID", "animetix-core-rag-agent"
                 )
                 span.set_attribute("gcp.agent.id", agent_id)
                 span.set_attribute("gcp.agent.state", state_name)

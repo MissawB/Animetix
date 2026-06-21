@@ -1,19 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   Activity,
   Flame,
   Loader2,
-  ShieldCheck,
   Zap,
-  Target,
   Layers,
   Brain,
   Sparkles,
   Settings,
   Sliders,
-  RefreshCw,
-  Eye,
   Compass
 } from 'lucide-react';
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -106,19 +102,26 @@ const SynapticLabPage: React.FC = () => {
   const [lr, setLr] = useState(0.05);
   const [plasticityResult, setPlasticityResult] = useState<PlasticityResult | null>(null);
 
-  // Sync parameters on data fetch
-  useEffect(() => {
-    if (state) {
-      setTauPlus(state.plasticity_config.tau_plus);
-      setTauMinus(state.plasticity_config.tau_minus);
-      setMode(state.personalization_settings.mode || 'auto');
-      setManualArchetype(state.personalization_settings.manual_archetype || 'shonen_hero');
-      setIntensityMult(state.personalization_settings.intensity_multiplier ?? 1.0);
-      if (state.personalization_settings.features) {
-        setFeatures(state.personalization_settings.features);
-      }
+  // Sync parameters on data fetch: reset the local form whenever the server
+  // state *content* changes. Done during render (React's "adjusting state when
+  // a prop changes" pattern) rather than in an effect. We key on a value
+  // signature instead of object identity so a new-but-equal reference (e.g.
+  // react-query without structural sharing, or a remock in tests) doesn't loop.
+  const stateSig = state
+    ? JSON.stringify({ c: state.plasticity_config, p: state.personalization_settings })
+    : null;
+  const [syncedSig, setSyncedSig] = useState<string | null>(null);
+  if (state && stateSig !== syncedSig) {
+    setSyncedSig(stateSig);
+    setTauPlus(state.plasticity_config.tau_plus);
+    setTauMinus(state.plasticity_config.tau_minus);
+    setMode(state.personalization_settings.mode || 'auto');
+    setManualArchetype(state.personalization_settings.manual_archetype || 'shonen_hero');
+    setIntensityMult(state.personalization_settings.intensity_multiplier ?? 1.0);
+    if (state.personalization_settings.features) {
+      setFeatures(state.personalization_settings.features);
     }
-  }, [state]);
+  }
 
   // Mutations
   const configMutation = useMutation<UnifiedPlasticityState, Error, {
@@ -135,7 +138,7 @@ const SynapticLabPage: React.FC = () => {
         method: 'POST', 
         body: JSON.stringify(body) 
       }),
-    onSuccess: (newData) => {
+    onSuccess: () => {
       refetch();
     }
   });

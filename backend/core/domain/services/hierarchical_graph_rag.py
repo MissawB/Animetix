@@ -4,32 +4,32 @@ Hierarchical GraphRAG Service for Animetix.
 Uses graph partition detection to summarize global themes and inject them into RAG prompts.
 """
 
-import logging  # noqa: E402
-from typing import Any, Dict, List, Optional  # noqa: E402
+import logging
+from typing import Any, Dict, List, Optional
 
-from core.domain.services.llm_service import LLMService  # noqa: E402
-from core.ports.graph_persistence_port import GraphPersistencePort  # noqa: E402
-from pipeline.mlops.graph_community_partitioner import (  # noqa: E402
-    GraphCommunityPartitioner,
-)
+from core.domain.services.llm_service import LLMService
+from core.ports.graph_persistence_port import GraphPersistencePort
 
 logger = logging.getLogger("animetix.graphrag")
 
 
 class HierarchicalGraphRAGService:
     def __init__(
-        self, neo4j_manager: Optional[GraphPersistencePort], llm_service: LLMService
+        self,
+        neo4j_manager: Optional[GraphPersistencePort],
+        llm_service: LLMService,
+        partitioner: Any = None,
     ):
         self.neo4j_manager = neo4j_manager
         self.llm_service = llm_service
-        self.partitioner = GraphCommunityPartitioner(
-            neo4j_manager=neo4j_manager, llm_service=llm_service
-        )
+        # Injecté par le conteneur DI (adapter de `pipeline.graph_community_partitioner`),
+        # afin que le core ne dépende pas de la couche pipeline.
+        self.partitioner = partitioner
         self._communities_loaded = False
 
     def ensure_communities_loaded(self):
         """Assure que les communautés thématiques sont chargées et partitionnées."""
-        if self._communities_loaded:
+        if self._communities_loaded or self.partitioner is None:
             return
         try:
             self.partitioner.run_partitioning()

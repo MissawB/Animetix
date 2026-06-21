@@ -19,10 +19,14 @@ export const useCovertest = () => {
     },
   });
 
+  // Rejoue : ré-exécute la queryFn (équivalent d'un remount) sans recharger l'app.
+  const restart = () => queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+
   return {
     gameState,
     loading,
     handleGuess: guessMutation.mutateAsync,
+    restart,
   };
 };
 

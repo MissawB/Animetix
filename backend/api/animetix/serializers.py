@@ -14,7 +14,15 @@ from .models import (
     MangaChapter,
     MangaPage,
     Profile,
+    TrackerConnection,
+    VoiceProfile,
 )
+
+
+class TrackerConnectionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TrackerConnection
+        fields = ["id", "tracker", "username", "created_at"]
 
 
 class MangaPageSerializer(serializers.ModelSerializer):
@@ -87,6 +95,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             "unlocked_badges",
             "custom_username_color",
             "tier",
+            "wallet_balance",
             "personalization_settings",
             "has_api_key",
         ]
@@ -105,6 +114,89 @@ class AchievementSerializer(serializers.ModelSerializer):
     class Meta:
         model = Achievement
         fields = "__all__"
+
+
+# --- VS Battle (Arena) : serializers de réponse pour drf-spectacular ---
+# Décrivent la forme renvoyée par `run_vs_battle` afin que les types soient
+# générés dans `schema.yaml`/`api.d.ts` (au lieu d'être écrits à la main côté front).
+class CombatStatsSerializer(serializers.Serializer):
+    tier = serializers.CharField(allow_null=True, required=False)
+    tier_value = serializers.IntegerField()
+    speed = serializers.CharField(allow_null=True, required=False)
+    durability = serializers.CharField(allow_null=True, required=False)
+    intelligence = serializers.CharField(allow_null=True, required=False)
+    abilities = serializers.ListField(child=serializers.CharField(), required=False)
+
+
+class CombatCharacterSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    franchise = serializers.CharField(allow_null=True, required=False)
+    image_url = serializers.CharField(allow_null=True, required=False)
+    wiki_url = serializers.CharField(allow_null=True, required=False)
+    stats = CombatStatsSerializer()
+    summary = serializers.CharField(required=False)
+
+
+class DebateTurnSerializer(serializers.Serializer):
+    agent = serializers.CharField()
+    content = serializers.CharField()
+
+
+class VsBattleResultSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    character_a = CombatCharacterSerializer()
+    character_b = CombatCharacterSerializer()
+    winner = serializers.CharField()
+    verdict_summary = serializers.CharField()
+    debate_history = DebateTurnSerializer(many=True)
+
+
+# --- XAI / Diagnostics : serializers de réponse pour drf-spectacular ---
+# Décrivent la charge de l'évènement SSE `xai_report` émis par AgenticRAGStreamView,
+# afin de générer les types structurés côté front (au lieu de les écrire à la main).
+class DocumentAttributionSerializer(serializers.Serializer):
+    title = serializers.CharField()
+    contribution_weight = serializers.FloatField()
+    relevance_score = serializers.FloatField(required=False)
+    document_id = serializers.CharField(required=False)
+
+
+class LogitLensTrajectorySerializer(serializers.Serializer):
+    layer = serializers.IntegerField()
+    top_tokens = serializers.ListField(child=serializers.CharField())
+    internal_probabilities = serializers.ListField(child=serializers.FloatField())
+
+
+class ModelDiagnosticsSerializer(serializers.Serializer):
+    attention_heatmap = serializers.ListField(
+        child=serializers.ListField(child=serializers.FloatField())
+    )
+    top_influential_tokens = serializers.ListField(child=serializers.CharField())
+    logit_lens_trajectory = LogitLensTrajectorySerializer(many=True)
+
+
+class UncertaintySerializer(serializers.Serializer):
+    confidence_score = serializers.FloatField()
+    is_reliable = serializers.BooleanField()
+    perplexity = serializers.FloatField(allow_null=True)
+    action_required = serializers.CharField()
+    method = serializers.CharField()
+
+
+class AgentTraceStepSerializer(serializers.Serializer):
+    agent = serializers.CharField()
+    thought = serializers.CharField()
+
+
+class XaiReportSerializer(serializers.Serializer):
+    query_intent = serializers.CharField()
+    # Conteneurs optionnels : le backend peut les omettre (défauts pydantic),
+    # les consommateurs front gardent déjà leur absence.
+    retrieval_attribution = DocumentAttributionSerializer(many=True, required=False)
+    internal_diagnostics = ModelDiagnosticsSerializer(required=False)
+    uncertainty = UncertaintySerializer(required=False)
+    agent_trace = AgentTraceStepSerializer(many=True, required=False)
+    final_confidence = serializers.FloatField()
 
 
 from core.utils.security import sanitize_html_content  # noqa: E402
@@ -130,6 +222,28 @@ class MediaItemSerializer(serializers.Serializer):
     related_items = serializers.ListField(child=serializers.DictField(), required=False)
 
     def to_representation(self, instance):
+        from django.db import models
+
+        if isinstance(instance, models.Model):
+            manga_metadata = getattr(instance, "metadata", {}) or {}
+            mapped_instance = {
+                "id": getattr(instance, "external_id", None),
+                "title": getattr(instance, "title", ""),
+                "title_english": getattr(instance, "title_english", None),
+                "title_native": getattr(instance, "title_native", None),
+                "image": getattr(instance, "image_url", None),
+                "year": getattr(instance, "release_year", None),
+                "popularity": int(getattr(instance, "popularity", 0) or 0),
+                "genres": manga_metadata.get("genres", []),
+                "tags": manga_metadata.get("tags", []),
+                "micro_tags": manga_metadata.get("micro_tags", []),
+                "description": getattr(instance, "description", ""),
+                "studios": manga_metadata.get("studios", []),
+                "author": manga_metadata.get("author", None),
+                "related_items": manga_metadata.get("related_items", []),
+            }
+            instance = mapped_instance
+
         ret = super().to_representation(instance)
         # Sécurisation des contenus potentiellement générés par l'IA ou utilisateurs
         if ret.get("description"):
@@ -460,3 +574,23 @@ class RegisterSerializer(serializers.Serializer):
     username = serializers.CharField()
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
+
+
+class VoiceProfileSerializer(serializers.ModelSerializer):
+    sample_url = serializers.ReadOnlyField()
+
+    class Meta:
+        model = VoiceProfile
+        fields = [
+            "id",
+            "name",
+            "language",
+            "origin",
+            "definition",
+            "roles",
+            "impact",
+            "origin_detail",
+            "sample_url",
+            "created_at",
+            "updated_at",
+        ]

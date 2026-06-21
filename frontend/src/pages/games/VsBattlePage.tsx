@@ -10,7 +10,8 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { vsBattleService } from '../../features/games/services/vsBattleService';
 import { queryClient } from "../../utils/queryClient";
 
-import { VsBattleArenaEntry, VsBattleResult } from '../../types';
+import { VsBattleArenaEntry } from '../../types';
+import { VsBattleResult } from '../../api';
 
 const VsBattlePage: React.FC = () => {
   

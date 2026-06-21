@@ -5,18 +5,17 @@ import re as _regex_module
 import time
 from typing import Any, Dict, List, Optional, Type, TypeVar
 
-from pydantic import BaseModel, ConfigDict
-
-from backend.core.domain.entities.ai_schemas import (
+from core.domain.entities.ai_schemas import (
     CombatCharacter,
     CombatResult,
     DebateTurn,
 )
-from backend.core.domain.services.prompt_manager import PromptManager  # noqa: E402
-from backend.core.ports.fandom_port import FandomPort  # noqa: E402
-from backend.core.ports.inference_port import InferencePort  # noqa: E402
-from backend.core.ports.web_search_port import WebSearchPort  # noqa: E402
-from backend.core.utils.security import is_safe_url  # noqa: E402
+from core.domain.services.prompt_manager import PromptManager  # noqa: E402
+from core.ports.fandom_port import FandomPort  # noqa: E402
+from core.ports.inference_port import InferencePort  # noqa: E402
+from core.ports.web_search_port import WebSearchPort  # noqa: E402
+from core.utils.security import is_safe_url  # noqa: E402
+from pydantic import BaseModel, ConfigDict
 
 logger = logging.getLogger("animetix.vs_battle")
 
