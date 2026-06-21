@@ -110,10 +110,11 @@ def main():
     )
 
     # Write env vars to a YAML file to avoid Windows shell escaping/comma issues
+    # Variables d'environnement NON sensibles uniquement. Les secrets (tokens, clés)
+    # passent par Secret Manager via `--set-secrets` ci-dessous — JAMAIS en dur ici.
     env_vars_data = {
         "ALLOWED_HOSTS": "*.run.app,missawb-animetix-web.hf.space,localhost,127.0.0.1",
         "DJANGO_ENV": "production",
-        "HF_SPACES": "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",
         "SENTRY_DSN": "https://16adfd8a3ea5046c55ba1c7a4a919619@o4511298977202176.ingest.de.sentry.io/4511298998894672",
     }
 
@@ -131,6 +132,7 @@ def main():
             "IGDB_CLIENT_ID=IGDB_CLIENT_ID:latest,"
             "GEMINI_API_KEY=GEMINI_API_KEY:latest,"
             "HF_TOKEN=HF_TOKEN:latest,"
+            "HF_SPACES=HF_SPACES:latest,"
             "IGDB_CLIENT_SECRET=IGDB_CLIENT_SECRET:latest,"
             "WANDB_API_KEY=WANDB_API_KEY:latest"
         )
