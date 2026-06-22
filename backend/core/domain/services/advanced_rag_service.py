@@ -54,6 +54,7 @@ class AdvancedRAGService:
         plasticity_simulator: Any = "default",
         lnn_service: Any = "default",
         cache_port: Optional[CachePort] = None,
+        cognitive_boosters_enabled: bool = True,
     ):
         self.repository = repository
         self.llm_service = llm_service
@@ -69,6 +70,7 @@ class AdvancedRAGService:
         self._injected_lnn = lnn_service
 
         self.cache = cache_port or InMemoryCache()
+        self.cognitive_boosters_enabled = cognitive_boosters_enabled
 
         self._indices: Dict[str, HybridSearchIndex] = {}
         self.rerank_cache = RerankingCache(cache_port=self.cache)
@@ -77,6 +79,8 @@ class AdvancedRAGService:
         self, user_id: Optional[str] = None
     ) -> Tuple[Any, Any, Any]:
         """Charge ou initialise les modèles cognitifs spécifiques à l'utilisateur."""
+        if not self.cognitive_boosters_enabled:
+            return None, None, None
         # 1. Gestion des modèles injectés (ou désactivés via None)
         q = self._injected_quantum
         p = self._injected_plasticity
@@ -137,6 +141,10 @@ class AdvancedRAGService:
             SynapticPlasticityService(num_concepts=10),
             LiquidNeuralNetworkService(state_dimension=4, input_dimension=2),
         )
+
+    def set_cognitive_boosters(self, enabled: bool) -> None:
+        """Active/désactive les boosters cognitifs à chaud (utilisé par l'ablation)."""
+        self.cognitive_boosters_enabled = enabled
 
     def _save_cognitive_models(
         self, user_id: str, quantum_model, plasticity_service, lnn_service
