@@ -499,6 +499,7 @@ class CoreServicesContainer(containers.DeclarativeContainer):
 
     manga_service = providers.Singleton(
         LazyClass("core.domain.services.manga_service", "MangaService"),
+        manga_repository=persistence.manga_repository_adapter,
         suwayomi_adapter=persistence.suwayomi_adapter,
     )
 
