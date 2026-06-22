@@ -1,34 +1,11 @@
-# Build + push the brain GPU image, then enforce the declarative Cloud Run state.
-# `services replace` applies deploy/run-brain.service.yaml verbatim, so the cost
-# knobs (minScale=0, nvidia-l4) live in git and cannot drift out-of-band.
-# Trigger manually: gcloud builds submit --config deploy/cloudbuild.brain.yaml .
-# CI passes _TAG=<commit sha> to pin an immutable artifact.
-substitutions:
-  _TAG: latest
-  _REGION: europe-west1
 steps:
 - name: 'gcr.io/cloud-builders/docker'
-  args:
-    - build
-    - --pull
-    - -t
-    - europe-west9-docker.pkg.dev/animetix/animetix-repo/brain:latest
-    - -t
-    - europe-west9-docker.pkg.dev/animetix/animetix-repo/brain:${_TAG}
-    - -f
-    - deploy/Dockerfile.brain
-    - .
-- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-  entrypoint: 'bash'
-  args:
-    - '-c'
-    - |
-      set -euo pipefail
-      IMAGE="europe-west9-docker.pkg.dev/animetix/animetix-repo/brain:${_TAG}"
-      sed "s|__IMAGE__|${IMAGE}|g" deploy/run-brain.service.yaml > /workspace/run-brain.rendered.yaml
-      gcloud run services replace /workspace/run-brain.rendered.yaml \
-        --region "${_REGION}" \
-        --quiet
+  args: [
+    'build',
+    '--pull',
+    '-t', 'europe-west9-docker.pkg.dev/animetix/animetix-repo/brain:latest',
+    '-f', 'deploy/Dockerfile.brain',
+    '.'
+  ]
 images:
 - 'europe-west9-docker.pkg.dev/animetix/animetix-repo/brain:latest'
-- 'europe-west9-docker.pkg.dev/animetix/animetix-repo/brain:${_TAG}'
