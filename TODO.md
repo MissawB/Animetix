@@ -53,18 +53,12 @@ _Rien d'ouvert._
   - `MAX_IMAGE_SIZE` / allow-lists MIME dupliquées entre [labs.py](backend/api/animetix/api/labs.py) et [core.py](backend/api/animetix/api/core.py) → centraliser dans `backend/core/constants.py`.
 - [ ] **Backend — `UnifiedInferenceAdapter` god object**
   - 8 mixins, ~476 lignes ([unified_inference_adapter.py:30](backend/adapters/inference/unified_inference_adapter.py#L30)) ; MRO fragile, dur à tester → composition plutôt qu'héritage multiple.
-- [ ] **Frontend — `fetch()` brut qui contourne `apiClient`** _(audit étendu : ~15 sites, pas seulement 2)_
+- [x] **Frontend — `fetch()` brut qui contourne `apiClient`** _(audit étendu : ~15 sites traités)_
   - Problème : `fetch()` direct → pas de CSRF, pas de header auth Firebase, pas de toast d'erreur (cf. [apiClient.ts](frontend/src/utils/apiClient.ts)).
-  - [x] **Fait** : `SearchBar` (image search) → `searchMediaByImage()` dans `api.ts` ; `AudioLabPage` (sample audio) → laissé en `fetch` brut **à dessein** (asset binaire potentiellement cross-origin) + toast d'échec ajouté.
-  - **À migrer vers `apiClient`** (appels JSON même-origine `/api/...`) :
-    - [useAdminEval.ts:7](frontend/src/features/admin/hooks/useAdminEval.ts#L7)
-    - [SimulatedAdBanner.tsx:37](frontend/src/features/billing/components/SimulatedAdBanner.tsx#L37) & [:46](frontend/src/features/billing/components/SimulatedAdBanner.tsx#L46) ; [SponsorStreamModal.tsx:117](frontend/src/features/billing/components/SponsorStreamModal.tsx#L117)
-    - [useCustomConfig.ts:21](frontend/src/features/utils/hooks/useCustomConfig.ts#L21)
-    - [FinancialDashboardPage.tsx:37](frontend/src/pages/admin/FinancialDashboardPage.tsx#L37) ; [MonitoringConsolePage.tsx:8](frontend/src/pages/dev/MonitoringConsolePage.tsx#L8)
-    - [ExplorePage.tsx:24](frontend/src/pages/explore/ExplorePage.tsx#L24)
-    - [useTachideskExplorer.ts](frontend/src/pages/explore/tachidesk/hooks/useTachideskExplorer.ts) — ~9 appels (sources/extensions/search/import/favorite/chapters)
-    - [MangaLibraryPage.tsx:23](frontend/src/pages/media/MangaLibraryPage.tsx#L23) & [:53](frontend/src/pages/media/MangaLibraryPage.tsx#L53)
-  - **À laisser en `fetch` brut** (assets binaires / cross-origin — `apiClient` parserait en JSON et fuiterait le token à un tiers) : [MangaVoicePage.tsx:59](frontend/src/pages/labs/MangaVoicePage.tsx#L59) (`sample_url`), [offlineLibrary.ts:117](frontend/src/features/manga-reader/offline/offlineLibrary.ts#L117) (`image_url` blob), [api.ts:357](frontend/src/api.ts#L357) (proxy binaire). _Pour ceux-ci : harmoniser la gestion d'erreur (toast) plutôt que router via apiClient._
+  - [x] `SearchBar` (image search) → `searchMediaByImage()` dans `api.ts`.
+  - [x] **Migrés vers `apiClient`** : `useAdminEval`, `SimulatedAdBanner` (×2) & `SponsorStreamModal` (factorisés dans `billingService.logAdEvent`, `skipToast`), `useCustomConfig` (→ `utilsService.updateConfig`), `FinancialDashboardPage`, `MonitoringConsolePage`, `ExplorePage`, `useTachideskExplorer` (9 appels, control-flow préservé), `MangaLibraryPage` (×2). Tests des 4 fichiers concernés mis à jour (mock `apiClient`).
+  - [x] **Laissés en `fetch` brut à dessein** (assets binaires / cross-origin — `apiClient` parserait en JSON et fuiterait le token à un tiers) : `AudioLabPage` (sample audio, + toast d'échec ajouté), [MangaVoicePage.tsx:59](frontend/src/pages/labs/MangaVoicePage.tsx#L59) (`sample_url`), [offlineLibrary.ts:117](frontend/src/features/manga-reader/offline/offlineLibrary.ts#L117) (`image_url` blob), [api.ts:357](frontend/src/api.ts#L357) (proxy binaire).
+  - [ ] _Reliquat optionnel_ : harmoniser un toast d'échec sur `MangaVoicePage` / `offlineLibrary` / proxy `api.ts:357` (comme fait pour `AudioLabPage`).
 - [ ] **Frontend — état local fragmenté**
   - [AudioLabPage.tsx:64](frontend/src/pages/labs/AudioLabPage.tsx#L64) (~13 `useState`) ; anti-pattern `JSON.stringify` en render dans [SynapticLabPage.tsx:110](frontend/src/pages/labs/SynapticLabPage.tsx#L110) → `useReducer`/hook dédié.
 - [ ] **CI — gaspillage et robustesse**

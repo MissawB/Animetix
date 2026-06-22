@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ExternalLink, Sparkles, X } from 'lucide-react';
+import { logAdEvent } from '../services/billingService';
 
 const SPONSORS = [
   {
@@ -33,22 +34,11 @@ export const SimulatedAdBanner: React.FC = () => {
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
-    // Log Banner Impression
-    fetch('/api/v1/billing/log_ad_event/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ event_type: 'impression', ad_type: 'banner' })
-    }).catch(err => console.error('Failed to log ad impression', err));
+    logAdEvent('impression', 'banner');
   }, []);
 
   const handleCtaClick = () => {
-    // Log Banner Click
-    fetch('/api/v1/billing/log_ad_event/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ event_type: 'click', ad_type: 'banner' })
-    }).catch(err => console.error('Failed to log ad click', err));
-
+    logAdEvent('click', 'banner');
     window.open(sponsor.url, '_blank', 'noopener,noreferrer');
   };
 

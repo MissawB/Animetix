@@ -5,6 +5,7 @@ import { TrendingUp, Play, Info, Plus, ChevronRight, ChevronLeft, MapPin, Globe 
 import { Link } from 'react-router-dom';
 
 import { MediaItem } from '../../types';
+import { apiClient } from '../../utils/apiClient';
 
 interface ExploreData {
     trending: (MediaItem & { synopsis_fr?: string; synopsis_en?: string })[];
@@ -20,10 +21,7 @@ const ExplorePage: React.FC = () => {
   
   const { data } = useQuery<ExploreData>({
     queryKey: ['explore', mediaType],
-    queryFn: async () => {
-      const res = await fetch(`/api/explore/?media_type=${mediaType}`);
-      return res.json();
-    }
+    queryFn: () => apiClient(`/api/explore/?media_type=${mediaType}`),
   });
 
   const scrollLeft = (id: string) => {
