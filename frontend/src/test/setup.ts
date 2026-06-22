@@ -8,6 +8,18 @@ if (!Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = vi.fn();
 }
 
+// Stub the Firebase client module globally.
+// src/utils/firebase.ts eagerly calls getAuth()/getAnalytics() at import time,
+// which throws `auth/invalid-api-key` whenever the VITE_FIREBASE_* env vars are
+// absent (CI, fresh checkout). Any test whose import graph reaches firebase.ts
+// would otherwise fail to load. Tests needing real auth behavior override this
+// with their own vi.mock (a per-file mock takes precedence over this one).
+vi.mock('../utils/firebase', () => ({
+  app: {},
+  auth: { currentUser: null },
+  analytics: {},
+}));
+
 // Mock react-i18next
 vi.mock('react-i18next', () => ({
   useTranslation: () => {
