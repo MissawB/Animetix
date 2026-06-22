@@ -1,7 +1,8 @@
 from unittest.mock import MagicMock
 
 import pytest
-from core.domain.services.agentic_rag_service import AgenticRAGService
+
+from tests.helpers.agentic_rag_factory import build_test_agentic_rag_service
 
 
 @pytest.fixture
@@ -43,7 +44,7 @@ def mock_guardrail():
 def agentic_rag_security(
     mock_engine, mock_rag, mock_web, mock_prompt_manager, mock_guardrail
 ):
-    service = AgenticRAGService(
+    service = build_test_agentic_rag_service(
         inference_engine=mock_engine,
         rag_service=mock_rag,
         web_search=mock_web,

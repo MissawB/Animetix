@@ -317,7 +317,7 @@ def run_regression_test(model_adapter=None):
         try:
             idx = sys.argv.index("--threshold")
             threshold = float(sys.argv[idx + 1])
-        except Exception:  # nosec B110
+        except (ValueError, IndexError):  # nosec B110 - malformed --threshold arg
             pass
 
     is_ci = os.getenv("CI") == "true"

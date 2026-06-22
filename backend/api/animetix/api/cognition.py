@@ -139,8 +139,9 @@ class AIDebateArenaView(APIView):
         try:
             record = debate_service.run_debate(**serializer.validated_data)
             return Response(record)
-        except Exception as e:
-            return Response({"error": str(e)}, status=500)
+        except Exception:
+            logger.exception("Error in self-play debate")
+            return Response({"error": "Internal server error"}, status=500)
 
 
 class NeuroMemoryManagementView(APIView):
@@ -244,8 +245,9 @@ class CounterfactualSimulatorView(APIView):
                 what_if_query=serializer.validated_data["what_if"],
             )
             return Response(result)
-        except Exception as e:
-            return Response({"error": str(e)}, status=500)
+        except Exception:
+            logger.exception("Error in counterfactual simulation")
+            return Response({"error": "Internal server error"}, status=500)
 
 
 class CoveOracleView(APIView):
@@ -267,9 +269,9 @@ class CoveOracleView(APIView):
         try:
             trace = cove_service.trace_verification(**serializer.validated_data)
             return Response(trace)
-        except Exception as e:
-            logger.error(f"CoVe Error: {e}")
-            return Response({"error": str(e)}, status=500)
+        except Exception:
+            logger.exception("CoVe Error")
+            return Response({"error": "Internal server error"}, status=500)
 
 
 class CFRStrategyLabView(APIView):
@@ -291,6 +293,6 @@ class CFRStrategyLabView(APIView):
         try:
             result = cfr_solver.solve_with_history(**serializer.validated_data)
             return Response(result)
-        except Exception as e:
-            logger.error(f"CFR Simulation Error: {e}")
-            return Response({"error": str(e)}, status=500)
+        except Exception:
+            logger.exception("CFR Simulation Error")
+            return Response({"error": "Internal server error"}, status=500)

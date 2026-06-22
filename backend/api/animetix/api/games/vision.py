@@ -216,7 +216,9 @@ class VisionGameGuessView(APIView):
                 }
             )
 
-        except Exception as e:
+        except Exception:
+            logger.exception("Error in vision game guess")
             return Response(
-                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {"error": "Internal server error"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )

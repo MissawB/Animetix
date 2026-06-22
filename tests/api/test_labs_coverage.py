@@ -90,7 +90,7 @@ def test_latent_space_data_view_read_error():
     ):
         response = view(request)
     assert response.status_code == 500
-    assert "disk gone" in response.data["error"]
+    assert response.data["error"] == "Internal server error"
 
 
 # --------------------------------------------------------------------------- #
@@ -208,7 +208,7 @@ def test_singularity_compile_error():
         {"action": "compile", "function_name": "vector_norm"}, mock_container
     )
     assert response.status_code == 500
-    assert response.data["error"] == "compile boom"
+    assert response.data["error"] == "Internal server error"
 
 
 def test_singularity_plasticity_success():
@@ -234,7 +234,7 @@ def test_singularity_plasticity_error():
     )
     response = _run_singularity({"action": "plasticity"}, mock_container)
     assert response.status_code == 500
-    assert response.data["error"] == "spike fail"
+    assert response.data["error"] == "Internal server error"
 
 
 def test_singularity_quantum_success():
@@ -259,7 +259,7 @@ def test_singularity_quantum_error():
     )
     response = _run_singularity({"action": "quantum"}, mock_container)
     assert response.status_code == 500
-    assert response.data["error"] == "decohere"
+    assert response.data["error"] == "Internal server error"
 
 
 def test_singularity_evolve_dynamic_success():
@@ -285,7 +285,7 @@ def test_singularity_evolve_dynamic_error():
     )
     response = _run_singularity({"action": "evolve_dynamic"}, mock_container)
     assert response.status_code == 500
-    assert response.data["error"] == "llm down"
+    assert response.data["error"] == "Internal server error"
 
 
 def test_singularity_swarm_missing_fields():
@@ -316,7 +316,7 @@ def test_singularity_swarm_error():
         {"action": "swarm", "fact": "a", "media": "b"}, mock_container
     )
     assert response.status_code == 500
-    assert response.data["error"] == "no quorum"
+    assert response.data["error"] == "Internal server error"
 
 
 # --------------------------------------------------------------------------- #
@@ -361,7 +361,7 @@ def test_liquid_nn_error():
     finally:
         p.stop()
     assert response.status_code == 500
-    assert response.data["error"] == "diverged"
+    assert response.data["error"] == "Internal server error"
 
 
 # --------------------------------------------------------------------------- #
@@ -517,7 +517,7 @@ def test_video_rag_index_error():
     finally:
         p.stop()
     assert response.status_code == 500
-    assert response.data["error"] == "index fail"
+    assert response.data["error"] == "Internal server error"
 
 
 # --------------------------------------------------------------------------- #
@@ -561,7 +561,7 @@ def test_video_rag_search_error():
     finally:
         p.stop()
     assert response.status_code == 500
-    assert response.data["error"] == "search down"
+    assert response.data["error"] == "Internal server error"
 
 
 # --------------------------------------------------------------------------- #
@@ -620,7 +620,7 @@ def test_tree_of_thoughts_error():
     ):
         response = view(request)
     assert response.status_code == 500
-    assert response.data["error"] == "tot boom"
+    assert response.data["error"] == "Internal server error"
 
 
 # --------------------------------------------------------------------------- #

@@ -77,9 +77,9 @@ class DeveloperRAGView(APIView):
                 }
             )
 
-        except Exception as e:
+        except Exception:
             logger.exception("Error in DeveloperRAGView:")
-            return Response({"error": str(e)}, status=500)
+            return Response({"error": "Internal server error"}, status=500)
 
 
 class DeveloperApiKeyView(APIView):
@@ -146,7 +146,8 @@ class CreateProSubscriptionCheckoutView(APIView):
         )
 
         if not success:
-            return Response({"error": result}, status=500)
+            logger.error(f"Subscription checkout session failed: {result}")
+            return Response({"error": "Internal server error"}, status=500)
 
         return Response({"checkout_url": result})
 
@@ -198,7 +199,8 @@ class CreateBxCheckoutView(APIView):
         )
 
         if not success:
-            return Response({"error": result}, status=500)
+            logger.error(f"Bx checkout session failed: {result}")
+            return Response({"error": "Internal server error"}, status=500)
 
         return Response({"checkout_url": result})
 

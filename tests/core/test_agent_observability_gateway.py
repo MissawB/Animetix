@@ -1,9 +1,10 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from core.domain.services.agentic_rag_service import AgenticRAGService
 from core.domain.services.guardrail_service import GuardrailService
 from django.test import override_settings
+
+from tests.helpers.agentic_rag_factory import build_test_agentic_rag_service
 
 
 @pytest.mark.django_db
@@ -60,7 +61,7 @@ def test_agent_observability_sets_span_attributes(mock_get_span):
         "semantic_router": MagicMock(),
     }
 
-    service = AgenticRAGService(**mock_deps)
+    service = build_test_agentic_rag_service(**mock_deps)
     with override_settings(
         VERTEX_AI_AGENT_OBSERVABILITY_ACTIVE=True, VERTEX_AI_AGENT_ID="test-agent"
     ):

@@ -167,7 +167,7 @@ def test_ai_debate_arena_service_exception(auth_client):
             format="json",
         )
     assert resp.status_code == 500
-    assert resp.data["error"] == "boom"
+    assert resp.data["error"] == "Internal server error"
 
 
 # --------------------------------------------------------------------------
@@ -313,7 +313,7 @@ def test_counterfactual_service_exception(auth_client):
             reverse("api_counterfactual"), {"what_if": "X"}, format="json"
         )
     assert resp.status_code == 500
-    assert resp.data["error"] == "kaboom"
+    assert resp.data["error"] == "Internal server error"
 
 
 # --------------------------------------------------------------------------
@@ -350,7 +350,7 @@ def test_cove_oracle_service_exception(auth_client):
             reverse("api_cove_oracle"), {"question": "Q?"}, format="json"
         )
     assert resp.status_code == 500
-    assert resp.data["error"] == "cove down"
+    assert resp.data["error"] == "Internal server error"
 
 
 # --------------------------------------------------------------------------
@@ -390,4 +390,4 @@ def test_cfr_strategy_service_exception(auth_client):
             reverse("api_cfr_strategy_lab"), {"iterations": 10}, format="json"
         )
     assert resp.status_code == 500
-    assert resp.data["error"] == "cfr fail"
+    assert resp.data["error"] == "Internal server error"

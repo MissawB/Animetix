@@ -1,4 +1,5 @@
 import datetime  # noqa: E402
+import logging  # noqa: E402
 
 from core.ports.eval_port import EvalResultPort  # noqa: E402
 from core.ports.feedback_port import FeedbackRepositoryPort  # noqa: E402
@@ -28,6 +29,8 @@ from ..serializers import (
     DPOCurationSerializer,
     GoldDatasetEntrySerializer,
 )
+
+logger = logging.getLogger("animetix.mlops")
 
 
 class AISafetyEventViewSet(viewsets.ReadOnlyModelViewSet):
@@ -263,8 +266,9 @@ class DSPyOptimizerView(APIView):
                     "all_mutations": mutations,
                 }
             )
-        except Exception as e:
-            return Response({"error": str(e)}, status=500)
+        except Exception:
+            logger.exception("Error in MLOps mutation")
+            return Response({"error": "Internal server error"}, status=500)
 
 
 class SOTABenchmarkListView(APIView):

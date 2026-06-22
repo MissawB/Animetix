@@ -429,4 +429,4 @@ def test_guess_unexpected_exception_returns_500(api_client):
             reverse("api_vision_guess"), {"description": "a ninja"}, format="json"
         )
     assert resp.status_code == 500
-    assert "score boom" in resp.json()["error"]
+    assert resp.json()["error"] == "Internal server error"

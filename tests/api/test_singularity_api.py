@@ -100,7 +100,7 @@ def test_singularity_synthesize_error(api_client, authenticated_user):
             response = api_client.post(url, payload, format="json")
 
             assert response.status_code == 500
-            assert response.data["error"] == "Synthesis failed"
+            assert response.data["error"] == "Internal server error"
 
 
 @pytest.mark.django_db

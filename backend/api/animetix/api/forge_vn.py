@@ -168,8 +168,9 @@ class ForgeVNView(APIView):
             return Response(
                 {"error": "Fusion not found"}, status=status.HTTP_404_NOT_FOUND
             )
-        except Exception as e:
-            logger.error(f"Error in ForgeVNView: {e}", exc_info=True)
+        except Exception:
+            logger.exception("Error in ForgeVNView")
             return Response(
-                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {"error": "Internal server error"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )

@@ -193,7 +193,8 @@ class DjangoRepositoryAdapter(RepositoryPort):
                 "image": fusion.image_url,
                 "art_style": fusion.art_style,
             }
-        except Exception:
+        except CreativeFusion.DoesNotExist:
+            # Narrow: only "not found" maps to None; real DB errors must surface.
             return None
 
     def get_user_gameplay_history(self, user_id: int, limit: int = 10) -> List[Dict]:

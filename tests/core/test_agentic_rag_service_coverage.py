@@ -14,7 +14,8 @@ generator that mutates the RAGContext it receives.
 from unittest.mock import MagicMock
 
 from core.domain.entities.ai_schemas import RAGContext, RAGState, StreamStep
-from core.domain.services.agentic_rag_service import AgenticRAGService
+
+from tests.helpers.agentic_rag_factory import build_test_agentic_rag_service
 
 
 # --------------------------------------------------------------------------- #
@@ -43,7 +44,7 @@ def _build_service(**overrides):
         guardrail_service=None,
     )
     deps.update(overrides)
-    service = AgenticRAGService(**deps)
+    service = build_test_agentic_rag_service(**deps)
 
     # Replace the (rebuilt) real orchestrator with a controllable mock.
     service.orchestrator = MagicMock()

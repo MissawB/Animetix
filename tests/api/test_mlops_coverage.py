@@ -339,7 +339,7 @@ def test_dspy_optimizer_exception(admin_client):
         )
 
     assert response.status_code == 500
-    assert "bad template" in response.json()["error"]
+    assert response.json()["error"] == "Internal server error"
 
 
 # --------------------------------------------------------------------------- #

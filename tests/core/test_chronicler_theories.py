@@ -1,7 +1,8 @@
 from unittest.mock import MagicMock
 
 from core.domain.entities.ai_schemas import RAGContext, SearchPlan
-from core.domain.services.agentic_rag_service import AgenticRAGService
+
+from tests.helpers.agentic_rag_factory import build_test_agentic_rag_service
 
 
 def test_chronicler_theories_integration():
@@ -17,7 +18,7 @@ def test_chronicler_theories_integration():
     # Since it is called by ChroniclerAgent.pulse_community and AgenticRAGService uses it,
     # we need to ensure the RAG service uses the mocked components.
 
-    AgenticRAGService(
+    build_test_agentic_rag_service(
         inference_engine=mock_inference,
         rag_service=mock_rag_service,
         web_search=mock_web_search,

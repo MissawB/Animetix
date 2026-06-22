@@ -2,6 +2,7 @@ import base64
 import hashlib
 
 from animetix_project.logging_config import get_logger
+from core.constants import ALLOWED_IMAGE_MIMES, MAX_IMAGE_SIZE  # noqa: E402
 from core.domain.services.guardrail_service import GuardrailService
 from core.ports.usage_port import UsagePort
 from core.utils.security import (
@@ -12,20 +13,17 @@ from core.utils.security import (
 )
 from dependency_injector.wiring import Provide, inject
 from django.contrib.auth.models import User
+from django.core.cache import cache  # noqa: E402
+from django.http import HttpResponse  # noqa: E402
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django_ratelimit.decorators import ratelimit  # noqa: E402
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from ..containers import Container, get_container
 from ..serializers import MangaChapterSerializer, MediaItemSerializer, ProfileSerializer
-
-ALLOWED_IMAGE_MIMES = ["image/jpeg", "image/png", "image/webp", "image/gif"]
-MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10 Mo
-from django.core.cache import cache  # noqa: E402
-from django.http import HttpResponse  # noqa: E402
-from django_ratelimit.decorators import ratelimit  # noqa: E402
 
 logger = get_logger("animetix.api")
 
@@ -193,8 +191,9 @@ class MediaSearchView(APIView):
             )
 
             return Response(self._format_results(results))
-        except Exception as e:
-            return Response({"error": str(e)}, status=500)
+        except Exception:
+            logger.exception("Error in image search")
+            return Response({"error": "Internal server error"}, status=500)
 
     def _format_results(self, results):
         # Utilise le serializer pour formater les résultats
@@ -655,9 +654,9 @@ class SuwayomiExtensionsListView(APIView):
         try:
             extensions = self.suwayomi_adapter.get_extensions()
             return Response(extensions)
-        except Exception as e:
-            logger.error(f"Failed to fetch Suwayomi extensions: {e}")
-            return Response({"error": str(e)}, status=500)
+        except Exception:
+            logger.exception("Failed to fetch Suwayomi extensions")
+            return Response({"error": "Internal server error"}, status=500)
 
 
 class SuwayomiExtensionsActionView(APIView):
@@ -700,9 +699,9 @@ class SuwayomiExtensionsActionView(APIView):
         try:
             results = self.suwayomi_adapter.update_extensions(ids, action)
             return Response(results)
-        except Exception as e:
-            logger.error(f"Failed to update Suwayomi extensions: {e}")
-            return Response({"error": str(e)}, status=500)
+        except Exception:
+            logger.exception("Failed to update Suwayomi extensions")
+            return Response({"error": "Internal server error"}, status=500)
 
 
 class FavoriteMangaToggleView(APIView):

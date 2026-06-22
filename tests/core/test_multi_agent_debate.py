@@ -3,11 +3,12 @@ from unittest.mock import MagicMock
 import pytest
 from core.domain.entities.ai_schemas import JudgeAction, JudgeEvaluation, SearchPlan
 from core.domain.services.advanced_rag_service import AdvancedRAGService  # noqa: E402
-from core.domain.services.agentic_rag_service import AgenticRAGService
 from core.domain.services.llm_service import LLMService  # noqa: E402
 from core.domain.services.prompt_manager import PromptManager  # noqa: E402
 from core.ports.inference_port import InferencePort  # noqa: E402
 from core.ports.web_search_port import WebSearchPort  # noqa: E402
+
+from tests.helpers.agentic_rag_factory import build_test_agentic_rag_service
 
 # Drives the full multi-agent debate / RAG pipeline against a live inference engine (no ollama in CI).
 pytestmark = pytest.mark.integration
@@ -115,7 +116,7 @@ class TestMultiAgentDebateIntegration:
             iter(["Third attempt "]),
         ]
 
-        service = AgenticRAGService(
+        service = build_test_agentic_rag_service(
             inference_engine=mock_inference,
             rag_service=mock_rag_service,
             web_search=mock_web_search,

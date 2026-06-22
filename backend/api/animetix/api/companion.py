@@ -1,8 +1,12 @@
+import logging
+
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from ..containers import get_container
+
+logger = logging.getLogger("animetix.companion")
 
 
 class CompanionInteractView(APIView):
@@ -94,7 +98,9 @@ class CompanionInteractView(APIView):
 
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
+        except Exception:
+            logger.exception("Error in companion chat")
             return Response(
-                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {"error": "Internal server error"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )

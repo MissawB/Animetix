@@ -2,6 +2,19 @@
 
 This document archives the major milestones of the project's technical evolution.
 
+## [2026-06-22] Session: API Hardening, RCE Guard & Constants/Broad-Except Cleanup
+
+### Cleanup: duplicated constants + bug-masking catch-alls
+- **Constants**: `MAX_IMAGE_SIZE` and the image/video/audio MIME allow-lists were duplicated (and drifting) between `api/core.py` and `api/labs.py`. Centralized in `core.constants`; both import from there (image list unified to include gif; labs' dead duplicate constants dropped).
+- **Broad `except Exception`**: AST audit of all 638 handlers showed almost all already log or return a deliberate fallback (legitimate defensive code). Only 3 silently swallowed; narrowed the 2 obvious ones (`django_repository_adapter.get_creative_fusion` → `CreativeFusion.DoesNotExist` so a repo no longer masks DB errors as "not found"; `regression_benchmark` `--threshold` parse → `(ValueError, IndexError)`). The ASGI event-loop-policy startup shim is an intentional best-effort guard, left as-is. No blind 638-site sweep (no value, risky).
+
+### Security: API stacktrace-leak + secure-by-default permissions
+- **Stacktrace leak**: 27 endpoints returned the raw exception to the client on HTTP 500 (`Response({"error": str(e)}, status=500)`), exposing internals (paths, SQL, …). Replaced the client body with a generic `"Internal server error"` and log the detail server-side via `logger.exception(...)` — across 11 `api/*` modules plus `tasks_views` and `views/billing`. 4xx validation responses (intentional user feedback) were left intact.
+- **Permissions secure-by-default**: DRF `DEFAULT_PERMISSION_CLASSES` was `IsAuthenticatedOrReadOnly`, making every endpoint world-readable unless overridden. Flipped to `IsAuthenticated`. An AST audit of all 142 views found only 8 relying on the default; the genuinely public ones now declare `IsAuthenticatedOrReadOnly` (Multiverse gallery/catalog/export-PDF, AchievementViewSet) while internal/control views (monitoring, observability) tighten. The 3 `@api_view` functions and `AIFeedbackAPIView` (uses `get_permissions`) already scoped permissions explicitly.
+
+### Security: RCE guard on exec() of LLM-generated kernels
+- `SelfEvolvingCompiler.compile_dynamic_kernel` exec'd dynamic Python source, including code produced by an LLM (`evolve_with_llm`) — a prompt injection upstream could smuggle arbitrary code into the host (RCE). Added `assert_safe_kernel_source()`: an AST gate rejecting imports, dunder attribute access (blocks `().__class__.__subclasses__()` escapes) and a blocklist of dangerous names (os/sys/subprocess/eval/exec/open/getattr…). `exec` now also runs with a restricted `__builtins__` (`_SAFE_BUILTINS` — only numeric helpers like range/len/abs/float) as defense-in-depth. Malicious kernels raise `UnsafeKernelError`; `evolve_with_llm` swallows it and returns the null fallback (no execution). Legitimate numeric kernels unchanged; 13 new security tests.
+
 ## [2026-06-22] Session: Frontend & Infra Sweep (data/LFS, fetch→apiClient, CI, deps, DX, a11y, coverage)
 
 A batch of TODO items closed across data hygiene, CI, deps, DX and the frontend, each merged via its own PR.
@@ -23,6 +36,9 @@ Three core-domain services reached across the hexagonal boundary into infrastruc
 - **`voice_ingestion_service`** imported `animetix.models.VoiceProfile` + `ContentFile`/`slugify` to persist the ingested sample → new **`VoiceProfileRepositoryPort`** + `DjangoVoiceProfileAdapter`; the service is now wired as `container.core.voice_ingestion_service` and the labs view resolves it from the container instead of instantiating it directly.
 - **`llm_service`** reached into `animetix.middleware` to resolve the ambient request user for the quota check → new **`UserContextPort`** + `MiddlewareUserContextAdapter`. Explicit `user_id`/`tier` args keep priority; quota enforcement is preserved with no direct middleware import (avoids threading user_id through ~35 internal callers).
 - Verified: container wiring tests green, `llm_service`/labs/manga-endpoint tests green, and none of the three core files import Django/animetix anymore.
+
+### Test scaffolding removed from production
+- `AgenticRAGService.__init__` shipped ~130 lines of test-only `isinstance(..., Mock)` scaffolding: it gave a mock `llm_service` default `generate` side-effects and rebuilt a real `RAGOrchestrator` (with all real agents) whenever a Mock orchestrator was passed. Extracted to a test factory (`tests/helpers/agentic_rag_factory.py:build_test_agentic_rag_service`) and migrated the 14 unit tests that relied on the implicit behavior. The production `__init__` no longer imports `unittest.mock` or branches on `Mock`; behavior preserved (51 passed / 16 deselected unchanged, container wiring green).
 
 ### Test-home consolidation
 - Merged the historically-duplicated test homes (`tests/backend/core`→`tests/core`, `tests/backend/api`→`tests/api`, `tests/pipeline_logic`→`tests/pipeline`) via `git mv` — pytest collection unchanged at 2313 tests, history preserved. Purely organizational (discovery is `testpaths=tests`).
