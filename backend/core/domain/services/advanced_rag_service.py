@@ -303,6 +303,14 @@ class AdvancedRAGService:
     def generate_advanced_answer(
         self, query: str, media_type: str, user_id: Optional[str] = None
     ) -> str:
+        answer, _ = self.generate_advanced_answer_with_context(
+            query, media_type, user_id=user_id
+        )
+        return answer
+
+    def generate_advanced_answer_with_context(
+        self, query: str, media_type: str, user_id: Optional[str] = None
+    ) -> Tuple[str, str]:
         candidates = self.hybrid_search(query, media_type, limit=20, user_id=user_id)
         if self.colbert_adapter:
             candidates = self.colbert_adapter.rank_documents(query, candidates)
@@ -314,17 +322,16 @@ class AdvancedRAGService:
                 for r in top_results
             ]
         )
-
         if self.prompt_manager is None:
             logger.error("No prompt_manager configured; cannot generate answer.")
-            return ""
+            return "", context
         prompt, system_prompt = self.prompt_manager.get_prompt(
             "advanced_rag_generate", context=context, query=query
         )
         inference_res = self.llm_service.inference_engine.generate(
             prompt, system_prompt=system_prompt
         )
-        return inference_res.text
+        return inference_res.text, context
 
     def generate_holistic_answer(
         self, query: str, media_type: str, category_name: str
