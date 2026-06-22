@@ -22,6 +22,7 @@ import * as z from 'zod';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAudioLab } from '../../features/labs/hooks/useAudioLab';
+import { useQuickIngestForm } from '../../features/labs/hooks/useQuickIngestForm';
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
@@ -70,13 +71,6 @@ const AudioLabPage: React.FC = () => {
   const [selectedSeiyuu, setSelectedSeiyuu] = useState<VoiceProfile | null>(null);
   const [activeAudio, setActiveAudio] = useState<string | null>(null);
   const [audioLoading, setAudioLoading] = useState<string | null>(null);
-
-  // Quick Ingestion Mode
-  const [showQuickIngest, setShowQuickIngest] = useState(false);
-  const [quickName, setQuickName] = useState('');
-  const [quickLang, setQuickLang] = useState('japanese');
-  const [quickSource, setQuickSource] = useState('');
-  const [quickError, setQuickError] = useState('');
 
   const { register, handleSubmit, formState: { errors } } = useForm<AudioFormValues>({
     resolver: zodResolver(audioSchema),
@@ -137,6 +131,14 @@ const AudioLabPage: React.FC = () => {
     }
   };
 
+  const quickIngest = useQuickIngestForm({
+    ingestVoice,
+    onIngested: (profile) => {
+      selectVoiceProfile(profile);
+      searchSeiyuu(seiyuuQuery, langFilter); // refresh the list
+    },
+  });
+
   const onDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     setIsDraggingOver(false);
@@ -173,32 +175,6 @@ const AudioLabPage: React.FC = () => {
     audio.play().catch(err => console.error(err));
     setActiveAudio(url);
     audio.onended = () => setActiveAudio(null);
-  };
-
-  const handleQuickIngest = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setQuickError('');
-    if (!quickName || !quickSource) {
-      setQuickError("Le nom et la source sont requis.");
-      return;
-    }
-    try {
-      const response = await ingestVoice({
-        name: quickName,
-        language: quickLang,
-        query: quickSource,
-      });
-      // Select the newly created voice profile
-      selectVoiceProfile(response.profile);
-      setShowQuickIngest(false);
-      setQuickName('');
-      setQuickSource('');
-      // Refresh list
-      searchSeiyuu(seiyuuQuery, langFilter);
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : '';
-      setQuickError(message || "Erreur d'ingestion.");
-    }
   };
 
   if (loading) return (
@@ -371,7 +347,7 @@ const AudioLabPage: React.FC = () => {
             <Button
               variant="outline"
               fullWidth
-              onClick={() => setShowQuickIngest(!showQuickIngest)}
+              onClick={quickIngest.toggle}
               className="text-[9px] uppercase font-black tracking-wider flex items-center justify-center gap-1.5 py-3.5 border-dashed border-blue-500/30 text-blue-400 hover:bg-blue-500/10"
             >
               <Plus className="w-3 h-3" /> Ingestion YouTube Rapide
@@ -379,12 +355,12 @@ const AudioLabPage: React.FC = () => {
 
             {/* Ingestion Panel inside Sidebar */}
             <AnimatePresence>
-              {showQuickIngest && (
+              {quickIngest.isOpen && (
                 <motion.form
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  onSubmit={handleQuickIngest}
+                  onSubmit={quickIngest.submit}
                   className="bg-navy-950/80 border border-blue-500/20 p-5 rounded-2xl space-y-4 overflow-hidden"
                 >
                   <h4 className="text-[10px] font-black uppercase tracking-widest text-blue-400 flex items-center gap-1">
@@ -395,15 +371,15 @@ const AudioLabPage: React.FC = () => {
                       type="text"
                       placeholder="Nom de l'acteur"
                       aria-label="Nom de l'acteur"
-                      value={quickName}
-                      onChange={(e) => setQuickName(e.target.value)}
+                      value={quickIngest.name}
+                      onChange={(e) => quickIngest.setName(e.target.value)}
                       className="w-full bg-black/45 border border-white/5 rounded-lg px-3 py-2 text-xs font-bold text-white"
                     />
                   </div>
                   <div className="space-y-1">
                     <select
-                      value={quickLang}
-                      onChange={(e) => setQuickLang(e.target.value)}
+                      value={quickIngest.language}
+                      onChange={(e) => quickIngest.setLanguage(e.target.value)}
                       className="w-full bg-black/45 border border-white/5 rounded-lg px-3 py-2 text-xs font-bold text-white"
                     >
                       <option value="japanese">Japonais (Seiyuu)</option>
@@ -415,16 +391,16 @@ const AudioLabPage: React.FC = () => {
                       type="text"
                       placeholder="Lien YouTube ou recherche"
                       aria-label="Lien YouTube ou recherche"
-                      value={quickSource}
-                      onChange={(e) => setQuickSource(e.target.value)}
+                      value={quickIngest.source}
+                      onChange={(e) => quickIngest.setSource(e.target.value)}
                       className="w-full bg-black/45 border border-white/5 rounded-lg px-3 py-2 text-xs font-bold text-white"
                     />
                   </div>
-                  {quickError && (
-                    <p className="text-[9px] font-bold text-red-400">⚠️ {quickError}</p>
+                  {quickIngest.error && (
+                    <p className="text-[9px] font-bold text-red-400">⚠️ {quickIngest.error}</p>
                   )}
                   <div className="flex gap-2 justify-end">
-                    <Button type="button" size="sm" variant="ghost" onClick={() => setShowQuickIngest(false)}>Annuler</Button>
+                    <Button type="button" size="sm" variant="ghost" onClick={quickIngest.close}>Annuler</Button>
                     <Button type="submit" size="sm" className="bg-blue-600 hover:bg-blue-500 border-none" disabled={isIngestingVoice}>
                       {isIngestingVoice ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Ingérer'}
                     </Button>

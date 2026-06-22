@@ -55,8 +55,9 @@ _Rien d'ouvert._
   - 8 mixins, ~476 lignes ([unified_inference_adapter.py:30](backend/adapters/inference/unified_inference_adapter.py#L30)) ; MRO fragile, dur à tester → composition plutôt qu'héritage multiple.
 - [ ] **Frontend — `fetch()` brut qui contourne `apiClient`**
   - [SearchBar.tsx:81](frontend/src/components/SearchBar.tsx#L81) et [AudioLabPage.tsx:127](frontend/src/pages/labs/AudioLabPage.tsx#L127) bypassent CSRF + auth Firebase + toasts → tout passer par `apiClient`.
-- [ ] **Frontend — état local fragmenté**
-  - [AudioLabPage.tsx:64](frontend/src/pages/labs/AudioLabPage.tsx#L64) (~13 `useState`) ; anti-pattern `JSON.stringify` en render dans [SynapticLabPage.tsx:110](frontend/src/pages/labs/SynapticLabPage.tsx#L110) → `useReducer`/hook dédié.
+- [x] **Frontend — état local fragmenté**
+  - [x] `AudioLabPage` : formulaire « Quick Ingest » (5 `useState` + handler + validation) extrait dans un hook dédié `useQuickIngestForm` (14 → 9 `useState`). Testé. L'état recording/playback restant est laissé en place (intriqué à l'UI, ROI décroissant).
+  - [x] `SynapticLabPage:110` — **faux positif** : le `JSON.stringify` en render est le pattern React documenté « ajuster un state pendant le render » (set-state-in-render gardé par une *signature de valeur* pour éviter les boucles d'identité), coût négligeable sur des objets config minuscules. Laissé tel quel à dessein.
 - [ ] **CI — gaspillage et robustesse**
   - Pas de `concurrency: cancel-in-progress` → runs redondants empilés.
   - PyTorch (~800 Mo) réinstallé sans cache dans 3 jobs ([ci.yml](.github/workflows/ci.yml) ~97/163/203).
