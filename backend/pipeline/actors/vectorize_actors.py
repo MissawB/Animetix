@@ -8,14 +8,14 @@ from sentence_transformers import SentenceTransformer
 # Détection robuste de la racine du projet
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(os.path.join(BASE_DIR, "pipeline"))
-from chroma_client import chroma_manager  # noqa: E402
+from vector_client import vector_manager  # noqa: E402
 
 logger = logging.getLogger("animetix")
 
 CLEAN_DB = os.path.join(BASE_DIR, "data", "processed", "clean_root_actors.json")
 
 
-def run_vectorization(chroma_res=None):
+def run_vectorization(vector_res=None):
     if not os.path.exists(CLEAN_DB):
         logger.error(f"❌ {CLEAN_DB} not found.")
         return False
@@ -23,11 +23,11 @@ def run_vectorization(chroma_res=None):
     with open(CLEAN_DB, "r", encoding="utf-8") as f:
         db = json.load(f)
 
-    # --- RÉCUPÉRATION DES IDS DÉJÀ DANS CHROMA ---
-    manager = chroma_res.manager if chroma_res else chroma_manager
+    # --- RÉCUPÉRATION DES IDS DÉJÀ DANS PGVECTOR ---
+    manager = vector_res.manager if vector_res else vector_manager
     collection = manager.get_collection("actor_vibe")
     existing_ids = set(collection.get()["ids"])
-    logger.info(f"📂 {len(existing_ids)} actors already in ChromaDB.")
+    logger.info(f"📂 {len(existing_ids)} actors already in pgvector.")
 
     # --- FILTRAGE DU DELTA ET DÉDUPLICATION INTERNE ---
     new_items = []
@@ -35,7 +35,7 @@ def run_vectorization(chroma_res=None):
 
     for item in db:
         item_id = str(item["id"])
-        # On ignore si déjà dans Chroma OU si déjà vu dans ce fichier JSON
+        # On ignore si déjà dans pgvector OU si déjà vu dans ce fichier JSON
         if item_id not in existing_ids and item_id not in seen_ids_this_run:
             new_items.append(item)
             seen_ids_this_run.add(item_id)
@@ -45,7 +45,7 @@ def run_vectorization(chroma_res=None):
         return True
 
     logger.info(
-        f"🚀 Vectorizing {len(new_items)} unique new actors (Full Chroma mode)..."
+        f"🚀 Vectorizing {len(new_items)} unique new actors (Full pgvector mode)..."
     )
 
     model = SentenceTransformer("paraphrase-multilingual-mpnet-base-v2")
@@ -85,7 +85,7 @@ def run_vectorization(chroma_res=None):
         try:
             manager.add_to_collection("actor_vibe", ids, embeddings, metadatas)
         except Exception as e:
-            logger.error(f"⚠️ Error during Chroma insertion: {e}")
+            logger.error(f"⚠️ Error during pgvector insertion: {e}")
 
-    logger.info("✅ Actor Chroma Sync Complete!")
+    logger.info("✅ Actor pgvector Sync Complete!")
     return True

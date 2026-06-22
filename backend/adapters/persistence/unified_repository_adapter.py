@@ -18,29 +18,29 @@ class UnifiedRepositoryAdapter(RepositoryPort):
 
     def __init__(self, project_root: str):
         self.project_root = project_root
-        self.chroma = PGVectorRepositoryAdapter(project_root=project_root)
+        self.vectors = PGVectorRepositoryAdapter(project_root=project_root)
         self.django = DjangoRepositoryAdapter()
         logger.info("Using PGVector as primary vector repository adapter.")
 
     def _get_primary(self) -> RepositoryPort:
-        return self.chroma
+        return self.vectors
 
     def get_collection(self, collection_name: str):
-        return self.chroma.get_collection(collection_name)
+        return self.vectors.get_collection(collection_name)
 
     def get_nearest_neighbors(
         self, collection_name: str, item_id: str, n_results: int = 5
     ) -> Optional[Dict]:
-        """Recherche par similarité optimisée sur ChromaDB."""
-        return self.chroma.get_nearest_neighbors(collection_name, item_id, n_results)
+        """Recherche par similarité optimisée sur pgvector."""
+        return self.vectors.get_nearest_neighbors(collection_name, item_id, n_results)
 
     def calculate_similarity(
         self, collection_name: str, item_a_id: str, item_b_id: str
     ) -> float:
-        return self.chroma.calculate_similarity(collection_name, item_a_id, item_b_id)
+        return self.vectors.calculate_similarity(collection_name, item_a_id, item_b_id)
 
     def load_catalog(self, media_type: str) -> Optional[Dict]:
-        return self.chroma.load_catalog(media_type)
+        return self.vectors.load_catalog(media_type)
 
     def load_themes(self) -> Dict:
         return self.django.load_themes()
@@ -58,7 +58,7 @@ class UnifiedRepositoryAdapter(RepositoryPort):
         limit: int = 10,
         offset: int = 0,
     ) -> List[Dict]:
-        results = self.chroma.search_media_items(query, media_type, limit, offset)
+        results = self.vectors.search_media_items(query, media_type, limit, offset)
         if results:
             return results
         return self.django.search_media_items(query, media_type, limit, offset)
@@ -71,16 +71,18 @@ class UnifiedRepositoryAdapter(RepositoryPort):
         metadatas: List[Dict],
         documents: Optional[List[str]] = None,
     ):
-        self.chroma.upsert_items(collection_name, ids, embeddings, metadatas, documents)
+        self.vectors.upsert_items(
+            collection_name, ids, embeddings, metadatas, documents
+        )
 
     def delete_collection(self, collection_name: str):
-        self.chroma.delete_collection(collection_name)
+        self.vectors.delete_collection(collection_name)
 
     def get_collection_count(self, collection_name: str) -> int:
-        return self.chroma.get_collection_count(collection_name)
+        return self.vectors.get_collection_count(collection_name)
 
     def get_all_ids(self, collection_name: str) -> List[str]:
-        return self.chroma.get_all_ids(collection_name)
+        return self.vectors.get_all_ids(collection_name)
 
     def get_catalog_by_type(
         self, media_type: str, limit: int = 1000, offset: int = 0
@@ -94,7 +96,7 @@ class UnifiedRepositoryAdapter(RepositoryPort):
         db_res = self.django.load_latent_space(media_type, vibe_type)
         if db_res:
             return db_res
-        return self.chroma.load_latent_space(media_type, vibe_type)
+        return self.vectors.load_latent_space(media_type, vibe_type)
 
     def sync_latent_space(
         self, media_type: str, vibe_type: str, data: List[Dict]

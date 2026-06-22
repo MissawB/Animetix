@@ -3,9 +3,9 @@
 
 Target module: ``backend.pipeline.mlops.index_otaku_knowledge`` (the
 ``OtakuKnowledgeIndexer`` pipeline that compiles the local meta databases into
-semantic facts and upserts them into ChromaDB).
+semantic facts and upserts them into pgvector).
 
-All external I/O is mocked: the Django DI container / ChromaDB repository and the
+All external I/O is mocked: the Django DI container / pgvector repository and the
 embedding function. The real fact-compilation, sentence chunking, doc-id /
 metadata construction and control flow run against the real local ``*_db``
 fixtures so the assertions exercise genuine behaviour (no false-green).
@@ -81,21 +81,21 @@ def log_capture():
 
 
 def _make_repo(coll_names=None):
-    """Build a mock repository whose chroma surface mirrors the real one.
+    """Build a mock repository whose pgvector surface mirrors the real one.
 
     ``embedding_fn`` returns one deterministic vector per input text and records
     every call so tests can assert exactly what got vectorised.
     """
     repo = MagicMock()
-    repo.chroma.coll_names = coll_names if coll_names is not None else {}
+    repo.vectors.coll_names = coll_names if coll_names is not None else {}
 
     def _embed(texts):
         # One 3-dim vector per text; values derived from length so we can assert
         # the embedding function actually received our chunk text.
         return [[float(len(t)), 1.0, 2.0] for t in texts]
 
-    repo.chroma.embedding_fn = MagicMock(side_effect=_embed)
-    repo.chroma.upsert_items = MagicMock()
+    repo.vectors.embedding_fn = MagicMock(side_effect=_embed)
+    repo.vectors.upsert_items = MagicMock()
     return repo
 
 
@@ -232,7 +232,7 @@ def test_chunk_empty_string_returns_empty(indexer):
 # --- execute_indexation: dry-run -------------------------------------------
 
 
-def test_execute_indexation_dry_run_does_not_touch_chroma(indexer, log_capture):
+def test_execute_indexation_dry_run_does_not_touch_vectors(indexer, log_capture):
     """Dry-run logs a simulation and never calls the repository."""
     repo = _make_repo()
     indexer.container = MagicMock()
@@ -243,7 +243,7 @@ def test_execute_indexation_dry_run_does_not_touch_chroma(indexer, log_capture):
     assert result is None
     # Dry-run must short-circuit before fetching the repository.
     indexer.container.repository.assert_not_called()
-    repo.chroma.upsert_items.assert_not_called()
+    repo.vectors.upsert_items.assert_not_called()
     assert any("Dry-Run" in m for m in log_capture.messages)
 
 
@@ -267,7 +267,7 @@ def test_execute_indexation_upserts_vectorised_chunks(monkeypatch):
     """End-to-end production path: facts -> chunks -> embeddings -> upsert.
 
     We shrink the source data to two deterministic facts so we can assert the
-    exact ids/embeddings/metadata handed to ChromaDB.
+    exact ids/embeddings/metadata handed to pgvector.
     """
     ix = iok.OtakuKnowledgeIndexer(dry_run=False)
     repo = _make_repo(coll_names={"Anime": "anime_thematic"})
@@ -284,8 +284,8 @@ def test_execute_indexation_upserts_vectorised_chunks(monkeypatch):
     ix.execute_indexation()
 
     # The repository upsert was called exactly once into the configured collection.
-    assert repo.chroma.upsert_items.call_count == 1
-    args, _ = repo.chroma.upsert_items.call_args
+    assert repo.vectors.upsert_items.call_count == 1
+    args, _ = repo.vectors.upsert_items.call_args
     coll_name, ids, embeddings, metadatas = args
 
     assert coll_name == "anime_thematic"
@@ -297,7 +297,7 @@ def test_execute_indexation_upserts_vectorised_chunks(monkeypatch):
 
     # The embedding function received the context-prefixed chunk text and the
     # resulting vectors were forwarded verbatim.
-    embed_inputs = [c.args[0][0] for c in repo.chroma.embedding_fn.call_args_list]
+    embed_inputs = [c.args[0][0] for c in repo.vectors.embedding_fn.call_args_list]
     assert any("[Source: Otaku Database" in t and "Alpha" in t for t in embed_inputs)
     for text, vec in zip(embed_inputs, embeddings):
         assert vec == [float(len(text)), 1.0, 2.0]
@@ -324,15 +324,15 @@ def test_execute_indexation_defaults_collection_name(monkeypatch):
 
     ix.execute_indexation()
 
-    coll_name = repo.chroma.upsert_items.call_args.args[0]
+    coll_name = repo.vectors.upsert_items.call_args.args[0]
     assert coll_name == "anime_thematic"
 
 
-def test_execute_indexation_swallows_chroma_errors(monkeypatch, log_capture):
+def test_execute_indexation_swallows_vector_errors(monkeypatch, log_capture):
     """A failure inside the indexation block is caught and logged, not raised."""
     ix = iok.OtakuKnowledgeIndexer(dry_run=False)
     repo = _make_repo(coll_names={"Anime": "anime_thematic"})
-    repo.chroma.upsert_items.side_effect = RuntimeError("chroma exploded")
+    repo.vectors.upsert_items.side_effect = RuntimeError("pgvector exploded")
     ix.container = MagicMock()
     ix.container.repository.return_value = repo
     monkeypatch.setattr(
@@ -360,8 +360,8 @@ def test_execute_indexation_real_data_full_pipeline(monkeypatch):
 
     ix.execute_indexation()
 
-    repo.chroma.upsert_items.assert_called_once()
-    ids = repo.chroma.upsert_items.call_args.args[1]
+    repo.vectors.upsert_items.assert_called_once()
+    ids = repo.vectors.upsert_items.call_args.args[1]
     # The real databases produce many chunks; sanity-check it's non-trivial.
     assert len(ids) > 50
     assert len(ids) == len(set(ids)) or len(ids) >= len(set(ids))  # ids generated

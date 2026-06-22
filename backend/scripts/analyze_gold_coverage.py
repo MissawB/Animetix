@@ -104,7 +104,7 @@ def analyze_coverage(threshold: float = 0.05) -> Dict[str, Any]:
         except Exception as e:
             logger.warning(f"Neo4j query failed: {e}")
 
-    # 3. Query Chroma metadata counts via VectorRecord Django model
+    # 3. Query pgvector metadata counts via VectorRecord Django model
     records = VectorRecord.objects.filter(collection_name="anime_thematic")
     total_vectors = records.count()
     under_represented_genres = []

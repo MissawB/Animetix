@@ -6,7 +6,7 @@ from scipy.stats import ks_2samp
 
 # Ajout du dossier root au path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from backend.pipeline.chroma_client import chroma_manager  # noqa: E402
+from backend.pipeline.vector_client import vector_manager  # noqa: E402
 
 
 class DriftDetector:
@@ -14,7 +14,7 @@ class DriftDetector:
         self.baseline_vectors = np.load(baseline_path)
 
     def check_drift(self, collection_name, threshold=0.05):
-        collection = chroma_manager.get_collection(collection_name)
+        collection = vector_manager.get_collection(collection_name)
         data = collection.get(include=["embeddings"])
         current_vectors = np.array(data["embeddings"])
 

@@ -3,7 +3,7 @@ import logging
 import os
 
 import numpy as np
-from pipeline.chroma_client import chroma_manager
+from pipeline.vector_client import vector_manager
 from sklearn.manifold import TSNE
 
 logger = logging.getLogger("animetix.mlops.viz")
@@ -13,9 +13,9 @@ ARTIFACTS_DIR = os.path.join("data", "artifacts")
 
 def run_visualization():
     """
-    Génère les projections 3D pour TOUTES les collections ChromaDB.
+    Génère les projections 3D pour TOUTES les collections pgvector.
     """
-    client = chroma_manager
+    client = vector_manager
     collections_to_viz = [
         "anime_plot",
         "anime_thematic",

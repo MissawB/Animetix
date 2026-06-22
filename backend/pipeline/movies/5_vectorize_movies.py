@@ -10,9 +10,9 @@ logger = logging.getLogger("animetix." + __name__)
 # Détection robuste de la racine du projet
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(os.path.join(BASE_DIR, "pipeline"))
-from chroma_client import chroma_manager  # noqa: E402
+from vector_client import vector_manager  # noqa: E402
 
-logger.info("🚀 Starting Movie Vectorization (Full Chroma Mode)...")
+logger.info("🚀 Starting Movie Vectorization (Full pgvector Mode)...")
 
 CLEAN_DB = os.path.join(BASE_DIR, "data", "processed", "clean_root_movies.json")
 
@@ -25,10 +25,10 @@ def main():
     with open(CLEAN_DB, "r", encoding="utf-8") as f:
         db = json.load(f)
 
-    # --- RÉCUPÉRATION DES IDS DÉJÀ DANS CHROMA ---
-    collection = chroma_manager.get_collection("movie_thematic")
+    # --- RÉCUPÉRATION DES IDS DÉJÀ DANS PGVECTOR ---
+    collection = vector_manager.get_collection("movie_thematic")
     existing_ids = set(collection.get()["ids"])
-    logger.info(f"📂 {len(existing_ids)} movies already in ChromaDB.")
+    logger.info(f"📂 {len(existing_ids)} movies already in pgvector.")
 
     # --- FILTRAGE DU DELTA & DE-DUPLICATION ---
     new_items = []
@@ -88,17 +88,17 @@ def main():
         vec_plot = model.encode(plot_corpus, convert_to_numpy=True)
         vec_vibe = model.encode(vibe_corpus, convert_to_numpy=True)
 
-        # Injection directe dans ChromaDB
+        # Injection directe dans pgvector
         try:
-            chroma_manager.add_to_collection(
+            vector_manager.add_to_collection(
                 "movie_thematic", ids, vec_thematic, metadatas
             )
-            chroma_manager.add_to_collection("movie_plot", ids, vec_plot, metadatas)
-            chroma_manager.add_to_collection("movie_vibe", ids, vec_vibe, metadatas)
+            vector_manager.add_to_collection("movie_plot", ids, vec_plot, metadatas)
+            vector_manager.add_to_collection("movie_vibe", ids, vec_vibe, metadatas)
         except Exception as e:
-            logger.warning(f"⚠️ ChromaDB sync failed for this chunk: {e}")
+            logger.warning(f"⚠️ pgvector sync failed for this chunk: {e}")
 
-    logger.info("✅ Movie Chroma Sync Complete!")
+    logger.info("✅ Movie pgvector Sync Complete!")
 
 
 if __name__ == "__main__":

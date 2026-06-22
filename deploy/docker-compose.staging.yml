@@ -22,7 +22,7 @@ services:
       - db
       - redis
 
-  # Le reste des services (db, redis, chromadb, neo4j, ollama)
+  # Le reste des services (db, redis, neo4j, ollama)
  
   # est partagé avec le site de production pour économiser les ressources GPU/RAM.
   # Utilise 'docker-compose -f docker-compose.yml -f docker-compose.staging.yml up'

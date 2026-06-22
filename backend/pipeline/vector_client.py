@@ -489,4 +489,4 @@ class PGVectorManager:
         return int(datetime.datetime.now().timestamp())
 
 
-chroma_manager = PGVectorManager()
+vector_manager = PGVectorManager()

@@ -38,7 +38,7 @@ Estimation based on a production deployment on **Google Cloud Platform (GCP)** o
 | **Compute Engine (GPU)** | L4 / A100 Instances | **$450 - $1200** | Inference for Ghost Labs & SLMs |
 | **Cloud Run / GKE** | Django Backend | **$40 - $150** | API, Celery Workers, WebSockets |
 | **Databases** | Cloud SQL + Neo4j Aura | **$80 - $200** | Relational and Graph persistence |
-| **Vector Store** | ChromaDB (Self-hosted) | **$30 - $60** | RAG Engine (Lore & Semantics) |
+| **Vector Store** | pgvector (Postgres extension) | **$30 - $60** | RAG Engine (Lore & Semantics) |
 | **Cloud Storage** | GCS Buckets | **$15 - $50** | Media assets, manga pages |
 
 **Total Estimated Infrastructure Cost: ~$600 to $1600 / month.**

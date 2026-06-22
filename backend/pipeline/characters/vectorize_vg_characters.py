@@ -62,14 +62,14 @@ def run_vectorization_vg():
         corpus, show_progress_bar=True, convert_to_numpy=True
     ).tolist()
 
-    # --- STOCKAGE CHROMADB ---
-    logger.info("🚀 Syncing with ChromaDB (Collection: vg_character_vibe)...")
+    # --- STOCKAGE PGVECTOR ---
+    logger.info("🚀 Syncing with pgvector (Collection: vg_character_vibe)...")
     try:
         ids = [str(c["id"]) for c in data_for_lookup]
         repo.upsert_items("vg_character_vibe", ids, embeddings, data_for_lookup)
-        logger.info("✅ ChromaDB synchronization complete.")
+        logger.info("✅ pgvector synchronization complete.")
     except Exception as e:
-        logger.warning(f"⚠️ ChromaDB Error: {e}")
+        logger.warning(f"⚠️ pgvector Error: {e}")
 
     # Sauvegarde du lookup spécifique
     os.makedirs(os.path.dirname(LOOKUP_FILE), exist_ok=True)

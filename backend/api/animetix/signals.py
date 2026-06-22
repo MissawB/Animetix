@@ -93,7 +93,7 @@ def broadcast_boss_phase(sender, instance, created, **kwargs):
 @receiver(post_save, sender=MediaItem)
 def sync_media_on_save(sender, instance, created, **kwargs):
     """
-    Signal pour synchroniser automatiquement ChromaDB et Neo4j
+    Signal pour synchroniser automatiquement pgvector et Neo4j
     lorsqu'un MediaItem est créé ou modifié (Asynchrone via Celery).
     """
     from animetix.tasks_client import enqueue_task  # noqa: E402

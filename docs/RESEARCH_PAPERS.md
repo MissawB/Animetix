@@ -111,7 +111,7 @@ L'architecture d'**Animetix** repose sur une combinaison de techniques d'Intelli
 ### Matryoshka Representation Learning
 * **ID / Source :** [arXiv:2205.13147](https://huggingface.co/papers/2205.13147)
 * **Concept Clé :** Représentations vectorielles tronquables (l'information majeure au début du vecteur).
-* **Implémentation dans Animetix :** Optimise le stockage ChromaDB pour une recherche sémantique ultra-rapide et économique.
+* **Implémentation dans Animetix :** Optimise le stockage pgvector pour une recherche sémantique ultra-rapide et économique.
 
 ### LEGO-GraphRAG: Modularizing Graph-based Retrieval-Augmented Generation
 * **ID / Source :** [arXiv:2411.05844](https://huggingface.co/papers/2411.05844)

@@ -54,7 +54,7 @@ class CrossModalSearchService:
         else:
             final_vec = np.array(image_vec)
 
-        # 3. Recherche dans ChromaDB avec le vecteur fusionné
+        # 3. Recherche dans pgvector avec le vecteur fusionné
         # Note: On suppose que la collection contient des embeddings CLIP
         results = self.vector_db.search_by_vector(
             "unified_clip_space", final_vec.tolist(), limit=limit
@@ -84,8 +84,8 @@ class VlmIndexingService:
         return description
 
     def index_visual_narrative(self, media_item: Dict, image_data: bytes):
-        """Pipeline d'indexation : Image -> Texte VLM -> ChromaDB."""
+        """Pipeline d'indexation : Image -> Texte VLM -> pgvector."""
         narrative = self.describe_poster(image_data, media_item["title"])
         logger.info(f"📸 VLM Narrative for {media_item['title']}: {narrative[:100]}...")
-        # L'indexation finale se fait dans ChromaDB (non implémenté ici car dépend de l'adapter)
+        # L'indexation finale se fait dans pgvector (non implémenté ici car dépend de l'adapter)
         return narrative

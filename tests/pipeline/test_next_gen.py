@@ -59,8 +59,8 @@ def test_episodic_memory_compressor():
         EpisodicMemoryCompressor,
     )
 
-    mock_chroma = MagicMock()
-    # Simuler deux souvenirs vectoriels dans Chroma
+    mock_vectors = MagicMock()
+    # Simuler deux souvenirs vectoriels dans pgvector
     mock_collection = MagicMock()
     mock_collection.get.return_value = {
         "documents": [
@@ -68,7 +68,7 @@ def test_episodic_memory_compressor():
             "L'utilisateur déteste les animes comiques niaises.",
         ]
     }
-    mock_chroma.get_collection.return_value = mock_collection
+    mock_vectors.get_collection.return_value = mock_collection
 
     mock_engine = MagicMock()
     mock_engine.generate.return_value = (
@@ -78,7 +78,7 @@ def test_episodic_memory_compressor():
     mock_neo4j = MagicMock()
 
     compressor = EpisodicMemoryCompressor(
-        chroma_resource=mock_chroma,
+        vector_store=mock_vectors,
         inference_engine=mock_engine,
         neo4j_manager=mock_neo4j,
     )
@@ -86,7 +86,7 @@ def test_episodic_memory_compressor():
     profile = compressor.compress_user_memories("user_123")
 
     assert "adepte de Berserk" in profile
-    mock_chroma.get_collection.assert_called_once_with("user_long_term_memories")
+    mock_vectors.get_collection.assert_called_once_with("user_long_term_memories")
     # Vérification que le graphe de relations Neo4j a bien été mis à jour
     assert mock_neo4j.execute_query.call_count >= 1
 

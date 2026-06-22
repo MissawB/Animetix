@@ -16,8 +16,8 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "animetix_project.settings")
 django.setup()
 
 from animetix.models import MediaItem  # noqa: E402
-from pipeline.chroma_client import chroma_manager  # noqa: E402
 from pipeline.neo4j_client import neo4j_manager  # noqa: E402
+from pipeline.vector_client import vector_manager  # noqa: E402
 
 
 def reconcile():
@@ -32,7 +32,7 @@ def reconcile():
         print("⚠️ Django catalog is empty. Run 'python manage.py sync_catalog' first.")
         return
 
-    # 2. Check ChromaDB
+    # 2. Check pgvector
     collections = {
         "Anime": ["anime_thematic", "anime_visual_vibe", "anime_plot"],
         "Manga": ["manga_thematic", "manga_visual_vibe"],
@@ -52,16 +52,16 @@ def reconcile():
     for item in check_items:
         issues = []
 
-        # Chroma Check
+        # pgvector Check
         colls = collections.get(item.media_type, [])
         for coll_name in colls:
             try:
-                coll = chroma_manager.get_collection(coll_name)
+                coll = vector_manager.get_collection(coll_name)
                 res = coll.get(ids=[str(item.external_id)], include=[])
                 if not res.get("ids"):
-                    issues.append(f"Missing in Chroma:{coll_name}")
+                    issues.append(f"Missing in pgvector:{coll_name}")
             except Exception:
-                issues.append(f"Chroma Error:{coll_name}")
+                issues.append(f"pgvector Error:{coll_name}")
 
         # Neo4j Check (Simplified)
         try:
@@ -79,7 +79,7 @@ def reconcile():
     # 3. Report
     if not discrepancies:
         print(
-            "✅ SUCCESS: All sampled items are synchronized across Django, ChromaDB, and Neo4j."
+            "✅ SUCCESS: All sampled items are synchronized across Django, pgvector, and Neo4j."
         )
     else:
         print(f"❌ FOUND {len(discrepancies)} DISCREPANCIES:")

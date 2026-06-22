@@ -5,7 +5,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(PROJECT_ROOT / "src"))
 
-from pipeline.chroma_client import chroma_manager  # noqa: E402
+from pipeline.vector_client import vector_manager  # noqa: E402
 
 collections = [
     "anime_thematic",
@@ -26,7 +26,7 @@ collections = [
 
 for coll_name in collections:
     try:
-        coll = chroma_manager.get_collection(coll_name)
+        coll = vector_manager.get_collection(coll_name)
         count = coll.count()
         print(f"Collection '{coll_name}': {count} items")
     except Exception as e:

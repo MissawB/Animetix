@@ -8,9 +8,9 @@ logger = logging.getLogger("animetix." + __name__)
 # Détection robuste de la racine du projet
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(os.path.join(BASE_DIR, "pipeline"))
-from chroma_client import chroma_manager  # noqa: E402
+from vector_client import vector_manager  # noqa: E402
 
-logger.info("🔗 Starting Cross-Media Mapping (Anime/Manga <-> Movies) via ChromaDB...")
+logger.info("🔗 Starting Cross-Media Mapping (Anime/Manga <-> Movies) via pgvector...")
 
 # Fichiers de sortie
 MAP_ANIME_MOVIE = os.path.join(BASE_DIR, "data", "artifacts", "anime_to_movie_map.json")
@@ -21,8 +21,8 @@ def create_mapping_v2(source_coll_name, target_coll_name, output_path):
     logger.info(f"   - Mapping {source_coll_name} to {target_coll_name}...")
 
     try:
-        source_coll = chroma_manager.get_collection(source_coll_name)
-        target_coll = chroma_manager.get_collection(target_coll_name)
+        source_coll = vector_manager.get_collection(source_coll_name)
+        target_coll = vector_manager.get_collection(target_coll_name)
 
         # On récupère tous les IDs et embeddings de la source
         source_data = source_coll.get(include=["embeddings", "metadatas"])

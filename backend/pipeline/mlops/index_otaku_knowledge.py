@@ -60,7 +60,7 @@ except ImportError as e:
 class OtakuKnowledgeIndexer:
     """
     Indexeur sémantique de masse de la connaissance Otaku unifiée.
-    Compile les 6 bases de données locales de métadonnées et les indexe dans ChromaDB.
+    Compile les 6 bases de données locales de métadonnées et les indexe dans pgvector.
     """
 
     def __init__(self, dry_run: bool = False):
@@ -241,13 +241,13 @@ class OtakuKnowledgeIndexer:
         try:
             repo = self.container.repository()
             # On indexe l'intégralité dans la collection 'anime_thematic'
-            collection_name = repo.chroma.coll_names.get("Anime", "anime_thematic")
+            collection_name = repo.vectors.coll_names.get("Anime", "anime_thematic")
 
             ids = []
             embeddings = []
             metadatas = []
 
-            embedding_fn = repo.chroma.embedding_fn
+            embedding_fn = repo.vectors.embedding_fn
 
             logger.info("🏋️ Vectorizing all factual entries using Jina-v3 locally...")
 
@@ -276,12 +276,12 @@ class OtakuKnowledgeIndexer:
                         }
                     )
 
-            # Upsert en masse dans ChromaDB via le repository
-            repo.chroma.upsert_items(collection_name, ids, embeddings, metadatas)
-            logger.info(f"✅ Upserted {len(ids)} expert factual chunks into ChromaDB.")
+            # Upsert en masse dans pgvector via le repository
+            repo.vectors.upsert_items(collection_name, ids, embeddings, metadatas)
+            logger.info(f"✅ Upserted {len(ids)} expert factual chunks into pgvector.")
             indexed_count = len(ids)
         except Exception as e:
-            logger.error(f"❌ Failed to execute mass indexation in ChromaDB: {e}")
+            logger.error(f"❌ Failed to execute mass indexation in pgvector: {e}")
 
         logger.info(
             f"✨ Otaku Knowledge Indexer finished. Processed {indexed_count} total ssemantic chunks."
@@ -297,7 +297,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Simule l'indexation sans écrire dans ChromaDB.",
+        help="Simule l'indexation sans écrire dans pgvector.",
     )
     args = parser.parse_args()
 

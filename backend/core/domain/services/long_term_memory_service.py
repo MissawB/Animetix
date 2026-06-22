@@ -10,19 +10,17 @@ logger = logging.getLogger("animetix")
 class LongTermMemoryService:
     """
     Gère la mémoire sémantique à long terme des joueurs.
-    Stocke les résumés des parties passées dans ChromaDB pour une personnalisation continue.
+    Stocke les résumés des parties passées dans pgvector pour une personnalisation continue.
     """
 
-    def __init__(
-        self, chroma_resource, inference_engine, prompt_manager: PromptManager
-    ):
-        self.chroma = chroma_resource
+    def __init__(self, vector_store, inference_engine, prompt_manager: PromptManager):
+        self.vectors = vector_store
         self.llm = inference_engine
         self.prompt_manager = prompt_manager
         self.collection_name = "user_long_term_memories"
 
     def _get_collection(self):
-        return self.chroma.get_collection(self.collection_name)
+        return self.vectors.get_collection(self.collection_name)
 
     def store_memory(self, user_id: str, conversation_history: List[Dict[str, str]]):
         """
@@ -42,7 +40,7 @@ class LongTermMemoryService:
         try:
             summary = self.llm.generate(prompt, system_prompt=system)
 
-            # 2. Stocker dans Chroma
+            # 2. Stocker dans pgvector
             coll = self._get_collection()
             timestamp = datetime.datetime.now().isoformat()
             memory_id = f"mem_{user_id}_{timestamp}"

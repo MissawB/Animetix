@@ -38,7 +38,7 @@ def get_pipeline_resources():
 BATCH_SIZE = 32
 
 
-def run_vectorization(chroma_res=None, neo4j_res=None):
+def run_vectorization(vector_res=None, neo4j_res=None):
     """
     Pipeline de vectorisation Multimodale avec support Matryoshka (MRL).
     """
@@ -91,7 +91,7 @@ def run_vectorization(chroma_res=None, neo4j_res=None):
         for idx, item in enumerate(batch):
             ext_id = str(item["id"])
 
-            # Upsert ChromaDB
+            # Upsert pgvector
             repo.upsert_items(
                 "anime_thematic", [ext_id], [t_embeddings[idx].tolist()], [item]
             )

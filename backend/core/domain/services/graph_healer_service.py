@@ -48,7 +48,7 @@ class GraphHealerService:
 
     def heal_node(self, media_id: str):
         """Reconstruit un nœud spécifique et ses relations via extraction IA."""
-        # 1. Get source of truth from SQL/Chroma
+        # 1. Get source of truth from SQL/pgvector
         media_data = self.repository.get_media_by_id(media_id)
         if not media_data:
             logger.error(f"Cannot heal {media_id}: No data found in repository.")
