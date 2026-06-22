@@ -21,9 +21,8 @@ _Rien d'ouvert._
   - `voice_ingestion_service` → `VoiceProfileRepositoryPort` + `DjangoVoiceProfileAdapter` ; service câblé via `container.core.voice_ingestion_service`.
   - `llm_service` → `UserContextPort` + `MiddlewareUserContextAdapter` (plus de reach dans `animetix.middleware` ; `user_id`/`tier` explicites prioritaires, quota préservé).
   - Aucun des 3 fichiers du cœur n'importe plus Django/animetix. Vérifié : wiring conteneur OK, tests llm/labs/manga verts.
-- [ ] **Archi — code de test (Mock/MagicMock) dans un service de prod**
-  - [agentic_rag_service.py:58-104](backend/core/domain/services/agentic_rag_service.py#L58) reconstruit des agents pour les mocks dans `__init__`. Fragile, ne devrait jamais tourner en prod.
-  - Sortir la logique mock vers des fixtures de test.
+- [x] **Archi — code de test (Mock/MagicMock) dans un service de prod** ✅ _(2026-06-22)_
+  - Les 2 branches `isinstance(..., Mock)` de `AgenticRAGService.__init__` (side_effects sur llm mocké + reconstruction d'un RAGOrchestrator réel avec agents, ~130 l.) sont sorties dans une fabrique de test `tests/helpers/agentic_rag_factory.py:build_test_agentic_rag_service`. Les 14 tests qui en dépendaient sont migrés. Le `__init__` de prod n'importe plus `unittest.mock` ni ne teste de `Mock`. Comportement préservé (51 passed / 16 deselected inchangé ; wiring conteneur vert).
 
 - [x] **Consolidation de la couverture backend → 75 % — ✅ ATTEINT : 75,33 %** _(branche `worktree-coverage-consolidation`, 2285 tests verts)_
   - **Mesure finale 2026-06-21 : 75,33 % global** (`--cov=backend`, le flag exact du gate CI ; 19 831 / 26 325 lignes). Point de départ 55,05 %.

@@ -11,6 +11,9 @@ Three core-domain services reached across the hexagonal boundary into infrastruc
 - **`llm_service`** reached into `animetix.middleware` to resolve the ambient request user for the quota check → new **`UserContextPort`** + `MiddlewareUserContextAdapter`. Explicit `user_id`/`tier` args keep priority; quota enforcement is preserved with no direct middleware import (avoids threading user_id through ~35 internal callers).
 - Verified: container wiring tests green, `llm_service`/labs/manga-endpoint tests green, and none of the three core files import Django/animetix anymore.
 
+### Test scaffolding removed from production
+- `AgenticRAGService.__init__` shipped ~130 lines of test-only `isinstance(..., Mock)` scaffolding: it gave a mock `llm_service` default `generate` side-effects and rebuilt a real `RAGOrchestrator` (with all real agents) whenever a Mock orchestrator was passed. Extracted to a test factory (`tests/helpers/agentic_rag_factory.py:build_test_agentic_rag_service`) and migrated the 14 unit tests that relied on the implicit behavior. The production `__init__` no longer imports `unittest.mock` or branches on `Mock`; behavior preserved (51 passed / 16 deselected unchanged, container wiring green).
+
 ### Test-home consolidation
 - Merged the historically-duplicated test homes (`tests/backend/core`→`tests/core`, `tests/backend/api`→`tests/api`, `tests/pipeline_logic`→`tests/pipeline`) via `git mv` — pytest collection unchanged at 2313 tests, history preserved. Purely organizational (discovery is `testpaths=tests`).
 
