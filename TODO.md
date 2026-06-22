@@ -55,7 +55,7 @@ _Rien d'ouvert._
   - [SearchBar.tsx:81](frontend/src/components/SearchBar.tsx#L81) et [AudioLabPage.tsx:127](frontend/src/pages/labs/AudioLabPage.tsx#L127) bypassent CSRF + auth Firebase + toasts → tout passer par `apiClient`.
 - [ ] **Frontend — état local fragmenté**
   - [AudioLabPage.tsx:64](frontend/src/pages/labs/AudioLabPage.tsx#L64) (~13 `useState`) ; anti-pattern `JSON.stringify` en render dans [SynapticLabPage.tsx:110](frontend/src/pages/labs/SynapticLabPage.tsx#L110) → `useReducer`/hook dédié.
-- [ ] **CI — gaspillage et robustesse**
+- [x] **CI — gaspillage et robustesse**
   - Pas de `concurrency: cancel-in-progress` → runs redondants empilés.
   - PyTorch (~800 Mo) réinstallé sans cache dans 3 jobs ([ci.yml](.github/workflows/ci.yml) ~97/163/203).
   - Pas de `timeout-minutes` sur `perf-test`/`integration-test`.
