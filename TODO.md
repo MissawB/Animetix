@@ -68,8 +68,9 @@ _Rien d'ouvert._
 - [ ] **A11y & logs frontend** : `<img>` sans `alt`, boutons admin sans `aria-label`, `console.error` laissés en prod (~41 fichiers).
 - [ ] **Deps** : doublon `opencv-python` + `opencv-python-headless` ([requirements.txt:580](requirements.txt#L580)) ; GCP / `transformers` peu ou pas pinnés dans [requirements.in](requirements.in) (build non reproductible).
 - [ ] **DX** : pas de Prettier ni `.editorconfig` ; badge README « Python 3.11+ » alors que CI/pyproject ciblent 3.12.
-- [ ] **Couverture frontend — élargir** _(outillage + CI faits ; ~29 % stmts, 492 tests — cf. [HISTORY](docs/HISTORY.md))_
-  - Optionnel / ROI décroissant : couvrir les flows complexes restants (3D/canvas/WebSocket) et remonter le plancher de seuils au fil de l'eau.
+- [ ] **Couverture frontend — élargir** _(ongoing optionnel ; 509 tests, seuils 28/22/28/29 — cf. [HISTORY](docs/HISTORY.md))_
+  - [x] Lot services jeux non testés (`akinetix`, `vision`, `covertest`, `animinator`) + `media` ; hooks porteurs de logique (`useAchievements`, `useMediaDetail`, `useCovertest`) → +17 tests, functions 27→28 et lines 28→29.
+  - Reste (ROI décroissant) : flows complexes 3D/canvas/WebSocket (`useTachideskExplorer`, `useSocket`, `useMultiverseCatalog`) ; continuer à remonter le plancher au fil de l'eau.
 - [x] **Organisation des tests backend — consolidation physique** ✅ _(2026-06-21)_
   - Fusionné `tests/backend/core`→`tests/core`, `tests/backend/api`→`tests/api`, `tests/pipeline_logic`→`tests/pipeline` via `git mv` (historique préservé). Collection pytest **inchangée à 2313 tests**, échantillons rejoués verts (200 + 74 passed). `tests/README.md` mis à jour. Reste à trancher (séparé) : `tests/backend/views/…` → `tests/api/` ou conserver.
 - [ ] **Sécu deps — `jsonpickle` CVE résiduelle** _(risque réel faible, résiduel accepté)_
