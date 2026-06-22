@@ -7,23 +7,17 @@ import time
 import numpy as np
 from adapters.inference.workflows_client import GCPWorkflowsClient
 from animetix_project.logging_config import get_logger
+
+# Media-upload limits/MIME allow-lists are centralized in core.constants.
+from core.constants import ALLOWED_AUDIO_MIMES  # noqa: E402
 from core.utils.security import validate_file_mime_type, validate_file_size
+from dependency_injector.wiring import Provide, inject  # noqa: E402
 from django.conf import settings
 from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
 from rest_framework import permissions, status, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
-ALLOWED_IMAGE_MIMES = ["image/jpeg", "image/png", "image/webp"]
-ALLOWED_VIDEO_MIMES = ["video/mp4", "video/webm", "video/x-msvideo"]
-ALLOWED_AUDIO_MIMES = ["audio/mpeg", "audio/wav", "audio/ogg", "audio/x-wav"]
-
-MAX_IMAGE_SIZE = 10 * 1024 * 1024
-MAX_VIDEO_SIZE = 50 * 1024 * 1024
-MAX_AUDIO_SIZE = 15 * 1024 * 1024
-
-from dependency_injector.wiring import Provide, inject  # noqa: E402
 
 from ..containers import Container, get_container  # noqa: E402
 from ..models import DailyChallenge  # noqa: E402

@@ -21,6 +21,16 @@ DEFAULT_MAX_TOKENS = 512
 DEFAULT_DETECTION_THRESHOLD = 0.05
 DEFAULT_IMG2IMG_RESIZE = (512, 512)
 
+# --- Media upload validation (size limits + MIME allow-lists) ---
+# Centralized here so the API layer (core.py / labs.py) shares one source of truth.
+MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10 MB
+MAX_VIDEO_SIZE = 50 * 1024 * 1024  # 50 MB
+MAX_AUDIO_SIZE = 15 * 1024 * 1024  # 15 MB
+
+ALLOWED_IMAGE_MIMES = ["image/jpeg", "image/png", "image/webp", "image/gif"]
+ALLOWED_VIDEO_MIMES = ["video/mp4", "video/webm", "video/x-msvideo"]
+ALLOWED_AUDIO_MIMES = ["audio/mpeg", "audio/wav", "audio/ogg", "audio/x-wav"]
+
 # --- PLY Format ---
 PLY_HEADER_TEMPLATE = (
     "ply\n"
