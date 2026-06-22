@@ -193,8 +193,9 @@ class MediaSearchView(APIView):
             )
 
             return Response(self._format_results(results))
-        except Exception as e:
-            return Response({"error": str(e)}, status=500)
+        except Exception:
+            logger.exception("Error in image search")
+            return Response({"error": "Internal server error"}, status=500)
 
     def _format_results(self, results):
         # Utilise le serializer pour formater les résultats
@@ -655,9 +656,9 @@ class SuwayomiExtensionsListView(APIView):
         try:
             extensions = self.suwayomi_adapter.get_extensions()
             return Response(extensions)
-        except Exception as e:
-            logger.error(f"Failed to fetch Suwayomi extensions: {e}")
-            return Response({"error": str(e)}, status=500)
+        except Exception:
+            logger.exception("Failed to fetch Suwayomi extensions")
+            return Response({"error": "Internal server error"}, status=500)
 
 
 class SuwayomiExtensionsActionView(APIView):
@@ -700,9 +701,9 @@ class SuwayomiExtensionsActionView(APIView):
         try:
             results = self.suwayomi_adapter.update_extensions(ids, action)
             return Response(results)
-        except Exception as e:
-            logger.error(f"Failed to update Suwayomi extensions: {e}")
-            return Response({"error": str(e)}, status=500)
+        except Exception:
+            logger.exception("Failed to update Suwayomi extensions")
+            return Response({"error": "Internal server error"}, status=500)
 
 
 class FavoriteMangaToggleView(APIView):

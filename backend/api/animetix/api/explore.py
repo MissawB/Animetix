@@ -69,10 +69,11 @@ class MediaExploreView(views.APIView):
                 }
             )
 
-        except Exception as e:
-            logger.error(f"Error in MediaExploreView: {e}", exc_info=True)
+        except Exception:
+            logger.exception("Error in MediaExploreView")
             return response.Response(
-                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {"error": "Internal server error"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
 
@@ -113,9 +114,9 @@ class SeichijunreiMapView(views.APIView):
                     )
 
             return response.Response(locations)
-        except Exception as e:
-            logger.error(f"Error in SeichijunreiMapView: {e}")
-            return response.Response({"error": str(e)}, status=500)
+        except Exception:
+            logger.exception("Error in SeichijunreiMapView")
+            return response.Response({"error": "Internal server error"}, status=500)
 
 
 class MarketWikiView(views.APIView):
@@ -174,8 +175,9 @@ class MarketWikiView(views.APIView):
                 return response.Response(
                     {"error": f"Data not found: {str(e)}"}, status=404
                 )
-        except Exception as e:
-            return response.Response({"error": str(e)}, status=500)
+        except Exception:
+            logger.exception("Error in MarketWikiView")
+            return response.Response({"error": "Internal server error"}, status=500)
 
 
 # MarketListingViewSet has been removed

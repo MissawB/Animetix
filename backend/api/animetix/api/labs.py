@@ -67,8 +67,9 @@ class LatentSpaceDataView(APIView):
             with open(file_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
             return Response(data)
-        except Exception as e:
-            return Response({"error": str(e)}, status=500)
+        except Exception:
+            logger.exception("Error loading latent space artifact")
+            return Response({"error": "Internal server error"}, status=500)
 
 
 class DailyChallengeDataView(APIView):
@@ -266,8 +267,9 @@ class SingularityLabDataView(APIView):
                         "mode": compiler.mode,
                     }
                 )
-            except Exception as e:
-                return Response({"error": str(e)}, status=500)
+            except Exception:
+                logger.exception("Error in singularity compile action")
+                return Response({"error": "Internal server error"}, status=500)
 
         elif action == "plasticity":
             deduct_berrix(request.user, 20, "Singularity: Plasticité Synaptique")
@@ -300,8 +302,9 @@ class SingularityLabDataView(APIView):
                         "stdp_log": stdp_log,
                     }
                 )
-            except Exception as e:
-                return Response({"error": str(e)}, status=500)
+            except Exception:
+                logger.exception("Error in singularity plasticity action")
+                return Response({"error": "Internal server error"}, status=500)
 
         elif action == "quantum":
             deduct_berrix(request.user, 20, "Singularity: Effondrement Quantique")
@@ -319,8 +322,9 @@ class SingularityLabDataView(APIView):
                         "message": f"Effondrement quantique sur '{theme}' réussi.",
                     }
                 )
-            except Exception as e:
-                return Response({"error": str(e)}, status=500)
+            except Exception:
+                logger.exception("Error in singularity quantum action")
+                return Response({"error": "Internal server error"}, status=500)
 
         elif action == "evolve_dynamic":
             deduct_berrix(request.user, 50, "Singularity: Évolution LLM Dynamique")
@@ -347,8 +351,9 @@ class SingularityLabDataView(APIView):
                         "message": f"Nouveau kernel '{fn.__name__}' généré par LLM et injecté.",
                     }
                 )
-            except Exception as e:
-                return Response({"error": str(e)}, status=500)
+            except Exception:
+                logger.exception("Error in singularity evolve_dynamic action")
+                return Response({"error": "Internal server error"}, status=500)
 
         elif action == "swarm":
             deduct_berrix(request.user, 50, "Singularity: Consensus Swarm P2P")
@@ -364,8 +369,9 @@ class SingularityLabDataView(APIView):
                     fact=fact, media_title=media
                 )
                 return Response(diagnostics)
-            except Exception as e:
-                return Response({"error": str(e)}, status=500)
+            except Exception:
+                logger.exception("Error in singularity swarm action")
+                return Response({"error": "Internal server error"}, status=500)
 
         elif action == "synthesize":
             deduct_berrix(request.user, 100, "Singularity: Synthèse Multivers")
@@ -396,8 +402,9 @@ class SingularityLabDataView(APIView):
                         ),
                     }
                 )
-            except Exception as e:
-                return Response({"error": str(e)}, status=500)
+            except Exception:
+                logger.exception("Error in singularity synthesize action")
+                return Response({"error": "Internal server error"}, status=500)
 
         return Response({"error": "Action inconnue"}, status=400)
 
@@ -421,8 +428,9 @@ class LiquidNeuralNetworkLabView(APIView):
                     "final_state": lnn.state.tolist(),
                 }
             )
-        except Exception as e:
-            return Response({"error": str(e)}, status=500)
+        except Exception:
+            logger.exception("Error in LiquidNeuralNetworkLabView")
+            return Response({"error": "Internal server error"}, status=500)
 
 
 class MangaLabDataView(APIView):
@@ -511,9 +519,8 @@ class MangaVoiceLabView(APIView):
                     {"ready": True, "status": "failed", "error": str(e)},
                     timeout=3600,
                 )
-                return Response(
-                    {"error": f"Failed to start workflow: {str(e)}"}, status=500
-                )
+                logger.exception("Failed to start workflow")
+                return Response({"error": "Failed to start workflow"}, status=500)
         else:
             # Fallback local dev synchrone simulé
             cache.set(
@@ -563,9 +570,9 @@ class VideoFateZeroLabView(APIView):
                     "message": f"Transformation {studio_style} (FateZero) réussie.",
                 }
             )
-        except Exception as e:
-            logger.error(f"Error in VideoFateZeroLabView: {e}")
-            return Response({"error": str(e)}, status=500)
+        except Exception:
+            logger.exception("Error in VideoFateZeroLabView")
+            return Response({"error": "Internal server error"}, status=500)
 
 
 class VideoRAGIndexView(APIView):
@@ -587,9 +594,9 @@ class VideoRAGIndexView(APIView):
             video_data = video_file.read()
             count = video_rag.index_video(video_id, video_data)
             return Response({"status": "success", "indexed_segments": count})
-        except Exception as e:
-            logger.error(f"VideoRAGIndex Error: {e}")
-            return Response({"error": str(e)}, status=500)
+        except Exception:
+            logger.exception("VideoRAGIndex Error")
+            return Response({"error": "Internal server error"}, status=500)
 
 
 class VideoRAGSearchView(APIView):
@@ -608,9 +615,9 @@ class VideoRAGSearchView(APIView):
         try:
             results = video_rag.search_video_segment(query, limit=10)
             return Response({"status": "success", "results": results})
-        except Exception as e:
-            logger.error(f"VideoRAGSearch Error: {e}")
-            return Response({"error": str(e)}, status=500)
+        except Exception:
+            logger.exception("VideoRAGSearch Error")
+            return Response({"error": "Internal server error"}, status=500)
 
 
 class VideoLabDataView(APIView):
@@ -757,10 +764,10 @@ class VoiceProfileIngestView(APIView):
                 },
                 status=status.HTTP_201_CREATED,
             )
-        except Exception as e:
-            logger.error(f"Erreur lors de l'ingestion vocale: {e}")
+        except Exception:
+            logger.exception("Erreur lors de l'ingestion vocale")
             return Response(
-                {"error": f"Erreur lors de l'ingestion: {str(e)}"},
+                {"error": "Erreur lors de l'ingestion"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
@@ -785,9 +792,9 @@ class SoundscapeGenerationView(APIView):
             service = container.core.soundscape_service()
             result_url = service.generate_soundscape_for_video(video_bytes)
             return Response({"status": "success", "audio_url": result_url})
-        except Exception as e:
-            logger.error(f"Error in SoundscapeGenerationView: {e}")
-            return Response({"error": str(e)}, status=500)
+        except Exception:
+            logger.exception("Error in SoundscapeGenerationView")
+            return Response({"error": "Internal server error"}, status=500)
 
 
 class SpeechToSpeechLabView(APIView):
@@ -818,9 +825,9 @@ class SpeechToSpeechLabView(APIView):
                 encoded_audio = base64.b64encode(result["audio_data"]).decode("utf-8")
                 return Response({"status": "success", "audio_data": encoded_audio})
             return Response(result, status=400)
-        except Exception as e:
-            logger.error(f"Error in SpeechToSpeechLabView: {e}")
-            return Response({"error": str(e)}, status=500)
+        except Exception:
+            logger.exception("Error in SpeechToSpeechLabView")
+            return Response({"error": "Internal server error"}, status=500)
 
 
 class TreeOfThoughtsLabView(APIView):
@@ -842,10 +849,11 @@ class TreeOfThoughtsLabView(APIView):
         try:
             result = self.tot_service.solve_with_tree_of_thoughts(query)
             return Response(result)
-        except Exception as e:
-            logger.error(f"Error in TreeOfThoughtsLabView: {e}", exc_info=True)
+        except Exception:
+            logger.exception("Error in TreeOfThoughtsLabView")
             return Response(
-                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {"error": "Internal server error"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
 
@@ -876,9 +884,9 @@ class MangaCleanLabView(APIView):
 
             b64_img = base64.b64encode(cleaned_bytes).decode("utf-8")
             return Response({"status": "success", "image": b64_img})
-        except Exception as e:
-            logger.error(f"Error in MangaCleanLabView: {e}")
-            return Response({"error": str(e)}, status=500)
+        except Exception:
+            logger.exception("Error in MangaCleanLabView")
+            return Response({"error": "Internal server error"}, status=500)
 
 
 class MangaTranslateLabView(APIView):
@@ -907,9 +915,9 @@ class MangaTranslateLabView(APIView):
 
             b64_img = base64.b64encode(translated_bytes).decode("utf-8")
             return Response({"status": "success", "image": b64_img})
-        except Exception as e:
-            logger.error(f"Error in MangaTranslateLabView: {e}")
-            return Response({"error": str(e)}, status=500)
+        except Exception:
+            logger.exception("Error in MangaTranslateLabView")
+            return Response({"error": "Internal server error"}, status=500)
 
 
 class VoiceCloningLabView(APIView):
@@ -963,9 +971,9 @@ class VoiceCloningLabView(APIView):
             return Response(
                 {"status": "success", "audio_data": f"data:audio/wav;base64,{encoded}"}
             )
-        except Exception as e:
-            logger.error(f"Voice Cloning Error: {e}", exc_info=True)
-            return Response({"error": str(e)}, status=500)
+        except Exception:
+            logger.exception("Voice Cloning Error")
+            return Response({"error": "Internal server error"}, status=500)
 
 
 class SpatialLabDataView(APIView):
@@ -1016,9 +1024,9 @@ class Generate3DDataView(APIView):
             service = container.core.spatial_computing_service()
             result = service.reconstruct_3d_scene(image_bytes, title)
             return Response(result)
-        except Exception as e:
-            logger.error(f"Error in Generate3DDataView: {e}")
-            return Response({"error": str(e)}, status=500)
+        except Exception:
+            logger.exception("Error in Generate3DDataView")
+            return Response({"error": "Internal server error"}, status=500)
 
 
 class CinematicReconstructionView(APIView):
@@ -1042,9 +1050,9 @@ class CinematicReconstructionView(APIView):
             service = container.core.cinematic_volumetric_reconstruction_service()
             result = service.reconstruct_dynamic_cinematic_scene(video_bytes, title)
             return Response(result)
-        except Exception as e:
-            logger.error(f"Error in CinematicReconstructionView: {e}")
-            return Response({"error": str(e)}, status=500)
+        except Exception:
+            logger.exception("Error in CinematicReconstructionView")
+            return Response({"error": "Internal server error"}, status=500)
 
 
 class SingularityCommandCenterView(APIView):
@@ -1169,8 +1177,9 @@ class NeuralDiagnosticsLabView(APIView):
             report = xai_service.get_diagnostics_report(prompt, response)
 
             return Response(report)
-        except Exception as e:
-            logger.error(f"Neural Diagnostics Error: {e}", exc_info=True)
+        except Exception:
+            logger.exception("Neural Diagnostics Error")
             return Response(
-                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {"error": "Internal server error"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )

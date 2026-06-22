@@ -124,7 +124,7 @@ def test_developer_rag_exception_returns_500(auth_client):
         )
 
     assert response.status_code == 500
-    assert "boom" in response.json()["error"]
+    assert response.json()["error"] == "Internal server error"
 
 
 # --------------------------------------------------------------------------- #
@@ -193,7 +193,7 @@ def test_subscribe_pro_failure(auth_client):
     ):
         response = auth_client.post(reverse("developer_subscribe_pro"))
     assert response.status_code == 500
-    assert response.json()["error"] == "stripe error"
+    assert response.json()["error"] == "Internal server error"
 
 
 # --------------------------------------------------------------------------- #
@@ -250,7 +250,7 @@ def test_bx_checkout_stripe_failure(auth_client):
             format="json",
         )
     assert response.status_code == 500
-    assert response.json()["error"] == "declined"
+    assert response.json()["error"] == "Internal server error"
 
 
 # --------------------------------------------------------------------------- #

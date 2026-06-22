@@ -43,9 +43,9 @@ _Rien d'ouvert._
 
 ## 🟡 Moyens
 
-- [ ] **API — fuite de stacktrace + permission par défaut trop ouverte**
-  - `return Response({"error": str(e)}, status=500)` expose l'exception au client : [labs.py:1021](backend/api/animetix/api/labs.py#L1021), [core.py:196](backend/api/animetix/api/core.py#L196) → `logger.exception()` + message générique.
-  - Permission DRF par défaut = `IsAuthenticatedOrReadOnly` ([settings.py:250](backend/api/animetix_project/settings.py#L250)) : tout lisible sans auth sauf override → passer à `IsAuthenticated` par défaut, `AllowAny` ciblé.
+- [x] **API — fuite de stacktrace + permission par défaut trop ouverte** ✅ _(2026-06-22)_
+  - **Fuite** : 27 réponses HTTP 500 qui renvoyaient `str(e)`/exception au client sont génériques (`"Internal server error"`) + `logger.exception()` côté serveur (11 fichiers `api/*`, `tasks_views`, `views/billing`). Les 4xx (feedback de validation) sont conservés.
+  - **Permissions** : défaut DRF `IsAuthenticatedOrReadOnly` → **`IsAuthenticated`** (secure-by-default). Audit AST des 142 vues : seules 8 héritaient du défaut ; les vues publiques (`Multiverse*`, `AchievementViewSet`) déclarent désormais `IsAuthenticatedOrReadOnly`, les internes (monitoring/observability) se durcissent.
 - [ ] **Backend — `except Exception:` trop larges + constantes dupliquées**
   - Nombreux catch-all génériques masquant les vrais bugs → resserrer sur des exceptions spécifiques.
   - `MAX_IMAGE_SIZE` / allow-lists MIME dupliquées entre [labs.py](backend/api/animetix/api/labs.py) et [core.py](backend/api/animetix/api/core.py) → centraliser dans `backend/core/constants.py`.

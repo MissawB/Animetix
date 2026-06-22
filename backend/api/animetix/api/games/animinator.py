@@ -1,3 +1,5 @@
+import logging
+
 from core.utils.security import sanitize_html_content
 from dependency_injector.wiring import Provide, inject
 from rest_framework import permissions, status
@@ -8,6 +10,8 @@ from animetix.api.dependencies import get_session_service
 
 from ...containers import Container
 from ...models import GameplaySession
+
+logger = logging.getLogger("animetix.games.animinator")
 
 
 class AniminatorAskView(APIView):
@@ -75,7 +79,9 @@ class AniminatorAskView(APIView):
                 )
 
             return Response({"answer": sanitized_response, "questions_left": q_left})
-        except Exception as e:
+        except Exception:
+            logger.exception("Error in AniminatorAskView")
             return Response(
-                {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {"error": "Internal server error"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )

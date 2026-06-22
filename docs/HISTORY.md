@@ -2,7 +2,11 @@
 
 This document archives the major milestones of the project's technical evolution.
 
-## [2026-06-22] Session: RCE Guard, Hexagonal Boundary Repair (domain → infra) & Test-Home Consolidation
+## [2026-06-22] Session: API Hardening, RCE Guard, Hexagonal Boundary Repair (domain → infra) & Test-Home Consolidation
+
+### Security: API stacktrace-leak + secure-by-default permissions
+- **Stacktrace leak**: 27 endpoints returned the raw exception to the client on HTTP 500 (`Response({"error": str(e)}, status=500)`), exposing internals (paths, SQL, …). Replaced the client body with a generic `"Internal server error"` and log the detail server-side via `logger.exception(...)` — across 11 `api/*` modules plus `tasks_views` and `views/billing`. 4xx validation responses (intentional user feedback) were left intact.
+- **Permissions secure-by-default**: DRF `DEFAULT_PERMISSION_CLASSES` was `IsAuthenticatedOrReadOnly`, making every endpoint world-readable unless overridden. Flipped to `IsAuthenticated`. An AST audit of all 142 views found only 8 relying on the default; the genuinely public ones now declare `IsAuthenticatedOrReadOnly` (Multiverse gallery/catalog/export-PDF, AchievementViewSet) while internal/control views (monitoring, observability) tighten. The 3 `@api_view` functions and `AIFeedbackAPIView` (uses `get_permissions`) already scoped permissions explicitly.
 
 ### Security: RCE guard on exec() of LLM-generated kernels
 - `SelfEvolvingCompiler.compile_dynamic_kernel` exec'd dynamic Python source, including code produced by an LLM (`evolve_with_llm`) — a prompt injection upstream could smuggle arbitrary code into the host (RCE). Added `assert_safe_kernel_source()`: an AST gate rejecting imports, dunder attribute access (blocks `().__class__.__subclasses__()` escapes) and a blocklist of dangerous names (os/sys/subprocess/eval/exec/open/getattr…). `exec` now also runs with a restricted `__builtins__` (`_SAFE_BUILTINS` — only numeric helpers like range/len/abs/float) as defense-in-depth. Malicious kernels raise `UnsafeKernelError`; `evolve_with_llm` swallows it and returns the null fallback (no execution). Legitimate numeric kernels unchanged; 13 new security tests.

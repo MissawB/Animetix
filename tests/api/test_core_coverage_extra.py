@@ -204,7 +204,7 @@ def test_media_search_post_exception_returns_500(factory):
     ):
         response = view.post(drf_request)
     assert response.status_code == 500
-    assert "boom" in response.data["error"]
+    assert response.data["error"] == "Internal server error"
 
 
 # --------------------------------------------------------------------------- #
@@ -367,7 +367,7 @@ def test_suwayomi_extensions_action_exception(factory):
     view.suwayomi_adapter.update_extensions.side_effect = RuntimeError("boom")
     response = view.post(Request(request, parsers=[JSONParser()]))
     assert response.status_code == 500
-    assert "boom" in response.data["error"]
+    assert response.data["error"] == "Internal server error"
 
 
 # --------------------------------------------------------------------------- #

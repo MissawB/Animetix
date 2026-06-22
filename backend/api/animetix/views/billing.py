@@ -72,8 +72,10 @@ def billing_alert_webhook(request):
         if success:
             return JsonResponse({"status": "shutdown_triggered", "info": info})
         else:
+            logger.error(f"Brain service shutdown failed: {info}")
             return JsonResponse(
-                {"status": "shutdown_failed", "error": info}, status=500
+                {"status": "shutdown_failed", "error": "Internal server error"},
+                status=500,
             )
 
     return JsonResponse(

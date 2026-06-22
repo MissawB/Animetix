@@ -231,8 +231,6 @@ def eventarc_gcs_upload_view(request):
             enqueue_task("process_gcs_upload_task", bucket=bucket, name=name)
         except Exception as enqueue_err:
             logger.error(f"Failed to enqueue GCS upload task: {enqueue_err}")
-            return JsonResponse(
-                {"error": f"Failed to enqueue task: {enqueue_err}"}, status=500
-            )
+            return JsonResponse({"error": "Failed to enqueue task"}, status=500)
 
     return JsonResponse({"status": "event processed", "bucket": bucket, "name": name})

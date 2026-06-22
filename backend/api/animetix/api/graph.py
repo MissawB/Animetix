@@ -1,3 +1,5 @@
+import logging
+
 from core.ports.graph_persistence_port import GraphPersistencePort
 from dependency_injector.wiring import Provide, inject
 from rest_framework import permissions, status
@@ -5,6 +7,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from ..containers import Container
+
+logger = logging.getLogger("animetix.graph")
 
 
 class GraphNeighborsView(APIView):
@@ -53,9 +57,10 @@ class GraphNeighborsView(APIView):
         try:
             data = self.graph_manager.get_neighborhood(item_id, media_type, depth)
             return Response(data)
-        except Exception as e:
+        except Exception:
+            logger.exception("Failed to retrieve graph data")
             return Response(
-                {"error": f"Failed to retrieve graph data: {str(e)}"},
+                {"error": "Failed to retrieve graph data"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
