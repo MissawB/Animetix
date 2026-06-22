@@ -65,7 +65,10 @@ _Rien d'ouvert._
 
 ## 🟢 Faibles
 
-- [ ] **A11y & logs frontend** : `<img>` sans `alt`, boutons admin sans `aria-label`, `console.error` laissés en prod (~41 fichiers).
+- [x] **A11y & logs frontend**
+  - [x] `<img>` sans `alt` : **déjà fait** (0/62 — vérifié, toutes les balises ont un `alt`).
+  - [x] Boutons admin sans nom accessible : **déjà couvert** par la règle ESLint `jsx-a11y/control-has-associated-label: error` (déjà en place et verte) — les boutons admin ont un nom accessible (texte ou `aria-label`).
+  - [x] Logs console : les 12 `console.log` (cycle de vie WebSocket : `ClubChat`, `useSocket`, `SpeechToSpeechLabPage`, `notificationStore`) routés vers un logger dev-only `src/utils/logger.ts` (no-op en prod) ; règle ESLint `no-console` ajoutée (autorise `warn`/`error`). Les 66 `console.error` (handlers légitimes) conservés.
 - [ ] **Deps** : doublon `opencv-python` + `opencv-python-headless` ([requirements.txt:580](requirements.txt#L580)) ; GCP / `transformers` peu ou pas pinnés dans [requirements.in](requirements.in) (build non reproductible).
 - [ ] **DX** : pas de Prettier ni `.editorconfig` ; badge README « Python 3.11+ » alors que CI/pyproject ciblent 3.12.
 - [ ] **Couverture frontend — élargir** _(outillage + CI faits ; ~29 % stmts, 492 tests — cf. [HISTORY](docs/HISTORY.md))_

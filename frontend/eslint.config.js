@@ -52,6 +52,10 @@ export default defineConfig([
         'error',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
       ],
+      // Keep diagnostic chatter out of the prod console: console.log/info/debug are
+      // forbidden (use the dev-only `logger` in src/utils/logger.ts instead);
+      // console.warn/error stay allowed for real problems.
+      'no-console': ['error', { allow: ['warn', 'error'] }],
     },
   },
   ...storybook.configs["flat/recommended"]
