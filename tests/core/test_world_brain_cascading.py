@@ -4,6 +4,8 @@ import pytest
 from core.domain.entities.ai_schemas import DebateOutcome, JudgeAction, SearchPlan
 from core.domain.services.agentic_rag_service import AgenticRAGService
 
+from tests.helpers.agentic_rag_factory import build_test_agentic_rag_service
+
 # Drives the full agentic RAG pipeline against a live inference engine (no ollama in CI).
 pytestmark = pytest.mark.integration
 
@@ -41,7 +43,7 @@ def test_world_brain_cascading_flow(mock_dependencies):
     """
     Vérifie le flux en cascade : PLAN -> SAGA_LOOKUP -> GRAPH_EXPLORE -> RESEARCH -> SYNTHESIZE.
     """
-    service = AgenticRAGService(
+    service = build_test_agentic_rag_service(
         inference_engine=mock_dependencies["inference_engine"],
         rag_service=mock_dependencies["rag_service"],
         web_search=mock_dependencies["web_search"],

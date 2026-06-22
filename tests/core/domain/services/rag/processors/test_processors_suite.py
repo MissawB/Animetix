@@ -324,8 +324,8 @@ def test_rag_context_language():
 def test_agentic_rag_service_propagates_language(monkeypatch):
     from unittest.mock import MagicMock  # noqa: E402
 
-    from core.domain.services.agentic_rag_service import (  # noqa: E402
-        AgenticRAGService,
+    from tests.helpers.agentic_rag_factory import (  # noqa: E402
+        build_test_agentic_rag_service,
     )
 
     # Mock dependencies
@@ -336,7 +336,7 @@ def test_agentic_rag_service_propagates_language(monkeypatch):
     mock_llm = MagicMock()
     mock_orch = MagicMock()
 
-    service = AgenticRAGService(
+    service = build_test_agentic_rag_service(
         inference_engine=mock_engine,
         rag_service=mock_rag,
         web_search=mock_search,

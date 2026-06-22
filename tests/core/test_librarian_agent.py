@@ -2,7 +2,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from core.domain.entities.ai_schemas import DebateOutcome, JudgeAction, SearchPlan
-from core.domain.services.agentic_rag_service import AgenticRAGService
+
+from tests.helpers.agentic_rag_factory import build_test_agentic_rag_service
 
 # Drives the full agentic RAG pipeline against a live inference engine (no ollama in CI).
 pytestmark = pytest.mark.integration
@@ -58,7 +59,7 @@ def test_librarian_loop_integration(mock_dependencies):
     )
 
     # AgenticRAGService instantiation
-    service = AgenticRAGService(
+    service = build_test_agentic_rag_service(
         inference_engine=inference_engine,
         rag_service=rag_service,
         web_search=web_search,

@@ -3,7 +3,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 from core.domain.entities.ai_schemas import DebateOutcome, JudgeAction, StreamStep
 from core.domain.services.agentic_rag_service import (
-    AgenticRAGService,
     RAGContext,
     RAGState,
 )
@@ -26,6 +25,8 @@ from core.domain.services.rag.processors.speculate_processor import SpeculatePro
 from core.domain.services.rag.processors.synthesize_processor import SynthesizeProcessor
 from core.domain.services.rag.processors.vlm_rerank_processor import VlmRerankProcessor
 from core.domain.services.rag_orchestrator import RAGOrchestrator
+
+from tests.helpers.agentic_rag_factory import build_test_agentic_rag_service
 
 # Exercises the RAG state machine end-to-end against a live inference engine (no ollama in CI).
 pytestmark = pytest.mark.integration
@@ -153,7 +154,7 @@ def mock_deps():
 
 
 def test_research_more_loop_integration(mock_deps):
-    service = AgenticRAGService(**mock_deps)
+    service = build_test_agentic_rag_service(**mock_deps)
 
     outcome1 = DebateOutcome(
         consensus_action=JudgeAction.RESEARCH_MORE,
@@ -239,7 +240,7 @@ def test_research_more_loop_integration(mock_deps):
 
 
 def test_rewrite_loop(mock_deps):
-    service = AgenticRAGService(**mock_deps)
+    service = build_test_agentic_rag_service(**mock_deps)
 
     outcome1 = DebateOutcome(
         consensus_action=JudgeAction.REWRITE, final_reasoning="Fix style", critiques={}

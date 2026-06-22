@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Dict, Generator, Optional, cast
+from typing import Dict, Generator, Optional
 
 from core.config import get_config
 from core.ports.config_port import ConfigPort
@@ -55,31 +55,6 @@ class AgenticRAGService:
         self.web_search = web_search
         self.prompt_manager = prompt_manager
         self.llm_service = llm_service
-        from unittest.mock import DEFAULT, Mock  # noqa: E402
-
-        if isinstance(self.llm_service, Mock):
-
-            def default_generate(*args, **kwargs):
-                ret = self.llm_service.generate._mock_return_value
-                if ret is not DEFAULT:
-                    return ret
-                return self.inference_engine.generate(*args, **kwargs)
-
-            def default_generate_structured(*args, **kwargs):
-                ret = self.llm_service.generate_structured._mock_return_value
-                if ret is not DEFAULT:
-                    return ret
-                raise Exception("Fallback to classic generate for tests")
-
-            if getattr(self.llm_service.generate, "side_effect", None) is None:
-                self.llm_service.generate.side_effect = default_generate
-            if (
-                getattr(self.llm_service.generate_structured, "side_effect", None)
-                is None
-            ):
-                self.llm_service.generate_structured.side_effect = (
-                    default_generate_structured
-                )
         self.neo4j_manager = neo4j_manager
         self.memory_service = memory_service
         self.semantic_cache = semantic_cache
@@ -97,135 +72,6 @@ class AgenticRAGService:
         # Injecté par le conteneur DI (cf. AgenticContainer.guardrail_service).
         # Rétro-compat : accepte aussi un passage via kwargs.
         self.guardrail_service = guardrail_service or kwargs.get("guardrail_service")
-
-        # Mock-compatibility for testing:
-        # If the orchestrator is a Mock/MagicMock, construct a real RAGOrchestrator populated with real agents
-        # using the mocked dependency parameters, so that the state machine can run during unit tests.
-        from unittest.mock import MagicMock, Mock  # noqa: E402
-
-        if isinstance(self.orchestrator, Mock):
-            from core.domain.services.rag.agents import (  # noqa: E402
-                ContextCompressor,
-                GraphExpert,
-                LibrarianAgent,
-                ResponseCritic,
-                ResponseJudge,
-                ResponseSynthesizer,
-                RetrievalEvaluator,
-                ScoutAgent,
-                SearchPlanner,
-            )
-            from core.domain.services.rag.agents.debate_manager import (  # noqa: E402
-                DebateManager,
-            )
-            from core.domain.services.rag.agents.forge import ForgeAgent  # noqa: E402
-            from core.domain.services.rag.agents.saga_agent import (  # noqa: E402
-                SagaAgent,
-            )
-            from core.domain.services.rag.processors.acquire_knowledge_processor import (  # noqa: E402
-                AcquireKnowledgeProcessor,
-            )
-            from core.domain.services.rag.processors.fallback_rag_processor import (  # noqa: E402
-                FallbackRagProcessor,
-            )
-            from core.domain.services.rag.processors.graph_explore_processor import (  # noqa: E402
-                GraphExploreProcessor,
-            )
-            from core.domain.services.rag.processors.judge_processor import (  # noqa: E402
-                JudgeProcessor,
-            )
-            from core.domain.services.rag.processors.plan_processor import (  # noqa: E402
-                PlanProcessor,
-            )
-            from core.domain.services.rag.processors.research_processor import (  # noqa: E402
-                ResearchProcessor,
-            )
-            from core.domain.services.rag.processors.saga_lookup_processor import (  # noqa: E402
-                SagaLookupProcessor,
-            )
-            from core.domain.services.rag.processors.speculate_processor import (  # noqa: E402
-                SpeculateProcessor,
-            )
-            from core.domain.services.rag.processors.synthesize_processor import (  # noqa: E402
-                SynthesizeProcessor,
-            )
-            from core.domain.services.rag.processors.vlm_rerank_processor import (  # noqa: E402
-                VlmRerankProcessor,
-            )
-            from core.domain.services.rag_orchestrator import (  # noqa: E402
-                RAGOrchestrator,
-            )
-
-            planner_agent = SearchPlanner(self.llm_service, self.prompt_manager)
-            scout_agent = ScoutAgent(
-                self.llm_service, self.prompt_manager, self.neo4j_manager
-            )
-            synthesizer_agent = ResponseSynthesizer(
-                self.llm_service, self.prompt_manager
-            )
-            ResponseJudge(self.llm_service, self.prompt_manager)
-            ResponseCritic(self.llm_service, self.prompt_manager)
-            debate_mgr = DebateManager(self.llm_service, self.prompt_manager)
-            librarian_agent = LibrarianAgent(
-                self.llm_service, self.prompt_manager, self.web_search
-            )
-            # ForgeAgent/SagaAgent tolerate a missing graph manager at runtime
-            # (they guard ``self.neo4j_manager`` before use), but their __init__
-            # signatures require a non-None port. In the test/mock path the port
-            # may legitimately be None, so cast to preserve that behavior.
-            forge_agent = ForgeAgent(
-                self.llm_service,
-                self.prompt_manager,
-                cast(GraphPersistencePort, self.neo4j_manager),
-            )
-            saga_agent = SagaAgent(
-                self.llm_service, cast(GraphPersistencePort, self.neo4j_manager)
-            )
-            graph_expert = GraphExpert(self.llm_service, self.prompt_manager)
-            context_compressor = ContextCompressor(
-                self.llm_service, self.prompt_manager
-            )
-            retrieval_evaluator = RetrievalEvaluator(
-                self.llm_service, self.prompt_manager
-            )
-
-            processors = {
-                RAGState.PLAN: PlanProcessor(planner=planner_agent),
-                RAGState.SAGA_LOOKUP: SagaLookupProcessor(saga_agent=saga_agent),
-                RAGState.GRAPH_EXPLORE: GraphExploreProcessor(
-                    community_partitioner=MagicMock(),
-                    graph_expert=graph_expert,
-                    neo4j_manager=self.neo4j_manager,
-                ),
-                RAGState.RESEARCH: ResearchProcessor(
-                    planner=planner_agent,
-                    rag_service=self.rag_service,
-                    context_compressor=context_compressor,
-                    retrieval_evaluator=retrieval_evaluator,
-                    web_search=self.web_search,
-                    scout=scout_agent,
-                    neo4j_manager=self.neo4j_manager,
-                ),
-                RAGState.ACQUIRE_KNOWLEDGE: AcquireKnowledgeProcessor(
-                    librarian=librarian_agent
-                ),
-                RAGState.SPECULATE: SpeculateProcessor(forge=forge_agent),
-                RAGState.VLM_RERANK: VlmRerankProcessor(
-                    inference_engine=self.inference_engine,
-                    prompt_manager=self.prompt_manager,
-                ),
-                RAGState.SYNTHESIZE: SynthesizeProcessor(
-                    synthesizer=synthesizer_agent,
-                    xai_service=self.xai_service,
-                ),
-                RAGState.JUDGE: JudgeProcessor(debate_manager=debate_mgr),
-                RAGState.FALLBACK_RAG: FallbackRagProcessor(
-                    rag_service=self.rag_service,
-                    inference_engine=self.inference_engine,
-                    expert_facts=[],
-                ),
-            }
-            self.orchestrator = RAGOrchestrator(processors=processors)
 
         # Delegate kwargs to properties/attributes on self if present, otherwise to orchestrator
         for key, val in kwargs.items():

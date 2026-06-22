@@ -1,7 +1,8 @@
 from unittest.mock import MagicMock
 
 import pytest
-from core.domain.services.agentic_rag_service import AgenticRAGService
+
+from tests.helpers.agentic_rag_factory import build_test_agentic_rag_service
 
 # Drives the full agentic RAG pipeline against a live inference engine (no ollama in CI).
 pytestmark = pytest.mark.integration
@@ -33,7 +34,9 @@ def test_agentic_rag_triggers_thinking_mode_on_complex_query(mock_dependencies):
         "mock system",
     )
 
-    service = AgenticRAGService(**mock_dependencies, llm_service=mock_llm_service)
+    service = build_test_agentic_rag_service(
+        **mock_dependencies, llm_service=mock_llm_service
+    )
 
     # 2. Mock agents to check if they receive thinking_mode=True
     # The planner, critic, and synthesizer are initialized in __init__
