@@ -70,7 +70,10 @@ _Rien d'ouvert._
 ## 🟢 Faibles
 
 - [ ] **A11y & logs frontend** : `<img>` sans `alt`, boutons admin sans `aria-label`, `console.error` laissés en prod (~41 fichiers).
-- [ ] **Deps** : doublon `opencv-python` + `opencv-python-headless` ([requirements.txt:580](requirements.txt#L580)) ; GCP / `transformers` peu ou pas pinnés dans [requirements.in](requirements.in) (build non reproductible).
+- [x] **Deps**
+  - [x] **Pins** : `requirements.in` entièrement épinglé — `transformers==4.57.6`, les 4 `google-cloud-*`, `apache-beam==2.74.0`, `dbt-core/sqlite/bigquery` figés aux versions **déjà résolues** par pip-compile. Le lockfile `requirements.txt` reste **byte-identique** (aucun recompile : ce serait dangereux sur Windows car le lock cible Linux/Py3.12) ; un futur recompile sera déterministe.
+  - [x] **Doublon opencv** : `ultralytics` force `opencv-python` (GUI, besoin de `libGL` absent de l'image slim) à côté de notre `opencv-python-headless`. Un recompile ne peut PAS le retirer (dep transitive forcée). Fix au niveau des 3 Dockerfiles (`Dockerfile`, `.brain`, `.dataflow`) : après l'install, `pip uninstall` des **deux** (ils partagent les fichiers `cv2/`) puis réinstall de **headless seul** (version lue depuis le lockfile). Image plus légère + `import cv2` sans `libGL`.
+  - _Note vérif_ : build-time validé par le job CI `docker-build` (pour `deploy/Dockerfile`) ; non vérifiable en runtime localement (Windows ≠ Linux/libGL). `.brain`/`.dataflow` ne sont pas buildés en CI.
 - [ ] **DX** : pas de Prettier ni `.editorconfig` ; badge README « Python 3.11+ » alors que CI/pyproject ciblent 3.12.
 - [ ] **Couverture frontend — élargir** _(ongoing optionnel ; 520 tests, seuils 29/22/28/29 — cf. [HISTORY](docs/HISTORY.md))_
   - [x] Lot 1 — services jeux (`akinetix`, `vision`, `covertest`, `animinator`) + `media` ; hooks logique (`useAchievements`, `useMediaDetail`, `useCovertest`).
