@@ -1,0 +1,41 @@
+# Declarative Cloud Run manifest for the animetix-brain GPU service.
+# Applied via: gcloud run services replace deploy/run-brain.service.yaml --region europe-west1
+# (wired into deploy/cloudbuild.brain.yaml). `__IMAGE__` is substituted with the
+# pinned, SHA-tagged image at deploy time.
+#
+# BOOTSTRAP PREREQUISITES (one-shot, NOT automated):
+#   1. gcloud secrets create brain-api-key --data-file=-   # value = secured API key
+#   2. Grant the brain runtime service account roles/secretmanager.secretAccessor
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: animetix-brain
+  labels:
+    cloud.googleapis.com/location: europe-west1
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "0"
+        autoscaling.knative.dev/maxScale: "3"
+        run.googleapis.com/cpu-throttling: "false"
+    spec:
+      containers:
+        - image: __IMAGE__
+          ports:
+            - containerPort: 7861
+          env:
+            - name: PORT
+              value: "7861"
+            - name: BRAIN_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: brain-api-key
+                  key: latest
+          resources:
+            limits:
+              cpu: "4"
+              memory: 16Gi
+              nvidia.com/gpu: "1"
+      nodeSelector:
+        run.googleapis.com/accelerator: nvidia-l4
