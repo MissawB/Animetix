@@ -592,7 +592,7 @@ def test_remaining_delegated_methods_pass_through_results():
         def estimate_depth(self, image_data):
             return sentinels["estimate_depth"]
 
-        def generate_3d_scene(self, image_data, depth_map):
+        def generate_3d_scene(self, image_data, depth_map, mode="gaussian_splatting"):
             return sentinels["generate_3d_scene"]
 
         def visual_rerank(self, query, image_urls, system_prompt=""):
@@ -634,7 +634,7 @@ def test_remaining_delegated_methods_return_defaults_when_all_fail():
         def clone_voice(self, text, reference_audio, language="fr"):
             raise RuntimeError("x")
 
-        def generate_3d_scene(self, image_data, depth_map):
+        def generate_3d_scene(self, image_data, depth_map, mode="gaussian_splatting"):
             raise RuntimeError("x")
 
         def transform_image_to_anime(self, image_data, studio_style, prompt=""):

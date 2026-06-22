@@ -1,6 +1,9 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from adapters.persistence.django_manga_repository_adapter import (
+    DjangoMangaRepositoryAdapter,
+)
 from adapters.persistence.suwayomi_adapter import SuwayomiAdapter
 from animetix.models import MediaItem
 from core.domain.services.manga_service import MangaService
@@ -94,7 +97,10 @@ def test_manga_service_suwayomi_sync():
         "http://localhost:4567/page2.jpg",
     ]
 
-    service = MangaService(suwayomi_adapter=mock_adapter)
+    service = MangaService(
+        manga_repository=DjangoMangaRepositoryAdapter(),
+        suwayomi_adapter=mock_adapter,
+    )
 
     # Create a MediaItem
     MediaItem.objects.create(
