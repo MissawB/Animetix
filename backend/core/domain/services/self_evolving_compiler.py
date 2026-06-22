@@ -5,6 +5,8 @@ Generates, compiles, and links performance-optimized native execution loops at r
 Now supports dynamic code generation and Numba JIT.
 """
 
+import ast  # noqa: E402
+import builtins  # noqa: E402
 import logging  # noqa: E402
 import os  # noqa: E402
 import re  # noqa: E402
@@ -13,6 +15,100 @@ from typing import Any, Callable, Dict, Optional  # noqa: E402
 import numpy as np  # noqa: E402
 
 logger = logging.getLogger("animetix.evolving.compiler")
+
+
+class UnsafeKernelError(ValueError):
+    """Raised when dynamic kernel source fails the security validation gate."""
+
+
+# Builtins a numeric kernel legitimately needs. Everything else (eval / exec /
+# open / __import__ / getattr / ...) is deliberately withheld so that code passed
+# to ``exec`` cannot reach the host even if the AST gate is ever bypassed.
+_SAFE_BUILTIN_NAMES = frozenset(
+    {
+        "abs",
+        "min",
+        "max",
+        "sum",
+        "len",
+        "range",
+        "enumerate",
+        "zip",
+        "round",
+        "pow",
+        "int",
+        "float",
+        "bool",
+        "complex",
+    }
+)
+_SAFE_BUILTINS = {
+    name: getattr(builtins, name)
+    for name in _SAFE_BUILTIN_NAMES
+    if hasattr(builtins, name)
+}
+
+# Names that must never appear in a dynamic kernel. This is belt-and-suspenders on
+# top of the restricted builtins + AST gate (imports + dunder access are blocked
+# structurally below).
+_FORBIDDEN_NAMES = frozenset(
+    {
+        "eval",
+        "exec",
+        "compile",
+        "__import__",
+        "open",
+        "input",
+        "globals",
+        "locals",
+        "vars",
+        "getattr",
+        "setattr",
+        "delattr",
+        "breakpoint",
+        "exit",
+        "quit",
+        "help",
+        "dir",
+        "memoryview",
+        "bytearray",
+        "os",
+        "sys",
+        "subprocess",
+        "importlib",
+        "socket",
+        "shutil",
+        "pathlib",
+        "builtins",
+        "ctypes",
+        "pickle",
+        "marshal",
+    }
+)
+
+
+def assert_safe_kernel_source(source: str) -> None:
+    """Validate LLM/dynamic kernel source before ``exec`` (RCE guard).
+
+    Rejects anything outside a pure numeric kernel: imports, dunder attribute
+    access (blocks ``().__class__.__subclasses__()`` style escapes), and a blocklist
+    of dangerous names. Raises :class:`UnsafeKernelError` on violation.
+    """
+    try:
+        tree = ast.parse(source)
+    except SyntaxError as e:
+        raise UnsafeKernelError(f"Kernel source is not valid Python: {e}") from e
+
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.Import, ast.ImportFrom)):
+            raise UnsafeKernelError("imports are not allowed in dynamic kernels")
+        if isinstance(node, ast.Attribute) and node.attr.startswith("__"):
+            raise UnsafeKernelError(
+                f"dunder attribute access is not allowed: {node.attr!r}"
+            )
+        if isinstance(node, ast.Name) and node.id in _FORBIDDEN_NAMES:
+            raise UnsafeKernelError(f"use of forbidden name: {node.id!r}")
+
 
 try:
     import numba  # noqa: E402, F401
@@ -43,8 +139,19 @@ class SelfEvolvingCompiler:
         # Nettoyage du code source
         source_code = source_code.strip()
 
-        # Préparation de l'espace de noms
-        exec_globals = {"np": np, "math": __import__("math")}
+        # --- RCE GUARD ---
+        # Kernel source can originate from an LLM (evolve_with_llm); a prompt
+        # injection could otherwise smuggle arbitrary code into exec(). Validate the
+        # AST before doing anything with it.
+        assert_safe_kernel_source(source_code)
+
+        # Préparation de l'espace de noms. ``__builtins__`` is restricted to a safe
+        # numeric subset so exec'd code has no access to import/open/eval/etc.
+        exec_globals: Dict[str, Any] = {
+            "__builtins__": _SAFE_BUILTINS,
+            "np": np,
+            "math": __import__("math"),
+        }
         if HAS_NUMBA:
             exec_globals["njit"] = njit
 
@@ -59,6 +166,9 @@ class SelfEvolvingCompiler:
             decorated_source = "@njit(cache=False, fastmath=True)\n" + source_code
 
         try:
+            # nosec B102 - source is AST-validated (assert_safe_kernel_source) and
+            # exec runs with restricted __builtins__ (_SAFE_BUILTINS); no imports,
+            # dunder access or dangerous names can reach this point.
             exec(decorated_source, exec_globals)  # nosec B102
             # Récupération de la fonction compilée
             if name in exec_globals:
