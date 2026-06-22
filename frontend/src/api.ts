@@ -28,6 +28,16 @@ export async function searchMedia(query: string, mediaType = 'anime'): Promise<M
   return apiClient(`/api/v1/search/?q=${encodeURIComponent(query)}&media_type=${mediaType}`);
 }
 
+export async function searchMediaByImage(file: File, mediaType = 'Anime'): Promise<MediaItem[]> {
+  const formData = new FormData();
+  formData.append('image', file);
+  formData.append('media_type', mediaType);
+  // isFormData lets apiClient skip the JSON Content-Type (so the browser sets the
+  // multipart boundary) while still injecting CSRF + Firebase auth and surfacing
+  // error toasts — which a raw fetch() would bypass.
+  return apiClient('/api/v1/search/', { method: 'POST', body: formData, isFormData: true });
+}
+
 // --- Classic Game API ---
 export async function startClassicGame(mediaType = 'anime', difficulty = 'normal'): Promise<ClassicGameState> {
   return apiClient('/api/v1/game/classic/start/', {
