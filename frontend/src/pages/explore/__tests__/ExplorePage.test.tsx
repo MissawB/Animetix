@@ -3,6 +3,10 @@ import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ExplorePage from '../ExplorePage';
 import { vi } from 'vitest';
+import { apiClient } from '../../../utils/apiClient';
+
+vi.mock('../../../utils/apiClient', () => ({ apiClient: vi.fn() }));
+const mockedApiClient = vi.mocked(apiClient);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -12,9 +16,6 @@ const queryClient = new QueryClient({
   },
 });
 
-// Mock fetch
-global.fetch = vi.fn();
-
 describe('ExplorePage', () => {
   beforeEach(() => {
     queryClient.clear();
@@ -22,9 +23,7 @@ describe('ExplorePage', () => {
   });
 
   it('renders the explore page title and sections', () => {
-    vi.mocked(global.fetch).mockResolvedValue({
-      json: async () => ({ trending: [] })
-    } as unknown as Response);
+    mockedApiClient.mockResolvedValue({ trending: [] });
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -37,9 +36,7 @@ describe('ExplorePage', () => {
   });
 
   it('renders media type filters', () => {
-    vi.mocked(global.fetch).mockResolvedValue({
-      json: async () => ({ trending: [] })
-    } as unknown as Response);
+    mockedApiClient.mockResolvedValue({ trending: [] });
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -60,9 +57,7 @@ describe('ExplorePage', () => {
       trending: []
     };
 
-    vi.mocked(global.fetch).mockResolvedValue({
-      json: async () => mockData
-    } as unknown as Response);
+    mockedApiClient.mockResolvedValue(mockData);
 
     render(
       <QueryClientProvider client={queryClient}>

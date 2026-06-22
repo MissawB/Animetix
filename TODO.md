@@ -53,8 +53,12 @@ _Rien d'ouvert._
   - `MAX_IMAGE_SIZE` / allow-lists MIME dupliquées entre [labs.py](backend/api/animetix/api/labs.py) et [core.py](backend/api/animetix/api/core.py) → centraliser dans `backend/core/constants.py`.
 - [ ] **Backend — `UnifiedInferenceAdapter` god object**
   - 8 mixins, ~476 lignes ([unified_inference_adapter.py:30](backend/adapters/inference/unified_inference_adapter.py#L30)) ; MRO fragile, dur à tester → composition plutôt qu'héritage multiple.
-- [ ] **Frontend — `fetch()` brut qui contourne `apiClient`**
-  - [SearchBar.tsx:81](frontend/src/components/SearchBar.tsx#L81) et [AudioLabPage.tsx:127](frontend/src/pages/labs/AudioLabPage.tsx#L127) bypassent CSRF + auth Firebase + toasts → tout passer par `apiClient`.
+- [x] **Frontend — `fetch()` brut qui contourne `apiClient`** _(audit étendu : ~15 sites traités)_
+  - Problème : `fetch()` direct → pas de CSRF, pas de header auth Firebase, pas de toast d'erreur (cf. [apiClient.ts](frontend/src/utils/apiClient.ts)).
+  - [x] `SearchBar` (image search) → `searchMediaByImage()` dans `api.ts`.
+  - [x] **Migrés vers `apiClient`** : `useAdminEval`, `SimulatedAdBanner` (×2) & `SponsorStreamModal` (factorisés dans `billingService.logAdEvent`, `skipToast`), `useCustomConfig` (→ `utilsService.updateConfig`), `FinancialDashboardPage`, `MonitoringConsolePage`, `ExplorePage`, `useTachideskExplorer` (9 appels, control-flow préservé), `MangaLibraryPage` (×2). Tests des 4 fichiers concernés mis à jour (mock `apiClient`).
+  - [x] **Laissés en `fetch` brut à dessein** (assets binaires / cross-origin — `apiClient` parserait en JSON et fuiterait le token à un tiers) : `AudioLabPage` (sample audio, + toast d'échec ajouté), [MangaVoicePage.tsx:59](frontend/src/pages/labs/MangaVoicePage.tsx#L59) (`sample_url`), [offlineLibrary.ts:117](frontend/src/features/manga-reader/offline/offlineLibrary.ts#L117) (`image_url` blob), [api.ts:357](frontend/src/api.ts#L357) (proxy binaire).
+  - [ ] _Reliquat optionnel_ : harmoniser un toast d'échec sur `MangaVoicePage` / `offlineLibrary` / proxy `api.ts:357` (comme fait pour `AudioLabPage`).
 - [ ] **Frontend — état local fragmenté**
   - [AudioLabPage.tsx:64](frontend/src/pages/labs/AudioLabPage.tsx#L64) (~13 `useState`) ; anti-pattern `JSON.stringify` en render dans [SynapticLabPage.tsx:110](frontend/src/pages/labs/SynapticLabPage.tsx#L110) → `useReducer`/hook dédié.
 - [ ] **CI — gaspillage et robustesse**
