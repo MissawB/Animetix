@@ -7,6 +7,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.pdfgen import canvas
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -14,6 +15,9 @@ from ..containers import Container
 
 
 class MultiverseGalleryView(APIView):
+    # Public catalogue browsing: GET stays open, writes (if any) require auth.
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
     @inject
     def __init__(
         self,
@@ -87,6 +91,9 @@ class MultiverseCatalogView(APIView):
       - page: page number (1-indexed, default: 1)
       - page_size: items per page (default: 12, max: 48)
     """
+
+    # Public catalogue browsing: GET stays open, writes (if any) require auth.
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     @inject
     def __init__(
@@ -266,6 +273,9 @@ class MultiverseExportPDFView(APIView):
     Génère et télécharge une fiche scénaristique PDF stylisée comme un Wiki
     contenant la description, la cosmologie, les personnages et les relations Neo4j.
     """
+
+    # Public catalogue browsing: GET stays open, writes (if any) require auth.
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     @inject
     def __init__(

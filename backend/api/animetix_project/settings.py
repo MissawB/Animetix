@@ -247,9 +247,11 @@ MIDDLEWARE = [
 
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
-    "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.IsAuthenticatedOrReadOnly"
-    ],
+    # Secure-by-default: endpoints require authentication unless a view explicitly
+    # opts into public access (AllowAny / IsAuthenticatedOrReadOnly). Previously this
+    # was IsAuthenticatedOrReadOnly, which made every endpoint world-readable unless
+    # overridden.
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "backend.api.animetix.auth.GoogleIdentityAuthentication",
         "backend.api.animetix.auth.DeveloperApiKeyAuthentication",

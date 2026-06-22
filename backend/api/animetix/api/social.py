@@ -450,6 +450,8 @@ class SocialViewSet(viewsets.ViewSet):
 
 
 class AchievementViewSet(viewsets.ReadOnlyModelViewSet):
+    # Public, read-only catalogue of achievements.
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     queryset = Achievement.objects.all()
     serializer_class = AchievementSerializer
 
