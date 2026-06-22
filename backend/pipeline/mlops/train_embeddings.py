@@ -156,7 +156,7 @@ def train_custom_embeddings():
             "🧠 Simulation de l'alignement vectoriel de Jina-v3 Custom Adapter..."
         )
         logger.info(
-            "✅ Alignement cosinus ajusté sémantiquement dans l'espace vectoriel ChromaDB."
+            "✅ Alignement cosinus ajusté sémantiquement dans l'espace vectoriel pgvector."
         )
         logger.info(
             "🎯 recall@5 amélioré de +14.2% sur les concepts Otaku (Christophe Lemoine, Stéphane Excoffier, Glénat)."

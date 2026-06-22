@@ -16,6 +16,7 @@ from ..entities.ai_schemas import (
 )
 from ..exceptions import InferenceError, InfrastructureError
 from .advanced_rag_service import AdvancedRAGService
+from .graph_health import is_graph_degraded
 from .llm_service import LLMService
 from .prompt_manager import PromptManager
 from .rag.agents import SemanticRouter  # noqa: E402
@@ -23,6 +24,9 @@ from .rag_orchestrator import RAGOrchestrator  # Updated import
 from .xai_service import XaiCollector, XaiDiagnosticService
 
 logger = logging.getLogger("animetix.rag")
+
+# Re-exported for callers/tests that reference it on this module.
+_graph_is_degraded = is_graph_degraded
 
 
 class AgenticRAGService:
@@ -332,15 +336,20 @@ class AgenticRAGService:
                 )
             return
 
-        # Chargement de la mémoire utilisateur depuis le Graphe (Task 5.2)
-        user_context = ""
-        if user_id and self.neo4j_manager:
-            user_context = self.neo4j_manager.get_user_preferences_context(user_id)
-            if user_context:
-                yield StreamStep(
-                    type="thought",
-                    content=f"[Graph User Memory] Profil utilisateur '{user_id}' chargé depuis le graphe sémantique.",
-                ).model_dump()
+        # Chargement de la mémoire utilisateur depuis le Graphe (Task 5.2),
+        # avec résilience : si le graphe est indisponible, on bascule sur la
+        # mémoire vectorielle (pgvector) et on signale l'état dégradé.
+        user_context, graph_degraded = self._load_user_preferences(user_id, query)
+        if graph_degraded:
+            yield StreamStep(
+                type="thought",
+                content="[Mode dégradé] Graphe de connaissances indisponible — bascule sur la mémoire vectorielle (pgvector) et la recherche web.",
+            ).model_dump()
+        elif user_context:
+            yield StreamStep(
+                type="thought",
+                content=f"[Graph User Memory] Profil utilisateur '{user_id}' chargé depuis le graphe sémantique.",
+            ).model_dump()
 
         ctx = RAGContext(
             query=query,
@@ -432,6 +441,48 @@ class AgenticRAGService:
         if self.memory_service and user_id:
             return self.memory_service.retrieve_relevant_memories(user_id, query)
         return ""
+
+    def _load_user_preferences(
+        self, user_id: Optional[str], query: str
+    ) -> tuple[str, bool]:
+        """Load the user-preference context with graph-outage resilience.
+
+        Returns ``(context, degraded)``. The graph is the primary source; when
+        it is unreachable we fall back to the pgvector memory store instead of
+        silently proceeding with an empty context, and surface a degraded-state
+        signal (observability + a caller-visible flag).
+        """
+        if not (user_id and self.neo4j_manager):
+            return "", False
+
+        context = ""
+        try:
+            context = self.neo4j_manager.get_user_preferences_context(user_id) or ""
+        except Exception as e:  # adapter already guards, but stay defensive
+            logger.warning(f"Graph preference lookup failed: {e}")
+            context = ""
+
+        if context:
+            return context, False
+
+        # Empty context: tell "user has no history" apart from "graph is down".
+        if not _graph_is_degraded(self.neo4j_manager):
+            return "", False
+
+        # Degraded: fall back to the pgvector memory store and report it.
+        fallback = self._get_memories(user_id, query)
+        if self.obs_service:
+            self.obs_service.log_error(
+                error_type="GraphDegraded",
+                message=(
+                    f"Neo4j unreachable; fell back to vector memory for user={user_id}"
+                ),
+            )
+        logger.warning(
+            "⚠️ Knowledge graph degraded — using pgvector memory fallback "
+            f"for user={user_id}"
+        )
+        return fallback, True
 
     def _store_results(self, query: str, answer: str, user_id: Optional[str]):
         if self.semantic_cache:

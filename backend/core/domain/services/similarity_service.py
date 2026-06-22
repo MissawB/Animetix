@@ -84,7 +84,7 @@ class SimilarityService:
     ) -> Optional[Dict]:
         """Voisins sémantiques d'un item via la recherche vectorielle du repository.
 
-        Retourne le résultat brut du store vectoriel (format Chroma :
+        Retourne le résultat brut du store vectoriel (format pgvector :
         ``{"metadatas": [[...]], "distances": [[...]], ...}``) ou ``None`` si
         l'item est introuvable. Comme :meth:`calculate_similarity`, ``media_type``
         sert directement de nom de collection.

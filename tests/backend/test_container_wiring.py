@@ -25,7 +25,7 @@ def test_drift_and_hierarchical_wiring_resolve():
     from animetix.containers import container
 
     drift = container.core.drift_service()
-    assert drift.vector_store is container.persistence.chroma_vector_store()
+    assert drift.vector_store is container.persistence.vector_store()
 
     hgr = container.core.hierarchical_graph_rag_service()
     assert hgr.partitioner is container.agentic.community_partitioner()

@@ -34,7 +34,7 @@ def run_filtering():
         if not game.get("image"):
             continue
 
-        # On garde l'ID original pour Chroma
+        # On garde l'ID original pour pgvector
         clean_data.append(game)
 
     # Sauvegarde

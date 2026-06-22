@@ -45,7 +45,7 @@ class DjangoRepositoryAdapter(RepositoryPort):
     def get_nearest_neighbors(
         self, collection_name: str, item_id: str, n_results: int = 5
     ) -> Optional[Dict]:
-        """Désactivé dans l'adaptateur relationnel. Utiliser ChromaDB."""
+        """Désactivé dans l'adaptateur relationnel. Utiliser pgvector."""
         return None
 
     def load_catalog(self, media_type: str) -> Optional[Dict]:
@@ -64,7 +64,7 @@ class DjangoRepositoryAdapter(RepositoryPort):
     def calculate_similarity(
         self, collection_name: str, item_a_id: str, item_b_id: str
     ) -> float:
-        """Désactivé dans l'adaptateur relationnel. Utiliser ChromaDB."""
+        """Désactivé dans l'adaptateur relationnel. Utiliser pgvector."""
         return 0.0
 
     def upsert_items(

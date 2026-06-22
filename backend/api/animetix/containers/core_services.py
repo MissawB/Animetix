@@ -329,7 +329,7 @@ class CoreServicesContainer(containers.DeclarativeContainer):
             "core.domain.services.episodic_memory_compressor",
             "EpisodicMemoryCompressor",
         ),
-        chroma_resource=persistence.repository,
+        vector_store=persistence.repository,
         inference_engine=inference.inference_engine,
         neo4j_manager=persistence.graph_persistence_port,
     )
@@ -402,7 +402,7 @@ class CoreServicesContainer(containers.DeclarativeContainer):
 
     drift_service = providers.Singleton(
         LazyClass("core.domain.services.drift_service", "DriftService"),
-        vector_store=persistence.chroma_vector_store,
+        vector_store=persistence.vector_store,
         config_port=infrastructure.config_port,
     )
 

@@ -5,7 +5,7 @@ from typing import Dict
 class SyncPort(ABC):
     @abstractmethod
     def sync_to_vector_db(self, media_type: str, item_id: str, data: Dict):
-        """Met à jour l'item dans ChromaDB."""
+        """Met à jour l'item dans pgvector."""
         pass
 
     @abstractmethod

@@ -7,10 +7,10 @@ from django.test import override_settings
 @pytest.mark.django_db
 def test_vertex_ai_detection_disabled():
     with override_settings(VERTEX_AI_VECTOR_SEARCH_ACTIVE=False):
-        import pipeline.chroma_client  # noqa: E402
+        import pipeline.vector_client  # noqa: E402
 
-        pipeline.chroma_client._vertex_ai_supported = None
-        from pipeline.chroma_client import is_vertex_ai_supported  # noqa: E402
+        pipeline.vector_client._vertex_ai_supported = None
+        from pipeline.vector_client import is_vertex_ai_supported  # noqa: E402
 
         assert is_vertex_ai_supported() is False
 
@@ -23,10 +23,10 @@ def test_vertex_ai_detection_enabled_success(mock_init):
         VERTEX_AI_PROJECT_ID="test-project",
         VERTEX_AI_LOCATION="europe-west1",
     ):
-        import pipeline.chroma_client  # noqa: E402
+        import pipeline.vector_client  # noqa: E402
 
-        pipeline.chroma_client._vertex_ai_supported = None
-        from pipeline.chroma_client import is_vertex_ai_supported  # noqa: E402
+        pipeline.vector_client._vertex_ai_supported = None
+        from pipeline.vector_client import is_vertex_ai_supported  # noqa: E402
 
         assert is_vertex_ai_supported() is True
         mock_init.assert_called_once_with(
@@ -36,10 +36,10 @@ def test_vertex_ai_detection_enabled_success(mock_init):
 
 @pytest.mark.django_db
 def test_vertex_ai_fallback_to_pgvector():
-    import pipeline.chroma_client  # noqa: E402
+    import pipeline.vector_client  # noqa: E402
 
-    pipeline.chroma_client._vertex_ai_supported = False
-    from pipeline.chroma_client import PGVectorManager  # noqa: E402
+    pipeline.vector_client._vertex_ai_supported = False
+    from pipeline.vector_client import PGVectorManager  # noqa: E402
 
     manager = PGVectorManager()
     coll = manager.get_collection("test_fallback")

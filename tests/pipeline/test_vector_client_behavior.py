@@ -1,4 +1,4 @@
-"""Behavior tests for the pgvector/AlloyDB unified vector wrapper (chroma_client).
+"""Behavior tests for the pgvector/AlloyDB unified vector wrapper (vector_client).
 
 Two layers are exercised:
 
@@ -19,9 +19,9 @@ deterministic.
 import json
 from unittest.mock import MagicMock
 
-import pipeline.chroma_client as cc
+import pipeline.vector_client as cc
 import pytest
-from pipeline.chroma_client import (
+from pipeline.vector_client import (
     PGVectorCollectionWrapper,
     PGVectorManager,
     is_alloydb_ai_supported,

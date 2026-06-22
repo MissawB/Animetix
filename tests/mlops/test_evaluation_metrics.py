@@ -36,8 +36,8 @@ def mock_safe_http_request():
 
 
 @pytest.fixture
-def mock_chroma():
-    with patch("pipeline.chroma_client.chroma_manager") as mock:
+def mock_vectors():
+    with patch("pipeline.vector_client.vector_manager") as mock:
         mock.query_collection.return_value = {
             "documents": [["Mock context document 1", "Mock context document 2"]],
             "ids": [["11061", "16498"]],
@@ -82,7 +82,7 @@ def mock_ragas_eval_service():
 def test_ragas_performance_comparison_metrics_logging(
     mock_wandb,
     mock_safe_http_request,
-    mock_chroma,
+    mock_vectors,
     mock_neo4j,
     mock_sentence_transformer,
     mock_ragas_eval_service,

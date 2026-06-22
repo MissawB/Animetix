@@ -6,7 +6,7 @@ import numpy as np
 import orjson
 from core.ports.repository_port import RepositoryPort
 from django.core.cache import cache
-from pipeline.chroma_client import chroma_manager
+from pipeline.vector_client import vector_manager
 
 logger = logging.getLogger("animetix")
 
@@ -29,7 +29,7 @@ class LocalSentenceTransformerEmbeddingFunction:
 class PGVectorRepositoryAdapter(RepositoryPort):
     def __init__(self, project_root: str):
         self.project_root = project_root
-        self.manager = chroma_manager
+        self.manager = vector_manager
         self._embedding_fn = None
 
         self.db_files = {
@@ -217,7 +217,7 @@ class PGVectorRepositoryAdapter(RepositoryPort):
         try:
             coll = self.manager.get_collection(name=coll_name)
 
-            from pipeline.chroma_client import is_alloydb_ai_supported  # noqa: E402
+            from pipeline.vector_client import is_alloydb_ai_supported  # noqa: E402
 
             if is_alloydb_ai_supported():
                 res = coll.query(query_texts=[query], n_results=limit, offset=offset)

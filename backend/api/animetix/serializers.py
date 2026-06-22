@@ -203,7 +203,7 @@ class XaiReportSerializer(serializers.Serializer):
 from core.utils.security import sanitize_html_content  # noqa: E402
 
 
-# Serializers pour les données chargées dynamiquement (JSON/Chroma)
+# Serializers pour les données chargées dynamiquement (JSON/pgvector)
 class MediaItemSerializer(serializers.Serializer):
     id = serializers.CharField()
     title = serializers.CharField()

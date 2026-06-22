@@ -15,8 +15,8 @@ class PersistenceContainer(containers.DeclarativeContainer):
 
     django_repository = providers.Callable(lambda repo: repo.django, repository)
 
-    chroma_vector_store = providers.Singleton(
-        "adapters.persistence.chroma_vector_store_adapter.ChromaVectorStoreAdapter"
+    vector_store = providers.Singleton(
+        "adapters.persistence.pg_vector_store_adapter.PgVectorStoreAdapter"
     )
 
     graph_persistence_port = providers.Singleton(
