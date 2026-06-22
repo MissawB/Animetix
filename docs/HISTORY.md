@@ -4,6 +4,10 @@ This document archives the major milestones of the project's technical evolution
 
 ## [2026-06-22] Session: API Hardening, RCE Guard, Hexagonal Boundary Repair (domain → infra) & Test-Home Consolidation
 
+### Cleanup: duplicated constants + bug-masking catch-alls
+- **Constants**: `MAX_IMAGE_SIZE` and the image/video/audio MIME allow-lists were duplicated (and drifting) between `api/core.py` and `api/labs.py`. Centralized in `core.constants`; both import from there (image list unified to include gif; labs' dead duplicate constants dropped).
+- **Broad `except Exception`**: AST audit of all 638 handlers showed almost all already log or return a deliberate fallback (legitimate defensive code). Only 3 silently swallowed; narrowed the 2 obvious ones (`django_repository_adapter.get_creative_fusion` → `CreativeFusion.DoesNotExist` so a repo no longer masks DB errors as "not found"; `regression_benchmark` `--threshold` parse → `(ValueError, IndexError)`). The ASGI event-loop-policy startup shim is an intentional best-effort guard, left as-is. No blind 638-site sweep (no value, risky).
+
 ### Security: API stacktrace-leak + secure-by-default permissions
 - **Stacktrace leak**: 27 endpoints returned the raw exception to the client on HTTP 500 (`Response({"error": str(e)}, status=500)`), exposing internals (paths, SQL, …). Replaced the client body with a generic `"Internal server error"` and log the detail server-side via `logger.exception(...)` — across 11 `api/*` modules plus `tasks_views` and `views/billing`. 4xx validation responses (intentional user feedback) were left intact.
 - **Permissions secure-by-default**: DRF `DEFAULT_PERMISSION_CLASSES` was `IsAuthenticatedOrReadOnly`, making every endpoint world-readable unless overridden. Flipped to `IsAuthenticated`. An AST audit of all 142 views found only 8 relying on the default; the genuinely public ones now declare `IsAuthenticatedOrReadOnly` (Multiverse gallery/catalog/export-PDF, AchievementViewSet) while internal/control views (monitoring, observability) tighten. The 3 `@api_view` functions and `AIFeedbackAPIView` (uses `get_permissions`) already scoped permissions explicitly.

@@ -10,7 +10,7 @@ _Rien d'ouvert._
 
 ## 🟠 Élevés
 
-- [ ] **Repo — 125 Mo de données suivies dans git** _(vérifié)_
+- [x] **Repo — 125 Mo de données suivies dans git** _(vérifié)_
   - `data/processed/filtered_characters.json` (40 Mo), `refined_characters.json` (30 Mo), `clean_characters.json` (24 Mo), etc. Artefacts générés qui gonflent l'historique et ralentissent les clones.
   - Migrer vers Git LFS **ou** `git rm --cached` + régénération au build ; documenter le téléchargement dans le README.
 - [x] **Sécu — `exec()` sur du code généré par LLM (surface RCE)** ✅ _(2026-06-22)_
@@ -46,12 +46,12 @@ _Rien d'ouvert._
 - [x] **API — fuite de stacktrace + permission par défaut trop ouverte** ✅ _(2026-06-22)_
   - **Fuite** : 27 réponses HTTP 500 qui renvoyaient `str(e)`/exception au client sont génériques (`"Internal server error"`) + `logger.exception()` côté serveur (11 fichiers `api/*`, `tasks_views`, `views/billing`). Les 4xx (feedback de validation) sont conservés.
   - **Permissions** : défaut DRF `IsAuthenticatedOrReadOnly` → **`IsAuthenticated`** (secure-by-default). Audit AST des 142 vues : seules 8 héritaient du défaut ; les vues publiques (`Multiverse*`, `AchievementViewSet`) déclarent désormais `IsAuthenticatedOrReadOnly`, les internes (monitoring/observability) se durcissent.
-- [ ] **Backend — `except Exception:` trop larges + constantes dupliquées**
-  - Nombreux catch-all génériques masquant les vrais bugs → resserrer sur des exceptions spécifiques.
-  - `MAX_IMAGE_SIZE` / allow-lists MIME dupliquées entre [labs.py](backend/api/animetix/api/labs.py) et [core.py](backend/api/animetix/api/core.py) → centraliser dans `backend/core/constants.py`.
-- [ ] **Backend — `UnifiedInferenceAdapter` god object**
+- [x] **Backend — `except Exception:` trop larges + constantes dupliquées** ✅ _(2026-06-22)_
+  - **Constantes** : `MAX_IMAGE_SIZE` + allow-lists MIME (image/vidéo/audio) centralisées dans `backend/core/constants.py` ; `core.py`/`labs.py` importent de là (liste image unifiée avec gif ; doublons morts de labs supprimés).
+  - **catch-all** : audit AST des **638** `except Exception` — la quasi-totalité loguent/renvoient un fallback délibéré (défensif légitime). Seuls **3** avalaient silencieusement ; 2 resserrés (`CreativeFusion.DoesNotExist` dans le repository ; `(ValueError, IndexError)` au parse `--threshold`), le 3e (shim de policy event-loop ASGI) laissé volontairement (best-effort commenté + `nosec`). Pas de sweep aveugle des 638 (sans valeur + risqué).
+- [x] **Backend — `UnifiedInferenceAdapter` god object**
   - 8 mixins, ~476 lignes ([unified_inference_adapter.py:30](backend/adapters/inference/unified_inference_adapter.py#L30)) ; MRO fragile, dur à tester → composition plutôt qu'héritage multiple.
-- [ ] **Frontend — `fetch()` brut qui contourne `apiClient`**
+- [x] **Frontend — `fetch()` brut qui contourne `apiClient`**
   - [SearchBar.tsx:81](frontend/src/components/SearchBar.tsx#L81) et [AudioLabPage.tsx:127](frontend/src/pages/labs/AudioLabPage.tsx#L127) bypassent CSRF + auth Firebase + toasts → tout passer par `apiClient`.
 - [ ] **Frontend — état local fragmenté**
   - [AudioLabPage.tsx:64](frontend/src/pages/labs/AudioLabPage.tsx#L64) (~13 `useState`) ; anti-pattern `JSON.stringify` en render dans [SynapticLabPage.tsx:110](frontend/src/pages/labs/SynapticLabPage.tsx#L110) → `useReducer`/hook dédié.
@@ -63,9 +63,9 @@ _Rien d'ouvert._
 
 ## 🟢 Faibles
 
-- [ ] **A11y & logs frontend** : `<img>` sans `alt`, boutons admin sans `aria-label`, `console.error` laissés en prod (~41 fichiers).
-- [ ] **Deps** : doublon `opencv-python` + `opencv-python-headless` ([requirements.txt:580](requirements.txt#L580)) ; GCP / `transformers` peu ou pas pinnés dans [requirements.in](requirements.in) (build non reproductible).
-- [ ] **DX** : pas de Prettier ni `.editorconfig` ; badge README « Python 3.11+ » alors que CI/pyproject ciblent 3.12.
+- [x] **A11y & logs frontend** : `<img>` sans `alt`, boutons admin sans `aria-label`, `console.error` laissés en prod (~41 fichiers).
+- [x] **Deps** : doublon `opencv-python` + `opencv-python-headless` ([requirements.txt:580](requirements.txt#L580)) ; GCP / `transformers` peu ou pas pinnés dans [requirements.in](requirements.in) (build non reproductible).
+- [x] **DX** : pas de Prettier ni `.editorconfig` ; badge README « Python 3.11+ » alors que CI/pyproject ciblent 3.12.
 - [ ] **Couverture frontend — élargir** _(outillage + CI faits ; ~29 % stmts, 492 tests — cf. [HISTORY](docs/HISTORY.md))_
   - Optionnel / ROI décroissant : couvrir les flows complexes restants (3D/canvas/WebSocket) et remonter le plancher de seuils au fil de l'eau.
 - [x] **Organisation des tests backend — consolidation physique** ✅ _(2026-06-21)_
