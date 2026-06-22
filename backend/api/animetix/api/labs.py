@@ -737,11 +737,9 @@ class VoiceProfileIngestView(APIView):
                 status=status.HTTP_402_PAYMENT_REQUIRED,
             )
 
-        from core.domain.services.voice_ingestion_service import VoiceIngestionService
-
         from animetix.serializers import VoiceProfileSerializer
 
-        ingestion_service = VoiceIngestionService()
+        ingestion_service = get_container().core.voice_ingestion_service()
         try:
             profile = ingestion_service.ingest_voice(
                 name=name,

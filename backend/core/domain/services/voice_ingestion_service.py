@@ -2,11 +2,10 @@ import io
 import logging
 import os
 import tempfile
+from typing import Any
 
-from animetix.models import VoiceProfile
 from core.domain.exceptions import InferenceError
-from django.core.files.base import ContentFile
-from django.utils.text import slugify
+from core.ports.voice_profile_port import VoiceProfileRepositoryPort
 
 logger = logging.getLogger("animetix.voice_ingestion_service")
 
@@ -14,8 +13,12 @@ logger = logging.getLogger("animetix.voice_ingestion_service")
 class VoiceIngestionService:
     """
     Service to ingest voice actors/seiyuu profiles dynamically from YouTube.
-    Downloads, slices, filters (bandpass), and saves the sample to the VoiceProfile.
+    Downloads, slices, filters (bandpass), and saves the sample via the injected
+    voice-profile repository port (no direct ORM/file access in the domain).
     """
+
+    def __init__(self, voice_profile_repository: VoiceProfileRepositoryPort):
+        self.voice_profile_repository = voice_profile_repository
 
     def ingest_voice(
         self,
@@ -25,7 +28,7 @@ class VoiceIngestionService:
         definition: str = "",
         roles: str = "",
         impact: str = "Custom",
-    ) -> VoiceProfile:
+    ) -> Any:
         """
         Ingests a voice profile from a YouTube link or query.
         """
@@ -132,28 +135,18 @@ class VoiceIngestionService:
                     filtered_sound.export(out_buffer, format="wav")
                     audio_bytes = out_buffer.getvalue()
 
-                    # 4. Enregistrement ou mise à jour du profil
-                    profile, created = VoiceProfile.objects.update_or_create(
+                    # 4. Enregistrement ou mise à jour du profil (via le port)
+                    profile = self.voice_profile_repository.save_voice_sample(
                         name=name,
-                        defaults={
-                            "language": language,
-                            "origin": "youtube",
-                            "definition": definition
-                            or "Voix ingérée à la volée depuis YouTube.",
-                            "roles": roles or "Rôles personnalisés",
-                            "impact": impact or "Custom",
-                            "origin_detail": webpage_url,
-                        },
+                        language=language,
+                        origin_detail=webpage_url,
+                        audio_bytes=audio_bytes,
+                        definition=definition,
+                        roles=roles,
+                        impact=impact,
                     )
 
-                    file_name = f"{slugify(name)}_sample.wav"
-                    profile.sample_file.save(
-                        file_name, ContentFile(audio_bytes), save=True
-                    )
-
-                    logger.info(
-                        f"Profil vocal '{name}' créé/mis à jour avec succès avec le fichier {file_name}."
-                    )
+                    logger.info(f"Profil vocal '{name}' créé/mis à jour avec succès.")
                     return profile
 
             except Exception as e:

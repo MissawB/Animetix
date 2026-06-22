@@ -502,6 +502,13 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         suwayomi_adapter=persistence.suwayomi_adapter,
     )
 
+    voice_ingestion_service = providers.Singleton(
+        LazyClass(
+            "core.domain.services.voice_ingestion_service", "VoiceIngestionService"
+        ),
+        voice_profile_repository=persistence.voice_profile_adapter,
+    )
+
     synthetic_validation_service = providers.Singleton(
         LazyClass("core.domain.services.validation_gate", "SyntheticValidationService"),
         inference_engine=inference.inference_engine,
