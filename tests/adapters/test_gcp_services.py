@@ -30,3 +30,15 @@ def test_restore_brain_service_success(mock_patch, mock_default):
     assert (
         mock_patch.call_args[1]["json"]["template"]["scaling"]["maxInstanceCount"] == 5
     )
+
+
+@patch("google.auth.default")
+@patch("google.auth.transport.requests.AuthorizedSession.patch")
+def test_restore_brain_service_defaults_to_three(mock_patch, mock_default):
+    mock_default.return_value = (MagicMock(), "test-project")
+    mock_patch.return_value = MagicMock(status_code=200, json=lambda: {})
+
+    restore_brain_service()  # no explicit ceiling
+    assert (
+        mock_patch.call_args[1]["json"]["template"]["scaling"]["maxInstanceCount"] == 3
+    )

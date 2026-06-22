@@ -35,13 +35,17 @@ Estimation based on a production deployment on **Google Cloud Platform (GCP)** o
 
 | Resource | Service | Est. Monthly Cost | Role |
 | :--- | :--- | :--- | :--- |
-| **Compute Engine (GPU)** | L4 / A100 Instances | **$450 - $1200** | Inference for Ghost Labs & SLMs |
+| **GPU Inference (`animetix-brain`)** | Cloud Run GPU (serverless, on-demand) | **$0 idle → $450-1200 under load** | Inference for Ghost Labs & SLMs |
 | **Cloud Run / GKE** | Django Backend | **$40 - $150** | API, Celery Workers, WebSockets |
 | **Databases** | Cloud SQL + Neo4j Aura | **$80 - $200** | Relational and Graph persistence |
 | **Vector Store** | pgvector (Postgres extension) | **$30 - $60** | RAG Engine (Lore & Semantics) |
 | **Cloud Storage** | GCS Buckets | **$15 - $50** | Media assets, manga pages |
 
-**Total Estimated Infrastructure Cost: ~$600 to $1600 / month.**
+**Total Estimated Infrastructure Cost: ~$150 to $1600 / month** (the wide range reflects the GPU service, which is the dominant *variable* — not fixed — cost).
+
+> ⚠️ **Audit note (2026-06-22): GPU cost posture corrected — the brain already scales to zero.**
+> The `animetix-brain` GPU service runs on **Cloud Run (serverless)**, deployed by the versioned script [`scripts/deploy/deploy_brain.py`](../../scripts/deploy/deploy_brain.py) (NVIDIA L4, secrets, VPC egress, GCS-FUSE model volume). Cloud Run's default `minInstances=0` means the GPU **already scales to zero → $0 when idle** (cold-start latency on the first request); the earlier "$450-1200 fixed" framing was inaccurate — this cost is load-driven, not a permanent floor.
+> The residual gap was that the scaling bounds were *implicit*: `--min-instances`/`--max-instances` were unset, so scale-to-zero was undocumented and `max` defaulted to 100 (uncapped). **Fixed 2026-06-22** by making `--min-instances=0` and `--max-instances=3` explicit in the deploy script (the ceiling is aligned with the `restore_brain_service` default). The GPU cost floor is now auditable from git.
 
 ---
 
@@ -65,7 +69,7 @@ The **Berrix** (Bx) token system was recalibrated on June 13, 2026, to shift fro
 *   **Cost of a standard AI call (5 Bx):** ~$0.00005.
 *   **Cost of a Forge Image (50 Bx):** ~$0.0005.
 
-**Observation:** A single video ad now finances approximately 400 to 500 simple AI calls or 5 creative fusions. The generated surplus is used exclusively to cover the GPU cluster maintenance (fixed cost).
+**Observation:** A single video ad now finances approximately 400 to 500 simple AI calls or 5 creative fusions. The generated surplus is used to cover the GPU service usage — which, on serverless Cloud Run GPU, is a *variable* load-driven cost, not a permanent fixed cluster (see §2 audit note).
 
 ### 4.2. Cost/Revenue Ratio (Direct Purchase)
 *   **Initiate Pack (10,000 Bx for €4.99):**
@@ -83,4 +87,4 @@ The **Berrix** (Bx) token system was recalibrated on June 13, 2026, to shift fro
 4.  **Image Compression:** Use WebP aggressively to reduce bandwidth egress and GCS storage costs.
 
 ---
-*Last audit update: June 13, 2026.*
+*Last audit update: June 22, 2026 (GPU cost posture corrected: Cloud Run serverless, not fixed Compute Engine).*

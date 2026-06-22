@@ -88,7 +88,7 @@ def shutdown_brain_service():
         return False, str(e)
 
 
-def restore_brain_service(max_instances=10):
+def restore_brain_service(max_instances=3):
     """
     Restores the animetix-brain Cloud Run GPU service by resetting maxInstanceCount to a positive value.
     """

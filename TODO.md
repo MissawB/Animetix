@@ -8,7 +8,9 @@ _Rien d'ouvert._
 
 ## 🟠 Élevés
 
-_Rien d'ouvert._
+- [x] **Coût/Infra — bornes de scaling du brain GPU non explicites** _(analyse financière 2026-06-22 ; résolu le 2026-06-22)_
+  - Constat initial (« aucune IaC ») **partiellement faux** : le déploiement est bien codifié dans [scripts/deploy/deploy_brain.py](scripts/deploy/deploy_brain.py) (Cloud Run, L4, secrets, VPC, volume GCS-FUSE). Le vrai défaut : `--min-instances`/`--max-instances` n'étaient **pas fixés** → défauts Cloud Run (min=0 implicite — le brain scalait déjà à zéro ; max=100 non plafonné). Le « GPU fixe 24/7 » du [COST_AUDIT.md](docs/COST_AUDIT.md) était donc inexact.
+  - **Fait :** ajout de `--min-instances=0` (scale-to-zero explicite/auditable) et `--max-instances=3` (plafond coût, aligné sur le défaut de `restore_brain_service`) dans le script de déploiement. COST_AUDIT corrigé.
 
 ## 🟡 Moyens
 

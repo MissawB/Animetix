@@ -75,6 +75,8 @@ def main():
         "--cpu=4",
         "--memory=16Gi",
         "--no-cpu-throttling",  # Requis pour garder le CPU alloué avec GPU
+        "--min-instances=0",  # scale-to-zero explicite : pas de GPU facturé à l'idle (auditable)
+        "--max-instances=3",  # plafond coût ; aligné sur le défaut de restore_brain_service
         f"--set-secrets={secrets}",
         "--set-env-vars=DJANGO_ENV=production,LLM_API_BASE=http://localhost:11434/v1,LLM_MODEL_NAME=llama3,GCP_MODELS_MOUNT_PATH=/mnt/models",
         "--port=7861",

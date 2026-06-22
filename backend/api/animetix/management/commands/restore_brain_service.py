@@ -10,8 +10,8 @@ class Command(BaseCommand):
         parser.add_argument(
             "--max-instances",
             type=int,
-            default=10,
-            help="Maximum instance count to restore the service to",
+            default=3,
+            help="Maximum instance count to restore the service to (matches the --max-instances ceiling in scripts/deploy/deploy_brain.py)",
         )
 
     def handle(self, *args, **options):
