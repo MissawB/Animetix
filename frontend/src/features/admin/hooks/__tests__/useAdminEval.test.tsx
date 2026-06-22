@@ -1,8 +1,12 @@
 import { renderHook, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { apiClient } from '../../../../utils/apiClient';
 import { useAdminEval } from '../useAdminEval';
+
+vi.mock('../../../../utils/apiClient', () => ({ apiClient: vi.fn() }));
+const mockedApiClient = vi.mocked(apiClient);
 
 const makeWrapper = () => {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -16,26 +20,19 @@ describe('useAdminEval', () => {
     vi.clearAllMocks();
   });
 
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
-  it('fetches and returns admin eval data', async () => {
+  it('fetches and returns admin eval data via apiClient', async () => {
     const payload = { evals: [{ id: 1, score: 0.9 }] };
-    const json = vi.fn().mockResolvedValue(payload);
-    const fetchMock = vi.fn().mockResolvedValue({ json } as unknown as Response);
-    vi.stubGlobal('fetch', fetchMock);
+    mockedApiClient.mockResolvedValue(payload);
 
     const { result } = renderHook(() => useAdminEval(), { wrapper: makeWrapper() });
 
     await waitFor(() => expect(result.current.loading).toBe(false));
-    expect(fetchMock).toHaveBeenCalledWith('/api/v1/admin/ai_eval/data/');
+    expect(mockedApiClient).toHaveBeenCalledWith('/api/v1/admin/ai_eval/data/');
     expect(result.current.data).toEqual(payload);
   });
 
   it('starts in a loading state', () => {
-    const fetchMock = vi.fn().mockReturnValue(new Promise(() => {}));
-    vi.stubGlobal('fetch', fetchMock);
+    mockedApiClient.mockReturnValue(new Promise(() => {}));
 
     const { result } = renderHook(() => useAdminEval(), { wrapper: makeWrapper() });
 

@@ -5,6 +5,7 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
 import tseslint from 'typescript-eslint';
+import eslintConfigPrettier from 'eslint-config-prettier';
 import { defineConfig, globalIgnores } from 'eslint/config';
 
 export default defineConfig([
@@ -52,7 +53,14 @@ export default defineConfig([
         'error',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
       ],
+      // Keep diagnostic chatter out of the prod console: console.log/info/debug are
+      // forbidden (use the dev-only `logger` in src/utils/logger.ts instead);
+      // console.warn/error stay allowed for real problems.
+      'no-console': ['error', { allow: ['warn', 'error'] }],
     },
   },
-  ...storybook.configs["flat/recommended"]
+  ...storybook.configs["flat/recommended"],
+  // Must stay LAST: turns off ESLint rules that would conflict with Prettier
+  // formatting (we run Prettier for style, ESLint for correctness).
+  eslintConfigPrettier,
 ]);

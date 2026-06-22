@@ -16,14 +16,7 @@ export const useCustomConfig = () => {
   });
 
   const mutation = useMutation({
-    mutationFn: async (newConfig: Partial<UserConfig>) => {
-        // En un vrai projet, utilsService aurait une méthode updateConfig
-        return fetch('/api/v1/custom-config/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newConfig)
-        });
-    },
+    mutationFn: (newConfig: Partial<UserConfig>) => utilsService.updateConfig(newConfig),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['custom-config'] });
       addToast('Paramètres enregistrés !', 'success');

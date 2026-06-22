@@ -2,7 +2,7 @@
 
 This document archives the major milestones of the project's technical evolution.
 
-## [2026-06-22] Session: API Hardening, RCE Guard, Hexagonal Boundary Repair (domain → infra) & Test-Home Consolidation
+## [2026-06-22] Session: API Hardening, RCE Guard & Constants/Broad-Except Cleanup
 
 ### Cleanup: duplicated constants + bug-masking catch-alls
 - **Constants**: `MAX_IMAGE_SIZE` and the image/video/audio MIME allow-lists were duplicated (and drifting) between `api/core.py` and `api/labs.py`. Centralized in `core.constants`; both import from there (image list unified to include gif; labs' dead duplicate constants dropped).
@@ -14,6 +14,21 @@ This document archives the major milestones of the project's technical evolution
 
 ### Security: RCE guard on exec() of LLM-generated kernels
 - `SelfEvolvingCompiler.compile_dynamic_kernel` exec'd dynamic Python source, including code produced by an LLM (`evolve_with_llm`) — a prompt injection upstream could smuggle arbitrary code into the host (RCE). Added `assert_safe_kernel_source()`: an AST gate rejecting imports, dunder attribute access (blocks `().__class__.__subclasses__()` escapes) and a blocklist of dangerous names (os/sys/subprocess/eval/exec/open/getattr…). `exec` now also runs with a restricted `__builtins__` (`_SAFE_BUILTINS` — only numeric helpers like range/len/abs/float) as defense-in-depth. Malicious kernels raise `UnsafeKernelError`; `evolve_with_llm` swallows it and returns the null fallback (no execution). Legitimate numeric kernels unchanged; 13 new security tests.
+
+## [2026-06-22] Session: Frontend & Infra Sweep (data/LFS, fetch→apiClient, CI, deps, DX, a11y, coverage)
+
+A batch of TODO items closed across data hygiene, CI, deps, DX and the frontend, each merged via its own PR.
+
+- **Repo data → Git LFS**: the large tracked `data/processed` / `data/artifacts` JSON (filtered/refined characters 40/30 MB, …) moved to Git LFS (consistent with the existing `*.npy` rule); the orphan `clean_characters.json` (24 MB, zero references) dropped. A history-rewrite purge of old blobs was left as a separate coordinated op.
+- **Frontend `fetch()` → `apiClient`**: ~15 raw same-origin `fetch()` calls migrated to `apiClient` (CSRF + Firebase auth + error toasts) — SearchBar image search (`searchMediaByImage`), billing ad-events (`billingService.logAdEvent`), `useCustomConfig`→`utilsService.updateConfig`, Monitoring/Financial pages, ExplorePage, `useTachideskExplorer` (9 calls, control-flow preserved), MangaLibrary. Binary/cross-origin asset fetches (AudioLabPage, MangaVoicePage, offlineLibrary, the image proxy) left as raw `fetch` on purpose; AudioLabPage got a failure toast.
+- **AudioLabPage state**: Quick Ingest form (5 `useState` + validation + submit) extracted to a dedicated `useQuickIngestForm` hook (14→9 `useState`). SynapticLab `JSON.stringify`-in-render confirmed a deliberate React "adjust-state-during-render" pattern (left as-is).
+- **CI**: `concurrency.cancel-in-progress`; pip wheel cache on the test/integration/perf jobs (no more ~800 MB torch re-download); `timeout-minutes` (45/30/30); corrected the stale coverage-gate comment (coverage is 75.33 %, gate live).
+- **Deps**: `requirements.in` fully pinned to the resolved versions (transformers, google-cloud-\*, apache-beam, dbt-\*) — lockfile byte-identical. Duplicate `opencv-python` (forced by ultralytics, needs libGL) dropped in all 3 Dockerfiles: uninstall both then reinstall headless from the lockfile.
+- **DX**: Prettier + `eslint-config-prettier` (config + scripts + lint-staged, no repo-wide reformat), root `.editorconfig`, README Python `3.11+`→`3.12+`.
+- **A11y & logs**: 12 WebSocket `console.log` routed through a dev-only `logger` (no-op in prod) + a `no-console` ESLint rule (warn/error allowed). `<img>` alt and admin accessible-names were already enforced.
+- **Frontend coverage**: covered the untested game/media services + react-query hooks (+28 tests, 492→520); ratcheted the v8 floors to statements 29 / branches 22 / functions 28 / lines 29.
+
+## [2026-06-22] Session: Hexagonal Boundary Repair (domain → infra) & Test-Home Consolidation
 
 ### Hexagonal boundary violations fixed (domain no longer imports Django/animetix)
 Three core-domain services reached across the hexagonal boundary into infrastructure. Each now depends on an injected port; the Django/ORM/middleware code lives in an adapter wired through the DI container.

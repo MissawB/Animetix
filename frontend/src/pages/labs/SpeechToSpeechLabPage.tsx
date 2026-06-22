@@ -18,6 +18,7 @@ import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { apiClient } from "../../utils/apiClient";
 import { VoiceProfile } from '../../types';
+import { logger } from '../../utils/logger';
 
 const SpeechToSpeechLabPage: React.FC = () => {
   const [status, setStatus] = useState<'connecting' | 'ready' | 'recording' | 'thinking' | 'playing' | 'error'>('connecting');
@@ -114,18 +115,18 @@ const SpeechToSpeechLabPage: React.FC = () => {
       wsUrl += `?voice_profile_id=${selectedProfile.id}`;
     }
 
-    console.log(`Connecting to Gemini Live WebSocket: ${wsUrl}`);
+    logger.log(`Connecting to Gemini Live WebSocket: ${wsUrl}`);
     const socket = new WebSocket(wsUrl);
     socketRef.current = socket;
 
     socket.onopen = () => {
-      console.log('Gemini Live WebSocket connected');
+      logger.log('Gemini Live WebSocket connected');
     };
 
     socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        console.log('Received from Gemini Live:', data);
+        logger.log('Received from Gemini Live:', data);
 
         if (data.type === 'session_ready') {
           setStatus('ready');
@@ -148,7 +149,7 @@ const SpeechToSpeechLabPage: React.FC = () => {
     };
 
     socket.onclose = (event) => {
-      console.log('Gemini Live WebSocket closed:', event);
+      logger.log('Gemini Live WebSocket closed:', event);
       if (status !== 'error') {
         // Auto-reconnect after 3 seconds
         setTimeout(() => {
