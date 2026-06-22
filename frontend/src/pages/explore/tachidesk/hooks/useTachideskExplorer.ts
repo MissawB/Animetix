@@ -1,9 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Source, Manga, Chapter, Extension, ExtensionAction } from '../types';
-
-const getErrorMessage = (err: unknown): string | undefined =>
-  err instanceof Error ? err.message : undefined;
+import { apiClient } from '../../../../utils/apiClient';
 
 export const useTachideskExplorer = () => {
   const navigate = useNavigate();
@@ -40,15 +38,13 @@ export const useTachideskExplorer = () => {
     setLoadingSources(true);
     setError(null);
     try {
-      const res = await fetch('/api/v1/explore/suwayomi/sources/');
-      if (!res.ok) throw new Error('Impossible de charger les sources Suwayomi');
-      const data: Source[] = await res.json();
+      const data: Source[] = await apiClient('/api/v1/explore/suwayomi/sources/', { skipToast: true });
       setSources(data);
       if (data.length > 0 && !selectedSource) {
         setSelectedSource(data[0].id);
       }
-    } catch (err: unknown) {
-      setError(getErrorMessage(err) || 'Une erreur est survenue lors du chargement des sources');
+    } catch {
+      setError('Impossible de charger les sources Suwayomi');
     } finally {
       setLoadingSources(false);
     }
@@ -58,12 +54,10 @@ export const useTachideskExplorer = () => {
     setLoadingExtensions(true);
     setError(null);
     try {
-      const res = await fetch('/api/v1/explore/suwayomi/extensions/');
-      if (!res.ok) throw new Error('Impossible de charger les extensions Suwayomi');
-      const data: Extension[] = await res.json();
+      const data: Extension[] = await apiClient('/api/v1/explore/suwayomi/extensions/', { skipToast: true });
       setExtensions(data);
-    } catch (err: unknown) {
-      setError(getErrorMessage(err) || 'Erreur lors du chargement des extensions');
+    } catch {
+      setError('Impossible de charger les extensions Suwayomi');
     } finally {
       setLoadingExtensions(false);
     }
@@ -94,12 +88,13 @@ export const useTachideskExplorer = () => {
     setError(null);
     setMangas([]);
     try {
-      const res = await fetch(`/api/v1/explore/suwayomi/search/?source_id=${selectedSource}&q=${encodeURIComponent(searchQuery)}`);
-      if (!res.ok) throw new Error('La recherche a échoué');
-      const data: Manga[] = await res.json();
+      const data: Manga[] = await apiClient(
+        `/api/v1/explore/suwayomi/search/?source_id=${selectedSource}&q=${encodeURIComponent(searchQuery)}`,
+        { skipToast: true },
+      );
       setMangas(data);
-    } catch (err: unknown) {
-      setError(getErrorMessage(err) || 'Erreur lors de la recherche des mangas');
+    } catch {
+      setError('La recherche a échoué');
     } finally {
       setLoadingMangas(false);
     }
@@ -124,8 +119,7 @@ export const useTachideskExplorer = () => {
 
     try {
       const extId = `suwayomi:${selectedSource}:${manga.id}`;
-      void fetch(`/api/v1/media/Manga/${extId}/favorite/`)
-        .then(res => res.ok ? res.json() : { is_favorite: false, status: null })
+      void apiClient(`/api/v1/media/Manga/${extId}/favorite/`, { skipToast: true })
         .then((data: { is_favorite: boolean; status: 'reading' | 'completed' | 'plan_to_read' | null }) => {
           setIsFavorited(data.is_favorite);
           setFavoriteStatus(data.status);
@@ -134,30 +128,21 @@ export const useTachideskExplorer = () => {
           setIsFavorited(false);
           setFavoriteStatus(null);
         });
-      const res = await fetch(`/api/v1/media/Manga/${extId}/chapters/`);
-      if (res.ok) {
-        const data: Chapter[] = await res.json();
+      try {
+        const data: Chapter[] = await apiClient(`/api/v1/media/Manga/${extId}/chapters/`, { skipToast: true });
         setChapters(data);
-      } else {
-        const importRes = await fetch('/api/v1/explore/suwayomi/import/', {
+      } catch {
+        // Not imported yet — import from Suwayomi, then retry fetching chapters.
+        await apiClient('/api/v1/explore/suwayomi/import/', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            source_id: selectedSource,
-            suwayomi_manga_id: manga.id
-          })
+          body: JSON.stringify({ source_id: selectedSource, suwayomi_manga_id: manga.id }),
+          skipToast: true,
         });
-        if (importRes.ok) {
-          const chRes = await fetch(`/api/v1/media/Manga/${extId}/chapters/`);
-          if (chRes.ok) {
-            setChapters(await chRes.json());
-          }
-        }
+        const data: Chapter[] = await apiClient(`/api/v1/media/Manga/${extId}/chapters/`, { skipToast: true });
+        setChapters(data);
       }
-    } catch (err: unknown) {
-      console.error(err);
+    } catch {
+      // best-effort: the details panel simply stays empty on failure
     } finally {
       setLoadingDetails(false);
     }
@@ -168,23 +153,14 @@ export const useTachideskExplorer = () => {
     const extId = `suwayomi:${selectedSource}:${selectedManga.id}`;
     setTogglingFavorite(true);
     try {
-      const res = await fetch(`/api/v1/media/Manga/${extId}/favorite/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          source_id: selectedSource,
-          suwayomi_manga_id: selectedManga.id
-        })
-      });
-      if (res.ok) {
-        const data: { is_favorite: boolean; status: 'reading' | 'completed' | 'plan_to_read' | null } = await res.json();
-        setIsFavorited(data.is_favorite);
-        setFavoriteStatus(data.status);
-      } else {
-        throw new Error('Failed to toggle favorite');
-      }
+      const data: { is_favorite: boolean; status: 'reading' | 'completed' | 'plan_to_read' | null } =
+        await apiClient(`/api/v1/media/Manga/${extId}/favorite/`, {
+          method: 'POST',
+          body: JSON.stringify({ source_id: selectedSource, suwayomi_manga_id: selectedManga.id }),
+          skipToast: true,
+        });
+      setIsFavorited(data.is_favorite);
+      setFavoriteStatus(data.status);
     } catch {
       setError("Impossible de mettre à jour le statut favori");
     } finally {
@@ -197,24 +173,14 @@ export const useTachideskExplorer = () => {
     const extId = `suwayomi:${selectedSource}:${selectedManga.id}`;
     setTogglingFavorite(true);
     try {
-      const res = await fetch(`/api/v1/media/Manga/${extId}/favorite/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          source_id: selectedSource,
-          suwayomi_manga_id: selectedManga.id,
-          status: status
-        })
-      });
-      if (res.ok) {
-        const data: { is_favorite: boolean; status: 'reading' | 'completed' | 'plan_to_read' | null } = await res.json();
-        setIsFavorited(data.is_favorite);
-        setFavoriteStatus(data.status);
-      } else {
-        throw new Error('Failed to update favorite status');
-      }
+      const data: { is_favorite: boolean; status: 'reading' | 'completed' | 'plan_to_read' | null } =
+        await apiClient(`/api/v1/media/Manga/${extId}/favorite/`, {
+          method: 'POST',
+          body: JSON.stringify({ source_id: selectedSource, suwayomi_manga_id: selectedManga.id, status }),
+          skipToast: true,
+        });
+      setIsFavorited(data.is_favorite);
+      setFavoriteStatus(data.status);
     } catch {
       setError("Impossible de mettre à jour le statut favori");
     } finally {
@@ -230,18 +196,11 @@ export const useTachideskExplorer = () => {
     const extId = `suwayomi:${selectedSource}:${selectedManga.id}`;
 
     try {
-      const res = await fetch('/api/v1/explore/suwayomi/import/', {
+      await apiClient('/api/v1/explore/suwayomi/import/', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          source_id: selectedSource,
-          suwayomi_manga_id: selectedManga.id
-        })
+        body: JSON.stringify({ source_id: selectedSource, suwayomi_manga_id: selectedManga.id }),
+        skipToast: true,
       });
-
-      if (!res.ok) throw new Error("Erreur d'importation");
 
       setImportStatus("Redirection vers le lecteur...");
       navigate(`/media/manga/${extId}/${chapter.chapterNumber}/`);
@@ -257,23 +216,17 @@ export const useTachideskExplorer = () => {
     setActionProgress(prev => ({ ...prev, [pkgName]: true }));
     setError(null);
     try {
-      const res = await fetch('/api/v1/explore/suwayomi/extensions/action/', {
+      await apiClient('/api/v1/explore/suwayomi/extensions/action/', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ids: [pkgName],
-          action
-        })
+        body: JSON.stringify({ ids: [pkgName], action }),
+        skipToast: true,
       });
-      if (!res.ok) throw new Error(`L'action ${action} a échoué`);
 
       // Refresh both list of extensions and sources list to sync
       await fetchExtensions();
       await fetchSources();
-    } catch (err: unknown) {
-      setError(getErrorMessage(err) || `Une erreur est survenue lors de l'exécution de l'action ${action}`);
+    } catch {
+      setError(`L'action ${action} a échoué`);
     } finally {
       setActionProgress(prev => ({ ...prev, [pkgName]: false }));
     }

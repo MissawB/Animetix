@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Shield, Sparkles, AlertTriangle, Coins, RefreshCw, BarChart2, TrendingUp, HelpCircle } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
+import { apiClient } from '../../utils/apiClient';
 
 interface FinancialData {
   total_ai_cost: number;
@@ -34,11 +35,8 @@ const FinancialDashboardPage: React.FC = () => {
 
   const fetchData = useCallback(async () => {
     try {
-      const res = await fetch('/api/v1/billing/admin/financial-summary/');
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`);
-      }
-      const json = await res.json();
+      // skipToast: this page renders its own inline error panel.
+      const json = await apiClient('/api/v1/billing/admin/financial-summary/', { skipToast: true });
       setData(json);
       setError(null);
     } catch (err) {

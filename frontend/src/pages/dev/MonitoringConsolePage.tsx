@@ -1,22 +1,15 @@
 import React from 'react';
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { Button } from "../../components/ui/Button";
+import { apiClient } from "../../utils/apiClient";
 
 const MonitoringConsolePage: React.FC = () => {
   const triggerAction = async (action: string) => {
     try {
-      const response = await fetch(`/api/monitoring/${action}/`, { 
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1] || ''
-        }
-      });
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
+      // apiClient injects the CSRF token + Firebase auth header.
+      await apiClient(`/api/monitoring/${action}/`, { method: 'POST', skipToast: true });
       alert(`Action ${action} triggered successfully`);
-    } catch (error) {
-      console.error('Error triggering action:', error);
+    } catch {
       alert('Error triggering action');
     }
   };

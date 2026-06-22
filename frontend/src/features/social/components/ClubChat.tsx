@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Hash } from 'lucide-react';
 import { useAuthStore } from '../../../store/authStore';
+import { logger } from '../../../utils/logger';
 
 interface Message {
   id: string;
@@ -52,7 +53,7 @@ const ClubChat: React.FC<ClubChatProps> = ({ clubId, clubName }) => {
       const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const socketUrl = `${wsProtocol}//${window.location.host}/ws/club/${clubId}/`;
       
-      console.log(`Connecting to club chat WebSocket: ${socketUrl}`);
+      logger.log(`Connecting to club chat WebSocket: ${socketUrl}`);
       ws = new WebSocket(socketUrl);
       socketRef.current = ws;
 
@@ -67,7 +68,7 @@ const ClubChat: React.FC<ClubChatProps> = ({ clubId, clubName }) => {
           setIsConnected(false);
           // Only reconnect if the socket reference wasn't updated/closed intentionally
           if (socketRef.current === ws) {
-            console.log("WebSocket disconnected. Reconnecting in 3 seconds...");
+            logger.log("WebSocket disconnected. Reconnecting in 3 seconds...");
             reconnectTimeoutId = setTimeout(connectWebSocket, 3000);
           }
         }

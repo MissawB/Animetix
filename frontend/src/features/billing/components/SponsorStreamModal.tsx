@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Film, CheckCircle2, X, AlertTriangle, Play } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
+import { logAdEvent } from '../services/billingService';
 
 interface Props {
   actionType: 'boost' | 'refill';
@@ -113,13 +114,7 @@ export const SponsorStreamModal: React.FC<Props> = ({ actionType, onClose, onCon
 
   const sponsor = SPONSORS_CLIPS[actionType];
 
-  const logVideoImpression = () => {
-    fetch('/api/v1/billing/log_ad_event/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ event_type: 'impression', ad_type: 'video' })
-    }).catch(err => console.error('Failed to log video impression', err));
-  };
+  const logVideoImpression = () => logAdEvent('impression', 'video');
 
   useEffect(() => {
     if (hasError) {
