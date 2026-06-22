@@ -1,10 +1,10 @@
 """Behavior tests for PGVectorRepositoryAdapter.
 
 The adapter delegates all vector work to ``self.manager`` (the module-level
-``chroma_manager``) and reads catalogs/latent-spaces from JSON files on disk.
+``vector_manager``) and reads catalogs/latent-spaces from JSON files on disk.
 We construct the adapter with a real (temp) ``project_root`` for the file paths
 and replace ``adapter.manager`` with a MagicMock that returns crafted collection
-results — so no real pgvector / Chroma / Django DB is touched.
+results — so no real pgvector / pgvector / Django DB is touched.
 
 Assertions target the REAL logic: the nearest-neighbor embedding round-trip,
 the Matryoshka-sliced cosine similarity + cache write, catalog mapping /
@@ -27,7 +27,7 @@ from adapters.persistence.pgvector_repository_adapter import (
 @pytest.fixture
 def adapter(tmp_path):
     a = PGVectorRepositoryAdapter(project_root=str(tmp_path))
-    a.manager = MagicMock(name="chroma_manager")
+    a.manager = MagicMock(name="vector_manager")
     return a
 
 
@@ -281,7 +281,7 @@ def test_load_latent_space_none_when_nothing_on_disk(adapter):
 
 
 def test_search_media_items_alloydb_path(adapter, mocker):
-    mocker.patch("pipeline.chroma_client.is_alloydb_ai_supported", return_value=True)
+    mocker.patch("pipeline.vector_client.is_alloydb_ai_supported", return_value=True)
     coll = adapter.manager.get_collection.return_value
     coll.query.return_value = {
         "metadatas": [[{"title": "X"}]],
@@ -296,7 +296,7 @@ def test_search_media_items_alloydb_path(adapter, mocker):
 
 
 def test_search_media_items_local_embedding_truncates_dim(adapter, mocker):
-    mocker.patch("pipeline.chroma_client.is_alloydb_ai_supported", return_value=False)
+    mocker.patch("pipeline.vector_client.is_alloydb_ai_supported", return_value=False)
     coll = adapter.manager.get_collection.return_value
     # Existing record has a 2-dim embedding -> expected_dim becomes 2.
     coll.get.return_value = {"embeddings": [[0.0, 0.0]]}
@@ -312,7 +312,7 @@ def test_search_media_items_local_embedding_truncates_dim(adapter, mocker):
 
 
 def test_search_media_items_local_embedding_pads_dim(adapter, mocker):
-    mocker.patch("pipeline.chroma_client.is_alloydb_ai_supported", return_value=False)
+    mocker.patch("pipeline.vector_client.is_alloydb_ai_supported", return_value=False)
     coll = adapter.manager.get_collection.return_value
     coll.get.return_value = {"embeddings": [[0.0, 0.0, 0.0, 0.0]]}  # dim 4
     coll.query.return_value = {"metadatas": [[]], "ids": [[]]}
@@ -325,7 +325,7 @@ def test_search_media_items_local_embedding_pads_dim(adapter, mocker):
 
 
 def test_search_media_items_defaults_media_type_to_anime(adapter, mocker):
-    mocker.patch("pipeline.chroma_client.is_alloydb_ai_supported", return_value=True)
+    mocker.patch("pipeline.vector_client.is_alloydb_ai_supported", return_value=True)
     coll = adapter.manager.get_collection.return_value
     coll.query.return_value = {"metadatas": [[]], "ids": [[]]}
 
@@ -335,7 +335,7 @@ def test_search_media_items_defaults_media_type_to_anime(adapter, mocker):
 
 
 def test_search_media_items_empty_on_error(adapter, mocker):
-    mocker.patch("pipeline.chroma_client.is_alloydb_ai_supported", return_value=True)
+    mocker.patch("pipeline.vector_client.is_alloydb_ai_supported", return_value=True)
     adapter.manager.get_collection.side_effect = RuntimeError("down")
     assert adapter.search_media_items("q", media_type="Anime") == []
 

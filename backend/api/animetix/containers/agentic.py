@@ -236,7 +236,7 @@ class AgenticContainer(containers.DeclarativeContainer):
         LazyClass(
             "core.domain.services.long_term_memory_service", "LongTermMemoryService"
         ),
-        chroma_resource=persistence.repository,
+        vector_store=persistence.repository,
         inference_engine=inference.inference_engine,
         prompt_manager=infrastructure.prompt_manager,
     )

@@ -2,7 +2,7 @@ import json
 import logging
 import os
 
-from pipeline.chroma_client import chroma_manager
+from pipeline.vector_client import vector_manager
 from sentence_transformers import SentenceTransformer
 
 logger = logging.getLogger("animetix.pipeline.combat")
@@ -14,7 +14,7 @@ BASE_DIR = os.path.dirname(
 COMBAT_DATA_PATH = os.path.join(BASE_DIR, "data", "processed", "combat_data.json")
 
 
-def run_combat_vectorization(chroma_res=None):
+def run_combat_vectorization(vector_res=None):
     """
     Vectorizes combat stats and abilities for semantic search of similar power levels.
     """
@@ -59,11 +59,11 @@ def run_combat_vectorization(chroma_res=None):
     model = SentenceTransformer("paraphrase-multilingual-mpnet-base-v2")
     embeddings = model.encode(corpus, show_progress_bar=True)
 
-    # Sync with ChromaDB
+    # Sync with pgvector
     collection = (
-        chroma_res.get_collection("combat_profiles")
-        if chroma_res
-        else chroma_manager.get_collection("combat_profiles")
+        vector_res.get_collection("combat_profiles")
+        if vector_res
+        else vector_manager.get_collection("combat_profiles")
     )
 
     try:
@@ -71,14 +71,14 @@ def run_combat_vectorization(chroma_res=None):
         existing = collection.get(ids=ids)
         if existing["ids"]:
             logger.info(
-                f"♻️ Updating {len(existing['ids'])} existing profiles in ChromaDB..."
+                f"♻️ Updating {len(existing['ids'])} existing profiles in pgvector..."
             )
             collection.delete(ids=existing["ids"])
 
         collection.add(ids=ids, embeddings=embeddings.tolist(), metadatas=metadatas)
-        logger.info("✅ ChromaDB combat profiles synchronization complete.")
+        logger.info("✅ pgvector combat profiles synchronization complete.")
     except Exception as e:
-        logger.error(f"❌ ChromaDB Error: {e}")
+        logger.error(f"❌ pgvector Error: {e}")
         return False
 
     return True

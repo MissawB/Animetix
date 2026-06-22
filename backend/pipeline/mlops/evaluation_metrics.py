@@ -64,8 +64,8 @@ def ragas_performance_comparison():
 
     eval_service = RagasEvalService(judge_engine=get_container().inference_engine())
 
-    from pipeline.chroma_client import chroma_manager  # noqa: E402
     from pipeline.neo4j_client import neo4j_manager  # noqa: E402
+    from pipeline.vector_client import vector_manager  # noqa: E402
 
     embed_model = SentenceTransformer("paraphrase-multilingual-mpnet-base-v2")
     brain_url = os.getenv("BRAIN_API_URL", "http://127.0.0.1:7861")
@@ -97,7 +97,7 @@ def ragas_performance_comparison():
 
             # Retrieval
             try:
-                res = chroma_manager.query_collection(
+                res = vector_manager.query_collection(
                     "anime_thematic", q_vec, n_results=3
                 )
                 contexts = [str(doc) for doc in res["documents"][0] if doc is not None]

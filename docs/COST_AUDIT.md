@@ -38,7 +38,7 @@ Estimation based on a production deployment on **Google Cloud Platform (GCP)** o
 | **GPU Inference (`animetix-brain`)** | Cloud Run GPU (serverless, on-demand) | **$0 idle → $450-1200 under load** | Inference for Ghost Labs & SLMs |
 | **Cloud Run / GKE** | Django Backend | **$40 - $150** | API, Celery Workers, WebSockets |
 | **Databases** | Cloud SQL + Neo4j Aura | **$80 - $200** | Relational and Graph persistence |
-| **Vector Store** | Vertex AI Vector Search (managed) | **$30 - $80** | RAG Engine (Lore & Semantics) |
+| **Vector Store** | pgvector (Postgres extension) | **$30 - $60** | RAG Engine (Lore & Semantics) |
 | **Cloud Storage** | GCS Buckets | **$15 - $50** | Media assets, manga pages |
 
 **Total Estimated Infrastructure Cost: ~$150 to $1600 / month** (the wide range reflects the GPU service, which is the dominant *variable* — not fixed — cost).

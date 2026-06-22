@@ -25,7 +25,6 @@ from django.conf import settings  # noqa: E402
 if not settings.configured:
     settings.configure(
         PROJECT_ROOT=BASE_DIR,
-        CHROMA_DB_PATH=os.path.join(BASE_DIR, "data", "chroma_db"),
         MODELS_DIR=os.path.join(BASE_DIR, "data", "models"),
         DEBUG=True,
         DATABASES={

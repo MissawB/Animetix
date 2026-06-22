@@ -5,7 +5,7 @@ from typing import List
 class VectorStorePort(ABC):
     """Port de lecture d'un magasin de vecteurs (embeddings).
 
-    Abstrait le client de la base vectorielle (Chroma, pgvector…) afin que le
+    Abstrait le client de la base vectorielle (pgvector/AlloyDB) afin que le
     `core` ne dépende pas de la couche `pipeline`/infrastructure.
     """
 

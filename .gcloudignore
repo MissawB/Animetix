@@ -16,7 +16,6 @@ checkpoints/
 !data/
 data/raw/
 data/models/
-data/chroma_db/
 data/mlops/
 data/audio/
 .tmp_dagster_home_*

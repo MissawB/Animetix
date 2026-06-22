@@ -19,7 +19,7 @@ We built **Animetix** to solve this. Our inspiration was to construct a cognitiv
 Animetix is an intelligent ecosystem composed of two primary engines: a **Cognitive Discovery Engine** and an **AI-Driven Game Suite**.
 
 ### 1. Intelligent RAG 2.0 Discovery
-*   **Hybrid Cognitive Memory:** Integrates **ChromaDB** for vector semantic indexing (HNSW search over plot outlines and tropes) and **Neo4j** for complex relationship traversals (interconnecting studios, creators, characters, and adaptations.) 
+*   **Hybrid Cognitive Memory:** Integrates **pgvector** for vector semantic indexing (HNSW search over plot outlines and tropes) and **Neo4j** for complex relationship traversals (interconnecting studios, creators, characters, and adaptations.) 
 * **Multi-Scale Search (MRL):** Employs **Matryoshka Representation Learning** (using Jina-v3) to run lightning-fast rough filters on the first 128 dimensions, then zooming into the full 1024-dimensional space for exact matches.
 * **Cross-Encoder Reranking:** Leverages a **BGE-Reranker** to analyze query-context pairs jointly, calculating an absolute relevance score to ensure high precision and combat hallucination.
 
@@ -59,7 +59,7 @@ Building a high-performance, local-first AI system came with severe technical bo
 
 ## 🏆 Accomplishments that we're proud of
 
-* **RAG 2.0 Cohesion:** Bridging the gap between the search speed of vector stores (**ChromaDB**) and the deep relationship reasoning of graphs (**Neo4j**) to prevent context fragmentation.
+* **RAG 2.0 Cohesion:** Bridging the gap between the search speed of vector stores (**pgvector**) and the deep relationship reasoning of graphs (**Neo4j**) to prevent context fragmentation.
 * **Perfect Test Suite Stability:** Restoring and passing a massive test suite of **over 430 tests** with full mock coverage, ensuring all services are production-ready.
 * **The Z3 Solver Fusion:** Fusing creative LLM outputs with absolute mathematical logic solving to create a perfectly balanced, provable deductive game (**The Paradox**).
 * **Defensive AI Engineering:** Implementation of strict evaluation guardrails (**ResponseCritic**, **ResponseJudge**), Paxos-style Swarm consensus, and a failsafe RAG mode that ensures high factuality scores and guarantees user safety.
@@ -116,7 +116,7 @@ The platform leverages a cutting-edge stack spanning front-end rendering engines
 *   **Howler.js**: Powers real-time, high-fidelity game audio, and dynamic soundscapes.
 
 ### 4. Databases, Vector Stores, & Cache
-* **ChromaDB (1.5)**: HNSW vector search database acting as semantic memory.
+* **pgvector**: HNSW vector search (PostgreSQL extension) acting as semantic memory.
 * **Neo4j (6.1)**: Distributed Property Graph database modeling anime-character-studio relations.
 * **PostgreSQL & psycopg2-binary**: Robust transaction store (with migration scripts).
 * **Redis (7.4)**: Real-time channel layering, cache memory, and WebSocket message broker.
@@ -162,7 +162,6 @@ The platform leverages a cutting-edge stack spanning front-end rendering engines
 This section highlights dependencies observed in the project that are not explicitly listed or detailed in the `Technology Stack & Detailed Dependencies` section above. These require further investigation to ensure accuracy and completeness of the documentation.
 
 ### Python Dependencies:
-*   ChromaDB
 *   Ollama
 *   LangChain
 *   LangGraph

@@ -147,7 +147,7 @@ jobs:
     # docker-compose. NON-BLOQUANT (continue-on-error) et ignoré sur les PR pour les
     # garder rapides — tourne sur push main + run manuel. ollama n'est PAS démarré ici,
     # donc les tests dépendant d'un LLM live se skippent gracieusement (cf. conftest) ;
-    # les autres exercent chromadb/neo4j/redis.
+    # les autres exercent neo4j/redis.
     needs: [lint]
     if: github.event_name != 'pull_request'
     continue-on-error: true

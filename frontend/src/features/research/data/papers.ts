@@ -194,7 +194,7 @@ export const researchPapers: ResearchPaper[] = [
     url: 'https://huggingface.co/papers/2205.13147',
     category: 'rag',
     keyConcept: 'Représentations vectorielles tronquables hyper-performantes.',
-    implementation: 'Optimisation de la Vector DB ChromaDB pour la recherche sémantique.'
+    implementation: 'Optimisation de la Vector DB pgvector pour la recherche sémantique.'
   },
   {
     id: 'lego-graphrag',

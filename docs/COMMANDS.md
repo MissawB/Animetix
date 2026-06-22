@@ -9,7 +9,7 @@ This guide lists all the commands needed to run, maintain, evaluate, test, and d
 ---
 
 ## 🚀 1. Deployment & Infrastructure (Docker)
-Manages the global production/staging infrastructure, including PostgreSQL, Neo4j, Redis, ChromaDB, and inference containers.
+Manages the global production/staging infrastructure, including PostgreSQL (pgvector), Neo4j, Redis, and inference containers.
 
 | Command | Directory | Description |
 | :--- | :--- | :--- |
@@ -133,7 +133,7 @@ Maintenance scripts, database reconciliation, and background worker pools.
 | :--- | :--- | :--- |
 | `pip install -r requirements.txt` | Root | Installs and updates required Python libraries. |
 | `python scripts/reconcile_db.py` | Root | **(CRITICAL)** Analyzes and resolves sync discrepancies between PostgreSQL and Neo4j. |
-| `python scripts/check_chroma_counts.py` | Root | Inspects document counts in the fallback vector database. |
+| `python scripts/check_vector_counts.py` | Root | Inspects document counts in the pgvector vector store. |
 | `python scripts/check_db_tables.py` | Root | Provides a quick inspection of PostgreSQL physical table statuses. |
 | `python scripts/check_instantiation.py` | Root | Dry-runs adapter instantiations to validate bindings and type signatures. |
 | `python scripts/check_migrations_any_db.py` | Root | Inspects migration status on any target database. |

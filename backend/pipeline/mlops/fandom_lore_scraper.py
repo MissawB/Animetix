@@ -234,11 +234,11 @@ class FandomLoreScraper:
                     indexed_count += len(chunks)
                     continue
 
-                # Indexation ChromaDB réelle via le repository
+                # Indexation pgvector réelle via le repository
                 if self.container:
                     try:
                         repo = self.container.repository()
-                        collection_name = repo.chroma.coll_names.get(
+                        collection_name = repo.vectors.coll_names.get(
                             "Anime", "anime_thematic"
                         )
 
@@ -247,7 +247,7 @@ class FandomLoreScraper:
                         metadatas = []
 
                         # Récupérer l'adapter d'embeddings
-                        embedding_fn = repo.chroma.embedding_fn
+                        embedding_fn = repo.vectors.embedding_fn
 
                         for i, chunk in enumerate(chunks):
                             chunk_text = context_header + chunk
@@ -267,16 +267,16 @@ class FandomLoreScraper:
                                 }
                             )
 
-                        # Upsert dans ChromaDB
-                        repo.chroma.upsert_items(
+                        # Upsert dans pgvector
+                        repo.vectors.upsert_items(
                             collection_name, ids, embeddings, metadatas
                         )
                         logger.info(
-                            f"✅ Upserted {len(chunks)} lore chunks for {matched_key} in ChromaDB."
+                            f"✅ Upserted {len(chunks)} lore chunks for {matched_key} in pgvector."
                         )
                         indexed_count += len(chunks)
                     except Exception as e:
-                        logger.error(f"❌ Failed to index chunks in ChromaDB: {e}")
+                        logger.error(f"❌ Failed to index chunks in pgvector: {e}")
 
         logger.info(
             f"✨ Fandom Lore Pipeline finished. Processed {indexed_count} total ssemantic chunks."
@@ -292,7 +292,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Simule l'indexation sans écrire dans ChromaDB.",
+        help="Simule l'indexation sans écrire dans pgvector.",
     )
     args = parser.parse_args()
 

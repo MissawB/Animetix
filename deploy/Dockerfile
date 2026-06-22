@@ -56,7 +56,7 @@ COPY --chown=appuser:appuser . .
 # Aggregate React assets with Django statics
 RUN python backend/api/manage.py collectstatic --noinput
 
-RUN mkdir -p data/raw data/processed data/models data/artifacts data/chroma_db && chown -R appuser:appuser /app
+RUN mkdir -p data/raw data/processed data/models data/artifacts && chown -R appuser:appuser /app
 USER appuser
 EXPOSE 7860
 CMD ["supervisord", "-c", "deploy/supervisord.conf"]

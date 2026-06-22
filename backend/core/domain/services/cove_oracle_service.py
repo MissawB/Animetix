@@ -5,6 +5,7 @@ import orjson
 from core.ports.inference_port import InferencePort
 
 from ..entities.ai_schemas import CoVePlan
+from .graph_health import is_graph_degraded
 from .prompt_manager import PromptManager
 
 logger = logging.getLogger("animetix.oracle")
@@ -44,6 +45,7 @@ class CoveOracleService:
             "verification_plan": [],
             "verifications": [],
             "final_response": "",
+            "graph_degraded": False,
         }
 
         # Étape 1 : Générer une réponse initiale (Baseline)
@@ -83,13 +85,12 @@ class CoveOracleService:
             ent_res = self.inference_engine.generate(ent_prompt)
             entities = [e.strip() for e in ent_res.text.split(",")]
 
-            # Interrogation de Neo4j (GraphRAG)
-            graph_context = ""
-            if self.neo4j_manager:
-                for ent in entities:
-                    ctx = self.neo4j_manager.get_creator_network_context(ent)
-                    if "Pas de données" not in ctx:
-                        graph_context += f"{ctx}\n"
+            # Interrogation de Neo4j (GraphRAG) avec résilience : si le graphe
+            # est indisponible, on n'invente pas un "non vérifié" — on signale
+            # l'état dégradé pour que la synthèse finale en tienne compte.
+            graph_context, degraded = self._gather_graph_context(entities)
+            if degraded:
+                trace["graph_degraded"] = True
 
             # Évaluation du fait avec le contexte vérifié
             eval_prompt = self.prompt_manager.get_prompt(
@@ -121,6 +122,30 @@ class CoveOracleService:
         trace["final_response"] = final_res.text
 
         return trace
+
+    def _gather_graph_context(self, entities) -> tuple[str, bool]:
+        """Collect creator-network context for the entities, outage-resilient.
+
+        Returns ``(graph_context, degraded)``. When no graph is wired, returns
+        ``("", False)``. When the graph is unreachable — detected up front or
+        via a failing live query — returns the context gathered so far and
+        ``degraded=True`` instead of raising or silently reporting "no data".
+        """
+        if not self.neo4j_manager:
+            return "", False
+        if is_graph_degraded(self.neo4j_manager):
+            return "", True
+
+        graph_context = ""
+        for ent in entities:
+            try:
+                ctx = self.neo4j_manager.get_creator_network_context(ent)
+            except Exception as e:
+                logger.warning(f"CoVe graph lookup failed for '{ent}': {e}")
+                return graph_context, True
+            if "Pas de données" not in ctx:
+                graph_context += f"{ctx}\n"
+        return graph_context, False
 
     def _safe_json_generate(
         self, prompt: str, system_prompt: str = "Réponds UNIQUEMENT en JSON."

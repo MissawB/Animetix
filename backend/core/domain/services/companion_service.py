@@ -61,7 +61,13 @@ class CompanionService:
 
     def _sanitize_and_delimit(self, text: str, tag: str) -> str:
         """
-        Sanitizes input by stripping known prompt injection keywords and wraps it in XML-like tags.
+        Sanitizes input and wraps it in XML-like delimiters.
+
+        Two layers: a keyword denylist (defense-in-depth, best-effort) and —
+        critically — escaping of the ``<`` / ``>`` delimiter characters so user
+        content can never close the ``<tag>…</tag>`` wrapper and inject
+        instructions outside it (tag-breaking prompt injection). The escaping is
+        the structural guarantee; the denylist is not relied upon for safety.
         """
         if not text:
             return ""
@@ -82,5 +88,10 @@ class CompanionService:
         for kw in forbidden:
             pattern = re.escape(kw)
             sanitized = re.sub(pattern, "", sanitized, flags=re.IGNORECASE)
+
+        # Neutralize the delimiters so the payload cannot break out of the
+        # wrapper (e.g. "</user_input>…<user_input>"). Mirrors the escaping in
+        # core.utils.security.sanitize_for_prompt.
+        sanitized = sanitized.replace("<", "&lt;").replace(">", "&gt;")
 
         return f"<{tag}>{sanitized}</{tag}>"

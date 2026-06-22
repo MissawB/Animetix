@@ -25,9 +25,9 @@ def test_beam_pipeline_execution():
         repo = container.persistence.repository()
 
         # Mock embedding_fn to avoid loading SentenceTransformer model during tests
-        repo.chroma._embedding_fn = lambda texts: [[0.1] * 384 for _ in texts]
+        repo.vectors._embedding_fn = lambda texts: [[0.1] * 384 for _ in texts]
 
-        with patch.object(repo.chroma, "upsert_items") as mock_upsert:
+        with patch.object(repo.vectors, "upsert_items") as mock_upsert:
             from backend.pipeline.mlops.lore_ingestion_beam import (  # noqa: E402
                 ChunkTextDoFn,
                 GenerateEmbeddingsDoFn,

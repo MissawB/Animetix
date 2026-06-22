@@ -26,10 +26,10 @@ class DjangoSemanticCacheAdapter(SemanticCachePort):
         if not query_embedding:
             return None
 
-        from pipeline.chroma_client import chroma_manager  # noqa: E402
+        from pipeline.vector_client import vector_manager  # noqa: E402
 
         try:
-            results = chroma_manager.query_collection(
+            results = vector_manager.query_collection(
                 collection_name=self.collection_name,
                 query_embeddings=[query_embedding],
                 n_results=1,
@@ -64,7 +64,7 @@ class DjangoSemanticCacheAdapter(SemanticCachePort):
 
     def set(self, query: str, query_embedding: List[float], response: str) -> None:
         from animetix.models import SemanticCache  # noqa: E402
-        from pipeline.chroma_client import chroma_manager  # noqa: E402
+        from pipeline.vector_client import vector_manager  # noqa: E402
 
         # 1. Sauvegarde relationnelle (pour correspondance exacte)
         SemanticCache.objects.update_or_create(
@@ -75,7 +75,7 @@ class DjangoSemanticCacheAdapter(SemanticCachePort):
         if query_embedding:
             query_hash = hashlib.sha256(query.encode("utf-8")).hexdigest()
             try:
-                chroma_manager.add_to_collection(
+                vector_manager.add_to_collection(
                     collection_name=self.collection_name,
                     ids=[query_hash],
                     embeddings=[query_embedding],

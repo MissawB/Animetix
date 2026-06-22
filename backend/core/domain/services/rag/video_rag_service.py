@@ -22,7 +22,7 @@ class VideoRAGService:
         self.collection_name = "video_temporal"
 
     def index_video(self, video_id: str, video_data: bytes) -> int:
-        """Découpe, analyse et indexe une vidéo dans ChromaDB."""
+        """Découpe, analyse et indexe une vidéo dans pgvector."""
         if not self.repository:
             logger.error("No repository provided for Video-RAG indexing.")
             return 0

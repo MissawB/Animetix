@@ -3,11 +3,11 @@
 Covers ``FandomLoreScraper``: popular-franchise discovery (SQL hit / SQL error /
 fallback), polite URL scraping (BeautifulSoup noise-stripping, regex fallback,
 HTTP-error resilience), semantic sentence chunking, and the end-to-end
-``execute_pipeline`` in both dry-run and real-ChromaDB-upsert modes plus its
+``execute_pipeline`` in both dry-run and real-pgvector-upsert modes plus its
 skip / scrape-failure branches.
 
 All external I/O is mocked in the module namespace: ``safe_http_request`` (HTTP),
-the DI container / ChromaDB repository, and the ``MediaItem`` ORM. Real (small)
+the DI container / pgvector repository, and the ``MediaItem`` ORM. Real (small)
 HTML strings are fed to BeautifulSoup so the real parsing runs. No real network,
 DB, or model work happens.
 """
@@ -194,15 +194,15 @@ def test_pipeline_real_upsert_payload(mocker, scraper):
 
     container = MagicMock()
     repo = container.repository.return_value
-    repo.chroma.coll_names = {"Anime": "anime_thematic"}
-    repo.chroma.embedding_fn = lambda texts: [[0.1, 0.2, 0.3] for _ in texts]
+    repo.vectors.coll_names = {"Anime": "anime_thematic"}
+    repo.vectors.embedding_fn = lambda texts: [[0.1, 0.2, 0.3] for _ in texts]
     scraper.container = container
     scraper.dry_run = False
 
     scraper.execute_pipeline()
 
-    repo.chroma.upsert_items.assert_called_once()
-    coll, ids, embeddings, metadatas = repo.chroma.upsert_items.call_args.args
+    repo.vectors.upsert_items.assert_called_once()
+    coll, ids, embeddings, metadatas = repo.vectors.upsert_items.call_args.args
     assert coll == "anime_thematic"
     assert len(ids) == len(embeddings) == len(metadatas) >= 1
     assert all(i.startswith("fandom_naruto_") for i in ids)
@@ -221,9 +221,9 @@ def test_pipeline_resilient_to_upsert_error(mocker, scraper):
     mocker.patch.object(scraper, "scrape_url", return_value="A sentence here. Two.")
     container = MagicMock()
     repo = container.repository.return_value
-    repo.chroma.coll_names = {"Anime": "anime_thematic"}
-    repo.chroma.embedding_fn = lambda texts: [[0.0] for _ in texts]
-    repo.chroma.upsert_items.side_effect = RuntimeError("chroma down")
+    repo.vectors.coll_names = {"Anime": "anime_thematic"}
+    repo.vectors.embedding_fn = lambda texts: [[0.0] for _ in texts]
+    repo.vectors.upsert_items.side_effect = RuntimeError("pgvector down")
     scraper.container = container
     scraper.dry_run = False
     err = mocker.patch.object(fls.logger, "error")
@@ -239,4 +239,4 @@ def test_pipeline_no_texts_when_all_scrapes_fail(mocker, scraper):
     scraper.container = container
     scraper.dry_run = False
     scraper.execute_pipeline()
-    container.repository.return_value.chroma.upsert_items.assert_not_called()
+    container.repository.return_value.vectors.upsert_items.assert_not_called()

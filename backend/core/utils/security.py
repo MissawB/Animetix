@@ -73,7 +73,6 @@ ALLOWED_INTERNAL_HOSTS = [
     "brain",
     "db",
     "redis",
-    "chromadb",
     "neo4j",
     "localhost",
     "127.0.0.1",

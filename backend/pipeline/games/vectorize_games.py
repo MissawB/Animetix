@@ -12,10 +12,10 @@ logger = logging.getLogger("animetix.pipeline." + __name__)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(
     os.path.dirname(BASE_DIR)
-)  # Pour importer chroma_client si besoin (ou ajuster selon structure)
+)  # Pour importer vector_client si besoin (ou ajuster selon structure)
 # Plus simple:
 sys.path.append(os.path.join(BASE_DIR, "pipeline"))
-from chroma_client import chroma_manager  # noqa: E402
+from vector_client import vector_manager  # noqa: E402
 
 CLEAN_DB = os.path.join(BASE_DIR, "data", "processed", "clean_root_games.json")
 LOOKUP_FILE = os.path.join(BASE_DIR, "data", "artifacts", "game_data_for_lookup.json")
@@ -24,7 +24,7 @@ VEC_PLOT = os.path.join(BASE_DIR, "data", "artifacts", "game_plot_vectors.npy")
 VEC_VIBE = os.path.join(BASE_DIR, "data", "artifacts", "game_vibe_vectors.npy")
 
 
-def run_vectorization(chroma_res=None):
+def run_vectorization(vector_res=None):
     if not os.path.exists(CLEAN_DB):
         logger.error(f"❌ {CLEAN_DB} not found.")
         return False
@@ -103,19 +103,19 @@ def run_vectorization(chroma_res=None):
     new_plot = model.encode(plot_corpus, show_progress_bar=True)
     new_vibe = model.encode(vibe_corpus, show_progress_bar=True)
 
-    # --- STOCKAGE CHROMADB ---
-    logger.info("🚀 Syncing with ChromaDB...")
+    # --- STOCKAGE PGVECTOR ---
+    logger.info("🚀 Syncing with pgvector...")
     try:
         ids = [str(item["id"]) for item in new_data_for_lookup]
         metadatas = new_data_for_lookup
 
-        manager = chroma_res.manager if chroma_res else chroma_manager
+        manager = vector_res.manager if vector_res else vector_manager
         manager.add_to_collection("game_thematic", ids, new_thematic, metadatas)
         manager.add_to_collection("game_plot", ids, new_plot, metadatas)
         manager.add_to_collection("game_vibe", ids, new_vibe, metadatas)
-        logger.info("✅ ChromaDB synchronization complete.")
+        logger.info("✅ pgvector synchronization complete.")
     except Exception as e:
-        logger.warning(f"⚠️ ChromaDB Error: {e}")
+        logger.warning(f"⚠️ pgvector Error: {e}")
 
     # --- Fusion et Sauvegarde Backup ---
     logger.info("Merging and saving artifacts...")

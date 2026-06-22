@@ -1,5 +1,5 @@
 import pytest
-from pipeline.chroma_client import chroma_manager
+from pipeline.vector_client import vector_manager
 
 
 @pytest.mark.django_db
@@ -7,10 +7,10 @@ def test_compatibility_vector_client():
     collection_name = "test_coll_client"
 
     # 1. Clean collection
-    chroma_manager.delete_collection(collection_name)
+    vector_manager.delete_collection(collection_name)
 
     # 2. Get collection
-    coll = chroma_manager.get_collection(collection_name)
+    coll = vector_manager.get_collection(collection_name)
     assert coll.count() == 0
 
     # 3. Add items

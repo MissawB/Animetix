@@ -7,8 +7,8 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-from pipeline.chroma_client import chroma_manager
 from pipeline.neo4j_client import neo4j_manager
+from pipeline.vector_client import vector_manager
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
@@ -51,7 +51,7 @@ class RAGEvaluator:
         """Récupère le contexte et les IDs de chunks/médias associés."""
         query_embedding = self.embed_model.encode([query]).tolist()
         try:
-            results = chroma_manager.query_collection(
+            results = vector_manager.query_collection(
                 "anime_thematic", query_embedding, n_results=3
             )
             vector_contexts = [

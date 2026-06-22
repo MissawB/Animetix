@@ -15,7 +15,7 @@ Le rangement suit les **couches** de l'architecture (hexagonale + Django), pas l
 | `tests/adapters/` | **Adapters** (inference / persistence) qui implémentent les ports | `test_fallback_adapter.py`, `test_pgvector_repository_adapter.py` |
 | `tests/api/` | **Endpoints DRF / consumers** (couche HTTP/WS Django) | `test_admin.py`, `test_companion.py` |
 | `tests/backend/` | **Projet Django** transverse : settings, middleware, ASGI, management commands, tasks Celery, modèles | `test_settings.py`, `test_middleware_async.py`, `tasks/…` |
-| `tests/pipeline/` | **Pipeline MLOps & scrapers** (ingestion, enrichissement, neo4j/chroma) | `pipeline/manga/…`, `test_enrich_db_scraper.py` |
+| `tests/pipeline/` | **Pipeline MLOps & scrapers** (ingestion, enrichissement, neo4j/pgvector) | `pipeline/manga/…`, `test_enrich_db_scraper.py` |
 | `tests/mlops/` | **MLOps** : datasets DPO/SFT, provenance, eval | `test_dpo_dataset_compiler.py` |
 | `tests/scripts/`, `tests/security/`, `tests/deploy/` | scripts utilitaires / garde-fous sécurité / scripts de déploiement | — |
 | `tests/helpers/` | **Utilitaires de test partagés** (PAS des tests) | `image_utils.py` |

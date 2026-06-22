@@ -6,7 +6,7 @@ from core.domain.services.prompt_manager import PromptManager
 
 
 @pytest.fixture
-def mock_chroma():
+def mock_vectors():
     return MagicMock()
 
 
@@ -26,18 +26,18 @@ def mock_prompt_manager():
 
 
 @pytest.fixture
-def memory_service(mock_chroma, mock_engine, mock_prompt_manager):
+def memory_service(mock_vectors, mock_engine, mock_prompt_manager):
     return LongTermMemoryService(
-        chroma_resource=mock_chroma,
+        vector_store=mock_vectors,
         inference_engine=mock_engine,
         prompt_manager=mock_prompt_manager,
     )
 
 
-def test_store_memory(memory_service, mock_chroma, mock_engine, mock_prompt_manager):
+def test_store_memory(memory_service, mock_vectors, mock_engine, mock_prompt_manager):
     # Setup mocks
     mock_coll = MagicMock()
-    mock_chroma.get_collection.return_value = mock_coll
+    mock_vectors.get_collection.return_value = mock_coll
     mock_engine.generate.return_value = "User likes action anime."
 
     history = [{"role": "user", "content": "I love Naruto"}]
@@ -56,9 +56,9 @@ def test_store_memory(memory_service, mock_chroma, mock_engine, mock_prompt_mana
     assert kwargs["metadatas"][0]["user_id"] == "user123"
 
 
-def test_retrieve_relevant_memories(memory_service, mock_chroma):
+def test_retrieve_relevant_memories(memory_service, mock_vectors):
     mock_coll = MagicMock()
-    mock_chroma.get_collection.return_value = mock_coll
+    mock_vectors.get_collection.return_value = mock_coll
     mock_coll.query.return_value = {"documents": [["Memory 1", "Memory 2"]]}
 
     res = memory_service.retrieve_relevant_memories("user123", "Naruto")

@@ -6,20 +6,20 @@ import sys
 # Détection robuste de la racine du projet
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(os.path.join(BASE_DIR, "pipeline"))
-from chroma_client import chroma_manager  # noqa: E402
+from vector_client import vector_manager  # noqa: E402
 
 logger = logging.getLogger("animetix")
 
-logger.info("🔗 Starting Cross-Media Mapping (Characters <-> Actors) via ChromaDB...")
+logger.info("🔗 Starting Cross-Media Mapping (Characters <-> Actors) via pgvector...")
 
 # Fichier de sortie
 MAP_CHAR_ACTOR = os.path.join(BASE_DIR, "data", "artifacts", "char_to_actor_map.json")
 
 
-def run_mapping(chroma_res=None):
+def run_mapping(vector_res=None):
     logger.info("   - Mapping character_vibe to actor_vibe...")
 
-    manager = chroma_res.manager if chroma_res else chroma_manager
+    manager = vector_res.manager if vector_res else vector_manager
     try:
         source_coll = manager.get_collection("character_vibe")
         target_coll = manager.get_collection("actor_vibe")
@@ -52,7 +52,7 @@ def run_mapping(chroma_res=None):
         for j, char_id in enumerate(batch_ids):
             char_name = batch_meta[j].get(
                 "title"
-            )  # 'title' est le nom du perso dans les metadata Chroma
+            )  # 'title' est le nom du perso dans les metadata pgvector
 
             if results["metadatas"][j]:
                 actor_meta = results["metadatas"][j][0]

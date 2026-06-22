@@ -15,17 +15,17 @@ logger = logging.getLogger("animetix.memory.compressor")
 class EpisodicMemoryCompressor:
     def __init__(
         self,
-        chroma_resource,
+        vector_store,
         inference_engine,
         neo4j_manager: Optional[GraphPersistencePort] = None,
     ):
-        self.chroma = chroma_resource
+        self.vectors = vector_store
         self.llm = inference_engine
         self.neo4j_manager = neo4j_manager
         self.collection_name = "user_long_term_memories"
 
     def _get_collection(self):
-        return self.chroma.get_collection(self.collection_name)
+        return self.vectors.get_collection(self.collection_name)
 
     def compress_user_memories(self, user_id: str) -> str:
         """
