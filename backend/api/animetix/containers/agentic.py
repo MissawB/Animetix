@@ -1,5 +1,6 @@
 from core.domain.entities.ai_schemas import RAGState
 from dependency_injector import containers, providers
+from django.conf import settings
 
 from .lazy import LazyClass
 
@@ -30,6 +31,9 @@ class AgenticContainer(containers.DeclarativeContainer):
         neo4j_manager=persistence.graph_persistence_port,
         colbert_adapter=persistence.colbert_adapter,
         cache_port=infrastructure.cache_port,
+        cognitive_boosters_enabled=getattr(
+            settings, "RAG_COGNITIVE_BOOSTERS_ENABLED", True
+        ),
     )
 
     graph_expert = providers.Singleton(

@@ -454,6 +454,11 @@ FEATURE_FLAGS = {
     "AI_DEBUG_DASHBOARD": env.bool("FEATURE_AI_DEBUG", default=not IS_PRODUCTION),
 }
 
+# --- RAG COGNITIVE BOOSTERS ---
+RAG_COGNITIVE_BOOSTERS_ENABLED = os.environ.get(
+    "RAG_COGNITIVE_BOOSTERS_ENABLED", "true"
+).lower() in ("1", "true", "yes")
+
 ALLOYDB_EMBEDDING_MODEL = env("ALLOYDB_EMBEDDING_MODEL", default="text-embedding-005")
 
 import asyncio  # noqa: E402
