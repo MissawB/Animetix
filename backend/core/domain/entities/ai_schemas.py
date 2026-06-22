@@ -303,6 +303,20 @@ class InferenceResponse(BaseModel):
 
     text: str
     metadata: InferenceMetadata = Field(default_factory=InferenceMetadata)
+    is_error: bool = Field(
+        default=False,
+        description=(
+            "Typed failure sentinel. An adapter sets this to signal a soft failure "
+            "(instead of raising) so the fallback orchestrator routes to the next "
+            "engine. Replaces the brittle text.startswith('Erreur') heuristic, which "
+            "misrouted genuine answers that merely began with 'Erreur'."
+        ),
+    )
+
+    @classmethod
+    def failure(cls, message: str) -> "InferenceResponse":
+        """Build a soft-failure response carrying a human-readable reason."""
+        return cls(text=message, is_error=True)
 
 
 # --- XAI & ADVANCED DIAGNOSTICS SCHEMAS ---
