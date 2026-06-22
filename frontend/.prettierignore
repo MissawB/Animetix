@@ -1,0 +1,12 @@
+# Build output & deps
+dist
+node_modules
+coverage
+playwright-report
+test-results
+
+# Generated from schema.yaml (npm run generate:api) — not hand-formatted
+src/types/api.d.ts
+
+# Lockfile
+package-lock.json

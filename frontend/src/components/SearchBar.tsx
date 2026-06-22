@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { searchMedia } from '../api';
+import { searchMedia, searchMediaByImage } from '../api';
 import { Search, X, Camera, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Input } from './ui/Input';
@@ -74,20 +74,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSelect, placeholder, id 
     setIsOpen(true);
     
     try {
-        const formData = new FormData();
-        formData.append('image', file);
-        formData.append('media_type', 'Anime');
-
-        const res = await fetch('/api/v1/search/', {
-            method: 'POST',
-            body: formData
-        });
-        
-        if (!res.ok) throw new Error('Image search failed');
-        const data = await res.json();
+        const data = await searchMediaByImage(file);
         setResults(data);
-    } catch (err) {
-        console.error("Image search failed:", err);
+    } catch {
+        // apiClient already surfaced the error via a toast.
         setResults([]);
     } finally {
         setIsLoading(false);

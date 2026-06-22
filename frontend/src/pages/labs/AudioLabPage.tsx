@@ -29,6 +29,7 @@ import { Badge } from "../../components/ui/Badge";
 import { CardSkeleton } from "../../components/ui/Skeleton";
 import { VoiceProfile } from '../../types';
 import type { AudioProcessPayload } from '../../features/labs/services/audioLabService';
+import { useToastStore } from '../../store/toastStore';
 
 const audioSchema = z.object({
   text: z.string().min(10, "Veuillez entrer au moins 10 caractères pour la synthèse.").max(500, "Le texte est trop long."),
@@ -115,7 +116,12 @@ const AudioLabPage: React.FC = () => {
     setSelectedSeiyuu(seiyuu);
     setRecordings([{ id: Date.now(), name: `Voix de ${seiyuu.name}`, duration: 'Sample BDD' }]);
 
-    // Fetch the sample and convert to File to satisfy the existing backend
+    // Fetch the sample and convert to File to satisfy the existing backend.
+    // NB: sample_url is a media asset (Django FileField .url) that may be a
+    // cross-origin GCS/HF/YouTube URL, and the body is a binary blob — not JSON.
+    // So we use a raw fetch here on purpose: routing it through apiClient would
+    // attach the user's Firebase token/CSRF to a third-party host and try to
+    // JSON-parse the audio. We still surface failures via a toast.
     try {
       setAudioLoading(seiyuu.sample_url);
       const resp = await fetch(seiyuu.sample_url);
@@ -123,10 +129,12 @@ const AudioLabPage: React.FC = () => {
         const blob = await resp.blob();
         const file = new File([blob], `${seiyuu.name}_sample.wav`, { type: 'audio/wav' });
         setAudioFile(file);
+      } else {
+        useToastStore.getState().addToast("Échec du chargement de l'échantillon vocal.", 'error');
       }
       setAudioLoading(null);
-    } catch (err) {
-      console.error("Failed to load seiyuu sample:", err);
+    } catch {
+      useToastStore.getState().addToast("Échec du chargement de l'échantillon vocal.", 'error');
       setAudioLoading(null);
     }
   };

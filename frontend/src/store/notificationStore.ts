@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { useToastStore } from './toastStore';
+import { logger } from '../utils/logger';
 
 interface NotificationStore {
   unreadCount: number;
@@ -30,18 +31,18 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
     // Proxied by Vite in dev, or straight to Django in prod
     const wsUrl = `${protocol}//${host}/ws/notifications/`;
 
-    console.log(`Connecting to notification socket: ${wsUrl}`);
+    logger.log(`Connecting to notification socket: ${wsUrl}`);
     const socket = new WebSocket(wsUrl);
 
     socket.onopen = () => {
-      console.log('Notification socket connected');
+      logger.log('Notification socket connected');
       set({ isConnected: true, socket });
     };
 
     socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        console.log('New real-time notification received:', data);
+        logger.log('New real-time notification received:', data);
         
         // Show a toast
         const title = data.title || 'Nouvelle Notification';
@@ -58,7 +59,7 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
     };
 
     socket.onclose = () => {
-      console.log('Notification socket closed');
+      logger.log('Notification socket closed');
       set({ isConnected: false, socket: null });
       // Retry connection after 5s
       setTimeout(() => {

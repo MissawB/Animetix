@@ -31,6 +31,10 @@ COPY requirements.txt ./
 # Install pinned Python deps. beautifulsoup4 (==4.12.3) est déjà dans requirements.txt :
 # pas de réinstallation séparée non épinglée (build reproductible).
 RUN pip install --no-cache-dir -r requirements.txt
+# ultralytics pulls the GUI opencv-python (needs libGL) next to opencv-python-headless;
+# both own the same `cv2` files, so remove both then reinstall only headless.
+RUN pip uninstall -y opencv-python opencv-python-headless \
+    && pip install --no-cache-dir "$(grep -E '^opencv-python-headless==' requirements.txt)"
 
 # Copy backend codebase
 COPY backend/ ./backend/

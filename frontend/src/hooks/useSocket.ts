@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useToastStore } from '../store/toastStore';
+import { logger } from '../utils/logger';
 
 interface SocketData {
   type: string;
@@ -31,12 +32,12 @@ const useSocket = (roomCode: string | undefined, type: 'undercover' | 'codemanga
     const host = window.location.host;
     const url = `${protocol}://${host}/ws/${type}/${roomCode}/`;
 
-    console.log(`Tentative de connexion WebSocket: ${url}`);
+    logger.log(`Tentative de connexion WebSocket: ${url}`);
     const socket = new WebSocket(url);
     socketRef.current = socket;
 
     socket.onopen = () => {
-      console.log(`Connecté à la room ${type}: ${roomCode}`);
+      logger.log(`Connecté à la room ${type}: ${roomCode}`);
       setConnected(true);
       setReconnecting(false);
       reconnectAttemptsRef.current = 0;

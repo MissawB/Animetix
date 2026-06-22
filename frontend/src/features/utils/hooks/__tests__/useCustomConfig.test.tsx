@@ -68,12 +68,9 @@ describe('useCustomConfig', () => {
     await waitFor(() => expect(utilsService.getConfig).not.toHaveBeenCalled());
   });
 
-  it('posts new config and shows a success toast on save', async () => {
+  it('posts new config through utilsService and shows a success toast on save', async () => {
     (utilsService.getConfig as Mock).mockResolvedValue(mockConfig());
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue({ ok: true } as Response);
-    vi.stubGlobal('fetch', fetchMock);
+    (utilsService.updateConfig as Mock).mockResolvedValue({});
 
     const { result } = renderHook(() => useCustomConfig(), { wrapper: makeWrapper() });
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -83,11 +80,6 @@ describe('useCustomConfig', () => {
     });
 
     await waitFor(() => expect(addToast).toHaveBeenCalledWith('Paramètres enregistrés !', 'success'));
-    expect(fetchMock).toHaveBeenCalledWith(
-      '/api/v1/custom-config/',
-      expect.objectContaining({ method: 'POST' })
-    );
-
-    vi.unstubAllGlobals();
+    expect(utilsService.updateConfig).toHaveBeenCalledWith({ theme: 'light' });
   });
 });
