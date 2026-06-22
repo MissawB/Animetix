@@ -1,14 +1,24 @@
 # -*- coding: utf-8 -*-
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 from core.domain.services.tree_of_thoughts_service import TreeOfThoughtsSearchService
+
+
+def _resp(text):
+    """Wrap a string as an InferenceResponse-shaped object (``.text`` field).
+
+    The InferencePort contract is ``generate(...) -> InferenceResponse``; the
+    service reads ``.text`` from the result, so engine mocks must mirror that.
+    """
+    return SimpleNamespace(text=text)
 
 
 def test_tot_returns_full_tree_structure():
     """Vérifie que le service ToT retourne maintenant une structure d'arbre complète."""
     mock_engine = MagicMock()
     # Simuler un score de 0.8
-    mock_engine.generate.return_value = "0.8"
+    mock_engine.generate.return_value = _resp("0.8")
 
     service = TreeOfThoughtsSearchService(
         inference_engine=mock_engine, prompt_manager=MagicMock()
@@ -48,11 +58,11 @@ def test_tot_captures_generated_nodes():
     # 4. Score 0.3 (branch 1) -> pruned
     # 5. Synthesis
     mock_engine.generate.side_effect = [
-        "Thought 1",
-        "0.9",
-        "Thought 2",
-        "0.3",
-        "Final synthesis",
+        _resp("Thought 1"),
+        _resp("0.9"),
+        _resp("Thought 2"),
+        _resp("0.3"),
+        _resp("Final synthesis"),
     ]
 
     service = TreeOfThoughtsSearchService(

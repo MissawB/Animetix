@@ -76,7 +76,7 @@ class TreeOfThoughtsSearchService:
                         next_thought = self.inference_engine.generate(
                             prompt=thought_prompt,
                             system_prompt="Tu es un planificateur cognitif d'élite d'arbre de pensées.",
-                        ).strip()
+                        ).text.strip()
                     except Exception as e:
                         logger.error(f"Error generating thought branch: {e}")
                         next_thought = (
@@ -194,7 +194,7 @@ class TreeOfThoughtsSearchService:
             score_text = self.inference_engine.generate(
                 prompt=critic_prompt,
                 system_prompt="Tu es le Critique logique d'arbre de pensées. Réponds uniquement par un chiffre.",
-            ).strip()
+            ).text.strip()
             # Nettoyage et conversion
             import re  # noqa: E402
 

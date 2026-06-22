@@ -4,7 +4,17 @@ Tests unitaires pour les modules d'IA Cognitive Next-Gen d'Animetix.
 Couvre Tree-of-Thoughts (ToT), EpisodicMemoryCompressor, et NeuroSymbolicUserProfiler.
 """
 
+from types import SimpleNamespace  # noqa: E402
 from unittest.mock import MagicMock  # noqa: E402
+
+
+def _resp(text):
+    """Wrap a string as an InferenceResponse-shaped object (``.text`` field).
+
+    The InferencePort contract is ``generate(...) -> InferenceResponse``; the
+    service reads ``.text`` from the result, so engine mocks must mirror that.
+    """
+    return SimpleNamespace(text=text)
 
 
 # ==========================================
@@ -19,13 +29,13 @@ def test_tree_of_thoughts_search():
     # Simuler des retours LLM :
     # Les premiers retours sont les étapes de pensées, le dernier est le score de pertinence, et la synthèse finale
     mock_engine.generate.side_effect = [
-        "Thought path A",  # step 1, branch 1
-        "0.85",  # score for step 1, branch 1
-        "Thought path B",  # step 1, branch 2
-        "0.40",  # score for step 1, branch 2 (pruned!)
-        "Thought path C",  # step 1, branch 3
-        "0.90",  # score for step 1, branch 3 (selected!)
-        "Final synthesis text",  # synthesis response
+        _resp("Thought path A"),  # step 1, branch 1
+        _resp("0.85"),  # score for step 1, branch 1
+        _resp("Thought path B"),  # step 1, branch 2
+        _resp("0.40"),  # score for step 1, branch 2 (pruned!)
+        _resp("Thought path C"),  # step 1, branch 3
+        _resp("0.90"),  # score for step 1, branch 3 (selected!)
+        _resp("Final synthesis text"),  # synthesis response
     ]
 
     service = TreeOfThoughtsSearchService(

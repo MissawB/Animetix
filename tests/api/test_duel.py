@@ -1,5 +1,9 @@
+from unittest.mock import MagicMock
+
 import pytest
+from animetix.containers import container
 from animetix.models import DuelRoom
+from dependency_injector import providers
 from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework.test import APIClient
@@ -8,6 +12,26 @@ from rest_framework.test import APIClient
 @pytest.fixture
 def api_client():
     return APIClient()
+
+
+@pytest.fixture(autouse=True)
+def stub_catalog():
+    """Make the duel endpoints hermetic.
+
+    ``CreateDuelRoomView`` resolves ``catalog_service`` via DI and calls
+    ``load_data(media_type)``. Without an override it hits the real singleton,
+    which reads a catalog JSON from disk and caches it -- making these tests
+    depend on disk data and on the singleton's (suite-order-dependent) state.
+    A scoped ``providers.Object`` override returns the mock directly, bypassing
+    the persistence sub-container. We scope with ``with`` (never
+    ``reset_override()``) per the games conftest guidance.
+    """
+    cat = MagicMock()
+    cat.load_data.return_value = {
+        "title_to_full_data": {"Naruto": {"id": 1, "title": "Naruto"}}
+    }
+    with container.core.catalog_service.override(providers.Object(cat)):
+        yield cat
 
 
 @pytest.fixture

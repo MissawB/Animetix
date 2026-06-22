@@ -104,9 +104,13 @@ def test_driver_property_returns_none_on_failure(mocker):
     assert mgr.driver is None
 
 
-def test_methods_noop_without_driver():
+def test_methods_noop_without_driver(mocker):
+    # Force the lazy ``driver`` property to None deterministically. Setting
+    # ``_driver = None`` alone is not enough: the property reconnects on access,
+    # so on a host where Neo4j IS reachable (e.g. CI) the methods would run for
+    # real instead of no-op'ing. Patching the property guarantees "no driver".
+    mocker.patch.object(Neo4jManager, "driver", new=None)
     mgr = Neo4jManager()
-    mgr._driver = None
     # All write/read paths short-circuit and never raise when driver is None.
     assert mgr.sync_media_to_graph({"id": 1}, "Anime") is None
     assert mgr.sync_character_to_graph({"id": 1}) is None
