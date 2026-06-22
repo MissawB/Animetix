@@ -13,9 +13,8 @@ _Rien d'ouvert._
 - [ ] **Repo — 125 Mo de données suivies dans git** _(vérifié)_
   - `data/processed/filtered_characters.json` (40 Mo), `refined_characters.json` (30 Mo), `clean_characters.json` (24 Mo), etc. Artefacts générés qui gonflent l'historique et ralentissent les clones.
   - Migrer vers Git LFS **ou** `git rm --cached` + régénération au build ; documenter le téléchargement dans le README.
-- [ ] **Sécu — `exec()` sur du code généré par LLM (surface RCE)**
-  - [self_evolving_compiler.py:62](backend/core/domain/services/self_evolving_compiler.py#L62) exécute du source dynamique (`# nosec B102`). Une injection de prompt en amont permettrait l'exécution de code arbitraire.
-  - Valider l'AST avant exécution (interdire `import`/`os`/`subprocess`), sandboxer (RestrictedPython), ou désactiver la feature en prod.
+- [x] **Sécu — `exec()` sur du code généré par LLM (surface RCE)** ✅ _(2026-06-22)_
+  - Garde AST `assert_safe_kernel_source()` ajouté avant `exec` dans `self_evolving_compiler` : rejette `import`/`from`, l'accès aux attributs dunder (bloque les évasions `().__class__.__subclasses__()`), et une blocklist de noms dangereux (os/sys/subprocess/eval/exec/open/getattr…). `exec` tourne désormais avec des `__builtins__` restreints (`_SAFE_BUILTINS` : seulement range/len/abs/float…) — défense en profondeur. Kernel malveillant → `UnsafeKernelError` ; `evolve_with_llm` retombe sur le fallback nul sans exécuter. Kernels numériques légitimes inchangés. 13 tests de sécurité ajoutés.
 - [x] **Archi — violations de la frontière hexagonale (domaine → infra)** ✅ _(2026-06-22)_
   - `manga_service` → `MangaRepositoryPort` + `DjangoMangaRepositoryAdapter` (toute la persistance ORM derrière le port ; retourne des modèles opaques pour préserver la sérialisation DRF, `DoesNotExist`→`None`).
   - `voice_ingestion_service` → `VoiceProfileRepositoryPort` + `DjangoVoiceProfileAdapter` ; service câblé via `container.core.voice_ingestion_service`.

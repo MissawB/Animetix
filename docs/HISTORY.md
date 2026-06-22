@@ -2,7 +2,10 @@
 
 This document archives the major milestones of the project's technical evolution.
 
-## [2026-06-22] Session: Hexagonal Boundary Repair (domain → infra) & Test-Home Consolidation
+## [2026-06-22] Session: RCE Guard, Hexagonal Boundary Repair (domain → infra) & Test-Home Consolidation
+
+### Security: RCE guard on exec() of LLM-generated kernels
+- `SelfEvolvingCompiler.compile_dynamic_kernel` exec'd dynamic Python source, including code produced by an LLM (`evolve_with_llm`) — a prompt injection upstream could smuggle arbitrary code into the host (RCE). Added `assert_safe_kernel_source()`: an AST gate rejecting imports, dunder attribute access (blocks `().__class__.__subclasses__()` escapes) and a blocklist of dangerous names (os/sys/subprocess/eval/exec/open/getattr…). `exec` now also runs with a restricted `__builtins__` (`_SAFE_BUILTINS` — only numeric helpers like range/len/abs/float) as defense-in-depth. Malicious kernels raise `UnsafeKernelError`; `evolve_with_llm` swallows it and returns the null fallback (no execution). Legitimate numeric kernels unchanged; 13 new security tests.
 
 ### Hexagonal boundary violations fixed (domain no longer imports Django/animetix)
 Three core-domain services reached across the hexagonal boundary into infrastructure. Each now depends on an injected port; the Django/ORM/middleware code lives in an adapter wired through the DI container.
