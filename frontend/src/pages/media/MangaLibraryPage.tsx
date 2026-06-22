@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
 import { FavoriteManga } from '../../types';
+import { apiClient } from '../../utils/apiClient';
 
 export const MangaLibraryPage: React.FC = () => {
   const { t } = useTranslation();
@@ -20,13 +21,11 @@ export const MangaLibraryPage: React.FC = () => {
 
   const fetchFavorites = async () => {
     try {
-      const res = await fetch('/api/v1/media/favorites/');
-      if (res.ok) {
-        const data = await res.json();
-        setFavorites(data);
-      }
-    } catch (e) {
-      console.error('Failed to fetch favorites', e);
+      // skipToast: favorites loading is best-effort (e.g. unauthenticated users).
+      const data = await apiClient('/api/v1/media/favorites/', { skipToast: true });
+      setFavorites(data);
+    } catch {
+      // keep the current list on failure
     } finally {
       setLoading(false);
     }
@@ -40,38 +39,15 @@ export const MangaLibraryPage: React.FC = () => {
 
   const handleUpdateStatus = async (mediaId: string, status: string | null) => {
     try {
-      const options: RequestInit = {
+      // apiClient injects the CSRF token + Firebase auth header.
+      await apiClient(`/api/v1/media/Manga/${mediaId}/favorite/`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': getCookie('csrftoken') || '',
-        },
-      };
-      if (status) {
-        options.body = JSON.stringify({ status });
-      }
-      const res = await fetch(`/api/v1/media/Manga/${mediaId}/favorite/`, options);
-      if (res.ok) {
-        await fetchFavorites();
-      }
-    } catch (e) {
-      console.error('Failed to update status', e);
+        body: status ? JSON.stringify({ status }) : undefined,
+      });
+      await fetchFavorites();
+    } catch {
+      // toast already surfaced by apiClient
     }
-  };
-
-  const getCookie = (name: string): string | null => {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-      const cookies = document.cookie.split(';');
-      for (let i = 0; i < cookies.length; i++) {
-        const cookie = cookies[i].trim();
-        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-          break;
-        }
-      }
-    }
-    return cookieValue;
   };
 
   const getCount = (tab: 'all' | 'reading' | 'plan_to_read' | 'completed') => {

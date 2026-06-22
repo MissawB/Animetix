@@ -50,7 +50,7 @@ peft==0.13.2
 sentence-transformers==3.3.1
 torch==2.5.1
 torchvision==0.20.1
-transformers>=4.57.0
+transformers==4.57.6
 trl==0.12.1
 coqui-tts==0.27.5
 ultralytics==8.4.51
@@ -59,10 +59,12 @@ imageio==2.37.3
 z3-solver==4.16.0.0
 
 # 5. GCP, Observability & Utilities
-google-cloud-aiplatform
-google-cloud-bigquery
-google-cloud-pubsub
-google-cloud-profiler
+# Pinned to the versions pip-compile already resolved into requirements.txt, so
+# the lockfile stays byte-identical and a future re-compile is deterministic.
+google-cloud-aiplatform==1.158.0
+google-cloud-bigquery==3.42.0
+google-cloud-pubsub==2.39.0
+google-cloud-profiler==4.1.0
 google-cloud-workflows==1.22.0
 opentelemetry-api==1.40.0
 opentelemetry-sdk==1.40.0
@@ -78,10 +80,10 @@ supervisor==4.2.5
 # Snyk). Résiduel ACCEPTÉ : jsonpickle est purement transitif (jamais importé par notre
 # code) et la CVE exige de désérialiser de l'input non fiable, ce que nous ne faisons pas.
 # Non corrigeable sans monter apache-beam (gros chantier, fige Dockerfile.dataflow). Cf. TODO.
-apache-beam
-dbt-core
-dbt-sqlite
-dbt-bigquery
+apache-beam==2.74.0
+dbt-core==1.11.11
+dbt-sqlite==1.10.0
+dbt-bigquery==1.10.3
 beautifulsoup4==4.12.3
 orjson==3.11.8
 filetype==1.2.0

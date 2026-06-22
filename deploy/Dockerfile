@@ -24,6 +24,12 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+# ultralytics pins the GUI opencv-python (needs libGL, absent from this slim image)
+# alongside our opencv-python-headless; both own the same `cv2` files, so plainly
+# uninstalling one would delete the shared files. Remove both, then reinstall only
+# headless (version read from the lockfile) — smaller image, `import cv2` needs no libGL.
+RUN pip uninstall -y opencv-python opencv-python-headless \
+    && pip install --no-cache-dir "$(grep -E '^opencv-python-headless==' requirements.txt)"
 
 # Stage 3: Runtime
 FROM python:3.12-slim-bookworm

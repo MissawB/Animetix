@@ -53,26 +53,33 @@ _Rien d'ouvert._
   - `MAX_IMAGE_SIZE` / allow-lists MIME dupliquées entre [labs.py](backend/api/animetix/api/labs.py) et [core.py](backend/api/animetix/api/core.py) → centraliser dans `backend/core/constants.py`.
 - [ ] **Backend — `UnifiedInferenceAdapter` god object**
   - 8 mixins, ~476 lignes ([unified_inference_adapter.py:30](backend/adapters/inference/unified_inference_adapter.py#L30)) ; MRO fragile, dur à tester → composition plutôt qu'héritage multiple.
-- [ ] **Frontend — `fetch()` brut qui contourne `apiClient`**
-  - [SearchBar.tsx:81](frontend/src/components/SearchBar.tsx#L81) et [AudioLabPage.tsx:127](frontend/src/pages/labs/AudioLabPage.tsx#L127) bypassent CSRF + auth Firebase + toasts → tout passer par `apiClient`.
+- [x] **Frontend — `fetch()` brut qui contourne `apiClient`** _(audit étendu : ~15 sites traités)_
+  - Problème : `fetch()` direct → pas de CSRF, pas de header auth Firebase, pas de toast d'erreur (cf. [apiClient.ts](frontend/src/utils/apiClient.ts)).
+  - [x] `SearchBar` (image search) → `searchMediaByImage()` dans `api.ts`.
+  - [x] **Migrés vers `apiClient`** : `useAdminEval`, `SimulatedAdBanner` (×2) & `SponsorStreamModal` (factorisés dans `billingService.logAdEvent`, `skipToast`), `useCustomConfig` (→ `utilsService.updateConfig`), `FinancialDashboardPage`, `MonitoringConsolePage`, `ExplorePage`, `useTachideskExplorer` (9 appels, control-flow préservé), `MangaLibraryPage` (×2). Tests des 4 fichiers concernés mis à jour (mock `apiClient`).
+  - [x] **Laissés en `fetch` brut à dessein** (assets binaires / cross-origin — `apiClient` parserait en JSON et fuiterait le token à un tiers) : `AudioLabPage` (sample audio, + toast d'échec ajouté), [MangaVoicePage.tsx:59](frontend/src/pages/labs/MangaVoicePage.tsx#L59) (`sample_url`), [offlineLibrary.ts:117](frontend/src/features/manga-reader/offline/offlineLibrary.ts#L117) (`image_url` blob), [api.ts:357](frontend/src/api.ts#L357) (proxy binaire).
+  - [ ] _Reliquat optionnel_ : harmoniser un toast d'échec sur `MangaVoicePage` / `offlineLibrary` / proxy `api.ts:357` (comme fait pour `AudioLabPage`).
 - [ ] **Frontend — état local fragmenté**
   - [AudioLabPage.tsx:64](frontend/src/pages/labs/AudioLabPage.tsx#L64) (~13 `useState`) ; anti-pattern `JSON.stringify` en render dans [SynapticLabPage.tsx:110](frontend/src/pages/labs/SynapticLabPage.tsx#L110) → `useReducer`/hook dédié.
-- [ ] **CI — gaspillage et robustesse**
-  - Pas de `concurrency: cancel-in-progress` → runs redondants empilés.
-  - PyTorch (~800 Mo) réinstallé sans cache dans 3 jobs ([ci.yml](.github/workflows/ci.yml) ~97/163/203).
-  - Pas de `timeout-minutes` sur `perf-test`/`integration-test`.
-  - À confirmer : `--cov-fail-under=75` ([ci.yml:119](.github/workflows/ci.yml#L119)) annoncé comme *hard gate* bloquant le deploy — vérifier la cohérence avec la couverture réelle.
+- [x] **CI — gaspillage et robustesse**
+  - [x] `concurrency: cancel-in-progress` ajouté (groupe `workflow-ref-event` pour ne pas annuler un deploy manuel via un push main).
+  - [x] Cache pip (`setup-python cache: pip`, clé `requirements.txt`) sur `test`/`integration-test`/`perf-test` + retrait des `--no-cache-dir` → torch/torchvision et requirements ne sont plus re-téléchargés à chaque run.
+  - [x] `timeout-minutes` ajouté : `test` 45, `integration-test`/`perf-test` 30.
+  - [x] Gate `--cov-fail-under=75` **confirmé cohérent** : couverture réelle = **75,33 %** (cf. [HISTORY](docs/HISTORY.md)), le gate passe et garde contre les régressions. Commentaire périmé (« ~56 %, intentionnellement rouge ») corrigé.
 
 ## 🟢 Faibles
 
-- [x] **A11y & logs frontend**
-  - [x] `<img>` sans `alt` : **déjà fait** (0/62 — vérifié, toutes les balises ont un `alt`).
-  - [x] Boutons admin sans nom accessible : **déjà couvert** par la règle ESLint `jsx-a11y/control-has-associated-label: error` (déjà en place et verte) — les boutons admin ont un nom accessible (texte ou `aria-label`).
-  - [x] Logs console : les 12 `console.log` (cycle de vie WebSocket : `ClubChat`, `useSocket`, `SpeechToSpeechLabPage`, `notificationStore`) routés vers un logger dev-only `src/utils/logger.ts` (no-op en prod) ; règle ESLint `no-console` ajoutée (autorise `warn`/`error`). Les 66 `console.error` (handlers légitimes) conservés.
-- [ ] **Deps** : doublon `opencv-python` + `opencv-python-headless` ([requirements.txt:580](requirements.txt#L580)) ; GCP / `transformers` peu ou pas pinnés dans [requirements.in](requirements.in) (build non reproductible).
+- [ ] **A11y & logs frontend** : `<img>` sans `alt`, boutons admin sans `aria-label`, `console.error` laissés en prod (~41 fichiers).
+- [x] **Deps**
+  - [x] **Pins** : `requirements.in` entièrement épinglé — `transformers==4.57.6`, les 4 `google-cloud-*`, `apache-beam==2.74.0`, `dbt-core/sqlite/bigquery` figés aux versions **déjà résolues** par pip-compile. Le lockfile `requirements.txt` reste **byte-identique** (aucun recompile : ce serait dangereux sur Windows car le lock cible Linux/Py3.12) ; un futur recompile sera déterministe.
+  - [x] **Doublon opencv** : `ultralytics` force `opencv-python` (GUI, besoin de `libGL` absent de l'image slim) à côté de notre `opencv-python-headless`. Un recompile ne peut PAS le retirer (dep transitive forcée). Fix au niveau des 3 Dockerfiles (`Dockerfile`, `.brain`, `.dataflow`) : après l'install, `pip uninstall` des **deux** (ils partagent les fichiers `cv2/`) puis réinstall de **headless seul** (version lue depuis le lockfile). Image plus légère + `import cv2` sans `libGL`.
+  - _Note vérif_ : build-time validé par le job CI `docker-build` (pour `deploy/Dockerfile`) ; non vérifiable en runtime localement (Windows ≠ Linux/libGL). `.brain`/`.dataflow` ne sont pas buildés en CI.
 - [ ] **DX** : pas de Prettier ni `.editorconfig` ; badge README « Python 3.11+ » alors que CI/pyproject ciblent 3.12.
-- [ ] **Couverture frontend — élargir** _(outillage + CI faits ; ~29 % stmts, 492 tests — cf. [HISTORY](docs/HISTORY.md))_
-  - Optionnel / ROI décroissant : couvrir les flows complexes restants (3D/canvas/WebSocket) et remonter le plancher de seuils au fil de l'eau.
+- [ ] **Couverture frontend — élargir** _(ongoing optionnel ; 520 tests, seuils 29/22/28/29 — cf. [HISTORY](docs/HISTORY.md))_
+  - [x] Lot 1 — services jeux (`akinetix`, `vision`, `covertest`, `animinator`) + `media` ; hooks logique (`useAchievements`, `useMediaDetail`, `useCovertest`).
+  - [x] Lot 2 — hooks react-query restants (`useCurationTickets`, `useDPO`, `useSocialDashboard`, `useProfile`, `useLeaderboard`, `useDailyChallenge`, `useHealth`).
+  - Total +28 tests (492→520) ; seuils remontés statements 28→29, functions 27→28, lines 28→29.
+  - Reste (ROI décroissant) : flows complexes 3D/canvas/WebSocket (`useTachideskExplorer`, `useSocket`, `useMultiverseCatalog`) ; continuer à remonter le plancher au fil de l'eau.
 - [x] **Organisation des tests backend — consolidation physique** ✅ _(2026-06-21)_
   - Fusionné `tests/backend/core`→`tests/core`, `tests/backend/api`→`tests/api`, `tests/pipeline_logic`→`tests/pipeline` via `git mv` (historique préservé). Collection pytest **inchangée à 2313 tests**, échantillons rejoués verts (200 + 74 passed). `tests/README.md` mis à jour. Reste à trancher (séparé) : `tests/backend/views/…` → `tests/api/` ou conserver.
 - [ ] **Sécu deps — `jsonpickle` CVE résiduelle** _(risque réel faible, résiduel accepté)_
