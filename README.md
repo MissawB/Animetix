@@ -1,7 +1,7 @@
 # 🎭 Animetix: Next-Gen AI Sandbox & Interactive Games
 
 [![Build Status](https://img.shields.io/badge/Build-Success-brightgreen.svg)]()
-[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)]()
+[![Python](https://img.shields.io/badge/Python-3.12+-blue.svg)]()
 [![Django](https://img.shields.io/badge/Django-5.0+-green.svg)]()
 [![Firebase](https://img.shields.io/badge/Google_Identity_Platform-GCIP-orange.svg)]()
 [![Vertex AI](https://img.shields.io/badge/Vertex_AI-Vector_Search_2.0-blue.svg)]()
@@ -117,7 +117,7 @@ For production scale and security, Animetix utilizes managed Google Cloud Platfo
 
 ### 📋 Prerequisites
 
-* Python 3.11+
+* Python 3.12+
 * Node.js 18+ (for frontend development)
 * Docker & Docker Compose
 * *Optional:* GCP credentials & Firebase config.

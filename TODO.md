@@ -67,7 +67,10 @@ _Rien d'ouvert._
 
 - [ ] **A11y & logs frontend** : `<img>` sans `alt`, boutons admin sans `aria-label`, `console.error` laissés en prod (~41 fichiers).
 - [ ] **Deps** : doublon `opencv-python` + `opencv-python-headless` ([requirements.txt:580](requirements.txt#L580)) ; GCP / `transformers` peu ou pas pinnés dans [requirements.in](requirements.in) (build non reproductible).
-- [ ] **DX** : pas de Prettier ni `.editorconfig` ; badge README « Python 3.11+ » alors que CI/pyproject ciblent 3.12.
+- [x] **DX**
+  - [x] **Prettier** ajouté (`prettier` + `eslint-config-prettier`) : `frontend/.prettierrc.json` + `.prettierignore`, scripts `format`/`format:check`, branché dans `lint-staged` (prettier avant eslint) et `eslint-config-prettier` en dernier dans `eslint.config.js` pour éviter les conflits de style. **Pas de reformat global** (stratégie format-on-touch via lint-staged) → zéro conflit avec les branches frontend ouvertes.
+  - [x] **`.editorconfig`** créé à la racine (py 4 espaces ; js/ts/json/css/yaml 2 ; LF + newline final).
+  - [x] **README** : badge + prérequis « Python 3.11+ » → « 3.12+ » (cohérent avec `pyproject` py312 et la CI).
 - [ ] **Couverture frontend — élargir** _(outillage + CI faits ; ~29 % stmts, 492 tests — cf. [HISTORY](docs/HISTORY.md))_
   - Optionnel / ROI décroissant : couvrir les flows complexes restants (3D/canvas/WebSocket) et remonter le plancher de seuils au fil de l'eau.
 - [x] **Organisation des tests backend — consolidation physique** ✅ _(2026-06-21)_

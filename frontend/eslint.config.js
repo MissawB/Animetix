@@ -5,6 +5,7 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
 import tseslint from 'typescript-eslint';
+import eslintConfigPrettier from 'eslint-config-prettier';
 import { defineConfig, globalIgnores } from 'eslint/config';
 
 export default defineConfig([
@@ -54,5 +55,8 @@ export default defineConfig([
       ],
     },
   },
-  ...storybook.configs["flat/recommended"]
+  ...storybook.configs["flat/recommended"],
+  // Must stay LAST: turns off ESLint rules that would conflict with Prettier
+  // formatting (we run Prettier for style, ESLint for correctness).
+  eslintConfigPrettier,
 ]);
