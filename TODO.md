@@ -16,9 +16,11 @@ _Rien d'ouvert._
 - [ ] **Sécu — `exec()` sur du code généré par LLM (surface RCE)**
   - [self_evolving_compiler.py:62](backend/core/domain/services/self_evolving_compiler.py#L62) exécute du source dynamique (`# nosec B102`). Une injection de prompt en amont permettrait l'exécution de code arbitraire.
   - Valider l'AST avant exécution (interdire `import`/`os`/`subprocess`), sandboxer (RestrictedPython), ou désactiver la feature en prod.
-- [ ] **Archi — violations de la frontière hexagonale (domaine → infra)**
-  - Le cœur importe l'ORM Django : [manga_service.py:5](backend/core/domain/services/manga_service.py#L5), [voice_ingestion_service.py:6](backend/core/domain/services/voice_ingestion_service.py#L6) ; [llm_service.py:58](backend/core/domain/services/llm_service.py#L58) reach dans `animetix.middleware`.
-  - Injecter un port/repository ; passer `user_id`/`tier` en paramètres au lieu de lire le middleware.
+- [x] **Archi — violations de la frontière hexagonale (domaine → infra)** ✅ _(2026-06-22)_
+  - `manga_service` → `MangaRepositoryPort` + `DjangoMangaRepositoryAdapter` (toute la persistance ORM derrière le port ; retourne des modèles opaques pour préserver la sérialisation DRF, `DoesNotExist`→`None`).
+  - `voice_ingestion_service` → `VoiceProfileRepositoryPort` + `DjangoVoiceProfileAdapter` ; service câblé via `container.core.voice_ingestion_service`.
+  - `llm_service` → `UserContextPort` + `MiddlewareUserContextAdapter` (plus de reach dans `animetix.middleware` ; `user_id`/`tier` explicites prioritaires, quota préservé).
+  - Aucun des 3 fichiers du cœur n'importe plus Django/animetix. Vérifié : wiring conteneur OK, tests llm/labs/manga verts.
 - [ ] **Archi — code de test (Mock/MagicMock) dans un service de prod**
   - [agentic_rag_service.py:58-104](backend/core/domain/services/agentic_rag_service.py#L58) reconstruit des agents pour les mocks dans `__init__`. Fragile, ne devrait jamais tourner en prod.
   - Sortir la logique mock vers des fixtures de test.

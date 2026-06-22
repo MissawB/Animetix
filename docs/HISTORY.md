@@ -2,6 +2,18 @@
 
 This document archives the major milestones of the project's technical evolution.
 
+## [2026-06-22] Session: Hexagonal Boundary Repair (domain → infra) & Test-Home Consolidation
+
+### Hexagonal boundary violations fixed (domain no longer imports Django/animetix)
+Three core-domain services reached across the hexagonal boundary into infrastructure. Each now depends on an injected port; the Django/ORM/middleware code lives in an adapter wired through the DI container.
+- **`manga_service`** imported `animetix.models` (MangaChapter/MangaPage/MediaItem) and ran ORM queries + `get_or_create` directly → new **`MangaRepositoryPort`** + `DjangoMangaRepositoryAdapter`. The port returns records as opaque objects (still real models, so DRF serialization is untouched) and maps `DoesNotExist` → `None`; sync decisions / Suwayomi+mock flow stay in the service.
+- **`voice_ingestion_service`** imported `animetix.models.VoiceProfile` + `ContentFile`/`slugify` to persist the ingested sample → new **`VoiceProfileRepositoryPort`** + `DjangoVoiceProfileAdapter`; the service is now wired as `container.core.voice_ingestion_service` and the labs view resolves it from the container instead of instantiating it directly.
+- **`llm_service`** reached into `animetix.middleware` to resolve the ambient request user for the quota check → new **`UserContextPort`** + `MiddlewareUserContextAdapter`. Explicit `user_id`/`tier` args keep priority; quota enforcement is preserved with no direct middleware import (avoids threading user_id through ~35 internal callers).
+- Verified: container wiring tests green, `llm_service`/labs/manga-endpoint tests green, and none of the three core files import Django/animetix anymore.
+
+### Test-home consolidation
+- Merged the historically-duplicated test homes (`tests/backend/core`→`tests/core`, `tests/backend/api`→`tests/api`, `tests/pipeline_logic`→`tests/pipeline`) via `git mv` — pytest collection unchanged at 2313 tests, history preserved. Purely organizational (discovery is `testpaths=tests`).
+
 ## [2026-06-21] Session: mypy Type-Debt Elimination, Frontend Coverage Campaign & CI Hardening
 
 ### Typing (Élevés)
