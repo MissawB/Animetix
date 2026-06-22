@@ -32,6 +32,10 @@ class InfrastructureContainer(containers.DeclarativeContainer):
         pricing_service=pricing_service,
     )
 
+    user_context_port = providers.Singleton(
+        "adapters.infrastructure.middleware_user_context_adapter.MiddlewareUserContextAdapter"
+    )
+
     notification_port = providers.Singleton(
         "adapters.infrastructure.django_notification_adapter.DjangoNotificationAdapter"
     )

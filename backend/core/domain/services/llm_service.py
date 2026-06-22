@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 from ...ports.inference_port import InferencePort
 from ...ports.usage_port import UsagePort
+from ...ports.user_context_port import UserContextPort
 from ..exceptions import InferenceError, ParsingError
 from .prompt_manager import PromptManager
 
@@ -31,6 +32,7 @@ class LLMService:
         slm_engine: Optional[InferencePort] = None,
         vision_engine: Optional[InferencePort] = None,
         obs_service=None,
+        user_context_port: Optional[UserContextPort] = None,
     ):
         self.inference_engine = inference_engine
         self.slm_engine = slm_engine or inference_engine  # Fallback to main if no SLM
@@ -40,6 +42,7 @@ class LLMService:
         self.prompt_manager = prompt_manager
         self.usage_port = usage_port
         self.obs_service = obs_service
+        self.user_context_port = user_context_port
 
     def generate(
         self,
@@ -53,17 +56,11 @@ class LLMService:
         tier: str = "free",
     ) -> str:
         # --- QUOTA CHECK ---
-        if not user_id:
-            try:
-                from animetix.middleware import (
-                    get_current_user_id,
-                    get_current_user_tier,
-                )
-
-                user_id = get_current_user_id()
-                tier = get_current_user_tier()
-            except ImportError as e:
-                logger.warning(f"Handled error: {e}")
+        # Explicit user_id/tier args take priority; otherwise resolve the ambient
+        # request user via the injected port (no direct reach into Django middleware).
+        if not user_id and self.user_context_port:
+            user_id = self.user_context_port.get_current_user_id()
+            tier = self.user_context_port.get_current_user_tier()
 
         if user_id and self.usage_port:
             if not self.usage_port.check_quota(user_id, tier):

@@ -20,6 +20,7 @@ class AgenticContainer(containers.DeclarativeContainer):
         usage_port=infrastructure.usage_port,
         slm_engine=inference.compact_reasoning_adapter,
         obs_service=infrastructure.obs_service,
+        user_context_port=infrastructure.user_context_port,
     )
 
     rag_service = providers.Singleton(

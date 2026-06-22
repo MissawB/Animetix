@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 from core.domain.entities.ai_schemas import InferenceResponse
@@ -59,28 +59,30 @@ def test_generate_allows_within_quota(
     mock_inference_engine.generate.assert_called_once()
 
 
-@patch("animetix.middleware.get_current_user_id")
-@patch("animetix.middleware.get_current_user_tier")
-def test_generate_retrieves_from_middleware(
-    mock_get_tier,
-    mock_get_id,
+def test_generate_retrieves_from_user_context_port(
     mock_inference_engine,
     mock_prompt_manager,
     mock_usage_port,
 ):
-    # Setup
-    mock_get_id.return_value = 456
-    mock_get_tier.return_value = "pro"
+    # When no explicit user_id is passed, the service resolves the ambient user via
+    # the injected UserContextPort (not by reaching into Django middleware).
+    user_context = MagicMock()
+    user_context.get_current_user_id.return_value = 456
+    user_context.get_current_user_tier.return_value = "pro"
     mock_usage_port.check_quota.return_value = False
 
     service = LLMService(
-        mock_inference_engine, mock_prompt_manager, usage_port=mock_usage_port
+        mock_inference_engine,
+        mock_prompt_manager,
+        usage_port=mock_usage_port,
+        user_context_port=user_context,
     )
 
     # Execute & Verify
     with pytest.raises(QuotaExceededError):
         service.generate("test prompt")
 
+    user_context.get_current_user_id.assert_called_once()
     mock_usage_port.check_quota.assert_called_with(456, "pro")
 
 
