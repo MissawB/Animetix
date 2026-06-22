@@ -61,11 +61,11 @@ _Rien d'ouvert._
   - [ ] _Reliquat optionnel_ : harmoniser un toast d'échec sur `MangaVoicePage` / `offlineLibrary` / proxy `api.ts:357` (comme fait pour `AudioLabPage`).
 - [ ] **Frontend — état local fragmenté**
   - [AudioLabPage.tsx:64](frontend/src/pages/labs/AudioLabPage.tsx#L64) (~13 `useState`) ; anti-pattern `JSON.stringify` en render dans [SynapticLabPage.tsx:110](frontend/src/pages/labs/SynapticLabPage.tsx#L110) → `useReducer`/hook dédié.
-- [ ] **CI — gaspillage et robustesse**
-  - Pas de `concurrency: cancel-in-progress` → runs redondants empilés.
-  - PyTorch (~800 Mo) réinstallé sans cache dans 3 jobs ([ci.yml](.github/workflows/ci.yml) ~97/163/203).
-  - Pas de `timeout-minutes` sur `perf-test`/`integration-test`.
-  - À confirmer : `--cov-fail-under=75` ([ci.yml:119](.github/workflows/ci.yml#L119)) annoncé comme *hard gate* bloquant le deploy — vérifier la cohérence avec la couverture réelle.
+- [x] **CI — gaspillage et robustesse**
+  - [x] `concurrency: cancel-in-progress` ajouté (groupe `workflow-ref-event` pour ne pas annuler un deploy manuel via un push main).
+  - [x] Cache pip (`setup-python cache: pip`, clé `requirements.txt`) sur `test`/`integration-test`/`perf-test` + retrait des `--no-cache-dir` → torch/torchvision et requirements ne sont plus re-téléchargés à chaque run.
+  - [x] `timeout-minutes` ajouté : `test` 45, `integration-test`/`perf-test` 30.
+  - [x] Gate `--cov-fail-under=75` **confirmé cohérent** : couverture réelle = **75,33 %** (cf. [HISTORY](docs/HISTORY.md)), le gate passe et garde contre les régressions. Commentaire périmé (« ~56 %, intentionnellement rouge ») corrigé.
 
 ## 🟢 Faibles
 
