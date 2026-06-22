@@ -30,3 +30,19 @@ def test_deploy_brain_calls_gcloud(mock_run):
 
     # Vérifie qu'on a mis à jour le service web
     assert any("run services update" in c for c in flat_calls)
+
+
+@patch("subprocess.run")
+def test_deploy_brain_sets_explicit_scaling_bounds(mock_run):
+    mock_run.return_value = MagicMock(
+        returncode=0, stdout="https://brain-url.run.app\n"
+    )
+
+    main()
+
+    flat_calls = [" ".join(call[0][0]) for call in mock_run.call_args_list]
+    deploy_call = next(c for c in flat_calls if "run deploy" in c)
+    # Explicit scale-to-zero (no idle GPU billing) + cost ceiling aligned with
+    # restore_brain_service default (3).
+    assert "--min-instances=0" in deploy_call
+    assert "--max-instances=3" in deploy_call
