@@ -56,33 +56,24 @@ def ad_reward_bx() -> int:
 # ---------------------------------------------------------------------------
 
 FEATURE_COMPUTE_USD: dict[str, float] = {
-    # Chatbot / RAG / companion (~1 short LLM call)
-    "agentic_rag": 0.0018,
-    "companion": 0.0018,
-    # Graph & speech quick ops (~2–3 short calls)
-    "knowledge_graph": 0.0035,
-    "speech_to_speech": 0.0035,
-    # Medium inference: manga ops, Singularity light (compile/plasticity/quantum merged)
-    "singularity_basic": 0.0075,
-    "manga_clean": 0.0075,
-    "manga_translate": 0.0075,
-    # Voice ingestion (transcription + indexing)
-    "voice_ingest": 0.0115,
-    # Heavy multi-step inference (evolve/swarm merged)
-    "creative_fusion": 0.019,
-    "soundscape": 0.019,
-    "singularity_mid": 0.019,
-    # GPU-intensive single-output generation
-    "vn_script": 0.0387,
-    "multiverse_synth": 0.0387,
-    "voice_clone": 0.0387,
-    # Very heavy: 3-D lift / long diffusion
-    "image_to_3d": 0.058,
-    # Flagship: full-length audio dubbing
-    "manga_voice": 0.0771,
-    # 3-D reconstruction / style-transfer at full resolution
-    "style_transfer": 0.1932,
-    "cinematic_3d": 0.1932,
+    "companion": 0.002,
+    "agentic_rag": 0.002,
+    "knowledge_graph": 0.001,
+    "vn_script": 0.02,
+    "creative_fusion": 0.03,
+    "singularity_basic": 0.004,  # kernel / plasticity / quantum
+    "singularity_mid": 0.008,  # llm-evolution / swarm
+    "multiverse_synth": 0.02,
+    "manga_voice": 0.05,
+    "style_transfer": 0.15,
+    "voice_ingest": 0.005,
+    "soundscape": 0.01,
+    "speech_to_speech": 0.003,
+    "manga_clean": 0.004,
+    "manga_translate": 0.004,
+    "voice_clone": 0.005,
+    "image_to_3d": 0.04,
+    "cinematic_3d": 0.15,
 }
 
 FEATURE_BX_COSTS: dict[str, int] = {
