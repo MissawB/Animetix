@@ -11,6 +11,7 @@ import logging  # noqa: E402
 import time  # noqa: E402
 
 import torch  # noqa: E402
+from core.utils.model_registry import resolve_trust_remote_code  # noqa: E402
 from datasets import load_dataset  # noqa: E402
 from peft import LoraConfig  # noqa: E402
 from transformers import (
@@ -236,7 +237,7 @@ def run_expert_training():
                 torch_dtype=(
                     torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
                 ),
-                trust_remote_code=True,
+                trust_remote_code=resolve_trust_remote_code(model_name),
                 low_cpu_mem_usage=True if device_map == "auto" else False,
                 revision="main",
             )  # nosec B615
@@ -252,7 +253,7 @@ def run_expert_training():
                 model_name,
                 quantization_config=bnb_config,
                 device_map=device_map,
-                trust_remote_code=True,
+                trust_remote_code=resolve_trust_remote_code(model_name),
                 low_cpu_mem_usage=True,
                 revision="main",
             )  # nosec B615
