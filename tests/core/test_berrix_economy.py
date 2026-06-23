@@ -32,7 +32,7 @@ def test_ad_reward_bx_keeps_margin_on_ad_funded_bx():
     )
 
 
-def test_feature_bx_costs_floor():
+def test_every_feature_price_clears_the_margin_floor():
     """Every entry in FEATURE_BX_COSTS must be >= bx_cost_for_usd of its USD anchor.
 
     This is the margin-cushion guarantee: if we charge fewer Bx than required by
@@ -52,3 +52,15 @@ def test_feature_bx_costs_floor():
             f"Feature '{key}': charges {charged} Bx but margin floor is {floor} Bx "
             f"(compute cost ${usd:.4f})"
         )
+
+
+def test_known_underfloor_features_were_bumped():
+    """companion, agentic_rag, and creative_fusion are priced above their floor.
+
+    Their compute costs are cheap enough that bx_cost_for_usd() returns a floor
+    lower than the brand / complexity premium we want to charge. Verify the
+    literal values in the table are the bumped ones from the spec.
+    """
+    assert econ.FEATURE_BX_COSTS["companion"] == 6
+    assert econ.FEATURE_BX_COSTS["agentic_rag"] == 6
+    assert econ.FEATURE_BX_COSTS["creative_fusion"] == 78

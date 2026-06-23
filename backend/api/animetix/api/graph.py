@@ -38,7 +38,7 @@ class GraphNeighborsView(APIView):
 
         deduct_berrix(
             request.user,
-            FEATURE_BX_COSTS["graph_exploration"],
+            FEATURE_BX_COSTS["knowledge_graph"],
             "Exploration du Knowledge Graph",
         )
 

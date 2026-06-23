@@ -57,37 +57,60 @@ def ad_reward_bx() -> int:
 
 FEATURE_COMPUTE_USD: dict[str, float] = {
     # Chatbot / RAG / companion (~1 short LLM call)
-    "chatbot_rag": 0.0018,
+    "agentic_rag": 0.0018,
     "companion": 0.0018,
     # Graph & speech quick ops (~2–3 short calls)
-    "graph_exploration": 0.0035,
+    "knowledge_graph": 0.0035,
     "speech_to_speech": 0.0035,
-    # Medium inference: image analysis, manga ops, Singularity light
-    "singularity_compile": 0.0075,
-    "singularity_plasticity": 0.0075,
-    "singularity_quantum": 0.0075,
-    "manga_cleaner": 0.0075,
-    "manga_translator": 0.0075,
+    # Medium inference: manga ops, Singularity light (compile/plasticity/quantum merged)
+    "singularity_basic": 0.0075,
+    "manga_clean": 0.0075,
+    "manga_translate": 0.0075,
     # Voice ingestion (transcription + indexing)
-    "voice_ingestion": 0.0115,
-    # Heavy multi-step inference
-    "archetypist_fusion": 0.019,
+    "voice_ingest": 0.0115,
+    # Heavy multi-step inference (evolve/swarm merged)
+    "creative_fusion": 0.019,
     "soundscape": 0.019,
-    "singularity_evolve": 0.019,
-    "singularity_swarm": 0.019,
+    "singularity_mid": 0.019,
     # GPU-intensive single-output generation
-    "forge_vn": 0.0387,
-    "singularity_multiverse": 0.0387,
-    "voice_cloning": 0.0387,
+    "vn_script": 0.0387,
+    "multiverse_synth": 0.0387,
+    "voice_clone": 0.0387,
     # Very heavy: 3-D lift / long diffusion
     "image_to_3d": 0.058,
     # Flagship: full-length audio dubbing
-    "voice_lab": 0.0771,
+    "manga_voice": 0.0771,
     # 3-D reconstruction / style-transfer at full resolution
-    "fatezero": 0.1932,
+    "style_transfer": 0.1932,
     "cinematic_3d": 0.1932,
 }
 
 FEATURE_BX_COSTS: dict[str, int] = {
-    key: bx_cost_for_usd(usd) for key, usd in FEATURE_COMPUTE_USD.items()
+    # Chatbot / RAG / companion — floor is 5 Bx; bumped to 6 to stay above floor at all envs
+    "agentic_rag": 6,
+    "companion": 6,
+    # Graph & speech quick ops
+    "knowledge_graph": 10,
+    "speech_to_speech": 10,
+    # Medium inference
+    "singularity_basic": 20,
+    "manga_clean": 20,
+    "manga_translate": 20,
+    # Voice ingestion
+    "voice_ingest": 30,
+    # Heavy multi-step — creative_fusion bumped to 78 (brand premium above floor 50)
+    "creative_fusion": 78,
+    "soundscape": 50,
+    "singularity_mid": 50,
+    # GPU-intensive
+    "vn_script": 100,
+    "multiverse_synth": 100,
+    "voice_clone": 100,
+    # Very heavy
+    "image_to_3d": 150,
+    # Flagship
+    "manga_voice": 200,
+    # Full-resolution 3-D / style-transfer
+    "style_transfer": 500,
+    "cinematic_3d": 500,
 }

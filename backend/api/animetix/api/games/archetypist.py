@@ -46,7 +46,7 @@ class ArchetypistStartFusionView(APIView):
         # Déduction des Bx (50 Bx pour marge minimale)
         deduct_berrix(
             request.user,
-            FEATURE_BX_COSTS["archetypist_fusion"],
+            FEATURE_BX_COSTS["creative_fusion"],
             "Forge de Creative Fusion",
         )
 

@@ -136,7 +136,7 @@ class AgenticRAGStreamView(APIView):
 
                 deduct_berrix(
                     request.user,
-                    FEATURE_BX_COSTS["chatbot_rag"],
+                    FEATURE_BX_COSTS["agentic_rag"],
                     "Agentic RAG / Chatbot",
                 )
             except Exception as e:

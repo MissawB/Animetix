@@ -1,10 +1,13 @@
 from animetix_project.logging_config import get_logger
+from core.domain.services.berrix_economy import FEATURE_BX_COSTS  # noqa: E402
 from core.domain.services.guardrail_service import GuardrailService
 from core.ports.usage_port import UsagePort
 from dependency_injector.wiring import Provide, inject
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from animetix.api.billing import deduct_berrix  # noqa: E402
 
 from ..containers import Container, get_container
 from ..models import CreativeFusion
@@ -85,15 +88,9 @@ class ForgeVNView(APIView):
 
             if action == "generate":
                 # Déduction des Bx (100 Bx pour un script VN complet)
-                from core.domain.services.berrix_economy import (
-                    FEATURE_BX_COSTS,  # noqa: E402
-                )
-
-                from animetix.api.billing import deduct_berrix  # noqa: E402
-
                 deduct_berrix(
                     request.user,
-                    FEATURE_BX_COSTS["forge_vn"],
+                    FEATURE_BX_COSTS["vn_script"],
                     "Génération de Script Visual Novel",
                 )
 

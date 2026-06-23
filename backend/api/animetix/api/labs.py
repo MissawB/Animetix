@@ -238,7 +238,7 @@ class SingularityLabDataView(APIView):
         if action == "compile":
             deduct_berrix(
                 request.user,
-                FEATURE_BX_COSTS["singularity_compile"],
+                FEATURE_BX_COSTS["singularity_basic"],
                 "Singularity: Compilation de Kernel",
             )
             function_name = request.data.get(
@@ -274,7 +274,7 @@ class SingularityLabDataView(APIView):
         elif action == "plasticity":
             deduct_berrix(
                 request.user,
-                FEATURE_BX_COSTS["singularity_plasticity"],
+                FEATURE_BX_COSTS["singularity_basic"],
                 "Singularity: Plasticité Synaptique",
             )
             activations = request.data.get(
@@ -313,7 +313,7 @@ class SingularityLabDataView(APIView):
         elif action == "quantum":
             deduct_berrix(
                 request.user,
-                FEATURE_BX_COSTS["singularity_quantum"],
+                FEATURE_BX_COSTS["singularity_basic"],
                 "Singularity: Effondrement Quantique",
             )
             theme = request.data.get("theme", "shonen").lower()
@@ -337,7 +337,7 @@ class SingularityLabDataView(APIView):
         elif action == "evolve_dynamic":
             deduct_berrix(
                 request.user,
-                FEATURE_BX_COSTS["singularity_evolve"],
+                FEATURE_BX_COSTS["singularity_mid"],
                 "Singularity: Évolution LLM Dynamique",
             )
             task = request.data.get("task", "dot_product")
@@ -370,7 +370,7 @@ class SingularityLabDataView(APIView):
         elif action == "swarm":
             deduct_berrix(
                 request.user,
-                FEATURE_BX_COSTS["singularity_swarm"],
+                FEATURE_BX_COSTS["singularity_mid"],
                 "Singularity: Consensus Swarm P2P",
             )
             fact = request.data.get("fact")
@@ -392,7 +392,7 @@ class SingularityLabDataView(APIView):
         elif action == "synthesize":
             deduct_berrix(
                 request.user,
-                FEATURE_BX_COSTS["singularity_multiverse"],
+                FEATURE_BX_COSTS["multiverse_synth"],
                 "Singularity: Synthèse Multivers",
             )
             universe_name = request.data.get("universe_name", "Unnamed Universe")
@@ -511,7 +511,9 @@ class MangaVoiceLabView(APIView):
 
         # Déduction des Berrix (200 Bx pour orchestration GCP + Audio)
         deduct_berrix(
-            request.user, FEATURE_BX_COSTS["voice_lab"], "Manga Voice Lab (Doublage IA)"
+            request.user,
+            FEATURE_BX_COSTS["manga_voice"],
+            "Manga Voice Lab (Doublage IA)",
         )
 
         task_id = str(uuid.uuid4())
@@ -577,7 +579,7 @@ class VideoFateZeroLabView(APIView):
         # Déduction des Berrix (500 Bx pour transfert de style vidéo - Très lourd)
         deduct_berrix(
             request.user,
-            FEATURE_BX_COSTS["fatezero"],
+            FEATURE_BX_COSTS["style_transfer"],
             f"FateZero Style Transfer: {studio_style}",
         )
 
@@ -765,7 +767,7 @@ class VoiceProfileIngestView(APIView):
         try:
             deduct_berrix(
                 request.user,
-                FEATURE_BX_COSTS["voice_ingestion"],
+                FEATURE_BX_COSTS["voice_ingest"],
                 f"Ingestion vocale de {name}",
             )
         except Exception as e:
@@ -912,7 +914,7 @@ class MangaCleanLabView(APIView):
 
         # Déduction des Berrix (20 Bx pour inpainting de planche)
         deduct_berrix(
-            request.user, FEATURE_BX_COSTS["manga_cleaner"], "Manga Cleaner (Planche)"
+            request.user, FEATURE_BX_COSTS["manga_clean"], "Manga Cleaner (Planche)"
         )
 
         try:
@@ -945,7 +947,7 @@ class MangaTranslateLabView(APIView):
         # Déduction des Berrix (20 Bx pour inpainting + traduction)
         deduct_berrix(
             request.user,
-            FEATURE_BX_COSTS["manga_translator"],
+            FEATURE_BX_COSTS["manga_translate"],
             f"Manga Translator: {target_lang}",
         )
 
@@ -976,7 +978,7 @@ class VoiceCloningLabView(APIView):
 
         # Déduction des Berrix (100 Bx pour clonage vocal multi-passes)
         deduct_berrix(
-            request.user, FEATURE_BX_COSTS["voice_cloning"], "Voice Cloning (Audio)"
+            request.user, FEATURE_BX_COSTS["voice_clone"], "Voice Cloning (Audio)"
         )
 
         # Validation: Pitch must be an integer
