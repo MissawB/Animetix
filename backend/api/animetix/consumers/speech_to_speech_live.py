@@ -8,6 +8,7 @@ import wave
 
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
+from core.utils.gemini_models import GEMINI_LIVE
 from google import genai
 from google.genai import types
 
@@ -161,7 +162,7 @@ class SpeechToSpeechLiveConsumer(AsyncWebsocketConsumer):
                     self.voice_profile_id
                 )
 
-            model = os.getenv("GEMINI_LIVE_MODEL", "gemini-2.0-flash-exp")
+            model = GEMINI_LIVE
             config = {"response_modalities": ["AUDIO"]}
             system_prompt = "You are a helpful AI assistant."
 

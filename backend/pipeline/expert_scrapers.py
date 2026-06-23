@@ -13,6 +13,7 @@ import os  # noqa: E402
 import sys  # noqa: E402
 import time  # noqa: E402
 
+from core.utils.gemini_models import GEMINI_FLASH  # noqa: E402
 from core.utils.security import safe_http_request  # noqa: E402
 from dotenv import load_dotenv  # noqa: E402
 
@@ -137,7 +138,7 @@ Retourne uniquement le JSON, sans fioritures Markdown ou balises ```json.
 """
         try:
             response = gemini_client.models.generate_content(
-                model="gemini-2.5-flash", contents=prompt
+                model=GEMINI_FLASH, contents=prompt
             )
             raw_text = response.text.strip()
             if raw_text.startswith("```"):
@@ -223,7 +224,7 @@ Retourne uniquement le JSON, sans fioritures Markdown ou balises ```json.
 """
         try:
             response = gemini_client.models.generate_content(
-                model="gemini-2.5-flash", contents=prompt
+                model=GEMINI_FLASH, contents=prompt
             )
             raw_text = response.text.strip()
             if raw_text.startswith("```"):

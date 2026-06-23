@@ -15,6 +15,8 @@ api_path = os.path.join(backend_path, "api")
 if api_path not in sys.path:
     sys.path.insert(0, api_path)
 
+from core.utils.gemini_models import GEMINI_FLASH  # noqa: E402
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "animetix_project.settings")
 
 # Try initializing Django
@@ -140,7 +142,7 @@ class DPOFeedbackLoop:
             f"Renvoie uniquement la réponse rédigée de manière fluide et naturelle, sans aucune salutation ou métadonnée."
         )
 
-        model_name = os.getenv("ANIMETIX_GEMINI_MODEL", "gemini-2.5-flash")
+        model_name = GEMINI_FLASH
 
         for attempt in range(3):
             try:

@@ -1,5 +1,6 @@
 import os
 
+from core.utils.gemini_models import GEMINI_FLASH
 from dependency_injector import containers, providers
 from django.conf import settings
 
@@ -29,7 +30,7 @@ class InferenceContainer(containers.DeclarativeContainer):
         api_key=os.getenv("GEMINI_API_KEY"),
         project=os.getenv("GOOGLE_CLOUD_PROJECT", "animetix"),
         location=os.getenv("GOOGLE_CLOUD_LOCATION", "europe-west9"),
-        model_name=os.getenv("GEMINI_MODEL_NAME", "gemini-1.5-flash"),
+        model_name=GEMINI_FLASH,
         usage_port=infrastructure.usage_port,
     )
 
