@@ -1,0 +1,17 @@
+[
+  {"query": "Un shonen avec un héros qui veut devenir le plus fort", "media_type": "Anime"},
+  {"query": "Anime de mecha psychologique et déprimant", "media_type": "Anime"},
+  {"query": "Tranche de vie réconfortante dans un café", "media_type": "Anime"},
+  {"query": "Dark fantasy avec des chasseurs de démons", "media_type": "Anime"},
+  {"query": "Romance lycéenne avec une tsundere", "media_type": "Anime"},
+  {"query": "Thriller surnaturel avec des cahiers de la mort", "media_type": "Anime"},
+  {"query": "Aventure de pirates à la recherche d'un trésor", "media_type": "Anime"},
+  {"query": "Isekai où le héros est trop puissant", "media_type": "Anime"},
+  {"query": "Sport intense autour du volley-ball", "media_type": "Anime"},
+  {"query": "Science-fiction cyberpunk avec des cyborgs", "media_type": "Anime"},
+  {"query": "Comédie absurde de magical girls", "media_type": "Anime"},
+  {"query": "Seinen mature sur la guerre et la politique", "media_type": "Anime"},
+  {"query": "Horreur psychologique en huis clos", "media_type": "Anime"},
+  {"query": "Film Ghibli poétique sur la nature", "media_type": "Anime"},
+  {"query": "Combats de pouvoirs surnaturels entre lycéens", "media_type": "Anime"}
+]
