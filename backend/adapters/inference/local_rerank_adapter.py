@@ -2,15 +2,23 @@ import logging
 import os
 from typing import List, Optional
 
+from adapters.inference.lazy_local_model_adapter import (
+    LazyLocalModelAdapter,  # noqa: E402
+)
 from adapters.inference.rerank_mixin import RerankMixin
 from core.domain.entities.ai_schemas import InferenceResponse
-from core.ports.inference_port import InferenceNotImplementedError, InferencePort
+from core.ports.inference_port import InferenceNotImplementedError
 from core.ports.usage_port import UsagePort
 
 logger = logging.getLogger("animetix.inference.rerank")
 
 
-class LocalRerankAdapter(RerankMixin, InferencePort):
+class LocalRerankAdapter(RerankMixin, LazyLocalModelAdapter):
+    ENGINE_NAME = "local_rerank"
+
+    def _is_ready(self) -> bool:
+        return bool(self._cross_encoder)
+
     def __init__(
         self, model_name: Optional[str] = None, usage_port: Optional[UsagePort] = None
     ):
@@ -51,9 +59,3 @@ class LocalRerankAdapter(RerankMixin, InferencePort):
         raise InferenceNotImplementedError(
             "Text embedding not supported by LocalRerankAdapter"
         )
-
-    def health_check(self) -> dict:
-        return {
-            "status": "online" if self._cross_encoder else "offline",
-            "engine": "local_rerank",
-        }
