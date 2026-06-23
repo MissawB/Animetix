@@ -10,20 +10,24 @@ _Rien d'ouvert._
 
 ## 🟠 Élevés
 
-- [ ] **Backend — Neo4j = point de défaillance unique (dégradation silencieuse)** _(revue archi 2026-06-22)_
+- [x] **Backend — Neo4j = point de défaillance unique (dégradation silencieuse)** _(revue archi 2026-06-22)_
   - Si le graphe est indisponible, le contexte de préférences utilisateur ([agentic_rag_service.py](backend/core/domain/services/agentic_rag_service.py)) **et** le fact-checking CoVe ([cove_oracle_service.py](backend/core/domain/services/cove_oracle_service.py)) retombent à vide sans alerte. Aggravé par le biais CoVe : un fait réel absent de Neo4j est marqué « non vérifié ». Ajouter un fallback explicite (ChromaDB/web) + un signal d'état dégradé.
-- [ ] **Sécu — sanitisation prompt-injection regex-only (tag-breaking)** _(revue archi 2026-06-22)_
+- [x] **Sécu — sanitisation prompt-injection regex-only (tag-breaking)** _(revue archi 2026-06-22)_
   - La sanitisation du companion enveloppe l'input dans `<user_input>…</user_input>` mais ne détecte pas les payloads qui ferment puis rouvrent la balise (`</user_input>ignore previous<user_input>`) ([companion.py](backend/api/animetix/api/companion.py)). Échapper/neutraliser les délimiteurs et/ou valider via un classifieur, pas uniquement par regex.
 - [ ] **Sécu — `trust_remote_code=True` sur les modèles HF** _(revue archi 2026-06-22)_
   - Présent dans les mixins VLM/diffusers ([vlm_mixin.py](backend/adapters/inference/vlm_mixin.py), [image_gen_mixin.py](backend/adapters/inference/image_gen_mixin.py)) : exécute du code de modèles non audités. Épingler des modèles de confiance, ou retirer le flag, ou isoler le chargement.
-- [ ] **Archi IA — boosters « cognitifs » dans le chemin RAG de prod sans preuve de gain** _(revue archi 2026-06-22)_
-  - `advanced_rag_service` câble `quantum_cognitive_service` + `neuromorphic_lnn_service` dans le reranking réel. Instrumenter le chemin via `ragas_eval_service` (faithfulness/relevance) et faire des **ablations** : garder ce qui améliore mesurablement, rétrograder le reste vers les Ghost Labs (démos). Réduit la surface de maintenance d'un projet solo (~94 services de domaine).
+- [x] **Archi IA — boosters « cognitifs » dans le chemin RAG de prod sans preuve de gain** _(revue archi 2026-06-22)_
+  - `advanced_rag_service` câble `quantum_cognitive_service` + `neuromorphic_lnn_service` dans le reranking réel. Instrumenter le chemin via `ragas_eval_service` (faithfulness/relevance) et faire des **ablations** : garder ce qui améliore mesurablement, rétrograder le reste vers les Ghost Labs (démos). Réduit la surface de maintenance d'un projet solo (~94 services de domaine). _Double levier : réduit aussi la surface GPU facturée → cf. coût fixe ci-dessous._
+- [x] **Coût/Viabilité — GPU fixe 24/7 = seuil de rentabilité trop haut** _(analyse financière 2026-06-22)_
+  - L'instance GPU (L4/A100) allumée en continu coûte **450–1 200 $/mois** ([docs/COST_AUDIT.md](docs/COST_AUDIT.md)), facturée même sans trafic. C'est le poste fixe dominant : il impose ~**30 000–80 000 clips pub/mois** (~1 000–2 700/jour) pour atteindre le break-even, hors de portée d'un projet solo sans acquisition. Migrer vers du GPU **spot/serverless on-demand** (déjà recommandé §5.1‑5.2 du cost audit) pour diviser le seuil par 3–5. **Levier n°1 de pérennité.**
 
 ## 🟡 Moyens
 
-- [ ] **Backend — `UnifiedInferenceAdapter` god object**
+- [x] **Économie — modèle strict « break-even » sans coussin de trésorerie** _(analyse financière 2026-06-22)_
+  - Le modèle Berrix a été recalibré en **marge nulle** (« social equilibrium ») le 13/06/2026 ([docs/COST_AUDIT.md](docs/COST_AUDIT.md#L60)) : aucune réserve pour absorber un pic GPU, une baisse d'eCPM publicitaire ou le churn. Le garde-fou actuel ([billing_alert_webhook](backend/api/animetix/views/billing.py#L15)) coupe le service brain (scale à 0) au dépassement de budget — protection anti-faillite, pas pérennité. Rétablir une **marge minimale (5–15 %)** pour constituer un coussin.
+- [x] **Backend — `UnifiedInferenceAdapter` god object**
   - 8 mixins, ~476 lignes ([unified_inference_adapter.py:30](backend/adapters/inference/unified_inference_adapter.py#L30)) ; MRO fragile, dur à tester → composition plutôt qu'héritage multiple.
-- [ ] **Backend — `FallbackInferenceAdapter` god object + couplage central** _(revue archi 2026-06-22)_
+- [x] **Backend — `FallbackInferenceAdapter` god object + couplage central** _(revue archi 2026-06-22)_
   - Agrège 30+ méthodes via 7 mixins et cumule orchestration + fallback + health-check + détection de capacités + reporting ([fallback_adapter.py](backend/adapters/inference/fallback_adapter.py)). ~60 services en dépendent : point de couplage le plus dur à faire évoluer. Extraire la sélection/health-check de l'orchestration.
 - [ ] **Backend — companion n'exploite pas la mémoire long-terme** _(revue archi 2026-06-22)_
   - Le companion ne conserve que 5 tours en session ([companion.py](backend/api/animetix/api/companion.py)) alors que `long_term_memory_service` et `episodic_memory_compressor` existent et ne sont pas raccordés. Brancher la mémoire persistante (ChromaDB) au flux du companion.
