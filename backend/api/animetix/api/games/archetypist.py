@@ -15,6 +15,8 @@ from ...models import CreativeFusion
 
 logger = get_logger("animetix." + __name__)
 
+from core.domain.services.berrix_economy import FEATURE_BX_COSTS  # noqa: E402
+
 from animetix.api.billing import deduct_berrix  # noqa: E402
 
 from ...serializers import ArchetypistFusionSerializer  # noqa: E402
@@ -42,7 +44,11 @@ class ArchetypistStartFusionView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         # Déduction des Bx (50 Bx pour marge minimale)
-        deduct_berrix(request.user, 50, "Forge de Creative Fusion")
+        deduct_berrix(
+            request.user,
+            FEATURE_BX_COSTS["creative_fusion"],
+            "Forge de Creative Fusion",
+        )
 
         data = serializer.validated_data
         session_service = get_session_service(request)

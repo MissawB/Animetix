@@ -2,6 +2,7 @@ import json
 import logging
 import secrets
 
+from core.domain.services.berrix_economy import PACKS
 from django.conf import settings
 from django.http import HttpResponse
 from django.utils.decorators import method_decorator
@@ -181,21 +182,28 @@ class DeveloperSubscriptionMockView(APIView):
 class CreateBxCheckoutView(APIView):
     """
     Crée une session Stripe Checkout pour l'achat d'un pack de Bx.
+
+    The pack_id selects a server-authoritative entry from PACKS; client-supplied
+    amount/price_cents are intentionally ignored so the margin cannot be bypassed.
     """
 
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        amount = request.data.get("amount")  # Nombre de Bx (ex: 10000)
-        price = request.data.get("price_cents")  # Prix en centimes (ex: 499)
-
-        if not amount or not price:
+        pack_id = request.data.get("pack_id")
+        pack = PACKS.get(pack_id)
+        if not pack:
             return Response(
-                {"error": "amount and price_cents are required"}, status=400
+                {"error": "Unknown pack_id", "available": list(PACKS)}, status=400
             )
 
+        # Client-supplied amount/price_cents are intentionally ignored: the price
+        # is authoritative server-side so the margin cannot be bypassed.
         success, result = StripeBillingService.create_checkout_session(
-            user_id=request.user.id, amount_bx=amount, price_cents=price
+            user_id=request.user.id,
+            amount_bx=pack["bx"],
+            price_cents=pack["price_cents"],
+            currency=pack["currency"],
         )
 
         if not success:

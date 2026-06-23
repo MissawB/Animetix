@@ -78,3 +78,22 @@ class TestWalletAPI:
         assert response.status_code == status.HTTP_200_OK
         assert response.data["pagination"]["total_count"] == 15
         assert all(t["type"] == "ad_passive" for t in response.data["history"])
+
+    def test_watch_ad_credits_margin_safe_reward(self, api_client, test_user):
+        from core.domain.services.berrix_economy import ad_reward_bx
+
+        api_client.force_authenticate(user=test_user)
+        start = test_user.profile.wallet_balance
+        resp = api_client.post(reverse("api_wallet_watch_ad"))
+        assert resp.status_code == 200
+        test_user.profile.refresh_from_db()
+        assert resp.data["earned"] == ad_reward_bx()  # 41 at defaults, not 250
+        assert test_user.profile.wallet_balance == start + ad_reward_bx()
+
+    def test_mine_credits_capped_loss_leader(self, api_client, test_user):
+        from core.domain.services.berrix_economy import MINING_REWARD_BX
+
+        api_client.force_authenticate(user=test_user)
+        resp = api_client.post(reverse("api_wallet_mine"))
+        assert resp.status_code == 200
+        assert resp.data["earned"] == MINING_REWARD_BX  # 10

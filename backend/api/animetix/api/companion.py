@@ -42,9 +42,15 @@ class CompanionInteractView(APIView):
             )
 
         # Déduction des Bx (5 Bx pour une interaction Chat)
+        from core.domain.services.berrix_economy import FEATURE_BX_COSTS  # noqa: E402
+
         from animetix.api.billing import deduct_berrix  # noqa: E402
 
-        deduct_berrix(request.user, 5, f"Interaction Compagnon: {mentor_id}")
+        deduct_berrix(
+            request.user,
+            FEATURE_BX_COSTS["companion"],
+            f"Interaction Compagnon: {mentor_id}",
+        )
 
         # Retrieve history from session
         history = request.session.get("companion_history", [])
