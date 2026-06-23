@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from adapters.inference.capability_registry import CapabilityRegistry
 from adapters.inference.fallback_adapter import FallbackInferenceAdapter
 from pydantic import BaseModel
 
@@ -84,11 +85,11 @@ def test_fallback_introspection_capability_mapping():
     fallback = FallbackInferenceAdapter(adapters=[adapter1, adapter2])
 
     # Introspection checks
-    assert fallback._is_method_overridden(adapter2, "estimate_depth") is True
-    assert fallback._is_method_overridden(adapter1, "estimate_depth") is False
+    assert CapabilityRegistry.is_method_overridden(adapter2, "estimate_depth") is True
+    assert CapabilityRegistry.is_method_overridden(adapter1, "estimate_depth") is False
 
     # Capability cache verification
-    capable = fallback._capability_cache.get("estimate_depth", [])
+    capable = fallback._capabilities.for_method("estimate_depth")
     assert adapter2 in capable
     assert adapter1 not in capable
 

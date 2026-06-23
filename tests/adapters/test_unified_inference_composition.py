@@ -50,5 +50,5 @@ def test_capability_detection_still_routes_to_unified():
     a = _adapter()
     a.health_check = lambda: {"status": "offline"}  # avoid network in fallback init
     fb = FallbackInferenceAdapter([a])
-    assert a in fb._capability_cache.get("rerank_documents", [])
-    assert a in fb._capability_cache.get("process_manga_page", [])
+    assert a in fb._capabilities.for_method("rerank_documents")
+    assert a in fb._capabilities.for_method("process_manga_page")

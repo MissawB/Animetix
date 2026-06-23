@@ -2,6 +2,7 @@ import logging
 import time
 from typing import Any, Dict, List, Optional
 
+from adapters.inference.capability_registry import CapabilityRegistry
 from core.domain.entities.ai_schemas import InferenceResponse, TokenLogProb
 from core.ports.inference_port import InferenceNotImplementedError, InferencePort
 
@@ -20,7 +21,6 @@ class FallbackInferenceAdapter(InferencePort):
     ):
         self.adapters = [a for a in adapters if a is not None]
         self.obs_service = obs_service
-        self._capability_cache: Dict[str, List[InferencePort]] = {}
         self._online_adapters: set[InferencePort] = set()
 
         # Cache for diagnostics & advanced uncertainty
@@ -28,7 +28,7 @@ class FallbackInferenceAdapter(InferencePort):
         self._last_logprobs: Optional[List[TokenLogProb]] = None
 
         self._check_initial_health()
-        self._build_capability_cache()
+        self._capabilities = CapabilityRegistry(self.adapters)
 
     def _check_initial_health(self) -> None:
         for adapter in self.adapters:
@@ -54,51 +54,6 @@ class FallbackInferenceAdapter(InferencePort):
         online = [a for a in adapters if a in self._online_adapters]
         offline = [a for a in adapters if a not in self._online_adapters]
         return online + offline
-
-    def _is_method_overridden(self, adapter: InferencePort, method_name: str) -> bool:
-        # Ignore mock objects to avoid registering instance-level mock methods as capabilities
-        if getattr(adapter.__class__, "__module__", "") == "unittest.mock" or hasattr(
-            adapter, "mock_calls"
-        ):
-            return False
-
-        cls = adapter.__class__
-        method = getattr(cls, method_name, None)
-        if method is None or not callable(method):
-            return False
-
-        port_method = getattr(InferencePort, method_name, None)
-        if port_method is None:
-            return True
-
-        adapter_func = getattr(method, "__func__", method)
-        port_func = getattr(port_method, "__func__", port_method)
-
-        return adapter_func is not port_func
-
-    def _build_capability_cache(self) -> None:
-        import inspect  # noqa: E402
-
-        from core.ports.inference_port import InferencePort  # noqa: E402
-
-        port_methods = [
-            name
-            for name, val in inspect.getmembers(
-                InferencePort, predicate=inspect.isfunction
-            )
-            if not name.startswith("_")
-        ]
-
-        for method_name in port_methods:
-            capable = [
-                adapter
-                for adapter in self.adapters
-                if self._is_method_overridden(adapter, method_name)
-            ]
-            self._capability_cache[method_name] = capable
-            logger.debug(
-                f"⚙️ [Fallback] Registered capable engines for '{method_name}': {[a.__class__.__name__ for a in capable]}"
-            )
 
     def _report_failure(
         self,
@@ -139,7 +94,7 @@ class FallbackInferenceAdapter(InferencePort):
         **kwargs,
     ) -> InferenceResponse:
         last_error = ""
-        capable_adapters = self._capability_cache.get("generate", [])
+        capable_adapters = self._capabilities.for_method("generate")
         if not capable_adapters:
             capable_adapters = self.adapters
 
@@ -216,7 +171,7 @@ class FallbackInferenceAdapter(InferencePort):
         **kwargs,
     ):
         """Streaming avec repli intelligent."""
-        capable_adapters = self._capability_cache.get("stream_generate", [])
+        capable_adapters = self._capabilities.for_method("stream_generate")
         if not capable_adapters:
             capable_adapters = self.adapters
 
@@ -378,7 +333,7 @@ class FallbackInferenceAdapter(InferencePort):
             raise e
 
     def _fallback_call(self, method_name: str, *args, **kwargs):
-        capable_adapters = self._capability_cache.get(method_name, [])
+        capable_adapters = self._capabilities.for_method(method_name)
         if not capable_adapters:
             capable_adapters = self.adapters
 
@@ -600,7 +555,7 @@ class FallbackInferenceAdapter(InferencePort):
         if 0 <= index < len(self.adapters):
             adapter = self.adapters.pop(index)
             self.adapters.insert(0, adapter)
-            self._build_capability_cache()
+            self._capabilities.rebuild(self.adapters)
             logger.info(
                 f"🔄 [Fallback] Primary adapter set to {adapter.__class__.__name__}"
             )
