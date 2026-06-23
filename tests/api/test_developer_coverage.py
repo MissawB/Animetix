@@ -216,9 +216,10 @@ def test_subscribe_mock_sets_pro_tier(auth_client, user):
 # --------------------------------------------------------------------------- #
 @pytest.mark.django_db
 def test_bx_checkout_missing_fields(auth_client):
+    # No pack_id -> 400 with "Unknown pack_id" error listing available packs.
     response = auth_client.post(reverse("api_wallet_checkout"), {}, format="json")
     assert response.status_code == 400
-    assert "required" in response.json()["error"]
+    assert "Unknown pack_id" in response.json()["error"]
 
 
 @pytest.mark.django_db
@@ -230,7 +231,7 @@ def test_bx_checkout_success(auth_client):
     ):
         response = auth_client.post(
             reverse("api_wallet_checkout"),
-            {"amount": 10000, "price_cents": 499},
+            {"pack_id": "initiate"},
             format="json",
         )
     assert response.status_code == 200
@@ -246,11 +247,47 @@ def test_bx_checkout_stripe_failure(auth_client):
     ):
         response = auth_client.post(
             reverse("api_wallet_checkout"),
-            {"amount": 10000, "price_cents": 499},
+            {"pack_id": "initiate"},
             format="json",
         )
     assert response.status_code == 500
     assert response.json()["error"] == "Internal server error"
+
+
+@pytest.mark.django_db
+def test_bx_checkout_ignores_client_price_and_uses_catalog(auth_client):
+    with patch.object(
+        developer_mod.StripeBillingService,
+        "create_checkout_session",
+        return_value=(True, "https://stripe/bx"),
+    ) as mock_create:
+        # Client tries to buy a real pack for 1 cent — server must ignore the price.
+        resp = auth_client.post(
+            reverse("api_wallet_checkout"),
+            {"pack_id": "initiate", "amount": 999999, "price_cents": 1},
+            format="json",
+        )
+    assert resp.status_code == 200
+    # The endpoint must call Stripe with the CATALOG price, not the client-supplied values.
+    mock_create.assert_called_once()
+    call_kwargs = mock_create.call_args.kwargs
+    assert (
+        call_kwargs["amount_bx"] == 10000
+    ), f"Expected catalog amount_bx=10000, got {call_kwargs['amount_bx']}"
+    assert call_kwargs["price_cents"] == 499, (
+        f"Expected catalog price_cents=499, got {call_kwargs['price_cents']} "
+        "(server must NOT use the client-supplied price_cents=1)"
+    )
+
+
+@pytest.mark.django_db
+def test_bx_checkout_rejects_unknown_pack(auth_client):
+    resp = auth_client.post(
+        reverse("api_wallet_checkout"),
+        {"pack_id": "does_not_exist"},
+        format="json",
+    )
+    assert resp.status_code == 400
 
 
 # --------------------------------------------------------------------------- #

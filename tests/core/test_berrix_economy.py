@@ -1,0 +1,75 @@
+import math
+
+from core.domain.services import berrix_economy as econ
+
+
+def test_anchors_have_expected_defaults():
+    assert econ.BX_PRICE_USD_NET == 0.00043
+    assert econ.TARGET_MARGIN == 0.10
+    assert econ.AD_REVENUE_USD == 0.02
+    assert econ.MINING_REWARD_BX == 10
+
+
+def test_bx_cost_for_usd_rounds_up_and_guarantees_margin():
+    # A feature costing $0.002 of compute must charge enough Bx that the compute
+    # is at most (1 - margin) of the Bx value spent.
+    price = econ.bx_cost_for_usd(0.002)
+    assert price == math.ceil(0.002 / (0.00043 * 0.90))  # == 6
+    # margin holds: compute <= (1 - margin) * value spent
+    assert 0.002 <= price * econ.BX_PRICE_USD_NET * (1 - econ.TARGET_MARGIN)
+
+
+def test_bx_cost_for_usd_is_never_zero_for_positive_cost():
+    assert econ.bx_cost_for_usd(0.0000001) >= 1
+
+
+def test_ad_reward_bx_keeps_margin_on_ad_funded_bx():
+    reward = econ.ad_reward_bx()
+    # Bx granted are worth at most (1 - margin) of the ad revenue.
+    assert reward == math.floor(0.02 * (1 - 0.10) / 0.00043)  # == 41
+    assert reward * econ.BX_PRICE_USD_NET <= econ.AD_REVENUE_USD * (
+        1 - econ.TARGET_MARGIN
+    )
+
+
+def test_every_feature_price_clears_the_margin_floor():
+    """Every entry in FEATURE_BX_COSTS must be >= bx_cost_for_usd of its USD anchor.
+
+    This is the margin-cushion guarantee: if we charge fewer Bx than required by
+    the margin model, the treasury loses money on that call.
+    """
+    assert hasattr(econ, "FEATURE_COMPUTE_USD"), "FEATURE_COMPUTE_USD table missing"
+    assert hasattr(econ, "FEATURE_BX_COSTS"), "FEATURE_BX_COSTS table missing"
+    assert econ.FEATURE_COMPUTE_USD, "FEATURE_COMPUTE_USD must not be empty"
+    assert econ.FEATURE_BX_COSTS, "FEATURE_BX_COSTS must not be empty"
+    assert (
+        econ.FEATURE_COMPUTE_USD.keys() == econ.FEATURE_BX_COSTS.keys()
+    ), "FEATURE_COMPUTE_USD and FEATURE_BX_COSTS must have identical key sets"
+    for key, usd in econ.FEATURE_COMPUTE_USD.items():
+        floor = econ.bx_cost_for_usd(usd)
+        charged = econ.FEATURE_BX_COSTS[key]
+        assert charged >= floor, (
+            f"Feature '{key}': charges {charged} Bx but margin floor is {floor} Bx "
+            f"(compute cost ${usd:.4f})"
+        )
+
+
+def test_known_underfloor_features_were_bumped():
+    """companion, agentic_rag, and creative_fusion are priced above their floor.
+
+    Their compute costs are cheap enough that bx_cost_for_usd() returns a floor
+    lower than the brand / complexity premium we want to charge. Verify the
+    literal values in the table are the bumped ones from the spec.
+    """
+    assert econ.FEATURE_BX_COSTS["companion"] == 6
+    assert econ.FEATURE_BX_COSTS["agentic_rag"] == 6
+    assert econ.FEATURE_BX_COSTS["creative_fusion"] == 78
+
+
+def test_packs_are_priced_at_or_above_canonical_rate():
+    # Each pack must sell Bx for at least their net backing value (no underpricing).
+    for pid, pack in econ.PACKS.items():
+        net_usd = pack["price_cents"] / 100.0
+        assert (
+            net_usd >= pack["bx"] * econ.BX_PRICE_USD_NET * 0.95
+        ), f"pack {pid} underpriced vs canonical Bx value"
