@@ -1,6 +1,12 @@
 import os
 
 from core.utils.gemini_models import GEMINI_FLASH
+from core.utils.local_models import (
+    COMPACT_REASONING_MODEL,
+    LLM_OLLAMA_MODEL,
+    LOCAL_DIFFUSION_MODEL_ID,
+    LOCAL_TEXT_MODEL,
+)
 from dependency_injector import containers, providers
 from django.conf import settings
 
@@ -15,12 +21,12 @@ class InferenceContainer(containers.DeclarativeContainer):
             "adapters.inference.unified_inference_adapter", "UnifiedInferenceAdapter"
         ),
         api_base=os.getenv("LLM_API_BASE", "http://localhost:11434/v1"),
-        model_name=os.getenv("LLM_MODEL_NAME", "llama3"),
+        model_name=LLM_OLLAMA_MODEL,
     )
 
     local_text_adapter = providers.Singleton(
         LazyClass("adapters.inference.local_text_adapter", "LocalTextAdapter"),
-        model_id=os.getenv("LOCAL_MODEL_ID", "Qwen/Qwen2.5-1.5B-Instruct"),
+        model_id=LOCAL_TEXT_MODEL,
         use_4bit=True,
         usage_port=infrastructure.usage_port,
     )
@@ -51,14 +57,14 @@ class InferenceContainer(containers.DeclarativeContainer):
         LazyClass(
             "adapters.inference.compact_reasoning_adapter", "CompactReasoningAdapter"
         ),
-        model_id=os.getenv("COMPACT_MODEL_ID", "WeiboAI/VibeThinker-3B"),
+        model_id=COMPACT_REASONING_MODEL,
         use_4bit=True,
         usage_port=infrastructure.usage_port,
     )
 
     diffusers_adapter = providers.Singleton(
         LazyClass("adapters.inference.diffusers_adapter", "DiffusersAdapter"),
-        model_id=os.getenv("LOCAL_DIFFUSION_MODEL", "black-forest-labs/FLUX.1-schnell"),
+        model_id=LOCAL_DIFFUSION_MODEL_ID,
         use_fp16=True,
         usage_port=infrastructure.usage_port,
     )

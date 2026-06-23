@@ -8,6 +8,7 @@ from adapters.inference.lazy_local_model_adapter import (
 from core.domain.entities.ai_schemas import InferenceResponse
 from core.ports.inference_port import InferenceNotImplementedError
 from core.ports.usage_port import UsagePort
+from core.utils.local_models import LOCAL_DIFFUSION_MODEL_ID
 
 logger = logging.getLogger("animetix.inference.image")
 
@@ -24,7 +25,7 @@ class DiffusersAdapter(ImageGenMixin, LazyLocalModelAdapter):
 
     def __init__(
         self,
-        model_id: str = "black-forest-labs/FLUX.1-schnell",
+        model_id: str = LOCAL_DIFFUSION_MODEL_ID,
         use_fp16: bool = True,
         usage_port: Optional[UsagePort] = None,
     ):

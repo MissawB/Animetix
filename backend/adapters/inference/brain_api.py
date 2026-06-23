@@ -22,6 +22,7 @@ sys.path.append(
 from adapters.inference.unified_inference_adapter import (  # noqa: E402
     UnifiedInferenceAdapter,
 )
+from core.utils.local_models import LLM_OLLAMA_MODEL  # noqa: E402
 
 logger = logging.getLogger("animetix.brain")
 
@@ -52,7 +53,7 @@ from contextlib import asynccontextmanager  # noqa: E402
 
 # Configuration des moteurs d'inférence
 api_base = os.getenv("LLM_API_BASE", "http://localhost:11434/v1")
-model_name = os.getenv("LLM_MODEL_NAME", "llama3")
+model_name = LLM_OLLAMA_MODEL
 
 # Initialisation de l'unité de calcul locale (Unified avec GPU)
 brain_engine = UnifiedInferenceAdapter(api_base=api_base, model_name=model_name)

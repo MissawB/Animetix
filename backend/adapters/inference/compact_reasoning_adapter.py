@@ -4,6 +4,7 @@ from typing import Optional
 from core.domain.entities.ai_schemas import InferenceResponse
 from core.domain.exceptions import InferenceError
 from core.ports.usage_port import UsagePort
+from core.utils.local_models import COMPACT_REASONING_MODEL
 
 from .local_text_adapter import LocalTextAdapter
 
@@ -18,7 +19,7 @@ class CompactReasoningAdapter(LocalTextAdapter):
 
     def __init__(
         self,
-        model_id: str = "WeiboAI/VibeThinker-3B",
+        model_id: str = COMPACT_REASONING_MODEL,
         use_4bit: bool = True,
         usage_port: Optional[UsagePort] = None,
     ):
