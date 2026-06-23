@@ -2,9 +2,9 @@ import logging
 import os
 from typing import Any, List, Optional
 
+from adapters.inference.lazy_local_model_adapter import LazyLocalModelAdapter
 from core.domain.entities.ai_schemas import InferenceResponse
 from core.domain.exceptions import InferenceError
-from core.ports.inference_port import InferencePort
 from core.utils.hf_security import resolve_trust_remote_code, trusted_revision
 from core.utils.lazy_import import lazy_import
 
@@ -16,7 +16,9 @@ from core.ports.usage_port import UsagePort  # noqa: E402
 logger = logging.getLogger("animetix.inference.text")
 
 
-class LocalTextAdapter(InferencePort):
+class LocalTextAdapter(LazyLocalModelAdapter):
+    ENGINE_NAME = "local_text"
+
     def __init__(
         self,
         model_id: str = "Qwen/Qwen3.5-4B",
@@ -45,45 +47,36 @@ class LocalTextAdapter(InferencePort):
 
         self.radix_cache = RadixCacheManager(max_nodes=16, min_prefix_len=10)
 
-    def _load_model(self):
-        if self.model:
-            return
-        try:
-            from transformers import (
-                AutoModelForCausalLM,  # noqa: E402
-                AutoTokenizer,
-                BitsAndBytesConfig,
-            )
+    def _load_model_impl(self) -> None:
+        from transformers import (
+            AutoModelForCausalLM,  # noqa: E402
+            AutoTokenizer,
+            BitsAndBytesConfig,
+        )
 
-            logger.info(f"🏗️ Loading Local Text Model: {self.model_id}")
-            self.tokenizer = AutoTokenizer.from_pretrained(
-                self.model_id, revision=trusted_revision(self.model_id) or "main"
-            )
-            quantization_config = (
-                BitsAndBytesConfig(load_in_4bit=True) if self.use_4bit else None
-            )
-            self.model = AutoModelForCausalLM.from_pretrained(
-                self.model_id,
-                revision=trusted_revision(self.model_id) or "main",
+        logger.info(f"🏗️ Loading Local Text Model: {self.model_id}")
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            self.model_id, revision=trusted_revision(self.model_id) or "main"
+        )
+        quantization_config = (
+            BitsAndBytesConfig(load_in_4bit=True) if self.use_4bit else None
+        )
+        self.model = AutoModelForCausalLM.from_pretrained(
+            self.model_id,
+            revision=trusted_revision(self.model_id) or "main",
+            device_map="auto",
+            quantization_config=quantization_config,
+            trust_remote_code=resolve_trust_remote_code(self.model_id),
+        )
+
+        if self.speculative_enabled and self.draft_model_id:
+            logger.info(f"🏗️ Loading Draft Assistant Model: {self.draft_model_id}")
+            self.draft_model = AutoModelForCausalLM.from_pretrained(
+                self.draft_model_id,
+                revision=trusted_revision(self.draft_model_id) or "main",
                 device_map="auto",
                 quantization_config=quantization_config,
-                trust_remote_code=resolve_trust_remote_code(self.model_id),
-            )
-
-            # Load assistant model if speculative decoding is enabled
-            if self.speculative_enabled and self.draft_model_id:
-                logger.info(f"🏗️ Loading Draft Assistant Model: {self.draft_model_id}")
-                self.draft_model = AutoModelForCausalLM.from_pretrained(
-                    self.draft_model_id,
-                    revision=trusted_revision(self.draft_model_id) or "main",
-                    device_map="auto",
-                    quantization_config=quantization_config,
-                    trust_remote_code=resolve_trust_remote_code(self.draft_model_id),
-                )
-        except Exception as e:
-            logger.error(f"❌ Failed to load local text model: {e}")
-            raise InferenceError(
-                f"Critical failure during text model loading: {str(e)}"
+                trust_remote_code=resolve_trust_remote_code(self.draft_model_id),
             )
 
     def generate(
@@ -209,8 +202,5 @@ class LocalTextAdapter(InferencePort):
 
         return embedding.tolist()
 
-    def health_check(self) -> dict:
-        return {
-            "status": "online" if self.model or self._embedding_model else "offline",
-            "engine": "local_text",
-        }
+    def _is_ready(self) -> bool:
+        return self.model is not None or self._embedding_model is not None
