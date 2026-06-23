@@ -106,48 +106,22 @@ New package `backend/adapters/inference/components/`:
       return self._rerank.rerank_documents(query, documents)
   ```
 
-#### 4. Old mixin files → delegating shims (no duplication)
+#### 4. Old mixin files — left untouched (minimal blast radius)
 
 All eight mixins are **shared**: `MangaOcrMixin` is also inherited by `VisionTransformersAdapter`,
-and `RerankMixin` by `LocalRerankAdapter` (verified by grep). They cannot be deleted, and copying
-their logic into the new components would duplicate it.
+and `RerankMixin` by `LocalRerankAdapter` (verified by grep). They cannot be deleted.
 
-So the component is the **single source of truth**, and each pilot mixin becomes a **thin shim**
-that lazily builds its component (bound to `self`) and delegates:
+For this low-risk pilot we **leave both mixin files (and every other adapter) completely
+untouched**. The new components are used **only by `UnifiedInferenceAdapter`**. This means the
+component logic is, transitionally, **duplicated** from the mixin — an accepted, documented cost
+(see follow-up). It buys a near-zero blast radius: `VisionTransformersAdapter`, `LocalRerankAdapter`,
+their `health_check`s, and all their existing tests are unaffected. The alternative (mixin →
+delegating shim, single source) was rejected for the pilot because it would force changes to
+`LocalRerankAdapter.health_check` (which reads `self._cross_encoder`) and retargeting of tests that
+patch mixin-module internals — broadening the blast radius.
 
-```python
-class RerankMixin:
-    @property
-    def _rerank_component(self):
-        comp = self.__dict__.get("_rerank_component_instance")
-        if comp is None:
-            from adapters.inference.components.context import InferenceComponentContext
-            from adapters.inference.components.rerank_component import RerankComponent
-            ctx = InferenceComponentContext(
-                log_usage=self._log_usage,
-                generate=getattr(self, "generate", None),
-            )
-            comp = RerankComponent(
-                ctx,
-                reranker_model_name=getattr(
-                    self, "reranker_model_name",
-                    "cross-encoder/ms-marco-MiniLM-L-12-v2",
-                ),
-            )
-            self.__dict__["_rerank_component_instance"] = comp
-        return comp
-
-    def rerank_documents(self, query, documents):
-        return self._rerank_component.rerank_documents(query, documents)
-```
-
-`MangaOcrMixin` becomes the same shape (no `generate`/`reranker_model_name` needed). The shim's
-method stays on the class, so capability detection keeps working for the adapters that inherit the
-mixin. `UnifiedInferenceAdapter` does NOT inherit the two mixins anymore; it builds the components
-directly and delegates (section 3). One implementation, every consumer routed through it.
-
-Because the shim changes the runtime path for `LocalRerankAdapter` and `VisionTransformersAdapter`
-too, characterization tests cover those adapters (section Testing), not just `UnifiedInferenceAdapter`.
+The follow-up (migrate the remaining adapters to the components and delete the mixins, removing the
+duplication) is tracked in the TODO.
 
 ## Latent bug (preserved, out of scope)
 
@@ -167,15 +141,14 @@ and locks it with a characterization test. Fixing it is a separate follow-up.
   constructed with a fake `InferenceComponentContext` (a recorder `log_usage`, a stub `generate`);
   heavy model loads (`pipeline`, `CrossEncoder`) and HTTP (`safe_http_request`) mocked. Assert
   `log_usage` is invoked with the right engine string, and the score/return shapes.
-- **Shared-consumer characterization (shim blast radius):** because the mixin becomes a shim,
-  `LocalRerankAdapter.rerank_documents(...)` and `VisionTransformersAdapter.process_manga_page(...)`
-  now run through the component. Add/confirm characterization tests on those two adapters (heavy
-  loads + HTTP mocked) so the shim is proven behavior-preserving for them, not only for
-  `UnifiedInferenceAdapter`.
-- **Capability-detection guard (central):** build `FallbackInferenceAdapter([adapter])` and assert
-  `adapter` is in `_capability_cache["rerank_documents"]` and `_capability_cache["process_manga_page"]`
-  for `UnifiedInferenceAdapter` (delegating methods) AND for `LocalRerankAdapter` /
-  `VisionTransformersAdapter` (shim methods) — proving routing is preserved for every consumer.
+- **Capability-detection guard (central):** build `FallbackInferenceAdapter([unified_adapter])` and
+  assert `unified_adapter` is in `_capability_cache["rerank_documents"]` and
+  `_capability_cache["process_manga_page"]` — proving the delegating methods keep
+  `UnifiedInferenceAdapter` routable after it drops the two mixins.
+- **Regression guard:** the existing suite must stay green. The other adapters' tests are untouched
+  (mixins unchanged); the one Unified-side test that references these methods
+  (`tests/adapters/test_brain_api.py`) monkeypatches the methods themselves, so it is unaffected.
+  The plan's final task re-runs the inference suites to confirm.
 - All tests mock LLM/GPU/HTTP — CI-safe (no live model, no network).
 
 ## Risks / mitigations
@@ -186,9 +159,10 @@ and locks it with a characterization test. Fixing it is a separate follow-up.
   on the current adapter; the component logic is moved verbatim.
 - **Risk:** context grows into a new god-object. *Mitigation:* add fields only as a migrated
   component needs them; pilot keeps it to two.
-- **Risk:** the shim changes the runtime path of `LocalRerankAdapter` / `VisionTransformersAdapter`
-  (broader blast radius than Unified-only). *Mitigation:* component logic moved verbatim from the
-  mixin; characterization tests on those two adapters lock their behavior before and after.
+- **Risk:** transitional duplication between the components and the still-present mixins drifts over
+  time. *Mitigation:* the components are copied verbatim from the mixins now; the TODO follow-up
+  (migrate the other adapters to the components, delete the mixins) removes the duplication. Scope
+  kept to Unified-only to keep the pilot's blast radius minimal.
 
 ## Out of scope / follow-up
 
