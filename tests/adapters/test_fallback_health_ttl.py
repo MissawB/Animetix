@@ -116,3 +116,25 @@ def test_failed_adapter_drops_to_offline_segment_after_ttl():
     ordered = fb._get_ordered_adapters([a, b])
     assert ordered == [a, b]  # A (online) before B (offline)
     assert b not in fb._online_adapters
+
+
+def test_public_health_check_is_cached_within_ttl():
+    clock = FakeClock()
+    a = SpyAdapter("A", online=True)
+    fb = FallbackInferenceAdapter([a], health_ttl=30.0, clock=clock)
+    assert a.health_calls == 1  # init probe
+    result = fb.health_check()
+    assert result["status"] == "online"
+    assert result["adapters"] == [{"status": "online"}]
+    # No extra probe within TTL.
+    assert a.health_calls == 1
+
+
+def test_public_health_check_reports_offline_when_all_offline():
+    clock = FakeClock()
+    a = SpyAdapter("A", online=False)
+    fb = FallbackInferenceAdapter([a], health_ttl=30.0, clock=clock)
+    result = fb.health_check()
+    # Routing keeps A (safety net) but reported health is offline.
+    assert result["status"] == "offline"
+    assert a in fb._online_adapters

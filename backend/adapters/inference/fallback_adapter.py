@@ -592,9 +592,12 @@ class FallbackInferenceAdapter(InferencePort):
         return self._fallback_call("get_multimodal_late_interaction", image_data) or []
 
     def health_check(self) -> dict:
-        statuses = [a.health_check() for a in self.adapters]
-        is_online = any(s.get("status") == "online" for s in statuses)
-        return {"status": "online" if is_online else "offline", "adapters": statuses}
+        self._refresh_health_if_stale()
+        is_online = any(s.get("status") == "online" for s in self._cached_statuses)
+        return {
+            "status": "online" if is_online else "offline",
+            "adapters": self._cached_statuses,
+        }
 
     def set_primary_adapter(self, index: int) -> bool:
         """Change dynamiquement l'adaptateur prioritaire."""
