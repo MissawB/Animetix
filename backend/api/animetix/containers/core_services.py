@@ -96,6 +96,7 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         LazyClass("core.domain.services.companion_service", "CompanionService"),
         llm_service=agentic.llm_service,
         prompt_manager=infrastructure.prompt_manager,
+        memory_service=agentic.memory_service,
     )
 
     blind_test_service = providers.Singleton(

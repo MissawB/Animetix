@@ -62,6 +62,7 @@ class CompanionInteractView(APIView):
                 user_msg=user_message,
                 context=context_url,
                 history=history,
+                user_id=request.user.id,
             )
 
             # 2. Output Guardrail (Fact-checking, Hallucination)
@@ -86,8 +87,11 @@ class CompanionInteractView(APIView):
             history.append({"role": "user", "content": user_message})
             history.append({"role": "assistant", "content": response_text})
 
-            # Keep only last 5 entries
+            # Persist turns evicted from the 5-turn window into long-term memory,
+            # then keep only the last 5.
             if len(history) > 5:
+                evicted = history[:-5]
+                companion_service.remember(request.user.id, evicted)
                 history = history[-5:]
 
             request.session["companion_history"] = history
