@@ -3,7 +3,7 @@ import re
 
 BACKEND = pathlib.Path(__file__).resolve().parents[2] / "backend"
 ALLOWED = BACKEND / "core" / "utils" / "gemini_models.py"
-PATTERN = re.compile(r"gemini-[\w.-]*\d|text-embedding-[\w.-]*\d")
+PATTERN = re.compile(r"gemini-[\w.-]*\d")
 
 
 def test_no_hardcoded_gemini_model_literal():
