@@ -106,12 +106,48 @@ New package `backend/adapters/inference/components/`:
       return self._rerank.rerank_documents(query, documents)
   ```
 
-### 4. Old mixin files
+#### 4. Old mixin files → delegating shims (no duplication)
 
-Grep the repo for imports of `manga_ocr`/`MangaOcrMixin` and `rerank_mixin`/`RerankMixin`. If the
-only importer is `unified_inference_adapter.py`, delete `manga_ocr.py` and `rerank_mixin.py`. If
-another adapter (e.g. `VisionTransformersAdapter`, named in the manga_ocr docstring) still imports
-one, leave that file in place but remove it from `UnifiedInferenceAdapter`'s bases.
+All eight mixins are **shared**: `MangaOcrMixin` is also inherited by `VisionTransformersAdapter`,
+and `RerankMixin` by `LocalRerankAdapter` (verified by grep). They cannot be deleted, and copying
+their logic into the new components would duplicate it.
+
+So the component is the **single source of truth**, and each pilot mixin becomes a **thin shim**
+that lazily builds its component (bound to `self`) and delegates:
+
+```python
+class RerankMixin:
+    @property
+    def _rerank_component(self):
+        comp = self.__dict__.get("_rerank_component_instance")
+        if comp is None:
+            from adapters.inference.components.context import InferenceComponentContext
+            from adapters.inference.components.rerank_component import RerankComponent
+            ctx = InferenceComponentContext(
+                log_usage=self._log_usage,
+                generate=getattr(self, "generate", None),
+            )
+            comp = RerankComponent(
+                ctx,
+                reranker_model_name=getattr(
+                    self, "reranker_model_name",
+                    "cross-encoder/ms-marco-MiniLM-L-12-v2",
+                ),
+            )
+            self.__dict__["_rerank_component_instance"] = comp
+        return comp
+
+    def rerank_documents(self, query, documents):
+        return self._rerank_component.rerank_documents(query, documents)
+```
+
+`MangaOcrMixin` becomes the same shape (no `generate`/`reranker_model_name` needed). The shim's
+method stays on the class, so capability detection keeps working for the adapters that inherit the
+mixin. `UnifiedInferenceAdapter` does NOT inherit the two mixins anymore; it builds the components
+directly and delegates (section 3). One implementation, every consumer routed through it.
+
+Because the shim changes the runtime path for `LocalRerankAdapter` and `VisionTransformersAdapter`
+too, characterization tests cover those adapters (section Testing), not just `UnifiedInferenceAdapter`.
 
 ## Latent bug (preserved, out of scope)
 
@@ -131,9 +167,15 @@ and locks it with a characterization test. Fixing it is a separate follow-up.
   constructed with a fake `InferenceComponentContext` (a recorder `log_usage`, a stub `generate`);
   heavy model loads (`pipeline`, `CrossEncoder`) and HTTP (`safe_http_request`) mocked. Assert
   `log_usage` is invoked with the right engine string, and the score/return shapes.
+- **Shared-consumer characterization (shim blast radius):** because the mixin becomes a shim,
+  `LocalRerankAdapter.rerank_documents(...)` and `VisionTransformersAdapter.process_manga_page(...)`
+  now run through the component. Add/confirm characterization tests on those two adapters (heavy
+  loads + HTTP mocked) so the shim is proven behavior-preserving for them, not only for
+  `UnifiedInferenceAdapter`.
 - **Capability-detection guard (central):** build `FallbackInferenceAdapter([adapter])` and assert
   `adapter` is in `_capability_cache["rerank_documents"]` and `_capability_cache["process_manga_page"]`
-  — proving the delegating methods keep the adapter routable for those capabilities.
+  for `UnifiedInferenceAdapter` (delegating methods) AND for `LocalRerankAdapter` /
+  `VisionTransformersAdapter` (shim methods) — proving routing is preserved for every consumer.
 - All tests mock LLM/GPU/HTTP — CI-safe (no live model, no network).
 
 ## Risks / mitigations
@@ -144,6 +186,9 @@ and locks it with a characterization test. Fixing it is a separate follow-up.
   on the current adapter; the component logic is moved verbatim.
 - **Risk:** context grows into a new god-object. *Mitigation:* add fields only as a migrated
   component needs them; pilot keeps it to two.
+- **Risk:** the shim changes the runtime path of `LocalRerankAdapter` / `VisionTransformersAdapter`
+  (broader blast radius than Unified-only). *Mitigation:* component logic moved verbatim from the
+  mixin; characterization tests on those two adapters lock their behavior before and after.
 
 ## Out of scope / follow-up
 
