@@ -155,7 +155,8 @@ def test_load_model_cpu_selects_float32(mocker):
     _, kwargs = ld.model_from_pretrained.call_args
     assert kwargs["torch_dtype"] == "FP32"  # cpu branch -> float32 sentinel
     assert kwargs["device_map"] == "auto"
-    assert kwargs["trust_remote_code"] is True
+    # "vlm/cpu" is not allowlisted, so resolve_trust_remote_code -> False
+    assert kwargs["trust_remote_code"] is False
     # Positional model id is forwarded.
     assert ld.model_from_pretrained.call_args.args[0] == "vlm/cpu"
 
