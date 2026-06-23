@@ -3,8 +3,11 @@ import logging
 import os
 from typing import Any, Dict, List, Optional
 
+from adapters.inference.lazy_local_model_adapter import (
+    LazyLocalModelAdapter,  # noqa: E402
+)
 from core.domain.entities.ai_schemas import InferenceResponse
-from core.ports.inference_port import InferenceNotImplementedError, InferencePort
+from core.ports.inference_port import InferenceNotImplementedError
 from core.ports.usage_port import UsagePort
 from core.utils.model_registry import get_verified_revision
 from huggingface_hub import InferenceClient
@@ -12,7 +15,12 @@ from huggingface_hub import InferenceClient
 logger = logging.getLogger("animetix.inference.qwen3vl")
 
 
-class Qwen3VLAdapter(InferencePort):
+class Qwen3VLAdapter(LazyLocalModelAdapter):
+    ENGINE_NAME = "Qwen3-VL"
+
+    def _is_ready(self) -> bool:
+        return self.client is not None
+
     def __init__(
         self,
         model_id: str = "Qwen/Qwen3-VL-30B-A3B-Instruct",
@@ -203,6 +211,3 @@ class Qwen3VLAdapter(InferencePort):
         except Exception as e:
             logger.error(f"Qwen3-VL visual rerank failed: {e}")
             return [{"index": i, "score": 0.0} for i in range(len(image_urls))]
-
-    def health_check(self) -> dict:
-        return {"status": "online", "engine": "Qwen3-VL"}

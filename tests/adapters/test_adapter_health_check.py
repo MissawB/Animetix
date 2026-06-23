@@ -7,6 +7,8 @@ from adapters.inference.audio_transformers_adapter import AudioTransformersAdapt
 from adapters.inference.diffusers_adapter import DiffusersAdapter
 from adapters.inference.local_rerank_adapter import LocalRerankAdapter
 from adapters.inference.manga_ocr_adapter import MangaOCRAdapter
+from adapters.inference.qwen3_vl_adapter import Qwen3VLAdapter
+from adapters.inference.vision_transformers_adapter import VisionTransformersAdapter
 
 
 def test_diffusers_health_check_readiness_and_fields():
@@ -47,3 +49,16 @@ def test_manga_ocr_health_check_readiness():
     assert a.health_check() == {"status": "offline", "engine": "LightonOCR"}
     a.ocr_pipeline = object()
     assert a.health_check()["status"] == "online"
+
+
+def test_qwen3_vl_health_check_precise_readiness():
+    a = object.__new__(Qwen3VLAdapter)
+    a.client = None
+    assert a.health_check() == {"status": "offline", "engine": "Qwen3-VL"}
+    a.client = object()
+    assert a.health_check()["status"] == "online"
+
+
+def test_vision_transformers_facade_always_online():
+    a = object.__new__(VisionTransformersAdapter)
+    assert a.health_check() == {"status": "online", "engine": "vision_transformers"}
