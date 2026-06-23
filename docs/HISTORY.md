@@ -2,6 +2,14 @@
 
 This document archives the major milestones of the project's technical evolution.
 
+## [2026-06-22] Session: Typed inference-failure sentinel (drop the `"Erreur"` string heuristic)
+
+### Fix: brittle string-based fallback routing
+`FallbackInferenceAdapter` decided an engine had failed by testing `result.text.strip().startswith("Erreur")` in both `generate()` and `stream_generate()`. Fragile and French-locale-specific: a genuine model answer that merely *began with* « Erreur… » (e.g. _"Erreur 404 est un thème de Serial Experiments Lain"_) was misrouted to the next engine. Audit confirmed **no production text adapter** actually returned such a response — they all signal failure by **raising** (`InferenceError` / `raise`), which the orchestrator already catches — so the string branch was dead-but-harmful legacy.
+- Added a typed sentinel `InferenceResponse.is_error: bool = False` + an `InferenceResponse.failure(message)` factory ([ai_schemas.py](../backend/core/domain/entities/ai_schemas.py)). Adapters that prefer to soft-fail (without raising) now set the flag instead of relying on a magic prefix.
+- `FallbackInferenceAdapter` now falls through on `result.is_error` (not on the text prefix); the terminal "Échec critique" response is built via `.failure(...)` so total-failure is detectable downstream ([fallback_adapter.py](../backend/adapters/inference/fallback_adapter.py)).
+- TDD: updated the two `*_erreur_*` fall-through tests to drive the sentinel, added a regression test asserting an answer starting with "Erreur" is now returned as success, plus factory/default tests. Full related-suite run green (**528 passed**).
+
 ## [2026-06-22] Session: API Hardening, RCE Guard & Constants/Broad-Except Cleanup
 
 ### Cleanup: duplicated constants + bug-masking catch-alls

@@ -2,9 +2,9 @@
 
 FallbackInferenceAdapter orchestrates an ordered list of InferencePort
 adapters: it tries them in order (online ones first) and falls through to the
-next when one fails, returns None / an "Erreur"-prefixed text, or raises. When
-all fail, each method returns its own documented default (or raises, for
-generate_structured).
+next when one fails, returns None / a response flagged with the typed
+``is_error`` sentinel, or raises. When all fail, each method returns its own
+documented default (or raises, for generate_structured).
 
 These tests use REAL subclasses of InferencePort (not MagicMock) so the
 adapter's capability-detection (`_is_method_overridden`, which explicitly
@@ -55,9 +55,22 @@ class BaseFake(InferencePort):
         raise NotImplementedError
 
 
-def _resp(text, usage=None, logprobs=None):
+def _resp(text, usage=None, logprobs=None, is_error=False):
     meta = InferenceMetadata(usage=usage, logprobs=logprobs)
-    return InferenceResponse(text=text, metadata=meta)
+    return InferenceResponse(text=text, metadata=meta, is_error=is_error)
+
+
+# === typed failure sentinel ==================================================
+
+
+def test_inference_response_failure_factory_sets_is_error():
+    resp = InferenceResponse.failure("engine offline")
+    assert resp.is_error is True
+    assert resp.text == "engine offline"
+
+
+def test_inference_response_defaults_to_not_error():
+    assert InferenceResponse(text="ok").is_error is False
 
 
 # === generate: fallback order ================================================
@@ -83,11 +96,11 @@ def test_generate_first_success_short_circuits():
     assert b.calls == []
 
 
-def test_generate_falls_through_on_erreur_prefix():
+def test_generate_falls_through_on_failure_sentinel():
     class A(BaseFake):
         def generate(self, prompt, system_prompt="sys", **kwargs):
             self.calls.append(prompt)
-            return _resp("Erreur: moteur indisponible")
+            return _resp("moteur indisponible", is_error=True)
 
     class B(BaseFake):
         def generate(self, prompt, system_prompt="sys", **kwargs):
@@ -97,9 +110,30 @@ def test_generate_falls_through_on_erreur_prefix():
     a, b = A("A"), B("B")
     fb = FallbackInferenceAdapter([a, b])
     res = fb.generate("Q")
-    # A's "Erreur" text is treated as failure -> B used.
+    # A's is_error sentinel is treated as failure -> B used.
     assert res.text == "recovered by B"
     assert a.calls == ["Q"] and b.calls == ["Q"]
+
+
+def test_generate_accepts_answer_starting_with_erreur():
+    # Regression: a genuine answer that merely *starts with* "Erreur" must be
+    # returned as a success. The old startswith("Erreur") heuristic misrouted it
+    # to the next engine.
+    class A(BaseFake):
+        def generate(self, prompt, system_prompt="sys", **kwargs):
+            self.calls.append(prompt)
+            return _resp("Erreur 404 est un thème central de Serial Experiments Lain.")
+
+    class B(BaseFake):
+        def generate(self, prompt, system_prompt="sys", **kwargs):
+            self.calls.append(prompt)
+            return _resp("from B")
+
+    a, b = A("A"), B("B")
+    fb = FallbackInferenceAdapter([a, b])
+    res = fb.generate("Q")
+    assert res.text.startswith("Erreur 404")
+    assert b.calls == []  # A's answer accepted; B never consulted.
 
 
 def test_generate_falls_through_on_exception():
@@ -122,11 +156,12 @@ def test_generate_all_fail_returns_critical_default():
 
     class B(BaseFake):
         def generate(self, prompt, system_prompt="sys", **kwargs):
-            return _resp("Erreur: B down")
+            return _resp("B down", is_error=True)
 
     fb = FallbackInferenceAdapter([A("A"), B("B")])
     res = fb.generate("Q")
     assert res.text.startswith("Échec critique")
+    assert res.is_error is True
     # Last error recorded is from B (the final adapter tried).
     assert "B down" in res.text
 
@@ -385,10 +420,10 @@ def test_stream_generate_first_adapter_streams():
     assert [c.text for c in chunks] == ["chunk1", "chunk2"]
 
 
-def test_stream_generate_falls_through_on_erreur_first_chunk():
+def test_stream_generate_falls_through_on_failure_sentinel():
     class A(BaseFake):
         def stream_generate(self, prompt, system_prompt="sys", **kwargs):
-            yield _resp("Erreur: A bad")
+            yield _resp("A bad", is_error=True)
 
     class B(BaseFake):
         def stream_generate(self, prompt, system_prompt="sys", **kwargs):
@@ -398,6 +433,25 @@ def test_stream_generate_falls_through_on_erreur_first_chunk():
     fb = FallbackInferenceAdapter([A("A"), B("B")])
     chunks = list(fb.stream_generate("Q"))
     assert [c.text for c in chunks] == ["B good1", "B good2"]
+
+
+def test_stream_generate_accepts_first_chunk_starting_with_erreur():
+    # A first chunk whose text merely starts with "Erreur" (is_error=False) is a
+    # legitimate stream and must be yielded, not skipped.
+    class A(BaseFake):
+        def stream_generate(self, prompt, system_prompt="sys", **kwargs):
+            yield _resp("Erreur 404, ")
+            yield _resp("un thème de Lain")
+
+    class B(BaseFake):
+        def stream_generate(
+            self, prompt, system_prompt="sys", **kwargs
+        ):  # pragma: no cover
+            yield _resp("B should not run")
+
+    fb = FallbackInferenceAdapter([A("A"), B("B")])
+    chunks = list(fb.stream_generate("Q"))
+    assert [c.text for c in chunks] == ["Erreur 404, ", "un thème de Lain"]
 
 
 def test_stream_generate_handles_empty_stream_stopiteration():

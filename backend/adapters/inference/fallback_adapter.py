@@ -12,7 +12,8 @@ logger = logging.getLogger("animetix.inference.fallback")
 class FallbackInferenceAdapter(InferencePort):
     """
     Orchestre une liste d'adaptateurs d'inférence.
-    Passe au suivant si l'un d'eux échoue ou retourne une chaîne commençant par 'Erreur'.
+    Passe au suivant si l'un d'eux lève une exception ou retourne une réponse
+    marquée comme échec via la sentinelle typée ``InferenceResponse.is_error``.
     Inclut un mécanisme de monitoring via ObservabilityService.
     """
 
@@ -124,8 +125,8 @@ class FallbackInferenceAdapter(InferencePort):
                 result = adapter.generate(prompt, system_prompt, **call_kwargs)
                 latency = time.time() - start_time
 
-                # CRITIQUE : Si le résultat est nul ou si le texte commence par "Erreur", on considère ça comme un échec
-                if not result or result.text.strip().startswith("Erreur"):
+                # Échec doux : résultat nul ou réponse marquée via la sentinelle is_error.
+                if not result or result.is_error:
                     last_error = result.text if result else "Résultat vide"
                     self._report_failure(
                         adapter, "generate", last_error, latency, prompt
@@ -157,8 +158,8 @@ class FallbackInferenceAdapter(InferencePort):
                 )
                 continue
 
-        return InferenceResponse(
-            text=f"Échec critique : Tous les moteurs LLM ont échoué. Dernière erreur: {last_error}"
+        return InferenceResponse.failure(
+            f"Échec critique : Tous les moteurs LLM ont échoué. Dernière erreur: {last_error}"
         )
 
     def stream_generate(
@@ -201,7 +202,7 @@ class FallbackInferenceAdapter(InferencePort):
                 latency = time.time() - start_time
 
                 # Validation du premier chunk (InferenceResponse)
-                if first_chunk and not first_chunk.text.strip().startswith("Erreur"):
+                if first_chunk and not first_chunk.is_error:
 
                     def success_gen():
                         yield first_chunk
