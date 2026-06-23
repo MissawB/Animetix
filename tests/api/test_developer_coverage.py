@@ -256,13 +256,11 @@ def test_bx_checkout_stripe_failure(auth_client):
 
 @pytest.mark.django_db
 def test_bx_checkout_ignores_client_price_and_uses_catalog(auth_client):
-    from core.domain.services.berrix_economy import PACKS
-
     with patch.object(
         developer_mod.StripeBillingService,
         "create_checkout_session",
         return_value=(True, "https://stripe/bx"),
-    ):
+    ) as mock_create:
         # Client tries to buy a real pack for 1 cent — server must ignore the price.
         resp = auth_client.post(
             reverse("api_wallet_checkout"),
@@ -270,8 +268,16 @@ def test_bx_checkout_ignores_client_price_and_uses_catalog(auth_client):
             format="json",
         )
     assert resp.status_code == 200
-    # Mock mode returns a checkout url; the authoritative amount is the catalog's.
-    assert PACKS["initiate"]["bx"] == 10000
+    # The endpoint must call Stripe with the CATALOG price, not the client-supplied values.
+    mock_create.assert_called_once()
+    call_kwargs = mock_create.call_args.kwargs
+    assert (
+        call_kwargs["amount_bx"] == 10000
+    ), f"Expected catalog amount_bx=10000, got {call_kwargs['amount_bx']}"
+    assert call_kwargs["price_cents"] == 499, (
+        f"Expected catalog price_cents=499, got {call_kwargs['price_cents']} "
+        "(server must NOT use the client-supplied price_cents=1)"
+    )
 
 
 @pytest.mark.django_db
