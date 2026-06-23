@@ -6,6 +6,7 @@ import os  # noqa: E402
 from pathlib import Path  # noqa: E402
 
 import environ  # noqa: E402
+from core.utils.gemini_models import ALLOYDB_EMBEDDING
 
 # Initialize environ
 env = environ.Env()
@@ -459,7 +460,7 @@ RAG_COGNITIVE_BOOSTERS_ENABLED = os.environ.get(
     "RAG_COGNITIVE_BOOSTERS_ENABLED", "true"
 ).lower() in ("1", "true", "yes")
 
-ALLOYDB_EMBEDDING_MODEL = env("ALLOYDB_EMBEDDING_MODEL", default="text-embedding-005")
+ALLOYDB_EMBEDDING_MODEL = ALLOYDB_EMBEDDING
 
 import asyncio  # noqa: E402
 
@@ -595,9 +596,7 @@ VERTEX_AI_PROJECT_ID = env("VERTEX_AI_PROJECT_ID", default="")
 VERTEX_AI_LOCATION = env("VERTEX_AI_LOCATION", default="europe-west1")
 VERTEX_AI_COLLECTION_NAME = env("VERTEX_AI_COLLECTION_NAME", default="animetix_media")
 VERTEX_AI_AUTO_EMBEDDINGS = env.bool("VERTEX_AI_AUTO_EMBEDDINGS", default=True)
-VERTEX_AI_EMBEDDING_MODEL = env(
-    "VERTEX_AI_EMBEDDING_MODEL", default="text-embedding-005"
-)
+VERTEX_AI_EMBEDDING_MODEL = ALLOYDB_EMBEDDING
 
 # --- GEMINI ENTERPRISE AGENT PLATFORM ---
 VERTEX_AI_AGENT_GATEWAY_ACTIVE = env.bool(

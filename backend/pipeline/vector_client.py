@@ -3,6 +3,7 @@ import json
 import logging
 
 import numpy as np
+from core.utils.gemini_models import ALLOYDB_EMBEDDING
 from core.utils.security import sanitize_for_prompt
 from django.db import connection, transaction
 from sklearn.metrics.pairwise import cosine_similarity
@@ -26,7 +27,7 @@ def is_alloydb_ai_supported():
     try:
         from django.conf import settings  # noqa: E402
 
-        model_name = getattr(settings, "ALLOYDB_EMBEDDING_MODEL", "text-embedding-005")
+        model_name = getattr(settings, "ALLOYDB_EMBEDDING_MODEL", ALLOYDB_EMBEDDING)
         with connection.cursor() as cursor:
             cursor.execute("SELECT embedding(%s, 'test');", [model_name])
             cursor.fetchone()
@@ -229,7 +230,7 @@ class PGVectorCollectionWrapper:
         from animetix.models import VectorRecord  # noqa: E402
         from django.conf import settings  # noqa: E402
 
-        model_name = getattr(settings, "ALLOYDB_EMBEDDING_MODEL", "text-embedding-005")
+        model_name = getattr(settings, "ALLOYDB_EMBEDDING_MODEL", ALLOYDB_EMBEDDING)
 
         # SOTA sanitization: Proactive prompt injection defense on all ingested data
         if documents:
@@ -323,7 +324,7 @@ class PGVectorCollectionWrapper:
         from animetix.models import VectorRecord  # noqa: E402
         from django.conf import settings  # noqa: E402
 
-        model_name = getattr(settings, "ALLOYDB_EMBEDDING_MODEL", "text-embedding-005")
+        model_name = getattr(settings, "ALLOYDB_EMBEDDING_MODEL", ALLOYDB_EMBEDDING)
 
         if query_embeddings is None and query_texts is None:
             return {

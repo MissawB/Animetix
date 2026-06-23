@@ -11,6 +11,8 @@ import os
 import re
 import time
 
+from core.utils.gemini_models import GEMINI_FLASH
+
 from .paths import CACHE_FILE
 
 logger = logging.getLogger("animetix.pipeline.ft_dataset.paraphrase")
@@ -72,7 +74,7 @@ def paraphrase_text_via_gemini(text: str, client, style_type: str = "naturel") -
         f"Texte à réécrire :\n{text}"
     )
 
-    model_name = os.getenv("ANIMETIX_GEMINI_MODEL", "gemini-3-flash-preview")
+    model_name = GEMINI_FLASH
 
     for attempt in range(3):
         try:
@@ -128,7 +130,7 @@ def translate_to_english_via_gemini(text: str, client) -> str:
         f"Text to translate:\n{text}"
     )
 
-    model_name = os.getenv("ANIMETIX_GEMINI_MODEL", "gemini-3-flash-preview")
+    model_name = GEMINI_FLASH
 
     for attempt in range(3):
         try:
@@ -194,7 +196,7 @@ def validate_factual_alignment(original_text: str, generated_text: str, client) 
         "}"
     )
 
-    model_name = os.getenv("ANIMETIX_GEMINI_MODEL", "gemini-3-flash-preview")
+    model_name = GEMINI_FLASH
 
     for attempt in range(2):
         try:
