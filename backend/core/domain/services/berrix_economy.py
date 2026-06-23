@@ -105,3 +105,15 @@ FEATURE_BX_COSTS: dict[str, int] = {
     "style_transfer": 500,
     "cinematic_3d": 500,
 }
+
+# --- Pack catalog (server-authoritative). Prices in minor units (cents). ---
+# Priced at or above the canonical net Bx value so every purchase keeps the margin.
+# Floor = bx * BX_PRICE_USD_NET * 0.95 converted to cents:
+#   initiate: 10_000 * 0.00043 * 0.95 * 100 = 408.5  → 499 ✓
+#   adept:    30_000 * 0.00043 * 0.95 * 100 = 1225.5 → 1399 ✓
+#   master:  100_000 * 0.00043 * 0.95 * 100 = 4085   → 4299 ✓
+PACKS: dict[str, dict] = {
+    "initiate": {"bx": 10_000, "price_cents": 499, "currency": "eur"},
+    "adept": {"bx": 30_000, "price_cents": 1399, "currency": "eur"},
+    "master": {"bx": 100_000, "price_cents": 4299, "currency": "eur"},
+}

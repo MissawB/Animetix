@@ -64,3 +64,12 @@ def test_known_underfloor_features_were_bumped():
     assert econ.FEATURE_BX_COSTS["companion"] == 6
     assert econ.FEATURE_BX_COSTS["agentic_rag"] == 6
     assert econ.FEATURE_BX_COSTS["creative_fusion"] == 78
+
+
+def test_packs_are_priced_at_or_above_canonical_rate():
+    # Each pack must sell Bx for at least their net backing value (no underpricing).
+    for pid, pack in econ.PACKS.items():
+        net_usd = pack["price_cents"] / 100.0
+        assert (
+            net_usd >= pack["bx"] * econ.BX_PRICE_USD_NET * 0.95
+        ), f"pack {pid} underpriced vs canonical Bx value"
