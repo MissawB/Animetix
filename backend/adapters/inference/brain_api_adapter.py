@@ -135,6 +135,50 @@ class BrainAPIAdapter(InferencePort):
             logger.error(f"BrainAPI Streaming Generation failed: {e}")
             raise
 
+    async def astream_generate(
+        self,
+        prompt: str,
+        system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.",
+        thinking_budget: int = 0,
+        thinking_mode: bool = False,
+        include_logprobs: bool = False,
+        **kwargs,
+    ):
+        """Appelle l'API Brain pour générer du texte en streaming de façon asynchrone."""
+        if not self.api_url:
+            raise ValueError("Brain API URL not configured")
+
+        payload = {
+            "prompt": prompt,
+            "system_prompt": system_prompt,
+            "thinking_budget": thinking_budget,
+            "thinking_mode": thinking_mode,
+            "include_logprobs": include_logprobs,
+            **kwargs,
+        }
+
+        try:
+            async with httpx.AsyncClient() as client:
+                async with client.stream(
+                    "POST",
+                    f"{self.api_url}/stream_generate",
+                    json=payload,
+                    headers=self._get_headers(),
+                    timeout=None,
+                ) as response:
+                    response.raise_for_status()
+                    async for chunk in response.aiter_text():
+                        yield InferenceResponse(text=chunk)
+        except httpx.HTTPStatusError as e:
+            logger.error(f"BrainAPI Streaming Generation HTTP error: {e}")
+            raise
+        except httpx.RequestError as e:
+            logger.error(f"BrainAPI Streaming Generation network error: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"BrainAPI Streaming Generation failed: {e}")
+            raise
+
     def get_text_embedding(self, text: str) -> List[float]:
         """Appelle l'API Brain pour générer un embedding."""
         try:
