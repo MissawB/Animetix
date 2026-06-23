@@ -4,6 +4,7 @@ import sys
 
 import numpy as np
 import torch
+from core.utils.model_registry import resolve_trust_remote_code
 
 # Setup environment for Django-related imports
 base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -132,7 +133,7 @@ def train_dpo(
         model_id,
         quantization_config=bnb_config,
         device_map="auto" if device == "cuda" else None,
-        trust_remote_code=True,
+        trust_remote_code=resolve_trust_remote_code(model_id),
         revision="main",  # nosec B615
     )
 

@@ -3,6 +3,8 @@ import logging
 import os
 from typing import Optional
 
+from core.utils.model_registry import resolve_trust_remote_code
+
 logger = logging.getLogger("animetix." + __name__)
 
 
@@ -130,7 +132,7 @@ class ModelsRegistry:
                 model_id,
                 device=self.device,
                 revision=revision,
-                trust_remote_code=True if "jina" in model_id else False,
+                trust_remote_code=resolve_trust_remote_code(model_id),
             )
         return self._text_model
 

@@ -2,6 +2,7 @@ import logging
 import os
 
 import torch
+from core.utils.model_registry import resolve_trust_remote_code
 from peft import PeftModel
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
@@ -39,7 +40,7 @@ def merge_lora():
             base_model_name,
             torch_dtype=torch.float16,
             device_map=device_map,
-            trust_remote_code=True,
+            trust_remote_code=resolve_trust_remote_code(base_model_name),
             revision="main",
         )  # nosec B615
     except (torch.cuda.OutOfMemoryError, RuntimeError) as e:
@@ -52,7 +53,7 @@ def merge_lora():
                 base_model_name,
                 torch_dtype=torch.float16,
                 device_map=device_map,
-                trust_remote_code=True,
+                trust_remote_code=resolve_trust_remote_code(base_model_name),
                 revision="main",
             )  # nosec B615
         else:
