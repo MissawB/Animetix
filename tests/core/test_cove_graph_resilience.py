@@ -92,6 +92,11 @@ def test_trace_verification_records_graph_degraded_flag():
     engine = MagicMock()
     engine.generate.side_effect = gen
 
+    async def agenerate(prompt, system_prompt="sys", **kwargs):
+        return engine.generate(prompt, system_prompt=system_prompt)
+
+    engine.agenerate = agenerate
+
     trace = _svc(mgr, engine, pm).trace_verification("Is Naruto a ninja?", "Anime")
 
     assert trace["graph_degraded"] is True

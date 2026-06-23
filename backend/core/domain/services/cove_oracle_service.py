@@ -1,5 +1,6 @@
+import asyncio
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, List, Tuple
 
 import orjson
 from core.ports.inference_port import InferencePort
@@ -36,6 +37,22 @@ class CoveOracleService:
     def trace_verification(self, question: str, media_type: str) -> Dict:
         """
         Processus CoVe complet avec trace détaillée pour visualisation.
+
+        Pont synchrone vers :meth:`atrace_verification` pour les appelants
+        bloquants (vue Django sync). La parallélisation des vérifications a
+        lieu dans le cœur async.
+        """
+        return asyncio.run(self.atrace_verification(question, media_type))
+
+    async def atrace_verification(self, question: str, media_type: str) -> Dict:
+        """
+        Cœur asynchrone du processus CoVe.
+
+        Étape 3 (vérification des claims) est parallélisée via
+        ``asyncio.gather`` : chaque claim enchaîne extraction d'entités →
+        contexte graphe → évaluation, mais tous les claims s'exécutent
+        concurremment, ce qui borne la latence au claim le plus lent plutôt
+        qu'à leur somme.
         """
         logger.info(f"🛡️ CoVe Trace: Processing question: '{question}'")
 
@@ -52,14 +69,16 @@ class CoveOracleService:
         baseline_prompt = self.prompt_manager.get_prompt(
             "cove_baseline", media_type=media_type, question=question
         )
-        baseline_res = self.inference_engine.generate(baseline_prompt)
+        baseline_res = await self.inference_engine.agenerate(baseline_prompt)
         trace["baseline"] = baseline_res.text
 
         # Étape 2 : Planification des vérifications (Deconstruct claims)
         plan_prompt, plan_system = self.prompt_manager.get_prompt(
             "cove_plan", baseline_response=trace["baseline"]
         )
-        plan_data = self._safe_json_generate(plan_prompt, system_prompt=plan_system)
+        plan_data = await self._asafe_json_generate(
+            plan_prompt, system_prompt=plan_system
+        )
 
         try:
             plan = CoVePlan(**plan_data)
@@ -75,37 +94,19 @@ class CoveOracleService:
 
         logger.info(f"🔍 CoVe Trace: Verifying {len(verification_questions)} claims...")
 
-        # Étape 3 : Exécution des vérifications (contre le Graphe)
-        verified_facts = []
-        for v_question in verification_questions:
-            # On demande au LLM d'extraire les entités de la question de vérification
-            ent_prompt = self.prompt_manager.get_prompt(
-                "cove_entities", v_question=v_question
-            )
-            ent_res = self.inference_engine.generate(ent_prompt)
-            entities = [e.strip() for e in ent_res.text.split(",")]
+        # Étape 3 : Exécution des vérifications (contre le Graphe), en parallèle.
+        # gather préserve l'ordre des résultats, donc la trace reste alignée sur
+        # le plan de vérification d'origine.
+        results = await asyncio.gather(
+            *(self._averify_claim(v_question) for v_question in verification_questions)
+        )
 
-            # Interrogation de Neo4j (GraphRAG) avec résilience : si le graphe
-            # est indisponible, on n'invente pas un "non vérifié" — on signale
-            # l'état dégradé pour que la synthèse finale en tienne compte.
-            graph_context, degraded = self._gather_graph_context(entities)
+        verified_facts: List[str] = []
+        for entry, fact, degraded in results:
             if degraded:
                 trace["graph_degraded"] = True
-
-            # Évaluation du fait avec le contexte vérifié
-            eval_prompt = self.prompt_manager.get_prompt(
-                "cove_eval", v_question=v_question, graph_context=graph_context
-            )
-            eval_res = self.inference_engine.generate(eval_prompt)
-
-            verification_entry = {
-                "query": v_question,
-                "entities": entities,
-                "context_found": graph_context != "",
-                "result": eval_res.text,
-            }
-            trace["verifications"].append(verification_entry)
-            verified_facts.append(f"Fait vérifié ({v_question}) : {eval_res.text}")
+            trace["verifications"].append(entry)
+            verified_facts.append(fact)
 
         # Étape 4 : Génération de la réponse finale révisée
         final_prompt, final_system = self.prompt_manager.get_prompt(
@@ -116,12 +117,49 @@ class CoveOracleService:
         )
 
         logger.info("✅ CoVe Trace: Generating final verified response.")
-        final_res = self.inference_engine.generate(
+        final_res = await self.inference_engine.agenerate(
             final_prompt, system_prompt=final_system
         )
         trace["final_response"] = final_res.text
 
         return trace
+
+    async def _averify_claim(self, v_question: str) -> Tuple[Dict, str, bool]:
+        """Vérifie un claim isolé : entités → contexte graphe → évaluation.
+
+        Retourne ``(verification_entry, verified_fact, degraded)``. Conçu pour
+        être exécuté concurremment via ``asyncio.gather`` ; aucun état partagé
+        n'est muté ici, l'agrégation se fait chez l'appelant.
+        """
+        # On demande au LLM d'extraire les entités de la question de vérification
+        ent_prompt = self.prompt_manager.get_prompt(
+            "cove_entities", v_question=v_question
+        )
+        ent_res = await self.inference_engine.agenerate(ent_prompt)
+        entities = [e.strip() for e in ent_res.text.split(",")]
+
+        # Interrogation de Neo4j (GraphRAG) avec résilience : si le graphe
+        # est indisponible, on n'invente pas un "non vérifié" — on signale
+        # l'état dégradé pour que la synthèse finale en tienne compte. Le
+        # driver Neo4j est bloquant : déporté hors de la boucle d'événements.
+        graph_context, degraded = await asyncio.to_thread(
+            self._gather_graph_context, entities
+        )
+
+        # Évaluation du fait avec le contexte vérifié
+        eval_prompt = self.prompt_manager.get_prompt(
+            "cove_eval", v_question=v_question, graph_context=graph_context
+        )
+        eval_res = await self.inference_engine.agenerate(eval_prompt)
+
+        verification_entry = {
+            "query": v_question,
+            "entities": entities,
+            "context_found": graph_context != "",
+            "result": eval_res.text,
+        }
+        verified_fact = f"Fait vérifié ({v_question}) : {eval_res.text}"
+        return verification_entry, verified_fact, degraded
 
     def _gather_graph_context(self, entities) -> tuple[str, bool]:
         """Collect creator-network context for the entities, outage-resilient.
@@ -147,10 +185,10 @@ class CoveOracleService:
                 graph_context += f"{ctx}\n"
         return graph_context, False
 
-    def _safe_json_generate(
+    async def _asafe_json_generate(
         self, prompt: str, system_prompt: str = "Réponds UNIQUEMENT en JSON."
     ) -> Dict:
-        res = self.inference_engine.generate(prompt, system_prompt=system_prompt)
+        res = await self.inference_engine.agenerate(prompt, system_prompt=system_prompt)
         text = res.text
         try:
             if "{" in text and "}" in text:

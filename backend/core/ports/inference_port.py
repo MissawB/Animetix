@@ -1,3 +1,4 @@
+import asyncio
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 
@@ -44,6 +45,33 @@ class InferencePort(ABC):
     ) -> InferenceResponse:
         """Génère du texte à partir d'un prompt. thinking_budget > 0 ou thinking_mode=True active le raisonnement approfondi."""
         pass
+
+    async def agenerate(
+        self,
+        prompt: str,
+        system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.",
+        thinking_budget: int = 0,
+        thinking_mode: bool = False,
+        include_logprobs: bool = False,
+        **kwargs,
+    ) -> InferenceResponse:
+        """Variante asynchrone de :meth:`generate`.
+
+        Seam async par défaut : délègue à l'implémentation bloquante
+        ``generate`` dans un thread worker (``asyncio.to_thread``) afin de ne
+        pas geler la boucle d'événements. Les adaptateurs nativement async
+        (ex. client Gemini async) peuvent surcharger cette méthode pour une
+        vraie I/O non bloquante.
+        """
+        return await asyncio.to_thread(
+            self.generate,
+            prompt,
+            system_prompt=system_prompt,
+            thinking_budget=thinking_budget,
+            thinking_mode=thinking_mode,
+            include_logprobs=include_logprobs,
+            **kwargs,
+        )
 
     @abstractmethod
     def stream_generate(
