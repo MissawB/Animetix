@@ -185,7 +185,8 @@ def test_load_model_wraps_loader_failure_in_inference_error(mocker):
     ld.model_from_pretrained.side_effect = RuntimeError("CUDA out of memory")
     a = MoondreamAdapter()
     with pytest.raises(
-        InferenceError, match="SmolVLM loading failed: CUDA out of memory"
+        InferenceError,
+        match="Critical failure during SmolVLM model loading: CUDA out of memory",
     ):
         a._load_model()
     # Model stays unset so a later call could retry.

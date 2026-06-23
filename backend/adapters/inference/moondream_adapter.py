@@ -1,21 +1,19 @@
 import logging
 from typing import Any, List, Optional
 
+from adapters.inference.lazy_local_model_adapter import LazyLocalModelAdapter
 from core.domain.entities.ai_schemas import InferenceResponse
 from core.domain.exceptions import InferenceError
-from core.ports.inference_port import InferenceNotImplementedError, InferencePort
+from core.ports.inference_port import InferenceNotImplementedError
 from core.ports.usage_port import UsagePort
 from core.utils.hf_security import resolve_trust_remote_code, trusted_revision
-from core.utils.lazy_import import lazy_import
-
-torch = lazy_import("torch")
-transformers = lazy_import("transformers")
-PIL = lazy_import("PIL.Image")
 
 logger = logging.getLogger("animetix.inference.moondream")
 
 
-class MoondreamAdapter(InferencePort):
+class MoondreamAdapter(LazyLocalModelAdapter):
+    ENGINE_NAME = "SmolVLM"
+
     def __init__(
         self,
         model_id: str = "HuggingFaceTB/SmolVLM-Instruct",
@@ -26,31 +24,25 @@ class MoondreamAdapter(InferencePort):
         self.model: Any = None
         self.processor: Any = None
 
-    def _load_model(self):
-        if self.model:
-            return
-        try:
-            import torch as _torch  # noqa: E402
-            from transformers import (
-                AutoModelForVision2Seq,  # noqa: E402
-                AutoProcessor,
-            )
+    def _load_model_impl(self) -> None:
+        import torch as _torch  # noqa: E402
+        from transformers import (
+            AutoModelForVision2Seq,  # noqa: E402
+            AutoProcessor,
+        )
 
-            self.model = AutoModelForVision2Seq.from_pretrained(
-                self.model_id,
-                revision=trusted_revision(self.model_id) or "main",
-                trust_remote_code=resolve_trust_remote_code(self.model_id),
-                device_map="auto",
-                torch_dtype=(
-                    _torch.bfloat16 if _torch.cuda.is_available() else _torch.float32
-                ),
-            )
-            self.processor = AutoProcessor.from_pretrained(
-                self.model_id, revision=trusted_revision(self.model_id) or "main"
-            )
-        except Exception as e:
-            logger.error(f"Failed to load SmolVLM model: {e}")
-            raise InferenceError(f"SmolVLM loading failed: {e}")
+        self.model = AutoModelForVision2Seq.from_pretrained(
+            self.model_id,
+            revision=trusted_revision(self.model_id) or "main",
+            trust_remote_code=resolve_trust_remote_code(self.model_id),
+            device_map="auto",
+            torch_dtype=(
+                _torch.bfloat16 if _torch.cuda.is_available() else _torch.float32
+            ),
+        )
+        self.processor = AutoProcessor.from_pretrained(
+            self.model_id, revision=trusted_revision(self.model_id) or "main"
+        )
 
     def generate(
         self,
@@ -124,6 +116,3 @@ class MoondreamAdapter(InferencePort):
         except Exception as e:
             logger.error(f"SmolVLM visual description failed: {e}")
             raise InferenceError(f"SmolVLM visual description failed: {e}")
-
-    def health_check(self) -> dict:
-        return {"status": "online" if self.model else "offline", "engine": "SmolVLM"}
