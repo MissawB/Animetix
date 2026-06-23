@@ -1,7 +1,10 @@
 import logging
+import os
+import threading
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
+from adapters.inference.capability_registry import CapabilityRegistry
 from core.domain.entities.ai_schemas import InferenceResponse, TokenLogProb
 from core.ports.inference_port import InferenceNotImplementedError, InferencePort
 
@@ -17,7 +20,11 @@ class FallbackInferenceAdapter(InferencePort):
     """
 
     def __init__(
-        self, adapters: List[InferencePort], obs_service: Optional[Any] = None
+        self,
+        adapters: List[InferencePort],
+        obs_service: Optional[Any] = None,
+        health_ttl: Optional[float] = None,
+        clock: Callable[[], float] = time.monotonic,
     ):
         self.adapters = [a for a in adapters if a is not None]
         self.obs_service = obs_service
@@ -28,25 +35,63 @@ class FallbackInferenceAdapter(InferencePort):
         self._last_completion: Optional[str] = None
         self._last_logprobs: Optional[List[TokenLogProb]] = None
 
-        self._check_initial_health()
+        # Short-TTL health cache (shared by routing and public health_check).
+        self._clock = clock
+        self._health_ttl = (
+            float(os.getenv("FALLBACK_HEALTH_TTL_SECONDS", "30.0"))
+            if health_ttl is None
+            else float(health_ttl)
+        )
+        self._last_health_ts: Optional[float] = None
+        self._cached_statuses: List[Dict[str, Any]] = []
+        self._health_lock = threading.Lock()
+
+        self._refresh_health_if_stale()
+        self._capabilities = CapabilityRegistry(self.adapters)
         self._build_capability_cache()
 
-    def _check_initial_health(self) -> None:
-        for adapter in self.adapters:
-            try:
-                if hasattr(adapter, "health_check"):
-                    status = adapter.health_check()
-                    if status.get("status") == "online":
-                        self._online_adapters.add(adapter)
-                else:
-                    self._online_adapters.add(adapter)
-            except Exception as e:
-                logger.warning(
-                    f"Health check failed for adapter {adapter.__class__.__name__}: {e}"
-                )
-        # Si tous sont offline (ex: tests hors ligne), on les autorise tous par sécurité
-        if not self._online_adapters:
-            self._online_adapters.update(self.adapters)
+    def _refresh_health_if_stale(self) -> None:
+        """Re-probe every adapter at most once per TTL window.
+
+        Rebuilds ``_online_adapters`` (routing) and ``_cached_statuses``
+        (public health_check). Lock-guarded with a double-check so concurrent
+        callers on the shared Singleton don't stampede the probes.
+        """
+        if (
+            self._last_health_ts is not None
+            and self._clock() - self._last_health_ts < self._health_ttl
+        ):
+            return
+        with self._health_lock:
+            if (
+                self._last_health_ts is not None
+                and self._clock() - self._last_health_ts < self._health_ttl
+            ):
+                return
+            online: set[InferencePort] = set()
+            statuses: List[Dict[str, Any]] = []
+            for adapter in self.adapters:
+                name = adapter.__class__.__name__
+                try:
+                    if hasattr(adapter, "health_check"):
+                        status = adapter.health_check()
+                        statuses.append(status)
+                        if status.get("status") == "online":
+                            online.add(adapter)
+                    else:
+                        online.add(adapter)
+                        statuses.append({"status": "online", "engine": name})
+                except Exception as e:
+                    logger.warning(f"Health check failed for adapter {name}: {e}")
+                    statuses.append(
+                        {"status": "offline", "engine": name, "error": str(e)}
+                    )
+            # Si tous sont offline (ex: tests hors ligne), on les autorise tous.
+            if not online:
+                online.update(self.adapters)
+            self._online_adapters = online
+            self._cached_statuses = statuses
+            self._last_health_ts = self._clock()
 
     def _get_ordered_adapters(
         self, adapters: List[InferencePort]
