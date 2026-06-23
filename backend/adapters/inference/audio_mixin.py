@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any, Dict, Optional  # noqa: E402
 
 from core.domain.exceptions import InferenceError  # noqa: E402
 from core.utils.lazy_import import lazy_import  # noqa: E402
-from core.utils.model_security import get_verified_revision  # noqa: E402
+from core.utils.model_registry import get_verified_revision  # noqa: E402
 
 torch = lazy_import("torch")
 np = lazy_import("numpy")

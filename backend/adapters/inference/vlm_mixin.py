@@ -3,11 +3,11 @@
 import logging  # noqa: E402
 from typing import TYPE_CHECKING, Dict, List, Optional  # noqa: E402
 
-from core.utils.hf_security import (  # noqa: E402
+from core.utils.lazy_import import lazy_import  # noqa: E402
+from core.utils.model_registry import (  # noqa: E402
     resolve_trust_remote_code,
     trusted_revision,
 )
-from core.utils.lazy_import import lazy_import  # noqa: E402
 
 torch = lazy_import("torch")
 transformers = lazy_import("transformers")

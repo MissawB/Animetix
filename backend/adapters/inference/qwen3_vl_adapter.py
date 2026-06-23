@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional
 from core.domain.entities.ai_schemas import InferenceResponse
 from core.ports.inference_port import InferenceNotImplementedError, InferencePort
 from core.ports.usage_port import UsagePort
-from core.utils.model_security import get_verified_revision
+from core.utils.model_registry import get_verified_revision
 from huggingface_hub import InferenceClient
 
 logger = logging.getLogger("animetix.inference.qwen3vl")
