@@ -17,7 +17,7 @@ BASE_DIR = os.path.dirname(
 
 def merge_lora():
     base_model_name = os.getenv(
-        "BASE_MODEL_NAME", "unsloth/DeepSeek-R1-Distill-Qwen-8B"
+        "BASE_MODEL_NAME", "unsloth/DeepSeek-R1-Distill-Qwen-7B"
     )
     adapter_path = os.path.join(
         BASE_DIR, "data", "models", "otaku-expert-adapter", "checkpoint-100"

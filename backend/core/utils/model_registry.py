@@ -7,10 +7,10 @@ Merges the former `model_security.py` (get_verified_revision) and
 `trust_remote_code=True` ONLY if listed here with that flag, and is then pinned
 to a real 40-hex SHA so a malicious future push cannot execute code.
 
-`unsloth/DeepSeek-R1-Distill-Qwen-8B` and `kyutai/moshi-1b-preview` are
-intentionally absent: they do not resolve on the Hub (RepositoryNotFoundError),
-so they cannot be SHA-pinned and must not be trusted. Re-point the training
-scripts / audio path at a resolvable, pinnable repo in a follow-up.
+The former 404 ids `unsloth/DeepSeek-R1-Distill-Qwen-8B` and
+`kyutai/moshi-1b-preview` have been re-pointed to the real pinnable repos
+`unsloth/DeepSeek-R1-Distill-Qwen-7B` and `kyutai/moshiko-pytorch-bf16`
+(both SHA-pinned), and all consumer scripts updated accordingly.
 """
 
 import logging
@@ -94,6 +94,14 @@ MODELS: dict[str, dict] = {
     },
     "HuggingFaceTB/SmolLM-135M": {
         "revision": "1d461723eec654e65efdc40cf49301c89c0c92f4",
+        "trust_remote_code": False,
+    },
+    "unsloth/DeepSeek-R1-Distill-Qwen-7B": {
+        "revision": "d53ce546e5539236bbadf12887371481c241ce6c",
+        "trust_remote_code": True,
+    },
+    "kyutai/moshiko-pytorch-bf16": {
+        "revision": "2bfc9ae6e89079a5cc7ed2a68436010d91a3d289",
         "trust_remote_code": False,
     },
 }

@@ -68,3 +68,19 @@ def test_old_model_security_module_is_gone():
     assert (
         importlib.util.find_spec("core.utils.model_security") is None
     ), "core/utils/model_security.py was not deleted; remove it and repoint consumers to model_registry"
+
+
+def test_repointed_models_present_and_pinned():
+    assert mr.MODELS["unsloth/DeepSeek-R1-Distill-Qwen-7B"] == {
+        "revision": "d53ce546e5539236bbadf12887371481c241ce6c",
+        "trust_remote_code": True,
+    }
+    assert mr.MODELS["kyutai/moshiko-pytorch-bf16"] == {
+        "revision": "2bfc9ae6e89079a5cc7ed2a68436010d91a3d289",
+        "trust_remote_code": False,
+    }
+
+
+def test_dead_404_models_are_gone():
+    assert "unsloth/DeepSeek-R1-Distill-Qwen-8B" not in mr.MODELS
+    assert "kyutai/moshi-1b-preview" not in mr.MODELS

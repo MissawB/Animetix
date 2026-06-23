@@ -110,7 +110,7 @@ class AudioMixin:
             from moshi.models import Moshi  # noqa: E402
 
             logger.info("🗣️ Loading Kyutai Moshi (S2S)...")
-            model_id = "kyutai/moshi-1b-preview"
+            model_id = "kyutai/moshiko-pytorch-bf16"
             revision = get_verified_revision(model_id)
             self._moshi_model = Moshi.from_pretrained(model_id, revision=revision)
             if torch.cuda.is_available():
