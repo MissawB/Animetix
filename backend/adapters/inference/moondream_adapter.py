@@ -5,6 +5,7 @@ from core.domain.entities.ai_schemas import InferenceResponse
 from core.domain.exceptions import InferenceError
 from core.ports.inference_port import InferenceNotImplementedError, InferencePort
 from core.ports.usage_port import UsagePort
+from core.utils.hf_security import resolve_trust_remote_code, trusted_revision
 from core.utils.lazy_import import lazy_import
 
 torch = lazy_import("torch")
@@ -37,16 +38,16 @@ class MoondreamAdapter(InferencePort):
 
             self.model = AutoModelForVision2Seq.from_pretrained(
                 self.model_id,
-                revision="main",
-                trust_remote_code=True,
+                revision=trusted_revision(self.model_id) or "main",
+                trust_remote_code=resolve_trust_remote_code(self.model_id),
                 device_map="auto",
                 torch_dtype=(
                     _torch.bfloat16 if _torch.cuda.is_available() else _torch.float32
                 ),
-            )  # nosec B615
+            )
             self.processor = AutoProcessor.from_pretrained(
-                self.model_id, revision="main"
-            )  # nosec B615
+                self.model_id, revision=trusted_revision(self.model_id) or "main"
+            )
         except Exception as e:
             logger.error(f"Failed to load SmolVLM model: {e}")
             raise InferenceError(f"SmolVLM loading failed: {e}")

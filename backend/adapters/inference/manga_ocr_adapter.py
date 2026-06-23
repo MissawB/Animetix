@@ -5,6 +5,7 @@ from core.domain.entities.ai_schemas import InferenceResponse
 from core.domain.exceptions import InferenceError
 from core.ports.inference_port import InferenceNotImplementedError, InferencePort
 from core.ports.usage_port import UsagePort
+from core.utils.hf_security import resolve_trust_remote_code, trusted_revision
 from transformers import pipeline
 
 logger = logging.getLogger("animetix.inference")
@@ -24,7 +25,10 @@ class MangaOCRAdapter(InferencePort):
         self.model_id = model_id
         try:
             self.ocr_pipeline = pipeline(
-                "image-to-text", model=self.model_id, trust_remote_code=True
+                "image-to-text",
+                model=self.model_id,
+                trust_remote_code=resolve_trust_remote_code(self.model_id),
+                revision=trusted_revision(self.model_id),
             )
         except Exception as e:
             logger.error(f"Failed to load Manga OCR model {model_id}: {e}")

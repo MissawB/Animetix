@@ -7,6 +7,10 @@ from io import BytesIO  # noqa: E402
 from typing import TYPE_CHECKING, Dict, List  # noqa: E402
 
 from core.domain.exceptions import InferenceError  # noqa: E402
+from core.utils.hf_security import (  # noqa: E402
+    resolve_trust_remote_code,
+    trusted_revision,
+)
 from core.utils.lazy_import import lazy_import  # noqa: E402
 
 torch = lazy_import("torch")
@@ -77,7 +81,8 @@ class ImageGenMixin:
                 model_id,
                 torch_dtype=self._get_dtype(),
                 variant=self._get_variant(),
-                trust_remote_code=True,
+                trust_remote_code=resolve_trust_remote_code(model_id),
+                revision=trusted_revision(model_id) or "main",
             )
             self.pipe.to("cuda")
             self.pipe.enable_model_cpu_offload()
@@ -99,7 +104,8 @@ class ImageGenMixin:
                 model_id,
                 torch_dtype=self._get_dtype(),
                 variant=self._get_variant(),
-                trust_remote_code=True,
+                trust_remote_code=resolve_trust_remote_code(model_id),
+                revision=trusted_revision(model_id) or "main",
             )
             self._img2img_pipe.to("cuda")
             self._img2img_pipe.enable_model_cpu_offload()
@@ -120,7 +126,8 @@ class ImageGenMixin:
                 model_id,
                 torch_dtype=self._get_dtype(),
                 variant=self._get_variant(),
-                trust_remote_code=True,
+                trust_remote_code=resolve_trust_remote_code(model_id),
+                revision=trusted_revision(model_id) or "main",
             )
             self._inpaint_pipe.to("cuda")
             self._inpaint_pipe.enable_model_cpu_offload()

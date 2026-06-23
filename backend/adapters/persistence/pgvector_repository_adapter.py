@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 import orjson
 from core.ports.repository_port import RepositoryPort
+from core.utils.hf_security import resolve_trust_remote_code, trusted_revision
 from django.core.cache import cache
 from pipeline.vector_client import vector_manager
 
@@ -12,11 +13,13 @@ logger = logging.getLogger("animetix")
 
 
 class LocalSentenceTransformerEmbeddingFunction:
-    def __init__(self, model_name: str, trust_remote_code: bool = True):
+    def __init__(self, model_name: str):
         from sentence_transformers import SentenceTransformer  # noqa: E402
 
         self.model = SentenceTransformer(
-            model_name, trust_remote_code=trust_remote_code
+            model_name,
+            trust_remote_code=resolve_trust_remote_code(model_name),
+            revision=trusted_revision(model_name) or "main",
         )
 
     def __call__(self, input: List[str]) -> List[List[float]]:
@@ -54,7 +57,7 @@ class PGVectorRepositoryAdapter(RepositoryPort):
     def embedding_fn(self):
         if self._embedding_fn is None:
             self._embedding_fn = LocalSentenceTransformerEmbeddingFunction(
-                model_name="jinaai/jina-embeddings-v3", trust_remote_code=True
+                model_name="jinaai/jina-embeddings-v3"
             )
         return self._embedding_fn
 
