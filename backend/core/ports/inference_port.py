@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import Any, AsyncGenerator, Dict, List, Optional
 
 from ..domain.entities.ai_schemas import InferenceResponse
 from .usage_port import UsagePort
@@ -57,6 +57,48 @@ class InferencePort(ABC):
     ):
         """Génère du texte en flux (streaming) à partir d'un prompt. thinking_budget > 0 ou thinking_mode=True active le raisonnement approfondi."""
         pass
+
+    async def astream_generate(
+        self,
+        prompt: str,
+        system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.",
+        thinking_budget: int = 0,
+        thinking_mode: bool = False,
+        include_logprobs: bool = False,
+        **kwargs,
+    ) -> AsyncGenerator[InferenceResponse, None]:
+        """Génère du texte en flux de manière asynchrone via run_in_executor."""
+        import asyncio
+
+        queue = asyncio.Queue()
+        loop = asyncio.get_running_loop()
+        DONE = object()
+
+        def producer():
+            try:
+                for chunk in self.stream_generate(
+                    prompt=prompt,
+                    system_prompt=system_prompt,
+                    thinking_budget=thinking_budget,
+                    thinking_mode=thinking_mode,
+                    include_logprobs=include_logprobs,
+                    **kwargs,
+                ):
+                    loop.call_soon_threadsafe(queue.put_nowait, chunk)
+            except Exception as e:
+                loop.call_soon_threadsafe(queue.put_nowait, e)
+            finally:
+                loop.call_soon_threadsafe(queue.put_nowait, DONE)
+
+        loop.run_in_executor(None, producer)
+
+        while True:
+            item = await queue.get()
+            if item is DONE:
+                break
+            if isinstance(item, Exception):
+                raise item
+            yield item
 
     def generate_structured(
         self,
