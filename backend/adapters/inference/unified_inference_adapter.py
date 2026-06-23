@@ -9,10 +9,11 @@ from adapters.inference.audio_mixin import AudioMixin
 
 # Focused Mixin imports
 from adapters.inference.clip_vision import ClipVisionMixin
+from adapters.inference.components.context import InferenceComponentContext
+from adapters.inference.components.manga_ocr_component import MangaOcrComponent
+from adapters.inference.components.rerank_component import RerankComponent
 from adapters.inference.depth_estimation import DepthEstimationMixin
 from adapters.inference.image_gen_mixin import ImageGenMixin
-from adapters.inference.manga_ocr import MangaOcrMixin
-from adapters.inference.rerank_mixin import RerankMixin
 from adapters.inference.video_analysis import VideoAnalysisMixin
 from adapters.inference.vlm_mixin import VlmMixin
 from core.domain.entities.ai_schemas import (
@@ -30,12 +31,10 @@ logger = logging.getLogger("animetix." + __name__)
 class UnifiedInferenceAdapter(
     ClipVisionMixin,
     DepthEstimationMixin,
-    MangaOcrMixin,
     VideoAnalysisMixin,
     AudioMixin,
     ImageGenMixin,
     VlmMixin,
-    RerankMixin,
     InferencePort,
 ):
     """
@@ -66,6 +65,13 @@ class UnifiedInferenceAdapter(
         self._last_completion: str = ""
         self._last_logprobs: List[TokenLogProb] = []
 
+        # Composed capability components (replacing MangaOcr/Rerank mixins).
+        _component_ctx = InferenceComponentContext(
+            log_usage=self._log_usage, generate=self.generate
+        )
+        self._rerank = RerankComponent(_component_ctx)
+        self._manga_ocr = MangaOcrComponent(_component_ctx)
+
         if not is_safe_url(self.api_base, allow_internal=True):
             logger.warning(
                 f"UnifiedInferenceAdapter: API base URL might be unsafe: {self.api_base}"
@@ -74,6 +80,12 @@ class UnifiedInferenceAdapter(
         logger.info(
             f"Initialized UnifiedInferenceAdapter for {self.model_name} at {self.api_base}"
         )
+
+    def rerank_documents(self, query: str, documents: List[str]) -> List[float]:
+        return self._rerank.rerank_documents(query, documents)
+
+    def process_manga_page(self, image_data: bytes) -> Dict[str, Any]:
+        return self._manga_ocr.process_manga_page(image_data)
 
     def _get_headers(self) -> Dict[str, str]:
         headers = {"Content-Type": "application/json"}
