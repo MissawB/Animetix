@@ -16,6 +16,7 @@ from core.domain.entities.ai_schemas import (
 from core.domain.exceptions import InferenceError
 from core.ports.inference_port import InferenceNotImplementedError, InferencePort
 from core.ports.usage_port import UsagePort
+from core.utils.gemini_models import GEMINI_EMBEDDING, GEMINI_FLASH
 from core.utils.security import safe_http_request
 from google import genai
 from google.genai import types
@@ -64,12 +65,8 @@ class GoogleGenAIAdapter(DepthEstimationMixin, InferencePort):
             or os.getenv("GOOGLE_CLOUD_LOCATION")
             or os.getenv("GCP_LOCATION", "europe-west9")
         )
-        self.model_name = (
-            model_name or os.getenv("GEMINI_MODEL_NAME") or "gemini-3.5-flash"
-        )
-        self.embedding_model = (
-            os.getenv("GEMINI_EMBEDDING_MODEL") or "text-embedding-004"
-        )
+        self.model_name = model_name or GEMINI_FLASH
+        self.embedding_model = GEMINI_EMBEDDING
 
         if vertexai is not None:
             self.use_vertexai = vertexai

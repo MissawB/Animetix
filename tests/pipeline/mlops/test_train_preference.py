@@ -236,7 +236,7 @@ def test_dpo_algorithm_uses_sigmoid_and_low_lr(patched, monkeypatch):
 
 def test_max_seq_length_deepseek_default(patched, monkeypatch):
     monkeypatch.delenv("MAX_SEQ_LENGTH", raising=False)
-    monkeypatch.setenv("BASE_MODEL_NAME", "unsloth/DeepSeek-R1-Distill-Qwen-8B")
+    monkeypatch.setenv("BASE_MODEL_NAME", "unsloth/DeepSeek-R1-Distill-Qwen-7B")
     monkeypatch.setenv("ALIGNMENT_ALGORITHM", "simpo")
     _seed_dataset(patched["tmp_path"])
 
@@ -431,14 +431,14 @@ def test_peft_fallback_builds_lora_config(patched, monkeypatch):
 
 def test_tracker_logs_and_train_invoked(patched, monkeypatch):
     monkeypatch.setenv("ALIGNMENT_ALGORITHM", "simpo")
-    monkeypatch.setenv("BASE_MODEL_NAME", "unsloth/DeepSeek-R1-Distill-Qwen-8B")
+    monkeypatch.setenv("BASE_MODEL_NAME", "unsloth/DeepSeek-R1-Distill-Qwen-7B")
     _seed_dataset(patched["tmp_path"])
 
     tp.run_preference_training()
 
     tracker = patched["tracker"]
     tracker.log_param.assert_any_call(
-        "model_base", "unsloth/DeepSeek-R1-Distill-Qwen-8B"
+        "model_base", "unsloth/DeepSeek-R1-Distill-Qwen-7B"
     )
     tracker.log_param.assert_any_call("algorithm", "simpo")
     tracker.finish.assert_called_once_with(status="COMPLETED")

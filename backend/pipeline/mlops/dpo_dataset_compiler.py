@@ -20,6 +20,7 @@ api_path = os.path.join(backend_path, "api")
 if api_path not in sys.path:
     sys.path.insert(0, api_path)
 
+from core.utils.gemini_models import GEMINI_FLASH  # noqa: E402
 from pipeline.logging_setup import setup_logging  # noqa: E402
 
 logger = logging.getLogger("animetix.pipeline.mlops.dpo_dataset_compiler")
@@ -134,11 +135,11 @@ except ImportError:
     genai = None
 
 GEMINI_CLIENT = None
-GEMINI_MODEL = "gemini-2.5-flash"
+GEMINI_MODEL = GEMINI_FLASH
 
 
 def init_gemini_client():
-    global GEMINI_CLIENT, GEMINI_MODEL
+    global GEMINI_CLIENT
     from dotenv import load_dotenv  # noqa: E402
 
     base_dir = os.path.dirname(
@@ -146,7 +147,6 @@ def init_gemini_client():
     )
     load_dotenv(os.path.join(base_dir, ".env"))
     api_key = os.getenv("GEMINI_API_KEY")
-    GEMINI_MODEL = os.getenv("ANIMETIX_GEMINI_MODEL", "gemini-2.5-flash")
     if api_key and genai is not None:
         try:
             GEMINI_CLIENT = genai.Client(api_key=api_key)

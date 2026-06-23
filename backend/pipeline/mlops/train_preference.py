@@ -75,7 +75,7 @@ BASE_DIR = os.path.dirname(
 
 
 def run_preference_training():
-    model_name = os.getenv("BASE_MODEL_NAME", "unsloth/DeepSeek-R1-Distill-Qwen-8B")
+    model_name = os.getenv("BASE_MODEL_NAME", "unsloth/DeepSeek-R1-Distill-Qwen-7B")
     default_seq_len = 1024 if "deepseek" in model_name.lower() else 768
     max_seq_length = int(os.getenv("MAX_SEQ_LENGTH", str(default_seq_len)))
 

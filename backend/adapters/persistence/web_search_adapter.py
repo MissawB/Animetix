@@ -3,6 +3,7 @@ import os
 from typing import Dict, List
 
 from core.ports.web_search_port import WebSearchPort
+from core.utils.gemini_models import GEMINI_FLASH
 from core.utils.security import is_safe_url, safe_http_request
 
 logger = logging.getLogger("animetix.persistence.web_search")
@@ -86,7 +87,7 @@ class UnifiedWebSearchAdapter(WebSearchPort):
             prompt = f"Perform a search on: '{query}' and return relevant information."
 
             response = client.models.generate_content(
-                model="gemini-2.5-flash",
+                model=GEMINI_FLASH,
                 contents=prompt,
                 config=types.GenerateContentConfig(tools=[{"google_search": {}}]),
             )
