@@ -4,11 +4,11 @@ import logging  # noqa: E402
 from typing import List, Optional  # noqa: E402
 
 import httpx  # noqa: E402
-from core.domain.entities.ai_schemas import InferenceResponse  # noqa: E402
-from core.ports.inference_port import (  # noqa: E402
-    InferenceNotImplementedError,
-    InferencePort,
+from adapters.inference.lazy_local_model_adapter import (
+    LazyLocalModelAdapter,  # noqa: E402
 )
+from core.domain.entities.ai_schemas import InferenceResponse  # noqa: E402
+from core.ports.inference_port import InferenceNotImplementedError  # noqa: E402
 from core.ports.usage_port import UsagePort  # noqa: E402
 
 from .clip_vision import ClipVisionMixin  # noqa: E402
@@ -28,9 +28,16 @@ class VisionTransformersAdapter(
     VideoAnalysisMixin,
     ClipVisionMixin,
     VlmMixin,
-    InferencePort,
+    LazyLocalModelAdapter,
 ):
     """Unified vision adapter composing depth, OCR, video, and CLIP capabilities."""
+
+    ENGINE_NAME = "vision_transformers"
+
+    def _is_ready(self) -> bool:
+        # Multi-capability lazy facade: each mixin loads its sub-model on demand,
+        # so the facade is "available" as soon as it is constructed.
+        return True
 
     def __init__(self, use_4bit: bool = True, usage_port: Optional[UsagePort] = None):
         super().__init__(usage_port=usage_port)
@@ -67,6 +74,3 @@ class VisionTransformersAdapter(
         raise InferenceNotImplementedError(
             "Text embedding not supported by VisionTransformersAdapter"
         )
-
-    def health_check(self) -> dict:
-        return {"status": "online", "engine": "vision_transformers"}

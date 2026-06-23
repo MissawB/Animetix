@@ -2,17 +2,25 @@ import logging
 from typing import List, Optional
 
 from adapters.inference.audio_mixin import AudioMixin
+from adapters.inference.lazy_local_model_adapter import (
+    LazyLocalModelAdapter,  # noqa: E402
+)
 from core.domain.entities.ai_schemas import InferenceResponse
-from core.ports.inference_port import InferenceNotImplementedError, InferencePort
+from core.ports.inference_port import InferenceNotImplementedError
 from core.ports.usage_port import UsagePort
 
 logger = logging.getLogger("animetix.inference.audio")
 
 
-class AudioTransformersAdapter(AudioMixin, InferencePort):
+class AudioTransformersAdapter(AudioMixin, LazyLocalModelAdapter):
     """
     Dedicated audio adapter using local models via AudioMixin.
     """
+
+    ENGINE_NAME = "audio_transformers"
+
+    def _is_ready(self) -> bool:
+        return bool(self._tts_model or self._audioldm_pipeline or self._moshi_model)
 
     def __init__(
         self,
@@ -55,13 +63,3 @@ class AudioTransformersAdapter(AudioMixin, InferencePort):
         raise InferenceNotImplementedError(
             "Text embedding not supported by AudioTransformersAdapter"
         )
-
-    def health_check(self) -> dict:
-        return {
-            "status": (
-                "online"
-                if self._tts_model or self._audioldm_pipeline or self._moshi_model
-                else "offline"
-            ),
-            "engine": "audio_transformers",
-        }

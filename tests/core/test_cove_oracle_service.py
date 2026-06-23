@@ -5,9 +5,21 @@ from core.domain.entities.ai_schemas import InferenceResponse
 from core.domain.services.cove_oracle_service import CoveOracleService
 
 
+def _attach_agenerate(engine):
+    """Give a MagicMock engine an awaitable ``agenerate`` that routes through
+    the sync ``generate`` mock — mirroring ``InferencePort.agenerate``'s default
+    so existing ``generate.side_effect`` doubles keep driving the async path."""
+
+    async def agenerate(prompt, system_prompt="sys", **kwargs):
+        return engine.generate(prompt, system_prompt=system_prompt, **kwargs)
+
+    engine.agenerate = agenerate
+    return engine
+
+
 @pytest.fixture
 def mock_engine():
-    return MagicMock()
+    return _attach_agenerate(MagicMock())
 
 
 @pytest.fixture
