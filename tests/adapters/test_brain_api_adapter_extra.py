@@ -14,6 +14,7 @@ import httpx
 import pytest
 from adapters.inference.brain_api_adapter import BrainAPIAdapter
 from core.domain.entities.ai_schemas import InferenceResponse
+from core.domain.exceptions import ConfigurationError
 from core.ports.inference_port import InferenceNotImplementedError
 
 MODULE = "adapters.inference.brain_api_adapter.safe_http_request"
@@ -101,9 +102,8 @@ def test_generate_logs_usage_and_builds_payload():
 
 
 def test_generate_raises_when_url_missing():
-    a = BrainAPIAdapter(api_url=None, api_key="k")
-    with pytest.raises(ValueError, match="Brain API URL not configured"):
-        a.generate("Q")
+    with pytest.raises(ConfigurationError, match="Brain API URL not configured"):
+        BrainAPIAdapter(api_url=None, api_key="k")
 
 
 def test_generate_reraises_http_error(adapter):
@@ -132,9 +132,8 @@ def test_generate_without_api_key_sends_empty_headers(adapter_no_key):
 
 
 def test_stream_generate_raises_when_url_missing():
-    a = BrainAPIAdapter(api_url=None, api_key="k")
-    with pytest.raises(ValueError, match="Brain API URL not configured"):
-        next(a.stream_generate("Q"))
+    with pytest.raises(ConfigurationError, match="Brain API URL not configured"):
+        BrainAPIAdapter(api_url=None, api_key="k")
 
 
 def test_stream_generate_builds_payload_and_yields_all_chunks(adapter):
@@ -238,9 +237,9 @@ def test_generate_sprite_failure_raises_not_implemented(adapter):
 # --- image embedding (incl. no-URL early return) -----------------------------
 
 
-def test_get_image_embedding_returns_empty_without_url():
-    a = BrainAPIAdapter(api_url=None, api_key="k")
-    assert a.get_image_embedding(b"\x89PNG") == []
+def test_get_image_embedding_raises_without_url():
+    with pytest.raises(ConfigurationError, match="Brain API URL not configured"):
+        BrainAPIAdapter(api_url=None, api_key="k")
 
 
 def test_get_image_embedding_encodes_and_parses(adapter):
