@@ -108,5 +108,11 @@ class AdapterLoadError(InfrastructureError):
     pass
 
 
+class ConfigurationError(AnimetixBaseError):
+    """Raised when environment variables or configurations are missing/invalid."""
+
+    pass
+
+
 # Compatibility layer for existing code (will be deprecated)
 AnimetixError = AnimetixBaseError
