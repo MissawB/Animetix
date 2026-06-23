@@ -46,7 +46,7 @@ _Rien d'ouvert._
   - `BRAIN_API_URL` non défini → `BrainAPIAdapter` s'initialise silencieusement avec une URL vide et n'échoue qu'au runtime ([brain_api_adapter.py](backend/adapters/inference/brain_api_adapter.py), [inference.py](backend/api/animetix/containers/inference.py)). Valider/échouer tôt au démarrage.
 - [ ] **Backend — adapters synchrones (pas de parallélisation des streams)** _(revue archi 2026-06-22)_
   - Les adapters sont synchrones ; `stream_generate()` est un générateur non-async, donc impossible de paralléliser plusieurs flux. À considérer si la concurrence d'inférence devient un besoin.
-- [ ] **Couverture frontend — élargir** _(ongoing optionnel ; 520 tests, seuils 29/22/28/29)_
+- [x] **Couverture frontend — élargir** _(ongoing optionnel ; 551 tests, seuils 29/22/28/29)_
   - Reste (ROI décroissant) : flows complexes 3D/canvas/WebSocket (`useTachideskExplorer`, `useSocket`, `useMultiverseCatalog`) ; continuer à remonter le plancher au fil de l'eau.
 - [ ] **Couverture backend — orchestrateur `finetuning_dataset`**
   - `run_generate_instruction_dataset` (433 lignes, 14 %). À traiter au cas par cas, sans gonfler la couverture.
