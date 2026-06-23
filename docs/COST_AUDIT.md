@@ -61,11 +61,20 @@ Estimation based on a production deployment on **Google Cloud Platform (GCP)** o
 
 ## 4. Profitability Analysis: The "Berrix" Model (Minimal Margin)
 
+> **Margin model (2026-06-23): guaranteed by construction.** All Bx economics
+> derive from one source of truth, `backend/core/domain/services/berrix_economy.py`:
+> a net Bx value (`BX_PRICE_USD_NET ≈ $0.00043`) and a configurable
+> `TARGET_MARGIN` (default 10%). Feature prices (`FEATURE_BX_COSTS`) are held at
+> or above `bx_cost_for_usd()` — a floor test enforces it. Rewarded ads grant
+> `ad_reward_bx()` (≈ 41 Bx, down from 250) so ad-funded Bx keep the margin;
+> passive mining (10 Bx) is an explicit, capped loss-leader. Packs are sold from
+> a server-authoritative catalog at the canonical rate.
+
 The **Berrix** (Bx) token system was recalibrated on June 13, 2026, to shift from a profitable model to a **"Break-even" (Social Equilibrium)** model, minimizing margins for the user's benefit.
 
 ### 4.1. Cost/Revenue Ratio (Advertising)
 *   **Average revenue of a Rewarded Ad (30s):** ~$0.015 to $0.025.
-*   **User Credit:** **+250 Bx** (Berrix).
+*   **User Credit:** **+~41 Bx** (calibrated for 10% margin).
 *   **Cost of a standard AI call (5 Bx):** ~$0.00005.
 *   **Cost of a Forge Image (50 Bx):** ~$0.0005.
 
