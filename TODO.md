@@ -14,8 +14,8 @@ _Rien d'ouvert._
   - Si le graphe est indisponible, le contexte de préférences utilisateur ([agentic_rag_service.py](backend/core/domain/services/agentic_rag_service.py)) **et** le fact-checking CoVe ([cove_oracle_service.py](backend/core/domain/services/cove_oracle_service.py)) retombent à vide sans alerte. Aggravé par le biais CoVe : un fait réel absent de Neo4j est marqué « non vérifié ». Ajouter un fallback explicite (ChromaDB/web) + un signal d'état dégradé.
 - [x] **Sécu — sanitisation prompt-injection regex-only (tag-breaking)** _(revue archi 2026-06-22)_
   - La sanitisation du companion enveloppe l'input dans `<user_input>…</user_input>` mais ne détecte pas les payloads qui ferment puis rouvrent la balise (`</user_input>ignore previous<user_input>`) ([companion.py](backend/api/animetix/api/companion.py)). Échapper/neutraliser les délimiteurs et/ou valider via un classifieur, pas uniquement par regex.
-- [ ] **Sécu — `trust_remote_code=True` sur les modèles HF** _(revue archi 2026-06-22)_
-  - Présent dans les mixins VLM/diffusers ([vlm_mixin.py](backend/adapters/inference/vlm_mixin.py), [image_gen_mixin.py](backend/adapters/inference/image_gen_mixin.py)) : exécute du code de modèles non audités. Épingler des modèles de confiance, ou retirer le flag, ou isoler le chargement.
+- [x] **Sécu — `trust_remote_code=True` sur les modèles HF** _(revue archi 2026-06-22 ; fait)_
+  - Résolu : allowlist centrale [model_registry.py](backend/core/utils/model_registry.py) (model_id → SHA épinglé + politique `trust_remote_code`) ; défaut `False`, seuls les modèles allowlistés (jina, LightonOCR…) l'obtiennent, épinglés au SHA. Tous les adapters (vlm/image_gen/…) + pipeline/scripts gatent via `resolve_trust_remote_code()` ; garde-fou de test interdit les littéraux bruts.
 - [x] **Archi IA — boosters « cognitifs » dans le chemin RAG de prod sans preuve de gain** _(revue archi 2026-06-22)_
   - `advanced_rag_service` câble `quantum_cognitive_service` + `neuromorphic_lnn_service` dans le reranking réel. Instrumenter le chemin via `ragas_eval_service` (faithfulness/relevance) et faire des **ablations** : garder ce qui améliore mesurablement, rétrograder le reste vers les Ghost Labs (démos). Réduit la surface de maintenance d'un projet solo (~94 services de domaine). _Double levier : réduit aussi la surface GPU facturée → cf. coût fixe ci-dessous._
 - [x] **Coût/Viabilité — GPU fixe 24/7 = seuil de rentabilité trop haut** _(analyse financière 2026-06-22)_
@@ -29,19 +29,21 @@ _Rien d'ouvert._
   - 8 mixins, ~476 lignes ([unified_inference_adapter.py:30](backend/adapters/inference/unified_inference_adapter.py#L30)) ; MRO fragile, dur à tester → composition plutôt qu'héritage multiple.
 - [x] **Backend — `FallbackInferenceAdapter` god object + couplage central** _(revue archi 2026-06-22)_
   - Agrège 30+ méthodes via 7 mixins et cumule orchestration + fallback + health-check + détection de capacités + reporting ([fallback_adapter.py](backend/adapters/inference/fallback_adapter.py)). ~60 services en dépendent : point de couplage le plus dur à faire évoluer. Extraire la sélection/health-check de l'orchestration.
-- [ ] **Backend — companion n'exploite pas la mémoire long-terme** _(revue archi 2026-06-22)_
-  - Le companion ne conserve que 5 tours en session ([companion.py](backend/api/animetix/api/companion.py)) alors que `long_term_memory_service` et `episodic_memory_compressor` existent et ne sont pas raccordés. Brancher la mémoire persistante (ChromaDB) au flux du companion.
-- [ ] **Backend — noms de modèles hardcodés + mismatch de version** _(revue archi 2026-06-22)_
-  - Modèles en dur éparpillés (`gemini-1.5-flash`, `FLUX.1-schnell`, `SmolVLM`, `Qwen2.5-1.5B`, `VibeThinker-3B`…) dans adapters/mixins, avec un écart commentaire/code sur la version Gemini. Centraliser dans la config (un seul registre de modèles).
-- [ ] **Backend — CoVe non parallélisé** _(revue archi 2026-06-22)_
-  - Vérification linéaire (2–3 appels LLM par claim) ([cove_oracle_service.py](backend/core/domain/services/cove_oracle_service.py)) : la latence explose au-delà de ~5 claims. Paralléliser via `asyncio.gather`.
+- [x] **Backend — companion n'exploite pas la mémoire long-terme** _(revue archi 2026-06-22 ; fait)_
+  - Résolu : `memory_service` câblé via DI dans [companion.py](backend/api/animetix/api/companion.py) — récupération des mémoires long-terme + `remember()` en arrière-plan + persistance des tours évincés (slot `{memories}` dans les prompts de personnalité).
+- [ ] **Backend — noms de modèles hardcodés + mismatch de version** _(revue archi 2026-06-22 ; en partie fait)_
+  - ✅ Phase 1 : registre sécu [model_registry.py](backend/core/utils/model_registry.py) (SHA + trust). ✅ Phase 2a : unification Gemini en 3 rôles canoniques via [gemini_models.py](backend/core/utils/gemini_models.py) (`gemini-3.5-flash`/`live-2.5-native-audio`/`embedding-2`) + garde-fou anti-littéral.
+  - ⏳ **Reste (Phase 2b)** : registre d'**IDs logiques locaux** (`llama3`, `Qwen2.5-1.5B` vs `Qwen3.5-4B`, `DRAFT_MODEL_ID`, `VibeThinker-3B`, `FLUX`) + fusion `manifest.json` / [pipeline/models_registry.py](backend/pipeline/models_registry.py).
+- [x] **Backend — CoVe non parallélisé** _(revue archi 2026-06-22 ; fait)_
+  - Résolu : vérification des claims parallélisée via `asyncio.gather` dans [cove_oracle_service.py](backend/core/domain/services/cove_oracle_service.py).
 
 ## 🟢 Faibles
 
-- [ ] **Backend — duplication entre adapters d'inférence** _(revue archi 2026-06-22)_
-  - `health_check()` et le motif `_load_model()` (try/except + cache lazy) sont réimplémentés dans chaque adapter ([backend/adapters/inference/](backend/adapters/inference/)). Factoriser dans une base commune / mixin.
-- [ ] **Backend — health-checks re-exécutés à chaque orchestration** _(revue archi 2026-06-22)_
-  - Le fallback relance les health-checks à chaque appel, sans cache TTL ([fallback_adapter.py](backend/adapters/inference/fallback_adapter.py)). Ajouter un cache à durée de vie courte.
+- [ ] **Backend — duplication entre adapters d'inférence** _(revue archi 2026-06-22 ; en partie fait)_
+  - ✅ Motif `_load_model` lazy factorisé dans [LazyLocalModelAdapter](backend/adapters/inference/lazy_local_model_adapter.py) ; ✅ `health_check` readiness factorisé pour les 6 adapters de modèles locaux (diffusers, audio, rerank, manga_ocr, qwen3_vl, vision) via `_is_ready()`.
+  - ⏳ **Reste** : factoriser le `health_check` *reachability* des adapters API (`brain_api` HTTP-ping, `google_genai` client-init, `unified`/ollama) dans un mixin dédié.
+- [ ] **Backend — health-checks re-exécutés à chaque orchestration** _(revue archi 2026-06-22 ; en cours)_
+  - Le fallback relance les health-checks à chaque appel, sans cache TTL ([fallback_adapter.py](backend/adapters/inference/fallback_adapter.py)). Ajouter un cache à durée de vie courte. ⏳ _En cours dans un worktree dédié (`perf+healthcheck-ttl-cache`), pas encore mergé._
 - [ ] **Backend — validation des env vars d'inférence** _(revue archi 2026-06-22)_
   - `BRAIN_API_URL` non défini → `BrainAPIAdapter` s'initialise silencieusement avec une URL vide et n'échoue qu'au runtime ([brain_api_adapter.py](backend/adapters/inference/brain_api_adapter.py), [inference.py](backend/api/animetix/containers/inference.py)). Valider/échouer tôt au démarrage.
 - [ ] **Backend — adapters synchrones (pas de parallélisation des streams)** _(revue archi 2026-06-22)_
