@@ -94,6 +94,8 @@ class FallbackInferenceAdapter(InferencePort):
     def _get_ordered_adapters(
         self, adapters: List[InferencePort]
     ) -> List[InferencePort]:
+        # Rafraîchit l'état de santé (throttlé par TTL) avant de router.
+        self._refresh_health_if_stale()
         # Tente d'abord les adaptateurs en ligne, puis les autres en dernier recours
         online = [a for a in adapters if a in self._online_adapters]
         offline = [a for a in adapters if a not in self._online_adapters]

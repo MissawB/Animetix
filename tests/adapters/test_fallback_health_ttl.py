@@ -86,3 +86,33 @@ def test_all_offline_allows_all_adapters():
     fb = FallbackInferenceAdapter([a, b], health_ttl=30.0, clock=clock)
     # Safety net: every adapter offline -> all kept online for routing.
     assert fb._online_adapters == {a, b}
+
+
+def test_recovered_adapter_rejoins_online_segment_after_ttl():
+    clock = FakeClock()
+    a = SpyAdapter("A", online=True)
+    b = SpyAdapter("B", online=False)  # offline at init
+    fb = FallbackInferenceAdapter([a, b], health_ttl=30.0, clock=clock)
+    # At init, only A is online -> A first, B last.
+    assert fb._get_ordered_adapters([a, b]) == [a, b]
+    assert b not in fb._online_adapters
+
+    b._online = True  # B recovers
+    clock.advance(31.0)  # cross the TTL boundary
+    ordered = fb._get_ordered_adapters([a, b])
+    assert set(ordered[:2]) == {a, b}  # both online now
+    assert b in fb._online_adapters
+
+
+def test_failed_adapter_drops_to_offline_segment_after_ttl():
+    clock = FakeClock()
+    a = SpyAdapter("A", online=True)
+    b = SpyAdapter("B", online=True)
+    fb = FallbackInferenceAdapter([a, b], health_ttl=30.0, clock=clock)
+    assert b in fb._online_adapters
+
+    b._online = False  # B dies
+    clock.advance(31.0)
+    ordered = fb._get_ordered_adapters([a, b])
+    assert ordered == [a, b]  # A (online) before B (offline)
+    assert b not in fb._online_adapters
