@@ -596,7 +596,7 @@ class FallbackInferenceAdapter(InferencePort):
         is_online = any(s.get("status") == "online" for s in self._cached_statuses)
         return {
             "status": "online" if is_online else "offline",
-            "adapters": self._cached_statuses,
+            "adapters": list(self._cached_statuses),
         }
 
     def set_primary_adapter(self, index: int) -> bool:

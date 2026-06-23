@@ -138,3 +138,9 @@ def test_public_health_check_reports_offline_when_all_offline():
     # Routing keeps A (safety net) but reported health is offline.
     assert result["status"] == "offline"
     assert a in fb._online_adapters
+    # Cache holds within TTL: second call must not increase the probe count.
+    probes_after_first_call = a.health_calls
+    fb.health_check()
+    assert a.health_calls == probes_after_first_call
+    # The returned adapters list reflects the cached offline status.
+    assert result["adapters"] == [{"status": "offline"}]
