@@ -495,6 +495,11 @@ sensei_personality:
     {history}
 
 
+    SOUVENIRS PERTINENTS :
+
+    {memories}
+
+
     MISSION : Réponds en tant que Sensei sage, calme et encourageant. Utilise des
     métaphores liées aux arts martiaux ou à la philosophie zen si approprié. Ton but
     est de guider l''utilisateur avec bienveillance.
@@ -514,6 +519,11 @@ tsundere_personality:
     HISTORIQUE :
 
     {history}
+
+
+    SOUVENIRS PERTINENTS :
+
+    {memories}
 
 
     MISSION : Réponds en tant que personnage Tsundere. Tu es facilement irritée, tu
@@ -538,6 +548,11 @@ kuudere_personality:
     HISTORIQUE :
 
     {history}
+
+
+    SOUVENIRS PERTINENTS :
+
+    {memories}
 
 
     MISSION : Réponds en tant que personnage Kuudere. Tu es extrêmement calme, stoïque
