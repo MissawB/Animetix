@@ -25,6 +25,8 @@ from ..serializers import DailyChallengeSerializer  # noqa: E402
 
 logger = get_logger("animetix." + __name__)
 
+from core.domain.services.berrix_economy import FEATURE_BX_COSTS  # noqa: E402
+
 from animetix.api.billing import deduct_berrix  # noqa: E402
 
 
@@ -234,7 +236,11 @@ class SingularityLabDataView(APIView):
             return self.get(request)
 
         if action == "compile":
-            deduct_berrix(request.user, 20, "Singularity: Compilation de Kernel")
+            deduct_berrix(
+                request.user,
+                FEATURE_BX_COSTS["singularity_compile"],
+                "Singularity: Compilation de Kernel",
+            )
             function_name = request.data.get(
                 "function_name", "cosine_similarity"
             ).strip()
@@ -266,7 +272,11 @@ class SingularityLabDataView(APIView):
                 return Response({"error": "Internal server error"}, status=500)
 
         elif action == "plasticity":
-            deduct_berrix(request.user, 20, "Singularity: Plasticité Synaptique")
+            deduct_berrix(
+                request.user,
+                FEATURE_BX_COSTS["singularity_plasticity"],
+                "Singularity: Plasticité Synaptique",
+            )
             activations = request.data.get(
                 "activations", [1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
             )
@@ -301,7 +311,11 @@ class SingularityLabDataView(APIView):
                 return Response({"error": "Internal server error"}, status=500)
 
         elif action == "quantum":
-            deduct_berrix(request.user, 20, "Singularity: Effondrement Quantique")
+            deduct_berrix(
+                request.user,
+                FEATURE_BX_COSTS["singularity_quantum"],
+                "Singularity: Effondrement Quantique",
+            )
             theme = request.data.get("theme", "shonen").lower()
             try:
                 model = container.core.quantum_cognitive_model()
@@ -321,7 +335,11 @@ class SingularityLabDataView(APIView):
                 return Response({"error": "Internal server error"}, status=500)
 
         elif action == "evolve_dynamic":
-            deduct_berrix(request.user, 50, "Singularity: Évolution LLM Dynamique")
+            deduct_berrix(
+                request.user,
+                FEATURE_BX_COSTS["singularity_evolve"],
+                "Singularity: Évolution LLM Dynamique",
+            )
             task = request.data.get("task", "dot_product")
             try:
                 compiler = container.core.self_evolving_compiler()
@@ -350,7 +368,11 @@ class SingularityLabDataView(APIView):
                 return Response({"error": "Internal server error"}, status=500)
 
         elif action == "swarm":
-            deduct_berrix(request.user, 50, "Singularity: Consensus Swarm P2P")
+            deduct_berrix(
+                request.user,
+                FEATURE_BX_COSTS["singularity_swarm"],
+                "Singularity: Consensus Swarm P2P",
+            )
             fact = request.data.get("fact")
             media = request.data.get("media")
             if not fact or not media:
@@ -368,7 +390,11 @@ class SingularityLabDataView(APIView):
                 return Response({"error": "Internal server error"}, status=500)
 
         elif action == "synthesize":
-            deduct_berrix(request.user, 100, "Singularity: Synthèse Multivers")
+            deduct_berrix(
+                request.user,
+                FEATURE_BX_COSTS["singularity_multiverse"],
+                "Singularity: Synthèse Multivers",
+            )
             universe_name = request.data.get("universe_name", "Unnamed Universe")
             genre = request.data.get("genre", "Cyberpunk")
 
@@ -484,7 +510,9 @@ class MangaVoiceLabView(APIView):
             )
 
         # Déduction des Berrix (200 Bx pour orchestration GCP + Audio)
-        deduct_berrix(request.user, 200, "Manga Voice Lab (Doublage IA)")
+        deduct_berrix(
+            request.user, FEATURE_BX_COSTS["voice_lab"], "Manga Voice Lab (Doublage IA)"
+        )
 
         task_id = str(uuid.uuid4())
         filename = f"manga_voice_{task_id}.wav"
@@ -547,7 +575,11 @@ class VideoFateZeroLabView(APIView):
             return Response({"error": "Video file is required."}, status=400)
 
         # Déduction des Berrix (500 Bx pour transfert de style vidéo - Très lourd)
-        deduct_berrix(request.user, 500, f"FateZero Style Transfer: {studio_style}")
+        deduct_berrix(
+            request.user,
+            FEATURE_BX_COSTS["fatezero"],
+            f"FateZero Style Transfer: {studio_style}",
+        )
 
         try:
             video_bytes = video_file.read()
@@ -731,7 +763,11 @@ class VoiceProfileIngestView(APIView):
 
         # Déduction des Berrix (30 Bx pour l'ingestion/découpage de voix)
         try:
-            deduct_berrix(request.user, 30, f"Ingestion vocale de {name}")
+            deduct_berrix(
+                request.user,
+                FEATURE_BX_COSTS["voice_ingestion"],
+                f"Ingestion vocale de {name}",
+            )
         except Exception as e:
             return Response(
                 {"error": f"Fonds insuffisants : {str(e)}"},
@@ -779,7 +815,11 @@ class SoundscapeGenerationView(APIView):
             return Response({"error": "Video file is required."}, status=400)
 
         # Déduction des Berrix (50 Bx pour génération audio)
-        deduct_berrix(request.user, 50, "Génération de Soundscape Immersif")
+        deduct_berrix(
+            request.user,
+            FEATURE_BX_COSTS["soundscape"],
+            "Génération de Soundscape Immersif",
+        )
 
         try:
             video_bytes = video_file.read()
@@ -805,7 +845,11 @@ class SpeechToSpeechLabView(APIView):
             return Response({"error": "Audio file is required."}, status=400)
 
         # Déduction des Berrix (10 Bx pour un tour de parole S2S)
-        deduct_berrix(request.user, 10, f"Speech-to-Speech: {persona}")
+        deduct_berrix(
+            request.user,
+            FEATURE_BX_COSTS["speech_to_speech"],
+            f"Speech-to-Speech: {persona}",
+        )
 
         try:
             audio_bytes = audio_file.read()
@@ -867,7 +911,9 @@ class MangaCleanLabView(APIView):
             return Response({"error": "Image file is required."}, status=400)
 
         # Déduction des Berrix (20 Bx pour inpainting de planche)
-        deduct_berrix(request.user, 20, "Manga Cleaner (Planche)")
+        deduct_berrix(
+            request.user, FEATURE_BX_COSTS["manga_cleaner"], "Manga Cleaner (Planche)"
+        )
 
         try:
             image_bytes = image_file.read()
@@ -897,7 +943,11 @@ class MangaTranslateLabView(APIView):
             return Response({"error": "Image file is required."}, status=400)
 
         # Déduction des Berrix (20 Bx pour inpainting + traduction)
-        deduct_berrix(request.user, 20, f"Manga Translator: {target_lang}")
+        deduct_berrix(
+            request.user,
+            FEATURE_BX_COSTS["manga_translator"],
+            f"Manga Translator: {target_lang}",
+        )
 
         try:
             image_bytes = image_file.read()
@@ -925,7 +975,9 @@ class VoiceCloningLabView(APIView):
             return Response({"error": "Missing text or audio"}, status=400)
 
         # Déduction des Berrix (100 Bx pour clonage vocal multi-passes)
-        deduct_berrix(request.user, 100, "Voice Cloning (Audio)")
+        deduct_berrix(
+            request.user, FEATURE_BX_COSTS["voice_cloning"], "Voice Cloning (Audio)"
+        )
 
         # Validation: Pitch must be an integer
         try:
@@ -1011,7 +1063,9 @@ class Generate3DDataView(APIView):
             return Response({"error": "Image file is required."}, status=400)
 
         # Déduction des Berrix (150 Bx pour reconstruction 3D Gaussian Splatting)
-        deduct_berrix(request.user, 150, f"Image-to-3D: {title}")
+        deduct_berrix(
+            request.user, FEATURE_BX_COSTS["image_to_3d"], f"Image-to-3D: {title}"
+        )
 
         try:
             image_bytes = image_file.read()
@@ -1037,7 +1091,11 @@ class CinematicReconstructionView(APIView):
             return Response({"error": "Video file is required."}, status=400)
 
         # Déduction des Berrix (500 Bx pour reconstruction volumétrique dynamique)
-        deduct_berrix(request.user, 500, f"Cinematic 3D Reconstruction: {title}")
+        deduct_berrix(
+            request.user,
+            FEATURE_BX_COSTS["cinematic_3d"],
+            f"Cinematic 3D Reconstruction: {title}",
+        )
 
         try:
             video_bytes = video_file.read()

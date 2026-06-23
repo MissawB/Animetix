@@ -32,9 +32,15 @@ class GraphNeighborsView(APIView):
 
     def get(self, request):
         # Déduction des Bx (10 Bx pour exploration de graphe profonde)
+        from core.domain.services.berrix_economy import FEATURE_BX_COSTS  # noqa: E402
+
         from animetix.api.billing import deduct_berrix  # noqa: E402
 
-        deduct_berrix(request.user, 10, "Exploration du Knowledge Graph")
+        deduct_berrix(
+            request.user,
+            FEATURE_BX_COSTS["graph_exploration"],
+            "Exploration du Knowledge Graph",
+        )
 
         item_id = request.query_params.get("id")
         media_type = request.query_params.get("type")

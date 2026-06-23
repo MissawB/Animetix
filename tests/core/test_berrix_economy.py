@@ -30,3 +30,25 @@ def test_ad_reward_bx_keeps_margin_on_ad_funded_bx():
     assert reward * econ.BX_PRICE_USD_NET <= econ.AD_REVENUE_USD * (
         1 - econ.TARGET_MARGIN
     )
+
+
+def test_feature_bx_costs_floor():
+    """Every entry in FEATURE_BX_COSTS must be >= bx_cost_for_usd of its USD anchor.
+
+    This is the margin-cushion guarantee: if we charge fewer Bx than required by
+    the margin model, the treasury loses money on that call.
+    """
+    assert hasattr(econ, "FEATURE_COMPUTE_USD"), "FEATURE_COMPUTE_USD table missing"
+    assert hasattr(econ, "FEATURE_BX_COSTS"), "FEATURE_BX_COSTS table missing"
+    assert econ.FEATURE_COMPUTE_USD, "FEATURE_COMPUTE_USD must not be empty"
+    assert econ.FEATURE_BX_COSTS, "FEATURE_BX_COSTS must not be empty"
+    assert (
+        econ.FEATURE_COMPUTE_USD.keys() == econ.FEATURE_BX_COSTS.keys()
+    ), "FEATURE_COMPUTE_USD and FEATURE_BX_COSTS must have identical key sets"
+    for key, usd in econ.FEATURE_COMPUTE_USD.items():
+        floor = econ.bx_cost_for_usd(usd)
+        charged = econ.FEATURE_BX_COSTS[key]
+        assert charged >= floor, (
+            f"Feature '{key}': charges {charged} Bx but margin floor is {floor} Bx "
+            f"(compute cost ${usd:.4f})"
+        )

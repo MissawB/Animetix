@@ -85,9 +85,17 @@ class ForgeVNView(APIView):
 
             if action == "generate":
                 # Déduction des Bx (100 Bx pour un script VN complet)
+                from core.domain.services.berrix_economy import (
+                    FEATURE_BX_COSTS,  # noqa: E402
+                )
+
                 from animetix.api.billing import deduct_berrix  # noqa: E402
 
-                deduct_berrix(request.user, 100, "Génération de Script Visual Novel")
+                deduct_berrix(
+                    request.user,
+                    FEATURE_BX_COSTS["forge_vn"],
+                    "Génération de Script Visual Novel",
+                )
 
                 # Guardrail check on fusion metadata
                 check_text = (

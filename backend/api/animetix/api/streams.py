@@ -128,9 +128,17 @@ class AgenticRAGStreamView(APIView):
 
         if request.user.is_authenticated:
             try:
+                from core.domain.services.berrix_economy import (
+                    FEATURE_BX_COSTS,  # noqa: E402
+                )
+
                 from animetix.api.billing import deduct_berrix  # noqa: E402
 
-                deduct_berrix(request.user, 5, "Agentic RAG / Chatbot")
+                deduct_berrix(
+                    request.user,
+                    FEATURE_BX_COSTS["chatbot_rag"],
+                    "Agentic RAG / Chatbot",
+                )
             except Exception as e:
                 return JsonResponse({"error": str(e)}, status=402)
 

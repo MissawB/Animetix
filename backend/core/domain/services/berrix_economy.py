@@ -42,3 +42,52 @@ def bx_cost_for_usd(usd_compute: float) -> int:
 def ad_reward_bx() -> int:
     """Bx granted per rewarded ad, so the ad keeps the margin on the Bx it funds."""
     return math.floor(AD_REVENUE_USD * (1 - TARGET_MARGIN) / BX_PRICE_USD_NET)
+
+
+# ---------------------------------------------------------------------------
+# Feature cost table
+# ---------------------------------------------------------------------------
+# FEATURE_COMPUTE_USD: estimated real-compute cost (USD) per feature invocation.
+# FEATURE_BX_COSTS:    how many Bx we actually charge — always >= bx_cost_for_usd(usd),
+#                      so the margin floor is guaranteed on every call.
+#
+# To add a feature: set its USD anchor here; the charged Bx is computed automatically.
+# To add a premium: set a higher value in FEATURE_BX_COSTS than the floor requires.
+# ---------------------------------------------------------------------------
+
+FEATURE_COMPUTE_USD: dict[str, float] = {
+    # Chatbot / RAG / companion (~1 short LLM call)
+    "chatbot_rag": 0.0018,
+    "companion": 0.0018,
+    # Graph & speech quick ops (~2–3 short calls)
+    "graph_exploration": 0.0035,
+    "speech_to_speech": 0.0035,
+    # Medium inference: image analysis, manga ops, Singularity light
+    "singularity_compile": 0.0075,
+    "singularity_plasticity": 0.0075,
+    "singularity_quantum": 0.0075,
+    "manga_cleaner": 0.0075,
+    "manga_translator": 0.0075,
+    # Voice ingestion (transcription + indexing)
+    "voice_ingestion": 0.0115,
+    # Heavy multi-step inference
+    "archetypist_fusion": 0.019,
+    "soundscape": 0.019,
+    "singularity_evolve": 0.019,
+    "singularity_swarm": 0.019,
+    # GPU-intensive single-output generation
+    "forge_vn": 0.0387,
+    "singularity_multiverse": 0.0387,
+    "voice_cloning": 0.0387,
+    # Very heavy: 3-D lift / long diffusion
+    "image_to_3d": 0.058,
+    # Flagship: full-length audio dubbing
+    "voice_lab": 0.0771,
+    # 3-D reconstruction / style-transfer at full resolution
+    "fatezero": 0.1932,
+    "cinematic_3d": 0.1932,
+}
+
+FEATURE_BX_COSTS: dict[str, int] = {
+    key: bx_cost_for_usd(usd) for key, usd in FEATURE_COMPUTE_USD.items()
+}
