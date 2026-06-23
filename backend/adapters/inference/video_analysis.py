@@ -4,6 +4,10 @@ import logging  # noqa: E402
 from typing import TYPE_CHECKING, Any, Dict, List  # noqa: E402
 
 from core.domain.exceptions import InferenceError  # noqa: E402
+from core.utils.hf_security import (  # noqa: E402
+    resolve_trust_remote_code,
+    trusted_revision,
+)
 from core.utils.lazy_import import lazy_import  # noqa: E402
 
 torch = lazy_import("torch")
@@ -51,18 +55,18 @@ class VideoAnalysisMixin:
                 )
 
             self._video_processor = AutoProcessor.from_pretrained(
-                model_id, revision="main"
-            )  # nosec B615
+                model_id, revision=trusted_revision(model_id) or "main"
+            )
             self._video_vlm = Qwen2VLForConditionalGeneration.from_pretrained(
                 model_id,
-                revision="main",
+                revision=trusted_revision(model_id) or "main",
                 torch_dtype=(
                     _torch.float16 if _torch.cuda.is_available() else _torch.float32
                 ),
                 device_map="auto",
                 quantization_config=quantization_config,
-                trust_remote_code=True,
-            )  # nosec B615
+                trust_remote_code=resolve_trust_remote_code(model_id),
+            )
         except Exception as e:
             logger.error(f"❌ Failed to load Qwen3-VL: {e}")
             raise InferenceError(f"Video VLM loading failed: {str(e)}")

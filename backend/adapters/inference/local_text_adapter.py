@@ -5,6 +5,7 @@ from typing import Any, List, Optional
 from core.domain.entities.ai_schemas import InferenceResponse
 from core.domain.exceptions import InferenceError
 from core.ports.inference_port import InferencePort
+from core.utils.hf_security import resolve_trust_remote_code, trusted_revision
 from core.utils.lazy_import import lazy_import
 
 torch = lazy_import("torch")
@@ -56,28 +57,28 @@ class LocalTextAdapter(InferencePort):
 
             logger.info(f"🏗️ Loading Local Text Model: {self.model_id}")
             self.tokenizer = AutoTokenizer.from_pretrained(
-                self.model_id, revision="main"
-            )  # nosec B615
+                self.model_id, revision=trusted_revision(self.model_id) or "main"
+            )
             quantization_config = (
                 BitsAndBytesConfig(load_in_4bit=True) if self.use_4bit else None
             )
             self.model = AutoModelForCausalLM.from_pretrained(
                 self.model_id,
-                revision="main",
+                revision=trusted_revision(self.model_id) or "main",
                 device_map="auto",
                 quantization_config=quantization_config,
-                trust_remote_code=True,
-            )  # nosec B615
+                trust_remote_code=resolve_trust_remote_code(self.model_id),
+            )
 
             # Load assistant model if speculative decoding is enabled
             if self.speculative_enabled and self.draft_model_id:
                 logger.info(f"🏗️ Loading Draft Assistant Model: {self.draft_model_id}")
                 self.draft_model = AutoModelForCausalLM.from_pretrained(
                     self.draft_model_id,
-                    revision="main",
+                    revision=trusted_revision(self.draft_model_id) or "main",
                     device_map="auto",
                     quantization_config=quantization_config,
-                    trust_remote_code=True,
+                    trust_remote_code=resolve_trust_remote_code(self.draft_model_id),
                 )
         except Exception as e:
             logger.error(f"❌ Failed to load local text model: {e}")

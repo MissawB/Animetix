@@ -3,6 +3,10 @@
 import logging  # noqa: E402
 from typing import TYPE_CHECKING, Dict, List, Optional  # noqa: E402
 
+from core.utils.hf_security import (  # noqa: E402
+    resolve_trust_remote_code,
+    trusted_revision,
+)
 from core.utils.lazy_import import lazy_import  # noqa: E402
 
 torch = lazy_import("torch")
@@ -91,12 +95,12 @@ class VlmMixin:
             if not hasattr(self, "_vlm_model"):
                 logger.info(f"🏗️ Loading Local VLM: {vlm_id}")
                 self._vlm_processor = AutoProcessor.from_pretrained(
-                    vlm_id, revision="main"
-                )  # nosec B615
+                    vlm_id, revision=trusted_revision(vlm_id) or "main"
+                )
                 self._vlm_model = AutoModelForVision2Seq.from_pretrained(
                     vlm_id,
-                    revision="main",
-                    trust_remote_code=True,  # nosec B615
+                    revision=trusted_revision(vlm_id) or "main",
+                    trust_remote_code=resolve_trust_remote_code(vlm_id),
                     torch_dtype=(
                         torch.bfloat16 if torch.cuda.is_available() else torch.float32
                     ),
