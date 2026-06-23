@@ -5,8 +5,8 @@ from typing import Any, List, Optional
 from core.domain.entities.ai_schemas import InferenceResponse
 from core.domain.exceptions import InferenceError
 from core.ports.inference_port import InferencePort
-from core.utils.hf_security import resolve_trust_remote_code, trusted_revision
 from core.utils.lazy_import import lazy_import
+from core.utils.model_registry import resolve_trust_remote_code, trusted_revision
 
 torch = lazy_import("torch")
 transformers = lazy_import("transformers")

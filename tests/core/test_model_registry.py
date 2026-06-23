@@ -47,3 +47,24 @@ def test_every_trusted_entry_has_a_real_sha():
             assert entry["revision"] and re.fullmatch(
                 r"[0-9a-f]{40}", entry["revision"]
             ), f"{mid} is trusted but not SHA-pinned"
+
+
+# ---------------------------------------------------------------------------
+# Import-hygiene: the two legacy shim modules must no longer exist
+# ---------------------------------------------------------------------------
+
+
+def test_old_hf_security_module_is_gone():
+    import importlib.util
+
+    assert (
+        importlib.util.find_spec("core.utils.hf_security") is None
+    ), "core/utils/hf_security.py was not deleted; remove it and repoint consumers to model_registry"
+
+
+def test_old_model_security_module_is_gone():
+    import importlib.util
+
+    assert (
+        importlib.util.find_spec("core.utils.model_security") is None
+    ), "core/utils/model_security.py was not deleted; remove it and repoint consumers to model_registry"

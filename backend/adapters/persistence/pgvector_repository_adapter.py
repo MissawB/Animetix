@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 import orjson
 from core.ports.repository_port import RepositoryPort
-from core.utils.hf_security import resolve_trust_remote_code, trusted_revision
+from core.utils.model_registry import resolve_trust_remote_code, trusted_revision
 from django.core.cache import cache
 from pipeline.vector_client import vector_manager
 
