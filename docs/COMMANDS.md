@@ -87,6 +87,7 @@ Model training, distillation, agent alignment (RLHF/DPO), and benchmarks.
 ### RAG Evaluation & Alignment (DPO / RL)
 | Command | Directory | Description |
 | :--- | :--- | :--- |
+| `python backend/api/manage.py run_rag_ablation --source curated` | Root | Runs the RAG pipeline with cognitive boosters ON vs OFF over a query set and reports RAGAS deltas (faithfulness / relevancy / context precision). Use `--source gold` for the Gold Dataset questions. Requires a live judge LLM. |
 | `python backend/scripts/mlops_rag_eval.py` | Root | Runs automated Ragas evaluations (Faithfulness, Answer Relevance) on samples to check for regressions. |
 | `python backend/pipeline/mlops/evaluation_metrics.py` | Root | Calculates global evaluation metrics (Hit Rate, MRR) against the "Gold Dataset". |
 | `python backend/pipeline/mlops/dpo_feedback_loop.py` | Root | Collects user interactions and corrections to compile a local DPO dataset. |
