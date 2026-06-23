@@ -1,9 +1,12 @@
 import logging
 from typing import Any, Dict, List, Optional
 
+from adapters.inference.lazy_local_model_adapter import (
+    LazyLocalModelAdapter,  # noqa: E402
+)
 from core.domain.entities.ai_schemas import InferenceResponse
 from core.domain.exceptions import InferenceError
-from core.ports.inference_port import InferenceNotImplementedError, InferencePort
+from core.ports.inference_port import InferenceNotImplementedError
 from core.ports.usage_port import UsagePort
 from core.utils.model_registry import resolve_trust_remote_code, trusted_revision
 from transformers import pipeline
@@ -11,10 +14,15 @@ from transformers import pipeline
 logger = logging.getLogger("animetix.inference")
 
 
-class MangaOCRAdapter(InferencePort):
+class MangaOCRAdapter(LazyLocalModelAdapter):
     """
     Adaptateur spécialisé pour l'OCR de mangas utilisant LightonOCR.
     """
+
+    ENGINE_NAME = "LightonOCR"
+
+    def _is_ready(self) -> bool:
+        return bool(self.ocr_pipeline)
 
     def __init__(
         self,
@@ -92,9 +100,3 @@ class MangaOCRAdapter(InferencePort):
         except Exception as e:
             logger.error(f"Manga OCR processing failed: {e}")
             raise InferenceError(f"Manga OCR processing failed: {e}")
-
-    def health_check(self) -> dict:
-        return {
-            "status": "online" if self.ocr_pipeline else "offline",
-            "engine": "LightonOCR",
-        }
