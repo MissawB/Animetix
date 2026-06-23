@@ -5,6 +5,7 @@ from adapters.inference.brain_api_adapter import BrainAPIAdapter
 from adapters.inference.local_rerank_adapter import LocalRerankAdapter
 from adapters.inference.local_text_adapter import LocalTextAdapter
 from adapters.inference.qwen3_vl_adapter import Qwen3VLAdapter
+from core.domain.exceptions import ConfigurationError
 from core.ports.inference_port import InferenceNotImplementedError
 
 
@@ -14,12 +15,10 @@ def test_qwen3_vl_not_implemented():
 
 
 def test_brain_api_not_implemented(monkeypatch):
-    # BrainAPIAdapter returns a default list when no api_url is configured.
     # Clear the env fallback so the test is independent of the local environment.
     monkeypatch.delenv("BRAIN_API_URL", raising=False)
-    adapter = BrainAPIAdapter(api_url="", api_key="")
-    result = adapter.get_image_embedding(b"")
-    assert result == []
+    with pytest.raises(ConfigurationError, match="Brain API URL not configured"):
+        BrainAPIAdapter(api_url="", api_key="")
 
 
 def test_transformers_not_implemented():
@@ -71,3 +70,29 @@ def test_transformers_text_and_rerank_adapters_instantiation():
 
     rerank_adapter = LocalRerankAdapter()
     assert rerank_adapter.model_name is not None
+
+
+def test_inference_container_raises_on_missing_url(monkeypatch):
+    import importlib
+
+    from django.conf import settings
+
+    # Simulate a non-test environment and remove BRAIN_API_URL
+    monkeypatch.setattr(settings, "SETTINGS_MODULE", "animetix_project.settings")
+    monkeypatch.delenv("BRAIN_API_URL", raising=False)
+
+    with pytest.raises(ConfigurationError, match="BRAIN_API_URL is not configured"):
+        importlib.reload(importlib.import_module("animetix.containers.inference"))
+
+
+def test_inference_container_succeeds_when_url_present(monkeypatch):
+    import importlib
+
+    from django.conf import settings
+
+    # Simulate a non-test environment and configure BRAIN_API_URL
+    monkeypatch.setattr(settings, "SETTINGS_MODULE", "animetix_project.settings")
+    monkeypatch.setenv("BRAIN_API_URL", "http://brain-api:7861")
+
+    module = importlib.reload(importlib.import_module("animetix.containers.inference"))
+    assert module.InferenceContainer is not None

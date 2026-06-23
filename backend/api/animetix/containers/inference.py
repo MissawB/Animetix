@@ -1,10 +1,24 @@
 import os
 
+from core.domain.exceptions import ConfigurationError
 from core.utils.gemini_models import GEMINI_FLASH
 from dependency_injector import containers, providers
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 
 from .lazy import LazyClass
+
+try:
+    is_testing = (
+        settings.configured
+        and settings.SETTINGS_MODULE == "animetix_project.test_settings"
+    )
+except ImproperlyConfigured:
+    is_testing = False
+
+if not is_testing:
+    if not os.getenv("BRAIN_API_URL"):
+        raise ConfigurationError("BRAIN_API_URL is not configured")
 
 
 class InferenceContainer(containers.DeclarativeContainer):
