@@ -1,4 +1,5 @@
 from animetix_project.logging_config import get_logger
+from core.domain.services.berrix_economy import MINING_REWARD_BX, ad_reward_bx
 from django.core.cache import cache
 from django.db import transaction
 from rest_framework import permissions, status
@@ -72,8 +73,8 @@ class WalletMineView(APIView):
                 status=status.HTTP_429_TOO_MANY_REQUESTS,
             )
 
-        # Augmentation pour marge minimale: 20 Bx par session de 3 min
-        amount = 20
+        # Loss-leader marketing borné (aucun revenu réel) — source: berrix_economy
+        amount = MINING_REWARD_BX
 
         try:
             with transaction.atomic():
@@ -114,8 +115,8 @@ class WalletWatchAdView(APIView):
 
     def post(self, request):
         user = request.user
-        # Augmentation pour marge minimale: 250 Bx par vidéo (Généreux +++)
-        amount = 250
+        # Récompense calibrée pour garder la marge sur les Bx financés par pub
+        amount = ad_reward_bx()
 
         try:
             with transaction.atomic():
