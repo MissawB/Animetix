@@ -92,7 +92,7 @@ def test_defaults_base_model_name_when_env_absent(mocker, monkeypatch):
     m = _wire(mocker)
     mlw.merge_lora()
     name = m["auto_model"].from_pretrained.call_args.args[0]
-    assert name == "unsloth/DeepSeek-R1-Distill-Qwen-8B"
+    assert name == "unsloth/DeepSeek-R1-Distill-Qwen-7B"
 
 
 def test_device_map_cpu_when_no_cuda(mocker):

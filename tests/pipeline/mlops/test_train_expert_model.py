@@ -304,7 +304,7 @@ def test_missing_dataset_logs_failed_and_returns_early(patched, monkeypatch):
 
 def test_max_seq_length_deepseek_default(patched, monkeypatch):
     monkeypatch.delenv("MAX_SEQ_LENGTH", raising=False)
-    monkeypatch.setenv("BASE_MODEL_NAME", "unsloth/DeepSeek-R1-Distill-Qwen-8B")
+    monkeypatch.setenv("BASE_MODEL_NAME", "unsloth/DeepSeek-R1-Distill-Qwen-7B")
     _seed_dataset(patched["tmp_path"])
 
     tem.run_expert_training()
@@ -553,14 +553,14 @@ def test_distributed_deepspeed_injection(patched, monkeypatch, tmp_path):
 
 
 def test_tracker_and_provenance_contract(patched, monkeypatch):
-    monkeypatch.setenv("BASE_MODEL_NAME", "unsloth/DeepSeek-R1-Distill-Qwen-8B")
+    monkeypatch.setenv("BASE_MODEL_NAME", "unsloth/DeepSeek-R1-Distill-Qwen-7B")
     _seed_dataset(patched["tmp_path"])
 
     tem.run_expert_training()
 
     tracker = patched["tracker"]
     tracker.log_param.assert_any_call(
-        "model_base", "unsloth/DeepSeek-R1-Distill-Qwen-8B"
+        "model_base", "unsloth/DeepSeek-R1-Distill-Qwen-7B"
     )
     tracker.log_param.assert_any_call("git_commit", "deadbeefcafebabe")
     tracker.finish.assert_called_once_with(status="COMPLETED")
@@ -568,7 +568,7 @@ def test_tracker_and_provenance_contract(patched, monkeypatch):
     # Provenance metadata was written next to the adapter output dir.
     patched["write_meta"].assert_called_once()
     pkw = patched["write_meta"].call_args
-    assert pkw.kwargs["model_base"] == "unsloth/DeepSeek-R1-Distill-Qwen-8B"
+    assert pkw.kwargs["model_base"] == "unsloth/DeepSeek-R1-Distill-Qwen-7B"
 
     # Training actually launched.
     patched["sft_instance"].train.assert_called_once()
