@@ -85,7 +85,7 @@ dbt-core==1.11.11
 dbt-sqlite==1.10.0
 dbt-bigquery==1.10.3
 beautifulsoup4==4.12.3
-orjson==3.11.8
+orjson==3.11.9
 filetype==1.2.0
 bleach==6.1.0
 PyJWT==2.12.0
