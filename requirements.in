@@ -74,7 +74,7 @@ pydantic==2.12.5
 pydantic-settings==2.13.1
 stripe==15.2.0
 dependency-injector==4.49.0
-accelerate==1.13.0
+accelerate==1.14.0
 supervisor==4.2.5
 # apache-beam 2.74.0 cape `jsonpickle<4.0.0` → jsonpickle reste en 3.4.2 (CVE CWE-502,
 # Snyk). Résiduel ACCEPTÉ : jsonpickle est purement transitif (jamais importé par notre
