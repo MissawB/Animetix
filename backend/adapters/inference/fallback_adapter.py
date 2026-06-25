@@ -335,8 +335,11 @@ class FallbackInferenceAdapter(InferencePort):
                         f"success in {latency:.2f}s"
                     )
                     yield first_chunk
-                    async for chunk in agen:
-                        yield chunk
+                    try:
+                        async for chunk in agen:
+                            yield chunk
+                    finally:
+                        await agen.aclose()
                     return
 
                 error_hint = first_chunk.text if first_chunk else "Premier chunk vide"
