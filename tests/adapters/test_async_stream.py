@@ -157,3 +157,58 @@ async def test_google_genai_astream_generate_native(monkeypatch):
 
     assert chunks == ["Foo", "Bar"]
     client.aio.models.generate_content_stream.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_fallback_astream_generate_native():
+    from adapters.inference.fallback_adapter import FallbackInferenceAdapter
+
+    class FakeAdapter(InferencePort):
+        def __init__(self, chunks=None, raise_on_stream=False):
+            self._chunks = chunks or []
+            self._raise = raise_on_stream
+            self.astream_called = False
+
+        def generate(self, prompt, system_prompt="sys", **kwargs):
+            return InferenceResponse(text="gen-fallback")
+
+        def get_text_embedding(self, text):
+            return []
+
+        def health_check(self):
+            return {"status": "online"}
+
+        def stream_generate(self, prompt, system_prompt="sys", **kwargs):
+            for c in self._chunks:
+                yield InferenceResponse(text=c)
+
+        async def astream_generate(self, prompt, system_prompt="sys", **kwargs):
+            self.astream_called = True
+            if self._raise:
+                raise RuntimeError("boom")
+            for c in self._chunks:
+                yield InferenceResponse(text=c)
+
+    # 1) First adapter works -> its chunks are relayed.
+    good = FakeAdapter(chunks=["x", "y"])
+    fb = FallbackInferenceAdapter(adapters=[good])
+    out = [c.text async for c in fb.astream_generate("Q")]
+    assert out == ["x", "y"]
+    assert good.astream_called is True
+
+    # 2) First raises at the probe -> falls through to the second.
+    bad = FakeAdapter(raise_on_stream=True)
+    good2 = FakeAdapter(chunks=["z"])
+    fb2 = FallbackInferenceAdapter(adapters=[bad, good2])
+    out2 = [c.text async for c in fb2.astream_generate("Q")]
+    assert out2 == ["z"]
+    assert bad.astream_called is True
+    assert good2.astream_called is True
+
+    # 3) All fail -> final fallback to agenerate (generate).
+    b1 = FakeAdapter(raise_on_stream=True)
+    b2 = FakeAdapter(raise_on_stream=True)
+    fb3 = FallbackInferenceAdapter(adapters=[b1, b2])
+    out3 = [c.text async for c in fb3.astream_generate("Q")]
+    assert out3 == ["gen-fallback"]
+    assert all(a.astream_called for a in (b1, b2))

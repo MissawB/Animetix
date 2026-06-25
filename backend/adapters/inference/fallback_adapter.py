@@ -289,6 +289,84 @@ class FallbackInferenceAdapter(InferencePort):
 
         return error_gen()
 
+    async def astream_generate(
+        self,
+        prompt: str,
+        system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.",
+        thinking_budget: int = 0,
+        thinking_mode: bool = False,
+        include_logprobs: bool = False,
+        **kwargs,
+    ):
+        """Streaming async avec repli intelligent (miroir async de stream_generate)."""
+        import asyncio  # noqa: E402
+        import inspect  # noqa: E402
+
+        capable_adapters = self._capabilities.for_method("stream_generate")
+        if not capable_adapters:
+            capable_adapters = self.adapters
+
+        ordered_adapters = await asyncio.to_thread(
+            self._get_ordered_adapters, capable_adapters
+        )
+        for adapter in ordered_adapters:
+            if not hasattr(adapter, "astream_generate") or not callable(
+                getattr(adapter, "astream_generate")
+            ):
+                continue
+            start_time = time.time()
+            try:
+                sig = inspect.signature(adapter.astream_generate)
+                call_kwargs: Dict[str, Any] = {
+                    "thinking_budget": thinking_budget,
+                    "thinking_mode": thinking_mode,
+                }
+                if "include_logprobs" in sig.parameters:
+                    call_kwargs["include_logprobs"] = include_logprobs
+                call_kwargs.update(kwargs)
+
+                agen = adapter.astream_generate(prompt, system_prompt, **call_kwargs)
+                first_chunk = await agen.__anext__()
+                latency = time.time() - start_time
+
+                if first_chunk and not first_chunk.is_error:
+                    logger.info(
+                        f"✅ [Async Stream Fallback] {adapter.__class__.__name__} "
+                        f"success in {latency:.2f}s"
+                    )
+                    yield first_chunk
+                    async for chunk in agen:
+                        yield chunk
+                    return
+
+                error_hint = first_chunk.text if first_chunk else "Premier chunk vide"
+                self._report_failure(
+                    adapter, "astream_generate", error_hint, latency, prompt
+                )
+            except StopAsyncIteration:
+                self._report_failure(
+                    adapter,
+                    "astream_generate",
+                    "StopAsyncIteration (Pas de réponse)",
+                    time.time() - start_time,
+                    prompt,
+                )
+                continue
+            except Exception as e:
+                self._report_failure(
+                    adapter,
+                    "astream_generate",
+                    f"CRASH: {str(e)}",
+                    time.time() - start_time,
+                    prompt,
+                )
+                continue
+
+        # Final fallback to agenerate (delegates to the sync generate + its own fallback logic).
+        yield await self.agenerate(
+            prompt, system_prompt, thinking_budget, thinking_mode, include_logprobs
+        )
+
     def generate_image(self, prompt: str, style: str = "") -> str:
         """Génère une image avec repli."""
         from django.core.cache import cache
