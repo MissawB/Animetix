@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { 
   GitBranch, 
   Search, 
@@ -48,7 +48,54 @@ const TreeOfThoughtsPage: React.FC = () => {
   const [query, setQuery] = useState('');
   const [selectedNode, setSelectedNode] = useState<ToTNode | null>(null);
   const [graphData, setGraphData] = useState<ToTGraphData | null>(null);
+  const [isStreaming, setIsStreaming] = useState(false);
   const fgRef = useRef<ForceGraphMethods | undefined>(undefined); // react-force-graph-2d imperative handle
+  const esRef = useRef<EventSource | null>(null);
+
+  // Close any open SSE stream when leaving the page.
+  useEffect(() => () => esRef.current?.close(), []);
+
+  // Live streaming variant: consume the SSE endpoint and reveal nodes progressively
+  // (vs the batch /labs/tot/ endpoint above, which returns the full tree at once).
+  const startStream = useCallback(() => {
+    if (!query.trim()) return;
+    esRef.current?.close();
+    setSelectedNode(null);
+    setGraphData({ nodes: [], links: [] });
+    setIsStreaming(true);
+
+    const acc = { nodes: [] as ToTNode[], links: [] as ToTLink[], lastSelectedId: 'root' };
+    const es = new EventSource(`/api/v1/stream/tot/?q=${encodeURIComponent(query)}`);
+    esRef.current = es;
+
+    es.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
+      if (msg.type === 'node_created') {
+        const d = msg.data;
+        const type: ToTNode['type'] =
+          d.id === 'root' ? 'root' : d.is_pruned ? 'pruned' : 'selected';
+        acc.nodes.push({ id: d.id, type, score: d.score, full_text: d.text, label: (d.text || '').slice(0, 24) });
+        if (d.parent_id) acc.links.push({ source: d.parent_id, target: d.id });
+        if (!d.is_pruned && d.id !== 'root') acc.lastSelectedId = d.id;
+        setGraphData({ nodes: [...acc.nodes], links: [...acc.links] });
+      } else if (msg.type === 'final_answer') {
+        acc.nodes.push({ id: 'final', type: 'final', score: 1.0, full_text: msg.data.text, label: 'CONCLUSION' });
+        acc.links.push({ source: acc.lastSelectedId, target: 'final' });
+        setGraphData({ nodes: [...acc.nodes], links: [...acc.links] });
+        es.close();
+        setIsStreaming(false);
+        setTimeout(() => fgRef.current?.zoomToFit(400), 300);
+      } else if (msg.type === 'error') {
+        es.close();
+        setIsStreaming(false);
+      }
+    };
+
+    es.onerror = () => {
+      es.close();
+      setIsStreaming(false);
+    };
+  }, [query]);
 
   const totMutation = useMutation<ToTResponse, Error, { query: string }>({
     mutationFn: (body: { query: string }) => apiClient('/api/v1/labs/tot/', { 
@@ -131,12 +178,20 @@ const TreeOfThoughtsPage: React.FC = () => {
                 />
               </div>
 
-              <Button 
+              <Button
                 onClick={() => totMutation.mutate({ query })}
-                disabled={totMutation.isPending || !query.trim()}
+                disabled={totMutation.isPending || isStreaming || !query.trim()}
                 className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-6 rounded-2xl font-black italic text-lg uppercase shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:scale-[1.02] active:scale-[0.98] transition-all border-none"
               >
                 {totMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : "GÉNÉRER L'ARBRE"}
+              </Button>
+
+              <Button
+                onClick={startStream}
+                disabled={totMutation.isPending || isStreaming || !query.trim()}
+                className="w-full bg-white/5 hover:bg-white/10 text-emerald-300 py-4 rounded-2xl font-black italic uppercase border border-emerald-500/30 transition-all"
+              >
+                {isStreaming ? <Loader2 className="w-5 h-5 animate-spin" /> : "STREAM EN DIRECT"}
               </Button>
             </div>
 
