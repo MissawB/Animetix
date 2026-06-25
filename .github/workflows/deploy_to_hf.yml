@@ -16,7 +16,7 @@ jobs:
       - name: Check for changes
         id: check
         run: |
-          git diff --quiet HEAD^ HEAD data/models/manifest.json || echo "should_deploy=true" >> $GITHUB_OUTPUT
+          git diff --quiet HEAD^ HEAD backend/core/utils/model_registry.py || echo "should_deploy=true" >> $GITHUB_OUTPUT
 
   deploy:
     runs-on: ubuntu-latest

@@ -16,15 +16,18 @@ def test_get_git_commit_returns_string_without_env(monkeypatch):
     assert isinstance(commit, str) and commit  # SHA réel ou "unknown"
 
 
-def test_get_manifest_revisions_reads_file(tmp_path):
-    manifest = tmp_path / "manifest.json"
-    manifest.write_text(json.dumps({"llm": {"v3": {"revision": "abc"}}}))
-    data = run_provenance.get_manifest_revisions(manifest)
-    assert data["llm"]["v3"]["revision"] == "abc"
-
-
-def test_get_manifest_revisions_missing_returns_empty(tmp_path):
-    assert run_provenance.get_manifest_revisions(tmp_path / "nope.json") == {}
+def test_get_registry_revisions_resolves_from_central_registry():
+    # Les révisions viennent désormais du registre central (model_registry),
+    # plus du manifest supprimé. Forme attendue : {kind: {version: {id, revision}}}.
+    data = run_provenance.get_registry_revisions()
+    assert data["text"]["v3"] == {
+        "id": "jinaai/jina-embeddings-v3",
+        "revision": "ab036b023d30b4d1138c4c3bfa9f0c445ab455d6",
+    }
+    assert data["vision"]["v2"]["id"] == "google/siglip2-so400m-patch14-384"
+    for versions in data.values():
+        for entry in versions.values():
+            assert entry["id"] and entry["revision"]
 
 
 def test_build_provenance_shape(monkeypatch):
