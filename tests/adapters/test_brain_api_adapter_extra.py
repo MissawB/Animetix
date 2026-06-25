@@ -102,8 +102,14 @@ def test_generate_logs_usage_and_builds_payload():
 
 
 def test_generate_raises_when_url_missing():
-    with pytest.raises(ConfigurationError, match="Brain API URL not configured"):
+    with pytest.raises(ConfigurationError, match="BRAIN_API_URL is not configured"):
         BrainAPIAdapter(api_url=None, api_key="k")
+
+
+def test_init_raises_on_malformed_url():
+    # Now routed through check_brain_config: a present-but-malformed URL is caught.
+    with pytest.raises(ConfigurationError, match="malformed"):
+        BrainAPIAdapter(api_url="not-a-url", api_key="k")
 
 
 def test_generate_reraises_http_error(adapter):
@@ -132,7 +138,7 @@ def test_generate_without_api_key_sends_empty_headers(adapter_no_key):
 
 
 def test_stream_generate_raises_when_url_missing():
-    with pytest.raises(ConfigurationError, match="Brain API URL not configured"):
+    with pytest.raises(ConfigurationError, match="BRAIN_API_URL is not configured"):
         BrainAPIAdapter(api_url=None, api_key="k")
 
 
@@ -238,7 +244,7 @@ def test_generate_sprite_failure_raises_not_implemented(adapter):
 
 
 def test_get_image_embedding_raises_without_url():
-    with pytest.raises(ConfigurationError, match="Brain API URL not configured"):
+    with pytest.raises(ConfigurationError, match="BRAIN_API_URL is not configured"):
         BrainAPIAdapter(api_url=None, api_key="k")
 
 

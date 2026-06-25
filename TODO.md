@@ -26,6 +26,7 @@ _Rien d'ouvert._
 - [x] **Backend — validation des env vars d'inférence** _(revue archi 2026-06-22 ; fait)_
   - ✅ `BrainAPIAdapter` échoue tôt (`raise ConfigurationError` si `BRAIN_API_URL` manquant) ([brain_api_adapter.py](backend/adapters/inference/brain_api_adapter.py)).
   - ✅ Garde-fou de cohérence (coherence-only) pour `unified` (`LLM_API_BASE` malformé) et `google_genai` (`GEMINI_API_KEY` blanc) dans leurs `__init__`, + validation groupée à erreurs agrégées au démarrage du container via `validate_inference_config()` ([inference_config.py](backend/core/utils/inference_config.py), câblée dans [inference.py](backend/api/animetix/containers/inference.py)).
+  - ✅ `BrainAPIAdapter` routé sur `check_brain_config` ([brain_api_adapter.py](backend/adapters/inference/brain_api_adapter.py)) : message unifié (`"BRAIN_API_URL is not configured"`) + check d'URL malformée côté adapter. En-tête d'erreur agrégée passé tout en anglais (`"Invalid inference configuration:"`) et filtre `is not None` dans `validate_inference_config()`.
 - [ ] **Backend — adapters synchrones (pas de parallélisation des streams)** _(revue archi 2026-06-22)_
   - Les adapters sont synchrones ; `stream_generate()` est un générateur non-async, donc impossible de paralléliser plusieurs flux. À considérer si la concurrence d'inférence devient un besoin.
 - [ ] **Couverture backend — orchestrateur `finetuning_dataset`**

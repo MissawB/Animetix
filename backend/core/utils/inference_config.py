@@ -62,9 +62,8 @@ def validate_inference_config() -> None:
         check_unified_config(os.getenv("LLM_API_BASE")),
         check_google_genai_config(os.getenv("GEMINI_API_KEY")),
     ]
-    errors = [p for p in problems if p]
+    errors = [p for p in problems if p is not None]
     if errors:
         raise ConfigurationError(
-            "Configuration d'inférence invalide:\n"
-            + "\n".join(f"  - {e}" for e in errors)
+            "Invalid inference configuration:\n" + "\n".join(f"  - {e}" for e in errors)
         )

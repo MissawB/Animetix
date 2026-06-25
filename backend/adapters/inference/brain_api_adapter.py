@@ -13,6 +13,7 @@ from core.domain.entities.ai_schemas import (
 from core.domain.exceptions import ConfigurationError
 from core.ports.inference_port import InferenceNotImplementedError, InferencePort
 from core.ports.usage_port import UsagePort
+from core.utils.inference_config import check_brain_config
 from core.utils.security import safe_http_request
 
 logger = logging.getLogger("animetix.inference.brain")
@@ -31,8 +32,9 @@ class BrainAPIAdapter(ReachabilityHealthCheckMixin, InferencePort):
     ):
         super().__init__(usage_port=usage_port)
         self.api_url = api_url or os.getenv("BRAIN_API_URL")
-        if not self.api_url:
-            raise ConfigurationError("Brain API URL not configured")
+        config_error = check_brain_config(self.api_url)
+        if config_error:
+            raise ConfigurationError(config_error)
         self.api_key = api_key or os.getenv("BRAIN_API_KEY")
 
     def _get_headers(self) -> Dict[str, str]:

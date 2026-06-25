@@ -103,6 +103,9 @@ def test_validate_aggregates_all_problems(monkeypatch):
     with pytest.raises(ConfigurationError) as exc:
         validate_inference_config()
     text = str(exc.value)
+    # Header and sub-messages are all English (no mixed-language strings).
+    assert "Invalid inference configuration:" in text
+    assert "invalide" not in text
     assert "BRAIN_API_URL is not configured" in text
     assert "LLM_API_BASE" in text
     assert "GEMINI_API_KEY" in text
