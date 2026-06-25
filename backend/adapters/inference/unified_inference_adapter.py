@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 import os
@@ -383,6 +384,101 @@ class UnifiedInferenceAdapter(
         except Exception as e:
             logger.error(f"Unified Stream Error: {e}")
             raise InferenceError(f"Streaming failed: {e}")
+
+    async def astream_generate(
+        self,
+        prompt: str,
+        system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.",
+        thinking_budget: int = 0,
+        thinking_mode: bool = False,
+        include_logprobs: bool = False,
+        **kwargs,
+    ):
+        """Variante async native de stream_generate (httpx.AsyncClient, SSE)."""
+        self._last_completion = ""
+        self._last_logprobs = []
+        payload = {
+            "model": self.model_name,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": prompt},
+            ],
+            "temperature": 0.7,
+            "stream": True,
+        }
+
+        if thinking_mode or thinking_budget > 0:
+            payload["extra_body"] = {
+                "thinking_budget": thinking_budget,
+                "thinking_mode": thinking_mode,
+            }
+
+        if include_logprobs:
+            payload["logprobs"] = True
+            payload["top_logprobs"] = 5
+
+        url = f"{self.api_base}/chat/completions"
+        try:
+            if not await asyncio.to_thread(is_safe_url, url, allow_internal=True):
+                raise ValueError(f"Unsafe stream URL: {url}")
+
+            async with httpx.AsyncClient(
+                timeout=self.timeout, follow_redirects=False
+            ) as client:
+                async with client.stream(
+                    "POST", url, json=payload, headers=self._get_headers()
+                ) as res:
+                    res.raise_for_status()
+                    async for line in res.aiter_lines():
+                        if not line or not line.startswith("data: "):
+                            continue
+                        data_content = line[6:].strip()
+                        if data_content == "[DONE]":
+                            break
+                        try:
+                            chunk = json.loads(data_content)
+                            choice = chunk["choices"][0]
+                            delta = choice.get("delta", {})
+
+                            parsed_logprobs = None
+                            if (
+                                "logprobs" in choice
+                                and choice["logprobs"]
+                                and "content" in choice["logprobs"]
+                            ):
+                                parsed_logprobs = []
+                                for lp in choice["logprobs"]["content"]:
+                                    top_lp = None
+                                    if "top_logprobs" in lp and lp["top_logprobs"]:
+                                        top_lp = [
+                                            {item["token"]: item["logprob"]}
+                                            for item in lp["top_logprobs"]
+                                        ]
+                                    parsed_logprobs.append(
+                                        TokenLogProb(
+                                            token=lp["token"],
+                                            logprob=lp["logprob"],
+                                            top_logprobs=top_lp,
+                                        )
+                                    )
+
+                            if "content" in delta:
+                                self._last_completion += delta["content"]
+                                if parsed_logprobs:
+                                    self._last_logprobs.extend(parsed_logprobs)
+                                yield InferenceResponse(
+                                    text=delta["content"],
+                                    metadata=InferenceMetadata(
+                                        logprobs=parsed_logprobs,
+                                        usage=chunk.get("usage"),
+                                    ),
+                                )
+                        except Exception as e:
+                            logger.warning(f"Error parsing async stream chunk: {e}")
+                            continue
+        except Exception as e:
+            logger.error(f"Unified Async Stream Error: {e}")
+            raise InferenceError(f"Async streaming failed: {e}")
 
     def health_check(self) -> dict:
         # Multi-endpoint reachability: prefer the Ollama /api/tags probe (richer:

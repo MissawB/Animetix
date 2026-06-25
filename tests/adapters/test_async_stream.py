@@ -64,3 +64,59 @@ async def test_brain_api_adapter_astream_generate_native():
     args, kwargs = mock_client.stream.call_args
     assert args == ("POST", "http://brain:5000/stream_generate")
     assert kwargs["json"]["prompt"] == "Q"
+
+
+@pytest.mark.asyncio
+async def test_unified_astream_generate_native():
+    import json as _json
+    from unittest.mock import AsyncMock, MagicMock, patch
+
+    from adapters.inference.unified_inference_adapter import UnifiedInferenceAdapter
+
+    adapter = UnifiedInferenceAdapter(
+        api_base="http://llm:8000/v1", model_name="m", api_key="k"
+    )
+
+    lines = [
+        "data: " + _json.dumps({"choices": [{"delta": {"content": "Hel"}}]}),
+        "data: " + _json.dumps({"choices": [{"delta": {"content": "lo"}}]}),
+        "data: [DONE]",
+    ]
+
+    async def fake_aiter_lines():
+        for ln in lines:
+            yield ln
+
+    mock_response = MagicMock()
+    mock_response.aiter_lines.side_effect = fake_aiter_lines
+    mock_response.raise_for_status.return_value = None
+
+    mock_stream_ctx = MagicMock()
+    mock_stream_ctx.__aenter__ = AsyncMock(return_value=mock_response)
+    mock_stream_ctx.__aexit__ = AsyncMock()
+
+    mock_client = MagicMock()
+    mock_client.stream.return_value = mock_stream_ctx
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock()
+
+    with (
+        patch(
+            "adapters.inference.unified_inference_adapter.httpx.AsyncClient",
+            return_value=mock_client,
+        ),
+        patch(
+            "adapters.inference.unified_inference_adapter.is_safe_url",
+            return_value=True,
+        ),
+    ):
+        chunks = []
+        async for c in adapter.astream_generate("Q", include_logprobs=False):
+            chunks.append(c.text)
+
+    assert chunks == ["Hel", "lo"]
+    mock_client.stream.assert_called_once()
+    args, kwargs = mock_client.stream.call_args
+    assert args[0] == "POST"
+    assert kwargs["json"]["stream"] is True
+    assert adapter._last_completion == "Hello"
