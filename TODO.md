@@ -23,9 +23,9 @@ _Rien d'ouvert._
 - [ ] **Backend — duplication entre adapters d'inférence** _(revue archi 2026-06-22 ; en partie fait)_
   - ✅ `health_check` *reachability* des adapters API (`brain_api` HTTP-ping, `google_genai` client-init, `unified`/ollama) factorisé dans [ReachabilityHealthCheckMixin](backend/adapters/inference/reachability_health_mixin.py) (builder de statut standardisé + sonde HTTP générique pilotée par un `requester` injecté → chaque adapter garde son client HTTP et ses cibles de patch).
   - ⏳ **Reste** : factoriser le motif `_load_model()` (try/except + cache lazy) et le `health_check` *readiness* des adapters de modèles **locaux**.
-- [ ] **Backend — validation des env vars d'inférence** _(revue archi 2026-06-22 ; en partie fait)_
-  - ✅ `BrainAPIAdapter` échoue désormais tôt (`raise ConfigurationError` si `BRAIN_API_URL` manquant) au lieu de s'initialiser silencieusement ([brain_api_adapter.py](backend/adapters/inference/brain_api_adapter.py)).
-  - ⏳ **Reste** : même garde-fou pour `unified`/`google_genai` + validation groupée au démarrage du container ([inference.py](backend/api/animetix/containers/inference.py)).
+- [x] **Backend — validation des env vars d'inférence** _(revue archi 2026-06-22 ; fait)_
+  - ✅ `BrainAPIAdapter` échoue tôt (`raise ConfigurationError` si `BRAIN_API_URL` manquant) ([brain_api_adapter.py](backend/adapters/inference/brain_api_adapter.py)).
+  - ✅ Garde-fou de cohérence (coherence-only) pour `unified` (`LLM_API_BASE` malformé) et `google_genai` (`GEMINI_API_KEY` blanc) dans leurs `__init__`, + validation groupée à erreurs agrégées au démarrage du container via `validate_inference_config()` ([inference_config.py](backend/core/utils/inference_config.py), câblée dans [inference.py](backend/api/animetix/containers/inference.py)).
 - [ ] **Backend — adapters synchrones (pas de parallélisation des streams)** _(revue archi 2026-06-22)_
   - Les adapters sont synchrones ; `stream_generate()` est un générateur non-async, donc impossible de paralléliser plusieurs flux. À considérer si la concurrence d'inférence devient un besoin.
 - [ ] **Couverture backend — orchestrateur `finetuning_dataset`**
