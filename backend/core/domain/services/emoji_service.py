@@ -47,7 +47,7 @@ class EmojiDomainService:
         for token in self.llm_service.inference_engine.stream_generate(
             prompt, system_prompt=system
         ):
-            full_response += token
+            full_response += token.text
             # Note: on ne stream pas les tokens un par un ici car on veut la liste finale,
             # mais on pourrait si on voulait un effet machine à écrire sur les emojis.
 
