@@ -39,19 +39,11 @@ class EmojiStreamView(View):
         )
 
 
-@method_decorator(
-    ratelimit(key="user_or_ip", rate="5/m", method="GET", block=True), name="get"
-)
-class ParadoxStreamView(APIView):
-    """Streams paradox logic generation events."""
+class ParadoxStreamView(View):
+    """Async SSE: streams paradox logic generation events."""
 
-    permission_classes = [permissions.AllowAny]
-
-    def get(self, request):
-        session = get_session_service(request)
-        container = get_container()
-        media_type = session.get_current_mode()
-        data = container.core.catalog_service.load_data(media_type)
+    async def get(self, request):
+        await check_rate_limit(request, "animetix.api.streams.ParadoxStreamView")
         t1, t2, intruder = (
             request.GET.get("t1"),
             request.GET.get("t2"),
@@ -59,31 +51,27 @@ class ParadoxStreamView(APIView):
         )
         if not all([t1, t2, intruder]):
             return HttpResponse(status=400)
+        session = await sync_to_async(get_session_service)(request)
+        media_type = await sync_to_async(session.get_current_mode)()
+        container = get_container()
+        data = await sync_to_async(container.core.catalog_service.load_data)(media_type)
+        item_a = data["title_to_full_data"][t1]
+        item_b = data["title_to_full_data"][t2]
+        item_i = data["title_to_full_data"][intruder]
+        language = await sync_to_async(session.get)("language", "Français")
 
-        def event_stream():
-            item_a, item_b, item_i = (
-                data["title_to_full_data"][t1],
-                data["title_to_full_data"][t2],
-                data["title_to_full_data"][intruder],
-            )
-            try:
-                for event in container.core.paradox_service.generate_logic_stream(
-                    media_type,
-                    item_a,
-                    item_b,
-                    item_i,
-                    session.get("language", "Français"),
-                ):
-                    if event["type"] == "result":
-                        event["content"] = {
-                            "reasoning": event["content"].reasoning,
-                            "scenario": event["content"].scenario,
-                        }
-                    yield f"data: {json.dumps(event)}\n\n"
-            except Exception as e:
-                yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"
+        async def _events():
+            async for event in container.core.paradox_service.agenerate_logic_stream(
+                media_type, item_a, item_b, item_i, language
+            ):
+                if event["type"] == "result":
+                    event["content"] = {
+                        "reasoning": event["content"].reasoning,
+                        "scenario": event["content"].scenario,
+                    }
+                yield event
 
-        return StreamingHttpResponse(event_stream(), content_type="text/event-stream")
+        return sse_stream_response(_events())
 
 
 @method_decorator(
