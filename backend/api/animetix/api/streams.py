@@ -169,6 +169,8 @@ class AniminatorStreamView(View):
     """Async SSE: streams the Oracle's response and updates game state in session."""
 
     async def get(self, request):
+        # Explicit group (the sync @ratelimit decorator auto-derived one from the
+        # view fn); kept stable here so the per-view bucket stays isolated.
         limited = await sync_to_async(is_ratelimited)(
             request=request,
             group="animetix.api.streams.AniminatorStreamView",
