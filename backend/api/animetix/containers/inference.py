@@ -1,7 +1,7 @@
 import os
 
-from core.domain.exceptions import ConfigurationError
 from core.utils.gemini_models import GEMINI_FLASH
+from core.utils.inference_config import validate_inference_config
 from core.utils.local_models import (
     COMPACT_REASONING_MODEL,
     LLM_OLLAMA_MODEL,
@@ -23,8 +23,7 @@ except ImproperlyConfigured:
     is_testing = False
 
 if not is_testing:
-    if not os.getenv("BRAIN_API_URL"):
-        raise ConfigurationError("BRAIN_API_URL is not configured")
+    validate_inference_config()
 
 
 class InferenceContainer(containers.DeclarativeContainer):
