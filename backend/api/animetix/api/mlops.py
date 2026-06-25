@@ -2,6 +2,7 @@ import datetime  # noqa: E402
 import logging  # noqa: E402
 
 from core.ports.eval_port import EvalResultPort  # noqa: E402
+from core.ports.feature_store_port import FeatureStorePort  # noqa: E402
 from core.ports.feedback_port import FeedbackRepositoryPort  # noqa: E402
 from core.ports.gold_dataset_port import GoldDatasetPort  # noqa: E402
 from core.ports.mlops_port import MlopsPort  # noqa: E402
@@ -16,14 +17,19 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from ..containers import Container, get_container  # noqa: E402
-from ..forms import VertexPipelineListForm, VertexPipelineTriggerForm  # noqa: E402
+from ..forms import (  # noqa: E402
+    UserIDForm,
+    VertexFeatureStoreForm,
+    VertexPipelineListForm,
+    VertexPipelineTriggerForm,
+)
 from ..models import (
     AIFeedback,
     AIREvalResult,
     AISafetyEvent,  # noqa: E402
     GoldDatasetEntry,
 )
-from ..permissions import IsAdminOrReadOnlyExpert  # noqa: E402
+from ..permissions import IsAdminOrReadOnlyExpert, IsIAPApprovedAdmin  # noqa: E402
 from ..serializers import (
     AIFeedbackInputSerializer,
     AIFeedbackSerializer,
@@ -458,6 +464,64 @@ class VertexPipelineView(APIView):
             return Response({"status": "success", "runs": runs})
         except Exception as e:
             logger.error(f"Vertex pipeline list failed: {e}")
+            return Response(
+                {"error": "Internal server error"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class VertexFeatureStoreView(APIView):
+    """Query and seed user preference vectors in the Vertex AI Feature Store."""
+
+    permission_classes = [IsIAPApprovedAdmin]
+
+    @inject
+    def __init__(
+        self,
+        feature_store: FeatureStorePort = Provide[
+            Container.persistence.feature_store_adapter
+        ],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.feature_store = feature_store
+
+    def get(self, request):
+        form = UserIDForm(request.GET)
+        if not form.is_valid():
+            return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        user_id = form.cleaned_data["user_id"]
+        try:
+            features = self.feature_store.get_user_preferences(str(user_id))
+            return Response(
+                {"status": "success", "user_id": user_id, "features": features}
+            )
+        except Exception as e:
+            logger.error(f"Feature Store read failed: {e}")
+            return Response(
+                {"error": "Internal server error"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    def post(self, request):
+        form = VertexFeatureStoreForm(request.data)
+        if not form.is_valid():
+            return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        user_id = form.cleaned_data["user_id"]
+        features = form.cleaned_data["features"]
+        try:
+            self.feature_store.save_user_preferences(str(user_id), features)
+            return Response(
+                {
+                    "status": "success",
+                    "message": f"Updated Feature Store values for user {user_id}",
+                },
+                status=status.HTTP_201_CREATED,
+            )
+        except Exception as e:
+            logger.error(f"Feature Store write failed: {e}")
             return Response(
                 {"error": "Internal server error"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,

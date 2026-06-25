@@ -1,20 +1,33 @@
-"""Standalone unit tests for the ported Vertex AI Feature Store infrastructure.
+"""Unit + API tests for the ported Vertex AI Feature Store feature.
 
-Only the self-contained client/adapter tests are kept here. The integration
-tests from feature/vertex-pipelines (ArchetypeDriftService feature_store_port
-wiring, PersonalizationMiddleware fast path, API routes) depend on wiring that
-is still being re-integrated against main — they will be restored with that
-batch.
+Covers the self-contained client/adapter and the VertexFeatureStoreView API
+(auth + get/post via DI override). The deeper personalization integration
+(ArchetypeDriftService feature_store_port + PersonalizationMiddleware fast-path)
+is intentionally deferred — it rewrites a central middleware/service and is a
+separate, higher-risk change.
 """
 
 import os
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from adapters.infrastructure.vertex_feature_store_client import (
     VertexFeatureStoreClient,
 )
+from animetix.containers import container
+from core.ports.feature_store_port import FeatureStorePort
+from dependency_injector import providers
+from django.contrib.auth.models import User
 from django.core.cache import cache
+from django.urls import reverse
+
+
+@pytest.fixture(autouse=True)
+def _brain_api_url(monkeypatch):
+    # Authenticated JSON responses pass through PersonalizationMiddleware, which
+    # builds the inference chain (incl. BrainAPIAdapter, requiring BRAIN_API_URL).
+    # Set a dummy so construction succeeds; keeps the tests hermetic.
+    monkeypatch.setenv("BRAIN_API_URL", "http://localhost:5000")
 
 
 @pytest.fixture(autouse=True)
@@ -34,6 +47,31 @@ def cleanup_mock_store():
         except OSError:
             pass
     cache.clear()
+
+
+@pytest.fixture
+def admin_user(db):
+    return User.objects.create_superuser(
+        username="admin", email="admin@example.com", password="password"
+    )
+
+
+@pytest.fixture
+def regular_user(db):
+    return User.objects.create_user(username="user", password="password")
+
+
+@pytest.fixture
+def mock_feature_store():
+    store = MagicMock(spec=FeatureStorePort)
+    store.get_user_preferences.return_value = {
+        "shonen_hero": 0.7,
+        "seinen_rebel": 0.2,
+        "ghibli_dreamer": 0.1,
+        "comedy_relief": 0.0,
+        "last_calculated": "2026-06-04T19:30:00Z",
+    }
+    return store
 
 
 def test_vertex_feature_store_client_simulation():
@@ -70,10 +108,53 @@ def test_feature_store_adapter_caching():
         }
         adapter.save_user_preferences("user_202", test_features)
 
-        # Verify Django Cache (L1) is updated
         cache_key = "user_features_user_202"
         assert cache.get(cache_key) == test_features
 
-        # Fetch preferences and verify (served from L1 cache)
         fetched = adapter.get_user_preferences("user_202")
         assert fetched == test_features
+
+
+@pytest.mark.django_db
+def test_vertex_feature_store_api_auth(client, regular_user):
+    url = reverse("mlops-features")
+
+    # Unauthenticated
+    response = client.get(url, {"user_id": "1"})
+    assert response.status_code in [401, 403]
+
+    # Regular (non-admin) user forbidden
+    client.force_login(regular_user)
+    response = client.get(url, {"user_id": "1"})
+    assert response.status_code == 403
+
+
+@pytest.mark.django_db
+def test_vertex_feature_store_api_get_post(client, admin_user, mock_feature_store):
+    client.force_login(admin_user)
+    url = reverse("mlops-features")
+
+    with container.persistence.feature_store_adapter.override(
+        providers.Object(mock_feature_store)
+    ):
+        # GET
+        response = client.get(url, {"user_id": "999"})
+        assert response.status_code == 200
+        assert response.json()["features"]["seinen_rebel"] == 0.2
+        mock_feature_store.get_user_preferences.assert_any_call("999")
+
+        # POST
+        post_data = {
+            "user_id": "999",
+            "features": {
+                "shonen_hero": 1.0,
+                "seinen_rebel": 0.0,
+                "ghibli_dreamer": 0.0,
+                "comedy_relief": 0.0,
+            },
+        }
+        response = client.post(url, post_data, content_type="application/json")
+        assert response.status_code == 201
+        mock_feature_store.save_user_preferences.assert_called_once_with(
+            "999", post_data["features"]
+        )

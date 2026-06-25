@@ -25,4 +25,9 @@ urlpatterns = [
         api_views.VertexPipelineView.as_view(),
         name="mlops-pipelines",
     ),
+    path(
+        "features/",
+        api_views.VertexFeatureStoreView.as_view(),
+        name="mlops-features",
+    ),
 ]

@@ -79,3 +79,10 @@ class PersistenceContainer(containers.DeclarativeContainer):
             "adapters.persistence.session_state_adapter", "DjangoSessionStateAdapter"
         )
     )
+
+    feature_store_adapter = providers.Singleton(
+        LazyClass(
+            "adapters.persistence.feature_store_adapter",
+            "FeatureStoreAdapter",
+        )
+    )
