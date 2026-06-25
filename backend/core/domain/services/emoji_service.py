@@ -55,6 +55,36 @@ class EmojiDomainService:
         emojis = self._parse_emojis(full_response)
         yield {"type": "result", "content": emojis}
 
+    async def agenerate_emojis_stream(
+        self, media_type: str, title: str, description: str
+    ):
+        """Variante async de generate_emojis_stream (consomme astream_generate)."""
+        import asyncio  # noqa: E402
+
+        yield {"type": "thought", "content": f"Analyse du synopsis de {title}..."}
+        yield {
+            "type": "thought",
+            "content": "Identification des thèmes clés et des objets iconiques...",
+        }
+        await asyncio.sleep(0.5)
+        yield {
+            "type": "thought",
+            "content": "Traduction sémantique en symboles universels...",
+        }
+
+        prompt, system = self.llm_service.prompt_manager.get_prompt(
+            "emoji_generation", title=title, description=description[:1000]
+        )
+
+        full_response = ""
+        async for token in self.llm_service.inference_engine.astream_generate(
+            prompt, system_prompt=system
+        ):
+            full_response += token.text
+
+        emojis = self._parse_emojis(full_response)
+        yield {"type": "result", "content": emojis}
+
     def generate_emojis(
         self, media_type: str, title: str, description: str
     ) -> List[str] | str:

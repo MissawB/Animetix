@@ -1,8 +1,41 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from core.domain.entities.ai_schemas import InferenceResponse
 from core.domain.services.emoji_service import EmojiDomainService
+
+
+@pytest.mark.asyncio
+async def test_agenerate_emojis_stream_consumes_inferenceresponse(
+    emoji_service, mock_llm_service
+):
+    mock_llm_service.prompt_manager.get_prompt.return_value = ("p", "s")
+
+    async def _astream(prompt, system_prompt=None):
+        yield InferenceResponse(text="🍥")
+        yield InferenceResponse(text="🦊")
+
+    mock_llm_service.inference_engine.astream_generate.side_effect = _astream
+
+    captured = {}
+
+    def fake_parse(text):
+        captured["full"] = text
+        return ["🍥", "🦊"]
+
+    emoji_service._parse_emojis = fake_parse
+
+    with patch("asyncio.sleep", new=AsyncMock()):
+        events = [
+            e
+            async for e in emoji_service.agenerate_emojis_stream(
+                "Anime", "Naruto", "desc"
+            )
+        ]
+
+    result = [e for e in events if e["type"] == "result"]
+    assert result and result[0]["content"] == ["🍥", "🦊"]
+    assert captured["full"] == "🍥🦊"
 
 
 @pytest.fixture
