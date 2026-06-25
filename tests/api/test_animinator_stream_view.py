@@ -1,22 +1,23 @@
-"""Regression test for the AniminatorStreamView SSE token-type bug.
+"""Tests for the async AniminatorStreamView (native Django async SSE view).
 
-The inference engine yields InferenceResponse objects; the view must read
-`.text` (not treat the chunk as a string). Driven by calling `.get()` directly
-(bypassing DRF dispatch / ratelimit) with the streams-module collaborators
-patched, then decoding the StreamingHttpResponse SSE frames.
+The view is a coroutine returning a StreamingHttpResponse with an async body.
+Collaborators are patched at the streams-module namespace; the response body is
+consumed via async iteration over streaming_content.
 """
 
 import json
 from unittest.mock import MagicMock, patch
 
+import pytest
 from animetix.api import streams as streams_mod
 from core.domain.entities.ai_schemas import InferenceResponse
 from django.test import RequestFactory
+from django_ratelimit.exceptions import Ratelimited
 
 
-def _sse_events(response):
+async def _sse_events(response):
     events = []
-    for chunk in response.streaming_content:
+    async for chunk in response.streaming_content:
         text = chunk.decode("utf-8") if isinstance(chunk, bytes) else chunk
         for line in text.splitlines():
             line = line.strip()
@@ -25,9 +26,7 @@ def _sse_events(response):
     return events
 
 
-def test_animinator_stream_view_emits_text_tokens_no_error():
-    request = RequestFactory().get("/x", {"q": "Is it a ninja?"})
-
+def _session_mock():
     session = MagicMock()
 
     def _sget(key, default=None):
@@ -39,20 +38,43 @@ def test_animinator_stream_view_emits_text_tokens_no_error():
         }.get(key, default)
 
     session.get.side_effect = _sget
+    return session
 
+
+def _container_with_chunks(chunks):
     container = MagicMock()
-    container.core.animinator_service.ask_oracle_stream.return_value = iter(
+
+    async def _astream(media_type, secret, question):
+        for c in chunks:
+            yield c
+
+    container.core.animinator_service.aask_oracle_stream.side_effect = _astream
+    return container
+
+
+@pytest.mark.asyncio
+async def test_animinator_async_stream_emits_text_tokens_no_error():
+    request = RequestFactory().get("/x", {"q": "Is it a ninja?"})
+    container = _container_with_chunks(
         [InferenceResponse(text="Hel"), InferenceResponse(text="lo")]
     )
-
     with (
-        patch.object(streams_mod, "get_session_service", return_value=session),
+        patch.object(streams_mod, "is_ratelimited", return_value=False),
+        patch.object(streams_mod, "get_session_service", return_value=_session_mock()),
         patch.object(streams_mod, "get_container", return_value=container),
     ):
-        resp = streams_mod.AniminatorStreamView().get(request)
-        events = _sse_events(resp)
+        resp = await streams_mod.AniminatorStreamView().get(request)
+        events = await _sse_events(resp)
 
     token_events = [e for e in events if e.get("type") == "token"]
     assert "".join(e["content"] for e in token_events) == "Hello"
     assert not any(e.get("type") == "error" for e in events)
     assert any(e.get("type") == "done" for e in events)
+
+
+@pytest.mark.asyncio
+async def test_animinator_async_stream_rate_limited_raises():
+    request = RequestFactory().get("/x", {"q": "hi"})
+    with patch.object(streams_mod, "is_ratelimited", return_value=True):
+        with pytest.raises(Ratelimited):
+            await streams_mod.AniminatorStreamView().get(request)

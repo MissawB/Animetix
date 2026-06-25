@@ -1,8 +1,12 @@
 import json
 
+from asgiref.sync import sync_to_async
 from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
 from django.utils.decorators import method_decorator
+from django.views import View
+from django_ratelimit.core import is_ratelimited
 from django_ratelimit.decorators import ratelimit
+from django_ratelimit.exceptions import Ratelimited
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import permissions
 from rest_framework.views import APIView
@@ -161,44 +165,54 @@ class AgenticRAGStreamView(APIView):
         return response
 
 
-@method_decorator(
-    ratelimit(key="user_or_ip", rate="5/m", method="GET", block=True), name="get"
-)
-class AniminatorStreamView(APIView):
-    """Streams the Oracle's response and updates the game state in session."""
+class AniminatorStreamView(View):
+    """Async SSE: streams the Oracle's response and updates game state in session."""
 
-    permission_classes = [permissions.AllowAny]
+    async def get(self, request):
+        limited = await sync_to_async(is_ratelimited)(
+            request=request,
+            group="animetix.api.streams.AniminatorStreamView",
+            key="user_or_ip",
+            rate="5/m",
+            method="GET",
+            increment=True,
+        )
+        if limited:
+            raise Ratelimited()
 
-    def get(self, request):
-        session = get_session_service(request)
+        session = await sync_to_async(get_session_service)(request)
         container = get_container()
-        media_type = session.get("media_type", "Anime")
-        secret = session.get("animinator_secret")
+        media_type = await sync_to_async(session.get)("media_type", "Anime")
+        secret = await sync_to_async(session.get)("animinator_secret")
         question = request.GET.get("q")
         if not secret or not question:
             return HttpResponse(status=400)
 
-        def event_stream():
+        async def event_stream():
             full_response = ""
             try:
-                for token in container.core.animinator_service.ask_oracle_stream(
+                async for token in container.core.animinator_service.aask_oracle_stream(
                     media_type, secret, question
                 ):
                     full_response += token.text
                     yield f"data: {json.dumps({'type': 'token', 'content': token.text})}\n\n"
 
-                chat = session.get("animinator_chat", [])
+                chat = await sync_to_async(session.get)("animinator_chat", [])
                 chat.append({"q": question, "a": full_response})
-                session.set("animinator_chat", chat)
+                await sync_to_async(session.set)("animinator_chat", chat)
 
-                q_left = session.get("animinator_questions_left", 20) - 1
-                session.set("animinator_questions_left", max(0, q_left))
+                q_left = (
+                    await sync_to_async(session.get)("animinator_questions_left", 20)
+                ) - 1
+                await sync_to_async(session.set)(
+                    "animinator_questions_left", max(0, q_left)
+                )
 
                 if q_left <= 0:
-                    session.set("animinator_game_over", True)
+                    await sync_to_async(session.set)("animinator_game_over", True)
                     from ..models import GameplaySession  # noqa: E402
 
-                    GameplaySession.objects.create(
+                    await sync_to_async(GameplaySession.objects.create)(
                         game_mode="animinator",
                         media_type=media_type,
                         target_item=secret,
