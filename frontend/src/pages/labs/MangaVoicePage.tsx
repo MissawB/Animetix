@@ -17,6 +17,7 @@ import { apiClient } from "../../utils/apiClient";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion, AnimatePresence } from 'framer-motion';
 import { VoiceProfile } from '../../types';
+import { useToastStore } from '../../store/toastStore';
 
 const MangaVoicePage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
@@ -61,9 +62,12 @@ const MangaVoicePage: React.FC = () => {
         const blob = await resp.blob();
         const file = new File([blob], `${profile.name}_sample.wav`, { type: 'audio/wav' });
         setRefAudio(file);
+      } else {
+        useToastStore.getState().addToast("Échec du chargement de l'échantillon vocal.", 'error');
       }
     } catch (err) {
       console.error("Failed to load reference audio from profile:", err);
+      useToastStore.getState().addToast("Échec du chargement de l'échantillon vocal.", 'error');
     } finally {
       setLoadingAudio(false);
     }
@@ -87,6 +91,7 @@ const MangaVoicePage: React.FC = () => {
       setAudioUrl(data.audio_data);
     } catch (err) {
       console.error(err);
+      useToastStore.getState().addToast('Échec de la génération de la voix.', 'error');
     } finally {
       setLoading(false);
     }
