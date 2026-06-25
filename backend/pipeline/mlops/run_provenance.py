@@ -2,7 +2,7 @@
 """Provenance des runs d'entraînement MLOps.
 
 Capture de quoi tracer/reproduire un checkpoint : commit git du code, horodatage
-UTC, et révisions des modèles de base (depuis `data/models/manifest.json`).
+UTC, et révisions des modèles de base (depuis le registre central model_registry).
 Écrit un `run_metadata.json` à côté du checkpoint — sans dépendance lourde
 (ni DVC ni MLflow).
 """
@@ -15,13 +15,12 @@ import os
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 logger = logging.getLogger("animetix.mlops.provenance")
 
 # backend/pipeline/mlops/run_provenance.py -> parents[3] = racine du dépôt
 REPO_ROOT = Path(__file__).resolve().parents[3]
-MANIFEST_PATH = REPO_ROOT / "data" / "models" / "manifest.json"
 
 
 def get_git_commit() -> str:
@@ -45,23 +44,31 @@ def get_git_commit() -> str:
         return "unknown"
 
 
-def get_manifest_revisions(manifest_path: Optional[Path] = None) -> Dict[str, Any]:
-    """Révisions des modèles de base (depuis le manifest) pour la traçabilité."""
-    path = Path(manifest_path) if manifest_path else MANIFEST_PATH
+def get_registry_revisions() -> Dict[str, Any]:
+    """Révisions des modèles de base (depuis le registre central) pour la traçabilité."""
     try:
-        with open(path, encoding="utf-8") as f:
-            return json.load(f)
+        from core.utils.model_registry import EMBEDDING_VERSIONS, get_verified_revision
+
+        revisions: Dict[str, Any] = {}
+        for kind, versions in EMBEDDING_VERSIONS.items():
+            revisions[kind] = {}
+            for version, model_id in versions.items():
+                revisions[kind][version] = {
+                    "id": model_id,
+                    "revision": get_verified_revision(model_id),
+                }
+        return revisions
     except Exception as e:
-        logger.warning(f"Could not read model manifest at {path}: {e}")
+        logger.warning(f"Could not read model revisions from registry: {e}")
         return {}
 
 
 def build_provenance(**extra: Any) -> Dict[str, Any]:
-    """Dict de provenance : commit git + timestamp UTC + manifest + extras fournis."""
+    """Dict de provenance : commit git + timestamp UTC + révisions registre + extras fournis."""
     return {
         "git_commit": get_git_commit(),
         "timestamp_utc": datetime.now(timezone.utc).isoformat(),
-        "base_models": get_manifest_revisions(),
+        "base_models": get_registry_revisions(),
         **extra,
     }
 

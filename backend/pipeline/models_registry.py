@@ -1,9 +1,12 @@
-import json
 import logging
 import os
 from typing import Optional
 
-from core.utils.model_registry import resolve_trust_remote_code
+from core.utils.model_registry import (
+    EMBEDDING_VERSIONS,
+    get_verified_revision,
+    resolve_trust_remote_code,
+)
 
 logger = logging.getLogger("animetix." + __name__)
 
@@ -11,7 +14,7 @@ logger = logging.getLogger("animetix." + __name__)
 class ModelIntegrityVerifier:
     """
     Assure que les modèles chargés depuis le Hub Hugging Face sont intègres
-    et proviennent de sources de confiance.
+    (présence de fichiers safetensors — garde-fou anti-pickle/RCE).
     """
 
     @staticmethod
@@ -21,7 +24,6 @@ class ModelIntegrityVerifier:
 
             info = model_info(model_id, revision=revision)
 
-            # Vérification de l'auteur/organisation
             author = getattr(info, "author", "unknown")
             if author not in [
                 "jinaai",
@@ -34,7 +36,6 @@ class ModelIntegrityVerifier:
                     f"⚠️ Modèle '{model_id}' provient d'un auteur non listé comme 'Premium Trust': {author}"
                 )
 
-            # Vérification de la présence de fichiers sécurisés (safetensors)
             has_safetensors = any(
                 f.rfilename.endswith(".safetensors") for f in info.siblings
             )
@@ -61,43 +62,9 @@ class ModelsRegistry:
         self._text_model = None
         self._vision_model = None
         self._device = None
-        self.manifest = self._load_manifest()
         self.active_text_version = os.getenv("MODEL_VERSION_TEXT", "v4")
         self.active_vision_version = os.getenv("MODEL_VERSION_VISION", "v3")
         self.verifier = ModelIntegrityVerifier()
-
-    def _load_manifest(self):
-        manifest_path = os.path.join(
-            os.path.dirname(__file__), "..", "..", "data", "models", "manifest.json"
-        )
-        try:
-            with open(manifest_path, "r") as f:
-                return json.load(f)
-        except Exception as e:
-            logger.warning(f"Failed to load models manifest, using fallback: {e}")
-            # Fallback avec révisions épinglées (Pinned SHAs for Security)
-            return {
-                "text": {
-                    "v3": {
-                        "id": "jinaai/jina-embeddings-v3",
-                        "revision": "4955745f4705a61a0b33c7f12e8c257ca46797a7",
-                    },
-                    "v4": {
-                        "id": "Qwen/Qwen3-Embedding-8B",
-                        "revision": "1d8ad4ca9b3dd8059ad90a75d4983776a23d44af",
-                    },
-                },
-                "vision": {
-                    "v2": {
-                        "id": "google/siglip2-so400m-patch14-384",
-                        "revision": "e8e4872",
-                    },
-                    "v3": {
-                        "id": "Qwen/Qwen3-VL-Embedding-8B",
-                        "revision": "2c4565515e0f265c6511776e7193b22c0968ddc7",
-                    },
-                },
-            }
 
     @property
     def device(self):
@@ -107,59 +74,33 @@ class ModelsRegistry:
             self._device = "cuda" if torch.cuda.is_available() else "cpu"
         return self._device
 
+    def _load_embedding(self, kind: str, version: str):
+        from sentence_transformers import SentenceTransformer  # noqa: E402
+
+        model_id = EMBEDDING_VERSIONS[kind][version]
+        revision = get_verified_revision(model_id)  # single SHA source of truth
+
+        self.verifier.verify(model_id, revision=revision)  # safetensors guard
+
+        logger.info(f"📦 Loading {kind} model: {model_id} (version: {version})...")
+        return SentenceTransformer(
+            model_id,
+            device=self.device,
+            revision=revision,
+            trust_remote_code=resolve_trust_remote_code(model_id),
+        )
+
     @property
     def text_model(self):
         if self._text_model is None:
-            from sentence_transformers import SentenceTransformer  # noqa: E402
-
-            config = self.manifest["text"].get(self.active_text_version)
-            if isinstance(config, str):
-                # Legacy support
-                model_id = config
-                revision = None
-            else:
-                model_id = config["id"]
-                revision = config.get("revision")
-
-            # Vérification avant chargement
-            self.verifier.verify(model_id, revision=revision)
-
-            logger.info(
-                f"📦 Loading text model: {model_id} (version: {self.active_text_version})..."
-            )
-            # On n'active trust_remote_code que pour les modèles vérifiés si nécessaire
-            self._text_model = SentenceTransformer(
-                model_id,
-                device=self.device,
-                revision=revision,
-                trust_remote_code=resolve_trust_remote_code(model_id),
-            )
+            self._text_model = self._load_embedding("text", self.active_text_version)
         return self._text_model
 
     @property
     def vision_model(self):
         if self._vision_model is None:
-            from sentence_transformers import SentenceTransformer  # noqa: E402
-
-            vision_config = self.manifest.get("vision", {})
-            config = vision_config.get(self.active_vision_version)
-
-            if config is None:
-                # Fallback to legacy or first available
-                model_id = vision_config.get("id", "google/siglip2-so400m-patch14-384")
-                revision = vision_config.get("revision", "main")
-            else:
-                model_id = config["id"]
-                revision = config.get("revision", "main")
-
-            # Vérification
-            self.verifier.verify(model_id, revision=revision)
-
-            logger.info(
-                f"📦 Loading vision model: {model_id} (version: {self.active_vision_version})..."
-            )
-            self._vision_model = SentenceTransformer(
-                model_id, device=self.device, revision=revision
+            self._vision_model = self._load_embedding(
+                "vision", self.active_vision_version
             )
         return self._vision_model
 
