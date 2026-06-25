@@ -2,7 +2,7 @@ import json
 import logging
 import os
 import re
-from typing import List
+from typing import Any, List
 
 from adapters.inference.components.context import InferenceComponentContext
 from core.utils.lazy_import import lazy_import
@@ -27,7 +27,7 @@ class RerankComponent:
     ):
         self._ctx = ctx
         self._reranker_model_name = reranker_model_name
-        self._cross_encoder = None
+        self._cross_encoder: Any = None
 
     @property
     def is_loaded(self) -> bool:

@@ -4,6 +4,7 @@ import os
 import tempfile
 import uuid
 from datetime import datetime, timezone
+from typing import Optional
 
 from django.conf import settings
 
@@ -75,7 +76,7 @@ class VertexPipelinesClient:
         self,
         pipeline_func,
         pipeline_name: str,
-        parameter_values: dict = None,
+        parameter_values: Optional[dict] = None,
         enable_caching: bool = True,
     ) -> dict:
         """
@@ -210,7 +211,9 @@ class VertexPipelinesClient:
             logger.error(f"Failed to retrieve pipeline run {pipeline_job_name}: {e}")
             return {"error": str(e)}
 
-    def list_pipeline_runs(self, pipeline_name: str = None, limit: int = 20) -> list:
+    def list_pipeline_runs(
+        self, pipeline_name: Optional[str] = None, limit: int = 20
+    ) -> list:
         """
         Lists recent pipeline runs with lineage/state metadata.
         """
