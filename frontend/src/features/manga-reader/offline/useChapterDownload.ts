@@ -6,6 +6,7 @@ import {
   type ChapterMeta,
   type DownloadablePage,
 } from './offlineLibrary';
+import { useToastStore } from '../../../store/toastStore';
 
 export type DownloadStatus = 'idle' | 'downloading' | 'downloaded' | 'error';
 
@@ -49,7 +50,9 @@ export function useChapterDownload(meta: ChapterMeta, pages: DownloadablePage[])
       setStatus('downloaded');
     } catch (err) {
       if (!mounted.current) return;
-      setError(err instanceof Error ? err.message : 'Échec du téléchargement.');
+      const msg = err instanceof Error ? err.message : 'Échec du téléchargement.';
+      setError(msg);
+      useToastStore.getState().addToast(msg, 'error');
       setStatus('error');
     }
   }, [mediaId, chapterNumber, mediaTitle, chapterTitle, pages]);
