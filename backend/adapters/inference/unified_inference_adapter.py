@@ -22,8 +22,9 @@ from core.domain.entities.ai_schemas import (
     InferenceResponse,
     TokenLogProb,
 )
-from core.domain.exceptions import InferenceError
+from core.domain.exceptions import ConfigurationError, InferenceError
 from core.ports.inference_port import InferencePort
+from core.utils.inference_config import check_unified_config
 from core.utils.local_models import LLM_OLLAMA_MODEL
 from core.utils.security import is_safe_url, safe_http_request
 
@@ -75,10 +76,9 @@ class UnifiedInferenceAdapter(
         self._rerank = RerankComponent(_component_ctx)
         self._manga_ocr = MangaOcrComponent(_component_ctx)
 
-        if not is_safe_url(self.api_base, allow_internal=True):
-            logger.warning(
-                f"UnifiedInferenceAdapter: API base URL might be unsafe: {self.api_base}"
-            )
+        config_error = check_unified_config(self.api_base)
+        if config_error:
+            raise ConfigurationError(config_error)
 
         logger.info(
             f"Initialized UnifiedInferenceAdapter for {self.model_name} at {self.api_base}"

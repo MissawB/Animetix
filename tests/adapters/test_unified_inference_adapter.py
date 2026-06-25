@@ -490,3 +490,17 @@ def test_generate_sprite_wraps_prompt_and_delegates(adapter):
     assert "character sheet" in sent_prompt
     assert "transparent background" in sent_prompt
     assert gi.call_args.args[1] == "cel"
+
+
+def test_init_raises_on_malformed_api_base():
+    from core.domain.exceptions import ConfigurationError
+
+    with pytest.raises(ConfigurationError):
+        UnifiedInferenceAdapter(api_base="not-a-url", model_name="m")
+
+
+def test_init_default_localhost_is_accepted(monkeypatch):
+    # No env, no api_base arg -> falls back to localhost default, must NOT raise.
+    monkeypatch.delenv("LLM_API_BASE", raising=False)
+    adapter = UnifiedInferenceAdapter()
+    assert adapter.api_base == "http://localhost:11434/v1"
