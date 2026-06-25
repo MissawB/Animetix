@@ -78,7 +78,7 @@ def main():
         "--min-instances=0",  # scale-to-zero explicite : pas de GPU facturé à l'idle (auditable)
         "--max-instances=3",  # plafond coût ; aligné sur le défaut de restore_brain_service
         f"--set-secrets={secrets}",
-        "--set-env-vars=DJANGO_ENV=production,LLM_API_BASE=http://localhost:11434/v1,LLM_MODEL_NAME=llama3,GCP_MODELS_MOUNT_PATH=/mnt/models",
+        "--set-env-vars=DJANGO_ENV=production,LLM_API_BASE=http://localhost:11434/v1,LLM_MODEL_NAME=qwen3.5,GCP_MODELS_MOUNT_PATH=/mnt/models",
         "--port=7861",
         "--allow-unauthenticated",  # L'authentification est gérée par X-API-Key au niveau applicatif
         f"--project={project_id}",
