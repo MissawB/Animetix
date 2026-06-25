@@ -28,8 +28,8 @@ _Rien d'ouvert._
   - ✅ `BrainAPIAdapter` échoue tôt (`raise ConfigurationError` si `BRAIN_API_URL` manquant) ([brain_api_adapter.py](backend/adapters/inference/brain_api_adapter.py)).
   - ✅ Garde-fou de cohérence (coherence-only) pour `unified` (`LLM_API_BASE` malformé) et `google_genai` (`GEMINI_API_KEY` blanc) dans leurs `__init__`, + validation groupée à erreurs agrégées au démarrage du container via `validate_inference_config()` ([inference_config.py](backend/core/utils/inference_config.py), câblée dans [inference.py](backend/api/animetix/containers/inference.py)).
   - ✅ `BrainAPIAdapter` routé sur `check_brain_config` ([brain_api_adapter.py](backend/adapters/inference/brain_api_adapter.py)) : message unifié (`"BRAIN_API_URL is not configured"`) + check d'URL malformée côté adapter. En-tête d'erreur agrégée passé tout en anglais (`"Invalid inference configuration:"`) et filtre `is not None` dans `validate_inference_config()`.
-- [ ] **Backend — adapters synchrones (pas de parallélisation des streams)** _(revue archi 2026-06-22)_
-  - Les adapters sont synchrones ; `stream_generate()` est un générateur non-async, donc impossible de paralléliser plusieurs flux. À considérer si la concurrence d'inférence devient un besoin.
+- [x] **Backend — adapters synchrones (pas de parallélisation des streams)** _(revue archi 2026-06-22 ; fait)_
+  - ✅ `astream_generate` natif (I/O non bloquante) pour `UnifiedInferenceAdapter` (httpx.AsyncClient/SSE), `GoogleGenAIAdapter` (`client.aio`) et orchestration async dans `FallbackInferenceAdapter` ; les modèles locaux restent sur le pont thread par défaut de `InferencePort`. Plusieurs streams peuvent désormais être parallélisés via `asyncio.gather` sans bloquer la boucle. (Caveat documenté : le cache de diagnostics `_last_completion` de `UnifiedInferenceAdapter` est best-effort sous streams concurrents sur le Singleton.)
 - [ ] **Couverture backend — orchestrateur `finetuning_dataset`**
   - `run_generate_instruction_dataset` (433 lignes, 14 %). À traiter au cas par cas, sans gonfler la couverture.
 - [ ] **Frontend — `fetch()` brut : reliquat optionnel**
