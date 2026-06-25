@@ -4,9 +4,7 @@ from asgiref.sync import sync_to_async
 from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
 from django.utils.decorators import method_decorator
 from django.views import View
-from django_ratelimit.core import is_ratelimited
 from django_ratelimit.decorators import ratelimit
-from django_ratelimit.exceptions import Ratelimited
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import permissions
 from rest_framework.views import APIView
@@ -147,18 +145,7 @@ class AniminatorStreamView(View):
     """Async SSE: streams the Oracle's response and updates game state in session."""
 
     async def get(self, request):
-        # Explicit group (the sync @ratelimit decorator auto-derived one from the
-        # view fn); kept stable here so the per-view bucket stays isolated.
-        limited = await sync_to_async(is_ratelimited)(
-            request=request,
-            group="animetix.api.streams.AniminatorStreamView",
-            key="user_or_ip",
-            rate="5/m",
-            method="GET",
-            increment=True,
-        )
-        if limited:
-            raise Ratelimited()
+        await check_rate_limit(request, "animetix.api.streams.AniminatorStreamView")
 
         session = await sync_to_async(get_session_service)(request)
         container = get_container()

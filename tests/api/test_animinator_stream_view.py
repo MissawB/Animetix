@@ -6,7 +6,7 @@ consumed via async iteration over streaming_content.
 """
 
 import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from animetix.api import streams as streams_mod
@@ -59,7 +59,7 @@ async def test_animinator_async_stream_emits_text_tokens_no_error():
         [InferenceResponse(text="Hel"), InferenceResponse(text="lo")]
     )
     with (
-        patch.object(streams_mod, "is_ratelimited", return_value=False),
+        patch.object(streams_mod, "check_rate_limit", new=AsyncMock(return_value=None)),
         patch.object(streams_mod, "get_session_service", return_value=_session_mock()),
         patch.object(streams_mod, "get_container", return_value=container),
     ):
@@ -75,6 +75,8 @@ async def test_animinator_async_stream_emits_text_tokens_no_error():
 @pytest.mark.asyncio
 async def test_animinator_async_stream_rate_limited_raises():
     request = RequestFactory().get("/x", {"q": "hi"})
-    with patch.object(streams_mod, "is_ratelimited", return_value=True):
+    with patch.object(
+        streams_mod, "check_rate_limit", new=AsyncMock(side_effect=Ratelimited())
+    ):
         with pytest.raises(Ratelimited):
             await streams_mod.AniminatorStreamView().get(request)
