@@ -49,8 +49,8 @@ class FallbackRagProcessor(StateProcessor):
 
         ctx.full_answer = ""
         for token in self.inference_engine.stream_generate(prompt, system):
-            ctx.full_answer += token
-            yield StreamStep(type="token", content=token).model_dump()
+            ctx.full_answer += token.text
+            yield StreamStep(type="token", content=token.text).model_dump()
 
         return RAGState.FINALIZE
 
