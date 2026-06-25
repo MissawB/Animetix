@@ -968,6 +968,35 @@ class TestRunGenerateInstructionDataset(unittest.TestCase):
         # One Tier-1 anime in the augmented set triggers the 5-variation paraphrase branch.
         self.assertEqual(paraphrase_mock.call_count, 5)
 
+    def test_invalid_noise_rate_falls_back_without_error(self):
+        animes = [
+            {
+                "title": "NoiseAnime",
+                "genres": ["Action"],
+                "studios": ["S"],
+                "tags": ["t"],
+                "popularity": 1000,
+                "year": 2020,
+            }
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            with _orchestrator_env(
+                tmp,
+                animes=animes,
+                mangas=[],
+                chars=[],
+                env={
+                    "ANIMETIX_AUGMENT_DATA": "False",
+                    "ANIMETIX_QUERY_NOISE_RATE": "not-a-number",
+                },
+            ) as out:
+                # Invalid rate -> ValueError caught -> 0.12 fallback; must not raise.
+                fd.run_generate_instruction_dataset()
+                data = self._read(out)
+        self.assertTrue(
+            data, "orchestrator should still produce a dataset on noise-rate fallback"
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
