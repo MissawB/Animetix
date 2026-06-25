@@ -14,10 +14,11 @@ from core.domain.entities.ai_schemas import (
     InferenceResponse,
     TokenLogProb,
 )
-from core.domain.exceptions import InferenceError
+from core.domain.exceptions import ConfigurationError, InferenceError
 from core.ports.inference_port import InferenceNotImplementedError, InferencePort
 from core.ports.usage_port import UsagePort
 from core.utils.gemini_models import GEMINI_EMBEDDING, GEMINI_FLASH
+from core.utils.inference_config import check_google_genai_config
 from core.utils.security import safe_http_request
 from google import genai
 from google.genai import types
@@ -58,6 +59,9 @@ class GoogleGenAIAdapter(
         super().__init__(usage_port=usage_port)
 
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
+        config_error = check_google_genai_config(self.api_key)
+        if config_error:
+            raise ConfigurationError(config_error)
         self.project = (
             project
             or os.getenv("GOOGLE_CLOUD_PROJECT")

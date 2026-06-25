@@ -707,3 +707,24 @@ def test_cache_skipped_for_non_gemini_model():
     a = _adapter(_mock_client(), model_name="claude-x")
     a.cache_threshold_chars = 5
     assert a._get_or_create_cache("a long enough system prompt") is None
+
+
+# --- __init__ config guard-rail (Task 3) -------------------------------------
+
+
+def test_init_raises_on_blank_api_key(monkeypatch):
+    from core.domain.exceptions import ConfigurationError
+
+    # Env-set-but-blank is the realistic misconfiguration (.env / k8s secret).
+    monkeypatch.setenv("GEMINI_API_KEY", "   ")
+    with patch(CLIENT, return_value=_mock_client()):
+        with pytest.raises(ConfigurationError):
+            GoogleGenAIAdapter()
+
+
+def test_init_absent_api_key_uses_vertex_no_raise(monkeypatch):
+    # No api_key at all -> Vertex/degraded path, must NOT raise.
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    with patch(CLIENT, return_value=_mock_client()):
+        adapter = GoogleGenAIAdapter()
+    assert adapter.use_vertexai is True
