@@ -46,6 +46,7 @@ dagster.yaml
 # --- Data & MLOps ---
 data/raw/
 data/models/
+data/chroma_db/
 checkpoints/
 wandb/
 .wandb/
