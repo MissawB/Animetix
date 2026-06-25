@@ -176,6 +176,26 @@ class LLMService:
             **kwargs,
         )
 
+    async def astream_generate(
+        self,
+        prompt: str,
+        system_prompt: str = "",
+        use_slm: bool = False,
+        thinking_budget: int = 0,
+        thinking_mode: bool = False,
+        **kwargs,
+    ):
+        """Variante async de stream_generate (routage SLM)."""
+        engine = self.slm_engine if use_slm else self.inference_engine
+        async for chunk in engine.astream_generate(
+            prompt,
+            system_prompt,
+            thinking_budget=thinking_budget,
+            thinking_mode=thinking_mode,
+            **kwargs,
+        ):
+            yield chunk
+
     def generate_structured(
         self,
         prompt: str,
