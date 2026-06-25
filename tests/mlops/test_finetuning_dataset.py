@@ -869,6 +869,26 @@ class TestRunGenerateInstructionDataset(unittest.TestCase):
 
         # Every section is wired into the final dataset.
         self.assertTrue(any(instr(it).startswith("transmedia") for it in data))
+        self.assertTrue(
+            any(instr(it).startswith("awards_and_magazines") for it in data)
+        )
+        self.assertTrue(any(instr(it).startswith("songs_and_seiyuu") for it in data))
+        self.assertTrue(
+            any(instr(it).startswith("french_market_relations") for it in data)
+        )
+        self.assertTrue(
+            any(instr(it).startswith("japanese_market_relations") for it in data)
+        )
+        self.assertTrue(
+            any(instr(it).startswith("french_market_profile") for it in data)
+        )
+        self.assertTrue(
+            any(instr(it).startswith("japanese_market_profile") for it in data)
+        )
+        self.assertTrue(
+            any(instr(it).startswith("volumes_and_episodes") for it in data)
+        )
+        self.assertTrue(any(instr(it).startswith("mcp_tool") for it in data))
         self.assertTrue(any(instr(it).startswith("rag") for it in data))
         self.assertTrue(any(instr(it).startswith("meta") for it in data))
         self.assertTrue(any(instr(it).startswith("refusal") for it in data))
