@@ -12,16 +12,22 @@ def test_canonical_defaults():
 
 
 def test_env_overrides(monkeypatch):
+    import core.utils.local_models as lm
+
     monkeypatch.setenv("LLM_MODEL_NAME", "llm-x")
     monkeypatch.setenv("LOCAL_MODEL_ID", "text-x")
     monkeypatch.setenv("DRAFT_MODEL_ID", "draft-x")
     monkeypatch.setenv("COMPACT_MODEL_ID", "compact-x")
     monkeypatch.setenv("LOCAL_DIFFUSION_MODEL", "diff-x")
-    import core.utils.local_models as lm
-
-    lm = importlib.reload(lm)
-    assert lm.LLM_OLLAMA_MODEL == "llm-x"
-    assert lm.LOCAL_TEXT_MODEL == "text-x"
-    assert lm.DRAFT_TEXT_MODEL == "draft-x"
-    assert lm.COMPACT_REASONING_MODEL == "compact-x"
-    assert lm.LOCAL_DIFFUSION_MODEL_ID == "diff-x"
+    try:
+        reloaded = importlib.reload(lm)
+        assert reloaded.LLM_OLLAMA_MODEL == "llm-x"
+        assert reloaded.LOCAL_TEXT_MODEL == "text-x"
+        assert reloaded.DRAFT_TEXT_MODEL == "draft-x"
+        assert reloaded.COMPACT_REASONING_MODEL == "compact-x"
+        assert reloaded.LOCAL_DIFFUSION_MODEL_ID == "diff-x"
+    finally:
+        # Restore the module to clean defaults so the reload does not pollute
+        # other tests' import of these module-level constants (order-dependent).
+        monkeypatch.undo()
+        importlib.reload(lm)
