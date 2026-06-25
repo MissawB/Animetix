@@ -8,6 +8,7 @@ import tempfile  # noqa: E402
 import wave  # noqa: E402
 from typing import TYPE_CHECKING, Any, Dict, Optional  # noqa: E402
 
+from adapters.inference.lazy_load_mixin import LazyLoadMixin  # noqa: E402
 from core.domain.exceptions import InferenceError  # noqa: E402
 from core.utils.lazy_import import lazy_import  # noqa: E402
 from core.utils.model_registry import get_verified_revision  # noqa: E402
@@ -18,7 +19,7 @@ np = lazy_import("numpy")
 logger = logging.getLogger("animetix.inference.audio_mixin")
 
 
-class AudioMixin:
+class AudioMixin(LazyLoadMixin):
     """
     Mixin providing audio capabilities:
     - Voice Cloning (XTTS/RVC)
@@ -45,28 +46,26 @@ class AudioMixin:
             raise InferenceError(
                 "CUDA GPU is not available. Local audio models loading is disabled."
             )
-        if hasattr(self, "_tts_model") and self._tts_model:
-            return
-        try:
-            from TTS.api import TTS  # noqa: E402
+        self._lazy_load("_tts_model", self._build_xtts, label="XTTS")
 
-            # Check for mounted local volume
-            mount_path = os.getenv("GCP_MODELS_MOUNT_PATH", "/mnt/models")
-            local_model_path = os.path.join(mount_path, "xtts_v2")
-            if os.path.exists(local_model_path):
-                logger.info(
-                    f"🎙️ Loading XTTS Model from local FUSE path: {local_model_path}"
-                )
-                self._tts_model = TTS(model_path=local_model_path)
-            else:
-                model_name = "tts_models/multilingual/multi-dataset/xtts_v2"
-                logger.info(f"🎙️ Loading XTTS Model from Hugging Face: {model_name}")
-                self._tts_model = TTS(model_name)
+    def _build_xtts(self):
+        from TTS.api import TTS  # noqa: E402
 
-            if torch.cuda.is_available():
-                self._tts_model.to("cuda")
-        except Exception as e:
-            logger.error(f"❌ Failed to load XTTS: {e}")
+        # Check for mounted local volume
+        mount_path = os.getenv("GCP_MODELS_MOUNT_PATH", "/mnt/models")
+        local_model_path = os.path.join(mount_path, "xtts_v2")
+        if os.path.exists(local_model_path):
+            logger.info(
+                f"🎙️ Loading XTTS Model from local FUSE path: {local_model_path}"
+            )
+            self._tts_model = TTS(model_path=local_model_path)
+        else:
+            model_name = "tts_models/multilingual/multi-dataset/xtts_v2"
+            logger.info(f"🎙️ Loading XTTS Model from Hugging Face: {model_name}")
+            self._tts_model = TTS(model_name)
+
+        if torch.cuda.is_available():
+            self._tts_model.to("cuda")
 
     def _load_audioldm(self):
         if not torch.cuda.is_available():
@@ -76,25 +75,21 @@ class AudioMixin:
             raise InferenceError(
                 "CUDA GPU is not available. Local audio models loading is disabled."
             )
-        if hasattr(self, "_audioldm_pipeline") and self._audioldm_pipeline:
-            return
-        try:
-            from diffusers import AudioLDMPipeline  # noqa: E402
+        self._lazy_load("_audioldm_pipeline", self._build_audioldm, label="AudioLDM")
 
-            logger.info("🎧 Loading AudioLDM for Soundscapes...")
-            model_id = "cvssp/audioldm-s-full-v2"
-            revision = get_verified_revision(model_id)
-            self._audioldm_pipeline = AudioLDMPipeline.from_pretrained(
-                model_id,
-                revision=revision,
-                torch_dtype=(
-                    torch.float16 if torch.cuda.is_available() else torch.float32
-                ),
-            )
-            if torch.cuda.is_available():
-                self._audioldm_pipeline.to("cuda")
-        except Exception as e:
-            logger.error(f"❌ Failed to load AudioLDM: {e}")
+    def _build_audioldm(self):
+        from diffusers import AudioLDMPipeline  # noqa: E402
+
+        logger.info("🎧 Loading AudioLDM for Soundscapes...")
+        model_id = "cvssp/audioldm-s-full-v2"
+        revision = get_verified_revision(model_id)
+        self._audioldm_pipeline = AudioLDMPipeline.from_pretrained(
+            model_id,
+            revision=revision,
+            torch_dtype=(torch.float16 if torch.cuda.is_available() else torch.float32),
+        )
+        if torch.cuda.is_available():
+            self._audioldm_pipeline.to("cuda")
 
     def _load_moshi(self):
         if not torch.cuda.is_available():
@@ -104,19 +99,17 @@ class AudioMixin:
             raise InferenceError(
                 "CUDA GPU is not available. Local audio models loading is disabled."
             )
-        if hasattr(self, "_moshi_model") and self._moshi_model:
-            return
-        try:
-            from moshi.models import Moshi  # noqa: E402
+        self._lazy_load("_moshi_model", self._build_moshi, label="Moshi")
 
-            logger.info("🗣️ Loading Kyutai Moshi (S2S)...")
-            model_id = "kyutai/moshiko-pytorch-bf16"
-            revision = get_verified_revision(model_id)
-            self._moshi_model = Moshi.from_pretrained(model_id, revision=revision)
-            if torch.cuda.is_available():
-                self._moshi_model.to("cuda")
-        except Exception as e:
-            logger.error(f"❌ Failed to load Moshi: {e}")
+    def _build_moshi(self):
+        from moshi.models import Moshi  # noqa: E402
+
+        logger.info("🗣️ Loading Kyutai Moshi (S2S)...")
+        model_id = "kyutai/moshiko-pytorch-bf16"
+        revision = get_verified_revision(model_id)
+        self._moshi_model = Moshi.from_pretrained(model_id, revision=revision)
+        if torch.cuda.is_available():
+            self._moshi_model.to("cuda")
 
     def clone_voice(
         self, text: str, reference_audio: bytes, language: str = "fr"
