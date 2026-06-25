@@ -41,8 +41,9 @@ _Rien d'ouvert._
 
 ## 🟢 Faibles
 
-- [ ] **Backend — duplication entre adapters d'inférence** _(revue archi 2026-06-22)_
-  - `health_check()` et le motif `_load_model()` (try/except + cache lazy) sont réimplémentés dans chaque adapter ([backend/adapters/inference/](backend/adapters/inference/)). Factoriser dans une base commune / mixin.
+- [ ] **Backend — duplication entre adapters d'inférence** _(revue archi 2026-06-22 ; en partie fait)_
+  - ✅ `health_check` *reachability* des adapters API (`brain_api` HTTP-ping, `google_genai` client-init, `unified`/ollama) factorisé dans [ReachabilityHealthCheckMixin](backend/adapters/inference/reachability_health_mixin.py) (builder de statut standardisé + sonde HTTP générique pilotée par un `requester` injecté → chaque adapter garde son client HTTP et ses cibles de patch).
+  - ⏳ **Reste** : factoriser le motif `_load_model()` (try/except + cache lazy) et le `health_check` *readiness* des adapters de modèles **locaux**.
 - [ ] **Backend — health-checks re-exécutés à chaque orchestration** _(revue archi 2026-06-22)_
   - Le fallback relance les health-checks à chaque appel, sans cache TTL ([fallback_adapter.py](backend/adapters/inference/fallback_adapter.py)). Ajouter un cache à durée de vie courte.
 - [ ] **Backend — validation des env vars d'inférence** _(revue archi 2026-06-22)_

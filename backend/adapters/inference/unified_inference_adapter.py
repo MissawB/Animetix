@@ -14,6 +14,7 @@ from adapters.inference.components.manga_ocr_component import MangaOcrComponent
 from adapters.inference.components.rerank_component import RerankComponent
 from adapters.inference.depth_estimation import DepthEstimationMixin
 from adapters.inference.image_gen_mixin import ImageGenMixin
+from adapters.inference.reachability_health_mixin import ReachabilityHealthCheckMixin
 from adapters.inference.video_analysis import VideoAnalysisMixin
 from adapters.inference.vlm_mixin import VlmMixin
 from core.domain.entities.ai_schemas import (
@@ -30,6 +31,7 @@ logger = logging.getLogger("animetix." + __name__)
 
 
 class UnifiedInferenceAdapter(
+    ReachabilityHealthCheckMixin,
     ClipVisionMixin,
     DepthEstimationMixin,
     VideoAnalysisMixin,
@@ -383,36 +385,35 @@ class UnifiedInferenceAdapter(
             raise InferenceError(f"Streaming failed: {e}")
 
     def health_check(self) -> dict:
-        try:
-            res = safe_http_request(
-                "GET",
-                f"{self.api_base.replace('/v1', '')}/api/tags",
-                timeout=5,
-                allow_internal=True,
-            )
-            if res.status_code == 200:
-                return {
-                    "status": "online",
-                    "engine": "Ollama/Unified",
-                    "models": res.json().get("models", []),
-                }
-        except Exception as e:
-            logger.debug(f"Ollama health check failed: {e}")
+        # Multi-endpoint reachability: prefer the Ollama /api/tags probe (richer:
+        # surfaces the model list), then fall back to the OpenAI-compatible
+        # /models endpoint. safe_http_request is resolved here so the tests'
+        # module-level patch still applies (see the mixin docstring).
+        ollama = self._http_ping_health(
+            safe_http_request,
+            "GET",
+            f"{self.api_base.replace('/v1', '')}/api/tags",
+            timeout=5,
+            allow_internal=True,
+            engine="Ollama/Unified",
+            ok_extra=lambda res: {"models": res.json().get("models", [])},
+        )
+        if ollama["status"] == "online":
+            return ollama
 
-        try:
-            res = safe_http_request(
-                "GET",
-                f"{self.api_base}/models",
-                headers=self._get_headers(),
-                timeout=5,
-                allow_internal=True,
-            )
-            if res.status_code == 200:
-                return {"status": "online", "engine": "OpenAI-Compatible/Unified"}
-        except Exception as e:
-            logger.debug(f"OpenAI-Compatible health check failed: {e}")
+        openai = self._http_ping_health(
+            safe_http_request,
+            "GET",
+            f"{self.api_base}/models",
+            headers=self._get_headers(),
+            timeout=5,
+            allow_internal=True,
+            engine="OpenAI-Compatible/Unified",
+        )
+        if openai["status"] == "online":
+            return openai
 
-        return {"status": "offline", "engine": "Unified"}
+        return self._health_status("offline", engine="Unified")
 
     def set_model_name(self, model_name: str):
         """Change dynamiquement le modèle cible."""

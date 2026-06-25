@@ -1,10 +1,10 @@
 import base64
 import logging
 import os
-import time
 from typing import Any, Dict, List, Optional
 
 import httpx
+from adapters.inference.reachability_health_mixin import ReachabilityHealthCheckMixin
 from core.domain.entities.ai_schemas import (
     InferenceMetadata,
     InferenceResponse,
@@ -18,7 +18,7 @@ from core.utils.security import safe_http_request
 logger = logging.getLogger("animetix.inference.brain")
 
 
-class BrainAPIAdapter(InferencePort):
+class BrainAPIAdapter(ReachabilityHealthCheckMixin, InferencePort):
     """
     Client pour l'API centrale d'Animetix (Brain), orchestrant les modèles SOTA.
     """
@@ -552,17 +552,15 @@ class BrainAPIAdapter(InferencePort):
             return super().moderate_content(text, categories)
 
     def health_check(self) -> dict:
-        try:
-            start_time = time.time()
-            response = httpx.get(f"{self.api_url}/health", timeout=5.0)
-            latency = (time.time() - start_time) * 1000
-            return {
-                "status": "online" if response.status_code == 200 else "degraded",
-                "latency_ms": round(latency, 2),
-                "engine": "BrainAPI",
-            }
-        except Exception:
-            return {"status": "offline", "engine": "BrainAPI"}
+        # Single HTTP-ping reachability probe; httpx.get is resolved here so the
+        # module-level patch in the tests still applies (see the mixin docstring).
+        return self._http_ping_health(
+            httpx.get,
+            f"{self.api_url}/health",
+            timeout=5.0,
+            engine="BrainAPI",
+            with_latency=True,
+        )
 
     def generate_structured(
         self,

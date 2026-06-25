@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional
 
 # Focused Mixin imports
 from adapters.inference.depth_estimation import DepthEstimationMixin
+from adapters.inference.reachability_health_mixin import ReachabilityHealthCheckMixin
 from core.domain.entities.ai_schemas import (
     InferenceMetadata,
     InferenceResponse,
@@ -37,7 +38,9 @@ def get_image_mime_type(image_data: bytes) -> str:
     return "image/png"
 
 
-class GoogleGenAIAdapter(DepthEstimationMixin, InferencePort):
+class GoogleGenAIAdapter(
+    ReachabilityHealthCheckMixin, DepthEstimationMixin, InferencePort
+):
     """
     Adapter for Google's Gemini models using the unified google-genai SDK.
     Supports local fallback mixins for specialized vision tasks.
@@ -108,13 +111,15 @@ class GoogleGenAIAdapter(DepthEstimationMixin, InferencePort):
         )
 
     def health_check(self) -> dict:
+        # Client-init reachability: no remote call — the SDK client is only built
+        # when credentials resolve, so a live client means the API is reachable.
         if not self.client:
-            return {"status": "offline", "reason": "Client not initialized"}
-        return {
-            "status": "online",
-            "model": self.model_name,
-            "backend": "Vertex AI" if self.use_vertexai else "Developer API",
-        }
+            return self._health_status("offline", reason="Client not initialized")
+        return self._health_status(
+            "online",
+            model=self.model_name,
+            backend="Vertex AI" if self.use_vertexai else "Developer API",
+        )
 
     def calculate_visual_similarity(
         self, query: str, item_id: str, media_type: str
