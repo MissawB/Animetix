@@ -114,7 +114,7 @@ class ParadoxDomainService:
         for token in self.llm_service.stream_generate(
             prompt, system_prompt=system, use_slm=True
         ):
-            full_res += token
+            full_res += token.text
             # On pourrait yield token ici pour un effet CoT ultra-détaillé
 
         try:
