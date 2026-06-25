@@ -60,11 +60,13 @@ class TestInitGeminiClient(unittest.TestCase):
     def test_init_gemini_client_no_api_key(self):
         """Lines 155-159: no API key => client stays None."""
         compiler.GEMINI_CLIENT = MagicMock()  # prove it gets reset to None
+        # init_gemini_client imports load_dotenv function-locally
+        # (`from dotenv import load_dotenv`), so we patch the real source
+        # `dotenv.load_dotenv` — patching a module-level name would miss it and
+        # the real load_dotenv would read a developer's local .env, leaking
+        # GEMINI_API_KEY into this "no key" case. Hermetic with or without .env.
         with (
-            patch(
-                "backend.pipeline.mlops.dpo_dataset_compiler.load_dotenv",
-                create=True,
-            ),
+            patch("dotenv.load_dotenv"),
             patch.dict(os.environ, {}, clear=True),
         ):
             compiler.init_gemini_client()
@@ -76,10 +78,7 @@ class TestInitGeminiClient(unittest.TestCase):
         fake_genai = MagicMock()
         fake_genai.Client.return_value = fake_client
         with (
-            patch(
-                "backend.pipeline.mlops.dpo_dataset_compiler.load_dotenv",
-                create=True,
-            ),
+            patch("dotenv.load_dotenv"),
             patch.dict(os.environ, {"GEMINI_API_KEY": "abc123"}, clear=True),
             patch.object(compiler, "genai", fake_genai),
         ):
@@ -92,10 +91,7 @@ class TestInitGeminiClient(unittest.TestCase):
         fake_genai = MagicMock()
         fake_genai.Client.side_effect = RuntimeError("boom")
         with (
-            patch(
-                "backend.pipeline.mlops.dpo_dataset_compiler.load_dotenv",
-                create=True,
-            ),
+            patch("dotenv.load_dotenv"),
             patch.dict(os.environ, {"GEMINI_API_KEY": "abc123"}, clear=True),
             patch.object(compiler, "genai", fake_genai),
         ):
@@ -552,16 +548,14 @@ class TestCompileDpoPairsBranches(unittest.TestCase):
 
 class TestMainEntryPoint(unittest.TestCase):
     def test_main_invokes_compile_with_env(self):
-        """Lines 1071-1084: __main__ block parses env and calls compile_dpo_pairs.
+        """Lines 1071-1086: __main__ block parses env and calls compile_dpo_pairs.
 
         runpy.run_path executes the real source file under __name__ == "__main__"
         (so coverage attributes the guard lines correctly). The freshly executed
-        module defines its own compile_dpo_pairs; we replace it with a spy via
-        init_globals... but the body rebinds it, so instead we make the call a
-        safe no-op: the default SFT path does not exist (no data/ dir here), so
-        the real compile_dpo_pairs returns 0 quickly. We additionally spy on the
-        cached module's function in case the path resolves to a real SFT file,
-        and assert env vars were parsed into the correct ints.
+        module defines and calls its own compile_dpo_pairs, so it can't be spied
+        on via the cached import. Instead we mask the default SFT path as absent
+        (see below) so the real compile_dpo_pairs takes its no-op branch — a
+        safe, hermetic run with no LLM/DB/file output.
         """
         import runpy
 
@@ -575,11 +569,21 @@ class TestMainEntryPoint(unittest.TestCase):
         dpo_default = os.path.join(
             base_dir, "data", "mlops", "datasets", "dpo_train_validated.jsonl"
         )
-        # Precondition: the default SFT dataset is absent in this checkout, so
-        # the real compile_dpo_pairs invoked by __main__ returns 0 and writes
-        # nothing — a safe, hermetic no-op (no LLM/DB/file output).
-        self.assertFalse(os.path.exists(sft_default))
         existed_before = os.path.exists(dpo_default)
+
+        # Force the default SFT dataset to read as absent so the real
+        # compile_dpo_pairs invoked by __main__ takes its no-op path (line 961:
+        # missing SFT + no feedback => return 0, write nothing). This makes the
+        # test hermetic whether or not a developer has generated the (gitignored)
+        # 50 MB SFT dataset locally; in CI the file is simply absent. Only the
+        # SFT path is masked — every other path delegates to the real check so
+        # runpy can still locate the source file.
+        real_exists = os.path.exists
+
+        def _exists_without_sft(path):
+            if os.path.abspath(path) == os.path.abspath(sft_default):
+                return False
+            return real_exists(path)
 
         # Block the optional Django feedback-loop import so the run touches no DB.
         with (
@@ -595,6 +599,7 @@ class TestMainEntryPoint(unittest.TestCase):
                     "backend.pipeline.mlops.dpo_feedback_loop": None,
                 },
             ),
+            patch("os.path.exists", side_effect=_exists_without_sft),
         ):
             # Executes the real source file with __name__ == "__main__",
             # covering the env-parsing and compile_dpo_pairs call site.
