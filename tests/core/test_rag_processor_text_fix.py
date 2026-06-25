@@ -12,6 +12,7 @@ from core.domain.entities.ai_schemas import InferenceResponse
 from core.domain.services.rag.processors.fallback_rag_processor import (
     FallbackRagProcessor,
 )
+from core.domain.services.rag.processors.synthesize_processor import SynthesizeProcessor
 
 
 def test_fallback_rag_processor_consumes_inferenceresponse():
@@ -32,3 +33,28 @@ def test_fallback_rag_processor_consumes_inferenceresponse():
     tokens = [s for s in steps if s["type"] == "token"]
     assert "".join(s["content"] for s in tokens) == "abcd"
     assert ctx.full_answer == "abcd"
+
+
+def test_synthesize_processor_consumes_inferenceresponse():
+    synthesizer = MagicMock()
+    synthesizer.synthesize_stream.return_value = iter(
+        [InferenceResponse(text="Hello "), InferenceResponse(text="world")]
+    )
+    proc = SynthesizeProcessor(synthesizer=synthesizer, xai_service=MagicMock())
+    ctx = SimpleNamespace(
+        query="q",
+        truth_path="ctx",
+        thinking_budget=0,
+        thinking_mode=False,
+        use_slm=False,
+        correction_feedback=None,
+        language="Français",
+        full_answer="",
+        knowledge_acquired=True,  # skip the measure_confidence branch
+    )
+
+    steps = list(proc.process(ctx))
+
+    tokens = [s for s in steps if s["type"] == "token"]
+    assert "".join(s["content"] for s in tokens) == "Hello world"
+    assert ctx.full_answer == "Hello world"
