@@ -1,5 +1,3 @@
-import logging
-
 import pytest
 from adapters.inference.lazy_load_mixin import LazyLoadMixin
 from core.domain.exceptions import InferenceError
@@ -33,8 +31,12 @@ def test_lazy_load_noop_when_already_loaded():
 
 
 def test_lazy_load_swallows_failure_by_default(caplog):
+    import logging as _logging
+
     f = _Fake()
-    with caplog.at_level(logging.ERROR):
+    probe = _logging.getLogger("animetix")
+    probe.propagate = True  # animetix logger has propagate=False in app config
+    with caplog.at_level(_logging.ERROR, logger="animetix"):
         f._lazy_load("attr", f._bad, label="thing")  # must NOT raise
     assert f.attr is None  # stays unset so a retry is possible
     assert "Failed to load thing" in caplog.text

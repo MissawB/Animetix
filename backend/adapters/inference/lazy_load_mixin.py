@@ -3,7 +3,7 @@ from typing import Any, Callable
 
 from core.domain.exceptions import InferenceError
 
-logger = logging.getLogger("adapters.inference")
+logger = logging.getLogger("animetix.inference.lazy_load")
 
 
 class LazyLoadMixin:
