@@ -22,7 +22,8 @@ _Rien d'ouvert._
 
 - [ ] **Backend — duplication entre adapters d'inférence** _(revue archi 2026-06-22 ; en partie fait)_
   - ✅ `health_check` *reachability* des adapters API (`brain_api` HTTP-ping, `google_genai` client-init, `unified`/ollama) factorisé dans [ReachabilityHealthCheckMixin](backend/adapters/inference/reachability_health_mixin.py) (builder de statut standardisé + sonde HTTP générique pilotée par un `requester` injecté → chaque adapter garde son client HTTP et ses cibles de patch).
-  - ⏳ **Reste** : factoriser le motif `_load_model()` (try/except + cache lazy) et le `health_check` *readiness* des adapters de modèles **locaux**.
+  - ✅ `health_check` *readiness* factorisé dans [LazyLocalModelAdapter](backend/adapters/inference/lazy_local_model_adapter.py) (tous les adapters à modèle local migrés) ; motif `_load_model()` multi-sous-modèles factorisé dans [LazyLoadMixin](backend/adapters/inference/lazy_load_mixin.py) (`ImageGenMixin`/`AudioMixin`).
+  - ⏳ **Reste (résiduel, hors scope)** : `RerankMixin` et `LocalTextAdapter.get_text_embedding` (chargements inline aux sémantiques d'erreur différentes) ; `LocalGuardrailAdapter` (aucun modèle).
 - [x] **Backend — validation des env vars d'inférence** _(revue archi 2026-06-22 ; fait)_
   - ✅ `BrainAPIAdapter` échoue tôt (`raise ConfigurationError` si `BRAIN_API_URL` manquant) ([brain_api_adapter.py](backend/adapters/inference/brain_api_adapter.py)).
   - ✅ Garde-fou de cohérence (coherence-only) pour `unified` (`LLM_API_BASE` malformé) et `google_genai` (`GEMINI_API_KEY` blanc) dans leurs `__init__`, + validation groupée à erreurs agrégées au démarrage du container via `validate_inference_config()` ([inference_config.py](backend/core/utils/inference_config.py), câblée dans [inference.py](backend/api/animetix/containers/inference.py)).

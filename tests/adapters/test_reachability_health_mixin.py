@@ -109,3 +109,18 @@ def test_ping_ok_extra_skipped_on_degraded():
     )
     assert "models" not in out
     assert out["status"] == "degraded"
+
+
+def test_ping_ok_extra_failure_keeps_online_status():
+    # A reachable service answers 200 but with an unparseable body, so ok_extra
+    # raises. Enrichment is best-effort: a 200 must still report online, never
+    # be downgraded to offline by an enrichment failure.
+    req = MagicMock(return_value=_resp(200))
+
+    def boom(_res):
+        raise ValueError("malformed body")
+
+    out = _Dummy()._http_ping_health(
+        req, "http://svc/api/tags", engine="Svc", ok_extra=boom
+    )
+    assert out == {"status": "online", "engine": "Svc"}

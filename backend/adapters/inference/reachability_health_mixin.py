@@ -45,14 +45,19 @@ class ReachabilityHealthCheckMixin:
         the endpoint answered 200.
         """
         try:
-            start = time.time()
+            start = time.perf_counter()
             res = requester(*args, **kwargs)
             online = res.status_code == 200
             fields: Dict[str, Any] = {"engine": engine}
             if with_latency:
-                fields["latency_ms"] = round((time.time() - start) * 1000, 2)
+                fields["latency_ms"] = round((time.perf_counter() - start) * 1000, 2)
             if online and ok_extra is not None:
-                fields.update(ok_extra(res))
+                # Enrichment is best-effort: a 200 means the service is reachable,
+                # so a failure parsing the body must never downgrade the result.
+                try:
+                    fields.update(ok_extra(res))
+                except Exception:
+                    pass
             return self._health_status("online" if online else "degraded", **fields)
         except Exception:
             return self._health_status("offline", engine=engine)
