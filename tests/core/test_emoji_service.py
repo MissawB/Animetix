@@ -1,6 +1,7 @@
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
+from core.domain.entities.ai_schemas import InferenceResponse
 from core.domain.services.emoji_service import EmojiDomainService
 
 
@@ -12,6 +13,32 @@ def mock_llm_service():
 @pytest.fixture
 def emoji_service(mock_llm_service):
     return EmojiDomainService(llm_service=mock_llm_service)
+
+
+def test_generate_emojis_stream_consumes_inferenceresponse(
+    emoji_service, mock_llm_service
+):
+    mock_llm_service.prompt_manager.get_prompt.return_value = ("p", "s")
+    mock_llm_service.inference_engine.stream_generate.return_value = iter(
+        [InferenceResponse(text="🍥"), InferenceResponse(text="🦊")]
+    )
+    # Mock the parser (it lazily imports the optional `emoji` package) so this test
+    # targets the .text bug — i.e. that both chunks' .text assemble into the string
+    # passed to the parser — not emoji parsing.
+    captured = {}
+
+    def fake_parse(text):
+        captured["full"] = text
+        return ["🍥", "🦊"]
+
+    emoji_service._parse_emojis = fake_parse
+
+    with patch("time.sleep"):
+        events = list(emoji_service.generate_emojis_stream("Anime", "Naruto", "desc"))
+
+    result = [e for e in events if e["type"] == "result"]
+    assert result and result[0]["content"] == ["🍥", "🦊"]
+    assert captured["full"] == "🍥🦊"
 
 
 def test_select_secret(emoji_service):

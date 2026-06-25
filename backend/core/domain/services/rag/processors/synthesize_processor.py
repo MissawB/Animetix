@@ -40,18 +40,19 @@ class SynthesizeProcessor(StateProcessor):
             xai_collector=xai_collector,
         ):
             token_count += 1
-            if "<thought>" in token and not in_thought:
+            token_text = token.text
+            if "<thought>" in token_text and not in_thought:
                 in_thought = True
-                parts = token.split("<thought>", 1)
+                parts = token_text.split("<thought>", 1)
                 if parts[0]:
                     ctx.full_answer += parts[0]
                     yield StreamStep(type="token", content=parts[0]).model_dump()
                 if parts[1]:
                     yield StreamStep(type="thought", content=parts[1]).model_dump()
                 continue
-            if "</thought>" in token and in_thought:
+            if "</thought>" in token_text and in_thought:
                 in_thought = False
-                parts = token.split("</thought>", 1)
+                parts = token_text.split("</thought>", 1)
                 if parts[0]:
                     yield StreamStep(type="thought", content=parts[0]).model_dump()
                 if parts[1]:
@@ -61,10 +62,10 @@ class SynthesizeProcessor(StateProcessor):
             if in_thought:
                 if ctx.thinking_budget > 0 and token_count > ctx.thinking_budget:
                     continue
-                yield StreamStep(type="thought", content=token).model_dump()
+                yield StreamStep(type="thought", content=token_text).model_dump()
             else:
-                ctx.full_answer += token
-                yield StreamStep(type="token", content=token).model_dump()
+                ctx.full_answer += token_text
+                yield StreamStep(type="token", content=token_text).model_dump()
 
         if not ctx.knowledge_acquired:
             res = self.xai_service.measure_confidence(ctx.query, ctx.full_answer)

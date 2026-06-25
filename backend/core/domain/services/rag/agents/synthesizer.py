@@ -1,5 +1,6 @@
 from typing import Generator, Optional
 
+from core.domain.entities.ai_schemas import InferenceResponse
 from core.domain.services.llm_service import LLMService
 from core.domain.services.prompt_manager import PromptManager
 
@@ -21,7 +22,7 @@ class ResponseSynthesizer:
         correction_feedback: Optional[str] = None,
         language: str = "Français",
         xai_collector=None,
-    ) -> Generator[str, None, None]:
+    ) -> Generator[InferenceResponse, None, None]:
         prompt_key = (
             "synthesizer_correction" if correction_feedback else "synthesizer_final"
         )
