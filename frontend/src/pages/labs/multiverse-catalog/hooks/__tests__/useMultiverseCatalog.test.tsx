@@ -4,6 +4,7 @@ import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useMultiverseCatalog } from '../useMultiverseCatalog';
 import { apiClient } from '../../../../../utils/apiClient';
+import type { Universe } from '../../types';
 
 vi.mock('../../../../../utils/apiClient', () => ({
   apiClient: vi.fn(),
@@ -172,7 +173,17 @@ describe('useMultiverseCatalog', () => {
     });
     expect(result.current.viewMode).toBe('list');
 
-    const mockUniverse = { id: 'u1', name: 'Ghibli', description: '', genre: '', characterCount: 5, bgImage: '', archetypes: [] };
+    const mockUniverse: Universe = {
+      id: 'u1',
+      name: 'Ghibli',
+      description: '',
+      cosmology: '',
+      genre: '',
+      is_synthetic: false,
+      character_count: 5,
+      characters: [],
+      created_at: null,
+    };
     act(() => {
       result.current.handleSelectUniverse(mockUniverse);
     });
