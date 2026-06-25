@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Callable
+from typing import Any, Callable, Literal
 
 from core.domain.exceptions import InferenceError
 
@@ -21,7 +21,7 @@ class LazyLoadMixin:
         loader: Callable[[], Any],
         *,
         label: str,
-        on_error: str = "swallow",
+        on_error: Literal["swallow", "raise"] = "swallow",
     ) -> None:
         if getattr(self, attr, None):
             return
