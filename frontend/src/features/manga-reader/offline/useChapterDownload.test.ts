@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useChapterDownload } from './useChapterDownload';
 import * as lib from './offlineLibrary';
+import { useToastStore } from '../../../store/toastStore';
 
 const META = { mediaId: 'm1', mediaTitle: 'T', chapterNumber: 1, chapterTitle: 'C1' };
 const PAGES = [{ number: 0, image_url: 'u0' }];
@@ -47,6 +48,20 @@ describe('useChapterDownload', () => {
     });
     expect(result.current.status).toBe('error');
     expect(result.current.error).toContain('stockage');
+  });
+
+  it('toasts an error on download failure', async () => {
+    vi.spyOn(lib, 'isChapterDownloaded').mockResolvedValue(false);
+    vi.spyOn(lib, 'downloadChapter').mockRejectedValue(new lib.OfflineQuotaError());
+    const addToast = vi
+      .spyOn(useToastStore.getState(), 'addToast')
+      .mockImplementation(() => {});
+    const { result } = renderHook(() => useChapterDownload(META, PAGES));
+    await waitFor(() => expect(result.current.status).toBe('idle'));
+    await act(async () => {
+      await result.current.download();
+    });
+    expect(addToast).toHaveBeenCalledWith(expect.stringContaining('stockage'), 'error');
   });
 
   it('remove() deletes and returns to idle', async () => {
