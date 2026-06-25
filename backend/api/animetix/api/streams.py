@@ -12,41 +12,31 @@ from rest_framework import permissions
 from rest_framework.views import APIView
 
 from animetix.api.dependencies import get_session_service
+from animetix.api.sse import check_rate_limit, sse_stream_response
 
 from ..containers import get_container
 from ..forms import ToTStreamForm
 from ..serializers import XaiReportSerializer
 
 
-@method_decorator(
-    ratelimit(key="user_or_ip", rate="5/m", method="GET", block=True), name="get"
-)
-class EmojiStreamView(APIView):
-    """Streams emoji generation events for the UI."""
+class EmojiStreamView(View):
+    """Async SSE: streams emoji generation events for the UI."""
 
-    permission_classes = [permissions.AllowAny]
-
-    def get(self, request):
-        session = get_session_service(request)
-        media_type, secret = session.get_current_mode(), request.GET.get("secret")
+    async def get(self, request):
+        await check_rate_limit(request, "animetix.api.streams.EmojiStreamView")
+        secret = request.GET.get("secret")
         if not secret:
             return HttpResponse(status=400)
-
+        session = await sync_to_async(get_session_service)(request)
+        media_type = await sync_to_async(session.get_current_mode)()
         container = get_container()
-        data = container.core.catalog_service.load_data(media_type)
-
-        def event_stream():
-            try:
-                for event in container.core.emoji_service.generate_emojis_stream(
-                    media_type,
-                    secret,
-                    data["title_to_full_data"][secret].get("description", ""),
-                ):
-                    yield f"data: {json.dumps(event)}\n\n"
-            except Exception as e:
-                yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"
-
-        return StreamingHttpResponse(event_stream(), content_type="text/event-stream")
+        data = await sync_to_async(container.core.catalog_service.load_data)(media_type)
+        description = data["title_to_full_data"][secret].get("description", "")
+        return sse_stream_response(
+            container.core.emoji_service.agenerate_emojis_stream(
+                media_type, secret, description
+            )
+        )
 
 
 @method_decorator(
