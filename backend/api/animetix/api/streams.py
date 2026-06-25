@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 from animetix.api.dependencies import get_session_service
 
 from ..containers import get_container
+from ..forms import ToTStreamForm
 from ..serializers import XaiReportSerializer
 
 
@@ -205,6 +206,38 @@ class AniminatorStreamView(APIView):
                         was_won=False,
                     )
                 yield f"data: {json.dumps({'type': 'done', 'questions_left': q_left})}\n\n"
+            except Exception as e:
+                yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"
+
+        return StreamingHttpResponse(event_stream(), content_type="text/event-stream")
+
+
+@method_decorator(
+    ratelimit(key="user_or_ip", rate="5/m", method="GET", block=True), name="get"
+)
+class ToTStreamView(APIView):
+    """Streams Tree-of-Thoughts search node/answer events for the visualizer."""
+
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        form = ToTStreamForm(request.GET)
+        if not form.is_valid():
+            return JsonResponse({"error": form.errors}, status=400)
+
+        query = form.cleaned_data["q"]
+        breadth = form.cleaned_data.get("breadth") or 3
+        depth = form.cleaned_data.get("depth") or 3
+
+        container = get_container()
+        tot_service = container.core.tree_of_thoughts_service()
+
+        def event_stream():
+            try:
+                for event in tot_service.solve_with_tree_of_thoughts_stream(
+                    query=query, breadth=breadth, depth=depth
+                ):
+                    yield f"data: {json.dumps(event)}\n\n"
             except Exception as e:
                 yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"
 

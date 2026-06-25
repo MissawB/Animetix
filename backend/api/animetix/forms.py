@@ -141,3 +141,9 @@ class UserIDForm(forms.Form):
 class VertexFeatureStoreForm(forms.Form):
     user_id = forms.CharField(max_length=100, required=True)
     features = forms.JSONField(required=True)
+
+
+class ToTStreamForm(forms.Form):
+    q = forms.CharField(max_length=500, required=True)
+    breadth = forms.IntegerField(min_value=1, max_value=10, required=False, initial=3)
+    depth = forms.IntegerField(min_value=1, max_value=10, required=False, initial=3)

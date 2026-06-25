@@ -432,6 +432,11 @@ urlpatterns = [
         api_views.AniminatorStreamView.as_view(),
         name="api_animinator_stream",
     ),
+    path(
+        "stream/tot/",
+        api_views.ToTStreamView.as_view(),
+        name="api_tot_stream",
+    ),
     # --- ARCHETYPIST (LA FORGE) ---
     path(
         "archetypist/start/",
