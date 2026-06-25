@@ -937,6 +937,37 @@ class TestRunGenerateInstructionDataset(unittest.TestCase):
                 fd.run_generate_instruction_dataset()
         genai_mock.Client.assert_not_called()
 
+    def test_augmentation_calls_paraphrase_for_tier1_title(self):
+        genai_mock = MagicMock()
+        paraphrase_mock = MagicMock(return_value="paraphrased")
+        animes = [
+            {  # Tier-1 (>150k) -> enters the augmented set -> 5 paraphrase calls
+                "title": "AugAnime",
+                "genres": ["Action"],
+                "studios": ["S"],
+                "tags": ["t"],
+                "popularity": 200000,
+                "year": 2020,
+            }
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            with _orchestrator_env(
+                tmp,
+                animes=animes,
+                mangas=[],
+                chars=[],
+                env={
+                    "ANIMETIX_AUGMENT_DATA": "true",
+                    "GEMINI_API_KEY": "k",
+                    "ANIMETIX_QUERY_NOISE_RATE": "0.0",
+                },
+                genai_mock=genai_mock,
+                paraphrase_mock=paraphrase_mock,
+            ):
+                fd.run_generate_instruction_dataset()
+        # One Tier-1 anime in the augmented set triggers the 5-variation paraphrase branch.
+        self.assertEqual(paraphrase_mock.call_count, 5)
+
 
 if __name__ == "__main__":
     unittest.main()
