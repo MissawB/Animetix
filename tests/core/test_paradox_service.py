@@ -5,6 +5,29 @@ from core.domain.entities.ai_schemas import InferenceResponse
 from core.domain.services.paradox_service import ParadoxDomainService
 
 
+@pytest.mark.asyncio
+async def test_agenerate_logic_stream_consumes_inferenceresponse(
+    paradox_service, mock_llm_service
+):
+    mock_llm_service.prompt_manager.get_prompt.return_value = ("p", "s")
+
+    async def _astream(prompt, system_prompt=None, use_slm=False):
+        yield InferenceResponse(text='{"reasoning": "R", "scenario": "S"}')
+
+    mock_llm_service.astream_generate.side_effect = _astream
+
+    events = [
+        e
+        async for e in paradox_service.agenerate_logic_stream(
+            "Anime", {"title": "A"}, {"title": "B"}, {"title": "I"}, "Français"
+        )
+    ]
+    result = [e for e in events if e["type"] == "result"]
+    assert result
+    assert result[0]["content"].reasoning == "R"
+    assert result[0]["content"].scenario == "S"
+
+
 def test_generate_logic_stream_consumes_inferenceresponse(
     paradox_service, mock_llm_service
 ):

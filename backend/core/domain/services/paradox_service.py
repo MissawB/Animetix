@@ -142,6 +142,76 @@ class ParadoxDomainService:
                 "content": ParadoxLogic(reasoning="Error", scenario=full_res),
             }
 
+    async def agenerate_logic_stream(
+        self, media_type: str, item_a: Dict, item_b: Dict, intruder: Dict, language: str
+    ):
+        """Variante async de generate_logic_stream (consomme astream_generate)."""
+        import asyncio  # noqa: E402
+
+        yield {
+            "type": "thought",
+            "content": "Initialisation du solveur neuro-symbolique...",
+        }
+
+        label_a = item_a.get("title") or item_a.get("name")
+        label_b = item_b.get("title") or item_b.get("name")
+        label_i = intruder.get("title") or intruder.get("name")
+
+        yield {
+            "type": "thought",
+            "content": f"Analyse des similarités entre {label_a}, {label_b} et {label_i}...",
+        }
+
+        if self.neuro_symbolic_service:
+            yield {
+                "type": "thought",
+                "content": "Extraction des prédicats logiques (Graph Nodes)...",
+            }
+            await asyncio.sleep(0.3)
+            yield {
+                "type": "thought",
+                "content": "Détection d'une anomalie dans le cluster thématique...",
+            }
+
+        prompt, system = self.llm_service.prompt_manager.get_prompt(
+            "paradox_generation",
+            media_type=media_type,
+            item_a=label_a,
+            item_b=label_b,
+            intruder=label_i,
+        )
+
+        full_res = ""
+        async for token in self.llm_service.astream_generate(
+            prompt, system_prompt=system, use_slm=True
+        ):
+            full_res += token.text
+
+        try:
+            if "{" in full_res and "}" in full_res:
+                clean_json = full_res[full_res.find("{") : full_res.rfind("}") + 1]
+                parsed = orjson.loads(clean_json)
+                yield {
+                    "type": "result",
+                    "content": ParadoxLogic(
+                        reasoning=parsed.get("reasoning", "Analyse Indisponible"),
+                        scenario=parsed.get("scenario", full_res),
+                    ),
+                }
+            else:
+                yield {
+                    "type": "result",
+                    "content": ParadoxLogic(
+                        reasoning="LLM Fallback (SLM)", scenario=full_res
+                    ),
+                }
+        except Exception as e:
+            logger.warning(f"Paradox logic generator parsing failed: {e}")
+            yield {
+                "type": "result",
+                "content": ParadoxLogic(reasoning="Error", scenario=full_res),
+            }
+
     def generate_logic(
         self, media_type: str, item_a: Dict, item_b: Dict, intruder: Dict, language: str
     ) -> ParadoxLogic:
