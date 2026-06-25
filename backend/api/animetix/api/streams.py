@@ -4,64 +4,44 @@ from asgiref.sync import sync_to_async
 from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
 from django.utils.decorators import method_decorator
 from django.views import View
-from django_ratelimit.core import is_ratelimited
 from django_ratelimit.decorators import ratelimit
-from django_ratelimit.exceptions import Ratelimited
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import permissions
 from rest_framework.views import APIView
 
 from animetix.api.dependencies import get_session_service
+from animetix.api.sse import check_rate_limit, sse_stream_response
 
 from ..containers import get_container
 from ..forms import ToTStreamForm
 from ..serializers import XaiReportSerializer
 
 
-@method_decorator(
-    ratelimit(key="user_or_ip", rate="5/m", method="GET", block=True), name="get"
-)
-class EmojiStreamView(APIView):
-    """Streams emoji generation events for the UI."""
+class EmojiStreamView(View):
+    """Async SSE: streams emoji generation events for the UI."""
 
-    permission_classes = [permissions.AllowAny]
-
-    def get(self, request):
-        session = get_session_service(request)
-        media_type, secret = session.get_current_mode(), request.GET.get("secret")
+    async def get(self, request):
+        await check_rate_limit(request, "animetix.api.streams.EmojiStreamView")
+        secret = request.GET.get("secret")
         if not secret:
             return HttpResponse(status=400)
-
+        session = await sync_to_async(get_session_service)(request)
+        media_type = await sync_to_async(session.get_current_mode)()
         container = get_container()
-        data = container.core.catalog_service.load_data(media_type)
-
-        def event_stream():
-            try:
-                for event in container.core.emoji_service.generate_emojis_stream(
-                    media_type,
-                    secret,
-                    data["title_to_full_data"][secret].get("description", ""),
-                ):
-                    yield f"data: {json.dumps(event)}\n\n"
-            except Exception as e:
-                yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"
-
-        return StreamingHttpResponse(event_stream(), content_type="text/event-stream")
+        data = await sync_to_async(container.core.catalog_service.load_data)(media_type)
+        description = data["title_to_full_data"][secret].get("description", "")
+        return sse_stream_response(
+            container.core.emoji_service.agenerate_emojis_stream(
+                media_type, secret, description
+            )
+        )
 
 
-@method_decorator(
-    ratelimit(key="user_or_ip", rate="5/m", method="GET", block=True), name="get"
-)
-class ParadoxStreamView(APIView):
-    """Streams paradox logic generation events."""
+class ParadoxStreamView(View):
+    """Async SSE: streams paradox logic generation events."""
 
-    permission_classes = [permissions.AllowAny]
-
-    def get(self, request):
-        session = get_session_service(request)
-        container = get_container()
-        media_type = session.get_current_mode()
-        data = container.core.catalog_service.load_data(media_type)
+    async def get(self, request):
+        await check_rate_limit(request, "animetix.api.streams.ParadoxStreamView")
         t1, t2, intruder = (
             request.GET.get("t1"),
             request.GET.get("t2"),
@@ -69,31 +49,27 @@ class ParadoxStreamView(APIView):
         )
         if not all([t1, t2, intruder]):
             return HttpResponse(status=400)
+        session = await sync_to_async(get_session_service)(request)
+        media_type = await sync_to_async(session.get_current_mode)()
+        container = get_container()
+        data = await sync_to_async(container.core.catalog_service.load_data)(media_type)
+        item_a = data["title_to_full_data"][t1]
+        item_b = data["title_to_full_data"][t2]
+        item_i = data["title_to_full_data"][intruder]
+        language = await sync_to_async(session.get)("language", "Français")
 
-        def event_stream():
-            item_a, item_b, item_i = (
-                data["title_to_full_data"][t1],
-                data["title_to_full_data"][t2],
-                data["title_to_full_data"][intruder],
-            )
-            try:
-                for event in container.core.paradox_service.generate_logic_stream(
-                    media_type,
-                    item_a,
-                    item_b,
-                    item_i,
-                    session.get("language", "Français"),
-                ):
-                    if event["type"] == "result":
-                        event["content"] = {
-                            "reasoning": event["content"].reasoning,
-                            "scenario": event["content"].scenario,
-                        }
-                    yield f"data: {json.dumps(event)}\n\n"
-            except Exception as e:
-                yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"
+        async def _events():
+            async for event in container.core.paradox_service.agenerate_logic_stream(
+                media_type, item_a, item_b, item_i, language
+            ):
+                if event["type"] == "result":
+                    event["content"] = {
+                        "reasoning": event["content"].reasoning,
+                        "scenario": event["content"].scenario,
+                    }
+                yield event
 
-        return StreamingHttpResponse(event_stream(), content_type="text/event-stream")
+        return sse_stream_response(_events())
 
 
 @method_decorator(
@@ -169,18 +145,7 @@ class AniminatorStreamView(View):
     """Async SSE: streams the Oracle's response and updates game state in session."""
 
     async def get(self, request):
-        # Explicit group (the sync @ratelimit decorator auto-derived one from the
-        # view fn); kept stable here so the per-view bucket stays isolated.
-        limited = await sync_to_async(is_ratelimited)(
-            request=request,
-            group="animetix.api.streams.AniminatorStreamView",
-            key="user_or_ip",
-            rate="5/m",
-            method="GET",
-            increment=True,
-        )
-        if limited:
-            raise Ratelimited()
+        await check_rate_limit(request, "animetix.api.streams.AniminatorStreamView")
 
         session = await sync_to_async(get_session_service)(request)
         container = get_container()

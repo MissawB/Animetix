@@ -101,3 +101,29 @@ async def test_aask_oracle_stream(llm_service, mock_engine, mock_prompt_manager)
     mock_prompt_manager.get_prompt.assert_called_once_with(
         "ask_oracle", media_type="Anime", title="Naruto", question="Q?"
     )
+
+
+@pytest.mark.asyncio
+async def test_astream_generate_routes_slm_vs_main(mock_prompt_manager):
+    main_engine = MagicMock()
+    slm_engine = MagicMock()
+
+    async def _main(prompt, system_prompt, **kwargs):
+        yield InferenceResponse(text="M")
+
+    async def _slm(prompt, system_prompt, **kwargs):
+        yield InferenceResponse(text="S")
+
+    main_engine.astream_generate = _main
+    slm_engine.astream_generate = _slm
+    svc = LLMService(
+        inference_engine=main_engine,
+        prompt_manager=mock_prompt_manager,
+        slm_engine=slm_engine,
+    )
+
+    main_chunks = [c.text async for c in svc.astream_generate("p", "s")]
+    slm_chunks = [c.text async for c in svc.astream_generate("p", "s", use_slm=True)]
+
+    assert main_chunks == ["M"]
+    assert slm_chunks == ["S"]
