@@ -80,6 +80,10 @@ MODELS: dict[str, dict] = {
         "revision": "cfd3195ba4ea9592eec887ded089f4c08eff231d",
         "trust_remote_code": False,
     },
+    "google/siglip2-so400m-patch14-384": {
+        "revision": "e8e487298228002f3d8a82e0cd5c8ea9c567f57f",
+        "trust_remote_code": False,
+    },
     "cross-encoder/ms-marco-MiniLM-L-12-v2": {
         "revision": "7b0235231ca2674cb8ca8f022859a6eba2b1c968",
         "trust_remote_code": False,
@@ -103,6 +107,20 @@ MODELS: dict[str, dict] = {
     "kyutai/moshiko-pytorch-bf16": {
         "revision": "2bfc9ae6e89079a5cc7ed2a68436010d91a3d289",
         "trust_remote_code": False,
+    },
+}
+
+
+# Versioned embedding models (logical version -> model id). Revisions resolve
+# from MODELS via get_verified_revision — never duplicated here.
+EMBEDDING_VERSIONS: dict[str, dict[str, str]] = {
+    "text": {
+        "v3": "jinaai/jina-embeddings-v3",
+        "v4": "Qwen/Qwen3-Embedding-8B",
+    },
+    "vision": {
+        "v2": "google/siglip2-so400m-patch14-384",
+        "v3": "Qwen/Qwen3-VL-Embedding-8B",
     },
 }
 

@@ -84,3 +84,26 @@ def test_repointed_models_present_and_pinned():
 def test_dead_404_models_are_gone():
     assert "unsloth/DeepSeek-R1-Distill-Qwen-8B" not in mr.MODELS
     assert "kyutai/moshi-1b-preview" not in mr.MODELS
+
+
+def test_siglip2_present_and_pinned():
+    assert mr.MODELS["google/siglip2-so400m-patch14-384"] == {
+        "revision": "e8e487298228002f3d8a82e0cd5c8ea9c567f57f",
+        "trust_remote_code": False,
+    }
+
+
+def test_embedding_versions_map_resolves_to_known_models():
+    assert mr.EMBEDDING_VERSIONS == {
+        "text": {
+            "v3": "jinaai/jina-embeddings-v3",
+            "v4": "Qwen/Qwen3-Embedding-8B",
+        },
+        "vision": {
+            "v2": "google/siglip2-so400m-patch14-384",
+            "v3": "Qwen/Qwen3-VL-Embedding-8B",
+        },
+    }
+    for kind in mr.EMBEDDING_VERSIONS.values():
+        for model_id in kind.values():
+            assert model_id in mr.MODELS, f"{model_id} not pinned in MODELS"
