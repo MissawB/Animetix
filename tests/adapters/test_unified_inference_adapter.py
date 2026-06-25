@@ -69,12 +69,15 @@ def test_defaults_when_no_args_and_no_env():
 
 
 def test_env_vars_used_when_args_missing(monkeypatch):
+    from core.utils.local_models import LLM_OLLAMA_MODEL
+
     monkeypatch.setenv("LLM_API_BASE", "http://env-host/v1")
-    monkeypatch.setenv("LLM_MODEL_NAME", "env-model")
     monkeypatch.setenv("LLM_API_KEY", "env-key")
     a = UnifiedInferenceAdapter()
     assert a.api_base == "http://env-host/v1"
-    assert a.model_name == "env-model"
+    # model_name now comes from the central registry constant (resolved at
+    # import via LLM_MODEL_NAME), not a per-construction os.getenv read.
+    assert a.model_name == LLM_OLLAMA_MODEL
     assert a.api_key == "env-key"
 
 
