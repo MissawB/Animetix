@@ -23,6 +23,7 @@ from core.domain.entities.ai_schemas import (
 )
 from core.domain.exceptions import InferenceError
 from core.ports.inference_port import InferencePort
+from core.utils.local_models import LLM_OLLAMA_MODEL
 from core.utils.security import is_safe_url, safe_http_request
 
 logger = logging.getLogger("animetix." + __name__)
@@ -56,7 +57,7 @@ class UnifiedInferenceAdapter(
         self.api_base = (
             api_base or os.getenv("LLM_API_BASE") or "http://localhost:11434/v1"
         )
-        self.model_name = model_name or os.getenv("LLM_MODEL_NAME") or "qwen3.5"
+        self.model_name = model_name or LLM_OLLAMA_MODEL
         self.api_key = api_key or os.getenv("LLM_API_KEY") or "ollama"
         self.max_retries = max_retries
         self.timeout = timeout

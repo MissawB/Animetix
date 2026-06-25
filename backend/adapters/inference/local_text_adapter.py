@@ -6,6 +6,7 @@ from adapters.inference.lazy_local_model_adapter import LazyLocalModelAdapter
 from core.domain.entities.ai_schemas import InferenceResponse
 from core.domain.exceptions import InferenceError
 from core.utils.lazy_import import lazy_import
+from core.utils.local_models import DRAFT_TEXT_MODEL, LOCAL_TEXT_MODEL
 from core.utils.model_registry import resolve_trust_remote_code, trusted_revision
 
 torch = lazy_import("torch")
@@ -21,7 +22,7 @@ class LocalTextAdapter(LazyLocalModelAdapter):
 
     def __init__(
         self,
-        model_id: str = "Qwen/Qwen3.5-4B",
+        model_id: str = LOCAL_TEXT_MODEL,
         use_4bit: bool = True,
         usage_port: Optional[UsagePort] = None,
     ):
@@ -36,7 +37,7 @@ class LocalTextAdapter(LazyLocalModelAdapter):
         self.speculative_enabled = (
             os.getenv("SPECULATIVE_DECODING", "True").lower() == "true"
         )
-        self.draft_model_id = os.getenv("DRAFT_MODEL_ID", "Qwen/Qwen2.5-0.5B-Instruct")
+        self.draft_model_id = DRAFT_TEXT_MODEL
         self.draft_model: Any = None
 
         # Radix KV Cache configuration
