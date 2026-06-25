@@ -6,6 +6,7 @@ import tempfile  # noqa: E402
 from io import BytesIO  # noqa: E402
 from typing import TYPE_CHECKING, Dict, List  # noqa: E402
 
+from adapters.inference.lazy_load_mixin import LazyLoadMixin  # noqa: E402
 from core.domain.exceptions import InferenceError  # noqa: E402
 from core.utils.lazy_import import lazy_import  # noqa: E402
 from core.utils.model_registry import (  # noqa: E402
@@ -47,7 +48,7 @@ class CrossFrameAttentionProcessor:
         )
 
 
-class ImageGenMixin:
+class ImageGenMixin(LazyLoadMixin):
     """Provides image generation, transformation, and inpainting capabilities."""
 
     if TYPE_CHECKING:
@@ -70,69 +71,63 @@ class ImageGenMixin:
     def _load_txt2img(self):
         if not torch.cuda.is_available():
             raise InferenceError("CUDA GPU is not available for local diffusion.")
-        if hasattr(self, "pipe") and self.pipe:
-            return
-        try:
-            from diffusers import AutoPipelineForText2Image  # noqa: E402
+        self._lazy_load("pipe", self._build_txt2img, label="txt2img")
 
-            model_id = getattr(self, "model_id", "black-forest-labs/FLUX.1-schnell")
-            logger.info(f"🏗️ Loading Txt2Img: {model_id}")
-            self.pipe = AutoPipelineForText2Image.from_pretrained(
-                model_id,
-                torch_dtype=self._get_dtype(),
-                variant=self._get_variant(),
-                trust_remote_code=resolve_trust_remote_code(model_id),
-                revision=trusted_revision(model_id) or "main",
-            )
-            self.pipe.to("cuda")
-            self.pipe.enable_model_cpu_offload()
-            self.pipe.enable_vae_tiling()
-        except Exception as e:
-            logger.error(f"❌ Failed to load txt2img: {e}")
+    def _build_txt2img(self):
+        from diffusers import AutoPipelineForText2Image  # noqa: E402
+
+        model_id = getattr(self, "model_id", "black-forest-labs/FLUX.1-schnell")
+        logger.info(f"🏗️ Loading Txt2Img: {model_id}")
+        self.pipe = AutoPipelineForText2Image.from_pretrained(
+            model_id,
+            torch_dtype=self._get_dtype(),
+            variant=self._get_variant(),
+            trust_remote_code=resolve_trust_remote_code(model_id),
+            revision=trusted_revision(model_id) or "main",
+        )
+        self.pipe.to("cuda")
+        self.pipe.enable_model_cpu_offload()
+        self.pipe.enable_vae_tiling()
 
     def _load_img2img(self):
         if not torch.cuda.is_available():
             raise InferenceError("CUDA GPU is not available for local diffusion.")
-        if hasattr(self, "_img2img_pipe") and self._img2img_pipe:
-            return
-        try:
-            from diffusers import AutoPipelineForImage2Image  # noqa: E402
+        self._lazy_load("_img2img_pipe", self._build_img2img, label="img2img")
 
-            model_id = getattr(self, "model_id", "black-forest-labs/FLUX.1-schnell")
-            logger.info(f"🏗️ Loading Img2Img: {model_id}")
-            self._img2img_pipe = AutoPipelineForImage2Image.from_pretrained(
-                model_id,
-                torch_dtype=self._get_dtype(),
-                variant=self._get_variant(),
-                trust_remote_code=resolve_trust_remote_code(model_id),
-                revision=trusted_revision(model_id) or "main",
-            )
-            self._img2img_pipe.to("cuda")
-            self._img2img_pipe.enable_model_cpu_offload()
-        except Exception as e:
-            logger.error(f"❌ Failed to load img2img: {e}")
+    def _build_img2img(self):
+        from diffusers import AutoPipelineForImage2Image  # noqa: E402
+
+        model_id = getattr(self, "model_id", "black-forest-labs/FLUX.1-schnell")
+        logger.info(f"🏗️ Loading Img2Img: {model_id}")
+        self._img2img_pipe = AutoPipelineForImage2Image.from_pretrained(
+            model_id,
+            torch_dtype=self._get_dtype(),
+            variant=self._get_variant(),
+            trust_remote_code=resolve_trust_remote_code(model_id),
+            revision=trusted_revision(model_id) or "main",
+        )
+        self._img2img_pipe.to("cuda")
+        self._img2img_pipe.enable_model_cpu_offload()
 
     def _load_inpainting(self):
         if not torch.cuda.is_available():
             raise InferenceError("CUDA GPU is not available for local diffusion.")
-        if hasattr(self, "_inpaint_pipe") and self._inpaint_pipe:
-            return
-        try:
-            from diffusers import AutoPipelineForInpainting  # noqa: E402
+        self._lazy_load("_inpaint_pipe", self._build_inpainting, label="inpainting")
 
-            model_id = getattr(self, "model_id", "black-forest-labs/FLUX.1-schnell")
-            logger.info(f"🏗️ Loading Inpainting: {model_id}")
-            self._inpaint_pipe = AutoPipelineForInpainting.from_pretrained(
-                model_id,
-                torch_dtype=self._get_dtype(),
-                variant=self._get_variant(),
-                trust_remote_code=resolve_trust_remote_code(model_id),
-                revision=trusted_revision(model_id) or "main",
-            )
-            self._inpaint_pipe.to("cuda")
-            self._inpaint_pipe.enable_model_cpu_offload()
-        except Exception as e:
-            logger.error(f"❌ Failed to load inpainting: {e}")
+    def _build_inpainting(self):
+        from diffusers import AutoPipelineForInpainting  # noqa: E402
+
+        model_id = getattr(self, "model_id", "black-forest-labs/FLUX.1-schnell")
+        logger.info(f"🏗️ Loading Inpainting: {model_id}")
+        self._inpaint_pipe = AutoPipelineForInpainting.from_pretrained(
+            model_id,
+            torch_dtype=self._get_dtype(),
+            variant=self._get_variant(),
+            trust_remote_code=resolve_trust_remote_code(model_id),
+            revision=trusted_revision(model_id) or "main",
+        )
+        self._inpaint_pipe.to("cuda")
+        self._inpaint_pipe.enable_model_cpu_offload()
 
     def generate_image(self, prompt: str, style: str = "") -> str:
         self._load_txt2img()
