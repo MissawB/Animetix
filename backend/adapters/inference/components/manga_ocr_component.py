@@ -21,7 +21,7 @@ class MangaOcrComponent:
 
     def __init__(self, ctx: InferenceComponentContext):
         self._ctx = ctx
-        self._pipeline = None
+        self._pipeline: Any = None
 
     def process_manga_page(self, image_data: bytes) -> Dict[str, Any]:
         try:

@@ -98,7 +98,7 @@ class InferencePort(ABC):
         """Génère du texte en flux de manière asynchrone via run_in_executor."""
         import asyncio
 
-        queue = asyncio.Queue()
+        queue: asyncio.Queue = asyncio.Queue()
         loop = asyncio.get_running_loop()
         DONE = object()
 
