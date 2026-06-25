@@ -901,6 +901,42 @@ class TestRunGenerateInstructionDataset(unittest.TestCase):
         self.assertEqual(len(alpha), 5, "Tier-1 anime should yield 5 variations")
         self.assertEqual(len(beta), 1, "Tier-3 anime should yield 1 variation")
 
+    def test_client_initialized_when_augmentation_enabled(self):
+        genai_mock = MagicMock()
+        with tempfile.TemporaryDirectory() as tmp:
+            with _orchestrator_env(
+                tmp,
+                animes=[],
+                mangas=[],
+                chars=[],
+                env={
+                    "ANIMETIX_AUGMENT_DATA": "true",
+                    "GEMINI_API_KEY": "k",
+                    "ANIMETIX_QUERY_NOISE_RATE": "0.0",
+                },
+                genai_mock=genai_mock,
+            ):
+                fd.run_generate_instruction_dataset()
+        genai_mock.Client.assert_called_once_with(api_key="k")
+
+    def test_client_not_initialized_when_augmentation_disabled(self):
+        genai_mock = MagicMock()
+        with tempfile.TemporaryDirectory() as tmp:
+            with _orchestrator_env(
+                tmp,
+                animes=[],
+                mangas=[],
+                chars=[],
+                env={
+                    "ANIMETIX_AUGMENT_DATA": "False",
+                    "GEMINI_API_KEY": "k",
+                    "ANIMETIX_QUERY_NOISE_RATE": "0.0",
+                },
+                genai_mock=genai_mock,
+            ):
+                fd.run_generate_instruction_dataset()
+        genai_mock.Client.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()
