@@ -120,3 +120,40 @@ async def test_unified_astream_generate_native():
     assert args[0] == "POST"
     assert kwargs["json"]["stream"] is True
     assert adapter._last_completion == "Hello"
+
+
+@pytest.mark.asyncio
+async def test_google_genai_astream_generate_native(monkeypatch):
+    from unittest.mock import AsyncMock, MagicMock, patch
+
+    from adapters.inference.google_genai_adapter import GoogleGenAIAdapter
+
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+
+    def _chunk(text):
+        c = MagicMock()
+        c.text = text
+        c.candidates = []
+        c.usage_metadata = None
+        return c
+
+    async def fake_stream():
+        for t in ["Foo", "Bar"]:
+            yield _chunk(t)
+
+    client = MagicMock()
+    client.aio = MagicMock()
+    client.aio.models = MagicMock()
+    client.aio.models.generate_content_stream = AsyncMock(return_value=fake_stream())
+
+    with patch(
+        "adapters.inference.google_genai_adapter.genai.Client", return_value=client
+    ):
+        adapter = GoogleGenAIAdapter(api_key="key")
+
+    chunks = []
+    async for c in adapter.astream_generate("Q"):
+        chunks.append(c.text)
+
+    assert chunks == ["Foo", "Bar"]
+    client.aio.models.generate_content_stream.assert_awaited_once()

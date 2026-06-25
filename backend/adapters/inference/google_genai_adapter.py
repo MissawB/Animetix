@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import json
 import logging
@@ -301,6 +302,56 @@ class GoogleGenAIAdapter(
         except Exception as e:
             logger.error(f"Error during GoogleGenAI stream_generate: {e}")
             raise InferenceError(f"GoogleGenAI stream_generate failed: {e}")
+
+    async def astream_generate(
+        self,
+        prompt: str,
+        system_prompt: str = "Tu es un expert en Anime, Manga et culture Otaku.",
+        thinking_budget: int = 0,
+        thinking_mode: bool = False,
+        include_logprobs: bool = False,
+        **kwargs,
+    ):
+        """Variante async native de stream_generate (client.aio Gemini)."""
+        if not self.client:
+            raise InferenceNotImplementedError(
+                "Google GenAI client is not initialized."
+            )
+        config_args: Dict[str, Any] = {"temperature": 0.7}
+        cache_name = await asyncio.to_thread(self._get_or_create_cache, system_prompt)
+        if cache_name:
+            config_args["cached_content"] = cache_name
+        else:
+            config_args["system_instruction"] = system_prompt
+
+        if thinking_mode or thinking_budget > 0:
+            config_args["thinking_config"] = types.ThinkingConfig(include_thoughts=True)
+
+        if include_logprobs:
+            config_args["response_logprobs"] = True
+            config_args["logprobs"] = 5
+
+        config = types.GenerateContentConfig(**config_args)
+
+        try:
+            response_stream = await self.client.aio.models.generate_content_stream(
+                model=self.model_name, contents=prompt, config=config
+            )
+            async for chunk in response_stream:
+                chunk_text = chunk.text or ""
+                candidate = chunk.candidates[0] if chunk.candidates else None
+                usage = self._get_usage_dict(chunk, 0, len(chunk_text))
+                parsed_logprobs = self._parse_logprobs(candidate) if candidate else None
+                thoughts = self._extract_thoughts(chunk)
+                yield InferenceResponse(
+                    text=chunk_text,
+                    metadata=InferenceMetadata(
+                        logprobs=parsed_logprobs, usage=usage, thinking=thoughts
+                    ),
+                )
+        except Exception as e:
+            logger.error(f"Error during GoogleGenAI astream_generate: {e}")
+            raise InferenceError(f"GoogleGenAI astream_generate failed: {e}")
 
     def generate_structured(
         self,
