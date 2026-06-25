@@ -20,4 +20,9 @@ urlpatterns = [
         api_views.AIFeedbackAPIView.as_view(),
         name="submit_ai_feedback",
     ),
+    path(
+        "pipelines/",
+        api_views.VertexPipelineView.as_view(),
+        name="mlops-pipelines",
+    ),
 ]

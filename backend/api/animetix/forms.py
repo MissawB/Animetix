@@ -119,3 +119,25 @@ class CustomConfigForm(forms.Form):
     mode = forms.ChoiceField(
         choices=[("all", "All"), ("white", "Whitelist")], initial="all"
     )
+
+
+# --- Vertex AI MLOps Pipelines + Feature Store forms (ported from feature/vertex-pipelines) ---
+class VertexPipelineTriggerForm(forms.Form):
+    pipeline_type = forms.ChoiceField(
+        choices=[("dpo", "DPO"), ("rag", "RAG")], required=True
+    )
+    min_samples = forms.IntegerField(min_value=1, required=False, initial=100)
+
+
+class VertexPipelineListForm(forms.Form):
+    pipeline_name = forms.CharField(max_length=255, required=False)
+    limit = forms.IntegerField(min_value=1, max_value=100, required=False, initial=20)
+
+
+class UserIDForm(forms.Form):
+    user_id = forms.CharField(max_length=100, required=True)
+
+
+class VertexFeatureStoreForm(forms.Form):
+    user_id = forms.CharField(max_length=100, required=True)
+    features = forms.JSONField(required=True)

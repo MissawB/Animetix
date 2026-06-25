@@ -4,6 +4,7 @@ import logging  # noqa: E402
 from core.ports.eval_port import EvalResultPort  # noqa: E402
 from core.ports.feedback_port import FeedbackRepositoryPort  # noqa: E402
 from core.ports.gold_dataset_port import GoldDatasetPort  # noqa: E402
+from core.ports.mlops_port import MlopsPort  # noqa: E402
 from core.ports.repository_port import RepositoryPort  # noqa: E402
 from dependency_injector.wiring import Provide, inject
 from django.db import models
@@ -15,12 +16,14 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from ..containers import Container, get_container  # noqa: E402
+from ..forms import VertexPipelineListForm, VertexPipelineTriggerForm  # noqa: E402
 from ..models import (
     AIFeedback,
     AIREvalResult,
     AISafetyEvent,  # noqa: E402
     GoldDatasetEntry,
 )
+from ..permissions import IsAdminOrReadOnlyExpert  # noqa: E402
 from ..serializers import (
     AIFeedbackInputSerializer,
     AIFeedbackSerializer,
@@ -397,3 +400,65 @@ class AdaptersView(APIView):
             )
 
         return Response({"error": "Invalid action"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class VertexPipelineView(APIView):
+    """Manually trigger and list Vertex AI MLOps pipelines (DPO and RAG)."""
+
+    permission_classes = [IsAdminOrReadOnlyExpert]
+
+    @inject
+    def __init__(
+        self,
+        mlops_port: MlopsPort = Provide[Container.agentic.mlops_adapter_factory],
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.mlops_port = mlops_port
+
+    def post(self, request):
+        form = VertexPipelineTriggerForm(request.data)
+        if not form.is_valid():
+            return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        pipeline_type = form.cleaned_data["pipeline_type"]
+        try:
+            if pipeline_type == "dpo":
+                min_samples = form.cleaned_data.get("min_samples") or 100
+                result = self.mlops_port.trigger_dpo_pipeline(min_samples=min_samples)
+            elif pipeline_type == "rag":
+                result = self.mlops_port.trigger_rag_pipeline()
+            else:
+                return Response(
+                    {"error": f"Invalid pipeline_type: {pipeline_type}"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            return Response(
+                {"status": "success", "pipeline_run": result},
+                status=status.HTTP_201_CREATED,
+            )
+        except Exception as e:
+            logger.error(f"Vertex pipeline trigger failed: {e}")
+            return Response(
+                {"error": "Internal server error"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    def get(self, request):
+        form = VertexPipelineListForm(request.GET)
+        if not form.is_valid():
+            return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        pipeline_name = form.cleaned_data.get("pipeline_name")
+        limit = form.cleaned_data.get("limit") or 20
+        try:
+            runs = self.mlops_port.list_pipeline_runs(
+                pipeline_name=pipeline_name, limit=limit
+            )
+            return Response({"status": "success", "runs": runs})
+        except Exception as e:
+            logger.error(f"Vertex pipeline list failed: {e}")
+            return Response(
+                {"error": "Internal server error"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
