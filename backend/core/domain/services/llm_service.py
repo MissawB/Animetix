@@ -330,6 +330,18 @@ class LLMService:
             prompt, system, thinking_mode=thinking_mode
         )
 
+    async def aask_oracle_stream(
+        self, media_type: str, title: str, question: str, thinking_mode: bool = False
+    ):
+        """Variante async de ask_oracle_stream (consomme astream_generate)."""
+        prompt, system = self.prompt_manager.get_prompt(
+            "ask_oracle", media_type=media_type, title=title, question=question
+        )
+        async for chunk in self.inference_engine.astream_generate(
+            prompt, system, thinking_mode=thinking_mode
+        ):
+            yield chunk
+
     def propose_next_question(
         self, media_type: str, history: str, candidates: list
     ) -> str:
