@@ -83,3 +83,21 @@ def test_generate_logs_usage_correctly(llm_service, mock_engine):
     args, kwargs = usage_port.log_usage.call_args
     assert kwargs["input_tokens"] == 10
     assert kwargs["output_tokens"] == 5
+
+
+@pytest.mark.asyncio
+async def test_aask_oracle_stream(llm_service, mock_engine, mock_prompt_manager):
+    async def fake_astream(prompt, system, **kwargs):
+        yield InferenceResponse(text="Hel")
+        yield InferenceResponse(text="lo")
+
+    mock_engine.astream_generate = fake_astream
+
+    chunks = [
+        c.text async for c in llm_service.aask_oracle_stream("Anime", "Naruto", "Q?")
+    ]
+
+    assert chunks == ["Hel", "lo"]
+    mock_prompt_manager.get_prompt.assert_called_once_with(
+        "ask_oracle", media_type="Anime", title="Naruto", question="Q?"
+    )

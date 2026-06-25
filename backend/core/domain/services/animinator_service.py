@@ -66,6 +66,18 @@ class AniminatorDomainService:
             question = f"[FAITS DU GRAPHE :\n{facts}]\n\n{question}"
         yield from self.llm_service.ask_oracle_stream(media_type, title, question)
 
+    async def aask_oracle_stream(self, media_type: str, title: str, question: str):
+        """Variante async de ask_oracle_stream (Neo4j off-loop, délègue au LLM async)."""
+        import asyncio  # noqa: E402
+
+        facts = await asyncio.to_thread(self._fetch_graph_facts, title, question)
+        if facts:
+            question = f"[FAITS DU GRAPHE :\n{facts}]\n\n{question}"
+        async for chunk in self.llm_service.aask_oracle_stream(
+            media_type, title, question
+        ):
+            yield chunk
+
     def check_guess(self, guess: str, secret: str) -> bool:
         """Vérifie si le guess correspond au titre secret."""
         return guess.strip().lower() == secret.strip().lower()

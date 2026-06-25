@@ -184,8 +184,8 @@ class AniminatorStreamView(APIView):
                 for token in container.core.animinator_service.ask_oracle_stream(
                     media_type, secret, question
                 ):
-                    full_response += token
-                    yield f"data: {json.dumps({'type': 'token', 'content': token})}\n\n"
+                    full_response += token.text
+                    yield f"data: {json.dumps({'type': 'token', 'content': token.text})}\n\n"
 
                 chat = session.get("animinator_chat", [])
                 chat.append({"q": question, "a": full_response})
