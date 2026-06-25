@@ -1,11 +1,16 @@
+import contextlib
+import json
 import os
+import random as _py_random
 import sys
+import tempfile
 import unittest
 from unittest.mock import MagicMock, patch
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, BASE_DIR)
 
+import backend.pipeline.mlops.finetuning_dataset as fd  # noqa: E402
 from backend.pipeline.mlops.finetuning_dataset import clean_description  # noqa: E402
 
 
@@ -684,6 +689,197 @@ class TestFinetuningDataset(unittest.TestCase):
                 or "Source" in item["output"]
                 or "ignor" in item["output"].lower()
             )
+
+
+# --- Orchestrator integration tests (run_generate_instruction_dataset) --------
+
+_SIMPLE_GENERATORS = (
+    "generate_transmedia_instructions",
+    "generate_awards_and_magazines_instructions",
+    "generate_songs_and_seiyuu_instructions",
+    "generate_french_market_relations_instructions",
+    "generate_japanese_market_relations_instructions",
+    "generate_french_market_profile_instructions",
+    "generate_japanese_market_profile_instructions",
+    "generate_volumes_and_episodes_instructions",
+    "generate_mcp_tool_instructions",
+)
+
+
+def _items(tag, n):
+    """n tagged instruction dicts, each with a unique instruction so dedup keeps them."""
+    return [
+        {
+            "instruction": f"{tag}-{i}",
+            "input": "",
+            "output": "o",
+            "language": "Français",
+        }
+        for i in range(n)
+    ]
+
+
+@contextlib.contextmanager
+def _orchestrator_env(
+    tmpdir,
+    *,
+    animes=None,
+    mangas=None,
+    chars=None,
+    env=None,
+    genai_mock=None,
+    paraphrase_mock=None,
+    seed=0,
+):
+    """Patch the heavy surface of run_generate_instruction_dataset and yield the output path.
+
+    DB args: a list writes a temp JSON fixture; None points the constant at a
+    non-existent path so the os.path.exists guard is False.
+    """
+
+    def _write(name, data):
+        if data is None:
+            return os.path.join(tmpdir, name + "_missing.json")
+        path = os.path.join(tmpdir, name + ".json")
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f)
+        return path
+
+    anime_db = _write("anime", animes)
+    manga_db = _write("manga", mangas)
+    char_db = _write("char", chars)
+    out_path = os.path.join(tmpdir, "out.jsonl")
+
+    def _fake_load_dataset(path, split=None, **kwargs):
+        lang = "fr" if "alpaca-cleaned-fr" in path else "en"
+        return [
+            {"instruction": f"general-{lang}", "input": "", "output": "o"}
+            for _ in range(50)
+        ]
+
+    def _fixed(value):
+        return MagicMock(side_effect=lambda *a, **k: value)
+
+    with contextlib.ExitStack() as stack:
+
+        def patch_attr(name, new):
+            stack.enter_context(patch.object(fd, name, new))
+
+        patch_attr("ANIME_DB", anime_db)
+        patch_attr("MANGA_DB", manga_db)
+        patch_attr("CHAR_DB", char_db)
+        patch_attr("OUTPUT_DATASET", out_path)
+        patch_attr("random", _py_random.Random(seed))
+        patch_attr("load_dataset", MagicMock(side_effect=_fake_load_dataset))
+        patch_attr("save_paraphrase_cache", MagicMock())
+
+        for gen in _SIMPLE_GENERATORS:
+            _tag = gen.removeprefix("generate_").removesuffix("_instructions")
+            patch_attr(
+                gen, MagicMock(side_effect=lambda *a, _g=_tag, **k: _items(_g, 2))
+            )
+        patch_attr("generate_rag_context_instructions", _fixed(_items("rag", 2)))
+        patch_attr("generate_otaku_meta_instructions", _fixed(_items("meta", 3)))
+        patch_attr("generate_negative_refusal_examples", _fixed(_items("refusal", 2)))
+        patch_attr(
+            "generate_multiturn_dialogues",
+            _fixed(
+                [
+                    {
+                        "turns": [{"user": "u", "assistant": "a"}],
+                        "language": "Français",
+                    },
+                    {
+                        "turns": [{"user": "u2", "assistant": "a2"}],
+                        "language": "English",
+                    },
+                ]
+            ),
+        )
+        if genai_mock is not None:
+            patch_attr("genai", genai_mock)
+        if paraphrase_mock is not None:
+            patch_attr("paraphrase_text_via_gemini", paraphrase_mock)
+        if env is not None:
+            stack.enter_context(patch.dict(os.environ, env, clear=False))
+
+        yield out_path
+
+
+class TestRunGenerateInstructionDataset(unittest.TestCase):
+    def _read(self, path):
+        with open(path, encoding="utf-8") as f:
+            return [json.loads(line) for line in f]
+
+    def test_integration_happy_path_assembles_all_sections(self):
+        animes = [
+            {  # idx 0 -> French branch; Tier-1 (>150k) -> 5 variations
+                "title": "TestAnimeAlpha",
+                "genres": ["Action"],
+                "studios": ["S"],
+                "tags": ["t"],
+                "popularity": 200000,
+                "year": 2020,
+            },
+            {  # idx 1 -> English branch; Tier-3 (<=50k) -> 1 variation
+                "title": "TestAnimeBeta",
+                "genres": ["Comedy"],
+                "studios": ["S"],
+                "tags": ["t"],
+                "popularity": 1000,
+                "year": 2020,
+            },
+        ]
+        mangas = [
+            {
+                "title": "TestMangaA",
+                "genres": ["Action"],
+                "tags": ["t"],
+                "popularity": 1000,
+                "year": 2020,
+            }
+        ]
+        chars = [
+            {  # origin deliberately NOT one of the anime titles, to avoid contaminating the counts
+                "name": "TestCharA",
+                "origin": "TestCharOrigin",
+                "entities": {"organizations": ["Org"]},
+                "popularity": {"favourites": 100, "rank": 10},
+                "metadata": {"height": "170cm"},
+            }
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            with _orchestrator_env(
+                tmp,
+                animes=animes,
+                mangas=mangas,
+                chars=chars,
+                env={
+                    "ANIMETIX_AUGMENT_DATA": "False",
+                    "ANIMETIX_QUERY_NOISE_RATE": "0.0",
+                },
+            ) as out:
+                fd.run_generate_instruction_dataset()
+                data = self._read(out)
+
+        self.assertTrue(data, "orchestrator wrote an empty dataset")
+
+        def instr(item):
+            return item.get("instruction", "")
+
+        # Every section is wired into the final dataset.
+        self.assertTrue(any(instr(it).startswith("transmedia") for it in data))
+        self.assertTrue(any(instr(it).startswith("rag") for it in data))
+        self.assertTrue(any(instr(it).startswith("meta") for it in data))
+        self.assertTrue(any(instr(it).startswith("refusal") for it in data))
+        self.assertTrue(any(instr(it) in ("general-fr", "general-en") for it in data))
+        self.assertTrue(any("turns" in it for it in data))
+
+        # Tier-variation counts (augmentation off, noise off -> instructions pristine).
+        alpha = [it for it in data if "TestAnimeAlpha" in instr(it)]
+        beta = [it for it in data if "TestAnimeBeta" in instr(it)]
+        self.assertEqual(len(alpha), 5, "Tier-1 anime should yield 5 variations")
+        self.assertEqual(len(beta), 1, "Tier-3 anime should yield 1 variation")
 
 
 if __name__ == "__main__":
