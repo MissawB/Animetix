@@ -122,6 +122,7 @@ class SynthesizeProcessor(StateProcessor):
                     yield StreamStep(type="token", content=parts[0]).model_dump()
                 if parts[1]:
                     yield StreamStep(type="thought", content=parts[1]).model_dump()
+                continue
             if "</thought>" in token_text and in_thought:
                 in_thought = False
                 parts = token_text.split("</thought>", 1)

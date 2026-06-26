@@ -94,7 +94,11 @@ async def test_synthesize_aprocess_parses_thought_tags_and_judges():
     synthesizer = MagicMock()
     synthesizer.asynthesize_stream.return_value = _aiter(
         [
-            InferenceResponse(text="Hi <thought>plan</thought> bye"),
+            InferenceResponse(text="Hi "),
+            InferenceResponse(text="<thought>"),
+            InferenceResponse(text="plan"),
+            InferenceResponse(text="</thought>"),
+            InferenceResponse(text=" bye"),
         ]
     )
     xai = MagicMock()
