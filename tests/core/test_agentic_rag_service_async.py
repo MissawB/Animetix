@@ -66,3 +66,5 @@ async def test_aplan_and_solve_stream_guardrail_blocks():
     )
     events = [e async for e in service.aplan_and_solve_stream("q", "Anime")]
     assert any(e["type"] == "thought" and "Guardrail" in e["content"] for e in events)
+    # The blocked reason is also streamed as token events (parity with sync).
+    assert any(e["type"] == "token" for e in events)
