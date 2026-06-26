@@ -97,3 +97,17 @@ A later Snyk scan reflects the **current** dependency tree (it correctly shows
   `backend/api/animetix/api/core.py` (Suwayomi proxy echoes remote content),
   open-redirect in `frontend/src/pages/auth/LoginPage.tsx` (`navigate(from)`),
   possible hardcoded secret in `scripts/deploy/deploy_jobs.py`.
+
+### Frontend (npm) dependencies
+
+- **Applied — posthog-js `^1.376.0` → `^1.379.1`** (resolves to 1.394.0): fixes the
+  transitive `@opentelemetry/core` Uncontrolled Resource Consumption (CWE-770,
+  CVSS 8.2). After the bump, `@opentelemetry/core` is no longer in the tree at all.
+  Verified: `npm install --legacy-peer-deps` (the project's convention),
+  `check-types` and `lint` both green.
+- **Deferred — firebase 12.14.0 → protobufjs 7.6.1** (Arbitrary Code Injection
+  CWE-94, CVSS 7.3): Snyk reports **"no supported fix"**. protobufjs is transitive
+  under firebase, which constrains it to `^7.x`; forcing protobufjs 8.x via an
+  `overrides` would violate firebase's range, and no in-range 7.x release is
+  confirmed to fix this CVE. **Accept + monitor** until firebase ships a release on
+  a patched protobufjs.

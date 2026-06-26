@@ -39,7 +39,7 @@
     "i18next-http-backend": "^4.0.0",
     "idb-keyval": "^6.2.4",
     "lucide-react": "^1.16.0",
-    "posthog-js": "^1.376.0",
+    "posthog-js": "^1.379.1",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-force-graph-2d": "^1.29.1",
