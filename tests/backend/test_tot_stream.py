@@ -1,8 +1,7 @@
-"""Unit tests for TreeOfThoughtsSearchService.solve_with_tree_of_thoughts_stream.
+"""Unit tests for TreeOfThoughtsSearchService.asolve_with_tree_of_thoughts_stream.
 
-Ported from feature/vertex-pipelines, adapted to main's inference contract:
-InferenceEngine.generate() returns an InferenceResponse exposing `.text`
-(the branch returned a bare string).
+The streaming traversal is async (per-level asyncio.gather over agenerate); the
+engine mock exposes an async ``agenerate`` returning an InferenceResponse (`.text`).
 """
 
 from types import SimpleNamespace
