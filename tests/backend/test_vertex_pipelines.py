@@ -15,7 +15,13 @@ from animetix.containers import container
 from dependency_injector import providers
 from django.contrib.auth.models import User
 from django.urls import reverse
-from pipeline.mlops.vertex_pipelines import dpo_retraining_pipeline
+
+# Vertex AI Pipelines build on the Kubeflow Pipelines SDK (`kfp`), an optional
+# heavy MLOps dependency not installed in CI; skip this module when it's absent
+# instead of failing collection.
+pytest.importorskip("kfp")
+
+from pipeline.mlops.vertex_pipelines import dpo_retraining_pipeline  # noqa: E402
 
 
 @pytest.fixture(autouse=True)
