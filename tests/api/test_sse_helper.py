@@ -27,6 +27,7 @@ async def test_sse_stream_response_serializes_events():
     assert 'data: {"type": "thought", "content": "a"}\n\n' in body
     assert '"result"' in body
     assert resp["content-type"] == "text/event-stream"
+    assert resp["Cache-Control"] == "no-cache"
 
 
 @pytest.mark.asyncio

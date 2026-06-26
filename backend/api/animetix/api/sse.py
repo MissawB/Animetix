@@ -34,4 +34,6 @@ def sse_stream_response(event_aiter):
         except Exception as e:
             yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"
 
-    return StreamingHttpResponse(_gen(), content_type="text/event-stream")
+    response = StreamingHttpResponse(_gen(), content_type="text/event-stream")
+    response["Cache-Control"] = "no-cache"
+    return response
