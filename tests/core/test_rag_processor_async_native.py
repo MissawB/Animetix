@@ -132,3 +132,31 @@ async def test_synthesize_aprocess_low_confidence_acquires_knowledge():
     assert ctx.knowledge_acquired is True
     assert ctx.next_state == RAGState.ACQUIRE_KNOWLEDGE
     assert any(s["type"] == "thought" and "Uncertainty" in s["content"] for s in steps)
+
+
+@pytest.mark.asyncio
+async def test_synthesize_aprocess_respects_thinking_budget_cutoff():
+    # Inside a <thought>, thought tokens past the budget (token_count > budget)
+    # must be dropped — the one branch where output differs from a naive passthrough.
+    synthesizer = MagicMock()
+    synthesizer.asynthesize_stream.return_value = _aiter(
+        [
+            InferenceResponse(text="<thought>"),  # count=1, opens thought
+            InferenceResponse(text="a"),  # count=2, 2 > 2 false -> kept
+            InferenceResponse(text="b"),  # count=3, 3 > 2 true  -> dropped
+            InferenceResponse(text="c"),  # count=4, dropped
+            InferenceResponse(text="</thought>"),  # count=5, closes thought
+            InferenceResponse(text="done"),  # count=6, token
+        ]
+    )
+    xai = MagicMock()
+    proc = SynthesizeProcessor(synthesizer=synthesizer, xai_service=xai)
+    ctx = _synth_ctx(thinking_budget=2, knowledge_acquired=True)  # skip confidence
+
+    steps = [s async for s in proc.aprocess(ctx)]
+
+    thoughts = [s["content"] for s in steps if s["type"] == "thought"]
+    assert "a" in thoughts
+    assert "b" not in thoughts and "c" not in thoughts  # dropped past budget
+    assert ctx.full_answer == "done"
+    assert ctx.next_state == RAGState.JUDGE
