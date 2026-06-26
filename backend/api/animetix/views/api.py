@@ -2,15 +2,13 @@ import datetime
 import json
 
 from django.core.cache import cache
-from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django_ratelimit.decorators import ratelimit
 from pydantic import ValidationError
 
 from animetix.api.dependencies import get_session_service
 
-from ..containers import get_container
-from ..forms import AgenticRagForm, AniminatorForm, EmojiStreamForm, ParadoxStreamForm
 from ..schemas import OfflineSyncSchema
 from .common import logger
 
@@ -40,150 +38,6 @@ def get_task_status(request, task_id):
         logger.error(f"⚠️ Tasks Cache Status Error: {e}")
         return HttpResponse(status=204)
     return HttpResponse(status=204)
-
-
-def emoji_decode_stream(request):
-    """Streams emoji generation events for the UI."""
-    form = EmojiStreamForm(request.GET)
-    if not form.is_valid():
-        return JsonResponse({"error": form.errors}, status=400)
-
-    secret = form.cleaned_data["target_secret"]
-    session = get_session_service(request)
-    media_type = session.get_current_mode()
-
-    container = get_container()
-    data = container.catalog_service.load_data(media_type)
-
-    def event_stream():
-        try:
-            for event in container.emoji_service.generate_emojis_stream(
-                media_type,
-                secret,
-                data["title_to_full_data"][secret].get("description", ""),
-            ):
-                yield f"data: {json.dumps(event)}\n\n"
-        except Exception as e:
-            yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"
-
-    return StreamingHttpResponse(event_stream(), content_type="text/event-stream")
-
-
-def paradox_stream(request):
-    """Streams paradox logic generation events."""
-    form = ParadoxStreamForm(request.GET)
-    if not form.is_valid():
-        return JsonResponse({"error": form.errors}, status=400)
-
-    item_a = form.cleaned_data["item_a"]
-    item_b = form.cleaned_data["item_b"]
-    intruder_item = form.cleaned_data["intruder"]
-
-    session = get_session_service(request)
-    container = get_container()
-    media_type = session.get_current_mode()
-    data = container.catalog_service.load_data(media_type)
-
-    def event_stream():
-        item_a_data, item_b_data, item_i_data = (
-            data["title_to_full_data"][item_a],
-            data["title_to_full_data"][item_b],
-            data["title_to_full_data"][intruder_item],
-        )
-        try:
-            for event in container.paradox_service.generate_logic_stream(
-                media_type,
-                item_a_data,
-                item_b_data,
-                item_i_data,
-                session.get("language", "Français"),
-            ):
-                if event["type"] == "result":
-                    event["content"] = {
-                        "reasoning": event["content"].reasoning,
-                        "scenario": event["content"].scenario,
-                    }
-                yield f"data: {json.dumps(event)}\n\n"
-        except Exception as e:
-            yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"
-
-    return StreamingHttpResponse(event_stream(), content_type="text/event-stream")
-
-
-def agentic_rag_stream(request):
-    """Streams agentic RAG planning and solving events."""
-    form = AgenticRagForm(request.GET)
-    if not form.is_valid():
-        return JsonResponse({"error": form.errors}, status=400)
-
-    query = form.cleaned_data["query"]
-    session = get_session_service(request)
-    media_type = session.get_current_mode()
-
-    def event_stream():
-        agent, user_id = (
-            get_container().agentic_rag,
-            str(request.user.id) if request.user.is_authenticated else None,
-        )
-        try:
-            for event in agent.plan_and_solve_stream(
-                query, media_type, user_id=user_id
-            ):
-                yield f"data: {json.dumps(event)}\n\n"
-        except Exception as e:
-            yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"
-
-    response = StreamingHttpResponse(event_stream(), content_type="text/event-stream")
-    response["Cache-Control"] = "no-cache"
-    return response
-
-
-def animinator_stream(request):
-    """Streams the Oracle's response and updates the game state in session."""
-    form = AniminatorForm(request.GET)
-    if not form.is_valid():
-        return JsonResponse({"error": form.errors}, status=400)
-
-    question = form.cleaned_data["question"]
-    session = get_session_service(request)
-    container = get_container()
-    media_type = session.get("media_type", "Anime")
-    secret = session.get("animinator_secret")
-    if not secret:
-        return HttpResponse(status=400)
-
-    def event_stream():
-        full_response = ""
-        try:
-            for token in container.animinator_service.ask_oracle_stream(
-                media_type, secret, question
-            ):
-                full_response += token
-                yield f"data: {json.dumps({'type': 'token', 'content': token})}\n\n"
-
-            chat = session.get("animinator_chat", [])
-            chat.append({"q": question, "a": full_response})
-            session.set("animinator_chat", chat)
-
-            q_left = session.get("animinator_questions_left", 20) - 1
-            session.set("animinator_questions_left", max(0, q_left))
-
-            if q_left <= 0:
-                session.set("animinator_game_over", True)
-                from ..models import GameplaySession  # noqa: E402
-
-                GameplaySession.objects.create(
-                    game_mode="animinator",
-                    media_type=media_type,
-                    target_item=secret,
-                    history=chat,
-                    was_won=False,
-                )
-            yield f"data: {json.dumps({'type': 'done', 'questions_left': q_left})}\n\n"
-        except Exception as e:
-            yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"
-
-    return StreamingHttpResponse(event_stream(), content_type="text/event-stream")
 
 
 @ratelimit(key="user", rate="1/5m", block=True)
