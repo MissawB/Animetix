@@ -54,6 +54,50 @@ class FallbackRagProcessor(StateProcessor):
 
         return RAGState.FINALIZE
 
+    async def aprocess(self, ctx: RAGContext, xai_collector=None):
+        """Variante async native de process (recherche off-loop, streaming LLM natif)."""
+        import asyncio  # noqa: E402
+
+        yield StreamStep(
+            type="thought",
+            content="[Fallback] Exécution d'une recherche hybride standard...",
+        ).model_dump()
+
+        expert_injections = self._get_expert_injections(ctx.query)
+        results = await asyncio.to_thread(
+            self.rag_service.hybrid_search, ctx.query, ctx.media_type
+        )
+
+        local_ctx_list = [
+            f"- {r.get('title')}: {r.get('description', '')[:2000]}" for r in results
+        ]
+        if expert_injections:
+            fallback_context = "\n".join(
+                [f"- Fait de Repli: {f}" for f in expert_injections] + local_ctx_list
+            )
+        else:
+            fallback_context = "\n".join(local_ctx_list)
+
+        yield StreamStep(
+            type="thought", content="[Fallback] Synthèse de la réponse de secours..."
+        ).model_dump()
+
+        if ctx.language == "English":
+            prompt = f"Answer the following question using ONLY the context provided.\nQUESTION: {ctx.query}\nCONTEXT:\n{fallback_context}"
+            system = (
+                "You are an expert assistant. Be concise and factual. Reply in English."
+            )
+        else:
+            prompt = f"Réponds à la question suivante en utilisant UNIQUEMENT le contexte fourni.\nQUESTION: {ctx.query}\nCONTEXTE:\n{fallback_context}"
+            system = "Tu es un assistant expert. Sois concis et factuel. Réponds en Français."
+
+        ctx.full_answer = ""
+        async for token in self.inference_engine.astream_generate(prompt, system):
+            ctx.full_answer += token.text
+            yield StreamStep(type="token", content=token.text).model_dump()
+
+        ctx.next_state = RAGState.FINALIZE
+
     def _get_expert_injections(self, query: str) -> list[str]:
         expert_injections = []
         q_lower = query.lower()
