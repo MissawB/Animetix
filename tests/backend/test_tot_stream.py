@@ -84,6 +84,52 @@ async def test_asolve_with_tree_of_thoughts_stream_pruning():
     assert events[-1]["data"]["text"] == "Fallback answer"
 
 
+@pytest.mark.asyncio
+async def test_asolve_gather_preserves_order_multi_branch():
+    """With breadth>1, the per-level gather must keep grid order so node IDs and
+    parent_ids stay deterministic across concurrent branches."""
+    mock_engine = MagicMock()
+
+    async def mock_agenerate(prompt, system_prompt=None):
+        if "Génère l'étape suivante" in prompt:
+            return _resp("thought")
+        if "Attribue une note de pertinence" in prompt:
+            return _resp("0.9")  # all pass -> beam keeps both, in order
+        if "Rédige la réponse finale" in prompt:
+            return _resp("final")
+        return _resp("x")
+
+    mock_engine.agenerate = mock_agenerate
+    service = TreeOfThoughtsSearchService(
+        inference_engine=mock_engine, prompt_manager=MagicMock()
+    )
+
+    events = [
+        e
+        async for e in service.asolve_with_tree_of_thoughts_stream(
+            query="q", breadth=2, depth=2
+        )
+    ]
+    nodes = [e["data"] for e in events if e["type"] == "node_created"]
+    ids = [n["id"] for n in nodes]
+    assert ids == [
+        "root",
+        "node_1_1",
+        "node_1_2",
+        "node_2_3",
+        "node_2_4",
+        "node_2_5",
+        "node_2_6",
+    ]
+    parents = {n["id"]: n["parent_id"] for n in nodes}
+    assert parents["node_1_1"] == "root"
+    assert parents["node_1_2"] == "root"
+    assert parents["node_2_3"] == "node_1_1"
+    assert parents["node_2_4"] == "node_1_1"
+    assert parents["node_2_5"] == "node_1_2"
+    assert parents["node_2_6"] == "node_1_2"
+
+
 def test_tot_stream_route_and_view_wired():
     """Smoke test: the SSE route resolves and the view + service provider load."""
     from animetix.api.streams import ToTStreamView  # noqa: F401
