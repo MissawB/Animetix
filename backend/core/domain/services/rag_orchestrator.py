@@ -74,7 +74,13 @@ class RAGOrchestrator:
             try:
                 async for event in processor.aprocess(ctx, xai_collector=xai_collector):
                     yield event
-                ctx.current_state = ctx.next_state
+                # Processors communicate the next state via ctx.next_state (async
+                # generators cannot return a value). It is set on every normal exit
+                # path; fall back to FINALIZE defensively if a processor left it unset.
+                if ctx.next_state is None:
+                    ctx.current_state = RAGState.FINALIZE
+                else:
+                    ctx.current_state = ctx.next_state
             except Exception as e:
                 if ctx.current_state == RAGState.FALLBACK_RAG:
                     ctx.current_state = RAGState.FAILED
