@@ -1,4 +1,4 @@
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach, Mock } from 'vitest';
 import useSocket from '../useSocket';
 import { useToastStore } from '../../store/toastStore';
@@ -14,7 +14,7 @@ class MockWebSocket {
   readyState: number = 0; // CONNECTING
   onopen: (() => void) | null = null;
   onclose: ((event: { code: number; reason: string }) => void) | null = null;
-  onerror: ((err: any) => void) | null = null;
+  onerror: ((err: Event) => void) | null = null;
   onmessage: ((event: { data: string }) => void) | null = null;
   send = vi.fn();
   close = vi.fn();
@@ -44,7 +44,7 @@ class MockWebSocket {
   }
 
   // Helper method to simulate message
-  triggerMessage(data: any) {
+  triggerMessage(data: unknown) {
     if (this.onmessage) this.onmessage({ data: JSON.stringify(data) });
   }
 }
@@ -163,7 +163,7 @@ describe('useSocket', () => {
   });
 
   it('handles clean up and closes the connection on unmount', () => {
-    const { result, unmount } = renderHook(() => useSocket('room-1', 'undercover'));
+    const { unmount } = renderHook(() => useSocket('room-1', 'undercover'));
     const socket = MockWebSocket.instances[0];
 
     unmount();
@@ -173,7 +173,7 @@ describe('useSocket', () => {
 
   it('reconnects when connection is lost', async () => {
     const { result } = renderHook(() => useSocket('room-1', 'undercover'));
-    let socket = MockWebSocket.instances[0];
+    const socket = MockWebSocket.instances[0];
 
     act(() => {
       socket.triggerOpen();
