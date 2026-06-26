@@ -314,3 +314,33 @@ class TreeOfThoughtsSearchService:
                 exc_info=True,
             )
             return 0.7
+
+    async def _aevaluate_thought_node(
+        self, query: str, history: List[str], next_thought: str
+    ) -> float:
+        """Variante async de _evaluate_thought_node (consomme agenerate)."""
+        critic_prompt = (
+            f"Requête : {query}\n"
+            f"Historique de pensée : {' -> '.join(history)}\n"
+            f"Nouvelle proposition : {next_thought}\n\n"
+            f"Attribue une note de pertinence STRICTEMENT sous la forme d'un nombre flottant entre 0.0 et 1.0 (ex: 0.85). "
+            f"Ne renvoie rien d'autre que le nombre."
+        )
+        try:
+            resp = await self.inference_engine.agenerate(
+                prompt=critic_prompt,
+                system_prompt="Tu es le Critique logique d'arbre de pensées. Réponds uniquement par un chiffre.",
+            )
+            score_text = resp.text.strip()
+            import re  # noqa: E402
+
+            match = re.search(r"\d+\.\d+", score_text)
+            if match:
+                return min(1.0, max(0.0, float(match.group(0))))
+            return 0.8
+        except Exception:
+            logger.warning(
+                "⚠️ Logic Critic evaluation failed. Falling back to default score 0.7.",
+                exc_info=True,
+            )
+            return 0.7

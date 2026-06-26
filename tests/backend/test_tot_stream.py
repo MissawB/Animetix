@@ -8,6 +8,7 @@ InferenceEngine.generate() returns an InferenceResponse exposing `.text`
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
+import pytest
 from core.domain.services.tree_of_thoughts_service import TreeOfThoughtsSearchService
 
 
@@ -96,3 +97,33 @@ def test_tot_stream_route_and_view_wired():
     assert reverse("api_tot_stream").endswith("/stream/tot/")
     # The ToT service provider is registered (the view builds it lazily per request).
     assert callable(get_container().core.tree_of_thoughts_service)
+
+
+@pytest.mark.asyncio
+async def test_aevaluate_thought_node_parses_score():
+    mock_engine = MagicMock()
+
+    async def mock_agenerate(prompt, system_prompt=None):
+        return _resp("0.85")
+
+    mock_engine.agenerate = mock_agenerate
+    service = TreeOfThoughtsSearchService(
+        inference_engine=mock_engine, prompt_manager=MagicMock()
+    )
+    score = await service._aevaluate_thought_node("q", [], "thought")
+    assert score == 0.85
+
+
+@pytest.mark.asyncio
+async def test_aevaluate_thought_node_fallback_on_unparsable():
+    mock_engine = MagicMock()
+
+    async def mock_agenerate(prompt, system_prompt=None):
+        return _resp("not a number")
+
+    mock_engine.agenerate = mock_agenerate
+    service = TreeOfThoughtsSearchService(
+        inference_engine=mock_engine, prompt_manager=MagicMock()
+    )
+    score = await service._aevaluate_thought_node("q", [], "thought")
+    assert score == 0.8
