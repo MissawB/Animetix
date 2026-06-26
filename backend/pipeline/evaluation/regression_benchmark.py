@@ -17,12 +17,18 @@ sys.path.insert(0, os.path.join(BASE_DIR, "backend"))
 # Repo root, so the `backend.api.animetix.*` paths referenced in settings resolve.
 sys.path.insert(0, BASE_DIR)
 
-import django  # noqa: E402
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "animetix_project.settings")
-django.setup()
+def _ci_without_llm_key() -> bool:
+    """True in CI when no LLM API key is available. Every request would then
+    fail over to loading a multi-GB local model per test (~40 min on the
+    runner) and the accuracy threshold is skipped anyway, so the benchmark has
+    nothing to validate."""
+    return os.getenv("CI") == "true" and not (
+        os.getenv("GEMINI_API_KEY")
+        or os.getenv("OPENAI_API_KEY")
+        or os.getenv("BRAIN_API_KEY")
+    )
 
-from animetix.containers import get_container  # noqa: E402
 
 # --- GOLD SET DE RÉFÉRENCE ---
 # Ce set couvre les différents types de médias et niveaux de complexité.
@@ -217,6 +223,11 @@ GOLD_SET = [
 
 def run_regression_test(model_adapter=None):
     """Benchmark de précision IA."""
+    # Imported lazily: pulling the DI container triggers the inference config
+    # guardrail at import time, so we keep it out of module import (callers like
+    # sync_gold_ground_truth import GOLD_SET without a backend configured).
+    from animetix.containers import get_container
+
     logger.info("🧪 Starting AI Regression Test...")
     container = get_container()
     agent = container.agentic_rag()
@@ -346,14 +357,20 @@ if __name__ == "__main__":
     # fails over to loading a multi-GB local model (CompactReasoningAdapter) per
     # test — ~40 min on the runner. The accuracy threshold is already skipped in
     # that case, so skip the whole benchmark instead of running it pointlessly.
-    if os.getenv("CI") == "true" and not (
-        os.getenv("GEMINI_API_KEY")
-        or os.getenv("OPENAI_API_KEY")
-        or os.getenv("BRAIN_API_KEY")
-    ):
+    #
+    # This MUST run before django.setup() below: bootstrapping Django triggers
+    # the inference container's import-time config guardrail, which raises when
+    # BRAIN_API_URL is unset — exactly the CI-without-keys case we skip here.
+    if _ci_without_llm_key():
         logger.warning(
             "⚠️ CI run with no LLM API key — skipping the regression benchmark "
             "(it would otherwise load a multi-GB local model per test)."
         )
         sys.exit(0)
+
+    import django
+
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "animetix_project.settings")
+    django.setup()
+
     run_regression_test()
