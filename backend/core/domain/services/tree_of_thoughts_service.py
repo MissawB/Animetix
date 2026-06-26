@@ -176,14 +176,35 @@ class TreeOfThoughtsSearchService:
             "full_tree": full_tree,
         }
 
-    def solve_with_tree_of_thoughts_stream(
+    async def _agen_thought(
+        self, query: str, path: Dict[str, Any], step: int, branch_idx: int
+    ) -> str:
+        """Génère une pensée candidate (async). Fallback sur erreur."""
+        thought_prompt = (
+            f"Requête : {query}\n"
+            f"Étapes de raisonnement passées : {' -> '.join(path['thought_path'])}\n"
+            f"Génère l'étape suivante (Étape #{step}, Option #{branch_idx + 1}) dans ton raisonnement logique. "
+            f"Sois extrêmement concis (1 phrase)."
+        )
+        try:
+            resp = await self.inference_engine.agenerate(
+                prompt=thought_prompt,
+                system_prompt="Tu es un planificateur cognitif d'élite d'arbre de pensées.",
+            )
+            return resp.text.strip()
+        except Exception as e:
+            logger.error(f"Error generating thought branch: {e}")
+            return f"Thought option {branch_idx + 1} for step {step}."
+
+    async def asolve_with_tree_of_thoughts_stream(
         self, query: str, breadth: int = 3, depth: int = 3
     ):
-        """Variante streaming de Tree-of-Thoughts.
+        """Variante async de Tree-of-Thoughts : parallélise chaque niveau via gather.
 
-        Émet un évènement ``node_created`` par nœud exploré (élagué ou non) puis
-        un ``final_answer`` — consommé par l'endpoint SSE du visualiseur ToT.
+        Émet un ``node_created`` par nœud (batch par niveau) puis un ``final_answer``.
         """
+        import asyncio  # noqa: E402
+
         yield {
             "type": "node_created",
             "data": {
@@ -201,56 +222,45 @@ class TreeOfThoughtsSearchService:
         node_counter = 0
 
         for step in range(1, depth + 1):
+            grid = [
+                (path, branch_idx)
+                for path in current_paths
+                for branch_idx in range(breadth)
+            ]
+            thoughts = await asyncio.gather(
+                *[self._agen_thought(query, p, step, b) for (p, b) in grid]
+            )
+            scores = await asyncio.gather(
+                *[
+                    self._aevaluate_thought_node(query, p["thought_path"], t)
+                    for (p, _), t in zip(grid, thoughts)
+                ]
+            )
+
             new_paths: List[Dict[str, Any]] = []
-            for path in current_paths:
-                for branch_idx in range(breadth):
-                    node_counter += 1
-                    node_id = f"node_{step}_{node_counter}"
-
-                    thought_prompt = (
-                        f"Requête : {query}\n"
-                        f"Étapes de raisonnement passées : {' -> '.join(path['thought_path'])}\n"
-                        f"Génère l'étape suivante (Étape #{step}, Option #{branch_idx + 1}) dans ton raisonnement logique. "
-                        f"Sois extrêmement concis (1 phrase)."
-                    )
-
-                    try:
-                        next_thought = self.inference_engine.generate(
-                            prompt=thought_prompt,
-                            system_prompt="Tu es un planificateur cognitif d'élite d'arbre de pensées.",
-                        ).text.strip()
-                    except Exception as e:
-                        logger.error(f"Error generating thought branch: {e}")
-                        next_thought = (
-                            f"Thought option {branch_idx + 1} for step {step}."
-                        )
-
-                    score = self._evaluate_thought_node(
-                        query, path["thought_path"], next_thought
-                    )
-                    is_pruned = score < 0.5
-
-                    yield {
-                        "type": "node_created",
-                        "data": {
-                            "id": node_id,
-                            "parent_id": path["id"],
+            for (path, _branch_idx), next_thought, score in zip(grid, thoughts, scores):
+                node_counter += 1
+                node_id = f"node_{step}_{node_counter}"
+                is_pruned = score < 0.5
+                yield {
+                    "type": "node_created",
+                    "data": {
+                        "id": node_id,
+                        "parent_id": path["id"],
+                        "text": next_thought,
+                        "score": score,
+                        "is_pruned": is_pruned,
+                    },
+                }
+                if not is_pruned:
+                    new_paths.append(
+                        {
+                            "thought_path": list(path["thought_path"]) + [next_thought],
+                            "score": path["score"] * score,
                             "text": next_thought,
-                            "score": score,
-                            "is_pruned": is_pruned,
-                        },
-                    }
-
-                    if not is_pruned:
-                        updated_path = list(path["thought_path"]) + [next_thought]
-                        new_paths.append(
-                            {
-                                "thought_path": updated_path,
-                                "score": path["score"] * score,
-                                "text": next_thought,
-                                "id": node_id,
-                            }
-                        )
+                            "id": node_id,
+                        }
+                    )
 
             if not new_paths:
                 break
@@ -272,10 +282,11 @@ class TreeOfThoughtsSearchService:
         )
 
         try:
-            final_answer = self.inference_engine.generate(
+            resp = await self.inference_engine.agenerate(
                 prompt=synthesis_prompt,
                 system_prompt="Tu es le Synthétiseur final d'Animetix.",
-            ).text
+            )
+            final_answer = resp.text
         except Exception as e:
             logger.error(f"Synthesis failed in ToT: {e}")
             final_answer = "Désolé, la synthèse arborescente a échoué."

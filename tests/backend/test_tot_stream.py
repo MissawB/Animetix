@@ -17,10 +17,11 @@ def _resp(text):
     return SimpleNamespace(text=text)
 
 
-def test_solve_with_tree_of_thoughts_stream_success():
+@pytest.mark.asyncio
+async def test_asolve_with_tree_of_thoughts_stream_success():
     mock_engine = MagicMock()
 
-    def mock_generate(prompt, system_prompt=None):
+    async def mock_agenerate(prompt, system_prompt=None):
         if "Génère l'étape suivante" in prompt:
             return _resp("Next thought step")
         if "Attribue une note de pertinence" in prompt:
@@ -29,57 +30,53 @@ def test_solve_with_tree_of_thoughts_stream_success():
             return _resp("Final synthetic answer")
         return _resp("Default")
 
-    mock_engine.generate.side_effect = mock_generate
-
+    mock_engine.agenerate = mock_agenerate
     service = TreeOfThoughtsSearchService(
         inference_engine=mock_engine, prompt_manager=MagicMock()
     )
 
-    events = list(
-        service.solve_with_tree_of_thoughts_stream(
+    events = [
+        e
+        async for e in service.asolve_with_tree_of_thoughts_stream(
             query="test query", breadth=1, depth=1
         )
-    )
+    ]
 
-    # Event 0: root
     assert events[0]["type"] == "node_created"
     assert events[0]["data"]["id"] == "root"
     assert events[0]["data"]["parent_id"] is None
-
-    # Event 1: first thought
     assert events[1]["type"] == "node_created"
     assert events[1]["data"]["id"] == "node_1_1"
     assert events[1]["data"]["text"] == "Next thought step"
     assert events[1]["data"]["is_pruned"] is False
-
-    # Last event: final answer
     assert events[-1]["type"] == "final_answer"
     assert events[-1]["data"]["text"] == "Final synthetic answer"
 
 
-def test_solve_with_tree_of_thoughts_stream_pruning():
+@pytest.mark.asyncio
+async def test_asolve_with_tree_of_thoughts_stream_pruning():
     mock_engine = MagicMock()
 
-    def mock_generate_low_score(prompt, system_prompt=None):
+    async def mock_agenerate(prompt, system_prompt=None):
         if "Génère l'étape suivante" in prompt:
             return _resp("Unimportant thought")
         if "Attribue une note de pertinence" in prompt:
-            return _resp("0.2")  # Low score -> pruned
+            return _resp("0.2")
         if "Rédige la réponse finale" in prompt:
             return _resp("Fallback answer")
         return _resp("Default")
 
-    mock_engine.generate.side_effect = mock_generate_low_score
-
+    mock_engine.agenerate = mock_agenerate
     service = TreeOfThoughtsSearchService(
         inference_engine=mock_engine, prompt_manager=MagicMock()
     )
 
-    events = list(
-        service.solve_with_tree_of_thoughts_stream(
+    events = [
+        e
+        async for e in service.asolve_with_tree_of_thoughts_stream(
             query="test query", breadth=1, depth=1
         )
-    )
+    ]
 
     assert any(
         e["type"] == "node_created" and e["data"]["is_pruned"] is True for e in events
