@@ -28,6 +28,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # alongside our opencv-python-headless; both own the same `cv2` files, so plainly
 # uninstalling one would delete the shared files. Remove both, then reinstall only
 # headless (version read from the lockfile) — smaller image, `import cv2` needs no libGL.
+# DL3013: the version IS pinned — the command-substitution resolves to
+# `opencv-python-headless==<version>` from the lockfile; hadolint can't see through it.
+# hadolint ignore=DL3013
 RUN pip uninstall -y opencv-python opencv-python-headless \
     && pip install --no-cache-dir "$(grep -E '^opencv-python-headless==' requirements.txt)"
 
