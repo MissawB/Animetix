@@ -28,3 +28,17 @@ updates:
       include: "scope"
     # Allow up to 5 pull requests for npm dependencies
     open-pull-requests-limit: 5
+
+  # GitHub Actions used in workflows (keeps action versions current, e.g.
+  # actions/setup-python, actions/checkout — avoids the v4/v5 drift)
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "fix"
+      include: "scope"
+    open-pull-requests-limit: 5
