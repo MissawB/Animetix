@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 import pytest
 from core.domain.entities.ai_schemas import (
     DebateOutcome,
+    InferenceResponse,
     JudgeAction,
     RAGContext,
     RAGState,
@@ -182,12 +183,12 @@ def test_research_processor_web_search():
 def test_synthesize_processor_success():
     mock_synth = MagicMock()
     mock_synth.synthesize_stream.return_value = [
-        "<thought>",
-        "think",
-        "</thought>",
-        "Final",
-        " ",
-        "Answer",
+        InferenceResponse(text="<thought>"),
+        InferenceResponse(text="think"),
+        InferenceResponse(text="</thought>"),
+        InferenceResponse(text="Final"),
+        InferenceResponse(text=" "),
+        InferenceResponse(text="Answer"),
     ]
     mock_xai = MagicMock()
     mock_xai.measure_confidence.return_value = {"confidence_score": 0.9}
@@ -242,7 +243,11 @@ def test_fallback_rag_processor():
         {"title": "Fallback Title", "description": "Fallback Description"}
     ]
     mock_inference = MagicMock()
-    mock_inference.stream_generate.return_value = ["Fallback", " ", "Result"]
+    mock_inference.stream_generate.return_value = [
+        InferenceResponse(text="Fallback"),
+        InferenceResponse(text=" "),
+        InferenceResponse(text="Result"),
+    ]
 
     processor = FallbackRagProcessor(
         mock_rag, mock_inference, [{"primary_keywords": ["test"], "fact": "Rule Fact"}]
@@ -396,7 +401,7 @@ def test_fallback_processor_english():
     mock_rag = MagicMock()
     mock_rag.hybrid_search.return_value = [{"title": "Title", "description": "Desc"}]
     mock_engine = MagicMock()
-    mock_engine.stream_generate.return_value = ["Answer"]
+    mock_engine.stream_generate.return_value = [InferenceResponse(text="Answer")]
 
     processor = FallbackRagProcessor(mock_rag, mock_engine, [])
     ctx = RAGContext(query="What is Naruto?", media_type="Anime", language="English")

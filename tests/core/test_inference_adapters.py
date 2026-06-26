@@ -17,7 +17,7 @@ def test_qwen3_vl_not_implemented():
 def test_brain_api_not_implemented(monkeypatch):
     # Clear the env fallback so the test is independent of the local environment.
     monkeypatch.delenv("BRAIN_API_URL", raising=False)
-    with pytest.raises(ConfigurationError, match="Brain API URL not configured"):
+    with pytest.raises(ConfigurationError, match="BRAIN_API_URL is not configured"):
         BrainAPIAdapter(api_url="", api_key="")
 
 

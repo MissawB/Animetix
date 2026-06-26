@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock
 
 import pytest
+from core.domain.entities.ai_schemas import InferenceResponse
 
 from tests.helpers.agentic_rag_factory import build_test_agentic_rag_service
 
@@ -8,7 +9,9 @@ from tests.helpers.agentic_rag_factory import build_test_agentic_rag_service
 @pytest.fixture
 def mock_engine():
     engine = MagicMock()
-    engine.stream_generate.return_value = iter(["Réponse", " standard."])
+    engine.stream_generate.return_value = iter(
+        [InferenceResponse(text="Réponse"), InferenceResponse(text=" standard.")]
+    )
     return engine
 
 
@@ -84,7 +87,11 @@ def test_rag_blocks_prompt_injection(agentic_rag_security, mock_guardrail):
 def test_rag_refuses_fictional_entities(agentic_rag_security, mock_engine):
     # Mock LLM to return refusal when context is empty/unrelated
     mock_engine.stream_generate.return_value = iter(
-        ["Le film Le Voyage de Chihiro 2 (Spirited Away 2) n'existe pas."]
+        [
+            InferenceResponse(
+                text="Le film Le Voyage de Chihiro 2 (Spirited Away 2) n'existe pas."
+            )
+        ]
     )
 
     query = "Quelle est la date de sortie du film Spirited Away 2 ?"
@@ -97,7 +104,9 @@ def test_rag_disambiguates_ambiguous_titles(agentic_rag_security, mock_engine):
     # Mock LLM to return disambiguation information
     mock_engine.stream_generate.return_value = iter(
         [
-            "Il existe deux adaptations de Hunter x Hunter : Nippon Animation (1999) et Madhouse (2011)."
+            InferenceResponse(
+                text="Il existe deux adaptations de Hunter x Hunter : Nippon Animation (1999) et Madhouse (2011)."
+            )
         ]
     )
 
