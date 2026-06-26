@@ -1,4 +1,5 @@
 import os
+import sys
 
 from core.utils.gemini_models import GEMINI_FLASH
 from core.utils.inference_config import validate_inference_config
@@ -22,7 +23,11 @@ try:
 except ImproperlyConfigured:
     is_testing = False
 
-if not is_testing:
+# `collectstatic` runs at image-build time, where no inference backend is
+# configured and none is needed; the startup guardrail must not fail the build.
+is_collectstatic = "collectstatic" in sys.argv
+
+if not is_testing and not is_collectstatic:
     validate_inference_config()
 
 
