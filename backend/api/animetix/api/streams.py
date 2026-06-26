@@ -193,33 +193,20 @@ class AniminatorStreamView(View):
         return StreamingHttpResponse(event_stream(), content_type="text/event-stream")
 
 
-@method_decorator(
-    ratelimit(key="user_or_ip", rate="5/m", method="GET", block=True), name="get"
-)
-class ToTStreamView(APIView):
-    """Streams Tree-of-Thoughts search node/answer events for the visualizer."""
+class ToTStreamView(View):
+    """Async SSE: streams Tree-of-Thoughts search node/answer events."""
 
-    permission_classes = [permissions.AllowAny]
-
-    def get(self, request):
+    async def get(self, request):
+        await check_rate_limit(request, "animetix.api.streams.ToTStreamView")
         form = ToTStreamForm(request.GET)
         if not form.is_valid():
             return JsonResponse({"error": form.errors}, status=400)
-
         query = form.cleaned_data["q"]
         breadth = form.cleaned_data.get("breadth") or 3
         depth = form.cleaned_data.get("depth") or 3
-
-        container = get_container()
-        tot_service = container.core.tree_of_thoughts_service()
-
-        def event_stream():
-            try:
-                for event in tot_service.solve_with_tree_of_thoughts_stream(
-                    query=query, breadth=breadth, depth=depth
-                ):
-                    yield f"data: {json.dumps(event)}\n\n"
-            except Exception as e:
-                yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"
-
-        return StreamingHttpResponse(event_stream(), content_type="text/event-stream")
+        tot_service = get_container().core.tree_of_thoughts_service()
+        return sse_stream_response(
+            tot_service.asolve_with_tree_of_thoughts_stream(
+                query=query, breadth=breadth, depth=depth
+            )
+        )
