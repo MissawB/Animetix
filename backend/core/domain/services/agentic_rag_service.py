@@ -407,6 +407,167 @@ class AgenticRAGService:
         if self.obs_service:
             self.obs_service.log_rag_latency(time.time() - start_time, query, user_id)
 
+    async def aplan_and_solve_stream(
+        self,
+        query: str,
+        media_type: str,
+        user_id: Optional[str] = None,
+        language: str = "Français",
+    ):
+        """Variante async de plan_and_solve_stream (orchestrateur async ; I/O off-loop)."""
+        import asyncio  # noqa: E402
+
+        start_time = time.time()
+
+        if self.guardrail_service:
+            guard_input = await asyncio.to_thread(
+                self.guardrail_service.validate_input, query
+            )
+            if not guard_input.get("is_safe", True):
+                reason = guard_input.get(
+                    "reason",
+                    "Suspicion de tentative d'injection de prompt ou de contournement des règles.",
+                )
+                logger.warning(f"🛡️ [Guardrail] Query blocked: {reason}")
+                yield StreamStep(
+                    type="thought", content=f"[Guardrail] Requête bloquée : {reason}"
+                ).model_dump()
+                for token in reason.split(" "):
+                    yield StreamStep(type="token", content=token + " ").model_dump()
+                return
+
+        routing_decision = await asyncio.to_thread(self.semantic_router.classify, query)
+        if routing_decision == "SIMPLE":
+            yield StreamStep(
+                type="thought",
+                content="[Semantic Router] Requête simple détectée. Court-circuitage vers la recherche et synthèse directe en < 2 secondes...",
+            ).model_dump()
+            ctx = RAGContext(
+                query=query,
+                media_type=media_type,
+                user_id=user_id,
+                thinking_budget=0,
+                thinking_mode=False,
+                memories="",
+                current_state=RAGState.FALLBACK_RAG,
+                language=language,
+            )
+            async for event in self.orchestrator.arun_workflow(ctx):
+                yield event
+            if ctx.full_answer:
+                await asyncio.to_thread(
+                    self._store_results, query, ctx.full_answer, user_id
+                )
+            if self.obs_service:
+                await asyncio.to_thread(
+                    self.obs_service.log_rag_latency,
+                    time.time() - start_time,
+                    query,
+                    user_id,
+                )
+            return
+
+        self._record_agent_trace("PLAN", {"query": query, "media_type": media_type})
+        thinking_budget, complexity = await asyncio.to_thread(
+            self._assess_complexity, query
+        )
+        thinking_mode = complexity >= 2
+        if thinking_budget > 0 or thinking_mode:
+            yield StreamStep(
+                type="thought",
+                content=f"[TTC] Requête complexe (Score {complexity}). Budget: {thinking_budget} tokens. Mode Thinking: {thinking_mode}",
+            ).model_dump()
+
+        cached = await asyncio.to_thread(self._check_cache, query)
+        if cached:
+            for event in self._stream_cached_response(cached):
+                yield event
+            if self.obs_service:
+                await asyncio.to_thread(
+                    self.obs_service.log_rag_latency,
+                    time.time() - start_time,
+                    query,
+                    user_id,
+                )
+            return
+
+        user_context, graph_degraded = await asyncio.to_thread(
+            self._load_user_preferences, user_id, query
+        )
+        if graph_degraded:
+            yield StreamStep(
+                type="thought",
+                content="[Mode dégradé] Graphe de connaissances indisponible — bascule sur la mémoire vectorielle (pgvector) et la recherche web.",
+            ).model_dump()
+        elif user_context:
+            yield StreamStep(
+                type="thought",
+                content=f"[Graph User Memory] Profil utilisateur '{user_id}' chargé depuis le graphe sémantique.",
+            ).model_dump()
+
+        memories = await asyncio.to_thread(self._get_memories, user_id, query)
+        ctx = RAGContext(
+            query=query,
+            media_type=media_type,
+            user_id=user_id,
+            thinking_budget=thinking_budget,
+            thinking_mode=thinking_mode,
+            use_slm=complexity in [1, 2],
+            memories=memories,
+            current_state=RAGState.PLAN,
+            graph_expert=(
+                getattr(
+                    self.orchestrator.processors[RAGState.GRAPH_EXPLORE],
+                    "graph_expert",
+                    None,
+                )
+                if self.orchestrator
+                and RAGState.GRAPH_EXPLORE in self.orchestrator.processors
+                else None
+            ),
+            truth_path=user_context,
+            language=language,
+        )
+
+        xai_collector = XaiCollector()
+        async for event in self.orchestrator.arun_workflow(
+            ctx, xai_collector=xai_collector
+        ):
+            yield event
+
+        if ctx.full_answer:
+            await asyncio.to_thread(
+                self._store_results, ctx.query, ctx.full_answer, ctx.user_id
+            )
+            if self.xai_service:
+                try:
+                    response_obj = InferenceResponse(text=ctx.full_answer)
+                    report = await asyncio.to_thread(
+                        self.xai_service.generate_advanced_report,
+                        query=ctx.query,
+                        response=response_obj,
+                        collector=xai_collector,
+                    )
+                    yield StreamStep(type="xai_report", content=report).model_dump()
+                except Exception as e:
+                    logger.error(f"Error generating XAI report: {e}", exc_info=True)
+            if user_id and self.neo4j_manager:
+                import threading  # noqa: E402
+
+                threading.Thread(
+                    target=self.neo4j_manager.sync_user_interaction,
+                    args=(user_id, query, "SEARCH"),
+                    daemon=True,
+                ).start()
+
+        if self.obs_service:
+            await asyncio.to_thread(
+                self.obs_service.log_rag_latency,
+                time.time() - start_time,
+                query,
+                user_id,
+            )
+
     # --- MÉTHODES UTILITAIRES ---
     def _assess_complexity(self, query: str) -> tuple[int, int]:
         try:
