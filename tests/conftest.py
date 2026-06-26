@@ -4,6 +4,13 @@ import sys
 
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 
+# BrainAPIAdapter.__init__ raises ConfigurationError when BRAIN_API_URL is unset
+# (it is required — no sensible local default). The DI fallback chain constructs
+# every adapter eagerly, so any test that builds the inference chain needs a
+# syntactically-valid dummy URL; no real HTTP is performed at construction.
+# setdefault keeps a real value (dev .env / CI secret) when one is provided.
+os.environ.setdefault("BRAIN_API_URL", "http://localhost:5000")
+
 if sys.platform == "win32":
     # Fail-fast : on impose la Proactor loop et on laisse toute erreur remonter,
     # plutôt que de la masquer silencieusement (ce qui ferait tourner la suite sur
