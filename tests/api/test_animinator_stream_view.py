@@ -73,6 +73,22 @@ async def test_animinator_async_stream_emits_text_tokens_no_error():
 
 
 @pytest.mark.asyncio
+async def test_animinator_async_stream_sets_cache_control_no_cache():
+    # SSE must not be buffered/cached by intermediaries — parity with the other
+    # SSE views (which set this via the shared sse_stream_response helper).
+    request = RequestFactory().get("/x", {"q": "Is it a ninja?"})
+    container = _container_with_chunks([InferenceResponse(text="hi")])
+    with (
+        patch.object(streams_mod, "check_rate_limit", new=AsyncMock(return_value=None)),
+        patch.object(streams_mod, "get_session_service", return_value=_session_mock()),
+        patch.object(streams_mod, "get_container", return_value=container),
+    ):
+        resp = await streams_mod.AniminatorStreamView().get(request)
+
+    assert resp["Cache-Control"] == "no-cache"
+
+
+@pytest.mark.asyncio
 async def test_animinator_async_stream_rate_limited_raises():
     request = RequestFactory().get("/x", {"q": "hi"})
     with patch.object(
