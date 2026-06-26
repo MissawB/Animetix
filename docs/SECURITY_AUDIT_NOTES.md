@@ -49,3 +49,51 @@ If the team wants the finding suppressed in the Snyk dashboard, ignore it there
 `jsonpickle<4`); not imported by app code; low exposure; revisit when beam
 supports jsonpickle>=4."* — use the exact `SNYK-PYTHON-JSONPICKLE-*` issue id
 from the dashboard.
+
+## Snyk report of 2026-06-26 (second, up-to-date scan)
+
+A later Snyk scan reflects the **current** dependency tree (it correctly shows
+`django@5.2.14`). Triage and decisions below.
+
+> Dependency-version changes go in **`requirements.in`** (the source);
+> `requirements.txt` is regenerated with
+> `pip-compile --allow-unsafe --output-file=requirements.txt --strip-extras requirements.in`.
+> Never hand-edit `requirements.txt`.
+
+### Applied — safe quick-win bumps
+
+- **PyJWT 2.12.0 → 2.13.0** — fixes Improper Authentication (CWE-287, CVSS 8.8)
+  + 4 more. Direct dep; pure-python; verified (auth/JWT tests green).
+- **bleach 6.1.0 → 6.4.0** — fixes XSS (CWE-79). Direct dep; pure-python;
+  verified (security/sanitization tests green).
+
+### Deferred — blocked or high-risk
+
+- **diffusers 0.37.0 → 0.38.0** (code injection CWE-94, TOCTOU): **blocked** —
+  diffusers 0.38 enforces `peft>=0.17.0` at import, but the project pins
+  `peft==0.13.2`; bumping peft cascades into transformers/torch. Defer to the
+  torch/transformers chantier.
+- **cryptography 47.0.0 → 48.0.1** (OOB read CWE-125, CVSS 8.7): **blocked** —
+  transitive, and `apache-beam==2.74.0` pins `cryptography<48.0.0`. Same gate as
+  jsonpickle. Revisit when apache-beam allows cryptography 48.
+- **torch 2.5.1 → 2.6.0+** (Deserialization CWE-502, CVSS 9.3) and
+  **transformers 4.57.6 → 5.x**: the single biggest item — most "transitive"
+  findings (accelerate, peft, sentence-transformers, torchvision, ultralytics,
+  trl, bitsandbytes, manga-ocr, coqui-tts) are just "torch is old". Bumping torch
+  risks breaking the entire pinned ML stack (CUDA/compat matrix). **Needs a
+  dedicated chantier with full ML-path testing** — not a quick win.
+
+### Accepted / out of app scope
+
+- **OS Debian packages** (zlib, openssl, util-linux, gnutls, sqlite3, krb5,
+  gnupg2, pam, perl): come from the `python:3.12-slim-bookworm` base image; many
+  are "no fix" in Debian stable. Mitigated by rebuilding on an updated base, not
+  by app code.
+- **Snyk Code (SAST) likely false positives / accepted:** DOM-XSS on
+  `<img src={...}>` fed from our own API; `csrf_exempt` on machine-to-machine
+  webhooks (own auth); "hardcoded credentials" in test fixtures
+  (`password="password"`).
+- **Snyk Code (SAST) worth real follow-up (not in this batch):** reflected XSS in
+  `backend/api/animetix/api/core.py` (Suwayomi proxy echoes remote content),
+  open-redirect in `frontend/src/pages/auth/LoginPage.tsx` (`navigate(from)`),
+  possible hardcoded secret in `scripts/deploy/deploy_jobs.py`.
