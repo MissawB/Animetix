@@ -5,6 +5,15 @@
 substitutions:
   _TAG: latest
 
+# Send build logs to Cloud Logging only (not the default GCS logs bucket).
+# When `gcloud builds submit` runs as a service account (CI / Workload Identity
+# Federation) rather than a human Viewer/Owner, it cannot stream logs from the
+# default GCS bucket and exits non-zero EVEN IF THE BUILD SUCCEEDS. CLOUD_LOGGING_ONLY
+# removes the GCS bucket from the picture so the command returns the build's real
+# status. (Also the required logging mode for builds run as a user-specified SA.)
+options:
+  logging: CLOUD_LOGGING_ONLY
+
 steps:
 - name: 'gcr.io/cloud-builders/docker'
   entrypoint: 'bash'
