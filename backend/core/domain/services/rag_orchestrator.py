@@ -55,3 +55,36 @@ class RAGOrchestrator:
                         content=f"[Recovery] Erreur détectée dans l'état {ctx.current_state} : {str(e)}. Basculement en mode Fallback...",
                     ).model_dump()
                     ctx.current_state = RAGState.FALLBACK_RAG
+
+    async def arun_workflow(self, ctx: RAGContext, xai_collector=None):
+        """Variante async de run_workflow (async generator sur aprocess)."""
+        while (
+            ctx.current_state not in [RAGState.FINALIZE, RAGState.FAILED]
+            and ctx.iteration < ctx.max_iterations
+        ):
+            ctx.iteration += 1
+            yield StreamStep(
+                type="thought", content=f"[State Machine] État: {ctx.current_state}"
+            ).model_dump()
+
+            processor = self.processors.get(ctx.current_state)
+            if not processor:
+                ctx.current_state = RAGState.FINALIZE
+                break
+            try:
+                async for event in processor.aprocess(ctx, xai_collector=xai_collector):
+                    yield event
+                ctx.current_state = ctx.next_state
+            except Exception as e:
+                if ctx.current_state == RAGState.FALLBACK_RAG:
+                    ctx.current_state = RAGState.FAILED
+                    yield StreamStep(
+                        type="thought",
+                        content=f"[Recovery] Échec critique du fallback : {str(e)}",
+                    ).model_dump()
+                else:
+                    yield StreamStep(
+                        type="thought",
+                        content=f"[Recovery] Erreur détectée dans l'état {ctx.current_state} : {str(e)}. Basculement en mode Fallback...",
+                    ).model_dump()
+                    ctx.current_state = RAGState.FALLBACK_RAG
