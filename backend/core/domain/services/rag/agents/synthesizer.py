@@ -46,3 +46,40 @@ class ResponseSynthesizer:
             thinking_budget=thinking_budget,
             thinking_mode=thinking_mode,
         )
+
+    async def asynthesize_stream(
+        self,
+        query: str,
+        context: str,
+        thinking_budget: int = 0,
+        thinking_mode: bool = False,
+        use_slm: bool = False,
+        correction_feedback: Optional[str] = None,
+        language: str = "Français",
+        xai_collector=None,
+    ):
+        """Variante async de synthesize_stream (LLM streaming off-loop via astream_generate)."""
+        prompt_key = (
+            "synthesizer_correction" if correction_feedback else "synthesizer_final"
+        )
+        syn_prompt, syn_sys = self.prompt_manager.get_prompt(
+            prompt_key,
+            query=query,
+            context=context,
+            feedback=correction_feedback,
+            language=language,
+        )
+
+        if xai_collector:
+            xai_collector.log_agent_thought(
+                "Synthesizer", f"Génération de la réponse finale ({language})"
+            )
+
+        async for chunk in self.llm_service.astream_generate(
+            syn_prompt,
+            syn_sys,
+            use_slm=use_slm,
+            thinking_budget=thinking_budget,
+            thinking_mode=thinking_mode,
+        ):
+            yield chunk
