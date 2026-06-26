@@ -76,6 +76,11 @@ stripe==15.2.0
 dependency-injector==4.49.0
 accelerate==1.13.0
 supervisor==4.2.5
+# supervisor 4.2.5 imports `pkg_resources` at startup; setuptools >=81 removed it,
+# so a fresh image (setuptools auto-pinned to latest by pip-compile --allow-unsafe)
+# crashes supervisord with "No module named 'pkg_resources'". Pin <81 to keep
+# pkg_resources; 80.x still satisfies the Snyk setuptools CVEs (>=78.1.1).
+setuptools<81
 # apache-beam 2.74.0 cape `jsonpickle<4.0.0` → jsonpickle reste en 3.4.2 (CVE CWE-502,
 # Snyk). Résiduel ACCEPTÉ : jsonpickle est purement transitif (jamais importé par notre
 # code) et la CVE exige de désérialiser de l'input non fiable, ce que nous ne faisons pas.

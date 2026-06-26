@@ -1086,8 +1086,9 @@ zstandard==0.25.0
     # via apache-beam
 
 # The following packages are considered to be unsafe in a requirements file:
-setuptools==82.0.1
+setuptools==80.10.2
     # via
+    #   -r requirements.in
     #   grpcio-tools
     #   pandas-gbq
     #   pydata-google-auth
