@@ -155,6 +155,7 @@ class RAGContext(BaseModel):
     knowledge_acquired: bool = False
     saga_name: Optional[str] = None
     current_state: RAGState = RAGState.ANALYZE
+    next_state: Optional[RAGState] = None
     graph_expert: Any = None  # To avoid circular imports
     visual_context: Optional[str] = None
     image_paths: List[str] = Field(default_factory=list)
