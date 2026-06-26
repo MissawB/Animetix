@@ -2,19 +2,13 @@ import json
 
 from asgiref.sync import sync_to_async
 from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
-from django.utils.decorators import method_decorator
 from django.views import View
-from django_ratelimit.decorators import ratelimit
-from drf_spectacular.utils import OpenApiResponse, extend_schema
-from rest_framework import permissions
-from rest_framework.views import APIView
 
 from animetix.api.dependencies import get_session_service
 from animetix.api.sse import check_rate_limit, sse_stream_response
 
 from ..containers import get_container
 from ..forms import ToTStreamForm
-from ..serializers import XaiReportSerializer
 
 
 class EmojiStreamView(View):
@@ -72,73 +66,53 @@ class ParadoxStreamView(View):
         return sse_stream_response(_events())
 
 
-@method_decorator(
-    ratelimit(key="user_or_ip", rate="5/m", method="GET", block=True), name="get"
-)
-class AgenticRAGStreamView(APIView):
-    """Streams agentic RAG planning and solving events."""
+class AgenticRAGStreamView(View):
+    """Async SSE: streams agentic RAG planning and solving events."""
 
-    permission_classes = [permissions.AllowAny]
-
-    @extend_schema(
-        responses=OpenApiResponse(
-            response=XaiReportSerializer,
-            description=(
-                "Flux SSE (text/event-stream). Évènements : `thought`, `eval`, "
-                "`token` et `xai_report`. Le schéma décrit la charge de l'évènement "
-                "`xai_report` (les autres portent du texte)."
-            ),
-        )
-    )
-    def get(self, request):
-        session = get_session_service(request)
+    async def get(self, request):
+        await check_rate_limit(request, "animetix.api.streams.AgenticRAGStreamView")
         query = request.GET.get("q", "")
-        media_type = request.GET.get("media_type") or session.get_current_mode()
-
-        lang_param = request.GET.get("lang")
-        if lang_param:
-            if "en" in lang_param.lower() or "eng" in lang_param.lower():
-                language = "English"
-            else:
-                language = "Français"
-        else:
-            language = session.get("language", "Français")
-
         if not query:
             return JsonResponse({"error": "No query provided"}, status=400)
 
-        if request.user.is_authenticated:
+        session = await sync_to_async(get_session_service)(request)
+        media_type = (
+            request.GET.get("media_type")
+            or await sync_to_async(session.get_current_mode)()
+        )
+
+        lang_param = request.GET.get("lang")
+        if lang_param:
+            language = (
+                "English"
+                if ("en" in lang_param.lower() or "eng" in lang_param.lower())
+                else "Français"
+            )
+        else:
+            language = await sync_to_async(session.get)("language", "Français")
+
+        user = await request.auser()
+        if user.is_authenticated:
+            from core.domain.services.berrix_economy import (  # noqa: E402
+                FEATURE_BX_COSTS,
+            )
+
+            from animetix.api.billing import deduct_berrix  # noqa: E402
+
             try:
-                from core.domain.services.berrix_economy import (
-                    FEATURE_BX_COSTS,  # noqa: E402
-                )
-
-                from animetix.api.billing import deduct_berrix  # noqa: E402
-
-                deduct_berrix(
-                    request.user,
-                    FEATURE_BX_COSTS["agentic_rag"],
-                    "Agentic RAG / Chatbot",
+                await sync_to_async(deduct_berrix)(
+                    user, FEATURE_BX_COSTS["agentic_rag"], "Agentic RAG / Chatbot"
                 )
             except Exception as e:
                 return JsonResponse({"error": str(e)}, status=402)
 
-        def event_stream():
-            agent = get_container().agentic.agentic_rag()
-            user_id = str(request.user.id) if request.user.is_authenticated else None
-            try:
-                for event in agent.plan_and_solve_stream(
-                    query, media_type, user_id=user_id, language=language
-                ):
-                    yield f"data: {json.dumps(event)}\n\n"
-            except Exception as e:
-                yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"
-
-        response = StreamingHttpResponse(
-            event_stream(), content_type="text/event-stream"
+        agent = get_container().agentic.agentic_rag()
+        user_id = str(user.id) if user.is_authenticated else None
+        return sse_stream_response(
+            agent.aplan_and_solve_stream(
+                query, media_type, user_id=user_id, language=language
+            )
         )
-        response["Cache-Control"] = "no-cache"
-        return response
 
 
 class AniminatorStreamView(View):
