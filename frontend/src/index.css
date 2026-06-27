@@ -102,6 +102,41 @@
     animation: float-particle linear infinite;
 }
 
+/* Singularity Labs — drifting latent-space grid (signature motion) */
+@keyframes grid-pan {
+    0% { background-position: 0 0; }
+    100% { background-position: 44px 44px; }
+}
+.animate-grid-pan {
+    animation: grid-pan 6s linear infinite;
+}
+
+/* World Boss — alert beam scanning across the banner (signature motion) */
+@keyframes boss-sweep {
+    0%   { transform: translateX(-120%) skewX(-12deg); opacity: 0; }
+    12%  { opacity: 1; }
+    88%  { opacity: 1; }
+    100% { transform: translateX(360%) skewX(-12deg); opacity: 0; }
+}
+.animate-boss-sweep {
+    animation: boss-sweep 5s ease-in-out infinite;
+}
+
+/* World Boss — breathing danger aura behind the boss */
+@keyframes boss-pulse {
+    0%, 100% { opacity: 0.45; transform: translateY(-50%) scale(0.92); }
+    50%      { opacity: 0.85; transform: translateY(-50%) scale(1.06); }
+}
+.animate-boss-pulse {
+    animation: boss-pulse 3.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .animate-grid-pan,
+    .animate-boss-sweep,
+    .animate-boss-pulse { animation: none; }
+}
+
 /* CORE STYLES */
 body { 
     font-family: 'Inter', sans-serif; 
