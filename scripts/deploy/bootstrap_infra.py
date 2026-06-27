@@ -9,6 +9,7 @@ Modes:
 Creation-only; never deletes. Never passes a secret value.
 """
 
+import argparse
 import shutil
 import subprocess
 import sys
@@ -317,3 +318,249 @@ def ensure_service_accounts(mode, missing):
         elif mode == "dry-run":
             for role in roles:
                 print(f"[DRY-RUN] bind {role} to {_sa_email(name)}")
+
+
+SECRETS = [
+    "DJANGO_SECRET_KEY",
+    "BRAIN_API_KEY",
+    "TMDB_API_KEY",
+    "DATABASE_URL",
+    "REDIS_URL",
+    "IGDB_CLIENT_ID",
+    "IGDB_CLIENT_SECRET",
+    "GEMINI_API_KEY",
+    "HF_TOKEN",
+    "HF_SPACES",
+    "WANDB_API_KEY",
+]
+
+DEPLOYER_SA = "github-deployer"
+WIF_POOL = "github-pool"
+WIF_PROVIDER = "github-provider"
+
+
+def ensure_secrets(mode, missing):
+    for name in SECRETS:
+        _apply_or_check(
+            mode,
+            missing,
+            [
+                "gcloud",
+                "secrets",
+                "create",
+                name,
+                "--replication-policy=automatic",
+                f"--project={PROJECT_ID}",
+            ],
+            ["gcloud", "secrets", "describe", name, f"--project={PROJECT_ID}"],
+            f"Secret Manager placeholder {name}",
+        )
+
+
+def _project_number():
+    res = run_command(
+        ["gcloud", "projects", "describe", PROJECT_ID, "--format=value(projectNumber)"],
+        check=False,
+    )
+    return res.stdout.strip()
+
+
+def ensure_wif(mode, missing):
+    sa_email = _sa_email(DEPLOYER_SA)
+    _apply_or_check(
+        mode,
+        missing,
+        [
+            "gcloud",
+            "iam",
+            "service-accounts",
+            "create",
+            DEPLOYER_SA,
+            "--display-name=GitHub Actions deployer",
+            f"--project={PROJECT_ID}",
+        ],
+        [
+            "gcloud",
+            "iam",
+            "service-accounts",
+            "describe",
+            sa_email,
+            f"--project={PROJECT_ID}",
+        ],
+        f"Deployer SA {DEPLOYER_SA}",
+    )
+    deployer_roles = [
+        "roles/cloudbuild.builds.editor",
+        "roles/run.admin",
+        "roles/iam.serviceAccountUser",
+        "roles/artifactregistry.writer",
+    ]
+    if mode == "apply":
+        for role in deployer_roles:
+            run_command(
+                [
+                    "gcloud",
+                    "projects",
+                    "add-iam-policy-binding",
+                    PROJECT_ID,
+                    f"--member=serviceAccount:{sa_email}",
+                    f"--role={role}",
+                ],
+                check=False,
+            )
+    elif mode == "dry-run":
+        for role in deployer_roles:
+            print(f"[DRY-RUN] bind {role} to {sa_email}")
+    _apply_or_check(
+        mode,
+        missing,
+        [
+            "gcloud",
+            "iam",
+            "workload-identity-pools",
+            "create",
+            WIF_POOL,
+            f"--project={PROJECT_ID}",
+            "--location=global",
+        ],
+        [
+            "gcloud",
+            "iam",
+            "workload-identity-pools",
+            "describe",
+            WIF_POOL,
+            f"--project={PROJECT_ID}",
+            "--location=global",
+        ],
+        f"WIF pool {WIF_POOL}",
+    )
+    _apply_or_check(
+        mode,
+        missing,
+        [
+            "gcloud",
+            "iam",
+            "workload-identity-pools",
+            "providers",
+            "create-oidc",
+            WIF_PROVIDER,
+            f"--project={PROJECT_ID}",
+            "--location=global",
+            f"--workload-identity-pool={WIF_POOL}",
+            "--issuer-uri=https://token.actions.githubusercontent.com",
+            "--attribute-mapping=google.subject=assertion.sub,attribute.repository=assertion.repository,attribute.repository_owner=assertion.repository_owner",
+            "--attribute-condition=assertion.repository_owner == 'MissawB'",
+        ],
+        [
+            "gcloud",
+            "iam",
+            "workload-identity-pools",
+            "providers",
+            "describe",
+            WIF_PROVIDER,
+            f"--project={PROJECT_ID}",
+            "--location=global",
+            f"--workload-identity-pool={WIF_POOL}",
+        ],
+        f"WIF provider {WIF_PROVIDER}",
+    )
+    if mode in ("apply", "dry-run"):
+        project_number = _project_number() if mode == "apply" else "PROJECT_NUMBER"
+        member = (
+            f"principalSet://iam.googleapis.com/projects/{project_number}"
+            f"/locations/global/workloadIdentityPools/{WIF_POOL}/attribute.repository/{GH_REPO}"
+        )
+        binding = [
+            "gcloud",
+            "iam",
+            "service-accounts",
+            "add-iam-policy-binding",
+            sa_email,
+            f"--project={PROJECT_ID}",
+            "--role=roles/iam.workloadIdentityUser",
+            f"--member={member}",
+        ]
+        if mode == "dry-run":
+            print(f"[DRY-RUN] WIF impersonation binding: {' '.join(binding)}")
+        else:
+            run_command(binding, check=False)
+            print(
+                "\n--- Set these as GitHub Actions Variables (environment 'production') ---"
+            )
+            print(
+                f"GCP_WIF_PROVIDER     = projects/{project_number}/locations/global/workloadIdentityPools/{WIF_POOL}/providers/{WIF_PROVIDER}"
+            )
+            print(f"SERVICE_ACCOUNT_EMAIL = {sa_email}")
+
+
+def print_out_of_scope():
+    print(
+        "\n--- NOT provisioned by this script (create/manage manually) ---\n"
+        "  - Cloud SQL / AlloyDB instance (DATABASE_URL)\n"
+        "  - Memorystore Redis (REDIS_URL)\n"
+        "  - Eventarc trigger (GCS upload -> Django webhook)\n"
+        "  - Cloud Armor attachment to a backend service\n"
+        "  - VPC network / subnets\n"
+        "  - Vertex AI Feature Store / Vector Search (flagged/simulated in code)\n"
+        "  - Secret VALUES: add versions to the placeholder secrets above.\n"
+        "  - BRAIN_API_URL on animetix-web: set by scripts/deploy/deploy_brain.py.\n"
+    )
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(
+        description="Bootstrap foundational GCP infra (idempotent)."
+    )
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
+        "--apply", action="store_true", help="create resources (idempotent)"
+    )
+    group.add_argument(
+        "--check", action="store_true", help="read-only: report exists/MISSING"
+    )
+    group.add_argument(
+        "--dry-run", action="store_true", help="print commands, execute nothing"
+    )
+    args = parser.parse_args(argv)
+
+    if args.apply:
+        mode = "apply"
+    elif args.check:
+        mode = "check"
+    elif args.dry_run:
+        mode = "dry-run"
+    else:
+        parser.print_help()
+        print_out_of_scope()
+        return 0
+
+    missing = []
+    steps = [
+        ensure_apis,
+        ensure_artifact_registry,
+        ensure_tasks_queue,
+        ensure_buckets,
+        ensure_pubsub,
+        ensure_bigquery,
+        ensure_service_accounts,
+        ensure_secrets,
+        ensure_wif,
+    ]
+    for fn in steps:
+        print(f"\n=== {fn.__name__} ===")
+        fn(mode, missing)
+
+    print_out_of_scope()
+
+    if mode == "check":
+        if missing:
+            print(f"\n{len(missing)} resource(s) MISSING:")
+            for m in missing:
+                print(f"  - {m}")
+            return 1
+        print("\nAll checked resources present.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

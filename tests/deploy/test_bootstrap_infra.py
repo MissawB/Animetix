@@ -126,3 +126,72 @@ def test_pubsub_topic_and_subscription():
         and "--topic=lore-ingestion-topic" in f
         for f in flat
     )
+
+
+def test_secrets_created_without_values():
+    calls = []
+    with patch.object(
+        boot,
+        "run_command",
+        side_effect=lambda args, check=True: calls.append(args) or _ok(),
+    ):
+        boot.ensure_secrets("apply", [])
+    flat = [" ".join(c) for c in calls]
+    for name in (
+        "DJANGO_SECRET_KEY",
+        "BRAIN_API_KEY",
+        "DATABASE_URL",
+        "REDIS_URL",
+        "HF_TOKEN",
+        "WANDB_API_KEY",
+    ):
+        assert any(f"secrets create {name}" in f for f in flat)
+    assert all("versions add" not in f for f in flat)
+
+
+def test_wif_provider_condition_and_scoped_binding():
+    calls = []
+
+    def fake(args, check=True):
+        calls.append(args)
+        if "projects" in args and "describe" in args:
+            return SimpleNamespace(returncode=0, stdout="123456789\n", stderr="")
+        return _ok()
+
+    with patch.object(boot, "run_command", side_effect=fake):
+        boot.ensure_wif("apply", [])
+    flat = [" ".join(c) for c in calls]
+    assert any("workload-identity-pools create github-pool" in f for f in flat)
+    assert any(
+        "create-oidc github-provider" in f
+        and "assertion.repository_owner == 'MissawB'" in f
+        for f in flat
+    )
+    assert any(
+        "workloadIdentityUser" in f and "attribute.repository/MissawB/Animetix" in f
+        for f in flat
+    )
+
+
+def test_main_dry_run_executes_nothing_and_covers_all_groups():
+    calls = []
+    with patch.object(
+        boot,
+        "run_command",
+        side_effect=lambda args, check=True: calls.append(args) or _ok(),
+    ):
+        rc = boot.main(["--dry-run"])
+    assert rc == 0
+    assert calls == []
+
+
+def test_main_requires_a_mode():
+    calls = []
+    with patch.object(
+        boot,
+        "run_command",
+        side_effect=lambda args, check=True: calls.append(args) or _ok(),
+    ):
+        rc = boot.main([])
+    assert rc == 0
+    assert calls == []
