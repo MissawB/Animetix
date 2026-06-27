@@ -135,7 +135,7 @@ jobs:
       # Runs even when the coverage gate fails so the report is always published.
       # Non-blocking: never fails the job on upload/token issues.
       if: always()
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v7
       with:
         files: ./coverage.xml
         token: ${{ secrets.CODECOV_TOKEN }}
@@ -264,7 +264,7 @@ jobs:
       # Runs even if the coverage gate fails so the report is always published.
       # Non-blocking: never fails the job on upload/token issues.
       if: always()
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v7
       with:
         files: frontend/coverage/lcov.info
         flags: frontend
