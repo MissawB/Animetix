@@ -75,7 +75,7 @@ pydantic-settings==2.13.1
 stripe==15.2.0
 dependency-injector==4.49.0
 accelerate==1.13.0
-supervisor==4.2.5
+supervisor==4.3.0
 # supervisor 4.2.5 imports `pkg_resources` at startup; setuptools >=81 removed it,
 # so a fresh image (setuptools auto-pinned to latest by pip-compile --allow-unsafe)
 # crashes supervisord with "No module named 'pkg_resources'". Pin <81 to keep
