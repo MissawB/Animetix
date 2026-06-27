@@ -74,6 +74,8 @@ def ensure_apis(mode, missing):
         "cloudscheduler.googleapis.com",
     ]
     create_args = ["gcloud", "services", "enable", *apis, f"--project={PROJECT_ID}"]
+    # Inline dispatch (not _apply_or_check): check mode needs per-API granularity
+    # via set membership against `services list`, which a single describe can't express.
     if mode == "dry-run":
         print(f"[DRY-RUN] Enable APIs: {' '.join(create_args)}")
         return
