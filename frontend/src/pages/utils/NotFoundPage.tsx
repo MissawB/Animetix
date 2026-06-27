@@ -29,7 +29,7 @@ const NotFoundPage: React.FC = () => {
             <h2 className="text-3xl font-black italic manga-font uppercase tracking-tight">
               Dimension <span className="text-yellow-400 text-glow">Inconnue</span>
             </h2>
-            <p className="text-sm font-bold opacity-30 uppercase tracking-[0.2em] max-w-md mx-auto">
+            <p className="text-sm font-bold text-gray-600 dark:text-gray-400 uppercase tracking-[0.2em] max-w-md mx-auto">
               Cette page n'existe pas dans le multivers d'Animetix. Peut-être a-t-elle été absorbée par un trou noir narratif...
             </p>
           </div>
@@ -40,7 +40,7 @@ const NotFoundPage: React.FC = () => {
               as={Link}
               to="/"
               variant="primary"
-              className="bg-yellow-400 text-black border-none py-4 px-8 rounded-2xl shadow-xl hover:scale-105 transition-all font-black uppercase italic tracking-wider"
+              className="bg-yellow-400 !text-black border-none py-4 px-8 rounded-2xl shadow-xl hover:scale-105 transition-all font-black uppercase italic tracking-wider"
             >
               <Home className="w-5 h-5" /> Accueil
             </Button>
