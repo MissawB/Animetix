@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   X, Home, Zap, Trophy, Shield, Sparkles, Gamepad2, Search, Compass,
-  Network, Film, Users, UserPlus, FlaskConical, BrainCircuit, Eye, LogIn, Microscope, Mic,
-  Database, MessageSquare, Share2, Globe, Download, Monitor, BookOpen
+  Users, UserPlus, FlaskConical, BrainCircuit, Eye, LogIn, Microscope,
+  Database, Share2, Download, BookOpen, type LucideIcon
 } from 'lucide-react';
 import { SimulatedAdBanner } from '../../features/billing/components/SimulatedAdBanner';
 import { User } from '../../types';
@@ -21,270 +21,268 @@ interface SidebarDrawerProps {
   setDifficulty: (diff: 'Easy' | 'Normal' | 'Hard' | 'Impossible' | 'Custom') => void;
 }
 
+interface NavDef {
+  to: string;
+  icon: LucideIcon;
+  label: string;
+  color: string;
+}
+
+const SectionLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <div className="flex items-center gap-3 px-1 mt-6 mb-2 first:mt-0">
+    <span className="text-[10px] font-black uppercase tracking-[0.22em] text-gray-400 dark:text-gray-500 whitespace-nowrap">
+      {children}
+    </span>
+    <span className="flex-1 h-px bg-gradient-to-r from-gray-200 dark:from-white/10 to-transparent" />
+  </div>
+);
+
+const NavItem: React.FC<{ item: NavDef; active: boolean; onClick: () => void }> = ({ item, active, onClick }) => {
+  const { icon: Icon, to, label, color } = item;
+  return (
+    <Link
+      to={to}
+      onClick={onClick}
+      aria-current={active ? 'page' : undefined}
+      className={`group relative flex items-center gap-3 pl-3 pr-2.5 py-2.5 rounded-xl no-underline transition-all duration-200 ${
+        active
+          ? 'bg-yellow-400 text-black shadow-[0_6px_22px_-6px_rgba(253,185,19,0.7)]'
+          : 'text-gray-600 dark:text-gray-300 hover:bg-black/[0.04] dark:hover:bg-white/[0.06] hover:translate-x-0.5'
+      }`}
+    >
+      {active && <span className="absolute left-0 top-1/2 -translate-y-1/2 h-7 w-1 rounded-r-full bg-black" />}
+      <span
+        className={`grid place-items-center w-8 h-8 rounded-lg shrink-0 transition-colors ${
+          active ? 'bg-black/10' : 'bg-black/[0.04] dark:bg-white/5 group-hover:bg-black/[0.07] dark:group-hover:bg-white/10'
+        }`}
+      >
+        <Icon className={`w-[18px] h-[18px] ${active ? 'text-black' : color}`} />
+      </span>
+      <span className={`text-sm tracking-tight truncate ${active ? 'font-black' : 'font-bold'}`}>{label}</span>
+    </Link>
+  );
+};
+
 const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
   isSidebarOpen, isAuthenticated, user, pathname, mediaType, difficulty,
   toggleSidebar, setMediaType, setDifficulty
 }) => {
   const { t } = useTranslation();
-  const location = { pathname };
+  const close = () => toggleSidebar(true);
+
+  const mainLinks: NavDef[] = [
+    { to: '/', icon: Home, label: t('nav.home', 'Accueil'), color: 'text-gray-500 dark:text-gray-400' },
+    { to: '/daily-challenge/', icon: Zap, label: t('nav.daily', 'Défi Quotidien'), color: 'text-yellow-400' },
+    { to: '/games/hub/', icon: Gamepad2, label: t('nav.games', 'Jeux'), color: 'text-violet-400' },
+  ];
+
+  const exploreLinks: NavDef[] = [
+    { to: '/search/', icon: Search, label: t('nav.search', 'Recherche'), color: 'text-cyan-400' },
+    { to: '/explore/', icon: Compass, label: t('nav.explore', 'Explorer'), color: 'text-emerald-400' },
+    { to: '/media/manga/library/', icon: BookOpen, label: t('nav.library', 'Ma Bibliothèque'), color: 'text-pink-400' },
+    { to: '/media/manga/offline/', icon: Download, label: t('nav.offline_manga', 'Manga Hors-ligne'), color: 'text-orange-400' },
+  ];
+
+  const communityLinks: NavDef[] = [
+    { to: '/social/dashboard/', icon: Users, label: t('nav.community', 'Communauté'), color: 'text-orange-400' },
+    ...(isAuthenticated
+      ? [
+          { to: '/social/friends/', icon: UserPlus, label: t('nav.friends', 'Amis'), color: 'text-pink-400' },
+          { to: '/social/sync/', icon: Database, label: t('nav.offline_sync', 'Sync Hors-ligne'), color: 'text-yellow-400' },
+        ]
+      : []),
+    { to: '/leaderboard/', icon: Trophy, label: t('nav.leaderboard', 'Classement'), color: 'text-yellow-500' },
+  ];
+
+  // Labs is a hub (/lab/) that links to every experimental tool, so a single entry is enough.
+  const creationLinks: NavDef[] = [
+    { to: '/lab/forge-hub/', icon: Sparkles, label: t('nav.forge', 'Forge Créative'), color: 'text-purple-400' },
+    { to: '/lab/', icon: FlaskConical, label: t('nav.labs_hub', 'Labs'), color: 'text-green-400' },
+    { to: '/research/papers/', icon: Microscope, label: t('nav.research', 'Recherche IA'), color: 'text-cyan-500' },
+  ];
+
+  const systemLinks: NavDef[] = [
+    { to: '/social/nexus/', icon: BrainCircuit, label: t('nav.nexus', 'Nexus Pro'), color: 'text-fuchsia-400' },
+    { to: '/social/transparency/', icon: Eye, label: t('navbar.transparency', 'Transparence'), color: 'text-slate-400' },
+    { to: '/social/open-data/', icon: Share2, label: t('nav.open_data', 'Portail Open Data'), color: 'text-teal-400' },
+  ];
+
+  const xp = user?.xp ?? 0;
+  const level = Math.max(1, Math.floor(xp / 500));
+  const xpProgress = ((xp % 500) / 500) * 100;
 
   return (
     <aside
       id="manga-sidebar"
-      className={`fixed left-0 top-0 h-screen w-[300px] bg-[#fffcf0] dark:bg-[#1a1a2e] z-[2000] flex flex-col p-8 overflow-y-auto transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[20px_0_50px_rgba(0,0,0,0.1)] border-r border-gray-100 dark:border-white/5 ${
+      className={`fixed left-0 top-0 h-screen w-[310px] bg-[#fffcf0] dark:bg-[#15152a] z-[2000] flex flex-col overflow-y-auto transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-[20px_0_60px_rgba(0,0,0,0.25)] border-r border-gray-100 dark:border-white/5 ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}
     >
-      <div className="mb-12 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="manga-font text-2xl tracking-tighter text-black dark:text-white">
-            {t('nav.menu', 'MENU')}
+      {/* Header */}
+      <div className="sticky top-0 z-10 bg-gradient-to-b from-[#fffcf0] dark:from-[#15152a] via-[#fffcf0] dark:via-[#15152a] to-transparent px-6 pt-6 pb-4 flex items-center justify-between">
+        <Link to="/" onClick={close} className="flex items-center gap-2.5 no-underline group">
+          <img
+            src="/static/img/logo/white_logo.png"
+            alt="Animetix"
+            className="w-8 h-8 object-contain dark:invert transition-transform group-hover:rotate-6"
+          />
+          <span className="manga-font text-xl tracking-tighter text-black dark:text-white">
+            ANIME<span className="text-yellow-400">TIX</span>
           </span>
-        </div>
+        </Link>
         <button
-          className="text-3xl hover:rotate-90 transition-transform duration-300 text-black dark:text-white"
-          onClick={() => toggleSidebar(true)}
+          className="grid place-items-center w-9 h-9 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/10 hover:text-black dark:hover:text-white hover:rotate-90 transition-all duration-300"
+          onClick={close}
           aria-label="Fermer le menu"
         >
-          <X className="w-6 h-6" />
+          <X className="w-5 h-5" />
         </button>
       </div>
 
-      {isAuthenticated && user && (
-        <Link
-          to={`/profile/${user.username}/`}
-          onClick={() => toggleSidebar(true)}
-          className="block mb-10 bg-white/50 dark:bg-black/20 p-5 rounded-3xl shadow-xl border border-gray-100 dark:border-white/5 no-underline group hover:scale-[1.02] active:scale-95 transition-all"
-        >
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-12 h-12 bg-yellow-400 text-black rounded-2xl flex items-center justify-center font-black italic border-2 border-black transform rotate-3 group-hover:rotate-0 text-xl shadow-md transition-transform">
-              {user.username?.[0]?.toUpperCase()}
+      <div className="px-6 pb-8">
+        {/* User card */}
+        {isAuthenticated && user && (
+          <Link
+            to={`/profile/${user.username}/`}
+            onClick={close}
+            className="block mb-5 p-4 rounded-2xl bg-gradient-to-br from-yellow-400/15 via-yellow-400/5 to-transparent border border-yellow-400/25 no-underline group hover:border-yellow-400/50 transition-all"
+          >
+            <div className="flex items-center gap-3 mb-3.5">
+              <div className="w-12 h-12 bg-yellow-400 text-black rounded-2xl flex items-center justify-center font-black italic border-2 border-black/80 rotate-3 group-hover:rotate-0 text-xl shadow-md transition-transform shrink-0">
+                {user.username?.[0]?.toUpperCase()}
+              </div>
+              <div className="min-w-0">
+                <p className="manga-font text-base m-0 text-black dark:text-white truncate">{user.username}</p>
+                <p className="text-[10px] font-black text-yellow-600 dark:text-yellow-400 uppercase tracking-widest m-0">
+                  {user.tier === 'premium' ? 'Boosté' : 'Standard'} · Niv. {level}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="manga-font text-sm m-0 text-black dark:text-white">{user.username}</p>
-              <p className="text-[10px] font-bold text-yellow-600 dark:text-yellow-400 uppercase m-0">
-                {user.tier === 'premium' ? 'Boosté' : 'Standard'}
-              </p>
+            <div className="w-full bg-black/10 dark:bg-black/40 h-2 rounded-full overflow-hidden">
+              <div
+                className="bg-gradient-to-r from-yellow-400 to-orange-500 h-full rounded-full shadow-[0_0_10px_#fdb913] transition-all"
+                style={{ width: `${xpProgress}%` }}
+              ></div>
             </div>
-          </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-800 h-2 rounded-full overflow-hidden">
-            <div
-              className="bg-yellow-400 h-full shadow-[0_0_10px_#fdb913]"
-              style={{ width: `${((user.xp ?? 0) % 500) / 500 * 100}%` }}
-            ></div>
-          </div>
-          <div className="flex justify-between mt-2 font-black text-[10px] opacity-40 text-black dark:text-white">
-            <span>{user.xp ?? 0} XP</span>
-            <span>NIV. {Math.max(1, Math.floor((user.xp ?? 0) / 500))}</span>
-          </div>
-        </Link>
-      )}
-
-      <nav className="flex-grow space-y-1 pb-10">
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2 mt-4">{t('nav.main', 'Principal')}</p>
-        <Link to="/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
-          <Home className="w-4 h-4" /> {t('nav.home', 'Accueil')}
-        </Link>
-        <Link to="/daily-challenge/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/daily-challenge/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
-          <Zap className="w-4 h-4 text-yellow-400 fill-current animate-pulse" /> {t('nav.daily', 'Défi Quotidien')}
-        </Link>
-        <Link to="/games/hub/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/games/hub/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
-          <Gamepad2 className="w-4 h-4" /> {t('nav.games', 'Jeux')}
-        </Link>
-        <Link to="/theater/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/theater/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
-          <Film className="w-4 h-4" /> {t('nav.theater', 'Cinéma')}
-        </Link>
-
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2 mt-6">{t('nav.exploration', 'Exploration')}</p>
-        <Link to="/search/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/search/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
-          <Search className="w-4 h-4 text-cyan-400" /> {t('nav.search', 'Recherche')}
-        </Link>
-        <Link to="/explore/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/explore/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
-          <Compass className="w-4 h-4 text-emerald-400" /> {t('nav.explore', 'Explorer')}
-        </Link>
-        <Link to="/explore/tachidesk/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/explore/tachidesk/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
-          <Globe className="w-4 h-4 text-blue-400" /> {t('nav.tachidesk', 'Tachidesk Explorer')}
-        </Link>
-        <Link to="/media/manga/library/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/media/manga/library/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
-          <BookOpen className="w-4 h-4 text-pink-400" /> {t('nav.library', 'Ma Bibliothèque')}
-        </Link>
-        <Link to="/media/manga/offline/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/media/manga/offline/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
-          <Download className="w-4 h-4 text-orange-400" /> {t('nav.offline_manga', 'Manga Hors-ligne')}
-        </Link>
-        <Link to="/lab/latent-space/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/lab/latent-space/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
-          <Network className="w-4 h-4 text-indigo-400" /> {t('navbar.latent', 'Espace Latent')}
-        </Link>
-
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2 mt-6">{t('nav.community_section', 'Communauté')}</p>
-        <Link to="/social/dashboard/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/social/dashboard/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
-          <Users className="w-4 h-4 text-orange-400" /> {t('nav.community', 'Communauté')}
-        </Link>
-        {isAuthenticated && (
-          <>
-            <Link to="/social/friends/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/social/friends/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
-              <UserPlus className="w-4 h-4 text-pink-400" /> {t('nav.friends', 'Amis')}
-            </Link>
-            <Link to="/social/sync/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/social/sync/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
-              <Database className="w-4 h-4 text-yellow-400" /> {t('nav.offline_sync', 'Sync Hors-ligne')}
-            </Link>
-            <Link to="/social/ai-feedback-history/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/social/ai-feedback-history/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
-              <MessageSquare className="w-4 h-4 text-purple-400" /> {t('nav.ai_feedback_history', 'Feedbacks IA')}
-            </Link>
-          </>
-        )}
-        <Link to="/leaderboard/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/leaderboard/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
-          <Trophy className="w-4 h-4 text-yellow-500" /> {t('nav.leaderboard', 'Classement')}
-        </Link>
-
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2 mt-6">{t('nav.labs', 'Labs & Création')}</p>
-        <Link to="/lab/forge-hub/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/lab/forge-hub/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
-          <Sparkles className="w-4 h-4 text-purple-400" /> {t('nav.forge', 'Forge Créative')}
-        </Link>
-        <Link to="/lab/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/lab/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
-          <FlaskConical className="w-4 h-4 text-green-400" /> {t('nav.betalab', 'Labo Bêta')}
-        </Link>
-        <Link to="/research/papers/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/research/papers/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
-          <Microscope className="w-4 h-4 text-cyan-500" /> {t('nav.research', 'Labo de Recherche')}
-        </Link>
-
-        {/* Ghost Labs Links */}
-        <Link to="/lab/audio/seiyuu/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-emerald-400/10 dark:hover:bg-emerald-400/5 ${location.pathname === '/lab/audio/seiyuu/' ? 'bg-gradient-to-r from-emerald-400 to-teal-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
-          <Mic className="w-4 h-4 text-emerald-500" /> {t('nav.seiyuu', 'Seiyuu Discovery')}
-        </Link>
-        <Link to="/lab/compiler/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-blue-400/10 dark:hover:bg-blue-400/5 ${location.pathname === '/lab/compiler/' ? 'bg-gradient-to-r from-blue-400 to-cyan-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
-          <Monitor className="w-4 h-4 text-blue-500" /> {t('nav.compiler', 'Compilateur IA')}
-        </Link>
-        <Link to="/lab/video-rag/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-red-400/10 dark:hover:bg-red-400/5 ${location.pathname === '/lab/video-rag/' ? 'bg-gradient-to-r from-red-400 to-rose-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
-          <Film className="w-4 h-4 text-red-500" /> {t('nav.video_rag', 'Video RAG')}
-        </Link>
-        <Link to="/lab/cove-oracle/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-indigo-400/10 dark:hover:bg-indigo-400/5 ${location.pathname === '/lab/cove-oracle/' ? 'bg-gradient-to-r from-indigo-400 to-violet-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
-          <Shield className="w-4 h-4 text-indigo-500" /> {t('nav.cove', 'Oracle CoVe')}
-        </Link>
-
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2 mt-6">Système & Diagnostics</p>
-        <Link to="/social/nexus/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/social/nexus/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
-          <BrainCircuit className="w-4 h-4 text-fuchsia-400" /> {t('nav.nexus', 'Nexus Pro')}
-        </Link>
-        <Link to="/social/transparency/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/social/transparency/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
-          <Eye className="w-4 h-4 text-slate-400" /> {t('navbar.transparency', 'Transparence')}
-        </Link>
-        <Link to="/social/open-data/" onClick={() => toggleSidebar(true)} className={`nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-yellow-400/10 dark:hover:bg-yellow-400/5 ${location.pathname === '/social/open-data/' ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-black shadow-lg scale-105 border-l-4 border-black font-bold' : ''}`}>
-          <Share2 className="w-4 h-4 text-teal-400" /> {t('nav.open_data', 'Portail Open Data')}
-        </Link>
-
-        {!isAuthenticated && (
-          <>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2 mt-6">{t('nav.account', 'Compte')}</p>
-            <Link to="/auth/login/" onClick={() => toggleSidebar(true)} className="nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-blue-500/10 dark:hover:bg-blue-500/20">
-              <LogIn className="w-4 h-4 text-blue-500" /> {t('auth.login', 'Connexion')}
-            </Link>
-            <Link to="/auth/register/" onClick={() => toggleSidebar(true)} className="nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-green-500/10 dark:hover:bg-green-500/20">
-              <UserPlus className="w-4 h-4 text-green-500" /> {t('auth.register', "S'inscrire")}
-            </Link>
-          </>
+            <div className="flex justify-between mt-2 font-black text-[10px] text-black/40 dark:text-white/40">
+              <span>{xp} XP</span>
+              <span>{500 - (xp % 500)} XP → NIV. {level + 1}</span>
+            </div>
+          </Link>
         )}
 
-        <div className="pt-8">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-4">{t('nav.univers', 'Univers')}</p>
-          <div className="grid grid-cols-3 gap-2 p-1 bg-white/50 dark:bg-black/20 rounded-2xl border border-gray-100 dark:border-white/5">
-            {(['Anime', 'Manga', 'Character'] as const).map(mode => (
-              <button
-                key={mode}
-                onClick={() => setMediaType(mode)}
-                className={`text-[10px] font-black italic p-3 rounded-xl text-center transition-all ${
-                  mediaType === mode
-                    ? 'bg-yellow-400 text-black shadow-lg scale-105 font-bold'
-                    : 'text-gray-500 dark:text-gray-400 opacity-50 hover:opacity-100'
-                }`}
-              >
-                {mode === 'Anime' ? t('nav.anime_full', 'Anime') : mode === 'Manga' ? t('nav.manga_full', 'Manga') : t('nav.perso_full', 'Perso')}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="pt-8">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-4">{t('nav.difficulty', 'Difficulté')}</p>
-          <div className="grid grid-cols-5 gap-2 bg-white/50 dark:bg-black/20 p-2 rounded-2xl border border-gray-100 dark:border-white/5">
-            {(['Easy', 'Normal', 'Hard', 'Impossible'] as const).map((diff, idx) => {
-              const bgColors = {
-                Easy: 'bg-green-500',
-                Normal: 'bg-blue-500',
-                Hard: 'bg-orange-500',
-                Impossible: 'bg-red-600'
-              };
-              const textColors = {
-                Easy: 'text-green-600 dark:text-green-400',
-                Normal: 'text-blue-600 dark:text-blue-400',
-                Hard: 'text-orange-600 dark:text-orange-400',
-                Impossible: 'text-red-600 dark:text-red-400'
-              };
-              const letter = ['C', 'B', 'A', 'S'][idx];
-              return (
+        {/* Game config — kept at the top for quick access */}
+        <div className="mb-2 space-y-3">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500 mb-1.5 px-0.5">
+              {t('nav.univers', 'Univers')}
+            </p>
+            <div className="grid grid-cols-3 gap-1.5 p-1.5 bg-black/[0.03] dark:bg-black/30 rounded-2xl border border-gray-100 dark:border-white/5">
+              {(['Anime', 'Manga', 'Character'] as const).map((mode) => (
                 <button
-                  key={diff}
-                  onClick={() => setDifficulty(diff)}
-                  className={`manga-font text-xs p-2 rounded-lg transition-all ${
-                    difficulty === diff ? `${bgColors[diff]} text-white shadow-lg scale-110` : `${textColors[diff]} bg-white/5 hover:bg-white/10`
+                  key={mode}
+                  onClick={() => setMediaType(mode)}
+                  aria-pressed={mediaType === mode}
+                  className={`text-[11px] font-black italic py-2 rounded-xl text-center transition-all ${
+                    mediaType === mode
+                      ? 'bg-yellow-400 text-black shadow-md'
+                      : 'text-gray-500 dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5'
                   }`}
                 >
-                  {letter}
+                  {mode === 'Anime' ? t('nav.anime_full', 'Anime') : mode === 'Manga' ? t('nav.manga_full', 'Manga') : t('nav.perso_full', 'Perso')}
                 </button>
-              );
-            })}
-            <Link
-              to="/custom-config/"
-              onClick={() => toggleSidebar(true)}
-              className={`manga-font text-xs p-2 rounded-lg flex items-center justify-center no-underline transition-all ${
-                difficulty === 'Custom' ? 'bg-purple-600 text-white shadow-lg scale-110' : 'bg-purple-600/10 text-purple-600 dark:text-purple-400 hover:bg-purple-600/20'
-              }`}
-            >
-              P
-            </Link>
+              ))}
+            </div>
+          </div>
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500 mb-1.5 px-0.5">
+              {t('nav.difficulty', 'Difficulté')}
+            </p>
+            <div className="grid grid-cols-5 gap-1.5 p-1.5 bg-black/[0.03] dark:bg-black/30 rounded-2xl border border-gray-100 dark:border-white/5">
+              {(['Easy', 'Normal', 'Hard', 'Impossible'] as const).map((diff, idx) => {
+                const bgColors = { Easy: 'bg-green-500', Normal: 'bg-blue-500', Hard: 'bg-orange-500', Impossible: 'bg-red-600' };
+                const textColors = {
+                  Easy: 'text-green-600 dark:text-green-400',
+                  Normal: 'text-blue-600 dark:text-blue-400',
+                  Hard: 'text-orange-600 dark:text-orange-400',
+                  Impossible: 'text-red-600 dark:text-red-400',
+                };
+                const letter = ['C', 'B', 'A', 'S'][idx];
+                return (
+                  <button
+                    key={diff}
+                    onClick={() => setDifficulty(diff)}
+                    aria-pressed={difficulty === diff}
+                    title={diff}
+                    className={`manga-font text-sm py-2 rounded-xl transition-all ${
+                      difficulty === diff ? `${bgColors[diff]} text-white shadow-md scale-105` : `${textColors[diff]} hover:bg-black/5 dark:hover:bg-white/5`
+                    }`}
+                  >
+                    {letter}
+                  </button>
+                );
+              })}
+              <Link
+                to="/custom-config/"
+                onClick={close}
+                title="Personnalisé"
+                aria-label="Configuration personnalisée"
+                className={`manga-font text-sm py-2 rounded-xl flex items-center justify-center no-underline transition-all ${
+                  difficulty === 'Custom' ? 'bg-purple-600 text-white shadow-md scale-105' : 'text-purple-600 dark:text-purple-400 hover:bg-black/5 dark:hover:bg-white/5'
+                }`}
+              >
+                P
+              </Link>
+            </div>
           </div>
         </div>
+
+        {/* Navigation */}
+        <nav className="space-y-0.5">
+          <SectionLabel>{t('nav.main', 'Principal')}</SectionLabel>
+          {mainLinks.map((it) => <NavItem key={it.to} item={it} active={pathname === it.to} onClick={close} />)}
+
+          <SectionLabel>{t('nav.exploration', 'Exploration')}</SectionLabel>
+          {exploreLinks.map((it) => <NavItem key={it.to} item={it} active={pathname === it.to} onClick={close} />)}
+
+          <SectionLabel>{t('nav.community_section', 'Communauté')}</SectionLabel>
+          {communityLinks.map((it) => <NavItem key={it.to} item={it} active={pathname === it.to} onClick={close} />)}
+
+          <SectionLabel>{t('nav.labs', 'Labs & Création')}</SectionLabel>
+          {creationLinks.map((it) => <NavItem key={it.to} item={it} active={pathname === it.to} onClick={close} />)}
+
+          <SectionLabel>{t('nav.system', 'Système')}</SectionLabel>
+          {systemLinks.map((it) => <NavItem key={it.to} item={it} active={pathname === it.to} onClick={close} />)}
+
+          {!isAuthenticated && (
+            <>
+              <SectionLabel>{t('nav.account', 'Compte')}</SectionLabel>
+              <NavItem item={{ to: '/auth/login/', icon: LogIn, label: t('auth.login', 'Connexion'), color: 'text-blue-500' }} active={pathname === '/auth/login/'} onClick={close} />
+              <NavItem item={{ to: '/auth/register/', icon: UserPlus, label: t('auth.register', "S'inscrire"), color: 'text-green-500' }} active={pathname === '/auth/register/'} onClick={close} />
+            </>
+          )}
+        </nav>
+
         {user && user.tier === 'free' && (
-          <div className="pt-8 px-2">
+          <div className="pt-7">
             <SimulatedAdBanner />
           </div>
         )}
-      </nav>
 
-      {user?.is_staff && (
-        <div className="mt-10 pt-8 border-t border-black/5 dark:border-white/5">
-           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-4">Outils Admin & Monitoring</p>
-           <div className="space-y-1">
-             <Link
-               to="/admin/safety-audit/"
-               onClick={() => toggleSidebar(true)}
-               className="nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-red-500/10 dark:hover:bg-red-500/5 text-xs"
-             >
-                <Shield className="w-4 h-4 text-red-500" /> Audit Sécurité IA
-             </Link>
-             <Link
-               to="/admin/ttc-monitoring/"
-               onClick={() => toggleSidebar(true)}
-               className="nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-blue-500/10 dark:hover:bg-blue-500/5 text-xs"
-             >
-                <Zap className="w-4 h-4 text-blue-500" /> Monitoring TTC
-             </Link>
-             <Link
-               to="/admin/financials/"
-               onClick={() => toggleSidebar(true)}
-               className="nav-link-manga flex items-center gap-4 p-3 rounded-2xl no-underline text-black dark:text-white hover:bg-green-500/10 dark:hover:bg-green-500/5 text-xs"
-             >
-                <Trophy className="w-4 h-4 text-green-500" /> Gestion Financière
-             </Link>
-             <Link
-               to="/admin/dashboard/"
-               onClick={() => toggleSidebar(true)}
-               className="w-full mt-4 py-3 rounded-2xl bg-white/50 dark:bg-black/20 flex items-center justify-center gap-3 no-underline text-black dark:text-white font-black italic text-xs hover:bg-yellow-400 dark:hover:bg-yellow-400 hover:text-black dark:hover:text-black transition-all"
-             >
-                <Shield className="w-4 h-4" /> {t('nav.admin', 'ADMINISTRATION')}
-             </Link>
-           </div>
-        </div>
-      )}
+        {/* Admin — the dashboard hub gives access to every admin tool */}
+        {user?.is_staff && (
+          <div className="mt-8 pt-6 border-t border-black/5 dark:border-white/5">
+            <SectionLabel>{t('nav.admin_tools', 'Admin')}</SectionLabel>
+            <Link
+              to="/admin/dashboard/"
+              onClick={close}
+              className="w-full py-3 rounded-2xl bg-black text-yellow-400 dark:bg-white/5 dark:text-white flex items-center justify-center gap-2.5 no-underline font-black italic text-xs hover:bg-yellow-400 hover:text-black dark:hover:bg-yellow-400 dark:hover:text-black transition-all"
+            >
+              <Shield className="w-4 h-4" /> {t('nav.admin', 'ADMINISTRATION')}
+            </Link>
+          </div>
+        )}
+      </div>
     </aside>
   );
 };

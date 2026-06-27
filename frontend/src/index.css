@@ -178,10 +178,14 @@ body {
   }
 
   .home-bg {
-    background-image: url("/static/img/background.png");
+    background-image: linear-gradient(rgba(255, 252, 240, 0.7), rgba(255, 252, 240, 0.7)), url("/static/img/background.png");
     background-attachment: fixed;
     background-size: cover;
     background-position: center;
+  }
+
+  [data-bs-theme="dark"] .home-bg, .dark .home-bg {
+    background-image: linear-gradient(rgba(15, 15, 26, 0.82), rgba(15, 15, 26, 0.82)), url("/static/img/background.png");
   }
 
   body::before {
