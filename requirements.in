@@ -95,5 +95,5 @@ filetype==1.2.0
 bleach==6.4.0
 PyJWT==2.13.0
 pydub==0.25.1
-reportlab==4.3.1
+reportlab==5.0.0
 yt-dlp==2026.6.9
