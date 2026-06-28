@@ -11,6 +11,23 @@ from ...models import GameplaySession
 
 logger = get_logger("animetix." + __name__)
 
+# Hint keys the player may pick/order in the lobby.
+# Keep in sync with CLASSIC_HINT_ORDER in animetix/presenters.py.
+HINT_TYPES = ("year", "origin", "tags", "genres", "studio", "letter", "words", "desc")
+
+
+def _sanitize_hint_config(raw):
+    """Keep only valid hint keys, preserve order, drop duplicates.
+
+    A list is honoured as-is — including an empty list, which means "no hints"
+    (the Tryhard mode). Only ``None``/invalid input falls back to the full
+    default selection (e.g. legacy sessions or API calls without a config).
+    """
+    if isinstance(raw, list):
+        return list(dict.fromkeys(h for h in raw if h in HINT_TYPES))
+    return list(HINT_TYPES)
+
+
 # --- CLASSIC MODE ---
 
 
@@ -44,8 +61,12 @@ class ClassicGameStateView(APIView):
 
         from ...presenters import GamePresenter  # noqa: E402
 
+        hint_config = _sanitize_hint_config(state.get("hint_config"))
         hints = GamePresenter.format_classic_hints(
-            secret_data, len(state["guesses"]), state["revealed_hints"]
+            secret_data,
+            len(state["guesses"]),
+            state["revealed_hints"],
+            hint_config=hint_config,
         )
 
         return Response(
@@ -96,6 +117,7 @@ class ClassicGameStartView(APIView):
         media_type = request.data.get("media_type", "Anime")
         difficulty = request.data.get("difficulty", "Normal")
         override_secret = request.data.get("override_secret")
+        hint_config = _sanitize_hint_config(request.data.get("hint_config"))
 
         port.update({"media_type": media_type, "difficulty": difficulty})
 
@@ -134,13 +156,16 @@ class ClassicGameStartView(APIView):
                 "guesses": [],
                 "game_over": False,
                 "revealed_hints": [],
+                "hint_config": hint_config,
             }
         )
 
         from ...presenters import GamePresenter  # noqa: E402
 
         secret_data = data["title_to_full_data"].get(secret_title)
-        hints = GamePresenter.format_classic_hints(secret_data, 0, [])
+        hints = GamePresenter.format_classic_hints(
+            secret_data, 0, [], hint_config=hint_config
+        )
 
         return Response(
             {
@@ -180,6 +205,7 @@ class ClassicGameGuessView(APIView):
             "is_daily": port.get("is_daily", False),
             "is_ranked": port.get("is_ranked", False),
             "revealed_hints": port.get("revealed_hints", []),
+            "hint_config": _sanitize_hint_config(port.get("hint_config")),
         }
         if not state["secret_title"]:
             return Response(
@@ -289,7 +315,7 @@ class ClassicGameGuessView(APIView):
         # Get updated state
         revealed_hints = port.get("revealed_hints", [])
         hints = GamePresenter.format_classic_hints(
-            secret_item, len(guesses), revealed_hints
+            secret_item, len(guesses), revealed_hints, hint_config=state["hint_config"]
         )
 
         return Response(
@@ -324,24 +350,35 @@ class ClassicGameRevealView(APIView):
             )
 
         hint_type = request.data.get("hint_type")
-        if not hint_type:
+        hint_config = _sanitize_hint_config(port.get("hint_config"))
+        if not hint_type or hint_type not in hint_config:
             return Response(
-                {"error": "Hint type is required"}, status=status.HTTP_400_BAD_REQUEST
+                {"error": "Invalid hint type"}, status=status.HTTP_400_BAD_REQUEST
             )
 
+        from ...presenters import GamePresenter  # noqa: E402
+
+        media_type = port.get("media_type", "Anime")
+        data = catalog_service.get_catalog(media_type)
+        secret_data = data["title_to_full_data"].get(secret_title)
+        guesses = port.get("guesses", [])
         revealed = port.get("revealed_hints", [])
+
+        # The hint must have unlocked (enough guesses) before it can be revealed.
+        current = GamePresenter.format_classic_hints(
+            secret_data, len(guesses), revealed, hint_config=hint_config
+        )
+        if not current.get(hint_type, {}).get("can_reveal"):
+            return Response(
+                {"error": "Hint not yet unlocked"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         if hint_type not in revealed:
             revealed.append(hint_type)
             port.set("revealed_hints", revealed)
 
-        # Get updated hints
-        media_type = port.get("media_type", "Anime")
-        data = catalog_service.get_catalog(media_type)
-        secret_data = data["title_to_full_data"].get(secret_title)
-
-        from ...presenters import GamePresenter  # noqa: E402
-
-        guesses = port.get("guesses", [])
-        hints = GamePresenter.format_classic_hints(secret_data, len(guesses), revealed)
-
+        hints = GamePresenter.format_classic_hints(
+            secret_data, len(guesses), revealed, hint_config=hint_config
+        )
         return Response({"revealed_hints": revealed, "hints": hints})

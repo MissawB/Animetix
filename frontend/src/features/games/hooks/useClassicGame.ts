@@ -1,6 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { classicGameService } from '../services/classicService';
-import type { ClassicGameState } from '../../../types';
+import type { ClassicGameState, ClassicHintKey } from '../../../types';
+
+interface StartArgs {
+  mediaType?: string;
+  difficulty?: string;
+  hintConfig?: ClassicHintKey[];
+}
 
 export const useClassicGame = () => {
   const queryClient = useQueryClient();
@@ -20,6 +26,16 @@ export const useClassicGame = () => {
 
   const guessMutation = useMutation({
     mutationFn: classicGameService.submit,
+    onSuccess: (newState) => {
+      queryClient.setQueryData(QUERY_KEY, newState);
+    },
+  });
+
+  // Démarre une partie avec une configuration précise (univers, difficulté,
+  // indices) — utilisé pour rejouer les mêmes réglages depuis l'écran de victoire.
+  const startMutation = useMutation({
+    mutationFn: ({ mediaType, difficulty, hintConfig }: StartArgs) =>
+      classicGameService.start(mediaType, difficulty, hintConfig),
     onSuccess: (newState) => {
       queryClient.setQueryData(QUERY_KEY, newState);
     },
@@ -47,6 +63,8 @@ export const useClassicGame = () => {
     isGuessing: guessMutation.isPending,
     revealHint: revealMutation.mutateAsync,
     revealingHint: revealMutation.isPending,
+    startGame: startMutation.mutateAsync,
+    starting: startMutation.isPending,
     restart,
   };
 };

@@ -30,6 +30,7 @@ class GameSessionService:
             "revealed_hints": self.port.get("revealed_hints", []),
             "media_type": self.port.get("media_type", "Anime"),
             "difficulty": self.port.get("difficulty", "Normal"),
+            "hint_config": self.port.get("hint_config"),
             "is_daily": self.port.get("is_daily", False),
             "is_ranked": self.port.get("is_ranked", False),
         }

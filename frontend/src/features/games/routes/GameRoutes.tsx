@@ -5,6 +5,7 @@ const AkinetixPage = lazy(() => import('../../../pages/games/AkinetixPage'));
 const BlindtestPage = lazy(() => import('../../../pages/games/BlindtestPage'));
 const BlindtestLobbyPage = lazy(() => import('../../../pages/games/BlindtestLobbyPage'));
 const ClassicGamePage = lazy(() => import('../../../pages/games/ClassicGamePage'));
+const ClassicLobbyPage = lazy(() => import('../../../pages/games/ClassicLobbyPage'));
 const ParadoxGamePage = lazy(() => import('../../../pages/games/ParadoxGamePage'));
 const UndercoverRoom = lazy(() => import('../../../pages/games/UndercoverRoom'));
 const CodeMangaRoom = lazy(() => import('../../../pages/games/CodeMangaRoom'));
@@ -26,7 +27,8 @@ export const GameRoutes = () => (
   <>
     <Route path="/games/hub/" element={<GamesHubPage />} />
     <Route path="/theater/" element={<TheaterPage />} />
-    <Route path="/game/classic/" element={<ClassicGamePage />} />
+    <Route path="/game/classic/" element={<ClassicLobbyPage />} />
+    <Route path="/game/classic/play/" element={<ClassicGamePage />} />
     <Route path="/game/vsbattle/" element={<VsBattlePage />} />
     <Route path="/game/world-boss/active/" element={<WorldBossPage />} />
     <Route path="/game/duel/lobby/" element={<DuelLobbyPage />} />

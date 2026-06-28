@@ -13,11 +13,14 @@ interface ClassicGameHook {
   isGuessing: boolean;
   revealHint: (key: string) => Promise<void>;
   revealingHint: boolean;
+  startGame: (arg: unknown) => Promise<void>;
+  starting: boolean;
   restart: () => void;
 }
 
 const handleGuess = vi.fn<(arg: { guess: string }) => Promise<void>>(() => Promise.resolve());
 const revealHint = vi.fn<(key: string) => Promise<void>>(() => Promise.resolve());
+const startGame = vi.fn<(arg: unknown) => Promise<void>>(() => Promise.resolve());
 const restart = vi.fn();
 let hookValue: ClassicGameHook;
 
@@ -28,6 +31,8 @@ const makeHook = (over: Partial<ClassicGameHook> = {}): ClassicGameHook => ({
   isGuessing: false,
   revealHint,
   revealingHint: false,
+  startGame,
+  starting: false,
   restart,
   ...over,
 });
@@ -125,12 +130,12 @@ describe('ClassicGamePage', () => {
     expect(revealHint).toHaveBeenCalledWith('origin');
   });
 
-  it('renders the victory state and triggers restart', () => {
+  it('renders the victory state and replays on demand', () => {
     hookValue = makeHook({ gameState: baseState({ gameOver: true, secret_title: 'Death Note' }) });
     renderPage();
     expect(screen.getByText(/Œuvre démasquée/i)).toBeInTheDocument();
     expect(screen.getByText(/Death Note/i)).toBeInTheDocument();
     fireEvent.click(screen.getByText(/Rejouer/i));
-    expect(restart).toHaveBeenCalled();
+    expect(startGame).toHaveBeenCalled();
   });
 });

@@ -19,10 +19,18 @@ export const classicGameService = {
     return apiClient(`${API_BASE}/state/`, { skipToast: true });
   },
   
-  start: async (mediaType = 'Anime', difficulty = 'Normal'): Promise<ClassicGameState> => {
+  start: async (
+    mediaType = 'Anime',
+    difficulty = 'Normal',
+    hintConfig?: ClassicHintKey[],
+  ): Promise<ClassicGameState> => {
     return apiClient(`${API_BASE}/start/`, {
       method: 'POST',
-      body: JSON.stringify({ media_type: mediaType, difficulty }),
+      body: JSON.stringify({
+        media_type: mediaType,
+        difficulty,
+        ...(hintConfig ? { hint_config: hintConfig } : {}),
+      }),
     });
   },
   

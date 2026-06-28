@@ -238,7 +238,7 @@ export interface VisionState extends GameState {
   guesses: Array<{ text: string; score: number }>;
 }
 
-export type ClassicHintKey = 'origin' | 'tags' | 'studio' | 'desc';
+export type ClassicHintKey = 'year' | 'origin' | 'tags' | 'genres' | 'studio' | 'letter' | 'words' | 'desc';
 
 export interface ClassicHint {
   label: string;
@@ -248,7 +248,7 @@ export interface ClassicHint {
   value: string | null;
 }
 
-export type ClassicHints = Record<ClassicHintKey, ClassicHint>;
+export type ClassicHints = Partial<Record<ClassicHintKey, ClassicHint>>;
 
 export interface ClassicGuess {
   title: string;

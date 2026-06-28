@@ -1,7 +1,9 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Search, Trophy, RotateCcw, Lock, Flame, Target, Gauge,
-  Globe, Tags, Clapperboard, ScrollText, Check, Sparkles, ChevronRight,
+  Globe, Tags, Clapperboard, ScrollText, Calendar, Shapes, Hash, CaseSensitive,
+  Check, Sparkles, ChevronRight, SlidersHorizontal,
 } from 'lucide-react';
 import { useClassicGame } from '../../features/games/hooks/useClassicGame';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
@@ -22,17 +24,19 @@ const HEAT: Record<string, { label: string; bar: string; chip: string; glow: str
 const heatOf = (g: ClassicGuess) => HEAT[g.color ?? 'secondary'] ?? HEAT.secondary;
 
 const HINT_META: Record<ClassicHintKey, { icon: React.ElementType; tone: string }> = {
-  origin: { icon: Globe, tone: 'text-blue-500' },
+  year:   { icon: Calendar, tone: 'text-blue-500' },
+  origin: { icon: Globe, tone: 'text-teal-500' },
   tags:   { icon: Tags, tone: 'text-yellow-500' },
+  genres: { icon: Shapes, tone: 'text-orange-500' },
   studio: { icon: Clapperboard, tone: 'text-purple-500' },
+  letter: { icon: CaseSensitive, tone: 'text-pink-500' },
+  words:  { icon: Hash, tone: 'text-cyan-500' },
   desc:   { icon: ScrollText, tone: 'text-green-500' },
 };
-const HINT_ORDER: ClassicHintKey[] = ['origin', 'tags', 'studio', 'desc'];
-
 const HOW_TO = [
   { t: 'Devinez une œuvre', d: "Tapez le titre d'un anime ou manga. L'autocomplétion vous aide à viser un titre valide du catalogue." },
   { t: 'Lisez la chaleur', d: 'Chaque tentative révèle sa proximité avec l’œuvre mystère : plus c’est chaud, plus vous brûlez.' },
-  { t: 'Débloquez des indices', d: 'Origine, tags, studio puis synopsis se débloquent au fil de vos essais quand la piste se refroidit.' },
+  { t: 'Débloquez des indices', d: 'Les indices que vous avez choisis se débloquent au fil de vos essais quand la piste se refroidit.' },
   { t: "Démasquez l'œuvre", d: 'Trouvez le titre exact pour remporter la manche et empocher l’XP.' },
 ];
 
@@ -44,7 +48,8 @@ const HEAT_LEGEND: Array<{ key: keyof typeof HEAT; range: string }> = [
 ];
 
 const ClassicGamePage: React.FC = () => {
-  const { gameState, loading, handleGuess, isGuessing, revealHint, revealingHint, restart } = useClassicGame();
+  const { gameState, loading, handleGuess, isGuessing, revealHint, revealingHint, startGame, starting } = useClassicGame();
+  const navigate = useNavigate();
   const [guess, setGuess] = useState('');
   const [titles, setTitles] = useState<string[]>([]);
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -91,10 +96,18 @@ const ClassicGamePage: React.FC = () => {
 
   const guessCount = gameState?.guesses?.length ?? 0;
   const hints = gameState?.hints;
-  const unlockedHints = useMemo(
-    () => (hints ? HINT_ORDER.filter((k) => hints[k]?.can_reveal).length : 0),
-    [hints],
-  );
+  // The player picks which hints and in what order in the lobby; the backend
+  // returns them already ordered, so we follow the object's key order.
+  const hintKeys = (hints ? Object.keys(hints) : []) as ClassicHintKey[];
+  const unlockedHints = hintKeys.filter((k) => hints?.[k]?.can_reveal).length;
+
+  const replay = () =>
+    startGame({
+      mediaType: gameState?.mediaType,
+      difficulty: gameState?.difficulty,
+      // Pass the exact set (even empty, for Tryhard) so replays keep the config.
+      hintConfig: hintKeys,
+    });
 
   if (loading) {
     return (
@@ -129,7 +142,7 @@ const ClassicGamePage: React.FC = () => {
             <div className="flex flex-wrap gap-2.5">
               <StatusPill icon={Gauge} label="Difficulté" value={gameState.difficulty ?? 'Normal'} />
               <StatusPill icon={Search} label="Tentatives" value={String(guessCount)} />
-              <StatusPill icon={Sparkles} label="Indices" value={`${unlockedHints}/${HINT_ORDER.length}`} />
+              <StatusPill icon={Sparkles} label="Indices" value={`${unlockedHints}/${hintKeys.length}`} />
             </div>
           </div>
         </header>
@@ -196,13 +209,23 @@ const ClassicGamePage: React.FC = () => {
                 <p className="mt-1 text-xs font-black uppercase tracking-widest opacity-40">
                   Résolu en {guessCount} tentative{guessCount > 1 ? 's' : ''}
                 </p>
-                <button
-                  type="button"
-                  onClick={() => restart()}
-                  className="mt-7 inline-flex items-center gap-2 px-7 py-3.5 rounded-2xl bg-green-600 hover:bg-green-500 text-white font-black italic manga-font tracking-wide shadow-xl shadow-green-600/20 transition-all hover:scale-105 active:scale-95"
-                >
-                  <RotateCcw className="w-5 h-5" /> Rejouer
-                </button>
+                <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => replay()}
+                    disabled={starting}
+                    className="inline-flex items-center gap-2 px-7 py-3.5 rounded-2xl bg-green-600 hover:bg-green-500 text-white font-black italic manga-font tracking-wide shadow-xl shadow-green-600/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-60 disabled:hover:scale-100"
+                  >
+                    <RotateCcw className="w-5 h-5" /> {starting ? 'Nouvelle œuvre…' : 'Rejouer'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/game/classic/')}
+                    className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl border-2 border-black/10 dark:border-white/15 font-black italic manga-font tracking-wide hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-all"
+                  >
+                    <SlidersHorizontal className="w-5 h-5" /> Réglages
+                  </button>
+                </div>
               </div>
             )}
 
@@ -279,7 +302,10 @@ const ClassicGamePage: React.FC = () => {
                 <Sparkles className="w-4 h-4 text-yellow-500" /> Indices
               </div>
               <div className="space-y-3">
-                {HINT_ORDER.map((key) => {
+                {hintKeys.length === 0 && (
+                  <p className="text-xs font-bold opacity-30 text-center py-4">Aucun indice pour cette partie.</p>
+                )}
+                {hintKeys.map((key) => {
                   const h = hints?.[key];
                   const meta = HINT_META[key];
                   const Icon = meta.icon;

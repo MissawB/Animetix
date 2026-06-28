@@ -2,6 +2,18 @@ import random
 
 from django.utils.translation import gettext_lazy as _
 
+# Ordered list of every Classic-mode hint key (also the default order/selection).
+CLASSIC_HINT_ORDER = [
+    "year",
+    "origin",
+    "tags",
+    "genres",
+    "studio",
+    "letter",
+    "words",
+    "desc",
+]
+
 
 class ArchetypistPresenter:
     """Helper class to prepare UI data for the Archetypist view."""
@@ -358,40 +370,96 @@ class GamePresenter:
 
     @classmethod
     def format_classic_hints(
-        cls, secret_data: dict, guess_count: int, revealed_ids: list
+        cls,
+        secret_data: dict,
+        guess_count: int,
+        revealed_ids: list,
+        hint_config: "list | None" = None,
+        step: int = 5,
     ) -> dict:
-        """Centralizes hint formatting for the Classic mode."""
+        """Centralizes hint formatting for the Classic mode.
+
+        ``hint_config`` is an ordered list of hint keys chosen by the player
+        (which hints, and in which order). Unlock thresholds follow that order:
+        the n-th hint unlocks after ``n * step`` guesses. ``None`` falls back to
+        the full default order; an empty list yields no hints (Tryhard mode).
+        """
         if not secret_data:
             secret_data = {}
 
-        origin = secret_data.get("origin") or "Inconnu"
-        year = secret_data.get("year") or "????"
-        origin_year = f"{origin} ({year})"
+        # Metadata is flattened onto the item by the repository, but fall back to a
+        # nested "metadata" dict for catalogs built from raw files.
+        meta = secret_data.get("metadata")
+        meta = meta if isinstance(meta, dict) else {}
 
-        tags = secret_data.get("tags")
-        tags_str = ", ".join(tags[:5]) if tags else "Inconnu"
+        def field(key):
+            value = secret_data.get(key)
+            return value if value not in (None, "") else meta.get(key)
 
-        metadata = secret_data.get("metadata") or {}
-        studio = (
-            metadata.get("studio") or "Inconnu"
-            if isinstance(metadata, dict)
-            else "Inconnu"
+        def fmt_list(val, n=5):
+            """Join a list of strings/objects into a short readable string."""
+            if not isinstance(val, list) or not val:
+                return None
+            out = []
+            for x in val[:n]:
+                if isinstance(x, dict):
+                    out.append(x.get("name") or x.get("title") or "")
+                else:
+                    out.append(str(x))
+            out = [o for o in out if o]
+            return ", ".join(out) if out else None
+
+        title = str(secret_data.get("title") or "")
+
+        year = field("year")
+        year_str = str(year) if year else "Inconnu"
+
+        origin = field("origin") or "Inconnu"
+
+        tags_str = fmt_list(field("tags")) or "Inconnu"
+        genres_str = fmt_list(field("genres")) or "Inconnu"
+
+        studios = field("studios")
+        studio_str = (
+            fmt_list(studios)
+            or (studios if isinstance(studios, str) else None)
+            or field("studio")
+            or "Inconnu"
         )
 
-        desc = secret_data.get("description") or "..."
+        letter = title[:1].upper() or "?"
+        word_count = len(title.split())
+        words_str = f"{word_count} mot" + ("s" if word_count > 1 else "")
+
+        desc = (
+            secret_data.get("description")
+            or field("clean_description")
+            or field("synopsis_fr")
+            or "..."
+        )
         desc_snippet = desc[:100] + "..." if len(desc) > 100 else desc
 
-        return {
-            "origin": cls.format_hint(
-                "origin", "Origine / Année", 5, origin_year, guess_count, revealed_ids
-            ),
-            "tags": cls.format_hint(
-                "tags", "Tags", 10, tags_str, guess_count, revealed_ids
-            ),
-            "studio": cls.format_hint(
-                "studio", "Studio", 15, studio, guess_count, revealed_ids
-            ),
-            "desc": cls.format_hint(
-                "desc", "Description", 20, desc_snippet, guess_count, revealed_ids
-            ),
+        catalog = {
+            "year": ("Année de sortie", year_str),
+            "origin": ("Origine", origin),
+            "tags": ("Tags", tags_str),
+            "genres": ("Genres", genres_str),
+            "studio": ("Studio", studio_str),
+            "letter": ("Première lettre", letter),
+            "words": ("Nombre de mots", words_str),
+            "desc": ("Description", desc_snippet),
         }
+
+        # None means "not configured" → default selection. An explicit empty
+        # list means "no hints" (Tryhard mode) and is preserved as such.
+        if hint_config is None:
+            hint_config = CLASSIC_HINT_ORDER
+        order = list(dict.fromkeys(k for k in hint_config if k in catalog))
+
+        result = {}
+        for i, key in enumerate(order):
+            label, value = catalog[key]
+            result[key] = cls.format_hint(
+                key, label, (i + 1) * step, value, guess_count, revealed_ids
+            )
+        return result
