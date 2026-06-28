@@ -2,8 +2,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Play, Pause, Check, X, Music, Trophy, ArrowRight } from 'lucide-react';
 import { useBlindtestStore } from '../../features/games/stores/blindtestStore';
+import { blindtestService } from '../../features/games/services/blindtestService';
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
+
+const norm = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
 
 type HintType = 'invert' | 'blur' | 'grayscale' | 'hue' | 'noise';
 const HINT_TYPES: HintType[] = ['invert', 'blur', 'grayscale', 'hue', 'noise'];
@@ -45,6 +48,9 @@ const BlindtestPage: React.FC = () => {
   const [sessionOver, setSessionOver] = useState(false);
   const [hintType, setHintType] = useState<HintType>(() => pickHint());
   const [aspect, setAspect] = useState(16 / 9);
+  const [titles, setTitles] = useState<string[]>([]);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showSug, setShowSug] = useState(false);
   const mediaRef = useRef<HTMLVideoElement>(null);
 
   // Start the chosen format/difficulty; otherwise resume / auto-start.
@@ -53,10 +59,40 @@ const BlindtestPage: React.FC = () => {
     else loadGame();
   }, [launchType, launchDifficulty, loadGame, restartGame]);
 
-  const onSubmit = async () => {
-    submitGuess(guess);
+  // Anime titles for the guess autocomplete (fetched once).
+  useEffect(() => {
+    let active = true;
+    blindtestService.getTitles().then((t) => { if (active) setTitles(t); }).catch(() => {});
+    return () => { active = false; };
+  }, []);
+
+  const onSubmit = (value?: string) => {
+    const g = (value ?? guess).trim();
+    if (!g) return;
+    submitGuess(g);
     setGuess('');
+    setSuggestions([]);
+    setShowSug(false);
   };
+
+  const onGuessChange = (val: string) => {
+    setGuess(val);
+    const q = norm(val.trim());
+    if (q.length < 2) { setSuggestions([]); setShowSug(false); return; }
+    const starts: string[] = [];
+    const incl: string[] = [];
+    for (const t of titles) {
+      const n = norm(t);
+      if (n.startsWith(q)) starts.push(t);
+      else if (n.includes(q)) incl.push(t);
+      if (starts.length >= 8) break;
+    }
+    const sug = [...starts, ...incl].slice(0, 8);
+    setSuggestions(sug);
+    setShowSug(sug.length > 0);
+  };
+
+  const pick = (title: string) => onSubmit(title);
 
   const togglePlay = () => {
     const el = mediaRef.current;
@@ -289,16 +325,36 @@ const BlindtestPage: React.FC = () => {
           </h2>
           {!gameState.gameOver ? (
             <div className="space-y-6">
-              <input
-                type="text"
-                value={guess}
-                onChange={(e) => setGuess(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter' && guess.trim()) onSubmit(); }}
-                className="w-full p-4 rounded-2xl bg-gray-50 dark:bg-navy-900 border-2 border-transparent focus:border-yellow-400 outline-none font-bold"
-                placeholder="Titre de l'animé..."
-                aria-label="Titre de l'animé"
-              />
-              <Button variant="primary" fullWidth onClick={onSubmit}>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={guess}
+                  onChange={(e) => onGuessChange(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && guess.trim()) { setShowSug(false); onSubmit(); } }}
+                  onFocus={() => { if (suggestions.length) setShowSug(true); }}
+                  onBlur={() => setTimeout(() => setShowSug(false), 150)}
+                  className="w-full p-4 rounded-2xl bg-gray-50 dark:bg-navy-900 border-2 border-transparent focus:border-yellow-400 outline-none font-bold"
+                  placeholder="Titre de l'animé..."
+                  aria-label="Titre de l'animé"
+                  autoComplete="off"
+                />
+                {showSug && suggestions.length > 0 && (
+                  <ul className="absolute z-30 left-0 right-0 mt-2 bg-white dark:bg-[#0f0f1a] rounded-2xl border border-gray-100 dark:border-white/10 shadow-2xl overflow-hidden max-h-72 overflow-y-auto">
+                    {suggestions.map((tt) => (
+                      <li key={tt}>
+                        <button
+                          type="button"
+                          onMouseDown={(e) => { e.preventDefault(); pick(tt); }}
+                          className="w-full text-left px-4 py-3 hover:bg-yellow-400/10 font-bold text-sm text-black dark:text-white truncate transition-colors"
+                        >
+                          {tt}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <Button variant="primary" fullWidth onClick={() => onSubmit()}>
                 VALIDER MA RÉPONSE
               </Button>
             </div>

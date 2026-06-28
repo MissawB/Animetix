@@ -23,6 +23,18 @@ def _max_attempts(difficulty: str) -> int:
     return MAX_ATTEMPTS.get(difficulty, MAX_ATTEMPTS["Normal"])
 
 
+class BlindtestTitlesView(APIView):
+    """Anime titles for the guess autocomplete (same catalog used to validate)."""
+
+    permission_classes = [permissions.AllowAny]
+
+    @inject
+    def get(self, request, catalog_service=Provide[Container.core.catalog_service]):
+        data = catalog_service.load_data("Anime")
+        titles = sorted((data or {}).get("title_to_full_data", {}).keys())
+        return Response({"titles": titles})
+
+
 class BlindtestGameStateView(APIView):
     permission_classes = [permissions.AllowAny]
 

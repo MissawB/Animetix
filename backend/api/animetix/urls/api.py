@@ -619,6 +619,11 @@ urlpatterns = [
         name="api_blindtest_guess",
     ),
     path(
+        "game/blindtest/titles/",
+        api_views.BlindtestTitlesView.as_view(),
+        name="api_blindtest_titles",
+    ),
+    path(
         "game/covertest/state/",
         api_views.CovertestGameStateView.as_view(),
         name="api_covertest_state",

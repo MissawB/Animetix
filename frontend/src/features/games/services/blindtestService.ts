@@ -63,6 +63,11 @@ export const blindtestService = {
     );
   },
 
+  getTitles: async (): Promise<string[]> => {
+    const data = (await apiClient(`${API_BASE}/titles/`, { skipToast: true })) as { titles?: string[] };
+    return data?.titles ?? [];
+  },
+
   submitGuess: async (guess: string): Promise<GuessResult> => {
     const raw = (await apiClient(`${API_BASE}/guess/`, {
       method: 'POST',
