@@ -41,15 +41,24 @@ describe('Navbar', () => {
     vi.clearAllMocks();
   });
 
-  it('renders the Games link', () => {
+  it('renders the sidebar toggle button', () => {
     render(
       <MemoryRouter>
         <Navbar />
       </MemoryRouter>
     );
-    
-    const gamesLink = screen.getByText(/Games/i);
-    expect(gamesLink).toBeInTheDocument();
-    expect(gamesLink.closest('a')).toHaveAttribute('href', '/games/hub/');
+
+    expect(screen.getByLabelText('nav.toggle_sidebar')).toBeInTheDocument();
+  });
+
+  it('shows auth links when logged out', () => {
+    render(
+      <MemoryRouter>
+        <Navbar />
+      </MemoryRouter>
+    );
+
+    const registerLink = screen.getByText(/auth\.register/i).closest('a');
+    expect(registerLink).toHaveAttribute('href', '/auth/register/');
   });
 });
