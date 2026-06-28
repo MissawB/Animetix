@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Play, Pause, Check, X, Music, SlidersHorizontal, Trophy, ArrowRight } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Play, Pause, Check, X, Music, Trophy, ArrowRight } from 'lucide-react';
 import { useBlindtestStore } from '../../features/games/stores/blindtestStore';
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
@@ -41,6 +41,7 @@ const BlindtestPage: React.FC = () => {
   const [results, setResults] = useState<{ score: number; won: boolean; secret?: string }[]>([]);
   const [sessionOver, setSessionOver] = useState(false);
   const [hintType, setHintType] = useState<HintType>(() => pickHint());
+  const [aspect, setAspect] = useState(16 / 9);
   const mediaRef = useRef<HTMLVideoElement>(null);
 
   // Start the chosen format/difficulty; otherwise resume / auto-start.
@@ -163,19 +164,21 @@ const BlindtestPage: React.FC = () => {
             </video>
           ) : (
             <div className="flex flex-col items-center py-8">
-              {/* Current format + back to config */}
-              <div className="flex items-center gap-3 mb-10">
+              {/* Current format */}
+              <div className="mb-8">
                 <span className="px-4 py-1.5 rounded-full bg-yellow-400/15 border border-yellow-400/30 text-yellow-600 dark:text-yellow-400 text-[11px] font-black uppercase tracking-widest">
                   {currentMode === 'OP' ? 'Opening' : 'Ending'}
                 </span>
-                <Link to="/blindtest/" className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest text-gray-500 hover:text-black dark:hover:text-white no-underline transition-colors">
-                  <SlidersHorizontal className="w-3.5 h-3.5" /> Changer
-                </Link>
               </div>
 
               {hintsEnabled ? (
                 /* Visual hint — distorted video that clears with each guess */
-                <button onClick={togglePlay} aria-label={isPlaying ? 'Mettre en pause' : 'Lancer la lecture'} className="group relative w-64 h-64 rounded-3xl overflow-hidden shadow-2xl bg-black outline-none">
+                <button
+                  onClick={togglePlay}
+                  aria-label={isPlaying ? 'Mettre en pause' : 'Lancer la lecture'}
+                  className="group relative w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl bg-black outline-none"
+                  style={{ aspectRatio: String(aspect) }}
+                >
                   <video
                     ref={mediaRef}
                     src={gameState.video_url}
@@ -183,6 +186,10 @@ const BlindtestPage: React.FC = () => {
                     style={{ filter: filterFor(hintType, hintLevel) }}
                     preload="auto"
                     aria-label="Indice visuel du générique"
+                    onLoadedMetadata={(e) => {
+                      const el = e.currentTarget;
+                      if (el.videoWidth && el.videoHeight) setAspect(el.videoWidth / el.videoHeight);
+                    }}
                     onPlay={() => setIsPlaying(true)}
                     onPause={() => setIsPlaying(false)}
                     onEnded={() => setIsPlaying(false)}
