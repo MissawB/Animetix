@@ -1,19 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
+import {
   Send,
   Trash2,
   Sparkles,
-  Zap,
-  MessageSquare, 
+  MessageSquare,
   Users,
-  Settings,
-  ShieldCheck,
   Bot
 } from 'lucide-react';
 import { useCompanionStore } from "../../features/companion/companionStore";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
-import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 
 
@@ -51,9 +47,6 @@ const CompanionChatPage: React.FC = () => {
                 <h1 className="text-5xl font-black italic manga-font tracking-tighter uppercase mb-2">
                     NEXUS <span className="text-blue-500 text-glow">COMPANION</span>
                 </h1>
-                <p className="text-sm font-bold opacity-30 uppercase tracking-[0.3em]">
-                    Interface d'immersion narrative synchronisée.
-                </p>
             </div>
             
             <div className="flex gap-4">
@@ -104,15 +97,8 @@ const CompanionChatPage: React.FC = () => {
                                 <Bot className="w-6 h-6 text-white" />
                             </div>
                             <div>
-                                <div className="flex items-center gap-2">
-                                    <span className="font-black italic uppercase text-sm">{activeMentor.toUpperCase()} HUB</span>
-                                    <Badge variant="success" className="text-[8px] bg-emerald-500/10 text-emerald-500 border-emerald-500/20">CONNECTED</Badge>
-                                </div>
-                                <div className="text-[9px] font-bold opacity-30 uppercase tracking-widest">Protocol: Agentic-V2 / LLM-SOTA</div>
+                                <span className="font-black italic uppercase text-sm">{activeMentor.toUpperCase()} HUB</span>
                             </div>
-                        </div>
-                        <div className="flex gap-2">
-                            <button className="p-2 hover:bg-white/5 rounded-lg transition-colors"><Settings className="w-4 h-4 opacity-20" /></button>
                         </div>
                     </div>
 
@@ -191,10 +177,6 @@ const CompanionChatPage: React.FC = () => {
                                 <Send className="w-6 h-6 text-white" />
                             </Button>
                         </form>
-                        <div className="mt-6 flex items-center justify-center gap-6 opacity-20">
-                            <div className="flex items-center gap-2 text-[8px] font-black uppercase tracking-widest"><ShieldCheck className="w-3 h-3" /> Secure Tunnel</div>
-                            <div className="flex items-center gap-2 text-[8px] font-black uppercase tracking-widest"><Zap className="w-3 h-3" /> RAG-Enabled</div>
-                        </div>
                     </div>
                 </Card>
             </div>
