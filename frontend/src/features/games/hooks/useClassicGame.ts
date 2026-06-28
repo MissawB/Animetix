@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { classicGameService } from '../services/classicService';
+import type { ClassicGameState } from '../../../types';
 
 export const useClassicGame = () => {
   const queryClient = useQueryClient();
@@ -24,6 +25,17 @@ export const useClassicGame = () => {
     },
   });
 
+  // Révèle un indice : on fusionne seulement le bloc `hints` renvoyé dans l'état
+  // courant (le reste de la partie — tentatives, etc. — reste intact).
+  const revealMutation = useMutation({
+    mutationFn: classicGameService.reveal,
+    onSuccess: (data) => {
+      queryClient.setQueryData<ClassicGameState | undefined>(QUERY_KEY, (prev) =>
+        prev ? { ...prev, hints: data.hints } : prev
+      );
+    },
+  });
+
   // Rejoue une nouvelle partie : on ré-exécute la queryFn (comme le ferait un
   // remount) au lieu d'un window.location.reload() qui rechargeait toute l'app.
   const restart = () => queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -32,6 +44,9 @@ export const useClassicGame = () => {
     gameState,
     loading,
     handleGuess: guessMutation.mutateAsync,
+    isGuessing: guessMutation.isPending,
+    revealHint: revealMutation.mutateAsync,
+    revealingHint: revealMutation.isPending,
     restart,
   };
 };

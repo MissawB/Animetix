@@ -18,7 +18,7 @@ describe('classicGameService', () => {
 
     const result = await classicGameService.getState();
 
-    expect(mocked).toHaveBeenCalledWith('/api/v1/game/classic/state/');
+    expect(mocked).toHaveBeenCalledWith('/api/v1/game/classic/state/', { skipToast: true });
     expect(result).toBe(state);
   });
 
@@ -57,5 +57,33 @@ describe('classicGameService', () => {
       body: JSON.stringify({ guess: 'Naruto' }),
     });
     expect(result).toBe(state);
+  });
+
+  it('getTitles fetches the catalog titles and returns the array', async () => {
+    mocked.mockResolvedValue({ titles: ['Naruto', 'Bleach'] });
+
+    const result = await classicGameService.getTitles();
+
+    expect(mocked).toHaveBeenCalledWith('/api/v1/game/classic/titles/', { skipToast: true });
+    expect(result).toEqual(['Naruto', 'Bleach']);
+  });
+
+  it('getTitles returns an empty array when none are provided', async () => {
+    mocked.mockResolvedValue({});
+
+    expect(await classicGameService.getTitles()).toEqual([]);
+  });
+
+  it('reveal posts the hint type', async () => {
+    const payload = { revealed_hints: ['origin'], hints: {} };
+    mocked.mockResolvedValue(payload);
+
+    const result = await classicGameService.reveal('origin');
+
+    expect(mocked).toHaveBeenCalledWith('/api/v1/game/classic/reveal/', {
+      method: 'POST',
+      body: JSON.stringify({ hint_type: 'origin' }),
+    });
+    expect(result).toBe(payload);
   });
 });

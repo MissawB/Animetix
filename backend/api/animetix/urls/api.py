@@ -469,6 +469,11 @@ urlpatterns = [
         name="api_vs_battle_like",
     ),
     path(
+        "game/classic/titles/",
+        api_views.ClassicGameTitlesView.as_view(),
+        name="api_classic_titles",
+    ),
+    path(
         "game/classic/state/",
         api_views.ClassicGameStateView.as_view(),
         name="api_classic_state",

@@ -238,9 +238,35 @@ export interface VisionState extends GameState {
   guesses: Array<{ text: string; score: number }>;
 }
 
+export type ClassicHintKey = 'origin' | 'tags' | 'studio' | 'desc';
+
+export interface ClassicHint {
+  label: string;
+  unlocks_at: number;
+  can_reveal: boolean;
+  revealed: boolean;
+  value: string | null;
+}
+
+export type ClassicHints = Record<ClassicHintKey, ClassicHint>;
+
+export interface ClassicGuess {
+  title: string;
+  title_english?: string | null;
+  title_native?: string | null;
+  image?: string | null;
+  score?: number;
+  color?: 'danger' | 'warning' | 'primary' | 'secondary' | string;
+  is_correct: boolean;
+}
+
 export interface ClassicGameState extends GameState {
-  guesses: Array<{ title: string; is_correct: boolean }>;
+  difficulty?: string;
+  guess_count?: number;
+  guesses: ClassicGuess[];
+  hints?: ClassicHints;
   secret_title?: string;
+  secret_data?: Record<string, unknown> | null;
 }
 
 export interface ParadoxState extends GameState {

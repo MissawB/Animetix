@@ -67,6 +67,20 @@ class ClassicGameStateView(APIView):
         )
 
 
+class ClassicGameTitlesView(APIView):
+    """Catalog titles for the guess autocomplete (same catalog used to validate)."""
+
+    permission_classes = [permissions.AllowAny]
+
+    @inject
+    def get(self, request, catalog_service=Provide[Container.core.catalog_service]):
+        session_service = get_session_service(request)
+        media_type = session_service.get_classic_state().get("media_type") or "Anime"
+        data = catalog_service.get_catalog(media_type)
+        titles = sorted((data or {}).get("title_to_full_data", {}).keys())
+        return Response({"titles": titles})
+
+
 class ClassicGameStartView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -123,6 +137,11 @@ class ClassicGameStartView(APIView):
             }
         )
 
+        from ...presenters import GamePresenter  # noqa: E402
+
+        secret_data = data["title_to_full_data"].get(secret_title)
+        hints = GamePresenter.format_classic_hints(secret_data, 0, [])
+
         return Response(
             {
                 "status": "started",
@@ -136,6 +155,7 @@ class ClassicGameStartView(APIView):
                 "gameOver": False,
                 "guess_count": 0,
                 "guesses": [],
+                "hints": hints,
             }
         )
 
