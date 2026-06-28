@@ -43,10 +43,12 @@ class UnifiedRepositoryAdapter(RepositoryPort):
         return self.vectors.load_catalog(media_type)
 
     def load_themes(self) -> Dict:
-        return self.django.load_themes()
+        # Themes/covers live in pre-compiled JSON read by the pgvector adapter;
+        # the Django adapter only returns stubs ({}).
+        return self.vectors.load_themes()
 
     def load_covers(self) -> Dict:
-        return self.django.load_covers()
+        return self.vectors.load_covers()
 
     def get_media_item(self, media_type: str, external_id: str) -> Optional[Dict]:
         return self.django.get_media_item(media_type, external_id)

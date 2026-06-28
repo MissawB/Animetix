@@ -9,9 +9,10 @@ import environ  # noqa: E402
 
 # Initialize environ
 env = environ.Env()
-# Read .env file at the project root
+# Read .env file at the project root (settings.py is at backend/api/animetix_project/,
+# so the repo root is four parents up).
 environ.Env.read_env(
-    os.path.join(Path(__file__).resolve().parent.parent.parent, ".env")
+    os.path.join(Path(__file__).resolve().parent.parent.parent.parent, ".env")
 )
 
 # Build paths
