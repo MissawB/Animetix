@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Send, 
-  Trash2, 
-  Sparkles, 
-  Brain, 
-  Zap, 
+  Send,
+  Trash2,
+  Sparkles,
+  Zap,
   MessageSquare, 
   Users,
   Settings,
@@ -91,14 +90,6 @@ const CompanionChatPage: React.FC = () => {
                             </button>
                         ))}
                     </div>
-                </Card>
-
-                <Card padding="lg" className="bg-blue-600 text-white border-none shadow-blue-600/20">
-                    <Brain className="w-10 h-10 mb-4" />
-                    <h4 className="text-xl font-black italic manga-font uppercase mb-2">Mémoire Vive</h4>
-                    <p className="text-[10px] font-bold opacity-80 leading-relaxed uppercase italic">
-                        Votre compagnon utilise la simulation de plasticité synaptique pour mémoriser vos préférences et adapter son ton au fil des discussions.
-                    </p>
                 </Card>
             </div>
 
