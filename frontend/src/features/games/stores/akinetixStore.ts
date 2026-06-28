@@ -45,13 +45,15 @@ export const useAkinetixStore = create<AkinetixStore>((set, get) => ({
   },
 
   submitAnswer: async (answer: string) => {
-    set({ isLoading: true, error: null });
+    // Keep the question card mounted (no global loading skeleton) so the board
+    // doesn't flash a completely different layout between questions.
+    set({ error: null });
     try {
       const state = await akinetixService.submitAnswer(answer);
-      set({ gameState: state, isLoading: false });
+      set({ gameState: state });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to submit answer';
-      set({ error: message, isLoading: false });
+      set({ error: message });
     }
   },
 

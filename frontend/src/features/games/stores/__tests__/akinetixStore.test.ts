@@ -103,7 +103,8 @@ describe('useAkinetixStore', () => {
 
     expect(mockedService.submitAnswer).toHaveBeenCalledWith('yes');
     expect(useAkinetixStore.getState().gameState).toEqual(next);
-    expect(useAkinetixStore.getState().isLoading).toBe(false);
+    // submitAnswer intentionally does not toggle the global loading skeleton
+    // (so the question card stays mounted between questions).
   });
 
   it('submitAnswer sets error on failure', async () => {
@@ -112,7 +113,6 @@ describe('useAkinetixStore', () => {
     await useAkinetixStore.getState().submitAnswer('no');
 
     expect(useAkinetixStore.getState().error).toBe('answer boom');
-    expect(useAkinetixStore.getState().isLoading).toBe(false);
   });
 
   it('submitConfirmation restarts the game on success', async () => {
