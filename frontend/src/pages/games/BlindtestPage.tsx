@@ -1,21 +1,49 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Play, Pause, Check, X, Music, SlidersHorizontal } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Play, Pause, Check, X, Music, SlidersHorizontal, Trophy, ArrowRight } from 'lucide-react';
 import { useBlindtestStore } from '../../features/games/stores/blindtestStore';
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 
+type HintType = 'invert' | 'blur' | 'grayscale' | 'hue' | 'noise';
+const HINT_TYPES: HintType[] = ['invert', 'blur', 'grayscale', 'hue', 'noise'];
+const SCORE_TIERS = [100, 50, 25, 10, 0];
+
+const pickHint = (): HintType => HINT_TYPES[Math.floor(Math.random() * HINT_TYPES.length)];
+
+const filterFor = (type: HintType, level: number): string => {
+  const L = Math.max(0, Math.min(1, level));
+  switch (type) {
+    case 'invert': return `invert(${L.toFixed(2)})`;
+    case 'blur': return `blur(${(L * 16).toFixed(1)}px)`;
+    case 'grayscale': return `grayscale(${L.toFixed(2)}) contrast(${(1 + L).toFixed(2)})`;
+    case 'hue': return `hue-rotate(${Math.round(L * 220)}deg) saturate(${(1 + L * 2).toFixed(2)})`;
+    case 'noise': return `brightness(${(1 - 0.25 * L).toFixed(2)})`;
+    default: return 'none';
+  }
+};
+
 const BlindtestPage: React.FC = () => {
   const { gameState, isLoading, error, loadGame, restartGame, submitGuess } = useBlindtestStore();
   const location = useLocation();
-  const launchState = location.state as { type?: 'OP' | 'ED'; difficulty?: string } | null;
-  const launchType = launchState?.type;
-  const launchDifficulty = launchState?.difficulty;
+  const navigate = useNavigate();
+  const cfg = location.state as { mode?: 'session' | 'single'; type?: 'OP' | 'ED'; difficulty?: string; length?: number; hints?: boolean } | null;
+  const mode = cfg?.mode ?? 'single';
+  const sessionLength = cfg?.length ?? 1;
+  const hintsEnabled = cfg?.hints ?? false;
+  const launchType = cfg?.type;
+  const launchDifficulty = cfg?.difficulty;
+
   const [guess, setGuess] = useState<string>('');
   const [isPlaying, setIsPlaying] = useState(false);
+  const [round, setRound] = useState(1);
+  const [totalScore, setTotalScore] = useState(0);
+  const [results, setResults] = useState<{ score: number; won: boolean; secret?: string }[]>([]);
+  const [sessionOver, setSessionOver] = useState(false);
+  const [hintType, setHintType] = useState<HintType>(() => pickHint());
   const mediaRef = useRef<HTMLVideoElement>(null);
 
-  // Start the format/difficulty chosen on the config page; otherwise resume / auto-start.
+  // Start the chosen format/difficulty; otherwise resume / auto-start.
   useEffect(() => {
     if (launchType) restartGame(launchType, launchDifficulty);
     else loadGame();
@@ -51,10 +79,81 @@ const BlindtestPage: React.FC = () => {
 
   const currentMode: 'OP' | 'ED' = gameState.theme_type === 'ED' ? 'ED' : 'OP';
   const lost = gameState.gameOver && gameState.won === false;
+  const maxAttempts = gameState.maxAttempts ?? 4;
+  const used = gameState.guesses.length;
+  const hintLevel = gameState.gameOver ? 0 : Math.max(0, 1 - used / Math.max(1, maxAttempts));
+  const correctIdx = gameState.guesses.findIndex((g) => g.is_correct);
+  const roundScore = gameState.won && correctIdx >= 0 ? (SCORE_TIERS[correctIdx] ?? 0) : 0;
   const replay = () => restartGame(currentMode, gameState.difficulty);
+
+  const finishRound = () => {
+    setResults((r) => [...r, { score: roundScore, won: !!gameState.won, secret: gameState.secret_title }]);
+    setTotalScore((t) => t + roundScore);
+    if (round >= sessionLength) {
+      setSessionOver(true);
+    } else {
+      setRound((r) => r + 1);
+      setHintType(pickHint());
+      restartGame(launchType ?? currentMode, launchDifficulty ?? gameState.difficulty);
+    }
+  };
+
+  // ── Session summary ──────────────────────────────────────────
+  if (sessionOver) {
+    const maxScore = sessionLength * 100;
+    const wins = results.filter((r) => r.won).length;
+    return (
+      <div className="max-w-2xl mx-auto px-6 py-20">
+        <Card padding="lg" className="text-center">
+          <Trophy className="w-14 h-14 text-yellow-400 mx-auto mb-4" />
+          <h1 className="text-4xl font-black italic manga-font uppercase text-black dark:text-white">Session terminée</h1>
+          <p className="mt-6 text-6xl font-black manga-font text-yellow-500">{totalScore}</p>
+          <p className="text-xs font-black uppercase tracking-widest text-gray-400 mt-1">sur {maxScore} points · {wins}/{sessionLength} trouvés</p>
+
+          <div className="mt-8 grid grid-cols-5 sm:grid-cols-10 gap-1.5">
+            {results.map((r, i) => (
+              <div
+                key={i}
+                title={`Manche ${i + 1}: ${r.score} pts${r.secret ? ` — ${r.secret}` : ''}`}
+                className={`h-8 rounded-md grid place-items-center text-[10px] font-black ${
+                  r.won ? 'bg-green-500/20 text-green-600 dark:text-green-400' : 'bg-red-500/15 text-red-500'
+                }`}
+              >
+                {r.score}
+              </div>
+            ))}
+          </div>
+
+          <div className="flex gap-3 justify-center mt-10">
+            <Button variant="primary" onClick={() => navigate('/blindtest/')}>NOUVELLE SESSION</Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  const isSession = mode === 'session';
+  const lastRound = round >= sessionLength;
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-16">
+      {/* Session progress */}
+      {isSession && (
+        <div className="max-w-7xl mx-auto mb-8">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-black uppercase tracking-widest text-gray-500 dark:text-gray-400">
+              Manche {round} / {sessionLength}
+            </span>
+            <span className="text-xs font-black uppercase tracking-widest text-yellow-600 dark:text-yellow-400">
+              {totalScore} pts
+            </span>
+          </div>
+          <div className="w-full h-2 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-yellow-400 to-orange-500 transition-all" style={{ width: `${((round - 1) / sessionLength) * 100}%` }} />
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         {/* LECTEUR */}
         <Card padding="md">
@@ -69,65 +168,82 @@ const BlindtestPage: React.FC = () => {
                 <span className="px-4 py-1.5 rounded-full bg-yellow-400/15 border border-yellow-400/30 text-yellow-600 dark:text-yellow-400 text-[11px] font-black uppercase tracking-widest">
                   {currentMode === 'OP' ? 'Opening' : 'Ending'}
                 </span>
-                <Link
-                  to="/blindtest/"
-                  className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest text-gray-500 hover:text-black dark:hover:text-white no-underline transition-colors"
-                >
+                <Link to="/blindtest/" className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest text-gray-500 hover:text-black dark:hover:text-white no-underline transition-colors">
                   <SlidersHorizontal className="w-3.5 h-3.5" /> Changer
                 </Link>
               </div>
 
-              {/* Spinning vinyl */}
-              <button onClick={togglePlay} aria-label={isPlaying ? 'Mettre en pause' : 'Lancer la lecture'} className="group relative outline-none">
-                <div
-                  className={`relative w-60 h-60 rounded-full grid place-items-center shadow-[0_20px_50px_rgba(0,0,0,0.5)] ${
-                    isPlaying ? 'motion-safe:animate-[spin_4s_linear_infinite]' : ''
-                  }`}
-                  style={{
-                    background:
-                      'repeating-radial-gradient(circle at center, #0d0d12 0 3px, #1b1b24 3px 6px)',
-                  }}
-                >
-                  {/* light sheen */}
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-transparent via-white/5 to-white/15 pointer-events-none" />
-                  {/* center label */}
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-yellow-300 to-orange-500 grid place-items-center border-4 border-black/40 shadow-inner">
-                    <Music className="w-9 h-9 text-black/80" />
-                  </div>
-                  {/* spindle hole */}
-                  <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-[#0f0f1a] border border-white/20" />
-                </div>
-                {/* play / pause overlay */}
-                <span className="absolute inset-0 grid place-items-center pointer-events-none">
-                  <span className="bg-black/60 backdrop-blur-sm text-white p-5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                    {isPlaying ? <Pause className="w-8 h-8" /> : <Play className="w-8 h-8 fill-current" />}
+              {hintsEnabled ? (
+                /* Visual hint — distorted video that clears with each guess */
+                <button onClick={togglePlay} aria-label={isPlaying ? 'Mettre en pause' : 'Lancer la lecture'} className="group relative w-64 h-64 rounded-3xl overflow-hidden shadow-2xl bg-black outline-none">
+                  <video
+                    ref={mediaRef}
+                    src={gameState.video_url}
+                    className="w-full h-full object-cover transition-[filter] duration-500"
+                    style={{ filter: filterFor(hintType, hintLevel) }}
+                    preload="auto"
+                    aria-label="Indice visuel du générique"
+                    onPlay={() => setIsPlaying(true)}
+                    onPause={() => setIsPlaying(false)}
+                    onEnded={() => setIsPlaying(false)}
+                    onEmptied={() => setIsPlaying(false)}
+                  >
+                    <track kind="captions" />
+                  </video>
+                  {hintType === 'noise' && (
+                    <div
+                      className="absolute inset-0 mix-blend-overlay pointer-events-none"
+                      style={{ backgroundImage: "url('/static/img/noise.png')", opacity: hintLevel }}
+                    />
+                  )}
+                  <span className="absolute inset-0 grid place-items-center pointer-events-none">
+                    <span className="bg-black/60 backdrop-blur-sm text-white p-4 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      {isPlaying ? <Pause className="w-7 h-7" /> : <Play className="w-7 h-7 fill-current" />}
+                    </span>
                   </span>
-                </span>
-              </button>
+                </button>
+              ) : (
+                /* Vinyl disc — audio only */
+                <button onClick={togglePlay} aria-label={isPlaying ? 'Mettre en pause' : 'Lancer la lecture'} className="group relative outline-none">
+                  <div
+                    className={`relative w-60 h-60 rounded-full grid place-items-center shadow-[0_20px_50px_rgba(0,0,0,0.5)] ${isPlaying ? 'motion-safe:animate-[spin_4s_linear_infinite]' : ''}`}
+                    style={{ background: 'repeating-radial-gradient(circle at center, #0d0d12 0 3px, #1b1b24 3px 6px)' }}
+                  >
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-transparent via-white/5 to-white/15 pointer-events-none" />
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-yellow-300 to-orange-500 grid place-items-center border-4 border-black/40 shadow-inner">
+                      <Music className="w-9 h-9 text-black/80" />
+                    </div>
+                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-[#0f0f1a] border border-white/20" />
+                  </div>
+                  <span className="absolute inset-0 grid place-items-center pointer-events-none">
+                    <span className="bg-black/60 backdrop-blur-sm text-white p-5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      {isPlaying ? <Pause className="w-8 h-8" /> : <Play className="w-8 h-8 fill-current" />}
+                    </span>
+                  </span>
+                  <video
+                    ref={mediaRef}
+                    src={gameState.video_url}
+                    className="hidden"
+                    preload="auto"
+                    aria-label="Extrait audio du blind test"
+                    onPlay={() => setIsPlaying(true)}
+                    onPause={() => setIsPlaying(false)}
+                    onEnded={() => setIsPlaying(false)}
+                    onEmptied={() => setIsPlaying(false)}
+                  >
+                    <track kind="captions" />
+                  </video>
+                </button>
+              )}
 
               <p className="mt-8 font-bold text-gray-500 uppercase tracking-widest text-xs">
-                {isPlaying ? 'Lecture en cours…' : "Cliquez sur le disque pour écouter"}
+                {isPlaying ? 'Lecture en cours…' : hintsEnabled ? 'Clique pour écouter — le visuel se précise à chaque essai' : 'Cliquez sur le disque pour écouter'}
               </p>
               {typeof gameState.attemptsLeft === 'number' && (
                 <p className="mt-2 text-[11px] font-black uppercase tracking-widest text-yellow-600 dark:text-yellow-400">
                   {gameState.attemptsLeft} tentative{gameState.attemptsLeft > 1 ? 's' : ''} restante{gameState.attemptsLeft > 1 ? 's' : ''}
                 </p>
               )}
-
-              {/* Audio source — the video stays hidden so the anime isn't revealed. */}
-              <video
-                ref={mediaRef}
-                src={gameState.video_url}
-                className="hidden"
-                preload="auto"
-                aria-label="Extrait audio du blind test"
-                onPlay={() => setIsPlaying(true)}
-                onPause={() => setIsPlaying(false)}
-                onEnded={() => setIsPlaying(false)}
-                onEmptied={() => setIsPlaying(false)}
-              >
-                <track kind="captions" />
-              </video>
             </div>
           )}
         </Card>
@@ -152,21 +268,27 @@ const BlindtestPage: React.FC = () => {
                 VALIDER MA RÉPONSE
               </Button>
             </div>
+          ) : isSession ? (
+            <div className={`p-6 rounded-2xl text-center border-2 ${gameState.won ? 'bg-green-500/10 border-green-500' : 'bg-red-500/10 border-red-500'}`}>
+              <p className={`font-black text-2xl ${gameState.won ? 'text-green-500' : 'text-red-500'}`}>
+                {gameState.won ? `🎉 +${roundScore} pts` : '😵 Manche perdue'}
+              </p>
+              <p className="text-lg font-bold mt-2">C'était : <span className="text-yellow-500">{gameState.secret_title}</span></p>
+              <Button variant="primary" className="mt-6" onClick={finishRound}>
+                {lastRound ? 'VOIR LE RÉSULTAT' : 'MANCHE SUIVANTE'} <ArrowRight className="w-5 h-5" />
+              </Button>
+            </div>
           ) : lost ? (
             <div className="bg-red-500/10 border-2 border-red-500 p-6 rounded-2xl text-center">
                 <p className="text-red-500 font-black text-2xl">😵 PERDU !</p>
                 <p className="text-xl font-bold mt-2">C'était : <span className="text-yellow-500">{gameState.secret_title}</span></p>
-                <Button variant="danger" className="mt-6" onClick={replay}>
-                    REJOUER
-                </Button>
+                <Button variant="danger" className="mt-6" onClick={replay}>REJOUER</Button>
             </div>
           ) : (
             <div className="bg-green-500/10 border-2 border-green-500 p-6 rounded-2xl text-center">
                 <p className="text-green-500 font-black text-2xl animate-bounce">🎉 BIEN JOUÉ !</p>
                 <p className="text-xl font-bold mt-2">C'était : <span className="text-yellow-500">{gameState.secret_title}</span></p>
-                <Button variant="success" className="mt-6" onClick={replay}>
-                    REJOUER
-                </Button>
+                <Button variant="success" className="mt-6" onClick={replay}>REJOUER</Button>
             </div>
           )}
 

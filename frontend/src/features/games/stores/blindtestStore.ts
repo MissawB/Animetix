@@ -45,17 +45,16 @@ export const useBlindtestStore = create<BlindtestStore>((set, get) => ({
   },
 
   submitGuess: async (guess: string) => {
-    set({ isLoading: true, error: null });
+    // No global loading flag here: keep the player mounted so audio/visual hint
+    // playback isn't interrupted on every guess.
+    set({ error: null });
     try {
       const result = await blindtestService.submitGuess(guess);
       const prev = get().gameState;
       // Merge so the current track (video_url, theme_type, song…) is preserved.
-      set({
-        gameState: prev ? { ...prev, ...result } : null,
-        isLoading: false,
-      });
+      set({ gameState: prev ? { ...prev, ...result } : null });
     } catch (err) {
-      set({ error: msg(err, 'Failed to submit guess'), isLoading: false });
+      set({ error: msg(err, 'Failed to submit guess') });
     }
   },
 }));
