@@ -341,6 +341,12 @@ else:
         }
     }
 DATABASES["default"]["ATOMIC_REQUESTS"] = False
+# Reuse DB connections across requests. With a remote Postgres (e.g. Neon), the
+# default CONN_MAX_AGE=0 reopens a connection every request — a ~1-2s TLS +
+# round-trip cost that dominated each request (DB-backed sessions touch the DB on
+# every call). Persistent connections pay that setup once, not per request.
+DATABASES["default"].setdefault("CONN_MAX_AGE", env.int("DB_CONN_MAX_AGE", default=600))
+DATABASES["default"]["CONN_HEALTH_CHECKS"] = True
 
 # Cache
 REDIS_URL = os.getenv("REDIS_URL")
@@ -367,6 +373,14 @@ else:
     }
     if not IS_PRODUCTION:
         print("[INFO] Redis not found, using Local Memory Cache.")
+
+# In local development the database is often a remote (e.g. Neon) instance, so
+# DB-backed sessions add a round-trip to every request. Store sessions in the
+# local cache instead (runserver is single-process, LocMem is sufficient) to
+# remove the per-request session DB hit.
+if DEBUG:
+    SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+    SESSION_CACHE_ALIAS = "default"
 
 # Google Cloud Tasks Configuration
 GCP_PROJECT_ID = env("GOOGLE_CLOUD_PROJECT", default="animetix")

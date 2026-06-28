@@ -217,6 +217,26 @@ class AkinetixEngine:
             new_probs / total if total > 1e-9 else np.full(len(items), 1.0 / len(items))
         )
 
+    def _item_attribute_set(self, item: Dict, fine_attributes: Dict) -> set:
+        """All attribute keys an item satisfies, for O(1) membership lookups."""
+        attrs = set()
+        for g in item.get("genres") or []:
+            attrs.add(f"genre:{g}")
+        for t in item.get("micro_tags") or []:
+            attrs.add(f"tag:{t}")
+        for s in item.get("studios") or []:
+            attrs.add(f"studio:{s}")
+        meta = item.get("metadata", {})
+        if isinstance(meta, dict):
+            for th in meta.get("themes") or []:
+                attrs.add(f"theme:{th}")
+        item_fine = fine_attributes.get(str(item.get("id")), {})
+        if isinstance(item_fine, dict):
+            for k, v in item_fine.items():
+                if v:
+                    attrs.add(f"fine:{k}")
+        return attrs
+
     def _check_attribute_instance(
         self, item: Dict, attribute: str, fine_attributes: Dict
     ) -> bool:
@@ -252,14 +272,22 @@ class AkinetixEngine:
         if not candidates:
             return None
 
+        # Inverted index attribute -> item indices, built once. Avoids re-scanning
+        # every item (with a per-call split) for each candidate: the previous
+        # O(candidates x items) double loop dominated the per-answer latency.
+        considered = candidates[:200]  # Limite pour la performance
+        considered_set = set(considered)
+        attr_to_indices: Dict[str, List[int]] = {}
+        for i, item in enumerate(items):
+            for attr in self._item_attribute_set(item, fine_attributes or {}):
+                if attr in considered_set:
+                    attr_to_indices.setdefault(attr, []).append(i)
+
         # 1. Calcul de l'entropie (gain d'information) pour chaque candidat
         scored_candidates = []
-        for attr in candidates[:200]:  # Limite pour la performance
-            p_yes = sum(
-                probs[i]
-                for i, item in enumerate(items)
-                if self._check_attribute_instance(item, attr, fine_attributes or {})
-            )
+        for attr in considered:
+            idx = attr_to_indices.get(attr)
+            p_yes = float(probs[idx].sum()) if idx else 0.0
             gain = 1.0 - abs(p_yes - 0.5) * 2  # 1.0 = entropie max, 0.0 = min
             scored_candidates.append((attr, gain))
 
