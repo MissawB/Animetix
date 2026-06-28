@@ -222,6 +222,7 @@ export interface BlindtestState extends GameState {
   video_url?: string;
   secret_title?: string;
   theme_type?: string;
+  sequence?: number | string;
   song?: string;
   artists?: string[];
   won?: boolean;
@@ -333,7 +334,10 @@ export interface SearchItem {
 export interface CovertestState extends GameState {
   cover_url: string;
   secret_title?: string;
-  guesses: Array<{ title: string; is_correct: boolean }>;
+  locale?: string;
+  volume?: string | number;
+  author?: string;
+  guesses: Array<{ title: string; image?: string | null; is_correct: boolean }>;
 }
 
 export interface GraphNode {
@@ -452,6 +456,13 @@ export interface BenchmarkData {
   benchmarks: ModelBenchmark[];
   top_model: ModelBenchmark;
   best_open_source: ModelBenchmark;
+}
+
+export interface ArenaCharacter {
+  name: string;
+  franchise: string;
+  image: string;
+  source?: 'wiki' | 'synthetic';
 }
 
 export interface VsBattleArenaEntry {

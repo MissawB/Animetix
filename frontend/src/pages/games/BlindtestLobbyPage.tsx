@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Disc3, ListMusic, Music2, Play, Sparkles, EyeOff } from 'lucide-react';
+import { Disc3, ListMusic, Music2, Play, Sparkles, EyeOff, Mic2, Hash, Check } from 'lucide-react';
 import { useUIStore } from '../../store/uiStore';
 import { Card } from '../../components/ui/Card';
 
@@ -29,6 +29,8 @@ const BlindtestLobbyPage: React.FC = () => {
   const [format, setFormat] = useState<Format>('OP');
   const [length, setLength] = useState(10);
   const [hints, setHints] = useState(true);
+  const [guessArtist, setGuessArtist] = useState(false);
+  const [guessSequence, setGuessSequence] = useState(false);
 
   const activeDiff: Difficulty = difficulty === 'Custom' ? 'Normal' : difficulty;
 
@@ -40,6 +42,8 @@ const BlindtestLobbyPage: React.FC = () => {
         difficulty: activeDiff,
         length: mode === 'session' ? length : 1,
         hints,
+        guessArtist,
+        guessSequence,
       },
     });
 
@@ -167,6 +171,40 @@ const BlindtestLobbyPage: React.FC = () => {
                   <p className="manga-font text-sm text-black dark:text-white m-0">{title}</p>
                   <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 m-0">{sub}</p>
                 </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Objectifs bonus */}
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Objectifs bonus</p>
+          <p className="text-[11px] text-gray-400 mb-4">Une fois l'animé trouvé, gagne des points en plus.</p>
+          <div className="space-y-3">
+            {([
+              { on: guessArtist, set: setGuessArtist, icon: Mic2, title: 'Deviner le/les chanteur(s)', sub: "L'interprète du générique · +25 pts" },
+              { on: guessSequence, set: setGuessSequence, icon: Hash, title: "Deviner le numéro d'opening", sub: 'Le n° du générique (OP/ED) · +25 pts' },
+            ]).map(({ on, set, icon: Icon, title, sub }) => (
+              <button
+                key={title}
+                type="button"
+                onClick={() => set((v) => !v)}
+                role="switch"
+                aria-checked={on}
+                className={`w-full flex items-center gap-3 p-4 rounded-2xl border-2 text-left transition-all ${
+                  on ? 'border-yellow-400 bg-yellow-400/10' : 'border-black/5 dark:border-white/10 hover:border-yellow-400/50'
+                }`}
+              >
+                <Icon className={`w-5 h-5 shrink-0 ${on ? 'text-yellow-500' : 'text-gray-400'}`} />
+                <div className="flex-grow">
+                  <p className="font-black text-sm leading-tight text-black dark:text-white">{title}</p>
+                  <p className="text-[11px] font-medium opacity-50">{sub}</p>
+                </div>
+                <span className={`shrink-0 w-11 h-6 rounded-full p-0.5 transition-colors ${on ? 'bg-yellow-400' : 'bg-black/15 dark:bg-white/15'}`}>
+                  <span className={`grid place-items-center w-5 h-5 rounded-full bg-white shadow transition-transform ${on ? 'translate-x-5' : 'translate-x-0'}`}>
+                    {on && <Check className="w-3 h-3 text-yellow-500" />}
+                  </span>
+                </span>
               </button>
             ))}
           </div>

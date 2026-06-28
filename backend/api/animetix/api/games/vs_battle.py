@@ -8,7 +8,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from ...containers import get_container
-from ...models import VsBattle
+from ...models import MediaItem, VsBattle
 from ...serializers import VsBattleResultSerializer, VsBattleSerializer
 
 logger = logging.getLogger(__name__)
@@ -21,6 +21,52 @@ def list_vs_battles(request):
     battles = VsBattle.objects.filter(is_public=True).order_by("-created_at")[:20]
     serializer = VsBattleSerializer(battles, many=True)
     return Response(serializer.data)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def list_vs_characters(request):
+    """Personnages sélectionnables (nom, franchise, image) pour l'Arène.
+
+    Sert la galerie de sélection : le front filtre par nom ou par franchise.
+    Trié par popularité réelle (``metadata.favourites``) car la colonne
+    ``popularity`` n'est pas renseignée pour les personnages — sinon les
+    personnages emblématiques (Goku, etc.) seraient hors de la sélection.
+    """
+    from django.db.models import F, IntegerField
+    from django.db.models.fields.json import KeyTextTransform, KeyTransform
+    from django.db.models.functions import Cast
+
+    # `favourites` is nested at metadata -> popularity -> favourites.
+    fav = Cast(
+        KeyTextTransform("favourites", KeyTransform("popularity", "metadata")),
+        IntegerField(),
+    )
+    base = (
+        MediaItem.objects.filter(media_type="Character")
+        .exclude(image_url__isnull=True)
+        .exclude(image_url="")
+        .annotate(fav=fav)
+        .order_by(F("fav").desc(nulls_last=True))
+    )
+
+    # Once the roster has been precomputed (`precompute_vsbattle_sheets`), only
+    # tagged characters — those with a VS Battles sheet, wiki or synthetic — are
+    # offered. Until then, fall back to the most popular so the roster still works.
+    tagged = base.filter(metadata__vsbattle__in_roster=True)
+    qs = tagged if tagged.exists() else base[:2000]
+
+    characters = [
+        {
+            "name": m.title,
+            "franchise": (m.metadata or {}).get("origin") or "",
+            "image": m.image_url,
+            "source": ((m.metadata or {}).get("vsbattle") or {}).get("source")
+            or "wiki",
+        }
+        for m in qs
+    ]
+    return Response({"characters": characters})
 
 
 @extend_schema(responses=VsBattleResultSerializer)

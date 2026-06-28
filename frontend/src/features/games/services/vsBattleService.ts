@@ -1,8 +1,15 @@
 import { apiClient } from '../../../utils/apiClient';
+import type { ArenaCharacter } from '../../../types';
 
 export const vsBattleService = {
   getArenaFeed: async () => {
     return apiClient('/api/v1/game/vs_battle/arena/');
+  },
+  getCharacters: async (): Promise<ArenaCharacter[]> => {
+    const data = (await apiClient('/api/v1/game/vs_battle/characters/', { skipToast: true })) as {
+      characters?: ArenaCharacter[];
+    };
+    return data?.characters ?? [];
   },
   runBattle: async (charA: string, charB: string, franchiseA?: string, franchiseB?: string) => {
     return apiClient('/api/v1/game/vs_battle/run/', {

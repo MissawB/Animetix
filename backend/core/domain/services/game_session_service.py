@@ -199,6 +199,7 @@ class GameSessionService:
                 "covertest_url": cover["cover_url"],
                 "covertest_locale": cover["locale"],
                 "covertest_volume": cover["volume"],
+                "covertest_author": cover.get("author"),
                 "covertest_guesses": [],
                 "covertest_game_over": False,
             }
@@ -210,6 +211,7 @@ class GameSessionService:
             "url": self.port.get("covertest_url"),
             "locale": self.port.get("covertest_locale"),
             "volume": self.port.get("covertest_volume"),
+            "author": self.port.get("covertest_author"),
             "guesses": self.port.get("covertest_guesses", []),
             "game_over": self.port.get("covertest_game_over", False),
             "is_daily": self.port.get("is_daily", False),

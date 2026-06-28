@@ -6,6 +6,7 @@ const API_BASE = '/api/v1/game/blindtest';
 interface RawBlindtestState {
   video_url?: string;
   theme_type?: string;
+  blindtest_sequence?: number | string | null;
   blindtest_song?: string;
   blindtest_artists?: string[];
   guesses?: Array<{ title: string; is_correct: boolean }>;
@@ -33,6 +34,7 @@ const normalize = (raw: RawBlindtestState): BlindtestState => ({
   video_url: raw.video_url,
   secret_title: raw.secret_title,
   theme_type: raw.theme_type,
+  sequence: raw.blindtest_sequence ?? undefined,
   song: raw.blindtest_song,
   artists: raw.blindtest_artists,
   won: raw.won,

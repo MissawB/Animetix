@@ -56,6 +56,7 @@ class BlindtestGameStateView(APIView):
             {
                 "video_url": state.video,
                 "theme_type": state.type,
+                "blindtest_sequence": state.sequence,
                 "blindtest_song": state.song,
                 "blindtest_artists": state.artists,
                 "guesses": state.guesses,
@@ -108,6 +109,7 @@ class BlindtestGameStartView(APIView):
         state.secret = theme["anime_title"]
         state.video = theme["video_url"]
         state.type = theme["type"]
+        state.sequence = theme.get("sequence")
         state.song = theme["song_title"]
         state.artists = theme["artists"]
         state.guesses = []
@@ -122,6 +124,7 @@ class BlindtestGameStartView(APIView):
             {
                 "video_url": state.video,
                 "theme_type": state.type,
+                "blindtest_sequence": state.sequence,
                 "blindtest_song": state.song,
                 "blindtest_artists": state.artists,
                 "guesses": [],
@@ -245,6 +248,10 @@ class BlindtestGameGuessView(APIView):
                 "game_over": state.game_over,
                 "won": is_correct,
                 "attempts_left": max(0, max_attempts - len(state.guesses)),
+                "theme_type": state.type,
+                "blindtest_sequence": state.sequence,
+                "blindtest_song": state.song,
+                "blindtest_artists": state.artists,
                 "secret_title": secret if state.game_over else None,
                 "newly_unlocked_achievements": unlocked_achievements,
             }

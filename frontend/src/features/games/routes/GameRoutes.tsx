@@ -11,6 +11,7 @@ const UndercoverRoom = lazy(() => import('../../../pages/games/UndercoverRoom'))
 const CodeMangaRoom = lazy(() => import('../../../pages/games/CodeMangaRoom'));
 const AniminatorPage = lazy(() => import('../../../pages/games/AniminatorPage'));
 const CovertestPage = lazy(() => import('../../../pages/games/CovertestPage'));
+const CovertestLobbyPage = lazy(() => import('../../../pages/games/CovertestLobbyPage'));
 const VisionPage = lazy(() => import('../../../pages/games/VisionPage'));
 const EmojiPage = lazy(() => import('../../../pages/games/EmojiPage'));
 const ForgePage = lazy(() => import('../../../pages/games/ForgePage'));
@@ -42,7 +43,8 @@ export const GameRoutes = () => (
     <Route path="/blindtest/play/" element={<BlindtestPage />} />
     <Route path="/vision/" element={<VisionPage />} />
     <Route path="/paradox/" element={<ParadoxGamePage />} />
-    <Route path="/covertest/" element={<CovertestPage />} />
+    <Route path="/covertest/" element={<CovertestLobbyPage />} />
+    <Route path="/covertest/play/" element={<CovertestPage />} />
     <Route path="/animinator/" element={<AniminatorPage />} />
     <Route path="/undercover/room/:roomCode/" element={<UndercoverRoom />} />
     <Route path="/codemanga/room/:roomCode/" element={<CodeMangaRoom />} />

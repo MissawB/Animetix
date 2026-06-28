@@ -29,14 +29,35 @@ const filterFor = (type: HintType, level: number): string => {
   }
 };
 
+const BonusRecap: React.FC<{
+  bonusArtistOn: boolean; bonusSeqOn: boolean;
+  artistCorrect: boolean; seqCorrect: boolean;
+  artists?: string[]; sequence?: number | string; type: 'OP' | 'ED';
+}> = ({ bonusArtistOn, bonusSeqOn, artistCorrect, seqCorrect, artists, sequence, type }) => (
+  <div className="mt-3 space-y-1 text-sm font-black uppercase tracking-wide">
+    {bonusArtistOn && (
+      <p className={artistCorrect ? 'text-green-500' : 'text-red-400'}>
+        {artistCorrect ? 'Chanteur ✓ +25' : `Chanteur : ${(artists ?? []).join(', ')}`}
+      </p>
+    )}
+    {bonusSeqOn && (
+      <p className={seqCorrect ? 'text-green-500' : 'text-red-400'}>
+        {seqCorrect ? 'Numéro ✓ +25' : `C'était ${type} n°${sequence}`}
+      </p>
+    )}
+  </div>
+);
+
 const BlindtestPage: React.FC = () => {
   const { gameState, isLoading, error, loadGame, restartGame, submitGuess } = useBlindtestStore();
   const location = useLocation();
   const navigate = useNavigate();
-  const cfg = location.state as { mode?: 'session' | 'single'; type?: 'OP' | 'ED'; difficulty?: string; length?: number; hints?: boolean } | null;
+  const cfg = location.state as { mode?: 'session' | 'single'; type?: 'OP' | 'ED'; difficulty?: string; length?: number; hints?: boolean; guessArtist?: boolean; guessSequence?: boolean } | null;
   const mode = cfg?.mode ?? 'single';
   const sessionLength = cfg?.length ?? 1;
   const hintsEnabled = cfg?.hints ?? false;
+  const guessArtist = cfg?.guessArtist ?? false;
+  const guessSequence = cfg?.guessSequence ?? false;
   const launchType = cfg?.type;
   const launchDifficulty = cfg?.difficulty;
 
@@ -51,6 +72,12 @@ const BlindtestPage: React.FC = () => {
   const [titles, setTitles] = useState<string[]>([]);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSug, setShowSug] = useState(false);
+  // Bonus objectives (singer / opening number)
+  const [artistGuess, setArtistGuess] = useState('');
+  const [seqGuess, setSeqGuess] = useState('');
+  const [bonusDone, setBonusDone] = useState(false);
+  const [artistCorrect, setArtistCorrect] = useState(false);
+  const [seqCorrect, setSeqCorrect] = useState(false);
   const mediaRef = useRef<HTMLVideoElement>(null);
 
   // Start the chosen format/difficulty; otherwise resume / auto-start.
@@ -126,8 +153,36 @@ const BlindtestPage: React.FC = () => {
   const hintSteps = Math.max(1, maxAttempts - 1);
   const hintLevel = used >= 1 ? Math.max(0, 1 - (used - 1) / hintSteps) : 1;
   const correctIdx = gameState.guesses.findIndex((g) => g.is_correct);
-  const roundScore = gameState.won && correctIdx >= 0 ? (SCORE_TIERS[correctIdx] ?? 0) : 0;
-  const replay = () => restartGame(currentMode, gameState.difficulty);
+  const baseScore = gameState.won && correctIdx >= 0 ? (SCORE_TIERS[correctIdx] ?? 0) : 0;
+
+  // Bonus objectives — only when won and the data is available for this theme.
+  const artistAvailable = !!(gameState.artists && gameState.artists.length);
+  const sequenceAvailable = gameState.sequence != null && gameState.sequence !== '';
+  const bonusArtistOn = guessArtist && artistAvailable;
+  const bonusSeqOn = guessSequence && sequenceAvailable;
+  const bonusEnabled = !!gameState.won && (bonusArtistOn || bonusSeqOn);
+  const bonusPending = bonusEnabled && !bonusDone;
+  const bonusScore = (bonusArtistOn && artistCorrect ? 25 : 0) + (bonusSeqOn && seqCorrect ? 25 : 0);
+  const roundScore = baseScore + bonusScore;
+
+  const resetBonus = () => {
+    setBonusDone(false); setArtistCorrect(false); setSeqCorrect(false);
+    setArtistGuess(''); setSeqGuess('');
+  };
+  const validateBonus = () => {
+    if (bonusArtistOn) {
+      const g = norm(artistGuess);
+      setArtistCorrect(!!g && (gameState.artists ?? []).some((a) => { const n = norm(a); return n.includes(g) || g.includes(n); }));
+    }
+    if (bonusSeqOn) {
+      const want = String(gameState.sequence ?? '').replace(/[^0-9]/g, '');
+      const got = seqGuess.replace(/[^0-9]/g, '');
+      setSeqCorrect(!!got && got === want);
+    }
+    setBonusDone(true);
+  };
+
+  const replay = () => { resetBonus(); restartGame(currentMode, gameState.difficulty); };
 
   const finishRound = () => {
     setResults((r) => [...r, { score: roundScore, won: !!gameState.won, secret: gameState.secret_title }]);
@@ -137,6 +192,7 @@ const BlindtestPage: React.FC = () => {
     } else {
       setRound((r) => r + 1);
       setHintType(pickHint());
+      resetBonus();
       restartGame(launchType ?? currentMode, launchDifficulty ?? gameState.difficulty);
     }
   };
@@ -358,12 +414,41 @@ const BlindtestPage: React.FC = () => {
                 VALIDER MA RÉPONSE
               </Button>
             </div>
+          ) : bonusPending ? (
+            <div className="p-6 rounded-2xl text-center border-2 bg-green-500/10 border-green-500">
+              <p className="font-black text-2xl text-green-500">🎉 Trouvé ! +{baseScore} pts</p>
+              <p className="text-lg font-bold mt-2">C'était : <span className="text-yellow-500">{gameState.secret_title}</span></p>
+              <div className="mt-5 pt-5 border-t border-white/10 space-y-3 text-left max-w-sm mx-auto">
+                <p className="text-[11px] font-black uppercase tracking-widest text-yellow-500 text-center">Bonus (+25 pts chacun)</p>
+                {bonusArtistOn && (
+                  <input
+                    value={artistGuess}
+                    onChange={(e) => setArtistGuess(e.target.value)}
+                    placeholder="Chanteur / interprète…"
+                    aria-label="Chanteur"
+                    className="w-full p-3 rounded-xl bg-gray-50 dark:bg-navy-900 border-2 border-transparent focus:border-yellow-400 outline-none font-bold"
+                  />
+                )}
+                {bonusSeqOn && (
+                  <input
+                    type="number"
+                    value={seqGuess}
+                    onChange={(e) => setSeqGuess(e.target.value)}
+                    placeholder={`Numéro d'${currentMode === 'ED' ? 'ending' : 'opening'} (ex: 1)`}
+                    aria-label="Numéro d'opening"
+                    className="w-full p-3 rounded-xl bg-gray-50 dark:bg-navy-900 border-2 border-transparent focus:border-yellow-400 outline-none font-bold"
+                  />
+                )}
+                <Button variant="primary" fullWidth onClick={validateBonus}>VALIDER LE BONUS</Button>
+              </div>
+            </div>
           ) : isSession ? (
             <div className={`p-6 rounded-2xl text-center border-2 ${gameState.won ? 'bg-green-500/10 border-green-500' : 'bg-red-500/10 border-red-500'}`}>
               <p className={`font-black text-2xl ${gameState.won ? 'text-green-500' : 'text-red-500'}`}>
                 {gameState.won ? `🎉 +${roundScore} pts` : '😵 Manche perdue'}
               </p>
               <p className="text-lg font-bold mt-2">C'était : <span className="text-yellow-500">{gameState.secret_title}</span></p>
+              {bonusEnabled && bonusDone && <BonusRecap {...{ bonusArtistOn, bonusSeqOn, artistCorrect, seqCorrect, artists: gameState.artists, sequence: gameState.sequence, type: currentMode }} />}
               <Button variant="primary" className="mt-6" onClick={finishRound}>
                 {lastRound ? 'VOIR LE RÉSULTAT' : 'MANCHE SUIVANTE'} <ArrowRight className="w-5 h-5" />
               </Button>
@@ -376,8 +461,9 @@ const BlindtestPage: React.FC = () => {
             </div>
           ) : (
             <div className="bg-green-500/10 border-2 border-green-500 p-6 rounded-2xl text-center">
-                <p className="text-green-500 font-black text-2xl animate-bounce">🎉 BIEN JOUÉ !</p>
+                <p className="text-green-500 font-black text-2xl animate-bounce">🎉 BIEN JOUÉ !{bonusScore > 0 ? ` +${bonusScore} bonus` : ''}</p>
                 <p className="text-xl font-bold mt-2">C'était : <span className="text-yellow-500">{gameState.secret_title}</span></p>
+                {bonusEnabled && bonusDone && <BonusRecap {...{ bonusArtistOn, bonusSeqOn, artistCorrect, seqCorrect, artists: gameState.artists, sequence: gameState.sequence, type: currentMode }} />}
                 <Button variant="success" className="mt-6" onClick={replay}>REJOUER</Button>
             </div>
           )}

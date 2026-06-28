@@ -9,10 +9,23 @@ export interface CovertestGuessRequest {
 
 export const covertestService = {
   getState: async (): Promise<CovertestState> => {
-    return apiClient(`${API_BASE}/state/`);
+    // Probe : peut auto-démarrer côté backend ; le toast d'erreur éventuel est évité.
+    return apiClient(`${API_BASE}/state/`, { skipToast: true });
+  },
+  start: async (isDaily = false): Promise<CovertestState> => {
+    return apiClient(`${API_BASE}/start/`, {
+      method: 'POST',
+      body: JSON.stringify({ is_daily: isDaily }),
+    });
   },
   submit: async (data: CovertestGuessRequest): Promise<CovertestState> => {
     return apiClient(`${API_BASE}/guess/`, { method: 'POST', body: JSON.stringify(data) });
-  }
+  },
+  reveal: async (): Promise<CovertestState> => {
+    return apiClient(`${API_BASE}/reveal/`, { method: 'POST' });
+  },
+  getTitles: async (): Promise<string[]> => {
+    const data = (await apiClient(`${API_BASE}/titles/`, { skipToast: true })) as { titles?: string[] };
+    return data?.titles ?? [];
+  },
 };
-

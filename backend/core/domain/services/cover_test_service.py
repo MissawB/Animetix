@@ -59,6 +59,7 @@ class CoverTestDomainService:
                         "cover_url": cover["url"],
                         "locale": loc,
                         "volume": cover.get("volume"),
+                        "author": data.get("author"),
                     }
                     break
             if result:

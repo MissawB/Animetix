@@ -462,6 +462,11 @@ urlpatterns = [
     path(
         "game/vs_battle/arena/", api_views.list_vs_battles, name="api_vs_battle_arena"
     ),
+    path(
+        "game/vs_battle/characters/",
+        api_views.list_vs_characters,
+        name="api_vs_battle_characters",
+    ),
     path("game/vs_battle/run/", api_views.run_vs_battle, name="api_vs_battle_run"),
     path(
         "game/vs_battle/<int:battle_id>/like/",
@@ -629,9 +634,19 @@ urlpatterns = [
         name="api_blindtest_titles",
     ),
     path(
+        "game/covertest/titles/",
+        api_views.CovertestTitlesView.as_view(),
+        name="api_covertest_titles",
+    ),
+    path(
         "game/covertest/state/",
         api_views.CovertestGameStateView.as_view(),
         name="api_covertest_state",
+    ),
+    path(
+        "game/covertest/reveal/",
+        api_views.CovertestGameRevealView.as_view(),
+        name="api_covertest_reveal",
     ),
     path(
         "game/covertest/start/",

@@ -13,6 +13,7 @@ class BlindTestGameState:
     secret: Optional[str] = None
     video: Optional[str] = None
     type: Optional[str] = None
+    sequence: Any = None
     song: Optional[str] = None
     artists: Any = None
     guesses: List[Any] = field(default_factory=list)
@@ -32,6 +33,7 @@ class BlindTestDomainService:
             secret=port.get("blindtest_secret"),
             video=port.get("blindtest_video"),
             type=port.get("blindtest_type"),
+            sequence=port.get("blindtest_sequence"),
             song=port.get("blindtest_song"),
             artists=port.get("blindtest_artists"),
             guesses=port.get("blindtest_guesses", []),
@@ -47,6 +49,7 @@ class BlindTestDomainService:
                 "blindtest_secret": state.secret,
                 "blindtest_video": state.video,
                 "blindtest_type": state.type,
+                "blindtest_sequence": state.sequence,
                 "blindtest_song": state.song,
                 "blindtest_artists": state.artists,
                 "blindtest_guesses": state.guesses,
@@ -113,6 +116,7 @@ class BlindTestDomainService:
                         "song_title": theme["song_title"],
                         "artists": theme["artists"],
                         "type": theme["type"],
+                        "sequence": theme.get("sequence"),
                         "video_url": video_url,
                     }
                     break
