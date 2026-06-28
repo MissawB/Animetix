@@ -4,6 +4,8 @@ from typing import Dict, List, Tuple
 
 import numpy as np
 
+from .akinetix.question_formatter import is_valid_micro_tag
+
 
 class AkinetixRLEnvironment:
     """
@@ -23,7 +25,13 @@ class AkinetixRLEnvironment:
         attrs = set()
         for item in db:
             attrs.update([f"genre:{g}" for g in item.get("genres", [])])
-            attrs.update([f"tag:{t}" for t in item.get("micro_tags", [])])
+            attrs.update(
+                [
+                    f"tag:{t}"
+                    for t in item.get("micro_tags", [])
+                    if is_valid_micro_tag(t)
+                ]
+            )
             attrs.update([f"studio:{s}" for s in item.get("studios", [])])
         return list(attrs)
 

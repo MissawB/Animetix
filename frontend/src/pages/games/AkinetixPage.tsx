@@ -60,7 +60,7 @@ const AkinetixPage: React.FC = () => {
           <Brain className="w-12 h-12 text-blue-500 relative z-10" />
         </div>
         <h1 className="text-5xl md:text-7xl font-black italic manga-font mb-4 tracking-tighter uppercase text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
-          Akinetix <span className="text-white">Omega</span>
+          Akinetix
         </h1>
         <p className="text-white/50 font-bold uppercase tracking-[0.2em] text-sm md:text-base">
           L'IA peut-elle lire dans vos pensées ?

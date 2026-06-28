@@ -64,3 +64,33 @@ def test_process_rl_answer(engine, sample_db):
     new_state = engine.process_answer(sample_db, state, "OUI", mode="rl")
     assert len(new_state.history) == 1
     assert new_state.current_q is not None
+
+
+_BAD_TAG = "aucune unité de calcul d'IA n'est disponible (Ollama/HF)."
+
+
+def test_is_valid_micro_tag():
+    from core.domain.services.akinetix.question_formatter import is_valid_micro_tag
+
+    assert is_valid_micro_tag("ninja")
+    assert is_valid_micro_tag("Esthétique Cyberpunk")
+    assert not is_valid_micro_tag(_BAD_TAG)
+    assert not is_valid_micro_tag("x" * 60)
+    assert not is_valid_micro_tag("")
+    assert not is_valid_micro_tag(None)
+
+
+def test_prepare_classical_data_drops_polluted_micro_tags(engine):
+    db = [
+        {
+            "id": "1",
+            "title": "X",
+            "genres": ["Action"],
+            "micro_tags": ["ninja", _BAD_TAG],
+        },
+    ]
+    _items, attrs = engine._prepare_classical_data(db, {})
+    assert "tag:ninja" in attrs
+    assert all(
+        "aucune unité" not in a.lower() and "ollama" not in a.lower() for a in attrs
+    )

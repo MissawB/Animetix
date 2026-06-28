@@ -19,10 +19,11 @@ describe('AkinetixPage', () => {
     global.fetch = vi.fn()
       .mockResolvedValueOnce({
         ok: true,
+        // The real API returns snake_case (the service normalizes it).
         json: () => Promise.resolve({
           history: [],
-          currentQuestion: "Est-ce un personnage masculin ?",
-          gameOver: false
+          current_question: "Est-ce un personnage masculin ?",
+          game_over: false
         })
       } as Response);
   });
@@ -39,8 +40,8 @@ describe('AkinetixPage', () => {
         ok: true,
         json: () => Promise.resolve({
             history: [{ q: "Est-ce un personnage masculin ?", a: "OUI" }],
-            currentQuestion: "A-t-il les cheveux blonds ?",
-            gameOver: false
+            current_question: "A-t-il les cheveux blonds ?",
+            game_over: false
         })
     } as Response);
 

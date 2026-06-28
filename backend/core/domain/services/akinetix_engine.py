@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 
 from ..entities.akinetix import AkinetixGameState, AkinetixQuestion
-from .akinetix.question_formatter import QuestionFormatter
+from .akinetix.question_formatter import QuestionFormatter, is_valid_micro_tag
 from .akinetix_rl_env import AkinetixRLEnvironment
 from .catalog_service import CatalogService
 
@@ -158,7 +158,13 @@ class AkinetixEngine:
             if item.get("genres"):
                 attrs.update([f"genre:{g}" for g in (item.get("genres") or [])])
             if item.get("micro_tags"):
-                attrs.update([f"tag:{t}" for t in (item.get("micro_tags") or [])])
+                attrs.update(
+                    [
+                        f"tag:{t}"
+                        for t in (item.get("micro_tags") or [])
+                        if is_valid_micro_tag(t)
+                    ]
+                )
             if item.get("studios"):
                 attrs.update([f"studio:{s}" for s in (item.get("studios") or [])])
             meta = item.get("metadata", {})
