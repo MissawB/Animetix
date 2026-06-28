@@ -6,7 +6,11 @@ export const SingularityLab: React.FC = () => {
   const { isEn } = useGameModes();
 
   return (
-    <section className="py-16">
+    <section className="py-16 text-left">
+      <h2 className="text-3xl font-black mb-6 flex items-baseline text-black dark:text-white uppercase italic manga-font">
+        Labs
+        <span className="text-yellow-400 text-3xl leading-none ml-1">.</span>
+      </h2>
       <Link to="/lab/" className="block no-underline group">
         <div className="relative w-full h-[280px] bg-gradient-to-r from-navy-950 via-[#0a0a16] to-black rounded-[3rem] overflow-hidden shadow-2xl border border-cyan-400/15 group-hover:border-cyan-400/50 transition-all duration-500 flex items-center p-8 md:p-16">
           {/* Latent-space coordinate grid — drifts continuously (signature motion) */}
