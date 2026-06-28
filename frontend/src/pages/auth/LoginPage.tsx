@@ -166,7 +166,7 @@ const LoginPage: React.FC = () => {
                 <div className="flex-grow border-t border-gray-200 dark:border-white/10"></div>
               </div>
 
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <button type="button" aria-label="Se connecter avec Google" title="Google" disabled={isLoading} onClick={handleGoogleLogin} className={socialBtn}>
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -182,12 +182,6 @@ const LoginPage: React.FC = () => {
                   </svg>
                 </button>
 
-                <button type="button" aria-label="X — bientôt disponible" title="Bientôt disponible" disabled className={socialBtnSoon}>
-                  <svg className="w-5 h-5 text-black dark:text-white" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                  </svg>
-                </button>
-
                 <button type="button" aria-label="MyAnimeList — bientôt disponible" title="Bientôt disponible" disabled className={socialBtnSoon}>
                   <svg className="w-5 h-5 text-[#2e51a2]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path d="M14.921 6.479c-.82 0-3.683 0-4.947 3.156-.662 1.652-.986 4.812.876 7.886l1.934-1.41s-.767-1.095-1.083-3.191h2.897l.022 3.19h2.604V8.835h-2.581v2.043l-2.46-.023s.413-2.408 2.877-2.336h2.454l-.572-2.04ZM0 6.528v9.624h2.348v-5.84l2.031 2.664 2.047-2.652v5.828h2.336V6.528H6.437L4.368 9.474 2.31 6.528Zm18.447.022v9.583h5.022L24 14.09h-3.232V6.55Z" />
@@ -195,7 +189,7 @@ const LoginPage: React.FC = () => {
                 </button>
               </div>
               <p className="text-center text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500 mt-3">
-                Discord, X &amp; MyAnimeList bientôt disponibles
+                Discord &amp; MyAnimeList bientôt disponibles
               </p>
 
               <div className="text-center pt-6 border-t border-gray-100 dark:border-white/5">
