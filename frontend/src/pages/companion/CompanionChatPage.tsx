@@ -15,7 +15,7 @@ import { AnimatedPage } from "../../components/ui/AnimatedPage";
 
 const CompanionChatPage: React.FC = () => {
   const [input, setInput] = useState('');
-  const { history, isLoading, sendMessage, activeMentor, setMentor, clearHistory, customPersona, setCustomPersona } = useCompanionStore();
+  const { history, isLoading, error, sendMessage, activeMentor, setMentor, clearHistory, customPersona, setCustomPersona } = useCompanionStore();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -171,6 +171,14 @@ const CompanionChatPage: React.FC = () => {
                                             <div className="w-2 h-2 bg-blue-500/40 rounded-full animate-bounce [animation-delay:0.4s]" />
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {error && (
+                            <div className="flex justify-center animate-fade-in">
+                                <div className="max-w-[90%] px-5 py-3 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-bold text-center">
+                                    {error}
                                 </div>
                             </div>
                         )}

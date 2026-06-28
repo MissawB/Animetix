@@ -39,7 +39,8 @@ export const apiClient = async (url: string, options: RequestInit & { skipToast?
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => null);
-      const errorMessage = errorData?.message || `Erreur ${response.status}: Impossible de récupérer les données.`;
+      // DRF surfaces errors as `detail`; our views use `error`/`message`.
+      const errorMessage = errorData?.message || errorData?.error || errorData?.detail || `Erreur ${response.status}: Impossible de récupérer les données.`;
       
       // Déclenchement global du Toast
       if (!skipToast) {
