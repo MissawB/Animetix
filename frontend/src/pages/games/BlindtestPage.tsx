@@ -11,15 +11,18 @@ const SCORE_TIERS = [100, 50, 25, 10, 0];
 
 const pickHint = (): HintType => HINT_TYPES[Math.floor(Math.random() * HINT_TYPES.length)];
 
+// The colour/noise effect stays on at all times (the clip is never shown clean);
+// only the blur eases off with each guess so the image "se précise".
 const filterFor = (type: HintType, level: number): string => {
   const L = Math.max(0, Math.min(1, level));
+  const blur = `blur(${(3 + L * 13).toFixed(1)}px)`;
   switch (type) {
-    case 'invert': return `invert(${L.toFixed(2)})`;
-    case 'blur': return `blur(${(L * 16).toFixed(1)}px)`;
-    case 'grayscale': return `grayscale(${L.toFixed(2)}) contrast(${(1 + L).toFixed(2)})`;
-    case 'hue': return `hue-rotate(${Math.round(L * 220)}deg) saturate(${(1 + L * 2).toFixed(2)})`;
-    case 'noise': return `brightness(${(1 - 0.25 * L).toFixed(2)})`;
-    default: return 'none';
+    case 'invert': return `invert(1) ${blur}`;
+    case 'grayscale': return `grayscale(1) contrast(1.15) ${blur}`;
+    case 'hue': return `hue-rotate(160deg) saturate(2.5) ${blur}`;
+    case 'blur': return `blur(${(6 + L * 18).toFixed(1)}px)`;
+    case 'noise': return `${blur} brightness(0.9)`;
+    default: return blur;
   }
 };
 
@@ -82,7 +85,10 @@ const BlindtestPage: React.FC = () => {
   const lost = gameState.gameOver && gameState.won === false;
   const maxAttempts = gameState.maxAttempts ?? 4;
   const used = gameState.guesses.length;
-  const hintLevel = gameState.gameOver ? 0 : Math.max(0, 1 - used / Math.max(1, maxAttempts));
+  // Visual hint only after the first guess; round always opens on the vinyl.
+  const showVisual = hintsEnabled && !gameState.gameOver && used >= 1;
+  const hintSteps = Math.max(1, maxAttempts - 1);
+  const hintLevel = used >= 1 ? Math.max(0, 1 - (used - 1) / hintSteps) : 1;
   const correctIdx = gameState.guesses.findIndex((g) => g.is_correct);
   const roundScore = gameState.won && correctIdx >= 0 ? (SCORE_TIERS[correctIdx] ?? 0) : 0;
   const replay = () => restartGame(currentMode, gameState.difficulty);
@@ -172,18 +178,18 @@ const BlindtestPage: React.FC = () => {
               </div>
 
               {hintsEnabled ? (
-                /* Visual hint — distorted video that clears with each guess */
-                <button
-                  onClick={togglePlay}
-                  aria-label={isPlaying ? 'Mettre en pause' : 'Lancer la lecture'}
-                  className="group relative w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl bg-black outline-none"
+                /* One persistent media element (audio stays continuous). The vinyl
+                   covers it until the first guess; afterwards the clip is revealed
+                   distorted — colour effect always on, blur easing each guess. */
+                <div
+                  className="relative w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl bg-[#0d0d12]"
                   style={{ aspectRatio: String(aspect) }}
                 >
                   <video
                     ref={mediaRef}
                     src={gameState.video_url}
-                    className="w-full h-full object-cover transition-[filter] duration-500"
-                    style={{ filter: filterFor(hintType, hintLevel) }}
+                    className={`w-full h-full object-cover transition-all duration-500 ${showVisual ? 'opacity-100' : 'opacity-0'}`}
+                    style={{ filter: showVisual ? filterFor(hintType, hintLevel) : 'none' }}
                     preload="auto"
                     aria-label="Indice visuel du générique"
                     onLoadedMetadata={(e) => {
@@ -197,20 +203,41 @@ const BlindtestPage: React.FC = () => {
                   >
                     <track kind="captions" />
                   </video>
-                  {hintType === 'noise' && (
+
+                  {showVisual && hintType === 'noise' && (
                     <div
                       className="absolute inset-0 mix-blend-overlay pointer-events-none"
-                      style={{ backgroundImage: "url('/static/img/noise.png')", opacity: hintLevel }}
+                      style={{ backgroundImage: "url('/static/img/noise.png')", opacity: 0.4 + hintLevel * 0.5 }}
                     />
                   )}
-                  <span className="absolute inset-0 grid place-items-center pointer-events-none">
+
+                  {!showVisual && (
+                    <div className="absolute inset-0 grid place-items-center">
+                      <div
+                        className={`relative w-44 h-44 rounded-full grid place-items-center shadow-[0_20px_50px_rgba(0,0,0,0.5)] ${isPlaying ? 'motion-safe:animate-[spin_4s_linear_infinite]' : ''}`}
+                        style={{ background: 'repeating-radial-gradient(circle at center, #0d0d12 0 3px, #1b1b24 3px 6px)' }}
+                      >
+                        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-transparent via-white/5 to-white/15" />
+                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-300 to-orange-500 grid place-items-center border-4 border-black/40 shadow-inner">
+                          <Music className="w-6 h-6 text-black/80" />
+                        </div>
+                        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#0f0f1a] border border-white/20" />
+                      </div>
+                    </div>
+                  )}
+
+                  <button
+                    onClick={togglePlay}
+                    aria-label={isPlaying ? 'Mettre en pause' : 'Lancer la lecture'}
+                    className="absolute inset-0 grid place-items-center group outline-none"
+                  >
                     <span className="bg-black/60 backdrop-blur-sm text-white p-4 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                       {isPlaying ? <Pause className="w-7 h-7" /> : <Play className="w-7 h-7 fill-current" />}
                     </span>
-                  </span>
-                </button>
+                  </button>
+                </div>
               ) : (
-                /* Vinyl disc — audio only */
+                /* Vinyl disc — audio only (hints disabled) */
                 <button onClick={togglePlay} aria-label={isPlaying ? 'Mettre en pause' : 'Lancer la lecture'} className="group relative outline-none">
                   <div
                     className={`relative w-60 h-60 rounded-full grid place-items-center shadow-[0_20px_50px_rgba(0,0,0,0.5)] ${isPlaying ? 'motion-safe:animate-[spin_4s_linear_infinite]' : ''}`}
