@@ -221,6 +221,13 @@ export interface EmojiState extends GameState {
 export interface BlindtestState extends GameState {
   video_url?: string;
   secret_title?: string;
+  theme_type?: string;
+  song?: string;
+  artists?: string[];
+  won?: boolean;
+  difficulty?: string;
+  maxAttempts?: number;
+  attemptsLeft?: number;
   guesses: Array<{ title: string; is_correct: boolean }>;
 }
 

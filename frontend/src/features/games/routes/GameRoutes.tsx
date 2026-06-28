@@ -3,6 +3,7 @@ import { lazy } from 'react';
 
 const AkinetixPage = lazy(() => import('../../../pages/games/AkinetixPage'));
 const BlindtestPage = lazy(() => import('../../../pages/games/BlindtestPage'));
+const BlindtestLobbyPage = lazy(() => import('../../../pages/games/BlindtestLobbyPage'));
 const ClassicGamePage = lazy(() => import('../../../pages/games/ClassicGamePage'));
 const ParadoxGamePage = lazy(() => import('../../../pages/games/ParadoxGamePage'));
 const UndercoverRoom = lazy(() => import('../../../pages/games/UndercoverRoom'));
@@ -35,7 +36,8 @@ export const GameRoutes = () => (
     <Route path="/akinetix/" element={<AkinetixPage />} />
     <Route path="/akinetix-expert/" element={<AkinetixRLPage />} />
     <Route path="/emoji/" element={<EmojiPage />} />
-    <Route path="/blindtest/" element={<BlindtestPage />} />
+    <Route path="/blindtest/" element={<BlindtestLobbyPage />} />
+    <Route path="/blindtest/play/" element={<BlindtestPage />} />
     <Route path="/vision/" element={<VisionPage />} />
     <Route path="/paradox/" element={<ParadoxGamePage />} />
     <Route path="/covertest/" element={<CovertestPage />} />

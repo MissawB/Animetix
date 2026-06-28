@@ -7,11 +7,14 @@ interface BlindtestStore {
   isLoading: boolean;
   error: string | null;
   loadGame: () => Promise<void>;
-  restartGame: () => Promise<void>;
+  restartGame: (type?: 'OP' | 'ED', difficulty?: string) => Promise<void>;
   submitGuess: (guess: string) => Promise<void>;
 }
 
-export const useBlindtestStore = create<BlindtestStore>((set) => ({
+const msg = (err: unknown, fallback: string) =>
+  err instanceof Error ? err.message : fallback;
+
+export const useBlindtestStore = create<BlindtestStore>((set, get) => ({
   gameState: null,
   isLoading: true,
   error: null,
@@ -26,31 +29,33 @@ export const useBlindtestStore = create<BlindtestStore>((set) => ({
         const state = await blindtestService.startGame();
         set({ gameState: state, isLoading: false });
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Failed to start game';
-        set({ error: message, isLoading: false });
+        set({ error: msg(err, 'Failed to start game'), isLoading: false });
       }
     }
   },
 
-  restartGame: async () => {
+  restartGame: async (type, difficulty) => {
     set({ isLoading: true, error: null });
     try {
-      const state = await blindtestService.startGame();
+      const state = await blindtestService.startGame({ type, difficulty });
       set({ gameState: state, isLoading: false });
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to restart game';
-      set({ error: message, isLoading: false });
+      set({ error: msg(err, 'Failed to restart game'), isLoading: false });
     }
   },
 
   submitGuess: async (guess: string) => {
     set({ isLoading: true, error: null });
     try {
-      const state = await blindtestService.submitGuess(guess);
-      set({ gameState: state, isLoading: false });
+      const result = await blindtestService.submitGuess(guess);
+      const prev = get().gameState;
+      // Merge so the current track (video_url, theme_type, song…) is preserved.
+      set({
+        gameState: prev ? { ...prev, ...result } : null,
+        isLoading: false,
+      });
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to submit guess';
-      set({ error: message, isLoading: false });
+      set({ error: msg(err, 'Failed to submit guess'), isLoading: false });
     }
-  }
+  },
 }));
