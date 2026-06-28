@@ -1,14 +1,60 @@
 import hashlib
 import random
-from typing import Dict, Optional
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional
+
+from core.ports.game_state_port import GameStatePort
 
 from ...ports.repository_port import RepositoryPort
+
+
+@dataclass
+class BlindTestGameState:
+    secret: Optional[str] = None
+    video: Optional[str] = None
+    type: Optional[str] = None
+    song: Optional[str] = None
+    artists: Any = None
+    guesses: List[Any] = field(default_factory=list)
+    game_over: bool = False
+    is_daily: bool = False
+    difficulty: str = "Normal"
 
 
 class BlindTestDomainService:
     def __init__(self, repository: RepositoryPort):
         self.repository = repository
         self._themes = None
+
+    def get_state(self, port: GameStatePort) -> BlindTestGameState:
+        """Load the Blind Test state for the current session from the port."""
+        return BlindTestGameState(
+            secret=port.get("blindtest_secret"),
+            video=port.get("blindtest_video"),
+            type=port.get("blindtest_type"),
+            song=port.get("blindtest_song"),
+            artists=port.get("blindtest_artists"),
+            guesses=port.get("blindtest_guesses", []),
+            game_over=port.get("blindtest_game_over", False),
+            is_daily=port.get("is_daily", False),
+            difficulty=port.get("blindtest_difficulty", "Normal"),
+        )
+
+    def save_state(self, port: GameStatePort, state: BlindTestGameState) -> None:
+        """Persist the Blind Test state for the current session to the port."""
+        port.update(
+            {
+                "blindtest_secret": state.secret,
+                "blindtest_video": state.video,
+                "blindtest_type": state.type,
+                "blindtest_song": state.song,
+                "blindtest_artists": state.artists,
+                "blindtest_guesses": state.guesses,
+                "blindtest_game_over": state.game_over,
+                "is_daily": state.is_daily,
+                "blindtest_difficulty": state.difficulty,
+            }
+        )
 
     def _get_themes(self):
         if self._themes is None:

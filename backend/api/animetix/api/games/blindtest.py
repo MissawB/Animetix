@@ -15,6 +15,13 @@ logger = get_logger("animetix.games.blindtest")
 
 # --- BLINDTEST MODE ---
 
+# Difficulty controls how many guesses the player gets before losing.
+MAX_ATTEMPTS = {"Easy": 6, "Normal": 4, "Hard": 3, "Impossible": 1}
+
+
+def _max_attempts(difficulty: str) -> int:
+    return MAX_ATTEMPTS.get(difficulty, MAX_ATTEMPTS["Normal"])
+
 
 class BlindtestGameStateView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -31,6 +38,8 @@ class BlindtestGameStateView(APIView):
                 {"error": "No game in progress"}, status=status.HTTP_400_BAD_REQUEST
             )
 
+        won = any(g.get("is_correct") for g in state.guesses)
+        max_attempts = _max_attempts(state.difficulty)
         return Response(
             {
                 "video_url": state.video,
@@ -39,7 +48,11 @@ class BlindtestGameStateView(APIView):
                 "blindtest_artists": state.artists,
                 "guesses": state.guesses,
                 "game_over": state.game_over,
+                "won": won,
                 "is_daily": state.is_daily,
+                "difficulty": state.difficulty,
+                "max_attempts": max_attempts,
+                "attempts_left": max(0, max_attempts - len(state.guesses)),
                 "secret_title": state.secret if state.game_over else None,
             }
         )
@@ -60,6 +73,7 @@ class BlindtestGameStartView(APIView):
         media_type = "Anime"
         is_daily = request.data.get("is_daily", False)
         theme_pref = request.data.get("type")
+        difficulty = request.data.get("difficulty") or "Normal"
 
         data = catalog_service.load_data(media_type)
         if not data:
@@ -87,9 +101,11 @@ class BlindtestGameStartView(APIView):
         state.guesses = []
         state.game_over = False
         state.is_daily = is_daily
+        state.difficulty = difficulty
 
         blind_test_service.save_state(port, state)
 
+        max_attempts = _max_attempts(difficulty)
         return Response(
             {
                 "video_url": state.video,
@@ -98,7 +114,11 @@ class BlindtestGameStartView(APIView):
                 "blindtest_artists": state.artists,
                 "guesses": [],
                 "game_over": False,
+                "won": False,
                 "is_daily": is_daily,
+                "difficulty": difficulty,
+                "max_attempts": max_attempts,
+                "attempts_left": max_attempts,
             }
         )
 
@@ -155,6 +175,9 @@ class BlindtestGameGuessView(APIView):
             }
         )
 
+        max_attempts = _max_attempts(state.difficulty)
+        out_of_attempts = not is_correct and len(state.guesses) >= max_attempts
+
         unlocked_achievements = []
         if is_correct:
             state.game_over = True
@@ -190,6 +213,16 @@ class BlindtestGameGuessView(APIView):
                 history=state.guesses,
                 was_won=True,
             )
+        elif out_of_attempts:
+            state.game_over = True
+            GameplaySession.objects.create(
+                user=request.user if request.user.is_authenticated else None,
+                game_mode="blindtest",
+                media_type=media_type,
+                target_item=secret,
+                history=state.guesses,
+                was_won=False,
+            )
 
         blind_test_service.save_state(port, state)
 
@@ -197,8 +230,10 @@ class BlindtestGameGuessView(APIView):
             {
                 "is_correct": is_correct,
                 "guesses": state.guesses,
-                "game_over": is_correct,
-                "secret_title": secret if is_correct else None,
+                "game_over": state.game_over,
+                "won": is_correct,
+                "attempts_left": max(0, max_attempts - len(state.guesses)),
+                "secret_title": secret if state.game_over else None,
                 "newly_unlocked_achievements": unlocked_achievements,
             }
         )
