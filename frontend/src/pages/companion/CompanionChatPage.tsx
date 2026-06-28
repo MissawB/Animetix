@@ -15,7 +15,7 @@ import { AnimatedPage } from "../../components/ui/AnimatedPage";
 
 const CompanionChatPage: React.FC = () => {
   const [input, setInput] = useState('');
-  const { history, isLoading, sendMessage, activeMentor, setMentor, clearHistory } = useCompanionStore();
+  const { history, isLoading, sendMessage, activeMentor, setMentor, clearHistory, customPersona, setCustomPersona } = useCompanionStore();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -33,9 +33,15 @@ const CompanionChatPage: React.FC = () => {
   };
 
   const MENTORS = [
-    { id: 'sensei', name: 'Sensei', desc: 'Sagesse et guidance technique.', color: 'text-blue-500', bg: 'bg-blue-500/10' },
-    { id: 'tsundere', name: 'Tsundere-chan', desc: 'Émotionnelle et protectrice.', color: 'text-red-500', bg: 'bg-red-500/10' },
-    { id: 'kuudere', name: 'Kuudere-san', desc: 'Calme et analyse logique.', color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+    { id: 'sensei', name: 'Sensei', desc: 'Sagesse et guidance technique.' },
+    { id: 'tsundere', name: 'Tsundere-chan', desc: 'Émotionnelle et protectrice.' },
+    { id: 'kuudere', name: 'Kuudere-san', desc: 'Calme et analyse logique.' },
+    { id: 'senpai', name: 'Senpai', desc: 'Encourageant et un peu taquin.' },
+    { id: 'rival', name: 'Rival', desc: 'Compétitif, te pousse à fond.' },
+    { id: 'genki', name: 'Genki', desc: 'Énergie et optimisme débordants.' },
+    { id: 'ojou', name: 'Ojou-sama', desc: 'Raffinée et un brin hautaine.' },
+    { id: 'strategist', name: 'Stratège', desc: 'Analytique et calculateur.' },
+    { id: 'custom', name: 'Personnalisé', desc: 'Définis ta propre personnalité.' },
   ];
 
   return (
@@ -84,6 +90,24 @@ const CompanionChatPage: React.FC = () => {
                         ))}
                     </div>
                 </Card>
+
+                {activeMentor === 'custom' && (
+                    <Card padding="lg" className="bg-navy-900/40 border-white/5">
+                        <h3 className="text-[10px] font-black uppercase opacity-40 mb-3 tracking-widest flex items-center gap-2">
+                            <Sparkles className="w-3 h-3" /> Personnalité
+                        </h3>
+                        <textarea
+                            value={customPersona}
+                            onChange={(e) => setCustomPersona(e.target.value)}
+                            maxLength={600}
+                            rows={5}
+                            placeholder="Ex: Tu es un pirate jovial qui parle en métaphores marines et adore les défis."
+                            aria-label="Personnalité du compagnon"
+                            className="w-full p-3 rounded-2xl bg-black/40 border-2 border-white/5 focus:border-blue-500 outline-none text-xs font-medium leading-relaxed text-white placeholder-white/20 resize-none transition-all"
+                        />
+                        <p className="text-[9px] font-bold opacity-30 uppercase tracking-widest mt-2 text-right">{customPersona.length}/600</p>
+                    </Card>
+                )}
             </div>
 
             {/* Chat Area */}

@@ -26,6 +26,7 @@ class CompanionInteractView(APIView):
         mentor_id = request.data.get("mentor_id")
         user_message = request.data.get("user_message")
         context_url = request.data.get("context_url", "")
+        custom_persona = request.data.get("custom_persona")
 
         if not mentor_id or not user_message:
             return Response(
@@ -63,6 +64,7 @@ class CompanionInteractView(APIView):
                 context=context_url,
                 history=history,
                 user_id=request.user.id,
+                custom_persona=custom_persona,
             )
 
             # 2. Output Guardrail (Fact-checking, Hallucination)

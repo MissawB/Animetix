@@ -8,18 +8,21 @@ interface Message {
 
 interface CompanionState {
   activeMentor: string;
+  customPersona: string;
   isOpen: boolean;
   history: Message[];
   isLoading: boolean;
   error: string | null;
   toggleOpen: () => void;
   setMentor: (mentorId: string) => void;
+  setCustomPersona: (persona: string) => void;
   sendMessage: (message: string, contextUrl?: string) => Promise<void>;
   clearHistory: () => void;
 }
 
 export const useCompanionStore = create<CompanionState>((set, get) => ({
   activeMentor: 'sensei',
+  customPersona: '',
   isOpen: false,
   history: [],
   isLoading: false,
@@ -29,8 +32,10 @@ export const useCompanionStore = create<CompanionState>((set, get) => ({
 
   setMentor: (mentorId) => set({ activeMentor: mentorId }),
 
+  setCustomPersona: (persona) => set({ customPersona: persona }),
+
   sendMessage: async (message, contextUrl) => {
-    const { activeMentor } = get();
+    const { activeMentor, customPersona } = get();
     
     // Automatically capture current URL and Title if not provided
     const effectiveContextUrl = contextUrl || `${window.location.href} (Page: ${document.title})`;
@@ -44,7 +49,12 @@ export const useCompanionStore = create<CompanionState>((set, get) => ({
     }));
 
     try {
-      const response = await interactWithCompanion(activeMentor, message, effectiveContextUrl);
+      const response = await interactWithCompanion(
+        activeMentor,
+        message,
+        effectiveContextUrl,
+        activeMentor === 'custom' ? customPersona : undefined,
+      );
       
       // Update history with the full history returned by the API
       // (or just append the response if the API only returns the new history)

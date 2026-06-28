@@ -10,7 +10,7 @@ class InfrastructureContainer(containers.DeclarativeContainer):
     prompt_manager = providers.Singleton(
         "core.domain.services.prompt_manager.PromptManager",
         prompts_dir=os.path.join(
-            settings.PROJECT_ROOT, "src", "core", "domain", "services", "prompts"
+            settings.PROJECT_ROOT, "backend", "core", "domain", "services", "prompts"
         ),
     )
 

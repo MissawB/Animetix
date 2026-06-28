@@ -69,6 +69,38 @@ def test_companion_service_invalid_mentor(mock_llm_service, mock_prompt_manager)
         service.generate_response("invalid", "msg")
 
 
+def test_companion_service_preset_uses_shared_template(
+    mock_llm_service, mock_prompt_manager
+):
+    mock_prompt_manager.get_prompt.return_value = ("p", "s")
+    service = CompanionService(mock_llm_service, mock_prompt_manager)
+
+    service.generate_response("senpai", "Salut")
+
+    args, kwargs = mock_prompt_manager.get_prompt.call_args
+    assert args[0] == "companion_custom"
+    assert "Senpai" in kwargs["persona"]
+
+
+def test_companion_service_custom_persona(mock_llm_service, mock_prompt_manager):
+    mock_prompt_manager.get_prompt.return_value = ("p", "s")
+    service = CompanionService(mock_llm_service, mock_prompt_manager)
+
+    service.generate_response("custom", "Salut", custom_persona="Tu es un pirate.")
+
+    args, kwargs = mock_prompt_manager.get_prompt.call_args
+    assert args[0] == "companion_custom"
+    assert kwargs["persona"] == "Tu es un pirate."
+
+
+def test_companion_service_custom_persona_required(
+    mock_llm_service, mock_prompt_manager
+):
+    service = CompanionService(mock_llm_service, mock_prompt_manager)
+    with pytest.raises(ValueError, match="custom_persona is required"):
+        service.generate_response("custom", "msg")
+
+
 def test_companion_service_sanitization(mock_llm_service, mock_prompt_manager):
     # Setup
     mock_prompt_manager.get_prompt.return_value = ("formatted_prompt", "system_prompt")

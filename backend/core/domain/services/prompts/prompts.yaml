@@ -734,3 +734,7 @@ video_narrative_generation:
   template: "RÔLE : Chroniqueur Visuel Expert.\nTITRE DE L'ŒUVRE : {title}\n\nMISSION : Décris de manière extrêmement détaillée ce qui se passe dans cet extrait vidéo.\n\nCONSIGNES :\n1. STYLES GRAPHIQUES : Identifie le style d'animation, les jeux de lumière et les palettes de couleurs.\n2. ACTIONS : Détaille les mouvements, les techniques de combat et les expressions faciales.\n3. CONTEXTE : Relie les actions au lore de '{title}' si possible.\n\nSois factuel et précis. Ne fais pas de suppositions si l'image est floue."
   system_prompt: Tu es l'Expert en Narration Visuelle d'Animetix. Ta description servira de base à un moteur de recherche sémantique.
 
+companion_custom:
+  template: "L'utilisateur dit : {user_msg}\n\nCONTEXTE :\n{context}\n\nHISTORIQUE :\n{history}\n\nSOUVENIRS PERTINENTS :\n{memories}\n\nMISSION : Reste fidèle à ta personnalité et réponds de manière utile et cohérente avec ton rôle."
+  system_prompt: "{persona}"
+

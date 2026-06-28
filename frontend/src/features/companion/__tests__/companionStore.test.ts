@@ -16,6 +16,7 @@ describe('useCompanionStore', () => {
     vi.clearAllMocks();
     useCompanionStore.setState({
       activeMentor: 'sensei',
+      customPersona: '',
       isOpen: false,
       history: [],
       isLoading: false,
@@ -57,7 +58,7 @@ describe('useCompanionStore', () => {
     await useCompanionStore.getState().sendMessage('Hi', 'http://ctx');
 
     const state = useCompanionStore.getState();
-    expect(mockedInteract).toHaveBeenCalledWith('sensei', 'Hi', 'http://ctx');
+    expect(mockedInteract).toHaveBeenCalledWith('sensei', 'Hi', 'http://ctx', undefined);
     expect(state.history).toEqual([
       { role: 'user', content: 'Hi' },
       { role: 'assistant', content: 'Hello there' },
@@ -72,7 +73,17 @@ describe('useCompanionStore', () => {
 
     await useCompanionStore.getState().sendMessage('yo', 'http://ctx');
 
-    expect(mockedInteract).toHaveBeenCalledWith('rival', 'yo', 'http://ctx');
+    expect(mockedInteract).toHaveBeenCalledWith('rival', 'yo', 'http://ctx', undefined);
+  });
+
+  it('sendMessage forwards the custom persona for the custom mentor', async () => {
+    useCompanionStore.getState().setMentor('custom');
+    useCompanionStore.getState().setCustomPersona('Tu es un pirate.');
+    mockedInteract.mockResolvedValue({ response: 'ok', history: [] });
+
+    await useCompanionStore.getState().sendMessage('yo', 'http://ctx');
+
+    expect(mockedInteract).toHaveBeenCalledWith('custom', 'yo', 'http://ctx', 'Tu es un pirate.');
   });
 
   it('sendMessage derives a context url from location and document when none given', async () => {

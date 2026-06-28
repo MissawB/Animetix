@@ -234,13 +234,14 @@ export interface CompanionResponse {
   history: { role: string; content: string }[];
 }
 
-export async function interactWithCompanion(mentorId: string, message: string, contextUrl: string = ''): Promise<CompanionResponse> {
+export async function interactWithCompanion(mentorId: string, message: string, contextUrl: string = '', customPersona?: string): Promise<CompanionResponse> {
   return apiClient('/api/v1/companion/interact/', {
     method: 'POST',
     body: JSON.stringify({
       mentor_id: mentorId,
       user_message: message,
       context_url: contextUrl,
+      custom_persona: customPersona,
     }),
   });
 }
