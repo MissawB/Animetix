@@ -4,6 +4,7 @@ from typing import Any
 
 import jwt
 import requests
+from cryptography.x509 import load_pem_x509_certificate
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import RemoteUserBackend
@@ -185,10 +186,13 @@ class GoogleIdentityAuthentication(authentication.BaseAuthentication):
                 raise exceptions.AuthenticationFailed("Invalid kid in token header.")
 
             cert = public_keys[kid]
+            # Google's securetoken endpoint returns x509 CERTIFICATES; PyJWT needs a
+            # public KEY, so extract it (passing the cert raises InvalidKeyError).
+            public_key = load_pem_x509_certificate(cert.encode()).public_key()
 
             payload = jwt.decode(
                 id_token,
-                cert,
+                public_key,
                 algorithms=["RS256"],
                 audience=project_id,
                 issuer=f"https://securetoken.google.com/{project_id}",
