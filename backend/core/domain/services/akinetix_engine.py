@@ -22,12 +22,15 @@ class AkinetixEngine:
     MIN_STEPS_BEFORE_GUESS = 5
     MAX_STEPS_TOTAL = 25
 
-    # Answer mapping
+    # Answer mapping (anything else falls back to "dont_know")
     ANSWER_MAPPING = {
         "OUI": "yes",
         "NON": "no",
-        "PEUT-ÊTRE": "probably",
+        "PROBABLEMENT": "probably",
         "PROBABLEMENT PAS": "probably_not",
+        "JE NE SAIS PAS": "dont_know",
+        # Backward-compat with the old single "maybe" button.
+        "PEUT-ÊTRE": "probably",
     }
 
     def __init__(
@@ -120,6 +123,13 @@ class AkinetixEngine:
         best_title, best_prob = self._get_classical_best_guess(items, probs)
         steps = len(asked_attrs)
 
+        # Progression vers une déduction : confiance du meilleur candidat
+        # normalisée par le seuil de décision (0..1).
+        if self.PROBABILITY_THRESHOLD > 0:
+            state.confidence = float(min(1.0, best_prob / self.PROBABILITY_THRESHOLD))
+        else:
+            state.confidence = float(min(1.0, best_prob))
+
         if (
             best_prob > self.PROBABILITY_THRESHOLD
             and steps >= self.MIN_STEPS_BEFORE_GUESS
@@ -127,6 +137,7 @@ class AkinetixEngine:
             state.current_q = f"Est-ce que tu penses à : {best_title} ?"
             state.ai_guess = best_title
             state.game_over = True
+            state.confidence = 1.0
         else:
             next_attr = self._propose_classical_question(
                 items, attributes, probs, asked_attrs, fine_attrs

@@ -48,6 +48,7 @@ class AkinetixGameStateView(APIView):
                 "game_over": state.game_over,
                 "ai_guess": state.ai_guess,
                 "is_daily": state.is_daily,
+                "confidence": state.confidence,
             }
         )
 
@@ -100,6 +101,7 @@ class AkinetixGameStartView(APIView):
                 "game_over": game_state.game_over,
                 "ai_guess": game_state.ai_guess,
                 "is_daily": game_state.is_daily,
+                "confidence": game_state.confidence,
             }
         )
 
@@ -156,6 +158,7 @@ class AkinetixGameAnswerView(APIView):
                 "game_over": new_state.game_over,
                 "ai_guess": new_state.ai_guess,
                 "is_daily": new_state.is_daily,
+                "confidence": new_state.confidence,
             }
         )
 

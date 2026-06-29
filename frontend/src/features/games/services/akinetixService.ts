@@ -10,6 +10,7 @@ interface RawAkinetixState {
   game_over?: boolean;
   ai_guess?: string | null;
   is_daily?: boolean;
+  confidence?: number;
 }
 
 // The API returns snake_case; the UI/types use camelCase. apiClient does not
@@ -22,6 +23,7 @@ const normalize = (raw: RawAkinetixState): AkinetixState => ({
   currentQuestion: raw.current_question ?? null,
   aiGuess: raw.ai_guess ?? null,
   history: raw.history ?? [],
+  confidence: typeof raw.confidence === 'number' ? raw.confidence : 0,
 });
 
 export const akinetixService = {

@@ -557,12 +557,25 @@ class AkinetixStartSerializer(serializers.Serializer):
 class AkinetixAnswerSerializer(serializers.Serializer):
     answer = serializers.CharField()
 
+    ALLOWED_ANSWERS = [
+        "OUI",
+        "NON",
+        "PROBABLEMENT",
+        "PROBABLEMENT PAS",
+        "JE NE SAIS PAS",
+        # Backward-compat with the old single "maybe" button.
+        "PEUT-ÊTRE",
+    ]
+
     def validate_answer(self, value):
         val = value.upper().strip()
         if val == "PEUT-ETRE":
-            return "PEUT-ÊTRE"
-        if val not in ["OUI", "NON", "PEUT-ÊTRE"]:
-            raise serializers.ValidationError("Expected OUI, NON, or PEUT-ÊTRE.")
+            val = "PEUT-ÊTRE"
+        if val not in self.ALLOWED_ANSWERS:
+            raise serializers.ValidationError(
+                "Réponse invalide : utilisez OUI, NON, PROBABLEMENT, "
+                "PROBABLEMENT PAS ou JE NE SAIS PAS."
+            )
         return val
 
 

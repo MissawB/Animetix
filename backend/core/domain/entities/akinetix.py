@@ -26,6 +26,9 @@ class AkinetixGameState(BaseModel):
     probs: List[float] = Field(default_factory=list)
     asked_attrs: List[str] = Field(default_factory=list)
     is_daily: bool = False
+    # Progression 0..1 : à quel point l'IA est proche de deviner (confiance du
+    # meilleur candidat, normalisée par le seuil de décision). 1.0 = sûre.
+    confidence: float = 0.0
 
     def to_dict(self) -> Dict[str, Any]:
         """Legacy compatibility for dictionary-based ports."""

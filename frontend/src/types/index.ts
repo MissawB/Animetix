@@ -210,6 +210,8 @@ export interface AkinetixState extends GameState {
   currentQuestion: string | null;
   history: Array<{ q: string; a: string }>;
   aiGuess: string | null;
+  /** Progression 0..1 : à quel point l'IA est proche de deviner. */
+  confidence: number;
 }
 
 export interface EmojiState extends GameState {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Brain, History, Check, X, HelpCircle, Sparkles, Target, AlertTriangle } from 'lucide-react';
+import { Brain, History, Check, X, HelpCircle, Sparkles, Target, AlertTriangle, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { useAkinetixStore } from '../../features/games/stores/akinetixStore';
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
@@ -117,9 +117,26 @@ const AkinetixPage: React.FC = () => {
 
             <div className="relative z-10 flex flex-col items-center text-center">
               
-              <Badge variant="primary" className="mb-8 bg-blue-500/20 text-blue-400 border-blue-500/30 backdrop-blur-md">
+              <Badge variant="primary" className="mb-6 bg-blue-500/20 text-blue-400 border-blue-500/30 backdrop-blur-md">
                 Question #{gameState.history.length + 1}
               </Badge>
+
+              {/* Barre de progression : confiance de l'IA (à quel point elle est
+                  proche de deviner). */}
+              {!showActualTargetInput && (
+                <div className="w-full max-w-md mx-auto mb-10">
+                  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mb-2">
+                    <span className="flex items-center gap-1.5"><Target className="w-3 h-3" /> Confiance de l'IA</span>
+                    <span className="text-blue-400">{Math.round((gameState.confidence ?? 0) * 100)}%</span>
+                  </div>
+                  <div className="w-full h-2.5 rounded-full bg-white/5 overflow-hidden border border-white/5">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-blue-500 to-purple-500 shadow-[0_0_12px_rgba(59,130,246,0.5)] transition-all duration-700 ease-out"
+                      style={{ width: `${Math.min(100, Math.round((gameState.confidence ?? 0) * 100))}%` }}
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="text-3xl md:text-5xl mb-12 font-black text-white leading-tight drop-shadow-lg">
                 {gameState.gameOver && !showActualTargetInput ? (
@@ -139,31 +156,48 @@ const AkinetixPage: React.FC = () => {
               {/* Action Buttons */}
               <div className="w-full max-w-2xl mx-auto">
                 {!gameState.gameOver ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
-                    <Button 
-                      variant="success" 
-                      size="lg" 
-                      onClick={() => submitAnswer('OUI')}
-                      className="py-6 text-lg font-black uppercase tracking-widest bg-green-500 hover:bg-green-600 border-none shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_30px_rgba(34,197,94,0.5)] transition-all"
-                    >
-                      <Check className="w-6 h-6 mr-2" /> {t('common.yes')}
-                    </Button>
-                    <Button 
-                      variant="danger" 
-                      size="lg" 
-                      onClick={() => submitAnswer('NON')}
-                      className="py-6 text-lg font-black uppercase tracking-widest bg-red-500 hover:bg-red-600 border-none shadow-[0_0_20px_rgba(239,68,68,0.3)] hover:shadow-[0_0_30px_rgba(239,68,68,0.5)] transition-all"
-                    >
-                      <X className="w-6 h-6 mr-2" /> {t('common.no')}
-                    </Button>
-                    <Button 
-                      variant="secondary" 
-                      size="lg" 
-                      onClick={() => submitAnswer('PEUT-ÊTRE')}
-                      className="py-6 text-lg font-black uppercase tracking-widest bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20 border border-yellow-500/30 transition-all"
-                    >
-                      <HelpCircle className="w-6 h-6 mr-2" /> PEUT-ÊTRE
-                    </Button>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4 md:gap-6">
+                      <Button
+                        variant="success"
+                        size="lg"
+                        onClick={() => submitAnswer('OUI')}
+                        className="py-6 text-lg font-black uppercase tracking-widest bg-green-500 hover:bg-green-600 border-none shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_30px_rgba(34,197,94,0.5)] transition-all"
+                      >
+                        <Check className="w-6 h-6 mr-2" /> {t('common.yes')}
+                      </Button>
+                      <Button
+                        variant="danger"
+                        size="lg"
+                        onClick={() => submitAnswer('NON')}
+                        className="py-6 text-lg font-black uppercase tracking-widest bg-red-500 hover:bg-red-600 border-none shadow-[0_0_20px_rgba(239,68,68,0.3)] hover:shadow-[0_0_30px_rgba(239,68,68,0.5)] transition-all"
+                      >
+                        <X className="w-6 h-6 mr-2" /> {t('common.no')}
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <Button
+                        variant="secondary"
+                        onClick={() => submitAnswer('PROBABLEMENT')}
+                        className="py-4 text-sm font-black uppercase tracking-wider bg-green-500/10 text-green-400 hover:bg-green-500/20 border border-green-500/30 transition-all"
+                      >
+                        <ThumbsUp className="w-4 h-4 mr-2" /> Probablement
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        onClick={() => submitAnswer('PROBABLEMENT PAS')}
+                        className="py-4 text-sm font-black uppercase tracking-wider bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 border border-orange-500/30 transition-all"
+                      >
+                        <ThumbsDown className="w-4 h-4 mr-2" /> Probablement pas
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        onClick={() => submitAnswer('JE NE SAIS PAS')}
+                        className="py-4 text-sm font-black uppercase tracking-wider bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20 border border-yellow-500/30 transition-all"
+                      >
+                        <HelpCircle className="w-4 h-4 mr-2" /> Je ne sais pas
+                      </Button>
+                    </div>
                   </div>
                 ) : showActualTargetInput ? (
                   <div className="flex flex-col gap-4 animate-fade-in">
