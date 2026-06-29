@@ -195,29 +195,28 @@
     }
   },
   "forge_hub": {
-    "title": "Forge des Mondes",
-    "subtitle": "Accès Protocol Omega",
-    "description": "Sélectionnez une relique pour initialiser le laboratoire",
+    "title": "Forge Créative",
+    "description": "Choisissez une catégorie pour ouvrir ses ateliers de création IA",
     "categories": {
       "narrative": {
         "title": "Narratif",
-        "sub": "Reality Synthesis",
-        "desc": "Forge de Scénarios"
+        "sub": "Histoires & scénarios",
+        "desc": "Invente des récits et fusionne des univers"
       },
       "visual": {
         "title": "Visuel",
-        "sub": "Visual Labs",
-        "desc": "Manga & Video Lab"
+        "sub": "Images & vidéo",
+        "desc": "Génère des planches manga et des vidéos"
       },
       "audio": {
         "title": "Audio",
-        "sub": "Aural Nexus",
-        "desc": "Voice & Soundscape"
+        "sub": "Voix & sons",
+        "desc": "Clone des voix et compose des ambiances"
       },
       "experimental": {
         "title": "Labo",
-        "sub": "Singularity Lab",
-        "desc": "Quantum & Swarm"
+        "sub": "Expérimental",
+        "desc": "Modules de recherche IA avancés"
       }
     }
   },

@@ -199,29 +199,28 @@
     }
   },
   "forge_hub": {
-    "title": "Forge of Worlds",
-    "subtitle": "Omega Access Protocol",
-    "description": "Select a relic to initialize the laboratory",
+    "title": "Creative Forge",
+    "description": "Pick a category to open its AI creation studios",
     "categories": {
       "narrative": {
         "title": "Narrative",
-        "sub": "Reality Synthesis",
-        "desc": "Scenario Forge"
+        "sub": "Stories & scenarios",
+        "desc": "Invent stories and blend universes"
       },
       "visual": {
         "title": "Visual",
-        "sub": "Visual Labs",
-        "desc": "Manga & Video Lab"
+        "sub": "Images & video",
+        "desc": "Generate manga pages and videos"
       },
       "audio": {
         "title": "Audio",
-        "sub": "Aural Nexus",
-        "desc": "Voice & Soundscape"
+        "sub": "Voice & sound",
+        "desc": "Clone voices and compose soundscapes"
       },
       "experimental": {
         "title": "Lab",
-        "sub": "Singularity Lab",
-        "desc": "Quantum & Swarm"
+        "sub": "Experimental",
+        "desc": "Advanced AI research modules"
       }
     }
   },

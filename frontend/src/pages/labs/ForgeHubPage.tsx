@@ -70,9 +70,6 @@ const ForgeHubPage: React.FC = () => {
         </div>
 
         <header className="text-center mb-24 z-10">
-          <p className="text-[10px] font-black uppercase tracking-[0.5em] text-red-500 mb-2">
-            {t('forge_hub.subtitle')}
-          </p>
           <h1 className="text-7xl font-black italic manga-font uppercase tracking-tighter text-white">
             {t('forge_hub.title').split(' ')[0]} <span className="text-red-600 drop-shadow-[0_0_15px_rgba(220,38,38,0.5)]">
               {t('forge_hub.title').split(' ').slice(1).join(' ')}
