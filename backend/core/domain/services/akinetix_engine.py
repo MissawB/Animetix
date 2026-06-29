@@ -123,12 +123,7 @@ class AkinetixEngine:
         best_title, best_prob = self._get_classical_best_guess(items, probs)
         steps = len(asked_attrs)
 
-        # Progression vers une déduction : confiance du meilleur candidat
-        # normalisée par le seuil de décision (0..1).
-        if self.PROBABILITY_THRESHOLD > 0:
-            state.confidence = float(min(1.0, best_prob / self.PROBABILITY_THRESHOLD))
-        else:
-            state.confidence = float(min(1.0, best_prob))
+        state.confidence = self._compute_confidence(probs, best_prob)
 
         if (
             best_prob > self.PROBABILITY_THRESHOLD
@@ -328,6 +323,33 @@ class AkinetixEngine:
         item = items[idx]
         title = item.get("title") or item.get("name", "Inconnu")
         return title, probs[idx]
+
+    def _compute_confidence(self, probs: np.ndarray, best_prob: float) -> float:
+        """Progression 0..1 « à quel point l'IA est proche de deviner ».
+
+        Combine deux signaux et garde le maximum :
+        - l'information acquise (réduction d'entropie de la distribution),
+          passée en racine carrée pour que la barre bouge nettement dès les
+          premières questions plutôt que de rester collée à 0 ;
+        - la confiance du meilleur candidat normalisée par le seuil de décision,
+          qui garantit que la barre atteint 100 % au moment où l'IA tranche.
+        """
+        threshold = self.PROBABILITY_THRESHOLD
+        threshold_progress = (
+            min(1.0, best_prob / threshold) if threshold > 0 else min(1.0, best_prob)
+        )
+
+        reactive = 0.0
+        positive = probs[probs > 0]
+        n = probs.size
+        if positive.size and n > 1:
+            entropy = float(-np.sum(positive * np.log(positive)))
+            max_entropy = float(np.log(n))
+            if max_entropy > 0:
+                info_gained = 1.0 - entropy / max_entropy
+                reactive = float(np.sqrt(max(0.0, min(1.0, info_gained))))
+
+        return float(min(1.0, max(reactive, threshold_progress)))
 
     # --- RL Strategy Implementation ---
 
