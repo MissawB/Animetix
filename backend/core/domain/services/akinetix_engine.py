@@ -163,20 +163,25 @@ class AkinetixEngine:
                     attrs.add(f"fine:{k}")
             if item.get("genres"):
                 attrs.update([f"genre:{g}" for g in (item.get("genres") or [])])
-            if item.get("micro_tags"):
-                attrs.update(
-                    [
-                        f"tag:{t}"
-                        for t in (item.get("micro_tags") or [])
-                        if is_valid_micro_tag(t)
-                    ]
-                )
+            for t in self._item_tags(item):
+                attrs.add(f"tag:{t}")
             if item.get("studios"):
                 attrs.update([f"studio:{s}" for s in (item.get("studios") or [])])
             meta = item.get("metadata", {})
             if isinstance(meta, dict) and meta.get("themes"):
                 attrs.update([f"theme:{t}" for t in (meta.get("themes") or [])])
         return items, sorted(list(attrs))
+
+    def _item_tags(self, item: Dict) -> List[str]:
+        """Tags thématiques valides d'une œuvre.
+
+        Fusionne le champ riche ``tags`` (tags AniList, ~380 valeurs) avec
+        ``micro_tags`` et écarte les entrées polluées/erreurs (pipeline de
+        tagging lancé sans unité de calcul). Le moteur n'utilisait que
+        ``micro_tags``, cassé, d'où des questions de tag quasi inexistantes.
+        """
+        raw = list(item.get("tags") or []) + list(item.get("micro_tags") or [])
+        return [t for t in raw if is_valid_micro_tag(t)]
 
     def _has_attributes(self, item: Dict, fine_attributes: Dict) -> bool:
         char_id = str(item.get("id"))
@@ -228,7 +233,7 @@ class AkinetixEngine:
         attrs = set()
         for g in item.get("genres") or []:
             attrs.add(f"genre:{g}")
-        for t in item.get("micro_tags") or []:
+        for t in self._item_tags(item):
             attrs.add(f"tag:{t}")
         for s in item.get("studios") or []:
             attrs.add(f"studio:{s}")
@@ -254,7 +259,7 @@ class AkinetixEngine:
         if attr_type == "genre":
             return attr_val in (item.get("genres") or [])
         if attr_type == "tag":
-            return attr_val in (item.get("micro_tags") or [])
+            return attr_val in self._item_tags(item)
         if attr_type == "studio":
             return attr_val in (item.get("studios") or [])
         if attr_type == "theme":
