@@ -217,7 +217,7 @@ const AccountSettingsPage: React.FC = () => {
                 <BarChart3 className="w-5 h-5 text-blue-500" /> Quotas & Consommation
               </h2>
               <p className="text-sm opacity-60 text-black dark:text-white">
-                Suivez votre utilisation des Bx et vérifiez votre limite quotidienne.
+                Suivez votre utilisation des Berrix et vérifiez votre limite quotidienne.
               </p>
               <div className="space-y-3">
                 <Link 

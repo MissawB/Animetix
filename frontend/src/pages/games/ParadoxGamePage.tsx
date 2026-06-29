@@ -38,7 +38,7 @@ const ParadoxGamePage: React.FC = () => {
           <p className="mb-8 opacity-70 font-bold">{error}</p>
           <div className="flex gap-3 justify-center">
             <Link to="/power-station/">
-              <Button variant="primary" className="mx-auto">Recharger des Bx</Button>
+              <Button variant="primary" className="mx-auto">Recharger des Berrix</Button>
             </Link>
             <Button variant="ghost" onClick={loadGame}>Réessayer</Button>
           </div>

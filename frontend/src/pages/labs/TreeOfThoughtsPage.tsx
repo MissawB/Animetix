@@ -228,7 +228,7 @@ const TreeOfThoughtsPage: React.FC = () => {
                     <Link to="/auth/login/"><Button className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-black italic uppercase text-xs border-none">Se connecter</Button></Link>
                   )}
                   {errorKind === 'payment' && (
-                    <Link to="/power-station/"><Button className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-black italic uppercase text-xs border-none">Recharger des Bx</Button></Link>
+                    <Link to="/power-station/"><Button className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-black italic uppercase text-xs border-none">Recharger des Berrix</Button></Link>
                   )}
                 </div>
               )}

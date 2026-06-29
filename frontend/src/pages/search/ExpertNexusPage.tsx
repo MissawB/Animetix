@@ -358,7 +358,7 @@ const ExpertNexusPage: React.FC = () => {
                                         <Link to="/auth/login/"><Button variant="primary" className="mt-4">Se connecter</Button></Link>
                                     )}
                                     {errorKind === 'payment' && (
-                                        <Link to="/power-station/"><Button variant="primary" className="mt-4">Recharger des Bx</Button></Link>
+                                        <Link to="/power-station/"><Button variant="primary" className="mt-4">Recharger des Berrix</Button></Link>
                                     )}
                                 </div>
                             </div>

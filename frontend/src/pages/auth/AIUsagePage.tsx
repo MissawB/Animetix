@@ -155,7 +155,7 @@ const AIUsagePage: React.FC = () => {
             
             <Card padding="lg" className="bg-white dark:bg-[#161625] border-none shadow-xl">
               <h3 className="text-sm font-black uppercase tracking-widest mb-8 flex items-center gap-2 text-black dark:text-white">
-                <History className="w-4 h-4 text-blue-500" /> Historique des Bx (7j)
+                <History className="w-4 h-4 text-blue-500" /> Historique des Berrix (7j)
               </h3>
               <div className="h-64 w-full">
                 <Plot

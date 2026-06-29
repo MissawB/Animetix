@@ -50,7 +50,7 @@ export const PassiveAdMiner: React.FC = () => {
             await refetchUser();
             incrementTotalMined(response.earned);
             setLastMinedAt(new Date().toISOString());
-            addToast(`Minage passif : +${response.earned} Bx (Berrix) crédités !`, 'success');
+            addToast(`Minage passif : +${response.earned} Bx crédités !`, 'success');
             setTimeLeft(180);
           }
         } catch (error) {

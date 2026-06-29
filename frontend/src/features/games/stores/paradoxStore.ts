@@ -27,7 +27,7 @@ const classifyError = (err: unknown): { kind: ParadoxErrorKind; message: string 
     return {
       kind: 'payment',
       message:
-        "Solde de Berrix insuffisant. Recharge tes Bx (ou mine-en) pour lancer un paradoxe.",
+        "Solde de Berrix insuffisant. Recharge tes Berrix (ou mine-en) pour lancer un paradoxe.",
     };
   }
   const message = err instanceof Error ? err.message : 'Failed to start game';
