@@ -271,7 +271,7 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         LazyClass(
             "core.domain.services.spatial_computing_service", "SpatialComputingService"
         ),
-        vision_service=vision_service,
+        inference_engine=vision_service,
     )
 
     cinematic_volumetric_reconstruction_service = providers.Singleton(
@@ -306,7 +306,7 @@ class CoreServicesContainer(containers.DeclarativeContainer):
 
     cove_oracle_service = providers.Singleton(
         LazyClass("core.domain.services.cove_oracle_service", "CoveOracleService"),
-        llm_service=agentic.llm_service,
+        inference_engine=inference.inference_engine,
         prompt_manager=infrastructure.prompt_manager,
     )
 

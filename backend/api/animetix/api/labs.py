@@ -924,7 +924,7 @@ class MangaCleanLabView(APIView):
 
         try:
             image_bytes = image_file.read()
-            inference_engine = container.inference.primary()
+            inference_engine = container.inference.inference_engine()
 
             # Un nettoyage simple équivaut à un inpainting avec une liste de bulles vide.
             cleaned_bytes = inference_engine.inpaint_text_bubbles(image_bytes, [])
