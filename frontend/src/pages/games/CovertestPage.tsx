@@ -10,21 +10,50 @@ const norm = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').to
 
 const MAX_ATTEMPTS: Record<string, number> = { Easy: 6, Normal: 4, Hard: 3, Impossible: 2, Tryhard: 3 };
 
-// Tryhard: a random distortion stacked on top of the blur, easing off each guess.
-type CoverFx = 'invert' | 'grayscale' | 'hue' | 'sepia' | 'noise';
-const COVER_FX: CoverFx[] = ['invert', 'grayscale', 'hue', 'sepia', 'noise'];
-const pickFx = (): CoverFx => COVER_FX[Math.floor(Math.random() * COVER_FX.length)];
-const fxFilter = (fx: CoverFx, level: number, blurPx: number): string => {
-  const L = Math.max(0, Math.min(1, level)); // 1 = hardest, 0 = revealed
-  const blur = `blur(${blurPx}px)`;
-  switch (fx) {
-    case 'invert': return `invert(${L.toFixed(2)}) ${blur}`;
-    case 'grayscale': return `grayscale(${L.toFixed(2)}) contrast(${(1 + L * 0.3).toFixed(2)}) ${blur}`;
-    case 'hue': return `hue-rotate(${Math.round(L * 180)}deg) saturate(${(1 + L * 2).toFixed(2)}) ${blur}`;
-    case 'sepia': return `sepia(${L.toFixed(2)}) hue-rotate(${Math.round(L * 40)}deg) ${blur}`;
-    case 'noise': return `${blur} contrast(${(1 + L * 0.8).toFixed(2)}) brightness(${(1 - L * 0.25).toFixed(2)})`;
-    default: return blur;
+// Tryhard: a random COMBINATION of distortions stacked on top of the blur. Each
+// effect eases off to identity as guesses are used (0 at reveal), and the combo is
+// re-rolled every round so two covers are never mangled the same way.
+type FxKind = 'invert' | 'grayscale' | 'hue' | 'sepia' | 'saturate' | 'contrast' | 'bright' | 'posterize';
+const FX_KINDS: FxKind[] = ['invert', 'grayscale', 'hue', 'sepia', 'saturate', 'contrast', 'bright', 'posterize'];
+type FxCombo = { kind: FxKind; seed: number }[];
+
+// 2–4 distinct effects, each with its own random seed for intensity/direction.
+const pickFxCombo = (): FxCombo => {
+  const shuffled = [...FX_KINDS].sort(() => Math.random() - 0.5);
+  // Keep at most one of the two invert-based effects so they don't cancel out.
+  const filtered: FxKind[] = [];
+  let hasInvert = false;
+  for (const k of shuffled) {
+    const inverty = k === 'invert' || k === 'posterize';
+    if (inverty && hasInvert) continue;
+    if (inverty) hasInvert = true;
+    filtered.push(k);
   }
+  const count = 2 + Math.floor(Math.random() * 3); // 2..4
+  return filtered.slice(0, count).map((kind) => ({ kind, seed: Math.random() }));
+};
+
+const fxFragment = (kind: FxKind, L: number, seed: number): string => {
+  switch (kind) {
+    case 'invert': return `invert(${L.toFixed(2)})`;
+    case 'grayscale': return `grayscale(${L.toFixed(2)})`;
+    case 'hue': return `hue-rotate(${Math.round(L * (140 + seed * 220))}deg)`;
+    case 'sepia': return `sepia(${L.toFixed(2)})`;
+    case 'saturate': return `saturate(${(1 + L * (2.5 + seed * 4)).toFixed(2)})`;
+    case 'contrast': return `contrast(${(1 + L * (0.7 + seed * 1.8)).toFixed(2)})`;
+    // brightness: randomly darken or wash out depending on the seed.
+    case 'bright': return `brightness(${(1 + L * (seed < 0.5 ? -(0.2 + seed * 0.7) : (0.35 + seed * 0.9))).toFixed(2)})`;
+    // posterize-ish: harsh invert + heavy contrast for a solarised look.
+    case 'posterize': return `invert(${(L * 0.9).toFixed(2)}) contrast(${(1 + L * 1.4).toFixed(2)})`;
+    default: return '';
+  }
+};
+
+const fxFilter = (combo: FxCombo, level: number, blurPx: number): string => {
+  const L = Math.max(0, Math.min(1, level)); // 1 = hardest, 0 = revealed
+  const parts = combo.map(({ kind, seed }) => fxFragment(kind, L, seed)).filter(Boolean);
+  parts.push(`blur(${blurPx}px)`);
+  return parts.join(' ');
 };
 
 const CovertestPage: React.FC = () => {
@@ -55,7 +84,7 @@ const CovertestPage: React.FC = () => {
   const [bonusDone, setBonusDone] = useState(false);
   const [volumeCorrect, setVolumeCorrect] = useState(false);
   const [authorCorrect, setAuthorCorrect] = useState(false);
-  const [fx, setFx] = useState<CoverFx>(() => pickFx());
+  const [fxCombo, setFxCombo] = useState<FxCombo>(() => pickFxCombo());
   // Local guard for the "next round / replay" button. We can't rely on the
   // mutation's `starting` flag: firing startGame from the mount effect under
   // React StrictMode leaves startMutation.isPending stuck true, which would
@@ -117,7 +146,7 @@ const CovertestPage: React.FC = () => {
   };
   const nextCover = async () => {
     resetBonus();
-    setFx(pickFx());
+    setFxCombo(pickFxCombo());
     await startGame({ origin }).catch(() => {});
   };
 
@@ -140,7 +169,7 @@ const CovertestPage: React.FC = () => {
   const blurPx = over ? 0 : Math.round(4 + Math.max(0, 1 - attemptsUsed / maxAttempts) * 20);
   // Tryhard: random distortion that also eases off, layered on the blur.
   const fxLevel = over ? 0 : Math.max(0, 1 - attemptsUsed / maxAttempts);
-  const coverFilter = tryhard ? fxFilter(fx, fxLevel, blurPx) : `blur(${blurPx}px)`;
+  const coverFilter = tryhard ? fxFilter(fxCombo, fxLevel, blurPx) : `blur(${blurPx}px)`;
 
   const onChange = (val: string) => {
     setGuess(val);
