@@ -1,18 +1,52 @@
 import React, { useEffect } from 'react';
-import { Target, Trophy, RotateCcw, AlertTriangle } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Target, Trophy, RotateCcw, AlertTriangle, Lock, Zap } from 'lucide-react';
 import { useParadoxStore } from '../../features/games/stores/paradoxStore';
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 
 const ParadoxGamePage: React.FC = () => {
-  const { gameState, isLoading, error, loadGame, submitGuess } = useParadoxStore();
+  const { gameState, isLoading, error, errorKind, loadGame, submitGuess } = useParadoxStore();
 
   useEffect(() => {
     loadGame();
   }, [loadGame]);
 
   if (isLoading) return <div className="text-center py-20 text-white font-black animate-pulse uppercase tracking-[0.3em]">Ouverture d'une faille temporelle...</div>;
-  
+
+  if (error && errorKind === 'auth') {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <Card padding="lg" className="text-center border-indigo-500/50 max-w-md">
+          <Lock className="w-16 h-16 text-indigo-400 mx-auto mb-6" />
+          <h2 className="text-2xl font-black text-indigo-300 mb-4 italic">CONNEXION REQUISE</h2>
+          <p className="mb-8 opacity-70 font-bold">{error}</p>
+          <Link to="/auth/login/">
+            <Button variant="primary" className="mx-auto">Se connecter</Button>
+          </Link>
+        </Card>
+      </div>
+    );
+  }
+
+  if (error && errorKind === 'payment') {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <Card padding="lg" className="text-center border-amber-500/50 max-w-md">
+          <Zap className="w-16 h-16 text-amber-400 mx-auto mb-6" />
+          <h2 className="text-2xl font-black text-amber-300 mb-4 italic">BERRIX INSUFFISANTS</h2>
+          <p className="mb-8 opacity-70 font-bold">{error}</p>
+          <div className="flex gap-3 justify-center">
+            <Link to="/power-station/">
+              <Button variant="primary" className="mx-auto">Recharger des Bx</Button>
+            </Link>
+            <Button variant="ghost" onClick={loadGame}>Réessayer</Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
   if (error) {
     return (
       <div className="flex justify-center items-center py-20">

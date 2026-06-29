@@ -18,7 +18,7 @@ describe('paradoxService', () => {
 
     const result = await paradoxService.getState();
 
-    expect(mocked).toHaveBeenCalledWith('/api/v1/game/paradox/state/');
+    expect(mocked).toHaveBeenCalledWith('/api/v1/game/paradox/state/', { skipToast: true });
     expect(result).toBe(state);
   });
 

@@ -10,6 +10,8 @@ import {
   Sparkles
 } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
+import { useAuthStore } from '../../store/authStore';
 import _ForceGraph2D, { type ForceGraphMethods } from 'react-force-graph-2d';
 const ForceGraph2D = (_ForceGraph2D as unknown as { default: React.ElementType }).default || _ForceGraph2D;
 import { apiClient } from "../../utils/apiClient";
@@ -49,8 +51,11 @@ const TreeOfThoughtsPage: React.FC = () => {
   const [selectedNode, setSelectedNode] = useState<ToTNode | null>(null);
   const [graphData, setGraphData] = useState<ToTGraphData | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [errorKind, setErrorKind] = useState<'auth' | 'payment' | 'generic' | null>(null);
   const fgRef = useRef<ForceGraphMethods | undefined>(undefined); // react-force-graph-2d imperative handle
   const esRef = useRef<EventSource | null>(null);
+  const receivedAnyRef = useRef(false);
 
   // Close any open SSE stream when leaving the page.
   useEffect(() => () => esRef.current?.close(), []);
@@ -59,9 +64,21 @@ const TreeOfThoughtsPage: React.FC = () => {
   // (vs the batch /labs/tot/ endpoint above, which returns the full tree at once).
   const startStream = useCallback(() => {
     if (!query.trim()) return;
+
+    // Mode IA (GPU) → consomme des Bx, login requis. Détecté en amont car
+    // EventSource ne peut pas lire un statut HTTP 401/402.
+    if (!useAuthStore.getState().isAuthenticated) {
+      setError("Ce mode utilise l'IA (GPU) et coûte des Berrix. Connecte-toi pour lancer un raisonnement.");
+      setErrorKind('auth');
+      return;
+    }
+
     esRef.current?.close();
     setSelectedNode(null);
     setGraphData({ nodes: [], links: [] });
+    setError(null);
+    setErrorKind(null);
+    receivedAnyRef.current = false;
     setIsStreaming(true);
 
     const acc = { nodes: [] as ToTNode[], links: [] as ToTLink[], lastSelectedId: 'root' };
@@ -69,6 +86,7 @@ const TreeOfThoughtsPage: React.FC = () => {
     esRef.current = es;
 
     es.onmessage = (event) => {
+      receivedAnyRef.current = true;
       const msg = JSON.parse(event.data);
       if (msg.type === 'node_created') {
         const d = msg.data;
@@ -92,6 +110,12 @@ const TreeOfThoughtsPage: React.FC = () => {
     };
 
     es.onerror = () => {
+      // EventSource ne donne ni statut ni corps : un échec sans aucun évènement
+      // reçu est presque toujours un refus 402 (solde de Bx insuffisant).
+      if (!receivedAnyRef.current) {
+        setError('Raisonnement refusé. Vérifie ton solde de Berrix (ce mode IA en consomme) puis réessaie.');
+        setErrorKind('payment');
+      }
       es.close();
       setIsStreaming(false);
     };
@@ -193,6 +217,21 @@ const TreeOfThoughtsPage: React.FC = () => {
               >
                 {isStreaming ? <Loader2 className="w-5 h-5 animate-spin" /> : "STREAM EN DIRECT"}
               </Button>
+
+              {error && (
+                <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400">
+                  <h4 className="text-[11px] font-black italic uppercase mb-1">
+                    {errorKind === 'auth' ? 'Connexion requise' : errorKind === 'payment' ? 'Berrix insuffisants' : 'Erreur'}
+                  </h4>
+                  <p className="text-[10px] font-bold opacity-80 leading-relaxed mb-3">{error}</p>
+                  {errorKind === 'auth' && (
+                    <Link to="/auth/login/"><Button className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-black italic uppercase text-xs border-none">Se connecter</Button></Link>
+                  )}
+                  {errorKind === 'payment' && (
+                    <Link to="/power-station/"><Button className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-black italic uppercase text-xs border-none">Recharger des Bx</Button></Link>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="mt-12 space-y-8">

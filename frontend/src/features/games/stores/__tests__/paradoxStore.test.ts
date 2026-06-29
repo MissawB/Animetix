@@ -59,7 +59,7 @@ describe('useParadoxStore', () => {
 
     await useParadoxStore.getState().loadGame();
 
-    expect(mockedApiClient).toHaveBeenCalledWith('/api/v1/game/paradox/start/', { method: 'POST' });
+    expect(mockedApiClient).toHaveBeenCalledWith('/api/v1/game/paradox/start/', { method: 'POST', skipToast: true });
     expect(useParadoxStore.getState().gameState).toEqual(fresh);
     expect(useParadoxStore.getState().error).toBeNull();
   });

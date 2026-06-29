@@ -9,7 +9,9 @@ export interface ParadoxGuessRequest {
 
 export const paradoxService = {
   getState: async (): Promise<ParadoxState> => {
-    return apiClient(`${API_BASE}/state/`);
+    // 400 (no active game) is expected on first load — handled by the caller's
+    // fallback start, so we don't want a raw toast here.
+    return apiClient(`${API_BASE}/state/`, { skipToast: true });
   },
   submit: async (data: ParadoxGuessRequest): Promise<ParadoxState> => {
     return apiClient(`${API_BASE}/move/`, { method: 'POST', body: JSON.stringify(data) });

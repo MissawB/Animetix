@@ -10,7 +10,8 @@ import {
   AlertCircle,
   Clock
 } from 'lucide-react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
+import { useAuthStore } from '../../store/authStore';
 import { motion } from 'framer-motion';
 import ForceGraph2D, { type ForceGraphMethods, type NodeObject, type LinkObject } from 'react-force-graph-2d';
 import { Card } from "../../components/ui/Card";
@@ -56,7 +57,9 @@ const ExpertNexusPage: React.FC = () => {
   const [, setSteps] = useState<Step[]>([]);
   const [finalAnswer, setFinalAnswer] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [errorKind, setErrorKind] = useState<'auth' | 'payment' | 'generic' | null>(null);
   const [xaiReport, setXaiReport] = useState<XaiReport | null>(null);
+  const receivedAnyRef = useRef(false);
   
   // Graph state
   const [graphData, setGraphData] = useState<{ nodes: GraphNode[], links: GraphLink[] }>({ nodes: [], links: [] });
@@ -87,11 +90,22 @@ const ExpertNexusPage: React.FC = () => {
 
   const handleSearch = useCallback((searchQuery: string) => {
     if (!searchQuery.trim()) return;
-    
+
+    // Ce mode utilise l'IA (GPU) et consomme des Bx → login requis. On le détecte
+    // en amont car EventSource ne peut pas lire un statut HTTP 401/402.
+    if (!useAuthStore.getState().isAuthenticated) {
+      setError("Ce mode utilise l'IA (GPU) et coûte des Berrix. Connecte-toi pour lancer une analyse.");
+      setErrorKind('auth');
+      setIsStreaming(false);
+      return;
+    }
+
     setSearchParams({ q: searchQuery });
     setSteps([]);
     setFinalAnswer('');
     setError(null);
+    setErrorKind(null);
+    receivedAnyRef.current = false;
     setIsStreaming(true);
 
     // Initialize Root node
@@ -114,8 +128,9 @@ const ExpertNexusPage: React.FC = () => {
 
     eventSource.onmessage = (event) => {
       try {
+        receivedAnyRef.current = true;
         const data = JSON.parse(event.data);
-        
+
         if (data.type === 'token') {
           setFinalAnswer(prev => prev + data.content);
         } else if (data.type === 'thought') {
@@ -200,6 +215,13 @@ const ExpertNexusPage: React.FC = () => {
     };
 
     eventSource.onerror = () => {
+      // EventSource ne donne ni statut ni corps. Si le flux échoue sans qu'aucun
+      // évènement n'ait été reçu, c'est presque toujours un refus 402 (solde de Bx
+      // insuffisant), l'utilisateur étant déjà authentifié à ce stade.
+      if (!receivedAnyRef.current) {
+        setError('Analyse refusée. Vérifie ton solde de Berrix (ce mode IA en consomme) puis réessaie.');
+        setErrorKind('payment');
+      }
       stopStreaming();
     };
   }, [setSearchParams, stopStreaming]);
@@ -327,9 +349,17 @@ const ExpertNexusPage: React.FC = () => {
                         {error && (
                             <div className="p-8 bg-red-500/10 border border-red-500/20 rounded-3xl flex items-center gap-6 text-red-500">
                                 <AlertCircle className="w-12 h-12 flex-shrink-0" />
-                                <div>
-                                    <h4 className="text-xl font-black italic uppercase mb-1">Erreur de Résolution</h4>
+                                <div className="flex-grow">
+                                    <h4 className="text-xl font-black italic uppercase mb-1">
+                                        {errorKind === 'auth' ? 'Connexion requise' : errorKind === 'payment' ? 'Berrix insuffisants' : 'Erreur de Résolution'}
+                                    </h4>
                                     <p className="text-sm font-bold opacity-80 uppercase tracking-wide">{error}</p>
+                                    {errorKind === 'auth' && (
+                                        <Link to="/auth/login/"><Button variant="primary" className="mt-4">Se connecter</Button></Link>
+                                    )}
+                                    {errorKind === 'payment' && (
+                                        <Link to="/power-station/"><Button variant="primary" className="mt-4">Recharger des Bx</Button></Link>
+                                    )}
                                 </div>
                             </div>
                         )}
