@@ -8,7 +8,9 @@ import { apiClient } from '../../utils/apiClient';
 import { useToastStore } from "../../store/toastStore";
 import { Button } from "../../components/ui/Button";
 import { SponsorStreamModal } from '../../features/billing/components/SponsorStreamModal';
-import { SimulatedAdBanner } from '../../features/billing/components/SimulatedAdBanner';
+import { AdSlot } from '../../features/billing/components/AdSlot';
+
+const PRICING_AD_SLOT = import.meta.env.VITE_ADSENSE_SLOT_SIDEBAR as string | undefined;
 
 export const PricingPage: React.FC = () => {
   const { user, checkAuth, refetchUser } = useAuthStore();
@@ -232,9 +234,9 @@ export const PricingPage: React.FC = () => {
           </Button>
         </div>
 
-        {/* Demo Ad Banner */}
+        {/* Real ad banner (AdSense) */}
         <div className="max-w-md mx-auto">
-          <SimulatedAdBanner />
+          <AdSlot slot={PRICING_AD_SLOT} format="rectangle" fundsMining={false} />
         </div>
 
       </div>

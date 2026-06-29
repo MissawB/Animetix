@@ -6,8 +6,10 @@ import {
   Users, UserPlus, FlaskConical, BrainCircuit, Eye, LogIn, Microscope,
   Database, Share2, Download, BookOpen, type LucideIcon
 } from 'lucide-react';
-import { SimulatedAdBanner } from '../../features/billing/components/SimulatedAdBanner';
+import { AdSlot } from '../../features/billing/components/AdSlot';
 import { User } from '../../types';
+
+const SIDEBAR_AD_SLOT = import.meta.env.VITE_ADSENSE_SLOT_SIDEBAR as string | undefined;
 
 interface SidebarDrawerProps {
   isSidebarOpen: boolean;
@@ -265,7 +267,7 @@ const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
 
         {user && user.tier === 'free' && (
           <div className="pt-7">
-            <SimulatedAdBanner />
+            <AdSlot slot={SIDEBAR_AD_SLOT} format="rectangle" />
           </div>
         )}
 

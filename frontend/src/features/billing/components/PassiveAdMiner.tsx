@@ -28,6 +28,14 @@ export const PassiveAdMiner: React.FC = () => {
       if (isMiningRef.current) return;
 
       const currentState = usePassiveMiningStore.getState();
+
+      // Mining is funded by ads: only progress while at least one ad is on screen.
+      if (currentState.adSlotsVisible <= 0) {
+        setStatus('OFFLINE');
+        return;
+      }
+      setStatus('ONLINE');
+
       const currentTimeLeft = currentState.timeLeft;
 
       if (currentTimeLeft <= 1) {

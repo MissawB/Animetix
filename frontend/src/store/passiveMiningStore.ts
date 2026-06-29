@@ -6,11 +6,16 @@ interface PassiveMiningState {
   totalMined: number;
   lastMinedAt: string | null;
   status: 'ONLINE' | 'COOLDOWN' | 'OFFLINE';
+  // Number of ad slots currently mounted. Passive mining only progresses while
+  // at least one real ad is on screen (mining is funded by ads).
+  adSlotsVisible: number;
   setEnabled: (enabled: boolean) => void;
   setTimeLeft: (time: number) => void;
   setStatus: (status: 'ONLINE' | 'COOLDOWN' | 'OFFLINE') => void;
   incrementTotalMined: (amount: number) => void;
   setLastMinedAt: (date: string | null) => void;
+  registerAd: () => void;
+  unregisterAd: () => void;
 }
 
 export const usePassiveMiningStore = create<PassiveMiningState>((set) => ({
@@ -19,6 +24,10 @@ export const usePassiveMiningStore = create<PassiveMiningState>((set) => ({
   totalMined: parseInt(localStorage.getItem('passive_mining_total') || '0', 10),
   lastMinedAt: localStorage.getItem('passive_mining_last_date'),
   status: 'OFFLINE',
+  adSlotsVisible: 0,
+  registerAd: () => set((state) => ({ adSlotsVisible: state.adSlotsVisible + 1 })),
+  unregisterAd: () =>
+    set((state) => ({ adSlotsVisible: Math.max(0, state.adSlotsVisible - 1) })),
   setEnabled: (enabled) => {
     localStorage.setItem('passive_mining_enabled', String(enabled));
     set({ isEnabled: enabled, status: enabled ? 'ONLINE' : 'OFFLINE' });

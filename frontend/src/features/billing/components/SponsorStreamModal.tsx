@@ -362,8 +362,8 @@ export const SponsorStreamModal: React.FC<Props> = ({ actionType, onClose, onCon
         <div className="p-8 space-y-6">
           <header className="flex justify-between items-center">
             <div>
-              <p className="text-yellow-500 text-[10px] font-black uppercase tracking-widest">Flux de Sponsoring</p>
-              <h3 className="text-xl font-black italic uppercase text-white">Sponsor Réel (IMA SDK)</h3>
+              <p className="text-yellow-500 text-[10px] font-black uppercase tracking-widest">Pub récompensée</p>
+              <h3 className="text-xl font-black italic uppercase text-white">Publicité vidéo</h3>
             </div>
             {isDone && !isSubmitting && (
               <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full text-gray-400 hover:text-white">
@@ -382,7 +382,7 @@ export const SponsorStreamModal: React.FC<Props> = ({ actionType, onClose, onCon
                   src={fallbackVideoUrl}
                   autoPlay
                   muted
-                  aria-label="Vidéo sponsor de repli"
+                  aria-label="Vidéo publicitaire de repli"
                   onTimeUpdate={handleFallbackTimeUpdate}
                   onEnded={handleFallbackEnded}
                   className="absolute inset-0 w-full h-full object-cover"
@@ -395,7 +395,7 @@ export const SponsorStreamModal: React.FC<Props> = ({ actionType, onClose, onCon
               <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="z-10">
                 <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto animate-bounce" />
                 <h4 className="text-sm font-black uppercase text-yellow-500 mt-2">{sponsor.name}</h4>
-                <p className="text-xs text-gray-400 font-mono italic">Sponsor visionné avec succès !</p>
+                <p className="text-xs text-gray-400 font-mono italic">Pub visionnée avec succès !</p>
               </motion.div>
             ) : !isAdStarted ? (
               <div className="space-y-4 p-6 z-10 flex flex-col items-center">
@@ -408,7 +408,7 @@ export const SponsorStreamModal: React.FC<Props> = ({ actionType, onClose, onCon
                   onClick={startAdPlayback}
                   className="mt-2 py-2.5 px-6 bg-yellow-500 hover:bg-yellow-600 active:scale-95 text-black font-black text-xs uppercase tracking-wider rounded-xl transition-all flex items-center gap-2"
                 >
-                  <Play size={12} fill="currentColor" /> Lancer le Sponsor
+                  <Play size={12} fill="currentColor" /> Lancer la pub
                 </button>
               </div>
             ) : (
@@ -418,7 +418,7 @@ export const SponsorStreamModal: React.FC<Props> = ({ actionType, onClose, onCon
                   className="absolute inset-0 w-full h-full object-cover pointer-events-none"
                   muted
                   playsInline
-                  aria-label="Vidéo sponsor"
+                  aria-label="Vidéo publicitaire"
                 />
                 <div 
                   ref={adContainerRef} 
