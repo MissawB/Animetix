@@ -1,11 +1,13 @@
 import logging
 
+from core.domain.services.berrix_economy import FEATURE_BX_COSTS
 from core.utils.security import sanitize_html_content
 from dependency_injector.wiring import Provide, inject
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from animetix.api.billing import deduct_berrix
 from animetix.api.dependencies import get_session_service
 
 from ...containers import Container
@@ -15,7 +17,8 @@ logger = logging.getLogger("animetix.games.animinator")
 
 
 class AniminatorAskView(APIView):
-    permission_classes = [permissions.AllowAny]
+    # GPU-backed AI game (LLM oracle): requires login and consumes Berrix.
+    permission_classes = [permissions.IsAuthenticated]
 
     @inject
     def post(
@@ -48,6 +51,14 @@ class AniminatorAskView(APIView):
             session.set("animinator_secret", secret)
             session.set("animinator_questions_left", 20)
             session.set("animinator_chat", [])
+
+        # Berrix deduction for the GPU oracle turn (raises 402 if balance too low).
+        # Outside the try below so PaymentRequired isn't swallowed into a 500.
+        deduct_berrix(
+            request.user,
+            FEATURE_BX_COSTS["animinator"],
+            "Animinator — Oracle IA",
+        )
 
         try:
             # On collecte le flux complet en synchrone pour renvoyer une réponse JSON (puisque le frontend l'attend ainsi)

@@ -1,9 +1,11 @@
 from animetix_project.logging_config import get_logger
+from core.domain.services.berrix_economy import FEATURE_BX_COSTS
 from dependency_injector.wiring import Provide, inject
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from animetix.api.billing import deduct_berrix
 from animetix.api.dependencies import get_session_service
 
 from ...containers import Container
@@ -15,7 +17,9 @@ logger = get_logger("animetix." + __name__)
 
 
 class EmojiGameStateView(APIView):
-    permission_classes = [permissions.AllowAny]
+    # GPU-backed game: the no-game branch auto-generates emojis via the LLM, so
+    # it requires login and consumes Berrix (charged only when a game is created).
+    permission_classes = [permissions.IsAuthenticated]
 
     @inject
     def get(
@@ -43,6 +47,12 @@ class EmojiGameStateView(APIView):
                 if secret:
                     secret_data = data["title_to_full_data"].get(secret, {})
                     description = secret_data.get("description", "")
+                    # GPU generation → consume Berrix (raises 402 if balance too low).
+                    deduct_berrix(
+                        request.user,
+                        FEATURE_BX_COSTS["emoji_stream"],
+                        "Emoji Quest — génération IA",
+                    )
                     emoji_list = emoji_service.generate_emojis(
                         media_type, secret, description
                     )
@@ -79,7 +89,8 @@ class EmojiGameStateView(APIView):
 
 
 class EmojiGameStartView(APIView):
-    permission_classes = [permissions.AllowAny]
+    # GPU-backed game (LLM emoji generation): requires login and consumes Berrix.
+    permission_classes = [permissions.IsAuthenticated]
 
     @inject
     def post(
@@ -115,6 +126,13 @@ class EmojiGameStartView(APIView):
 
         secret_data = data["title_to_full_data"].get(secret, {})
         description = secret_data.get("description", "")
+
+        # GPU generation → consume Berrix (raises 402 if balance too low).
+        deduct_berrix(
+            request.user,
+            FEATURE_BX_COSTS["emoji_stream"],
+            "Emoji Quest — génération IA",
+        )
 
         emoji_list = emoji_service.generate_emojis(media_type, secret, description)
 
