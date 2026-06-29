@@ -170,7 +170,28 @@ class AkinetixEngine:
             meta = item.get("metadata", {})
             if isinstance(meta, dict) and meta.get("themes"):
                 attrs.update([f"theme:{t}" for t in (meta.get("themes") or [])])
+            era = self._item_era(item)
+            if era:
+                attrs.add(f"era:{era}")
         return items, sorted(list(attrs))
+
+    @staticmethod
+    def _item_era(item: Dict) -> Optional[str]:
+        """Tranche temporelle d'une œuvre (à partir de ``year``), formulée pour
+        une question naturelle. Nouvel axe : « Est-ce sorti dans les années X ? »."""
+        try:
+            y = int(item.get("year"))
+        except (TypeError, ValueError):
+            return None
+        if y < 1990:
+            return "avant 1990"
+        if y < 2000:
+            return "dans les années 1990"
+        if y < 2010:
+            return "dans les années 2000"
+        if y < 2020:
+            return "dans les années 2010"
+        return "dans les années 2020"
 
     def _item_tags(self, item: Dict) -> List[str]:
         """Tags thématiques valides d'une œuvre.
@@ -246,6 +267,9 @@ class AkinetixEngine:
             for k, v in item_fine.items():
                 if v:
                     attrs.add(f"fine:{k}")
+        era = self._item_era(item)
+        if era:
+            attrs.add(f"era:{era}")
         return attrs
 
     def _check_attribute_instance(
@@ -269,6 +293,8 @@ class AkinetixEngine:
                 if isinstance(meta, dict)
                 else False
             )
+        if attr_type == "era":
+            return self._item_era(item) == attr_val
         return False
 
     def _propose_classical_question(

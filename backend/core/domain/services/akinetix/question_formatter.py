@@ -60,6 +60,11 @@ class QuestionFormatter:
             "Est-ce centré sur « {} » ?",
             "« {} » est-il au cœur de l'œuvre ?",
         ],
+        # attr_val est déjà un fragment prêt : "avant 1990" / "dans les années 2010".
+        "era": [
+            "Est-ce sorti {} ?",
+            "L'œuvre est-elle sortie {} ?",
+        ],
     }
 
     FINE_TEMPLATES = [
