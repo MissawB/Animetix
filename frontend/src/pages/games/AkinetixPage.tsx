@@ -12,15 +12,19 @@ const AkinetixPage: React.FC = () => {
   const { gameState, isLoading, error, loadGame, restartGame, submitAnswer, submitConfirmation } = useAkinetixStore();
   const [showActualTargetInput, setShowActualTargetInput] = useState(false);
   const [actualTarget, setActualTarget] = useState('');
-  const historyEndRef = useRef<HTMLDivElement>(null);
+  const historyScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadGame();
   }, [loadGame]);
 
+  // Garde le journal défilé en bas, mais SANS bouger la page : on défile
+  // uniquement le conteneur du journal (scrollIntoView faisait descendre toute
+  // la page, masquant la question suivante).
   useEffect(() => {
-    if (historyEndRef.current) {
-      historyEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    const el = historyScrollRef.current;
+    if (el && typeof el.scrollTo === 'function') {
+      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
     }
   }, [gameState?.history]);
 
@@ -76,7 +80,7 @@ const AkinetixPage: React.FC = () => {
                 <History className="w-4 h-4" /> Journal d'Analyse
             </h3>
             
-            <div className="overflow-y-auto pr-2 custom-scrollbar flex-1 space-y-4">
+            <div ref={historyScrollRef} className="overflow-y-auto pr-2 custom-scrollbar flex-1 space-y-4">
               {gameState.history.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center opacity-20 py-20">
                   <Sparkles className="w-8 h-8 mb-4" />
@@ -96,7 +100,6 @@ const AkinetixPage: React.FC = () => {
                   </div>
                 ))
               )}
-              <div ref={historyEndRef} />
             </div>
           </Card>
         </div>
