@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Brain, Play, Clapperboard, BookOpen, Users, Bot, MessageCircleQuestion, Sparkles,
+  Brain, Play, Clapperboard, BookOpen, Users, Bot, MessageCircleQuestion, Sparkles, ScanFace,
 } from 'lucide-react';
 
 type Universe = 'Anime' | 'Manga' | 'Character';
-type Mode = 'classique' | 'animinator';
+type Mode = 'classique' | 'animinator' | 'quiz-who';
 
 const MODES: {
   key: Mode;
@@ -30,6 +30,14 @@ const MODES: {
     desc: 'Le génie a une œuvre en tête : pose-lui tes questions librement pour la démasquer.',
     icon: Bot,
     route: '/animinator/',
+  },
+  {
+    key: 'quiz-who',
+    label: 'Qui est-ce ?',
+    sub: 'Plateau à éliminer',
+    desc: 'Un plateau de portraits, un secret caché : pose des questions pour éliminer les têtes et démasquer la bonne.',
+    icon: ScanFace,
+    route: '/quiz-who/',
   },
 ];
 
@@ -85,7 +93,7 @@ const AkinetixLobbyPage: React.FC = () => {
       <div className="rounded-[2.5rem] border-2 border-black/5 dark:border-white/10 bg-surface-card p-7 md:p-9 shadow-token-card space-y-10">
         {/* Mode */}
         <Section step={1} title="Mode de jeu">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {MODES.map(({ key, label, sub, desc, icon: Icon }) => (
               <button
                 key={key}

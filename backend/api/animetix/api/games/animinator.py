@@ -101,3 +101,61 @@ class AniminatorAskView(APIView):
                 {"error": "Internal server error"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+
+class AniminatorGuessView(APIView):
+    # Pure comparison (no GPU) → AllowAny; a game only exists for someone who has
+    # been asking (which requires login).
+    permission_classes = [permissions.AllowAny]
+
+    @inject
+    def post(
+        self,
+        request,
+        animinator_service=Provide[Container.core.animinator_service],
+    ):
+        session = get_session_service(request)
+        secret = session.get("animinator_secret")
+        if not secret:
+            return Response(
+                {"error": "No game in progress"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        guess = request.data.get("guess", "")
+        if not guess:
+            return Response(
+                {"error": "guess is required"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        correct = animinator_service.check_guess(guess, secret)
+        if correct:
+            session.set("animinator_game_over", True)
+            # Clear the secret so the next question starts a fresh game (replay).
+            session.set("animinator_secret", "")
+            media_type = session.get("media_type", "Anime")
+            chat = session.get("animinator_chat", [])
+            if request.user.is_authenticated:
+                try:
+                    request.user.profile.add_win(
+                        game_mode="animinator",
+                        media_type=media_type,
+                        attempts=len(chat),
+                    )
+                except Exception as e:
+                    logger.warning(f"Handled error in AniminatorGuessView: {e}")
+            GameplaySession.objects.create(
+                user=request.user if request.user.is_authenticated else None,
+                game_mode="animinator",
+                media_type=media_type,
+                target_item=secret,
+                history=chat,
+                was_won=True,
+            )
+
+        return Response(
+            {
+                "correct": correct,
+                "game_over": correct,
+                "secret": secret if correct else None,
+            }
+        )

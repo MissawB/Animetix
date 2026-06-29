@@ -22,6 +22,8 @@ class AnimetixConfig(AppConfig):
             modules=[
                 "animetix.api.games.classic",
                 "animetix.api.games.akinetix",
+                "animetix.api.games.animinator",
+                "animetix.api.games.quiz_who",
                 "animetix.api.games.emoji",
                 "animetix.api.games.paradox",
                 "animetix.api.games.vision",

@@ -549,6 +549,21 @@ urlpatterns = [
         name="api_akinetix_confirm",
     ),
     path(
+        "game/quiz-who/start/",
+        api_views.QuiEstCeStartView.as_view(),
+        name="api_quiz_who_start",
+    ),
+    path(
+        "game/quiz-who/ask/",
+        api_views.QuiEstCeAskView.as_view(),
+        name="api_quiz_who_ask",
+    ),
+    path(
+        "game/quiz-who/guess/",
+        api_views.QuiEstCeGuessView.as_view(),
+        name="api_quiz_who_guess",
+    ),
+    path(
         "game/akinetix-rl/state/",
         api_views.AkinetixRLStateView.as_view(),
         name="api_akinetix_rl_state",
@@ -567,6 +582,11 @@ urlpatterns = [
         "game/animinator/ask/",
         api_views.AniminatorAskView.as_view(),
         name="api_animinator_ask",
+    ),
+    path(
+        "game/animinator/guess/",
+        api_views.AniminatorGuessView.as_view(),
+        name="api_animinator_guess",
     ),
     path(
         "game/emoji/state/",

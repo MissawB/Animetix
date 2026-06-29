@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Sparkles, Send, Brain, Bot, User } from 'lucide-react';
+import { Sparkles, Send, Brain, Bot, User, Target } from 'lucide-react';
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Input } from "../../components/ui/Input";
@@ -14,9 +14,13 @@ interface Message {
 }
 
 const AniminatorPage: React.FC = () => {
-  const [messages, setMessages] = useState<Message[]>([
-    { role: 'ai', text: "Je suis l'Animinator. Pense à un animé, un manga ou un personnage, et je devinerai ce que c'est !" }
-  ]);
+  const INTRO: Message = {
+    role: 'ai',
+    text: "J'ai une œuvre mystère en tête (anime, manga ou personnage). Pose-moi des questions, puis tente de deviner ce que c'est !",
+  };
+  const [messages, setMessages] = useState<Message[]>([INTRO]);
+  const [won, setWon] = useState(false);
+  const [guessInput, setGuessInput] = useState('');
   const [input, setInput] = useState<string>('');
   const [isThinking, setIsThinking] = useState<boolean>(false);
   const [thoughtProcess, setThoughtProcess] = useState<string>('');
@@ -59,6 +63,36 @@ const AniminatorPage: React.FC = () => {
     }
   };
 
+  const handleGuess = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const g = guessInput.trim();
+    if (!g || isThinking || won) return;
+    setGuessInput('');
+    setMessages((prev) => [...prev, { role: 'user', text: `Je pense que c'est : ${g}` }]);
+    try {
+      const res = await animinatorService.guess(g);
+      if (res.correct) {
+        setWon(true);
+        setMessages((prev) => [
+          ...prev,
+          { role: 'ai', text: `🎉 Exact ! C'était bien « ${res.secret} ». Bien joué !` },
+        ]);
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          { role: 'ai', text: `Non, ce n'est pas « ${g} ». Continue à creuser !` },
+        ]);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleReplay = () => {
+    setWon(false);
+    setMessages([INTRO]);
+  };
+
   return (
     
       <div className="max-w-4xl mx-auto px-6 py-12 flex flex-col h-[calc(100vh-200px)]">
@@ -97,26 +131,57 @@ const AniminatorPage: React.FC = () => {
           </div>
 
           {/* Input Bar */}
-          <div className="p-8 bg-gray-50 dark:bg-navy-900/50 border-t border-gray-100 dark:border-white/5">
-            <form onSubmit={handleSend} className="relative flex gap-4">
-              <div className="relative flex-grow">
-                  <Sparkles className="absolute left-6 top-1/2 -translate-y-1/2 z-10 w-5 h-5 text-yellow-500 opacity-50" />
-                  <Input 
+          <div className="p-8 bg-gray-50 dark:bg-navy-900/50 border-t border-gray-100 dark:border-white/5 space-y-3">
+            {won ? (
+              <button
+                onClick={handleReplay}
+                className="w-full flex items-center justify-center gap-2 bg-yellow-400 text-black font-black italic uppercase tracking-widest py-5 rounded-2xl shadow-xl hover:scale-[1.01] transition-all"
+              >
+                <Sparkles className="w-5 h-5" /> Rejouer une nouvelle œuvre
+              </button>
+            ) : (
+              <>
+                <form onSubmit={handleSend} className="relative flex gap-4">
+                  <div className="relative flex-grow">
+                    <Sparkles className="absolute left-6 top-1/2 -translate-y-1/2 z-10 w-5 h-5 text-yellow-500 opacity-50" />
+                    <Input
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       disabled={isThinking}
                       className="pl-16 shadow-xl border-none bg-white dark:bg-navy-800"
                       placeholder="Posez votre question au génie..."
-                  />
-              </div>
-              <Button 
-                  type="submit" 
-                  disabled={isThinking || !input.trim()}
-                  className="bg-black text-white p-6 rounded-2xl shadow-xl hover:scale-105"
-              >
-                  <Send className="w-6 h-6" />
-              </Button>
-            </form>
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    disabled={isThinking || !input.trim()}
+                    className="bg-black text-white p-6 rounded-2xl shadow-xl hover:scale-105"
+                  >
+                    <Send className="w-6 h-6" />
+                  </Button>
+                </form>
+                {/* Guess bar */}
+                <form onSubmit={handleGuess} className="relative flex gap-4">
+                  <div className="relative flex-grow">
+                    <Target className="absolute left-6 top-1/2 -translate-y-1/2 z-10 w-5 h-5 text-green-500 opacity-60" />
+                    <Input
+                      value={guessInput}
+                      onChange={(e) => setGuessInput(e.target.value)}
+                      disabled={isThinking}
+                      className="pl-16 border-none bg-white dark:bg-navy-800"
+                      placeholder="Je pense que c'est…"
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    disabled={isThinking || !guessInput.trim()}
+                    className="bg-green-600 text-white px-6 rounded-2xl shadow-xl hover:scale-105 font-black uppercase tracking-widest text-sm"
+                  >
+                    Deviner
+                  </Button>
+                </form>
+              </>
+            )}
           </div>
         </Card>
       </div>
