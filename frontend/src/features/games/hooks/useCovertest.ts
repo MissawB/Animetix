@@ -15,7 +15,12 @@ export const useCovertest = () => {
   const guessMutation = useMutation<CovertestState, Error, CovertestGuessRequest>({
     mutationFn: covertestService.submit,
     onSuccess: (newState) => {
-      queryClient.setQueryData(QUERY_KEY, newState);
+      // The guess endpoint only returns the round's progress (guesses, game_over…),
+      // NOT the cover fields. Merge so cover_url/locale/volume/author survive a guess
+      // instead of being wiped (which blanked the cover after the first attempt).
+      queryClient.setQueryData<CovertestState | undefined>(QUERY_KEY, (prev) =>
+        prev ? { ...prev, ...newState } : newState
+      );
     },
   });
 

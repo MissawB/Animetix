@@ -32,9 +32,16 @@ describe('useCovertest', () => {
     expect(result.current.gameState).toBe(s);
   });
 
-  it('handleGuess submits and writes the new state into the cache', async () => {
-    getState.mockResolvedValue(state());
-    const next = { winner: true } as unknown as CovertestState;
+  it('handleGuess merges progress into state, preserving the cover', async () => {
+    // The guess endpoint returns only round progress (no cover fields); the hook
+    // must merge so the cover does not vanish after the first attempt.
+    getState.mockResolvedValue(
+      state({ cover_url: 'http://x/cover.jpg', locale: 'ja', secret_title: null, guesses: [] }),
+    );
+    const next = {
+      guesses: [{ title: 'the spy', is_correct: false }],
+      game_over: false,
+    } as unknown as CovertestState;
     submit.mockResolvedValue(next);
     const { result } = renderHook(() => useCovertest(), { wrapper: makeWrapper() });
     await waitFor(() => expect(result.current.loading).toBe(false));
@@ -45,8 +52,15 @@ describe('useCovertest', () => {
 
     // TanStack Query v5 calls mutationFn(variables, context) — assert just the variables.
     expect(submit.mock.calls[0][0]).toEqual({ guess: 'the spy' });
-    // onSuccess writes the result into the cache (compare by value: react-query
-    // structural-sharing may hand back a fresh reference).
-    await waitFor(() => expect(result.current.gameState).toEqual({ winner: true }));
+    // The cover survives the guess; progress fields are applied on top.
+    await waitFor(() =>
+      expect(result.current.gameState).toEqual({
+        cover_url: 'http://x/cover.jpg',
+        locale: 'ja',
+        secret_title: null,
+        guesses: [{ title: 'the spy', is_correct: false }],
+        game_over: false,
+      }),
+    );
   });
 });
