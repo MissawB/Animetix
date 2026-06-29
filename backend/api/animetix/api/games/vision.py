@@ -1,4 +1,5 @@
 from animetix_project.logging_config import get_logger
+from core.domain.services.berrix_economy import FEATURE_BX_COSTS
 from core.domain.services.guardrail_service import GuardrailService
 from core.ports.usage_port import UsagePort
 from dependency_injector.wiring import Provide, inject
@@ -6,6 +7,7 @@ from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from animetix.api.billing import deduct_berrix
 from animetix.api.dependencies import get_session_service
 
 from ...containers import Container
@@ -135,6 +137,15 @@ class VisionGameGuessView(APIView):
         form = VisionQuestForm(request.data)
         if not form.is_valid():
             return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        # Berrix deduction for the CLIP inference (raises 402 if balance too low).
+        # After form validation, outside the try below so PaymentRequired
+        # propagates as 402 (not swallowed into a 500).
+        deduct_berrix(
+            request.user,
+            FEATURE_BX_COSTS["vision_clip"],
+            "Vision Quest — analyse CLIP",
+        )
 
         try:
             query = form.cleaned_data["description"]

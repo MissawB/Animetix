@@ -133,8 +133,10 @@ class MediaSearchView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-        results = get_container().core.catalog_service.search_items(
-            query, media_type, limit
+        results = (
+            get_container()
+            .core.catalog_service()
+            .search_items(query, media_type, limit)
         )
         return Response(self._format_results(results))
 
@@ -159,6 +161,13 @@ class MediaSearchView(APIView):
 
         if not image_file:
             return Response({"error": "No image provided"}, status=400)
+
+        # NOTE: this CLIP cross-modal search is a GPU feature and SHOULD deduct Bx
+        # (FEATURE_BX_COSTS["vision_clip"]) once it works. It is currently broken at
+        # the DI layer — `cross_modal_search_service` provider passes `repository=`
+        # but CrossModalSearchService.__init__ expects (inference_engine, vector_db),
+        # so it 500s before any GPU runs. Add the deduct_berrix charge back here when
+        # that wiring is fixed (don't charge for a non-functional endpoint).
 
         try:
             if not validate_file_size(image_file.size, MAX_IMAGE_SIZE):
@@ -348,7 +357,7 @@ class MediaDetailView(APIView):
 
         # 2. Fallback via Catalog Service (si non synchronisé en SQL)
         container = get_container()
-        data = container.core.catalog_service.load_data(media_type)
+        data = container.core.catalog_service().load_data(media_type)
         if data:
             item = next(
                 (i for i in data.get("db", []) if str(i.get("id")) == str(item_id)),

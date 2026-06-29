@@ -74,6 +74,15 @@ FEATURE_COMPUTE_USD: dict[str, float] = {
     "voice_clone": 0.005,
     "image_to_3d": 0.04,
     "cinematic_3d": 0.15,
+    # GPU-backed games (inference per round)
+    "vision_clip": 0.002,  # single CLIP forward pass
+    "paradox": 0.003,  # one LLM reasoning + scenario generation
+    "vs_battle": 0.004,  # battle reasoning generation
+    "akinetix_rl": 0.004,  # RL agent rollout
+    # GPU-backed SSE streams (per generation)
+    "emoji_stream": 0.002,  # emoji hint generation
+    "animinator": 0.002,  # oracle Q&A turn
+    "tree_of_thoughts": 0.01,  # multi-node ToT search (breadth x depth LLM calls)
 }
 
 FEATURE_BX_COSTS: dict[str, int] = {
@@ -104,6 +113,15 @@ FEATURE_BX_COSTS: dict[str, int] = {
     # Full-resolution 3-D / style-transfer
     "style_transfer": 500,
     "cinematic_3d": 500,
+    # GPU-backed games — floors: vision 6, paradox 8, vs_battle/akinetix_rl 11
+    "vision_clip": 6,
+    "paradox": 8,
+    "vs_battle": 12,
+    "akinetix_rl": 12,
+    # GPU-backed SSE streams — floors: emoji/animinator 6, ToT 26
+    "emoji_stream": 6,
+    "animinator": 6,
+    "tree_of_thoughts": 30,
 }
 
 # --- Pack catalog (server-authoritative). Prices in minor units (cents). ---

@@ -1,11 +1,14 @@
 import logging
 
+from core.domain.services.berrix_economy import FEATURE_BX_COSTS
 from django_ratelimit.decorators import ratelimit
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+
+from animetix.api.billing import deduct_berrix
 
 from ...containers import get_container
 from ...models import MediaItem, VsBattle
@@ -100,6 +103,14 @@ def run_vs_battle(request):
             {"error": "Quota d'IA journalier atteint. Revenez demain !"},
             status=status.HTTP_403_FORBIDDEN,
         )
+
+    # Berrix deduction for the GPU battle reasoning (raises 402 if balance too low).
+    # Kept outside the try below so PaymentRequired propagates as 402, not 500.
+    deduct_berrix(
+        request.user,
+        FEATURE_BX_COSTS["vs_battle"],
+        "Arène — combat IA",
+    )
 
     try:
         result = vs_service.run_battle(

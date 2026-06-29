@@ -1,9 +1,11 @@
+from core.domain.services.berrix_economy import FEATURE_BX_COSTS
 from core.ports.usage_port import UsagePort
 from dependency_injector.wiring import Provide, inject
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from animetix.api.billing import deduct_berrix
 from animetix.api.dependencies import get_session_service
 
 from ...containers import Container
@@ -58,6 +60,13 @@ class AkinetixRLStartView(APIView):
             return Response(
                 {"error": "Catalog not found"}, status=status.HTTP_404_NOT_FOUND
             )
+
+        # Berrix deduction for the GPU rollout (raises 402 if balance is too low)
+        deduct_berrix(
+            request.user,
+            FEATURE_BX_COSTS["akinetix_rl"],
+            "Akinetix RL — agent expert",
+        )
 
         state = akinetix_expert_service.start_new_game(catalog["db"])
         akinetix_expert_service.save_state(port, state)

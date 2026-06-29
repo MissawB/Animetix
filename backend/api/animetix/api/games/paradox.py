@@ -1,12 +1,14 @@
 import random
 
 from animetix_project.logging_config import get_logger
+from core.domain.services.berrix_economy import FEATURE_BX_COSTS
 from core.ports.usage_port import UsagePort
 from dependency_injector.wiring import Provide, inject
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from animetix.api.billing import deduct_berrix
 from animetix.api.dependencies import get_session_service
 
 from ...containers import Container
@@ -68,6 +70,7 @@ class ParadoxGameStateView(APIView):
 
 
 class ParadoxGameStartView(APIView):
+    # GPU-backed AI game (LLM reasoning): requires login and consumes Berrix (Bx).
     permission_classes = [permissions.IsAuthenticated]
 
     @inject
@@ -108,6 +111,13 @@ class ParadoxGameStartView(APIView):
 
         t1, t2, intruder = res_prepare
         language = port.get("language", "Français")
+
+        # Berrix deduction for the GPU inference (raises 402 if balance is too low)
+        deduct_berrix(
+            request.user,
+            FEATURE_BX_COSTS["paradox"],
+            "Paradoxe — génération IA",
+        )
 
         res = paradox_service.generate_logic(
             media_type,

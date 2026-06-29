@@ -11,6 +11,26 @@ from ..containers import get_container
 from ..forms import ToTStreamForm
 
 
+async def _charge_bx_or_402(request, feature_key, label):
+    """Deduct Berrix for a GPU-backed stream.
+
+    Every GPU feature must consume Bx, so anonymous users (who can't be billed)
+    are rejected: ``deduct_berrix`` raises for them. Returns a ``JsonResponse``
+    with HTTP 402 on any failure (not logged in / insufficient balance), or
+    ``None`` when the charge succeeded and the stream may proceed.
+    """
+    from core.domain.services.berrix_economy import FEATURE_BX_COSTS
+
+    from animetix.api.billing import deduct_berrix
+
+    user = await request.auser()
+    try:
+        await sync_to_async(deduct_berrix)(user, FEATURE_BX_COSTS[feature_key], label)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=402)
+    return None
+
+
 class EmojiStreamView(View):
     """Async SSE: streams emoji generation events for the UI."""
 
@@ -19,13 +39,18 @@ class EmojiStreamView(View):
         secret = request.GET.get("secret")
         if not secret:
             return HttpResponse(status=400)
+        charge = await _charge_bx_or_402(request, "emoji_stream", "Indice Emoji (IA)")
+        if charge:
+            return charge
         session = await sync_to_async(get_session_service)(request)
         media_type = await sync_to_async(session.get_current_mode)()
         container = get_container()
-        data = await sync_to_async(container.core.catalog_service.load_data)(media_type)
+        data = await sync_to_async(container.core.catalog_service().load_data)(
+            media_type
+        )
         description = data["title_to_full_data"][secret].get("description", "")
         return sse_stream_response(
-            container.core.emoji_service.agenerate_emojis_stream(
+            container.core.emoji_service().agenerate_emojis_stream(
                 media_type, secret, description
             )
         )
@@ -43,17 +68,22 @@ class ParadoxStreamView(View):
         )
         if not all([t1, t2, intruder]):
             return HttpResponse(status=400)
+        charge = await _charge_bx_or_402(request, "paradox", "Paradoxe — génération IA")
+        if charge:
+            return charge
         session = await sync_to_async(get_session_service)(request)
         media_type = await sync_to_async(session.get_current_mode)()
         container = get_container()
-        data = await sync_to_async(container.core.catalog_service.load_data)(media_type)
+        data = await sync_to_async(container.core.catalog_service().load_data)(
+            media_type
+        )
         item_a = data["title_to_full_data"][t1]
         item_b = data["title_to_full_data"][t2]
         item_i = data["title_to_full_data"][intruder]
         language = await sync_to_async(session.get)("language", "Français")
 
         async def _events():
-            async for event in container.core.paradox_service.agenerate_logic_stream(
+            async for event in container.core.paradox_service().agenerate_logic_stream(
                 media_type, item_a, item_b, item_i, language
             ):
                 if event["type"] == "result":
@@ -91,21 +121,14 @@ class AgenticRAGStreamView(View):
         else:
             language = await sync_to_async(session.get)("language", "Français")
 
+        # GPU feature → always consume Bx (anonymous users are rejected).
+        charge = await _charge_bx_or_402(
+            request, "agentic_rag", "Agentic RAG / Chatbot"
+        )
+        if charge:
+            return charge
+
         user = await request.auser()
-        if user.is_authenticated:
-            from core.domain.services.berrix_economy import (  # noqa: E402
-                FEATURE_BX_COSTS,
-            )
-
-            from animetix.api.billing import deduct_berrix  # noqa: E402
-
-            try:
-                await sync_to_async(deduct_berrix)(
-                    user, FEATURE_BX_COSTS["agentic_rag"], "Agentic RAG / Chatbot"
-                )
-            except Exception as e:
-                return JsonResponse({"error": str(e)}, status=402)
-
         agent = get_container().agentic.agentic_rag()
         user_id = str(user.id) if user.is_authenticated else None
         return sse_stream_response(
@@ -128,11 +151,18 @@ class AniminatorStreamView(View):
         question = request.GET.get("q")
         if not secret or not question:
             return HttpResponse(status=400)
+        charge = await _charge_bx_or_402(
+            request, "animinator", "Animinator — Oracle IA"
+        )
+        if charge:
+            return charge
 
         async def event_stream():
             full_response = ""
             try:
-                async for token in container.core.animinator_service.aask_oracle_stream(
+                async for (
+                    token
+                ) in container.core.animinator_service().aask_oracle_stream(
                     media_type, secret, question
                 ):
                     full_response += token.text
@@ -182,6 +212,11 @@ class ToTStreamView(View):
         query = form.cleaned_data["q"]
         breadth = form.cleaned_data.get("breadth") or 3
         depth = form.cleaned_data.get("depth") or 3
+        charge = await _charge_bx_or_402(
+            request, "tree_of_thoughts", "Tree-of-Thoughts (IA)"
+        )
+        if charge:
+            return charge
         tot_service = get_container().core.tree_of_thoughts_service()
         return sse_stream_response(
             tot_service.asolve_with_tree_of_thoughts_stream(

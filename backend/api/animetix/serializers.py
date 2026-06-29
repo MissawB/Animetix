@@ -245,6 +245,15 @@ class MediaItemSerializer(serializers.Serializer):
             }
             instance = mapped_instance
 
+        # Les résultats pgvector portent `popularity` sous forme de dict imbriqué
+        # ({'favourites': N}, issu des métadonnées AniList) alors que le champ
+        # sérialiseur attend un entier → on normalise pour éviter un int(dict).
+        if isinstance(instance, dict) and isinstance(instance.get("popularity"), dict):
+            instance = {
+                **instance,
+                "popularity": int(instance["popularity"].get("favourites") or 0),
+            }
+
         ret = super().to_representation(instance)
         # Sécurisation des contenus potentiellement générés par l'IA ou utilisateurs
         if ret.get("description"):
