@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, Zap, Flame, Image as ImageIcon, Loader2, ArrowRight, RefreshCw, Heart, Share2, Info, X, Film } from 'lucide-react';
+import { Sparkles, Zap, Flame, Image as ImageIcon, Loader2, RefreshCw, Heart, Share2, Info, X, Film } from 'lucide-react';
 import { SearchBar } from "../../components/SearchBar";
 import { CyberTerminalPanel } from '../../components/forge/CyberTerminalPanel';
 import { GlitchText } from '../../components/forge/GlitchText';
@@ -87,15 +87,15 @@ const ForgePage: React.FC = () => {
     return (
       <div className="min-h-[80vh] flex items-center justify-center px-6">
         <div className="max-w-3xl w-full relative">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-anime-accent/20 blur-[120px] rounded-full animate-pulse" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-yellow-400/20 blur-[120px] rounded-full animate-pulse" />
           
           <div className="bg-white/80 dark:bg-anime-dark-card/80 backdrop-blur-2xl rounded-[4rem] p-12 shadow-2xl border border-white/20 relative z-10 text-center overflow-hidden">
              <div className="absolute top-0 left-0 w-full h-2 bg-black/5 dark:bg-white/5">
-                <div className="h-full bg-anime-accent animate-[loading_2s_ease-in-out_infinite]" style={{ width: '30%' }} />
+                <div className="h-full bg-yellow-400 animate-[loading_2s_ease-in-out_infinite]" style={{ width: '30%' }} />
              </div>
 
              <div className="mb-12 relative">
-                <div className="w-24 h-24 bg-anime-accent rounded-3xl mx-auto flex items-center justify-center shadow-lg shadow-anime-accent/20 rotate-12 animate-bounce">
+                <div className="w-24 h-24 bg-yellow-400 rounded-3xl mx-auto flex items-center justify-center shadow-lg shadow-yellow-400/20 rotate-12 animate-bounce">
                     <Loader2 className="w-12 h-12 text-black animate-spin" />
                 </div>
              </div>
@@ -104,13 +104,13 @@ const ForgePage: React.FC = () => {
              
              <div className="flex justify-center items-center gap-12 mb-12">
                 <div className="group relative">
-                    <div className="absolute -inset-2 bg-gradient-to-t from-anime-accent to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl blur-md" />
+                    <div className="absolute -inset-2 bg-gradient-to-t from-yellow-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl blur-md" />
                     <img src={itemA?.image_url} className="w-28 h-40 object-cover rounded-2xl shadow-xl relative z-10 grayscale brightness-50" alt="" loading="lazy" decoding="async" />
                     <p className="mt-3 text-[10px] font-black uppercase opacity-40 max-w-[112px] truncate">{itemA?.title || itemA?.name}</p>
                 </div>
                 <div className="flex flex-col items-center">
-                    <Sparkles className="w-10 h-10 text-anime-accent animate-pulse mb-2" />
-                    <div className="h-0.5 w-12 bg-gradient-to-r from-transparent via-anime-accent to-transparent" />
+                    <Sparkles className="w-10 h-10 text-yellow-400 animate-pulse mb-2" />
+                    <div className="h-0.5 w-12 bg-gradient-to-r from-transparent via-yellow-400 to-transparent" />
                 </div>
                 <div className="group relative">
                     <div className="absolute -inset-2 bg-gradient-to-t from-blue-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl blur-md" />
@@ -140,7 +140,7 @@ const ForgePage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
           
           <div className="lg:col-span-5 relative group">
-             <div className="absolute -inset-4 bg-anime-accent/20 blur-3xl rounded-[4rem] opacity-50 group-hover:opacity-100 transition-opacity" />
+             <div className="absolute -inset-4 bg-yellow-400/20 blur-3xl rounded-[4rem] opacity-50 group-hover:opacity-100 transition-opacity" />
              <div className="relative overflow-hidden rounded-[3.5rem] shadow-2xl border-8 border-white dark:border-anime-dark-card transform -rotate-1 hover:rotate-0 transition-transform duration-500">
                 {status.image_url ? (
                   <img src={status.image_url} className="w-full aspect-[3/4] object-cover scale-105 group-hover:scale-100 transition-transform duration-700" alt="Fusion" loading="lazy" decoding="async" />
@@ -155,7 +155,7 @@ const ForgePage: React.FC = () => {
                    <span className="bg-black/80 backdrop-blur-md text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-tighter">
                       Style: {artStyle}
                    </span>
-                   <span className="bg-anime-accent text-black text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-tighter shadow-lg">
+                   <span className="bg-yellow-400 text-black text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-tighter shadow-lg">
                       Chaos: {chaosLevel}%
                    </span>
                 </div>
@@ -163,11 +163,11 @@ const ForgePage: React.FC = () => {
              
              <div className="absolute -bottom-8 -right-4 bg-white dark:bg-anime-dark-card p-6 rounded-3xl shadow-2xl border border-gray-100 dark:border-white/5 max-w-[280px] transform rotate-3">
                 <div className="flex items-center gap-3 mb-2">
-                    <Sparkles className="w-5 h-5 text-anime-accent" />
+                    <Sparkles className="w-5 h-5 text-yellow-400" />
                     <span className="text-[10px] font-black opacity-40 uppercase tracking-widest">NOUVEL ARCHÉTYPE</span>
                 </div>
                 <h3 className="text-xl font-black italic manga-font leading-tight">
-                    {itemA?.title || itemA?.name} <span className="text-anime-accent text-sm">×</span> {itemB?.title || itemB?.name}
+                    {itemA?.title || itemA?.name} <span className="text-yellow-400 text-sm">×</span> {itemB?.title || itemB?.name}
                 </h3>
              </div>
           </div>
@@ -175,7 +175,7 @@ const ForgePage: React.FC = () => {
           <div className="lg:col-span-7 space-y-10 pt-8 lg:pt-0">
              <div>
                 <h1 className="text-7xl font-black italic manga-font leading-[0.8] tracking-tighter uppercase mb-4">
-                   FUSION <span className="text-anime-accent">RÉUSSIE</span>
+                   FUSION <span className="text-yellow-400">RÉUSSIE</span>
                 </h1>
                 <p className="text-xl font-bold opacity-30 uppercase tracking-[0.2em]">Une nouvelle réalité a été forgée dans le nexus.</p>
              </div>
@@ -185,7 +185,7 @@ const ForgePage: React.FC = () => {
                    SYNOPSIS GÉNÉRÉ PAR L'IA
                 </div>
                 <div className="prose dark:prose-invert max-w-none">
-                    <p className="text-2xl leading-relaxed italic font-medium opacity-90 first-letter:text-5xl first-letter:font-black first-letter:text-anime-accent first-letter:mr-3 first-letter:float-left whitespace-pre-wrap">
+                    <p className="text-2xl leading-relaxed italic font-medium opacity-90 first-letter:text-5xl first-letter:font-black first-letter:text-yellow-400 first-letter:mr-3 first-letter:float-left whitespace-pre-wrap">
                         {status.scenario}
                     </p>
                 </div>
@@ -194,7 +194,7 @@ const ForgePage: React.FC = () => {
              <div className="flex flex-wrap gap-4">
                 <button 
                    onClick={() => navigate(`/forge/vn/${fusionData?.fusion_id}/`)}
-                   className="flex-1 min-w-[200px] bg-anime-accent text-black py-5 px-8 rounded-2xl font-black italic text-lg hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 uppercase shadow-xl"
+                   className="flex-1 min-w-[200px] bg-yellow-400 text-black py-5 px-8 rounded-2xl font-black italic text-lg hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 uppercase shadow-xl"
                 >
                    <Film className="w-6 h-6" />
                    Transformer en Visual Novel
@@ -225,13 +225,13 @@ const ForgePage: React.FC = () => {
   return (
     <div className="max-w-6xl mx-auto px-6 py-16">
       <div className="text-center mb-20 relative">
-        <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-64 h-64 bg-anime-accent/10 blur-[100px] rounded-full" />
+        <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-64 h-64 bg-yellow-400/10 blur-[100px] rounded-full" />
         <h1 className="text-8xl font-black italic manga-font mb-4 tracking-tighter leading-none">
           <GlitchText>LA FORGE</GlitchText>
         </h1>
         <div className="flex items-center justify-center gap-4 mb-4">
             <div className="h-px w-12 bg-black/10 dark:bg-white/10" />
-            <p className="text-sm font-black opacity-30 uppercase tracking-[0.5em]">ARCHETYPIST ENGINE v2.0</p>
+            <p className="text-xs sm:text-sm font-black opacity-50 uppercase tracking-[0.25em] text-center">Fusionnez deux univers en une œuvre inédite</p>
             <div className="h-px w-12 bg-black/10 dark:bg-white/10" />
         </div>
       </div>
@@ -241,13 +241,13 @@ const ForgePage: React.FC = () => {
         <div className="lg:col-span-7 space-y-8">
             <CyberTerminalPanel>
                 <h3 className="text-xl font-black italic manga-font mb-6 flex items-center gap-3">
-                   <Zap className="w-5 h-5 text-anime-accent" /> Sélecteur d'Univers
+                   <Zap className="w-5 h-5 text-yellow-400" /> Sélecteur d'Univers
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <label htmlFor="univers-alpha" className="text-[10px] font-black uppercase tracking-widest opacity-40">Univers Alpha</label>
+                            <label htmlFor="univers-alpha" className="text-[10px] font-black uppercase tracking-widest opacity-70">Univers Alpha</label>
                             {itemA && <button onClick={() => setItemA(null)} className="text-[10px] font-bold text-red-500 hover:underline flex items-center gap-1"><X className="w-2 h-2" /> Effacer</button>}
                         </div>
                         <SearchBar id="univers-alpha" onSelect={setItemA} placeholder="Rechercher..." />
@@ -262,7 +262,7 @@ const ForgePage: React.FC = () => {
                                     </div>
                                 </>
                             ) : (
-                                <div className="text-center opacity-20 group-hover:opacity-40 transition-opacity">
+                                <div className="text-center opacity-40 group-hover:opacity-70 transition-opacity">
                                     <div className="w-12 h-12 bg-black/10 dark:bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-2">
                                         <Info className="w-6 h-6" />
                                     </div>
@@ -272,13 +272,13 @@ const ForgePage: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="hidden md:flex absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white dark:bg-anime-dark-bg border border-black/5 dark:border-white/5 rounded-full items-center justify-center z-20 shadow-lg">
-                        <ArrowRight className="w-5 h-5 opacity-20" />
+                    <div className="hidden md:flex absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-yellow-400 text-black rounded-2xl items-center justify-center z-20 shadow-lg shadow-yellow-400/40 ring-4 ring-cyberpunk-bg rotate-12">
+                        <Sparkles className="w-6 h-6" strokeWidth={2.5} />
                     </div>
 
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <label htmlFor="univers-beta" className="text-[10px] font-black uppercase tracking-widest opacity-40">Univers Bêta</label>
+                            <label htmlFor="univers-beta" className="text-[10px] font-black uppercase tracking-widest opacity-70">Univers Bêta</label>
                             {itemB && <button onClick={() => setItemB(null)} className="text-[10px] font-bold text-red-500 hover:underline flex items-center gap-1"><X className="w-2 h-2" /> Effacer</button>}
                         </div>
                         <SearchBar id="univers-beta" onSelect={setItemB} placeholder="Rechercher..." />
@@ -293,7 +293,7 @@ const ForgePage: React.FC = () => {
                                     </div>
                                 </>
                             ) : (
-                                <div className="text-center opacity-20 group-hover:opacity-40 transition-opacity">
+                                <div className="text-center opacity-40 group-hover:opacity-70 transition-opacity">
                                     <div className="w-12 h-12 bg-black/10 dark:bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-2">
                                         <Info className="w-6 h-6" />
                                     </div>
@@ -314,11 +314,11 @@ const ForgePage: React.FC = () => {
                         <button 
                             key={style.id} 
                             onClick={() => setArtStyle(style.id)} 
-                            className={`p-4 rounded-3xl text-left transition-all duration-300 border-2 ${artStyle === style.id ? 'border-anime-accent bg-anime-accent/5 shadow-lg scale-[1.02]' : 'border-transparent bg-black/5 dark:bg-white/5 opacity-60 hover:opacity-100'}`}
+                            className={`p-4 rounded-3xl text-left transition-all duration-300 border-2 ${artStyle === style.id ? 'border-yellow-400 bg-yellow-400/10 shadow-lg scale-[1.02]' : 'border-transparent bg-black/5 dark:bg-white/5 opacity-80 hover:opacity-100 hover:bg-black/10 dark:hover:bg-white/10'}`}
                         >
                             <div className={`w-8 h-8 ${style.color} rounded-lg mb-3 shadow-inner`} />
                             <div className="font-black italic text-xs uppercase mb-1">{style.name}</div>
-                            <div className="text-[9px] font-bold opacity-40 leading-tight">{style.desc}</div>
+                            <div className="text-[10px] font-bold opacity-60 leading-tight">{style.desc}</div>
                         </button>
                     ))}
                 </div>
@@ -328,17 +328,17 @@ const ForgePage: React.FC = () => {
         <div className="lg:col-span-5 space-y-8">
             <CyberTerminalPanel className="sticky top-24">
                 <h3 className="text-xl font-black italic manga-font mb-10 flex items-center gap-3">
-                   <Flame className="w-5 h-5 text-anime-error" /> Paramètres du Réacteur
+                   <Flame className="w-5 h-5 text-red-500" /> Paramètres du Réacteur
                 </h3>
 
                 <div className="space-y-12">
                     <div>
                         <div className="flex justify-between items-end mb-4">
                            <div className="space-y-1">
-                               <span className="text-xs font-black uppercase tracking-widest text-anime-error">Niveau de Chaos</span>
-                               <p className="text-[9px] font-bold opacity-30 max-w-[180px]">Définit le degré d'imprévisibilité de la fusion.</p>
+                               <span className="text-xs font-black uppercase tracking-widest text-red-500">Niveau de Chaos</span>
+                               <p className="text-[10px] font-bold opacity-55 max-w-[180px]">Définit le degré d'imprévisibilité de la fusion.</p>
                            </div>
-                           <span className="text-2xl font-black italic manga-font text-anime-error">{chaosLevel}%</span>
+                           <span className="text-2xl font-black italic manga-font text-red-500">{chaosLevel}%</span>
                         </div>
                         <div className="relative group pt-4">
                             <CyberSlider 
@@ -346,7 +346,7 @@ const ForgePage: React.FC = () => {
                                 onChange={setChaosLevel} 
                                 color="magenta"
                             />
-                            <div className="flex justify-between mt-2 text-[8px] font-black uppercase opacity-20">
+                            <div className="flex justify-between mt-3 text-[9px] font-black uppercase opacity-45">
                                 <span>Cohérent</span>
                                 <span>Distordu</span>
                                 <span>Entropie</span>
@@ -358,7 +358,7 @@ const ForgePage: React.FC = () => {
                         <div className="flex justify-between items-end mb-4">
                            <div className="space-y-1">
                                <span className="text-xs font-black uppercase tracking-widest text-blue-500">Équilibre des ADN</span>
-                               <p className="text-[9px] font-bold opacity-30 max-w-[180px]">Quel univers doit dominer la structure globale ?</p>
+                               <p className="text-[10px] font-bold opacity-55 max-w-[180px]">Quel univers doit dominer la structure globale ?</p>
                            </div>
                            <span className="text-2xl font-black italic manga-font text-blue-500">{balance}%</span>
                         </div>
@@ -368,7 +368,7 @@ const ForgePage: React.FC = () => {
                                 onChange={setBalance} 
                                 color="cyan"
                             />
-                            <div className="flex justify-between mt-2 text-[8px] font-black uppercase opacity-20">
+                            <div className="flex justify-between mt-3 text-[9px] font-black uppercase opacity-45">
                                 <span>Origine A</span>
                                 <span>Hybride</span>
                                 <span>Origine B</span>
@@ -384,15 +384,15 @@ const ForgePage: React.FC = () => {
                         Forger la Réalité
                     </CyberButton>
                     
-                    {error && <div className="text-anime-error text-center text-xs font-black uppercase bg-anime-error/10 p-4 rounded-2xl animate-bounce">{error}</div>}
+                    {error && <div className="text-red-500 text-center text-xs font-black uppercase bg-red-500/10 p-4 rounded-2xl animate-bounce">{error}</div>}
                 </div>
             </CyberTerminalPanel>
         </div>
       </div>
 
       {/* Footer Info */}
-      <div className="text-center opacity-20 mt-12 mb-8">
-         <p className="text-[10px] font-black tracking-[0.4em] uppercase">Powered by Animetix Generative Core & Agentic RAG 2.0</p>
+      <div className="text-center opacity-40 mt-12 mb-8">
+         <p className="text-[10px] font-black tracking-[0.3em] uppercase">Propulsé par le moteur génératif d'Animetix</p>
       </div>
     </div>
   );

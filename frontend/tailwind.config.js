@@ -35,6 +35,8 @@ export default {
         'anime-accent': 'rgb(var(--color-accent) / <alpha-value>)',
         'anime-success': 'rgb(var(--color-success) / <alpha-value>)',
         'anime-error': 'rgb(var(--color-danger) / <alpha-value>)',
+        'anime-dark-bg': '#0a0a0f',
+        'anime-dark-card': '#15151f',
         
         // Navy Palette (Design System Core)
         navy: {
