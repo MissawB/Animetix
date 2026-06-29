@@ -39,8 +39,8 @@ export const SoloChallenges: React.FC = () => {
                   {mode.titre_brush_1}<br />
                   <span className="text-yellow-400 text-2xl ml-6 tracking-normal">{mode.titre_brush_2}</span>
                 </h2>
-                <p 
-                  className="manga-font text-white text-xs italic mt-8 ml-10 opacity-90 tracking-wider leading-relaxed max-w-[65%]" 
+                <p
+                  className="manga-font text-white text-xs italic mt-16 ml-10 opacity-90 tracking-wider leading-relaxed max-w-[60%] line-clamp-3"
                   style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}
                 >
                   {mode.description}
