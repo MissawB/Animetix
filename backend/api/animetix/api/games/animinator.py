@@ -50,9 +50,21 @@ class AniminatorAskView(APIView):
                 )
             import random  # noqa: E402
 
-            secret = random.choice(
-                list(data["title_to_full_data"].keys())
-            )  # nosec B311
+            from ...services import AKINETIX_DIFFICULTY_RANK  # noqa: E402
+
+            # Difficulty bounds the secret (Easy = famous, Impossible = obscure).
+            difficulty = request.data.get("difficulty", "Normal")
+            limit = AKINETIX_DIFFICULTY_RANK.get(difficulty)
+            lookup = data.get("lookup", [])
+            pool = [
+                (it.get("title") or it.get("name"))
+                for it in (lookup[:limit] if limit else lookup)
+                if (it.get("title") or it.get("name"))
+                in data.get("title_to_full_data", {})
+            ]
+            if not pool:
+                pool = list(data["title_to_full_data"].keys())
+            secret = random.choice(pool)  # nosec B311
             session.set("animinator_secret", secret)
             session.set("animinator_questions_left", 20)
             session.set("animinator_chat", [])

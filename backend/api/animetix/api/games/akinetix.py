@@ -76,6 +76,7 @@ class AkinetixGameStartView(APIView):
         media_type = data["media_type"]
         port.set("media_type", media_type)
         is_daily = data["is_daily"]
+        difficulty = request.data.get("difficulty", "Normal")
 
         cat_data = catalog_service.load_data(media_type)
         if not cat_data:
@@ -83,7 +84,14 @@ class AkinetixGameStartView(APIView):
                 {"error": "Catalog not found"}, status=status.HTTP_404_NOT_FOUND
             )
 
-        game_state = akinetix_service.start_new_game(cat_data["db"])
+        # Difficulty bounds the candidate pool to the top-N most popular works
+        # (Easy = famous, Impossible = whole catalogue). Catalogue is pop-sorted.
+        from ...services import AKINETIX_DIFFICULTY_RANK  # noqa: E402
+
+        limit = AKINETIX_DIFFICULTY_RANK.get(difficulty)
+        db = cat_data["db"][:limit] if limit else cat_data["db"]
+
+        game_state = akinetix_service.start_new_game(db)
         if is_daily:
             game_state.is_daily = True
 

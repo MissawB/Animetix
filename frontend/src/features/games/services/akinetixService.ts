@@ -31,11 +31,14 @@ export const akinetixService = {
     return normalize(await apiClient(`${API_BASE}/state/`));
   },
 
-  startGame: async (mediaType?: string): Promise<AkinetixState> => {
+  startGame: async (mediaType?: string, difficulty?: string): Promise<AkinetixState> => {
+    const body: Record<string, string> = {};
+    if (mediaType) body.media_type = mediaType;
+    if (difficulty) body.difficulty = difficulty;
     return normalize(
       await apiClient(`${API_BASE}/start/`, {
         method: 'POST',
-        body: JSON.stringify(mediaType ? { media_type: mediaType } : {}),
+        body: JSON.stringify(body),
       }),
     );
   },

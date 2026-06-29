@@ -60,9 +60,14 @@ class QuiEstCeStartView(APIView):
         fine = catalog_service.get_akinetix_attributes()
         engine = akinetix_service.engine
 
+        # Difficulty bounds the board pool (Easy = famous, Impossible = obscure).
+        from ...services import AKINETIX_DIFFICULTY_RANK  # noqa: E402
+
+        difficulty = request.data.get("difficulty", "Normal")
+        limit = AKINETIX_DIFFICULTY_RANK.get(difficulty) or POPULAR_POOL
         pool = [
             it
-            for it in catalog["db"][:POPULAR_POOL]
+            for it in catalog["db"][:limit]
             if it.get("image") and (it.get("title") or it.get("name"))
         ]
         if len(pool) < 4:

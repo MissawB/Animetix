@@ -26,8 +26,10 @@ const AniminatorPage: React.FC = () => {
   const [thoughtProcess, setThoughtProcess] = useState<string>('');
   const chatEndRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
-  // Univers choisi dans le lobby Akinetix (utilisé pour démarrer la partie).
-  const mediaType = (location.state as { mediaType?: string } | null)?.mediaType;
+  // Univers + difficulté choisis dans le lobby Akinetix (au démarrage de la partie).
+  const navState = location.state as { mediaType?: string; difficulty?: string } | null;
+  const mediaType = navState?.mediaType;
+  const difficulty = navState?.difficulty;
 
   const scrollToBottom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -48,7 +50,7 @@ const AniminatorPage: React.FC = () => {
     setThoughtProcess('Analyse de la requête...');
 
     try {
-      const data = await animinatorService.ask(userMsg, mediaType);
+      const data = await animinatorService.ask(userMsg, mediaType, difficulty);
       
       setTimeout(() => {
         setMessages(prev => [...prev, { role: 'ai', text: data.answer || "Je commence à voir plus clair..." }]);

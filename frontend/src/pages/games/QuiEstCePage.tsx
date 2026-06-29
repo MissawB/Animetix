@@ -10,7 +10,9 @@ import { useToastStore } from '../../store/toastStore';
 
 const QuiEstCePage: React.FC = () => {
   const location = useLocation();
-  const mediaType = (location.state as { mediaType?: string } | null)?.mediaType;
+  const navState = location.state as { mediaType?: string; difficulty?: string } | null;
+  const mediaType = navState?.mediaType;
+  const difficulty = navState?.difficulty;
   const addToast = useToastStore((s) => s.addToast);
 
   const [board, setBoard] = useState<QuizWhoCandidate[]>([]);
@@ -31,7 +33,7 @@ const QuiEstCePage: React.FC = () => {
     setWon(false);
     setSecretTitle(null);
     try {
-      const data = await quizWhoService.start(mediaType);
+      const data = await quizWhoService.start(mediaType, difficulty);
       setBoard(data.board);
       setQuestions(data.questions);
     } catch {
@@ -39,7 +41,7 @@ const QuiEstCePage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [mediaType, addToast]);
+  }, [mediaType, difficulty, addToast]);
 
   useEffect(() => {
     // Fetch the board on mount (and when the universe changes).

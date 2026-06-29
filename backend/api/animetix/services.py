@@ -14,6 +14,18 @@ DIFFICULTY_SETTINGS = {
     "Character": {"Easy": 500, "Normal": 250, "Hard": 100, "Impossible": 20},
 }
 
+# For Akinetix-family modes where the PLAYER must recognise/guess the secret
+# (Animinator, Qui est-ce?, and the Akinetix classic candidate pool). Rank
+# ceiling into the popularity-sorted catalogue: Easy = only the most famous
+# works, Impossible = the whole catalogue (deep cuts). This is the intuitive
+# direction (Facile = très connus, Impossible = pépites obscures).
+AKINETIX_DIFFICULTY_RANK = {
+    "Easy": 150,
+    "Normal": 500,
+    "Hard": 1200,
+    "Impossible": 2000,
+}
+
 # Legacy bridges removed. Directly use the DI Container (get_container()) for all domain services.
 
 

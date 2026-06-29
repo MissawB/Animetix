@@ -16,11 +16,15 @@ export interface AniminatorGuessResponse {
 }
 
 export const animinatorService = {
-  ask: async (question: string, mediaType?: string): Promise<AniminatorResponse> => {
-    return apiClient(`${API_BASE}/ask/`, {
-      method: 'POST',
-      body: JSON.stringify(mediaType ? { question, media_type: mediaType } : { question }),
-    });
+  ask: async (
+    question: string,
+    mediaType?: string,
+    difficulty?: string,
+  ): Promise<AniminatorResponse> => {
+    const body: Record<string, string> = { question };
+    if (mediaType) body.media_type = mediaType;
+    if (difficulty) body.difficulty = difficulty;
+    return apiClient(`${API_BASE}/ask/`, { method: 'POST', body: JSON.stringify(body) });
   },
   guess: async (guess: string): Promise<AniminatorGuessResponse> => {
     return apiClient(`${API_BASE}/guess/`, {

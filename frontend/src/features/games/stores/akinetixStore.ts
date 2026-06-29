@@ -6,8 +6,8 @@ interface AkinetixStore {
   gameState: AkinetixState | null;
   isLoading: boolean;
   error: string | null;
-  loadGame: (mediaType?: string) => Promise<void>;
-  restartGame: (mediaType?: string) => Promise<void>;
+  loadGame: (mediaType?: string, difficulty?: string) => Promise<void>;
+  restartGame: (mediaType?: string, difficulty?: string) => Promise<void>;
   submitAnswer: (answer: string) => Promise<void>;
   submitConfirmation: (isCorrect: boolean, actualTarget?: string) => Promise<void>;
 }
@@ -17,14 +17,14 @@ export const useAkinetixStore = create<AkinetixStore>((set, get) => ({
   isLoading: true,
   error: null,
 
-  loadGame: async (mediaType?: string) => {
+  loadGame: async (mediaType?: string, difficulty?: string) => {
     set({ isLoading: true, error: null });
     try {
       const state = await akinetixService.getState();
       set({ gameState: state, isLoading: false });
     } catch {
       try {
-        const state = await akinetixService.startGame(mediaType);
+        const state = await akinetixService.startGame(mediaType, difficulty);
         set({ gameState: state, isLoading: false });
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to start game';
@@ -33,10 +33,10 @@ export const useAkinetixStore = create<AkinetixStore>((set, get) => ({
     }
   },
 
-  restartGame: async (mediaType?: string) => {
+  restartGame: async (mediaType?: string, difficulty?: string) => {
     set({ isLoading: true, error: null });
     try {
-      const state = await akinetixService.startGame(mediaType);
+      const state = await akinetixService.startGame(mediaType, difficulty);
       set({ gameState: state, isLoading: false });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to restart game';

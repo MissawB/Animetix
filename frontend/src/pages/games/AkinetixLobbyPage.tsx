@@ -6,6 +6,14 @@ import {
 
 type Universe = 'Anime' | 'Manga' | 'Character';
 type Mode = 'classique' | 'animinator' | 'quiz-who';
+type Difficulty = 'Easy' | 'Normal' | 'Hard' | 'Impossible';
+
+const DIFFICULTIES: { key: Difficulty; label: string; sub: string; active: string }[] = [
+  { key: 'Easy', label: 'Facile', sub: 'Très connus', active: 'border-green-500 bg-green-500/10 text-green-600 dark:text-green-400' },
+  { key: 'Normal', label: 'Normal', sub: 'Grand public', active: 'border-blue-500 bg-blue-500/10 text-blue-600 dark:text-blue-400' },
+  { key: 'Hard', label: 'Difficile', sub: 'Connaisseurs', active: 'border-orange-500 bg-orange-500/10 text-orange-600 dark:text-orange-400' },
+  { key: 'Impossible', label: 'Impossible', sub: 'Pépites obscures', active: 'border-red-600 bg-red-600/10 text-red-600 dark:text-red-400' },
+];
 
 const MODES: {
   key: Mode;
@@ -69,10 +77,11 @@ const AkinetixLobbyPage: React.FC = () => {
   const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>('classique');
   const [universe, setUniverse] = useState<Universe>('Anime');
+  const [difficulty, setDifficulty] = useState<Difficulty>('Normal');
 
   const launch = () => {
     const target = MODES.find((m) => m.key === mode);
-    if (target) navigate(target.route, { state: { mediaType: universe } });
+    if (target) navigate(target.route, { state: { mediaType: universe, difficulty } });
   };
 
   return (
@@ -150,6 +159,27 @@ const AkinetixLobbyPage: React.FC = () => {
           </div>
         </Section>
 
+        {/* Difficulté */}
+        <Section step={3} title="Difficulté">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {DIFFICULTIES.map((d) => (
+              <button
+                key={d.key}
+                onClick={() => setDifficulty(d.key)}
+                aria-pressed={difficulty === d.key}
+                className={`flex flex-col items-center gap-1 py-4 rounded-2xl border-2 transition-all ${
+                  difficulty === d.key
+                    ? d.active
+                    : 'border-black/5 dark:border-white/10 text-gray-500 dark:text-gray-400 hover:border-blue-500/40'
+                }`}
+              >
+                <span className="font-black italic uppercase tracking-wide text-sm">{d.label}</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider opacity-60">{d.sub}</span>
+              </button>
+            ))}
+          </div>
+        </Section>
+
         {/* Launch */}
         <button
           onClick={launch}
@@ -159,7 +189,7 @@ const AkinetixLobbyPage: React.FC = () => {
         </button>
         <p className="-mt-4 text-center text-[11px] font-bold uppercase tracking-widest text-gray-400 flex items-center justify-center gap-1.5">
           <Sparkles className="w-3.5 h-3.5 text-blue-500" />
-          {MODES.find((m) => m.key === mode)?.label} · {UNIVERSES.find((u) => u.key === universe)?.label}
+          {MODES.find((m) => m.key === mode)?.label} · {UNIVERSES.find((u) => u.key === universe)?.label} · {DIFFICULTIES.find((d) => d.key === difficulty)?.label}
         </p>
       </div>
     </div>

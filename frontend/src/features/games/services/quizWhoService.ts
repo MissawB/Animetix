@@ -32,11 +32,15 @@ export interface QuizWhoGuess {
 }
 
 export const quizWhoService = {
-  start: (mediaType?: string): Promise<QuizWhoStart> =>
-    apiClient(`${API_BASE}/start/`, {
+  start: (mediaType?: string, difficulty?: string): Promise<QuizWhoStart> => {
+    const body: Record<string, string> = {};
+    if (mediaType) body.media_type = mediaType;
+    if (difficulty) body.difficulty = difficulty;
+    return apiClient(`${API_BASE}/start/`, {
       method: 'POST',
-      body: JSON.stringify(mediaType ? { media_type: mediaType } : {}),
-    }) as Promise<QuizWhoStart>,
+      body: JSON.stringify(body),
+    }) as Promise<QuizWhoStart>;
+  },
 
   ask: (attribute: string): Promise<QuizWhoAsk> =>
     apiClient(`${API_BASE}/ask/`, {

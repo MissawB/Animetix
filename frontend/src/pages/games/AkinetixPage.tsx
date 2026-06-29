@@ -12,7 +12,9 @@ const AkinetixPage: React.FC = () => {
   const { t } = useTranslation();
   const { gameState, isLoading, error, loadGame, restartGame, submitAnswer, submitConfirmation } = useAkinetixStore();
   const location = useLocation();
-  const mediaType = (location.state as { mediaType?: string } | null)?.mediaType;
+  const navState = location.state as { mediaType?: string; difficulty?: string } | null;
+  const mediaType = navState?.mediaType;
+  const difficulty = navState?.difficulty;
   const [showActualTargetInput, setShowActualTargetInput] = useState(false);
   const [actualTarget, setActualTarget] = useState('');
   const historyScrollRef = useRef<HTMLDivElement>(null);
@@ -21,7 +23,7 @@ const AkinetixPage: React.FC = () => {
     // Arrivé depuis le lobby avec un univers choisi → nouvelle partie dans cet
     // univers ; sinon on reprend/charge la partie courante.
     if (mediaType) {
-      restartGame(mediaType);
+      restartGame(mediaType, difficulty);
     } else {
       loadGame();
     }
