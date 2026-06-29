@@ -117,7 +117,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ onSelect, placeholder, id 
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           placeholder={placeholder || t('search.placeholder')}
-          className="pl-12 pr-24"
+          className="!pl-12 !pr-24"
           autoComplete="off"
         />
 

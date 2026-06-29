@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, Zap, Flame, Image as ImageIcon, Loader2, RefreshCw, Heart, Share2, Info, X, Film } from 'lucide-react';
+import { Sparkles, Zap, Flame, Image as ImageIcon, Loader2, RefreshCw, Heart, Share2, Info, X, Film, Check } from 'lucide-react';
 import { SearchBar } from "../../components/SearchBar";
 import { CyberTerminalPanel } from '../../components/forge/CyberTerminalPanel';
 import { GlitchText } from '../../components/forge/GlitchText';
@@ -9,12 +9,12 @@ import { CyberButton } from '../../components/forge/CyberButton';
 import { startFusion, getFusionStatus, FusionResponse, FusionStatus } from '../../api';
 
 const ART_STYLES = [
-  { id: 'Cyberpunk', name: 'Cyberpunk', desc: 'Néons et technologie futuriste', color: 'bg-purple-500' },
-  { id: 'Ukiyo-e', name: 'Ukiyo-e', desc: 'Estampe traditionnelle japonaise', color: 'bg-orange-400' },
-  { id: 'Noir & Blanc', name: 'Manga Noir', desc: 'Contraste élevé, trames classiques', color: 'bg-gray-800' },
-  { id: 'Vaporwave', name: 'Vaporwave', desc: 'Esthétique rétro 80s, couleurs pastel', color: 'bg-pink-400' },
-  { id: 'Steampunk', name: 'Steampunk', desc: 'Cuivre, vapeur et engrenages', color: 'bg-amber-700' },
-  { id: 'Aquarelle', name: 'Aquarelle', desc: 'Douceur et transparences fluides', color: 'bg-blue-400' },
+  { id: 'Cyberpunk', name: 'Cyberpunk', desc: 'Néons et technologie futuriste', image: '/static/img/forge/styles/cyberpunk.jpg' },
+  { id: 'Ukiyo-e', name: 'Ukiyo-e', desc: 'Estampe traditionnelle japonaise', image: '/static/img/forge/styles/ukiyo-e.jpg' },
+  { id: 'Noir & Blanc', name: 'Manga Noir', desc: 'Contraste élevé, trames classiques', image: '/static/img/forge/styles/manga-noir.jpg' },
+  { id: 'Vaporwave', name: 'Vaporwave', desc: 'Esthétique rétro 80s, couleurs pastel', image: '/static/img/forge/styles/vaporwave.jpg' },
+  { id: 'Steampunk', name: 'Steampunk', desc: 'Cuivre, vapeur et engrenages', image: '/static/img/forge/styles/steampunk.png' },
+  { id: 'Aquarelle', name: 'Aquarelle', desc: 'Douceur et transparences fluides', image: '/static/img/forge/styles/aquarelle.png' },
 ];
 
 import { SearchItem } from '../../types';
@@ -306,21 +306,37 @@ const ForgePage: React.FC = () => {
             </CyberTerminalPanel>
 
             <CyberTerminalPanel>
-                <h3 className="text-xl font-black italic manga-font mb-6 flex items-center gap-3">
-                   <ImageIcon className="w-5 h-5 text-blue-400" /> Esthétique Visuelle
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {ART_STYLES.map(style => (
-                        <button 
-                            key={style.id} 
-                            onClick={() => setArtStyle(style.id)} 
-                            className={`p-4 rounded-3xl text-left transition-all duration-300 border-2 ${artStyle === style.id ? 'border-yellow-400 bg-yellow-400/10 shadow-lg scale-[1.02]' : 'border-transparent bg-black/5 dark:bg-white/5 opacity-80 hover:opacity-100 hover:bg-black/10 dark:hover:bg-white/10'}`}
+                <div className="flex items-center justify-between mb-6">
+                   <h3 className="text-xl font-black italic manga-font flex items-center gap-3">
+                      <ImageIcon className="w-5 h-5 text-blue-400" /> Esthétique Visuelle
+                   </h3>
+                   <span className="text-[9px] font-black uppercase tracking-widest opacity-40 hidden sm:block">Faites défiler →</span>
+                </div>
+                <div className="flex gap-4 overflow-x-auto custom-scrollbar pb-3 -mx-1 px-1 snap-x snap-mandatory">
+                    {ART_STYLES.map(style => {
+                        const selected = artStyle === style.id;
+                        return (
+                        <button
+                            key={style.id}
+                            onClick={() => setArtStyle(style.id)}
+                            aria-pressed={selected}
+                            title={style.desc}
+                            className={`group/style relative w-40 flex-shrink-0 snap-start aspect-[3/4] rounded-3xl overflow-hidden border-2 transition-all duration-300 ${selected ? 'border-yellow-400 ring-4 ring-yellow-400/20 scale-[1.02]' : 'border-transparent opacity-70 hover:opacity-100'}`}
                         >
-                            <div className={`w-8 h-8 ${style.color} rounded-lg mb-3 shadow-inner`} />
-                            <div className="font-black italic text-xs uppercase mb-1">{style.name}</div>
-                            <div className="text-[10px] font-bold opacity-60 leading-tight">{style.desc}</div>
+                            <img src={style.image} alt={style.name} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover/style:scale-110" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent" />
+                            {selected && (
+                                <div className="absolute top-2.5 right-2.5 w-6 h-6 rounded-full bg-yellow-400 text-black flex items-center justify-center shadow-lg">
+                                    <Check className="w-4 h-4" strokeWidth={3} />
+                                </div>
+                            )}
+                            <div className="absolute bottom-0 inset-x-0 p-3 text-left">
+                                <div className="font-black italic text-sm uppercase text-white leading-none mb-1 drop-shadow-md">{style.name}</div>
+                                <div className="text-[9px] font-bold text-white/70 leading-tight line-clamp-2">{style.desc}</div>
+                            </div>
                         </button>
-                    ))}
+                        );
+                    })}
                 </div>
             </CyberTerminalPanel>
         </div>
