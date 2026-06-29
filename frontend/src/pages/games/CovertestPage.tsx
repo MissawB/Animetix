@@ -61,13 +61,17 @@ const CovertestPage: React.FC = () => {
   // React StrictMode leaves startMutation.isPending stuck true, which would
   // disable the button forever.
   const [advancing, setAdvancing] = useState(false);
+  // True until the first cover for this visit has been fetched. Prevents showing
+  // a stale cover left in the React Query cache from a previous round (the SPA
+  // keeps the cache across navigations), which made the cover "change" on start.
+  const [initializing, setInitializing] = useState(true);
   const started = useRef(false);
 
   // Fresh cover when the page mounts (new round/session).
   useEffect(() => {
     if (started.current) return;
     started.current = true;
-    startGame({ origin }).catch(() => {});
+    startGame({ origin }).catch(() => {}).finally(() => setInitializing(false));
   }, [startGame, origin]);
 
   // Manga titles for the guess autocomplete (fetched once).
@@ -199,7 +203,7 @@ const CovertestPage: React.FC = () => {
     }
   };
 
-  if (loading && !gameState) {
+  if (initializing || (loading && !gameState)) {
     return <div className="max-w-3xl mx-auto px-6 py-16"><CardSkeleton /></div>;
   }
 
