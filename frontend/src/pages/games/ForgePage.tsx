@@ -320,33 +320,59 @@ const ForgePage: React.FC = () => {
                    <ImageIcon className="w-5 h-5 text-blue-400" /> Esthétique Visuelle
                 </h3>
                 {(() => {
+                    const len = ART_STYLES.length;
                     const idx = Math.max(0, ART_STYLES.findIndex((s) => s.id === artStyle));
                     const current = ART_STYLES[idx];
+                    const prev = ART_STYLES[(idx - 1 + len) % len];
+                    const next = ART_STYLES[(idx + 1) % len];
                     return (
                       <div className="flex flex-col items-center">
-                        <div className="flex items-center gap-3 sm:gap-5 w-full justify-center">
+                        <div className="relative h-[300px] w-full flex items-center justify-center overflow-hidden">
+                            {/* Neighbour: previous (set back, blurred) */}
                             <button
                                 onClick={() => cycleStyle(-1)}
-                                aria-label="Style précédent"
-                                className="flex-shrink-0 w-11 h-11 rounded-full bg-black/5 dark:bg-white/10 hover:bg-yellow-400 hover:text-black text-current flex items-center justify-center transition-all active:scale-90"
+                                aria-label={`Style précédent : ${prev.name}`}
+                                style={{ transform: 'translate(-50%, -50%) translateX(-148px) scale(0.78)' }}
+                                className="absolute left-1/2 top-1/2 z-0 w-[200px] aspect-[3/4] rounded-3xl overflow-hidden opacity-45 blur-[3px] hover:opacity-70 hover:blur-[1px] transition-all duration-300"
                             >
-                                <ChevronLeft className="w-6 h-6" />
+                                <img src={prev.image} alt={prev.name} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
+                                <div className="absolute inset-0 bg-black/40" />
                             </button>
 
-                            <div className="relative w-[220px] flex-shrink-0 aspect-[3/4] rounded-3xl overflow-hidden border-2 border-yellow-400 ring-4 ring-yellow-400/20 shadow-xl">
+                            {/* Neighbour: next (set back, blurred) */}
+                            <button
+                                onClick={() => cycleStyle(1)}
+                                aria-label={`Style suivant : ${next.name}`}
+                                style={{ transform: 'translate(-50%, -50%) translateX(148px) scale(0.78)' }}
+                                className="absolute left-1/2 top-1/2 z-0 w-[200px] aspect-[3/4] rounded-3xl overflow-hidden opacity-45 blur-[3px] hover:opacity-70 hover:blur-[1px] transition-all duration-300"
+                            >
+                                <img src={next.image} alt={next.name} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
+                                <div className="absolute inset-0 bg-black/40" />
+                            </button>
+
+                            {/* Featured (current) */}
+                            <div className="relative z-10 w-[210px] aspect-[3/4] rounded-3xl overflow-hidden border-2 border-yellow-400 ring-4 ring-yellow-400/20 shadow-2xl">
                                 <img key={current.id} src={current.image} alt={current.name} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover animate-fade-in" />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent" />
-                                <span className="absolute top-3 left-3 bg-yellow-400 text-black text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-tighter shadow">{idx + 1}/{ART_STYLES.length}</span>
+                                <span className="absolute top-3 left-3 bg-yellow-400 text-black text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-tighter shadow">{idx + 1}/{len}</span>
                                 <div className="absolute bottom-0 inset-x-0 p-4 text-left">
                                     <div className="text-xl font-black italic uppercase text-white leading-none mb-1 drop-shadow-md">{current.name}</div>
                                     <div className="text-[11px] font-bold text-white/70 leading-tight">{current.desc}</div>
                                 </div>
                             </div>
 
+                            {/* Arrows on top */}
+                            <button
+                                onClick={() => cycleStyle(-1)}
+                                aria-label="Style précédent"
+                                className="absolute left-1 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-black/60 backdrop-blur text-white hover:bg-yellow-400 hover:text-black flex items-center justify-center transition-all active:scale-90 shadow-lg"
+                            >
+                                <ChevronLeft className="w-6 h-6" />
+                            </button>
                             <button
                                 onClick={() => cycleStyle(1)}
                                 aria-label="Style suivant"
-                                className="flex-shrink-0 w-11 h-11 rounded-full bg-black/5 dark:bg-white/10 hover:bg-yellow-400 hover:text-black text-current flex items-center justify-center transition-all active:scale-90"
+                                className="absolute right-1 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-black/60 backdrop-blur text-white hover:bg-yellow-400 hover:text-black flex items-center justify-center transition-all active:scale-90 shadow-lg"
                             >
                                 <ChevronRight className="w-6 h-6" />
                             </button>
