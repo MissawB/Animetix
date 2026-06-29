@@ -1,3 +1,4 @@
+import random
 from typing import Any
 
 # Some catalogue entries have polluted micro_tags (e.g. an inference error string
@@ -32,8 +33,44 @@ class QuestionFormatter:
     Permet de séparer la logique algorithmique de la présentation (i18n ready).
     """
 
+    # Plusieurs tournures par type pour éviter la monotonie : une variante est
+    # tirée au hasard à chaque question (le texte est figé ensuite dans l'état).
+    TEMPLATES = {
+        "genre": [
+            "Est-ce une œuvre de type {} ?",
+            "Le genre {} colle-t-il ?",
+            "On est plutôt sur du {} ?",
+            "Dirais-tu que c'est du {} ?",
+            "Y a-t-il une dimension {} ?",
+        ],
+        "tag": [
+            "Y a-t-il une notion de « {} » ?",
+            "Le thème « {} » est-il présent ?",
+            "Ça parle de « {} » ?",
+            "Trouve-t-on du « {} » là-dedans ?",
+            "L'élément « {} » est-il là ?",
+        ],
+        "studio": [
+            "Est-ce que le studio {} a travaillé dessus ?",
+            "C'est signé {} ?",
+            "Le studio {} est-il derrière l'œuvre ?",
+        ],
+        "theme": [
+            "Le thème « {} » est-il central ?",
+            "Est-ce centré sur « {} » ?",
+            "« {} » est-il au cœur de l'œuvre ?",
+        ],
+    }
+
+    FINE_TEMPLATES = [
+        "{q} ?",
+        "Ton personnage {ql} ?",
+        "Est-ce que ton perso {ql} ?",
+        "Dirais-tu qu'il/elle {ql} ?",
+    ]
+
     def format(self, attribute: str) -> str:
-        """Transforme l'attribut interne en question naturelle."""
+        """Transforme l'attribut interne en question naturelle (phrasé varié)."""
         if not attribute:
             return "Es-tu prêt ?"
 
@@ -43,19 +80,12 @@ class QuestionFormatter:
         attr_type, attr_val = attribute.split(":", 1)
 
         if attr_type == "fine":
-            # Conversion snake_case -> Question
-            # Ex: hair_is_blue -> Hair is blue ?
-            q = attr_val.replace("_", " ").capitalize()
-            if not q.endswith("?"):
-                q += " ?"
-            return q
+            # Trait perso en snake_case français, ex: a_des_cheveux_blonds.
+            phrase = attr_val.replace("_", " ").strip()
+            template = random.choice(self.FINE_TEMPLATES)  # nosec B311
+            return template.format(q=phrase.capitalize(), ql=phrase.lower())
 
-        mapping = {
-            "genre": "Est-ce une œuvre de type {} ?",
-            "tag": "Est-ce que l'œuvre possède le tag '{}' ?",
-            "studio": "Est-ce que le studio {} a travaillé dessus ?",
-            "theme": "Le thème '{}' est-il central ?",
-        }
-
-        template = mapping.get(attr_type, "L'attribut {} est-il présent ?")
-        return template.format(attr_val)
+        variants = self.TEMPLATES.get(attr_type)
+        if not variants:
+            return f"L'attribut {attr_val} est-il présent ?"
+        return random.choice(variants).format(attr_val)  # nosec B311
