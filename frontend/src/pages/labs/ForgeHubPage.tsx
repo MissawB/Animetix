@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { RelicItem } from '../../features/labs/components/RelicItem';
 import { LabListOverlay } from '../../features/labs/components/LabListOverlay';
+import { Book, Frame, Headphones, FlaskConical as Flask } from 'lucide-react';
 
 const categoryLabs: Record<string, { id: string, title: string, url: string, desc: string }[]> = {
   narrative: [
@@ -31,10 +32,10 @@ const ForgeHubPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const categories = [
-    { id: 'narrative', image: '/static/img/forge/narrative.png', color: 'text-amber-500', glow: 'bg-amber-500' },
-    { id: 'visual', image: '/static/img/forge/visual.jpg', color: 'text-blue-500', glow: 'bg-blue-500' },
-    { id: 'audio', image: '/static/img/forge/audio.png', color: 'text-emerald-500', glow: 'bg-emerald-500' },
-    { id: 'experimental', image: '/static/img/forge/experimental.jpg', color: 'text-red-600', glow: 'bg-red-600' }
+    { id: 'narrative', icon: Book, color: 'text-amber-500', glow: 'bg-amber-500' },
+    { id: 'visual', icon: Frame, color: 'text-blue-500', glow: 'bg-blue-500' },
+    { id: 'audio', icon: Headphones, color: 'text-emerald-500', glow: 'bg-emerald-500' },
+    { id: 'experimental', icon: Flask, color: 'text-red-600', glow: 'bg-red-600' }
   ];
 
   const particleConfig = useMemo(() => [...Array(20)].map((_, i) => ({
@@ -95,13 +96,7 @@ const ForgeHubPage: React.FC = () => {
                 glowColor={cat.glow}
                 onClick={() => setSelectedCategory(cat.id)}
               >
-                <img
-                  src={cat.image}
-                  alt={t(`forge_hub.categories.${cat.id}.title`)}
-                  loading="lazy"
-                  decoding="async"
-                  className="w-full h-full object-cover rounded-[1.75rem] shadow-2xl ring-1 ring-white/10"
-                />
+                <cat.icon className="w-full h-full stroke-[0.5]" />
               </RelicItem>
             </motion.div>
           ))}
