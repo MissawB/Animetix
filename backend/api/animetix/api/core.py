@@ -3,6 +3,7 @@ import hashlib
 
 from animetix_project.logging_config import get_logger
 from core.constants import ALLOWED_IMAGE_MIMES, MAX_IMAGE_SIZE  # noqa: E402
+from core.domain.services.berrix_economy import FEATURE_BX_COSTS
 from core.domain.services.guardrail_service import GuardrailService
 from core.ports.usage_port import UsagePort
 from core.utils.security import (
@@ -21,6 +22,8 @@ from django_ratelimit.decorators import ratelimit  # noqa: E402
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from animetix.api.billing import deduct_berrix
 
 from ..containers import Container, get_container
 from ..serializers import MangaChapterSerializer, MediaItemSerializer, ProfileSerializer
@@ -162,12 +165,13 @@ class MediaSearchView(APIView):
         if not image_file:
             return Response({"error": "No image provided"}, status=400)
 
-        # NOTE: this CLIP cross-modal search is a GPU feature and SHOULD deduct Bx
-        # (FEATURE_BX_COSTS["vision_clip"]) once it works. It is currently broken at
-        # the DI layer — `cross_modal_search_service` provider passes `repository=`
-        # but CrossModalSearchService.__init__ expects (inference_engine, vector_db),
-        # so it 500s before any GPU runs. Add the deduct_berrix charge back here when
-        # that wiring is fixed (don't charge for a non-functional endpoint).
+        # Berrix deduction for the CLIP cross-modal search (raises 402 if balance
+        # too low). Outside the try below so PaymentRequired isn't swallowed into 500.
+        deduct_berrix(
+            request.user,
+            FEATURE_BX_COSTS["vision_clip"],
+            "Recherche par image (CLIP)",
+        )
 
         try:
             if not validate_file_size(image_file.size, MAX_IMAGE_SIZE):

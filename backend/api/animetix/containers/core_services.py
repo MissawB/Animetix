@@ -263,7 +263,8 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         LazyClass(
             "core.domain.services.cross_modal_service", "CrossModalSearchService"
         ),
-        repository=persistence.repository,
+        inference_engine=inference.inference_engine,
+        vector_db=persistence.vector_store,
     )
 
     spatial_computing_service = providers.Singleton(
@@ -434,7 +435,8 @@ class CoreServicesContainer(containers.DeclarativeContainer):
         LazyClass(
             "core.domain.services.creative.fusion_service", "FusionDomainService"
         ),
-        llm_service=agentic.llm_service,
+        inference_engine=inference.inference_engine,
+        prompt_manager=infrastructure.prompt_manager,
     )
 
     vs_battle_service = providers.Singleton(
