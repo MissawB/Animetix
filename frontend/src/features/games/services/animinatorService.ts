@@ -9,10 +9,10 @@ export interface AniminatorResponse {
 }
 
 export const animinatorService = {
-  ask: async (question: string): Promise<AniminatorResponse> => {
-    return apiClient(`${API_BASE}/ask/`, { 
-      method: 'POST', 
-      body: JSON.stringify({ question }) 
+  ask: async (question: string, mediaType?: string): Promise<AniminatorResponse> => {
+    return apiClient(`${API_BASE}/ask/`, {
+      method: 'POST',
+      body: JSON.stringify(mediaType ? { question, media_type: mediaType } : { question }),
     });
   }
 };

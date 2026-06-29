@@ -7,9 +7,8 @@ import {
   Eye, 
   Music, 
   MessageCircle, 
-  Ghost, 
+  Ghost,
   Code,
-  Sparkles,
   Trophy,
   ArrowRight,
   Flame,
@@ -126,16 +125,6 @@ const GamesHubPage: React.FC = () => {
       reward: "250 XP"
     },
     {
-      title: "Animinator",
-      desc: "Le génie omniscient capable de deviner n'importe quelle œuvre en un clin d'œil.",
-      icon: Sparkles,
-      path: "/animinator/",
-      color: "text-blue-400",
-      bg: "bg-blue-400/10",
-      difficulty: "Mystique",
-      reward: "150 XP"
-    },
-    {
       title: "Undercover",
       desc: "Infiltrez-vous dans un groupe de fans d'anime et débusquez l'intrus.",
       icon: ShieldCheck,
@@ -146,8 +135,8 @@ const GamesHubPage: React.FC = () => {
       reward: "300 XP"
     },
     {
-      title: "Akinetix Classic",
-      desc: "Le jeu de devinette original, optimisé pour une expérience rapide.",
+      title: "Akinetix",
+      desc: "Devine-l'œuvre : laisse l'IA te cuisiner, ou interroge le génie. Anime, manga ou personnage.",
       icon: Search,
       path: "/akinetix/",
       color: "text-orange-400",

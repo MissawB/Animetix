@@ -38,6 +38,11 @@ class AniminatorAskView(APIView):
             )
 
         if not secret:
+            # New game: honour the universe chosen in the Akinetix lobby.
+            req_media_type = request.data.get("media_type")
+            if req_media_type in ("Anime", "Manga", "Character"):
+                media_type = req_media_type
+                session.set("media_type", media_type)
             data = catalog_service.load_data(media_type)
             if not data:
                 return Response(

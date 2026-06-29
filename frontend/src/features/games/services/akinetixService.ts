@@ -31,8 +31,13 @@ export const akinetixService = {
     return normalize(await apiClient(`${API_BASE}/state/`));
   },
 
-  startGame: async (): Promise<AkinetixState> => {
-    return normalize(await apiClient(`${API_BASE}/start/`, { method: 'POST' }));
+  startGame: async (mediaType?: string): Promise<AkinetixState> => {
+    return normalize(
+      await apiClient(`${API_BASE}/start/`, {
+        method: 'POST',
+        body: JSON.stringify(mediaType ? { media_type: mediaType } : {}),
+      }),
+    );
   },
 
   submitAnswer: async (answer: string): Promise<AkinetixState> => {

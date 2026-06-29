@@ -25,7 +25,19 @@ describe('akinetixService', () => {
   it('startGame POSTs to start', async () => {
     mocked.mockResolvedValue({});
     await akinetixService.startGame();
-    expect(mocked).toHaveBeenCalledWith('/api/v1/game/akinetix/start/', { method: 'POST' });
+    expect(mocked).toHaveBeenCalledWith('/api/v1/game/akinetix/start/', {
+      method: 'POST',
+      body: JSON.stringify({}),
+    });
+  });
+
+  it('startGame forwards the chosen media_type', async () => {
+    mocked.mockResolvedValue({});
+    await akinetixService.startGame('Manga');
+    expect(mocked).toHaveBeenCalledWith('/api/v1/game/akinetix/start/', {
+      method: 'POST',
+      body: JSON.stringify({ media_type: 'Manga' }),
+    });
   });
 
   it('submitAnswer POSTs the answer', async () => {

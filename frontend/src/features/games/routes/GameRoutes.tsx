@@ -2,6 +2,7 @@ import { Route } from 'react-router-dom';
 import { lazy } from 'react';
 
 const AkinetixPage = lazy(() => import('../../../pages/games/AkinetixPage'));
+const AkinetixLobbyPage = lazy(() => import('../../../pages/games/AkinetixLobbyPage'));
 const BlindtestPage = lazy(() => import('../../../pages/games/BlindtestPage'));
 const BlindtestLobbyPage = lazy(() => import('../../../pages/games/BlindtestLobbyPage'));
 const ClassicGamePage = lazy(() => import('../../../pages/games/ClassicGamePage'));
@@ -36,7 +37,8 @@ export const GameRoutes = () => (
     <Route path="/game/duel/arena/:roomCode/" element={<DuelArenaPage />} />
     <Route path="/forge/" element={<ForgePage />} />
     <Route path="/forge/vn/:fusionId/" element={<ForgeVNPage />} />
-    <Route path="/akinetix/" element={<AkinetixPage />} />
+    <Route path="/akinetix/" element={<AkinetixLobbyPage />} />
+    <Route path="/akinetix/play/" element={<AkinetixPage />} />
     <Route path="/akinetix-expert/" element={<AkinetixRLPage />} />
     <Route path="/emoji/" element={<EmojiPage />} />
     <Route path="/blindtest/" element={<BlindtestLobbyPage />} />

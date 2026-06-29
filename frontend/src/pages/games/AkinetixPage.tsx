@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Brain, History, Check, X, HelpCircle, Sparkles, Target, AlertTriangle, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { useAkinetixStore } from '../../features/games/stores/akinetixStore';
 import { Card } from "../../components/ui/Card";
@@ -10,13 +11,22 @@ import { Badge } from '../../components/ui/Badge';
 const AkinetixPage: React.FC = () => {
   const { t } = useTranslation();
   const { gameState, isLoading, error, loadGame, restartGame, submitAnswer, submitConfirmation } = useAkinetixStore();
+  const location = useLocation();
+  const mediaType = (location.state as { mediaType?: string } | null)?.mediaType;
   const [showActualTargetInput, setShowActualTargetInput] = useState(false);
   const [actualTarget, setActualTarget] = useState('');
   const historyScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    loadGame();
-  }, [loadGame]);
+    // Arrivé depuis le lobby avec un univers choisi → nouvelle partie dans cet
+    // univers ; sinon on reprend/charge la partie courante.
+    if (mediaType) {
+      restartGame(mediaType);
+    } else {
+      loadGame();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Garde le journal défilé en bas, mais SANS bouger la page : on défile
   // uniquement le conteneur du journal (scrollIntoView faisait descendre toute
@@ -45,7 +55,7 @@ const AkinetixPage: React.FC = () => {
              <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-6 opacity-80" />
              <h2 className="text-4xl font-black text-red-500 mb-4 tracking-tighter uppercase">Anomalie Détectée</h2>
              <p className="mb-10 text-white/60 font-bold leading-relaxed">{error}</p>
-             <Button variant="danger" size="lg" onClick={restartGame} className="uppercase tracking-widest font-black">
+             <Button variant="danger" size="lg" onClick={() => restartGame()} className="uppercase tracking-widest font-black">
                Réinitialiser le Noyau
              </Button>
           </Card>
@@ -258,7 +268,7 @@ const AkinetixPage: React.FC = () => {
           <div className="flex justify-end">
             <Button 
                 variant="outline" 
-                onClick={restartGame}
+                onClick={() => restartGame()}
                 className="text-xs font-black uppercase tracking-widest border-white/10 text-white/50 hover:text-white hover:bg-white/5"
             >
                 Recommencer une partie

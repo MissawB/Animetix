@@ -9,9 +9,9 @@ export const useGameModes = () => {
       titre: 'Akinetix',
       titre_brush_1: 'AKINETIX',
       titre_brush_2: isEn ? 'THE SEER' : 'LE DEVIN',
-      description: isEn 
-        ? 'The artificial intelligence guesses your favorite anime or manga character.' 
-        : "L'intelligence artificielle devine votre personnage d'anime ou de manga.",
+      description: isEn
+        ? 'Two modes: let the AI guess what you have in mind, or quiz the genie yourself. Anime, manga or character.'
+        : "Deux modes : laisse l'IA deviner, ou interroge toi-même le génie. Anime, manga ou personnage.",
       icon_url: '/static/img/modes/akinetix.png',
       gradient: 'from-amber-400 to-orange-600 dark:from-amber-500/80 dark:to-orange-700/80',
       url: '/akinetix/',
@@ -59,17 +59,6 @@ export const useGameModes = () => {
       icon_url: '/static/img/modes/covertest.png',
       gradient: 'from-rose-400 to-red-600 dark:from-rose-500/80 dark:to-red-700/80',
       url: '/covertest/',
-    },
-    {
-      titre: 'Animinator',
-      titre_brush_1: 'ANIMINATOR',
-      titre_brush_2: isEn ? 'SYNTHESIS' : 'LA SYNTHÈSE',
-      description: isEn
-        ? 'Think of an anime, manga or character — the AI chats with you and guesses it.'
-        : "Pensez à un animé, un manga ou un personnage : l'IA dialogue avec vous et le devine.",
-      icon_url: '/static/img/modes/animinator.png',
-      gradient: 'from-cyan-400 to-blue-600 dark:from-cyan-500/80 dark:to-blue-700/80',
-      url: '/animinator/',
     },
     {
       titre: 'Blindtest',

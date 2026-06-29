@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Sparkles, Send, Brain, Bot, User } from 'lucide-react';
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
@@ -20,6 +21,9 @@ const AniminatorPage: React.FC = () => {
   const [isThinking, setIsThinking] = useState<boolean>(false);
   const [thoughtProcess, setThoughtProcess] = useState<string>('');
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const location = useLocation();
+  // Univers choisi dans le lobby Akinetix (utilisé pour démarrer la partie).
+  const mediaType = (location.state as { mediaType?: string } | null)?.mediaType;
 
   const scrollToBottom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -40,7 +44,7 @@ const AniminatorPage: React.FC = () => {
     setThoughtProcess('Analyse de la requête...');
 
     try {
-      const data = await animinatorService.ask(userMsg);
+      const data = await animinatorService.ask(userMsg, mediaType);
       
       setTimeout(() => {
         setMessages(prev => [...prev, { role: 'ai', text: data.answer || "Je commence à voir plus clair..." }]);
