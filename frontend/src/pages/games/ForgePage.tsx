@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, Zap, Flame, Image as ImageIcon, Loader2, RefreshCw, Heart, Share2, Info, X, Film, Check } from 'lucide-react';
+import { Sparkles, Zap, Flame, Image as ImageIcon, Loader2, RefreshCw, Heart, Share2, Info, X, Film, ChevronLeft, ChevronRight } from 'lucide-react';
 import { SearchBar } from "../../components/SearchBar";
 import { CyberTerminalPanel } from '../../components/forge/CyberTerminalPanel';
 import { GlitchText } from '../../components/forge/GlitchText';
@@ -15,6 +15,9 @@ const ART_STYLES = [
   { id: 'Vaporwave', name: 'Vaporwave', desc: 'Esthétique rétro 80s, couleurs pastel', image: '/static/img/forge/styles/vaporwave.jpg' },
   { id: 'Steampunk', name: 'Steampunk', desc: 'Cuivre, vapeur et engrenages', image: '/static/img/forge/styles/steampunk.png' },
   { id: 'Aquarelle', name: 'Aquarelle', desc: 'Douceur et transparences fluides', image: '/static/img/forge/styles/aquarelle.png' },
+  { id: 'Pixel Art', name: 'Pixel Art', desc: 'Rétro 8-bit, pixels et arcade', image: '/static/img/forge/styles/pixel-art.jpg' },
+  { id: 'Gothique', name: 'Gothique', desc: 'Victorien sombre et dramatique', image: '/static/img/forge/styles/gothique.png' },
+  { id: 'Mecha', name: 'Mecha', desc: 'Robots géants et science-fiction', image: '/static/img/forge/styles/mecha.jpg' },
 ];
 
 import { SearchItem } from '../../types';
@@ -80,6 +83,13 @@ const ForgePage: React.FC = () => {
     setItemB(null);
     setIsLoading(false);
     setShowConfetti(false);
+  };
+
+  const cycleStyle = (dir: number) => {
+    setArtStyle((prev) => {
+      const i = ART_STYLES.findIndex((s) => s.id === prev);
+      return ART_STYLES[(i + dir + ART_STYLES.length) % ART_STYLES.length].id;
+    });
   };
 
   // --- RENDERING GENERATION ---
@@ -306,38 +316,56 @@ const ForgePage: React.FC = () => {
             </CyberTerminalPanel>
 
             <CyberTerminalPanel>
-                <div className="flex items-center justify-between mb-6">
-                   <h3 className="text-xl font-black italic manga-font flex items-center gap-3">
-                      <ImageIcon className="w-5 h-5 text-blue-400" /> Esthétique Visuelle
-                   </h3>
-                   <span className="text-[9px] font-black uppercase tracking-widest opacity-40 hidden sm:block">Faites défiler →</span>
-                </div>
-                <div className="flex gap-4 overflow-x-auto custom-scrollbar pb-3 -mx-1 px-1 snap-x snap-mandatory">
-                    {ART_STYLES.map(style => {
-                        const selected = artStyle === style.id;
-                        return (
-                        <button
-                            key={style.id}
-                            onClick={() => setArtStyle(style.id)}
-                            aria-pressed={selected}
-                            title={style.desc}
-                            className={`group/style relative w-40 flex-shrink-0 snap-start aspect-[3/4] rounded-3xl overflow-hidden border-2 transition-all duration-300 ${selected ? 'border-yellow-400 ring-4 ring-yellow-400/20 scale-[1.02]' : 'border-transparent opacity-70 hover:opacity-100'}`}
-                        >
-                            <img src={style.image} alt={style.name} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover/style:scale-110" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent" />
-                            {selected && (
-                                <div className="absolute top-2.5 right-2.5 w-6 h-6 rounded-full bg-yellow-400 text-black flex items-center justify-center shadow-lg">
-                                    <Check className="w-4 h-4" strokeWidth={3} />
+                <h3 className="text-xl font-black italic manga-font mb-6 flex items-center gap-3">
+                   <ImageIcon className="w-5 h-5 text-blue-400" /> Esthétique Visuelle
+                </h3>
+                {(() => {
+                    const idx = Math.max(0, ART_STYLES.findIndex((s) => s.id === artStyle));
+                    const current = ART_STYLES[idx];
+                    return (
+                      <div className="flex flex-col items-center">
+                        <div className="flex items-center gap-3 sm:gap-5 w-full justify-center">
+                            <button
+                                onClick={() => cycleStyle(-1)}
+                                aria-label="Style précédent"
+                                className="flex-shrink-0 w-11 h-11 rounded-full bg-black/5 dark:bg-white/10 hover:bg-yellow-400 hover:text-black text-current flex items-center justify-center transition-all active:scale-90"
+                            >
+                                <ChevronLeft className="w-6 h-6" />
+                            </button>
+
+                            <div className="relative w-[220px] flex-shrink-0 aspect-[3/4] rounded-3xl overflow-hidden border-2 border-yellow-400 ring-4 ring-yellow-400/20 shadow-xl">
+                                <img key={current.id} src={current.image} alt={current.name} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover animate-fade-in" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent" />
+                                <span className="absolute top-3 left-3 bg-yellow-400 text-black text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-tighter shadow">{idx + 1}/{ART_STYLES.length}</span>
+                                <div className="absolute bottom-0 inset-x-0 p-4 text-left">
+                                    <div className="text-xl font-black italic uppercase text-white leading-none mb-1 drop-shadow-md">{current.name}</div>
+                                    <div className="text-[11px] font-bold text-white/70 leading-tight">{current.desc}</div>
                                 </div>
-                            )}
-                            <div className="absolute bottom-0 inset-x-0 p-3 text-left">
-                                <div className="font-black italic text-sm uppercase text-white leading-none mb-1 drop-shadow-md">{style.name}</div>
-                                <div className="text-[9px] font-bold text-white/70 leading-tight line-clamp-2">{style.desc}</div>
                             </div>
-                        </button>
-                        );
-                    })}
-                </div>
+
+                            <button
+                                onClick={() => cycleStyle(1)}
+                                aria-label="Style suivant"
+                                className="flex-shrink-0 w-11 h-11 rounded-full bg-black/5 dark:bg-white/10 hover:bg-yellow-400 hover:text-black text-current flex items-center justify-center transition-all active:scale-90"
+                            >
+                                <ChevronRight className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        <div className="flex flex-wrap justify-center gap-2 mt-5">
+                            {ART_STYLES.map((s) => (
+                                <button
+                                    key={s.id}
+                                    onClick={() => setArtStyle(s.id)}
+                                    aria-label={`Choisir ${s.name}`}
+                                    aria-pressed={s.id === artStyle}
+                                    className={`h-2 rounded-full transition-all ${s.id === artStyle ? 'w-6 bg-yellow-400' : 'w-2 bg-black/15 dark:bg-white/20 hover:bg-yellow-400/50'}`}
+                                />
+                            ))}
+                        </div>
+                      </div>
+                    );
+                })()}
             </CyberTerminalPanel>
         </div>
 
