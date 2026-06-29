@@ -871,7 +871,8 @@ class SpeechToSpeechLabView(APIView):
 
 
 class TreeOfThoughtsLabView(APIView):
-    permission_classes = [permissions.AllowAny]
+    # GPU-backed reasoning (multi-node ToT) → requires login and consumes Berrix.
+    permission_classes = [permissions.IsAuthenticated]
 
     @inject
     def __init__(
@@ -886,6 +887,10 @@ class TreeOfThoughtsLabView(APIView):
             return Response(
                 {"error": "Query required"}, status=status.HTTP_400_BAD_REQUEST
             )
+        # GPU → consume Berrix (before the try so a 402 isn't swallowed into a 500).
+        deduct_berrix(
+            request.user, FEATURE_BX_COSTS["tree_of_thoughts"], "Tree-of-Thoughts (IA)"
+        )
         try:
             result = self.tot_service.solve_with_tree_of_thoughts(query)
             return Response(result)
@@ -1210,7 +1215,8 @@ class NeuralDiagnosticsLabView(APIView):
     Uses native logprobs and XAI service.
     """
 
-    permission_classes = [permissions.AllowAny]
+    # GPU-backed (LLM generate + logprobs) → requires login and consumes Berrix.
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         prompt = request.data.get("prompt")
@@ -1218,6 +1224,13 @@ class NeuralDiagnosticsLabView(APIView):
             return Response(
                 {"error": "Prompt is required."}, status=status.HTTP_400_BAD_REQUEST
             )
+
+        # GPU → consume Berrix (before the try so a 402 isn't swallowed into a 500).
+        deduct_berrix(
+            request.user,
+            FEATURE_BX_COSTS["neural_diagnostics"],
+            "Neural Diagnostics (IA)",
+        )
 
         container = get_container()
         try:

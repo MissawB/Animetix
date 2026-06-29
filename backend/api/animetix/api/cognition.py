@@ -4,7 +4,10 @@ from rest_framework import permissions, status
 from rest_framework.views import APIView
 
 logger = logging.getLogger("animetix.api.cognition")
+from core.domain.services.berrix_economy import FEATURE_BX_COSTS  # noqa: E402
 from rest_framework.response import Response  # noqa: E402
+
+from animetix.api.billing import deduct_berrix  # noqa: E402
 
 from ..containers import get_container  # noqa: E402
 from ..models import AIFeedback, ArchetypeDriftSnapshot  # noqa: E402
@@ -136,6 +139,10 @@ class AIDebateArenaView(APIView):
         container = get_container()
         debate_service = container.core.self_play_debate_service()
 
+        # GPU (multi-agent LLM debate) → consume Berrix. Before the try so a 402
+        # isn't swallowed into a 500.
+        deduct_berrix(request.user, FEATURE_BX_COSTS["ai_debate"], "Debate Arena (IA)")
+
         try:
             record = debate_service.run_debate(**serializer.validated_data)
             return Response(record)
@@ -239,6 +246,13 @@ class CounterfactualSimulatorView(APIView):
         container = get_container()
         simulator = container.core.counterfactual_simulator()
 
+        # GPU (LLM counterfactual generation) → consume Berrix (before the try).
+        deduct_berrix(
+            request.user,
+            FEATURE_BX_COSTS["counterfactual"],
+            "Counterfactual Simulator (IA)",
+        )
+
         try:
             result = simulator.simulate_counterfactual_path(
                 actual_dialogue=serializer.validated_data["actual_context"],
@@ -265,6 +279,9 @@ class CoveOracleView(APIView):
 
         container = get_container()
         cove_service = container.core.cove_oracle_service()
+
+        # GPU (chain-of-verification LLM calls) → consume Berrix (before the try).
+        deduct_berrix(request.user, FEATURE_BX_COSTS["cove_oracle"], "CoVe Oracle (IA)")
 
         try:
             trace = cove_service.trace_verification(**serializer.validated_data)

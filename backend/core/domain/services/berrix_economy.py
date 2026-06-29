@@ -83,6 +83,11 @@ FEATURE_COMPUTE_USD: dict[str, float] = {
     "emoji_stream": 0.002,  # emoji hint generation
     "animinator": 0.002,  # oracle Q&A turn
     "tree_of_thoughts": 0.01,  # multi-node ToT search (breadth x depth LLM calls)
+    # GPU-backed cognition labs
+    "neural_diagnostics": 0.003,  # single LLM generate + XAI report
+    "ai_debate": 0.008,  # multi-agent self-play debate (several LLM turns)
+    "cove_oracle": 0.005,  # chain-of-verification (decompose + verify LLM calls)
+    "counterfactual": 0.003,  # alternative-timeline LLM generation
 }
 
 FEATURE_BX_COSTS: dict[str, int] = {
@@ -122,6 +127,11 @@ FEATURE_BX_COSTS: dict[str, int] = {
     "emoji_stream": 6,
     "animinator": 6,
     "tree_of_thoughts": 30,
+    # GPU-backed cognition labs — floors: diag/counterfactual 8, cove 13, debate 21
+    "neural_diagnostics": 10,
+    "ai_debate": 30,
+    "cove_oracle": 20,
+    "counterfactual": 10,
 }
 
 # --- Pack catalog (server-authoritative). Prices in minor units (cents). ---
