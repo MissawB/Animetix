@@ -28,7 +28,7 @@ const fxFilter = (fx: CoverFx, level: number, blurPx: number): string => {
 };
 
 const CovertestPage: React.FC = () => {
-  const { gameState, loading, handleGuess, isGuessing, startGame, starting, revealAnswer } = useCovertest();
+  const { gameState, loading, handleGuess, isGuessing, startGame, revealAnswer } = useCovertest();
   const location = useLocation();
   const navigate = useNavigate();
   const cfg = location.state as { mode?: 'session' | 'single'; difficulty?: string; length?: number; guessVolume?: boolean; guessAuthor?: boolean; origin?: string } | null;
@@ -56,6 +56,11 @@ const CovertestPage: React.FC = () => {
   const [volumeCorrect, setVolumeCorrect] = useState(false);
   const [authorCorrect, setAuthorCorrect] = useState(false);
   const [fx, setFx] = useState<CoverFx>(() => pickFx());
+  // Local guard for the "next round / replay" button. We can't rely on the
+  // mutation's `starting` flag: firing startGame from the mount effect under
+  // React StrictMode leaves startMutation.isPending stuck true, which would
+  // disable the button forever.
+  const [advancing, setAdvancing] = useState(false);
   const started = useRef(false);
 
   // Fresh cover when the page mounts (new round/session).
@@ -106,10 +111,10 @@ const CovertestPage: React.FC = () => {
     setVolumeGuess('');
     setAuthorGuess('');
   };
-  const nextCover = () => {
+  const nextCover = async () => {
     resetBonus();
     setFx(pickFx());
-    startGame({ origin }).catch(() => {});
+    await startGame({ origin }).catch(() => {});
   };
 
   const validateBonus = () => {
@@ -170,16 +175,27 @@ const CovertestPage: React.FC = () => {
     try { await handleGuess({ guess: canonical }); } catch { /* toast already shown */ }
   };
 
-  const finishRound = () => {
+  const finishRound = async () => {
     setResults((r) => [...r, { score: roundScore, won, secret: gameState?.secret_title }]);
     setTotalScore((t) => t + roundScore);
     if (mode === 'session' && round < sessionLength) {
       setRound((r) => r + 1);
-      nextCover();
+      await nextCover();
     } else if (mode === 'session') {
       setSessionOver(true);
     } else {
-      nextCover(); // single: replay a fresh cover
+      await nextCover(); // single: replay a fresh cover
+    }
+  };
+
+  // Single click handler for the next-round / replay button, guarded locally.
+  const advance = async () => {
+    if (advancing) return;
+    setAdvancing(true);
+    try {
+      await (mode === 'session' ? finishRound() : nextCover());
+    } finally {
+      setAdvancing(false);
     }
   };
 
@@ -364,8 +380,8 @@ const CovertestPage: React.FC = () => {
                 </div>
               )}
               <button
-                onClick={() => (isSession ? finishRound() : nextCover())}
-                disabled={starting}
+                onClick={advance}
+                disabled={advancing}
                 className="mt-6 inline-flex items-center gap-2 px-7 py-3.5 rounded-2xl bg-yellow-400 hover:bg-yellow-500 text-black font-black italic manga-font tracking-wide shadow-xl transition-all hover:scale-105 active:scale-95 disabled:opacity-60"
               >
                 {isSession
