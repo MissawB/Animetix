@@ -136,7 +136,7 @@ const PowerStationPage: React.FC = () => {
                   <CreditCard className="w-8 h-8 text-cyan-400" />
                 </div>
                 <h1 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter manga-font">
-                  CYBER-YEN <span className="text-cyan-400 text-glow">WALLET</span>
+                  BERRIX <span className="text-cyan-400 text-glow">WALLET</span>
                 </h1>
               </div>
               <p className="text-gray-400 font-bold uppercase tracking-[0.2em] text-xs">
@@ -147,7 +147,7 @@ const PowerStationPage: React.FC = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
             
-            {/* Left Column: Cyber-Yen Card & Stripe Packs */}
+            {/* Left Column: Berrix Card & Stripe Packs */}
             <div className="space-y-8">
               <h3 className="text-sm font-black uppercase tracking-[0.3em] text-gray-400 border-l-4 border-cyan-400 pl-4">Holographic Wallet</h3>
               
@@ -163,7 +163,7 @@ const PowerStationPage: React.FC = () => {
                 
                 <div className="flex justify-between items-start">
                   <div>
-                    <span className="text-[10px] font-black uppercase tracking-[0.25em] text-cyan-400/80 block">Cyber-Yen System</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.25em] text-cyan-400/80 block">Système Berrix</span>
                     <span className="text-xs text-gray-500 font-bold">Node ID: {user?.id || 'GUEST-00'}</span>
                   </div>
                   <Zap className="w-8 h-8 text-cyan-400 animate-pulse fill-current" />
@@ -266,7 +266,7 @@ const PowerStationPage: React.FC = () => {
                         {isEnabled ? <ToggleRight className="w-10 h-10 text-cyan-400" /> : <ToggleLeft className="w-10 h-10 text-gray-600" />}
                       </button>
                     </div>
-                    <p className="text-xs text-gray-400 font-bold uppercase tracking-wide">Mine des Bx en arrière-plan pendant que vous naviguez ou jouez.</p>
+                    <p className="text-xs text-gray-400 font-bold uppercase tracking-wide">Mine des Berrix en arrière-plan pendant que vous naviguez ou jouez.</p>
                   </div>
 
                   {/* Circular Progress & Timer */}
