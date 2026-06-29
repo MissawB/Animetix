@@ -6,6 +6,10 @@ export const useCovertest = () => {
   const queryClient = useQueryClient();
   const QUERY_KEY = ['covertest-state'];
 
+  // getState runs first on mount: besides probing for an in-progress round, the GET
+  // establishes the (anonymous) session cookie before the start/guess POSTs — without
+  // it the guess lands on a session with no game ("No game in progress"). The stale
+  // cover it may briefly seed is hidden by the page's `initializing` gate.
   const { data: gameState, isLoading: loading } = useQuery<CovertestState>({
     queryKey: QUERY_KEY,
     queryFn: () => covertestService.getState(),
