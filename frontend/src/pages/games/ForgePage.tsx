@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, Zap, Flame, Image as ImageIcon, Loader2, RefreshCw, Heart, Share2, Info, X, Film, ChevronLeft, ChevronRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Sparkles, Zap, Flame, Image as ImageIcon, Loader2, RefreshCw, Heart, Share2, Info, X, Film, ChevronLeft, ChevronRight, ImageOff } from 'lucide-react';
 import { SearchBar } from "../../components/SearchBar";
 import { CyberTerminalPanel } from '../../components/forge/CyberTerminalPanel';
 import { GlitchText } from '../../components/forge/GlitchText';
@@ -18,6 +19,7 @@ const ART_STYLES = [
   { id: 'Pixel Art', name: 'Pixel Art', desc: 'Rétro 8-bit, pixels et arcade', image: '/static/img/forge/styles/pixel-art.jpg' },
   { id: 'Gothique', name: 'Gothique', desc: 'Victorien sombre et dramatique', image: '/static/img/forge/styles/gothique.png' },
   { id: 'Mecha', name: 'Mecha', desc: 'Robots géants et science-fiction', image: '/static/img/forge/styles/mecha.jpg' },
+  { id: '', name: 'Brut', desc: 'Aucune esthétique imposée — fusion la plus fidèle', image: '' },
 ];
 
 import { SearchItem } from '../../types';
@@ -31,7 +33,8 @@ const ForgePage: React.FC = () => {
   const [chaosLevel, setChaosLevel] = useState<number>(50);
   const [balance, setBalance] = useState<number>(50);
   const [artStyle, setArtStyle] = useState<string>('Cyberpunk');
-  
+  const [styleDir, setStyleDir] = useState<number>(0);
+
   const [isGenerating, setIsLoading] = useState<boolean>(false);
   const [fusionData, setFusionData] = useState<FusionResponse | null>(null);
   const [status, setStatus] = useState<FusionStatus | null>(null);
@@ -86,10 +89,18 @@ const ForgePage: React.FC = () => {
   };
 
   const cycleStyle = (dir: number) => {
+    setStyleDir(dir);
     setArtStyle((prev) => {
       const i = ART_STYLES.findIndex((s) => s.id === prev);
       return ART_STYLES[(i + dir + ART_STYLES.length) % ART_STYLES.length].id;
     });
+  };
+
+  const goToStyle = (id: string) => {
+    const from = ART_STYLES.findIndex((s) => s.id === artStyle);
+    const to = ART_STYLES.findIndex((s) => s.id === id);
+    setStyleDir(to >= from ? 1 : -1);
+    setArtStyle(id);
   };
 
   // --- RENDERING GENERATION ---
@@ -325,9 +336,22 @@ const ForgePage: React.FC = () => {
                     const current = ART_STYLES[idx];
                     const prev = ART_STYLES[(idx - 1 + len) % len];
                     const next = ART_STYLES[(idx + 1) % len];
+                    const visual = (s: (typeof ART_STYLES)[number]) =>
+                        s.image ? (
+                            <img src={s.image} alt={s.name} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
+                        ) : (
+                            <div className="absolute inset-0 bg-gradient-to-br from-navy-700 to-navy-950 flex items-center justify-center">
+                                <ImageOff className="w-12 h-12 text-white/25" />
+                            </div>
+                        );
+                    const slide = {
+                        enter: (d: number) => ({ x: d >= 0 ? 220 : -220, opacity: 0 }),
+                        center: { x: 0, opacity: 1 },
+                        exit: (d: number) => ({ x: d >= 0 ? -220 : 220, opacity: 0 }),
+                    };
                     return (
                       <div className="flex flex-col items-center">
-                        <div className="relative h-[300px] w-full flex items-center justify-center overflow-hidden">
+                        <div className="relative h-[300px] w-full flex items-center justify-center overflow-hidden select-none">
                             {/* Neighbour: previous (set back, blurred) */}
                             <button
                                 onClick={() => cycleStyle(-1)}
@@ -335,7 +359,7 @@ const ForgePage: React.FC = () => {
                                 style={{ transform: 'translate(-50%, -50%) translateX(-148px) scale(0.78)' }}
                                 className="absolute left-1/2 top-1/2 z-0 w-[200px] aspect-[3/4] rounded-3xl overflow-hidden opacity-45 blur-[3px] hover:opacity-70 hover:blur-[1px] transition-all duration-300"
                             >
-                                <img src={prev.image} alt={prev.name} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
+                                {visual(prev)}
                                 <div className="absolute inset-0 bg-black/40" />
                             </button>
 
@@ -346,20 +370,38 @@ const ForgePage: React.FC = () => {
                                 style={{ transform: 'translate(-50%, -50%) translateX(148px) scale(0.78)' }}
                                 className="absolute left-1/2 top-1/2 z-0 w-[200px] aspect-[3/4] rounded-3xl overflow-hidden opacity-45 blur-[3px] hover:opacity-70 hover:blur-[1px] transition-all duration-300"
                             >
-                                <img src={next.image} alt={next.name} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
+                                {visual(next)}
                                 <div className="absolute inset-0 bg-black/40" />
                             </button>
 
-                            {/* Featured (current) */}
-                            <div className="relative z-10 w-[210px] aspect-[3/4] rounded-3xl overflow-hidden border-2 border-yellow-400 ring-4 ring-yellow-400/20 shadow-2xl">
-                                <img key={current.id} src={current.image} alt={current.name} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover animate-fade-in" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent" />
-                                <span className="absolute top-3 left-3 bg-yellow-400 text-black text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-tighter shadow">{idx + 1}/{len}</span>
-                                <div className="absolute bottom-0 inset-x-0 p-4 text-left">
-                                    <div className="text-xl font-black italic uppercase text-white leading-none mb-1 drop-shadow-md">{current.name}</div>
-                                    <div className="text-[11px] font-bold text-white/70 leading-tight">{current.desc}</div>
-                                </div>
-                            </div>
+                            {/* Featured (current) — swipeable */}
+                            <AnimatePresence initial={false} custom={styleDir} mode="popLayout">
+                                <motion.div
+                                    key={current.id || 'brut'}
+                                    custom={styleDir}
+                                    variants={slide}
+                                    initial="enter"
+                                    animate="center"
+                                    exit="exit"
+                                    transition={{ x: { type: 'spring', stiffness: 320, damping: 32 }, opacity: { duration: 0.18 } }}
+                                    drag="x"
+                                    dragConstraints={{ left: 0, right: 0 }}
+                                    dragElastic={0.7}
+                                    onDragEnd={(_e, info) => {
+                                        if (info.offset.x < -60) cycleStyle(1);
+                                        else if (info.offset.x > 60) cycleStyle(-1);
+                                    }}
+                                    className="relative z-10 w-[210px] aspect-[3/4] rounded-3xl overflow-hidden border-2 border-yellow-400 ring-4 ring-yellow-400/20 shadow-2xl cursor-grab active:cursor-grabbing touch-pan-y"
+                                >
+                                    {visual(current)}
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent pointer-events-none" />
+                                    <span className="absolute top-3 left-3 bg-yellow-400 text-black text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-tighter shadow pointer-events-none">{idx + 1}/{len}</span>
+                                    <div className="absolute bottom-0 inset-x-0 p-4 text-left pointer-events-none">
+                                        <div className="text-xl font-black italic uppercase text-white leading-none mb-1 drop-shadow-md">{current.name}</div>
+                                        <div className="text-[11px] font-bold text-white/70 leading-tight">{current.desc}</div>
+                                    </div>
+                                </motion.div>
+                            </AnimatePresence>
 
                             {/* Arrows on top */}
                             <button
@@ -381,8 +423,8 @@ const ForgePage: React.FC = () => {
                         <div className="flex flex-wrap justify-center gap-2 mt-5">
                             {ART_STYLES.map((s) => (
                                 <button
-                                    key={s.id}
-                                    onClick={() => setArtStyle(s.id)}
+                                    key={s.id || 'brut'}
+                                    onClick={() => goToStyle(s.id)}
                                     aria-label={`Choisir ${s.name}`}
                                     aria-pressed={s.id === artStyle}
                                     className={`h-2 rounded-full transition-all ${s.id === artStyle ? 'w-6 bg-yellow-400' : 'w-2 bg-black/15 dark:bg-white/20 hover:bg-yellow-400/50'}`}
