@@ -12,10 +12,10 @@ export const covertestService = {
     // Probe : peut auto-démarrer côté backend ; le toast d'erreur éventuel est évité.
     return apiClient(`${API_BASE}/state/`, { skipToast: true });
   },
-  start: async (isDaily = false): Promise<CovertestState> => {
+  start: async (isDaily = false, origin?: string): Promise<CovertestState> => {
     return apiClient(`${API_BASE}/start/`, {
       method: 'POST',
-      body: JSON.stringify({ is_daily: isDaily }),
+      body: JSON.stringify({ is_daily: isDaily, origin: origin || undefined }),
     });
   },
   submit: async (data: CovertestGuessRequest): Promise<CovertestState> => {

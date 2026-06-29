@@ -339,6 +339,8 @@ export interface CovertestState extends GameState {
   locale?: string;
   volume?: string | number;
   author?: string;
+  // Backend sends snake_case game_over (GameState.gameOver is unused for covertest).
+  game_over?: boolean;
   guesses: Array<{ title: string; image?: string | null; is_correct: boolean }>;
 }
 

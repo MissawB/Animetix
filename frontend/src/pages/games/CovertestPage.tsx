@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Send, RotateCcw, ArrowRight, Trophy, ImageIcon, Check, X, ChevronRight } from 'lucide-react';
 import { useCovertest } from '../../features/games/hooks/useCovertest';
@@ -31,10 +31,11 @@ const CovertestPage: React.FC = () => {
   const { gameState, loading, handleGuess, isGuessing, startGame, starting, revealAnswer } = useCovertest();
   const location = useLocation();
   const navigate = useNavigate();
-  const cfg = location.state as { mode?: 'session' | 'single'; difficulty?: string; length?: number; guessVolume?: boolean; guessAuthor?: boolean } | null;
+  const cfg = location.state as { mode?: 'session' | 'single'; difficulty?: string; length?: number; guessVolume?: boolean; guessAuthor?: boolean; origin?: string } | null;
   const mode = cfg?.mode ?? 'single';
   const sessionLength = cfg?.length ?? 1;
   const difficulty = cfg?.difficulty ?? 'Normal';
+  const origin = cfg?.origin || undefined;
   const maxAttempts = MAX_ATTEMPTS[difficulty] ?? 4;
   const guessVolume = !!cfg?.guessVolume;
   const guessAuthor = !!cfg?.guessAuthor;
@@ -61,8 +62,8 @@ const CovertestPage: React.FC = () => {
   useEffect(() => {
     if (started.current) return;
     started.current = true;
-    startGame().catch(() => {});
-  }, [startGame]);
+    startGame({ origin }).catch(() => {});
+  }, [startGame, origin]);
 
   // Manga titles for the guess autocomplete (fetched once).
   useEffect(() => {
@@ -74,7 +75,7 @@ const CovertestPage: React.FC = () => {
   const guesses = gameState?.guesses ?? [];
   const attemptsUsed = guesses.length;
   const won = guesses.some((g) => g.is_correct);
-  const over = !!gameState?.gameOver;
+  const over = !!gameState?.game_over;
   const outOfTries = attemptsUsed >= maxAttempts;
 
   // Out of tries and not solved → reveal the answer (loss).
@@ -108,7 +109,7 @@ const CovertestPage: React.FC = () => {
   const nextCover = () => {
     resetBonus();
     setFx(pickFx());
-    startGame().catch(() => {});
+    startGame({ origin }).catch(() => {});
   };
 
   const validateBonus = () => {
@@ -149,13 +150,24 @@ const CovertestPage: React.FC = () => {
     setShowSug(sug.length > 0);
   };
 
+  // Only manga that have a cover are guessable, so a guess must resolve to a known
+  // title (the autocomplete is built from the same list). Canonicalise before sending.
+  const titleByNorm = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const t of titles) m.set(norm(t), t);
+    return m;
+  }, [titles]);
+  const guessValid = titleByNorm.has(norm(guess.trim()));
+
   const submit = async (value?: string) => {
-    const g = (value ?? guess).trim();
-    if (!g || isGuessing || over) return;
+    const raw = (value ?? guess).trim();
+    if (!raw || isGuessing || over) return;
+    const canonical = titleByNorm.get(norm(raw));
+    if (!canonical) return; // not a manga with an available cover → not validable
     setShowSug(false);
     setGuess('');
     setSuggestions([]);
-    try { await handleGuess({ guess: g }); } catch { /* toast already shown */ }
+    try { await handleGuess({ guess: canonical }); } catch { /* toast already shown */ }
   };
 
   const finishRound = () => {
@@ -301,7 +313,8 @@ const CovertestPage: React.FC = () => {
               </div>
               <button
                 onClick={() => submit()}
-                disabled={!guess.trim() || isGuessing}
+                disabled={!guessValid || isGuessing}
+                title={guess.trim() && !guessValid ? 'Choisis un manga de la liste' : undefined}
                 className="w-full py-4 rounded-2xl bg-yellow-400 hover:bg-yellow-500 text-black font-black italic manga-font tracking-wide shadow-xl transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-40 disabled:hover:scale-100 flex items-center justify-center gap-2"
               >
                 <Send className="w-5 h-5" /> {isGuessing ? 'VÉRIFICATION…' : 'DEVINER'}

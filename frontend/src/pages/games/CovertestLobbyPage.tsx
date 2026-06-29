@@ -16,6 +16,13 @@ const DIFFICULTIES: { key: Difficulty; label: string; sub: string; tries: number
 
 const LENGTHS = [5, 10, 20, 50];
 
+type Origin = '' | 'ja' | 'fr';
+const ORIGINS: { key: Origin; label: string; sub: string }[] = [
+  { key: '', label: 'Auto', sub: 'Toutes origines' },
+  { key: 'ja', label: '🇯🇵 Japon', sub: 'Couvertures JP' },
+  { key: 'fr', label: '🇫🇷 France', sub: 'Éditions FR' },
+];
+
 const CovertestLobbyPage: React.FC = () => {
   const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>('session');
@@ -23,10 +30,11 @@ const CovertestLobbyPage: React.FC = () => {
   const [length, setLength] = useState(10);
   const [guessVolume, setGuessVolume] = useState(false);
   const [guessAuthor, setGuessAuthor] = useState(false);
+  const [origin, setOrigin] = useState<Origin>('');
 
   const launch = () =>
     navigate('/covertest/play/', {
-      state: { mode, difficulty, length: mode === 'session' ? length : 1, guessVolume, guessAuthor },
+      state: { mode, difficulty, length: mode === 'session' ? length : 1, guessVolume, guessAuthor, origin: origin || undefined },
     });
 
   return (
@@ -107,6 +115,27 @@ const CovertestLobbyPage: React.FC = () => {
               >
                 <span className="font-black italic uppercase tracking-wide text-sm">{d.label}</span>
                 <span className="text-[10px] font-bold uppercase tracking-wider opacity-60">{d.sub}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Origine des couvertures */}
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Origine des couvertures</p>
+          <p className="text-[11px] text-gray-400 mb-4">Choisis l'édition à deviner. <span className="font-bold">Auto</span> pioche parmi toutes les origines disponibles.</p>
+          <div className="grid grid-cols-3 gap-3">
+            {ORIGINS.map((o) => (
+              <button
+                key={o.key || 'auto'}
+                onClick={() => setOrigin(o.key)}
+                aria-pressed={origin === o.key}
+                className={`flex flex-col items-center gap-1 py-4 rounded-2xl border-2 transition-all ${
+                  origin === o.key ? 'border-yellow-400 bg-yellow-400/10 text-yellow-600 dark:text-yellow-400' : 'border-black/5 dark:border-white/10 text-gray-500 dark:text-gray-400 hover:border-yellow-400/50'
+                }`}
+              >
+                <span className="font-black italic uppercase tracking-wide text-sm">{o.label}</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider opacity-60">{o.sub}</span>
               </button>
             ))}
           </div>

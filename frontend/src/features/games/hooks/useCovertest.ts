@@ -25,8 +25,8 @@ export const useCovertest = () => {
   });
 
   // Démarre une nouvelle couverture (manche suivante / nouvelle session).
-  const startMutation = useMutation<CovertestState, Error, boolean | void>({
-    mutationFn: (isDaily) => covertestService.start(!!isDaily),
+  const startMutation = useMutation<CovertestState, Error, { isDaily?: boolean; origin?: string } | void>({
+    mutationFn: (opts) => covertestService.start(!!opts?.isDaily, opts?.origin),
     onSuccess: (newState) => {
       queryClient.setQueryData(QUERY_KEY, newState);
     },

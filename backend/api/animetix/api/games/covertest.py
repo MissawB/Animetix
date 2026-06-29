@@ -1,4 +1,5 @@
 import datetime
+import re
 
 from animetix_project.logging_config import get_logger
 from dependency_injector.wiring import Provide, inject
@@ -16,10 +17,15 @@ logger = get_logger("animetix." + __name__)
 # --- COVERTEST MODE ---
 
 
-def _pick_cover(cover_test_service, is_daily):
+def _normalize_title(value):
+    return " ".join(re.sub(r"[^a-z0-9\s]", "", (value or "").lower()).split())
+
+
+def _pick_cover(cover_test_service, is_daily, origin=None):
     if is_daily:
         return cover_test_service.get_daily_cover(datetime.date.today())
-    return cover_test_service.get_random_cover()
+    # origin = cover locale ("ja"/"fr"); None → service picks any available.
+    return cover_test_service.get_random_cover(locale=origin or None)
 
 
 def _cover_payload(state, reveal=False):
@@ -36,15 +42,17 @@ def _cover_payload(state, reveal=False):
 
 
 class CovertestTitlesView(APIView):
-    """Manga titles for the guess autocomplete (same catalog used to validate)."""
+    """Only manga that actually have a cover — the only guessable / valid answers."""
 
     permission_classes = [permissions.AllowAny]
 
     @inject
-    def get(self, request, catalog_service=Provide[Container.core.catalog_service]):
-        data = catalog_service.load_data("Manga")
-        titles = sorted((data or {}).get("title_to_full_data", {}).keys())
-        return Response({"titles": titles})
+    def get(
+        self,
+        request,
+        cover_test_service=Provide[Container.core.cover_test_service],
+    ):
+        return Response({"titles": cover_test_service.list_titles()})
 
 
 class CovertestGameStateView(APIView):
@@ -65,7 +73,8 @@ class CovertestGameStateView(APIView):
                 "true",
                 "1",
             )
-            cover = _pick_cover(cover_test_service, is_daily)
+            origin = request.query_params.get("origin") or None
+            cover = _pick_cover(cover_test_service, is_daily, origin)
             if not cover:
                 return Response(
                     {"error": "No game in progress and auto-start failed."},
@@ -89,8 +98,9 @@ class CovertestGameStartView(APIView):
     ):
         session_service = get_session_service(request)
         is_daily = bool(request.data.get("is_daily", False))
+        origin = request.data.get("origin") or None
 
-        cover = _pick_cover(cover_test_service, is_daily)
+        cover = _pick_cover(cover_test_service, is_daily, origin)
         if not cover:
             return Response(
                 {"error": "Failed to select cover"},
@@ -128,6 +138,7 @@ class CovertestGameGuessView(APIView):
         request,
         catalog_service=Provide[Container.core.catalog_service],
         game_service=Provide[Container.core.game_service],
+        cover_test_service=Provide[Container.core.cover_test_service],
     ):
         session_service = get_session_service(request)
         port = session_service.port
@@ -151,13 +162,19 @@ class CovertestGameGuessView(APIView):
         data = catalog_service.load_data("Manga")
         secret = state["secret"]
         secret_item = (data or {}).get("title_to_full_data", {}).get(secret)
-        is_correct = game_service.check_title_match(guess_title, secret_item)
+        # The cover catalog (manga_covers.json) and the text catalog don't fully
+        # overlap, so ~half the secret titles are missing from title_to_full_data.
+        # Match the guess directly against the secret title first; fall back to the
+        # catalog's synonym matching when the work is present there.
+        is_correct = _normalize_title(guess_title) == _normalize_title(secret)
+        if not is_correct and secret_item:
+            is_correct = game_service.check_title_match(guess_title, secret_item)
 
         guess_full = (data or {}).get("title_to_full_data", {}).get(guess_title, {})
         image_url = (
             str(guess_full.get("image"))
             if guess_full and guess_full.get("image")
-            else None
+            else cover_test_service.image_for_title(guess_title)
         )
 
         guesses = state["guesses"]
