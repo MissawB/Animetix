@@ -9,6 +9,7 @@ import { Book, Frame, Headphones, FlaskConical as Flask } from 'lucide-react';
 const categoryLabs: Record<string, { id: string, title: string, url: string, desc: string }[]> = {
   narrative: [
     { id: 'forge', title: 'Forge de Réalité', url: '/forge/', desc: 'Fusionnez univers et scénarios.' },
+    { id: 'vsbattle', title: 'Arena Ultimatum', url: '/game/vsbattle/', desc: 'Duels trans-dimensionnels arbitrés par l\'IA.' },
   ],
   visual: [
     { id: 'manga', title: 'Manga Lab', url: '/lab/manga/', desc: 'Rendu Manga par IA.' },

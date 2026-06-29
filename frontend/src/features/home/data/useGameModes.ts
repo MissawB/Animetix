@@ -70,17 +70,6 @@ export const useGameModes = () => {
       icon_url: '/static/img/modes/blindTest.png',
       gradient: 'from-emerald-400 to-green-600 dark:from-emerald-500/80 dark:to-green-700/80',
       url: '/blindtest/',
-    },
-    {
-      titre: 'VsBattle',
-      titre_brush_1: 'ARENA',
-      titre_brush_2: isEn ? 'ULTIMATUM' : 'ULTIMATUM',
-      description: isEn 
-        ? 'Trans-dimensional duels moderated by AI.' 
-        : "Duels trans-dimensionnels arbitrés par l'IA.",
-      icon_url: '/static/img/modes/VSBattle.png',
-      gradient: 'from-red-500 to-red-900 dark:from-red-600/80 dark:to-red-950/80',
-      url: '/game/vsbattle/',
     }
     ];
 
