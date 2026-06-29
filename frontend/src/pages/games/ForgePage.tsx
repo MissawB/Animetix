@@ -8,6 +8,10 @@ import { GlitchText } from '../../components/forge/GlitchText';
 import { CyberSlider } from '../../components/forge/CyberSlider';
 import { CyberButton } from '../../components/forge/CyberButton';
 import { startFusion, getFusionStatus, FusionResponse, FusionStatus } from '../../api';
+import { useAuthStore } from '../../store/authStore';
+
+// Coût Berrix de la fusion (tâche GPU) — aligné sur FEATURE_BX_COSTS["creative_fusion"] côté backend.
+const FUSION_COST = 78;
 
 const ART_STYLES = [
   { id: 'Cyberpunk', name: 'Cyberpunk', desc: 'Néons et technologie futuriste', image: '/static/img/forge/styles/cyberpunk.jpg' },
@@ -34,6 +38,8 @@ const ForgePage: React.FC = () => {
   const [balance, setBalance] = useState<number>(50);
   const [artStyle, setArtStyle] = useState<string>('Cyberpunk');
   const [styleDir, setStyleDir] = useState<number>(0);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const walletBalance = useAuthStore((s) => s.user?.wallet_balance ?? 0);
 
   const [isGenerating, setIsLoading] = useState<boolean>(false);
   const [fusionData, setFusionData] = useState<FusionResponse | null>(null);
@@ -42,6 +48,10 @@ const ForgePage: React.FC = () => {
   const [, setShowConfetti] = useState(false);
 
   const handleStartFusion = async () => {
+    if (!isAuthenticated) {
+      setError("Connexion requise pour forger une réalité.");
+      return;
+    }
     setIsLoading(true);
     setError(null);
     try {
@@ -53,8 +63,15 @@ const ForgePage: React.FC = () => {
         art_style: artStyle
       });
       setFusionData(res);
-    } catch (_err) {
-      setError("Le réacteur de fusion a surchauffé. Réessayez plus tard.");
+    } catch (err) {
+      const httpStatus = (err as { status?: number }).status;
+      if (httpStatus === 401 || httpStatus === 403) {
+        setError("Connexion requise pour forger une réalité.");
+      } else if (httpStatus === 402) {
+        setError(`Berrix insuffisants — la fusion coûte ${FUSION_COST} Bx.`);
+      } else {
+        setError("Le réacteur de fusion a surchauffé. Réessayez plus tard.");
+      }
       setIsLoading(false);
     }
   };
@@ -488,15 +505,44 @@ const ForgePage: React.FC = () => {
                         </div>
                     </div>
 
-                    <CyberButton
-                        onClick={() => !(!itemA || !itemB || isGenerating) && handleStartFusion()}
-                        className={`w-full py-8 rounded-[2.5rem] font-black italic text-3xl shadow-2xl transition-all duration-300 flex items-center justify-center gap-4 uppercase ${(!itemA || !itemB || isGenerating) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    >
-                        <Sparkles className="w-8 h-8" />
-                        Forger la Réalité
-                    </CyberButton>
-                    
-                    {error && <div className="text-red-500 text-center text-xs font-black uppercase bg-red-500/10 p-4 rounded-2xl animate-bounce">{error}</div>}
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between px-2">
+                            <span className="text-[11px] font-black uppercase tracking-widest opacity-50">Coût de la fusion</span>
+                            <span className="flex items-center gap-1.5 text-sm font-black text-yellow-400">
+                                <Zap className="w-4 h-4" /> {FUSION_COST} Bx
+                            </span>
+                        </div>
+
+                        <CyberButton
+                            onClick={() => !(!itemA || !itemB || isGenerating) && handleStartFusion()}
+                            className={`w-full py-8 rounded-[2.5rem] font-black italic text-3xl shadow-2xl transition-all duration-300 flex items-center justify-center gap-4 uppercase ${(!itemA || !itemB || isGenerating) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                            <Sparkles className="w-8 h-8" />
+                            Forger la Réalité
+                        </CyberButton>
+
+                        {isAuthenticated ? (
+                            <p className="text-center text-[10px] font-black uppercase tracking-widest opacity-40">
+                                Solde : <span className={walletBalance < FUSION_COST ? 'text-red-500' : 'text-yellow-400'}>{walletBalance} Bx</span>
+                            </p>
+                        ) : (
+                            <p className="text-center text-[10px] font-black uppercase tracking-widest opacity-50">
+                                Connexion requise — chaque fusion consomme des Berrix.
+                            </p>
+                        )}
+
+                        {error && (
+                            <div className="text-red-500 text-center text-xs font-black uppercase bg-red-500/10 p-4 rounded-2xl space-y-3">
+                                <p>{error}</p>
+                                {/connexion/i.test(error) && (
+                                    <button onClick={() => navigate('/auth/login/')} className="underline hover:text-red-400">Se connecter</button>
+                                )}
+                                {/insuffisants/i.test(error) && (
+                                    <button onClick={() => navigate('/power-station/')} className="underline hover:text-red-400">Recharger des Berrix</button>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </CyberTerminalPanel>
         </div>
