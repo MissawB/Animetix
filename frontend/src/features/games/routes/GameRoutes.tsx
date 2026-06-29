@@ -4,6 +4,8 @@ import { lazy } from 'react';
 const AkinetixPage = lazy(() => import('../../../pages/games/AkinetixPage'));
 const AkinetixLobbyPage = lazy(() => import('../../../pages/games/AkinetixLobbyPage'));
 const QuiEstCePage = lazy(() => import('../../../pages/games/QuiEstCePage'));
+const QuizWhoDuelLobbyPage = lazy(() => import('../../../pages/games/QuizWhoDuelLobbyPage'));
+const QuizWhoDuelArenaPage = lazy(() => import('../../../pages/games/QuizWhoDuelArenaPage'));
 const BlindtestPage = lazy(() => import('../../../pages/games/BlindtestPage'));
 const BlindtestLobbyPage = lazy(() => import('../../../pages/games/BlindtestLobbyPage'));
 const ClassicGamePage = lazy(() => import('../../../pages/games/ClassicGamePage'));
@@ -41,6 +43,8 @@ export const GameRoutes = () => (
     <Route path="/akinetix/" element={<AkinetixLobbyPage />} />
     <Route path="/akinetix/play/" element={<AkinetixPage />} />
     <Route path="/quiz-who/" element={<QuiEstCePage />} />
+    <Route path="/game/quiz-who/lobby/" element={<QuizWhoDuelLobbyPage />} />
+    <Route path="/game/quiz-who/arena/:roomCode/" element={<QuizWhoDuelArenaPage />} />
     <Route path="/akinetix-expert/" element={<AkinetixRLPage />} />
     <Route path="/emoji/" element={<EmojiPage />} />
     <Route path="/blindtest/" element={<BlindtestLobbyPage />} />
