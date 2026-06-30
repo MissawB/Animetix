@@ -28,6 +28,11 @@ def _sanitize_hint_config(raw):
     return list(HINT_TYPES)
 
 
+def _daily_score(attempts, hints_revealed):
+    """Daily score: 100 at best, minus penalties for extra guesses / revealed hints."""
+    return max(10, 100 - (attempts - 1) * 10 - hints_revealed * 5)
+
+
 # --- CLASSIC MODE ---
 
 
@@ -130,21 +135,33 @@ class ClassicGameStartView(APIView):
 
         if override_secret and getattr(request.user, "is_staff", False):
             secret_title = override_secret
-            port.update({"is_daily": False, "is_ranked": False})
+            port.update({"is_daily": False, "is_ranked": False, "daily_date": None})
         elif daily:
             # Deterministic target of the day for this media type (same for all).
+            # An optional daily_date lets players replay a past day (capped: today
+            # and at most 30 days back).
             import datetime as _dt  # noqa: E402
 
-            port.update({"is_daily": True, "is_ranked": False})
-            secret_title = game_service.select_daily_secret(
-                media_type, _dt.date.today()
+            today = _dt.date.today()
+            day = today
+            raw_date = request.data.get("daily_date")
+            if raw_date:
+                try:
+                    parsed = _dt.date.fromisoformat(str(raw_date))
+                    if parsed <= today and (today - parsed).days <= 30:
+                        day = parsed
+                except ValueError:
+                    pass
+            port.update(
+                {"is_daily": True, "is_ranked": False, "daily_date": day.isoformat()}
             )
+            secret_title = game_service.select_daily_secret(media_type, day)
         else:
             if override_secret:
                 logger.warning(
                     f"User {request.user} tried to override secret without staff permissions."
                 )
-            port.update({"is_daily": False, "is_ranked": False})
+            port.update({"is_daily": False, "is_ranked": False, "daily_date": None})
             from ...services import DIFFICULTY_SETTINGS  # noqa: E402
 
             secret_title = game_service.select_secret(
@@ -278,8 +295,37 @@ class ClassicGameGuessView(APIView):
         port.set("guesses", guesses)
 
         unlocked_achievements = []
+        daily_score = None
         if is_correct:
             port.set("game_over", True)
+            if state["is_daily"]:
+                daily_score = _daily_score(
+                    len(guesses), len(port.get("revealed_hints", []))
+                )
+                if request.user.is_authenticated:
+                    import datetime as _dt  # noqa: E402
+
+                    from ...models import DailyResult  # noqa: E402
+
+                    raw_day = port.get("daily_date") or _dt.date.today().isoformat()
+                    try:
+                        day = _dt.date.fromisoformat(str(raw_day))
+                    except ValueError:
+                        day = _dt.date.today()
+                    try:
+                        obj, created = DailyResult.objects.get_or_create(
+                            user=request.user,
+                            date=day,
+                            media_type=media_type,
+                            defaults={"score": daily_score, "attempts": len(guesses)},
+                        )
+                        # Keep the best score on replay.
+                        if not created and daily_score > obj.score:
+                            obj.score = daily_score
+                            obj.attempts = len(guesses)
+                            obj.save(update_fields=["score", "attempts"])
+                    except Exception as e:
+                        logger.warning(f"Daily result save failed: {e}")
             if request.user.is_authenticated:
                 item_rank = 100
                 for i, item in enumerate(data["lookup"]):
@@ -342,6 +388,7 @@ class ClassicGameGuessView(APIView):
                 "secret_title": secret_title if port.get("game_over", False) else None,
                 "secret_data": secret_item if port.get("game_over", False) else None,
                 "newly_unlocked_achievements": unlocked_achievements,
+                "daily_score": daily_score,
             }
         )
 

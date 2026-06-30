@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, Layers, ArrowLeft, CheckCircle2, Loader2 } from 'lucide-react';
+import { Calendar, ArrowLeft, CheckCircle2, Loader2, ChevronLeft, ChevronRight, Star, Trophy } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDailyChallenge } from '../../features/utils/hooks/useDailyChallenge';
 import { classicGameService } from '../../features/games/services/classicService';
@@ -8,22 +8,23 @@ import { Skeleton } from "../../components/ui/Skeleton";
 import { useToastStore } from '../../store/toastStore';
 import { useTranslation } from 'react-i18next';
 
-import { DailyMode } from '../../types';
+import { DailyChallenge, DailyMode } from '../../types';
 
 const DailyChallengePage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const addToast = useToastStore((s) => s.addToast);
-  const { data, isLoading, isError } = useDailyChallenge();
+  const [date, setDate] = useState<string | undefined>(undefined); // undefined = today
+  const { data, isLoading, isError } = useDailyChallenge(date);
   const [launching, setLaunching] = useState<string | null>(null);
 
-  // Launch the Classic game in daily mode for this card's media type (everyone
-  // gets the same deterministic target of the day), then jump straight to play.
-  const launchDaily = async (mode: DailyMode) => {
+  // Launch the Classic game in daily mode for this card's media type and the
+  // currently viewed date (everyone gets the same deterministic target).
+  const launchDaily = async (mode: DailyMode, day: string) => {
     if (launching) return;
     setLaunching(mode.id);
     try {
-      await classicGameService.start(mode.media_type ?? 'Anime', 'Normal', undefined, true);
+      await classicGameService.start(mode.media_type ?? 'Anime', 'Normal', undefined, true, day);
       navigate('/game/classic/play/');
     } catch {
       addToast('Impossible de lancer le défi du jour. Réessayez.', 'error');
@@ -46,6 +47,8 @@ const DailyChallengePage: React.FC = () => {
 
   if (isError || !data) return <div className="text-center py-20 text-red-500 font-bold">{t('common.error')}</div>;
 
+  const daily = data as DailyChallenge;
+
   return (
     <div className="min-h-screen pb-20">
       {/* Header */}
@@ -55,14 +58,43 @@ const DailyChallengePage: React.FC = () => {
             DÉFIS DU JOUR<span className="text-white">.</span>
           </h1>
           <p className="text-xl font-bold uppercase tracking-widest text-black/60">
-            Une seule cible par univers, à débusquer.
+            {daily.is_today ? 'Une seule cible par univers, à débusquer.' : 'Rejoue un défi passé pour battre ton score.'}
           </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
+
+          {/* Date navigation */}
+          <div className="mt-8 flex items-center justify-center gap-3">
+            <button
+              onClick={() => daily.prev_date && setDate(daily.prev_date)}
+              disabled={!daily.prev_date}
+              aria-label="Jour précédent"
+              className="grid place-items-center w-10 h-10 rounded-full bg-black text-white disabled:opacity-30 hover:scale-110 transition-transform"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
             <span className="inline-flex items-center gap-2 rounded-full bg-black text-white px-5 py-2 text-xs font-black uppercase tracking-widest">
-              <Calendar className="w-4 h-4" /> {data.date}
+              <Calendar className="w-4 h-4" /> {daily.date}
             </span>
+            <button
+              onClick={() => daily.next_date && setDate(daily.next_date)}
+              disabled={!daily.next_date}
+              aria-label="Jour suivant"
+              className="grid place-items-center w-10 h-10 rounded-full bg-black text-white disabled:opacity-30 hover:scale-110 transition-transform"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div className="mt-4 flex items-center justify-center gap-3">
+            {!daily.is_today && (
+              <button
+                onClick={() => setDate(undefined)}
+                className="rounded-full bg-white text-black px-5 py-2 text-xs font-black uppercase tracking-widest shadow-lg hover:scale-105 transition-transform"
+              >
+                Aujourd'hui
+              </button>
+            )}
             <span className="inline-flex items-center gap-2 rounded-full bg-white text-black px-5 py-2 text-xs font-black uppercase tracking-widest shadow-lg">
-              <Layers className="w-4 h-4" /> {data.modes.length} défis
+              <Trophy className="w-4 h-4 text-yellow-500" /> {daily.total_score ?? 0} pts
             </span>
           </div>
         </div>
@@ -71,10 +103,10 @@ const DailyChallengePage: React.FC = () => {
       {/* Grid Selection */}
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {data.modes.map((mode: DailyMode) => (
+          {daily.modes.map((mode: DailyMode) => (
             <button
               key={mode.id}
-              onClick={() => launchDaily(mode)}
+              onClick={() => launchDaily(mode, daily.date)}
               disabled={!!launching}
               className="group relative block h-[320px] w-full text-left rounded-[3rem] overflow-hidden shadow-2xl no-underline transition-all hover:translate-y-[-10px] hover:rotate-2 disabled:opacity-70 disabled:hover:translate-y-0 disabled:hover:rotate-0"
             >
@@ -89,10 +121,17 @@ const DailyChallengePage: React.FC = () => {
                 </h2>
               </div>
 
+              {/* Score badge (when already completed for this day) */}
+              {mode.completed && mode.score != null && (
+                <div className="absolute top-6 right-6 z-30 inline-flex items-center gap-1.5 rounded-full bg-black/70 backdrop-blur text-yellow-400 px-4 py-1.5 text-sm font-black shadow-lg">
+                  <Star className="w-4 h-4 fill-current" /> {mode.score}
+                </div>
+              )}
+
               {/* Description */}
               <div className="absolute bottom-8 left-8 right-8 z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                 <p className="text-white font-bold text-sm italic leading-tight drop-shadow-md">
-                  {mode.description}
+                  {mode.completed ? 'Déjà résolu — rejoue pour améliorer ton score.' : mode.description}
                 </p>
               </div>
 
@@ -106,10 +145,8 @@ const DailyChallengePage: React.FC = () => {
               )}
 
               {mode.completed && (
-                <div className="absolute inset-0 z-40 bg-black/60 backdrop-blur-sm flex items-center justify-center">
-                  <div className="bg-yellow-400 text-black px-8 py-3 rounded-2xl font-black italic manga-font text-2xl rotate-12 shadow-2xl flex items-center gap-2">
-                    COMPLÉTÉ <CheckCircle2 className="w-6 h-6" />
-                  </div>
+                <div className="absolute bottom-6 right-6 z-30 text-green-400">
+                  <CheckCircle2 className="w-7 h-7 drop-shadow" />
                 </div>
               )}
             </button>

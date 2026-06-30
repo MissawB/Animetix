@@ -24,6 +24,7 @@ export const classicGameService = {
     difficulty = 'Normal',
     hintConfig?: ClassicHintKey[],
     daily = false,
+    dailyDate?: string,
   ): Promise<ClassicGameState> => {
     return apiClient(`${API_BASE}/start/`, {
       method: 'POST',
@@ -32,6 +33,7 @@ export const classicGameService = {
         difficulty,
         ...(hintConfig ? { hint_config: hintConfig } : {}),
         ...(daily ? { daily: true } : {}),
+        ...(daily && dailyDate ? { daily_date: dailyDate } : {}),
       }),
     });
   },

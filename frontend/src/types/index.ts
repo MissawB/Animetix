@@ -278,7 +278,11 @@ export interface ParadoxState extends GameState {
 
 export interface DailyChallenge {
   date: string;
-  media_type: string;
+  media_type?: string;
+  is_today?: boolean;
+  prev_date?: string | null;
+  next_date?: string | null;
+  total_score?: number;
   modes: Array<DailyMode>;
 }
 
@@ -292,6 +296,7 @@ export interface DailyMode {
   media_type?: string;
   url?: string;
   completed: boolean;
+  score?: number | null;
 }
 
 export interface AudioLabState {

@@ -71,56 +71,77 @@ class LatentSpaceDataView(APIView):
 class DailyChallengeDataView(APIView):
     permission_classes = [permissions.AllowAny]
 
+    # How far back past challenges stay replayable.
+    MAX_BACK_DAYS = 30
+
     def get(self, request):
         today = datetime.date.today()
-        challenge, created = DailyChallenge.objects.get_or_create(
-            date=today,
-            defaults={
+        day = today
+        raw_date = request.query_params.get("date")
+        if raw_date:
+            try:
+                parsed = datetime.date.fromisoformat(raw_date)
+                if parsed <= today and (today - parsed).days <= self.MAX_BACK_DAYS:
+                    day = parsed
+            except ValueError:
+                pass
+
+        modes = [
+            {
+                "id": "anime",
                 "media_type": "Anime",
-                "secret_title": f"Cible du {today}",
-                "game_mode": "classic",
+                "brush1": "ANIME",
+                "brush2": "DU JOUR",
+                "description": "Devine la série animée mystère du jour.",
+                "gradient": "from-blue-600 to-indigo-900",
+                "icon": "/static/img/modes/classic.png",
             },
-        )
+            {
+                "id": "manga",
+                "media_type": "Manga",
+                "brush1": "MANGA",
+                "brush2": "DU JOUR",
+                "description": "Devine l'œuvre papier mystère du jour.",
+                "gradient": "from-rose-500 to-red-900",
+                "icon": "/static/img/modes/covertest.png",
+            },
+            {
+                "id": "character",
+                "media_type": "Character",
+                "brush1": "PERSO",
+                "brush2": "DU JOUR",
+                "description": "Devine le personnage mystère du jour.",
+                "gradient": "from-purple-600 to-fuchsia-900",
+                "icon": "/static/img/modes/akinetix.png",
+            },
+        ]
+
+        # Attach this user's saved score per universe for the requested day.
+        results = {}
+        if request.user.is_authenticated:
+            from ...models import DailyResult  # noqa: E402
+
+            for r in DailyResult.objects.filter(user=request.user, date=day):
+                results[r.media_type] = {"score": r.score, "attempts": r.attempts}
+        for m in modes:
+            res = results.get(m["media_type"])
+            m["completed"] = bool(res)
+            m["score"] = res["score"] if res else None
+
+        prev_day = day - datetime.timedelta(days=1)
+        can_prev = (today - prev_day).days <= self.MAX_BACK_DAYS
         return Response(
             {
-                "id": challenge.id,
-                "date": challenge.date,
-                "media_type": challenge.media_type,
-                "difficulty": "Normal",
-                "is_completed": False,
-                "reward_xp": 500,
-                "modes": [
-                    {
-                        "id": "anime",
-                        "media_type": "Anime",
-                        "brush1": "ANIME",
-                        "brush2": "DU JOUR",
-                        "description": "Devine la série animée mystère du jour.",
-                        "gradient": "from-blue-600 to-indigo-900",
-                        "icon": "/static/img/modes/classic.png",
-                        "completed": False,
-                    },
-                    {
-                        "id": "manga",
-                        "media_type": "Manga",
-                        "brush1": "MANGA",
-                        "brush2": "DU JOUR",
-                        "description": "Devine l'œuvre papier mystère du jour.",
-                        "gradient": "from-rose-500 to-red-900",
-                        "icon": "/static/img/modes/covertest.png",
-                        "completed": False,
-                    },
-                    {
-                        "id": "character",
-                        "media_type": "Character",
-                        "brush1": "PERSO",
-                        "brush2": "DU JOUR",
-                        "description": "Devine le personnage mystère du jour.",
-                        "gradient": "from-purple-600 to-fuchsia-900",
-                        "icon": "/static/img/modes/akinetix.png",
-                        "completed": False,
-                    },
-                ],
+                "date": day.isoformat(),
+                "is_today": day == today,
+                "prev_date": prev_day.isoformat() if can_prev else None,
+                "next_date": (
+                    None
+                    if day >= today
+                    else (day + datetime.timedelta(days=1)).isoformat()
+                ),
+                "total_score": sum(r["score"] for r in results.values()),
+                "modes": modes,
             }
         )
 

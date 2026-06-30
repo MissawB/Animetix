@@ -340,6 +340,26 @@ class ChallengeResult(models.Model):
     completed_at = models.DateTimeField(auto_now_add=True)
 
 
+class DailyResult(models.Model):
+    """Best daily-challenge score per user, date and universe (anime/manga/character).
+
+    Independent of DailyChallenge (which is single-universe): the daily page now
+    offers one target per media type, and past dates are replayable.
+    """
+
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="daily_results"
+    )
+    date = models.DateField()
+    media_type = models.CharField(max_length=20)
+    score = models.IntegerField(default=0)
+    attempts = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "date", "media_type")
+
+
 # --- ACHIEVEMENTS & FEEDBACK ---
 class Achievement(models.Model):
     code = models.CharField(max_length=50, unique=True)

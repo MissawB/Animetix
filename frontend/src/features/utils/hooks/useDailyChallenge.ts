@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { utilsService } from '../services/utilsService';
 
-export const useDailyChallenge = () => {
+export const useDailyChallenge = (date?: string) => {
   return useQuery({
-    queryKey: ['daily-challenge'],
-    queryFn: utilsService.getDaily,
+    queryKey: ['daily-challenge', date ?? 'today'],
+    queryFn: () => utilsService.getDaily(date),
   });
 };
