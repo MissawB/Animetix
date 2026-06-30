@@ -32,16 +32,16 @@ class ParadoxGameStateView(APIView):
         session_service = get_session_service(request)
         port = session_service.port
         state = paradox_service.get_state(port)
-        if not state.answer:
+        if not state.get("answer"):
             return Response(
                 {"error": "No game in progress"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        media_type = state.media
+        media_type = state.get("media", "Anime")
         data = catalog_service.load_data(media_type)
 
         items = []
-        for t in state.options:
+        for t in state.get("options", []):
             items.append(
                 {
                     "id": (
@@ -61,10 +61,10 @@ class ParadoxGameStateView(APIView):
         return Response(
             {
                 "media_type": media_type,
-                "scenario": state.scenario,
+                "scenario": state.get("scenario"),
                 "items": items,
-                "game_over": state.game_over,
-                "is_daily": state.is_daily,
+                "game_over": state.get("game_over", False),
+                "is_daily": state.get("is_daily", False),
             }
         )
 
@@ -132,20 +132,22 @@ class ParadoxGameStartView(APIView):
             engine="paradox-reasoning-engine", units=5, user_id=request.user.id
         )
 
-        state = paradox_service.get_state(port)
-        state.answer = intruder
-        state.options = [t1, t2, intruder]
-        random.shuffle(state.options)
-        state.reasoning = res.reasoning
-        state.scenario = res.scenario
-        state.media = media_type
-        state.is_daily = is_daily
-        state.game_over = False
+        options = [t1, t2, intruder]
+        random.shuffle(options)
+        state = {
+            "answer": intruder,
+            "options": options,
+            "reasoning": res.reasoning,
+            "scenario": res.scenario,
+            "media": media_type,
+            "is_daily": is_daily,
+            "game_over": False,
+        }
 
         paradox_service.save_state(port, state)
 
         items = []
-        for t in state.options:
+        for t in state["options"]:
             items.append(
                 {
                     "id": (
@@ -166,10 +168,10 @@ class ParadoxGameStartView(APIView):
             {
                 "status": "started",
                 "media_type": media_type,
-                "scenario": state.scenario,
+                "scenario": state["scenario"],
                 "items": items,
                 "game_over": False,
-                "is_daily": state.is_daily,
+                "is_daily": state["is_daily"],
             }
         )
 
@@ -188,12 +190,12 @@ class ParadoxGameGuessView(APIView):
         port = session_service.port
         state = paradox_service.get_state(port)
 
-        if not state.answer:
+        if not state.get("answer"):
             return Response(
                 {"error": "No game in progress"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        if state.game_over:
+        if state.get("game_over"):
             return Response(
                 {"error": "Game already over"}, status=status.HTTP_400_BAD_REQUEST
             )
@@ -201,7 +203,7 @@ class ParadoxGameGuessView(APIView):
         guess_title = request.data.get("guess")
         intruder_id = request.data.get("intruder_id")
 
-        media_type = state.media
+        media_type = state.get("media", "Anime")
         data = catalog_service.load_data(media_type)
 
         if not guess_title and intruder_id is not None and data:
@@ -217,10 +219,10 @@ class ParadoxGameGuessView(APIView):
             )
 
         choice = guess_title
-        answer = state.answer
+        answer = state.get("answer")
         is_correct = choice == answer
 
-        state.game_over = True
+        state["game_over"] = True
         paradox_service.save_state(port, state)
 
         unlocked_achievements = []
@@ -228,7 +230,7 @@ class ParadoxGameGuessView(APIView):
             if request.user.is_authenticated:
                 try:
                     newly_unlocked = request.user.profile.add_win(
-                        is_daily=state.is_daily,
+                        is_daily=state.get("is_daily", False),
                         game_mode="paradox",
                         media_type=media_type,
                         attempts=1,
@@ -260,7 +262,7 @@ class ParadoxGameGuessView(APIView):
             )
 
         items = []
-        for t in state.options:
+        for t in state.get("options", []):
             items.append(
                 {
                     "id": (
@@ -280,13 +282,13 @@ class ParadoxGameGuessView(APIView):
         return Response(
             {
                 "media_type": media_type,
-                "scenario": state.scenario,
+                "scenario": state.get("scenario"),
                 "items": items,
-                "game_over": state.game_over,
-                "is_daily": state.is_daily,
+                "game_over": state.get("game_over", False),
+                "is_daily": state.get("is_daily", False),
                 "is_correct": is_correct,
                 "answer": answer,
-                "reasoning": state.reasoning,
+                "reasoning": state.get("reasoning"),
                 "newly_unlocked_achievements": unlocked_achievements,
             }
         )

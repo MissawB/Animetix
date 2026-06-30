@@ -28,6 +28,7 @@ class ParadoxDomainService:
             "reasoning": port.get("paradox_reasoning"),
             "scenario": port.get("paradox_scenario"),
             "media": port.get("paradox_media", "Anime"),
+            "game_over": port.get("paradox_game_over", False),
             "is_daily": port.get("is_daily", False),
         }
 
@@ -40,6 +41,7 @@ class ParadoxDomainService:
                 "paradox_scenario": state.get("scenario"),
                 "paradox_media": state.get("media"),
                 "paradox_game_over": state.get("game_over", False),
+                "is_daily": state.get("is_daily", False),
             }
         )
 
