@@ -1,4 +1,5 @@
 import json
+from urllib.parse import parse_qs
 
 from asgiref.sync import sync_to_async
 
@@ -8,9 +9,12 @@ from .base import BaseConsumer, state_adapter
 
 
 class UndercoverConsumer(BaseConsumer):
+    """Players are keyed by a stable client id (cid) sent as a query param, NOT by the
+    ephemeral channel name — so a page refresh reuses the same slot (and keeps the
+    host) instead of spawning a new player every time."""
+
     async def get_room(self):
-        room = await state_adapter.get_state(f"undercover_room_{self.room_code}")
-        return room
+        return await state_adapter.get_state(f"undercover_room_{self.room_code}")
 
     async def save_room(self, room):
         await state_adapter.set_state(
@@ -20,11 +24,13 @@ class UndercoverConsumer(BaseConsumer):
     async def connect(self):
         self.room_code = self.scope["url_route"]["kwargs"]["room_code"].upper()
         self.room_group_name = f"undercover_{self.room_code}"
+        qs = parse_qs(self.scope.get("query_string", b"").decode())
+        self.cid = (qs.get("cid", [None])[0] or self.channel_name)[:64]
 
         room = await self.get_room()
         if not room:
             room = {
-                "host": self.channel_name,
+                "host": None,
                 "players": {},
                 "state": "lobby",
                 "messages": [],
@@ -36,74 +42,81 @@ class UndercoverConsumer(BaseConsumer):
 
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
 
-        room["players"][self.channel_name] = {
-            "name": f"Player {len(room['players']) + 1}",
-            "role": None,
-            "word": None,
-            "image": None,
-            "is_host": (self.channel_name == room["host"]),
-        }
+        if self.cid in room["players"]:
+            # Reconnect: keep the player's slot/name, just point at the new channel.
+            room["players"][self.cid]["channel"] = self.channel_name
+        else:
+            room["players"][self.cid] = {
+                "name": f"Agent {len(room['players']) + 1}",
+                "role": None,
+                "word": None,
+                "image": None,
+                "channel": self.channel_name,
+            }
+
+        # Assign the host if the slot is vacant (first player, or the host left).
+        if not room["host"] or room["host"] not in room["players"]:
+            room["host"] = self.cid
 
         await self.save_room(room)
         await self.accept()
-        # Tell this client its own id so it can find itself (host?) in the roster.
-        await self.send(
-            text_data=json.dumps({"type": "self_id", "id": self.channel_name})
-        )
         await self.broadcast_state()
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
         room = await self.get_room()
-        if room and self.channel_name in room["players"]:
-            del room["players"][self.channel_name]
+        if not room:
+            return
+        player = room["players"].get(self.cid)
+        # Only drop the player if this is still their active connection — a refresh
+        # often reconnects (updating the channel) before the old socket's disconnect
+        # fires, and we must not remove the just-reconnected player. The host slot is
+        # left as-is so a refreshing host keeps it on reconnect.
+        if player and player.get("channel") == self.channel_name:
+            del room["players"][self.cid]
             if not room["players"]:
                 await state_adapter.delete_state(f"undercover_room_{self.room_code}")
-            elif room["host"] == self.channel_name:
-                new_host = list(room["players"].keys())[0]
-                room["host"] = new_host
-                room["players"][new_host]["is_host"] = True
-                await self.save_room(room)
-            else:
-                await self.save_room(room)
+                return
+            await self.save_room(room)
             await self.broadcast_state()
 
     async def receive(self, text_data):
         data = json.loads(text_data)
         action = data.get("action")
         room = await self.get_room()
-        if not room:
+        if not room or self.cid not in room["players"]:
             return
+        is_host = self.cid == room["host"]
 
         if action == "set_name":
-            room["players"][self.channel_name]["name"] = data.get("name", "")[:15]
+            room["players"][self.cid]["name"] = (data.get("name", "") or "")[:15]
             await self.save_room(room)
             await self.broadcast_state()
-        elif action == "set_settings" and self.channel_name == room["host"]:
+        elif action == "set_settings" and is_host:
             room["media_type"] = data.get("media_type", "Anime")
             room["difficulty"] = data.get("difficulty", "Normal")
             await self.save_room(room)
             await self.broadcast_state()
         elif action == "chat":
             msg = {
-                "user": room["players"][self.channel_name]["name"],
-                "text": data.get("message", "")[:100],
+                "user": room["players"][self.cid]["name"],
+                "text": (data.get("message", "") or "")[:100],
                 "is_system": False,
             }
             room["messages"].append(msg)
             await self.save_room(room)
             await self.broadcast_chat(msg)
-        elif action == "start_game" and self.channel_name == room["host"]:
+        elif action == "start_game" and is_host:
             await self.start_game_logic(room)
         elif action == "vote":
-            room["votes"][self.channel_name] = data.get("voted_for")
+            room["votes"][self.cid] = data.get("voted_for")
             await self.save_room(room)
             await self.broadcast_state()
-        elif action == "reveal" and self.channel_name == room["host"]:
+        elif action == "reveal" and is_host:
             room["state"] = "revealed"
             await self.save_room(room)
             await self.broadcast_state()
-        elif action == "back_to_lobby" and self.channel_name == room["host"]:
+        elif action == "back_to_lobby" and is_host:
             room["state"] = "lobby"
             room["votes"], room["messages"] = {}, []
             for p in room["players"].values():
@@ -124,10 +137,10 @@ class UndercoverConsumer(BaseConsumer):
         revealed = room["state"] == "revealed"
         players_list = [
             {
-                "id": ch,
+                "id": cid,
                 "name": p["name"],
-                "is_host": p["is_host"],
-                "has_voted": ch in room["votes"],
+                "is_host": cid == room["host"],
+                "has_voted": cid in room["votes"],
                 # Roles/words are only exposed to everyone once the round is revealed.
                 **(
                     {"role": p["role"], "word": p["word"], "image": p["image"]}
@@ -135,7 +148,7 @@ class UndercoverConsumer(BaseConsumer):
                     else {}
                 ),
             }
-            for ch, p in room["players"].items()
+            for cid, p in room["players"].items()
         ]
         await self.channel_layer.group_send(
             self.room_group_name,
@@ -154,9 +167,9 @@ class UndercoverConsumer(BaseConsumer):
             },
         )
         if room["state"] in ["playing", "revealed"]:
-            for ch, p in room["players"].items():
+            for p in room["players"].values():
                 await self.channel_layer.send(
-                    ch,
+                    p["channel"],
                     {
                         "type": "send_msg",
                         "message": {
@@ -188,8 +201,8 @@ class UndercoverConsumer(BaseConsumer):
             or "Mystère..."
         )
 
-        for ch, p in room["players"].items():
-            assignment = game_data["assignments"][ch]
+        for cid, p in room["players"].items():
+            assignment = game_data["assignments"][cid]
             p["role"], p["word"], p["image"] = (
                 assignment["role"],
                 assignment["word"],

@@ -12,9 +12,26 @@ interface SocketData {
 const MAX_RECONNECT_ATTEMPTS = 5;
 const INITIAL_RECONNECT_DELAY = 1000;
 
+// Stable per-tab client id: survives a refresh (so the server reuses the same
+// player slot and keeps the host) but differs across tabs. Without it, every
+// reconnect span­ned a brand-new player.
+const getClientId = (): string => {
+  try {
+    let id = sessionStorage.getItem('animetix_ws_cid');
+    if (!id) {
+      id = (crypto.randomUUID && crypto.randomUUID()) || `c_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      sessionStorage.setItem('animetix_ws_cid', id);
+    }
+    return id;
+  } catch {
+    return `c_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  }
+};
+
 const useSocket = (roomCode: string | undefined, type: 'undercover' | 'codemanga') => {
+  const clientIdRef = useRef<string>(getClientId());
   const [messages, setMessages] = useState<Record<string, unknown>[]>([]);
-  const [gameState, setGameState] = useState<Record<string, unknown> | null>(null);
+  const [gameState, setGameState] = useState<Record<string, unknown> | null>({ myId: getClientId() });
   const [connected, setConnected] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
   
@@ -30,7 +47,7 @@ const useSocket = (roomCode: string | undefined, type: 'undercover' | 'codemanga
 
     const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
     const host = window.location.host;
-    const url = `${protocol}://${host}/ws/${type}/${roomCode}/`;
+    const url = `${protocol}://${host}/ws/${type}/${roomCode}/?cid=${encodeURIComponent(clientIdRef.current)}`;
 
     logger.log(`Tentative de connexion WebSocket: ${url}`);
     const socket = new WebSocket(url);
@@ -67,8 +84,6 @@ const useSocket = (roomCode: string | undefined, type: 'undercover' | 'codemanga
           setGameState((prev) => ({ ...(prev || {}), ...rest }));
         } else if (data.type === 'private_role') {
           setGameState((prev) => ({ ...(prev || {}), private_role: data }));
-        } else if (data.type === 'self_id') {
-          setGameState((prev) => ({ ...(prev || {}), myId: data.id }));
         } else if (data.type === 'chat_message') {
           const msg = data.message || {};
           setMessages((prev) => [...prev, msg]);

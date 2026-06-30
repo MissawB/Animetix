@@ -78,7 +78,8 @@ describe('useSocket', () => {
 
     expect(MockWebSocket.instances.length).toBe(1);
     const socket = MockWebSocket.instances[0];
-    expect(socket.url).toBe('ws://localhost:3000/ws/undercover/room-1/');
+    // URL carries a stable client id (cid) query param for reconnect identity.
+    expect(socket.url).toMatch(/^ws:\/\/localhost:3000\/ws\/undercover\/room-1\/\?cid=.+/);
 
     // Trigger open
     act(() => {
