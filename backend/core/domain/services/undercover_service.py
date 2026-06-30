@@ -329,21 +329,22 @@ class UndercoverService:
         if not anchor_cats:
             return None  # impossible de garantir un mot anime/manga/perso
 
-        # Le mot CIVIL (celui que la majorité voit) est TOUJOURS une ancre
-        # anime/manga/perso : on garantit ainsi qu'un anime/manga est présent et
-        # bien visible, jamais noyé côté infiltré.
-        civil_cat = random.choice(anchor_cats)
+        civil_cat = random.choice(cats)
         civil = random.choice(pools[civil_cat])
 
-        # L'infiltré prend de préférence une catégorie NON-ancre (film, jeu,
-        # acteur, perso de jeu) → vraie paire croisée. S'il n'y en a aucune de
-        # cochée, on retombe sur une ancre (manche anime/manga classique).
-        non_anchor_cats = [c for c in cats if c not in anchors]
-        under_cats = non_anchor_cats or anchor_cats
+        # Au moins un mot de la paire doit être une ancre (anime/manga/perso) :
+        # si le civil en est déjà une, l'infiltré peut être STRICTEMENT n'importe
+        # quoi (toute catégorie cochée, la même comprise) ; sinon l'infiltré DOIT
+        # être une ancre.
+        if civil_cat in anchors:
+            other_cats = cats
+        else:
+            other_cats = anchor_cats
         candidates = [
-            e for c in under_cats for e in pools[c] if e["label"] != civil["label"]
+            e for c in other_cats for e in pools[c] if e["label"] != civil["label"]
         ]
         if not candidates:
+            # Repli : n'importe quelle ancre différente (jamais hors-ancre des deux côtés).
             candidates = [
                 e for c in anchor_cats for e in pools[c] if e["label"] != civil["label"]
             ]
