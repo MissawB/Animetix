@@ -100,6 +100,18 @@ const UndercoverRoom: React.FC = () => {
   // Highlight only the vote cast this round (server clears votes each round).
   const voteTarget = vote && vote.round === round ? vote.target : null;
 
+  // Paints a range slider's filled portion + themes its thumb (see .uc-slider).
+  const sliderStyle = (value: number, min: number, max: number, accent: string): React.CSSProperties => {
+    // Fill tracks the thumb position; a degenerate (min==max) slider sits at 0.
+    const pct = max > min ? ((value - min) / (max - min)) * 100 : 0;
+    return {
+      background: `linear-gradient(90deg, ${accent} 0%, ${accent} ${pct}%, rgba(255,255,255,0.08) ${pct}%, rgba(255,255,255,0.08) 100%)`,
+      ['--uc-accent' as string]: accent,
+    };
+  };
+  const maxUnderSlider = Math.max(1, maxThreats - white);
+  const maxWhiteSlider = Math.max(0, maxThreats - under);
+
   if (!connected) {
     return (
       <div className="min-h-[60vh] grid place-items-center">
@@ -332,36 +344,48 @@ const UndercoverRoom: React.FC = () => {
                     </div>
 
                     {/* Sliders : intrus + Mr. White, bornés par la taille du lobby */}
-                    <div className="space-y-5">
+                    <div className="space-y-6">
                       <div>
-                        <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex items-center justify-between mb-2.5">
                           <p className="text-[11px] font-black uppercase tracking-[0.25em] text-red-400/80 flex items-center gap-1.5"><Vote className="w-3.5 h-3.5" /> Intrus</p>
-                          <span className="text-sm font-black text-red-400 tabular-nums">{under}</span>
+                          <span className="min-w-9 text-center px-2.5 py-1 rounded-lg bg-red-500/15 text-red-400 text-base font-black tabular-nums shadow-[0_0_14px_-4px_rgba(239,68,68,0.6)]">{under}</span>
                         </div>
                         <input
-                          type="range" min={1} max={Math.max(1, maxThreats - white)} value={under}
+                          type="range" min={1} max={maxUnderSlider} value={under}
                           onChange={(e) => applySettings({ num_undercovers: Number(e.target.value) })}
-                          className="w-full accent-red-500 cursor-pointer"
+                          className="uc-slider"
+                          style={sliderStyle(under, 1, maxUnderSlider, '#ef4444')}
                           aria-label="Nombre d'intrus"
                         />
+                        <div className="flex justify-between mt-1.5 text-[10px] font-bold text-white/25 tabular-nums"><span>1</span><span>max {maxUnderSlider}</span></div>
                       </div>
                       <div>
-                        <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex items-center justify-between mb-2.5">
                           <p className="text-[11px] font-black uppercase tracking-[0.25em] text-purple-300/80 flex items-center gap-1.5"><Ghost className="w-3.5 h-3.5" /> Mr. White</p>
-                          <span className="text-sm font-black text-purple-300 tabular-nums">{white}</span>
+                          <span className="min-w-9 text-center px-2.5 py-1 rounded-lg bg-purple-500/15 text-purple-300 text-base font-black tabular-nums shadow-[0_0_14px_-4px_rgba(192,132,252,0.6)]">{white}</span>
                         </div>
                         <input
-                          type="range" min={0} max={Math.max(0, maxThreats - under)} value={white}
+                          type="range" min={0} max={maxWhiteSlider} value={white}
                           onChange={(e) => applySettings({ num_mrwhites: Number(e.target.value) })}
-                          className="w-full accent-purple-400 cursor-pointer"
+                          className="uc-slider"
+                          style={sliderStyle(white, 0, maxWhiteSlider, '#c084fc')}
                           aria-label="Nombre de Mr. White"
                         />
-                        <p className="mt-1.5 text-[11px] text-white/35 italic">Le Mr. White n'a pas de mot : éliminé, il doit deviner celui des civils pour gagner.</p>
+                        <div className="flex justify-between mt-1.5 text-[10px] font-bold text-white/25 tabular-nums"><span>0</span><span>max {maxWhiteSlider}</span></div>
+                        <p className="mt-2 text-[11px] text-white/35 italic">Le Mr. White n'a pas de mot : éliminé, il doit deviner celui des civils pour gagner.</p>
                       </div>
-                      <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-wider">
-                        <span className="px-2.5 py-1 rounded-lg bg-green-500/10 text-green-400">{civilsCount} civils</span>
-                        <span className="px-2.5 py-1 rounded-lg bg-red-500/10 text-red-400">{under} intrus</span>
-                        {white > 0 && <span className="px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-300">{white} Mr. White</span>}
+                      {/* Composition bar */}
+                      <div>
+                        <div className="flex h-2.5 rounded-full overflow-hidden bg-white/5">
+                          {civilsCount > 0 && <div className="bg-green-500/70" style={{ width: `${(civilsCount / Math.max(1, players.length)) * 100}%` }} />}
+                          {under > 0 && <div className="bg-red-500/70" style={{ width: `${(under / Math.max(1, players.length)) * 100}%` }} />}
+                          {white > 0 && <div className="bg-purple-400/70" style={{ width: `${(white / Math.max(1, players.length)) * 100}%` }} />}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2 mt-3 text-[11px] font-black uppercase tracking-wider">
+                          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-green-500/10 text-green-400"><span className="w-2 h-2 rounded-full bg-green-500" />{civilsCount} civils</span>
+                          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-500/10 text-red-400"><span className="w-2 h-2 rounded-full bg-red-500" />{under} intrus</span>
+                          {white > 0 && <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-500/10 text-purple-300"><span className="w-2 h-2 rounded-full bg-purple-400" />{white} Mr. White</span>}
+                        </div>
                       </div>
                     </div>
 
