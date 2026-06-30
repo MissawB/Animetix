@@ -35,8 +35,9 @@ class UndercoverConsumer(BaseConsumer):
                 "state": "lobby",
                 "messages": [],
                 "clue": "",
-                "media_type": "Anime",
+                "categories": ["Anime"],
                 "difficulty": "Normal",
+                "num_undercovers": 1,
                 "votes": {},
             }
 
@@ -93,8 +94,16 @@ class UndercoverConsumer(BaseConsumer):
             await self.save_room(room)
             await self.broadcast_state()
         elif action == "set_settings" and is_host:
-            room["media_type"] = data.get("media_type", "Anime")
+            known = {"Anime", "Manga", "Character", "Movie", "Game", "Actor", "VGChar"}
+            cats = [c for c in (data.get("categories") or []) if c in known]
+            room["categories"] = cats or ["Anime"]
             room["difficulty"] = data.get("difficulty", "Normal")
+            try:
+                room["num_undercovers"] = max(
+                    1, min(int(data.get("num_undercovers", 1)), 3)
+                )
+            except (TypeError, ValueError):
+                room["num_undercovers"] = 1
             await self.save_room(room)
             await self.broadcast_state()
         elif action == "chat":
@@ -161,7 +170,8 @@ class UndercoverConsumer(BaseConsumer):
                     "clue": room["clue"],
                     "messages": room["messages"],
                     "difficulty": room["difficulty"],
-                    "media_type": room["media_type"],
+                    "categories": room.get("categories", ["Anime"]),
+                    "num_undercovers": room.get("num_undercovers", 1),
                     "votes": room["votes"] if revealed else {},
                 },
             },
@@ -183,23 +193,27 @@ class UndercoverConsumer(BaseConsumer):
 
     async def start_game_logic(self, room):
         container = get_container()
-        game_data = await sync_to_async(container.game_service.start_undercover_game)(
-            media_type=room["media_type"],
+        game_service = container.core.game_service()
+        n_players = len(room["players"])
+        # Keep at least 2 civils so the round stays playable.
+        num_undercovers = max(
+            1, min(room.get("num_undercovers", 1), max(1, n_players - 2))
+        )
+        categories = room.get("categories", ["Anime"])
+        game_data = await sync_to_async(game_service.start_undercover_game)(
+            categories=categories,
             difficulty=room["difficulty"],
             player_ids=list(room["players"].keys()),
             rank_limits=DIFFICULTY_SETTINGS,
+            num_undercovers=num_undercovers,
         )
         if not game_data:
             return
 
-        clue = (
-            await sync_to_async(container.llm_service.generate_undercover_clue)(
-                room["media_type"],
-                game_data["civil_word"],
-                game_data["undercover_word"],
-            )
-            or "Mystère..."
-        )
+        # No LLM clue here on purpose: Undercover is a CPU / no-login game and
+        # must never hit the GPU inference stack (which is Berrix-gated and would
+        # also stall the round start). Players describe their own word instead.
+        clue = ""
 
         for cid, p in room["players"].items():
             assignment = game_data["assignments"][cid]

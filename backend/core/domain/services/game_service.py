@@ -140,11 +140,16 @@ class GameService:
         return secret_obj.get("title") or secret_obj.get("name")
 
     def start_undercover_game(
-        self, media_type: str, difficulty: str, player_ids: List[str], rank_limits: Dict
+        self,
+        categories: List[str],
+        difficulty: str,
+        player_ids: List[str],
+        rank_limits: Dict,
+        num_undercovers: int = 1,
     ) -> Dict:
         """Délégation au UndercoverService."""
         return self.undercover_service.start_game(
-            media_type, difficulty, player_ids, rank_limits
+            categories, difficulty, player_ids, rank_limits, num_undercovers
         )
 
     def calculate_similarity(

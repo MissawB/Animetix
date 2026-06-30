@@ -17,13 +17,26 @@ interface UPlayer {
 }
 interface UMsg { user: string; text: string; is_system?: boolean }
 
-const MEDIA: { key: string; label: string }[] = [
-  { key: 'Anime', label: 'Anime' },
-  { key: 'Manga', label: 'Manga' },
-  { key: 'Character', label: 'Perso' },
+// Each category can be toggled on/off independently. "anchor" categories
+// (anime/manga/perso) guarantee at least one side of every pair stays an
+// anime/manga/character — at least one of them must be ticked.
+const CATEGORIES: { key: string; label: string; anchor?: boolean }[] = [
+  { key: 'Anime', label: 'Anime', anchor: true },
+  { key: 'Manga', label: 'Manga', anchor: true },
+  { key: 'Character', label: 'Persos anime', anchor: true },
+  { key: 'Movie', label: 'Films' },
+  { key: 'Game', label: 'Jeux vidéo' },
+  { key: 'Actor', label: 'Acteurs' },
+  { key: 'VGChar', label: 'Persos de jeux' },
 ];
+const ANCHOR_KEYS = CATEGORIES.filter((c) => c.anchor).map((c) => c.key);
 const DIFFS = ['Easy', 'Normal', 'Hard'];
 const DIFF_LABEL: Record<string, string> = { Easy: 'Facile', Normal: 'Normal', Hard: 'Difficile' };
+const DIFF_HINT: Record<string, string> = {
+  Easy: 'œuvres très populaires',
+  Normal: 'œuvres connues',
+  Hard: 'œuvres plus pointues',
+};
 const MIN_PLAYERS = 3;
 
 const STATUS: Record<string, string> = {
@@ -49,9 +62,13 @@ const UndercoverRoom: React.FC = () => {
   const clue = gs.clue as string | undefined;
   const messages = (gs.messages as UMsg[]) || [];
   const myRole = (gs.private_role as UPlayer) || {};
-  const mediaType = (gs.media_type as string) || 'Anime';
+  const categories = (gs.categories as string[]) || ['Anime'];
   const difficulty = (gs.difficulty as string) || 'Normal';
+  const numUnder = (gs.num_undercovers as number) || 1;
   const votes = (gs.votes as Record<string, string>) || {};
+  // Keep at least 2 civils — mirrors the server clamp.
+  const maxUnder = Math.max(1, Math.min(3, players.length - 2));
+  const hasAnchor = categories.some((c) => ANCHOR_KEYS.includes(c));
 
   if (!connected) {
     return (
@@ -81,11 +98,22 @@ const UndercoverRoom: React.FC = () => {
     setTimeout(() => setCopied(false), 1500);
   };
 
-  const undercover = players.find((p) => p.role === 'Undercover');
+  // set_settings carries the full settings tuple — merge so changing one knob
+  // doesn't reset the others.
+  const applySettings = (patch: Record<string, unknown>) =>
+    sendAction('set_settings', { categories, difficulty, num_undercovers: numUnder, ...patch });
+  const toggleCategory = (key: string) => {
+    const next = categories.includes(key)
+      ? categories.filter((c) => c !== key)
+      : [...categories, key];
+    applySettings({ categories: next });
+  };
+
+  const undercovers = players.filter((p) => p.role === 'Undercover');
   const tally: Record<string, number> = {};
   Object.values(votes).forEach((t) => { tally[t] = (tally[t] || 0) + 1; });
   const mostVotedId = Object.entries(tally).sort((a, b) => b[1] - a[1])[0]?.[0];
-  const groupCaughtImpostor = !!undercover && mostVotedId === undercover.id;
+  const groupCaughtImpostor = !!mostVotedId && undercovers.some((u) => u.id === mostVotedId);
 
   const panel = 'rounded-[2rem] border-2 border-white/5 bg-[#0d0f17]/80 backdrop-blur-xl shadow-2xl';
 
@@ -191,36 +219,65 @@ const UndercoverRoom: React.FC = () => {
 
                 {isHost ? (
                   <>
+                    <div>
+                      <p className="text-[11px] font-black uppercase tracking-[0.25em] text-white/40 mb-2">Catégories à inclure</p>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {CATEGORIES.map((c) => {
+                          const on = categories.includes(c.key);
+                          return (
+                            <button
+                              key={c.key}
+                              onClick={() => toggleCategory(c.key)}
+                              className={`flex items-center gap-2 py-2.5 px-3 rounded-xl border-2 text-xs font-black uppercase transition-all ${on ? 'border-red-500 bg-red-500/15 text-red-400' : 'border-white/10 text-white/40 hover:border-red-500/40'}`}
+                            >
+                              <span className={`w-4 h-4 rounded grid place-items-center border-2 shrink-0 ${on ? 'bg-red-500 border-red-500' : 'border-white/25'}`}>
+                                {on && <Check className="w-3 h-3 text-white" />}
+                              </span>
+                              <span className="truncate">{c.label}{c.anchor && <span className="text-yellow-400/70"> ⚓</span>}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <p className={`mt-2 text-[11px] italic ${hasAnchor ? 'text-white/35' : 'text-red-400'}`}>
+                        ⚓ Au moins une catégorie ancre (anime/manga/perso) doit être cochée — chaque paire en garde un mot.
+                      </p>
+                    </div>
                     <div className="grid sm:grid-cols-2 gap-5">
                       <div>
-                        <p className="text-[11px] font-black uppercase tracking-[0.25em] text-white/40 mb-2">Univers</p>
-                        <div className="grid grid-cols-3 gap-2">
-                          {MEDIA.map((m) => (
-                            <button
-                              key={m.key}
-                              onClick={() => sendAction('set_settings', { media_type: m.key, difficulty })}
-                              className={`py-2.5 rounded-xl border-2 text-xs font-black uppercase transition-all ${mediaType === m.key ? 'border-red-500 bg-red-500/15 text-red-400' : 'border-white/10 text-white/40 hover:border-red-500/40'}`}
-                            >{m.label}</button>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-[11px] font-black uppercase tracking-[0.25em] text-white/40 mb-2">Difficulté</p>
+                        <p className="text-[11px] font-black uppercase tracking-[0.25em] text-white/40 mb-2">Difficulté · popularité</p>
                         <div className="grid grid-cols-3 gap-2">
                           {DIFFS.map((d) => (
                             <button
                               key={d}
-                              onClick={() => sendAction('set_settings', { media_type: mediaType, difficulty: d })}
+                              onClick={() => applySettings({ difficulty: d })}
                               className={`py-2.5 rounded-xl border-2 text-xs font-black uppercase transition-all ${difficulty === d ? 'border-red-500 bg-red-500/15 text-red-400' : 'border-white/10 text-white/40 hover:border-red-500/40'}`}
                             >{DIFF_LABEL[d]}</button>
                           ))}
+                        </div>
+                        <p className="mt-2 text-[11px] text-white/35 italic">{DIFF_HINT[difficulty]} — plus c'est dur, plus les œuvres sont obscures.</p>
+                      </div>
+                      <div>
+                        <p className="text-[11px] font-black uppercase tracking-[0.25em] text-white/40 mb-2">Intrus</p>
+                        <div className="grid grid-cols-3 gap-2">
+                          {[1, 2, 3].map((k) => {
+                            const disabled = k > maxUnder;
+                            return (
+                              <button
+                                key={k}
+                                disabled={disabled}
+                                title={disabled ? 'Pas assez d\'agents' : `${k} intrus`}
+                                onClick={() => applySettings({ num_undercovers: k })}
+                                className={`py-2.5 rounded-xl border-2 text-xs font-black uppercase transition-all disabled:opacity-30 disabled:cursor-not-allowed ${numUnder === k ? 'border-red-500 bg-red-500/15 text-red-400' : 'border-white/10 text-white/40 enabled:hover:border-red-500/40'}`}
+                              >{k}</button>
+                            );
+                          })}
                         </div>
                       </div>
                     </div>
                     <div>
                       <button
                         onClick={() => sendAction('start_game')}
-                        disabled={players.length < MIN_PLAYERS}
+                        disabled={players.length < MIN_PLAYERS || !hasAnchor}
                         className="w-full py-4 rounded-2xl bg-red-600 enabled:hover:bg-red-500 text-white font-black italic uppercase tracking-widest text-lg shadow-[0_10px_30px_-10px_rgba(239,68,68,0.7)] transition-all enabled:hover:scale-[1.01] active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                       >
                         <Play className="w-5 h-5 fill-current" /> Lancer la mission
@@ -228,6 +285,11 @@ const UndercoverRoom: React.FC = () => {
                       {players.length < MIN_PLAYERS && (
                         <p className="mt-3 text-center text-[11px] font-bold uppercase tracking-widest text-white/35 flex items-center justify-center gap-1.5">
                           <Lock className="w-3.5 h-3.5" /> Min. {MIN_PLAYERS} agents — partage le code ci-dessus
+                        </p>
+                      )}
+                      {players.length >= MIN_PLAYERS && !hasAnchor && (
+                        <p className="mt-3 text-center text-[11px] font-bold uppercase tracking-widest text-red-400 flex items-center justify-center gap-1.5">
+                          <Lock className="w-3.5 h-3.5" /> Coche au moins une catégorie ancre (anime/manga/perso)
                         </p>
                       )}
                     </div>
@@ -260,7 +322,12 @@ const UndercoverRoom: React.FC = () => {
                 )}
                 <div className="p-4 rounded-2xl bg-red-500/5 border border-red-500/20 text-sm text-white/80 flex items-start gap-3">
                   <Vote className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-                  <span>Décris ton mot sans le révéler, puis <b className="text-red-400">clique un agent</b> pour voter contre l'intrus.</span>
+                  <span>
+                    {numUnder > 1
+                      ? <><b className="text-red-400">{numUnder} intrus</b> se cachent parmi vous. </>
+                      : null}
+                    Décris ton mot sans le révéler, puis <b className="text-red-400">clique un agent</b> pour voter contre {numUnder > 1 ? 'un intrus' : 'l\'intrus'}.
+                  </span>
                 </div>
                 {isHost && (
                   <button onClick={() => sendAction('reveal')} className="w-full py-3.5 rounded-2xl bg-yellow-400 hover:bg-yellow-500 text-black font-black italic uppercase tracking-wide flex items-center justify-center gap-2 transition-colors">
@@ -274,11 +341,19 @@ const UndercoverRoom: React.FC = () => {
             {state === 'revealed' && (
               <div className="space-y-5">
                 <div className={`p-6 rounded-2xl text-center border-2 ${groupCaughtImpostor ? 'bg-green-500/10 border-green-500' : 'bg-red-500/10 border-red-500'}`}>
-                  <p className="font-black text-2xl italic manga-font text-white">{groupCaughtImpostor ? '🎯 Intrus démasqué !' : '🕵️ L\'intrus s\'échappe !'}</p>
-                  {undercover && (
-                    <p className="mt-2 font-bold text-white/80">
-                      L'intrus était <span className="text-red-400">{undercover.name}</span> — son mot : <span className="text-yellow-400">{undercover.word}</span>
-                    </p>
+                  <p className="font-black text-2xl italic manga-font text-white">
+                    {groupCaughtImpostor
+                      ? (undercovers.length > 1 ? '🎯 Un intrus démasqué !' : '🎯 Intrus démasqué !')
+                      : (undercovers.length > 1 ? '🕵️ Les intrus s\'échappent !' : '🕵️ L\'intrus s\'échappe !')}
+                  </p>
+                  {undercovers.length > 0 && (
+                    <div className="mt-2 space-y-1 font-bold text-white/80">
+                      {undercovers.map((u) => (
+                        <p key={u.id}>
+                          <span className="text-red-400">{u.name}</span> — son mot : <span className="text-yellow-400">{u.word}</span>
+                        </p>
+                      ))}
+                    </div>
                   )}
                 </div>
                 {isHost && (
