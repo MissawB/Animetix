@@ -117,6 +117,7 @@ class ClassicGameStartView(APIView):
         media_type = request.data.get("media_type", "Anime")
         difficulty = request.data.get("difficulty", "Normal")
         override_secret = request.data.get("override_secret")
+        daily = bool(request.data.get("daily", False))
         hint_config = _sanitize_hint_config(request.data.get("hint_config"))
 
         port.update({"media_type": media_type, "difficulty": difficulty})
@@ -129,6 +130,15 @@ class ClassicGameStartView(APIView):
 
         if override_secret and getattr(request.user, "is_staff", False):
             secret_title = override_secret
+            port.update({"is_daily": False, "is_ranked": False})
+        elif daily:
+            # Deterministic target of the day for this media type (same for all).
+            import datetime as _dt  # noqa: E402
+
+            port.update({"is_daily": True, "is_ranked": False})
+            secret_title = game_service.select_daily_secret(
+                media_type, _dt.date.today()
+            )
         else:
             if override_secret:
                 logger.warning(
@@ -173,8 +183,8 @@ class ClassicGameStartView(APIView):
                 "media_type": media_type,
                 "mediaType": media_type,
                 "difficulty": difficulty,
-                "is_daily": False,
-                "isDaily": False,
+                "is_daily": daily,
+                "isDaily": daily,
                 "is_ranked": False,
                 "game_over": False,
                 "gameOver": False,

@@ -23,6 +23,7 @@ export const classicGameService = {
     mediaType = 'Anime',
     difficulty = 'Normal',
     hintConfig?: ClassicHintKey[],
+    daily = false,
   ): Promise<ClassicGameState> => {
     return apiClient(`${API_BASE}/start/`, {
       method: 'POST',
@@ -30,6 +31,7 @@ export const classicGameService = {
         media_type: mediaType,
         difficulty,
         ...(hintConfig ? { hint_config: hintConfig } : {}),
+        ...(daily ? { daily: true } : {}),
       }),
     });
   },

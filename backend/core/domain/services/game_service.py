@@ -1,3 +1,4 @@
+import hashlib
 import logging
 import random
 from typing import Dict, List, Optional
@@ -61,6 +62,33 @@ class GameService:
             valid_titles = catalog.get("titles", [])[:50]
 
         return random.choice(valid_titles) if valid_titles else ""
+
+    def select_daily_secret(self, media_type: str, date_obj) -> str:
+        """Deterministic 'pick of the day' for a media type — the same target for
+        everyone on a given date (popular pool so it stays guessable)."""
+        catalog = self.get_catalog(media_type)
+        if not catalog:
+            return ""
+
+        valid_lookup = catalog.get("lookup", [])[:300]
+        valid_titles = [
+            item.get("title") or item.get("name")
+            for item in valid_lookup
+            if (item.get("title") or item.get("name"))
+            in catalog.get("title_to_full_data", {})
+        ]
+        if not valid_titles:
+            valid_titles = catalog.get("titles", [])[:50]
+        if not valid_titles:
+            return ""
+
+        seed = int(
+            hashlib.md5(
+                f"daily-{media_type}-{date_obj}".encode(), usedforsecurity=False
+            ).hexdigest(),
+            16,
+        )
+        return valid_titles[seed % len(valid_titles)]
 
     def select_secret_custom(self, media_type: str, config: Dict, catalog: Dict) -> str:
         """Sélectionne un titre secret basé sur des filtres personnalisés (genres, tags)."""
