@@ -76,11 +76,11 @@ export const useGameModes = () => {
     const modesMulti = [
     {
       titre: 'Undercover',
-      description: isEn 
-        ? 'Unmask the intruder among your friends in a secret word match.' 
+      description: isEn
+        ? 'Unmask the intruder among your friends in a secret word match.'
         : 'Démasquez l\'intrus parmi vos amis dans une partie de mots infiltrés.',
       icon_url: '/static/img/modes/undercover.png',
-      url: '/game/duel/lobby/',
+      url: '/undercover/room/lobby/',
     },
     {
       titre: 'Code Manga',
