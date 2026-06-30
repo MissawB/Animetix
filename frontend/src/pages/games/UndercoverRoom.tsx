@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useMemo, useState } from 'react';
+import { useParams, useSearchParams } from 'react-router-dom';
 import useSocket from '../../hooks/useSocket';
 import {
   Users, Send, Crown, Play, RotateCcw, Check, Vote,
-  Fingerprint, Copy, Radio, Lock, Skull, HelpCircle, Ghost,
+  Fingerprint, Copy, Radio, Lock, Skull, HelpCircle, Ghost, Globe, EyeOff,
 } from 'lucide-react';
 
 interface UPlayer {
@@ -54,7 +54,15 @@ const roleMeta = (role?: string): { label: string; cls: string } => {
 
 const UndercoverRoom: React.FC = () => {
   const { roomCode } = useParams<{ roomCode: string }>();
-  const { gameState, connected, sendAction } = useSocket(roomCode, 'undercover');
+  const [searchParams] = useSearchParams();
+  // Only meaningful when *creating* the room (carried from the chooser); the
+  // server ignores it once the room exists.
+  const createVisibility = searchParams.get('visibility') || undefined;
+  const extraQuery = useMemo(
+    () => (createVisibility ? { visibility: createVisibility } : undefined),
+    [createVisibility],
+  );
+  const { gameState, connected, sendAction } = useSocket(roomCode, 'undercover', extraQuery);
   const [name, setName] = useState('');
   const [chat, setChat] = useState('');
   const [guess, setGuess] = useState('');
@@ -72,6 +80,8 @@ const UndercoverRoom: React.FC = () => {
   const myRole = (gs.private_role as UPlayer) || {};
   const categories = (gs.categories as string[]) || ['Anime'];
   const difficulty = (gs.difficulty as string) || 'Normal';
+  const visibility = (gs.visibility as string) || 'private';
+  const isPublic = visibility === 'public';
   const numUnder = (gs.num_undercovers as number) || 1;
   const numWhite = (gs.num_mrwhites as number) || 0;
   const round = (gs.round as number) || 0;
@@ -128,7 +138,7 @@ const UndercoverRoom: React.FC = () => {
   // doesn't reset the others.
   const applySettings = (patch: Record<string, unknown>) =>
     sendAction('set_settings', {
-      categories, difficulty, num_undercovers: under, num_mrwhites: white, ...patch,
+      categories, difficulty, num_undercovers: under, num_mrwhites: white, visibility, ...patch,
     });
   const toggleCategory = (key: string) => {
     const next = categories.includes(key)
@@ -173,6 +183,9 @@ const UndercoverRoom: React.FC = () => {
             {round > 0 && state !== 'ended' && (
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-white/10 text-white/60 normal-case tracking-wider">Manche {round}</span>
             )}
+            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full normal-case tracking-wider ${isPublic ? 'bg-green-500/15 text-green-400' : 'bg-white/10 text-white/60'}`}>
+              {isPublic ? <Globe className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}{isPublic ? 'Public' : 'Privé'}
+            </span>
           </div>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
             <h1 className="text-5xl sm:text-7xl font-black italic manga-font uppercase tracking-tighter text-white leading-none">
@@ -264,6 +277,22 @@ const UndercoverRoom: React.FC = () => {
 
                 {isHost ? (
                   <>
+                    <div>
+                      <p className="text-[11px] font-black uppercase tracking-[0.25em] text-white/40 mb-2">Visibilité du salon</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => applySettings({ visibility: 'public' })}
+                          className={`flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 text-xs font-black uppercase transition-all ${isPublic ? 'border-green-500 bg-green-500/15 text-green-400' : 'border-white/10 text-white/40 hover:border-green-500/40'}`}
+                        ><Globe className="w-3.5 h-3.5" /> Public</button>
+                        <button
+                          onClick={() => applySettings({ visibility: 'private' })}
+                          className={`flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 text-xs font-black uppercase transition-all ${!isPublic ? 'border-red-500 bg-red-500/15 text-red-400' : 'border-white/10 text-white/40 hover:border-red-500/40'}`}
+                        ><EyeOff className="w-3.5 h-3.5" /> Privé</button>
+                      </div>
+                      <p className="mt-2 text-[11px] text-white/35 italic">
+                        {isPublic ? 'Visible dans la liste des salons publics — tout le monde peut rejoindre.' : 'Accessible uniquement via le code ou l\'URL.'}
+                      </p>
+                    </div>
                     <div>
                       <p className="text-[11px] font-black uppercase tracking-[0.25em] text-white/40 mb-2">Catégories à inclure</p>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">

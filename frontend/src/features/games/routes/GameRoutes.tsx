@@ -12,6 +12,7 @@ const ClassicGamePage = lazy(() => import('../../../pages/games/ClassicGamePage'
 const ClassicLobbyPage = lazy(() => import('../../../pages/games/ClassicLobbyPage'));
 const ParadoxGamePage = lazy(() => import('../../../pages/games/ParadoxGamePage'));
 const UndercoverRoom = lazy(() => import('../../../pages/games/UndercoverRoom'));
+const UndercoverEntry = lazy(() => import('../../../pages/games/UndercoverEntry'));
 const CodeMangaRoom = lazy(() => import('../../../pages/games/CodeMangaRoom'));
 const AniminatorPage = lazy(() => import('../../../pages/games/AniminatorPage'));
 const CovertestPage = lazy(() => import('../../../pages/games/CovertestPage'));
@@ -54,6 +55,7 @@ export const GameRoutes = () => (
     <Route path="/covertest/" element={<CovertestLobbyPage />} />
     <Route path="/covertest/play/" element={<CovertestPage />} />
     <Route path="/animinator/" element={<AniminatorPage />} />
+    <Route path="/undercover/" element={<UndercoverEntry />} />
     <Route path="/undercover/room/:roomCode/" element={<UndercoverRoom />} />
     <Route path="/codemanga/room/:roomCode/" element={<CodeMangaRoom />} />
   </>

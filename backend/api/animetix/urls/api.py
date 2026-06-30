@@ -724,6 +724,11 @@ urlpatterns = [
         api_views.MatchmakingView.as_view(),
         name="api_duel_matchmaking",
     ),
+    path(
+        "game/undercover/public-rooms/",
+        api_views.UndercoverPublicRoomsView.as_view(),
+        name="api_undercover_public_rooms",
+    ),
     path("explore/", api_views.MediaExploreView.as_view(), name="api_explore"),
     path(
         "explore/seichijunrei/",

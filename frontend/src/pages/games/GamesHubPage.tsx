@@ -128,7 +128,7 @@ const GamesHubPage: React.FC = () => {
       title: "Undercover",
       desc: "Infiltrez-vous dans un groupe de fans d'anime et débusquez l'intrus.",
       icon: ShieldCheck,
-      path: "/undercover/room/lobby/",
+      path: "/undercover/",
       color: "text-red-400",
       bg: "bg-red-400/10",
       difficulty: "Social",

@@ -80,7 +80,7 @@ export const useGameModes = () => {
         ? 'Unmask the intruder among your friends in a secret word match.'
         : 'Démasquez l\'intrus parmi vos amis dans une partie de mots infiltrés.',
       icon_url: '/static/img/modes/undercover.png',
-      url: '/undercover/room/lobby/',
+      url: '/undercover/',
     },
     {
       titre: 'Code Manga',

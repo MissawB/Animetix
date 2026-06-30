@@ -11,6 +11,9 @@ from ..services import DIFFICULTY_SETTINGS
 from .base import BaseConsumer, state_adapter
 
 KNOWN_CATS = {"Anime", "Manga", "Character", "Movie", "Game", "Actor", "VGChar"}
+# Cache key holding the list of known room codes — public ones are surfaced in
+# the lobby listing (the cache can't enumerate keys, so we keep our own index).
+INDEX_KEY = "undercover_room_index"
 
 
 # Threats = undercovers + Mr. Whites. Capped so civils keep a strict majority at
@@ -84,8 +87,12 @@ class UndercoverConsumer(BaseConsumer):
         self.cid = (qs.get("cid", [None])[0] or self.channel_name)[:64]
 
         room = await self.get_room()
-        if not room:
+        created = not room
+        if created:
             room = self._fresh_room()
+            # The creator's URL may carry the chosen visibility (public/private).
+            if qs.get("visibility", [None])[0] == "public":
+                room["visibility"] = "public"
 
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
 
@@ -107,6 +114,7 @@ class UndercoverConsumer(BaseConsumer):
             room["host"] = self.cid
 
         await self.save_room(room)
+        await self._index_add()
         await self.accept()
         await self.broadcast_state()
 
@@ -116,6 +124,8 @@ class UndercoverConsumer(BaseConsumer):
             "players": {},
             "state": "lobby",
             "messages": [],
+            "name": "",
+            "visibility": "private",
             "categories": ["Anime"],
             "difficulty": "Normal",
             "num_undercovers": 1,
@@ -127,6 +137,16 @@ class UndercoverConsumer(BaseConsumer):
             "pending_white": None,
             "result": None,
         }
+
+    async def _index_add(self):
+        """Register this room code so the public listing can find it."""
+        try:
+            codes = await state_adapter.get_state(INDEX_KEY) or []
+            if self.room_code not in codes:
+                codes.append(self.room_code)
+                await state_adapter.set_state(INDEX_KEY, codes, timeout=86400)
+        except Exception:
+            pass
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
@@ -165,6 +185,10 @@ class UndercoverConsumer(BaseConsumer):
                 data.get("num_undercovers"), 1, 1, 12
             )
             room["num_mrwhites"] = self._as_int(data.get("num_mrwhites"), 0, 0, 12)
+            if data.get("visibility") in ("public", "private"):
+                room["visibility"] = data["visibility"]
+            if isinstance(data.get("name"), str):
+                room["name"] = data["name"][:24]
             await self.save_room(room)
             await self.broadcast_state()
         elif action == "chat":
@@ -370,6 +394,8 @@ class UndercoverConsumer(BaseConsumer):
                     "players": players_list,
                     "messages": room["messages"],
                     "difficulty": room["difficulty"],
+                    "visibility": room.get("visibility", "private"),
+                    "name": room.get("name", ""),
                     "categories": room.get("categories", ["Anime"]),
                     "num_undercovers": room.get("num_undercovers", 1),
                     "num_mrwhites": room.get("num_mrwhites", 0),

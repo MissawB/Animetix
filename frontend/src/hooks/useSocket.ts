@@ -28,8 +28,19 @@ const getClientId = (): string => {
   }
 };
 
-const useSocket = (roomCode: string | undefined, type: 'undercover' | 'codemanga') => {
+const useSocket = (
+  roomCode: string | undefined,
+  type: 'undercover' | 'codemanga',
+  extraQuery?: Record<string, string>,
+) => {
   const clientIdRef = useRef<string>(getClientId());
+  // Stringify once so the connect callback isn't recreated on every render.
+  const extraQueryStr = extraQuery
+    ? Object.entries(extraQuery)
+        .filter(([, v]) => v != null && v !== '')
+        .map(([k, v]) => `&${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+        .join('')
+    : '';
   const [messages, setMessages] = useState<Record<string, unknown>[]>([]);
   const [gameState, setGameState] = useState<Record<string, unknown> | null>({ myId: getClientId() });
   const [connected, setConnected] = useState(false);
@@ -47,7 +58,7 @@ const useSocket = (roomCode: string | undefined, type: 'undercover' | 'codemanga
 
     const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
     const host = window.location.host;
-    const url = `${protocol}://${host}/ws/${type}/${roomCode}/?cid=${encodeURIComponent(clientIdRef.current)}`;
+    const url = `${protocol}://${host}/ws/${type}/${roomCode}/?cid=${encodeURIComponent(clientIdRef.current)}${extraQueryStr}`;
 
     logger.log(`Tentative de connexion WebSocket: ${url}`);
     const socket = new WebSocket(url);
@@ -124,7 +135,7 @@ const useSocket = (roomCode: string | undefined, type: 'undercover' | 'codemanga
       console.error("Erreur WebSocket:", err);
     };
 
-  }, [roomCode, type, addToast]);
+  }, [roomCode, type, addToast, extraQueryStr]);
 
   useEffect(() => {
     connectRef.current = connect;
