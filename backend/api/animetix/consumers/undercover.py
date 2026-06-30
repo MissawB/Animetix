@@ -1,6 +1,7 @@
 import json
 import re
 import unicodedata
+from difflib import SequenceMatcher
 from urllib.parse import parse_qs
 
 from asgiref.sync import sync_to_async
@@ -23,6 +24,38 @@ def _norm_guess(text):
     folded = unicodedata.normalize("NFKD", str(text or ""))
     folded = folded.encode("ascii", "ignore").decode("ascii").lower()
     return re.sub(r"[^a-z0-9]+", "", folded)
+
+
+def _guess_words(text):
+    """Significant words (accent-folded, tiny words dropped) of a title/guess."""
+    folded = unicodedata.normalize("NFKD", str(text or ""))
+    folded = folded.encode("ascii", "ignore").decode("ascii").lower()
+    return [w for w in re.findall(r"[a-z0-9]+", folded) if len(w) > 2]
+
+
+def _guess_matches(guess, target):
+    """Tolerant match for a Mr. White guess: accepts typos, casing, accents,
+    word order and a missing subtitle — the name doesn't have to be perfect."""
+    g, t = _norm_guess(guess), _norm_guess(target)
+    if not g or not t:
+        return False
+    if g == t:
+        return True
+    # Typo tolerance on the whole compact string.
+    if SequenceMatcher(None, g, t).ratio() >= 0.8:
+        return True
+    # Word-level tolerance: every guessed word lands (fuzzily) in the title and
+    # together they cover at least half of the title's significant words.
+    gw, tw = _guess_words(guess), _guess_words(target)
+    if not gw or not tw:
+        return False
+
+    def near(a, b):
+        return a == b or SequenceMatcher(None, a, b).ratio() >= 0.8
+
+    matched_g = sum(1 for a in gw if any(near(a, b) for b in tw))
+    matched_t = sum(1 for b in tw if any(near(a, b) for a in gw))
+    return matched_g == len(gw) and matched_t >= max(1, (len(tw) + 1) // 2)
 
 
 class UndercoverConsumer(BaseConsumer):
@@ -239,7 +272,7 @@ class UndercoverConsumer(BaseConsumer):
             return
         white = room["players"][self.cid]
         room["pending_white"] = None
-        if _norm_guess(guess) and _norm_guess(guess) == _norm_guess(room["civil_word"]):
+        if _guess_matches(guess, room["civil_word"]):
             self._system(
                 room,
                 f"{white['name']} (Mr. White) a deviné « {room['civil_word']} » — "
