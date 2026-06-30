@@ -1,4 +1,6 @@
 import json
+import re
+import unicodedata
 from urllib.parse import parse_qs
 
 from asgiref.sync import sync_to_async
@@ -7,11 +9,32 @@ from ..containers import get_container
 from ..services import DIFFICULTY_SETTINGS
 from .base import BaseConsumer, state_adapter
 
+KNOWN_CATS = {"Anime", "Manga", "Character", "Movie", "Game", "Actor", "VGChar"}
+
+
+# Threats = undercovers + Mr. Whites. Capped so civils keep a strict majority at
+# the start (otherwise the game could open already at parity).
+def _max_threats(n_players):
+    return max(1, (n_players - 1) // 2)
+
+
+def _norm_guess(text):
+    """Loose normalisation so a Mr. White guess matches despite case/accents/punct."""
+    folded = unicodedata.normalize("NFKD", str(text or ""))
+    folded = folded.encode("ascii", "ignore").decode("ascii").lower()
+    return re.sub(r"[^a-z0-9]+", "", folded)
+
 
 class UndercoverConsumer(BaseConsumer):
     """Players are keyed by a stable client id (cid) sent as a query param, NOT by the
     ephemeral channel name — so a page refresh reuses the same slot (and keeps the
-    host) instead of spawning a new player every time."""
+    host) instead of spawning a new player every time.
+
+    In-game the round loops: living players vote, the most-voted is eliminated
+    (tie → revote), their role is revealed; a Mr. White then gets one guess at the
+    civils' word. Civils win when every threat (intrus + Mr. White) is out; the
+    threats win on reaching parity; a Mr. White also wins alone by guessing right or
+    surviving to parity."""
 
     async def get_room(self):
         return await state_adapter.get_state(f"undercover_room_{self.room_code}")
@@ -29,17 +52,7 @@ class UndercoverConsumer(BaseConsumer):
 
         room = await self.get_room()
         if not room:
-            room = {
-                "host": None,
-                "players": {},
-                "state": "lobby",
-                "messages": [],
-                "clue": "",
-                "categories": ["Anime"],
-                "difficulty": "Normal",
-                "num_undercovers": 1,
-                "votes": {},
-            }
+            room = self._fresh_room()
 
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
 
@@ -52,6 +65,7 @@ class UndercoverConsumer(BaseConsumer):
                 "role": None,
                 "word": None,
                 "image": None,
+                "alive": True,
                 "channel": self.channel_name,
             }
 
@@ -63,6 +77,24 @@ class UndercoverConsumer(BaseConsumer):
         await self.accept()
         await self.broadcast_state()
 
+    def _fresh_room(self):
+        return {
+            "host": None,
+            "players": {},
+            "state": "lobby",
+            "messages": [],
+            "categories": ["Anime"],
+            "difficulty": "Normal",
+            "num_undercovers": 1,
+            "num_mrwhites": 0,
+            "votes": {},
+            "round": 0,
+            "civil_word": "",
+            "undercover_word": "",
+            "pending_white": None,
+            "result": None,
+        }
+
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
         room = await self.get_room()
@@ -71,8 +103,7 @@ class UndercoverConsumer(BaseConsumer):
         player = room["players"].get(self.cid)
         # Only drop the player if this is still their active connection — a refresh
         # often reconnects (updating the channel) before the old socket's disconnect
-        # fires, and we must not remove the just-reconnected player. The host slot is
-        # left as-is so a refreshing host keeps it on reconnect.
+        # fires, and we must not remove the just-reconnected player.
         if player and player.get("channel") == self.channel_name:
             del room["players"][self.cid]
             if not room["players"]:
@@ -94,16 +125,13 @@ class UndercoverConsumer(BaseConsumer):
             await self.save_room(room)
             await self.broadcast_state()
         elif action == "set_settings" and is_host:
-            known = {"Anime", "Manga", "Character", "Movie", "Game", "Actor", "VGChar"}
-            cats = [c for c in (data.get("categories") or []) if c in known]
+            cats = [c for c in (data.get("categories") or []) if c in KNOWN_CATS]
             room["categories"] = cats or ["Anime"]
             room["difficulty"] = data.get("difficulty", "Normal")
-            try:
-                room["num_undercovers"] = max(
-                    1, min(int(data.get("num_undercovers", 1)), 3)
-                )
-            except (TypeError, ValueError):
-                room["num_undercovers"] = 1
+            room["num_undercovers"] = self._as_int(
+                data.get("num_undercovers"), 1, 1, 12
+            )
+            room["num_mrwhites"] = self._as_int(data.get("num_mrwhites"), 0, 0, 12)
             await self.save_room(room)
             await self.broadcast_state()
         elif action == "chat":
@@ -118,21 +146,157 @@ class UndercoverConsumer(BaseConsumer):
         elif action == "start_game" and is_host:
             await self.start_game_logic(room)
         elif action == "vote":
-            room["votes"][self.cid] = data.get("voted_for")
-            await self.save_room(room)
-            await self.broadcast_state()
-        elif action == "reveal" and is_host:
-            room["state"] = "revealed"
-            await self.save_room(room)
-            await self.broadcast_state()
+            await self.handle_vote(room, data.get("voted_for"))
+        elif action == "mrwhite_guess":
+            await self.handle_mrwhite_guess(room, data.get("guess"))
         elif action == "back_to_lobby" and is_host:
-            room["state"] = "lobby"
-            room["votes"], room["messages"] = {}, []
-            for p in room["players"].values():
-                p["role"], p["word"], p["image"] = None, None, None
+            self._reset_to_lobby(room)
             await self.save_room(room)
             await self.broadcast_state()
 
+    @staticmethod
+    def _as_int(value, default, lo, hi):
+        try:
+            return max(lo, min(int(value), hi))
+        except (TypeError, ValueError):
+            return default
+
+    def _reset_to_lobby(self, room):
+        room["state"] = "lobby"
+        room["votes"], room["messages"] = {}, []
+        room["round"] = 0
+        room["pending_white"] = None
+        room["result"] = None
+        room["civil_word"] = room["undercover_word"] = ""
+        for p in room["players"].values():
+            p["role"], p["word"], p["image"], p["alive"] = None, None, None, True
+
+    # ── Voting / elimination loop ───────────────────────────────────────────
+    async def handle_vote(self, room, target):
+        if room["state"] != "playing":
+            return
+        voter = room["players"].get(self.cid)
+        tgt = room["players"].get(target)
+        if not voter or not voter.get("alive") or target == self.cid:
+            return
+        if not tgt or not tgt.get("alive"):
+            return
+        room["votes"][self.cid] = target
+
+        living = [cid for cid, p in room["players"].items() if p.get("alive")]
+        if living and all(cid in room["votes"] for cid in living):
+            await self.resolve_votes(room)
+        else:
+            await self.save_room(room)
+            await self.broadcast_state()
+
+    async def resolve_votes(self, room):
+        living = {cid for cid, p in room["players"].items() if p.get("alive")}
+        tally = {}
+        for tgt in room["votes"].values():
+            if tgt in living:
+                tally[tgt] = tally.get(tgt, 0) + 1
+        room["votes"] = {}
+        if not tally:
+            await self.save_room(room)
+            await self.broadcast_state()
+            return
+
+        top = max(tally.values())
+        leaders = [cid for cid, c in tally.items() if c == top]
+        if len(leaders) > 1:
+            # Égalité : personne n'est éliminé, on relance un vote.
+            self._system(room, "Égalité des votes — personne n'est éliminé, on revote.")
+            await self.save_room(room)
+            await self.broadcast_state()
+            return
+
+        victim_id = leaders[0]
+        victim = room["players"][victim_id]
+        victim["alive"] = False
+        role_label = {
+            "Undercover": "Intrus",
+            "MrWhite": "Mr. White",
+            "Civil": "Civil",
+        }.get(victim["role"], victim["role"])
+        self._system(room, f"{victim['name']} est éliminé — c'était un {role_label}.")
+
+        if victim["role"] == "MrWhite":
+            # Un Mr. White éliminé tente de deviner le mot des civils (1 essai).
+            room["state"] = "mrwhite_guess"
+            room["pending_white"] = victim_id
+            await self.save_room(room)
+            await self.broadcast_state()
+            return
+
+        if not self._check_win(room):
+            room["round"] += 1
+        await self.save_room(room)
+        await self.broadcast_state()
+
+    async def handle_mrwhite_guess(self, room, guess):
+        if room["state"] != "mrwhite_guess" or room["pending_white"] != self.cid:
+            return
+        white = room["players"][self.cid]
+        room["pending_white"] = None
+        if _norm_guess(guess) and _norm_guess(guess) == _norm_guess(room["civil_word"]):
+            self._system(
+                room,
+                f"{white['name']} (Mr. White) a deviné « {room['civil_word']} » — "
+                f"Mr. White l'emporte !",
+            )
+            room["state"] = "ended"
+            room["result"] = {
+                "winner": "mrwhite",
+                "reason": "guess",
+                "mrwhite_winners": [white["name"]],
+            }
+        else:
+            said = (guess or "").strip() or "—"
+            self._system(
+                room, f"{white['name']} (Mr. White) s'est trompé (« {said} »)."
+            )
+            room["state"] = "playing"
+            if not self._check_win(room):
+                room["round"] += 1
+        await self.save_room(room)
+        await self.broadcast_state()
+
+    def _check_win(self, room):
+        """Returns True and sets room['result']/state='ended' if the game is over."""
+        threats = [
+            p
+            for p in room["players"].values()
+            if p.get("alive") and p["role"] in ("Undercover", "MrWhite")
+        ]
+        civils = [
+            p
+            for p in room["players"].values()
+            if p.get("alive") and p["role"] == "Civil"
+        ]
+        if not threats:
+            room["state"] = "ended"
+            room["result"] = {"winner": "civils", "reason": "all_threats_out"}
+            self._system(room, "Tous les intrus sont démasqués — les Civils gagnent !")
+            return True
+        if len(threats) >= len(civils):
+            whites = [p["name"] for p in threats if p["role"] == "MrWhite"]
+            room["state"] = "ended"
+            room["result"] = {
+                "winner": "infiltres",
+                "reason": "parity",
+                "mrwhite_winners": whites,
+            }
+            self._system(
+                room, "Les intrus atteignent la parité — les infiltrés gagnent !"
+            )
+            return True
+        return False
+
+    def _system(self, room, text):
+        room["messages"].append({"user": "", "text": text, "is_system": True})
+
+    # ── Broadcast ───────────────────────────────────────────────────────────
     async def broadcast_chat(self, msg):
         await self.channel_layer.group_send(
             self.room_group_name,
@@ -143,22 +307,26 @@ class UndercoverConsumer(BaseConsumer):
         room = await self.get_room()
         if not room:
             return
-        revealed = room["state"] == "revealed"
-        players_list = [
-            {
+        ended = room["state"] == "ended"
+        pending = room.get("pending_white")
+        players_list = []
+        for cid, p in room["players"].items():
+            alive = p.get("alive", True)
+            entry = {
                 "id": cid,
                 "name": p["name"],
                 "is_host": cid == room["host"],
+                "alive": alive,
                 "has_voted": cid in room["votes"],
-                # Roles/words are only exposed to everyone once the round is revealed.
-                **(
-                    {"role": p["role"], "word": p["word"], "image": p["image"]}
-                    if revealed
-                    else {}
-                ),
             }
-            for cid, p in room["players"].items()
-        ]
+            # Eliminated players are revealed to all; living roles stay hidden
+            # until the game ends.
+            if ended or not alive:
+                entry.update(
+                    {"role": p["role"], "word": p["word"], "image": p["image"]}
+                )
+            players_list.append(entry)
+
         await self.channel_layer.group_send(
             self.room_group_name,
             {
@@ -167,16 +335,25 @@ class UndercoverConsumer(BaseConsumer):
                     "type": "room_state",
                     "state": room["state"],
                     "players": players_list,
-                    "clue": room["clue"],
                     "messages": room["messages"],
                     "difficulty": room["difficulty"],
                     "categories": room.get("categories", ["Anime"]),
                     "num_undercovers": room.get("num_undercovers", 1),
-                    "votes": room["votes"] if revealed else {},
+                    "num_mrwhites": room.get("num_mrwhites", 0),
+                    "round": room.get("round", 0),
+                    "pending_white": pending,
+                    "pending_white_name": (
+                        room["players"][pending]["name"]
+                        if pending and pending in room["players"]
+                        else None
+                    ),
+                    "result": room.get("result"),
+                    "civil_word": room["civil_word"] if ended else "",
+                    "undercover_word": room["undercover_word"] if ended else "",
                 },
             },
         )
-        if room["state"] in ["playing", "revealed"]:
+        if room["state"] in ("playing", "mrwhite_guess", "ended"):
             for p in room["players"].values():
                 await self.channel_layer.send(
                     p["channel"],
@@ -195,9 +372,10 @@ class UndercoverConsumer(BaseConsumer):
         container = get_container()
         game_service = container.core.game_service()
         n_players = len(room["players"])
-        # Keep at least 2 civils so the round stays playable.
-        num_undercovers = max(
-            1, min(room.get("num_undercovers", 1), max(1, n_players - 2))
+        max_threats = _max_threats(n_players)
+        num_undercovers = max(1, min(room.get("num_undercovers", 1), max_threats))
+        num_mrwhites = max(
+            0, min(room.get("num_mrwhites", 0), max_threats - num_undercovers)
         )
         categories = room.get("categories", ["Anime"])
         game_data = await sync_to_async(game_service.start_undercover_game)(
@@ -206,14 +384,10 @@ class UndercoverConsumer(BaseConsumer):
             player_ids=list(room["players"].keys()),
             rank_limits=DIFFICULTY_SETTINGS,
             num_undercovers=num_undercovers,
+            num_mrwhites=num_mrwhites,
         )
         if not game_data:
             return
-
-        # No LLM clue here on purpose: Undercover is a CPU / no-login game and
-        # must never hit the GPU inference stack (which is Berrix-gated and would
-        # also stall the round start). Players describe their own word instead.
-        clue = ""
 
         for cid, p in room["players"].items():
             assignment = game_data["assignments"][cid]
@@ -222,6 +396,18 @@ class UndercoverConsumer(BaseConsumer):
                 assignment["word"],
                 assignment["image"],
             )
-        room["clue"], room["state"] = clue, "playing"
+            p["alive"] = True
+        room["civil_word"] = game_data["civil_word"]
+        room["undercover_word"] = game_data["undercover_word"]
+        room["votes"] = {}
+        room["round"] = 1
+        room["pending_white"] = None
+        room["result"] = None
+        room["messages"] = []
+        self._system(
+            room,
+            "La partie commence ! Décrivez votre mot à tour de rôle, puis votez.",
+        )
+        room["state"] = "playing"
         await self.save_room(room)
         await self.broadcast_state()

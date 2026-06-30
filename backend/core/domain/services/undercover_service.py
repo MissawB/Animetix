@@ -209,11 +209,13 @@ class UndercoverService:
         player_ids: List[str],
         rank_limits: Dict,
         num_undercovers: int = 1,
+        num_mrwhites: int = 0,
     ) -> Dict:
         """Initialise une partie : choix des mots (civil + infiltré), rôles, images.
 
         `categories` est la liste des catégories cochées par l'hôte (anime,
-        manga, perso, film, jeu, acteur, perso de jeu vidéo)."""
+        manga, perso, film, jeu, acteur, perso de jeu vidéo).
+        Un Mr. White n'a pas de mot : il devra deviner celui des civils."""
         cats = [c for c in (categories or []) if c in KNOWN_CATS]
         if not cats:
             cats = ["Anime"]
@@ -232,20 +234,35 @@ class UndercoverService:
             return {}
         civil, undercover = pair
 
-        # 3. Attribution des rôles — le nombre d'infiltrés est paramétrable, en
-        # gardant au moins 2 civils pour que le jeu reste jouable.
+        # 3. Attribution des rôles. Infiltrés + Mr. White sont paramétrables, en
+        # gardant au moins 2 civils pour que la partie reste jouable.
         n = len(player_ids)
-        k = max(1, min(int(num_undercovers or 1), max(1, n - 2)))
-        undercover_ids = set(random.sample(player_ids, k)) if n else set()
+        n_white = max(0, int(num_mrwhites or 0))
+        n_under = max(1, int(num_undercovers or 1))
+        # Plafond commun : au plus (n-1)//2 "menaces" (intrus + Mr. White), pour
+        # que les civils gardent la majorité au départ.
+        max_threats = max(1, (n - 1) // 2)
+        if n_under + n_white > max_threats:
+            n_under = max(1, min(n_under, max_threats))
+            n_white = max(0, min(n_white, max_threats - n_under))
+
+        special = random.sample(player_ids, min(n_under + n_white, n)) if n else []
+        undercover_ids = set(special[:n_under])
+        mrwhite_ids = set(special[n_under : n_under + n_white])
 
         assignments = {}
         for p_id in player_ids:
-            is_under = p_id in undercover_ids
-            assignments[p_id] = {
-                "role": "Undercover" if is_under else "Civil",
-                "word": undercover["label"] if is_under else civil["label"],
-                "image": undercover["image"] if is_under else civil["image"],
-            }
+            if p_id in mrwhite_ids:
+                role, word, image = "MrWhite", None, None
+            elif p_id in undercover_ids:
+                role, word, image = (
+                    "Undercover",
+                    undercover["label"],
+                    undercover["image"],
+                )
+            else:
+                role, word, image = "Civil", civil["label"], civil["image"]
+            assignments[p_id] = {"role": role, "word": word, "image": image}
 
         return {
             "civil_word": civil["label"],

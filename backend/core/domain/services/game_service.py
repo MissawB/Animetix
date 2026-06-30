@@ -146,10 +146,16 @@ class GameService:
         player_ids: List[str],
         rank_limits: Dict,
         num_undercovers: int = 1,
+        num_mrwhites: int = 0,
     ) -> Dict:
         """Délégation au UndercoverService."""
         return self.undercover_service.start_game(
-            categories, difficulty, player_ids, rank_limits, num_undercovers
+            categories,
+            difficulty,
+            player_ids,
+            rank_limits,
+            num_undercovers,
+            num_mrwhites,
         )
 
     def calculate_similarity(
