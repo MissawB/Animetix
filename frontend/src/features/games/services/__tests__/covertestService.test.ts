@@ -35,9 +35,10 @@ describe('covertestService', () => {
     });
   });
 
-  it('getTitles returns the titles array', async () => {
-    mocked.mockResolvedValue({ titles: ['One Piece', 'Bleach'] });
-    expect(await covertestService.getTitles()).toEqual(['One Piece', 'Bleach']);
+  it('getTitles returns the title entries', async () => {
+    const titles = [{ title: 'One Piece', aliases: [] }, { title: 'Bleach', aliases: ['BLEACH'] }];
+    mocked.mockResolvedValue({ titles });
+    expect(await covertestService.getTitles()).toEqual(titles);
     expect(mocked).toHaveBeenCalledWith('/api/v1/game/covertest/titles/', { skipToast: true });
   });
 

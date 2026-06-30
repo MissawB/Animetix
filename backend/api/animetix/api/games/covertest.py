@@ -41,8 +41,35 @@ def _cover_payload(state, reveal=False):
     }
 
 
+def _aliases_for(item, canonical):
+    """English / native / synonym titles for a catalog item, minus the canonical."""
+    if not item:
+        return []
+    names = [item.get("title_english"), item.get("title_native")]
+    names += item.get("alternative_titles", []) or []
+    meta = item.get("metadata") or {}
+    if isinstance(meta, dict):
+        names += meta.get("synonyms", []) or []
+        names += meta.get("alternative_titles", []) or []
+    seen, out = set(), []
+    cn = _normalize_title(canonical)
+    for n in names:
+        if not n:
+            continue
+        key = _normalize_title(n)
+        if not key or key == cn or key in seen:
+            continue
+        seen.add(key)
+        out.append(n)
+    return out
+
+
 class CovertestTitlesView(APIView):
-    """Only manga that actually have a cover — the only guessable / valid answers."""
+    """Only manga that actually have a cover — the only guessable / valid answers.
+
+    Each entry carries its English/native aliases so players can search a manga
+    by its Japanese (romaji) name OR its English name.
+    """
 
     permission_classes = [permissions.AllowAny]
     throttle_classes = []  # CPU quiz, no Bx/GPU: gameplay must not hit the anon day cap
@@ -52,8 +79,26 @@ class CovertestTitlesView(APIView):
         self,
         request,
         cover_test_service=Provide[Container.core.cover_test_service],
+        catalog_service=Provide[Container.core.catalog_service],
     ):
-        return Response({"titles": cover_test_service.list_titles()})
+        entries = cover_test_service.list_entries()
+        catalog = catalog_service.load_data("Manga") or {}
+        by_id = catalog.get("id_to_full_data", {})
+        by_title = catalog.get("title_to_full_data", {})
+        titles = []
+        for e in entries:
+            item = by_id.get(e["id"]) or by_title.get(e["title"])
+            # Union of the data-file aliases and any extra catalog aliases.
+            merged, seen = [], set()
+            cn = _normalize_title(e["title"])
+            for name in list(e.get("aliases", [])) + _aliases_for(item, e["title"]):
+                key = _normalize_title(name)
+                if not key or key == cn or key in seen:
+                    continue
+                seen.add(key)
+                merged.append(name)
+            titles.append({"title": e["title"], "aliases": merged})
+        return Response({"titles": titles})
 
 
 class CovertestGameStateView(APIView):

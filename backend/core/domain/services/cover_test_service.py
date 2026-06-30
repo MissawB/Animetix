@@ -23,6 +23,24 @@ class CoverTestDomainService:
         covers = self._get_covers() or {}
         return sorted({info["title"] for info in covers.values() if info.get("title")})
 
+    def list_entries(self) -> list:
+        """(id, title, aliases) for every manga that has a cover. Aliases (English /
+        native / synonyms, sourced from AniList in the data file) let players search a
+        manga by its Japanese romaji OR its English name."""
+        covers = self._get_covers() or {}
+        out = []
+        for mid, info in covers.items():
+            if not info.get("title"):
+                continue
+            aliases = []
+            for field in ("title_english", "title_native"):
+                if info.get(field):
+                    aliases.append(info[field])
+            aliases += info.get("synonyms", []) or []
+            out.append({"id": str(mid), "title": info["title"], "aliases": aliases})
+        out.sort(key=lambda e: e["title"].lower())
+        return out
+
     def image_for_title(
         self, title: str, locale: Optional[str] = None
     ) -> Optional[str]:

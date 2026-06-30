@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Send, RotateCcw, ArrowRight, Trophy, ImageIcon, Check, X, ChevronRight } from 'lucide-react';
+import { Send, RotateCcw, ArrowRight, Trophy, ImageIcon, Check, X, ChevronRight, Loader2 } from 'lucide-react';
 import { useCovertest } from '../../features/games/hooks/useCovertest';
-import { covertestService } from '../../features/games/services/covertestService';
+import { covertestService, type CovertestTitle } from '../../features/games/services/covertestService';
 import { Card } from '../../components/ui/Card';
 import { CardSkeleton } from '../../components/ui/Skeleton';
 
@@ -75,9 +75,14 @@ const CovertestPage: React.FC = () => {
   const [totalScore, setTotalScore] = useState(0);
   const [results, setResults] = useState<{ score: number; won: boolean; secret?: string }[]>([]);
   const [sessionOver, setSessionOver] = useState(false);
-  const [titles, setTitles] = useState<string[]>([]);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [titles, setTitles] = useState<CovertestTitle[]>([]);
+  // Each suggestion is the canonical title plus, when matched via an alias, the
+  // alias that matched (so "Demon Slayer" surfaces "Kimetsu no Yaiba").
+  const [suggestions, setSuggestions] = useState<{ title: string; via?: string }[]>([]);
   const [showSug, setShowSug] = useState(false);
+  // URL of the cover that finished loading; compared to the current one so we can
+  // show a loader (not the previous round's image) until the new cover is ready.
+  const [loadedUrl, setLoadedUrl] = useState<string | null>(null);
   // Bonus: volume + author guesses
   const [volumeGuess, setVolumeGuess] = useState('');
   const [authorGuess, setAuthorGuess] = useState('');
@@ -115,6 +120,7 @@ const CovertestPage: React.FC = () => {
   const won = guesses.some((g) => g.is_correct);
   const over = !!gameState?.game_over;
   const outOfTries = attemptsUsed >= maxAttempts;
+  const coverLoaded = !!gameState?.cover_url && loadedUrl === gameState.cover_url;
 
   // Out of tries and not solved → reveal the answer (loss).
   useEffect(() => {
@@ -175,32 +181,38 @@ const CovertestPage: React.FC = () => {
     setGuess(val);
     const q = norm(val.trim());
     if (q.length < 2) { setSuggestions([]); setShowSug(false); return; }
-    const starts: string[] = [];
-    const incl: string[] = [];
+    const starts: { title: string; via?: string }[] = [];
+    const incl: { title: string; via?: string }[] = [];
     for (const t of titles) {
-      const n = norm(t);
-      if (n.startsWith(q)) starts.push(t);
-      else if (n.includes(q)) incl.push(t);
-      if (starts.length >= 8) break;
+      if (norm(t.title).startsWith(q)) { starts.push({ title: t.title }); continue; }
+      const aliasStart = t.aliases.find((a) => norm(a).startsWith(q));
+      if (aliasStart) { starts.push({ title: t.title, via: aliasStart }); continue; }
+      if (norm(t.title).includes(q)) { incl.push({ title: t.title }); continue; }
+      const aliasIncl = t.aliases.find((a) => norm(a).includes(q));
+      if (aliasIncl) incl.push({ title: t.title, via: aliasIncl });
     }
     const sug = [...starts, ...incl].slice(0, 8);
     setSuggestions(sug);
     setShowSug(sug.length > 0);
   };
 
-  // Only manga that have a cover are guessable, so a guess must resolve to a known
-  // title (the autocomplete is built from the same list). Canonicalise before sending.
+  // Only manga that have a cover are guessable; a guess must resolve to a known title
+  // (canonical OR any alias). Canonicals are mapped first so they win on collisions.
   const titleByNorm = useMemo(() => {
     const m = new Map<string, string>();
-    for (const t of titles) m.set(norm(t), t);
+    for (const t of titles) m.set(norm(t.title), t.title);
+    for (const t of titles) for (const a of t.aliases) { const k = norm(a); if (!m.has(k)) m.set(k, t.title); }
     return m;
   }, [titles]);
-  const guessValid = titleByNorm.has(norm(guess.trim()));
+  // Valid when the text exactly matches a known name (canonical or alias) OR when at
+  // least one suggestion is shown — so a partial English/Japanese name still resolves.
+  const guessValid = titleByNorm.has(norm(guess.trim())) || suggestions.length > 0;
 
   const submit = async (value?: string) => {
     const raw = (value ?? guess).trim();
     if (!raw || isGuessing || over) return;
-    const canonical = titleByNorm.get(norm(raw));
+    // Exact name → its canonical; otherwise fall back to the top suggestion.
+    const canonical = titleByNorm.get(norm(raw)) ?? suggestions[0]?.title;
     if (!canonical) return; // not a manga with an available cover → not validable
     setShowSug(false);
     setGuess('');
@@ -291,15 +303,22 @@ const CovertestPage: React.FC = () => {
         <div className="relative group">
           <div className="absolute -inset-4 bg-gradient-to-tr from-yellow-400 to-orange-500 rounded-[3rem] blur-2xl opacity-20 group-hover:opacity-30 transition-opacity" />
           <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl aspect-[2/3] bg-navy-900">
+            {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
             <img
+              key={gameState.cover_url}
               src={gameState.cover_url}
               alt="Couverture mystère"
-              className="w-full h-full object-cover transition-all duration-700"
+              onLoad={() => setLoadedUrl(gameState.cover_url)}
+              className={`w-full h-full object-cover transition-all duration-700 ${coverLoaded ? 'opacity-100' : 'opacity-0'}`}
               style={{ filter: coverFilter, transform: over ? 'scale(1.03)' : 'scale(1.08)' }}
-              loading="lazy"
               decoding="async"
             />
-            {!over && (
+            {!coverLoaded && (
+              <div className="absolute inset-0 grid place-items-center">
+                <Loader2 className="w-10 h-10 text-white/40 animate-spin" />
+              </div>
+            )}
+            {!over && coverLoaded && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <div className="bg-black/50 backdrop-blur-md px-5 py-3 rounded-full border-2 border-white/15 flex items-center gap-2 text-white/80">
                   <ImageIcon className="w-5 h-5" />
@@ -346,14 +365,16 @@ const CovertestPage: React.FC = () => {
                 />
                 {showSug && suggestions.length > 0 && (
                   <ul className="absolute z-30 left-0 right-0 mt-2 bg-white dark:bg-[#0f0f1a] rounded-2xl border border-black/10 dark:border-white/10 shadow-2xl overflow-hidden max-h-72 overflow-y-auto">
-                    {suggestions.map((tt) => (
-                      <li key={tt}>
+                    {suggestions.map((s) => (
+                      <li key={s.title}>
                         <button
                           type="button"
-                          onMouseDown={(e) => { e.preventDefault(); submit(tt); }}
-                          className="w-full text-left px-4 py-3 hover:bg-yellow-400/10 font-bold text-sm truncate transition-colors flex items-center gap-2"
+                          onMouseDown={(e) => { e.preventDefault(); submit(s.title); }}
+                          className="w-full text-left px-4 py-3 hover:bg-yellow-400/10 font-bold text-sm transition-colors flex items-center gap-2"
                         >
-                          <ChevronRight className="w-3.5 h-3.5 opacity-40 shrink-0" /> {tt}
+                          <ChevronRight className="w-3.5 h-3.5 opacity-40 shrink-0" />
+                          <span className="truncate">{s.title}</span>
+                          {s.via && <span className="ml-auto shrink-0 max-w-[45%] truncate text-[10px] font-bold italic opacity-50">{s.via}</span>}
                         </button>
                       </li>
                     ))}

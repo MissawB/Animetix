@@ -36,7 +36,7 @@ describe('useCovertest', () => {
     // The guess endpoint returns only round progress (no cover fields); the hook
     // must merge so the cover does not vanish after the first attempt.
     getState.mockResolvedValue(
-      state({ cover_url: 'http://x/cover.jpg', locale: 'ja', secret_title: null, guesses: [] }),
+      state({ cover_url: 'http://x/cover.jpg', locale: 'ja', guesses: [] }),
     );
     const next = {
       guesses: [{ title: 'the spy', is_correct: false }],
@@ -57,7 +57,6 @@ describe('useCovertest', () => {
       expect(result.current.gameState).toEqual({
         cover_url: 'http://x/cover.jpg',
         locale: 'ja',
-        secret_title: null,
         guesses: [{ title: 'the spy', is_correct: false }],
         game_over: false,
       }),
