@@ -56,11 +56,26 @@ const useSocket = (roomCode: string | undefined, type: 'undercover' | 'codemanga
 
     socket.onmessage = (event) => {
       try {
-        const data: SocketData = JSON.parse(event.data);
+        const data = JSON.parse(event.data) as SocketData & Record<string, unknown>;
         if (data.type === 'game_state_update') {
-          setGameState(data.state || null);
+          // Legacy shape (codemanga): full state under `state`.
+          setGameState((data.state as Record<string, unknown>) || null);
+        } else if (data.type === 'room_state') {
+          // Undercover: state fields are at the top level — merge them in.
+          const { type: _t, ...rest } = data;
+          void _t;
+          setGameState((prev) => ({ ...(prev || {}), ...rest }));
+        } else if (data.type === 'private_role') {
+          setGameState((prev) => ({ ...(prev || {}), private_role: data }));
+        } else if (data.type === 'self_id') {
+          setGameState((prev) => ({ ...(prev || {}), myId: data.id }));
         } else if (data.type === 'chat_message') {
-          setMessages((prev) => [...prev, data.message || {}]);
+          const msg = data.message || {};
+          setMessages((prev) => [...prev, msg]);
+          setGameState((prev) => ({
+            ...(prev || {}),
+            messages: [...(((prev?.messages as unknown[]) || [])), msg],
+          }));
         }
       } catch (err) {
         console.error("Erreur de parsing WebSocket:", err);

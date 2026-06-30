@@ -46,6 +46,10 @@ class UndercoverConsumer(BaseConsumer):
 
         await self.save_room(room)
         await self.accept()
+        # Tell this client its own id so it can find itself (host?) in the roster.
+        await self.send(
+            text_data=json.dumps({"type": "self_id", "id": self.channel_name})
+        )
         await self.broadcast_state()
 
     async def disconnect(self, close_code):
@@ -117,12 +121,19 @@ class UndercoverConsumer(BaseConsumer):
         room = await self.get_room()
         if not room:
             return
+        revealed = room["state"] == "revealed"
         players_list = [
             {
                 "id": ch,
                 "name": p["name"],
                 "is_host": p["is_host"],
                 "has_voted": ch in room["votes"],
+                # Roles/words are only exposed to everyone once the round is revealed.
+                **(
+                    {"role": p["role"], "word": p["word"], "image": p["image"]}
+                    if revealed
+                    else {}
+                ),
             }
             for ch, p in room["players"].items()
         ]
@@ -138,6 +149,7 @@ class UndercoverConsumer(BaseConsumer):
                     "messages": room["messages"],
                     "difficulty": room["difficulty"],
                     "media_type": room["media_type"],
+                    "votes": room["votes"] if revealed else {},
                 },
             },
         )
