@@ -54,9 +54,9 @@ const DailyChallengePage: React.FC = () => {
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {data.modes.map((mode: DailyMode) => (
-            <Link 
-              key={mode.id} 
-              to={`/game/${mode.id}/`} 
+            <Link
+              key={mode.id}
+              to={mode.url ?? `/game/${mode.id}/`}
               className="group relative block h-[320px] rounded-[3rem] overflow-hidden shadow-2xl no-underline transition-all hover:translate-y-[-10px] hover:rotate-2"
             >
               {/* Background Gradient */}

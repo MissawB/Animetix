@@ -289,6 +289,7 @@ export interface DailyMode {
   gradient: string;
   description: string;
   icon: string;
+  url?: string;
   completed: boolean;
 }
 
