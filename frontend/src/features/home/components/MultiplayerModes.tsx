@@ -22,10 +22,10 @@ export const MultiplayerModes: React.FC = () => {
               <h3 className="text-black text-4xl font-black italic tracking-tighter manga-font leading-none">{mode.titre}</h3>
               <p className="text-black/70 text-xs font-bold uppercase tracking-widest mt-4 leading-relaxed">{mode.description}</p>
             </div>
-            <img 
-              src={mode.icon_url} 
-              className="absolute -right-4 bottom-0 h-[220px] md:h-[240px] drop-shadow-lg transition-transform group-hover:scale-110 object-contain" 
-              alt={mode.titre} 
+            <img
+              src={mode.icon_url}
+              className="absolute right-2 bottom-0 h-[92%] w-auto max-w-[50%] object-contain object-bottom drop-shadow-lg transition-transform group-hover:scale-105"
+              alt={mode.titre}
               loading="lazy"
               decoding="async"
             />
