@@ -95,7 +95,7 @@ export const useGameModes = () => {
       description: isEn
         ? 'Two players, two secret characters: take turns asking to unmask the other first.'
         : "À deux : chacun son perso secret, à tour de rôle, démasquez l'autre en premier.",
-      icon_url: '/static/img/modes/akinetix.png',
+      icon_url: '/static/img/modes/Qui-est-ce.png',
       url: '/game/quiz-who/lobby/',
     }
     ];
