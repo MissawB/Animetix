@@ -46,7 +46,7 @@
     "react-hook-form": "^7.76.0",
     "react-i18next": "^17.0.8",
     "react-plotly.js": "^2.6.0",
-    "react-router-dom": "^7.15.1",
+    "react-router-dom": "^7.18.1",
     "three": "^0.182.0",
     "zod": "^4.4.3",
     "zustand": "^5.0.13"
