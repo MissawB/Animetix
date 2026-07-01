@@ -85,10 +85,10 @@ export const useGameModes = () => {
     {
       titre: 'Code Manga',
       description: isEn
-        ? 'Make your team guess anime/manga cards with the minimum amount of words.'
-        : 'Faites deviner des cartes d\'anime/manga avec le moins d\'indices possibles.',
+        ? 'Find the anime hidden behind the AI-generated code fragments.'
+        : "Trouvez l'animé caché derrière les fragments de code générés par l'IA.",
       icon_url: '/static/img/modes/codemanga.png',
-      url: '/game/duel/lobby/',
+      url: '/codemanga/room/lobby/',
     },
     {
       titre: 'Qui est-ce ?',

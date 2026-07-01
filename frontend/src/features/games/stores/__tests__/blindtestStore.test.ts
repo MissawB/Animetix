@@ -88,17 +88,21 @@ describe('useBlindtestStore', () => {
   });
 
   it('submitGuess updates gameState with response', async () => {
-    const next = makeState({ guesses: [{ title: 'Bleach', is_correct: false }] });
+    const initial = makeState({ video_url: 'http://v/1', guesses: [] });
+    useBlindtestStore.setState({ gameState: initial, isLoading: false });
+
+    const next = { guesses: [{ title: 'Bleach', is_correct: false }], gameOver: false, won: false };
     mockedService.submitGuess.mockResolvedValue(next);
 
     await useBlindtestStore.getState().submitGuess('Bleach');
 
     expect(mockedService.submitGuess).toHaveBeenCalledWith('Bleach');
-    expect(useBlindtestStore.getState().gameState).toEqual(next);
+    expect(useBlindtestStore.getState().gameState).toEqual({ ...initial, ...next });
     expect(useBlindtestStore.getState().isLoading).toBe(false);
   });
 
   it('submitGuess sets error on failure', async () => {
+    useBlindtestStore.setState({ isLoading: false });
     mockedService.submitGuess.mockRejectedValue(new Error('guess boom'));
 
     await useBlindtestStore.getState().submitGuess('x');

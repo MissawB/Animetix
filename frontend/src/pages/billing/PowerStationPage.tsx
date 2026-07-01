@@ -109,19 +109,6 @@ const PowerStationPage: React.FC = () => {
     }
   };
 
-  const buyPack = async (amount: number, price: string) => {
-    addToast(`Redirection vers Stripe pour le pack ${amount} Bx (${price})...`, 'info');
-    setTimeout(async () => {
-       try {
-         await apiClient('/api/v1/profiles/refill_quota/', { method: 'POST' }); 
-         addToast("Achat réussi (Simulé) !", "success");
-         await refetchUser();
-         fetchLedger(1, filterType, filterDirection);
-       } catch (_e) {
-         addToast("Erreur lors de l'achat.", "error");
-       }
-    }, 2000);
-  };
 
   return (
     <AnimatedPage>
@@ -182,31 +169,6 @@ const PowerStationPage: React.FC = () => {
                 </div>
               </motion.div>
 
-              {/* Stripe purchases */}
-              <div className="space-y-4">
-                <h3 className="text-sm font-black uppercase tracking-[0.3em] text-gray-400 border-l-4 border-cyan-400 pl-4">Direct Purchase</h3>
-                <button 
-                  onClick={() => buyPack(10000, "4.99€")}
-                  className="w-full p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-cyan-500/50 hover:bg-cyan-500/5 transition-all text-left flex justify-between items-center group"
-                >
-                  <div>
-                    <div className="text-lg font-black italic manga-font uppercase text-white">Pack Initié</div>
-                    <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest">10k Bx + Badge Bronze</p>
-                  </div>
-                  <span className="text-lg font-black text-cyan-400">4.99€</span>
-                </button>
-
-                <button 
-                  onClick={() => buyPack(25000, "9.99€")}
-                  className="w-full p-6 rounded-2xl bg-cyan-900/20 border border-cyan-500/30 hover:border-cyan-400 hover:bg-cyan-900/30 transition-all text-left flex justify-between items-center group shadow-[0_0_20px_rgba(6,182,212,0.05)]"
-                >
-                  <div>
-                    <div className="text-lg font-black italic manga-font uppercase text-white">Pack Elite</div>
-                    <p className="text-[9px] text-cyan-300 font-bold uppercase tracking-widest">25k Bx + Badge Argent</p>
-                  </div>
-                  <span className="text-lg font-black text-cyan-400">9.99€</span>
-                </button>
-              </div>
             </div>
 
             {/* Right Column: Attention Mining Node & Active Mining */}
