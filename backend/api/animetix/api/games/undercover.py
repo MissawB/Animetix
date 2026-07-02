@@ -19,7 +19,7 @@ class UndercoverPublicRoomsView(APIView):
     """
 
     permission_classes = [permissions.AllowAny]
-    throttle_classes = []
+    throttle_classes: list = []
 
     def get(self, request):
         codes = cache.get(INDEX_KEY) or []

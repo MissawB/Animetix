@@ -24,6 +24,7 @@ class CatalogService:
         self.sql_repository = sql_repository or repository
         self.cache = cache_service
         self._cached_catalogs: Dict[str, Any] = {}
+        self._emoji_sequences: Optional[Dict] = None
 
     def load_data(self, media_type: str) -> Optional[Dict]:
         """Backward compatibility method for AnimetixService.load_data."""
@@ -138,7 +139,7 @@ class CatalogService:
         """
         import os  # noqa: E402
 
-        if getattr(self, "_emoji_sequences", None) is not None:
+        if self._emoji_sequences is not None:
             return self._emoji_sequences
         path = os.path.join(
             getattr(self.repository, "project_root", ""),

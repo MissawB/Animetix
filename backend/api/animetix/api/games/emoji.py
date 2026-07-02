@@ -83,7 +83,7 @@ def _start_game(port, catalog_service, emoji_service, media_type, difficulty="No
 
 class EmojiGameStateView(APIView):
     permission_classes = [permissions.AllowAny]
-    throttle_classes = []  # CPU game, no Bx: must not hit the anon day cap
+    throttle_classes: list = []  # CPU game, no Bx: must not hit the anon day cap
 
     @inject
     def get(
@@ -127,7 +127,7 @@ class EmojiGameStateView(APIView):
 
 class EmojiGameStartView(APIView):
     permission_classes = [permissions.AllowAny]
-    throttle_classes = []  # CPU game, no Bx
+    throttle_classes: list = []  # CPU game, no Bx
 
     @inject
     def post(
@@ -168,7 +168,7 @@ class EmojiGameStartView(APIView):
 
 class EmojiGameGuessView(APIView):
     permission_classes = [permissions.AllowAny]
-    throttle_classes = []  # CPU game, no Bx
+    throttle_classes: list = []  # CPU game, no Bx
 
     @inject
     def post(
@@ -280,7 +280,7 @@ class EmojiGameGiveUpView(APIView):
     """
 
     permission_classes = [permissions.AllowAny]
-    throttle_classes = []
+    throttle_classes: list = []
 
     def post(self, request):
         port = get_session_service(request).port
@@ -325,7 +325,7 @@ class EmojiGameSuggestView(APIView):
     """
 
     permission_classes = [permissions.AllowAny]
-    throttle_classes = []
+    throttle_classes: list = []
     MAX_SUGGESTIONS = 8
 
     @inject

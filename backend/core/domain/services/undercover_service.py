@@ -391,15 +391,15 @@ class UndercoverService:
         catalog = self.catalog_service.get_catalog(category)
         lookup = (catalog or {}).get("lookup") or []
         t2d = (catalog or {}).get("title_to_full_data") or {}
-        entries = []
+        result: List[Dict] = []
         for row in lookup[:limit]:
             label = row.get("title") or row.get("name")
             item = t2d.get(str(label))
             if item:
                 entry = self._make_entry(item, category)
                 if entry:
-                    entries.append(entry)
-        return entries
+                    result.append(entry)
+        return result
 
     def _make_entry(self, item: Dict, category: str) -> Optional[Dict]:
         label = item.get("title") or item.get("name")

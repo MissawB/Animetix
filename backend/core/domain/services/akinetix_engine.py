@@ -179,8 +179,11 @@ class AkinetixEngine:
     def _item_era(item: Dict) -> Optional[str]:
         """Tranche temporelle d'une œuvre (à partir de ``year``), formulée pour
         une question naturelle. Nouvel axe : « Est-ce sorti dans les années X ? »."""
+        year = item.get("year")
+        if year is None:
+            return None
         try:
-            y = int(item.get("year"))
+            y = int(year)
         except (TypeError, ValueError):
             return None
         if y < 1990:
