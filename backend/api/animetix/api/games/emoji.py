@@ -19,7 +19,9 @@ logger = get_logger("animetix." + __name__)
 
 def _revealed(port):
     """Emojis shown so far: 1 at the start, +1 per wrong guess, all when won."""
-    full = port.get("emoji_list", []) or []
+    full = port.get("emoji_list") or []
+    if not isinstance(full, list):  # legacy sessions stored a raw emoji string
+        full = []
     if port.get("emoji_game_over", False):
         return full
     wrong = sum(1 for g in port.get("emoji_guesses", []) if not g.get("is_correct"))
@@ -70,7 +72,9 @@ class EmojiGameStateView(APIView):
     ):
         port = get_session_service(request).port
         secret = port.get("emoji_secret")
-        if not secret:
+        # Rebuild if there is no game OR the stored sequence is legacy/corrupt
+        # (old sessions kept emoji_list as a raw string, which the SPA can't map).
+        if not secret or not isinstance(port.get("emoji_list"), list):
             media_type = port.get("media_type", "Anime")
             secret, media_type = _start_game(
                 port, catalog_service, emoji_service, media_type

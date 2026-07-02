@@ -39,6 +39,30 @@ def api_client():
     return APIClient()
 
 
+# --------------------------------------------------------------------------- #
+# _revealed helper — progressive reveal + legacy-session robustness
+# --------------------------------------------------------------------------- #
+def test_revealed_coerces_legacy_string_to_empty_list():
+    """Old sessions stored emoji_list as a raw string; slicing it must not leak
+    a string to the SPA (which crashes on `.map`)."""
+    from animetix.api.games.emoji import _revealed
+
+    out = _revealed({"emoji_list": "🍥🦊", "emoji_guesses": []})
+    assert isinstance(out, list)
+    assert out == []
+
+
+def test_revealed_progressive_and_full_on_game_over():
+    from animetix.api.games.emoji import _revealed
+
+    port = {"emoji_list": ["a", "b", "c"], "emoji_guesses": []}
+    assert _revealed(port) == ["a"]  # start: 1 shown
+    port["emoji_guesses"] = [{"is_correct": False}]
+    assert _revealed(port) == ["a", "b"]  # +1 per wrong guess
+    port["emoji_game_over"] = True
+    assert _revealed(port) == ["a", "b", "c"]  # all on win
+
+
 @pytest.fixture
 def mock_catalog():
     return {

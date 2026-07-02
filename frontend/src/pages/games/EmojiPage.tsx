@@ -32,6 +32,10 @@ const EmojiPage: React.FC = () => {
   
   if (!gameState) return null;
 
+  // Défensif : d'anciennes sessions renvoyaient `emojis` en chaîne (non-array).
+  const revealed: string[] = Array.isArray(gameState.emojis) ? gameState.emojis : [];
+  const totalEmojis = gameState.total_emojis || revealed.length;
+
   return (
     
       <div className="max-w-4xl mx-auto p-6 text-center py-16">
@@ -42,19 +46,19 @@ const EmojiPage: React.FC = () => {
         <Card padding="lg" className="bg-gradient-to-r from-orange-500 to-red-600 mb-12 text-white border-none relative overflow-hidden group">
           <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
           <div className="text-6xl md:text-8xl tracking-[0.3em] mb-6 flex flex-wrap justify-center items-center gap-2 drop-shadow-lg min-h-[6rem]">
-              {(gameState.emojis || []).map((e, i) => (
+              {revealed.map((e, i) => (
                 <span key={i} className="animate-in fade-in zoom-in duration-500">{e}</span>
               ))}
-              {Array.from({ length: Math.max(0, (gameState.total_emojis || 0) - (gameState.emojis?.length || 0)) }).map((_, i) => (
+              {Array.from({ length: Math.max(0, totalEmojis - revealed.length) }).map((_, i) => (
                 <span key={`h-${i}`} className="opacity-25 select-none">◻️</span>
               ))}
           </div>
           <p className="font-black italic text-sm uppercase tracking-widest opacity-80 flex items-center justify-center gap-2">
               <Sparkles className="w-4 h-4" /> Du plus vague au plus évident — un nouvel indice à chaque essai raté.
           </p>
-          {gameState.total_emojis > 0 && (
+          {totalEmojis > 0 && (
             <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60 mt-3">
-              Indice {Math.min(gameState.emojis?.length || 0, gameState.total_emojis)} / {gameState.total_emojis}
+              Indice {Math.min(revealed.length, totalEmojis)} / {totalEmojis}
             </p>
           )}
         </Card>
