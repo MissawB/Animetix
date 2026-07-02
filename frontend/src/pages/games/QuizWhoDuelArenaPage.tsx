@@ -1,188 +1,223 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Loader2, X, Trophy, Frown, HelpCircle, Check, Hourglass, Copy } from 'lucide-react';
+import React, { useState } from 'react';
+import { useParams } from 'react-router-dom';
+import useSocket from '../../hooks/useSocket';
 import {
-  quizWhoDuelService,
-  type QWDuelState,
-} from '../../features/games/services/quizWhoDuelService';
-import { useToastStore } from '../../store/toastStore';
+  X, Trophy, Frown, HelpCircle, Check, Hourglass, Copy, Crown, Radio, Search,
+  Play, RotateCcw, Eye, Send,
+} from 'lucide-react';
+
+interface QCard { id: string; title: string; image?: string }
+interface QQ { attr: string; label: string }
+interface QPlayer { num: number; name: string; is_host?: boolean }
+interface QAns { by: number; name?: string; label: string; answer: string }
+interface QMsg { user: string; text: string; is_system?: boolean }
+
+const UNIVERSES = [
+  { key: 'Character', label: 'Personnages' },
+  { key: 'Anime', label: 'Anime' },
+  { key: 'Manga', label: 'Manga' },
+];
+const DIFFS = [
+  { key: 'Easy', label: 'Facile', hint: 'persos très connus' },
+  { key: 'Normal', label: 'Normal', hint: 'persos connus' },
+  { key: 'Hard', label: 'Difficile', hint: 'persos pointus' },
+  { key: 'Impossible', label: 'Extrême', hint: 'persos obscurs' },
+];
+
+const panel = 'rounded-[1.75rem] border-2 border-white/5 bg-[#0d0f17]/80 backdrop-blur-xl shadow-2xl';
 
 const QuizWhoDuelArenaPage: React.FC = () => {
   const { roomCode = '' } = useParams();
-  const navigate = useNavigate();
-  const addToast = useToastStore((s) => s.addToast);
-  const [st, setSt] = useState<QWDuelState | null>(null);
-  const [busy, setBusy] = useState(false);
-  const finishedRef = useRef(false);
+  const { gameState, connected, sendAction } = useSocket(roomCode, 'quizwho');
+  const [name, setName] = useState('');
+  const [chat, setChat] = useState('');
+  const [copied, setCopied] = useState(false);
 
-  const refresh = useCallback(async () => {
-    try {
-      const data = await quizWhoDuelService.state(roomCode);
-      setSt(data);
-      finishedRef.current = data.finished;
-    } catch {
-      /* keep last state on a transient poll failure */
-    }
-  }, [roomCode]);
+  const gs = (gameState || {}) as Record<string, unknown>;
+  const state = (gs.state as string) || 'lobby';
+  const board = (gs.board as QCard[]) || [];
+  const questions = (gs.questions as QQ[]) || [];
+  const players = (gs.players as QPlayer[]) || [];
+  const lastAnswer = (gs.last_answer as QAns) || null;
+  const winner = (gs.winner as number) || null;
+  const messages = (gs.messages as QMsg[]) || [];
+  const mediaType = (gs.media_type as string) || 'Character';
+  const difficulty = (gs.difficulty as string) || 'Normal';
+  const myNum = (gs.your_num as number) || 0;
+  const isHost = !!gs.is_host;
+  const mySecretId = gs.your_secret_id as string | undefined;
+  const mySecretTitle = gs.your_secret_title as string | undefined;
+  const eliminated = new Set((gs.your_eliminated as string[]) || []);
+  const yourTurn = !!gs.your_turn;
+  const youWon = !!gs.you_won;
+  const opponentJoined = !!gs.opponent_joined;
+  const code = (roomCode || '').toUpperCase();
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    refresh();
-    const id = setInterval(() => {
-      if (!finishedRef.current) refresh();
-    }, 1500);
-    return () => clearInterval(id);
-  }, [refresh]);
-
-  const eliminated = new Set(st?.your_eliminated || []);
-
-  const ask = async (attr: string) => {
-    if (busy || !st?.your_turn) return;
-    setBusy(true);
-    try {
-      await quizWhoDuelService.ask(roomCode, attr);
-      await refresh();
-    } catch {
-      addToast('Action impossible.', 'error');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const guess = async (id: string) => {
-    if (busy || !st?.your_turn || eliminated.has(id)) return;
-    setBusy(true);
-    try {
-      const res = await quizWhoDuelService.guess(roomCode, id);
-      if (!res.correct) addToast("Raté ! Au tour de l'adversaire.", 'error');
-      await refresh();
-    } catch {
-      addToast('Tentative impossible.', 'error');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  if (!st) {
+  if (!connected) {
     return (
-      <div className="text-center py-24 text-black dark:text-white font-black uppercase tracking-[0.3em] animate-pulse">
-        Connexion à la salle…
+      <div className="min-h-[60vh] grid place-items-center">
+        <div className="flex flex-col items-center gap-4 text-teal-300">
+          <Radio className="w-12 h-12 animate-pulse" />
+          <p className="font-black uppercase tracking-[0.4em] animate-pulse">Connexion au duel…</p>
+        </div>
       </div>
     );
   }
 
-  const byId = Object.fromEntries(st.board.map((b) => [b.id, b]));
-  const remaining = st.board.filter((b) => !eliminated.has(b.id)).length;
+  const copyCode = () => { navigator.clipboard?.writeText(code); setCopied(true); setTimeout(() => setCopied(false), 1500); };
+  const submitName = () => { if (name.trim()) sendAction('set_name', { name: name.trim() }); };
+  const applySettings = (patch: Record<string, unknown>) => sendAction('set_settings', { media_type: mediaType, difficulty, ...patch });
+  const ask = (attr: string) => { if (yourTurn) sendAction('ask', { attribute: attr }); };
+  const guess = (id: string) => { if (yourTurn && !eliminated.has(id)) sendAction('guess', { guess_id: id }); };
+  const sendChat = (e: React.FormEvent) => { e.preventDefault(); if (chat.trim()) { sendAction('chat', { message: chat.trim() }); setChat(''); } };
 
-  // End screen
-  if (st.finished) {
-    return (
-      <div className="max-w-xl mx-auto px-6 py-20 text-center">
-        {st.you_won ? (
-          <>
-            <Trophy className="w-20 h-20 text-yellow-400 mx-auto mb-6 animate-bounce" />
-            <h1 className="text-4xl font-black italic uppercase mb-2 text-black dark:text-white">Victoire !</h1>
-            <p className="text-gray-500 dark:text-white/60">Tu as démasqué le perso adverse en premier.</p>
-          </>
-        ) : (
-          <>
-            <Frown className="w-20 h-20 text-gray-400 mx-auto mb-6" />
-            <h1 className="text-4xl font-black italic uppercase mb-2 text-black dark:text-white">Perdu…</h1>
-            <p className="text-gray-500 dark:text-white/60">L'adversaire a trouvé ton perso avant toi.</p>
-          </>
-        )}
-        <button
-          onClick={() => navigate('/game/quiz-who/lobby/')}
-          className="mt-8 inline-flex items-center gap-2 bg-yellow-400 text-black font-black italic uppercase tracking-widest px-8 py-4 rounded-2xl hover:scale-105 transition-all"
-        >
-          Rejouer
-        </button>
-      </div>
-    );
-  }
+  const opponent = players.find((p) => p.num !== myNum && p.num > 0);
+  const remaining = board.filter((b) => !eliminated.has(b.id)).length;
+  const isSpectator = myNum === 0;
 
-  // Waiting for opponent
-  if (!st.opponent_joined) {
-    return (
-      <div className="max-w-md mx-auto px-6 py-24 text-center">
-        <Hourglass className="w-14 h-14 text-yellow-400 mx-auto mb-6 animate-pulse" />
-        <h1 className="text-2xl font-black italic uppercase mb-3 text-black dark:text-white">En attente d'un adversaire</h1>
-        <p className="text-gray-500 dark:text-white/60 mb-6">Partage ce code à un ami :</p>
-        <button
-          onClick={() => {
-            navigator.clipboard?.writeText(roomCode);
-            addToast('Code copié !', 'success');
-          }}
-          className="inline-flex items-center gap-3 text-4xl font-black tracking-[0.4em] text-black dark:text-white bg-black/5 dark:bg-white/10 px-8 py-4 rounded-2xl"
-        >
-          {roomCode} <Copy className="w-5 h-5 opacity-50" />
-        </button>
-      </div>
-    );
-  }
-
-  const mySecret = byId[st.your_secret_id];
-
-  return (
-    <div className="max-w-6xl mx-auto px-6 py-10">
-      <header className="flex flex-wrap items-center justify-between gap-4 mb-8">
+  // ── Banner ──────────────────────────────────────────────────────────────
+  const banner = (
+    <div className="relative overflow-hidden rounded-[2rem] border-2 border-teal-500/30 bg-gradient-to-br from-teal-950/50 via-[#0d0f17] to-[#0d0f17] p-5 sm:p-7 mb-6 shadow-[0_0_60px_-15px_rgba(20,184,166,0.4)]">
+      <div className="absolute -right-10 -top-10 w-40 h-40 bg-teal-500/20 blur-[80px] rounded-full pointer-events-none" />
+      <div className="relative flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Salle {st.room_code}</p>
-          <h1 className="text-3xl font-black italic manga-font uppercase text-black dark:text-white">Qui est-ce ? Duel</h1>
+          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.4em] text-teal-300 mb-2"><Search className="w-4 h-4" /> Qui est-ce ? · Duel</div>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl sm:text-5xl font-black italic manga-font uppercase tracking-tighter text-white leading-none">Duel</h1>
+            <button onClick={copyCode} title="Copier le code" className="group inline-flex items-center gap-2 rounded-xl border-2 border-teal-500/40 bg-teal-500/10 hover:bg-teal-500/20 px-3.5 py-1.5 transition-all">
+              <span className="text-xl sm:text-2xl font-black tracking-[0.25em] text-teal-200 font-mono">{code}</span>
+              {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-teal-300 opacity-60 group-hover:opacity-100" />}
+            </button>
+          </div>
         </div>
-        <div
-          className={`px-5 py-2.5 rounded-2xl font-black uppercase tracking-widest text-sm ${
-            st.your_turn ? 'bg-green-500/15 text-green-500' : 'bg-black/5 dark:bg-white/10 text-gray-500'
-          }`}
-        >
-          {st.your_turn ? 'À toi de jouer' : "Tour de l'adversaire…"}
-        </div>
-      </header>
+        {state === 'playing' && !winner && (
+          <div className={`px-4 py-2 rounded-2xl font-black uppercase tracking-widest text-sm ${yourTurn ? 'bg-green-500/20 text-green-300' : 'bg-white/10 text-white/50'}`}>
+            {isSpectator ? 'Spectateur' : yourTurn ? 'À toi de jouer' : "Tour de l'adversaire…"}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 
-      {/* Your secret */}
-      {mySecret && (
-        <div className="flex items-center gap-4 rounded-2xl border-2 border-yellow-400/40 bg-yellow-400/5 p-3 mb-6 max-w-sm">
-          {mySecret.image && <img src={mySecret.image} alt="" className="w-12 h-16 object-cover rounded-lg" />}
+  // ── LOBBY ───────────────────────────────────────────────────────────────
+  if (state === 'lobby') {
+    return (
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
+        {banner}
+        <div className={`${panel} p-6 space-y-6`}>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-yellow-500">Ton perso (à protéger)</p>
-            <p className="font-black text-black dark:text-white">{mySecret.title}</p>
+            <p className="text-[11px] font-black uppercase tracking-[0.25em] text-teal-300/70 mb-2">Ton pseudo</p>
+            <div className="flex gap-2">
+              <input value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') submitName(); }}
+                placeholder="Pseudo…" maxLength={20} aria-label="Pseudo"
+                className="flex-grow p-3 rounded-xl bg-white/[0.04] border-2 border-white/10 focus:border-teal-400 outline-none font-bold text-white placeholder:text-white/25" />
+              <button onClick={submitName} className="px-5 rounded-xl bg-teal-500 hover:bg-teal-400 text-white font-black uppercase text-sm">OK</button>
+            </div>
+          </div>
+
+          {/* Players */}
+          <div className="grid grid-cols-2 gap-3">
+            {[1, 2].map((n) => {
+              const p = players.find((pl) => pl.num === n);
+              return (
+                <div key={n} className={`rounded-2xl border-2 p-4 ${p ? 'border-teal-500/40 bg-teal-500/5' : 'border-white/10 border-dashed'}`}>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-1">Joueur {n}</p>
+                  {p ? (
+                    <p className="font-black text-white flex items-center gap-1.5">{p.name}{p.is_host && <Crown className="w-4 h-4 text-yellow-400" />}{p.num === myNum && <span className="text-teal-300 text-xs">· toi</span>}</p>
+                  ) : (
+                    <p className="text-white/30 italic flex items-center gap-2"><Hourglass className="w-4 h-4 animate-pulse" /> en attente…</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {isHost ? (
+            <>
+              <div>
+                <p className="text-[11px] font-black uppercase tracking-[0.25em] text-white/40 mb-2">Univers</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {UNIVERSES.map((u) => (
+                    <button key={u.key} onClick={() => applySettings({ media_type: u.key })}
+                      className={`py-2.5 rounded-xl border-2 text-xs font-black uppercase transition-all ${mediaType === u.key ? 'border-teal-500 bg-teal-500/15 text-teal-300' : 'border-white/10 text-white/40 hover:border-teal-500/40'}`}>{u.label}</button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="text-[11px] font-black uppercase tracking-[0.25em] text-white/40 mb-2">Difficulté · connaissances</p>
+                <div className="grid grid-cols-4 gap-2">
+                  {DIFFS.map((d) => (
+                    <button key={d.key} onClick={() => applySettings({ difficulty: d.key })}
+                      className={`py-2.5 rounded-xl border-2 text-[11px] font-black uppercase transition-all ${difficulty === d.key ? 'border-teal-500 bg-teal-500/15 text-teal-300' : 'border-white/10 text-white/40 hover:border-teal-500/40'}`}>{d.label}</button>
+                  ))}
+                </div>
+                <p className="mt-2 text-[11px] text-white/35 italic">{DIFFS.find((d) => d.key === difficulty)?.hint} — plus c'est dur, plus les persos sont obscurs.</p>
+              </div>
+              <button onClick={() => sendAction('start_game')} disabled={!opponentJoined}
+                className="w-full py-4 rounded-2xl bg-teal-600 enabled:hover:bg-teal-500 text-white font-black italic uppercase tracking-widest text-lg shadow-[0_10px_30px_-10px_rgba(20,184,166,0.7)] transition-all enabled:hover:scale-[1.01] active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                <Play className="w-5 h-5 fill-current" /> Lancer le duel
+              </button>
+              {!opponentJoined && <p className="text-center text-[11px] font-bold uppercase tracking-widest text-white/35">En attente du 2ᵉ joueur — partage le code {code}</p>}
+            </>
+          ) : (
+            <p className="text-center opacity-40 italic py-2">{isSpectator ? 'Duel complet — tu es spectateur.' : "En attente du lancement par l'hôte…"}</p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ── ENDED ───────────────────────────────────────────────────────────────
+  if (state === 'ended') {
+    const winnerName = players.find((p) => p.num === winner)?.name || `Joueur ${winner}`;
+    return (
+      <div className="max-w-lg mx-auto px-6 py-16 text-center">
+        {youWon ? (
+          <><Trophy className="w-20 h-20 text-yellow-400 mx-auto mb-6 animate-bounce" /><h1 className="text-4xl font-black italic uppercase mb-2 text-white">Victoire !</h1><p className="text-white/60">Tu as démasqué le perso adverse en premier.</p></>
+        ) : isSpectator ? (
+          <><Search className="w-20 h-20 text-teal-300 mx-auto mb-6" /><h1 className="text-4xl font-black italic uppercase mb-2 text-white">{winnerName} gagne</h1></>
+        ) : (
+          <><Frown className="w-20 h-20 text-white/40 mx-auto mb-6" /><h1 className="text-4xl font-black italic uppercase mb-2 text-white">Perdu…</h1><p className="text-white/60">L'adversaire a trouvé ton perso avant toi.</p></>
+        )}
+        {isHost && (
+          <button onClick={() => sendAction('back_to_lobby')} className="mt-8 inline-flex items-center gap-2 bg-teal-500 hover:bg-teal-400 text-white font-black italic uppercase tracking-widest px-8 py-4 rounded-2xl transition-all">
+            <RotateCcw className="w-5 h-5" /> Rejouer
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  // ── PLAYING ─────────────────────────────────────────────────────────────
+  return (
+    <div className="max-w-[1500px] mx-auto px-4 sm:px-6 py-8">
+      {banner}
+      {mySecretId && !isSpectator && (
+        <div className="flex items-center gap-4 rounded-2xl border-2 border-teal-400/40 bg-teal-400/5 p-3 mb-5 max-w-md">
+          {board.find((b) => b.id === mySecretId)?.image
+            ? <img src={board.find((b) => b.id === mySecretId)?.image} alt="" className="w-12 h-16 object-cover rounded-lg" />
+            : <div className="w-12 h-16 rounded-lg bg-white/10 grid place-items-center"><Eye className="w-5 h-5 text-white/30" /></div>}
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-widest text-teal-300">Ton perso secret (à protéger)</p>
+            <p className="font-black text-white text-lg">{mySecretTitle}</p>
           </div>
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Board (the opponent's secret to find) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Board */}
         <div className="lg:col-span-8">
-          <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-            {st.board.map((c) => {
+          <div className="grid grid-cols-4 sm:grid-cols-4 gap-3">
+            {board.map((c) => {
               const out = eliminated.has(c.id);
+              const clickable = yourTurn && !out && !isSpectator;
               return (
-                <button
-                  key={c.id}
-                  onClick={() => guess(c.id)}
-                  disabled={out || busy || !st.your_turn}
-                  title={st.your_turn ? `Deviner : ${c.title}` : c.title}
-                  className={`group relative aspect-[3/4] rounded-2xl overflow-hidden border-2 transition-all ${
-                    out
-                      ? 'border-transparent opacity-30 grayscale'
-                      : st.your_turn
-                        ? 'border-black/5 dark:border-white/10 hover:border-yellow-400 hover:scale-[1.03] cursor-pointer'
-                        : 'border-black/5 dark:border-white/10'
-                  }`}
-                >
-                  {c.image ? (
-                    <img src={c.image} alt={c.title} loading="lazy" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full grid place-items-center bg-black/40 text-gray-500 text-xs">{c.title}</div>
-                  )}
-                  {out && (
-                    <span className="absolute inset-0 grid place-items-center bg-black/40">
-                      <X className="w-10 h-10 text-red-500" strokeWidth={3} />
-                    </span>
-                  )}
-                  <span className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 to-transparent p-2 pt-6">
-                    <span className="block text-[10px] font-black uppercase text-white truncate text-left">{c.title}</span>
-                  </span>
+                <button key={c.id} onClick={() => guess(c.id)} disabled={!clickable}
+                  title={clickable ? `Accuser : ${c.title}` : c.title}
+                  className={`group relative aspect-[3/4] rounded-2xl overflow-hidden border-2 transition-all ${out ? 'border-transparent opacity-25 grayscale' : clickable ? 'border-white/10 hover:border-teal-400 hover:scale-[1.03] cursor-pointer' : 'border-white/10'}`}>
+                  {c.image ? <img src={c.image} alt={c.title} loading="lazy" className="w-full h-full object-cover" /> : <div className="w-full h-full grid place-items-center bg-black/40 text-white/40 text-xs p-1 text-center">{c.title}</div>}
+                  {out && <span className="absolute inset-0 grid place-items-center bg-black/50"><X className="w-10 h-10 text-red-500" strokeWidth={3} /></span>}
+                  <span className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 to-transparent p-1.5 pt-5"><span className="block text-[10px] font-black uppercase text-white truncate text-left">{c.title}</span></span>
                 </button>
               );
             })}
@@ -190,63 +225,59 @@ const QuizWhoDuelArenaPage: React.FC = () => {
         </div>
 
         {/* Side panel */}
-        <div className="lg:col-span-4 space-y-5 lg:sticky lg:top-24">
-          <div className="rounded-2xl border-2 border-black/5 dark:border-white/10 bg-surface-card p-4 flex items-center justify-between">
-            <span className="text-xs font-black uppercase tracking-widest text-gray-400">Restants</span>
-            <span className="text-2xl font-black tabular-nums text-yellow-500">{remaining}</span>
+        <div className="lg:col-span-4 space-y-4 lg:sticky lg:top-24">
+          <div className={`${panel} p-4 flex items-center justify-between`}>
+            <span className="text-xs font-black uppercase tracking-widest text-white/40">Restants</span>
+            <span className="text-2xl font-black tabular-nums text-teal-300">{remaining}</span>
           </div>
 
-          {st.last_answer && (
-            <div
-              className={`rounded-2xl border-2 p-4 ${
-                st.last_answer.answer === 'OUI'
-                  ? 'border-green-500/40 bg-green-500/10'
-                  : st.last_answer.answer === 'NON'
-                    ? 'border-red-500/40 bg-red-500/10'
-                    : 'border-white/20 bg-black/5 dark:bg-white/5'
-              }`}
-            >
-              <p className="text-[10px] font-black uppercase tracking-widest opacity-50 mb-1">
-                {st.last_answer.by === st.your_player ? 'Toi' : 'Adversaire'}
-              </p>
-              <p className="text-[11px] font-bold opacity-70 mb-1">{st.last_answer.label}</p>
-              <p className="flex items-center gap-2 font-black italic uppercase text-sm">
-                {st.last_answer.answer === 'OUI' && <Check className="w-4 h-4 text-green-500" />}
-                {st.last_answer.answer === 'NON' && <X className="w-4 h-4 text-red-500" />}
-                {st.last_answer.answer}
+          {lastAnswer && (
+            <div className={`rounded-2xl border-2 p-4 ${lastAnswer.answer === 'OUI' ? 'border-green-500/40 bg-green-500/10' : lastAnswer.answer === 'NON' ? 'border-red-500/40 bg-red-500/10' : 'border-white/20 bg-white/5'}`}>
+              <p className="text-[10px] font-black uppercase tracking-widest opacity-50 mb-1">{lastAnswer.by === myNum ? 'Toi' : (opponent?.name || 'Adversaire')}</p>
+              <p className="text-[11px] font-bold opacity-70 mb-1">{lastAnswer.label}</p>
+              <p className="flex items-center gap-2 font-black italic uppercase text-sm text-white">
+                {lastAnswer.answer === 'OUI' && <Check className="w-4 h-4 text-green-400" />}
+                {lastAnswer.answer === 'NON' && <X className="w-4 h-4 text-red-400" />}
+                {lastAnswer.answer}
               </p>
             </div>
           )}
 
-          {st.your_turn ? (
-            <div>
-              <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 mb-3 flex items-center gap-2">
-                <HelpCircle className="w-4 h-4" /> Pose une question
-              </h3>
-              <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-1 custom-scrollbar">
-                {st.questions.map((q) => (
-                  <button
-                    key={q.attr}
-                    onClick={() => ask(q.attr)}
-                    disabled={busy}
-                    className="w-full text-left rounded-xl border-2 border-black/5 dark:border-white/10 hover:border-yellow-400 hover:bg-yellow-400/5 px-4 py-3 text-sm font-bold text-black dark:text-white transition-all disabled:opacity-50"
-                  >
-                    {q.label}
-                  </button>
+          {isSpectator ? (
+            <div className={`${panel} p-6 text-center text-white/40 text-xs font-bold uppercase tracking-widest`}>Mode spectateur</div>
+          ) : yourTurn ? (
+            <div className={`${panel} p-4`}>
+              <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-white/40 mb-3 flex items-center gap-2"><HelpCircle className="w-4 h-4" /> Pose une question</h3>
+              <div className="space-y-2 max-h-[45vh] overflow-y-auto pr-1 custom-scrollbar">
+                {questions.map((q) => (
+                  <button key={q.attr} onClick={() => ask(q.attr)}
+                    className="w-full text-left rounded-xl border-2 border-white/10 hover:border-teal-400 hover:bg-teal-400/5 px-4 py-2.5 text-sm font-bold text-white transition-all">{q.label}</button>
                 ))}
               </div>
+              <p className="mt-3 text-[11px] text-white/35 italic">…ou clique un portrait pour accuser directement.</p>
             </div>
           ) : (
-            <div className="rounded-2xl border-2 border-black/5 dark:border-white/10 p-6 text-center">
-              {busy ? (
-                <Loader2 className="w-6 h-6 animate-spin mx-auto text-gray-400" />
-              ) : (
-                <p className="text-xs font-bold uppercase tracking-widest text-gray-400">
-                  L'adversaire réfléchit…
-                </p>
-              )}
-            </div>
+            <div className={`${panel} p-6 text-center`}><p className="text-xs font-bold uppercase tracking-widest text-white/40 animate-pulse">L'adversaire réfléchit…</p></div>
           )}
+
+          {/* Journal / chat */}
+          <div className={`${panel} p-4 flex flex-col`}>
+            <div className="bg-black/40 rounded-xl p-3 mb-2 max-h-32 overflow-y-auto border border-white/5 custom-scrollbar">
+              {messages.length === 0 && <p className="text-center py-4 opacity-20 italic text-[11px]">—</p>}
+              {messages.map((m, i) => (
+                <p key={i} className="text-[11px] mb-1">
+                  {m.is_system ? <span className="text-teal-300/60 italic">{m.text}</span> : <><span className="text-teal-300/70 font-bold">{m.user}&gt; </span><span className="text-white/80">{m.text}</span></>}
+                </p>
+              ))}
+            </div>
+            {!isSpectator && (
+              <form onSubmit={sendChat} className="flex gap-2">
+                <input value={chat} onChange={(e) => setChat(e.target.value)} placeholder="Message…" maxLength={120} aria-label="Message"
+                  className="flex-grow min-w-0 p-2 rounded-lg bg-white/[0.04] border-2 border-white/10 focus:border-teal-400 outline-none text-white placeholder:text-white/25 text-xs" />
+                <button type="submit" className="px-2.5 rounded-lg bg-teal-500 hover:bg-teal-400 text-white"><Send className="w-4 h-4" /></button>
+              </form>
+            )}
+          </div>
         </div>
       </div>
     </div>

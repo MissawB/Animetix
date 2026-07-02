@@ -30,7 +30,7 @@ const getClientId = (): string => {
 
 const useSocket = (
   roomCode: string | undefined,
-  type: 'undercover' | 'codemanga',
+  type: 'undercover' | 'codemanga' | 'quizwho',
   extraQuery?: Record<string, string>,
 ) => {
   const clientIdRef = useRef<string>(getClientId());
