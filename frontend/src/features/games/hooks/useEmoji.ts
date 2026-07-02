@@ -26,6 +26,13 @@ export const useEmoji = () => {
     },
   });
 
+  const giveUpMutation = useMutation<EmojiState, Error, void>({
+    mutationFn: () => emojiService.giveUp(),
+    onSuccess: (newState) => {
+      queryClient.setQueryData(QUERY_KEY, newState);
+    },
+  });
+
   // Rejoue : tire un nouveau secret (nouvelle séquence d'emojis) côté serveur.
   const restart = (mediaType?: string) => startMutation.mutate(mediaType);
 
@@ -33,6 +40,7 @@ export const useEmoji = () => {
     gameState,
     loading,
     handleGuess: guessMutation.mutateAsync,
+    giveUp: () => giveUpMutation.mutate(),
     restart,
   };
 };

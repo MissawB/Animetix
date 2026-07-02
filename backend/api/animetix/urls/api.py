@@ -609,6 +609,11 @@ urlpatterns = [
         name="api_emoji_suggest",
     ),
     path(
+        "game/emoji/giveup/",
+        api_views.EmojiGameGiveUpView.as_view(),
+        name="api_emoji_giveup",
+    ),
+    path(
         "game/paradox/state/",
         api_views.ParadoxGameStateView.as_view(),
         name="api_paradox_state",

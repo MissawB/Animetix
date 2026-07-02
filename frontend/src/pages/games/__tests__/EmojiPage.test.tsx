@@ -10,10 +10,12 @@ interface EmojiHook {
   gameState: EmojiState | undefined;
   loading: boolean;
   handleGuess: (arg: { guess: string }) => Promise<void>;
+  giveUp: () => void;
   restart: () => void;
 }
 
 const handleGuess = vi.fn<(arg: { guess: string }) => Promise<void>>(() => Promise.resolve());
+const giveUp = vi.fn();
 const restart = vi.fn();
 let hookValue: EmojiHook;
 
@@ -49,17 +51,17 @@ const baseState = (over: Partial<EmojiState> = {}): EmojiState => ({
 describe('EmojiPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    hookValue = { gameState: baseState(), loading: false, handleGuess, restart };
+    hookValue = { gameState: baseState(), loading: false, handleGuess, giveUp, restart };
   });
 
   it('renders a skeleton while loading', () => {
-    hookValue = { gameState: undefined, loading: true, handleGuess, restart };
+    hookValue = { gameState: undefined, loading: true, handleGuess, giveUp, restart };
     const { container } = renderPage();
     expect(container.querySelector('.animate-pulse')).toBeTruthy();
   });
 
   it('renders nothing when there is no game state', () => {
-    hookValue = { gameState: undefined, loading: false, handleGuess, restart };
+    hookValue = { gameState: undefined, loading: false, handleGuess, giveUp, restart };
     const { container } = renderPage();
     expect(container).toBeEmptyDOMElement();
   });
@@ -109,6 +111,7 @@ describe('EmojiPage', () => {
       }),
       loading: false,
       handleGuess,
+      giveUp,
       restart,
     };
     renderPage();
@@ -120,14 +123,42 @@ describe('EmojiPage', () => {
 
   it('renders the victory state and triggers restart', () => {
     hookValue = {
-      gameState: baseState({ game_over: true, secret_title: 'One Piece' }),
+      gameState: baseState({
+        game_over: true,
+        secret_title: 'One Piece',
+        guesses: [{ title: 'One Piece', image: 'op.jpg', is_correct: true }],
+      }),
       loading: false,
       handleGuess,
+      giveUp,
       restart,
     };
     renderPage();
     expect(screen.getByText(/VICTOIRE/i)).toBeInTheDocument();
     fireEvent.click(screen.getByText(/REJOUER/i));
     expect(restart).toHaveBeenCalled();
+  });
+
+  it('triggers giveUp when clicking Abandonner', () => {
+    renderPage();
+    fireEvent.click(screen.getByText(/Abandonner/i));
+    expect(giveUp).toHaveBeenCalled();
+  });
+
+  it('shows the abandoned state (no correct guess) instead of victory', () => {
+    hookValue = {
+      gameState: baseState({
+        game_over: true,
+        secret_title: 'One Piece',
+        guesses: [{ title: 'Bleach', image: 'b.jpg', is_correct: false }],
+      }),
+      loading: false,
+      handleGuess,
+      giveUp,
+      restart,
+    };
+    renderPage();
+    expect(screen.getByText(/abandonn/i)).toBeInTheDocument();
+    expect(screen.queryByText(/VICTOIRE/i)).not.toBeInTheDocument();
   });
 });

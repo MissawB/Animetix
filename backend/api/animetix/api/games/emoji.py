@@ -250,6 +250,48 @@ class EmojiGameGuessView(APIView):
         )
 
 
+class EmojiGameGiveUpView(APIView):
+    """Abandon the current game: reveal the answer and record a loss.
+
+    CPU game → AllowAny + throttle-exempt. No win credited.
+    """
+
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = []
+
+    def post(self, request):
+        port = get_session_service(request).port
+        secret = port.get("emoji_secret")
+        if not secret:
+            return Response(
+                {"error": "No game in progress"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        already_over = port.get("emoji_game_over", False)
+        if not already_over:
+            port.set("emoji_game_over", True)
+            GameplaySession.objects.create(
+                user=request.user if request.user.is_authenticated else None,
+                game_mode="emoji",
+                media_type=port.get("media_type", "Anime"),
+                target_item=secret,
+                history=port.get("emoji_guesses", []),
+                was_won=False,
+            )
+
+        return Response(
+            {
+                "media_type": port.get("media_type", "Anime"),
+                "emojis": _revealed(port),  # game over → full sequence revealed
+                "total_emojis": len(port.get("emoji_list", []) or []),
+                "guesses": port.get("emoji_guesses", []),
+                "game_over": True,
+                "won": False,
+                "secret_title": secret,
+            }
+        )
+
+
 class EmojiGameSuggestView(APIView):
     """Rich autocomplete for the guess box.
 

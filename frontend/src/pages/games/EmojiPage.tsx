@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Trophy, Sparkles, Search } from 'lucide-react';
+import { Send, Trophy, Sparkles, Search, Flag, RotateCcw } from 'lucide-react';
 import { useEmoji } from '../../features/games/hooks/useEmoji';
 import { emojiService, EmojiSuggestion } from '../../features/games/services/emojiService';
 import { Card } from "../../components/ui/Card";
@@ -11,10 +11,11 @@ import { CardSkeleton } from "../../components/ui/Skeleton";
 import { EmojiState } from "../../types";
 
 const EmojiPage: React.FC = () => {
-  const { gameState, loading, handleGuess, restart } = useEmoji() as unknown as {
+  const { gameState, loading, handleGuess, giveUp, restart } = useEmoji() as unknown as {
     gameState: EmojiState | undefined;
     loading: boolean;
     handleGuess: (arg: { guess: string }) => Promise<void>;
+    giveUp: () => void;
     restart: () => void;
   };
   const [guess, setGuess] = useState<string>('');
@@ -65,6 +66,8 @@ const EmojiPage: React.FC = () => {
   // Défensif : d'anciennes sessions renvoyaient `emojis` en chaîne (non-array).
   const revealed: string[] = Array.isArray(gameState.emojis) ? gameState.emojis : [];
   const totalEmojis = gameState.total_emojis || revealed.length;
+  // Victoire = au moins une tentative correcte ; sinon la partie a été abandonnée.
+  const won = (gameState.guesses || []).some((g) => g.is_correct);
 
   return (
     
@@ -108,14 +111,14 @@ const EmojiPage: React.FC = () => {
                 placeholder="Cherchez un titre…"
                 aria-label="Rechercher un titre"
                 autoComplete="off"
-                className="w-full rounded-2xl border-2 border-surface-text/10 bg-surface-card py-3.5 pl-12 pr-4 text-center font-bold outline-none focus:border-orange-500 transition-colors"
+                className="w-full rounded-2xl border border-black/10 dark:border-white/10 bg-surface-card py-3.5 pl-12 pr-4 text-center font-bold outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/30 transition-all"
               />
             </div>
 
             {/* Liste en flux normal : elle repousse le bouton vers le bas au lieu
                 de le recouvrir (plus de chevauchement avec DEVINER). */}
             {showSug && suggestions.length > 0 && (
-              <ul className="max-h-80 overflow-y-auto rounded-2xl border-2 border-surface-text/10 bg-surface-card shadow-lg text-left divide-y divide-surface-text/5">
+              <ul className="max-h-80 overflow-y-auto rounded-2xl border border-black/10 dark:border-white/10 bg-surface-card shadow-xl text-left divide-y divide-black/5 dark:divide-white/5">
                 {suggestions.map((s, i) => (
                   <li key={`${s.title}-${i}`}>
                     <button
@@ -125,9 +128,9 @@ const EmojiPage: React.FC = () => {
                     >
                       {s.image ? (
                         <img src={s.image} alt="" loading="lazy" decoding="async"
-                          className="h-14 w-10 flex-shrink-0 rounded-lg object-cover border border-surface-text/10" />
+                          className="h-14 w-10 flex-shrink-0 rounded-lg object-cover shadow-sm" />
                       ) : (
-                        <div className="h-14 w-10 flex-shrink-0 rounded-lg bg-surface-text/5" />
+                        <div className="h-14 w-10 flex-shrink-0 rounded-lg bg-black/5 dark:bg-white/5" />
                       )}
                       <div className="min-w-0 flex-grow">
                         <div className="truncate font-black italic manga-font leading-tight">
@@ -143,34 +146,65 @@ const EmojiPage: React.FC = () => {
               </ul>
             )}
 
-            <Button variant="primary" size="lg" fullWidth onClick={() => onSubmit()} className="bg-black text-white hover:bg-gray-900 border-none">
-              <Send className="w-5 h-5" /> DEVINER
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button variant="primary" size="lg" fullWidth onClick={() => onSubmit()} className="bg-black text-white hover:bg-gray-900 border-none">
+                <Send className="w-5 h-5" /> DEVINER
+              </Button>
+              <button
+                type="button"
+                onClick={() => giveUp()}
+                className="flex items-center justify-center gap-2 rounded-2xl px-6 py-3 font-black uppercase tracking-wide text-sm text-red-500 border border-red-500/30 bg-red-500/5 hover:bg-red-500/15 hover:border-red-500/60 transition-colors whitespace-nowrap"
+              >
+                <Flag className="w-4 h-4" /> Abandonner
+              </button>
+            </div>
           </div>
         ) : (
-          <Card padding="lg" className="bg-green-500 text-white mb-12 border-4 border-white/20">
-            <Trophy className="w-16 h-16 mx-auto mb-4" />
-            <h3 className="text-5xl font-black italic manga-font mb-2 uppercase">VICTOIRE !</h3>
-            <p className="text-2xl font-bold">C'était : <span className="text-yellow-200">{gameState.secret_title}</span></p>
-            <Button variant="success" className="mt-8 bg-white text-green-600 border-none px-12" onClick={() => { restart(); setGuess(''); }}>
-              REJOUER
-            </Button>
-          </Card>
+          <div className={`mb-12 rounded-3xl p-8 md:p-10 text-white shadow-2xl relative overflow-hidden bg-gradient-to-br ${won ? 'from-emerald-500 to-green-600' : 'from-slate-700 to-slate-900'}`}>
+            <div className="absolute -top-8 -right-8 opacity-10">
+              {won ? <Trophy className="w-40 h-40" /> : <Flag className="w-40 h-40" />}
+            </div>
+            <div className="relative">
+              {won ? <Trophy className="w-14 h-14 mx-auto mb-3" /> : <Flag className="w-14 h-14 mx-auto mb-3" />}
+              <h3 className="text-4xl md:text-5xl font-black italic manga-font mb-3 uppercase tracking-tighter">
+                {won ? 'VICTOIRE !' : 'Partie abandonnée'}
+              </h3>
+              <p className="text-lg md:text-xl font-bold opacity-90">
+                La réponse était <span className="text-yellow-300">{gameState.secret_title}</span>
+              </p>
+              <Button
+                variant="ghost"
+                className="mt-8 bg-white/95 text-slate-900 hover:bg-white border-none px-10 font-black"
+                onClick={() => { restart(); setGuess(''); }}
+              >
+                <RotateCcw className="w-5 h-5" /> REJOUER
+              </Button>
+            </div>
+          </div>
         )}
 
-        <div className="max-w-2xl mx-auto space-y-4 mt-12">
-          <h4 className="text-[10px] font-black uppercase opacity-30 tracking-[0.3em] mb-6">Tes tentatives</h4>
+        <div className="max-w-2xl mx-auto space-y-3 mt-12">
+          {gameState.guesses.length > 0 && (
+            <h4 className="text-[10px] font-black uppercase opacity-30 tracking-[0.3em] mb-6">Tes tentatives</h4>
+          )}
           {gameState.guesses.map((g: { title: string; title_en?: string; image: string; is_correct: boolean }, i: number) => (
-            <Card key={i} padding="sm" className="flex items-center transition-all hover:scale-[1.02]">
-              <img src={g.image} className="w-14 h-20 object-cover rounded-2xl shadow-md border-2 border-surface-text/10" alt="" loading="lazy" decoding="async" />
-              <div className="flex-grow text-left ml-6">
-                <div className="font-black text-lg truncate uppercase italic manga-font leading-none mb-2">{g.title_en || g.title}</div>
+            <div
+              key={i}
+              className={`flex items-center gap-4 rounded-2xl p-3 border-l-4 transition-all hover:translate-x-1 ${
+                g.is_correct
+                  ? 'border-green-500 bg-green-500/10'
+                  : 'border-red-500/60 bg-red-500/5'
+              }`}
+            >
+              <img src={g.image} className="w-12 h-16 object-cover rounded-xl shadow-md flex-shrink-0" alt="" loading="lazy" decoding="async" />
+              <div className="flex-grow text-left min-w-0">
+                <div className="font-black text-base truncate uppercase italic manga-font leading-tight mb-1.5">{g.title_en || g.title}</div>
                 <Badge variant={g.is_correct ? 'success' : 'danger'}>
                     {g.is_correct ? 'TROUVÉ' : 'ÉCHEC'}
                 </Badge>
               </div>
-              <div className="text-3xl px-4">{g.is_correct ? '✅' : '❌'}</div>
-            </Card>
+              <div className="text-2xl px-2 flex-shrink-0">{g.is_correct ? '✅' : '❌'}</div>
+            </div>
           ))}
         </div>
       </div>

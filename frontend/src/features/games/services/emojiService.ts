@@ -27,6 +27,9 @@ export const emojiService = {
   submit: async (data: EmojiGuessRequest): Promise<EmojiState> => {
     return apiClient(`${API_BASE}/guess/`, { method: 'POST', body: JSON.stringify(data) });
   },
+  giveUp: async (): Promise<EmojiState> => {
+    return apiClient(`${API_BASE}/giveup/`, { method: 'POST', body: JSON.stringify({}) });
+  },
   suggest: async (q: string): Promise<EmojiSuggestion[]> => {
     const data = (await apiClient(`${API_BASE}/suggest/?q=${encodeURIComponent(q)}`, {
       skipToast: true,
