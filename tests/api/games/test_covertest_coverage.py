@@ -45,6 +45,28 @@ def mock_catalog():
     }
 
 
+def _seed_session(api_client, secret="Berserk", guesses=None, game_over=False):
+    """Seed a covertest game into the session.
+
+    The guess view reads game state from the session (``get_covertest_state`` →
+    the session port), NOT from ``cover_test_service.get_state`` — so mocking the
+    latter has no effect and the view would report "No game in progress".
+    """
+    session = api_client.session
+    session.update(
+        {
+            "covertest_secret": secret,
+            "covertest_url": "http://cover.jpg",
+            "covertest_locale": "ja",
+            "covertest_volume": 1,
+            "covertest_guesses": guesses if guesses is not None else [],
+            "covertest_game_over": game_over,
+            "covertest_is_daily": False,
+        }
+    )
+    session.save()
+
+
 def _state(**kwargs):
     defaults = dict(
         secret=None,
@@ -125,20 +147,12 @@ def test_state_auto_start_fails(api_client, mock_catalog):
 # --------------------------------------------------------------------------- #
 # CovertestGameStartView
 # --------------------------------------------------------------------------- #
-@pytest.mark.django_db
-def test_start_catalog_not_found(api_client):
-    cat = MagicMock()
-    cat.load_data.return_value = None
-    cover = MagicMock()
-    with (
-        container.core.catalog_service.override(providers.Object(cat)),
-        container.core.cover_test_service.override(providers.Object(cover)),
-    ):
-        resp = api_client.post(reverse("api_covertest_start"), {}, format="json")
-    assert resp.status_code == 404
-    assert resp.json()["error"] == "Catalog not found"
-
-
+# NB: there is intentionally no "catalog not found" start test — the start view
+# has no catalog dependency (it picks a cover via cover_test_service). A prior
+# test passed a *bare* MagicMock cover, which flowed into start_covertest_game →
+# the session/DRF serializer and blew up (MagicMock auto-creates attributes
+# forever → runaway recursion that OOM-killed the CI runner). The real failure
+# path ("no cover available" → 500) is covered by test_start_no_cover below.
 @pytest.mark.django_db
 def test_start_no_cover(api_client, mock_catalog):
     cat = MagicMock()
@@ -201,6 +215,7 @@ def test_guess_already_over(api_client, mock_catalog):
     cover = MagicMock()
     cover.get_state.return_value = _state(secret="Berserk", game_over=True)
     game = MagicMock()
+    _seed_session(api_client, secret="Berserk", game_over=True)
     with (
         container.core.catalog_service.override(providers.Object(cat)),
         container.core.cover_test_service.override(providers.Object(cover)),
@@ -220,6 +235,7 @@ def test_guess_missing_guess(api_client, mock_catalog):
     cover = MagicMock()
     cover.get_state.return_value = _state(secret="Berserk")
     game = MagicMock()
+    _seed_session(api_client, secret="Berserk")
     with (
         container.core.catalog_service.override(providers.Object(cat)),
         container.core.cover_test_service.override(providers.Object(cover)),
@@ -238,6 +254,7 @@ def test_guess_incorrect(api_client, mock_catalog):
     cover.get_state.return_value = _state(secret="Berserk", guesses=[])
     game = MagicMock()
     game.check_title_match.return_value = False
+    _seed_session(api_client, secret="Berserk")
     with (
         container.core.catalog_service.override(providers.Object(cat)),
         container.core.cover_test_service.override(providers.Object(cover)),
@@ -272,6 +289,7 @@ def test_guess_correct_authenticated_creates_session(api_client, mock_catalog):
     cover.get_state.return_value = _state(secret="Berserk", guesses=[])
     game = MagicMock()
     game.check_title_match.return_value = True
+    _seed_session(api_client, secret="Berserk")
     with (
         container.core.catalog_service.override(providers.Object(cat)),
         container.core.cover_test_service.override(providers.Object(cover)),
