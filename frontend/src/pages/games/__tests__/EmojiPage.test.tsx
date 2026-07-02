@@ -33,10 +33,11 @@ const renderPage = () => {
 };
 
 const baseState = (over: Partial<EmojiState> = {}): EmojiState => ({
-  gameOver: false,
-  mediaType: 'anime',
-  isDaily: false,
-  emojis: '🏴‍☠️👒',
+  game_over: false,
+  media_type: 'anime',
+  is_daily: false,
+  emojis: ['🏴‍☠️', '👒'],
+  total_emojis: 4,
   guesses: [],
   ...over,
 });
@@ -62,7 +63,9 @@ describe('EmojiPage', () => {
   it('renders the emoji puzzle and input when active', () => {
     renderPage();
     expect(screen.getByText(/EMOJI/i)).toBeInTheDocument();
-    expect(screen.getByText('🏴‍☠️👒')).toBeInTheDocument();
+    expect(screen.getByText('🏴‍☠️')).toBeInTheDocument();
+    expect(screen.getByText('👒')).toBeInTheDocument();
+    expect(screen.getByText(/Indice 2 \/ 4/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/Tapez votre proposition/i)).toBeInTheDocument();
   });
 
@@ -96,7 +99,7 @@ describe('EmojiPage', () => {
 
   it('renders the victory state and triggers restart', () => {
     hookValue = {
-      gameState: baseState({ gameOver: true, secret_title: 'One Piece' }),
+      gameState: baseState({ game_over: true, secret_title: 'One Piece' }),
       loading: false,
       handleGuess,
       restart,

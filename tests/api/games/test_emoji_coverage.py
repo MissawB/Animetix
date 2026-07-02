@@ -42,6 +42,7 @@ def api_client():
 @pytest.fixture
 def mock_catalog():
     return {
+        "db": [{"id": 1, "title": "Naruto"}, {"id": 2, "title": "Bleach"}],
         "title_to_full_data": {
             "Naruto": {
                 "title": "Naruto",
@@ -73,7 +74,7 @@ def test_state_auto_start_success(api_client, mock_catalog):
     cat.load_data.return_value = mock_catalog
     emoji = MagicMock()
     emoji.select_secret.return_value = "Naruto"
-    emoji.generate_emojis.return_value = ["🍥", "🦊"]
+    emoji.build_sequence.return_value = ["🍥", "🦊"]
 
     with (
         container.core.catalog_service.override(providers.Object(cat)),
@@ -82,7 +83,9 @@ def test_state_auto_start_success(api_client, mock_catalog):
         resp = api_client.get(reverse("api_emoji_state"))
     assert resp.status_code == 200
     data = resp.json()
-    assert data["emojis"] == ["🍥", "🦊"]
+    # Progressive reveal: only the first (vaguest) emoji shows at the start.
+    assert data["emojis"] == ["🍥"]
+    assert data["total_emojis"] == 2
     assert data["game_over"] is False
     assert data["secret_title"] is None  # hidden while game running
 
@@ -95,7 +98,7 @@ def test_state_auto_start_fallback_media_type(api_client, mock_catalog):
     cat.load_data.side_effect = [None, None, mock_catalog]
     emoji = MagicMock()
     emoji.select_secret.return_value = "Bleach"
-    emoji.generate_emojis.return_value = ["💀"]
+    emoji.build_sequence.return_value = ["💀"]
 
     with (
         container.core.catalog_service.override(providers.Object(cat)),
@@ -137,8 +140,9 @@ def test_start_catalog_not_found(api_client):
         resp = api_client.post(
             reverse("api_emoji_start"), {"media_type": "Anime"}, format="json"
         )
-    assert resp.status_code == 404
-    assert resp.json()["error"] == "Catalog not found"
+    # No catalog for any media_type -> auto-start yields no secret -> 500.
+    assert resp.status_code == 500
+    assert resp.json()["error"] == "Failed to start the game"
 
 
 @pytest.mark.django_db
@@ -147,7 +151,7 @@ def test_start_success(api_client, mock_catalog):
     cat.load_data.return_value = mock_catalog
     emoji = MagicMock()
     emoji.select_secret.return_value = "Naruto"
-    emoji.generate_emojis.return_value = ["🍥", "🦊"]
+    emoji.build_sequence.return_value = ["🍥", "🦊"]
     with (
         container.core.catalog_service.override(providers.Object(cat)),
         container.core.emoji_service.override(providers.Object(emoji)),
@@ -158,7 +162,9 @@ def test_start_success(api_client, mock_catalog):
     assert resp.status_code == 200
     data = resp.json()
     assert data["status"] == "started"
-    assert data["emojis"] == ["🍥", "🦊"]
+    # Progressive reveal: fresh game shows only the first emoji.
+    assert data["emojis"] == ["🍥"]
+    assert data["total_emojis"] == 2
     emoji.select_secret.assert_called_once()
 
 
@@ -176,7 +182,7 @@ def test_start_select_secret_failure(api_client, mock_catalog):
             reverse("api_emoji_start"), {"media_type": "Anime"}, format="json"
         )
     assert resp.status_code == 500
-    assert resp.json()["error"] == "Failed to select secret title"
+    assert resp.json()["error"] == "Failed to start the game"
 
 
 # --------------------------------------------------------------------------- #
@@ -184,7 +190,7 @@ def test_start_select_secret_failure(api_client, mock_catalog):
 # --------------------------------------------------------------------------- #
 def _start_game(api_client, cat, emoji, secret="Naruto"):
     emoji.select_secret.return_value = secret
-    emoji.generate_emojis.return_value = ["🍥"]
+    emoji.build_sequence.return_value = ["🍥"]
     return api_client.post(
         reverse("api_emoji_start"), {"media_type": "Anime"}, format="json"
     )

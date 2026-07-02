@@ -1,3 +1,4 @@
+import ast
 import logging
 import random
 from typing import Dict, List, Optional
@@ -6,10 +7,91 @@ from .llm_service import LLMService
 
 logger = logging.getLogger("animetix.emoji")
 
+# Lexical genre/tag → emoji fallback used ONLY when a title has no precomputed
+# sequence (cf. pipeline/games/build_emoji_sequences.py). Genre-ish first (vaguer).
+_FALLBACK_EMOJI = {
+    "action": "💥",
+    "adventure": "🗺️",
+    "comedy": "😂",
+    "drama": "🎭",
+    "fantasy": "✨",
+    "horror": "👻",
+    "romance": "❤️",
+    "sci-fi": "🚀",
+    "science fiction": "🚀",
+    "mystery": "🕵️",
+    "supernatural": "✨",
+    "sport": "🏆",
+    "music": "🎵",
+    "mecha": "🤖",
+    "magic": "🪄",
+    "school": "🏫",
+    "demon": "👹",
+    "vampire": "🧛",
+    "military": "⚔️",
+    "war": "⚔️",
+    "space": "🌌",
+    "psychological": "🧠",
+    "thriller": "🔪",
+    "historical": "🏯",
+    "samurai": "🗡️",
+    "pirate": "🏴‍☠️",
+    "police": "🚔",
+    "superhero": "🦸",
+    "isekai": "🌀",
+    "cooking": "🍜",
+    "idol": "🎤",
+    "slice of life": "🌸",
+    "sword": "⚔️",
+    "gore": "🩸",
+    "tragedy": "😭",
+    "dragon": "🐉",
+    "zombie": "🧟",
+    "robot": "🤖",
+    "monster": "👹",
+    "ghost": "👻",
+    "detective": "🕵️",
+}
+
+
+def _as_list(value):
+    if isinstance(value, list):
+        return value
+    if isinstance(value, str) and value.strip():
+        try:
+            parsed = ast.literal_eval(value)
+            return parsed if isinstance(parsed, list) else [parsed]
+        except (ValueError, SyntaxError):
+            return [value]
+    return []
+
 
 class EmojiDomainService:
     def __init__(self, llm_service: LLMService):
         self.llm_service = llm_service
+
+    # ── CPU emoji sequence (no LLM / no GPU) ───────────────────────────────
+    def build_sequence(self, sequences: Dict, media_type: str, item: Dict) -> List[str]:
+        """Vague→obvious emoji sequence for an item: the precomputed one if
+        available, else a lexical genre/tag fallback. Never calls an LLM."""
+        seq = (sequences or {}).get(media_type, {}).get(str(item.get("id")))
+        if seq:
+            return list(seq)
+        return self._fallback_sequence(item)
+
+    def _fallback_sequence(self, item: Dict) -> List[str]:
+        words = [str(g).lower() for g in _as_list(item.get("genres"))]
+        words += [str(t).lower() for t in _as_list(item.get("tags"))[:10]]
+        picked, seen = [], set()
+        for w in words:
+            for key, emo in _FALLBACK_EMOJI.items():
+                if key in w and emo not in seen:
+                    seen.add(emo)
+                    picked.append(emo)
+                    break
+            if len(picked) >= 5:
+                break
+        return picked or ["❓", "❓", "❓"]
 
     def select_secret(self, catalog: Dict) -> Optional[str]:
         """Sélectionne un titre aléatoire pour le défi Emoji."""

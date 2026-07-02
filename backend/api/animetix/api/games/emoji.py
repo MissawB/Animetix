@@ -1,11 +1,9 @@
 from animetix_project.logging_config import get_logger
-from core.domain.services.berrix_economy import FEATURE_BX_COSTS
 from dependency_injector.wiring import Provide, inject
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from animetix.api.billing import deduct_berrix
 from animetix.api.dependencies import get_session_service
 
 from ...containers import Container
@@ -13,13 +11,55 @@ from ...models import GameplaySession
 
 logger = get_logger("animetix." + __name__)
 
-# --- EMOJI MODE ---
+# --- EMOJI MODE (CPU only) ---
+# Emojis are derived offline from each title's important words via semantic
+# embeddings (pipeline/games/build_emoji_sequences.py) and revealed one at a time,
+# vaguest first. No LLM, no GPU, no Berrix → AllowAny + throttle-exempt.
+
+
+def _revealed(port):
+    """Emojis shown so far: 1 at the start, +1 per wrong guess, all when won."""
+    full = port.get("emoji_list", []) or []
+    if port.get("emoji_game_over", False):
+        return full
+    wrong = sum(1 for g in port.get("emoji_guesses", []) if not g.get("is_correct"))
+    return full[: min(len(full), 1 + wrong)]
+
+
+def _start_game(port, catalog_service, emoji_service, media_type):
+    """Pick a secret + build its precomputed emoji sequence (no LLM)."""
+    data = catalog_service.load_data(media_type)
+    if not data or not data.get("db"):
+        for m_type in ["Anime", "Manga", "Character"]:
+            data = catalog_service.load_data(m_type)
+            if data and data.get("db"):
+                media_type = m_type
+                break
+    if not data or not data.get("db"):
+        return None, media_type
+    secret = emoji_service.select_secret(data)
+    if not secret:
+        return None, media_type
+    item = data["title_to_full_data"].get(secret, {})
+    sequences = catalog_service.get_emoji_sequences()
+    emoji_list = emoji_service.build_sequence(sequences, media_type, item)
+    port.update(
+        {
+            "media_type": media_type,
+            "emoji_secret": secret,
+            "emoji_list": emoji_list,
+            "emoji_guesses": [],
+            "emoji_game_over": False,
+            "is_daily": False,
+            "is_ranked": False,
+        }
+    )
+    return secret, media_type
 
 
 class EmojiGameStateView(APIView):
-    # GPU-backed game: the no-game branch auto-generates emojis via the LLM, so
-    # it requires login and consumes Berrix (charged only when a game is created).
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = []  # CPU game, no Bx: must not hit the anon day cap
 
     @inject
     def get(
@@ -28,57 +68,23 @@ class EmojiGameStateView(APIView):
         catalog_service=Provide[Container.core.catalog_service],
         emoji_service=Provide[Container.core.emoji_service],
     ):
-        session_service = get_session_service(request)
-        port = session_service.port
+        port = get_session_service(request).port
         secret = port.get("emoji_secret")
         if not secret:
-            # Auto-start game
             media_type = port.get("media_type", "Anime")
-            data = catalog_service.load_data(media_type)
-            if not data:
-                for m_type in ["Anime", "Manga", "Character"]:
-                    data = catalog_service.load_data(m_type)
-                    if data:
-                        media_type = m_type
-                        port.set("media_type", media_type)
-                        break
-            if data:
-                secret = emoji_service.select_secret(data)
-                if secret:
-                    secret_data = data["title_to_full_data"].get(secret, {})
-                    description = secret_data.get("description", "")
-                    # GPU generation → consume Berrix (raises 402 if balance too low).
-                    deduct_berrix(
-                        request.user,
-                        FEATURE_BX_COSTS["emoji_stream"],
-                        "Emoji Quest — génération IA",
-                    )
-                    emoji_list = emoji_service.generate_emojis(
-                        media_type, secret, description
-                    )
-                    port.update(
-                        {
-                            "emoji_secret": secret,
-                            "emoji_list": emoji_list,
-                            "emoji_guesses": [],
-                            "emoji_game_over": False,
-                            "is_daily": False,
-                            "is_ranked": False,
-                        }
-                    )
-            # Recheck secret
-            secret = port.get("emoji_secret")
-
+            secret, media_type = _start_game(
+                port, catalog_service, emoji_service, media_type
+            )
         if not secret:
             return Response(
                 {"error": "No game in progress and auto-start failed."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
         return Response(
             {
                 "media_type": port.get("media_type", "Anime"),
-                "emojis": port.get("emoji_list", []),
+                "emojis": _revealed(port),
+                "total_emojis": len(port.get("emoji_list", []) or []),
                 "guesses": port.get("emoji_guesses", []),
                 "game_over": port.get("emoji_game_over", False),
                 "is_daily": port.get("is_daily", False),
@@ -89,8 +95,8 @@ class EmojiGameStateView(APIView):
 
 
 class EmojiGameStartView(APIView):
-    # GPU-backed game (LLM emoji generation): requires login and consumes Berrix.
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = []  # CPU game, no Bx
 
     @inject
     def post(
@@ -99,69 +105,35 @@ class EmojiGameStartView(APIView):
         catalog_service=Provide[Container.core.catalog_service],
         emoji_service=Provide[Container.core.emoji_service],
     ):
-        session_service = get_session_service(request)
-        port = session_service.port
+        port = get_session_service(request).port
         media_type = request.data.get("media_type", port.get("media_type", "Anime"))
-        if media_type in ["Anime", "Manga", "Character"]:
-            port.set("media_type", media_type)
-        is_daily = request.data.get("is_daily", False)
-        is_ranked = request.data.get("is_ranked", False)
-
-        data = catalog_service.load_data(media_type)
-        if not data:
-            return Response(
-                {"error": "Catalog not found"}, status=status.HTTP_404_NOT_FOUND
-            )
-
-        if is_daily or is_ranked:
-            secret = port.get("secret_title")
-        else:
-            secret = emoji_service.select_secret(data)
-
+        if media_type not in ["Anime", "Manga", "Character"]:
+            media_type = "Anime"
+        secret, media_type = _start_game(
+            port, catalog_service, emoji_service, media_type
+        )
         if not secret:
             return Response(
-                {"error": "Failed to select secret title"},
+                {"error": "Failed to start the game"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-
-        secret_data = data["title_to_full_data"].get(secret, {})
-        description = secret_data.get("description", "")
-
-        # GPU generation → consume Berrix (raises 402 if balance too low).
-        deduct_berrix(
-            request.user,
-            FEATURE_BX_COSTS["emoji_stream"],
-            "Emoji Quest — génération IA",
-        )
-
-        emoji_list = emoji_service.generate_emojis(media_type, secret, description)
-
-        port.update(
-            {
-                "emoji_secret": secret,
-                "emoji_list": emoji_list,
-                "emoji_guesses": [],
-                "emoji_game_over": False,
-                "is_daily": is_daily,
-                "is_ranked": is_ranked,
-            }
-        )
-
         return Response(
             {
                 "status": "started",
                 "media_type": media_type,
-                "emojis": emoji_list,
+                "emojis": _revealed(port),
+                "total_emojis": len(port.get("emoji_list", []) or []),
                 "guesses": [],
                 "game_over": False,
-                "is_daily": is_daily,
-                "is_ranked": is_ranked,
+                "is_daily": False,
+                "is_ranked": False,
             }
         )
 
 
 class EmojiGameGuessView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_classes = []  # CPU game, no Bx
 
     @inject
     def post(
@@ -170,14 +142,12 @@ class EmojiGameGuessView(APIView):
         catalog_service=Provide[Container.core.catalog_service],
         game_service=Provide[Container.core.game_service],
     ):
-        session_service = get_session_service(request)
-        port = session_service.port
+        port = get_session_service(request).port
         secret = port.get("emoji_secret")
         if not secret:
             return Response(
                 {"error": "No game in progress"}, status=status.HTTP_400_BAD_REQUEST
             )
-
         if port.get("emoji_game_over", False):
             return Response(
                 {"error": "Game already over"}, status=status.HTTP_400_BAD_REQUEST
@@ -199,7 +169,6 @@ class EmojiGameGuessView(APIView):
 
         guess_full = data["title_to_full_data"].get(guess_title)
         secret_item = data["title_to_full_data"].get(secret)
-
         is_correct = game_service.check_title_match(guess_title, secret_item)
 
         guesses = port.get("emoji_guesses", [])
@@ -231,20 +200,15 @@ class EmojiGameGuessView(APIView):
                         media_type=media_type,
                         attempts=len(guesses),
                     )
-                    if newly_unlocked:
-                        for ach in newly_unlocked:
-                            unlocked_achievements.append(
-                                {
-                                    "name": ach.name,
-                                    "description": ach.description,
-                                    "xp_reward": ach.xp_reward,
-                                    "badge_url": (
-                                        ach.badge_url
-                                        if hasattr(ach, "badge_url")
-                                        else None
-                                    ),
-                                }
-                            )
+                    for ach in newly_unlocked or []:
+                        unlocked_achievements.append(
+                            {
+                                "name": ach.name,
+                                "description": ach.description,
+                                "xp_reward": ach.xp_reward,
+                                "badge_url": getattr(ach, "badge_url", None),
+                            }
+                        )
                 except Exception as e:
                     logger.warning(f"Handled error in EmojiGameGuessView: {e}")
 
@@ -260,6 +224,8 @@ class EmojiGameGuessView(APIView):
         return Response(
             {
                 "media_type": media_type,
+                "emojis": _revealed(port),
+                "total_emojis": len(port.get("emoji_list", []) or []),
                 "game_over": port.get("emoji_game_over", False),
                 "guess_count": len(guesses),
                 "guesses": guesses,

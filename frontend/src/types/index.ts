@@ -214,8 +214,13 @@ export interface AkinetixState extends GameState {
   confidence: number;
 }
 
-export interface EmojiState extends GameState {
-  emojis: string;
+export interface EmojiState {
+  media_type: string;
+  emojis: string[]; // révélés jusqu'ici (vague → évident), un de plus par essai raté
+  total_emojis: number; // longueur totale de la séquence
+  game_over: boolean;
+  is_daily?: boolean;
+  is_ranked?: boolean;
   secret_title?: string;
   guesses: Array<{ title: string; title_en?: string; image: string; is_correct: boolean }>;
 }

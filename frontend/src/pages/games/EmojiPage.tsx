@@ -41,15 +41,25 @@ const EmojiPage: React.FC = () => {
         
         <Card padding="lg" className="bg-gradient-to-r from-orange-500 to-red-600 mb-12 text-white border-none relative overflow-hidden group">
           <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
-          <div className="text-6xl md:text-8xl tracking-[0.5em] mb-6 flex justify-center drop-shadow-lg">
-              {gameState.emojis}
+          <div className="text-6xl md:text-8xl tracking-[0.3em] mb-6 flex flex-wrap justify-center items-center gap-2 drop-shadow-lg min-h-[6rem]">
+              {(gameState.emojis || []).map((e, i) => (
+                <span key={i} className="animate-in fade-in zoom-in duration-500">{e}</span>
+              ))}
+              {Array.from({ length: Math.max(0, (gameState.total_emojis || 0) - (gameState.emojis?.length || 0)) }).map((_, i) => (
+                <span key={`h-${i}`} className="opacity-25 select-none">◻️</span>
+              ))}
           </div>
           <p className="font-black italic text-sm uppercase tracking-widest opacity-80 flex items-center justify-center gap-2">
-              <Sparkles className="w-4 h-4" /> L'IA a résumé une œuvre. Saurez-vous la retrouver ?
+              <Sparkles className="w-4 h-4" /> Du plus vague au plus évident — un nouvel indice à chaque essai raté.
           </p>
+          {gameState.total_emojis > 0 && (
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-60 mt-3">
+              Indice {Math.min(gameState.emojis?.length || 0, gameState.total_emojis)} / {gameState.total_emojis}
+            </p>
+          )}
         </Card>
 
-        {!gameState.gameOver ? (
+        {!gameState.game_over ? (
           <div className="max-w-md mx-auto space-y-4">
             <Input 
               value={guess} 
@@ -66,7 +76,7 @@ const EmojiPage: React.FC = () => {
             <Trophy className="w-16 h-16 mx-auto mb-4" />
             <h3 className="text-5xl font-black italic manga-font mb-2 uppercase">VICTOIRE !</h3>
             <p className="text-2xl font-bold">C'était : <span className="text-yellow-200">{gameState.secret_title}</span></p>
-            <Button variant="success" className="mt-8 bg-white text-green-600 border-none px-12" onClick={() => restart()}>
+            <Button variant="success" className="mt-8 bg-white text-green-600 border-none px-12" onClick={() => { restart(); setGuess(''); }}>
               REJOUER
             </Button>
           </Card>

@@ -130,6 +130,32 @@ class CatalogService:
                 logger.error(f"Failed to load Akinetix attributes: {e}")
         return {}
 
+    def get_emoji_sequences(self) -> Dict:
+        """Charge les séquences d'emojis précalculées (jeu Emoji, CPU).
+
+        Format : {media_type: {id: [emoji, ...]}} — cf.
+        ``backend/pipeline/games/build_emoji_sequences.py``. Mis en cache RAM.
+        """
+        import os  # noqa: E402
+
+        if getattr(self, "_emoji_sequences", None) is not None:
+            return self._emoji_sequences
+        path = os.path.join(
+            getattr(self.repository, "project_root", ""),
+            "data",
+            "artifacts",
+            "emoji_sequences.json",
+        )
+        data = {}
+        if os.path.exists(path):
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+            except Exception as e:
+                logger.error(f"Failed to load emoji sequences: {e}")
+        self._emoji_sequences = data
+        return data
+
     def invalidate_cache(self, media_type: Optional[str] = None):
         """Invalide le cache pour un type spécifique ou tous les types."""
         if media_type:

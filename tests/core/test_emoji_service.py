@@ -92,3 +92,39 @@ def test_generate_emojis(emoji_service, mock_llm_service):
     mock_llm_service.generate_emojis.assert_called_once_with(
         "Anime", "Naruto", "Ninja story"
     )
+
+
+# ── CPU sequence (no LLM) ──────────────────────────────────────────────────
+
+
+def test_build_sequence_uses_precomputed(emoji_service):
+    sequences = {"Anime": {"42": ["🗺️", "👻", "⚔️"]}}
+    item = {"id": 42, "genres": ["Action"]}
+    seq = emoji_service.build_sequence(sequences, "Anime", item)
+    assert seq == ["🗺️", "👻", "⚔️"]
+    # Returns a copy, not the stored list.
+    seq.append("💥")
+    assert sequences["Anime"]["42"] == ["🗺️", "👻", "⚔️"]
+
+
+def test_build_sequence_falls_back_on_missing(emoji_service):
+    # No precomputed entry for this id → lexical fallback from genres/tags.
+    item = {"id": 999, "genres": ["Horror"], "tags": ["Vampire", "School"]}
+    seq = emoji_service.build_sequence({"Anime": {}}, "Anime", item)
+    assert "👻" in seq  # horror
+    assert "🧛" in seq  # vampire
+    assert "🏫" in seq  # school
+    assert len(seq) == len(set(seq))  # deduped
+
+
+def test_fallback_sequence_default_when_no_match(emoji_service):
+    seq = emoji_service.build_sequence({}, "Anime", {"id": 1, "genres": []})
+    assert seq == ["❓", "❓", "❓"]
+
+
+def test_fallback_sequence_handles_stringified_lists(emoji_service):
+    # Repositories sometimes store list fields as their repr string.
+    item = {"id": 2, "genres": "['Comedy', 'Romance']"}
+    seq = emoji_service.build_sequence({}, "Anime", item)
+    assert "😂" in seq  # comedy
+    assert "❤️" in seq  # romance

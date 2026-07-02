@@ -19,8 +19,15 @@ export const useEmoji = () => {
     },
   });
 
-  // Rejoue : ré-exécute la queryFn (équivalent d'un remount) sans recharger l'app.
-  const restart = () => queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+  const startMutation = useMutation<EmojiState, Error, string | undefined>({
+    mutationFn: (mediaType) => emojiService.start(mediaType),
+    onSuccess: (newState) => {
+      queryClient.setQueryData(QUERY_KEY, newState);
+    },
+  });
+
+  // Rejoue : tire un nouveau secret (nouvelle séquence d'emojis) côté serveur.
+  const restart = (mediaType?: string) => startMutation.mutate(mediaType);
 
   return {
     gameState,
