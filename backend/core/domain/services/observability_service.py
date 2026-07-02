@@ -1,45 +1,26 @@
 import logging
-import os
 from typing import Any, Dict, Optional
-
-try:
-    import wandb
-except ImportError:  # W&B monitoring is optional and may be absent (e.g. in the image)
-    wandb = None  # type: ignore[assignment]
 
 logger = logging.getLogger("animetix.observability")
 
 
 class ObservabilityService:
-    """
-    Gère le monitoring des performances et de la qualité IA via Weights & Biases.
-    Suit la latence, la dérive sémantique et l'utilisation des modèles.
+    """Monitoring léger des performances IA (latence, qualité RAG, erreurs).
+
+    Historiquement branché sur Weights & Biases, mais l'``wandb.init()`` au
+    démarrage bloquait le process sur un appel réseau (le serveur ne démarrait
+    plus sans ``WANDB_MODE=disabled``) pour un intérêt nul en dev. Le suivi
+    runtime se fait désormais **en local** (historique de latence en mémoire +
+    logs structurés) — aucune dépendance réseau. Les métriques offline restent
+    couvertes par les pipelines d'évaluation dédiés
+    (``pipeline/mlops/evaluation_metrics.py``).
     """
 
     def __init__(self, project_name: str = "animetix-prod"):
         self.project_name = project_name
-        self.api_key = os.getenv("WANDB_API_KEY")
-        self.enabled = bool(self.api_key) and wandb is not None
-        self._run = None
-
-        # Suivi de la latence en mémoire pour les alertes temps réel
+        # Suivi de la latence en mémoire pour les alertes temps réel (AlertService).
         self._recent_latencies: list[float] = []
         self._max_history = 50
-
-        if self.enabled:
-            try:
-                wandb.login(key=self.api_key)
-                self._run = wandb.init(
-                    project=self.project_name,
-                    job_type="production-monitoring",
-                    resume="allow",
-                )
-                logger.info(
-                    f"🚀 W&B Monitoring initialized for project {self.project_name}"
-                )
-            except Exception as e:
-                logger.error(f"Failed to initialize W&B: {e}")
-                self.enabled = False
 
     def log_inference(
         self,
@@ -49,58 +30,37 @@ class ObservabilityService:
         metadata: Optional[Dict] = None,
     ):
         """Logue les métriques d'une inférence LLM."""
-        if not self.enabled:
-            return
-
-        data = {
-            "inference/latency": latency,
-            "inference/tokens": tokens,
-            "inference/tokens_per_sec": tokens / latency if latency > 0 else 0,
-            "model_id": model_id,
-        }
-        if metadata:
-            data.update(metadata)
-
-        wandb.log(data)
+        tps = tokens / latency if latency > 0 else 0
+        logger.debug(
+            "inference model=%s latency=%.3fs tokens=%d tps=%.1f%s",
+            model_id,
+            latency,
+            tokens,
+            tps,
+            f" meta={metadata}" if metadata else "",
+        )
 
     def log_rag_quality(
         self, query: str, similarity_score: float, faithfulness: float = 0.0
     ):
         """Logue la qualité des résultats du RAG."""
-        if not self.enabled:
-            return
-
-        wandb.log(
-            {
-                "rag/similarity_score": similarity_score,
-                "rag/faithfulness": faithfulness,
-                "rag/query_length": len(query),
-            }
+        logger.debug(
+            "rag_quality similarity=%.3f faithfulness=%.3f q_len=%d",
+            similarity_score,
+            faithfulness,
+            len(query),
         )
 
     def log_rag_latency(
         self, latency: float, query: str, user_id: Optional[str] = None
     ):
-        """Logue la latence globale d'une requête RAG."""
+        """Logue la latence globale d'une requête RAG + met à jour l'historique."""
         logger.info(
             f"⏱️ RAG Latency: {latency:.2f}s for query '{query[:50]}' by user {user_id}"
         )
-
-        # Mise à jour de l'historique local
         self._recent_latencies.append(latency)
         if len(self._recent_latencies) > self._max_history:
             self._recent_latencies.pop(0)
-
-        if not self.enabled:
-            return
-
-        wandb.log(
-            {
-                "rag/latency": latency,
-                "rag/query_length": len(query),
-                "rag/user_id": user_id or "anonymous",
-            }
-        )
 
     def get_average_rag_latency(self) -> float:
         """Retourne la latence moyenne des dernières requêtes RAG."""
@@ -110,27 +70,18 @@ class ObservabilityService:
 
     def log_dynamic_eval(self, query: str, context: str, answer: str, evaluation: Any):
         """Logue une évaluation dynamique 'LLM-as-a-Judge'."""
-        if not self.enabled:
-            return
-        wandb.log(
-            {
-                "eval/faithfulness": getattr(evaluation, "faithfulness_score", 0.0),
-                "eval/relevancy": getattr(evaluation, "relevancy_score", 0.0),
-                "eval/hallucination_detected": (
-                    1 if getattr(evaluation, "hallucination_detected", False) else 0
-                ),
-                "eval/query": query[:100],
-            }
+        logger.debug(
+            "eval faithfulness=%.3f relevancy=%.3f hallucination=%s q='%s'",
+            getattr(evaluation, "faithfulness_score", 0.0),
+            getattr(evaluation, "relevancy_score", 0.0),
+            bool(getattr(evaluation, "hallucination_detected", False)),
+            query[:100],
         )
 
     def log_error(self, error_type: str, message: str):
         """Logue une erreur critique de l'infrastructure IA."""
-        if not self.enabled:
-            return
-        wandb.log(
-            {"errors/count": 1, "errors/type": error_type, "errors/message": message}
-        )
+        logger.error("infra_error type=%s message=%s", error_type, message)
 
     def finish(self):
-        if self._run:
-            self._run.finish()
+        """No-op conservé pour compatibilité (plus de run W&B à clôturer)."""
+        return None
