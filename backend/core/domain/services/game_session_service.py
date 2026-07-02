@@ -214,7 +214,7 @@ class GameSessionService:
             "author": self.port.get("covertest_author"),
             "guesses": self.port.get("covertest_guesses", []),
             "game_over": self.port.get("covertest_game_over", False),
-            "is_daily": self.port.get("is_daily", False),
+            "is_daily": self.port.get("covertest_is_daily", False),
         }
 
     # --- State Management ---

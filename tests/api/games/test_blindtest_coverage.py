@@ -39,11 +39,13 @@ def _state(**kwargs):
         secret=None,
         video=None,
         type=None,
+        sequence=None,
         song=None,
         artists=None,
         guesses=[],
         game_over=False,
         is_daily=False,
+        difficulty="Normal",
     )
     defaults.update(kwargs)
     return SimpleNamespace(**defaults)

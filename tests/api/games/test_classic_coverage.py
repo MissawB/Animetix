@@ -471,7 +471,8 @@ def test_reveal_missing_hint_type(api_client, mock_catalog):
         _seed_started_game(api_client, cat, game)
         resp = api_client.post(reverse("api_classic_reveal"), {}, format="json")
     assert resp.status_code == 400
-    assert resp.json()["error"] == "Hint type is required"
+    # Missing and unknown hint types share one rejection message.
+    assert resp.json()["error"] == "Invalid hint type"
 
 
 @pytest.mark.django_db
@@ -486,6 +487,11 @@ def test_reveal_ok(api_client, mock_catalog):
         container.core.game_service.override(providers.Object(game)),
     ):
         _seed_started_game(api_client, cat, game)
+        # Hints unlock progressively (n-th hint after n*step guesses, step=5);
+        # "origin" is the 2nd hint, so seed 10 guesses to make it revealable.
+        session = api_client.session
+        session["guesses"] = [{"title": "x", "is_correct": False} for _ in range(10)]
+        session.save()
         resp = api_client.post(
             reverse("api_classic_reveal"), {"hint_type": "origin"}, format="json"
         )

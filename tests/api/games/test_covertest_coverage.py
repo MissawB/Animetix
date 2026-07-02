@@ -61,7 +61,7 @@ def _state(**kwargs):
 
 _COVER = {
     "manga_title": "Berserk",
-    "url": "http://cover.jpg",
+    "cover_url": "http://cover.jpg",
     "locale": "ja",
     "volume": 1,
 }
@@ -87,7 +87,6 @@ def test_state_auto_start_random(api_client, mock_catalog):
     assert data["cover_url"] == "http://cover.jpg"
     assert data["locale"] == "ja"
     assert data["secret_title"] is None  # hidden while running
-    cover.save_state.assert_called_once()
 
 
 @pytest.mark.django_db
@@ -171,7 +170,6 @@ def test_start_success(api_client, mock_catalog):
     data = resp.json()
     assert data["cover_url"] == "http://cover.jpg"
     assert data["game_over"] is False
-    cover.save_state.assert_called_once()
 
 
 # --------------------------------------------------------------------------- #

@@ -37,6 +37,7 @@ def _cover_payload(state, reveal=False):
         "author": state.get("author"),
         "guesses": state["guesses"],
         "game_over": over,
+        "is_daily": state.get("is_daily", False),
         "secret_title": state["secret"] if (over or reveal) else None,
     }
 

@@ -32,6 +32,7 @@ def _state(**kwargs):
         game_over=False,
         ai_guess=None,
         is_daily=False,
+        confidence=0.0,
     )
     defaults.update(kwargs)
     return SimpleNamespace(**defaults)
