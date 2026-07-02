@@ -564,31 +564,6 @@ urlpatterns = [
         name="api_quiz_who_guess",
     ),
     path(
-        "game/quiz-who/duel/create/",
-        api_views.QuizWhoDuelCreateView.as_view(),
-        name="api_quiz_who_duel_create",
-    ),
-    path(
-        "game/quiz-who/duel/join/",
-        api_views.QuizWhoDuelJoinView.as_view(),
-        name="api_quiz_who_duel_join",
-    ),
-    path(
-        "game/quiz-who/duel/ask/",
-        api_views.QuizWhoDuelAskView.as_view(),
-        name="api_quiz_who_duel_ask",
-    ),
-    path(
-        "game/quiz-who/duel/guess/",
-        api_views.QuizWhoDuelGuessView.as_view(),
-        name="api_quiz_who_duel_guess",
-    ),
-    path(
-        "game/quiz-who/duel/state/<str:room_code>/",
-        api_views.QuizWhoDuelStateView.as_view(),
-        name="api_quiz_who_duel_state",
-    ),
-    path(
         "game/akinetix-rl/state/",
         api_views.AkinetixRLStateView.as_view(),
         name="api_akinetix_rl_state",

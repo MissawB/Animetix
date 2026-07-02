@@ -294,37 +294,6 @@ class DuelRoom(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 
-class QuizWhoRoom(models.Model):
-    """2-player 'Qui est-ce ?': each player has a secret character on a shared
-    board; players take turns asking attribute questions about the OPPONENT's
-    secret and eliminating candidates; first to guess the opponent's wins."""
-
-    room_code = models.CharField(max_length=10, unique=True)
-    player1 = models.ForeignKey(
-        User, related_name="quizwho_p1", on_delete=models.CASCADE
-    )
-    player2 = models.ForeignKey(
-        User,
-        related_name="quizwho_p2",
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-    )
-    media_type = models.CharField(max_length=20, default="Anime")
-    difficulty = models.CharField(max_length=20, default="Normal")
-    board = models.JSONField(default=list)  # [{id, title, image}]
-    questions = models.JSONField(default=list)  # [{attr, label}]
-    secret1 = models.CharField(max_length=64, blank=True)  # p1's char (p2 guesses)
-    secret2 = models.CharField(max_length=64, blank=True)  # p2's char (p1 guesses)
-    turn = models.IntegerField(default=1)  # 1 or 2
-    eliminated1 = models.JSONField(default=list)  # p1's eliminations re: secret2
-    eliminated2 = models.JSONField(default=list)  # p2's eliminations re: secret1
-    last_answer = models.JSONField(default=dict, blank=True)  # {by, label, answer}
-    winner = models.IntegerField(null=True, blank=True)
-    is_finished = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-
 class DailyChallenge(models.Model):
     date = models.DateField(unique=True)
     media_type = models.CharField(max_length=20)

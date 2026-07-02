@@ -9,7 +9,6 @@ from .duel import *  # noqa: F401, F403
 from .emoji import *  # noqa: F401, F403
 from .paradox import *  # noqa: F401, F403
 from .quiz_who import *  # noqa: F401, F403
-from .quiz_who_duel import *  # noqa: F401, F403
 from .undercover import *  # noqa: F401, F403
 from .vision import *  # noqa: F401, F403
 from .vs_battle import *  # noqa: F401, F403
