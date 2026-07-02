@@ -27,7 +27,8 @@ async def test_paradox_async_stream_transforms_result_paradoxlogic():
     session.get.return_value = "Français"
 
     container = MagicMock()
-    container.core.catalog_service.load_data.return_value = {
+    # View calls the providers (container.core.X().method), so configure return_value.
+    container.core.catalog_service.return_value.load_data.return_value = {
         "title_to_full_data": {
             "A": {"title": "A"},
             "B": {"title": "B"},
@@ -42,10 +43,15 @@ async def test_paradox_async_stream_transforms_result_paradoxlogic():
             "content": SimpleNamespace(reasoning="R", scenario="S"),
         }
 
-    container.core.paradox_service.agenerate_logic_stream.side_effect = _agen
+    container.core.paradox_service.return_value.agenerate_logic_stream.side_effect = (
+        _agen
+    )
 
     with (
         patch.object(streams_mod, "check_rate_limit", new=AsyncMock(return_value=None)),
+        patch.object(
+            streams_mod, "_charge_bx_or_402", new=AsyncMock(return_value=None)
+        ),
         patch.object(streams_mod, "get_session_service", return_value=session),
         patch.object(streams_mod, "get_container", return_value=container),
     ):

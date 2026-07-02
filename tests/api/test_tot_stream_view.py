@@ -33,6 +33,9 @@ async def test_tot_async_stream_serializes_service_events():
 
     with (
         patch.object(streams_mod, "check_rate_limit", new=AsyncMock(return_value=None)),
+        patch.object(
+            streams_mod, "_charge_bx_or_402", new=AsyncMock(return_value=None)
+        ),
         patch.object(streams_mod, "get_container", return_value=container),
     ):
         resp = await streams_mod.ToTStreamView().get(request)

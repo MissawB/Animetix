@@ -48,7 +48,10 @@ def _container_with_chunks(chunks):
         for c in chunks:
             yield c
 
-    container.core.animinator_service.aask_oracle_stream.side_effect = _astream
+    # View calls the provider: container.core.animinator_service().aask_oracle_stream(...)
+    container.core.animinator_service.return_value.aask_oracle_stream.side_effect = (
+        _astream
+    )
     return container
 
 
@@ -60,6 +63,9 @@ async def test_animinator_async_stream_emits_text_tokens_no_error():
     )
     with (
         patch.object(streams_mod, "check_rate_limit", new=AsyncMock(return_value=None)),
+        patch.object(
+            streams_mod, "_charge_bx_or_402", new=AsyncMock(return_value=None)
+        ),
         patch.object(streams_mod, "get_session_service", return_value=_session_mock()),
         patch.object(streams_mod, "get_container", return_value=container),
     ):
@@ -80,6 +86,9 @@ async def test_animinator_async_stream_sets_cache_control_no_cache():
     container = _container_with_chunks([InferenceResponse(text="hi")])
     with (
         patch.object(streams_mod, "check_rate_limit", new=AsyncMock(return_value=None)),
+        patch.object(
+            streams_mod, "_charge_bx_or_402", new=AsyncMock(return_value=None)
+        ),
         patch.object(streams_mod, "get_session_service", return_value=_session_mock()),
         patch.object(streams_mod, "get_container", return_value=container),
     ):
