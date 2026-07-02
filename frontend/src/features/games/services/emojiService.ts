@@ -18,10 +18,13 @@ export const emojiService = {
   getState: async (): Promise<EmojiState> => {
     return apiClient(`${API_BASE}/state/`);
   },
-  start: async (mediaType?: string): Promise<EmojiState> => {
+  start: async (mediaType?: string, difficulty?: string): Promise<EmojiState> => {
     return apiClient(`${API_BASE}/start/`, {
       method: 'POST',
-      body: JSON.stringify(mediaType ? { media_type: mediaType } : {}),
+      body: JSON.stringify({
+        ...(mediaType ? { media_type: mediaType } : {}),
+        ...(difficulty ? { difficulty } : {}),
+      }),
     });
   },
   submit: async (data: EmojiGuessRequest): Promise<EmojiState> => {

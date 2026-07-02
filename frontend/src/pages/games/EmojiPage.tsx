@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Trophy, Sparkles, Search, Flag, RotateCcw } from 'lucide-react';
+import { Send, Trophy, Sparkles, Search, Flag, RotateCcw, Play, Clapperboard, BookOpen, Users, Gauge } from 'lucide-react';
 import { useEmoji } from '../../features/games/hooks/useEmoji';
 import { emojiService, EmojiSuggestion } from '../../features/games/services/emojiService';
 import { Card } from "../../components/ui/Card";
@@ -10,17 +10,33 @@ import { CardSkeleton } from "../../components/ui/Skeleton";
 
 import { EmojiState } from "../../types";
 
+const MEDIA_OPTS = [
+  { key: 'Anime', label: 'Animés', icon: Clapperboard },
+  { key: 'Manga', label: 'Mangas', icon: BookOpen },
+  { key: 'Character', label: 'Personnages', icon: Users },
+] as const;
+
+const DIFF_OPTS = [
+  { key: 'Easy', label: 'Facile', hint: 'Œuvres très connues' },
+  { key: 'Normal', label: 'Normal', hint: 'Un bon mix' },
+  { key: 'Hard', label: 'Difficile', hint: 'Titres plus pointus' },
+  { key: 'Impossible', label: 'Extrême', hint: 'Pépites obscures' },
+] as const;
+
 const EmojiPage: React.FC = () => {
-  const { gameState, loading, handleGuess, giveUp, restart } = useEmoji() as unknown as {
+  const { gameState, starting, handleGuess, giveUp, start, reset } = useEmoji() as unknown as {
     gameState: EmojiState | undefined;
-    loading: boolean;
+    starting: boolean;
     handleGuess: (arg: { guess: string }) => Promise<void>;
     giveUp: () => void;
-    restart: () => void;
+    start: (mediaType?: string, difficulty?: string) => void;
+    reset: () => void;
   };
   const [guess, setGuess] = useState<string>('');
   const [suggestions, setSuggestions] = useState<EmojiSuggestion[]>([]);
   const [showSug, setShowSug] = useState(false);
+  const [mediaType, setMediaType] = useState<string>('Anime');
+  const [difficulty, setDifficulty] = useState<string>('Normal');
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reqIdRef = useRef(0);
@@ -55,27 +71,100 @@ const EmojiPage: React.FC = () => {
     inputRef.current?.focus();
   };
 
-  if (loading) return (
+  // ── Écran de chargement (partie en cours de création) ──────────────────
+  if (starting && !gameState) return (
     <div className="flex justify-center items-center py-12 px-6">
       <CardSkeleton />
     </div>
   );
-  
-  if (!gameState) return null;
+
+  // ── Écran de choix : type d'œuvre + difficulté ─────────────────────────
+  if (!gameState) {
+    return (
+      <div className="max-w-3xl mx-auto p-6 py-16 text-center">
+        <h2 className="text-5xl font-black italic manga-font mb-3 tracking-tighter uppercase">
+          EMOJI <span className="text-orange-500">DECODE</span>
+        </h2>
+        <p className="text-sm font-bold opacity-50 mb-12">Devine l'œuvre cachée derrière une suite d'emojis, du plus vague au plus évident.</p>
+
+        <div className="text-left mb-10">
+          <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.3em] opacity-40 mb-4">
+            <Sparkles className="w-3.5 h-3.5" /> 1 · Type d'œuvre
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {MEDIA_OPTS.map(({ key, label, icon: Icon }) => {
+              const active = mediaType === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setMediaType(key)}
+                  className={`flex flex-col items-center gap-2 rounded-2xl border-2 p-5 font-black uppercase italic manga-font transition-all ${
+                    active
+                      ? 'border-orange-500 bg-orange-500/10 text-orange-500 scale-[1.02]'
+                      : 'border-black/10 dark:border-white/10 hover:border-orange-500/40'
+                  }`}
+                >
+                  <Icon className="w-7 h-7" />
+                  <span className="text-lg">{label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="text-left mb-12">
+          <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.3em] opacity-40 mb-4">
+            <Gauge className="w-3.5 h-3.5" /> 2 · Difficulté
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {DIFF_OPTS.map(({ key, label, hint }) => {
+              const active = difficulty === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setDifficulty(key)}
+                  className={`rounded-2xl border-2 p-4 text-center transition-all ${
+                    active
+                      ? 'border-orange-500 bg-orange-500/10 scale-[1.02]'
+                      : 'border-black/10 dark:border-white/10 hover:border-orange-500/40'
+                  }`}
+                >
+                  <div className={`font-black uppercase italic manga-font ${active ? 'text-orange-500' : ''}`}>{label}</div>
+                  <div className="text-[10px] font-bold opacity-40 mt-1 leading-tight">{hint}</div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <Button
+          variant="primary"
+          size="lg"
+          onClick={() => start(mediaType, difficulty)}
+          className="bg-black text-white hover:bg-gray-900 border-none px-16"
+        >
+          <Play className="w-5 h-5" /> COMMENCER
+        </Button>
+      </div>
+    );
+  }
 
   // Défensif : d'anciennes sessions renvoyaient `emojis` en chaîne (non-array).
   const revealed: string[] = Array.isArray(gameState.emojis) ? gameState.emojis : [];
   const totalEmojis = gameState.total_emojis || revealed.length;
   // Victoire = au moins une tentative correcte ; sinon la partie a été abandonnée.
   const won = (gameState.guesses || []).some((g) => g.is_correct);
+  const replay = () => { start(gameState.media_type, gameState.difficulty); setGuess(''); };
 
   return (
-    
+
       <div className="max-w-4xl mx-auto p-6 text-center py-16">
         <h2 className="text-5xl font-black italic manga-font mb-12 tracking-tighter uppercase">
           EMOJI <span className="text-orange-500">DECODE</span>
         </h2>
-        
+
         <Card padding="lg" className="bg-gradient-to-r from-orange-500 to-red-600 mb-12 text-white border-none relative overflow-hidden group">
           <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
           <div className="text-6xl md:text-8xl tracking-[0.3em] mb-6 flex flex-wrap justify-center items-center gap-2 drop-shadow-lg min-h-[6rem]">
@@ -172,13 +261,22 @@ const EmojiPage: React.FC = () => {
               <p className="text-lg md:text-xl font-bold opacity-90">
                 La réponse était <span className="text-yellow-300">{gameState.secret_title}</span>
               </p>
-              <Button
-                variant="ghost"
-                className="mt-8 bg-white/95 text-slate-900 hover:bg-white border-none px-10 font-black"
-                onClick={() => { restart(); setGuess(''); }}
-              >
-                <RotateCcw className="w-5 h-5" /> REJOUER
-              </Button>
+              <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+                <Button
+                  variant="ghost"
+                  className="bg-white/95 text-slate-900 hover:bg-white border-none px-10 font-black"
+                  onClick={replay}
+                >
+                  <RotateCcw className="w-5 h-5" /> REJOUER
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => { reset(); setGuess(''); }}
+                  className="rounded-2xl px-8 py-3 font-black uppercase tracking-wide text-sm text-white/90 border border-white/30 hover:bg-white/10 transition-colors"
+                >
+                  Changer de mode
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -208,10 +306,8 @@ const EmojiPage: React.FC = () => {
           ))}
         </div>
       </div>
-    
+
   );
 };
 
 export default EmojiPage;
-
-

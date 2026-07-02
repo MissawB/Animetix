@@ -8,15 +8,17 @@ import EmojiPage from '../EmojiPage';
 
 interface EmojiHook {
   gameState: EmojiState | undefined;
-  loading: boolean;
+  starting: boolean;
   handleGuess: (arg: { guess: string }) => Promise<void>;
   giveUp: () => void;
-  restart: () => void;
+  start: (mediaType?: string, difficulty?: string) => void;
+  reset: () => void;
 }
 
 const handleGuess = vi.fn<(arg: { guess: string }) => Promise<void>>(() => Promise.resolve());
 const giveUp = vi.fn();
-const restart = vi.fn();
+const start = vi.fn();
+const reset = vi.fn();
 let hookValue: EmojiHook;
 
 vi.mock('../../../features/games/hooks/useEmoji', () => ({
@@ -38,9 +40,20 @@ const renderPage = () => {
   );
 };
 
+const hook = (over: Partial<EmojiHook> = {}): EmojiHook => ({
+  gameState: undefined,
+  starting: false,
+  handleGuess,
+  giveUp,
+  start,
+  reset,
+  ...over,
+});
+
 const baseState = (over: Partial<EmojiState> = {}): EmojiState => ({
   game_over: false,
-  media_type: 'anime',
+  media_type: 'Anime',
+  difficulty: 'Normal',
   is_daily: false,
   emojis: ['🏴‍☠️', '👒'],
   total_emojis: 4,
@@ -51,19 +64,25 @@ const baseState = (over: Partial<EmojiState> = {}): EmojiState => ({
 describe('EmojiPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    hookValue = { gameState: baseState(), loading: false, handleGuess, giveUp, restart };
+    hookValue = hook({ gameState: baseState() });
   });
 
-  it('renders a skeleton while loading', () => {
-    hookValue = { gameState: undefined, loading: true, handleGuess, giveUp, restart };
+  it('renders a skeleton while a game is starting', () => {
+    hookValue = hook({ gameState: undefined, starting: true });
     const { container } = renderPage();
     expect(container.querySelector('.animate-pulse')).toBeTruthy();
   });
 
-  it('renders nothing when there is no game state', () => {
-    hookValue = { gameState: undefined, loading: false, handleGuess, giveUp, restart };
-    const { container } = renderPage();
-    expect(container).toBeEmptyDOMElement();
+  it('shows the chooser (media type + difficulty) when there is no game, and starts with the picks', () => {
+    hookValue = hook({ gameState: undefined });
+    renderPage();
+    expect(screen.getByText('Animés')).toBeInTheDocument();
+    expect(screen.getByText('Mangas')).toBeInTheDocument();
+    expect(screen.getByText('Personnages')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Mangas'));
+    fireEvent.click(screen.getByText('Difficile'));
+    fireEvent.click(screen.getByText(/COMMENCER/i));
+    expect(start).toHaveBeenCalledWith('Manga', 'Hard');
   });
 
   it('renders the emoji puzzle and input when active', () => {
@@ -102,18 +121,14 @@ describe('EmojiPage', () => {
   });
 
   it('renders prior attempts with badges', () => {
-    hookValue = {
+    hookValue = hook({
       gameState: baseState({
         guesses: [
           { title: 'Bleach', image: 'b.jpg', is_correct: false },
           { title: 'Naruto', title_en: 'Naruto EN', image: 'n.jpg', is_correct: true },
         ],
       }),
-      loading: false,
-      handleGuess,
-      giveUp,
-      restart,
-    };
+    });
     renderPage();
     expect(screen.getByText('Bleach')).toBeInTheDocument();
     expect(screen.getByText('Naruto EN')).toBeInTheDocument();
@@ -121,22 +136,33 @@ describe('EmojiPage', () => {
     expect(screen.getByText('ÉCHEC')).toBeInTheDocument();
   });
 
-  it('renders the victory state and triggers restart', () => {
-    hookValue = {
+  it('renders the victory state and replays with the same settings', () => {
+    hookValue = hook({
+      gameState: baseState({
+        game_over: true,
+        media_type: 'Manga',
+        difficulty: 'Hard',
+        secret_title: 'One Piece',
+        guesses: [{ title: 'One Piece', image: 'op.jpg', is_correct: true }],
+      }),
+    });
+    renderPage();
+    expect(screen.getByText(/VICTOIRE/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByText(/REJOUER/i));
+    expect(start).toHaveBeenCalledWith('Manga', 'Hard');
+  });
+
+  it('goes back to the chooser via "Changer de mode"', () => {
+    hookValue = hook({
       gameState: baseState({
         game_over: true,
         secret_title: 'One Piece',
         guesses: [{ title: 'One Piece', image: 'op.jpg', is_correct: true }],
       }),
-      loading: false,
-      handleGuess,
-      giveUp,
-      restart,
-    };
+    });
     renderPage();
-    expect(screen.getByText(/VICTOIRE/i)).toBeInTheDocument();
-    fireEvent.click(screen.getByText(/REJOUER/i));
-    expect(restart).toHaveBeenCalled();
+    fireEvent.click(screen.getByText(/Changer de mode/i));
+    expect(reset).toHaveBeenCalled();
   });
 
   it('triggers giveUp when clicking Abandonner', () => {
@@ -146,17 +172,13 @@ describe('EmojiPage', () => {
   });
 
   it('shows the abandoned state (no correct guess) instead of victory', () => {
-    hookValue = {
+    hookValue = hook({
       gameState: baseState({
         game_over: true,
         secret_title: 'One Piece',
         guesses: [{ title: 'Bleach', image: 'b.jpg', is_correct: false }],
       }),
-      loading: false,
-      handleGuess,
-      giveUp,
-      restart,
-    };
+    });
     renderPage();
     expect(screen.getByText(/abandonn/i)).toBeInTheDocument();
     expect(screen.queryByText(/VICTOIRE/i)).not.toBeInTheDocument();

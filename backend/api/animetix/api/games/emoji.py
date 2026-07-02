@@ -37,18 +37,30 @@ def _revealed(port):
     return full[: min(len(full), 1 + wrong)]
 
 
-def _start_game(port, catalog_service, emoji_service, media_type):
+EMOJI_MEDIA_TYPES = ["Anime", "Manga", "Character"]
+EMOJI_DIFFICULTIES = ["Easy", "Normal", "Hard", "Impossible"]
+
+
+def _difficulty_limit(difficulty):
+    """Popularity ceiling for the secret pool. Easy = only the most famous
+    works, Impossible = the whole catalogue (deep cuts)."""
+    from ...services import AKINETIX_DIFFICULTY_RANK
+
+    return AKINETIX_DIFFICULTY_RANK.get(difficulty, AKINETIX_DIFFICULTY_RANK["Normal"])
+
+
+def _start_game(port, catalog_service, emoji_service, media_type, difficulty="Normal"):
     """Pick a secret + build its precomputed emoji sequence (no LLM)."""
     data = catalog_service.load_data(media_type)
     if not data or not data.get("db"):
-        for m_type in ["Anime", "Manga", "Character"]:
+        for m_type in EMOJI_MEDIA_TYPES:
             data = catalog_service.load_data(m_type)
             if data and data.get("db"):
                 media_type = m_type
                 break
     if not data or not data.get("db"):
         return None, media_type
-    secret = emoji_service.select_secret(data)
+    secret = emoji_service.select_secret(data, limit=_difficulty_limit(difficulty))
     if not secret:
         return None, media_type
     item = data["title_to_full_data"].get(secret, {})
@@ -57,6 +69,7 @@ def _start_game(port, catalog_service, emoji_service, media_type):
     port.update(
         {
             "media_type": media_type,
+            "difficulty": difficulty,
             "emoji_secret": secret,
             "emoji_list": emoji_list,
             "emoji_guesses": [],
@@ -86,7 +99,11 @@ class EmojiGameStateView(APIView):
         if not secret or not isinstance(port.get("emoji_list"), list):
             media_type = port.get("media_type", "Anime")
             secret, media_type = _start_game(
-                port, catalog_service, emoji_service, media_type
+                port,
+                catalog_service,
+                emoji_service,
+                media_type,
+                port.get("difficulty", "Normal"),
             )
         if not secret:
             return Response(
@@ -96,6 +113,7 @@ class EmojiGameStateView(APIView):
         return Response(
             {
                 "media_type": port.get("media_type", "Anime"),
+                "difficulty": port.get("difficulty", "Normal"),
                 "emojis": _revealed(port),
                 "total_emojis": len(port.get("emoji_list", []) or []),
                 "guesses": port.get("emoji_guesses", []),
@@ -120,10 +138,13 @@ class EmojiGameStartView(APIView):
     ):
         port = get_session_service(request).port
         media_type = request.data.get("media_type", port.get("media_type", "Anime"))
-        if media_type not in ["Anime", "Manga", "Character"]:
+        if media_type not in EMOJI_MEDIA_TYPES:
             media_type = "Anime"
+        difficulty = request.data.get("difficulty", port.get("difficulty", "Normal"))
+        if difficulty not in EMOJI_DIFFICULTIES:
+            difficulty = "Normal"
         secret, media_type = _start_game(
-            port, catalog_service, emoji_service, media_type
+            port, catalog_service, emoji_service, media_type, difficulty
         )
         if not secret:
             return Response(
@@ -134,6 +155,7 @@ class EmojiGameStartView(APIView):
             {
                 "status": "started",
                 "media_type": media_type,
+                "difficulty": difficulty,
                 "emojis": _revealed(port),
                 "total_emojis": len(port.get("emoji_list", []) or []),
                 "guesses": [],
@@ -237,6 +259,7 @@ class EmojiGameGuessView(APIView):
         return Response(
             {
                 "media_type": media_type,
+                "difficulty": port.get("difficulty", "Normal"),
                 "emojis": _revealed(port),
                 "total_emojis": len(port.get("emoji_list", []) or []),
                 "game_over": port.get("emoji_game_over", False),
@@ -282,6 +305,7 @@ class EmojiGameGiveUpView(APIView):
         return Response(
             {
                 "media_type": port.get("media_type", "Anime"),
+                "difficulty": port.get("difficulty", "Normal"),
                 "emojis": _revealed(port),  # game over → full sequence revealed
                 "total_emojis": len(port.get("emoji_list", []) or []),
                 "guesses": port.get("emoji_guesses", []),

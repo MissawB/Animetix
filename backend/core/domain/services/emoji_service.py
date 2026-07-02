@@ -93,13 +93,18 @@ class EmojiDomainService:
                 break
         return picked or ["❓", "❓", "❓"]
 
-    def select_secret(self, catalog: Dict) -> Optional[str]:
-        """Sélectionne un titre aléatoire pour le défi Emoji."""
+    def select_secret(self, catalog: Dict, limit: int = 500) -> Optional[str]:
+        """Sélectionne un titre aléatoire dans le pool de popularité `limit`.
+
+        Le catalogue est trié par popularité décroissante : un `limit` petit ne
+        garde que les œuvres les plus connues (facile), un `limit` grand ouvre
+        aux pépites obscures (difficile).
+        """
         valid_choices = [
             t
             for t in catalog.get("titles", [])
             if t in catalog.get("title_to_full_data", {})
-        ][:500]
+        ][: max(1, limit)]
         if not valid_choices:
             return None
         return random.choice(valid_choices)

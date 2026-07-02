@@ -216,6 +216,7 @@ export interface AkinetixState extends GameState {
 
 export interface EmojiState {
   media_type: string;
+  difficulty?: string;
   emojis: string[]; // révélés jusqu'ici (vague → évident), un de plus par essai raté
   total_emojis: number; // longueur totale de la séquence
   game_over: boolean;
