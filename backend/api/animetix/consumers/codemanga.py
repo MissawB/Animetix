@@ -15,8 +15,14 @@ KNOWN_CATS = {"Anime", "Manga", "Character", "Movie", "Game", "Actor", "VGChar"}
 # Video-game characters have no catalog collection; their cards live in a file.
 VG_CHAR_FILE = ("data", "artifacts", "vg_char_data_for_lookup.json")
 # Difficulty = required anime/manga knowledge: how deep into the popularity-ranked
-# catalog we draw cards from (Easy = only very famous works, Hard = deep cuts).
+# catalog the "otaku" (obscure) cards are drawn from. Easy stays shallow, Hard
+# reaches deep cuts.
 DIFFICULTY_LIMITS = {"Easy": 150, "Normal": 450, "Hard": 1200}
+# Top slice of each catalog treated as "grand public" (recognisable) cards; the
+# rest of the depth is the "otaku" band.
+POPULAR_LIMIT = 60
+# Every board keeps obscure "otaku" cards in the majority (>=70%) but randomised.
+OTAKU_MIN, OTAKU_MAX = 18, 22  # out of 25 → 72%..88%
 
 
 class CodeMangaConsumer(BaseConsumer):
@@ -146,12 +152,12 @@ class CodeMangaConsumer(BaseConsumer):
     # ── Game logic ──────────────────────────────────────────────────────────
     async def generate_grid(self, room):
         limit = DIFFICULTY_LIMITS.get(room.get("difficulty", "Normal"), 450)
-        cards = await sync_to_async(self._collect_cards)(
+        popular, otaku = await sync_to_async(self._collect_pools)(
             room.get("categories") or ["Anime"], limit
         )
-        if len(cards) < 25:
+        selected = self._compose_cards(popular, otaku)
+        if len(selected) < 25:
             return
-        selected = random.sample(cards, 25)
         roles = (
             ["blue"] * BLUE_CARDS
             + ["red"] * RED_CARDS
@@ -171,13 +177,12 @@ class CodeMangaConsumer(BaseConsumer):
         room["blue_score"] = room["red_score"] = 0
         room["turn"], room["winner"], room["clue"] = "blue", None, None
 
-    def _collect_cards(self, categories, limit=450):
-        """Gather {title, image} cards from the selected categories (same data
-        universes as Undercover), capped to the top-`limit` most popular of each
-        so difficulty controls the required knowledge. Runs sync — call via
-        sync_to_async."""
+    def _collect_pools(self, categories, limit, popular_limit=POPULAR_LIMIT):
+        """Split the selected categories' cards into a "popular" pool (top slice,
+        recognisable) and an "otaku" pool (deeper, up to the difficulty limit).
+        Same data universes as Undercover. Runs sync — call via sync_to_async."""
         catalog = get_container().catalog_service
-        seen, out = set(), []
+        seen, popular, otaku = set(), [], []
         for cat in categories:
             try:
                 if cat == "VGChar":
@@ -187,13 +192,31 @@ class CodeMangaConsumer(BaseConsumer):
                     items = (data or {}).get("db", []) or []
             except Exception:
                 items = []
-            for it in items[:limit]:
+            for rank, it in enumerate(items[:limit]):
                 title = it.get("title") or it.get("name")
                 image = it.get("image")
-                if title and image and title not in seen:
-                    seen.add(title)
-                    out.append({"title": title, "image": image})
-        return out
+                if not title or not image or title in seen:
+                    continue
+                seen.add(title)
+                (popular if rank < popular_limit else otaku).append(
+                    {"title": title, "image": image}
+                )
+        return popular, otaku
+
+    def _compose_cards(self, popular, otaku):
+        """Pick 25 cards keeping obscure "otaku" cards a randomised majority
+        (>=70%), with a few recognisable ones for footing. Falls back gracefully
+        when a pool is too small."""
+        if len(popular) + len(otaku) < 25:
+            return []
+        otaku_n = min(random.randint(OTAKU_MIN, OTAKU_MAX), len(otaku))
+        popular_n = 25 - otaku_n
+        if popular_n > len(popular):
+            popular_n = len(popular)
+            otaku_n = 25 - popular_n
+        chosen = random.sample(otaku, otaku_n) + random.sample(popular, popular_n)
+        random.shuffle(chosen)
+        return chosen
 
     def _load_vg_cards(self, catalog):
         root = getattr(getattr(catalog, "repository", None), "project_root", "") or ""

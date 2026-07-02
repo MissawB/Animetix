@@ -217,18 +217,37 @@ async def test_set_categories_keeps_only_known(patched_state, mocker):
     assert patched_state["codemanga_room_ABC"]["categories"] == ["Anime", "Game"]
 
 
-async def test_collect_cards_merges_categories_and_dedupes(patched_catalog):
-    """_collect_cards unions catalogs by (title, image), skipping imageless items."""
+async def test_collect_pools_splits_popular_and_otaku(patched_catalog):
+    """Cards split into a top-N 'popular' pool and a deeper 'otaku' pool."""
     c = _make_consumer()
-    cards = c._collect_cards(["Anime"], 450)
-    assert len(cards) == 40  # fake catalog has 40 titled+imaged items
-    assert all("title" in x and "image" in x for x in cards)
+    popular, otaku = c._collect_pools(["Anime"], 450, popular_limit=10)
+    assert len(popular) == 10  # first 10 by popularity
+    assert len(otaku) == 30  # remaining of the 40 fake items
+    assert all("title" in x and "image" in x for x in popular + otaku)
 
 
-async def test_collect_cards_respects_difficulty_limit(patched_catalog):
-    """The popularity cap (difficulty) trims each category to the top-N."""
+async def test_collect_pools_respects_difficulty_limit(patched_catalog):
+    """The difficulty cap trims how deep the otaku band reaches."""
     c = _make_consumer()
-    assert len(c._collect_cards(["Anime"], 10)) == 10
+    popular, otaku = c._collect_pools(["Anime"], 15, popular_limit=10)
+    assert len(popular) == 10 and len(otaku) == 5  # only ranks 0..14 kept
+
+
+async def test_compose_cards_keeps_otaku_majority():
+    """25 cards with obscure ('otaku') cards a >=70% randomised majority."""
+    c = _make_consumer()
+    popular = [{"title": f"p{i}", "image": "x"} for i in range(100)]
+    otaku = [{"title": f"o{i}", "image": "x"} for i in range(100)]
+    for _ in range(20):  # randomised — check the guarantee holds every time
+        chosen = c._compose_cards(popular, otaku)
+        assert len(chosen) == 25
+        n_otaku = sum(1 for c2 in chosen if c2["title"].startswith("o"))
+        assert n_otaku >= 18  # >= 72% obscure
+
+
+async def test_compose_cards_empty_when_too_few():
+    c = _make_consumer()
+    assert c._compose_cards([{"title": "a", "image": "x"}], []) == []
 
 
 async def test_set_difficulty_validates(patched_state, mocker):
