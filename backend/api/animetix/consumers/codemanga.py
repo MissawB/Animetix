@@ -1,4 +1,5 @@
 import json
+import os
 import random
 from urllib.parse import parse_qs
 
@@ -9,7 +10,10 @@ from .base import BaseConsumer, state_adapter
 
 # Board composition (Codenames): the starting team (blue) gets 9, the other 8.
 BLUE_CARDS, RED_CARDS, NEUTRAL_CARDS = 9, 8, 7
-MEDIA_TYPES = {"Anime", "Manga", "Character"}
+# Same card universes as Undercover — the host ticks any mix of these.
+KNOWN_CATS = {"Anime", "Manga", "Character", "Movie", "Game", "Actor", "VGChar"}
+# Video-game characters have no catalog collection; their cards live in a file.
+VG_CHAR_FILE = ("data", "artifacts", "vg_char_data_for_lookup.json")
 
 
 class CodeMangaConsumer(BaseConsumer):
@@ -31,7 +35,7 @@ class CodeMangaConsumer(BaseConsumer):
             "host": None,
             "players": {},
             "state": "lobby",
-            "media_type": "Anime",
+            "categories": ["Anime"],
             "grid": [],
             "turn": "blue",
             "blue_score": 0,
@@ -98,9 +102,9 @@ class CodeMangaConsumer(BaseConsumer):
             me["team"] = team if team in ("blue", "red") else me["team"]
             role = data.get("role")
             me["role"] = role if role in ("spymaster", "operative") else me["role"]
-        elif action == "set_media" and is_host:
-            mt = data.get("media_type")
-            room["media_type"] = mt if mt in MEDIA_TYPES else "Anime"
+        elif action == "set_categories" and is_host:
+            cats = [c for c in (data.get("categories") or []) if c in KNOWN_CATS]
+            room["categories"] = cats or ["Anime"]
         elif action == "start_game" and is_host:
             await self.generate_grid(room)
             if room["grid"]:
@@ -134,12 +138,12 @@ class CodeMangaConsumer(BaseConsumer):
 
     # ── Game logic ──────────────────────────────────────────────────────────
     async def generate_grid(self, room):
-        data = await sync_to_async(get_container().catalog_service.load_data)(
-            room.get("media_type", "Anime")
+        cards = await sync_to_async(self._collect_cards)(
+            room.get("categories") or ["Anime"]
         )
-        if not data or len(data.get("db", [])) < 25:
+        if len(cards) < 25:
             return
-        selected = random.sample(list(data["db"]), 25)
+        selected = random.sample(cards, 25)
         roles = (
             ["blue"] * BLUE_CARDS
             + ["red"] * RED_CARDS
@@ -149,8 +153,8 @@ class CodeMangaConsumer(BaseConsumer):
         random.shuffle(roles)
         room["grid"] = [
             {
-                "title": selected[i].get("title") or selected[i].get("name"),
-                "image": selected[i].get("image"),
+                "title": selected[i]["title"],
+                "image": selected[i]["image"],
                 "role": roles[i],
                 "revealed": False,
             }
@@ -158,6 +162,34 @@ class CodeMangaConsumer(BaseConsumer):
         ]
         room["blue_score"] = room["red_score"] = 0
         room["turn"], room["winner"], room["clue"] = "blue", None, None
+
+    def _collect_cards(self, categories):
+        """Gather {title, image} cards from the selected categories (same data
+        universes as Undercover). Runs sync — call via sync_to_async."""
+        catalog = get_container().catalog_service
+        seen, out = set(), []
+        for cat in categories:
+            try:
+                if cat == "VGChar":
+                    items = self._load_vg_cards(catalog)
+                else:
+                    data = catalog.load_data(cat)
+                    items = (data or {}).get("db", []) or []
+            except Exception:
+                items = []
+            for it in items:
+                title = it.get("title") or it.get("name")
+                image = it.get("image")
+                if title and image and title not in seen:
+                    seen.add(title)
+                    out.append({"title": title, "image": image})
+        return out
+
+    def _load_vg_cards(self, catalog):
+        root = getattr(getattr(catalog, "repository", None), "project_root", "") or ""
+        path = os.path.join(root, *VG_CHAR_FILE)
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
 
     def handle_clue(self, room, me, data):
         """Current team's spymaster announces a one-word clue + a count."""
@@ -256,7 +288,7 @@ class CodeMangaConsumer(BaseConsumer):
                         "type": "state",
                         "room": {
                             "state": room["state"],
-                            "media_type": room.get("media_type", "Anime"),
+                            "categories": room.get("categories", ["Anime"]),
                             "grid": grid,
                             "turn": room["turn"],
                             "blue_score": room["blue_score"],

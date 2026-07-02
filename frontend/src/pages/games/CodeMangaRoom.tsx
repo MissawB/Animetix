@@ -10,10 +10,15 @@ interface CPlayer { id: string; name: string; team?: string | null; role?: strin
 interface CClue { team: string; word: string; number: number; guesses_left: number }
 interface CMsg { user: string; text: string }
 
-const MEDIA = [
+// Same card universes as Undercover — the host ticks any mix.
+const CATEGORIES = [
   { key: 'Anime', label: 'Anime' },
   { key: 'Manga', label: 'Manga' },
-  { key: 'Character', label: 'Persos' },
+  { key: 'Character', label: 'Persos anime' },
+  { key: 'Movie', label: 'Films' },
+  { key: 'Game', label: 'Jeux vidéo' },
+  { key: 'Actor', label: 'Acteurs' },
+  { key: 'VGChar', label: 'Persos de jeux' },
 ];
 const TEAM_LABEL: Record<string, string> = { blue: 'Bleue', red: 'Rouge' };
 
@@ -36,7 +41,7 @@ const CodeMangaRoom: React.FC = () => {
   const winner = gs.winner as string | null;
   const clue = (gs.clue as CClue) || null;
   const messages = (gs.messages as CMsg[]) || [];
-  const mediaType = (gs.media_type as string) || 'Anime';
+  const categories = (gs.categories as string[]) || ['Anime'];
   const myId = (gs.my_id as string) || (gs.myId as string) || '';
   const myTeam = (gs.my_team as string) || null;
   const myRole = (gs.my_role as string) || null;
@@ -63,6 +68,10 @@ const CodeMangaRoom: React.FC = () => {
   const copyCode = () => { navigator.clipboard?.writeText(code); setCopied(true); setTimeout(() => setCopied(false), 1500); };
   const sendChat = (e: React.FormEvent) => { e.preventDefault(); if (chat.trim()) { sendAction('chat', { message: chat.trim() }); setChat(''); } };
   const giveClue = (e: React.FormEvent) => { e.preventDefault(); if (clueWord.trim()) { sendAction('give_clue', { word: clueWord.trim(), number: clueNum }); setClueWord(''); } };
+  const toggleCategory = (key: string) => {
+    const next = categories.includes(key) ? categories.filter((c) => c !== key) : [...categories, key];
+    if (next.length) sendAction('set_categories', { categories: next });
+  };
 
   // Team composition helpers.
   const byTeamRole = (team: string, role: string) => players.filter((p) => p.team === team && p.role === role);
@@ -94,7 +103,7 @@ const CodeMangaRoom: React.FC = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+    <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-8">
       {/* Banner */}
       <div className="relative overflow-hidden rounded-[2.25rem] border-2 border-indigo-500/30 bg-gradient-to-br from-indigo-950/50 via-[#0d0f17] to-[#0d0f17] p-6 sm:p-8 mb-6 shadow-[0_0_60px_-15px_rgba(99,102,241,0.4)]">
         <div className="absolute -right-10 -top-10 w-48 h-48 bg-indigo-600/20 blur-[80px] rounded-full pointer-events-none" />
@@ -125,7 +134,7 @@ const CodeMangaRoom: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
         {/* Left: teams / players */}
         <div className={`${panel} p-5 lg:col-span-1 h-fit space-y-5`}>
           <div>
@@ -175,7 +184,7 @@ const CodeMangaRoom: React.FC = () => {
         </div>
 
         {/* Center: board / lobby */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="lg:col-span-3 space-y-4">
           {state === 'lobby' ? (
             <div className={`${panel} p-6 space-y-5`}>
               <div className="text-center py-4">
@@ -186,13 +195,20 @@ const CodeMangaRoom: React.FC = () => {
               {isHost ? (
                 <>
                   <div>
-                    <p className="text-[11px] font-black uppercase tracking-[0.25em] text-white/40 mb-2">Catégorie des cartes</p>
-                    <div className="grid grid-cols-3 gap-2">
-                      {MEDIA.map((m) => (
-                        <button key={m.key} onClick={() => sendAction('set_media', { media_type: m.key })}
-                          className={`py-2.5 rounded-xl border-2 text-xs font-black uppercase transition-all ${mediaType === m.key ? 'border-indigo-500 bg-indigo-500/15 text-indigo-300' : 'border-white/10 text-white/40 hover:border-indigo-500/40'}`}>{m.label}</button>
-                      ))}
+                    <p className="text-[11px] font-black uppercase tracking-[0.25em] text-white/40 mb-2">Catégories des cartes</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {CATEGORIES.map((m) => {
+                        const on = categories.includes(m.key);
+                        return (
+                          <button key={m.key} onClick={() => toggleCategory(m.key)}
+                            className={`flex items-center gap-2 py-2.5 px-3 rounded-xl border-2 text-xs font-black uppercase transition-all ${on ? 'border-indigo-500 bg-indigo-500/15 text-indigo-300' : 'border-white/10 text-white/40 hover:border-indigo-500/40'}`}>
+                            <span className={`w-4 h-4 rounded grid place-items-center border-2 shrink-0 ${on ? 'bg-indigo-500 border-indigo-500' : 'border-white/25'}`}>{on && <Check className="w-3 h-3 text-white" />}</span>
+                            <span className="truncate">{m.label}</span>
+                          </button>
+                        );
+                      })}
                     </div>
+                    <p className="mt-2 text-[11px] text-white/35 italic">Les 25 cartes sont tirées des catégories cochées (mélange possible).</p>
                   </div>
                   <button onClick={() => sendAction('start_game')} disabled={!canStart}
                     className="w-full py-4 rounded-2xl bg-indigo-600 enabled:hover:bg-indigo-500 text-white font-black italic uppercase tracking-widest text-lg shadow-[0_10px_30px_-10px_rgba(99,102,241,0.7)] transition-all enabled:hover:scale-[1.01] active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
