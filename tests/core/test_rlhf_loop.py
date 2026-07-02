@@ -63,9 +63,12 @@ def test_rlhf_loop_integration(mock_container):
     # 4. Run the curation logic
     try:
         with patch(
-            "scripts.curate_dpo_dataset.get_container", return_value=mock_container
+            "scripts.curation.curate_dpo_dataset.get_container",
+            return_value=mock_container,
         ):
-            from scripts.curate_dpo_dataset import curate_dpo_dataset  # noqa: E402
+            from scripts.curation.curate_dpo_dataset import (
+                curate_dpo_dataset,
+            )  # noqa: E402
 
             curate_dpo_dataset()
 

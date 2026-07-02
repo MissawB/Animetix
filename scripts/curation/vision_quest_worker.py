@@ -6,7 +6,8 @@ import sys
 import django
 
 # --- Environment & Django Setup ---
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Script lives in scripts/curation/vision_quest_worker.py → repo root is 3 levels up.
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.join(BASE_DIR, "src"))
 sys.path.insert(0, os.path.join(BASE_DIR, "src", "backend"))
 

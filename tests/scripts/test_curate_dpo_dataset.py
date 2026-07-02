@@ -1,11 +1,11 @@
 from unittest.mock import MagicMock, patch
 
-from scripts.curate_dpo_dataset import curate_dpo_dataset
+from scripts.curation.curate_dpo_dataset import curate_dpo_dataset
 
 
-@patch("scripts.curate_dpo_dataset.AIFeedback")
-@patch("scripts.curate_dpo_dataset.get_container")
-@patch("scripts.curate_dpo_dataset.DPOFeedbackLoop")
+@patch("scripts.curation.curate_dpo_dataset.AIFeedback")
+@patch("scripts.curation.curate_dpo_dataset.get_container")
+@patch("scripts.curation.curate_dpo_dataset.DPOFeedbackLoop")
 @patch("builtins.open", new_callable=MagicMock)
 def test_curate_dpo_dataset_flow(
     mock_open, mock_loop_class, mock_get_container, mock_feedback

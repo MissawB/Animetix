@@ -1,7 +1,7 @@
 from types import SimpleNamespace
 from unittest.mock import patch
 
-import scripts.deploy.bootstrap_infra as boot
+import scripts.deploy.gcp.bootstrap_infra as boot
 
 
 def _ok(*a, **k):

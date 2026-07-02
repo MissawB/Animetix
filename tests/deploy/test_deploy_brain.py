@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock, patch
 
-from scripts.deploy.deploy_brain import main
+from scripts.deploy.gcp.deploy_brain import main
 
 
 @patch("subprocess.run")

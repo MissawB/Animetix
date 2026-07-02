@@ -36,7 +36,10 @@ if not settings.configured:
     django.setup()
 
 from animetix.containers import get_container  # noqa: E402
-from vision_quest_worker import process_video_for_combat_lore  # noqa: E402
+
+from scripts.curation.vision_quest_worker import (  # noqa: E402
+    process_video_for_combat_lore,
+)
 
 
 @pytest.fixture
@@ -70,7 +73,7 @@ def test_process_video_for_combat_lore_e2e(mock_vlm_response, tmp_path):
     container.video_quest_service = mock_v_service
 
     # 3. Mock Neo4j Manager and run test
-    with patch("vision_quest_worker.neo4j_manager") as mock_neo4j:
+    with patch("scripts.curation.vision_quest_worker.neo4j_manager") as mock_neo4j:
         # 4. Run the worker logic
         process_video_for_combat_lore(media_id, str(video_file))
 

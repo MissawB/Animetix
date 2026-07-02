@@ -6,8 +6,8 @@ import django
 from tqdm import tqdm
 
 # Setup environment
-# Assuming script is in scripts/curate_dpo_dataset.py
-base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Script lives in scripts/curation/curate_dpo_dataset.py → repo root is 3 levels up.
+base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(os.path.join(base_dir, "src"))
 sys.path.append(os.path.join(base_dir, "src", "backend"))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "animetix_project.settings")

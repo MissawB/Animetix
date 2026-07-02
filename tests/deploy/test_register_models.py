@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock, patch
 
-from scripts.deploy.register_models import main
+from scripts.deploy.gcp.register_models import main
 
 
 @patch("subprocess.run")

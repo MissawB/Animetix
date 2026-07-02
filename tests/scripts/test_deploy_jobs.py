@@ -1,11 +1,11 @@
 from unittest.mock import MagicMock
 
-from scripts.deploy.deploy_jobs import main
+from scripts.deploy.gcp.deploy_jobs import main
 
 
 def test_deploy_jobs_main(mocker):
     # Mock run_command in deploy_jobs
-    mock_run = mocker.patch("scripts.deploy.deploy_jobs.run_command")
+    mock_run = mocker.patch("scripts.deploy.gcp.deploy_jobs.run_command")
 
     # We want run_command to return a mock response
     mock_response = MagicMock()

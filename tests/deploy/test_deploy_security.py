@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock, patch
 
-from scripts.deploy.deploy_security import main
+from scripts.deploy.gcp.deploy_security import main
 
 
 @patch("subprocess.run")
