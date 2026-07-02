@@ -46,6 +46,7 @@ def _fresh_room(host="cid-host"):
         "players": {},
         "state": "lobby",
         "categories": ["Anime"],
+        "difficulty": "Normal",
         "grid": [],
         "turn": "blue",
         "blue_score": 0,
@@ -219,9 +220,33 @@ async def test_set_categories_keeps_only_known(patched_state, mocker):
 async def test_collect_cards_merges_categories_and_dedupes(patched_catalog):
     """_collect_cards unions catalogs by (title, image), skipping imageless items."""
     c = _make_consumer()
-    cards = c._collect_cards(["Anime"])
+    cards = c._collect_cards(["Anime"], 450)
     assert len(cards) == 40  # fake catalog has 40 titled+imaged items
     assert all("title" in x and "image" in x for x in cards)
+
+
+async def test_collect_cards_respects_difficulty_limit(patched_catalog):
+    """The popularity cap (difficulty) trims each category to the top-N."""
+    c = _make_consumer()
+    assert len(c._collect_cards(["Anime"], 10)) == 10
+
+
+async def test_set_difficulty_validates(patched_state, mocker):
+    room = _fresh_room(host="cid-host")
+    room["players"]["cid-host"] = {
+        "name": "h",
+        "team": "blue",
+        "role": "spymaster",
+        "channel": "chan-host",
+    }
+    patched_state["codemanga_room_ABC"] = room
+    c = _make_consumer(cid="cid-host")
+    mocker.patch.object(c, "broadcast_state", AsyncMock())
+
+    await c.receive(json.dumps({"action": "set_difficulty", "difficulty": "Hard"}))
+    assert patched_state["codemanga_room_ABC"]["difficulty"] == "Hard"
+    await c.receive(json.dumps({"action": "set_difficulty", "difficulty": "BOGUS"}))
+    assert patched_state["codemanga_room_ABC"]["difficulty"] == "Normal"
 
 
 async def test_start_game_builds_grid_no_redirect(

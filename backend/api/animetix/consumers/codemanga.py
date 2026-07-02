@@ -14,6 +14,9 @@ BLUE_CARDS, RED_CARDS, NEUTRAL_CARDS = 9, 8, 7
 KNOWN_CATS = {"Anime", "Manga", "Character", "Movie", "Game", "Actor", "VGChar"}
 # Video-game characters have no catalog collection; their cards live in a file.
 VG_CHAR_FILE = ("data", "artifacts", "vg_char_data_for_lookup.json")
+# Difficulty = required anime/manga knowledge: how deep into the popularity-ranked
+# catalog we draw cards from (Easy = only very famous works, Hard = deep cuts).
+DIFFICULTY_LIMITS = {"Easy": 150, "Normal": 450, "Hard": 1200}
 
 
 class CodeMangaConsumer(BaseConsumer):
@@ -36,6 +39,7 @@ class CodeMangaConsumer(BaseConsumer):
             "players": {},
             "state": "lobby",
             "categories": ["Anime"],
+            "difficulty": "Normal",
             "grid": [],
             "turn": "blue",
             "blue_score": 0,
@@ -105,6 +109,9 @@ class CodeMangaConsumer(BaseConsumer):
         elif action == "set_categories" and is_host:
             cats = [c for c in (data.get("categories") or []) if c in KNOWN_CATS]
             room["categories"] = cats or ["Anime"]
+        elif action == "set_difficulty" and is_host:
+            d = data.get("difficulty")
+            room["difficulty"] = d if d in DIFFICULTY_LIMITS else "Normal"
         elif action == "start_game" and is_host:
             await self.generate_grid(room)
             if room["grid"]:
@@ -138,8 +145,9 @@ class CodeMangaConsumer(BaseConsumer):
 
     # ── Game logic ──────────────────────────────────────────────────────────
     async def generate_grid(self, room):
+        limit = DIFFICULTY_LIMITS.get(room.get("difficulty", "Normal"), 450)
         cards = await sync_to_async(self._collect_cards)(
-            room.get("categories") or ["Anime"]
+            room.get("categories") or ["Anime"], limit
         )
         if len(cards) < 25:
             return
@@ -163,9 +171,11 @@ class CodeMangaConsumer(BaseConsumer):
         room["blue_score"] = room["red_score"] = 0
         room["turn"], room["winner"], room["clue"] = "blue", None, None
 
-    def _collect_cards(self, categories):
+    def _collect_cards(self, categories, limit=450):
         """Gather {title, image} cards from the selected categories (same data
-        universes as Undercover). Runs sync — call via sync_to_async."""
+        universes as Undercover), capped to the top-`limit` most popular of each
+        so difficulty controls the required knowledge. Runs sync — call via
+        sync_to_async."""
         catalog = get_container().catalog_service
         seen, out = set(), []
         for cat in categories:
@@ -177,7 +187,7 @@ class CodeMangaConsumer(BaseConsumer):
                     items = (data or {}).get("db", []) or []
             except Exception:
                 items = []
-            for it in items:
+            for it in items[:limit]:
                 title = it.get("title") or it.get("name")
                 image = it.get("image")
                 if title and image and title not in seen:
@@ -289,6 +299,7 @@ class CodeMangaConsumer(BaseConsumer):
                         "room": {
                             "state": room["state"],
                             "categories": room.get("categories", ["Anime"]),
+                            "difficulty": room.get("difficulty", "Normal"),
                             "grid": grid,
                             "turn": room["turn"],
                             "blue_score": room["blue_score"],

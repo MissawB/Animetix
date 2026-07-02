@@ -20,6 +20,12 @@ const CATEGORIES = [
   { key: 'Actor', label: 'Acteurs' },
   { key: 'VGChar', label: 'Persos de jeux' },
 ];
+// Difficulty = required anime/manga knowledge (popularity depth of the cards).
+const DIFFS = [
+  { key: 'Easy', label: 'Grand public', hint: 'œuvres très connues' },
+  { key: 'Normal', label: 'Amateur', hint: 'œuvres connues' },
+  { key: 'Hard', label: 'Otaku', hint: 'œuvres pointues' },
+];
 const TEAM_LABEL: Record<string, string> = { blue: 'Bleue', red: 'Rouge' };
 
 const CodeMangaRoom: React.FC = () => {
@@ -42,6 +48,7 @@ const CodeMangaRoom: React.FC = () => {
   const clue = (gs.clue as CClue) || null;
   const messages = (gs.messages as CMsg[]) || [];
   const categories = (gs.categories as string[]) || ['Anime'];
+  const difficulty = (gs.difficulty as string) || 'Normal';
   const myId = (gs.my_id as string) || (gs.myId as string) || '';
   const myTeam = (gs.my_team as string) || null;
   const myRole = (gs.my_role as string) || null;
@@ -209,6 +216,16 @@ const CodeMangaRoom: React.FC = () => {
                       })}
                     </div>
                     <p className="mt-2 text-[11px] text-white/35 italic">Les 25 cartes sont tirées des catégories cochées (mélange possible).</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-black uppercase tracking-[0.25em] text-white/40 mb-2">Difficulté · connaissances requises</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {DIFFS.map((d) => (
+                        <button key={d.key} onClick={() => sendAction('set_difficulty', { difficulty: d.key })}
+                          className={`py-2.5 rounded-xl border-2 text-xs font-black uppercase transition-all ${difficulty === d.key ? 'border-indigo-500 bg-indigo-500/15 text-indigo-300' : 'border-white/10 text-white/40 hover:border-indigo-500/40'}`}>{d.label}</button>
+                      ))}
+                    </div>
+                    <p className="mt-2 text-[11px] text-white/35 italic">{DIFFS.find((d) => d.key === difficulty)?.hint} — plus c'est dur, plus il faut s'y connaître en anime/manga.</p>
                   </div>
                   <button onClick={() => sendAction('start_game')} disabled={!canStart}
                     className="w-full py-4 rounded-2xl bg-indigo-600 enabled:hover:bg-indigo-500 text-white font-black italic uppercase tracking-widest text-lg shadow-[0_10px_30px_-10px_rgba(99,102,241,0.7)] transition-all enabled:hover:scale-[1.01] active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
