@@ -1,3 +1,5 @@
+import unicodedata
+
 from animetix_project.logging_config import get_logger
 from dependency_injector.wiring import Provide, inject
 from rest_framework import permissions, status
@@ -10,6 +12,13 @@ from ...containers import Container
 from ...models import GameplaySession
 
 logger = get_logger("animetix." + __name__)
+
+
+def _norm(s):
+    """Casefold + strip accents so 'Démon' matches 'demon' and 'DEMON'."""
+    s = unicodedata.normalize("NFKD", str(s or "")).encode("ascii", "ignore").decode()
+    return s.casefold().strip()
+
 
 # --- EMOJI MODE (CPU only) ---
 # Emojis are derived offline from each title's important words via semantic
@@ -239,3 +248,52 @@ class EmojiGameGuessView(APIView):
                 "newly_unlocked_achievements": unlocked_achievements,
             }
         )
+
+
+class EmojiGameSuggestView(APIView):
+    """Rich autocomplete for the guess box.
+
+    Suggestions are drawn from the SAME catalog the game validates against, so
+    every suggestion is guessable. Each entry carries the native + English title
+    and the cover image. CPU only → AllowAny + throttle-exempt.
+    """
+
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = []
+    MAX_SUGGESTIONS = 8
+
+    @inject
+    def get(self, request, catalog_service=Provide[Container.core.catalog_service]):
+        q = _norm(request.query_params.get("q", ""))
+        if len(q) < 2:
+            return Response({"suggestions": []})
+
+        port = get_session_service(request).port
+        media_type = port.get("media_type", "Anime")
+        data = catalog_service.load_data(media_type)
+        if not data or not data.get("db"):
+            return Response({"suggestions": []})
+
+        starts, contains = [], []
+        for item in data["db"]:
+            title = item.get("title") or item.get("name") or ""
+            entry = {
+                "title": title,
+                "title_english": item.get("title_english"),
+                "title_native": item.get("title_native"),
+                "image": item.get("image"),
+            }
+            fields = [
+                _norm(title),
+                _norm(item.get("title_english")),
+                _norm(item.get("title_native")),
+            ]
+            fields = [f for f in fields if f]
+            if any(f.startswith(q) for f in fields):
+                starts.append(entry)
+            elif any(q in f for f in fields):
+                contains.append(entry)
+            if len(starts) >= self.MAX_SUGGESTIONS:
+                break
+
+        return Response({"suggestions": (starts + contains)[: self.MAX_SUGGESTIONS]})

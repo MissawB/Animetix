@@ -614,6 +614,17 @@ VERTEX_AI_EMBEDDING_MODEL = env(
     "VERTEX_AI_EMBEDDING_MODEL", default="text-embedding-005"
 )
 
+# --- VERTEX AI PIPELINES ---
+VERTEX_AI_PIPELINE_SA = env(
+    "VERTEX_AI_PIPELINE_SA",
+    default="vertex-express@animetix.iam.gserviceaccount.com",
+)
+VERTEX_AI_PIPELINE_REGION = env("VERTEX_AI_PIPELINE_REGION", default="europe-west1")
+VERTEX_AI_PIPELINE_ROOT = env(
+    "VERTEX_AI_PIPELINE_ROOT",
+    default="gs://animetix-vertex-pipelines-staging/",
+)
+
 # --- GEMINI ENTERPRISE AGENT PLATFORM ---
 VERTEX_AI_AGENT_GATEWAY_ACTIVE = env.bool(
     "VERTEX_AI_AGENT_GATEWAY_ACTIVE", default=False

@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { Send, Trophy, Sparkles } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Send, Trophy, Sparkles, Search } from 'lucide-react';
 import { useEmoji } from '../../features/games/hooks/useEmoji';
+import { emojiService, EmojiSuggestion } from '../../features/games/services/emojiService';
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
-import { Input } from "../../components/ui/Input";
 import { Badge } from "../../components/ui/Badge";
 import { CardSkeleton } from "../../components/ui/Skeleton";
 
@@ -18,10 +18,40 @@ const EmojiPage: React.FC = () => {
     restart: () => void;
   };
   const [guess, setGuess] = useState<string>('');
+  const [suggestions, setSuggestions] = useState<EmojiSuggestion[]>([]);
+  const [showSug, setShowSug] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reqIdRef = useRef(0);
 
-  const onSubmit = async () => {
-    await handleGuess({ guess });
+  useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current); }, []);
+
+  const onChange = (val: string) => {
+    setGuess(val);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    const q = val.trim();
+    if (q.length < 2) { setSuggestions([]); setShowSug(false); return; }
+    debounceRef.current = setTimeout(async () => {
+      const rid = ++reqIdRef.current;
+      const res = await emojiService.suggest(q).catch(() => [] as EmojiSuggestion[]);
+      if (rid !== reqIdRef.current) return; // ignore stale responses
+      setSuggestions(res);
+      setShowSug(res.length > 0);
+    }, 180);
+  };
+
+  const onSubmit = async (value?: string) => {
+    const g = (value ?? guess).trim();
+    if (!g) return;
+    setShowSug(false);
+    setSuggestions([]);
     setGuess('');
+    try {
+      await handleGuess({ guess: g });
+    } catch {
+      // titre hors catalogue → déjà signalé par un toast
+    }
+    inputRef.current?.focus();
   };
 
   if (loading) return (

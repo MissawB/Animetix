@@ -434,6 +434,8 @@ class VertexPipelineView(APIView):
                 result = self.mlops_port.trigger_dpo_pipeline(min_samples=min_samples)
             elif pipeline_type == "rag":
                 result = self.mlops_port.trigger_rag_pipeline()
+            elif pipeline_type == "star":
+                result = self.mlops_port.trigger_star_pipeline()
             else:
                 return Response(
                     {"error": f"Invalid pipeline_type: {pipeline_type}"},

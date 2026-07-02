@@ -7,8 +7,8 @@ Qwen3.5-4B). Pure module — only `os`.
 
 import os
 
-LLM_OLLAMA_MODEL = os.getenv("LLM_MODEL_NAME", "qwen3.5")
-LOCAL_TEXT_MODEL = os.getenv("LOCAL_MODEL_ID", "Qwen/Qwen3.5-4B")
+LLM_OLLAMA_MODEL = os.getenv("LLM_MODEL_NAME", "qwen3.5:9b")
+LOCAL_TEXT_MODEL = os.getenv("LOCAL_MODEL_ID", "Qwen/Qwen3.5-9B")
 DRAFT_TEXT_MODEL = os.getenv("DRAFT_MODEL_ID", "Qwen/Qwen2.5-0.5B-Instruct")
 COMPACT_REASONING_MODEL = os.getenv("COMPACT_MODEL_ID", "WeiboAI/VibeThinker-3B")
 LOCAL_DIFFUSION_MODEL_ID = os.getenv(

@@ -75,6 +75,11 @@ def mock_mlops_port():
         "display_name": "rag-reindexing",
         "state": "PIPELINE_STATE_RUNNING",
     }
+    port.trigger_star_pipeline.return_value = {
+        "name": "projects/animetix/locations/europe-west1/pipelineJobs/mock-star",
+        "display_name": "star-lora-tuning",
+        "state": "PIPELINE_STATE_RUNNING",
+    }
     port.list_pipeline_runs.return_value = [
         {
             "name": "projects/animetix/locations/europe-west1/pipelineJobs/mock-dpo",
@@ -123,8 +128,11 @@ def test_mlops_adapter_triggers():
         rag_result = adapter.trigger_rag_pipeline()
         assert rag_result["display_name"] == "rag-reindexing"
 
+        star_result = adapter.trigger_star_pipeline()
+        assert star_result["display_name"] == "star-lora-tuning"
+
         runs = adapter.list_pipeline_runs(limit=5)
-        assert len(runs) >= 2
+        assert len(runs) >= 3
 
 
 @pytest.mark.django_db
@@ -166,6 +174,14 @@ def test_vertex_pipeline_api_trigger_and_list(client, admin_user, mock_mlops_por
         assert response.status_code == 201
         assert response.json()["pipeline_run"]["display_name"] == "rag-reindexing"
         mock_mlops_port.trigger_rag_pipeline.assert_called_once()
+
+        # POST STAR
+        response = client.post(
+            url, {"pipeline_type": "star"}, content_type="application/json"
+        )
+        assert response.status_code == 201
+        assert response.json()["pipeline_run"]["display_name"] == "star-lora-tuning"
+        mock_mlops_port.trigger_star_pipeline.assert_called_once()
 
         # GET (list)
         response = client.get(url, {"pipeline_name": "dpo-retraining", "limit": 10})

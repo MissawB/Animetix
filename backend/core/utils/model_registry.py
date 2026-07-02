@@ -64,6 +64,10 @@ MODELS: dict[str, dict] = {
         "revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
         "trust_remote_code": False,
     },
+    "Qwen/Qwen3.5-9B": {
+        "revision": "c202236235762e1c871ad0ccb60c8ee5ba337b9a",
+        "trust_remote_code": False,
+    },
     "Qwen/Qwen2.5-VL-7B-Instruct": {
         "revision": "cc594898137f460bfe9f0759e9844b3ce807cfb5",
         "trust_remote_code": False,

@@ -37,6 +37,15 @@ class MlopsAdapter(MlopsPort):
             parameter_values={},
         )
 
+    def trigger_star_pipeline(self) -> dict:
+        from pipeline.mlops.vertex_pipelines import star_lora_pipeline
+
+        return self.pipelines_client.submit_pipeline(
+            pipeline_func=star_lora_pipeline,
+            pipeline_name="star-lora-tuning",
+            parameter_values={},
+        )
+
     def list_pipeline_runs(
         self, pipeline_name: "str | None" = None, limit: int = 20
     ) -> list:

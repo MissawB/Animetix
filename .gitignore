@@ -73,6 +73,12 @@ htmlcov/
 .env
 secrets.json
 
+# --- Hugging Face & Generated Images ---
+.cache/huggingface/
+/huggingface/
+Gemini_Generated_Image_*.png
+docs/images/architecture_custom.png
+
 # --- OS ---
 .DS_Store
 Thumbs.db

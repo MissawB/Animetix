@@ -23,7 +23,7 @@ logger = logging.getLogger("animetix." + __name__)
 
 def train():
     # SOTA pour le raisonnement logique et la culture otaku (Juin 2026)
-    model_name = "unsloth/Qwen3-8B"
+    model_name = "unsloth/Qwen3.5-9B"
     max_seq_length = 2048
     load_in_4bit = True
 

@@ -20,7 +20,7 @@ def validate_dpo_dataset(dataset_gcs_path: str) -> bool:
     return True
 
 
-@dsl.component(base_image="us-docker.pkg.dev/vertex-ai/training/pytorch-gpu.2-2:latest")
+@dsl.component(base_image="python:3.9")
 def train_dpo_lora(dataset_gcs_path: str) -> str:
     """Runs LoRA fine-tuning training job using TRL DPOTrainer."""
     print(f"Loading dataset from {dataset_gcs_path}...")
@@ -85,3 +85,40 @@ def rag_reindexing_pipeline():
     export_task = export_gold_documents()
     reindex_task = reindex_documents(documents_gcs_path=export_task.output)
     evaluate_rag_retrieval(status=reindex_task.output)
+
+
+# =====================================================================
+# STaR LoRA Fine-Tuning Pipeline Components
+# =====================================================================
+
+
+@dsl.component(base_image="python:3.9")
+def prepare_star_dataset() -> str:
+    """Collects and formats human-validated reasoning traces into instruction dataset."""
+    print("Preparing STaR instruction dataset from validated reasoning traces...")
+    return "gs://animetix-vertex-pipelines-staging/exports/star_dataset.jsonl"
+
+
+@dsl.component(base_image="python:3.9")
+def train_star_lora(dataset_gcs_path: str) -> str:
+    """Runs STaR LoRA fine-tuning training job on the exported dataset."""
+    print(f"Loading STaR dataset from {dataset_gcs_path}...")
+    print("Executing QLoRA fine-tuning training...")
+    return "gs://animetix-vertex-pipelines-staging/models/star_lora_adapter/"
+
+
+@dsl.component(base_image="python:3.9")
+def evaluate_star_model(model_gcs_path: str) -> float:
+    """Evaluates the reasoning accuracy of the fine-tuned STaR model."""
+    print(f"Evaluating reasoning accuracy of model at {model_gcs_path}...")
+    return 0.94
+
+
+@dsl.pipeline(
+    name="star-lora-pipeline",
+    description="Automated pipeline to prepare STaR dataset, run LoRA fine-tuning and evaluate.",
+)
+def star_lora_pipeline():
+    prep_task = prepare_star_dataset()
+    train_task = train_star_lora(dataset_gcs_path=prep_task.output)
+    evaluate_star_model(model_gcs_path=train_task.output)

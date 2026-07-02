@@ -22,6 +22,11 @@ class MlopsPort(ABC):
         pass
 
     @abstractmethod
+    def trigger_star_pipeline(self) -> dict:
+        """Déclenche le pipeline Vertex AI de Fine-Tuning STaR LoRA."""
+        pass
+
+    @abstractmethod
     def list_pipeline_runs(
         self, pipeline_name: "str | None" = None, limit: int = 20
     ) -> list:

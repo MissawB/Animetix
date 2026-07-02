@@ -84,10 +84,11 @@ def generate_fusion_flow_task(
 @register_task("run_star_training_cycle_task")
 def run_star_training_cycle_task():
     container = get_container()
-    new_entries = container.star_mlops_service.prepare_star_dataset()
+    service = container.core.star_mlops_service()
+    new_entries = service.prepare_star_dataset()
     if new_entries < 1:
         return "Insufficient new traces."
-    result = container.star_mlops_service.trigger_finetuning()
+    result = service.trigger_finetuning()
     return f"STaR cycle triggered: {result['status']}"
 
 

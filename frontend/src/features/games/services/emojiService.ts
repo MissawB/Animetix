@@ -7,6 +7,13 @@ export interface EmojiGuessRequest {
   guess: string;
 }
 
+export interface EmojiSuggestion {
+  title: string;
+  title_english?: string | null;
+  title_native?: string | null;
+  image?: string | null;
+}
+
 export const emojiService = {
   getState: async (): Promise<EmojiState> => {
     return apiClient(`${API_BASE}/state/`);
@@ -19,6 +26,12 @@ export const emojiService = {
   },
   submit: async (data: EmojiGuessRequest): Promise<EmojiState> => {
     return apiClient(`${API_BASE}/guess/`, { method: 'POST', body: JSON.stringify(data) });
-  }
+  },
+  suggest: async (q: string): Promise<EmojiSuggestion[]> => {
+    const data = (await apiClient(`${API_BASE}/suggest/?q=${encodeURIComponent(q)}`, {
+      skipToast: true,
+    })) as { suggestions?: EmojiSuggestion[] };
+    return data?.suggestions ?? [];
+  },
 };
 

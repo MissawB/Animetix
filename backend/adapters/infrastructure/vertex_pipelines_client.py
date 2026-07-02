@@ -26,6 +26,31 @@ except ImportError:
     HAS_KFP = False
 
 
+def _safe_get(obj, attr, default=None):
+    try:
+        val = getattr(obj, attr, default)
+        if val is None:
+            gca = getattr(obj, "_gca_resource", None)
+            if gca:
+                val = getattr(gca, attr, default)
+        return val
+    except Exception:
+        return default
+
+
+def _safe_isoformat(val):
+    if val is None:
+        return None
+    if hasattr(val, "isoformat"):
+        return val.isoformat()
+    if hasattr(val, "seconds"):
+        try:
+            return datetime.fromtimestamp(val.seconds, timezone.utc).isoformat()
+        except Exception:
+            pass
+    return str(val)
+
+
 class VertexPipelinesClient:
     def __init__(self):
         self.project_id = getattr(settings, "GCP_PROJECT_ID", "animetix")
@@ -90,8 +115,8 @@ class VertexPipelinesClient:
             raise ImportError("Kubeflow Pipelines (kfp) SDK is not installed.")
 
         fd, temp_yaml_path = tempfile.mkstemp(suffix=".yaml")
+        os.close(fd)
         try:
-            os.close(fd)
             # Compile KFP pipeline function to local YAML file
             compiler.Compiler().compile(
                 pipeline_func=pipeline_func, package_path=temp_yaml_path
@@ -99,45 +124,36 @@ class VertexPipelinesClient:
             logger.info(
                 f"Successfully compiled KFP pipeline {pipeline_name} to {temp_yaml_path}"
             )
-        except Exception as e:
-            logger.error(f"Failed to compile pipeline {pipeline_name}: {e}")
-            raise ValueError(f"Pipeline compilation failed: {e}")
-        finally:
-            try:
-                os.remove(temp_yaml_path)
-            except OSError:
-                pass
 
-        # 2. Submit pipeline
-        if self.simulation_mode:
-            logger.info(
-                f"[SIMULATION] Submitting pipeline {pipeline_name} with params: {parameter_values}"
-            )
+            # 2. Submit pipeline
+            if self.simulation_mode:
+                logger.info(
+                    f"[SIMULATION] Submitting pipeline {pipeline_name} with params: {parameter_values}"
+                )
 
-            # Generate a mock job ID and details
-            job_id = f"mock-pipeline-run-{int(datetime.now(timezone.utc).timestamp())}-{uuid.uuid4().hex[:6]}"
-            run_name = f"projects/{self.project_id}/locations/{self.region}/pipelineJobs/{job_id}"
+                # Generate a mock job ID and details
+                job_id = f"mock-pipeline-run-{int(datetime.now(timezone.utc).timestamp())}-{uuid.uuid4().hex[:6]}"
+                run_name = f"projects/{self.project_id}/locations/{self.region}/pipelineJobs/{job_id}"
 
-            run_data = {
-                "name": run_name,
-                "display_name": pipeline_name,
-                "pipeline_name": pipeline_name,
-                "state": "PIPELINE_STATE_RUNNING",
-                "create_time": datetime.now(timezone.utc).isoformat(),
-                "start_time": datetime.now(timezone.utc).isoformat(),
-                "end_time": None,
-                "update_time": datetime.now(timezone.utc).isoformat(),
-                "parameter_values": parameter_values,
-                "enable_caching": enable_caching,
-                "service_account": self.service_account,
-                "labels": {"env": "development", "triggered-by": "django-mlops"},
-                "error": None,
-            }
+                run_data = {
+                    "name": run_name,
+                    "display_name": pipeline_name,
+                    "pipeline_name": pipeline_name,
+                    "state": "PIPELINE_STATE_RUNNING",
+                    "create_time": datetime.now(timezone.utc).isoformat(),
+                    "start_time": datetime.now(timezone.utc).isoformat(),
+                    "end_time": None,
+                    "update_time": datetime.now(timezone.utc).isoformat(),
+                    "parameter_values": parameter_values,
+                    "enable_caching": enable_caching,
+                    "service_account": self.service_account,
+                    "labels": {"env": "development", "triggered-by": "django-mlops"},
+                    "error": None,
+                }
 
-            self._save_mock_run(run_data)
-            return run_data
+                self._save_mock_run(run_data)
+                return run_data
 
-        try:
             # Real submission to Vertex AI
             job = aiplatform.PipelineJob(
                 display_name=pipeline_name,
@@ -153,22 +169,35 @@ class VertexPipelinesClient:
             )
 
             return {
-                "name": job.resource_name,
-                "display_name": job.display_name,
-                "state": str(job.state),
-                "create_time": job.create_time.isoformat() if job.create_time else None,
-                "start_time": job.start_time.isoformat() if job.start_time else None,
-                "end_time": job.end_time.isoformat() if job.end_time else None,
-                "update_time": job.update_time.isoformat() if job.update_time else None,
+                "name": _safe_get(job, "resource_name"),
+                "display_name": _safe_get(job, "display_name"),
+                "state": str(_safe_get(job, "state")),
+                "create_time": _safe_isoformat(_safe_get(job, "create_time")),
+                "start_time": _safe_isoformat(_safe_get(job, "start_time")),
+                "end_time": _safe_isoformat(_safe_get(job, "end_time")),
+                "update_time": _safe_isoformat(_safe_get(job, "update_time")),
                 "parameter_values": parameter_values,
                 "enable_caching": enable_caching,
                 "service_account": self.service_account,
-                "labels": dict(job.labels) if job.labels else {},
-                "error": str(job.error) if job.error else None,
+                "labels": (
+                    dict(_safe_get(job, "labels", {}))
+                    if _safe_get(job, "labels")
+                    else {}
+                ),
+                "error": (
+                    str(_safe_get(job, "error")) if _safe_get(job, "error") else None
+                ),
             }
         except Exception as e:
-            logger.error(f"Failed to submit Vertex AI PipelineJob {pipeline_name}: {e}")
+            logger.error(
+                f"Failed to compile or submit Vertex AI PipelineJob {pipeline_name}: {e}"
+            )
             raise e
+        finally:
+            try:
+                os.remove(temp_yaml_path)
+            except OSError:
+                pass
 
     def get_pipeline_run(self, pipeline_job_name: str) -> dict:
         """
@@ -190,22 +219,29 @@ class VertexPipelinesClient:
 
         try:
             job = aiplatform.PipelineJob.get(resource_name=pipeline_job_name)
+            runtime_config = _safe_get(job, "runtime_config")
+            parameter_values = {}
+            if runtime_config and hasattr(runtime_config, "parameter_values"):
+                parameter_values = dict(runtime_config.parameter_values)
+
             return {
-                "name": job.resource_name,
-                "display_name": job.display_name,
-                "state": str(job.state),
-                "create_time": job.create_time.isoformat() if job.create_time else None,
-                "start_time": job.start_time.isoformat() if job.start_time else None,
-                "end_time": job.end_time.isoformat() if job.end_time else None,
-                "update_time": job.update_time.isoformat() if job.update_time else None,
-                "parameter_values": (
-                    dict(job.runtime_config.parameter_values)
-                    if job.runtime_config
+                "name": _safe_get(job, "resource_name"),
+                "display_name": _safe_get(job, "display_name"),
+                "state": str(_safe_get(job, "state")),
+                "create_time": _safe_isoformat(_safe_get(job, "create_time")),
+                "start_time": _safe_isoformat(_safe_get(job, "start_time")),
+                "end_time": _safe_isoformat(_safe_get(job, "end_time")),
+                "update_time": _safe_isoformat(_safe_get(job, "update_time")),
+                "parameter_values": parameter_values,
+                "service_account": _safe_get(job, "service_account"),
+                "labels": (
+                    dict(_safe_get(job, "labels", {}))
+                    if _safe_get(job, "labels")
                     else {}
                 ),
-                "service_account": job.service_account,
-                "labels": dict(job.labels) if job.labels else {},
-                "error": str(job.error) if job.error else None,
+                "error": (
+                    str(_safe_get(job, "error")) if _safe_get(job, "error") else None
+                ),
             }
         except Exception as e:
             logger.error(f"Failed to retrieve pipeline run {pipeline_job_name}: {e}")
@@ -241,28 +277,31 @@ class VertexPipelinesClient:
 
             results = []
             for job in jobs[:limit]:
+                runtime_config = _safe_get(job, "runtime_config")
+                parameter_values = {}
+                if runtime_config and hasattr(runtime_config, "parameter_values"):
+                    parameter_values = dict(runtime_config.parameter_values)
+
                 results.append(
                     {
-                        "name": job.resource_name,
-                        "display_name": job.display_name,
-                        "state": str(job.state),
-                        "create_time": (
-                            job.create_time.isoformat() if job.create_time else None
-                        ),
-                        "start_time": (
-                            job.start_time.isoformat() if job.start_time else None
-                        ),
-                        "end_time": job.end_time.isoformat() if job.end_time else None,
-                        "update_time": (
-                            job.update_time.isoformat() if job.update_time else None
-                        ),
-                        "parameter_values": (
-                            dict(job.runtime_config.parameter_values)
-                            if job.runtime_config
+                        "name": _safe_get(job, "resource_name"),
+                        "display_name": _safe_get(job, "display_name"),
+                        "state": str(_safe_get(job, "state")),
+                        "create_time": _safe_isoformat(_safe_get(job, "create_time")),
+                        "start_time": _safe_isoformat(_safe_get(job, "start_time")),
+                        "end_time": _safe_isoformat(_safe_get(job, "end_time")),
+                        "update_time": _safe_isoformat(_safe_get(job, "update_time")),
+                        "parameter_values": parameter_values,
+                        "labels": (
+                            dict(_safe_get(job, "labels", {}))
+                            if _safe_get(job, "labels")
                             else {}
                         ),
-                        "labels": dict(job.labels) if job.labels else {},
-                        "error": str(job.error) if job.error else None,
+                        "error": (
+                            str(_safe_get(job, "error"))
+                            if _safe_get(job, "error")
+                            else None
+                        ),
                     }
                 )
             return results

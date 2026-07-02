@@ -124,7 +124,7 @@ class CustomConfigForm(forms.Form):
 # --- Vertex AI MLOps Pipelines + Feature Store forms (ported from feature/vertex-pipelines) ---
 class VertexPipelineTriggerForm(forms.Form):
     pipeline_type = forms.ChoiceField(
-        choices=[("dpo", "DPO"), ("rag", "RAG")], required=True
+        choices=[("dpo", "DPO"), ("rag", "RAG"), ("star", "STaR")], required=True
     )
     min_samples = forms.IntegerField(min_value=1, required=False, initial=100)
 
