@@ -37,7 +37,7 @@ const EmojiPage: React.FC = () => {
       if (rid !== reqIdRef.current) return; // ignore stale responses
       setSuggestions(res);
       setShowSug(res.length > 0);
-    }, 180);
+    }, 90);
   };
 
   const onSubmit = async (value?: string) => {
@@ -110,38 +110,39 @@ const EmojiPage: React.FC = () => {
                 autoComplete="off"
                 className="w-full rounded-2xl border-2 border-surface-text/10 bg-surface-card py-3.5 pl-12 pr-4 text-center font-bold outline-none focus:border-orange-500 transition-colors"
               />
-              {showSug && suggestions.length > 0 && (
-                <ul className="absolute z-20 mt-2 w-full overflow-hidden rounded-2xl border-2 border-surface-text/10 bg-surface-card shadow-2xl text-left">
-                  {suggestions.map((s, i) => (
-                    <li key={`${s.title}-${i}`}>
-                      <button
-                        type="button"
-                        onMouseDown={(e) => { e.preventDefault(); onSubmit(s.title); }}
-                        className="flex w-full items-center gap-3 px-3 py-2.5 hover:bg-orange-500/10 transition-colors"
-                      >
-                        {s.image ? (
-                          <img src={s.image} alt="" loading="lazy" decoding="async"
-                            className="h-14 w-10 flex-shrink-0 rounded-lg object-cover border border-surface-text/10" />
-                        ) : (
-                          <div className="h-14 w-10 flex-shrink-0 rounded-lg bg-surface-text/5" />
-                        )}
-                        <div className="min-w-0 flex-grow">
-                          <div className="truncate font-black italic manga-font leading-tight">
-                            {s.title_english || s.title}
-                          </div>
-                          {s.title_native && (
-                            <div className="truncate text-xs opacity-50">{s.title_native}</div>
-                          )}
-                          {s.title_english && s.title_english !== s.title && (
-                            <div className="truncate text-[11px] font-bold opacity-40">{s.title}</div>
-                          )}
-                        </div>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
             </div>
+
+            {/* Liste en flux normal : elle repousse le bouton vers le bas au lieu
+                de le recouvrir (plus de chevauchement avec DEVINER). */}
+            {showSug && suggestions.length > 0 && (
+              <ul className="max-h-80 overflow-y-auto rounded-2xl border-2 border-surface-text/10 bg-surface-card shadow-lg text-left divide-y divide-surface-text/5">
+                {suggestions.map((s, i) => (
+                  <li key={`${s.title}-${i}`}>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => { e.preventDefault(); onSubmit(s.title); }}
+                      className="flex w-full items-center gap-3 px-3 py-2.5 hover:bg-orange-500/10 transition-colors"
+                    >
+                      {s.image ? (
+                        <img src={s.image} alt="" loading="lazy" decoding="async"
+                          className="h-14 w-10 flex-shrink-0 rounded-lg object-cover border border-surface-text/10" />
+                      ) : (
+                        <div className="h-14 w-10 flex-shrink-0 rounded-lg bg-surface-text/5" />
+                      )}
+                      <div className="min-w-0 flex-grow">
+                        <div className="truncate font-black italic manga-font leading-tight">
+                          {s.title_english || s.title}
+                        </div>
+                        {s.title_native && (
+                          <div className="truncate text-xs text-surface-text/45">{s.title_native}</div>
+                        )}
+                      </div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+
             <Button variant="primary" size="lg" fullWidth onClick={() => onSubmit()} className="bg-black text-white hover:bg-gray-900 border-none">
               <Send className="w-5 h-5" /> DEVINER
             </Button>

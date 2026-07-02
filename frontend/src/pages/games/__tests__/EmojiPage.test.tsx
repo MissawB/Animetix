@@ -91,9 +91,8 @@ describe('EmojiPage', () => {
     fireEvent.change(screen.getByPlaceholderText(/Cherchez un titre/i), {
       target: { value: 'attack' },
     });
-    const opt = await screen.findByText('Attack on Titan');
-    expect(screen.getByText('進撃の巨人')).toBeInTheDocument();
-    expect(screen.getByText('Shingeki no Kyojin')).toBeInTheDocument();
+    const opt = await screen.findByText('Attack on Titan'); // english on top
+    expect(screen.getByText('進撃の巨人')).toBeInTheDocument(); // native below
     fireEvent.mouseDown(opt);
     await waitFor(() =>
       expect(handleGuess).toHaveBeenCalledWith({ guess: 'Shingeki no Kyojin' }),
