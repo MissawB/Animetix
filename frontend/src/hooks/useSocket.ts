@@ -86,8 +86,13 @@ const useSocket = (
       try {
         const data = JSON.parse(event.data) as SocketData & Record<string, unknown>;
         if (data.type === 'game_state_update') {
-          // Legacy shape (codemanga): full state under `state`.
+          // Legacy shape: full state under `state`.
           setGameState((data.state as Record<string, unknown>) || null);
+        } else if (data.type === 'state') {
+          // Code Manga: room fields under `room`, plus per-player my_role/my_team/my_id.
+          const { type: _t, room, ...rest } = data;
+          void _t;
+          setGameState((prev) => ({ ...(prev || {}), ...((room as Record<string, unknown>) || {}), ...rest }));
         } else if (data.type === 'room_state') {
           // Undercover: state fields are at the top level — merge them in.
           const { type: _t, ...rest } = data;

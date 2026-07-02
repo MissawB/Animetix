@@ -116,13 +116,13 @@ const GamesHubPage: React.FC = () => {
     },
     {
       title: "Code Manga",
-      desc: "Décodez les messages secrets cachés dans des planches de manga OCRisées.",
+      desc: "Deux équipes, deux espions : décryptez les cartes anime/manga de votre équipe.",
       icon: Code,
-      path: "/codemanga/room/lobby/",
-      color: "text-gray-400",
-      bg: "bg-gray-400/10",
-      difficulty: "Technique",
-      reward: "250 XP"
+      path: "/codemanga/",
+      color: "text-indigo-400",
+      bg: "bg-indigo-400/10",
+      difficulty: "Social",
+      reward: "300 XP"
     },
     {
       title: "Undercover",

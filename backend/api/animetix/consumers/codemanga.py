@@ -1,13 +1,23 @@
 import json
 import random
+from urllib.parse import parse_qs
 
 from asgiref.sync import sync_to_async
 
 from ..containers import get_container
 from .base import BaseConsumer, state_adapter
 
+# Board composition (Codenames): the starting team (blue) gets 9, the other 8.
+BLUE_CARDS, RED_CARDS, NEUTRAL_CARDS = 9, 8, 7
+MEDIA_TYPES = {"Anime", "Manga", "Character"}
+
 
 class CodeMangaConsumer(BaseConsumer):
+    """Codenames-style game on anime/manga cards. Players are keyed by a stable
+    client id (cid) sent as a query param — a refresh reuses the same slot (and
+    keeps the host) instead of spawning a duplicate. Spymasters see every card's
+    team; operatives see a masked grid and click after their spymaster's clue."""
+
     async def get_room(self):
         return await state_adapter.get_state(f"codemanga_room_{self.room_code}")
 
@@ -16,140 +26,249 @@ class CodeMangaConsumer(BaseConsumer):
             f"codemanga_room_{self.room_code}", room, timeout=3600
         )
 
+    def _fresh_room(self):
+        return {
+            "host": None,
+            "players": {},
+            "state": "lobby",
+            "media_type": "Anime",
+            "grid": [],
+            "turn": "blue",
+            "blue_score": 0,
+            "red_score": 0,
+            "winner": None,
+            "clue": None,
+            "messages": [],
+        }
+
     async def connect(self):
         self.room_code = self.scope["url_route"]["kwargs"]["room_code"].upper()
         self.room_group_name = f"codemanga_{self.room_code}"
+        qs = parse_qs(self.scope.get("query_string", b"").decode())
+        self.cid = (qs.get("cid", [None])[0] or self.channel_name)[:64]
+
         room = await self.get_room()
         if not room:
-            room = {
-                "host": self.channel_name,
-                "players": {},
-                "state": "lobby",
-                "grid": [],
-                "turn": "blue",
-                "blue_score": 0,
-                "red_score": 0,
-                "winner": None,
-            }
+            room = self._fresh_room()
+
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
-        room["players"][self.channel_name] = {
-            "name": f"Fan #{random.randint(100, 999)}",
-            "team": None,
-            "role": None,
-        }
+
+        if self.cid in room["players"]:
+            room["players"][self.cid]["channel"] = self.channel_name
+        else:
+            room["players"][self.cid] = {
+                "name": f"Fan #{random.randint(100, 999)}",
+                "team": None,
+                "role": None,
+                "channel": self.channel_name,
+            }
+        if not room["host"] or room["host"] not in room["players"]:
+            room["host"] = self.cid
+
         await self.save_room(room)
         await self.accept()
         await self.broadcast_state()
 
-    async def receive(self, text_data):
-        data = json.loads(text_data)
-        action, room = data.get("action"), await self.get_room()
+    async def disconnect(self, close_code):
+        await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
+        room = await self.get_room()
         if not room:
             return
+        player = room["players"].get(self.cid)
+        if player and player.get("channel") == self.channel_name:
+            del room["players"][self.cid]
+            if not room["players"]:
+                await state_adapter.delete_state(f"codemanga_room_{self.room_code}")
+                return
+            await self.save_room(room)
+            await self.broadcast_state()
+
+    async def receive(self, text_data):
+        data = json.loads(text_data)
+        action = data.get("action")
+        room = await self.get_room()
+        if not room or self.cid not in room["players"]:
+            return
+        me = room["players"][self.cid]
+        is_host = self.cid == room["host"]
+
         if action == "set_player":
-            room["players"][self.channel_name].update(
+            me["name"] = (data.get("name") or me["name"])[:20]
+            team = data.get("team")
+            me["team"] = team if team in ("blue", "red") else me["team"]
+            role = data.get("role")
+            me["role"] = role if role in ("spymaster", "operative") else me["role"]
+        elif action == "set_media" and is_host:
+            mt = data.get("media_type")
+            room["media_type"] = mt if mt in MEDIA_TYPES else "Anime"
+        elif action == "start_game" and is_host:
+            await self.generate_grid(room)
+            if room["grid"]:
+                room["state"] = "playing"
+        elif action == "give_clue":
+            self.handle_clue(room, me, data)
+        elif action == "click_card":
+            self.handle_card_click(room, me, data.get("index"))
+        elif action == "chat":
+            text = (data.get("message") or "").strip()[:120]
+            if text:
+                room["messages"].append({"user": me["name"], "text": text})
+                room["messages"] = room["messages"][-100:]
+        elif action == "back_to_lobby" and is_host:
+            room.update(
                 {
-                    "name": data.get("name", "Anonyme"),
-                    "team": data.get("team", "blue"),
-                    "role": data.get("role", "operative"),
+                    "state": "lobby",
+                    "grid": [],
+                    "winner": None,
+                    "clue": None,
+                    "blue_score": 0,
+                    "red_score": 0,
+                    "turn": "blue",
                 }
             )
-        elif action == "start_game":
-            await self.generate_grid(room)
-            room["state"] = "playing"
-            await self.save_room(room)
-            await self.channel_layer.group_send(
-                self.room_group_name,
-                {
-                    "type": "send_msg",
-                    "message": {
-                        "type": "redirect",
-                        "url": f"/codemanga/game/{self.room_code}/",
-                    },
-                },
-            )
-        elif action == "click_card":
-            await self.handle_card_click(room, data.get("index"))
+        else:
+            return
+
         await self.save_room(room)
         await self.broadcast_state()
 
+    # ── Game logic ──────────────────────────────────────────────────────────
     async def generate_grid(self, room):
-        data = await sync_to_async(get_container().catalog_service.load_data)("Anime")
-        if not data:
+        data = await sync_to_async(get_container().catalog_service.load_data)(
+            room.get("media_type", "Anime")
+        )
+        if not data or len(data.get("db", [])) < 25:
             return
         selected = random.sample(list(data["db"]), 25)
-        roles = (["blue"] * 9) + (["red"] * 8) + (["neutral"] * 7) + (["assassin"] * 1)
+        roles = (
+            ["blue"] * BLUE_CARDS
+            + ["red"] * RED_CARDS
+            + ["neutral"] * NEUTRAL_CARDS
+            + ["assassin"]
+        )
         random.shuffle(roles)
         room["grid"] = [
             {
-                "title": selected[i].get("title"),
+                "title": selected[i].get("title") or selected[i].get("name"),
                 "image": selected[i].get("image"),
                 "role": roles[i],
                 "revealed": False,
             }
             for i in range(25)
         ]
-        room["blue_score"], room["red_score"], room["turn"], room["winner"] = (
-            0,
-            0,
-            "blue",
-            None,
-        )
+        room["blue_score"] = room["red_score"] = 0
+        room["turn"], room["winner"], room["clue"] = "blue", None, None
 
-    async def handle_card_click(self, room, idx):
-        if room["state"] != "playing" or room["winner"]:
+    def handle_clue(self, room, me, data):
+        """Current team's spymaster announces a one-word clue + a count."""
+        if room["state"] != "playing" or room["winner"] or room.get("clue"):
+            return
+        if me["role"] != "spymaster" or me["team"] != room["turn"]:
+            return
+        word = (data.get("word") or "").strip()[:24]
+        if not word:
+            return
+        try:
+            number = max(1, min(int(data.get("number", 1)), 9))
+        except (TypeError, ValueError):
+            number = 1
+        # A clue of N grants N+1 guesses (standard Codenames).
+        room["clue"] = {
+            "team": room["turn"],
+            "word": word,
+            "number": number,
+            "guesses_left": number + 1,
+        }
+
+    def handle_card_click(self, room, me, idx):
+        clue = room.get("clue")
+        if room["state"] != "playing" or room["winner"] or not clue:
+            return
+        # Only the current team's operatives may guess, and only on their clue.
+        if me["role"] != "operative" or me["team"] != room["turn"]:
+            return
+        if not isinstance(idx, int) or not (0 <= idx < len(room["grid"])):
             return
         card = room["grid"][idx]
         if card["revealed"]:
             return
         card["revealed"] = True
+        clue["guesses_left"] -= 1
+
         if card["role"] == "assassin":
             room["winner"] = "red" if room["turn"] == "blue" else "blue"
-        elif card["role"] != room["turn"]:
-            room["turn"] = "red" if room["turn"] == "blue" else "blue"
+            room["clue"] = None
+            return
+
         room["blue_score"] = sum(
             1 for c in room["grid"] if c["role"] == "blue" and c["revealed"]
         )
         room["red_score"] = sum(
             1 for c in room["grid"] if c["role"] == "red" and c["revealed"]
         )
-        if room["blue_score"] == 9:
+        if room["blue_score"] >= BLUE_CARDS:
             room["winner"] = "blue"
-        if room["red_score"] == 8:
+        elif room["red_score"] >= RED_CARDS:
             room["winner"] = "red"
+        if room["winner"]:
+            room["clue"] = None
+            return
 
+        # Wrong team / neutral ends the turn; a correct guess continues until the
+        # granted guesses run out.
+        if card["role"] != room["turn"] or clue["guesses_left"] <= 0:
+            room["turn"] = "red" if room["turn"] == "blue" else "blue"
+            room["clue"] = None
+
+    # ── Broadcast ───────────────────────────────────────────────────────────
     async def broadcast_state(self):
         room = await self.get_room()
         if not room:
             return
-        public_grid = [
+        # Reveal every card's team in the lobby and once the game is decided.
+        revealed = room["state"] != "playing" or bool(room["winner"])
+        masked_grid = [
             {
                 "title": c["title"],
                 "image": c["image"],
                 "revealed": c["revealed"],
-                "role": (c["role"] if c["revealed"] else "unknown"),
+                "role": c["role"] if (c["revealed"] or revealed) else "unknown",
             }
             for c in room["grid"]
         ]
-        for ch, p in room["players"].items():
-            grid_to_send = room["grid"] if p["role"] == "spymaster" else public_grid
+        players_public = [
+            {
+                "id": cid,
+                "name": p["name"],
+                "team": p["team"],
+                "role": p["role"],
+                "is_host": cid == room["host"],
+            }
+            for cid, p in room["players"].items()
+        ]
+        for cid, p in room["players"].items():
+            grid = room["grid"] if p["role"] == "spymaster" else masked_grid
             await self.channel_layer.send(
-                ch,
+                p["channel"],
                 {
                     "type": "send_msg",
                     "message": {
                         "type": "state",
                         "room": {
                             "state": room["state"],
-                            "grid": grid_to_send,
+                            "media_type": room.get("media_type", "Anime"),
+                            "grid": grid,
                             "turn": room["turn"],
                             "blue_score": room["blue_score"],
                             "red_score": room["red_score"],
                             "winner": room["winner"],
-                            "players": list(room["players"].values()),
+                            "clue": room.get("clue"),
+                            "messages": room.get("messages", []),
+                            "players": players_public,
                         },
                         "my_role": p["role"],
                         "my_team": p["team"],
+                        "my_id": cid,
                     },
                 },
             )
