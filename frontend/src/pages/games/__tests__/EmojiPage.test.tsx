@@ -21,6 +21,10 @@ vi.mock('../../../features/games/hooks/useEmoji', () => ({
   useEmoji: () => hookValue,
 }));
 
+vi.mock('../../../features/games/services/emojiService', () => ({
+  emojiService: { suggest: vi.fn(() => Promise.resolve([])) },
+}));
+
 const renderPage = () => {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
@@ -66,16 +70,34 @@ describe('EmojiPage', () => {
     expect(screen.getByText('🏴‍☠️')).toBeInTheDocument();
     expect(screen.getByText('👒')).toBeInTheDocument();
     expect(screen.getByText(/Indice 2 \/ 4/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/Tapez votre proposition/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Cherchez un titre/i)).toBeInTheDocument();
   });
 
   it('submits a guess and clears the input', async () => {
     renderPage();
-    fireEvent.change(screen.getByPlaceholderText(/Tapez votre proposition/i), {
+    fireEvent.change(screen.getByPlaceholderText(/Cherchez un titre/i), {
       target: { value: 'One Piece' },
     });
     fireEvent.click(screen.getByText(/DEVINER/i));
     await waitFor(() => expect(handleGuess).toHaveBeenCalledWith({ guess: 'One Piece' }));
+  });
+
+  it('shows rich suggestions (image + native + english) and submits the picked title', async () => {
+    const { emojiService } = await import('../../../features/games/services/emojiService');
+    (emojiService.suggest as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce([
+      { title: 'Shingeki no Kyojin', title_english: 'Attack on Titan', title_native: '進撃の巨人', image: 'aot.jpg' },
+    ]);
+    renderPage();
+    fireEvent.change(screen.getByPlaceholderText(/Cherchez un titre/i), {
+      target: { value: 'attack' },
+    });
+    const opt = await screen.findByText('Attack on Titan');
+    expect(screen.getByText('進撃の巨人')).toBeInTheDocument();
+    expect(screen.getByText('Shingeki no Kyojin')).toBeInTheDocument();
+    fireEvent.mouseDown(opt);
+    await waitFor(() =>
+      expect(handleGuess).toHaveBeenCalledWith({ guess: 'Shingeki no Kyojin' }),
+    );
   });
 
   it('renders prior attempts with badges', () => {

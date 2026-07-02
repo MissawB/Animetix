@@ -95,13 +95,54 @@ const EmojiPage: React.FC = () => {
 
         {!gameState.game_over ? (
           <div className="max-w-md mx-auto space-y-4">
-            <Input 
-              value={guess} 
-              onChange={(e) => setGuess(e.target.value)}
-              placeholder="Tapez votre proposition..."
-              className="text-center"
-            />
-            <Button variant="primary" size="lg" fullWidth onClick={onSubmit} className="bg-black text-white hover:bg-gray-900 border-none">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 opacity-30 pointer-events-none" />
+              <input
+                ref={inputRef}
+                type="text"
+                value={guess}
+                onChange={(e) => onChange(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); onSubmit(); } if (e.key === 'Escape') setShowSug(false); }}
+                onFocus={() => { if (suggestions.length) setShowSug(true); }}
+                onBlur={() => setTimeout(() => setShowSug(false), 150)}
+                placeholder="Cherchez un titre…"
+                aria-label="Rechercher un titre"
+                autoComplete="off"
+                className="w-full rounded-2xl border-2 border-surface-text/10 bg-surface-card py-3.5 pl-12 pr-4 text-center font-bold outline-none focus:border-orange-500 transition-colors"
+              />
+              {showSug && suggestions.length > 0 && (
+                <ul className="absolute z-20 mt-2 w-full overflow-hidden rounded-2xl border-2 border-surface-text/10 bg-surface-card shadow-2xl text-left">
+                  {suggestions.map((s, i) => (
+                    <li key={`${s.title}-${i}`}>
+                      <button
+                        type="button"
+                        onMouseDown={(e) => { e.preventDefault(); onSubmit(s.title); }}
+                        className="flex w-full items-center gap-3 px-3 py-2.5 hover:bg-orange-500/10 transition-colors"
+                      >
+                        {s.image ? (
+                          <img src={s.image} alt="" loading="lazy" decoding="async"
+                            className="h-14 w-10 flex-shrink-0 rounded-lg object-cover border border-surface-text/10" />
+                        ) : (
+                          <div className="h-14 w-10 flex-shrink-0 rounded-lg bg-surface-text/5" />
+                        )}
+                        <div className="min-w-0 flex-grow">
+                          <div className="truncate font-black italic manga-font leading-tight">
+                            {s.title_english || s.title}
+                          </div>
+                          {s.title_native && (
+                            <div className="truncate text-xs opacity-50">{s.title_native}</div>
+                          )}
+                          {s.title_english && s.title_english !== s.title && (
+                            <div className="truncate text-[11px] font-bold opacity-40">{s.title}</div>
+                          )}
+                        </div>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <Button variant="primary" size="lg" fullWidth onClick={() => onSubmit()} className="bg-black text-white hover:bg-gray-900 border-none">
               <Send className="w-5 h-5" /> DEVINER
             </Button>
           </div>
