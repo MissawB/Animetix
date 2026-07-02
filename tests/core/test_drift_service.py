@@ -22,6 +22,9 @@ class _FakeVectorStore(VectorStorePort):
     def get_embeddings(self, collection_name, limit):
         return self._embeddings[:limit]
 
+    def search_by_vector(self, collection_name, query_vector, limit=10):
+        return []
+
 
 def test_drift_service_uses_injected_ports(tmp_path):
     from core.domain.services.drift_service import DriftService

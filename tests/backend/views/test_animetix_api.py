@@ -71,6 +71,11 @@ def mock_catalog():
             {"id": 2, "title": "One Piece"},
             {"id": 3, "title": "Bleach"},
         ],
+        "db": [
+            {"id": 1, "title": "Naruto"},
+            {"id": 2, "title": "One Piece"},
+            {"id": 3, "title": "Bleach"},
+        ],
     }
 
 
@@ -81,7 +86,7 @@ def test_emoji_game_state_auto_start(api_client, mock_catalog):
 
     mock_em_service = MagicMock()
     mock_em_service.select_secret.return_value = "Naruto"
-    mock_em_service.generate_emojis.return_value = ["🦊", "🍥"]
+    mock_em_service.build_sequence.return_value = ["🦊", "🍥"]
 
     with (
         container.core.catalog_service.override(providers.Object(mock_cat_service)),
@@ -93,7 +98,8 @@ def test_emoji_game_state_auto_start(api_client, mock_catalog):
 
         assert response.status_code == 200
         data = response.json()
-        assert data["emojis"] == ["🦊", "🍥"]
+        # Progressive reveal: only the first (vaguest) emoji shows at the start.
+        assert data["emojis"] == ["🦊"]
         assert data["media_type"] == "Anime"
         assert data["guesses"] == []
         assert data["game_over"] is False
@@ -109,7 +115,7 @@ def test_covertest_game_state_auto_start(api_client, mock_catalog):
     mock_ct_service.get_state.return_value = state
     mock_ct_service.get_random_cover.return_value = {
         "manga_title": "Naruto",
-        "url": "http://cover.jpg",
+        "cover_url": "http://cover.jpg",
         "locale": "fr",
         "volume": "1",
     }
@@ -136,11 +142,16 @@ def test_paradox_game_state_and_guess(api_client, mock_catalog):
     mock_cat_service = MagicMock()
     mock_cat_service.load_data.return_value = mock_catalog
 
-    state = MockParadoxState()
-    state.answer = "Naruto"
-    state.options = ["Naruto", "One Piece", "Bleach"]
-    state.reasoning = "Because ninja"
-    state.scenario = "Spot the intruder"
+    # The paradox view reads session state with .get() (it's a dict, not an object).
+    state = {
+        "answer": "Naruto",
+        "options": ["Naruto", "One Piece", "Bleach"],
+        "reasoning": "Because ninja",
+        "scenario": "Spot the intruder",
+        "media": "Anime",
+        "is_daily": False,
+        "game_over": False,
+    }
 
     mock_px_service = MagicMock()
     mock_px_service.get_state.return_value = state
