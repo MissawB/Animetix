@@ -49,7 +49,8 @@ def mock_catalog():
 
 
 def _state(**kwargs):
-    """A plain attribute bag standing in for the paradox State object."""
+    """A dict standing in for the paradox session state (the view reads it with
+    ``.get()`` — session state is a dict, not an object)."""
     defaults = dict(
         answer=None,
         media="Anime",
@@ -60,7 +61,7 @@ def _state(**kwargs):
         is_daily=False,
     )
     defaults.update(kwargs)
-    return SimpleNamespace(**defaults)
+    return defaults
 
 
 # --------------------------------------------------------------------------- #
