@@ -230,6 +230,56 @@ async def test_guess_wrong_eliminates_and_flips(patched):
 
 
 # --------------------------------------------------------------------------- #
+# Custom questions (opponent-answered) + manual cross-off
+# --------------------------------------------------------------------------- #
+async def test_custom_question_pends_then_opponent_answers(patched):
+    await _start_game(patched)
+    p1 = _make(cid="p1", channel="c1")
+    await p1.receive(
+        json.dumps({"action": "ask_custom", "text": "a les cheveux bleus ?"})
+    )
+    room = _room(patched)
+    assert room["pending"] == {
+        "by": 1,
+        "name": room["players"]["p1"]["name"],
+        "text": "a les cheveux bleus ?",
+    }
+    # p1 (asker) can't answer their own question.
+    await p1.receive(json.dumps({"action": "answer_custom", "answer": "OUI"}))
+    assert _room(patched)["pending"] is not None
+    # p2 (opponent) answers → recorded, pending cleared, asker's turn ends.
+    p2 = _make(cid="p2", channel="c2")
+    await p2.receive(json.dumps({"action": "answer_custom", "answer": "OUI"}))
+    room = _room(patched)
+    assert room["pending"] is None
+    assert room["last_answer"] == {
+        "by": 1,
+        "name": room["players"]["p1"]["name"],
+        "label": "a les cheveux bleus ?",
+        "answer": "OUI",
+    }
+    assert room["turn"] == 2
+
+
+async def test_ask_blocked_while_pending(patched):
+    await _start_game(patched)
+    p1 = _make(cid="p1", channel="c1")
+    await p1.receive(json.dumps({"action": "ask_custom", "text": "q ?"}))
+    await p1.receive(json.dumps({"action": "ask", "attribute": "fille"}))
+    # last_answer stays None: the preset ask is blocked while a custom Q pends.
+    assert _room(patched)["last_answer"] is None
+
+
+async def test_toggle_card_crosses_off_and_back(patched):
+    await _start_game(patched)
+    p2 = _make(cid="p2", channel="c2")  # note-taking allowed even off-turn
+    await p2.receive(json.dumps({"action": "toggle_card", "card_id": "5"}))
+    assert "5" in _room(patched)["eliminated"]["2"]
+    await p2.receive(json.dumps({"action": "toggle_card", "card_id": "5"}))
+    assert "5" not in _room(patched)["eliminated"]["2"]
+
+
+# --------------------------------------------------------------------------- #
 # Broadcast masking
 # --------------------------------------------------------------------------- #
 async def test_broadcast_gives_each_player_only_their_secret(patched):

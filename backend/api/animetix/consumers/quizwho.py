@@ -121,6 +121,7 @@ class QuizWhoConsumer(BaseConsumer):
             "turn": 1,
             "last_answer": None,
             "winner": None,
+            "pending": None,  # {by, name, text} while a custom question awaits an answer
             "messages": [],
         }
 
@@ -193,9 +194,17 @@ class QuizWhoConsumer(BaseConsumer):
         elif action == "ask":
             await self.handle_ask(room, me, data.get("attribute"))
             return
+        elif action == "ask_custom":
+            await self.handle_ask_custom(room, me, data.get("text"))
+            return
+        elif action == "answer_custom":
+            await self.handle_answer_custom(room, me, data.get("answer"))
+            return
         elif action == "guess":
             await self.handle_guess(room, me, str(data.get("guess_id", "")))
             return
+        elif action == "toggle_card":
+            self.handle_toggle(room, me, str(data.get("card_id", "")))
         elif action == "chat":
             text = (data.get("message") or "").strip()[:120]
             if text:
@@ -212,6 +221,7 @@ class QuizWhoConsumer(BaseConsumer):
                     "turn": 1,
                     "last_answer": None,
                     "winner": None,
+                    "pending": None,
                 }
             )
         else:
@@ -249,6 +259,7 @@ class QuizWhoConsumer(BaseConsumer):
                 "turn": 1,
                 "last_answer": None,
                 "winner": None,
+                "pending": None,
                 "state": "playing",
                 "messages": [],
             }
@@ -257,9 +268,17 @@ class QuizWhoConsumer(BaseConsumer):
         await self.save_room(room)
         await self.broadcast_state()
 
+    def _can_act(self, room, num):
+        return (
+            room["state"] == "playing"
+            and not room["winner"]
+            and not room.get("pending")
+            and room["turn"] == num
+        )
+
     async def handle_ask(self, room, me, attribute):
         num = me["num"]
-        if room["state"] != "playing" or room["winner"] or room["turn"] != num:
+        if not self._can_act(room, num):
             return
         if attribute not in {q["attr"] for q in room["questions"]}:
             return
@@ -290,7 +309,7 @@ class QuizWhoConsumer(BaseConsumer):
 
     async def handle_guess(self, room, me, guess_id):
         num = me["num"]
-        if room["state"] != "playing" or room["winner"] or room["turn"] != num:
+        if not self._can_act(room, num):
             return
         target = str(room["secrets"].get("2" if num == 1 else "1"))
         if guess_id == target:
@@ -317,6 +336,49 @@ class QuizWhoConsumer(BaseConsumer):
         await self.save_room(room)
         await self.broadcast_state()
 
+    async def handle_ask_custom(self, room, me, text):
+        """A free-text question — the ENGINE can't answer it, so it's forwarded to
+        the opponent, who answers OUI/NON by hand (no auto-elimination)."""
+        num = me["num"]
+        if not self._can_act(room, num):
+            return
+        text = (text or "").strip()[:120]
+        if not text:
+            return
+        room["pending"] = {"by": num, "name": me["name"], "text": text}
+        await self.save_room(room)
+        await self.broadcast_state()
+
+    async def handle_answer_custom(self, room, me, answer):
+        pending = room.get("pending")
+        num = me["num"]
+        # Only the opponent (the one who wasn't asked) may answer.
+        if not pending or num not in (1, 2) or num == pending["by"]:
+            return
+        ans = "OUI" if answer == "OUI" else "NON"
+        room["last_answer"] = {
+            "by": pending["by"],
+            "name": pending["name"],
+            "label": pending["text"],
+            "answer": ans,
+        }
+        room["pending"] = None
+        room["turn"] = 2 if pending["by"] == 1 else 1  # asker's turn ends
+        await self.save_room(room)
+        await self.broadcast_state()
+
+    def handle_toggle(self, room, me, card_id):
+        """Personal cross-off toggle (note-taking) — allowed anytime, only affects
+        the caller's own eliminated set."""
+        num = me["num"]
+        if num not in (1, 2) or not card_id:
+            return
+        if card_id not in {b["id"] for b in room["board"]}:
+            return
+        elim = set(room["eliminated"].get(str(num), []))
+        elim.discard(card_id) if card_id in elim else elim.add(card_id)
+        room["eliminated"][str(num)] = list(elim)
+
     def _system(self, room, text):
         room["messages"].append({"user": "", "text": text, "is_system": True})
 
@@ -340,6 +402,7 @@ class QuizWhoConsumer(BaseConsumer):
             if p["num"] in (1, 2)
         ]
         opponent_joined = self._nums_present(room) == {1, 2}
+        pending = room.get("pending")
         for cid, p in room["players"].items():
             num = p["num"]
             my_secret = room["secrets"].get(str(num)) if num else None
@@ -356,6 +419,7 @@ class QuizWhoConsumer(BaseConsumer):
                     "winner": room["winner"],
                     "players": players_public,
                     "opponent_joined": opponent_joined,
+                    "pending": pending,
                     "messages": room.get("messages", []),
                 },
                 "your_num": num,
@@ -367,8 +431,13 @@ class QuizWhoConsumer(BaseConsumer):
                 "your_turn": (
                     room["state"] == "playing"
                     and not room["winner"]
+                    and not pending
                     and opponent_joined
                     and room["turn"] == num
+                ),
+                # This player must answer the opponent's pending custom question.
+                "awaiting_my_answer": bool(
+                    pending and num in (1, 2) and num != pending["by"]
                 ),
                 "you_won": ended and room["winner"] == num,
             }

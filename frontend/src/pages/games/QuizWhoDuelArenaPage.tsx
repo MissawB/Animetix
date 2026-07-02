@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import useSocket from '../../hooks/useSocket';
 import {
   X, Trophy, Frown, HelpCircle, Check, Hourglass, Copy, Crown, Radio, Search,
-  Play, RotateCcw, Eye, Send,
+  Play, RotateCcw, Eye, Send, Crosshair, MessageCircleQuestion,
 } from 'lucide-react';
 
 interface QCard { id: string; title: string; image?: string }
@@ -11,6 +11,7 @@ interface QQ { attr: string; label: string }
 interface QPlayer { num: number; name: string; is_host?: boolean }
 interface QAns { by: number; name?: string; label: string; answer: string }
 interface QMsg { user: string; text: string; is_system?: boolean }
+interface QPending { by: number; name: string; text: string }
 
 const UNIVERSES = [
   { key: 'Character', label: 'Personnages' },
@@ -31,6 +32,7 @@ const QuizWhoDuelArenaPage: React.FC = () => {
   const { gameState, connected, sendAction } = useSocket(roomCode, 'quizwho');
   const [name, setName] = useState('');
   const [chat, setChat] = useState('');
+  const [customQ, setCustomQ] = useState('');
   const [copied, setCopied] = useState(false);
 
   const gs = (gameState || {}) as Record<string, unknown>;
@@ -51,6 +53,8 @@ const QuizWhoDuelArenaPage: React.FC = () => {
   const yourTurn = !!gs.your_turn;
   const youWon = !!gs.you_won;
   const opponentJoined = !!gs.opponent_joined;
+  const pending = (gs.pending as QPending) || null;
+  const awaitingMyAnswer = !!gs.awaiting_my_answer;
   const code = (roomCode || '').toUpperCase();
 
   if (!connected) {
@@ -68,7 +72,10 @@ const QuizWhoDuelArenaPage: React.FC = () => {
   const submitName = () => { if (name.trim()) sendAction('set_name', { name: name.trim() }); };
   const applySettings = (patch: Record<string, unknown>) => sendAction('set_settings', { media_type: mediaType, difficulty, ...patch });
   const ask = (attr: string) => { if (yourTurn) sendAction('ask', { attribute: attr }); };
+  const askCustom = (e: React.FormEvent) => { e.preventDefault(); if (yourTurn && customQ.trim()) { sendAction('ask_custom', { text: customQ.trim() }); setCustomQ(''); } };
+  const answerCustom = (a: string) => sendAction('answer_custom', { answer: a });
   const guess = (id: string) => { if (yourTurn && !eliminated.has(id)) sendAction('guess', { guess_id: id }); };
+  const toggle = (id: string) => { if (myNum > 0) sendAction('toggle_card', { card_id: id }); };
   const sendChat = (e: React.FormEvent) => { e.preventDefault(); if (chat.trim()) { sendAction('chat', { message: chat.trim() }); setChat(''); } };
 
   const opponent = players.find((p) => p.num !== myNum && p.num > 0);
@@ -189,95 +196,122 @@ const QuizWhoDuelArenaPage: React.FC = () => {
   }
 
   // ── PLAYING ─────────────────────────────────────────────────────────────
+  const answerCard = lastAnswer && (
+    <div className={`rounded-2xl border-2 p-4 ${lastAnswer.answer === 'OUI' ? 'border-green-500/40 bg-green-500/10' : lastAnswer.answer === 'NON' ? 'border-red-500/40 bg-red-500/10' : 'border-white/20 bg-white/5'}`}>
+      <p className="text-[10px] font-black uppercase tracking-widest opacity-50 mb-1">{lastAnswer.by === myNum ? 'Toi' : (opponent?.name || 'Adversaire')} · {lastAnswer.answer === 'RATÉ' || lastAnswer.answer === 'GAGNÉ' ? 'accusation' : 'question'}</p>
+      <p className="text-[11px] font-bold opacity-70 mb-1">{lastAnswer.label}</p>
+      <p className="flex items-center gap-2 font-black italic uppercase text-sm text-white">
+        {lastAnswer.answer === 'OUI' && <Check className="w-4 h-4 text-green-400" />}
+        {lastAnswer.answer === 'NON' && <X className="w-4 h-4 text-red-400" />}
+        {lastAnswer.answer}
+      </p>
+    </div>
+  );
+
   return (
     <div className="max-w-[1500px] mx-auto px-4 sm:px-6 py-8">
       {banner}
-      {mySecretId && !isSpectator && (
-        <div className="flex items-center gap-4 rounded-2xl border-2 border-teal-400/40 bg-teal-400/5 p-3 mb-5 max-w-md">
-          {board.find((b) => b.id === mySecretId)?.image
-            ? <img src={board.find((b) => b.id === mySecretId)?.image} alt="" className="w-12 h-16 object-cover rounded-lg" />
-            : <div className="w-12 h-16 rounded-lg bg-white/10 grid place-items-center"><Eye className="w-5 h-5 text-white/30" /></div>}
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-teal-300">Ton perso secret (à protéger)</p>
-            <p className="font-black text-white text-lg">{mySecretTitle}</p>
-          </div>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Board */}
-        <div className="lg:col-span-8">
-          <div className="grid grid-cols-4 sm:grid-cols-4 gap-3">
-            {board.map((c) => {
-              const out = eliminated.has(c.id);
-              const clickable = yourTurn && !out && !isSpectator;
-              return (
-                <button key={c.id} onClick={() => guess(c.id)} disabled={!clickable}
-                  title={clickable ? `Accuser : ${c.title}` : c.title}
-                  className={`group relative aspect-[3/4] rounded-2xl overflow-hidden border-2 transition-all ${out ? 'border-transparent opacity-25 grayscale' : clickable ? 'border-white/10 hover:border-teal-400 hover:scale-[1.03] cursor-pointer' : 'border-white/10'}`}>
-                  {c.image ? <img src={c.image} alt={c.title} loading="lazy" className="w-full h-full object-cover" /> : <div className="w-full h-full grid place-items-center bg-black/40 text-white/40 text-xs p-1 text-center">{c.title}</div>}
-                  {out && <span className="absolute inset-0 grid place-items-center bg-black/50"><X className="w-10 h-10 text-red-500" strokeWidth={3} /></span>}
-                  <span className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 to-transparent p-1.5 pt-5"><span className="block text-[10px] font-black uppercase text-white truncate text-left">{c.title}</span></span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Side panel */}
-        <div className="lg:col-span-4 space-y-4 lg:sticky lg:top-24">
-          <div className={`${panel} p-4 flex items-center justify-between`}>
-            <span className="text-xs font-black uppercase tracking-widest text-white/40">Restants</span>
-            <span className="text-2xl font-black tabular-nums text-teal-300">{remaining}</span>
-          </div>
-
-          {lastAnswer && (
-            <div className={`rounded-2xl border-2 p-4 ${lastAnswer.answer === 'OUI' ? 'border-green-500/40 bg-green-500/10' : lastAnswer.answer === 'NON' ? 'border-red-500/40 bg-red-500/10' : 'border-white/20 bg-white/5'}`}>
-              <p className="text-[10px] font-black uppercase tracking-widest opacity-50 mb-1">{lastAnswer.by === myNum ? 'Toi' : (opponent?.name || 'Adversaire')}</p>
-              <p className="text-[11px] font-bold opacity-70 mb-1">{lastAnswer.label}</p>
-              <p className="flex items-center gap-2 font-black italic uppercase text-sm text-white">
-                {lastAnswer.answer === 'OUI' && <Check className="w-4 h-4 text-green-400" />}
-                {lastAnswer.answer === 'NON' && <X className="w-4 h-4 text-red-400" />}
-                {lastAnswer.answer}
-              </p>
+      <div className="flex flex-wrap items-center gap-4 mb-5">
+        {mySecretId && !isSpectator && (
+          <div className="flex items-center gap-3 rounded-2xl border-2 border-teal-400/40 bg-teal-400/5 p-2.5 pr-5">
+            {board.find((b) => b.id === mySecretId)?.image
+              ? <img src={board.find((b) => b.id === mySecretId)?.image} alt="" className="w-11 h-14 object-cover rounded-lg" />
+              : <div className="w-11 h-14 rounded-lg bg-white/10 grid place-items-center"><Eye className="w-5 h-5 text-white/30" /></div>}
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-teal-300">Ton perso secret</p>
+              <p className="font-black text-white">{mySecretTitle}</p>
             </div>
-          )}
+          </div>
+        )}
+        <div className={`ml-auto flex items-center gap-2 px-4 py-2 rounded-2xl ${panel}`}>
+          <span className="text-[11px] font-black uppercase tracking-widest text-white/40">Restants</span>
+          <span className="text-2xl font-black tabular-nums text-teal-300">{remaining}</span>
+        </div>
+      </div>
 
-          {isSpectator ? (
+      {/* Full board — all 16 portraits visible at once */}
+      <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-2 sm:gap-3">
+        {board.map((c) => {
+          const out = eliminated.has(c.id);
+          const canAccuse = yourTurn && !out && !isSpectator && !pending;
+          return (
+            <div key={c.id} className={`relative group aspect-[3/4] rounded-xl overflow-hidden border-2 transition-all ${out ? 'border-red-500/30' : 'border-white/10 hover:border-white/25'}`}>
+              <button onClick={() => toggle(c.id)} disabled={isSpectator} title={isSpectator ? c.title : out ? 'Rétablir' : 'Barrer'} className="absolute inset-0 w-full h-full cursor-pointer disabled:cursor-default">
+                {c.image ? <img src={c.image} alt={c.title} loading="lazy" className={`w-full h-full object-cover transition-all ${out ? 'grayscale opacity-25' : ''}`} /> : <div className="w-full h-full grid place-items-center bg-black/40 text-white/40 text-[10px] p-1 text-center">{c.title}</div>}
+                <span className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 to-transparent p-1 pt-4"><span className="block text-[9px] font-black uppercase text-white truncate text-left leading-tight">{c.title}</span></span>
+              </button>
+              {out && <span className="absolute inset-0 grid place-items-center pointer-events-none"><X className="w-8 h-8 text-red-500" strokeWidth={3} /></span>}
+              {canAccuse && (
+                <button onClick={() => guess(c.id)} title={`Accuser : ${c.title}`} className="absolute top-1 right-1 w-7 h-7 rounded-lg bg-teal-500 hover:bg-teal-400 text-white grid place-items-center opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity shadow-lg">
+                  <Crosshair className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Controls */}
+      <div className="grid lg:grid-cols-3 gap-4 mt-5">
+        <div className="lg:col-span-2 space-y-4">
+          {awaitingMyAnswer && pending ? (
+            <div className={`${panel} p-5 border-teal-400/50`}>
+              <p className="text-[11px] font-black uppercase tracking-widest text-teal-300 mb-1 flex items-center gap-2"><MessageCircleQuestion className="w-4 h-4" /> {pending.name} te demande</p>
+              <p className="text-xl font-black text-white mb-4">« {pending.text} »</p>
+              <div className="grid grid-cols-2 gap-3">
+                <button onClick={() => answerCustom('OUI')} className="py-3.5 rounded-xl bg-green-500 hover:bg-green-400 text-white font-black italic uppercase text-lg flex items-center justify-center gap-2"><Check className="w-5 h-5" /> Oui</button>
+                <button onClick={() => answerCustom('NON')} className="py-3.5 rounded-xl bg-red-500 hover:bg-red-400 text-white font-black italic uppercase text-lg flex items-center justify-center gap-2"><X className="w-5 h-5" /> Non</button>
+              </div>
+              <p className="mt-2 text-[11px] text-white/35 italic">Réponds honnêtement d'après TON perso secret.</p>
+            </div>
+          ) : pending ? (
+            <div className={`${panel} p-6 text-center`}>
+              <Hourglass className="w-6 h-6 text-teal-300 mx-auto mb-2 animate-pulse" />
+              <p className="text-sm font-bold text-white/60">En attente de la réponse de {opponent?.name || "l'adversaire"}…</p>
+              <p className="text-[11px] text-white/30 mt-1 italic">« {pending.text} »</p>
+            </div>
+          ) : isSpectator ? (
             <div className={`${panel} p-6 text-center text-white/40 text-xs font-bold uppercase tracking-widest`}>Mode spectateur</div>
           ) : yourTurn ? (
-            <div className={`${panel} p-4`}>
-              <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-white/40 mb-3 flex items-center gap-2"><HelpCircle className="w-4 h-4" /> Pose une question</h3>
-              <div className="space-y-2 max-h-[45vh] overflow-y-auto pr-1 custom-scrollbar">
+            <div className={`${panel} p-4 space-y-3`}>
+              <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-white/40 flex items-center gap-2"><HelpCircle className="w-4 h-4" /> Questions préenregistrées</h3>
+              <div className="grid sm:grid-cols-2 gap-2 max-h-52 overflow-y-auto pr-1 custom-scrollbar">
                 {questions.map((q) => (
                   <button key={q.attr} onClick={() => ask(q.attr)}
-                    className="w-full text-left rounded-xl border-2 border-white/10 hover:border-teal-400 hover:bg-teal-400/5 px-4 py-2.5 text-sm font-bold text-white transition-all">{q.label}</button>
+                    className="text-left rounded-xl border-2 border-white/10 hover:border-teal-400 hover:bg-teal-400/5 px-3 py-2 text-sm font-bold text-white transition-all">{q.label}</button>
                 ))}
               </div>
-              <p className="mt-3 text-[11px] text-white/35 italic">…ou clique un portrait pour accuser directement.</p>
+              <form onSubmit={askCustom} className="flex gap-2 pt-2 border-t border-white/5">
+                <input value={customQ} onChange={(e) => setCustomQ(e.target.value)} placeholder="Ta question perso — l'adversaire répond…" maxLength={120} aria-label="Question personnalisée"
+                  className="flex-grow min-w-0 p-2.5 rounded-xl bg-white/[0.04] border-2 border-white/10 focus:border-teal-400 outline-none text-white placeholder:text-white/25 text-sm" />
+                <button type="submit" disabled={!customQ.trim()} className="px-4 rounded-xl bg-teal-500 enabled:hover:bg-teal-400 text-white font-black uppercase text-xs disabled:opacity-40 disabled:cursor-not-allowed">Demander</button>
+              </form>
+              <p className="text-[11px] text-white/35 italic flex items-center gap-1 flex-wrap">Clique un portrait pour le <b className="text-white/60">barrer</b> ; survole puis <Crosshair className="inline w-3 h-3 text-teal-300" /> pour <b className="text-white/60">accuser</b>.</p>
             </div>
           ) : (
-            <div className={`${panel} p-6 text-center`}><p className="text-xs font-bold uppercase tracking-widest text-white/40 animate-pulse">L'adversaire réfléchit…</p></div>
+            <div className={`${panel} p-6 text-center`}><p className="text-xs font-bold uppercase tracking-widest text-white/40 animate-pulse">{opponent?.name || "L'adversaire"} réfléchit…</p></div>
           )}
+          {answerCard}
+        </div>
 
-          {/* Journal / chat */}
-          <div className={`${panel} p-4 flex flex-col`}>
-            <div className="bg-black/40 rounded-xl p-3 mb-2 max-h-32 overflow-y-auto border border-white/5 custom-scrollbar">
-              {messages.length === 0 && <p className="text-center py-4 opacity-20 italic text-[11px]">—</p>}
-              {messages.map((m, i) => (
-                <p key={i} className="text-[11px] mb-1">
-                  {m.is_system ? <span className="text-teal-300/60 italic">{m.text}</span> : <><span className="text-teal-300/70 font-bold">{m.user}&gt; </span><span className="text-white/80">{m.text}</span></>}
-                </p>
-              ))}
-            </div>
-            {!isSpectator && (
-              <form onSubmit={sendChat} className="flex gap-2">
-                <input value={chat} onChange={(e) => setChat(e.target.value)} placeholder="Message…" maxLength={120} aria-label="Message"
-                  className="flex-grow min-w-0 p-2 rounded-lg bg-white/[0.04] border-2 border-white/10 focus:border-teal-400 outline-none text-white placeholder:text-white/25 text-xs" />
-                <button type="submit" className="px-2.5 rounded-lg bg-teal-500 hover:bg-teal-400 text-white"><Send className="w-4 h-4" /></button>
-              </form>
-            )}
+        {/* Journal / chat */}
+        <div className={`${panel} p-4 flex flex-col`}>
+          <h3 className="text-[10px] font-black uppercase opacity-40 mb-2 tracking-[0.25em]">Journal</h3>
+          <div className="flex-grow bg-black/40 rounded-xl p-3 mb-2 max-h-40 min-h-[100px] overflow-y-auto border border-white/5 custom-scrollbar">
+            {messages.length === 0 && <p className="text-center py-4 opacity-20 italic text-[11px]">—</p>}
+            {messages.map((m, i) => (
+              <p key={i} className="text-[11px] mb-1">
+                {m.is_system ? <span className="text-teal-300/60 italic">{m.text}</span> : <><span className="text-teal-300/70 font-bold">{m.user}&gt; </span><span className="text-white/80">{m.text}</span></>}
+              </p>
+            ))}
           </div>
+          {!isSpectator && (
+            <form onSubmit={sendChat} className="flex gap-2">
+              <input value={chat} onChange={(e) => setChat(e.target.value)} placeholder="Message…" maxLength={120} aria-label="Message"
+                className="flex-grow min-w-0 p-2 rounded-lg bg-white/[0.04] border-2 border-white/10 focus:border-teal-400 outline-none text-white placeholder:text-white/25 text-xs" />
+              <button type="submit" className="px-2.5 rounded-lg bg-teal-500 hover:bg-teal-400 text-white"><Send className="w-4 h-4" /></button>
+            </form>
+          )}
         </div>
       </div>
     </div>
