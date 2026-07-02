@@ -45,9 +45,10 @@ describe('ToastContainer', () => {
       { id: 'c', message: 'FYI', type: 'info' },
     ];
     render(<ToastContainer />);
-    expect(screen.getByText('Saved!').parentElement).toHaveClass('bg-green-500');
-    expect(screen.getByText('Boom').parentElement).toHaveClass('bg-red-500');
-    expect(screen.getByText('FYI').parentElement).toHaveClass('bg-blue-500');
+    // Darkened for WCAG AA contrast with the white toast text.
+    expect(screen.getByText('Saved!').parentElement).toHaveClass('bg-green-700');
+    expect(screen.getByText('Boom').parentElement).toHaveClass('bg-red-600');
+    expect(screen.getByText('FYI').parentElement).toHaveClass('bg-blue-600');
   });
 
   it('calls removeToast with the toast id when close is clicked', () => {

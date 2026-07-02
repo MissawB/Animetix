@@ -8,10 +8,12 @@ import { useTranslation } from 'react-i18next';
 import { CardSkeleton } from "../../components/ui/Skeleton";
 
 // Podium accents for the top 3 (gold / silver / bronze).
+// `icon` = vibrant colour for the medal (non-text, no contrast rule); `label` =
+// AA-contrast colour for the rank text on the white/dark card.
 const PODIUM = [
-  { grad: 'from-yellow-400 to-amber-500', text: 'text-yellow-500', ring: 'ring-yellow-400/50', icon: Crown, order: 'sm:order-2', lift: 'sm:-translate-y-4' },
-  { grad: 'from-slate-300 to-slate-400', text: 'text-slate-400', ring: 'ring-slate-300/50', icon: Medal, order: 'sm:order-1', lift: '' },
-  { grad: 'from-orange-400 to-orange-600', text: 'text-orange-500', ring: 'ring-orange-400/50', icon: Medal, order: 'sm:order-3', lift: '' },
+  { grad: 'from-yellow-400 to-amber-500', icon: 'text-yellow-500', label: 'text-yellow-700 dark:text-yellow-400', ring: 'ring-yellow-400/50', Icon: Crown, order: 'sm:order-2', lift: 'sm:-translate-y-4' },
+  { grad: 'from-slate-300 to-slate-400', icon: 'text-slate-400', label: 'text-slate-600 dark:text-slate-300', ring: 'ring-slate-300/50', Icon: Medal, order: 'sm:order-1', lift: '' },
+  { grad: 'from-orange-400 to-orange-600', icon: 'text-orange-500', label: 'text-orange-700 dark:text-orange-400', ring: 'ring-orange-400/50', Icon: Medal, order: 'sm:order-3', lift: '' },
 ];
 
 const initial = (name: string) => (name?.[0] ?? '?').toUpperCase();
@@ -36,21 +38,21 @@ const LeaderboardPage: React.FC = () => {
     <div className="max-w-4xl mx-auto px-6 py-16">
       {/* ── Header ─────────────────────────────────────────────── */}
       <div className="text-center mb-14">
-        <div className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.3em] text-yellow-500 mb-4">
+        <div className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.3em] text-yellow-700 dark:text-yellow-400 mb-4">
           <Sparkles className="w-3.5 h-3.5" /> Classement mondial
         </div>
         <h1 className="text-5xl md:text-6xl font-black italic manga-font tracking-tighter uppercase leading-none">
-          <span className="bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-500 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-yellow-500 via-amber-600 to-orange-600 dark:from-yellow-400 dark:via-amber-500 dark:to-orange-500 bg-clip-text text-transparent">
             {t('social.leaderboard.title')}
           </span>
         </h1>
-        <p className="mt-4 text-sm font-bold opacity-50">Les légendes qui ont décodé le plus de secrets.</p>
+        <p className="mt-4 text-sm font-bold text-gray-600 dark:text-gray-400">Les légendes qui ont décodé le plus de secrets.</p>
       </div>
 
       {leaders.length === 0 ? (
         <div className="text-center py-16 rounded-3xl border border-dashed border-gray-200 dark:border-white/10">
           <Trophy className="w-12 h-12 mx-auto mb-4 opacity-20" />
-          <p className="font-bold opacity-50">Le panthéon est encore vide. À toi d'y entrer.</p>
+          <p className="font-bold text-gray-600 dark:text-gray-400">Le panthéon est encore vide. À toi d'y entrer.</p>
         </div>
       ) : (
         <>
@@ -58,7 +60,7 @@ const LeaderboardPage: React.FC = () => {
           <div className="flex flex-col sm:flex-row items-center sm:items-end justify-center gap-5 mb-10">
             {top3.map((player: Profile, index: number) => {
               const s = PODIUM[index];
-              const Icon = s.icon;
+              const Icon = s.Icon;
               return (
                 <Link
                   key={player.username}
@@ -70,9 +72,9 @@ const LeaderboardPage: React.FC = () => {
                       <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${s.grad} flex items-center justify-center text-3xl font-black italic text-white shadow-lg ring-4 ${s.ring}`}>
                         {initial(player.username)}
                       </div>
-                      <Icon className={`absolute -top-3 -right-3 w-8 h-8 ${s.text} drop-shadow`} />
+                      <Icon className={`absolute -top-3 -right-3 w-8 h-8 ${s.icon} drop-shadow`} aria-hidden="true" />
                     </div>
-                    <div className={`text-[11px] font-black uppercase tracking-[0.2em] ${s.text} mb-1`}>#{index + 1}</div>
+                    <div className={`text-[11px] font-black uppercase tracking-[0.2em] ${s.label} mb-1`}>#{index + 1}</div>
                     <div
                       className="font-black italic manga-font text-lg truncate max-w-full group-hover:text-yellow-500 transition-colors"
                       style={player.custom_username_color ? { color: player.custom_username_color } : undefined}
@@ -96,7 +98,7 @@ const LeaderboardPage: React.FC = () => {
                   to={`/profile/${player.username}/`}
                   className="flex items-center gap-4 rounded-2xl border border-gray-100 dark:border-white/5 bg-gray-50 dark:bg-navy-900 px-5 py-4 no-underline text-current hover:border-yellow-500/40 hover:translate-x-1 transition-all"
                 >
-                  <span className="w-10 text-center font-black italic text-lg opacity-40">#{i + 4}</span>
+                  <span className="w-10 text-center font-black italic text-lg text-gray-500 dark:text-gray-400">#{i + 4}</span>
                   <div className="w-11 h-11 flex-shrink-0 rounded-xl bg-black dark:bg-white/10 flex items-center justify-center font-black italic text-white dark:text-yellow-400">
                     {initial(player.username)}
                   </div>

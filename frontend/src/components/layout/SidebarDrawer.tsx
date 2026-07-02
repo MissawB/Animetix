@@ -129,7 +129,7 @@ const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
             className="w-8 h-8 object-contain dark:invert transition-transform group-hover:rotate-6"
           />
           <span className="manga-font text-xl tracking-tighter text-black dark:text-white">
-            ANIME<span className="text-yellow-400">TIX</span>
+            ANIME<span className="text-yellow-700 dark:text-yellow-400">TIX</span>
           </span>
         </Link>
         <button

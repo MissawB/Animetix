@@ -40,7 +40,7 @@ const Navbar: React.FC = () => {
           <img src="/static/img/logo/white_logo.png" alt="" className="h-7 dark:hidden" />
           <img src="/static/img/logo/logo.png" alt="" className="h-7 hidden dark:block" />
           <span className="manga-font text-lg tracking-tighter text-black dark:text-white hidden sm:block">
-            ANIME<span className="text-yellow-400">TIX</span>
+            ANIME<span className="text-yellow-700 dark:text-yellow-400">TIX</span>
           </span>
         </Link>
       </div>

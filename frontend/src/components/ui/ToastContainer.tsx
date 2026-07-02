@@ -11,13 +11,18 @@ export const ToastContainer: React.FC = () => {
         <div
           key={toast.id}
           className={`flex items-center justify-between p-4 rounded-xl shadow-2xl min-w-[300px] text-white font-bold transition-all animate-slide-in-right ${
-            toast.type === 'error' ? 'bg-red-500' :
-            toast.type === 'success' ? 'bg-green-500' : 'bg-blue-500'
+            toast.type === 'error' ? 'bg-red-600' :
+            toast.type === 'success' ? 'bg-green-700' : 'bg-blue-600'
           }`}
         >
           <span>{toast.message}</span>
-          <button onClick={() => removeToast(toast.id)} className="ml-4 opacity-50 hover:opacity-100 transition-opacity">
-            <X className="w-5 h-5" />
+          <button
+            type="button"
+            onClick={() => removeToast(toast.id)}
+            aria-label="Fermer la notification"
+            className="ml-4 opacity-80 hover:opacity-100 transition-opacity"
+          >
+            <X className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
       ))}

@@ -27,7 +27,7 @@ const NotFoundPage: React.FC = () => {
           {/* Message */}
           <div className="space-y-3">
             <h2 className="text-3xl font-black italic manga-font uppercase tracking-tight">
-              Dimension <span className="text-yellow-400 text-glow">Inconnue</span>
+              Dimension <span className="text-yellow-700 dark:text-yellow-400 text-glow">Inconnue</span>
             </h2>
             <p className="text-sm font-bold text-gray-600 dark:text-gray-400 uppercase tracking-[0.2em] max-w-md mx-auto">
               Cette page n'existe pas dans le multivers d'Animetix. Peut-être a-t-elle été absorbée par un trou noir narratif...

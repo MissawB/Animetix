@@ -70,7 +70,7 @@ const Footer: React.FC = () => {
                 className="w-9 h-9 object-contain dark:invert transition-transform group-hover:rotate-6"
               />
               <span className="manga-font text-2xl tracking-tighter text-black dark:text-white">
-                ANIME<span className="text-yellow-400">TIX</span>
+                ANIME<span className="text-yellow-700 dark:text-yellow-400">TIX</span>
               </span>
             </Link>
             <p className="mt-4 text-sm font-medium leading-relaxed text-gray-500 dark:text-gray-400 max-w-xs">
@@ -90,7 +90,7 @@ const Footer: React.FC = () => {
           {/* Link columns */}
           {columns.map((col) => (
             <nav key={col.title} aria-label={col.title} className="min-w-0">
-              <h3 className="text-[11px] font-black uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500 mb-4">
+              <h3 className="text-[11px] font-black uppercase tracking-[0.18em] text-gray-600 dark:text-gray-400 mb-4">
                 {col.title}
               </h3>
               <ul className="space-y-2.5">
