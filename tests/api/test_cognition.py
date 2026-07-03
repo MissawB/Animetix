@@ -69,7 +69,10 @@ def test_ai_debate_arena_view():
     user.is_authenticated = True
     request.user = user
 
-    with patch("animetix.api.cognition.get_container") as mock_get_container:
+    with (
+        patch("animetix.api.cognition.get_container") as mock_get_container,
+        patch("animetix.api.cognition.deduct_berrix"),
+    ):
         mock_container = MagicMock()
         mock_container.core.self_play_debate_service.return_value.run_debate.return_value = {
             "status": "success",
