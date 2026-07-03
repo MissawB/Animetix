@@ -323,6 +323,11 @@ jobs:
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
+      # data/processed/*.json & data/artifacts/* are Git LFS. Without lfs:true the
+      # checkout has pointer stubs, Cloud Build ships those into the image, and
+      # sync_catalog then fails: json.load on a pointer -> "Expecting value line 1".
+      with:
+        lfs: true
     # Reuses the WIF auth already configured for the Gemini workflows. The auth
     # service account needs: roles/cloudbuild.builds.editor, roles/run.admin, and
     # roles/iam.serviceAccountUser on the prod runtime service account.
