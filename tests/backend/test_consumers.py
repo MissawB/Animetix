@@ -13,12 +13,18 @@ async def test_undercover_consumer_logic():
     connected, _ = await communicator.connect()
     assert connected
 
-    # 2. Test set_name
+    # 2. Test set_name. On connect the consumer broadcasts a room_state with the
+    # default name ("Agent N"); set_name then broadcasts an updated one. Read
+    # room_state messages until the rename lands.
     await communicator.send_json_to({"action": "set_name", "name": "Player 1"})
 
-    response = await communicator.receive_json_from()
-    assert response["type"] == "room_state"
-    # Verification of player name based on the structure sent
+    response = None
+    for _ in range(5):
+        msg = await communicator.receive_json_from()
+        if msg.get("type") == "room_state" and msg["players"][0]["name"] == "Player 1":
+            response = msg
+            break
+    assert response is not None, "set_name did not update the player name"
     assert response["players"][0]["name"] == "Player 1"
 
     # 3. Test chat

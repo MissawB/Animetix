@@ -82,11 +82,13 @@ def _patch_container(mocker, is_correct=False, raw_similarity=0.0):
     These are sync callables (the consumer wraps them in ``sync_to_async``).
     """
     container = MagicMock()
-    container.core.catalog_service.load_data.return_value = {
+    container.core.catalog_service.return_value.load_data.return_value = {
         "title_to_full_data": {"Naruto": {"id": 1, "title": "Naruto"}}
     }
-    container.core.game_service.check_title_match.return_value = is_correct
-    container.core.game_service.calculate_raw_similarity.return_value = raw_similarity
+    container.core.game_service.return_value.check_title_match.return_value = is_correct
+    container.core.game_service.return_value.calculate_raw_similarity.return_value = (
+        raw_similarity
+    )
     mocker.patch.object(duel_module, "get_container", return_value=container)
     return container
 
@@ -251,7 +253,7 @@ async def test_handle_guess_noop_when_duel_already_finished(mocker):
 
     consumer.channel_layer.group_send.assert_not_awaited()
     duel.save.assert_not_called()
-    container.core.game_service.check_title_match.assert_not_called()
+    container.core.game_service.return_value.check_title_match.assert_not_called()
 
 
 async def test_handle_guess_correct_finishes_duel_and_broadcasts_winner(mocker):
@@ -270,7 +272,7 @@ async def test_handle_guess_correct_finishes_duel_and_broadcasts_winner(mocker):
     duel.save.assert_called_once()
 
     # check_title_match was given the secret's full data, not the bare title.
-    container.core.game_service.check_title_match.assert_called_once_with(
+    container.core.game_service.return_value.check_title_match.assert_called_once_with(
         "Naruto", {"id": 1, "title": "Naruto"}
     )
 
@@ -278,7 +280,7 @@ async def test_handle_guess_correct_finishes_duel_and_broadcasts_winner(mocker):
     winner.profile.add_win.assert_called_once_with(game_mode="duel", media_type="Anime")
 
     # No similarity scoring on a win.
-    container.core.game_service.calculate_raw_similarity.assert_not_called()
+    container.core.game_service.return_value.calculate_raw_similarity.assert_not_called()
 
     # Broadcast announces the winner and reveals the secret.
     group, message = _last_group_send_message(consumer.channel_layer)
@@ -308,7 +310,7 @@ async def test_handle_guess_wrong_broadcasts_similarity_score_without_finishing(
     player.profile.add_win.assert_not_called()
 
     # Similarity computed against the secret with the loaded data set.
-    container.core.game_service.calculate_raw_similarity.assert_called_once_with(
+    container.core.game_service.return_value.calculate_raw_similarity.assert_called_once_with(
         "Anime",
         "Naruto",
         "Bleach",
@@ -344,7 +346,7 @@ async def test_handle_guess_reconciles_turns_between_two_players(mocker):
     p1.profile.add_win.assert_not_called()
 
     # Now p2 guesses correctly -> duel finishes, winner is p2 (not p1).
-    container.core.game_service.check_title_match.return_value = True
+    container.core.game_service.return_value.check_title_match.return_value = True
     consumer2 = _make_consumer(p2)
     await consumer2.handle_guess("Naruto")
     _, msg2 = _last_group_send_message(consumer2.channel_layer)
