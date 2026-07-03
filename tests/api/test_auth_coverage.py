@@ -326,7 +326,10 @@ def test_google_auth_bad_kid(rf):
 @override_settings(FIREBASE_AUTH_EMULATOR_HOST=None)
 def test_google_auth_expired_signature(rf):
     request = rf.get("/x", HTTP_AUTHORIZATION="Bearer token")
-    with patch.object(auth_mod, "get_google_public_keys", return_value={"k": "c"}):
+    with (
+        patch.object(auth_mod, "get_google_public_keys", return_value={"k": "c"}),
+        patch.object(auth_mod, "load_pem_x509_certificate", return_value=MagicMock()),
+    ):
         with patch.object(
             auth_mod.jwt, "get_unverified_header", return_value={"kid": "k"}
         ):
@@ -342,7 +345,10 @@ def test_google_auth_expired_signature(rf):
 @override_settings(FIREBASE_AUTH_EMULATOR_HOST=None)
 def test_google_auth_invalid_token(rf):
     request = rf.get("/x", HTTP_AUTHORIZATION="Bearer token")
-    with patch.object(auth_mod, "get_google_public_keys", return_value={"k": "c"}):
+    with (
+        patch.object(auth_mod, "get_google_public_keys", return_value={"k": "c"}),
+        patch.object(auth_mod, "load_pem_x509_certificate", return_value=MagicMock()),
+    ):
         with patch.object(
             auth_mod.jwt, "get_unverified_header", return_value={"kid": "k"}
         ):
@@ -360,7 +366,10 @@ def test_google_auth_invalid_token(rf):
 @override_settings(FIREBASE_AUTH_EMULATOR_HOST=None)
 def test_google_auth_generic_exception(rf):
     request = rf.get("/x", HTTP_AUTHORIZATION="Bearer token")
-    with patch.object(auth_mod, "get_google_public_keys", return_value={"k": "c"}):
+    with (
+        patch.object(auth_mod, "get_google_public_keys", return_value={"k": "c"}),
+        patch.object(auth_mod, "load_pem_x509_certificate", return_value=MagicMock()),
+    ):
         with patch.object(
             auth_mod.jwt, "get_unverified_header", return_value={"kid": "k"}
         ):
@@ -377,7 +386,10 @@ def test_google_auth_generic_exception(rf):
 @override_settings(FIREBASE_AUTH_EMULATOR_HOST=None)
 def test_google_auth_production_missing_email(rf):
     request = rf.get("/x", HTTP_AUTHORIZATION="Bearer token")
-    with patch.object(auth_mod, "get_google_public_keys", return_value={"k": "c"}):
+    with (
+        patch.object(auth_mod, "get_google_public_keys", return_value={"k": "c"}),
+        patch.object(auth_mod, "load_pem_x509_certificate", return_value=MagicMock()),
+    ):
         with patch.object(
             auth_mod.jwt, "get_unverified_header", return_value={"kid": "k"}
         ):
@@ -393,7 +405,10 @@ def test_google_auth_production_missing_email(rf):
 def test_google_auth_production_success(rf):
     request = rf.get("/x", HTTP_AUTHORIZATION="Bearer token")
     payload = {"email": "prod@example.com"}
-    with patch.object(auth_mod, "get_google_public_keys", return_value={"k": "c"}):
+    with (
+        patch.object(auth_mod, "get_google_public_keys", return_value={"k": "c"}),
+        patch.object(auth_mod, "load_pem_x509_certificate", return_value=MagicMock()),
+    ):
         with patch.object(
             auth_mod.jwt, "get_unverified_header", return_value={"kid": "k"}
         ):

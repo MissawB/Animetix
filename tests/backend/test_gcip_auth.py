@@ -22,9 +22,12 @@ def authenticator():
 
 
 @pytest.mark.django_db
+@patch("backend.api.animetix.auth.load_pem_x509_certificate")
 @patch("backend.api.animetix.auth.get_google_public_keys")
 @patch("jwt.decode")
-def test_gcip_auth_success(mock_decode, mock_certs, rf, authenticator, settings):
+def test_gcip_auth_success(
+    mock_decode, mock_certs, mock_load_pem, rf, authenticator, settings
+):
     settings.GOOGLE_CLOUD_PROJECT = "my-gcp-project"
     settings.FIREBASE_AUTH_EMULATOR_HOST = None
 
@@ -72,9 +75,12 @@ def test_gcip_auth_invalid_header(mock_certs, rf, authenticator):
 
 
 @pytest.mark.django_db
+@patch("backend.api.animetix.auth.load_pem_x509_certificate")
 @patch("backend.api.animetix.auth.get_google_public_keys")
 @patch("jwt.decode")
-def test_gcip_auth_expired_token(mock_decode, mock_certs, rf, authenticator, settings):
+def test_gcip_auth_expired_token(
+    mock_decode, mock_certs, mock_load_pem, rf, authenticator, settings
+):
     settings.GOOGLE_CLOUD_PROJECT = "my-gcp-project"
     settings.FIREBASE_AUTH_EMULATOR_HOST = None
 
