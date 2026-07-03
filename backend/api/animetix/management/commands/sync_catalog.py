@@ -6,6 +6,32 @@ from django.db import transaction
 
 from animetix.models import MediaItem
 
+# Signatures of garbage "tags" left when an LLM enrichment step failed and stored
+# its error message as a tag (e.g. "aucune unité de calcul d'IA n'est disponible
+# (Ollama/HF)."). Matched case-insensitively as substrings; such entries are
+# dropped from tags / micro_tags / traits at sync time.
+_GARBAGE_TAG_SIGNATURES = (
+    "aucune unité de calcul",
+    "n'est disponible",
+    "ollama/hf",
+    "désolé",  # LLM refusal/error fragment ("Désolé, …") stored as a tag
+    "traceback (most recent",
+)
+_TAG_FIELDS = ("tags", "micro_tags", "traits")
+
+
+def _clean_tag_list(values):
+    """Drop LLM-error-message entries from a tag list; leave real tags untouched."""
+    if not isinstance(values, list):
+        return values
+    cleaned = []
+    for v in values:
+        s = str(v).strip()
+        if not s or any(sig in s.lower() for sig in _GARBAGE_TAG_SIGNATURES):
+            continue
+        cleaned.append(v)
+    return cleaned
+
 
 class Command(BaseCommand):
     help = "Syncs processed JSON files to the Django relational catalog."
@@ -115,6 +141,11 @@ class Command(BaseCommand):
                 ]
                 for f in fields_to_pop:
                     metadata.pop(f, None)
+
+                # Strip garbage LLM-error tags so they never reach the DB.
+                for tag_field in _TAG_FIELDS:
+                    if tag_field in metadata:
+                        metadata[tag_field] = _clean_tag_list(metadata[tag_field])
 
                 MediaItem.objects.update_or_create(
                     external_id=ext_id,
