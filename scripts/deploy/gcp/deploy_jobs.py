@@ -176,7 +176,16 @@ def main():
             "HF_TOKEN=HF_TOKEN:latest,"
             "HF_SPACES=HF_SPACES:latest,"
             "IGDB_CLIENT_SECRET=IGDB_CLIENT_SECRET:latest,"
-            "WANDB_API_KEY=WANDB_API_KEY:latest"
+            "WANDB_API_KEY=WANDB_API_KEY:latest,"
+            # Neo4j (knowledge graph). Mounted from Secret Manager so the URI /
+            # password are rotatable WITHOUT rebuilding the image. Previously these
+            # only reached the jobs via a `.env` baked into the image, so a dead or
+            # rotated Aura instance could not be fixed by updating the secret alone.
+            # load_dotenv(override=False) in neo4j_client lets these env vars win
+            # over any baked .env fallback.
+            "NEO4J_URI=NEO4J_URI:latest,"
+            "NEO4J_USER=NEO4J_USER:latest,"
+            "NEO4J_PASSWORD=NEO4J_PASSWORD:latest"
         )
 
         for job in jobs_config:
