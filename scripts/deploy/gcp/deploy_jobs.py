@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 import subprocess
@@ -109,12 +110,50 @@ def main():
         ]
     )
 
+    # BRAIN_API_URL is REQUIRED at import time (containers/inference.py runs
+    # validate_inference_config on django.setup()), so the jobs crash without it.
+    # The web service gets it from deploy_brain.py; read it back off the live
+    # service so the jobs always match. Overridable via env for a manual value.
+    brain_api_url = os.getenv("BRAIN_API_URL", "").strip()
+    if not brain_api_url:
+        res = run_command(
+            [
+                "gcloud",
+                "run",
+                "services",
+                "describe",
+                "animetix-web",
+                f"--region={region}",
+                f"--project={project_id}",
+                "--format=json",
+            ],
+            check=False,
+        )
+        try:
+            svc = json.loads(res.stdout or "{}")
+            envs = svc["spec"]["template"]["spec"]["containers"][0].get("env", [])
+            brain_api_url = next(
+                (e.get("value", "") for e in envs if e.get("name") == "BRAIN_API_URL"),
+                "",
+            ).strip()
+        except (json.JSONDecodeError, KeyError, IndexError, TypeError):
+            brain_api_url = ""
+    if not brain_api_url:
+        print(
+            "ERROR: could not resolve BRAIN_API_URL (not in env and not found on the "
+            "animetix-web service). Deploy the web service + deploy_brain.py first, "
+            "or set BRAIN_API_URL=... before running this script.\n"
+            "The jobs would crash on django.setup() without it."
+        )
+        sys.exit(1)
+
     # Write env vars to a YAML file to avoid Windows shell escaping/comma issues
     # Variables d'environnement NON sensibles uniquement. Les secrets (tokens, clés)
     # passent par Secret Manager via `--set-secrets` ci-dessous — JAMAIS en dur ici.
     env_vars_data = {
         "ALLOWED_HOSTS": "*.run.app,missawb-animetix-web.hf.space,localhost,127.0.0.1",
         "DJANGO_ENV": "production",
+        "BRAIN_API_URL": brain_api_url,
         "SENTRY_DSN": "https://16adfd8a3ea5046c55ba1c7a4a919619@o4511298977202176.ingest.de.sentry.io/4511298998894672",
     }
 
