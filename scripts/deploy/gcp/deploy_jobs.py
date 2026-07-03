@@ -221,6 +221,10 @@ def main():
                 "--vpc-egress=private-ranges-only",
                 f"--memory={job['memory']}",
                 f"--cpu={job['cpu']}",
+                # Default 10m is far too short for bulk work (sync_catalog upserts
+                # thousands of MediaItems, data-ingestion vectorizes). Give 1h;
+                # a job may override via its "timeout" key.
+                f"--task-timeout={job.get('timeout', '3600s')}",
                 f"--env-vars-file={temp_yaml_path}",
                 f"--set-secrets={secrets}",
                 f"--project={project_id}",
