@@ -102,10 +102,13 @@ def test_daily_challenge_data_view_creates_and_returns():
     view = DailyChallengeDataView.as_view()
     response = view(request)
     assert response.status_code == 200
-    assert response.data["media_type"] == "Anime"
-    assert response.data["reward_xp"] == 500
+    # Redesigned: one challenge per universe (anime / manga / character) with
+    # date navigation, instead of a single top-level media_type + reward_xp.
+    assert response.data["is_today"] is True
+    assert "date" in response.data
     mode_ids = {m["id"] for m in response.data["modes"]}
-    assert {"classic", "vision", "emoji"} <= mode_ids
+    assert mode_ids == {"anime", "manga", "character"}
+    assert response.data["modes"][0]["media_type"] == "Anime"
 
 
 # --------------------------------------------------------------------------- #
@@ -571,6 +574,9 @@ def test_tree_of_thoughts_missing_query():
     request = factory.post(
         "/api/v1/labs/tot/", json.dumps({}), content_type="application/json"
     )
+    # GPU feature → login required (the "Query required" 400 is returned before
+    # the Berrix charge, so no need to mock deduct_berrix here).
+    force_authenticate(request, user=MagicMock(id=1))
     view = TreeOfThoughtsLabView.as_view()
     response = view(request)
     assert response.status_code == 400
@@ -583,6 +589,7 @@ def test_tree_of_thoughts_success():
         json.dumps({"query": "Solve X"}),
         content_type="application/json",
     )
+    force_authenticate(request, user=MagicMock(id=1))
     view = TreeOfThoughtsLabView.as_view()
     # The injected service is an attribute on the instantiated view; patch it.
     with patch.object(
@@ -592,11 +599,14 @@ def test_tree_of_thoughts_success():
     ):
         instance_service = MagicMock()
         instance_service.solve_with_tree_of_thoughts.return_value = {"answer": "42"}
-        with patch.object(
-            TreeOfThoughtsLabView,
-            "__init__",
-            lambda self, **kw: setattr(self, "tot_service", instance_service)
-            or super(TreeOfThoughtsLabView, self).__init__(),
+        with (
+            patch.object(
+                TreeOfThoughtsLabView,
+                "__init__",
+                lambda self, **kw: setattr(self, "tot_service", instance_service)
+                or super(TreeOfThoughtsLabView, self).__init__(),
+            ),
+            patch("animetix.api.labs.deduct_berrix"),
         ):
             response = view(request)
     assert response.status_code == 200
@@ -609,14 +619,18 @@ def test_tree_of_thoughts_error():
         json.dumps({"query": "Solve X"}),
         content_type="application/json",
     )
+    force_authenticate(request, user=MagicMock(id=1))
     view = TreeOfThoughtsLabView.as_view()
     instance_service = MagicMock()
     instance_service.solve_with_tree_of_thoughts.side_effect = Exception("tot boom")
-    with patch.object(
-        TreeOfThoughtsLabView,
-        "__init__",
-        lambda self, **kw: setattr(self, "tot_service", instance_service)
-        or super(TreeOfThoughtsLabView, self).__init__(),
+    with (
+        patch.object(
+            TreeOfThoughtsLabView,
+            "__init__",
+            lambda self, **kw: setattr(self, "tot_service", instance_service)
+            or super(TreeOfThoughtsLabView, self).__init__(),
+        ),
+        patch("animetix.api.labs.deduct_berrix"),
     ):
         response = view(request)
     assert response.status_code == 500

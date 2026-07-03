@@ -17,8 +17,13 @@ def api_client():
 def test_neural_diagnostics_api_success(api_client):
     url = "/api/v1/labs/diagnostics/"
     payload = {"prompt": "Why is Naruto a ninja?"}
+    # GPU feature → login required + consumes Berrix (mocked so no wallet needed).
+    api_client.force_authenticate(user=MagicMock(id=1))
 
-    with patch("animetix.api.labs.get_container") as mock_get_container:
+    with (
+        patch("animetix.api.labs.get_container") as mock_get_container,
+        patch("animetix.api.labs.deduct_berrix"),
+    ):
         mock_container = MagicMock()
         mock_inference = MagicMock()
         mock_xai = MagicMock()
@@ -63,6 +68,7 @@ def test_neural_diagnostics_api_success(api_client):
 
 def test_neural_diagnostics_api_missing_prompt(api_client):
     url = "/api/v1/labs/diagnostics/"
+    api_client.force_authenticate(user=MagicMock(id=1))  # login required (GPU feature)
     response = api_client.post(url, {}, format="json")
     assert response.status_code == 400
     assert "error" in response.data
