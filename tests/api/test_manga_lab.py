@@ -23,12 +23,16 @@ def test_manga_clean_lab_view(dummy_image):
     request = factory.post("/api/v1/manga-lab/clean/", {"image": dummy_image})
     force_authenticate(request, user=user)
 
-    with patch("animetix.api.labs.get_container") as mock_get_container:
+    with (
+        patch("animetix.api.labs.get_container") as mock_get_container,
+        patch("animetix.api.labs.deduct_berrix"),
+    ):
         mock_container = MagicMock()
         mock_primary = MagicMock()
         # Mock returns bytes
         mock_primary.inpaint_text_bubbles.return_value = b"cleaned_image_bytes"
-        mock_container.inference.primary.return_value = mock_primary
+        # The view resolves the engine via container.inference.inference_engine().
+        mock_container.inference.inference_engine.return_value = mock_primary
         mock_get_container.return_value = mock_container
 
         view = MangaCleanLabView.as_view()

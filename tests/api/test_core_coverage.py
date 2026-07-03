@@ -174,7 +174,8 @@ def test_media_search_empty_returns_empty_list(factory):
 def test_media_search_success(factory):
     request = factory.get("/search/", {"q": "naruto", "media_type": "Anime"})
     container = MagicMock()
-    container.core.catalog_service.search_items.return_value = [
+    # The view calls the provider: container.core.catalog_service().search_items(...)
+    container.core.catalog_service.return_value.search_items.return_value = [
         {"id": "1", "title": "Naruto"}
     ]
     with patch(GET_CONTAINER, return_value=container):
@@ -352,7 +353,7 @@ def test_media_detail_from_sql(factory):
 def test_media_detail_catalog_fallback(factory):
     request = factory.get("/media/Anime/cat-9/")
     container = MagicMock()
-    container.core.catalog_service.load_data.return_value = {
+    container.core.catalog_service.return_value.load_data.return_value = {
         "db": [
             {
                 "id": "cat-9",
