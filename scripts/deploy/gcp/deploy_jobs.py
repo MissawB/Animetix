@@ -35,8 +35,7 @@ def main():
     scheduler_region = "europe-west1"  # Cloud Scheduler is not available in europe-west9, using europe-west1
     service_account = "836616987676-compute@developer.gserviceaccount.com"
     image = f"{region}-docker.pkg.dev/{project_id}/animetix-repo/web:latest"
-    vpc_network = os.getenv("GCP_VPC_NETWORK", "default")
-    vpc_subnet = os.getenv("GCP_VPC_SUBNET", "default")
+    vpc_connector = os.getenv("GCP_VPC_CONNECTOR", "animetix-vpc-conn")
 
     # Configuration for all 8 serverless periodic jobs
     jobs_config = [
@@ -210,8 +209,11 @@ def main():
                 f"--args={job['args']}",
                 f"--region={region}",
                 f"--service-account={service_account}",
-                f"--network={vpc_network}",
-                f"--subnet={vpc_subnet}",
+                # Use the same VPC *connector* as the animetix-web service (Neon /
+                # private egress). Direct-VPC (--network/--subnet) conflicts with an
+                # existing connector: "VPC connector and direct VPC can not be used
+                # together". Overridable via GCP_VPC_CONNECTOR.
+                f"--vpc-connector={vpc_connector}",
                 "--vpc-egress=private-ranges-only",
                 f"--memory={job['memory']}",
                 f"--cpu={job['cpu']}",
