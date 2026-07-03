@@ -345,11 +345,15 @@ jobs:
     - name: Deploy to Cloud Run (animetix-web)
       # Minimal update: only the image changes. The service keeps its existing
       # env vars, secrets, VPC connector, scaling and port. Pinned to the SHA tag.
+      # DJANGO_DB_USE_IAM=false: animetix-db authenticates the built-in `postgres`
+      # user via the password in DATABASE_URL (no Cloud SQL IAM DB user exists), so
+      # the prod default (IAM auth) must be disabled or every DB connect FATALs.
       run: |
         gcloud run deploy "$PROD_SERVICE" \
           --project "$GCP_PROJECT" \
           --region "$GCP_REGION" \
-          --image "$PROD_IMAGE:${{ github.sha }}"
+          --image "$PROD_IMAGE:${{ github.sha }}" \
+          --update-env-vars=DJANGO_DB_USE_IAM=false
     - name: Show prod service URL
       run: |
         gcloud run services describe "$PROD_SERVICE" \

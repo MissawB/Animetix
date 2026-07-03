@@ -153,6 +153,10 @@ def main():
         "ALLOWED_HOSTS": "*.run.app,missawb-animetix-web.hf.space,localhost,127.0.0.1",
         "DJANGO_ENV": "production",
         "BRAIN_API_URL": brain_api_url,
+        # animetix-db uses the built-in `postgres` user (password in DATABASE_URL),
+        # NOT Cloud SQL IAM. Without this, prod defaults DJANGO_DB_USE_IAM=True and
+        # tries to auth as a non-existent IAM service-account DB user → FATAL.
+        "DJANGO_DB_USE_IAM": "false",
         "SENTRY_DSN": "https://16adfd8a3ea5046c55ba1c7a4a919619@o4511298977202176.ingest.de.sentry.io/4511298998894672",
     }
 
