@@ -53,43 +53,60 @@ def enqueue_task(task_name, *args, **kwargs):
         return task_id
 
     else:
-        # Push to Google Cloud Tasks in production
-        from google.cloud import tasks_v2  # noqa: E402
+        # Push to Google Cloud Tasks in production. Best-effort: a missing
+        # google-cloud-tasks lib, an unconfigured queue, or a Cloud Tasks API
+        # error must NEVER crash the caller (e.g. MediaItem.save() during a bulk
+        # sync_catalog). The row is already persisted; only the async follow-up
+        # (pgvector / graph refresh) is skipped.
+        try:
+            from google.cloud import tasks_v2  # noqa: E402
 
-        project = settings.GCP_PROJECT_ID
-        queue = settings.GCP_TASKS_QUEUE_NAME
-        location = settings.GCP_TASKS_LOCATION
-        url = settings.GCP_TASKS_WORKER_URL
-        service_account = settings.GCP_TASKS_SERVICE_ACCOUNT
+            project = settings.GCP_PROJECT_ID
+            queue = settings.GCP_TASKS_QUEUE_NAME
+            location = settings.GCP_TASKS_LOCATION
+            url = settings.GCP_TASKS_WORKER_URL
+            service_account = settings.GCP_TASKS_SERVICE_ACCOUNT
 
-        client = tasks_v2.CloudTasksClient()
-        parent = client.queue_path(project, location, queue)
+            client = tasks_v2.CloudTasksClient()
+            parent = client.queue_path(project, location, queue)
 
-        payload = {
-            "task_id": task_id,
-            "task_name": task_name,
-            "args": args,
-            "kwargs": kwargs,
-        }
-
-        from animetix.telemetry import inject_trace_context  # noqa: E402
-
-        task_headers = {"Content-type": "application/json"}
-        inject_trace_context(task_headers)
-
-        task = {
-            "http_request": {
-                "http_method": tasks_v2.HttpMethod.POST,
-                "url": url,
-                "headers": task_headers,
-                "body": json.dumps(payload).encode("utf-8"),
-                "oidc_token": {
-                    "service_account_email": service_account,
-                    "audience": url,
-                },
+            payload = {
+                "task_id": task_id,
+                "task_name": task_name,
+                "args": args,
+                "kwargs": kwargs,
             }
-        }
 
-        logger.info(f"Enqueuing task {task_name} to Google Cloud Tasks queue {queue}")
-        client.create_task(request={"parent": parent, "task": task})
+            from animetix.telemetry import inject_trace_context  # noqa: E402
+
+            task_headers = {"Content-type": "application/json"}
+            inject_trace_context(task_headers)
+
+            task = {
+                "http_request": {
+                    "http_method": tasks_v2.HttpMethod.POST,
+                    "url": url,
+                    "headers": task_headers,
+                    "body": json.dumps(payload).encode("utf-8"),
+                    "oidc_token": {
+                        "service_account_email": service_account,
+                        "audience": url,
+                    },
+                }
+            }
+
+            logger.info(
+                f"Enqueuing task {task_name} to Google Cloud Tasks queue {queue}"
+            )
+            client.create_task(request={"parent": parent, "task": task})
+        except Exception as e:
+            logger.warning(
+                f"Cloud Tasks enqueue skipped for {task_name} "
+                f"({type(e).__name__}: {e}) — row persisted, async follow-up not scheduled."
+            )
+            cache.set(
+                f"task_result:{task_id}",
+                {"ready": True, "result": {"error": str(e)}, "state": "SKIPPED"},
+                timeout=86400,
+            )
         return task_id
