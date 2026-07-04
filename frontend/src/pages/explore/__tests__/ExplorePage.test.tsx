@@ -35,6 +35,24 @@ describe('ExplorePage', () => {
     expect(screen.getByText(/Tendances Actuelles/i)).toBeInTheDocument();
   });
 
+  it('requests the versioned explore endpoint with the media type', async () => {
+    // Régression : la page appelait /api/explore/ (sans v1) → 404 permanent,
+    // aucune donnée ne s'affichait. L'endpoint réel est /api/v1/explore/.
+    mockedApiClient.mockResolvedValue({ trending: [] });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <ExplorePage />
+        </MemoryRouter>
+      </QueryClientProvider>
+    );
+
+    await waitFor(() =>
+      expect(mockedApiClient).toHaveBeenCalledWith('/api/v1/explore/?media_type=Anime')
+    );
+  });
+
   it('renders media type filters', () => {
     mockedApiClient.mockResolvedValue({ trending: [] });
 

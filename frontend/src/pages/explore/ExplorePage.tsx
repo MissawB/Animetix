@@ -21,7 +21,7 @@ const ExplorePage: React.FC = () => {
   
   const { data } = useQuery<ExploreData>({
     queryKey: ['explore', mediaType],
-    queryFn: () => apiClient(`/api/explore/?media_type=${mediaType}`),
+    queryFn: () => apiClient(`/api/v1/explore/?media_type=${mediaType}`),
   });
 
   const scrollLeft = (id: string) => {
