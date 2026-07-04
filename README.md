@@ -1,12 +1,12 @@
 # 🎭 Animetix: Next-Gen AI Sandbox & Interactive Games
 
-[![Build Status](https://img.shields.io/badge/Build-Success-brightgreen.svg)]()
-[![Python](https://img.shields.io/badge/Python-3.12+-blue.svg)]()
-[![Django](https://img.shields.io/badge/Django-5.0+-green.svg)]()
-[![Firebase](https://img.shields.io/badge/Google_Identity_Platform-GCIP-orange.svg)]()
-[![Vertex AI](https://img.shields.io/badge/Vertex_AI-Vector_Search_2.0-blue.svg)]()
-[![AlloyDB AI](https://img.shields.io/badge/AlloyDB_AI-Text--to--SQL-lightblue.svg)]()
-[![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-yellow.svg)]()
+[![CI](https://github.com/MissawB/Animetix/actions/workflows/ci.yml/badge.svg)](https://github.com/MissawB/Animetix/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/Python-3.12+-blue.svg)](https://www.python.org/)
+[![Django](https://img.shields.io/badge/Django-5.0+-green.svg)](https://www.djangoproject.com/)
+[![Firebase](https://img.shields.io/badge/Google_Identity_Platform-GCIP-orange.svg)](https://cloud.google.com/identity-platform)
+[![Vertex AI](https://img.shields.io/badge/Vertex_AI-Vector_Search_2.0-blue.svg)](https://cloud.google.com/vertex-ai)
+[![AlloyDB AI](https://img.shields.io/badge/AlloyDB_AI-Text--to--SQL-lightblue.svg)](https://cloud.google.com/alloydb)
+[![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-yellow.svg)](https://huggingface.co/spaces)
 
 **Animetix** is a next-generation AI-powered cognitive sandbox and game platform for Anime, Manga, Movies, and Video Games. Powered by a **RAG 2.0 Knowledge Engine**, Animetix fuses advanced semantic graphs, multimodal reasoning, and deep reinforcement learning to power a vast suite of interactive game modes and research-grade AI laboratories.
 
