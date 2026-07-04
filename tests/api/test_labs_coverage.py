@@ -29,7 +29,6 @@ from animetix.api.labs import (
     MangaVoiceLabView,
     SingularityCommandCenterView,
     SingularityLabDataView,
-    TransparencyDataView,
     TreeOfThoughtsLabView,
     VideoRAGIndexView,
     VideoRAGSearchView,
@@ -109,49 +108,6 @@ def test_daily_challenge_data_view_creates_and_returns():
     mode_ids = {m["id"] for m in response.data["modes"]}
     assert mode_ids == {"anime", "manga", "character"}
     assert response.data["modes"][0]["media_type"] == "Anime"
-
-
-# --------------------------------------------------------------------------- #
-# TransparencyDataView
-# --------------------------------------------------------------------------- #
-def test_transparency_data_view_success():
-    request = factory.get("/api/v1/transparency/")
-    mock_container = MagicMock()
-    mock_container.core.health_dashboard_service().get_global_health.return_value = {
-        "status": "ok"
-    }
-    mock_container.core.graph_healer_service().audit_graph_quality.return_value = {
-        "nodes": 10
-    }
-    p = _container_patch(mock_container)
-    try:
-        view = TransparencyDataView.as_view(permission_classes=[])
-        response = view(request)
-    finally:
-        p.stop()
-    assert response.status_code == 200
-    assert response.data["status"] == "ok"
-    assert response.data["knowledge_graph"] == {"nodes": 10}
-
-
-def test_transparency_data_view_graph_unavailable():
-    """Graph audit failure is swallowed; status stays 200 with 'unavailable'."""
-    request = factory.get("/api/v1/transparency/")
-    mock_container = MagicMock()
-    mock_container.core.health_dashboard_service().get_global_health.return_value = {
-        "status": "ok"
-    }
-    mock_container.core.graph_healer_service().audit_graph_quality.side_effect = (
-        Exception("neo4j down")
-    )
-    p = _container_patch(mock_container)
-    try:
-        view = TransparencyDataView.as_view(permission_classes=[])
-        response = view(request)
-    finally:
-        p.stop()
-    assert response.status_code == 200
-    assert response.data["knowledge_graph"] == {"status": "unavailable"}
 
 
 # --------------------------------------------------------------------------- #

@@ -146,20 +146,6 @@ class DailyChallengeDataView(APIView):
         )
 
 
-class TransparencyDataView(APIView):
-    permission_classes = [permissions.IsAdminUser]
-
-    def get(self, request):
-        container = get_container()
-        stats = container.core.health_dashboard_service().get_global_health()
-        try:
-            graph_health = container.core.graph_healer_service().audit_graph_quality()
-            stats["knowledge_graph"] = graph_health
-        except Exception:
-            stats["knowledge_graph"] = {"status": "unavailable"}
-        return Response(stats)
-
-
 class SingularityLabDataView(APIView):
     """Interact with fifth generation Evolving AI and Singularity services (SOTA 2035+)."""
 

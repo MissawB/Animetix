@@ -52,10 +52,9 @@ const TransparencyPage: React.FC = () => {
 
   const metrics = data.global_metrics;
 
-  const timeline = data.evolution_timeline || [
-    { date: '2026-05', accuracy: 0.76 },
-    { date: '2026-06', accuracy: 0.84 },
-  ];
+  // Timeline réelle (précision d'évaluation par mois). Le graphe n'est affiché
+  // qu'à partir de deux points, sinon il ne serait pas lisible.
+  const timeline = data.evolution_timeline || [];
 
   return (
     <div className="min-h-screen bg-[#05050a] text-white">
@@ -65,9 +64,11 @@ const TransparencyPage: React.FC = () => {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-500/5 blur-[120px] rounded-full animate-pulse" />
           
           <div className="max-w-7xl mx-auto px-6 relative z-10 text-center">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-[0.2em] mb-8">
-                  <Activity className="w-3 h-3 animate-pulse" /> Live System Status: {data.model_uptime || 99.98}% Uptime
-              </div>
+              {data.model_uptime != null && (
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-[0.2em] mb-8">
+                    <Activity className="w-3 h-3 animate-pulse" /> Fiabilité du modèle : {data.model_uptime}% (réponses sans hallucination)
+                </div>
+              )}
               <h1 className="text-7xl font-black italic manga-font tracking-tighter uppercase mb-6 leading-tight">
                   HUB DE <span className="text-blue-500">TRANSPARENCE</span> IA
               </h1>
@@ -113,32 +114,40 @@ const TransparencyPage: React.FC = () => {
             </div>
             
             <Card className="bg-navy-900/20 border-white/5 p-10 h-[450px]">
-                <Plot
-                    data={[{
-                        x: timeline.map((d) => d.date),
-                        y: timeline.map((d) => d.accuracy),
-                        type: 'scatter',
-                        mode: 'lines',
-                        fill: 'tozeroy',
-                        line: { color: '#3b82f6', width: 4, shape: 'spline' },
-                        fillcolor: 'rgba(59,130,246,0.18)',
-                        hovertemplate: 'Accuracy: %{y:.0%}<extra></extra>',
-                    }]}
-                    layout={{
-                        autosize: true,
-                        paper_bgcolor: 'rgba(0,0,0,0)',
-                        plot_bgcolor: 'rgba(0,0,0,0)',
-                        margin: { l: 44, r: 20, t: 10, b: 36 },
-                        xaxis: { gridcolor: 'rgba(255,255,255,0.03)', tickfont: { color: '#ffffff33', size: 10 }, showline: false, zeroline: false },
-                        yaxis: { gridcolor: 'rgba(255,255,255,0.03)', tickfont: { color: '#ffffff33', size: 10 }, showline: false, zeroline: false, tickformat: '.0%' },
-                        font: { family: 'Montserrat', color: '#fff' },
-                        hovermode: 'x unified',
-                        showlegend: false,
-                    }}
-                    config={{ responsive: true, displayModeBar: false }}
-                    style={{ width: '100%', height: '100%' }}
-                    useResizeHandler
-                />
+                {timeline.length >= 2 ? (
+                    <Plot
+                        data={[{
+                            x: timeline.map((d) => d.date),
+                            y: timeline.map((d) => d.accuracy),
+                            type: 'scatter',
+                            mode: 'lines',
+                            fill: 'tozeroy',
+                            line: { color: '#3b82f6', width: 4, shape: 'spline' },
+                            fillcolor: 'rgba(59,130,246,0.18)',
+                            hovertemplate: 'Accuracy: %{y:.0%}<extra></extra>',
+                        }]}
+                        layout={{
+                            autosize: true,
+                            paper_bgcolor: 'rgba(0,0,0,0)',
+                            plot_bgcolor: 'rgba(0,0,0,0)',
+                            margin: { l: 44, r: 20, t: 10, b: 36 },
+                            xaxis: { gridcolor: 'rgba(255,255,255,0.03)', tickfont: { color: '#ffffff33', size: 10 }, showline: false, zeroline: false },
+                            yaxis: { gridcolor: 'rgba(255,255,255,0.03)', tickfont: { color: '#ffffff33', size: 10 }, showline: false, zeroline: false, tickformat: '.0%' },
+                            font: { family: 'Montserrat', color: '#fff' },
+                            hovermode: 'x unified',
+                            showlegend: false,
+                        }}
+                        config={{ responsive: true, displayModeBar: false }}
+                        style={{ width: '100%', height: '100%' }}
+                        useResizeHandler
+                    />
+                ) : (
+                    <div className="h-full flex flex-col items-center justify-center text-center opacity-30">
+                        <TrendingUp className="w-12 h-12 mb-4" />
+                        <p className="text-xs font-black uppercase tracking-widest">Pas encore assez de données d'évaluation</p>
+                        <p className="text-[10px] font-bold uppercase tracking-widest mt-1 opacity-60">La courbe apparaîtra dès plusieurs cycles d'évaluation enregistrés.</p>
+                    </div>
+                )}
             </Card>
         </section>
 
@@ -203,22 +212,22 @@ const TransparencyPage: React.FC = () => {
                 </header>
 
                 <div className="space-y-4">
-                    {data.embedding_drift && Object.entries(data.embedding_drift).map(([key, info]: [string, { status: string; p_value: number; sample_size: number }]) => (
+                    {data.embedding_drift && Object.entries(data.embedding_drift).map(([key, info]: [string, { status: string; p_value?: number; sample_size?: number }]) => (
                         <div key={key} className="p-6 bg-white/5 rounded-3xl border border-white/5 flex flex-col gap-4 group hover:bg-white/10 transition-all">
                             <div className="flex justify-between items-center">
                                 <span className="font-black italic uppercase text-xs tracking-widest">{key}</span>
-                                <Badge variant={info.status === 'healthy' ? 'success' : 'danger'}>{info.status}</Badge>
+                                <Badge variant={info.status === 'healthy' ? 'success' : info.status === 'alert' ? 'danger' : 'neutral'}>{info.status}</Badge>
                             </div>
                             <div className="flex items-end justify-between">
                                 <div>
                                     <p className="text-[8px] font-black opacity-30 uppercase mb-1">P-Value (KS Test)</p>
-                                    <p className={`text-2xl font-black italic manga-font ${info.p_value < 0.05 ? 'text-red-500' : 'text-emerald-500'}`}>
-                                        {info.p_value?.toFixed(4) || '0.9421'}
+                                    <p className={`text-2xl font-black italic manga-font ${info.p_value == null ? 'text-gray-500' : info.p_value < 0.05 ? 'text-red-500' : 'text-emerald-500'}`}>
+                                        {info.p_value != null ? info.p_value.toFixed(4) : 'N/A'}
                                     </p>
                                 </div>
                                 <div className="text-right">
                                     <p className="text-[8px] font-black opacity-30 uppercase mb-1">Échantillon</p>
-                                    <p className="text-sm font-bold uppercase tracking-tighter">{info.sample_size || 500} items</p>
+                                    <p className="text-sm font-bold uppercase tracking-tighter">{info.sample_size != null ? `${info.sample_size} items` : '—'}</p>
                                 </div>
                             </div>
                         </div>
@@ -253,9 +262,8 @@ const TransparencyPage: React.FC = () => {
                     <Scale className="w-6 h-6" /> Audit de Sécurité
                 </h3>
                 <div className="space-y-8">
-                    <AuditRow label="Biais Algorithmique" value={data.ethics_audit?.bias_score || 0.04} suffix="(Négligeable)" icon={<ShieldCheck className="text-purple-400" />} />
-                    <AuditRow label="Conformité Sécurité" value={(data.ethics_audit?.safety_compliance || 0.999) * 100} suffix="%" icon={<Lock className="text-purple-400" />} />
-                    <AuditRow label="Taux d'Hallucination" value={data.ethics_audit?.hallucination_rate || 0.02} suffix="(Target Reach)" icon={<AlertTriangle className="text-purple-400" />} />
+                    <AuditRow label="Conformité Sécurité" value={((data.ethics_audit?.safety_compliance ?? 1) * 100).toFixed(1)} suffix="%" icon={<Lock className="text-purple-400" />} />
+                    <AuditRow label="Taux d'Hallucination" value={((data.ethics_audit?.hallucination_rate ?? 0) * 100).toFixed(1)} suffix="%" icon={<AlertTriangle className="text-purple-400" />} />
                 </div>
                 
                 <div className="pt-8 border-t border-white/5">

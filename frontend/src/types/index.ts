@@ -166,12 +166,11 @@ export interface TransparencyData {
   global_metrics: TransparencyMetrics;
   evolution_timeline: Array<{ date: string; accuracy: number }>;
   sota_benchmarks: ModelBenchmark[];
-  embedding_drift: Record<string, { status: string; p_value: number; sample_size: number }>;
+  embedding_drift: Record<string, { status: string; p_value?: number; sample_size?: number }>;
   ethics_score: number;
-  model_uptime: number;
+  model_uptime: number | null;
   ethics_audit?: {
-    bias_score: number;
-    safety_compliance: number;
+    safety_compliance: number | null;
     hallucination_rate: number;
   };
 }
