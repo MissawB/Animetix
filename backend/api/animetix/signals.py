@@ -1,3 +1,5 @@
+import logging
+
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.db.models.signals import post_save
@@ -14,6 +16,8 @@ from .models import (
     MediaItem,
     Notification,
 )
+
+logger = logging.getLogger("animetix.signals")
 
 # ... [existing signal handlers are unmodified] ...
 
@@ -73,8 +77,12 @@ def broadcast_boss_phase(sender, instance, created, **kwargs):
     """
     Alerte globale lorsque la phase du World Boss change.
     """
-    if not created:
-        # On surveille les changements d'état
+    # Le marqueur est posé par la vue d'attaque uniquement quand update_phase()
+    # a réellement changé de phase — sinon chaque coup porté spammerait une
+    # alerte mondiale.
+    if created or not getattr(instance, "_phase_changed", False):
+        return
+    try:
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
             "global_notifications",
@@ -87,6 +95,12 @@ def broadcast_boss_phase(sender, instance, created, **kwargs):
                     "message": f"🚨 ALERTE : Le World Boss {instance.title} entre en Phase {instance.current_phase} !",
                 },
             },
+        )
+    except Exception:
+        # Best-effort : un channel layer indisponible ne doit pas casser le jeu.
+        logger.warning(
+            "Diffusion de la phase du World Boss impossible (channel layer indisponible).",
+            exc_info=True,
         )
 
 

@@ -18,6 +18,16 @@ const WorldBossPage: React.FC = () => {
     refetchInterval: 10000, // Refresh every 10s to see global progress
   });
 
+  const { data: leaderboard } = useQuery({
+    queryKey: ['world-boss', 'leaderboard', boss?.id],
+    queryFn: async () => {
+      const res = await apiClient('/api/v1/game/world-boss/leaderboard/', { skipToast: true });
+      return (res.leaderboard ?? []) as Array<{ id: number; username: string; points_contributed: number }>;
+    },
+    enabled: !!boss?.id,
+    refetchInterval: 10000,
+  });
+
   const attackMutation = useMutation({
     mutationFn: async (guess: string) => {
         return apiClient('/api/v1/game/world-boss/attack/', {
@@ -29,6 +39,7 @@ const WorldBossPage: React.FC = () => {
         setFeedback({ is_correct: data.is_correct, damage: data.damage_dealt });
         setGuess('');
         queryClient.invalidateQueries({ queryKey: ['world-boss', 'active'] });
+        queryClient.invalidateQueries({ queryKey: ['world-boss', 'leaderboard'] });
         setTimeout(() => setFeedback(null), 3000);
     }
   });
@@ -218,6 +229,40 @@ const WorldBossPage: React.FC = () => {
                         ) : (
                             <div className="text-center py-12 text-gray-700 uppercase font-black italic tracking-widest">
                                 No hints deciphered yet.
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Contributors Leaderboard */}
+                <div className="bg-gray-900/50 backdrop-blur-xl p-8 rounded-3xl border border-white/5">
+                    <h3 className="text-xl font-black italic uppercase mb-6 flex items-center gap-3">
+                        <Trophy className="text-yellow-500" size={20} />
+                        Top Raiders
+                    </h3>
+                    <div className="space-y-2">
+                        {leaderboard && leaderboard.length > 0 ? (
+                            leaderboard.map((row, i) => (
+                                <div
+                                    key={row.id}
+                                    className="flex items-center gap-3 bg-black/40 p-3 rounded-xl"
+                                >
+                                    <span className={`w-7 text-center font-black italic ${
+                                        i === 0 ? 'text-yellow-400' :
+                                        i === 1 ? 'text-gray-300' :
+                                        i === 2 ? 'text-orange-500' : 'text-gray-600'
+                                    }`}>
+                                        {i + 1}
+                                    </span>
+                                    <span className="flex-1 font-bold text-white/90 truncate">{row.username}</span>
+                                    <span className="font-mono font-black text-red-500 text-sm">
+                                        {row.points_contributed.toLocaleString()}
+                                    </span>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="text-center py-12 text-gray-700 uppercase font-black italic tracking-widest">
+                                No raiders yet. Be the first!
                             </div>
                         )}
                     </div>

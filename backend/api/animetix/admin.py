@@ -4,7 +4,38 @@ from django.urls import path
 from django.utils.html import format_html
 
 from animetix.containers import get_container
-from animetix.models import AIFeedback, AIREvalResult, AISafetyEvent, GoldDatasetEntry
+from animetix.models import (
+    AIFeedback,
+    AIREvalResult,
+    AISafetyEvent,
+    BossParticipation,
+    GlobalBoss,
+    GoldDatasetEntry,
+)
+
+
+@admin.register(GlobalBoss)
+class GlobalBossAdmin(admin.ModelAdmin):
+    """Pilotage manuel des raids World Boss (le spawn hebdo est automatique)."""
+
+    list_display = (
+        "title",
+        "secret_title",
+        "media_type",
+        "current_hp",
+        "total_hp",
+        "current_phase",
+        "is_active",
+        "end_date",
+    )
+    list_filter = ("is_active", "media_type")
+    search_fields = ("title", "secret_title")
+
+
+@admin.register(BossParticipation)
+class BossParticipationAdmin(admin.ModelAdmin):
+    list_display = ("user", "boss", "points_contributed", "last_participation")
+    list_filter = ("boss",)
 
 
 @admin.register(GoldDatasetEntry)

@@ -699,6 +699,11 @@ urlpatterns = [
         name="api_world_boss_attack",
     ),
     path(
+        "game/world-boss/leaderboard/",
+        api_views.WorldBossLeaderboardView.as_view(),
+        name="api_world_boss_leaderboard",
+    ),
+    path(
         "game/duel/create/",
         api_views.CreateDuelRoomView.as_view(),
         name="api_duel_create",
