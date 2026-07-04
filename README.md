@@ -43,8 +43,14 @@ Animetix features a rich variety of AI-driven game modes powered by customized d
 | **Forge VN**                   | Interactive Visual Novel         | Experience dynamic, AI-generated branching stories based on your creative fusions.              |
 | **Vs Battle Arena**            | LLM Battle Simulation            | Simulate hypothetical battles between characters with comparative capability analysis.          |
 | **Emoji Decode**               | Translation sequence models      | Decipher complex plot summaries translated into emojis by an adversarial LLM.                   |
-| **World Boss Raids**           | Cooperative Swarm AI             | Join forces with the community to damage an AI boss by submitting thematic solutions.           |
-| **Multiplayer Labs**           | WebSockets Matchmaking           | Play**Undercover** (find the intruder) or **CodeManga** (Codenames variation) in real-time.     |
+| **Anime Blindtest**            | Audio recognition                | Name the anime from its opening/ending theme (optionally warped by AI), with bonus points for the artist or track number. |
+| **Qui Est-Ce? (Quiz Who)**     | Character deduction duel         | A real-time "Guess Who?" duel: narrow down the hidden character through attribute questions.     |
+| **Covertest**                  | Cover recognition                | Identify the manga from its cover art alone, against the clock.                                  |
+| **Le Paradoxe**                | Temporal reasoning               | Solve chronology puzzles where multiple anime timelines intertwine.                              |
+| **Daily Challenge**            | Deterministic daily seed         | One shared daily target per universe — everyone races the same puzzle, tracked by streaks.       |
+| **World Boss Raids**           | Cooperative weekly raid          | A code-named boss spawns each week; the whole community deals damage by guessing the hidden work. Defeating it splits an XP reward across every participant, ranked on a contributor leaderboard. |
+| **Duel Arena**                 | Realtime 1v1 (WebSockets)        | Face another player head-to-head in a live anime-culture duel.                                  |
+| **Multiplayer Labs**           | WebSockets Matchmaking           | Play **Undercover** (find the intruder) or **CodeManga** (Codenames variation) in real-time.    |
 | **Vision Quest**               | VLM Multimodal analysis          | Identify visual tropes, frames, and scenes using multimodal vision queries.                     |
 
 ---
