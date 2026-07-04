@@ -1,4 +1,4 @@
-import React, { ReactNode, useCallback } from 'react';
+import React, { ReactNode, useCallback, useEffect } from 'react';
 import Navbar from './Navbar';
 import AdminNavbar from './admin/AdminNavbar';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -17,6 +17,7 @@ import SidebarDrawer from './layout/SidebarDrawer';
 import SettingsDrawer from './layout/SettingsDrawer';
 import Footer from './layout/Footer';
 import { useThemeSync } from './layout/useThemeSync';
+import { installLazyImageRescue } from '../utils/lazyImageRescue';
 
 interface LayoutProps {
   children: ReactNode;
@@ -34,6 +35,9 @@ const LayoutContent: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { user, isAuthenticated } = useAuthStore();
 
   useThemeSync(theme, config?.visual_theme);
+
+  // Rescues native lazy images stuck by the page-transition opacity animation.
+  useEffect(() => installLazyImageRescue(), []);
 
   const handleOverlayClose = useCallback(() => {
     toggleSidebar(true);
