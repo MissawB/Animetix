@@ -134,11 +134,17 @@ def test_suwayomi_extensions_list_view(authenticated_client, mock_suwayomi_adapt
 def test_suwayomi_extensions_list_view_unauthenticated(
     api_client, mock_suwayomi_adapter
 ):
+    """Listing extensions is a read-only GET on a public page (/explore/tachidesk/),
+    so anonymous users must be able to load it — like sources and search. Only
+    the mutating action/import endpoints require authentication."""
+    mock_suwayomi_adapter.get_extensions.return_value = [
+        {"pkgName": "com.mangadex", "name": "MangaDex", "isInstalled": True}
+    ]
     url = reverse("api_suwayomi_extensions")
     response = api_client.get(url)
-    assert (
-        response.status_code == 403
-    )  # Forbidden because of IsAuthenticated permission class
+    assert response.status_code == 200
+    assert response.data[0]["pkgName"] == "com.mangadex"
+    mock_suwayomi_adapter.get_extensions.assert_called_once()
 
 
 @pytest.mark.django_db

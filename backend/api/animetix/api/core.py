@@ -648,9 +648,14 @@ class SuwayomiImportView(APIView):
 
 
 class SuwayomiExtensionsListView(APIView):
-    """Liste des extensions installées et disponibles dans Suwayomi/Mihon."""
+    """Liste des extensions installées et disponibles dans Suwayomi/Mihon.
 
-    permission_classes = [permissions.IsAuthenticated]
+    Lecture seule sur une page publique (/explore/tachidesk/) : accessible en
+    anonyme comme les sources et la recherche. Les actions (installation /
+    mise à jour) et l'import restent réservés aux utilisateurs authentifiés.
+    """
+
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     @inject
     def __init__(
