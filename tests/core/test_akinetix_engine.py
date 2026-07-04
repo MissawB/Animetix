@@ -52,6 +52,19 @@ def test_process_classical_answer(engine, sample_db):
     )  # Naruto (Action) should be more probable
 
 
+def test_process_classical_answer_survives_catalog_growth(engine, sample_db):
+    """Régression prod : l'état est démarré sur un catalogue réduit (tranche de
+    difficulté) mais la réponse arrive avec le catalogue complet. Le moteur ne
+    doit pas lever IndexError ; il repart d'une distribution uniforme."""
+    state = engine.start_game(sample_db[:1], mode="classical")
+    state.current_attr = "genre:Action"
+    state.current_q = "Est-ce une œuvre Action ?"
+
+    new_state = engine.process_answer(sample_db, state, "OUI", mode="classical")
+    assert len(new_state.probs) == len(sample_db)
+    assert abs(sum(new_state.probs) - 1.0) < 1e-9
+
+
 def test_start_rl_game(engine, sample_db):
     state = engine.start_game(sample_db, mode="rl")
     assert isinstance(state, AkinetixGameState)

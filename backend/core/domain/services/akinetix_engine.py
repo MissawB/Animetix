@@ -110,6 +110,17 @@ class AkinetixEngine:
         probs = np.array(state.probs)
         asked_attrs = set(state.asked_attrs)
 
+        # The candidate pool is re-derived from the catalog on every answer; if
+        # it no longer matches the vector sized at game start (catalog reloaded
+        # or difficulty slice lost), restart from uniform instead of crashing.
+        if probs.size != len(items):
+            logger.warning(
+                "Probs/items size mismatch (%d vs %d); resetting to uniform.",
+                probs.size,
+                len(items),
+            )
+            probs = np.full(len(items), 1.0 / len(items)) if items else np.array([])
+
         if state.current_attr:
             probs = self._update_classical_probs(
                 items, probs, state.current_attr, answer, fine_attrs

@@ -77,6 +77,9 @@ class AkinetixGameStartView(APIView):
         port.set("media_type", media_type)
         is_daily = data["is_daily"]
         difficulty = request.data.get("difficulty", "Normal")
+        # The answer view must re-apply the same difficulty slice: the state's
+        # probability vector is sized on the sliced pool at start.
+        port.set("akinetix_difficulty", difficulty)
 
         cat_data = catalog_service.load_data(media_type)
         if not cat_data:
@@ -152,7 +155,13 @@ class AkinetixGameAnswerView(APIView):
                 {"error": "Catalog not found"}, status=status.HTTP_404_NOT_FOUND
             )
 
-        new_state = akinetix_service.process_answer(cat_data["db"], state, answer)
+        # Same difficulty slice as at start: state.probs is sized on that pool.
+        from ...services import AKINETIX_DIFFICULTY_RANK  # noqa: E402
+
+        limit = AKINETIX_DIFFICULTY_RANK.get(port.get("akinetix_difficulty", ""))
+        db = cat_data["db"][:limit] if limit else cat_data["db"]
+
+        new_state = akinetix_service.process_answer(db, state, answer)
         akinetix_service.save_state(port, new_state)
 
         return Response(

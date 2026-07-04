@@ -238,6 +238,38 @@ def test_answer_success(api_client):
     ak.save_state.assert_called_once()
 
 
+@pytest.mark.django_db
+def test_answer_reapplies_difficulty_slice(api_client):
+    """Régression prod (IndexError index 500) : le start borne le catalogue par
+    difficulté mais la vue answer passait le catalogue complet au moteur.
+    La même tranche doit être re-appliquée à chaque réponse."""
+    big_cat = {"db": [{"name": f"c{i}"} for i in range(200)]}
+    cat = MagicMock()
+    cat.load_data.return_value = big_cat
+    ak = MagicMock()
+    ak.start_new_game.return_value = _state(current_q="Q?", history=[])
+    ak.get_state.return_value = _state(current_q="Q?")
+    ak.process_answer.return_value = _state(current_q="Next?", history=[])
+    with (
+        container.core.catalog_service.override(providers.Object(cat)),
+        container.core.akinetix_service.override(providers.Object(ak)),
+    ):
+        resp = api_client.post(
+            reverse("api_akinetix_start"),
+            {"media_type": "Anime", "difficulty": "Easy"},
+            format="json",
+        )
+        assert resp.status_code == 200
+        # Easy = top 150 : le start borne déjà le pool.
+        assert len(ak.start_new_game.call_args[0][0]) == 150
+
+        resp = api_client.post(
+            reverse("api_akinetix_answer"), {"answer": "OUI"}, format="json"
+        )
+    assert resp.status_code == 200
+    assert len(ak.process_answer.call_args[0][0]) == 150
+
+
 # --------------------------------------------------------------------------- #
 # AkinetixGameConfirmView
 # --------------------------------------------------------------------------- #
