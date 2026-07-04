@@ -11,7 +11,8 @@ import {
   Terminal,
   Play,
   Clock,
-  Video
+  Video,
+  Brain
 } from 'lucide-react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiClient } from "../../utils/apiClient";
@@ -112,16 +113,24 @@ const UniversalSearchHubPage: React.FC = () => {
                 >
                     <Search className="w-5 h-5" /> Meta-Search
                 </button>
-                <button 
+                <button
                     onClick={() => setMode('visual')}
                     className={`px-8 py-4 rounded-3xl flex items-center gap-3 transition-all font-black italic text-xs uppercase tracking-[0.2em] border-2 ${
-                        mode === 'visual' 
-                        ? 'bg-purple-600 border-purple-500 text-white shadow-[0_0_30px_rgba(147,51,234,0.4)] scale-105' 
+                        mode === 'visual'
+                        ? 'bg-purple-600 border-purple-500 text-white shadow-[0_0_30px_rgba(147,51,234,0.4)] scale-105'
                         : 'bg-white/5 border-white/5 text-white/30 hover:bg-white/10'
                     }`}
                 >
                     <Eye className="w-5 h-5" /> Visual Nexus
                 </button>
+                {/* Expert Nexus is a separate streaming page (agentic RAG), so this
+                    navigates rather than toggling a local mode. */}
+                <Link
+                    to={query.trim() ? `/search/expert-nexus/?q=${encodeURIComponent(query.trim())}` : '/search/expert-nexus/'}
+                    className="px-8 py-4 rounded-3xl flex items-center gap-3 transition-all font-black italic text-xs uppercase tracking-[0.2em] border-2 bg-white/5 border-white/5 text-white/30 hover:bg-white/10 hover:text-blue-400 no-underline"
+                >
+                    <Brain className="w-5 h-5" /> Expert Nexus
+                </Link>
             </div>
 
             <form onSubmit={handleSearch} className="max-w-3xl mx-auto flex gap-4">

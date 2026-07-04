@@ -180,7 +180,7 @@ const SearchResultsPage: React.FC = () => {
                 </p>
                 <Button 
                     as={Link} 
-                    to={`/search/expert/?q=${encodeURIComponent(query)}`}
+                    to={`/search/expert-nexus/?q=${encodeURIComponent(query)}`}
                     variant="primary" 
                     className="bg-blue-600 border-none px-8 rounded-2xl"
                 >
