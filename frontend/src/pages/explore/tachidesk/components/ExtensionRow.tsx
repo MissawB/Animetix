@@ -1,6 +1,7 @@
 import React from 'react';
 import { Loader2, Download, Trash2, ArrowUpCircle } from 'lucide-react';
 import type { Extension, ExtensionAction } from '../types';
+import { useAuthStore } from '../../../../store/authStore';
 
 interface ExtensionRowProps {
   ext: Extension;
@@ -10,6 +11,10 @@ interface ExtensionRowProps {
 }
 
 const ExtensionRowComponent: React.FC<ExtensionRowProps> = ({ ext, onAction, inProgress, getProxiedImageUrl }) => {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  // Gérer une extension mute le serveur → réservé aux utilisateurs connectés.
+  const disabled = inProgress || !isAuthenticated;
+  const lockTitle = !isAuthenticated ? 'Connexion requise pour gérer les extensions' : undefined;
   return (
     <div className="p-4 bg-[#0c0c1b]/60 hover:bg-[#0c0c1b]/95 border border-white/5 hover:border-white/10 rounded-2xl flex items-center gap-4 transition-all group">
       {/* Icon */}
@@ -60,9 +65,9 @@ const ExtensionRowComponent: React.FC<ExtensionRowProps> = ({ ext, onAction, inP
         {ext.hasUpdate ? (
           <button
             onClick={() => onAction(ext.pkgName, 'update')}
-            disabled={inProgress}
-            className="p-2.5 bg-blue-600/10 hover:bg-blue-600 border border-blue-600/20 text-blue-400 hover:text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1.5 shadow-md hover:scale-[1.03]"
-            title="Mettre à jour l'extension"
+            disabled={disabled}
+            className="p-2.5 bg-blue-600/10 hover:bg-blue-600 border border-blue-600/20 text-blue-400 hover:text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 shadow-md hover:scale-[1.03]"
+            title={lockTitle ?? "Mettre à jour l'extension"}
           >
             {inProgress ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -76,9 +81,9 @@ const ExtensionRowComponent: React.FC<ExtensionRowProps> = ({ ext, onAction, inP
         ) : ext.isInstalled ? (
           <button
             onClick={() => onAction(ext.pkgName, 'uninstall')}
-            disabled={inProgress}
-            className="p-2.5 bg-red-600/10 hover:bg-red-600 border border-red-600/20 text-red-400 hover:text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1.5 shadow-md hover:scale-[1.03]"
-            title="Désinstaller l'extension"
+            disabled={disabled}
+            className="p-2.5 bg-red-600/10 hover:bg-red-600 border border-red-600/20 text-red-400 hover:text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 shadow-md hover:scale-[1.03]"
+            title={lockTitle ?? "Désinstaller l'extension"}
           >
             {inProgress ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -92,9 +97,9 @@ const ExtensionRowComponent: React.FC<ExtensionRowProps> = ({ ext, onAction, inP
         ) : (
           <button
             onClick={() => onAction(ext.pkgName, 'install')}
-            disabled={inProgress}
-            className="p-2.5 bg-green-600/10 hover:bg-green-600 border border-green-600/20 text-green-400 hover:text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50 flex items-center gap-1.5 shadow-md hover:scale-[1.03]"
-            title="Installer l'extension"
+            disabled={disabled}
+            className="p-2.5 bg-green-600/10 hover:bg-green-600 border border-green-600/20 text-green-400 hover:text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 shadow-md hover:scale-[1.03]"
+            title={lockTitle ?? "Installer l'extension"}
           >
             {inProgress ? (
               <Loader2 className="w-4 h-4 animate-spin" />

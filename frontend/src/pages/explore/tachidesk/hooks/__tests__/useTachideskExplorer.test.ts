@@ -11,6 +11,12 @@ vi.mock('../../../../../utils/apiClient', () => ({
   apiClient: vi.fn(),
 }));
 
+// Contrôle l'état d'authentification consommé par handleExtensionAction.
+let mockIsAuthenticated = true;
+vi.mock('../../../../../store/authStore', () => ({
+  useAuthStore: { getState: () => ({ isAuthenticated: mockIsAuthenticated }) },
+}));
+
 const mockApiClient = vi.mocked(apiClient);
 
 const mockSources = [
@@ -28,6 +34,7 @@ const mockChapters = [
 
 describe('useTachideskExplorer', () => {
   beforeEach(() => {
+    mockIsAuthenticated = true;
     mockApiClient.mockReset();
     // Default mock implementation to avoid unhandled promise rejections
     mockApiClient.mockImplementation(async (url) => {
@@ -231,6 +238,24 @@ describe('useTachideskExplorer', () => {
     });
 
     expect(result.current.error).toBeNull();
+  });
+
+  it('blocks extension actions when unauthenticated, without hitting the API', async () => {
+    mockIsAuthenticated = false;
+    const { result } = renderHook(() => useTachideskExplorer());
+    await waitFor(() => expect(result.current.sources).toEqual(mockSources));
+
+    mockApiClient.mockClear();
+    await act(async () => {
+      await result.current.handleExtensionAction('pkg.name', 'update');
+    });
+
+    // Message clair, et aucun appel à l'endpoint d'action (pas de 401 opaque).
+    expect(result.current.error).toMatch(/connecte-toi/i);
+    expect(mockApiClient).not.toHaveBeenCalledWith(
+      '/api/v1/explore/suwayomi/extensions/action/',
+      expect.anything(),
+    );
   });
 
   it('computes correct proxied image URL', async () => {

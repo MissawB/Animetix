@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import TachideskExplorerPage from '../TachideskExplorerPage';
+import { useAuthStore } from '../../../store/authStore';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,6 +29,8 @@ describe('TachideskExplorerPage', () => {
     queryClient.clear();
     vi.restoreAllMocks();
     vi.stubGlobal('fetch', vi.fn());
+    // Anonyme par défaut : les actions d'extension sont gardées côté UI.
+    useAuthStore.setState({ isAuthenticated: false });
   });
 
   const mockSources = [
@@ -199,6 +202,8 @@ describe('TachideskExplorerPage', () => {
   });
 
   it('calls extension action endpoint on install, uninstall, or update clicks', async () => {
+    // Gérer une extension exige d'être connecté.
+    useAuthStore.setState({ isAuthenticated: true });
     let actionPayload: { ids: string[]; action: string } | null = null;
 
     vi.mocked(global.fetch).mockImplementation(async (url, options) => {

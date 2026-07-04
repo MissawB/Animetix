@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Source, Manga, Chapter, Extension, ExtensionAction } from '../types';
 import { apiClient } from '../../../../utils/apiClient';
+import { useAuthStore } from '../../../../store/authStore';
 
 export const useTachideskExplorer = () => {
   const navigate = useNavigate();
@@ -213,6 +214,13 @@ export const useTachideskExplorer = () => {
   }, [selectedManga, selectedSource, navigate]);
 
   const handleExtensionAction = useCallback(async (pkgName: string, action: ExtensionAction) => {
+    // Installer/mettre à jour/désinstaller mute le serveur Suwayomi → login requis.
+    // On tranche en amont pour un message clair au lieu d'un 401 opaque (la liste,
+    // elle, reste consultable en anonyme).
+    if (!useAuthStore.getState().isAuthenticated) {
+      setError('Connecte-toi pour installer ou mettre à jour des extensions.');
+      return;
+    }
     setActionProgress(prev => ({ ...prev, [pkgName]: true }));
     setError(null);
     try {
