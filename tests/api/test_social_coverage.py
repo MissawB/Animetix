@@ -370,6 +370,16 @@ def test_social_dashboard(auth_client, user, other_user):
     assert len(resp.data["followers"]) == 1
 
 
+def test_social_dashboard_anonymous_returns_empty_network(api_client):
+    """La page Communauté est publique : un visiteur anonyme charge le hub
+    (cartes de navigation) avec un réseau vide, au lieu d'un 401 qui casse
+    toute la page."""
+    resp = api_client.get(reverse("api_social_dashboard"))
+    assert resp.status_code == 200
+    assert resp.data["following"] == []
+    assert resp.data["followers"] == []
+
+
 def test_social_toggle_follow_and_unfollow(auth_client, user, other_user):
     url = reverse("api_social_toggle_follow", args=[other_user.id])
     r1 = auth_client.post(url)

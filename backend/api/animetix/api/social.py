@@ -412,8 +412,20 @@ class CreativeFusionViewSet(viewsets.ModelViewSet):
 class SocialViewSet(viewsets.ViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
+    def get_permissions(self):
+        # La page Communauté est publique. Le décorateur @action ne suffit pas
+        # ici car les vues sont câblées manuellement (.as_view({"get": ...})),
+        # ce qui ignore ses permission_classes — on tranche donc par action.
+        if self.action == "dashboard":
+            return [permissions.AllowAny()]
+        return super().get_permissions()
+
     @action(detail=False, methods=["get"])
     def dashboard(self, request):
+        # Page Communauté publique : un anonyme charge le hub avec un réseau
+        # vide. Le réseau personnel n'apparaît qu'une fois connecté.
+        if not request.user.is_authenticated:
+            return Response({"following": [], "followers": []})
         following = request.user.following.all().select_related("to_user__profile")
         followers = request.user.followers.all().select_related("from_user__profile")
         return Response(
