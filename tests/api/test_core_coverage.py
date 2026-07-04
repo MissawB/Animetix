@@ -193,6 +193,25 @@ def test_media_search_success(factory):
     assert response.data[0]["id"] == "1"
 
 
+def test_media_item_serializer_exposes_type_and_image_url():
+    """The search UI reads item.type and item.image_url; the serializer must
+    emit both (without them: no thumbnails, empty type tabs, and detail links
+    resolving to /media/undefined/{id}/)."""
+    from animetix.serializers import MediaItemSerializer
+
+    raw = {
+        "id": "5",
+        "title": "Naruto",
+        "media_type": "Anime",
+        "image": "http://cdn/naruto.jpg",
+    }
+    data = MediaItemSerializer(raw).data
+    assert data["type"] == "Anime"
+    assert data["image_url"] == "http://cdn/naruto.jpg"
+    # Backward compat: legacy `image` key stays populated.
+    assert data["image"] == "http://cdn/naruto.jpg"
+
+
 def test_media_search_unsafe_query(factory):
     request = factory.get("/search/", {"q": "evil"})
     view = MediaSearchView()

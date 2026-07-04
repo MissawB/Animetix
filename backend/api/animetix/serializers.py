@@ -210,6 +210,11 @@ class MediaItemSerializer(serializers.Serializer):
     title_english = serializers.CharField(required=False, allow_null=True)
     title_native = serializers.CharField(required=False, allow_null=True)
     image = serializers.URLField(required=False, allow_null=True)
+    # Aliases the search UI consumes: item.type (tab filtering + detail route)
+    # and item.image_url (thumbnails). Without them: no images, empty tabs, and
+    # links resolving to /media/undefined/{id}/.
+    type = serializers.SerializerMethodField()
+    image_url = serializers.SerializerMethodField()
     year = serializers.IntegerField(required=False, allow_null=True)
     popularity = serializers.IntegerField(required=False, allow_null=True)
     genres = serializers.ListField(child=serializers.CharField(), required=False)
@@ -222,6 +227,20 @@ class MediaItemSerializer(serializers.Serializer):
     author = serializers.CharField(required=False, allow_null=True)
     related_items = serializers.ListField(child=serializers.DictField(), required=False)
 
+    @staticmethod
+    def _media_type(obj):
+        if isinstance(obj, dict):
+            return obj.get("media_type") or obj.get("type")
+        return getattr(obj, "media_type", None)
+
+    def get_type(self, obj):
+        return self._media_type(obj)
+
+    def get_image_url(self, obj):
+        if isinstance(obj, dict):
+            return obj.get("image") or obj.get("image_url")
+        return getattr(obj, "image_url", None)
+
     def to_representation(self, instance):
         from django.db import models
 
@@ -233,6 +252,7 @@ class MediaItemSerializer(serializers.Serializer):
                 "title_english": getattr(instance, "title_english", None),
                 "title_native": getattr(instance, "title_native", None),
                 "image": getattr(instance, "image_url", None),
+                "media_type": getattr(instance, "media_type", None),
                 "year": getattr(instance, "release_year", None),
                 "popularity": int(getattr(instance, "popularity", 0) or 0),
                 "genres": manga_metadata.get("genres", []),

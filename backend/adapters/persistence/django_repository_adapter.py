@@ -340,6 +340,7 @@ Strict Guidelines:
         data = {
             "id": item.external_id,
             "title": item.title,
+            "media_type": item.media_type,
             "title_english": item.title_english,
             "title_native": item.title_native,
             "description": item.description,
