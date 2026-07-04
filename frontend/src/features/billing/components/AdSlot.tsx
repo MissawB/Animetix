@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { logAdEvent } from '../services/billingService';
 import { usePassiveMiningStore } from '../../../store/passiveMiningStore';
+import { useAdPreferenceStore } from '../../../store/adPreferenceStore';
 
 // Real Google AdSense display unit. Configure via env:
 //   VITE_ADSENSE_CLIENT = ca-pub-xxxxxxxxxxxxxxxx   (publisher id)
@@ -51,27 +52,34 @@ export const AdSlot: React.FC<AdSlotProps> = ({
 }) => {
   const registerAd = usePassiveMiningStore((s) => s.registerAd);
   const unregisterAd = usePassiveMiningStore((s) => s.unregisterAd);
+  const adsEnabled = useAdPreferenceStore((s) => s.adsEnabled);
   const hasRealAds = Boolean(ADSENSE_CLIENT && slot);
 
   // Impression tracking + mining registration for the lifetime of the slot.
+  // Skipped entirely when the user has disabled ads.
   useEffect(() => {
+    if (!adsEnabled) return;
     logAdEvent('impression', 'banner');
     if (fundsMining) registerAd();
     return () => {
       if (fundsMining) unregisterAd();
     };
-  }, [fundsMining, registerAd, unregisterAd]);
+  }, [adsEnabled, fundsMining, registerAd, unregisterAd]);
 
   // Ask AdSense to fill the unit once the script is in place.
   useEffect(() => {
-    if (!hasRealAds) return;
+    if (!adsEnabled || !hasRealAds) return;
     loadAdSenseScript(ADSENSE_CLIENT as string);
     try {
       (window.adsbygoogle = window.adsbygoogle || []).push({});
     } catch (e) {
       console.error('AdSense push failed', e);
     }
-  }, [hasRealAds]);
+  }, [adsEnabled, hasRealAds]);
+
+  // User disabled ads in settings: render nothing (this also pauses mining,
+  // since no slot is mounted -> adSlotsVisible stays 0).
+  if (!adsEnabled) return null;
 
   if (!hasRealAds) {
     return (
