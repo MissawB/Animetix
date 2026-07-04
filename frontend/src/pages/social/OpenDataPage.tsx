@@ -2,8 +2,25 @@ import React, { useState, useEffect } from 'react';
 import { getOpenDatasets, downloadDataset } from '../../api';
 import { OpenDataset } from '../../types';
 import { Card } from "../../components/ui/Card";
-import { Share2, Download, FileText, Database, Info, Loader2 } from 'lucide-react';
+import { Share2, Download, FileText, Database, Loader2, ExternalLink } from 'lucide-react';
 import { useToastStore } from '../../store/toastStore';
+
+// Jeux de données publiés sur le Hub Hugging Face (consultables / téléchargeables
+// directement là-bas).
+const HF_DATASETS = [
+  {
+    name: 'Otaku Expert Dataset',
+    description: "Jeu de données d'entraînement (SFT) expert pour les modèles de raisonnement Otaku, rédigé en français.",
+    tag: 'Text Generation · FR · ~10K–100K',
+    url: 'https://huggingface.co/datasets/MissawB/otaku-expert-dataset',
+  },
+  {
+    name: 'Otaku Gold Dataset',
+    description: "Jeu de données étalon (vérité terrain) pour évaluer la précision des modèles, l'extraction d'entités et les pipelines RAG.",
+    tag: 'Question Answering · < 1K',
+    url: 'https://huggingface.co/datasets/MissawB/otaku-gold-dataset',
+  },
+];
 
 const OpenDataPage: React.FC = () => {
   const [datasets, setDatasets] = useState<OpenDataset[]>([]);
@@ -78,36 +95,17 @@ const OpenDataPage: React.FC = () => {
   return (
     <div className="max-w-5xl mx-auto px-6 py-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Header */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-12 gap-6">
-        <div>
-          <h1 className="text-4xl font-black italic manga-font tracking-tighter uppercase flex items-center gap-3">
-            <Share2 className="w-8 h-8 text-teal-400 animate-pulse" /> PORTAIL DE DONNÉES OUVERTES
-          </h1>
-          <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mt-2">
-            Transparence, science ouverte et conformité académique pour l'intelligence artificielle.
-          </p>
-        </div>
-        <div className="bg-teal-500/10 border border-teal-500/20 px-4 py-3 rounded-2xl flex items-center gap-3 shrink-0">
-          <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
-          <span className="text-[10px] font-black uppercase text-teal-400 tracking-wider">Conformité RGPD & Éthique</span>
-        </div>
+      <div className="mb-12">
+        <h1 className="text-4xl font-black italic manga-font tracking-tighter uppercase flex items-center gap-3">
+          <Share2 className="w-8 h-8 text-teal-400 animate-pulse" /> PORTAIL DE DONNÉES OUVERTES
+        </h1>
+        <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mt-2">
+          Nos jeux de données publics — en téléchargement direct ou sur Hugging Face.
+        </p>
       </div>
 
-      {/* Info Card */}
-      <Card padding="lg" className="mb-10 bg-gradient-to-br from-teal-950/20 via-navy-950/20 to-transparent border-teal-500/10">
-        <div className="flex gap-4">
-          <Info className="w-8 h-8 text-teal-400 shrink-0" />
-          <div className="space-y-2">
-            <h3 className="font-black text-sm uppercase tracking-wider text-teal-400">Pourquoi partageons-nous ces données ?</h3>
-            <p className="text-xs text-gray-300 leading-relaxed font-bold">
-              Conformément aux exigences de reproductibilité scientifique et aux standards éthiques de l'IA (notamment l'EU AI Act), nous rendons publics nos jeux de données d'apprentissage par renforcement (RLHF/DPO) ainsi que les traces d'interaction anonymisées.
-            </p>
-            <p className="text-[10px] text-gray-500 font-medium">
-              *Toutes les données ont subi un processus d'anonymisation strict (suppression des identifiants directs, hashing cryptographique et masquage différentiel) pour protéger la vie privée de notre communauté.
-            </p>
-          </div>
-        </div>
-      </Card>
+      {/* Téléchargement direct */}
+      <h2 className="text-xs font-black uppercase tracking-[0.25em] text-teal-400 mb-4">Téléchargement direct</h2>
 
       {/* Dataset Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -177,10 +175,55 @@ const OpenDataPage: React.FC = () => {
         {datasets.length === 0 && (
           <Card padding="lg" className="col-span-full text-center py-20 border-dashed border-2 border-white/5">
             <Database className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-            <p className="font-bold text-gray-500 italic">Aucun dataset public n'est actuellement disponible.</p>
-            <p className="text-xs text-gray-400 mt-2 uppercase tracking-widest">Les pipelines d'anonymisation sont en cours d'exécution.</p>
+            <p className="font-bold text-gray-500 italic">Aucun dataset en téléchargement direct pour le moment.</p>
           </Card>
         )}
+      </div>
+
+      {/* Sur Hugging Face */}
+      <h2 className="text-xs font-black uppercase tracking-[0.25em] text-teal-400 mt-14 mb-4">Sur Hugging Face</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {HF_DATASETS.map((ds) => (
+          <a
+            key={ds.url}
+            href={ds.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`${ds.name} — voir sur Hugging Face`}
+            className="no-underline group"
+          >
+            <Card
+              padding="lg"
+              className="h-full flex flex-col justify-between hover:border-teal-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-teal-950/10 relative overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-teal-500/5 rounded-bl-full pointer-events-none group-hover:bg-teal-500/10 transition-colors" />
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 rounded-xl bg-teal-500/10 text-teal-400 group-hover:scale-110 transition-transform">
+                    <Database className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h4 className="font-black text-md uppercase tracking-tight text-white group-hover:text-teal-400 transition-colors">
+                      {ds.name}
+                    </h4>
+                    <span className="text-[9px] font-black uppercase text-gray-500 tracking-wider bg-white/5 dark:bg-black/20 px-2 py-0.5 rounded">
+                      {ds.tag}
+                    </span>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-400 leading-relaxed font-medium">
+                  {ds.description}
+                </p>
+              </div>
+              <div className="pt-6 mt-6 border-t border-white/5">
+                <span className="w-full inline-flex items-center justify-center gap-2 border border-teal-500/30 text-teal-400 group-hover:bg-teal-500/10 font-black uppercase text-xs tracking-widest py-3 px-6 rounded-xl transition-all duration-300">
+                  <ExternalLink className="w-4 h-4" />
+                  Voir sur Hugging Face
+                </span>
+              </div>
+            </Card>
+          </a>
+        ))}
       </div>
     </div>
   );
