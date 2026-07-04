@@ -1,0 +1,12 @@
+name = "animetix-proxy"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+account_id = "29eda086da32f3db443edfe3980ab419"
+
+# Route animetix.xyz through this Worker, which rewrites the Host header to the
+# Cloud Run service URL (europe-west9 does not support Cloud Run domain mappings,
+# and Cloudflare's Origin-Rule Host override is Enterprise-only — so a Worker is
+# the free way to put the custom domain in front of Cloud Run).
+routes = [
+  { pattern = "animetix.xyz/*", zone_name = "animetix.xyz" },
+]
