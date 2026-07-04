@@ -17,6 +17,7 @@ Built on an **Atomic & Hexagonal Architecture**, the platform runs with enterpri
 ## 📌 Table of Contents
 
 - [🎮 Next-Gen AI Game Suite](#-next-gen-ai-game-suite)
+- [🔍 Universal Search Engine](#-universal-search-engine)
 - [🧪 The Ghost Labs (Advanced AI Sandbox)](#-the-ghost-labs-advanced-ai-sandbox)
 - [🧠 Core RAG 2.0 & Cognitive Architecture](#-core-rag-2-0--cognitive-architecture)
 - [☁️ Enterprise GCP Infrastructure](#%EF%B8%8F-enterprise-gcp-infrastructure)
@@ -52,6 +53,16 @@ Animetix features a rich variety of AI-driven game modes powered by customized d
 | **Duel Arena**                 | Realtime 1v1 (WebSockets)        | Face another player head-to-head in a live anime-culture duel.                                  |
 | **Multiplayer Labs**           | WebSockets Matchmaking           | Play **Undercover** (find the intruder) or **CodeManga** (Codenames variation) in real-time.    |
 | **Vision Quest**               | VLM Multimodal analysis          | Identify visual tropes, frames, and scenes using multimodal vision queries.                     |
+
+---
+
+## 🔍 Universal Search Engine
+
+A single query box unifies metadata, semantics, and multi-agent reasoning through three complementary modes:
+
+* **Meta-Search:** Hybrid lexical + semantic lookup across the entire catalog (anime, manga, characters, seiyuu), filterable by type and backed by the RAG 2.0 engine.
+* **Visual Nexus:** Describe a scene in natural language and retrieve the matching temporal video segments via multimodal embeddings.
+* **Expert Nexus:** An agentic RAG pipeline that streams its reasoning live over Server-Sent Events — a Monte Carlo Tree-of-Thoughts of specialized agents (semantic router, judge, synthesizer) that grounds every claim before delivering a synthesized answer.
 
 ---
 
@@ -229,7 +240,7 @@ pytest tests/e2e
 
 ## 📜 License
 
-Licensed under the [MIT License](LICENSE).
+Licensed under the [Apache License 2.0](LICENSE).
 
 ---
 
