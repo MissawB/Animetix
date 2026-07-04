@@ -5,7 +5,9 @@ import {
   Calendar, Shapes, Hash, CaseSensitive, ArrowUp, ArrowDown, Check, Sparkles, Loader2,
   Trophy, SlidersHorizontal, Skull,
 } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { classicGameService } from '../../features/games/services/classicService';
+import { CLASSIC_STATE_QUERY_KEY } from '../../features/games/hooks/useClassicGame';
 import { useToastStore } from '../../store/toastStore';
 import type { ClassicHintKey } from '../../types';
 
@@ -61,6 +63,7 @@ const Section: React.FC<{ step: number; title: string; hint?: string; children: 
 
 const ClassicLobbyPage: React.FC = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const addToast = useToastStore((s) => s.addToast);
 
   const [universe, setUniverse] = useState<Universe>('Anime');
@@ -92,7 +95,8 @@ const ClassicLobbyPage: React.FC = () => {
     if (launching) return;
     setLaunching(true);
     try {
-      await classicGameService.start(universe, difficulty, config);
+      const state = await classicGameService.start(universe, difficulty, config);
+      queryClient.setQueryData(CLASSIC_STATE_QUERY_KEY, state);
       navigate('/game/classic/play/');
     } catch {
       addToast("Impossible de lancer la partie. Réessayez.", 'error');

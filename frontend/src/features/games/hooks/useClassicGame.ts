@@ -8,9 +8,14 @@ interface StartArgs {
   hintConfig?: ClassicHintKey[];
 }
 
+// Clé partagée : toute page qui démarre une partie via classicGameService.start
+// (lobby, défi du jour) doit seeder ce cache, sinon la page de jeu ré-affiche
+// la partie précédente encore « fraîche » (staleTime global de 5 min, persisté).
+export const CLASSIC_STATE_QUERY_KEY = ['classic-state'];
+
 export const useClassicGame = () => {
   const queryClient = useQueryClient();
-  const QUERY_KEY = ['classic-state'];
+  const QUERY_KEY = CLASSIC_STATE_QUERY_KEY;
 
   const { data: gameState, isLoading: loading } = useQuery({
     queryKey: QUERY_KEY,

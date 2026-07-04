@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Calendar, ArrowLeft, CheckCircle2, Loader2, ChevronLeft, ChevronRight, Star, Trophy } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { useDailyChallenge } from '../../features/utils/hooks/useDailyChallenge';
 import { classicGameService } from '../../features/games/services/classicService';
+import { CLASSIC_STATE_QUERY_KEY } from '../../features/games/hooks/useClassicGame';
 import { Button } from "../../components/ui/Button";
 import { Skeleton } from "../../components/ui/Skeleton";
 import { useToastStore } from '../../store/toastStore';
@@ -13,6 +15,7 @@ import { DailyChallenge, DailyMode } from '../../types';
 const DailyChallengePage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const addToast = useToastStore((s) => s.addToast);
   const [date, setDate] = useState<string | undefined>(undefined); // undefined = today
   const { data, isLoading, isError } = useDailyChallenge(date);
@@ -24,7 +27,8 @@ const DailyChallengePage: React.FC = () => {
     if (launching) return;
     setLaunching(mode.id);
     try {
-      await classicGameService.start(mode.media_type ?? 'Anime', 'Normal', undefined, true, day);
+      const state = await classicGameService.start(mode.media_type ?? 'Anime', 'Normal', undefined, true, day);
+      queryClient.setQueryData(CLASSIC_STATE_QUERY_KEY, state);
       navigate('/game/classic/play/');
     } catch {
       addToast('Impossible de lancer le défi du jour. Réessayez.', 'error');
