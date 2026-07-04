@@ -27,8 +27,8 @@ const LayoutContent: React.FC<{ children: ReactNode }> = ({ children }) => {
   const location = useLocation();
 
   const {
-    isSidebarOpen, isSettingsOpen, theme, mediaType, difficulty, currentLang,
-    toggleSidebar, toggleSettings, setTheme, setMediaType, setDifficulty, setCurrentLang
+    isSidebarOpen, isSettingsOpen, theme, currentLang,
+    toggleSidebar, toggleSettings, setTheme, setCurrentLang
   } = useUIStore();
 
   const { user, isAuthenticated } = useAuthStore();
@@ -54,11 +54,7 @@ const LayoutContent: React.FC<{ children: ReactNode }> = ({ children }) => {
         isAuthenticated={isAuthenticated}
         user={user}
         pathname={location.pathname}
-        mediaType={mediaType}
-        difficulty={difficulty}
         toggleSidebar={toggleSidebar}
-        setMediaType={setMediaType}
-        setDifficulty={setDifficulty}
       />
 
       {/* SETTINGS DRAWER (RIGHT) */}

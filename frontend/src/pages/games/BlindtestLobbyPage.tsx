@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Disc3, ListMusic, Music2, Play, Sparkles, EyeOff, Mic2, Hash, Check } from 'lucide-react';
-import { useUIStore } from '../../store/uiStore';
 import { Card } from '../../components/ui/Card';
 
 type Mode = 'session' | 'single';
@@ -24,7 +23,7 @@ const LENGTHS = [5, 10, 30, 50, 100];
 
 const BlindtestLobbyPage: React.FC = () => {
   const navigate = useNavigate();
-  const { difficulty, setDifficulty } = useUIStore();
+  const [difficulty, setDifficulty] = useState<Difficulty>('Normal');
   const [mode, setMode] = useState<Mode>('session');
   const [format, setFormat] = useState<Format>('OP');
   const [length, setLength] = useState(10);
@@ -32,14 +31,12 @@ const BlindtestLobbyPage: React.FC = () => {
   const [guessArtist, setGuessArtist] = useState(false);
   const [guessSequence, setGuessSequence] = useState(false);
 
-  const activeDiff: Difficulty = difficulty === 'Custom' ? 'Normal' : difficulty;
-
   const launch = () =>
     navigate('/blindtest/play/', {
       state: {
         mode,
         type: format,
-        difficulty: activeDiff,
+        difficulty,
         length: mode === 'session' ? length : 1,
         hints,
         guessArtist,
@@ -139,9 +136,9 @@ const BlindtestLobbyPage: React.FC = () => {
               <button
                 key={d.key}
                 onClick={() => setDifficulty(d.key)}
-                aria-pressed={activeDiff === d.key}
+                aria-pressed={difficulty === d.key}
                 className={`py-3 rounded-2xl border-2 font-black italic uppercase tracking-widest text-xs transition-all ${
-                  activeDiff === d.key ? d.active : 'border-black/5 dark:border-white/10 text-gray-500 dark:text-gray-400 hover:border-yellow-400/50'
+                  difficulty === d.key ? d.active : 'border-black/5 dark:border-white/10 text-gray-500 dark:text-gray-400 hover:border-yellow-400/50'
                 }`}
               >
                 {d.label}

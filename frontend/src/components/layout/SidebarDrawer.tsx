@@ -16,11 +16,7 @@ interface SidebarDrawerProps {
   isAuthenticated: boolean;
   user: User | null;
   pathname: string;
-  mediaType: 'Anime' | 'Manga' | 'Character';
-  difficulty: 'Easy' | 'Normal' | 'Hard' | 'Impossible' | 'Custom';
   toggleSidebar: (forceClose?: boolean) => void;
-  setMediaType: (mode: 'Anime' | 'Manga' | 'Character') => void;
-  setDifficulty: (diff: 'Easy' | 'Normal' | 'Hard' | 'Impossible' | 'Custom') => void;
 }
 
 interface NavDef {
@@ -66,8 +62,7 @@ const NavItem: React.FC<{ item: NavDef; active: boolean; onClick: () => void }> 
 };
 
 const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
-  isSidebarOpen, isAuthenticated, user, pathname, mediaType, difficulty,
-  toggleSidebar, setMediaType, setDifficulty
+  isSidebarOpen, isAuthenticated, user, pathname, toggleSidebar
 }) => {
   const { t } = useTranslation();
   const close = () => toggleSidebar(true);
@@ -172,72 +167,6 @@ const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
             </div>
           </Link>
         )}
-
-        {/* Game config — kept at the top for quick access */}
-        <div className="mb-2 space-y-3">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500 mb-1.5 px-0.5">
-              {t('nav.univers', 'Univers')}
-            </p>
-            <div className="grid grid-cols-3 gap-1.5 p-1.5 bg-black/[0.03] dark:bg-black/30 rounded-2xl border border-gray-100 dark:border-white/5">
-              {(['Anime', 'Manga', 'Character'] as const).map((mode) => (
-                <button
-                  key={mode}
-                  onClick={() => setMediaType(mode)}
-                  aria-pressed={mediaType === mode}
-                  className={`text-[11px] font-black italic py-2 rounded-xl text-center transition-all ${
-                    mediaType === mode
-                      ? 'bg-yellow-400 text-black shadow-md'
-                      : 'text-gray-500 dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5'
-                  }`}
-                >
-                  {mode === 'Anime' ? t('nav.anime_full', 'Anime') : mode === 'Manga' ? t('nav.manga_full', 'Manga') : t('nav.perso_full', 'Perso')}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500 mb-1.5 px-0.5">
-              {t('nav.difficulty', 'Difficulté')}
-            </p>
-            <div className="grid grid-cols-5 gap-1.5 p-1.5 bg-black/[0.03] dark:bg-black/30 rounded-2xl border border-gray-100 dark:border-white/5">
-              {(['Easy', 'Normal', 'Hard', 'Impossible'] as const).map((diff, idx) => {
-                const bgColors = { Easy: 'bg-green-500', Normal: 'bg-blue-500', Hard: 'bg-orange-500', Impossible: 'bg-red-600' };
-                const textColors = {
-                  Easy: 'text-green-600 dark:text-green-400',
-                  Normal: 'text-blue-600 dark:text-blue-400',
-                  Hard: 'text-orange-600 dark:text-orange-400',
-                  Impossible: 'text-red-600 dark:text-red-400',
-                };
-                const letter = ['C', 'B', 'A', 'S'][idx];
-                return (
-                  <button
-                    key={diff}
-                    onClick={() => setDifficulty(diff)}
-                    aria-pressed={difficulty === diff}
-                    title={diff}
-                    className={`manga-font text-sm py-2 rounded-xl transition-all ${
-                      difficulty === diff ? `${bgColors[diff]} text-white shadow-md scale-105` : `${textColors[diff]} hover:bg-black/5 dark:hover:bg-white/5`
-                    }`}
-                  >
-                    {letter}
-                  </button>
-                );
-              })}
-              <Link
-                to="/custom-config/"
-                onClick={close}
-                title="Personnalisé"
-                aria-label="Configuration personnalisée"
-                className={`manga-font text-sm py-2 rounded-xl flex items-center justify-center no-underline transition-all ${
-                  difficulty === 'Custom' ? 'bg-purple-600 text-white shadow-md scale-105' : 'text-purple-600 dark:text-purple-400 hover:bg-black/5 dark:hover:bg-white/5'
-                }`}
-              >
-                P
-              </Link>
-            </div>
-          </div>
-        </div>
 
         {/* Navigation */}
         <nav className="space-y-0.5">

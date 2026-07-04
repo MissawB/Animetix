@@ -29,8 +29,6 @@ describe('useUIStore', () => {
       isSidebarOpen: false,
       isSettingsOpen: false,
       theme: 'auto',
-      mediaType: 'Anime',
-      difficulty: 'Normal',
       currentLang: 'Français',
     });
   });
@@ -118,20 +116,6 @@ describe('useUIStore', () => {
     // The raw preference (not the resolved value) is persisted.
     expect(localStorage.getItem('theme')).toBe('auto');
     expect(useUIStore.getState().theme).toBe('auto');
-  });
-
-  it('setMediaType updates state, persists, and plays a click', () => {
-    useUIStore.getState().setMediaType('Manga');
-    expect(useUIStore.getState().mediaType).toBe('Manga');
-    expect(localStorage.getItem('media_type')).toBe('Manga');
-    expect(playMock).toHaveBeenCalledWith('click');
-  });
-
-  it('setDifficulty updates state, persists, and plays a click', () => {
-    useUIStore.getState().setDifficulty('Hard');
-    expect(useUIStore.getState().difficulty).toBe('Hard');
-    expect(localStorage.getItem('difficulty')).toBe('Hard');
-    expect(playMock).toHaveBeenCalledWith('click');
   });
 
   it('setCurrentLang updates state and maps English/Français to en/fr', () => {

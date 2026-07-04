@@ -301,12 +301,7 @@
     "settings": "Paramètres",
     "appearance": "Apparence",
     "lang": "Langue",
-    "admin": "ADMINISTRATION",
-    "univers": "Univers",
-    "difficulty": "Difficulté",
-    "anime_full": "Anime",
-    "manga_full": "Manga",
-    "perso_full": "Perso"
+    "admin": "ADMINISTRATION"
   },
   "search": {
     "placeholder": "Rechercher un anime, manga...",

@@ -6,14 +6,10 @@ interface UIState {
   isSidebarOpen: boolean;
   isSettingsOpen: boolean;
   theme: string;
-  mediaType: 'Anime' | 'Manga' | 'Character';
-  difficulty: 'Easy' | 'Normal' | 'Hard' | 'Impossible' | 'Custom';
   currentLang: 'Français' | 'English';
   toggleSidebar: (forceClose?: boolean) => void;
   toggleSettings: (forceClose?: boolean) => void;
   setTheme: (theme: string) => void;
-  setMediaType: (mode: 'Anime' | 'Manga' | 'Character') => void;
-  setDifficulty: (diff: 'Easy' | 'Normal' | 'Hard' | 'Impossible' | 'Custom') => void;
   setCurrentLang: (lang: 'Français' | 'English') => void;
   playClick: () => void;
 }
@@ -22,8 +18,6 @@ export const useUIStore = create<UIState>((set) => ({
   isSidebarOpen: false,
   isSettingsOpen: false,
   theme: localStorage.getItem('theme') || 'auto',
-  mediaType: (localStorage.getItem('media_type') as 'Anime' | 'Manga' | 'Character') || 'Anime',
-  difficulty: (localStorage.getItem('difficulty') as 'Easy' | 'Normal' | 'Hard' | 'Impossible' | 'Custom') || 'Normal',
   currentLang: i18n.language === 'en' ? 'English' : 'Français',
   
   toggleSidebar: (forceClose) => {
@@ -58,18 +52,6 @@ export const useUIStore = create<UIState>((set) => ({
     
     localStorage.setItem('theme', theme);
     set({ theme });
-  },
-
-  setMediaType: (mode) => {
-    soundManager.play('click');
-    localStorage.setItem('media_type', mode);
-    set({ mediaType: mode });
-  },
-
-  setDifficulty: (diff) => {
-    soundManager.play('click');
-    localStorage.setItem('difficulty', diff);
-    set({ difficulty: diff });
   },
 
   setCurrentLang: (lang) => {
