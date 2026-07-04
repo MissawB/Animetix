@@ -1,6 +1,13 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { X, Sun, Moon, Monitor, CheckCircle2 } from 'lucide-react';
+import { X, Sun, Moon, Monitor, CheckCircle2, Megaphone, ShieldCheck } from 'lucide-react';
+import { useAdPreferenceStore } from '../../store/adPreferenceStore';
+
+declare global {
+  interface Window {
+    googlefc?: { showRevocationMessage?: () => void };
+  }
+}
 
 interface SettingsDrawerProps {
   isSettingsOpen: boolean;
@@ -15,6 +22,8 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
   isSettingsOpen, theme, currentLang, toggleSettings, setTheme, setCurrentLang
 }) => {
   const { t } = useTranslation();
+  const adsEnabled = useAdPreferenceStore((s) => s.adsEnabled);
+  const setAdsEnabled = useAdPreferenceStore((s) => s.setAdsEnabled);
 
   return (
     <aside
@@ -83,6 +92,51 @@ const SettingsDrawer: React.FC<SettingsDrawerProps> = ({
               </button>
             ))}
           </div>
+        </div>
+
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-6">
+            {t('settings.ads', 'Publicités')}
+          </p>
+          <button
+            onClick={() => setAdsEnabled(!adsEnabled)}
+            aria-label="Basculer les publicités"
+            aria-pressed={adsEnabled}
+            className="w-full flex items-center justify-between p-4 rounded-2xl text-black dark:text-white hover:bg-white/50 dark:hover:bg-black/20 transition-all text-left"
+          >
+            <span className="flex items-center gap-3">
+              <Megaphone className="w-5 h-5 text-yellow-500" />
+              <span className="manga-font text-xs">
+                {t('settings.adsToggle', 'Afficher les publicités')}
+              </span>
+            </span>
+            <span
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                adsEnabled ? 'bg-green-500' : 'bg-gray-400/40'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  adsEnabled ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </span>
+          </button>
+          <p className="mt-3 text-[10px] leading-relaxed text-gray-400 px-1">
+            {t(
+              'settings.adsHint',
+              'Désactiver les pubs met aussi en pause le minage passif de Bx.',
+            )}
+          </p>
+          <button
+            onClick={() => window.googlefc?.showRevocationMessage?.()}
+            className="mt-3 w-full flex items-center gap-2 p-3 rounded-2xl text-gray-500 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-black/20 transition-all text-left"
+          >
+            <ShieldCheck className="w-4 h-4" />
+            <span className="manga-font text-[11px]">
+              {t('settings.manageConsent', 'Gérer mon consentement')}
+            </span>
+          </button>
         </div>
       </div>
 
