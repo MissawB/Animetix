@@ -23,7 +23,12 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       gcTime: 1000 * 60 * 60 * 24, // Conserver en cache 24h
-      staleTime: 1000 * 60 * 5,    // Considérer "frais" pendant 5 min
+      staleTime: 1000 * 60 * 5,    // Considérer "frais" pendant 5 min (focus/reconnect)
+      // Le cache (persisté 24h) est servi instantanément, mais chaque montage
+      // de page revalide en arrière-plan : sans ça, naviguer vers une page
+      // dont la donnée a changé côté serveur (score du daily, XP, partie en
+      // cours...) affichait l'ancien état jusqu'à un F5 manuel.
+      refetchOnMount: 'always',
       retry: retryUnlessClientError,
     },
   },
