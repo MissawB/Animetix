@@ -490,26 +490,34 @@ const SeiyuuDiscoveryPage: React.FC = () => {
             </AnimatePresence>
           </div>
 
-          {/* Technology Guide */}
-          <div className="mt-32 grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card padding="lg" className="bg-black/40 border-white/5">
-              <h4 className="text-xs font-black uppercase tracking-widest text-emerald-400 mb-4">Vocal Fingerprinting</h4>
-              <p className="text-[10px] font-bold text-white/40 uppercase leading-relaxed">
-                L'IA analyse les harmoniques et le timbre unique pour catégoriser les voix selon 12 dimensions psycho-acoustiques.
-              </p>
-            </Card>
-            <Card padding="lg" className="bg-black/40 border-white/5">
-              <h4 className="text-xs font-black uppercase tracking-widest text-emerald-400 mb-4">Cross-Lore Index</h4>
-              <p className="text-[10px] font-bold text-white/40 uppercase leading-relaxed">
-                Recherche croisée permettant de découvrir les liens cachés entre différents studios via la réutilisation des talents vocaux.
-              </p>
-            </Card>
-            <Card padding="lg" className="bg-black/40 border-white/5">
-              <h4 className="text-xs font-black uppercase tracking-widest text-emerald-400 mb-4">Audio SOTA Samples</h4>
-              <p className="text-[10px] font-bold text-white/40 uppercase leading-relaxed">
-                Chaque profil inclut un échantillon audio haute fidélité pour une vérification instantanée de la signature vocale.
-              </p>
-            </Card>
+          {/* Guide & Protocole */}
+          <div className="mt-24 grid grid-cols-1 md:grid-cols-2 gap-8">
+              <Card padding="lg" className="bg-black/40 border-emerald-500/20 shadow-[0_0_50px_rgba(16,185,129,0.1)] relative overflow-hidden group">
+                  <div className="absolute -right-12 -bottom-12 opacity-5 group-hover:opacity-10 transition-opacity">
+                      <Mic2 className="w-64 h-64 text-emerald-500" />
+                  </div>
+                  <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3">
+                      <Sparkles className="w-5 h-5 text-emerald-400" /> Guide des Voix
+                  </h4>
+                  <div className="space-y-4 relative z-10">
+                      <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
+                          <span className="text-emerald-400">La Recherche :</span> Tapez le nom d'un doubleur ou d'un personnage, puis filtrez par langue (japonais, français) et par origine du profil.
+                      </p>
+                      <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
+                          <span className="text-emerald-400">L'Écoute :</span> Chaque profil contient un échantillon audio. Appuyez sur Play pour vérifier instantanément la signature vocale.
+                      </p>
+                      <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
+                          <span className="text-emerald-400">L'Ingestion :</span> Ajoutez une nouvelle voix depuis une vidéo YouTube (30 Bx). L'IA extrait, nettoie et indexe l'échantillon pour vous.
+                      </p>
+                  </div>
+              </Card>
+
+              <div className="p-12 rounded-[4rem] bg-gradient-to-br from-emerald-600/10 to-transparent border border-white/5 flex flex-col justify-center text-center">
+                  <p className="text-sm font-black uppercase tracking-[0.15em] italic leading-relaxed text-emerald-200/60">
+                      Le catalogue combine un dataset Hugging Face et des voix ingérées depuis YouTube, indexées avec langue, rôles et description. <br />
+                      Le pipeline d'ingestion télécharge l'audio, isole la bande vocale (80 Hz – 8 000 Hz) et découpe un échantillon de 10 s sans silence.
+                  </p>
+              </div>
           </div>
 
         </div>

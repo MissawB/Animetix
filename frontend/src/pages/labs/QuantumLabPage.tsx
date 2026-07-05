@@ -223,9 +223,9 @@ const QuantumLabPage: React.FC = () => {
               </Card>
 
               <div className="p-12 rounded-[4rem] bg-gradient-to-br from-purple-600/10 to-transparent border border-white/5 flex flex-col justify-center text-center">
-                  <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30 italic leading-relaxed text-purple-200/40">
-                      Protocole de Mesure : Les amplitudes de probabilité sont calculées via le solveur cognitif Animetix. <br />
-                      Toute observation modifie l'état initial du vecteur de conscience de l'utilisateur.
+                  <p className="text-sm font-black uppercase tracking-[0.15em] italic leading-relaxed text-purple-200/60">
+                      Simulation de préférence inspirée du formalisme quantique : le backend calcule une probabilité pour le thème choisi, en déduit un résultat binaire (effondrement positif ou négatif) et renvoie le vecteur d'amplitudes affiché. <br />
+                      Les réglages JIT et Plasticity modulent ce calcul côté serveur — c'est une modélisation probabiliste des goûts, pas un ordinateur quantique.
                   </p>
               </div>
           </div>

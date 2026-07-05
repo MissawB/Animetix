@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, Wand2, Languages, Image as ImageIcon } from 'lucide-react';
+import { Upload, Wand2, Languages, Image as ImageIcon, Sparkles } from 'lucide-react';
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Select } from "../../components/ui/Select";
@@ -198,6 +198,36 @@ const MangaLabPage: React.FC = () => {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Guide & Protocole */}
+      <div className="mt-24 grid grid-cols-1 md:grid-cols-2 gap-8">
+          <Card padding="lg" className="bg-white dark:bg-black/40 border-amber-500/20 shadow-[0_0_50px_rgba(245,158,11,0.1)] relative overflow-hidden group">
+              <div className="absolute -right-12 -bottom-12 opacity-5 group-hover:opacity-10 transition-opacity">
+                  <ImageIcon className="w-64 h-64 text-amber-500" />
+              </div>
+              <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3">
+                  <Sparkles className="w-5 h-5 text-amber-600 dark:text-amber-400" /> Guide du Manga Lab
+              </h4>
+              <div className="space-y-4 relative z-10">
+                  <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
+                      <span className="text-amber-600 dark:text-amber-400">Le Concept :</span> Importez une page de manga et laissez l'IA la nettoyer ou la traduire, sans toucher au dessin.
+                  </p>
+                  <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
+                      <span className="text-amber-600 dark:text-amber-400">Bubble Cleaner :</span> Efface le texte des bulles pour obtenir une planche vierge, prête à recevoir votre propre texte ou une nouvelle traduction.
+                  </p>
+                  <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
+                      <span className="text-amber-600 dark:text-amber-400">Auto-Translator :</span> Choisissez une langue cible et la planche est traduite directement dans les bulles. Comparez les versions avec les onglets Original, Propre et Traduit.
+                  </p>
+              </div>
+          </Card>
+
+          <div className="p-12 rounded-[4rem] bg-gradient-to-br from-amber-600/10 to-transparent border border-black/5 dark:border-white/5 flex flex-col justify-center text-center">
+              <p className="text-sm font-black uppercase tracking-[0.15em] italic leading-relaxed text-amber-800/70 dark:text-amber-200/60">
+                  La page est envoyée au backend qui détecte les bulles de texte, en extrait le contenu par OCR, puis efface le lettrage par inpainting pour produire la version "propre". <br />
+                  Pour la traduction, le texte reconnu est traduit dans la langue cible puis réinséré dans les bulles, et l'image finale est renvoyée encodée en base64.
+              </p>
+          </div>
       </div>
     </div>
   );

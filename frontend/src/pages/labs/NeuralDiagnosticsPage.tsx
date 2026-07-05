@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, Brain, BarChart3, Grid3X3, Send, AlertTriangle } from 'lucide-react';
+import { Activity, Brain, BarChart3, Grid3X3, Send, AlertTriangle, Sparkles } from 'lucide-react';
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
@@ -167,28 +167,32 @@ const NeuralDiagnosticsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Explainer Section */}
-        <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Guide & Protocole */}
+        <div className="mt-24 grid grid-cols-1 md:grid-cols-2 gap-8">
           <Card padding="lg" className="bg-black/40 border-blue-500/20 shadow-[0_0_50px_rgba(59,130,246,0.1)] relative overflow-hidden group">
             <div className="absolute -right-12 -bottom-12 opacity-5 group-hover:opacity-10 transition-opacity">
               <Brain className="w-64 h-64 text-blue-500" />
             </div>
-            <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3 text-blue-400">
-              <Brain className="w-5 h-5" /> {t('labs.diagnostics.explainer_title')}
+            <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3">
+              <Sparkles className="w-5 h-5 text-blue-400" /> Guide des Diagnostics
             </h4>
             <div className="space-y-4 relative z-10">
               <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                {t('labs.diagnostics.explainer_text_card1')}
+                <span className="text-blue-400">Le Prompt :</span> Tapez une phrase et lancez le diagnostic : le modèle de langage l'analyse token par token et vous montre ce qui se passe à l'intérieur pendant l'inférence.
               </p>
               <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                {t('labs.diagnostics.explainer_text_card2')}
+                <span className="text-blue-400">L'Entropie :</span> Chaque barre mesure l'hésitation du modèle sur un token. Une barre basse signifie qu'il est sûr de lui, une barre haute qu'il hésite entre plusieurs suites possibles.
+              </p>
+              <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
+                <span className="text-blue-400">La Heatmap :</span> La carte "logit lens" montre comment la prédiction se précise couche après couche. Utile pour repérer des biais ou comprendre une sortie inattendue.
               </p>
             </div>
           </Card>
 
           <div className="p-12 rounded-[4rem] bg-gradient-to-br from-blue-600/10 to-transparent border border-white/5 flex flex-col justify-center text-center">
-            <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30 italic leading-relaxed text-blue-200/40">
-              {t('labs.diagnostics.protocol_text')}
+            <p className="text-sm font-black uppercase tracking-[0.15em] italic leading-relaxed text-blue-200/60">
+              Diagnostic d'inférence réel : le prompt est envoyé à l'endpoint labs/diagnostics qui calcule l'entropie de la distribution de sortie par token, un score de confiance global et la trajectoire logit lens à travers les couches du modèle. <br />
+              Les graphiques visualisent ces métriques telles quelles, sans post-traitement.
             </p>
           </div>
         </div>

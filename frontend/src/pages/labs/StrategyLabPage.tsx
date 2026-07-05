@@ -5,7 +5,8 @@ import {
   Brain, 
   GitBranch,
   RefreshCw,
-  ShieldCheck
+  ShieldCheck,
+  Sparkles
 } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { apiClient } from "../../utils/apiClient";
@@ -304,6 +305,36 @@ const StrategyLabPage: React.FC = () => {
                         </motion.div>
                     )}
                 </AnimatePresence>
+            </div>
+        </div>
+
+        {/* Guide & Protocole */}
+        <div className="mt-24 grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Card padding="lg" className="bg-white dark:bg-black/40 border-red-500/20 shadow-[0_0_50px_rgba(239,68,68,0.1)] relative overflow-hidden group">
+                <div className="absolute -right-12 -bottom-12 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <Target className="w-64 h-64 text-red-500" />
+                </div>
+                <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3">
+                    <Sparkles className="w-5 h-5 text-red-600 dark:text-red-400" /> Guide du Stratège
+                </h4>
+                <div className="space-y-4 relative z-10">
+                    <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
+                        <span className="text-red-600 dark:text-red-400">Le Principe :</span> L'IA cherche la meilleure question à poser dans un jeu de devinettes. Réglez le nombre d'itérations avec le curseur, puis lancez la résolution.
+                    </p>
+                    <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
+                        <span className="text-red-600 dark:text-red-400">Le Regret :</span> À chaque itération, l'algorithme mesure le "regret" de ne pas avoir choisi une autre option, puis ajuste sa stratégie pour le réduire.
+                    </p>
+                    <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
+                        <span className="text-red-600 dark:text-red-400">La Convergence :</span> Quand les courbes se stabilisent, la stratégie n'évolue plus : l'IA a trouvé le meilleur dosage de probabilités entre les questions possibles.
+                    </p>
+                </div>
+            </Card>
+
+            <div className="p-12 rounded-[4rem] bg-gradient-to-br from-red-600/10 to-transparent border border-black/5 dark:border-white/5 flex flex-col justify-center text-center">
+                <p className="text-sm font-black uppercase tracking-[0.15em] italic leading-relaxed text-red-800/70 dark:text-red-200/60">
+                    Simulation de Counterfactual Regret Minimization (CFR+ avec regret matching) exécutée côté serveur : la stratégie moyenne converge vers un équilibre de Nash approché. <br />
+                    Les graphiques tracent la probabilité de chaque action et l'évolution du regret au fil des itérations — une visualisation pédagogique de théorie des jeux.
+                </p>
             </div>
         </div>
       </div>

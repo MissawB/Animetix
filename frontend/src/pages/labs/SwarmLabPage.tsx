@@ -118,21 +118,6 @@ const SwarmLabPage: React.FC = () => {
                           </Button>
                       </div>
                   </Card>
-
-                  <Card padding="lg" className="bg-white/5 border-white/5 opacity-50">
-                      <h4 className="text-[10px] font-black uppercase tracking-widest mb-4 text-emerald-400">Mécanique de l'Essaim</h4>
-                      <p className="text-[10px] font-bold uppercase leading-relaxed mb-4">
-                          Chaque proposition est soumise à 7 agents IA (Lore-Keeper, Logic-Gate, Sentiment-Scanner, etc.).
-                      </p>
-                      <ul className="space-y-3">
-                          <li className="flex gap-2 text-[8px] font-black opacity-40 uppercase">
-                              <div className="w-1 h-1 rounded-full bg-emerald-500 mt-1" /> Seuil de consensus : 70%.
-                          </li>
-                          <li className="flex gap-2 text-[8px] font-black opacity-40 uppercase">
-                              <div className="w-1 h-1 rounded-full bg-emerald-500 mt-1" /> Persistance automatique si validé.
-                          </li>
-                      </ul>
-                  </Card>
               </div>
 
               {/* Resultats */}
@@ -286,7 +271,7 @@ const SwarmLabPage: React.FC = () => {
               </Card>
 
               <div className="p-12 rounded-[4rem] bg-gradient-to-br from-emerald-600/10 to-transparent border border-white/5 flex flex-col justify-center text-center">
-                  <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30 italic leading-relaxed text-emerald-200/40">
+                  <p className="text-sm font-black uppercase tracking-[0.15em] italic leading-relaxed text-emerald-200/60">
                       Protocole Consensus : Les votes sont arbitrés via un algorithme de consensus distribué. <br />
                       Les faits validés sont injectés de manière permanente dans la matrice de lore.
                   </p>

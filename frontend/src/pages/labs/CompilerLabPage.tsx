@@ -174,32 +174,32 @@ const CompilerLabPage: React.FC = () => {
               </div>
           </div>
 
-          {/* Global Warning & Guide */}
+          {/* Guide & Protocole */}
           <div className="mt-24 grid grid-cols-1 md:grid-cols-2 gap-8">
-              <Card padding="lg" className="bg-black/40 border-red-500/20 shadow-[0_0_50px_rgba(220,38,38,0.1)] relative overflow-hidden group">
+              <Card padding="lg" className="bg-black/40 border-red-500/20 shadow-[0_0_50px_rgba(239,68,68,0.1)] relative overflow-hidden group">
                   <div className="absolute -right-12 -bottom-12 opacity-5 group-hover:opacity-10 transition-opacity">
-                      <Terminal className="w-64 h-64 text-red-600" />
+                      <Terminal className="w-64 h-64 text-red-500" />
                   </div>
                   <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3">
-                      <Sparkles className="w-5 h-5 text-red-400" /> Guide du Compilateur Évolutif
+                      <Sparkles className="w-5 h-5 text-red-400" /> Guide du Compilateur
                   </h4>
                   <div className="space-y-4 relative z-10">
                       <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                          <span className="text-red-500">Auto-Optimisation :</span> Contrairement aux logiciels classiques, notre IA analyse son propre code en temps réel pour détecter des goulots d'étranglement mathématiques.
+                          <span className="text-red-400">Le Concept :</span> Les calculs de similarité entre œuvres (cosinus, distance euclidienne) sont lents en Python pur. Cette page montre comment le serveur les accélère en les compilant à la volée.
                       </p>
                       <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                          <span className="text-red-500">Génération de Kernel :</span> Si une fonction est trop lente (ex: calcul de similarité), le compilateur génère une version ultra-optimisée en langage C (bas niveau) et l'injecte instantanément.
+                          <span className="text-red-400">La Compilation :</span> Entrez une fonction supportée (cosine_similarity, euclidean_distance, vector_norm) et lancez l'optimisation : le noyau est compilé en code machine puis testé immédiatement.
                       </p>
                       <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                          <span className="text-red-500">Performance :</span> Ce processus permet à Animetix de rester fluide même lors de calculs massifs sur des milliers d'archétypes simultanément.
+                          <span className="text-red-400">Le Résultat :</span> Le panneau de droite affiche le statut de compilation, la sortie du test de validation et la signature du code généré. Cette action consomme des Berrix.
                       </p>
                   </div>
               </Card>
 
               <div className="p-12 rounded-[4rem] bg-gradient-to-br from-red-600/10 to-transparent border border-white/5 flex flex-col justify-center text-center">
-                  <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30 italic leading-relaxed text-red-200/40">
-                      Backend LLVM : Les noyaux de calcul sont compilés via Clang/LLVM avec optimisations AVX-512. <br />
-                      L'injection de code dynamique est sécurisée par un sandbox matériel isolé.
+                  <p className="text-sm font-black uppercase tracking-[0.15em] italic leading-relaxed text-red-200/60">
+                      Compilation JIT réelle via Numba (@njit, fastmath) : le kernel numérique Python est traduit en code machine côté serveur, puis validé sur un vecteur de test. <br />
+                      Le code C affiché à gauche est illustratif — le mécanisme effectif est la génération dynamique de kernels Numpy/Numba par l'API singularity-lab.
                   </p>
               </div>
           </div>

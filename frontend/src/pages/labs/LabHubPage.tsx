@@ -6,12 +6,8 @@ import {
   Globe, 
   Atom,
   Users,
-  Zap,
   ArrowRight,
   ShieldCheck,
-  Terminal,
-  Layers,
-  Bot,
   Palette,
   Headphones,
   Video,
@@ -336,7 +332,7 @@ const cognitionLabs = [
 
 const LabHubPage: React.FC = () => {
   return (
-    <div className="min-h-screen w-full bg-[#0a0a12] text-white absolute left-0 top-0 pt-24 pb-20 z-0">
+    <div className="min-h-screen w-full bg-[#0a0a12] text-white pb-20">
       <AnimatedPage>
         <div className="max-w-7xl mx-auto px-6 py-16 relative z-10">
           
@@ -346,22 +342,12 @@ const LabHubPage: React.FC = () => {
             
             <div className="flex flex-col md:flex-row justify-between items-end gap-12">
                 <div className="max-w-3xl">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-[0.3em] text-red-500 mb-6 shadow-[0_0_20px_rgba(220,38,38,0.1)]">
-                        <Terminal className="w-3 h-3" /> Singularity Access Protocol v5.2
-                    </div>
                     <h1 className="text-8xl font-black italic manga-font tracking-tighter uppercase mb-6 leading-[0.9]">
                         SINGULARITY <span className="text-red-600 text-glow">LABS</span>
                     </h1>
                     <p className="text-2xl font-bold opacity-30 uppercase tracking-[0.2em] leading-relaxed">
                         Explorez la frontière entre l'IA générative et la cognition pure.
                     </p>
-                </div>
-                
-                <div className="flex gap-4">
-                    <Card padding="lg" className="bg-black/40 border-white/5 text-center min-w-[160px]">
-                        <p className="text-[10px] font-black uppercase opacity-30 mb-2">SOTA Status</p>
-                        <Badge variant="success" className="bg-emerald-500/10 text-emerald-500 border-none uppercase font-black italic">CONNECTED</Badge>
-                    </Card>
                 </div>
             </div>
         </header>
@@ -479,42 +465,11 @@ const LabHubPage: React.FC = () => {
             ))}
         </div>
 
-        {/* Global Tech Stats */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <Card padding="lg" className="bg-navy-900 border-white/5 flex items-center gap-8 shadow-xl">
-                <div className="p-4 bg-white/5 rounded-2xl text-blue-400">
-                    <Layers className="w-8 h-8" />
-                </div>
-                <div>
-                    <p className="text-[10px] font-black uppercase opacity-30 mb-1">Architecture</p>
-                    <p className="text-lg font-black italic uppercase manga-font">Neuro-Symbolic V5</p>
-                </div>
-            </Card>
-            <Card padding="lg" className="bg-navy-900 border-white/5 flex items-center gap-8 shadow-xl">
-                <div className="p-4 bg-white/5 rounded-2xl text-purple-400">
-                    <Bot className="w-8 h-8" />
-                </div>
-                <div>
-                    <p className="text-[10px] font-black uppercase opacity-30 mb-1">Compute Power</p>
-                    <p className="text-lg font-black italic uppercase manga-font">H100 Distributed</p>
-                </div>
-            </Card>
-            <Card padding="lg" className="bg-navy-900 border-white/5 flex items-center gap-8 shadow-xl">
-                <div className="p-4 bg-white/5 rounded-2xl text-orange-400">
-                    <Zap className="w-8 h-8" />
-                </div>
-                <div>
-                    <p className="text-[10px] font-black uppercase opacity-30 mb-1">Latency</p>
-                    <p className="text-lg font-black italic uppercase manga-font">Sub-Temporal 12ms</p>
-                </div>
-            </Card>
-        </div>
-
         {/* Alpha Footer */}
         <footer className="mt-32 pt-16 border-t border-white/5 text-center">
-            <p className="text-[9px] font-bold uppercase tracking-[0.5em] opacity-20 italic max-w-4xl mx-auto leading-relaxed">
-                Le Singularity Lab est un environnement de recherche de niveau Omega. <br />
-                Toutes les simulations de multivers et de plasticité sont exécutées sur des cœurs tensoriels isolés pour prévenir toute fuite de conscience artificielle.
+            <p className="text-sm font-bold uppercase tracking-[0.15em] opacity-40 italic max-w-4xl mx-auto leading-relaxed">
+                Les Singularity Labs regroupent les fonctionnalités expérimentales d'Animetix : des outils d'IA générative et cognitive appliqués à l'univers anime &amp; manga. <br />
+                Génération de lore, doublage et synthèse vocale, analyse vidéo, reconstruction 3D, moteurs de raisonnement — chaque module est un prototype de recherche en évolution constante.
             </p>
         </footer>
       </div>

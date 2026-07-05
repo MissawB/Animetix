@@ -518,28 +518,32 @@ const SynapticLabPage: React.FC = () => {
 
           </div>
 
-          {/* Explainer / Global Protocol */}
-          <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-8">
-              <Card padding="lg" className="bg-black/40 border-red-500/20 shadow-[0_0_40px_rgba(220,38,38,0.05)] relative overflow-hidden group">
+          {/* Guide & Protocole */}
+          <div className="mt-24 grid grid-cols-1 md:grid-cols-2 gap-8">
+              <Card padding="lg" className="bg-black/40 border-red-500/20 shadow-[0_0_50px_rgba(239,68,68,0.1)] relative overflow-hidden group">
                   <div className="absolute -right-12 -bottom-12 opacity-5 group-hover:opacity-10 transition-opacity">
                       <Brain className="w-64 h-64 text-red-500" />
                   </div>
-                  <h4 className="text-lg font-black italic manga-font uppercase mb-3 flex items-center gap-3">
-                      <Sparkles className="w-5 h-5 text-red-400" /> {t('labs.plasticity.explainer_title', 'Synaptic Plasticity Rules')}
+                  <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3">
+                      <Sparkles className="w-5 h-5 text-red-400" /> Guide de la Plasticité
                   </h4>
-                  <div className="space-y-3 relative z-10">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-white/50 leading-relaxed">
-                          Le simulateur intègre la règle classique de Hebb ("les neurones co-activés renforcent leurs liens") ainsi que le Spike-Timing-Dependent Plasticity (STDP) qui ajuste la force des synapses selon l'ordre précis d'activation des spikes conceptuels.
+                  <div className="space-y-4 relative z-10">
+                      <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
+                          <span className="text-red-400">La Matrice :</span> Chaque case de la grille montre la force du lien entre deux concepts (Shonen, Mecha, Romance...). Plus la case est lumineuse, plus l'association est forte.
                       </p>
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-white/50 leading-relaxed">
-                          En modifiant τ+ et τ-, vous modifiez la constante de décroissance exponentielle régissant la potentiation (renforcement) ou la dépression (affaiblissement) synaptique à long terme.
+                      <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
+                          <span className="text-red-400">Les Spikes :</span> Sélectionnez des concepts puis cliquez sur "Simuler" : les liens entre les concepts activés ensemble se renforcent, comme des neurones qui apprennent par association.
+                      </p>
+                      <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
+                          <span className="text-red-400">Le Persona :</span> Les réglages de drift d'archétype (auto ou manuel, intensité, aura/accent/police) ajustent le thème visuel que l'application applique à votre profil.
                       </p>
                   </div>
               </Card>
 
-              <div className="p-10 rounded-[3rem] bg-gradient-to-br from-red-600/5 to-transparent border border-white/5 flex flex-col justify-center text-center">
-                  <p className="text-[9px] font-black uppercase tracking-[0.4em] opacity-35 italic leading-relaxed text-red-200/50">
-                      {t('labs.plasticity.protocol_text', 'Omega-class simulation context activated. Synaptic mappings are protected from artificial leakage.')}
+              <div className="p-12 rounded-[4rem] bg-gradient-to-br from-red-600/10 to-transparent border border-white/5 flex flex-col justify-center text-center">
+                  <p className="text-sm font-black uppercase tracking-[0.15em] italic leading-relaxed text-red-200/60">
+                      Simulation de plasticité synaptique : règle de Hebb et STDP (Spike-Timing-Dependent Plasticity), avec constantes de temps τ+ / τ- à décroissance exponentielle et taux d'apprentissage η appliqués à la matrice de poids. <br />
+                      Les paramètres et le drift d'archétype sont persistés côté serveur via l'endpoint singularity-lab ; la matrice affichée est l'état réel renvoyé par l'API.
                   </p>
               </div>
           </div>

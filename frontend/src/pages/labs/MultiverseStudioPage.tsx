@@ -6,7 +6,8 @@ import {
   Network,
   Maximize2,
   X,
-  LayoutGrid
+  LayoutGrid,
+  Sparkles
 } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -115,9 +116,9 @@ const MultiverseStudioPage: React.FC = () => {
   }, [graphData, activeSynthesis]);
 
   return (
-    <div className="h-[calc(100vh-64px)] w-full flex overflow-hidden bg-[#05050a] text-white">
+    <div className="w-full bg-[#05050a] text-white">
       <AnimatedPage>
-        <div className="h-full w-full flex relative">
+        <div className="h-[calc(100vh-64px)] w-full flex relative overflow-hidden">
             
             {/* --- MAIN AREA: Nexus Explorer --- */}
             <main className="flex-1 relative flex flex-col">
@@ -244,7 +245,40 @@ const MultiverseStudioPage: React.FC = () => {
                     </motion.div>
                 )}
                 </AnimatePresence>
+
             </main>
+        </div>
+
+        {/* Guide & Protocole */}
+        <div className="max-w-7xl mx-auto px-6 pt-16 pb-16">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <Card padding="lg" className="bg-black/40 border-cyan-500/20 shadow-[0_0_50px_rgba(34,211,238,0.1)] relative overflow-hidden group">
+                    <div className="absolute -right-12 -bottom-12 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <Network className="w-64 h-64 text-cyan-500" />
+                    </div>
+                    <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3">
+                        <Sparkles className="w-5 h-5 text-cyan-400" /> Guide du Multivers
+                    </h4>
+                    <div className="space-y-4 relative z-10">
+                        <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
+                            <span className="text-cyan-400">La Carte :</span> Chaque bulle de la Nexus Map est un genre ou un univers. Cliquez sur un univers pour lire sa cosmologie et découvrir ses personnages.
+                        </p>
+                        <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
+                            <span className="text-cyan-400">La Création :</span> Glissez une graine de genre depuis la boîte Genesis directement sur la carte. Un nouvel univers est synthétisé en quelques secondes.
+                        </p>
+                        <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
+                            <span className="text-cyan-400">Le Catalogue :</span> Tous les univers créés sont conservés. Basculez sur la vue Catalogue pour les parcourir sous forme de liste.
+                        </p>
+                    </div>
+                </Card>
+
+                <div className="p-12 rounded-[4rem] bg-gradient-to-br from-cyan-600/10 to-transparent border border-white/5 flex flex-col justify-center text-center">
+                    <p className="text-sm font-black uppercase tracking-[0.15em] italic leading-relaxed text-cyan-200/60">
+                        La synthèse d'univers génère un lore cohérent (cosmologie, personnages) via LLM et le persiste dans le graphe Neo4j. <br />
+                        La Nexus Map affiche ce graphe — nœuds et liaisons sémantiques — et se resynchronise après chaque génération.
+                    </p>
+                </div>
+            </div>
         </div>
       </AnimatedPage>
     </div>

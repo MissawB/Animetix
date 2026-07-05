@@ -8,7 +8,6 @@ import {
   Clock, 
   ChevronRight, 
   Play,
-  Cpu,
   Eye,
   Layers
 } from 'lucide-react';
@@ -188,28 +187,33 @@ const VisualNexusPage: React.FC = () => {
             </AnimatePresence>
         </div>
 
-        {/* Technical Infrastructure */}
-        <div className="mt-32 p-12 rounded-[4rem] bg-navy-950 border border-white/5 grid grid-cols-1 md:grid-cols-3 gap-12">
-            <div className="space-y-4">
-                <div className="w-12 h-12 bg-purple-500/10 rounded-2xl flex items-center justify-center text-purple-500">
-                    <Cpu className="w-6 h-6" />
+        {/* Guide & Protocole */}
+        <div className="mt-24 grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Card padding="lg" className="bg-white dark:bg-black/40 border-purple-500/20 shadow-[0_0_50px_rgba(168,85,247,0.1)] relative overflow-hidden group">
+                <div className="absolute -right-12 -bottom-12 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <Eye className="w-64 h-64 text-purple-500" />
                 </div>
-                <h4 className="font-black italic uppercase manga-font text-lg">Inférence Video-LLaVA</h4>
-                <p className="text-[10px] font-bold opacity-30 uppercase leading-relaxed">Utilise des modèles multimodaux de pointe pour comprendre le mouvement, les couleurs et le contexte narratif des scènes.</p>
-            </div>
-            <div className="space-y-4">
-                <div className="w-12 h-12 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-500">
-                    <Clock className="w-6 h-6" />
+                <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3">
+                    <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400" /> Guide du Visual Nexus
+                </h4>
+                <div className="space-y-4 relative z-10">
+                    <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
+                        <span className="text-purple-600 dark:text-purple-400">Le Concept :</span> Décrivez une scène avec vos mots ("un combat sous la pluie", "un sourire triste au coucher du soleil") et le moteur retrouve les passages correspondants dans la base de clips.
+                    </p>
+                    <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
+                        <span className="text-purple-600 dark:text-purple-400">Les Résultats :</span> Chaque carte affiche le titre de la vidéo, le passage exact (minutage de début et de fin) et un score de correspondance avec votre description.
+                    </p>
+                    <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
+                        <span className="text-purple-600 dark:text-purple-400">Les Suggestions :</span> Pas d'inspiration ? Cliquez sur une des suggestions sous la barre de recherche pour lancer un scan immédiat.
+                    </p>
                 </div>
-                <h4 className="font-black italic uppercase manga-font text-lg">Temporal Grounding</h4>
-                <p className="text-[10px] font-bold opacity-30 uppercase leading-relaxed">Indexation précise au dixième de seconde près, permettant d'isoler des micro-événements dans des épisodes complets.</p>
-            </div>
-            <div className="space-y-4">
-                <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500">
-                    <Sparkles className="w-6 h-6" />
-                </div>
-                <h4 className="font-black italic uppercase manga-font text-lg">CLIP-Video Latent</h4>
-                <p className="text-[10px] font-bold opacity-30 uppercase leading-relaxed">Les clips sont projetés dans un espace latent vectoriel pour une recherche quasi-instantanée (Vector Search).</p>
+            </Card>
+
+            <div className="p-12 rounded-[4rem] bg-gradient-to-br from-purple-600/10 to-transparent border border-black/5 dark:border-white/5 flex flex-col justify-center text-center">
+                <p className="text-sm font-black uppercase tracking-[0.15em] italic leading-relaxed text-purple-800/70 dark:text-purple-200/60">
+                    Les clips sont préalablement décrits par un modèle multimodal vidéo (Video-LLaVA) puis indexés sous forme de vecteurs sémantiques avec leurs bornes temporelles. <br />
+                    Votre requête interroge cet index par similarité vectorielle et renvoie les segments les mieux notés, avec leur score de correspondance et leurs timecodes précis.
+                </p>
             </div>
         </div>
       </div>

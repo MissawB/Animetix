@@ -8,6 +8,7 @@ import {
   Wand2,
   Search,
   Loader2,
+  Sparkles,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Card } from "../../components/ui/Card";
@@ -286,6 +287,36 @@ const MangaVoicePage: React.FC = () => {
               </div>
             )}
           </div>
+        </div>
+
+        {/* Guide & Protocole */}
+        <div className="mt-24 grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Card padding="lg" className="bg-white dark:bg-black/40 border-orange-500/20 shadow-[0_0_50px_rgba(249,115,22,0.1)] relative overflow-hidden group">
+                <div className="absolute -right-12 -bottom-12 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <Mic className="w-64 h-64 text-orange-500" />
+                </div>
+                <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3">
+                    <Sparkles className="w-5 h-5 text-orange-600 dark:text-orange-400" /> Guide du Dubbing
+                </h4>
+                <div className="space-y-4 relative z-10">
+                    <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
+                        <span className="text-orange-600 dark:text-orange-400">Le Casting :</span> Choisissez un doubleur dans le catalogue (filtrable par langue JP/FR) ou chargez votre propre extrait WAV/MP3 comme voix de référence.
+                    </p>
+                    <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
+                        <span className="text-orange-600 dark:text-orange-400">Le Script :</span> Écrivez la réplique que le personnage doit dire, puis lancez la génération : la voix choisie prononce votre texte.
+                    </p>
+                    <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
+                        <span className="text-orange-600 dark:text-orange-400">Le Résultat :</span> Écoutez le doublage dans le lecteur intégré : idéal pour donner de la voix à une planche de manga ou tester un casting.
+                    </p>
+                </div>
+            </Card>
+
+            <div className="p-12 rounded-[4rem] bg-gradient-to-br from-orange-600/10 to-transparent border border-black/5 dark:border-white/5 flex flex-col justify-center text-center">
+                <p className="text-sm font-black uppercase tracking-[0.15em] italic leading-relaxed text-orange-800/70 dark:text-orange-200/60">
+                    Clonage vocal zero-shot : le texte et un échantillon audio de référence sont envoyés à l'endpoint manga-voice, qui conditionne la synthèse vocale sur ce timbre sans entraînement préalable. <br />
+                    Les profils du catalogue fournissent l'échantillon automatiquement ; la sortie est affinée via conversion RVC v2.
+                </p>
+            </div>
         </div>
       </div>
     </AnimatedPage>

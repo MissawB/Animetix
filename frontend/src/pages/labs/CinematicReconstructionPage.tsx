@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
-import { 
-  Box, 
-  Video, 
+import {
+  Box,
+  Video,
   Upload,
-  Zap, 
-  Play, 
-  Clock, 
-  Layers,
+  Zap,
+  Play,
   Loader2,
   ChevronRight,
   Target,
-  Maximize2
+  Maximize2,
+  Sparkles
 } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { apiClient } from "../../utils/apiClient";
@@ -247,23 +246,34 @@ const CinematicReconstructionPage: React.FC = () => {
             </div>
         </div>
 
-        {/* Technical Specs Footer */}
-        <div className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card padding="lg" className="bg-navy-900/40 border-white/5">
-                <Clock className="w-8 h-8 text-gray-500 mb-4" />
-                <h4 className="text-xs font-black uppercase tracking-widest mb-2 text-white">Échantillonnage Temporel</h4>
-                <p className="text-[10px] font-bold opacity-30 uppercase leading-relaxed">Le DCS analyse 24 frames par seconde mais n'extrait que les segments de haute variance pour optimiser la reconstruction.</p>
+        {/* Guide & Protocole */}
+        <div className="mt-24 grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Card padding="lg" className="bg-white dark:bg-black/40 border-purple-500/20 shadow-[0_0_50px_rgba(168,85,247,0.1)] relative overflow-hidden group">
+                <div className="absolute -right-12 -bottom-12 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <Box className="w-64 h-64 text-purple-500" />
+                </div>
+                <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3">
+                    <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400" /> Guide de la Reconstruction
+                </h4>
+                <div className="space-y-4 relative z-10">
+                    <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
+                        <span className="text-purple-600 dark:text-purple-400">Le Concept :</span> Importez une vidéo classique en 2D et le système en reconstruit une version 3D, image par image, que vous pouvez explorer.
+                    </p>
+                    <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
+                        <span className="text-purple-600 dark:text-purple-400">L'Utilisation :</span> Glissez votre fichier vidéo, cliquez sur "Lancer la reconstruction" et attendez la fin du traitement. Chaque frame reconstruite apparaît dans la grille de résultats.
+                    </p>
+                    <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
+                        <span className="text-purple-600 dark:text-purple-400">Les Résultats :</span> Chaque vignette indique son horodatage et son nombre de points 3D, ce qui vous permet de juger la densité de la scène reconstruite.
+                    </p>
+                </div>
             </Card>
-            <Card padding="lg" className="bg-navy-900/40 border-white/5">
-                <Layers className="w-8 h-8 text-purple-500 mb-4" />
-                <h4 className="text-xs font-black uppercase tracking-widest mb-2 text-white">Gaussian Splatting</h4>
-                <p className="text-[10px] font-bold opacity-30 uppercase leading-relaxed">Utilisation de splats 3D asymétriques pour représenter la transparence et les effets de lumière volumétriques dynamiques.</p>
-            </Card>
-            <Card padding="lg" className="bg-navy-900/40 border-white/5">
-                <Zap className="w-8 h-8 text-yellow-500 mb-4" />
-                <h4 className="text-xs font-black uppercase tracking-widest mb-2 text-white">Accélération GPU</h4>
-                <p className="text-[10px] font-bold opacity-30 uppercase leading-relaxed">Pipeline d'inférence distribué sur clusters H100 pour garantir un temps de rendu sub-temporel.</p>
-            </Card>
+
+            <div className="p-12 rounded-[4rem] bg-gradient-to-br from-purple-600/10 to-transparent border border-black/5 dark:border-white/5 flex flex-col justify-center text-center">
+                <p className="text-sm font-black uppercase tracking-[0.15em] italic leading-relaxed text-purple-800/70 dark:text-purple-200/60">
+                    La vidéo est échantillonnée à 2 images par seconde, puis chaque frame passe par une estimation de profondeur monoculaire (MiDaS) pour obtenir la géométrie de la scène. <br />
+                    Les cartes de profondeur sont ensuite converties en nuages de points par Gaussian Splatting, produisant une frame volumétrique horodatée avec son nombre de points.
+                </p>
+            </div>
         </div>
       </div>
     </AnimatedPage>

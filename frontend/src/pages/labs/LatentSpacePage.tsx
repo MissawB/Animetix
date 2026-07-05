@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import _Plot from 'react-plotly.js';
 import type * as Plotly from 'plotly.js';
 import { Link } from 'react-router-dom';
-import { Box,  Info, Globe, ArrowRight } from 'lucide-react';
+import { Box,  Info, Globe, ArrowRight, Sparkles } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from "../../utils/apiClient";
 import { Button } from "../../components/ui/Button";
+import { Card } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion, AnimatePresence } from 'framer-motion';
@@ -278,6 +279,38 @@ const LatentSpacePage: React.FC = () => {
           </div>
         </div>
 
+      </div>
+
+      {/* Guide & Protocole */}
+      <div className="bg-black text-white px-6 pt-24 pb-16">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Card padding="lg" className="bg-black/40 border-blue-500/20 shadow-[0_0_50px_rgba(59,130,246,0.1)] relative overflow-hidden group">
+                <div className="absolute -right-12 -bottom-12 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <Globe className="w-64 h-64 text-blue-500" />
+                </div>
+                <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3">
+                    <Sparkles className="w-5 h-5 text-blue-400" /> Guide de l'Espace Latent
+                </h4>
+                <div className="space-y-4 relative z-10">
+                    <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
+                        <span className="text-blue-400">Le Concept :</span> Chaque point lumineux est un anime, un manga ou un personnage. Sa position reflète la façon dont l'IA comprend l'œuvre : deux points proches se ressemblent.
+                    </p>
+                    <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
+                        <span className="text-blue-400">La Navigation :</span> Faites pivoter la carte à la souris, zoomez à la molette, puis cliquez sur un point pour ouvrir sa fiche d'analyse dans le panneau de droite.
+                    </p>
+                    <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
+                        <span className="text-blue-400">Les Filtres :</span> Changez le domaine (anime, manga, personnages) et l'axe d'analyse (thématique, visuel, scénario) pour recharger la carte sous un autre angle.
+                    </p>
+                </div>
+            </Card>
+
+            <div className="p-12 rounded-[4rem] bg-gradient-to-br from-blue-600/10 to-transparent border border-white/5 flex flex-col justify-center text-center">
+                <p className="text-sm font-black uppercase tracking-[0.15em] italic leading-relaxed text-blue-200/60">
+                    Visualisation exploratoire du catalogue : des embeddings haute dimension sont projetés en 3 dimensions puis rendus en nuage de points interactif (Plotly scatter3d). <br />
+                    La proximité spatiale traduit la similarité sémantique des vecteurs ; les couleurs regroupent les clusters ou catégories détectés.
+                </p>
+            </div>
+        </div>
       </div>
     </AnimatedPage>
   );

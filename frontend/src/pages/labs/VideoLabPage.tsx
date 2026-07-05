@@ -217,29 +217,34 @@ const VideoLabPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Explanatory Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
-        <Card padding="lg" className="bg-white/5 border-white/5 hover:border-white/10 transition-all">
-          <Sparkles className="w-8 h-8 text-yellow-500 mb-4" />
-          <h4 className="font-bold mb-2">Technologie FateZero</h4>
-          <p className="text-xs text-white/60 leading-relaxed">
-            Utilise l'algorithme FateZero pour un transfert de style temporel cohérent. L'IA reconstruit chaque frame en préservant la structure 3D, garantissant une fluidité parfaite.
-          </p>
-        </Card>
-        <Card padding="lg" className="bg-white/5 border-white/5 hover:border-white/10 transition-all">
-          <Film className="w-8 h-8 text-blue-500 mb-4" />
-          <h4 className="font-bold mb-2">Video-RAG Search</h4>
-          <p className="text-xs text-white/60 leading-relaxed">
-            Recherchez instantanément des moments spécifiques dans vos vastes bibliothèques vidéo grâce à l'indexation sémantique avancée, facilitant la création de vos projets.
-          </p>
-        </Card>
-        <Card padding="lg" className="bg-white/5 border-white/5 hover:border-white/10 transition-all">
-          <Wand2 className="w-8 h-8 text-red-500 mb-4" />
-          <h4 className="font-bold mb-2">Transformation Artistique</h4>
-          <p className="text-xs text-white/60 leading-relaxed">
-            Appliquez les signatures visuelles des plus grands studios d'animation (Ghibli, Mappa, Trigger...) avec une fidélité exceptionnelle, transformant vos vidéos en œuvres d'art.
-          </p>
-        </Card>
+      {/* Guide & Protocole */}
+      <div className="mt-24 grid grid-cols-1 md:grid-cols-2 gap-8">
+          <Card padding="lg" className="bg-white dark:bg-black/40 border-red-500/20 shadow-[0_0_50px_rgba(239,68,68,0.1)] relative overflow-hidden group">
+              <div className="absolute -right-12 -bottom-12 opacity-5 group-hover:opacity-10 transition-opacity">
+                  <Video className="w-64 h-64 text-red-500" />
+              </div>
+              <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3">
+                  <Sparkles className="w-5 h-5 text-red-600 dark:text-red-400" /> Guide du Video Lab
+              </h4>
+              <div className="space-y-4 relative z-10">
+                  <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
+                      <span className="text-red-600 dark:text-red-400">Le Concept :</span> Chargez une de vos vidéos et transformez-la en séquence animée dans le style d'un grand studio (Ghibli, MAPPA, Ufotable...).
+                  </p>
+                  <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
+                      <span className="text-red-600 dark:text-red-400">Le Choix du Style :</span> Sélectionnez un studio artistique, puis lancez la génération. Vous obtenez la vidéo transformée à côté de l'originale pour comparer.
+                  </p>
+                  <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
+                      <span className="text-red-600 dark:text-red-400">La Recherche :</span> Le champ Video-RAG vous permet de retrouver un moment précis dans les vidéos déjà indexées, simplement en le décrivant avec vos mots.
+                  </p>
+              </div>
+          </Card>
+
+          <div className="p-12 rounded-[4rem] bg-gradient-to-br from-red-600/10 to-transparent border border-black/5 dark:border-white/5 flex flex-col justify-center text-center">
+              <p className="text-sm font-black uppercase tracking-[0.15em] italic leading-relaxed text-red-800/70 dark:text-red-200/60">
+                  La vidéo est envoyée au backend qui applique un transfert de style frame par frame (algorithme FateZero) en préservant la cohérence temporelle du mouvement. <br />
+                  La recherche Video-RAG interroge un index sémantique de segments vidéo : chaque segment est résumé puis vectorisé, et votre requête est comparée à ces vecteurs pour renvoyer les timecodes correspondants.
+              </p>
+          </div>
       </div>
     </div>
   );

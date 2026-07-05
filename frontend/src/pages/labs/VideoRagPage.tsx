@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Wand2, Sparkles, Film, HelpCircle } from 'lucide-react';
+import { Search, Wand2, Sparkles, Film } from 'lucide-react';
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { Timeline } from "../../components/video/Timeline";
 import { Inspector } from "../../components/video/Inspector";
@@ -185,17 +185,37 @@ const VideoRagPage: React.FC = () => {
               </div>
             </Card>
 
-            {/* Explanation card */}
-            <div className="bg-white/5 border border-white/5 rounded-2xl p-6 flex gap-4 items-start">
-              <HelpCircle className="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5" />
-              <div>
-                <h4 className="font-bold text-sm text-white mb-1">Comment fonctionne le Video-RAG ?</h4>
-                <p className="text-xs text-white/50 leading-relaxed">
-                  Le système découpe les vidéos en segments temporels, extrait leurs descriptions clés via un modèle VLM (Qwen2-VL), puis projette ces descriptions dans un espace vectoriel sémantique (via Jina-Embeddings). Votre recherche interroge directement ces vecteurs pour situer l'instant exact où l'événement recherché se produit.
-                </p>
-              </div>
-            </div>
           </div>
+        </div>
+
+        {/* Guide & Protocole */}
+        <div className="mt-24 grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Card padding="lg" className="bg-black/40 border-red-500/20 shadow-[0_0_50px_rgba(239,68,68,0.1)] relative overflow-hidden group">
+                <div className="absolute -right-12 -bottom-12 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <Film className="w-64 h-64 text-red-500" />
+                </div>
+                <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3">
+                    <Sparkles className="w-5 h-5 text-red-400" /> Guide du Video-RAG
+                </h4>
+                <div className="space-y-4 relative z-10">
+                    <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
+                        <span className="text-red-400">Le Concept :</span> Décrivez un moment avec vos mots ("combat épique", "personnage triste") et le système retrouve les passages correspondants dans les vidéos indexées.
+                    </p>
+                    <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
+                        <span className="text-red-400">La Timeline :</span> Chaque résultat apparaît comme un segment coloré sur la timeline (action, dialogue ou émotion). Cliquez dessus pour voir ses détails dans l'inspecteur.
+                    </p>
+                    <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
+                        <span className="text-red-400">Les Suggestions :</span> Pas d'idée ? Utilisez les suggestions de test dans la barre latérale pour lancer une recherche en un clic.
+                    </p>
+                </div>
+            </Card>
+
+            <div className="p-12 rounded-[4rem] bg-gradient-to-br from-red-600/10 to-transparent border border-white/5 flex flex-col justify-center text-center">
+                <p className="text-sm font-black uppercase tracking-[0.15em] italic leading-relaxed text-red-200/60">
+                    Les vidéos sont découpées en segments temporels décrits par un modèle de vision (VLM Qwen2-VL), puis ces descriptions sont projetées dans un espace vectoriel via Jina-Embeddings. <br />
+                    Votre requête est vectorisée à son tour et comparée par similarité à ces vecteurs pour situer l'instant exact où l'événement recherché se produit.
+                </p>
+            </div>
         </div>
       </div>
     </AnimatedPage>

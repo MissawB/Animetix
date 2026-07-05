@@ -8,10 +8,12 @@ import {
   Zap,
   CheckCircle,
   AlertCircle,
-  ChevronRight
+  ChevronRight,
+  Sparkles
 } from 'lucide-react';
 import { WaveformVisualizer } from '../../features/labs/components/WaveformVisualizer';
 import { useVoiceCloning } from '../../features/labs/hooks/useVoiceCloning';
+import { Card } from "../../components/ui/Card";
 
 const VoiceLabPage: React.FC = () => {
   const [text, setText] = useState('');
@@ -270,6 +272,36 @@ const VoiceLabPage: React.FC = () => {
               )}
             </AnimatePresence>
           </section>
+        </div>
+
+        {/* Guide & Protocole */}
+        <div className="mt-24 grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Card padding="lg" className="bg-black/40 border-red-500/20 shadow-[0_0_50px_rgba(239,68,68,0.1)] relative overflow-hidden group">
+                <div className="absolute -right-12 -bottom-12 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <Mic className="w-64 h-64 text-red-500" />
+                </div>
+                <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3">
+                    <Sparkles className="w-5 h-5 text-red-400" /> Guide du Voice Lab
+                </h4>
+                <div className="space-y-4 relative z-10">
+                    <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
+                        <span className="text-red-400">La Référence :</span> Enregistrez votre voix au micro ou importez un fichier audio. Cet extrait sert de modèle de timbre pour la synthèse.
+                    </p>
+                    <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
+                        <span className="text-red-400">Le Texte :</span> Écrivez ce que la voix doit dire, puis cliquez sur Synthesize : l'IA prononce votre texte avec la voix de référence.
+                    </p>
+                    <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
+                        <span className="text-red-400">Les Réglages :</span> Le Pitch Shift monte ou descend la voix (par demi-tons) et l'Index Rate dose la fidélité au timbre d'origine.
+                    </p>
+                </div>
+            </Card>
+
+            <div className="p-12 rounded-[4rem] bg-gradient-to-br from-red-600/10 to-transparent border border-white/5 flex flex-col justify-center text-center">
+                <p className="text-sm font-black uppercase tracking-[0.15em] italic leading-relaxed text-red-200/60">
+                    Conversion vocale basée RVC v2 (Retrieval-based Voice Conversion) : le texte est d'abord synthétisé (TTS), puis le timbre est converti vers la voix de référence. <br />
+                    Le pitch shift est appliqué en demi-tons et l'index rate contrôle le poids de la récupération des caractéristiques du locuteur cible.
+                </p>
+            </div>
         </div>
       </motion.div>
     </div>
