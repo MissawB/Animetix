@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 import numpy as np
 import orjson
@@ -312,13 +312,4 @@ class PGVectorRepositoryAdapter(RepositoryPort):
         return []
 
     def get_user_creative_history(self, user_id: int, limit: int = 10) -> List[Dict]:
-        return []
-
-    def query_data_natural_language(
-        self, query: str, llm_service: Optional[Any] = None
-    ) -> List[Dict]:
-        """PGVector adapter doesn't query relational database directly. Returns empty."""
-        logger.warning(
-            "PGVectorRepositoryAdapter.query_data_natural_language called, but vector adapter does not support relational Text-to-SQL directly."
-        )
         return []

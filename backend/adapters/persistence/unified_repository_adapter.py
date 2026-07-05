@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from core.ports.repository_port import RepositoryPort
 
@@ -117,9 +117,3 @@ class UnifiedRepositoryAdapter(RepositoryPort):
     def get_user_creative_history(self, user_id: int, limit: int = 10) -> List[Dict]:
         """Récupère l'historique des fusions créatives via Django."""
         return self.django.get_user_creative_history(user_id, limit)
-
-    def query_data_natural_language(
-        self, query: str, llm_service: Optional[Any] = None
-    ) -> List[Dict]:
-        """Délègue la requête Text-to-SQL à l'adaptateur relationnel Django."""
-        return self.django.query_data_natural_language(query, llm_service)

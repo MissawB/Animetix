@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 
 class RepositoryPort(ABC):
@@ -104,11 +104,4 @@ class RepositoryPort(ABC):
     @abstractmethod
     def get_user_creative_history(self, user_id: int, limit: int = 10) -> List[Dict]:
         """Récupère l'historique des fusions créatives d'un utilisateur."""
-        pass
-
-    @abstractmethod
-    def query_data_natural_language(
-        self, query: str, llm_service: Optional[Any] = None
-    ) -> List[Dict]:
-        """Interroge le catalogue en langage naturel (Text-to-SQL) et renvoie les résultats."""
         pass
