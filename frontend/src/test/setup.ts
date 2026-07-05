@@ -20,11 +20,25 @@ vi.mock('../utils/firebase', () => ({
   analytics: {},
 }));
 
-// Mock react-i18next
+// Mock react-i18next.
+// Mirrors runtime behavior with no translations loaded: t('key') -> 'key',
+// t('key', 'défaut') -> 'défaut', t('key', { defaultValue, ...vars }) ->
+// defaultValue with {{var}} interpolation. Tests can keep asserting the
+// French defaultValue text.
 vi.mock('react-i18next', () => ({
   useTranslation: () => {
     return {
-      t: (key: string) => key,
+      t: (key: string, arg2?: unknown, arg3?: unknown) => {
+        const opts = (arg2 !== null && typeof arg2 === 'object' ? arg2
+          : arg3 !== null && typeof arg3 === 'object' ? arg3
+          : {}) as Record<string, unknown>;
+        const def = typeof arg2 === 'string' ? arg2
+          : typeof opts.defaultValue === 'string' ? opts.defaultValue
+          : undefined;
+        return (def ?? key).replace(/\{\{(\w+)\}\}/g, (m, name: string) =>
+          name in opts ? String(opts[name]) : m,
+        );
+      },
       i18n: {
         changeLanguage: () => new Promise(() => {}),
         language: 'en',

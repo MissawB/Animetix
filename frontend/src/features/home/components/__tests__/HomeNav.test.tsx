@@ -40,9 +40,9 @@ describe('HomeNav', () => {
 
   it('renders the navigation links', () => {
     renderNav();
-    expect(screen.getByText('nav.daily').closest('a')).toHaveAttribute('href', '/daily-challenge/');
-    expect(screen.getByText('nav.leaderboard').closest('a')).toHaveAttribute('href', '/leaderboard/');
-    expect(screen.getByText('navbar.latent').closest('a')).toHaveAttribute('href', '/latent-space/');
+    expect(screen.getByText('Défi Quotidien').closest('a')).toHaveAttribute('href', '/daily-challenge/');
+    expect(screen.getByText('Classement').closest('a')).toHaveAttribute('href', '/leaderboard/');
+    expect(screen.getByText('Latent Space').closest('a')).toHaveAttribute('href', '/latent-space/');
   });
 
   it('toggles the sidebar when the menu button is clicked', () => {

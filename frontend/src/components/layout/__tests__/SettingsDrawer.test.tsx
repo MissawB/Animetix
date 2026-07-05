@@ -18,9 +18,9 @@ const baseProps = (): Props => ({
 describe('SettingsDrawer', () => {
   it('renders appearance and language sections', () => {
     render(<SettingsDrawer {...baseProps()} />);
-    expect(screen.getByText('theme.light')).toBeInTheDocument();
-    expect(screen.getByText('theme.dark')).toBeInTheDocument();
-    expect(screen.getByText('theme.auto')).toBeInTheDocument();
+    expect(screen.getByText('Clair')).toBeInTheDocument();
+    expect(screen.getByText('Sombre')).toBeInTheDocument();
+    expect(screen.getByText('Auto')).toBeInTheDocument();
     expect(screen.getByText('Français')).toBeInTheDocument();
     expect(screen.getByText('English')).toBeInTheDocument();
   });
@@ -49,7 +49,7 @@ describe('SettingsDrawer', () => {
   it('calls setTheme with the chosen theme', () => {
     const props = baseProps();
     render(<SettingsDrawer {...props} />);
-    fireEvent.click(screen.getByText('theme.light'));
+    fireEvent.click(screen.getByText('Clair'));
     expect(props.setTheme).toHaveBeenCalledWith('light');
   });
 
@@ -63,7 +63,7 @@ describe('SettingsDrawer', () => {
   it('renders the ads section and reflects the store state', () => {
     useAdPreferenceStore.setState({ adsEnabled: true });
     render(<SettingsDrawer {...baseProps()} />);
-    expect(screen.getByText('settings.ads')).toBeInTheDocument();
+    expect(screen.getByText('Publicités')).toBeInTheDocument();
     expect(screen.getByLabelText('Basculer les publicités')).toBeInTheDocument();
   });
 

@@ -51,7 +51,10 @@ describe('MultiverseStudioPage', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText(/Nexus Map/i)).toBeInTheDocument();
+    // "Nexus Map" also appears in the bottom guide section — assert on the
+    // view toggle plus the map itself rather than a unique text match.
+    expect(screen.getAllByText(/Nexus Map/i).length).toBeGreaterThan(0);
     expect(screen.getByTestId('nexus-map')).toBeInTheDocument();
+    expect(screen.getByText('Guide du Multivers')).toBeInTheDocument();
   });
 });

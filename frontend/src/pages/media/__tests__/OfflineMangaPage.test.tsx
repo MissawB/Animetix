@@ -45,8 +45,8 @@ describe('OfflineMangaPage', () => {
     // Waits for the data load and renders the empty state
     await waitFor(() => {
       expect(screen.queryByText(/Initialisation du système.../i)).not.toBeInTheDocument();
-      expect(screen.getByText(/labs.offline_manga.empty_title/i)).toBeInTheDocument();
-      expect(screen.getByText(/labs.offline_manga.btn_explore/i)).toBeInTheDocument();
+      expect(screen.getByText('Aucun chapitre téléchargé')).toBeInTheDocument();
+      expect(screen.getByText('Parcourir les mangas')).toBeInTheDocument();
     });
   });
 
@@ -76,8 +76,8 @@ describe('OfflineMangaPage', () => {
       expect(screen.getByText('Chainsaw Man')).toBeInTheDocument();
       expect(screen.getByText(/Chapter 15/i)).toBeInTheDocument();
       expect(screen.getByText(/: Ch 15 Title/i)).toBeInTheDocument();
-      expect(screen.getByText(/labs.offline_manga.btn_read/i)).toBeInTheDocument();
-      expect(screen.getByText(/labs.offline_manga.btn_delete/i)).toBeInTheDocument();
+      expect(screen.getByText('Lire')).toBeInTheDocument();
+      expect(screen.getByText('Supprimer')).toBeInTheDocument();
     });
   });
 
@@ -104,7 +104,7 @@ describe('OfflineMangaPage', () => {
     );
 
     await waitFor(() => {
-      const readBtn = screen.getByText(/labs.offline_manga.btn_read/i);
+      const readBtn = screen.getByText('Lire');
       fireEvent.click(readBtn);
       expect(mockNavigate).toHaveBeenCalledWith('/media/manga/manga-1/15/');
     });
@@ -140,14 +140,14 @@ describe('OfflineMangaPage', () => {
       expect(screen.getByText('Chainsaw Man')).toBeInTheDocument();
     });
 
-    const deleteBtn = screen.getByText(/labs.offline_manga.btn_delete/i);
+    const deleteBtn = screen.getByText('Supprimer');
     fireEvent.click(deleteBtn);
 
     expect(deleteSpy).toHaveBeenCalledWith('manga-1', 15);
-    
+
     await waitFor(() => {
       expect(screen.queryByText('Chainsaw Man')).not.toBeInTheDocument();
-      expect(screen.getByText(/labs.offline_manga.empty_title/i)).toBeInTheDocument();
+      expect(screen.getByText('Aucun chapitre téléchargé')).toBeInTheDocument();
     });
   });
 
@@ -192,7 +192,7 @@ describe('OfflineMangaPage', () => {
       expect(screen.getByText('Manga 1')).toBeInTheDocument();
     });
 
-    const clearAllBtn = screen.getByText(/labs.offline_manga.clear_all/i);
+    const clearAllBtn = screen.getByText('Tout supprimer');
     fireEvent.click(clearAllBtn);
 
     expect(confirmSpy).toHaveBeenCalled();
@@ -201,7 +201,7 @@ describe('OfflineMangaPage', () => {
       expect(deleteSpy).toHaveBeenCalledWith('manga-1', 1);
       expect(deleteSpy).toHaveBeenCalledWith('manga-2', 2);
       expect(screen.queryByText('Manga 1')).not.toBeInTheDocument();
-      expect(screen.getByText(/labs.offline_manga.empty_title/i)).toBeInTheDocument();
+      expect(screen.getByText('Aucun chapitre téléchargé')).toBeInTheDocument();
     });
   });
 });
