@@ -25,7 +25,6 @@ django-redis==6.0.0
 neo4j==6.1.0
 psycopg2-binary==2.9.12
 redis==7.4.0
-sqlglot==25.0.0
 
 # 3. Testing, Dev Tools, Automation
 pytest==9.0.3
