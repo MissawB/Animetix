@@ -1,33 +1,45 @@
-from django.db import migrations
+from django.db import migrations, transaction
+
+
+def _try_ddl(connection, sql, label):
+    """Exécute un DDL optionnel (dépendant d'AlloyDB) sans casser la migration.
+
+    Chaque instruction tourne dans son propre SAVEPOINT : sur un Postgres sans
+    ces extensions (Neon), l'échec ne fait que rollback le savepoint — la
+    transaction de migration reste valide et peut être commitée. Sans ça, un
+    ``CREATE EXTENSION`` raté empoisonnait toute la transaction et faisait
+    échouer le commit de la migration → migrate bloqué, migrations suivantes
+    jamais appliquées.
+    """
+    try:
+        with transaction.atomic():
+            with connection.cursor() as cursor:
+                cursor.execute(sql)
+    except Exception as e:
+        print(f"Warning: {label}: {e}")
 
 
 def setup_alloydb_features(apps, schema_editor):
     if schema_editor.connection.vendor != "postgresql":
         return
-    with schema_editor.connection.cursor() as cursor:
-        # Enable google_ml_integration
-        try:
-            cursor.execute(
-                "CREATE EXTENSION IF NOT EXISTS google_ml_integration CASCADE;"
-            )
-        except Exception as e:
-            print(f"Warning: Could not enable google_ml_integration: {e}")
-
-        # Enable alloydb_scann
-        try:
-            cursor.execute("CREATE EXTENSION IF NOT EXISTS alloydb_scann CASCADE;")
-        except Exception as e:
-            print(f"Warning: Could not enable alloydb_scann: {e}")
-
-        # Create ScaNN index on VectorRecord embedding column
-        try:
-            cursor.execute(
-                "CREATE INDEX IF NOT EXISTS animetix_vectorrecord_embedding_scann_idx "
-                "ON animetix_vectorrecord USING scann (embedding cosine) "
-                "WITH (num_leaves = 100);"
-            )
-        except Exception as e:
-            print(f"Warning: Could not create ScaNN index: {e}")
+    connection = schema_editor.connection
+    _try_ddl(
+        connection,
+        "CREATE EXTENSION IF NOT EXISTS google_ml_integration CASCADE;",
+        "Could not enable google_ml_integration",
+    )
+    _try_ddl(
+        connection,
+        "CREATE EXTENSION IF NOT EXISTS alloydb_scann CASCADE;",
+        "Could not enable alloydb_scann",
+    )
+    _try_ddl(
+        connection,
+        "CREATE INDEX IF NOT EXISTS animetix_vectorrecord_embedding_scann_idx "
+        "ON animetix_vectorrecord USING scann (embedding cosine) "
+        "WITH (num_leaves = 100);",
+        "Could not create ScaNN index",
+    )
 
 
 class Migration(migrations.Migration):
