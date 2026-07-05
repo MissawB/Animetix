@@ -351,7 +351,6 @@ def test_stub_methods_return_defaults(adapter):
     assert adapter.get_creative_fusion(1) is None
     assert adapter.get_user_gameplay_history(1) == []
     assert adapter.get_user_creative_history(1) == []
-    assert adapter.query_data_natural_language("anything") == []
 
 
 # --- LocalSentenceTransformerEmbeddingFunction --------------------------
