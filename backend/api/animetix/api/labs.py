@@ -642,9 +642,14 @@ class VideoRAGIndexView(APIView):
 
 
 class VideoRAGSearchView(APIView):
-    """Endpoint pour rechercher des moments précis dans les vidéos indexées."""
+    """Endpoint pour rechercher des moments précis dans les vidéos indexées.
 
-    permission_classes = [permissions.AllowAny]
+    GPU/RAG : requiert login + consomme des Berrix (règle « GPU = Bx »).
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+    throttle_scope = "gpu"
+    throttle_classes = [ScopedRateThrottle]
 
     def get(self, request):
         query = request.GET.get("q")
@@ -652,10 +657,18 @@ class VideoRAGSearchView(APIView):
             return Response({"error": "query q is required"}, status=400)
 
         container = get_container()
-        video_rag = container.agentic.video_rag_service()
+        usage_port = container.infrastructure.usage_port()
+        tier = getattr(request, "user_tier", "free")
+        if not usage_port.check_quota(request.user.id, tier):
+            return Response({"error": "Daily AI quota exceeded."}, status=403)
+        deduct_berrix(
+            request.user, FEATURE_BX_COSTS["video_rag"], "VideoRAG — recherche vidéo"
+        )
 
+        video_rag = container.agentic.video_rag_service()
         try:
             results = video_rag.search_video_segment(query, limit=10)
+            usage_port.log_usage(engine="video-rag", units=1, user_id=request.user.id)
             return Response({"status": "success", "results": results})
         except Exception:
             logger.exception("VideoRAGSearch Error")

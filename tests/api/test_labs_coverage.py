@@ -484,7 +484,8 @@ def test_video_rag_index_error():
 # --------------------------------------------------------------------------- #
 def test_video_rag_search_missing_query():
     request = factory.get("/api/v1/labs/video/search/")
-    view = VideoRAGSearchView.as_view()
+    force_authenticate(request, user=MagicMock(id=1))
+    view = VideoRAGSearchView.as_view(permission_classes=[])
     response = view(request)
     assert response.status_code == 400
     assert "query q is required" in response.data["error"]
@@ -492,16 +493,20 @@ def test_video_rag_search_missing_query():
 
 def test_video_rag_search_success():
     request = factory.get("/api/v1/labs/video/search/?q=fight")
+    force_authenticate(request, user=MagicMock(id=1))
     mock_container = MagicMock()
     mock_container.agentic.video_rag_service.return_value.search_video_segment.return_value = [
         {"ts": 12, "score": 0.9}
     ]
     p = _container_patch(mock_container)
+    d = patch("animetix.api.labs.deduct_berrix")
+    d.start()
     try:
-        view = VideoRAGSearchView.as_view()
+        view = VideoRAGSearchView.as_view(permission_classes=[])
         response = view(request)
     finally:
         p.stop()
+        d.stop()
     assert response.status_code == 200
     assert response.data["status"] == "success"
     assert response.data["results"][0]["ts"] == 12
@@ -509,16 +514,20 @@ def test_video_rag_search_success():
 
 def test_video_rag_search_error():
     request = factory.get("/api/v1/labs/video/search/?q=fight")
+    force_authenticate(request, user=MagicMock(id=1))
     mock_container = MagicMock()
     mock_container.agentic.video_rag_service.return_value.search_video_segment.side_effect = Exception(
         "search down"
     )
     p = _container_patch(mock_container)
+    d = patch("animetix.api.labs.deduct_berrix")
+    d.start()
     try:
-        view = VideoRAGSearchView.as_view()
+        view = VideoRAGSearchView.as_view(permission_classes=[])
         response = view(request)
     finally:
         p.stop()
+        d.stop()
     assert response.status_code == 500
     assert response.data["error"] == "Internal server error"
 

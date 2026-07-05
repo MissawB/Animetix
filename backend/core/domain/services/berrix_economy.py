@@ -97,6 +97,8 @@ FEATURE_BX_COSTS: dict[str, int] = {
     # Graph & speech quick ops
     "knowledge_graph": 10,
     "speech_to_speech": 10,
+    "video_rag": 6,  # RAG/vector search over indexed video embeddings
+    "s2s_live": 12,  # Gemini Multimodal Live session (flat per-session charge)
     # Medium inference
     "singularity_basic": 20,
     "manga_clean": 20,
