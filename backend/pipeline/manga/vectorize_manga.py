@@ -27,7 +27,7 @@ sys.path.append(os.path.join(BASE_DIR, "pipeline"))
 
 # Initialisation différée
 def get_repo():
-    from backend.animetix.containers import get_container  # noqa: E402
+    from animetix.containers import get_container  # noqa: E402
 
     return get_container().repository
 

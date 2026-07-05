@@ -45,9 +45,9 @@ class TestSQLDataQualityPipeline(unittest.TestCase):
             with self.assertRaises(CommandError):
                 call_command("run_data_quality_tests", exclude_bigquery=True)
 
-    @patch("backend.pipeline.mlops.rlhf_pipeline.run_sql_quality_checks")
+    @patch("pipeline.mlops.rlhf_pipeline.run_sql_quality_checks")
     def test_pipeline_integration_runs_checks_first(self, mock_checks):
-        from backend.pipeline.mlops.rlhf_pipeline import (  # noqa: E402
+        from pipeline.mlops.rlhf_pipeline import (  # noqa: E402
             validated_dpo_dataset,
         )
 
@@ -56,9 +56,7 @@ class TestSQLDataQualityPipeline(unittest.TestCase):
             "sessions": "dummy_sessions.jsonl",
         }
 
-        with patch(
-            "backend.pipeline.mlops.rlhf_pipeline.DPOFeedbackLoop"
-        ) as mock_loop_class:
+        with patch("pipeline.mlops.rlhf_pipeline.DPOFeedbackLoop") as mock_loop_class:
             mock_loop = MagicMock()
             mock_loop.process_and_export.return_value = 10
             mock_loop_class.return_value = mock_loop

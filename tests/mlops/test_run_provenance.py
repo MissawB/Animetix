@@ -2,7 +2,7 @@
 
 import json
 
-from backend.pipeline.mlops import run_provenance
+from pipeline.mlops import run_provenance
 
 
 def test_get_git_commit_respects_env(monkeypatch):

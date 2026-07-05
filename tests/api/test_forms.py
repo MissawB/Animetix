@@ -1,4 +1,4 @@
-from backend.api.animetix.forms import (
+from animetix.forms import (
     AgenticRagForm,
     AniminatorForm,
     EmojiStreamForm,

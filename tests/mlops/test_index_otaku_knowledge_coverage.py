@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Real-behavior coverage tests for the Otaku knowledge mass-indexer.
 
-Target module: ``backend.pipeline.mlops.index_otaku_knowledge`` (the
+Target module: ``pipeline.mlops.index_otaku_knowledge`` (the
 ``OtakuKnowledgeIndexer`` pipeline that compiles the local meta databases into
 semantic facts and upserts them into pgvector).
 
@@ -34,7 +34,7 @@ _MLOPS_DIR = os.path.abspath(
 if _MLOPS_DIR not in sys.path:
     sys.path.insert(0, _MLOPS_DIR)
 
-import backend.pipeline.mlops.index_otaku_knowledge as iok  # noqa: E402
+import pipeline.mlops.index_otaku_knowledge as iok  # noqa: E402
 
 # --- Fixtures ---------------------------------------------------------------
 

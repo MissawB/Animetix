@@ -6,7 +6,7 @@ from scipy.stats import ks_2samp
 
 # Ajout du dossier root au path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from backend.pipeline.vector_client import vector_manager  # noqa: E402
+from pipeline.vector_client import vector_manager  # noqa: E402
 
 
 class DriftDetector:

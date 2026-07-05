@@ -126,11 +126,11 @@ class MarketWikiView(views.APIView):
 
     def get(self, request):
         try:
-            from backend.pipeline.mlops.french_market_db import (  # noqa: E402
+            from pipeline.mlops.french_market_db import (  # noqa: E402
                 FRENCH_ANIME_DISTRIBUTORS,
                 FRENCH_MANGA_PUBLISHERS,
             )
-            from backend.pipeline.mlops.japanese_market_db import (  # noqa: E402
+            from pipeline.mlops.japanese_market_db import (  # noqa: E402
                 JAPANESE_ANIME_DISTRIBUTORS,
                 JAPANESE_MANGA_PUBLISHERS,
             )

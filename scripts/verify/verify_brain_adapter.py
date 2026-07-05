@@ -1,5 +1,5 @@
-from backend.adapters.inference.brain_api_adapter import BrainAPIAdapter
-from backend.core.ports.inference_port import InferencePort
+from adapters.inference.brain_api_adapter import BrainAPIAdapter
+from core.ports.inference_port import InferencePort
 
 
 def verify_adapter():

@@ -7,7 +7,7 @@ from pipeline.neo4j_client import Neo4jManager
 class TestNeo4jSecurity:
     @pytest.fixture
     def manager(self):
-        with patch("src.pipeline.neo4j_client.GraphDatabase"):
+        with patch("pipeline.neo4j_client.GraphDatabase"):
             manager = Neo4jManager()
             # Mock the driver so it's not None
             manager._driver = MagicMock()

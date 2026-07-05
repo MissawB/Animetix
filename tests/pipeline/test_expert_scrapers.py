@@ -13,7 +13,7 @@ def mock_django_media_item():
     return item
 
 
-@patch("src.pipeline.expert_scrapers.gemini_client")
+@patch("pipeline.expert_scrapers.gemini_client")
 def test_scraper_g_streaming(mock_gemini):
     from pipeline.expert_scrapers import ScraperG_Streaming  # noqa: E402
 
@@ -58,7 +58,7 @@ def test_scraper_h_recs(mock_get):
     assert "guild/crew" in recs[0]["reason"]
 
 
-@patch("src.pipeline.expert_scrapers.gemini_client")
+@patch("pipeline.expert_scrapers.gemini_client")
 def test_scraper_i_pilgrimage(mock_gemini):
     from pipeline.expert_scrapers import ScraperI_Pilgrimage  # noqa: E402
 
@@ -78,13 +78,11 @@ def test_scraper_i_pilgrimage(mock_gemini):
     assert locations[0]["city"] == "Niigata"
 
 
-@patch("src.pipeline.expert_scrapers.MediaItem")
-@patch(
-    "src.pipeline.expert_scrapers.ScraperG_Streaming.get_french_licence_and_streaming"
-)
-@patch("src.pipeline.expert_scrapers.ScraperH_Recs.get_human_recs")
-@patch("src.pipeline.expert_scrapers.ScraperI_Pilgrimage.get_pilgrimage_locations")
-@patch("src.pipeline.expert_scrapers.update_json_metadata_field")
+@patch("pipeline.expert_scrapers.MediaItem")
+@patch("pipeline.expert_scrapers.ScraperG_Streaming.get_french_licence_and_streaming")
+@patch("pipeline.expert_scrapers.ScraperH_Recs.get_human_recs")
+@patch("pipeline.expert_scrapers.ScraperI_Pilgrimage.get_pilgrimage_locations")
+@patch("pipeline.expert_scrapers.update_json_metadata_field")
 def test_run_tripartite_enrichment_flow(
     mock_update_json,
     mock_get_pilgrimage,

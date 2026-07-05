@@ -3,14 +3,13 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
+from adapters.inference.vision_transformers_adapter import (  # noqa: E402
+    VisionTransformersAdapter,
+)
 from core.domain.services.rag.video_rag_service import (  # noqa: E402
     VideoRAGService,
 )
 from PIL import Image
-
-from backend.adapters.inference.vision_transformers_adapter import (  # noqa: E402
-    VisionTransformersAdapter,
-)
 
 # `video_rag_service` importe `imageio` paresseusement (dans une méthode), donc le
 # mock n'est nécessaire que pendant les tests — injecté via monkeypatch (auto-restauré)
@@ -57,7 +56,7 @@ def test_frame_sampling_logic(adapter):
 
 
 @patch(
-    "backend.adapters.inference.video_analysis.VideoAnalysisMixin._load_video_vlm",
+    "adapters.inference.video_analysis.VideoAnalysisMixin._load_video_vlm",
     MagicMock(),
 )
 def test_get_video_temporal_embeddings_mocked(adapter):
@@ -85,7 +84,7 @@ def test_get_video_temporal_embeddings_mocked(adapter):
 
 
 @patch(
-    "backend.adapters.inference.video_analysis.VideoAnalysisMixin._load_video_vlm",
+    "adapters.inference.video_analysis.VideoAnalysisMixin._load_video_vlm",
     MagicMock(),
 )
 def test_video_rag_service_orchestration(video_service):

@@ -13,7 +13,7 @@ def mock_django_media_item():
     return item
 
 
-@patch("src.pipeline.advanced_scrapers.gemini_client")
+@patch("pipeline.advanced_scrapers.gemini_client")
 @patch("pipeline.advanced_scrapers.safe_http_request")
 def test_scraper_d_arcs(mock_get, mock_gemini):
     from pipeline.advanced_scrapers import ScraperD_Arcs  # noqa: E402
@@ -91,7 +91,7 @@ def test_scraper_e_igdb(mock_post):
         assert games[0]["release_date"] == "2016-02-04"
 
 
-@patch("src.pipeline.advanced_scrapers.gemini_client")
+@patch("pipeline.advanced_scrapers.gemini_client")
 def test_scraper_f_tropes(mock_gemini):
     from pipeline.advanced_scrapers import ScraperF_Tropes  # noqa: E402
 
@@ -111,11 +111,11 @@ def test_scraper_f_tropes(mock_gemini):
     assert "destiné" in tropes[0]["description"]
 
 
-@patch("src.pipeline.advanced_scrapers.MediaItem")
-@patch("src.pipeline.advanced_scrapers.ScraperD_Arcs.get_arcs_and_fillers")
-@patch("src.pipeline.advanced_scrapers.ScraperE_IGDB.search_games")
-@patch("src.pipeline.advanced_scrapers.ScraperF_Tropes.get_narrative_tropes")
-@patch("src.pipeline.advanced_scrapers.update_json_metadata_field")
+@patch("pipeline.advanced_scrapers.MediaItem")
+@patch("pipeline.advanced_scrapers.ScraperD_Arcs.get_arcs_and_fillers")
+@patch("pipeline.advanced_scrapers.ScraperE_IGDB.search_games")
+@patch("pipeline.advanced_scrapers.ScraperF_Tropes.get_narrative_tropes")
+@patch("pipeline.advanced_scrapers.update_json_metadata_field")
 def test_run_tripartite_enrichment_flow(
     mock_update_json,
     mock_get_tropes,

@@ -25,7 +25,7 @@ import pytest
 
 # ``animetix/auth.py`` is imported by Django during ``django.setup()`` -- it is
 # wired into AUTHENTICATION_BACKENDS / MIDDLEWARE / DRF auth classes, under the
-# ``backend.api.animetix.auth`` dotted path (``backend/api`` is also on the
+# ``animetix.auth`` dotted path (``backend/api`` is also on the
 # pythonpath, so the same file resolves under the bare ``animetix.auth`` name).
 # Because the file was executed *before* pytest-cov started tracing, coverage.py
 # would otherwise report it as "module-not-measured" and collect zero data.
@@ -53,7 +53,7 @@ def _force_traced_import():
     except Exception:  # pragma: no cover - coverage not active (plain run)
         pass
 
-    for _name in ("animetix.auth", "backend.api.animetix.auth"):
+    for _name in ("animetix.auth", "animetix.auth"):
         sys.modules.pop(_name, None)
     return importlib.import_module("animetix.auth")
 

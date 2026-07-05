@@ -1,8 +1,7 @@
 from unittest.mock import MagicMock, patch
 
+from animetix.api.companion import CompanionInteractView
 from django.test import RequestFactory
-
-from backend.api.animetix.api.companion import CompanionInteractView
 
 
 def test_companion_interact_view_unauthenticated():
@@ -37,7 +36,7 @@ def test_companion_interact_view_authenticated():
     request.session = {}
 
     with (
-        patch("backend.api.animetix.api.companion.get_container") as mock_get_container,
+        patch("animetix.api.companion.get_container") as mock_get_container,
         patch("animetix.api.billing.deduct_berrix"),
     ):
         mock_container = MagicMock()
@@ -85,7 +84,7 @@ def test_companion_evicts_and_remembers_when_over_five_turns():
     request.session = {"companion_history": list(prior)}
 
     with (
-        patch("backend.api.animetix.api.companion.get_container") as mock_get_container,
+        patch("animetix.api.companion.get_container") as mock_get_container,
         patch("animetix.api.billing.deduct_berrix"),
     ):
         mock_container = MagicMock()

@@ -2,11 +2,10 @@ from unittest.mock import patch
 
 import jwt
 import pytest
+from animetix.auth import GoogleIdentityAuthentication
 from django.contrib.auth import get_user_model
 from django.test import RequestFactory
 from rest_framework.exceptions import AuthenticationFailed
-
-from backend.api.animetix.auth import GoogleIdentityAuthentication
 
 User = get_user_model()
 
@@ -22,8 +21,8 @@ def authenticator():
 
 
 @pytest.mark.django_db
-@patch("backend.api.animetix.auth.load_pem_x509_certificate")
-@patch("backend.api.animetix.auth.get_google_public_keys")
+@patch("animetix.auth.load_pem_x509_certificate")
+@patch("animetix.auth.get_google_public_keys")
 @patch("jwt.decode")
 def test_gcip_auth_success(
     mock_decode, mock_certs, mock_load_pem, rf, authenticator, settings
@@ -65,7 +64,7 @@ def test_gcip_auth_emulator_success(rf, authenticator, settings):
 
 
 @pytest.mark.django_db
-@patch("backend.api.animetix.auth.get_google_public_keys")
+@patch("animetix.auth.get_google_public_keys")
 def test_gcip_auth_invalid_header(mock_certs, rf, authenticator):
     request = rf.get("/api/v1/auth/me/")
     request.META["HTTP_AUTHORIZATION"] = "InvalidFormatHeader"
@@ -75,8 +74,8 @@ def test_gcip_auth_invalid_header(mock_certs, rf, authenticator):
 
 
 @pytest.mark.django_db
-@patch("backend.api.animetix.auth.load_pem_x509_certificate")
-@patch("backend.api.animetix.auth.get_google_public_keys")
+@patch("animetix.auth.load_pem_x509_certificate")
+@patch("animetix.auth.get_google_public_keys")
 @patch("jwt.decode")
 def test_gcip_auth_expired_token(
     mock_decode, mock_certs, mock_load_pem, rf, authenticator, settings

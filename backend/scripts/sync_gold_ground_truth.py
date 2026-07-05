@@ -171,7 +171,7 @@ def run_synchronization(dry_run: bool = False) -> Dict[str, Any]:
     stats = []
 
     # Let's import regression benchmark to sync in memory first
-    from backend.pipeline.evaluation.regression_benchmark import (  # noqa: E402
+    from pipeline.evaluation.regression_benchmark import (  # noqa: E402
         GOLD_SET as benchmark_gold_set,
     )
 

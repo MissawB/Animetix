@@ -2,6 +2,7 @@ import json
 import logging
 import secrets
 
+from adapters.persistence.django_usage_adapter import DjangoUsageAdapter
 from core.domain.services.berrix_economy import PACKS
 from django.conf import settings
 from django.http import HttpResponse
@@ -15,7 +16,6 @@ from rest_framework.views import APIView
 from animetix.auth import DeveloperApiKeyAuthentication
 from animetix.models import Profile
 from animetix.stripe_billing import StripeBillingService
-from backend.adapters.persistence.django_usage_adapter import DjangoUsageAdapter
 
 from ..containers import get_container
 

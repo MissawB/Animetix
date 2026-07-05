@@ -204,7 +204,7 @@ SITE_ID = 1
 
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
-    "backend.api.animetix.auth.IAPRemoteUserBackend",
+    "animetix.auth.IAPRemoteUserBackend",
 ]
 
 # Identity is handled client-side by Firebase Auth; the DRF API authenticates
@@ -229,7 +229,7 @@ MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "backend.api.animetix.auth.IAPRemoteUserMiddleware",
+    "animetix.auth.IAPRemoteUserMiddleware",
     "animetix.middleware.UserTierMiddleware",
     "animetix.middleware.UserTrackingMiddleware",  # Moved after Auth
     "animetix.middleware.PersonalizationMiddleware",
@@ -246,8 +246,8 @@ REST_FRAMEWORK = {
     # overridden.
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "backend.api.animetix.auth.GoogleIdentityAuthentication",
-        "backend.api.animetix.auth.DeveloperApiKeyAuthentication",
+        "animetix.auth.GoogleIdentityAuthentication",
+        "animetix.auth.DeveloperApiKeyAuthentication",
     ],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,

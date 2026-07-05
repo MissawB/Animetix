@@ -11,7 +11,7 @@ class TestDPODatasetCompiler(unittest.TestCase):
         pass
 
     def test_corrupt_fact_substitution(self):
-        from backend.pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
+        from pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
             corrupt_fact_substitution,
         )
 
@@ -81,7 +81,7 @@ class TestDPODatasetCompiler(unittest.TestCase):
         )
 
     def test_corrupt_tonal_deviation(self):
-        from backend.pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
+        from pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
             corrupt_tonal_deviation,
         )
 
@@ -126,7 +126,7 @@ class TestDPODatasetCompiler(unittest.TestCase):
         )
 
     def test_corrupt_abrupt_truncation(self):
-        from backend.pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
+        from pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
             corrupt_abrupt_truncation,
         )
 
@@ -139,7 +139,7 @@ class TestDPODatasetCompiler(unittest.TestCase):
         self.assertFalse(corr.endswith("."))
 
     def test_corrupt_evasive_refusal(self):
-        from backend.pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
+        from pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
             corrupt_evasive_refusal,
         )
 
@@ -152,7 +152,7 @@ class TestDPODatasetCompiler(unittest.TestCase):
         self.assertTrue(any(x in corr_en.lower() for x in ["sorry", "don't know"]))
 
     def test_compile_dpo_pairs(self):
-        from backend.pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
+        from pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
             compile_dpo_pairs,
         )
 
@@ -243,7 +243,7 @@ class TestDPODatasetCompiler(unittest.TestCase):
 
         from unittest.mock import MagicMock, patch  # noqa: E402
 
-        from backend.pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
+        from pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
             compile_dpo_pairs,
         )
 
@@ -267,11 +267,9 @@ class TestDPODatasetCompiler(unittest.TestCase):
 
         with (
             patch("dpo_feedback_loop.django_available", True),
-            patch("backend.pipeline.mlops.dpo_feedback_loop.django_available", True),
+            patch("pipeline.mlops.dpo_feedback_loop.django_available", True),
             patch("dpo_feedback_loop.AIFeedback") as mock_ai_feedback,
-            patch(
-                "backend.pipeline.mlops.dpo_feedback_loop.AIFeedback", mock_ai_feedback
-            ),
+            patch("pipeline.mlops.dpo_feedback_loop.AIFeedback", mock_ai_feedback),
         ):
             # Setup mock model query results
             mock_entries = []
@@ -291,7 +289,7 @@ class TestDPODatasetCompiler(unittest.TestCase):
                     "dpo_feedback_loop.DPOFeedbackLoop.generate_oracle_response"
                 ) as mock_oracle,
                 patch(
-                    "backend.pipeline.mlops.dpo_feedback_loop.DPOFeedbackLoop.generate_oracle_response",
+                    "pipeline.mlops.dpo_feedback_loop.DPOFeedbackLoop.generate_oracle_response",
                     mock_oracle,
                 ),
             ):
@@ -347,7 +345,7 @@ class TestDPODatasetCompiler(unittest.TestCase):
         import os  # noqa: E402
         import tempfile  # noqa: E402
 
-        import backend.pipeline.mlops.dpo_dataset_compiler as compiler  # noqa: E402
+        import pipeline.mlops.dpo_dataset_compiler as compiler  # noqa: E402
 
         with tempfile.TemporaryDirectory() as tmpdir:
             compiler.init_dpo_cache(tmpdir)
@@ -369,7 +367,7 @@ class TestDPODatasetCompiler(unittest.TestCase):
     def test_corrupt_llm_critic(self):
         from unittest.mock import MagicMock  # noqa: E402
 
-        import backend.pipeline.mlops.dpo_dataset_compiler as compiler  # noqa: E402
+        import pipeline.mlops.dpo_dataset_compiler as compiler  # noqa: E402
 
         # Reset mock state
         compiler.DPO_CACHE = {}
@@ -406,7 +404,7 @@ class TestDPODatasetCompiler(unittest.TestCase):
         import tempfile  # noqa: E402
         from unittest.mock import patch  # noqa: E402
 
-        import backend.pipeline.mlops.dpo_dataset_compiler as compiler  # noqa: E402
+        import pipeline.mlops.dpo_dataset_compiler as compiler  # noqa: E402
 
         # Create a SFT dataset with 10 valid entries to observe strategy distribution
         mock_data = []
@@ -493,7 +491,7 @@ class TestDPOSampleValidator(unittest.TestCase):
     """Tests for Pydantic schema validation of DPO samples."""
 
     def test_valid_sample_passes(self):
-        from backend.pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
+        from pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
             DPOSampleValidator,
         )
 
@@ -505,11 +503,10 @@ class TestDPOSampleValidator(unittest.TestCase):
         self.assertEqual(sample.prompt, "Qui est le créateur de Naruto ?")
 
     def test_rejects_html_residues_in_chosen(self):
-        from pydantic import ValidationError  # noqa: E402
-
-        from backend.pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
+        from pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
             DPOSampleValidator,
         )
+        from pydantic import ValidationError  # noqa: E402
 
         with self.assertRaises(ValidationError) as ctx:
             DPOSampleValidator(
@@ -520,11 +517,10 @@ class TestDPOSampleValidator(unittest.TestCase):
         self.assertIn("chosen", str(ctx.exception))
 
     def test_rejects_html_residues_in_rejected(self):
-        from pydantic import ValidationError  # noqa: E402
-
-        from backend.pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
+        from pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
             DPOSampleValidator,
         )
+        from pydantic import ValidationError  # noqa: E402
 
         with self.assertRaises(ValidationError) as ctx:
             DPOSampleValidator(
@@ -535,11 +531,10 @@ class TestDPOSampleValidator(unittest.TestCase):
         self.assertIn("rejected", str(ctx.exception))
 
     def test_rejects_malformed_code_blocks(self):
-        from pydantic import ValidationError  # noqa: E402
-
-        from backend.pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
+        from pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
             DPOSampleValidator,
         )
+        from pydantic import ValidationError  # noqa: E402
 
         # Unclosed code block
         with self.assertRaises(ValidationError):
@@ -550,11 +545,10 @@ class TestDPOSampleValidator(unittest.TestCase):
             )
 
     def test_rejects_failed_api_response(self):
-        from pydantic import ValidationError  # noqa: E402
-
-        from backend.pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
+        from pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
             DPOSampleValidator,
         )
+        from pydantic import ValidationError  # noqa: E402
 
         api_failures = [
             "Error: Internal Server Error",
@@ -573,11 +567,10 @@ class TestDPOSampleValidator(unittest.TestCase):
                 )
 
     def test_rejects_empty_or_whitespace(self):
-        from pydantic import ValidationError  # noqa: E402
-
-        from backend.pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
+        from pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
             DPOSampleValidator,
         )
+        from pydantic import ValidationError  # noqa: E402
 
         with self.assertRaises(ValidationError):
             DPOSampleValidator(
@@ -591,11 +584,10 @@ class TestDPOSampleValidator(unittest.TestCase):
             )
 
     def test_rejects_identical_chosen_rejected(self):
-        from pydantic import ValidationError  # noqa: E402
-
-        from backend.pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
+        from pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
             DPOSampleValidator,
         )
+        from pydantic import ValidationError  # noqa: E402
 
         with self.assertRaises(ValidationError):
             DPOSampleValidator(
@@ -609,7 +601,7 @@ class TestDPOSampleValidator(unittest.TestCase):
         import tempfile  # noqa: E402
         from unittest.mock import patch  # noqa: E402
 
-        import backend.pipeline.mlops.dpo_dataset_compiler as compiler  # noqa: E402
+        import pipeline.mlops.dpo_dataset_compiler as compiler  # noqa: E402
 
         # 5 entries: the corruption function will return HTML for some
         mock_data = [

@@ -23,7 +23,7 @@ INPUT_FILE = os.path.join(BASE_DIR, "data", "processed", "clean_root_animes.json
 
 # Initialisation différée
 def get_repo():
-    from backend.animetix.containers import get_container  # noqa: E402
+    from animetix.containers import get_container  # noqa: E402
 
     return get_container().repository
 

@@ -10,8 +10,8 @@ from unittest.mock import MagicMock, patch
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, BASE_DIR)
 
-import backend.pipeline.mlops.finetuning_dataset as fd  # noqa: E402
-from backend.pipeline.mlops.finetuning_dataset import clean_description  # noqa: E402
+import pipeline.mlops.finetuning_dataset as fd  # noqa: E402
+from pipeline.mlops.finetuning_dataset import clean_description  # noqa: E402
 
 
 class TestFinetuningDataset(unittest.TestCase):
@@ -26,8 +26,8 @@ class TestFinetuningDataset(unittest.TestCase):
         from unittest.mock import MagicMock  # noqa: E402
 
         # Cache + fonctions paraphrase vivent désormais dans ft_dataset.paraphrase
-        import backend.pipeline.mlops.ft_dataset.paraphrase as pmod  # noqa: E402
-        from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
+        import pipeline.mlops.ft_dataset.paraphrase as pmod  # noqa: E402
+        from pipeline.mlops.finetuning_dataset import (  # noqa: E402
             paraphrase_text_via_gemini,
         )
 
@@ -49,7 +49,7 @@ class TestFinetuningDataset(unittest.TestCase):
         mock_client.models.generate_content.return_value = mock_response
 
         with patch(
-            "backend.pipeline.mlops.ft_dataset.paraphrase.validate_factual_alignment",
+            "pipeline.mlops.ft_dataset.paraphrase.validate_factual_alignment",
             return_value=True,
         ):
             res2 = paraphrase_text_via_gemini("Un autre texte", mock_client, "naturel")
@@ -63,7 +63,7 @@ class TestFinetuningDataset(unittest.TestCase):
     def test_configurable_ratios(self):
         from unittest.mock import patch  # noqa: E402
 
-        import backend.pipeline.mlops.finetuning_dataset as fd  # noqa: E402
+        import pipeline.mlops.finetuning_dataset as fd  # noqa: E402
 
         env_vars = {
             "ANIMETIX_RATIO_SPECIALIZED": "70",
@@ -77,7 +77,7 @@ class TestFinetuningDataset(unittest.TestCase):
             self.assertEqual(gen_req, 200)
 
     def test_mcp_error_scenarios(self):
-        from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
+        from pipeline.mlops.finetuning_dataset import (  # noqa: E402
             generate_mcp_tool_instructions,
         )
 
@@ -106,7 +106,7 @@ class TestFinetuningDataset(unittest.TestCase):
         )
 
     def test_bilingual_generators(self):
-        from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
+        from pipeline.mlops.finetuning_dataset import (  # noqa: E402
             make_english_anime_profile,
             make_english_character_bio,
             make_english_manga_profile,
@@ -138,7 +138,7 @@ class TestFinetuningDataset(unittest.TestCase):
         self.assertIn("150,000", char_bio)
         self.assertIn("174cm", char_bio)
 
-    @patch("backend.pipeline.mlops.finetuning_dataset.load_dataset")
+    @patch("pipeline.mlops.finetuning_dataset.load_dataset")
     def test_bilingual_general_instructions(self, mock_load_dataset):
         mock_ds_fr = [{"instruction": "Inst FR", "input": "", "output": "Rep FR"}]
         mock_ds_en = [{"instruction": "Inst EN", "input": "", "output": "Rep EN"}]
@@ -151,7 +151,7 @@ class TestFinetuningDataset(unittest.TestCase):
 
         mock_load_dataset.side_effect = side_effect
 
-        from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
+        from pipeline.mlops.finetuning_dataset import (  # noqa: E402
             fetch_general_instructions,
         )
 
@@ -161,7 +161,7 @@ class TestFinetuningDataset(unittest.TestCase):
         self.assertEqual(res[1]["language"], "English")
 
     def test_generate_otaku_meta_instructions_bilingual(self):
-        from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
+        from pipeline.mlops.finetuning_dataset import (  # noqa: E402
             generate_otaku_meta_instructions,
         )
 
@@ -183,7 +183,7 @@ class TestFinetuningDataset(unittest.TestCase):
         )
 
     def test_deduplicate_dataset_multiturn(self):
-        from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
+        from pipeline.mlops.finetuning_dataset import (  # noqa: E402
             deduplicate_dataset,
         )
 
@@ -201,7 +201,7 @@ class TestFinetuningDataset(unittest.TestCase):
         self.assertEqual(len(res), 2)
 
     def test_generate_multiturn_dialogues(self):
-        from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
+        from pipeline.mlops.finetuning_dataset import (  # noqa: E402
             generate_multiturn_dialogues,
         )
 
@@ -249,7 +249,7 @@ class TestFinetuningDataset(unittest.TestCase):
             self.assertIn(d["language"], ["Français", "English"])
 
     def test_generate_multiturn_dialogues_complex_scenarios(self):
-        from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
+        from pipeline.mlops.finetuning_dataset import (  # noqa: E402
             generate_multiturn_dialogues,
         )
 
@@ -350,7 +350,7 @@ class TestFinetuningDataset(unittest.TestCase):
     def test_run_generate_instruction_dataset_contains_multiturn(self):
         import json  # noqa: E402
 
-        from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
+        from pipeline.mlops.finetuning_dataset import (  # noqa: E402
             OUTPUT_DATASET,
         )
 
@@ -367,7 +367,7 @@ class TestFinetuningDataset(unittest.TestCase):
             )
 
     def test_generate_negative_refusal_examples(self):
-        from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
+        from pipeline.mlops.finetuning_dataset import (  # noqa: E402
             generate_negative_refusal_examples,
         )
 
@@ -387,7 +387,7 @@ class TestFinetuningDataset(unittest.TestCase):
             )
 
     def test_refusal_topic_diversity(self):
-        from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
+        from pipeline.mlops.finetuning_dataset import (  # noqa: E402
             generate_negative_refusal_examples,
         )
 
@@ -453,7 +453,7 @@ class TestFinetuningDataset(unittest.TestCase):
     def test_run_generate_instruction_dataset_contains_refusals(self):
         import json  # noqa: E402
 
-        from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
+        from pipeline.mlops.finetuning_dataset import (  # noqa: E402
             OUTPUT_DATASET,
         )
 
@@ -543,7 +543,7 @@ class TestFinetuningDataset(unittest.TestCase):
     def test_run_generate_instruction_dataset_rebalanced_ratio(self):
         import json  # noqa: E402
 
-        from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
+        from pipeline.mlops.finetuning_dataset import (  # noqa: E402
             OUTPUT_DATASET,
         )
 
@@ -582,7 +582,7 @@ class TestFinetuningDataset(unittest.TestCase):
             )
 
     def test_validate_factual_alignment_success(self):
-        from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
+        from pipeline.mlops.finetuning_dataset import (  # noqa: E402
             validate_factual_alignment,
         )
 
@@ -597,7 +597,7 @@ class TestFinetuningDataset(unittest.TestCase):
         mock_client.models.generate_content.assert_called_once()
 
     def test_validate_factual_alignment_failure(self):
-        from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
+        from pipeline.mlops.finetuning_dataset import (  # noqa: E402
             validate_factual_alignment,
         )
 
@@ -616,7 +616,7 @@ class TestFinetuningDataset(unittest.TestCase):
     def test_inject_query_noise(self):
         import random  # noqa: E402
 
-        from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
+        from pipeline.mlops.finetuning_dataset import (  # noqa: E402
             inject_query_noise,
         )
 
@@ -654,7 +654,7 @@ class TestFinetuningDataset(unittest.TestCase):
         self.assertEqual(inject_query_noise("", "Français"), "")
 
     def test_generate_rag_context_instructions(self):
-        from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
+        from pipeline.mlops.finetuning_dataset import (  # noqa: E402
             generate_rag_context_instructions,
         )
 

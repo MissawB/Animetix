@@ -166,7 +166,7 @@ try:
     from creators_db import CREATORS_AND_STUDIOS  # noqa: E402
 except ImportError:
     try:
-        from backend.pipeline.mlops.creators_db import (  # noqa: E402
+        from pipeline.mlops.creators_db import (  # noqa: E402
             CREATORS_AND_STUDIOS,
         )
     except ImportError:
@@ -180,7 +180,7 @@ try:
     )
 except ImportError:
     try:
-        from backend.pipeline.mlops.french_market_db import (  # noqa: E402
+        from pipeline.mlops.french_market_db import (  # noqa: E402
             FRENCH_ANIME_DISTRIBUTORS,
             FRENCH_MANGA_PUBLISHERS,
             FRENCH_VOICE_ACTORS,
@@ -197,7 +197,7 @@ try:
     )
 except ImportError:
     try:
-        from backend.pipeline.mlops.japanese_market_db import (  # noqa: E402
+        from pipeline.mlops.japanese_market_db import (  # noqa: E402
             JAPANESE_ANIME_DISTRIBUTORS,
             JAPANESE_MANGA_PUBLISHERS,
         )
@@ -926,7 +926,7 @@ def compile_dpo_pairs(
         from dpo_feedback_loop import DPOFeedbackLoop  # noqa: E402
     except ImportError:
         try:
-            from backend.pipeline.mlops.dpo_feedback_loop import (  # noqa: E402
+            from pipeline.mlops.dpo_feedback_loop import (  # noqa: E402
                 DPOFeedbackLoop,
             )
         except ImportError:

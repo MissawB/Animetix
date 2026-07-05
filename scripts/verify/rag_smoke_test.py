@@ -20,7 +20,7 @@ def run_smoke_test():
         baseline = json.load(f)
 
     # 2. Exécuter l'évaluation actuelle
-    from backend.scripts.mlops_rag_eval import run_mlops_eval  # noqa: E402
+    from scripts.mlops_rag_eval import run_mlops_eval  # noqa: E402
 
     current_report = run_mlops_eval()
 

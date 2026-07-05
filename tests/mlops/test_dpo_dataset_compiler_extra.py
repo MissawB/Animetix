@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Additional coverage tests for backend.pipeline.mlops.dpo_dataset_compiler.
+Additional coverage tests for pipeline.mlops.dpo_dataset_compiler.
 
 Targets error/edge/fallback branches that the base test suite leaves uncovered:
 cache load/save error handling, Gemini client init, corruption fallbacks,
@@ -15,7 +15,7 @@ import tempfile
 import unittest
 from unittest.mock import MagicMock, patch
 
-import backend.pipeline.mlops.dpo_dataset_compiler as compiler
+import pipeline.mlops.dpo_dataset_compiler as compiler
 
 
 class TestCacheErrorHandling(unittest.TestCase):
@@ -36,7 +36,7 @@ class TestCacheErrorHandling(unittest.TestCase):
             compiler.init_dpo_cache(tmpdir)
             compiler.DPO_CACHE = {"k": "v"}
             with patch(
-                "backend.pipeline.mlops.dpo_dataset_compiler.open",
+                "pipeline.mlops.dpo_dataset_compiler.open",
                 side_effect=OSError("disk full"),
             ):
                 # Must not raise
@@ -274,7 +274,7 @@ class TestCompileDpoPairsBranches(unittest.TestCase):
                     "sys.modules",
                     {
                         "dpo_feedback_loop": None,
-                        "backend.pipeline.mlops.dpo_feedback_loop": None,
+                        "pipeline.mlops.dpo_feedback_loop": None,
                     },
                 ):
                     result = compiler.compile_dpo_pairs(sft, out, limit=5, seed=1)
@@ -351,7 +351,7 @@ class TestCompileDpoPairsBranches(unittest.TestCase):
                 "sys.modules",
                 {
                     "dpo_feedback_loop": None,
-                    "backend.pipeline.mlops.dpo_feedback_loop": None,
+                    "pipeline.mlops.dpo_feedback_loop": None,
                 },
             ):
                 result = compiler.compile_dpo_pairs(sft, out, limit=5, seed=1)
@@ -383,7 +383,7 @@ class TestCompileDpoPairsBranches(unittest.TestCase):
                     "sys.modules",
                     {
                         "dpo_feedback_loop": None,
-                        "backend.pipeline.mlops.dpo_feedback_loop": None,
+                        "pipeline.mlops.dpo_feedback_loop": None,
                     },
                 ),
             ):
@@ -539,7 +539,7 @@ class TestCompileDpoPairsBranches(unittest.TestCase):
                 "sys.modules",
                 {
                     "dpo_feedback_loop": None,
-                    "backend.pipeline.mlops.dpo_feedback_loop": None,
+                    "pipeline.mlops.dpo_feedback_loop": None,
                 },
             ):
                 result = compiler.compile_dpo_pairs(sft, out, limit=5, seed=1)
@@ -596,7 +596,7 @@ class TestMainEntryPoint(unittest.TestCase):
                 "sys.modules",
                 {
                     "dpo_feedback_loop": None,
-                    "backend.pipeline.mlops.dpo_feedback_loop": None,
+                    "pipeline.mlops.dpo_feedback_loop": None,
                 },
             ),
             patch("os.path.exists", side_effect=_exists_without_sft),

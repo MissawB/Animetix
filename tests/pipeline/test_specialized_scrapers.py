@@ -14,7 +14,7 @@ def mock_django_media_item():
     return item
 
 
-@patch("src.pipeline.specialized_scrapers.gemini_client")
+@patch("pipeline.specialized_scrapers.gemini_client")
 @patch("pipeline.specialized_scrapers.safe_http_request")
 def test_scraper_a_casting(mock_get, mock_gemini):
     from pipeline.specialized_scrapers import ScraperA_Casting  # noqa: E402
@@ -72,7 +72,7 @@ def test_scraper_b_music(mock_get):
         assert themes[1]["song_title"] == "Life is Like a Boat by Rie fu"
 
 
-@patch("src.pipeline.specialized_scrapers.gemini_client")
+@patch("pipeline.specialized_scrapers.gemini_client")
 def test_scraper_c_reviews(mock_gemini):
     from pipeline.specialized_scrapers import ScraperC_Reviews  # noqa: E402
 
@@ -95,11 +95,11 @@ def test_scraper_c_reviews(mock_gemini):
     assert "SensCritique" in reviews.get("reviews_sources")[0]["site"]
 
 
-@patch("src.pipeline.specialized_scrapers.MediaItem")
-@patch("src.pipeline.specialized_scrapers.ScraperA_Casting.scrape_casting")
-@patch("src.pipeline.specialized_scrapers.ScraperB_Music.get_music_themes")
-@patch("src.pipeline.specialized_scrapers.ScraperC_Reviews.synthesize_french_reviews")
-@patch("src.pipeline.specialized_scrapers.update_json_metadata_field")
+@patch("pipeline.specialized_scrapers.MediaItem")
+@patch("pipeline.specialized_scrapers.ScraperA_Casting.scrape_casting")
+@patch("pipeline.specialized_scrapers.ScraperB_Music.get_music_themes")
+@patch("pipeline.specialized_scrapers.ScraperC_Reviews.synthesize_french_reviews")
+@patch("pipeline.specialized_scrapers.update_json_metadata_field")
 def test_run_tripartite_enrichment_flow(
     mock_update_json,
     mock_synthesize,

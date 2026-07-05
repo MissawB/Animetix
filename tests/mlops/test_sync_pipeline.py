@@ -95,7 +95,7 @@ def test_sync_gold_ground_truth_pipeline(
     with (
         patch("scripts.sync_gold_ground_truth.PROJECT_ROOT", str(tmp_path)),
         patch(
-            "backend.pipeline.evaluation.regression_benchmark.GOLD_SET",
+            "pipeline.evaluation.regression_benchmark.GOLD_SET",
             mock_benchmark_gold_set,
         ),
         patch(

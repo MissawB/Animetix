@@ -1,7 +1,6 @@
 import pytest
+from animetix.schemas import OfflineSyncSchema
 from pydantic import ValidationError
-
-from backend.api.animetix.schemas import OfflineSyncSchema
 
 
 def test_offline_sync_schema_valid():

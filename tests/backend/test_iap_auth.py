@@ -1,12 +1,11 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from animetix.auth import IAPRemoteUserBackend, IAPRemoteUserMiddleware
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import PermissionDenied
 from django.test import RequestFactory
-
-from backend.api.animetix.auth import IAPRemoteUserBackend, IAPRemoteUserMiddleware
 
 User = get_user_model()
 
@@ -22,7 +21,7 @@ def middleware():
 
 
 @pytest.mark.django_db
-@patch("backend.api.animetix.auth.id_token.verify_token")
+@patch("animetix.auth.id_token.verify_token")
 def test_iap_middleware_success(mock_verify, rf, middleware, settings):
     settings.GCP_IAP_AUDIENCE = "mock-audience"
     settings.IAP_APPROVED_ADMIN_EMAILS = ["admin@animetix.com"]
@@ -52,7 +51,7 @@ def test_iap_middleware_success(mock_verify, rf, middleware, settings):
 
 
 @pytest.mark.django_db
-@patch("backend.api.animetix.auth.id_token.verify_token")
+@patch("animetix.auth.id_token.verify_token")
 def test_iap_middleware_failure(mock_verify, rf, middleware, settings):
     settings.GCP_IAP_AUDIENCE = "mock-audience"
     mock_verify.side_effect = Exception("Signature verification failed")
@@ -76,7 +75,7 @@ def test_iap_middleware_bypass_local(rf, middleware):
 
 
 @pytest.mark.django_db
-@patch("backend.api.animetix.auth.id_token.verify_token")
+@patch("animetix.auth.id_token.verify_token")
 def test_iap_backend_staff_revocation(mock_verify, rf, settings):
     settings.GCP_IAP_AUDIENCE = "mock-audience"
     settings.IAP_APPROVED_ADMIN_EMAILS = []  # Empty approved list

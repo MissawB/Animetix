@@ -578,7 +578,7 @@ def generate_multiturn_dialogues(
             )
 
             # Check if we have volume/episode count from database or use a realistic dummy
-            from backend.pipeline.mlops.volumes_and_episodes_db import (  # noqa: E402
+            from pipeline.mlops.volumes_and_episodes_db import (  # noqa: E402
                 VOLUMES_AND_EPISODES_DATA,
             )
 

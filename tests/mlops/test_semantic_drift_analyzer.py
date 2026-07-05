@@ -23,7 +23,7 @@ class TestDatasetFingerprint(unittest.TestCase):
         return path
 
     def test_sft_fingerprint_basic(self):
-        from backend.pipeline.mlops.semantic_drift_analyzer import (  # noqa: E402
+        from pipeline.mlops.semantic_drift_analyzer import (  # noqa: E402
             compute_fingerprint,
         )
 
@@ -61,7 +61,7 @@ class TestDatasetFingerprint(unittest.TestCase):
             self.assertIsNotNone(fp.snapshot_timestamp)
 
     def test_dpo_fingerprint_with_corruption_detection(self):
-        from backend.pipeline.mlops.semantic_drift_analyzer import (  # noqa: E402
+        from pipeline.mlops.semantic_drift_analyzer import (  # noqa: E402
             compute_fingerprint,
         )
 
@@ -94,7 +94,7 @@ class TestDatasetFingerprint(unittest.TestCase):
             self.assertGreater(fp.corruption_strategy_distribution.get("tone", 0), 0)
 
     def test_empty_dataset_fingerprint(self):
-        from backend.pipeline.mlops.semantic_drift_analyzer import (  # noqa: E402
+        from pipeline.mlops.semantic_drift_analyzer import (  # noqa: E402
             compute_fingerprint,
         )
 
@@ -108,7 +108,7 @@ class TestDatasetFingerprint(unittest.TestCase):
             self.assertEqual(fp.filtered_ratio, 1.0)
 
     def test_filtered_ratio_computation(self):
-        from backend.pipeline.mlops.semantic_drift_analyzer import (  # noqa: E402
+        from pipeline.mlops.semantic_drift_analyzer import (  # noqa: E402
             compute_fingerprint,
         )
 
@@ -131,7 +131,7 @@ class TestDriftAnalysis(unittest.TestCase):
     """Tests for drift comparison between baseline and current."""
 
     def _make_fingerprint(self, **kwargs):
-        from backend.pipeline.mlops.semantic_drift_analyzer import (  # noqa: E402
+        from pipeline.mlops.semantic_drift_analyzer import (  # noqa: E402
             DatasetFingerprint,
         )
 
@@ -164,7 +164,7 @@ class TestDriftAnalysis(unittest.TestCase):
         return DatasetFingerprint(**defaults)
 
     def test_identical_datasets_pass(self):
-        from backend.pipeline.mlops.semantic_drift_analyzer import (  # noqa: E402
+        from pipeline.mlops.semantic_drift_analyzer import (  # noqa: E402
             analyze_drift,
         )
 
@@ -179,7 +179,7 @@ class TestDriftAnalysis(unittest.TestCase):
         self.assertEqual(len(report.warnings), 0)
 
     def test_topic_drift_warning(self):
-        from backend.pipeline.mlops.semantic_drift_analyzer import (  # noqa: E402
+        from pipeline.mlops.semantic_drift_analyzer import (  # noqa: E402
             analyze_drift,
         )
 
@@ -208,7 +208,7 @@ class TestDriftAnalysis(unittest.TestCase):
         self.assertGreater(report.metrics["topic_cosine_distance"], 0.10)
 
     def test_length_drift_blocker(self):
-        from backend.pipeline.mlops.semantic_drift_analyzer import (  # noqa: E402
+        from pipeline.mlops.semantic_drift_analyzer import (  # noqa: E402
             analyze_drift,
         )
 
@@ -224,7 +224,7 @@ class TestDriftAnalysis(unittest.TestCase):
         self.assertGreater(len(report.blockers), 0)
 
     def test_sample_count_drop_blocker(self):
-        from backend.pipeline.mlops.semantic_drift_analyzer import (  # noqa: E402
+        from pipeline.mlops.semantic_drift_analyzer import (  # noqa: E402
             analyze_drift,
         )
 
@@ -238,7 +238,7 @@ class TestDriftAnalysis(unittest.TestCase):
         self.assertFalse(report.go_for_training)
 
     def test_sample_count_increase_no_alarm(self):
-        from backend.pipeline.mlops.semantic_drift_analyzer import (  # noqa: E402
+        from pipeline.mlops.semantic_drift_analyzer import (  # noqa: E402
             analyze_drift,
         )
 
@@ -252,7 +252,7 @@ class TestDriftAnalysis(unittest.TestCase):
         self.assertEqual(report.metrics["sample_count_drop_ratio"], 0.0)
 
     def test_filtered_ratio_spike_warning(self):
-        from backend.pipeline.mlops.semantic_drift_analyzer import (  # noqa: E402
+        from pipeline.mlops.semantic_drift_analyzer import (  # noqa: E402
             analyze_drift,
         )
 
@@ -270,7 +270,7 @@ class TestBaselinePersistence(unittest.TestCase):
     """Tests for saving/loading baseline fingerprints."""
 
     def test_save_and_load_baseline(self):
-        from backend.pipeline.mlops.semantic_drift_analyzer import (  # noqa: E402
+        from pipeline.mlops.semantic_drift_analyzer import (  # noqa: E402
             DatasetFingerprint,
             load_baseline,
             save_baseline,
@@ -300,7 +300,7 @@ class TestBaselinePersistence(unittest.TestCase):
             self.assertEqual(loaded.snapshot_timestamp, "2026-06-01T00:00:00")
 
     def test_load_missing_baseline_returns_none(self):
-        from backend.pipeline.mlops.semantic_drift_analyzer import (  # noqa: E402
+        from pipeline.mlops.semantic_drift_analyzer import (  # noqa: E402
             load_baseline,
         )
 
@@ -312,7 +312,7 @@ class TestEndToEnd(unittest.TestCase):
     """Integration test for the full pre-training drift check."""
 
     def test_first_run_creates_baseline_and_passes(self):
-        from backend.pipeline.mlops.semantic_drift_analyzer import (  # noqa: E402
+        from pipeline.mlops.semantic_drift_analyzer import (  # noqa: E402
             run_pre_training_drift_check,
         )
 
@@ -355,7 +355,7 @@ class TestEndToEnd(unittest.TestCase):
             self.assertEqual(len(report_files), 1)
 
     def test_second_run_with_stable_data_passes(self):
-        from backend.pipeline.mlops.semantic_drift_analyzer import (  # noqa: E402
+        from pipeline.mlops.semantic_drift_analyzer import (  # noqa: E402
             run_pre_training_drift_check,
         )
 

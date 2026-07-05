@@ -7,26 +7,26 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fil
 sys.path.insert(0, os.path.join(BASE_DIR, "backend"))
 sys.path.insert(0, os.path.join(BASE_DIR, "backend", "pipeline", "mlops"))
 
-from backend.pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
+from pipeline.mlops.dpo_dataset_compiler import (  # noqa: E402
     DISTRIBUTORS_LIST,
     JAPANESE_DISTRIBUTORS_SET,
     JAPANESE_PUBLISHERS_SET,
     PUBLISHERS_LIST,
     RELATED_ENTITIES_MAP,
 )
-from backend.pipeline.mlops.finetuning_dataset import (  # noqa: E402
+from pipeline.mlops.finetuning_dataset import (  # noqa: E402
     generate_japanese_market_profile_instructions,
     generate_japanese_market_relations_instructions,
 )
-from backend.pipeline.mlops.index_otaku_knowledge import (  # noqa: E402
+from pipeline.mlops.index_otaku_knowledge import (  # noqa: E402
     OtakuKnowledgeIndexer,
 )
-from backend.pipeline.mlops.japanese_market_db import (  # noqa: E402
+from pipeline.mlops.japanese_market_db import (  # noqa: E402
     JAPANESE_ANIME_DISTRIBUTORS,
     JAPANESE_MANGA_PUBLISHERS,
     JAPANESE_MARKET_RELATIONS,
 )
-from backend.pipeline.mlops.songs_and_seiyuu_db import (  # noqa: E402
+from pipeline.mlops.songs_and_seiyuu_db import (  # noqa: E402
     SEIYUU_PROFILES as JAPANESE_VOICE_ACTORS,
 )
 

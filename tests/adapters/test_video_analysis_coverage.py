@@ -20,14 +20,13 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
+from adapters.inference.video_analysis import (  # noqa: E402
+    VideoAnalysisMixin,
+)
 from core.domain.exceptions import InferenceError
 from PIL import Image
 
-from backend.adapters.inference.video_analysis import (  # noqa: E402
-    VideoAnalysisMixin,
-)
-
-MODULE = "backend.adapters.inference.video_analysis"
+MODULE = "adapters.inference.video_analysis"
 
 
 class _Host(VideoAnalysisMixin):

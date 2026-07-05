@@ -27,7 +27,7 @@ def media_items(db):
     from django.core.cache import cache
 
     cache.clear()
-    for mod_name in ("animetix.containers", "backend.api.animetix.containers"):
+    for mod_name in ("animetix.containers", "animetix.containers"):
         mod = sys.modules.get(mod_name)
         if mod is not None:
             try:

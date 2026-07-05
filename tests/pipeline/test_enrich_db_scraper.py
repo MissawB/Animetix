@@ -17,7 +17,7 @@ def mock_django_media_item():
     return item
 
 
-@patch("src.pipeline.enrich_db_scraper.gemini_client")
+@patch("pipeline.enrich_db_scraper.gemini_client")
 @patch("pipeline.enrich_db_scraper.safe_http_request")
 def test_jikan_fetching_and_translation(mock_get, mock_gemini, mock_django_media_item):
     from pipeline.enrich_db_scraper import (
@@ -43,10 +43,10 @@ def test_jikan_fetching_and_translation(mock_get, mock_gemini, mock_django_media
     assert translation == "Synopsis traduit"
 
 
-@patch("src.pipeline.enrich_db_scraper.MediaItem")
-@patch("src.pipeline.enrich_db_scraper.translate_synopsis_via_gemini")
-@patch("src.pipeline.enrich_db_scraper.fetch_jikan_details")
-@patch("src.pipeline.enrich_db_scraper.update_json_file")
+@patch("pipeline.enrich_db_scraper.MediaItem")
+@patch("pipeline.enrich_db_scraper.translate_synopsis_via_gemini")
+@patch("pipeline.enrich_db_scraper.fetch_jikan_details")
+@patch("pipeline.enrich_db_scraper.update_json_file")
 def test_run_enrichment_flow(
     mock_update_json,
     mock_fetch_jikan,
