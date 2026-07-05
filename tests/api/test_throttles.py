@@ -32,3 +32,25 @@ def test_gpu_scoped_throttle_resolves_a_rate():
     t = ScopedRateThrottle()
     t.scope = "gpu"
     assert t.get_rate() == "30/hour"
+
+
+def test_cpu_game_throttle_actually_limits_without_view_scope(monkeypatch):
+    # SimpleRateThrottle.THROTTLE_RATES is bound to api_settings.DEFAULT_THROTTLE_RATES
+    # at module-import time, so overriding settings.REST_FRAMEWORK at test time (via
+    # the `settings` fixture) does NOT change it — monkeypatch the class attribute
+    # directly instead, which is the standard way to override DRF throttle rates.
+    from types import SimpleNamespace
+
+    from django.core.cache import cache
+    from django.test import RequestFactory
+
+    monkeypatch.setattr(CpuGameThrottle, "THROTTLE_RATES", {"cpu_game": "3/min"})
+    cache.clear()
+    req = RequestFactory().get("/")
+    req.user = SimpleNamespace(is_authenticated=False)
+    view = SimpleNamespace()  # NO throttle_scope attribute — the bug condition
+
+    allowed = [CpuGameThrottle().allow_request(req, view) for _ in range(5)]
+    assert allowed[:3] == [True, True, True]
+    assert allowed[3] is False and allowed[4] is False  # 4th+ blocked at 3/min
+    cache.clear()

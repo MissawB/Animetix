@@ -8,7 +8,7 @@ protection. On ajoute des limites par minute et un throttle dédié aux jeux CPU
 
 from rest_framework.throttling import (
     AnonRateThrottle,
-    ScopedRateThrottle,
+    SimpleRateThrottle,
     UserRateThrottle,
 )
 
@@ -25,17 +25,20 @@ class BurstUserRateThrottle(UserRateThrottle):
     scope = "user_burst"
 
 
-class CpuGameThrottle(ScopedRateThrottle):
+class CpuGameThrottle(SimpleRateThrottle):
     """Throttle par minute pour les jeux CPU AllowAny.
 
-    Protège du flood sans jamais appliquer le cap journalier global (qui coupait
-    des parties en cours). Utilise l'IP pour les anonymes, l'utilisateur sinon.
+    Hérite de SimpleRateThrottle (pas ScopedRateThrottle) : ce dernier réécrit
+    self.scope depuis view.throttle_scope à chaque requête, ce qui annulerait le
+    throttle sur des vues qui ne déclarent pas throttle_scope. On fixe donc le
+    scope ici et on identifie par utilisateur (si authentifié) ou par IP.
     """
 
     scope = "cpu_game"
 
-    def __init__(self):
-        # ScopedRateThrottle lit self.scope depuis view.throttle_scope ; ici on
-        # fixe le scope sur la classe pour l'utiliser sans view.throttle_scope.
-        self.rate = self.get_rate()
-        self.num_requests, self.duration = self.parse_rate(self.rate)
+    def get_cache_key(self, request, view):
+        if request.user and request.user.is_authenticated:
+            ident = request.user.pk
+        else:
+            ident = self.get_ident(request)
+        return self.cache_format % {"scope": self.scope, "ident": ident}
