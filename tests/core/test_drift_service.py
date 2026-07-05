@@ -1,7 +1,5 @@
-"""Tests d'isolation de DriftService : les baselines sont persistées via un
-stockage injecté (Django default_storage en réel — GCS prod / FS dev)."""
-
-import io
+"""Tests d'isolation de DriftService : les baselines (normes des embeddings)
+sont persistées via un store injecté (DB Django en réel)."""
 
 from core.ports.vector_store_port import VectorStorePort
 
@@ -17,24 +15,17 @@ class _FakeVectorStore(VectorStorePort):
         return []
 
 
-class _FakeStorage:
-    """Stockage en mémoire imitant l'API Django Storage utilisée par le service."""
+class _FakeStore:
+    """Store de baselines en mémoire (API load/save du store DB)."""
 
     def __init__(self):
-        self.files = {}
+        self.data = {}
 
-    def exists(self, name):
-        return name in self.files
+    def load(self, collection_name):
+        return self.data.get(collection_name)
 
-    def open(self, name, mode="rb"):
-        return io.BytesIO(self.files[name])
-
-    def save(self, name, content):
-        self.files[name] = content.read()
-        return name
-
-    def delete(self, name):
-        self.files.pop(name, None)
+    def save(self, collection_name, norms, sample_size):
+        self.data[collection_name] = norms
 
 
 def test_reports_unknown_without_baseline():
@@ -42,7 +33,7 @@ def test_reports_unknown_without_baseline():
 
     svc = DriftService(
         vector_store=_FakeVectorStore([[0.1, 0.2], [0.3, 0.4]]),
-        storage=_FakeStorage(),
+        baseline_store=_FakeStore(),
     )
     assert svc.check_collection_drift("anime")["status"] == "unknown"
 
@@ -51,11 +42,12 @@ def test_generate_baseline_persists_and_enables_real_ks_test():
     from core.domain.services.drift_service import DriftService
 
     vectors = [[0.1, 0.2], [0.3, 0.4], [0.5, 0.6], [0.7, 0.8], [0.9, 1.0]]
-    storage = _FakeStorage()
-    svc = DriftService(vector_store=_FakeVectorStore(vectors), storage=storage)
+    store = _FakeStore()
+    svc = DriftService(vector_store=_FakeVectorStore(vectors), baseline_store=store)
 
     svc.generate_new_baseline("anime")
-    assert storage.exists("drift-baselines/anime_baseline.npy")
+    assert "anime" in store.data
+    assert len(store.data["anime"]) == len(vectors)  # one norm per vector
 
     report = svc.check_collection_drift("anime")
     # Baseline == état courant → distributions identiques → pas de dérive.
@@ -67,15 +59,15 @@ def test_generate_baseline_persists_and_enables_real_ks_test():
 def test_generate_baseline_noop_on_empty_collection():
     from core.domain.services.drift_service import DriftService
 
-    storage = _FakeStorage()
-    svc = DriftService(vector_store=_FakeVectorStore([]), storage=storage)
+    store = _FakeStore()
+    svc = DriftService(vector_store=_FakeVectorStore([]), baseline_store=store)
     svc.generate_new_baseline("manga")
-    assert not storage.exists("drift-baselines/manga_baseline.npy")
+    assert store.data == {}
 
 
 def test_get_drift_report_covers_all_collections():
     from core.domain.services.drift_service import DriftService
 
-    svc = DriftService(vector_store=_FakeVectorStore([]), storage=_FakeStorage())
+    svc = DriftService(vector_store=_FakeVectorStore([]), baseline_store=_FakeStore())
     report = svc.get_drift_report()
     assert set(report.keys()) == {"anime", "manga", "character"}

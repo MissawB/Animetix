@@ -454,6 +454,23 @@ class AISafetyEvent(models.Model):
         return f"Safety {self.event_type} - {self.action} ({self.created_at})"
 
 
+class DriftBaseline(models.Model):
+    """Référence de détection de dérive d'une collection vectorielle.
+
+    On ne stocke que les NORMES des embeddings (tableau 1D) : le test KS de
+    dérive ne compare que ces distributions, donc quelques Ko suffisent — et
+    la base étant partagée, la baseline est visible de toutes les instances
+    (contrairement à un fichier local éphémère sur Cloud Run)."""
+
+    collection_name = models.CharField(max_length=50, unique=True)
+    norms = models.JSONField(default=list)
+    sample_size = models.IntegerField(default=0)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"DriftBaseline {self.collection_name} ({self.sample_size} vecteurs)"
+
+
 class SemanticCache(models.Model):
     """Cache sémantique pour les réponses LLM."""
 

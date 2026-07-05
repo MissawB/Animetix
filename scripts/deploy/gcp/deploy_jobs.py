@@ -95,6 +95,17 @@ def main():
             "memory": "2Gi",
             "cpu": "1",
         },
+        {
+            # À la demande uniquement (pas de "schedule") : la baseline de dérive
+            # est figée délibérément après un cycle d'entraînement validé. La
+            # planifier annulerait la détection (baseline toujours == état courant).
+            # Déclencher via : gcloud run jobs execute animetix-generate-drift-baselines --region=europe-west9
+            "name": "animetix-generate-drift-baselines",
+            "args": "backend/api/manage.py,generate_drift_baselines",
+            "schedule": None,
+            "memory": "2Gi",
+            "cpu": "1",
+        },
     ]
 
     # 1. Enable Cloud Scheduler API
@@ -241,6 +252,15 @@ def main():
 
             run_command(deploy_cmd)
 
+            # On-demand jobs (no schedule) are created but NOT attached to Cloud
+            # Scheduler — they are triggered manually via `gcloud run jobs execute`.
+            if not job.get("schedule"):
+                print(
+                    f"Job '{job_name}' has no schedule — on-demand only, "
+                    "skipping Cloud Scheduler."
+                )
+                continue
+
             # 3. Check and Create/Update Cloud Scheduler Job
             scheduler_job_name = f"{job_name}-trigger"
             print(f"Checking Cloud Scheduler Job status for '{scheduler_job_name}'...")
@@ -278,7 +298,7 @@ def main():
 
             run_command(sched_cmd)
 
-        print("\nAll 8 periodic jobs deployed successfully!")
+        print(f"\nAll {len(jobs_config)} jobs deployed successfully!")
 
     finally:
         if os.path.exists(temp_yaml_path):
