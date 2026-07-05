@@ -27,8 +27,8 @@
 
 ## 🟠 Élevés
 
-- [ ] **Backend — triple espace de noms d'import du même package** _(audit dette 2026-07-05)_
-  - L'app est enregistrée `animetix` nu ([settings.py:195](backend/api/animetix_project/settings.py#L195)) mais importée aussi en `backend.api.animetix` (10 imports, dont settings) et `backend.animetix` (pipeline). Django peut charger modèles/signaux/singletons DI **deux fois** sous des identités différentes. Racine de plusieurs hacks en cascade (le `MetaPathFinder` custom de [tests/conftest.py:36-66](tests/conftest.py#L36-L66), les imports paresseux `# noqa: E402` partout). Choisir une racine unique.
+- [x] **Backend — triple espace de noms d'import du même package** _(audit dette 2026-07-05 ; **clos** le 2026-07-05, archivé dans [docs/HISTORY.md](docs/HISTORY.md))_
+  - Racine nue unifiée partout (~31 fichiers réécrits, chaînes `@patch`/settings comprises) ; hacks supprimés (sync contextvars de middleware.py, `SrcPipelineMapper` du conftest) ; tripwire 3 couches : garde levante [backend/\_\_init\_\_.py](backend/__init__.py), ruff TID251, [test_import_hygiene.py](tests/test_import_hygiene.py). Spec : [docs/plans/2026-07-05-unify-import-namespace-design.md](docs/plans/2026-07-05-unify-import-namespace-design.md).
 - [ ] **Sécu/coûts — endpoints IA/GPU en `AllowAny` + throttling incohérent** _(audit dette 2026-07-05)_
   - 76 `AllowAny`, dont des vues RAG/vector coûteuses dans [labs.py](backend/api/animetix/api/labs.py) (`VideoRAGSearchView:643`, `MangaLabDataView:469`, `AudioLabDataView:692`, `SeiyuuDiscoveryView:725`) couvertes seulement par le throttle global `anon:100/day`. Contredit la règle « toute feature GPU/IA consomme des Bx + login ».
   - Throttling : plusieurs jeux mettent `throttle_classes = []` ([emoji.py](backend/api/animetix/api/games/emoji.py), [undercover.py](backend/api/animetix/api/games/undercover.py)) et **aucune limite par minute** nulle part — le plafond journalier n'empêche pas les rafales.
