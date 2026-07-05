@@ -214,18 +214,10 @@ LOGOUT_REDIRECT_URL = "/"
 
 ASGI_APPLICATION = "animetix_project.asgi.application"
 
+from animetix_project.channels_config import build_channel_layers  # noqa: E402
+
 REDIS_URL = os.getenv("REDIS_URL")
-if REDIS_URL:
-    CHANNEL_LAYERS = {
-        "default": {
-            "BACKEND": "channels_redis.core.RedisChannelLayer",
-            "CONFIG": {
-                "hosts": [REDIS_URL],
-            },
-        },
-    }
-else:
-    CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
+CHANNEL_LAYERS = build_channel_layers(REDIS_URL, is_production=IS_PRODUCTION)
 
 MIDDLEWARE = [
     "animetix.middleware.TracingMiddleware",  # Tracing at the very beginning of the stack
