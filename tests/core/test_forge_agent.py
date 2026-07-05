@@ -4,6 +4,7 @@ import pytest
 from core.domain.entities.ai_schemas import (
     DebateOutcome,
     ForgeHypothesis,
+    InferenceResponse,
     JudgeAction,
     SearchPlan,
 )
@@ -120,11 +121,6 @@ def test_forge_speculation_e2e(
     # 3. Setup Scout
     agentic_rag.scout.find_truth_path.return_value = "Initial truth path"
 
-    # 4. Setup Synthesizer (first pass)
-    agentic_rag.synthesizer.synthesize_stream.return_value = iter(
-        ["First ", "attempt."]
-    )
-
     # 5. Setup Uncertainty (trigger Librarian)
     mock_uncertainty.measure_confidence.return_value = 0.4
 
@@ -142,10 +138,17 @@ def test_forge_speculation_e2e(
         confidence=0.8,
     )
 
-    # 8. Setup Synthesizer (second pass, after speculation)
+    # 8. Setup Synthesizer (first pass, then second pass after speculation)
     agentic_rag.synthesizer.synthesize_stream.side_effect = [
-        iter(["First ", "attempt."]),
-        iter(["Final ", "answer ", "with ", "speculation."]),
+        iter([InferenceResponse(text="First "), InferenceResponse(text="attempt.")]),
+        iter(
+            [
+                InferenceResponse(text="Final "),
+                InferenceResponse(text="answer "),
+                InferenceResponse(text="with "),
+                InferenceResponse(text="speculation."),
+            ]
+        ),
     ]
 
     # 9. Setup Debate Manager (Approve final answer)

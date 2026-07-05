@@ -168,7 +168,7 @@ def test_research_more_loop_integration(mock_deps):
         RAGState.JUDGE
     ].debate_manager.conduct_debate.side_effect = [outcome1, outcome2]
 
-    def judge_process_side_effect(ctx):
+    def judge_process_side_effect(ctx, xai_collector=None):
         yield StreamStep(
             type="thought", content=f"[State Machine] {RAGState.JUDGE.name}"
         )
@@ -252,7 +252,7 @@ def test_rewrite_loop(mock_deps):
         RAGState.JUDGE
     ].debate_manager.conduct_debate.side_effect = [outcome1, outcome2]
 
-    def judge_process_side_effect(ctx):
+    def judge_process_side_effect(ctx, xai_collector=None):
         yield StreamStep(
             type="thought", content=f"[State Machine] {RAGState.JUDGE.name}"
         )

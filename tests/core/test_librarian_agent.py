@@ -1,7 +1,12 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from core.domain.entities.ai_schemas import DebateOutcome, JudgeAction, SearchPlan
+from core.domain.entities.ai_schemas import (
+    DebateOutcome,
+    InferenceResponse,
+    JudgeAction,
+    SearchPlan,
+)
 
 from tests.helpers.agentic_rag_factory import build_test_agentic_rag_service
 
@@ -46,9 +51,12 @@ def test_librarian_loop_integration(mock_dependencies):
         optimized_query="Naruto Ep 5", reasoning="Need to find info", requires_web=True
     )
 
-    # Synthesizer mock
+    # Synthesizer mock: side_effect gives each synthesis pass (before/after Librarian)
+    # a fresh iterator of InferenceResponse chunks (SynthesizeProcessor reads .text).
     synthesizer = MagicMock()
-    synthesizer.synthesize_stream.return_value = iter(["C'est un anime."])
+    synthesizer.synthesize_stream.side_effect = lambda *a, **k: iter(
+        [InferenceResponse(text="C'est un anime.")]
+    )
 
     # DebateManager mock
     debate_manager = MagicMock()

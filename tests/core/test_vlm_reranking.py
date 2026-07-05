@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock
 
 import pytest
-from core.domain.entities.ai_schemas import JudgeAction, SearchPlan
+from core.domain.entities.ai_schemas import InferenceResponse, JudgeAction, SearchPlan
 
 from tests.helpers.agentic_rag_factory import build_test_agentic_rag_service
 
@@ -109,9 +109,16 @@ def test_vlm_reranking_end_to_end(mock_dependencies):
         {"index": 1, "score": 0.9},  # Character A
     ]
 
-    # Mock Synthesizer stream
-    inference_engine.stream_generate.return_value = iter(
-        ["Final", " Answer", " mentioning", " Character", " A"]
+    # Mock Synthesizer stream: ResponseSynthesizer streams from llm_service.stream_generate
+    # (not the raw engine), reading .text on each InferenceResponse chunk.
+    llm_service.stream_generate.side_effect = lambda *a, **k: iter(
+        [
+            InferenceResponse(text="Final"),
+            InferenceResponse(text=" Answer"),
+            InferenceResponse(text=" mentioning"),
+            InferenceResponse(text=" Character"),
+            InferenceResponse(text=" A"),
+        ]
     )
 
     # Run the process
@@ -140,8 +147,8 @@ def test_vlm_reranking_end_to_end(mock_dependencies):
 
     # 3. Verify the truth path passed to the synthesizer contains the reranked results
     # We need to capture the call to stream_generate which is used by ResponseSynthesizer
-    inference_engine.stream_generate.assert_called_once()
-    _, gen_kwargs = inference_engine.stream_generate.call_args
+    llm_service.stream_generate.assert_called_once()
+    _, gen_kwargs = llm_service.stream_generate.call_args
     # The first argument to stream_generate is the prompt which contains the context (truth_path)
     # Wait, the synthesizer gets syn_prompt, syn_sys.
     # Let's check what was passed to prompt_manager.get_prompt for synthesizer_final

@@ -1,7 +1,12 @@
 from unittest.mock import MagicMock
 
 import pytest
-from core.domain.entities.ai_schemas import DebateOutcome, JudgeAction, SearchPlan
+from core.domain.entities.ai_schemas import (
+    DebateOutcome,
+    InferenceResponse,
+    JudgeAction,
+    SearchPlan,
+)
 
 from tests.helpers.agentic_rag_factory import build_test_agentic_rag_service
 
@@ -80,8 +85,10 @@ def test_plan_and_solve_local_path(agentic_rag, mock_engine, mock_rag):
     )
     agentic_rag.debate_manager.conduct_debate.return_value = outcome
 
-    # Synthesizer mock
-    agentic_rag.synthesizer.synthesize_stream.return_value = iter(["The ", "answer."])
+    # Synthesizer mock: yields InferenceResponse chunks (SynthesizeProcessor reads .text)
+    agentic_rag.synthesizer.synthesize_stream.side_effect = lambda *a, **k: iter(
+        [InferenceResponse(text="The "), InferenceResponse(text="answer.")]
+    )
 
     res = agent_rag_plan_and_solve(agentic_rag, "Who is Naruto?", "Anime")
     assert "answer." in res.get("answer", "")
@@ -98,7 +105,9 @@ def test_plan_and_solve_web_path(agentic_rag, mock_engine, mock_web):
     )
     agentic_rag.debate_manager.conduct_debate.return_value = outcome
 
-    agentic_rag.synthesizer.synthesize_stream.return_value = iter(["The ", "answer."])
+    agentic_rag.synthesizer.synthesize_stream.side_effect = lambda *a, **k: iter(
+        [InferenceResponse(text="The "), InferenceResponse(text="answer.")]
+    )
 
     res = agent_rag_plan_and_solve(agentic_rag, "News?", "Anime")
     assert "answer." in res.get("answer", "").lower()
@@ -124,7 +133,9 @@ def test_plan_and_solve_with_reformulation(
     )
     agentic_rag.debate_manager.conduct_debate.side_effect = [outcome1, outcome2]
 
-    agentic_rag.synthesizer.synthesize_stream.return_value = iter(["The ", "answer."])
+    agentic_rag.synthesizer.synthesize_stream.side_effect = lambda *a, **k: iter(
+        [InferenceResponse(text="The "), InferenceResponse(text="answer.")]
+    )
 
     res = agent_rag_plan_and_solve(agentic_rag, "When did Naruto start?", "Anime")
     assert "answer" in res
@@ -145,7 +156,9 @@ def test_vlm_rerank_path(agentic_rag, mock_engine, mock_rag):
     )
     agentic_rag.debate_manager.conduct_debate.return_value = outcome
 
-    agentic_rag.synthesizer.synthesize_stream.return_value = iter(["The ", "answer."])
+    agentic_rag.synthesizer.synthesize_stream.side_effect = lambda *a, **k: iter(
+        [InferenceResponse(text="The "), InferenceResponse(text="answer.")]
+    )
 
     mock_rag.hybrid_search.return_value = [
         {
@@ -195,8 +208,15 @@ def test_thinking_mode_streaming(agentic_rag, mock_engine):
     agentic_rag.debate_manager.conduct_debate.return_value = outcome
 
     # Synthesizer returns tokens including thought tags
-    agentic_rag.synthesizer.synthesize_stream.return_value = iter(
-        ["<thought>", "Reasoning ", "process", "</thought>", "Final ", "Answer"]
+    agentic_rag.synthesizer.synthesize_stream.side_effect = lambda *a, **k: iter(
+        [
+            InferenceResponse(text="<thought>"),
+            InferenceResponse(text="Reasoning "),
+            InferenceResponse(text="process"),
+            InferenceResponse(text="</thought>"),
+            InferenceResponse(text="Final "),
+            InferenceResponse(text="Answer"),
+        ]
     )
 
     steps = list(agentic_rag.plan_and_solve_stream("Complex query", "Anime"))

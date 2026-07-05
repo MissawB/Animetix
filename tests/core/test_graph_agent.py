@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock
 
 import pytest
-from core.domain.entities.ai_schemas import JudgeAction, SearchPlan
+from core.domain.entities.ai_schemas import InferenceResponse, JudgeAction, SearchPlan
 
 from tests.helpers.agentic_rag_factory import build_test_agentic_rag_service
 
@@ -41,6 +41,17 @@ def mock_prompt_manager():
 @pytest.fixture
 def mock_llm_service():
     llm = MagicMock()
+    # The synthesizer streams from LLMService.stream_generate (not the raw engine)
+    # and reads .text on each chunk; side_effect gives each synthesis pass a fresh
+    # iterator instead of one shared, exhaustible one.
+    llm.stream_generate.side_effect = lambda *a, **k: iter(
+        [
+            InferenceResponse(text="Final "),
+            InferenceResponse(text="answer "),
+            InferenceResponse(text="from "),
+            InferenceResponse(text="graph."),
+        ]
+    )
     return llm
 
 

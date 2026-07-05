@@ -1,7 +1,12 @@
 from unittest.mock import MagicMock
 
 import pytest
-from core.domain.entities.ai_schemas import JudgeAction, JudgeEvaluation, SearchPlan
+from core.domain.entities.ai_schemas import (
+    InferenceResponse,
+    JudgeAction,
+    JudgeEvaluation,
+    SearchPlan,
+)
 from core.domain.services.advanced_rag_service import AdvancedRAGService  # noqa: E402
 from core.domain.services.llm_service import LLMService  # noqa: E402
 from core.domain.services.prompt_manager import PromptManager  # noqa: E402
@@ -111,9 +116,9 @@ class TestMultiAgentDebateIntegration:
         synthesizer_mock = MagicMock()
         # We need enough items for the number of iterations
         synthesizer_mock.synthesize_stream.side_effect = [
-            iter(["First attempt "]),
-            iter(["Second corrected attempt "]),
-            iter(["Third attempt "]),
+            iter([InferenceResponse(text="First attempt ")]),
+            iter([InferenceResponse(text="Second corrected attempt ")]),
+            iter([InferenceResponse(text="Third attempt ")]),
         ]
 
         service = build_test_agentic_rag_service(

@@ -24,9 +24,12 @@ def test_deploy_jobs_main(mocker):
         "--project=animetix",
     ]
 
-    # We should have calls for 8 jobs (each has 1 describe run, 1 deploy run, 1 describe scheduler, 1 deploy scheduler = 4 calls per job)
-    # Total calls: 1 (enable api) + 8 * 4 = 33 calls
-    assert len(mock_run.call_args_list) == 33
+    # 8 jobs are scheduled (1 describe run, 1 deploy run, 1 describe scheduler,
+    # 1 deploy scheduler = 4 calls per job). The 9th job,
+    # animetix-generate-drift-baselines, has schedule=None: it is created but
+    # deliberately NOT wired to Cloud Scheduler (2 calls: describe run, deploy run).
+    # Total calls: 1 (enable api) + 8 * 4 (scheduled jobs) + 1 * 2 (on-demand job) = 35
+    assert len(mock_run.call_args_list) == 35
 
     # Check details of specific jobs
     # animetix-sync-catalog
@@ -50,3 +53,14 @@ def test_deploy_jobs_main(mocker):
     )
     assert "--memory=4Gi" in deploy_maintenance_job
     assert "--cpu=2" in deploy_maintenance_job
+
+    # animetix-generate-drift-baselines: the 9th (last) job, on-demand only
+    # (schedule=None). It must be created but never wired up to Cloud Scheduler.
+    deploy_drift_job = mock_run.call_args_list[34][0][0]
+    assert "animetix-generate-drift-baselines" in deploy_drift_job
+    assert "create" in deploy_drift_job
+
+    assert not any(
+        "animetix-generate-drift-baselines" in call[0][0] and "scheduler" in call[0][0]
+        for call in mock_run.call_args_list
+    )

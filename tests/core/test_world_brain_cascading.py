@@ -1,7 +1,12 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from core.domain.entities.ai_schemas import DebateOutcome, JudgeAction, SearchPlan
+from core.domain.entities.ai_schemas import (
+    DebateOutcome,
+    InferenceResponse,
+    JudgeAction,
+    SearchPlan,
+)
 from core.domain.services.agentic_rag_service import AgenticRAGService
 
 from tests.helpers.agentic_rag_factory import build_test_agentic_rag_service
@@ -103,10 +108,14 @@ def test_world_brain_cascading_flow(mock_dependencies):
             return_value="Détails sur Luffy à Egghead récupérés."
         )
 
-        # 6. Mock Synthesizer
+        # 6. Mock Synthesizer (SynthesizeProcessor reads .text on each chunk)
         service.synthesizer.synthesize_stream = MagicMock(
-            return_value=iter(
-                ["L'objectif de Luffy ", "est devenu plus concret ", "à Egghead."]
+            side_effect=lambda *a, **k: iter(
+                [
+                    InferenceResponse(text="L'objectif de Luffy "),
+                    InferenceResponse(text="est devenu plus concret "),
+                    InferenceResponse(text="à Egghead."),
+                ]
             )
         )
 
