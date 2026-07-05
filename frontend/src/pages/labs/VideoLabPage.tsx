@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Video, Wand2, Play, Film, Sparkles } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Video, Wand2, Play, Film, Sparkles, Lock } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { apiClient } from "../../utils/apiClient";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
+import { useAuthStore } from '../../store/authStore';
 import { VideoSegment } from '../../types';
 
 
@@ -60,6 +62,7 @@ const VideoLabPage: React.FC = () => {
   ];
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchAuthError, setSearchAuthError] = useState(false);
   const searchMutation = useMutation<VideoSearchResponse, Error, string>({
     mutationFn: async (q: string) => {
         return apiClient(`/api/v1/labs/video/search/?q=${encodeURIComponent(q)}`, {
@@ -67,6 +70,17 @@ const VideoLabPage: React.FC = () => {
         });
     }
   });
+
+  // Video-RAG search est un mode IA (GPU) qui coûte des Berrix et requiert une session.
+  // On gate avant l'appel plutôt que de laisser l'API renvoyer un 401/402 brut.
+  const handleRagSearch = () => {
+    if (!useAuthStore.getState().isAuthenticated) {
+      setSearchAuthError(true);
+      return;
+    }
+    setSearchAuthError(false);
+    searchMutation.mutate(searchQuery);
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-16">
@@ -193,13 +207,23 @@ const VideoLabPage: React.FC = () => {
                         className="bg-black/40 border border-white/10 rounded-lg px-4 py-2 text-xs flex-grow focus:border-red-500 outline-none transition-colors"
                     />
                     <Button 
-                        onClick={() => searchMutation.mutate(searchQuery)}
+                        onClick={handleRagSearch}
                         disabled={!searchQuery || searchMutation.isPending}
                         className="px-3"
                     >
                         <Wand2 className="w-4 h-4" />
                     </Button>
                 </div>
+                {searchAuthError && (
+                    <div className="text-center p-6 rounded-2xl border border-indigo-500/30 bg-indigo-500/5 mt-4">
+                        <Lock className="w-10 h-10 text-indigo-400 mx-auto mb-4" />
+                        <h4 className="text-sm font-black uppercase text-indigo-300 mb-2 italic">Connexion requise</h4>
+                        <p className="text-xs opacity-70 font-bold mb-4">Ce mode utilise l'IA (GPU) et coûte des Berrix. Connecte-toi pour rechercher une scène.</p>
+                        <Link to="/auth/login/">
+                            <Button variant="primary" className="mx-auto">Se connecter</Button>
+                        </Link>
+                    </div>
+                )}
                 {searchMutation.isSuccess && searchMutation.data.results && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                         {searchMutation.data.results.map((res: VideoSegment, i: number) => (
