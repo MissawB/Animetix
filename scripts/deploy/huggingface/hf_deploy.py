@@ -37,12 +37,15 @@ def deploy_space(repo_id, docker_content, readme_content, ignore):
     docker_final = textwrap.dedent(docker_content).strip()
     readme_final = textwrap.dedent(readme_content).strip()
 
+    # Exclusions non négociables, quel que soit le `ignore` fourni par l'appelant :
+    # le .env racine contient des secrets réels et ne doit jamais être uploadé.
+    always_ignore = ["Dockerfile", "README.md", ".env", "**/.env"]
     api.upload_folder(
         folder_path=".",
         repo_id=repo_id,
         repo_type="space",
         token=token,
-        ignore_patterns=ignore + ["Dockerfile", "README.md"],
+        ignore_patterns=ignore + always_ignore,
     )
 
     api.upload_file(

@@ -1,0 +1,40 @@
+# Docker ne lit le .dockerignore qu'à la RACINE du contexte de build
+# (le build est `docker build -f deploy/Dockerfile .`) — un .dockerignore
+# placé dans deploy/ serait ignoré. Garder ce fichier aligné sur .gcloudignore
+# pour que builds locaux, CI et Cloud Build voient le même contexte.
+
+# Secrets locaux : ne doivent JAMAIS entrer dans l'image
+# (.env seul ne matche qu'à la racine en syntaxe .dockerignore, d'où le **/)
+.env
+**/.env
+
+.git
+.venv/
+venv/
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/coverage/
+frontend/playwright-report/
+frontend/test-results/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.idea/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+wandb/
+checkpoints/
+.superpowers/
+assets/
+.tmp_dagster_home_*
+
+# Dossiers de données lourds (les JSON de data/processed et data/artifacts
+# sont nécessaires au runtime — sync_catalog — et restent inclus)
+data/raw/
+data/models/
+data/mlops/
+data/audio/

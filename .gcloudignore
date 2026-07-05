@@ -1,6 +1,9 @@
 .git
 .gitignore
 .gcloudignore
+# Secrets locaux : ne doivent JAMAIS partir dans le contexte Cloud Build
+# (les builds locaux `gcloud builds submit` uploadaient le .env avant cette ligne).
+.env
 .venv/
 venv/
 node_modules/
