@@ -1,7 +1,6 @@
 import contextvars
 import json
 import logging
-import sys
 from typing import Any, Optional
 
 from asgiref.sync import iscoroutinefunction
@@ -12,24 +11,15 @@ from .containers import Container
 
 logger = logging.getLogger("animetix.middleware.personalization")
 
-# Synchronize contextvars across double-import namespaces (e.g. animetix.middleware vs backend.api.animetix.middleware)
-# Declared once so the branch assignments below don't trip mypy's no-redef.
-user_id_var: contextvars.ContextVar[Optional[Any]]
-user_tier_var: contextvars.ContextVar[str]
-if "animetix.middleware" in sys.modules and __name__ != "animetix.middleware":
-    _other = sys.modules["animetix.middleware"]
-    user_id_var = getattr(_other, "user_id_var")
-    user_tier_var = getattr(_other, "user_tier_var")
-elif (
-    "backend.api.animetix.middleware" in sys.modules
-    and __name__ != "backend.api.animetix.middleware"
-):
-    _other = sys.modules["backend.api.animetix.middleware"]
-    user_id_var = getattr(_other, "user_id_var")
-    user_tier_var = getattr(_other, "user_tier_var")
-else:
-    user_id_var = contextvars.ContextVar("user_id", default=None)
-    user_tier_var = contextvars.ContextVar("user_tier", default="free")
+# Namespace unique garanti par le garde backend/__init__.py + ruff TID251
+# (voir docs/plans/2026-07-05-unify-import-namespace-design.md) : plus besoin
+# de synchroniser les contextvars entre doubles identités du module.
+user_id_var: contextvars.ContextVar[Optional[Any]] = contextvars.ContextVar(
+    "user_id", default=None
+)
+user_tier_var: contextvars.ContextVar[str] = contextvars.ContextVar(
+    "user_tier", default="free"
+)
 
 
 def get_current_user_id():

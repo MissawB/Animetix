@@ -17,54 +17,6 @@ if sys.platform == "win32":
     # la mauvaise policy d'event-loop → pollution async difficile à diagnostiquer).
     asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
-import importlib  # noqa: E402
-from importlib.abc import Loader, MetaPathFinder  # noqa: E402
-from importlib.machinery import ModuleSpec  # noqa: E402
-
-
-class AliasLoader(Loader):
-    def __init__(self, real_module):
-        self.real_module = real_module
-
-    def create_module(self, spec):
-        return self.real_module
-
-    def exec_module(self, module):
-        pass
-
-
-class SrcPipelineMapper(MetaPathFinder):
-    def find_spec(self, fullname, path, target=None):
-        if fullname.startswith("src.pipeline"):
-            real_name = fullname.replace("src.pipeline", "pipeline", 1)
-            try:
-                mod = importlib.import_module(real_name)
-                spec = ModuleSpec(fullname, AliasLoader(mod))
-                return spec
-            except Exception:
-                pass
-        return None
-
-
-sys.meta_path.insert(0, SrcPipelineMapper())
-
-# Map the parent packages
-try:
-    import src  # noqa: E402
-except ImportError:
-    import types  # noqa: E402
-
-    src = types.ModuleType("src")
-    sys.modules["src"] = src
-
-try:
-    import pipeline  # noqa: E402
-
-    src.pipeline = pipeline
-    sys.modules["src.pipeline"] = pipeline
-except Exception:
-    pass
-
 import tracemalloc  # noqa: E402
 
 import pytest  # noqa: E402
