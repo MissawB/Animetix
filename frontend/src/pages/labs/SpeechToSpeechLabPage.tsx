@@ -121,25 +121,27 @@ const SpeechToSpeechLabPage: React.FC = () => {
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.host;
-    // Le middleware WS d'auth lit la session ; on passe aussi le token Firebase en
-    // query param pour les clients authentifiés côté Firebase (sans cookie de session).
     const params = new URLSearchParams();
     if (selectedProfile) {
       params.set('voice_profile_id', String(selectedProfile.id));
     }
-    try {
-      const token = await auth.currentUser?.getIdToken();
-      if (token) {
-        params.set('token', token);
-      }
-    } catch (err) {
-      logger.log('Failed to get Firebase ID token for S2S WS', err);
-    }
     const qs = params.toString();
     const wsUrl = `${protocol}//${host}/ws/labs/s2s/live/${qs ? `?${qs}` : ''}`;
 
+    // Le token Firebase voyage via Sec-WebSocket-Protocol (["bearer", token]),
+    // PAS dans l'URL : un token en query string finirait dans les logs d'accès.
+    // Le middleware WS lit aussi la session côté serveur si présente.
+    let token: string | undefined;
+    try {
+      token = await auth.currentUser?.getIdToken();
+    } catch (err) {
+      logger.log('Failed to get Firebase ID token for S2S WS', err);
+    }
+
     logger.log(`Connecting to Gemini Live WebSocket: ${wsUrl}`);
-    const socket = new WebSocket(wsUrl);
+    const socket = token
+      ? new WebSocket(wsUrl, ['bearer', token])
+      : new WebSocket(wsUrl);
     socketRef.current = socket;
 
     socket.onopen = () => {

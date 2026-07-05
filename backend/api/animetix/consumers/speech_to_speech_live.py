@@ -103,7 +103,13 @@ class SpeechToSpeechLiveConsumer(AsyncWebsocketConsumer):
             await self.close(code=4402)
             return
 
-        await self.accept()
+        # Echo the negotiated subprotocol so browsers accept the handshake when the
+        # Firebase token was passed via Sec-WebSocket-Protocol (see _resolve_user).
+        subprotocols = self.scope.get("subprotocols", [])
+        if subprotocols and subprotocols[0] == "bearer":
+            await self.accept(subprotocol="bearer")
+        else:
+            await self.accept()
         self.client_connected = True
         self.gemini_session = None
         self.gemini_client = None
@@ -128,17 +134,19 @@ class SpeechToSpeechLiveConsumer(AsyncWebsocketConsumer):
         )
 
     async def _resolve_user(self):
-        # 1) Session (AuthMiddlewareStack) ; 2) token Firebase en query param.
+        # 1) Session (AuthMiddlewareStack) ; 2) token Firebase via le
+        # sous-protocole Sec-WebSocket-Protocol (["bearer", "<id_token>"]).
+        # On NE lit PAS le token depuis l'URL : un token en query string finirait
+        # dans les logs d'accès (proxy/Cloud Run). Le navigateur ne pouvant pas
+        # poser d'en-tête Authorization sur un handshake WS, le sous-protocole est
+        # le canal standard pour transmettre le token hors de l'URL.
         user = self.scope.get("user")
         if user is not None and user.is_authenticated:
             return user
-        from urllib.parse import parse_qs
-
-        qs = parse_qs(self.scope.get("query_string", b"").decode("utf-8"))
-        token = qs.get("token", [None])[0]
-        if not token:
-            return None
-        return await self._verify_firebase_token(token)
+        subprotocols = self.scope.get("subprotocols", [])
+        if subprotocols and subprotocols[0] == "bearer" and len(subprotocols) > 1:
+            return await self._verify_firebase_token(subprotocols[1])
+        return None
 
     @database_sync_to_async
     def _verify_firebase_token(self, token):
