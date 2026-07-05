@@ -3,11 +3,9 @@ import Navbar from './Navbar';
 import AdminNavbar from './admin/AdminNavbar';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 import { queryClient } from '../utils/queryClient';
 import { useCustomConfig } from '../features/utils/hooks/useCustomConfig';
-import { pageVariants } from './ui/animations';
 import CompanionOverlay from '../features/companion/CompanionOverlay';
 import { useUIStore } from '../store/uiStore';
 import { useAuthStore } from '../store/authStore';
@@ -85,19 +83,9 @@ const LayoutContent: React.FC<{ children: ReactNode }> = ({ children }) => {
 
       {location.pathname.startsWith('/admin/') && <AdminNavbar />}
 
-      {/* CONTENT WRAPPER */}
+      {/* CONTENT WRAPPER — les transitions de route vivent dans AnimatedRoutes (AppRouter) */}
       <main className="flex-grow">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={location.pathname}
-            variants={pageVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-          >
-            {children}
-          </motion.div>
-        </AnimatePresence>
+        {children}
       </main>
 
       <Footer />

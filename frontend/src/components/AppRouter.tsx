@@ -1,5 +1,7 @@
 import React, { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { pageVariants } from './ui/animations';
 import Layout from './Layout';
 import { GameRoutes } from '../features/games/routes/GameRoutes';
 import { SocialRoutes } from '../features/social/routes/SocialRoutes';
@@ -43,14 +45,26 @@ const getBasename = () => {
   return match ? match[0].replace(/\/$/, '') : '';
 };
 
-const AppRouter: React.FC = () => {
-  const basename = React.useMemo(() => getBasename(), []);
+/**
+ * Route transitions must wrap <Routes location={location}> directly :
+ * l'arbre sortant conserve l'ancienne location en prop, sinon il re-rend la
+ * nouvelle page pendant l'animation d'exit et AnimatePresence reste bloqué
+ * (page invisible jusqu'au rechargement).
+ */
+const AnimatedRoutes: React.FC = () => {
+  const location = useLocation();
 
   return (
-    <Router basename={basename}>
-      <Layout>
+    <AnimatePresence mode="wait" onExitComplete={() => window.scrollTo(0, 0)}>
+      <motion.div
+        key={location.pathname}
+        variants={pageVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+      >
         <Suspense fallback={<Loading />}>
-          <Routes>
+          <Routes location={location}>
             <Route path="/" element={<App />} />
             {AuthRoutes()}
             {SocialRoutes()}
@@ -69,6 +83,18 @@ const AppRouter: React.FC = () => {
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
+const AppRouter: React.FC = () => {
+  const basename = React.useMemo(() => getBasename(), []);
+
+  return (
+    <Router basename={basename}>
+      <Layout>
+        <AnimatedRoutes />
       </Layout>
     </Router>
   );
