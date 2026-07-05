@@ -6,15 +6,12 @@ import time
 
 logger = logging.getLogger("animetix." + __name__)
 
-# Détection robuste de la racine du projet
 BASE_DIR = os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
-sys.path.insert(0, os.path.join(BASE_DIR, "src"))
-sys.path.insert(0, os.path.join(BASE_DIR, "src", "backend"))
 sys.path.insert(0, os.path.join(BASE_DIR, "backend", "api"))
 sys.path.insert(0, os.path.join(BASE_DIR, "backend"))
-# Repo root, so the `animetix.*` paths referenced in settings resolve.
+# Repo root: tests.helpers & data paths resolve from here.
 sys.path.insert(0, BASE_DIR)
 
 

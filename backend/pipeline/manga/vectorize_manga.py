@@ -20,9 +20,11 @@ if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
 
 logger = logging.getLogger("animetix.pipeline." + __name__)
 
-# Détection robuste de la racine du projet
+# BASE_DIR est backend/ (3 dirname depuis backend/pipeline/manga/) ; on expose
+# les deux racines d'import (backend -> core/pipeline, backend/api -> animetix*).
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-sys.path.append(os.path.join(BASE_DIR, "pipeline"))
+sys.path.append(BASE_DIR)
+sys.path.append(os.path.join(BASE_DIR, "api"))
 
 
 # Initialisation différée

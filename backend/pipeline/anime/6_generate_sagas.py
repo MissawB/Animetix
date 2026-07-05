@@ -8,17 +8,15 @@ from tqdm import tqdm
 # Setup logging
 logger = logging.getLogger("animetix." + __name__)
 
-# Setup environment
-# abspath(__file__) is backend/pipeline/anime/6_generate_sagas.py
-# 1. backend/pipeline/anime
-# 2. backend/pipeline
-# 3. src
-# 4. root
+# Setup environment — standalone script: expose the two import roots
+# (backend -> core/adapters/pipeline, backend/api -> animetix*).
+# abspath(__file__) is backend/pipeline/anime/6_generate_sagas.py, so four
+# dirname() calls reach the repo root.
 base_dir = os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
-sys.path.append(os.path.join(base_dir, "src"))
-sys.path.append(os.path.join(base_dir, "src", "backend"))
+sys.path.append(os.path.join(base_dir, "backend"))
+sys.path.append(os.path.join(base_dir, "backend", "api"))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "animetix_project.settings")
 import django  # noqa: E402
 

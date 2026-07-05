@@ -13,9 +13,11 @@ logger = logging.getLogger("animetix." + __name__)
 if sys.platform == "win32" and hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-# Détection robuste de la racine du projet
+# BASE_DIR est backend/ (3 dirname depuis backend/pipeline/anime/) ; on expose
+# les deux racines d'import (backend -> core/pipeline, backend/api -> animetix*).
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-sys.path.append(os.path.join(BASE_DIR, "backend"))
+sys.path.append(BASE_DIR)
+sys.path.append(os.path.join(BASE_DIR, "api"))
 from core.utils.security import safe_http_request  # noqa: E402
 
 INPUT_FILE = os.path.join(BASE_DIR, "data", "processed", "clean_root_animes.json")
