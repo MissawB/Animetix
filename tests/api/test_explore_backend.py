@@ -20,14 +20,14 @@ def media_items(db):
             metadata={"genres": ["Action"]},
         )
     # The CatalogService is a DI singleton that caches catalogs in-memory for the
-    # whole session; clear it (in both import namespaces) plus the Django cache so
-    # the explore view reflects the rows just created instead of a stale catalog.
+    # whole session; clear it plus the Django cache so the explore view reflects
+    # the rows just created instead of a stale catalog.
     import sys
 
     from django.core.cache import cache
 
     cache.clear()
-    for mod_name in ("animetix.containers", "animetix.containers"):
+    for mod_name in ("animetix.containers",):
         mod = sys.modules.get(mod_name)
         if mod is not None:
             try:
