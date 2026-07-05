@@ -97,7 +97,6 @@ Animetix employs an **LLM-as-a-Judge** evaluation loop:
 
 ## 🛡️ 6. Safety & Compliance
 
-- **SQL Guardrail:** Natural language text-to-SQL inputs are audited via `sql_guard.py` to prevent SQL injection, multi-statement queries, comments, or unauthorized table access.
 - **Prompt Sanitization:** Ingested context is audited to block indirect prompt injections.
 - **Rate Limiting:** Protects models from Token DoS attacks.
 - **OpenTelemetry Tracing:** Spans are enriched with semantic agentic attributes and exported directly to Cloud Trace.

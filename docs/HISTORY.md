@@ -2,6 +2,18 @@
 
 This document archives the major milestones of the project's technical evolution.
 
+## [2026-07-05] Session: Removed the dead LLM text-to-SQL surface
+
+Closure of the 🔴 debt item "SQL généré par LLM exécuté en base" (2026-07-05 audit). Exploration showed the whole chain was dead code: zero production callers (only the port, adapters and tests referenced it), `ALLOYDB_NL_QUERY_ACTIVE=False` by default, and prod runs on Neon where the native `alloydb_ai_nl.get_sql` path cannot execute — while the LLM fallback would have run with `neondb_owner` privileges gated only by a `READ ONLY` transaction. Decision (user-validated): delete rather than harden — removed `query_data_natural_language` from `RepositoryPort` and its three adapters, `is_alloydb_nl_query_supported()`, `sql_guard.py` (sqlglot AST validator), its fuzzing tests and `scripts/verify/audit_sql_guard.py`, the `ALLOYDB_NL_*` settings, and the `sqlglot` dependency. Everything is recoverable from git if the feature ever ships for real (spec: `docs/plans/2026-07-05-remove-text-to-sql-design.md`).
+
+## [2026-07-05] Session: Secret hygiene — `.env` can no longer reach the prod image or the HF Space
+
+Closure of the 🔴 debt item "Prod — secrets réels embarqués dans l'image Docker" (2026-07-05 debt audit). Both leak channels are shut and verified:
+
+- **Cloud Build / Docker channel**: `.env` added to [.gcloudignore](../.gcloudignore) (verified with `gcloud meta list-files-for-upload` — only the placeholder `.env.example` remains in the upload context) and a **root** [.dockerignore](../.dockerignore) created (`.env` + `**/.env`, mirroring `.gcloudignore` so local, CI and Cloud Build contexts match). The old `deploy/.dockerignore` was dead config — Docker only reads the `.dockerignore` at the build-context root (the build is `docker build -f deploy/Dockerfile .`) — and has been deleted.
+- **HF Space channel**: [hf_deploy.py](../scripts/deploy/huggingface/hf_deploy.py) now enforces an unconditional `always_ignore = [".env", "**/.env", …]` inside `deploy_space()`, independent of the caller-supplied ignore list.
+- **Actual exposure was narrower than feared**: the current prod image (`web:5f8a0886…`) was built by CI from a git checkout, which has no `.env` (untracked) → clean; the HF Space never received a `.env` (verified via the Hub API — the callers' ignore lists had worked). The residual risk was old Artifact-Registry tags built locally via `gcloud builds submit` before the exclusion, plus two dead-but-real keys in the local `.env` (`TRIPO_API_KEY`, `MAPBOX_TOKEN` — consumed nowhere in the code) → follow-ups tracked in TODO (purge old tags, revoke dead keys). Stripe/Cohere/Tavily/OpenAI values in `.env` were already empty; the 8 Cloud Run jobs already mount all their secrets via Secret Manager and `ci.yml` deploys with `--update-env-vars` (merge), so nothing depended on the baked file anymore — except the web service's missing `NEO4J_*`/`HUGGINGFACE_API_KEY`, split out as its own open TODO item.
+
 ## [2026-06-25] Session: Architecture & Financial Review — Backlog Closure
 
 Closure of the high/medium items raised by the 2026-06-22 AI-architecture and financial review (each shipped on its own branch; TODO trimmed back to open work only).

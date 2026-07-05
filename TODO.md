@@ -6,20 +6,100 @@
 
 ## 🔴 Critiques
 
-_Rien d'ouvert._
+- [x] **Prod — secrets réels embarqués dans l'image Docker** _(audit dette 2026-07-05 ; **clos et vérifié** le 2026-07-05, détail archivé dans [docs/HISTORY.md](docs/HISTORY.md))_
+  - ✅ Le `.env` racine ne part plus dans l'image : `.env` exclu de [.gcloudignore](.gcloudignore) (vérifié via `gcloud meta list-files-for-upload` — seul `.env.example` reste), [.dockerignore](.dockerignore) **racine** créé (`.env` + `**/.env` — celui que Docker lit vraiment), config morte `deploy/.dockerignore` supprimée. Le `read_env` de [settings.py:14-16](backend/api/animetix_project/settings.py#L14-L16) devient inoffensif (fichier absent de l'image, ignoré silencieusement).
+  - ✅ Second canal de fuite fermé : [hf_deploy.py](scripts/deploy/huggingface/hf_deploy.py) exclut `.env`/`**/.env` **inconditionnellement** (indépendamment de l'ignore fourni par l'appelant) ; vérifié via l'API Hub que le Space n'a jamais contenu de `.env` réel.
+- [ ] **Prod — secrets manquants sur `animetix-web` + hygiène post-fuite** _(découvert lors de la remédiation `.env` du 2026-07-05 — la fuite elle-même est close et vérifiée, archivée dans [docs/HISTORY.md](docs/HISTORY.md))_
+  - ⏳ **Monter les secrets sur le service web** (action manuelle — bloquée en session par permission) : l'image prod, CI-buildée et donc sans `.env`, tourne **sans** `NEO4J_URI/USER/PASSWORD` (lues par [neo4j_client.py:17-19](backend/pipeline/neo4j_client.py#L17-L19) — features graphe/Oracle dégradent en silence) ni `HUGGINGFACE_API_KEY` ([qwen3_vl_adapter.py:34](backend/adapters/inference/qwen3_vl_adapter.py#L34)) ; `HF_SPACES` y est un littéral au lieu d'un secretKeyRef. Les secrets existent déjà en SM (montés sur les 8 jobs). Exécuter :
+    ```
+    gcloud run services update animetix-web --region europe-west9 --project animetix \
+      --remove-env-vars=HF_SPACES \
+      --update-secrets=HF_SPACES=HF_SPACES:latest,HUGGINGFACE_API_KEY=HF_TOKEN:latest,NEO4J_URI=NEO4J_URI:latest,NEO4J_USER=NEO4J_USER:latest,NEO4J_PASSWORD=NEO4J_PASSWORD:latest
+    ```
+    (Sans risque : nouvelle révision, même image, rollback instantané. [ci.yml](.github/workflows/ci.yml) déploie avec `--update-env-vars` → ne wipe rien.)
+  - ⏳ **Hygiène historique** : purger les anciens tags de `animetix-repo/web` buildés localement avant l'exclusion (peuvent contenir le `.env`) ; révoquer `TRIPO_API_KEY` et `MAPBOX_TOKEN` (valeurs réelles dans le `.env` local, consommées nulle part dans le code).
+- [x] **Sécu — SQL généré par LLM exécuté en base (auto-flaggé HIGH-RISK)** _(audit dette 2026-07-05 ; **clos** le 2026-07-05 par suppression, archivé dans [docs/HISTORY.md](docs/HISTORY.md))_
+  - Code mort de bout en bout (zéro appelant de production, flag off, prod sur Neon) → feature supprimée plutôt que durcie : port + 3 adapters, `sql_guard.py` + fuzzing + script d'audit, settings `ALLOYDB_NL_*`, dépendance `sqlglot`. Spec : [docs/plans/2026-07-05-remove-text-to-sql-design.md](docs/plans/2026-07-05-remove-text-to-sql-design.md).
+- [ ] **Prod — WebSockets cassés : channel layer sans TLS + fallback InMemory silencieux** _(audit dette 2026-07-05)_
+  - Hypothèse WSGI **écartée** : [supervisord.conf:9](deploy/supervisord.conf#L9) sert bien de l'ASGI (gunicorn + UvicornWorker). Suspect n°1 : [settings.py:219-228](backend/api/animetix_project/settings.py#L219-L228) construit `CHANNEL_LAYERS` avec `"hosts": [REDIS_URL]` sans option SSL, alors que `CACHES` ([settings.py:360-362](backend/api/animetix_project/settings.py#L360-L362)) gère `rediss://` → si le Redis prod est TLS, handshake WS 500 pendant que le HTTP marche.
+  - Bug jumeau : si `REDIS_URL` absent → fallback silencieux `InMemoryChannelLayer` avec 2 workers → fan-out de groupes cassé sans erreur. Fix : config SSL du channel layer + **fail-fast** si `REDIS_URL` manquant en prod.
 
 ## 🟠 Élevés
 
-_Rien d'ouvert._
+- [ ] **Backend — triple espace de noms d'import du même package** _(audit dette 2026-07-05)_
+  - L'app est enregistrée `animetix` nu ([settings.py:195](backend/api/animetix_project/settings.py#L195)) mais importée aussi en `backend.api.animetix` (10 imports, dont settings) et `backend.animetix` (pipeline). Django peut charger modèles/signaux/singletons DI **deux fois** sous des identités différentes. Racine de plusieurs hacks en cascade (le `MetaPathFinder` custom de [tests/conftest.py:36-66](tests/conftest.py#L36-L66), les imports paresseux `# noqa: E402` partout). Choisir une racine unique.
+- [ ] **Sécu/coûts — endpoints IA/GPU en `AllowAny` + throttling incohérent** _(audit dette 2026-07-05)_
+  - 76 `AllowAny`, dont des vues RAG/vector coûteuses dans [labs.py](backend/api/animetix/api/labs.py) (`VideoRAGSearchView:643`, `MangaLabDataView:469`, `AudioLabDataView:692`, `SeiyuuDiscoveryView:725`) couvertes seulement par le throttle global `anon:100/day`. Contredit la règle « toute feature GPU/IA consomme des Bx + login ».
+  - Throttling : plusieurs jeux mettent `throttle_classes = []` ([emoji.py](backend/api/animetix/api/games/emoji.py), [undercover.py](backend/api/animetix/api/games/undercover.py)) et **aucune limite par minute** nulle part — le plafond journalier n'empêche pas les rafales.
+- [ ] **Backend — N+1 quasi garantis sur les endpoints listes** _(audit dette 2026-07-05)_
+  - 8 `select_related`/`prefetch_related` dans tout le backend pour un [models.py](backend/api/animetix/models.py) de 895 lignes plein de FK. Les endpoints listes/social/leaderboard ([social.py](backend/api/animetix/api/social.py), [core.py](backend/api/animetix/api/core.py)) sérialisent des objets liés sur Postgres distant (Neon) — latence qui scale avec le volume.
+- [ ] **CI — workflow HF cassé (mauvais chemin de script)** _(audit dette 2026-07-05)_
+  - [deploy_to_hf.yml:44](.github/workflows/deploy_to_hf.yml#L44) appelle `scripts/deploy/hf_deploy.py` qui n'existe pas (réel : `scripts/deploy/huggingface/hf_deploy.py`) → le job échoue à chaque déclenchement. Fixer le chemin, ou supprimer le déploiement HF si Cloud Run est la vraie prod.
+- [ ] **Build — dépendances de dev embarquées dans l'image prod** _(audit dette 2026-07-05)_
+  - [requirements.in:30-39](requirements.in#L30-L39) mélange pytest/pytest-playwright/playwright/watchdog/coloredlogs dans le lock de prod (playwright tire tout un stack navigateur). Scinder en `requirements.in` + `requirements-dev.in`.
+- [ ] **Frontend — tokens de design CSS cassés (triplets RGB à virgules)** _(audit dette 2026-07-05)_
+  - Toujours présent : [index.css:8](frontend/src/index.css#L8) et ~19 tokens en `37, 99, 235` mais [tailwind.config.js:16-37](frontend/tailwind.config.js#L16-L37) les consomme en `rgb(var(--x) / <alpha>)` → CSS invalide. **Toutes** les utilities `brand-*`/`surface-*`/`anime-*` sont cassées (pas que l'opacité). Fix trivial : triplets espace-séparés (`37 99 235`).
 
 ## 🟡 Moyens
 
+- [ ] **Backend — fichiers-dieux dans la couche API** _(audit dette 2026-07-05)_
+  - 25 fichiers > 500 lignes ; pires côté runtime : [labs.py](backend/api/animetix/api/labs.py) (1262 lignes, ~25 vues) et [core.py](backend/api/animetix/api/core.py) (1216 lignes — auth, recherche, config et jeu dans le même fichier). Découper par domaine.
+- [ ] **Backend — service locator au lieu d'injection** _(audit dette 2026-07-05)_
+  - 169 appels directs `container.x.y()` dans les vues + monkey-patch `ProviderDelegate` ([containers/\_\_init\_\_.py:40-54](backend/api/animetix/containers/__init__.py#L40-L54)) pour contourner le wiring de `dependency_injector`. Couplage global difficile à tester ; lié au bug DI contourné dans [tests/api/games/conftest.py](tests/api/games/conftest.py).
+- [ ] **Backend — exceptions avalées à grande échelle** _(audit dette 2026-07-05)_
+  - 168 `except Exception` log-et-continue + 77 `pass` silencieux, dont un consumer WebSocket ([undercover.py:148-149](backend/api/animetix/consumers/undercover.py#L148-L149)), [labs.py:87,215,237,243](backend/api/animetix/api/labs.py#L87), [reachability_health_mixin.py:59-60](backend/adapters/inference/reachability_health_mixin.py#L59-L60). Remplacer par du log/handling explicite, au moins sur les chemins runtime.
+- [ ] **Backend — module mort `brain_api.py` (539 lignes)** _(audit dette 2026-07-05)_
+  - [brain_api.py](backend/adapters/inference/brain_api.py) n'est importé nulle part (le container câble `brain_api_adapter`). À supprimer — son nom quasi identique au module actif est un piège.
+- [ ] **Backend — signaux dispersés + write amplification** _(audit dette 2026-07-05)_
+  - Signaux dans [models.py:549-557](backend/api/animetix/models.py#L549-L557) ET [signals.py](backend/api/animetix/signals.py) ; `save_user_profile` ré-écrit le profil à **chaque** save de User et lève `RelatedObjectDoesNotExist` si le profil manque (users bulk/legacy). Consolider et garder.
+- [ ] **Backend — squash des migrations** _(audit dette 2026-07-05)_
+  - 48 migrations sur une seule app, avec churn (QuizWhoRoom créé en 0044, supprimé en 0046). Squash = setup DB de test/CI plus rapide.
+- [ ] **Frontend — composants-dieux (14 pages de 400-560 lignes)** _(audit dette 2026-07-05)_
+  - [ForgePage.tsx](frontend/src/pages/games/ForgePage.tsx) (561), [SynapticLabPage.tsx](frontend/src/pages/labs/SynapticLabPage.tsx) (553), [UndercoverRoom.tsx](frontend/src/pages/games/UndercoverRoom.tsx) (539)… mélangent fetch, WebSocket et JSX. Extraire hooks (data/socket) et sous-composants présentationnels.
+- [ ] **Frontend — deux implémentations WebSocket divergentes (+ 2 bugs)** _(audit dette 2026-07-05)_
+  - [useSocket.ts:71-75](frontend/src/hooks/useSocket.ts#L71-L75) : compteur remis à zéro *avant* le test → le toast « Connexion rétablie ! » ne s'affiche jamais (code mort).
+  - [notificationStore.ts:61-68](frontend/src/store/notificationStore.ts#L61-L68) : reconnexion en boucle infinie toutes les 5s, sans cap, sans backoff, sans détection de close volontaire (logout). Standardiser sur la stratégie de `useSocket`.
+- [ ] **Frontend — i18n incohérent (~500 chaînes FR en dur)** _(audit dette 2026-07-05)_
+  - i18next configuré et utilisé dans ~251 fichiers, mais ~497 chaînes françaises restent codées en dur dans le JSX → changement de langue partiel.
+- [ ] **Tests — le conftest des jeux est une mine (bug `dependency_injector`)** _(audit dette 2026-07-05)_
+  - [tests/api/games/conftest.py](tests/api/games/conftest.py) re-wire 9 modules avant *chaque* test et documente que ces tests ne doivent pas tourner dans le même process que `--cov=animetix.views.api` (sinon vraies dépendances appelées). Cause du seul skip du repo ([test_archetypist_coverage.py:67](tests/api/games/test_archetypist_coverage.py#L67) — une 400 devient 500). Corriger à la racine (version/usage de `dependency_injector`).
+- [ ] **Tests — les e2e Playwright ne tournent nulle part** _(audit dette 2026-07-05)_
+  - `npm run test:e2e` filtre `--grep @e2e` mais **aucune spec n'a ce tag** → 0 test sélectionné. En CI seule `a11y.spec.ts` tourne ([ci.yml:289](.github/workflows/ci.yml#L289)) ; `akinetix.spec.ts`, `vrt.spec.ts`, `forge-ui.spec.ts` ne s'exécutent jamais. Idem projet vitest `storybook` (jamais en CI).
+- [ ] **Tests — asymétrie de couverture + angles morts** _(audit dette 2026-07-05)_
+  - Gate backend 75 % (dur) vs plancher frontend ~29 % ([vite.config.ts:129-134](frontend/vite.config.ts#L129-L134)). Le 75 % agrégé masque des zones à ~0 test : `pipeline/movies`, `pipeline/games`, `pipeline/actors`, `adapters/infrastructure`.
+  - Les tests d'intégration ne s'exécutent **jamais** en CI : `continue-on-error: true` ([ci.yml:153](.github/workflows/ci.yml#L153)), exclus des PR, ollama jamais démarré.
+- [ ] **Tests — 77 mutations brutes de `sys.modules` dans 16 fichiers** _(audit dette 2026-07-05)_
+  - Défendues par le garde autouse [conftest.py:138-160](tests/conftest.py#L138-L160) mais structurellement fragiles. + env muté au niveau module dans [test_brain_api.py:25](tests/adapters/test_brain_api.py#L25) (couplage à l'ordre d'import) et quelques tests à `sleep` réel ([test_cove_parallel.py:73](tests/core/test_cove_parallel.py#L73)).
+- [ ] **CI — dérive pre-commit ↔ CI + audit sécu frontend factice** _(audit dette 2026-07-05)_
+  - Pre-commit : pas de gate coverage local, hook mypy documenté cassé (`SKIP=mypy`), **aucun hook frontend** alors que la CI impose tsc/eslint/vitest (et `lint-staged.config.cjs` existe en parallèle, non unifié).
+  - Le job `frontend-security` de [security_audit.yml:49-63](.github/workflows/security_audit.yml#L49-L63) fait juste `npm ci` — **aucun `npm audit`**.
+- [ ] **Infra — `animetix.xyz` absent des défauts `ALLOWED_HOSTS`/CORS** _(audit dette 2026-07-05)_
+  - [settings.py:89](backend/api/animetix_project/settings.py#L89) (défaut = hf.space seulement) et [settings.py:277-282](backend/api/animetix_project/settings.py#L277-L282) : le domaine custom ne marche que si la var d'env est bien positionnée — couplage caché avec le Worker Cloudflare (`X-Forwarded-Host`). Ajouter le domaine aux défauts ou fail-fast.
+- [ ] **Infra — logique de déploiement dupliquée, pas d'IaC** _(audit dette 2026-07-05)_
+  - 3 fichiers Cloud Build + `gcloud` impératif dans [ci.yml:345-361](.github/workflows/ci.yml#L345-L361) + ~7 scripts Python `subprocess` ([deploy_brain.py](scripts/deploy/gcp/deploy_brain.py), `deploy_cdn.py`, `deploy_jobs.py`…) ; 3 cibles de déploiement (GCP, Cloudflare, HF Space). Converger vers une source déclarative.
+  - Contexte de build divergent : la CI valide un build local « gras » (pas de `.dockerignore`) quand la prod passe par `.gcloudignore` — un seul contexte canonique.
+- [ ] **Scripts — sprawl (~55 scripts, one-offs exploratoires)** _(audit dette 2026-07-05)_
+  - `scripts/test/ddg_test.py`, `test_xai_real.py`… hors pytest ; les utilitaires DB (`scripts/db/check_*.py`) devraient être des management commands. Trier : promouvoir, migrer ou supprimer.
 - [ ] **Backend — noms de modèles hardcodés + mismatch de version** _(revue archi 2026-06-22 ; en partie fait)_
   - ✅ Phase 1 : registre sécu [model_registry.py](backend/core/utils/model_registry.py) (SHA + trust). ✅ Phase 2a : unification Gemini en 3 rôles canoniques via [gemini_models.py](backend/core/utils/gemini_models.py) (`gemini-3.5-flash`/`live-2.5-native-audio`/`embedding-2`) + garde-fou anti-littéral. ✅ Révisions d'embeddings résolues depuis le registre central (`EMBEDDING_VERSIONS`, manifest abandonné).
   - ⏳ **Reste (Phase 2b)** : registre d'**IDs logiques locaux** (`llama3`, `Qwen2.5-1.5B` vs `Qwen3.5-4B`, `DRAFT_MODEL_ID`, `VibeThinker-3B`, `FLUX`) + fusion résiduelle [pipeline/models_registry.py](backend/pipeline/models_registry.py).
 
 ## 🟢 Faibles
 
+- [ ] **Git — `dev/null/` versionné (hooks Git-LFS committés)** _(audit dette 2026-07-05)_
+  - 4 hooks LFS (`post-checkout`, `post-commit`, `post-merge`, `pre-push`) committés sous le chemin littéral `dev/null/` (accident de redirection Windows, commit `3df26086`). `git rm -r dev/null/`.
+- [ ] **Git — ~30 Mo de PNG en blobs bruts (64 fichiers, hors LFS)** _(audit dette 2026-07-05)_
+  - Jusqu'à 2,6 Mo pièce (`frontend/public/img/background.png`…) alors que JSON/npy sont déjà en LFS. Ajouter `*.png filter=lfs` ou déplacer le gros art vers bucket/CDN.
+- [ ] **Docs — deux TODO contradictoires + docs périmées** _(audit dette 2026-07-05)_
+  - [docs/TODO.md](docs/TODO.md) (anglais) diverge de ce fichier → une seule source de vérité.
+  - [README.md:235](README.md#L235) pointe `scripts/setup_e2e.py` (réel : `scripts/verify/setup_e2e.py`) ; [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) mentionne encore Celery (remplacé par Cloud Run Jobs) ; `FULL_GUIDE.md`/`ROADMAP.md` antérieurs au burst drift/transparency/ads de juillet.
+- [ ] **Nettoyage — résidus de working tree et de refactor** _(audit dette 2026-07-05)_
+  - Dossier `src/` **vide** (résidu du refactor hexagonal, non gitignoré → pollue `git status`), `error_latent.html` (210 Ko), `brainstorming_status.txt`. Supprimer (+ ignorer `src/` si recréé par un outil).
+- [ ] **Divers cosmétique/hygiène** _(audit dette 2026-07-05)_
+  - `.mo` compilés versionnés (`backend/api/locale/*/LC_MESSAGES/django.mo`) ; `NOTICE` dit « Double Scenario Project » vs marque « Animetix » partout ; mélange FR/EN (commentaires, [sync-api.bat](sync-api.bat) Windows-only sans équivalent cross-platform) ; `console.log` de debug résiduels ([SponsorStreamModal.tsx](frontend/src/features/billing/components/SponsorStreamModal.tsx) en tête) ; `WSGI_APPLICATION` déclaré ([settings.py:304](backend/api/animetix_project/settings.py#L304)) pour une app ASGI-only (invite à l'erreur de serving) ; [frontend/.env.production](frontend/.env.production) tracké (clés publiques par design, mais mauvais précédent).
+  - [api.ts:342-371](frontend/src/api.ts#L342-L371) (`downloadDataset`) ré-implémente l'injection du token Firebase hors `apiClient` — à consolider avec l'item « fetch() brut » ci-dessous.
+- [ ] **Settings — défauts d'infra codés en dur** _(audit dette 2026-07-05)_
+  - `DEBUG=True` par défaut hors-prod ([settings.py:104](backend/api/animetix_project/settings.py#L104)) : toute la sécurité repose sur `DJANGO_ENV=production` ; URLs hf.space et emails de service accounts en littéraux ([settings.py:331,391,395,581,595,620](backend/api/animetix_project/settings.py#L331)) ; `print()` au démarrage ([settings.py:375,510](backend/api/animetix_project/settings.py#L375)) au lieu du logger ; `ssl_cert_reqs: None` sur le cache `rediss://` ([settings.py:361](backend/api/animetix_project/settings.py#L361)) désactive la vérif de cert.
 - [ ] **Backend — duplication entre adapters d'inférence** _(revue archi 2026-06-22 ; en partie fait)_
   - ✅ `health_check` *reachability* des adapters API (`brain_api` HTTP-ping, `google_genai` client-init, `unified`/ollama) factorisé dans [ReachabilityHealthCheckMixin](backend/adapters/inference/reachability_health_mixin.py) (builder de statut standardisé + sonde HTTP générique pilotée par un `requester` injecté → chaque adapter garde son client HTTP et ses cibles de patch).
   - ✅ `health_check` *readiness* factorisé dans [LazyLocalModelAdapter](backend/adapters/inference/lazy_local_model_adapter.py) (tous les adapters à modèle local migrés) ; motif `_load_model()` multi-sous-modèles factorisé dans [LazyLoadMixin](backend/adapters/inference/lazy_load_mixin.py) (`ImageGenMixin`/`AudioMixin`).

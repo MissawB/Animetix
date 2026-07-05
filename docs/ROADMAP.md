@@ -56,7 +56,6 @@ gantt
 
 #### Phase S: Robustness, Security & Observability (IN PROGRESS)
 *   **Network Security:** Direct VPC Egress and Cloud Armor WAF configured.
-*   **SQL Hardening:** `sql_guard.py` parser and read-only transactions for Text-to-SQL.
 *   **MLOps Alerting:** Prometheus/Grafana monitoring for archetype drift and model collapse.
 
 ---

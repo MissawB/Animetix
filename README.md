@@ -123,7 +123,6 @@ For production scale and security, Animetix utilizes managed Google Cloud Platfo
 
 * **Google Identity Platform (GCIP):** Manages user registration and logins (supporting Firebase Web SDK, custom DRF JWT validation, and OAuth providers: Google, Discord, X, MyAnimeList).
 * **Vertex AI Vector Search (Collections):** Managed high-dimensional indexing with serverless auto-embeddings (`text-embedding-005`) and RRF search.
-* **AlloyDB AI Tools:** Accelerates text-to-SQL operations on database catalogs via native SQL functions (`alloydb_ai_nl.get_sql`).
 * **Cloud Run Jobs & Cloud Scheduler:** Serverless nightly database synchronizations, replacing standard Celery Beat infrastructure.
 * **Cloud KMS (CMEK):** Customer-managed encryption keys for GCS buckets containing generated creative assets.
 * **Edge Defense (Cloud Armor):** Preempts token-based DDoS, Web application attacks, and prompt injections via CEL filtering.
@@ -210,7 +209,6 @@ Animetix/
 
 ## 📊 MLOps, Security & Observability
 
-* **Two-Layered SQL Guardrail:** Prior to execution, generated SQL queries are checked by `sql_guard.py` to prevent multi-statement injection, comments, mutating actions, or unauthorized table access.
 * **Prompt Sanitization:** Ingested context is audited to prevent indirect prompt injections.
 * **Telemetry & Tracing:** RAG decision steps and agent actions are injected into OpenTelemetry spans, which export directly to Google Cloud Trace when active.
 * **DPO Loop:** User preferences and corrections are logged to fine-tune local models.
