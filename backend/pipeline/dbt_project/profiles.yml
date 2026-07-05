@@ -9,9 +9,9 @@ animetix_quality:
     dev:
       database: main
       schema: main
-      schema_directory: C:\Users\bahma\PycharmProjects\Projet solo\Double_scenario_Project\.claude\worktrees\neo4j-resilience-drop-chroma\backend\pipeline\dbt_project\sqlite_schemas
+      schema_directory: C:\Users\bahma\PycharmProjects\Projet solo\Double_scenario_Project\backend\pipeline\dbt_project\sqlite_schemas
       schemas_and_paths:
-        main: C:\Users\bahma\PycharmProjects\Projet solo\Double_scenario_Project\.claude\worktrees\neo4j-resilience-drop-chroma\backend\api\file:memorydb_default?mode=memory&cache=shared
+        main: C:\Users\bahma\PycharmProjects\Projet solo\Double_scenario_Project\backend\api\file:memorydb_default?mode=memory&cache=shared
       threads: 1
       type: sqlite
   target: dev
