@@ -18,6 +18,8 @@ import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { apiClient } from "../../utils/apiClient";
+import { auth } from "../../utils/firebase";
+import { useAuthStore } from '../../store/authStore';
 import { VoiceProfile } from '../../types';
 import { logger } from '../../utils/logger';
 
@@ -105,16 +107,36 @@ const SpeechToSpeechLabPage: React.FC = () => {
     }
   }, []);
 
-  const connectWebSocket = useCallback(() => {
+  const connectWebSocket = useCallback(async () => {
     setStatus('connecting');
     setErrorMessage(null);
 
+    // Session S2S Live = GPU (Gemini Live) : requiert login + coûte des Berrix.
+    // On gate avant d'ouvrir le socket plutôt que d'encaisser un close 4401 brut.
+    if (!useAuthStore.getState().isAuthenticated) {
+      setErrorMessage('Connexion requise : ce mode utilise l\'IA (GPU) et coûte des Berrix.');
+      setStatus('error');
+      return;
+    }
+
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.host;
-    let wsUrl = `${protocol}//${host}/ws/labs/s2s/live/`;
+    // Le middleware WS d'auth lit la session ; on passe aussi le token Firebase en
+    // query param pour les clients authentifiés côté Firebase (sans cookie de session).
+    const params = new URLSearchParams();
     if (selectedProfile) {
-      wsUrl += `?voice_profile_id=${selectedProfile.id}`;
+      params.set('voice_profile_id', String(selectedProfile.id));
     }
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      if (token) {
+        params.set('token', token);
+      }
+    } catch (err) {
+      logger.log('Failed to get Firebase ID token for S2S WS', err);
+    }
+    const qs = params.toString();
+    const wsUrl = `${protocol}//${host}/ws/labs/s2s/live/${qs ? `?${qs}` : ''}`;
 
     logger.log(`Connecting to Gemini Live WebSocket: ${wsUrl}`);
     const socket = new WebSocket(wsUrl);
@@ -151,6 +173,18 @@ const SpeechToSpeechLabPage: React.FC = () => {
 
     socket.onclose = (event) => {
       logger.log('Gemini Live WebSocket closed:', event);
+      // Auth (4401) / solde insuffisant (4402) / durée max (4408) : ne pas boucler.
+      if (event.code === 4401 || event.code === 4402 || event.code === 4408) {
+        setErrorMessage(
+          event.code === 4402
+            ? 'Berrix insuffisants pour une session Speech-to-Speech.'
+            : event.code === 4408
+              ? 'Session terminée (durée maximale atteinte).'
+              : 'Connexion requise pour ce mode IA (GPU).'
+        );
+        setStatus('error');
+        return;
+      }
       if (status !== 'error') {
         // Auto-reconnect after 3 seconds
         setTimeout(() => {

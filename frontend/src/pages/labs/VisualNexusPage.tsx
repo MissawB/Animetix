@@ -9,14 +9,17 @@ import {
   ChevronRight, 
   Play,
   Eye,
-  Layers
+  Layers,
+  Lock
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { apiClient } from "../../utils/apiClient";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
+import { useAuthStore } from '../../store/authStore';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface VideoSegment {
@@ -32,6 +35,7 @@ interface VideoSegment {
 const VisualNexusPage: React.FC = () => {
   const [query, setQuery] = useState('');
   const [searchResults, setSearchResults] = useState<VideoSegment[]>([]);
+  const [authError, setAuthError] = useState(false);
 
   const searchMutation = useMutation({
     mutationFn: (q: string) => apiClient(`/api/v1/labs/video/search/?q=${encodeURIComponent(q)}`),
@@ -40,10 +44,21 @@ const VisualNexusPage: React.FC = () => {
     }
   });
 
+  // Video-RAG est un mode IA (GPU) qui coûte des Berrix et requiert une session :
+  // on gate avant l'appel plutôt que de laisser l'API renvoyer un 401/402 brut.
+  const runSearch = (q: string) => {
+    if (!useAuthStore.getState().isAuthenticated) {
+        setAuthError(true);
+        return;
+    }
+    setAuthError(false);
+    searchMutation.mutate(q);
+  };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) {
-        searchMutation.mutate(query);
+        runSearch(query);
     }
   };
 
@@ -96,13 +111,24 @@ const VisualNexusPage: React.FC = () => {
                         <button 
                             key={suggestion}
                             type="button"
-                            onClick={() => { setQuery(suggestion); searchMutation.mutate(suggestion); }}
+                            onClick={() => { setQuery(suggestion); runSearch(suggestion); }}
                             className="text-[9px] font-black uppercase tracking-widest px-4 py-2 rounded-full bg-white/5 border border-white/5 hover:border-purple-500/30 hover:bg-purple-500/10 transition-all text-gray-400"
                         >
                             {suggestion}
                         </button>
                     ))}
                 </div>
+
+                {authError && (
+                    <div className="text-center p-8 rounded-[2rem] border border-purple-500/30 bg-purple-500/5">
+                        <Lock className="w-10 h-10 text-purple-400 mx-auto mb-4" />
+                        <h4 className="text-sm font-black uppercase text-purple-300 mb-2 italic">Connexion requise</h4>
+                        <p className="text-xs opacity-70 font-bold mb-4">Ce mode utilise l'IA (GPU) et coûte des Berrix. Connecte-toi pour scanner le multivers.</p>
+                        <Link to="/auth/login/">
+                            <Button variant="primary" className="mx-auto">Se connecter</Button>
+                        </Link>
+                    </div>
+                )}
             </form>
         </Card>
 
