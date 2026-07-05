@@ -4,9 +4,8 @@ import {
   TrendingUp, 
   AlertCircle, 
   Zap, 
-  Activity, 
+  Activity,
   Clock,
-  BarChart3,
   Cpu,
   Trophy,
   ExternalLink,
@@ -16,6 +15,7 @@ import {
   Brain,
   AlertTriangle,
   Scale} from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from "../../utils/apiClient";
 import { Card } from "../../components/ui/Card";
@@ -265,12 +265,11 @@ const TransparencyPage: React.FC = () => {
                     <AuditRow label="Conformité Sécurité" value={((data.ethics_audit?.safety_compliance ?? 1) * 100).toFixed(1)} suffix="%" icon={<Lock className="text-purple-400" />} />
                     <AuditRow label="Taux d'Hallucination" value={((data.ethics_audit?.hallucination_rate ?? 0) * 100).toFixed(1)} suffix="%" icon={<AlertTriangle className="text-purple-400" />} />
                 </div>
-                
-                <div className="pt-8 border-t border-white/5">
-                     <Button variant="outline" fullWidth className="border-purple-500/20 text-purple-400 text-[10px] font-black uppercase tracking-widest py-4 rounded-2xl">
-                        <ExternalLink className="w-3 h-3 mr-2" /> Consulter le Rapport Complet (PDF)
-                     </Button>
-                </div>
+
+                <p className="pt-8 border-t border-white/5 text-[10px] font-bold opacity-30 uppercase tracking-widest leading-relaxed">
+                    Conformité = part des interactions évaluées non bloquées par le garde-fou.
+                    Hallucination = part des réponses signalées par l'évaluation automatique.
+                </p>
             </section>
         </div>
 
@@ -283,24 +282,21 @@ const TransparencyPage: React.FC = () => {
                 Grâce au protocole DPO (Direct Preference Optimization), vos choix guident l'apprentissage du modèle Champion.
             </p>
             <div className="flex flex-wrap gap-6 justify-center relative z-10">
-                <Button variant="primary" className="bg-white text-blue-600 px-12 py-7 rounded-2xl border-none shadow-xl hover:scale-105 transition-transform font-black italic uppercase">DÉCOUVRIR LE LAB</Button>
-                <Button variant="outline" className="border-white/30 text-white hover:bg-white/10 px-12 py-7 rounded-2xl font-black italic uppercase">REJOINDRE LE DISCORD</Button>
+                <Button as={Link} to="/lab/" variant="primary" className="bg-white text-blue-600 px-12 py-7 rounded-2xl border-none shadow-xl hover:scale-105 transition-transform font-black italic uppercase no-underline">DÉCOUVRIR LE LAB</Button>
+                <Button as={Link} to="/research/papers/" variant="outline" className="border-white/30 text-white hover:bg-white/10 px-12 py-7 rounded-2xl font-black italic uppercase no-underline">LA RECHERCHE IA</Button>
             </div>
         </section>
       </div>
 
-      {/* System Footer */}
-      <footer className="py-16 border-t border-white/5 bg-black/40">
-           <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-12 opacity-30 grayscale hover:grayscale-0 transition-all">
-               <div className="flex items-center gap-4">
-                  <BarChart3 className="w-6 h-6" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Distributed Consensus Network v2.4</span>
-               </div>
-               <div className="flex items-center gap-4">
-                  <Clock className="w-6 h-6" />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Last Sync: {metrics?.last_training || '2026-06-12'}</span>
-               </div>
-               <Badge variant="neutral" className="bg-white/5 px-4 py-2 border-white/10">NODE_ID: ATX-TX-09</Badge>
+      {/* Footer */}
+      <footer className="py-12 border-t border-white/5 bg-black/40">
+           <div className="max-w-7xl mx-auto px-6 flex items-center justify-center gap-4 opacity-30">
+               <Clock className="w-5 h-5" />
+               <span className="text-[10px] font-black uppercase tracking-widest">
+                   {metrics?.last_training
+                       ? `Dernière évaluation : ${metrics.last_training}`
+                       : 'Aucune évaluation enregistrée pour le moment'}
+               </span>
            </div>
       </footer>
     </div>
