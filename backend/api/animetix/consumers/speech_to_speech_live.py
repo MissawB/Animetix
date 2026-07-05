@@ -92,13 +92,23 @@ class SpeechToSpeechLiveConsumer(AsyncWebsocketConsumer):
     """
 
     async def connect(self):
+        user = await self._resolve_user()
+        if user is None or not user.is_authenticated:
+            await self.close(code=4401)
+            return
+        self.user = user
+
+        # GPU facturé : déduction forfaitaire par session (règle « GPU = Bx »).
+        if not await self._charge_session():
+            await self.close(code=4402)
+            return
+
         await self.accept()
         self.client_connected = True
         self.gemini_session = None
         self.gemini_client = None
         self.receiver_task = None
 
-        # Parse query params
         from urllib.parse import parse_qs
 
         query_string = self.scope.get("query_string", b"").decode("utf-8")
@@ -110,9 +120,66 @@ class SpeechToSpeechLiveConsumer(AsyncWebsocketConsumer):
             else None
         )
 
-        # Start the Gemini session in the background
+        # Borne le coût Gemini : coupe la session après 10 min.
+        self.deadline_task = asyncio.create_task(self._enforce_deadline())
         self.receiver_task = asyncio.create_task(self.run_gemini_session())
-        logger.info("SpeechToSpeechLiveConsumer client connected.")
+        logger.info(
+            "SpeechToSpeechLiveConsumer client connected (user=%s).", self.user.id
+        )
+
+    async def _resolve_user(self):
+        # 1) Session (AuthMiddlewareStack) ; 2) token Firebase en query param.
+        user = self.scope.get("user")
+        if user is not None and user.is_authenticated:
+            return user
+        from urllib.parse import parse_qs
+
+        qs = parse_qs(self.scope.get("query_string", b"").decode("utf-8"))
+        token = qs.get("token", [None])[0]
+        if not token:
+            return None
+        return await self._verify_firebase_token(token)
+
+    @database_sync_to_async
+    def _verify_firebase_token(self, token):
+        from rest_framework.exceptions import AuthenticationFailed
+
+        from animetix.auth import GoogleIdentityAuthentication
+
+        # Réutilise le vérificateur DRF : on fabrique une pseudo-requête portant
+        # l'Authorization Bearer attendu par authenticate().
+        class _Req:
+            META = {"HTTP_AUTHORIZATION": f"Bearer {token}"}
+
+        try:
+            result = GoogleIdentityAuthentication().authenticate(_Req())
+        except AuthenticationFailed:
+            return None
+        return result[0] if result else None
+
+    @database_sync_to_async
+    def _charge_session(self):
+        from core.domain.services.berrix_economy import FEATURE_BX_COSTS
+
+        from animetix.api.billing import deduct_berrix
+
+        try:
+            deduct_berrix(
+                self.user,
+                FEATURE_BX_COSTS["s2s_live"],
+                "Speech-to-Speech Live (session)",
+            )
+            return True
+        except Exception:
+            return False
+
+    async def _enforce_deadline(self):
+        await asyncio.sleep(600)  # 10 minutes
+        logger.info(
+            "S2S session deadline reached (user=%s), closing.",
+            getattr(self, "user", None),
+        )
+        await self.close(code=4408)
 
     @database_sync_to_async
     def get_voice_profile_data(self, profile_id):
@@ -346,6 +413,8 @@ class SpeechToSpeechLiveConsumer(AsyncWebsocketConsumer):
 
     async def disconnect(self, close_code):
         self.client_connected = False
-        if self.receiver_task:
+        if getattr(self, "receiver_task", None):
             self.receiver_task.cancel()
+        if getattr(self, "deadline_task", None):
+            self.deadline_task.cancel()
         logger.info("Client disconnected from SpeechToSpeechLiveConsumer.")
