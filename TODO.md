@@ -38,8 +38,8 @@
   - [deploy_to_hf.yml:44](.github/workflows/deploy_to_hf.yml#L44) appelle `scripts/deploy/hf_deploy.py` qui n'existe pas (réel : `scripts/deploy/huggingface/hf_deploy.py`) → le job échoue à chaque déclenchement. Fixer le chemin, ou supprimer le déploiement HF si Cloud Run est la vraie prod.
 - [ ] **Build — dépendances de dev embarquées dans l'image prod** _(audit dette 2026-07-05)_
   - [requirements.in:30-39](requirements.in#L30-L39) mélange pytest/pytest-playwright/playwright/watchdog/coloredlogs dans le lock de prod (playwright tire tout un stack navigateur). Scinder en `requirements.in` + `requirements-dev.in`.
-- [ ] **Frontend — tokens de design CSS cassés (triplets RGB à virgules)** _(audit dette 2026-07-05)_
-  - Toujours présent : [index.css:8](frontend/src/index.css#L8) et ~19 tokens en `37, 99, 235` mais [tailwind.config.js:16-37](frontend/tailwind.config.js#L16-L37) les consomme en `rgb(var(--x) / <alpha>)` → CSS invalide. **Toutes** les utilities `brand-*`/`surface-*`/`anime-*` sont cassées (pas que l'opacité). Fix trivial : triplets espace-séparés (`37 99 235`).
+- [x] **Frontend — tokens de design CSS cassés (triplets RGB à virgules)** _(audit dette 2026-07-05 — corrigé 2026-07-05)_
+  - 23 tokens de [index.css](frontend/src/index.css) convertis en triplets espace-séparés (`37 99 235`). Vérifié en navigateur : `bg-brand-primary` → `rgb(37, 99, 235)`, `bg-anime-accent/20` → `rgba(253, 185, 19, 0.2)`. Les seuls autres consommateurs (`rgb(var(--color-bg))` body) acceptent les deux formats.
 
 ## 🟡 Moyens
 

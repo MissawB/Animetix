@@ -5,20 +5,20 @@
 
 :root {
     /* Design Tokens - Colors */
-    --color-primary: 37, 99, 235;    /* #2563eb - Blue 600 */
-    --color-primary-hover: 29, 78, 216;
-    --color-secondary: 107, 114, 128;
-    --color-success: 34, 197, 94;
-    --color-danger: 239, 68, 68;
-    --color-warning: 234, 179, 8;
-    --color-accent: 253, 185, 19;   /* #fdb913 */
+    --color-primary: 37 99 235;    /* #2563eb - Blue 600 */
+    --color-primary-hover: 29 78 216;
+    --color-secondary: 107 114 128;
+    --color-success: 34 197 94;
+    --color-danger: 239 68 68;
+    --color-warning: 234 179 8;
+    --color-accent: 253 185 19;   /* #fdb913 */
     --color-accent-drift: #fdb913;
     
     /* Surface Tokens */
-    --color-bg: 241, 243, 245;
-    --color-text: 26, 26, 46;
-    --color-card: 255, 255, 255;
-    --color-card-border: 0, 0, 0;
+    --color-bg: 241 243 245;
+    --color-text: 26 26 46;
+    --color-card: 255 255 255;
+    --color-card-border: 0 0 0;
     --opacity-card-border: 0.05;
     
     /* Layout Tokens */
@@ -34,10 +34,10 @@
 }
 
 [data-bs-theme="dark"], .dark {
-    --color-bg: 15, 15, 26;
-    --color-text: 241, 242, 246;
-    --color-card: 26, 26, 46;
-    --color-card-border: 255, 255, 255;
+    --color-bg: 15 15 26;
+    --color-text: 241 242 246;
+    --color-card: 26 26 46;
+    --color-card-border: 255 255 255;
     --opacity-card-border: 0.05;
     --shadow-card: 0 10px 50px -12px rgba(0, 0, 0, 0.5);
 }
@@ -52,20 +52,20 @@
 
 /* Theme Presets */
 .theme-naruto {
-    --color-primary: 249, 115, 22;   /* Orange */
-    --color-accent: 0, 0, 0;         /* Black */
+    --color-primary: 249 115 22;   /* Orange */
+    --color-accent: 0 0 0;         /* Black */
     --radius-card: 1rem;             /* Shaper look */
     --border-width-card: 3px;
     --opacity-card-border: 1;
 }
 
 .theme-manga-classic {
-    --color-primary: 0, 0, 0;
-    --color-secondary: 0, 0, 0;
-    --color-bg: 255, 255, 255;
-    --color-card: 255, 255, 255;
-    --color-text: 0, 0, 0;
-    --color-card-border: 0, 0, 0;
+    --color-primary: 0 0 0;
+    --color-secondary: 0 0 0;
+    --color-bg: 255 255 255;
+    --color-card: 255 255 255;
+    --color-text: 0 0 0;
+    --color-card-border: 0 0 0;
     --opacity-card-border: 1;
     --border-width-card: 4px;
     --radius-card: 0px;
