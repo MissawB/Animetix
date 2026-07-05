@@ -392,6 +392,12 @@ class CustomConfigDataView(APIView):
 # version n'est persisté en base — c'est la seule source configurable).
 AI_MODEL_VERSION = "Animetix-Champion-v2.4"
 
+# Les taux (hallucination, conformité, fiabilité) sont calculés sur une fenêtre
+# glissante et masqués sous un seuil d'échantillon : sur trop peu d'évaluations,
+# un pourcentage donne une fausse impression de précision.
+TRANSPARENCY_WINDOW_DAYS = 30
+MIN_EVAL_SAMPLE = 20
+
 
 class TransparencyDataView(APIView):
     """
@@ -406,14 +412,23 @@ class TransparencyDataView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
+        from datetime import timedelta  # noqa: E402
+
         from django.db.models import Avg  # noqa: E402
         from django.db.models.functions import TruncMonth  # noqa: E402
+        from django.utils import timezone  # noqa: E402
 
-        from ..models import AIFeedback, AIREvalResult, VectorRecord  # noqa: E402
+        from ..models import (  # noqa: E402
+            AIFeedback,
+            AIREvalResult,
+            AISafetyEvent,
+            VectorRecord,
+        )
 
         container = get_container()
+        cutoff = timezone.now() - timedelta(days=TRANSPARENCY_WINDOW_DAYS)
 
-        # 1. Feedbacks communautaires (réel).
+        # 1. Feedbacks communautaires (réel, cumulés).
         total_feedbacks = AIFeedback.objects.count()
         community_satisfaction = 0.0
         if total_feedbacks:
@@ -423,12 +438,18 @@ class TransparencyDataView(APIView):
         # 2. Base de connaissances vectorielle (réel).
         knowledge_nodes = VectorRecord.objects.count()
 
-        # 3. Évaluations RAG (réel) : précision moyenne + taux d'hallucination.
-        eval_total = AIREvalResult.objects.count()
-        hallucination_rate = 0.0
-        if eval_total:
-            halluc = AIREvalResult.objects.filter(hallucination_detected=True).count()
-            hallucination_rate = round(halluc / eval_total, 4)
+        # 3. Évaluations RAG sur la fenêtre récente. Sous MIN_EVAL_SAMPLE, on
+        # renvoie None : un taux sur 3 évals n'a aucune valeur informative.
+        recent_evals = AIREvalResult.objects.filter(created_at__gte=cutoff)
+        recent_total = recent_evals.count()
+        enough_evals = recent_total >= MIN_EVAL_SAMPLE
+
+        hallucination_rate = None
+        model_reliability = None
+        if enough_evals:
+            recent_halluc = recent_evals.filter(hallucination_detected=True).count()
+            hallucination_rate = round(recent_halluc / recent_total, 4)
+            model_reliability = round(100 * (1 - hallucination_rate), 2)
 
         # Timeline mensuelle de la précision (réel) — le front masque le graphe
         # tant qu'il n'y a pas au moins deux points.
@@ -443,28 +464,32 @@ class TransparencyDataView(APIView):
             if row["m"] is not None and row["a"] is not None
         ]
 
-        # 4. Conformité sécurité (réel) via le journal Guardrail.
+        # 4. Conformité sécurité sur la même fenêtre (blocages Guardrail /
+        # interactions évaluées), masquée sous le même seuil.
         safety_compliance = None
-        try:
-            stats = container.persistence.safety_adapter().get_safety_stats()
-            blocked = stats.get("blocked_count", 0)
-            denom = eval_total or total_feedbacks
-            if denom:
-                safety_compliance = round(max(0.0, 1 - blocked / denom), 4)
-        except Exception:
-            logger.warning("Transparency: safety stats unavailable", exc_info=True)
+        if enough_evals:
+            try:
+                recent_blocked = AISafetyEvent.objects.filter(
+                    created_at__gte=cutoff, action__in=["block", "rewrite"]
+                ).count()
+                safety_compliance = round(
+                    max(0.0, 1 - recent_blocked / recent_total), 4
+                )
+            except Exception:
+                logger.warning("Transparency: safety stats unavailable", exc_info=True)
 
-        # 5. Score éthique composite (réel) à partir des signaux disponibles.
-        ethics_parts = [1 - hallucination_rate]
+        # 5. Score éthique composite à partir des seuls signaux fiables du moment.
+        ethics_parts = []
+        if hallucination_rate is not None:
+            ethics_parts.append(1 - hallucination_rate)
         if community_satisfaction:
             ethics_parts.append(community_satisfaction)
         if safety_compliance is not None:
             ethics_parts.append(safety_compliance)
-        ethics_score = round(100 * sum(ethics_parts) / len(ethics_parts), 1)
-
-        # Fiabilité du modèle (réel) : part des réponses sans hallucination.
-        model_reliability = (
-            round(100 * (1 - hallucination_rate), 2) if eval_total else None
+        ethics_score = (
+            round(100 * sum(ethics_parts) / len(ethics_parts), 1)
+            if ethics_parts
+            else None
         )
 
         # 6. Benchmarks SOTA (source curée canonique de l'app).

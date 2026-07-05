@@ -251,7 +251,11 @@ const TransparencyPage: React.FC = () => {
                 <div className="mt-12 pt-8 border-t border-white/20">
                     <div className="flex justify-between items-end">
                         <span className="text-[10px] font-black uppercase tracking-widest opacity-60 italic">Algorithmic Trust Score</span>
-                        <span className="text-7xl font-black italic manga-font leading-none drop-shadow-lg">{data.ethics_score || 98}%</span>
+                        {data.ethics_score != null ? (
+                            <span className="text-7xl font-black italic manga-font leading-none drop-shadow-lg">{data.ethics_score}%</span>
+                        ) : (
+                            <span className="text-lg font-black italic uppercase tracking-widest opacity-70">Données insuffisantes</span>
+                        )}
                     </div>
                 </div>
             </Card>
@@ -262,8 +266,18 @@ const TransparencyPage: React.FC = () => {
                     <Scale className="w-6 h-6" /> Audit de Sécurité
                 </h3>
                 <div className="space-y-8">
-                    <AuditRow label="Conformité Sécurité" value={((data.ethics_audit?.safety_compliance ?? 1) * 100).toFixed(1)} suffix="%" icon={<Lock className="text-purple-400" />} />
-                    <AuditRow label="Taux d'Hallucination" value={((data.ethics_audit?.hallucination_rate ?? 0) * 100).toFixed(1)} suffix="%" icon={<AlertTriangle className="text-purple-400" />} />
+                    <AuditRow
+                        label="Conformité Sécurité"
+                        value={data.ethics_audit?.safety_compliance != null ? (data.ethics_audit.safety_compliance * 100).toFixed(1) : 'Données insuffisantes'}
+                        suffix={data.ethics_audit?.safety_compliance != null ? '%' : ''}
+                        icon={<Lock className="text-purple-400" />}
+                    />
+                    <AuditRow
+                        label="Taux d'Hallucination"
+                        value={data.ethics_audit?.hallucination_rate != null ? (data.ethics_audit.hallucination_rate * 100).toFixed(1) : 'Données insuffisantes'}
+                        suffix={data.ethics_audit?.hallucination_rate != null ? '%' : ''}
+                        icon={<AlertTriangle className="text-purple-400" />}
+                    />
                 </div>
 
                 <p className="pt-8 border-t border-white/5 text-[10px] font-bold opacity-30 uppercase tracking-widest leading-relaxed">

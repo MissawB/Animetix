@@ -35,7 +35,10 @@ def test_transparency_empty_db_is_safe(api_client):
     assert isinstance(data["embedding_drift"], dict)
     # The fabricated bias metric is gone.
     assert "bias_score" not in data["ethics_audit"]
-    assert data["ethics_audit"]["hallucination_rate"] == 0.0
+    # No evaluations → rate is withheld (None), not a misleading 0%.
+    assert data["ethics_audit"]["hallucination_rate"] is None
+    assert data["ethics_audit"]["safety_compliance"] is None
+    assert data["ethics_score"] is None
 
 
 @pytest.mark.django_db
@@ -44,16 +47,16 @@ def test_transparency_reflects_real_data(api_client):
     for is_pos in (True, True, True, False):
         AIFeedback.objects.create(is_positive=is_pos)
 
-    # 5 evals, 1 hallucination → hallucination_rate 0.2, reliability 80%
-    for i in range(5):
+    # 20 recent evals (>= MIN_EVAL_SAMPLE), 4 hallucinations → rate 0.2, reliab. 80%
+    for i in range(20):
         AIREvalResult.objects.create(
             faithfulness=0.9,
             relevancy=0.8,
             precision=0.7,
-            hallucination_detected=(i == 0),
+            hallucination_detected=(i < 4),
         )
 
-    # Safety: 2 blocked over 5 evaluated interactions → compliance 0.6
+    # Safety: 2 blocked over 20 evaluated interactions → compliance 0.9
     AISafetyEvent.objects.create(event_type="output", action="block")
     AISafetyEvent.objects.create(event_type="output", action="rewrite")
     AISafetyEvent.objects.create(event_type="input", action="none")
@@ -67,10 +70,22 @@ def test_transparency_reflects_real_data(api_client):
     assert gm["community_satisfaction"] == 0.75
     assert data["ethics_audit"]["hallucination_rate"] == 0.2
     assert data["model_uptime"] == 80.0
-    assert data["ethics_audit"]["safety_compliance"] == 0.6
-    # ethics_score = mean(1-halluc=0.8, satisfaction=0.75, compliance=0.6) * 100
-    assert data["ethics_score"] == pytest.approx(71.7, abs=0.1)
-    # One month of evals → one timeline point.
+    assert data["ethics_audit"]["safety_compliance"] == 0.9
+    # ethics_score = mean(1-halluc=0.8, satisfaction=0.75, compliance=0.9) * 100
+    assert data["ethics_score"] == pytest.approx(81.7, abs=0.1)
     assert len(data["evolution_timeline"]) == 1
     assert 0.0 <= data["evolution_timeline"][0]["accuracy"] <= 1.0
     assert gm["last_training"] is not None
+
+
+@pytest.mark.django_db
+def test_transparency_withholds_rates_below_sample_threshold(api_client):
+    """A handful of evals must NOT produce a rate (would be statistical noise)."""
+    for i in range(5):
+        AIREvalResult.objects.create(faithfulness=0.9, hallucination_detected=(i == 0))
+    resp = api_client.get(reverse("api_transparency"))
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["ethics_audit"]["hallucination_rate"] is None
+    assert data["model_uptime"] is None
+    assert data["ethics_audit"]["safety_compliance"] is None
