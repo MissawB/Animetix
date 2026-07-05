@@ -24,15 +24,14 @@ import pytest
 
 
 # ``animetix/auth.py`` is imported by Django during ``django.setup()`` -- it is
-# wired into AUTHENTICATION_BACKENDS / MIDDLEWARE / DRF auth classes, under the
-# ``animetix.auth`` dotted path (``backend/api`` is also on the
-# pythonpath, so the same file resolves under the bare ``animetix.auth`` name).
+# wired into AUTHENTICATION_BACKENDS / MIDDLEWARE / DRF auth classes under the
+# ``animetix.auth`` dotted path.
 # Because the file was executed *before* pytest-cov started tracing, coverage.py
 # would otherwise report it as "module-not-measured" and collect zero data.
 #
 # To fix this we re-execute the module while the tracer is active.  Two things
 # are required:
-#   1. drop every ``sys.modules`` alias for the file so ``import_module`` truly
+#   1. drop the module from ``sys.modules`` so ``import_module`` truly
 #      re-runs the file body (rather than returning the cached module), and
 #   2. invalidate coverage's per-file ``_should_trace`` cache, which already
 #      contains a "do not trace / already imported" decision for this path from
@@ -53,8 +52,7 @@ def _force_traced_import():
     except Exception:  # pragma: no cover - coverage not active (plain run)
         pass
 
-    for _name in ("animetix.auth", "animetix.auth"):
-        sys.modules.pop(_name, None)
+    sys.modules.pop("animetix.auth", None)
     return importlib.import_module("animetix.auth")
 
 
