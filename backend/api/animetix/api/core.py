@@ -129,7 +129,9 @@ class MediaSearchView(APIView):
 
         # Input Guardrail (Anti-Jailbreak, Injection)
         if query:
-            guard_input = self.guardrail_service.validate_input(query)
+            guard_input = self.guardrail_service.validate_input(
+                query, allow_llm=request.user.is_authenticated
+            )
             if not guard_input.get("is_safe", True):
                 return Response(
                     {"error": guard_input.get("reason", "Inappropriate search query.")},

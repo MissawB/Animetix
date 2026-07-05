@@ -68,7 +68,7 @@ class GuardrailService:
             )
             return None
 
-    def validate_input(self, text: str) -> Dict[str, Any]:
+    def validate_input(self, text: str, allow_llm: bool = True) -> Dict[str, Any]:
         """Analyse proactive de la requête utilisateur (Pre-processing)."""
         logger.info(f"🛡️ [Guardrail] Validating input: {text[:50]}...")
 
@@ -107,7 +107,10 @@ class GuardrailService:
                 or result.get("action") == "none"
                 or is_stub
             ):
-                result = self._llm_moderate(text, self.enabled_categories, mode="input")
+                if allow_llm:
+                    result = self._llm_moderate(
+                        text, self.enabled_categories, mode="input"
+                    )
 
             return result
         except Exception as e:
