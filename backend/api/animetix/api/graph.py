@@ -87,8 +87,26 @@ class GraphWorldMapView(APIView):
         self.partitioner = partitioner
 
     def get(self, request):
-        communities = self.partitioner.run_partitioning()
-        return Response(communities)
+        from django.core.cache import cache
+
+        cache_key = "graph:world_map:v1"
+        cached = cache.get(cache_key)
+        if cached is not None:
+            return Response(cached)
+
+        # Anti-stampede : un seul hit génère ; les concurrents reçoivent 202 et
+        # le frontend re-tente. La carte est un artefact partagé (identique pour
+        # tous), donc on ne facture personne et on ne régénère qu'à l'expiration.
+        lock_key = "graph:world_map:v1:lock"
+        if not cache.add(lock_key, "1", timeout=120):
+            return Response({"status": "generating"}, status=202)
+
+        try:
+            communities = self.partitioner.run_partitioning()
+            cache.set(cache_key, communities, timeout=86400)  # 24 h
+            return Response(communities)
+        finally:
+            cache.delete(lock_key)
 
 
 class GraphDebuggerView(APIView):
