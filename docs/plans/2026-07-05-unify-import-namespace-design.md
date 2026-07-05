@@ -92,3 +92,12 @@ les **namespace packages implicites** maintiendraient l'alias silencieusement. D
 4. ruff (avec la nouvelle règle TID251) + black.
 5. Grep final : zéro `backend\.(api|core|adapters|pipeline|animetix)` et zéro
    `src\.pipeline` dans le code (hors docs/archives).
+
+## Déviation (2026-07-05, découverte à l'implémentation)
+
+La couche ruff du tripwire ne peut pas s'appliquer DANS `backend/` : la présence de
+`backend/__init__.py` (nécessaire au garde levant) fait résoudre les imports relatifs
+internes en chemins absolus `backend.*`, que TID251 flaggerait (147 faux positifs).
+Le ban est donc scopé via `per-file-ignores` : actif pour `tests/` et `scripts/`,
+désactivé pour `backend/**` où le garde runtime + le test d'hygiène assurent la
+couverture.

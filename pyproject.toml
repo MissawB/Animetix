@@ -24,6 +24,13 @@ ignore = ["E501"]  # Handled by black; strings/comments intentionally left long
 "backend" = { msg = "Racine canonique nue : importez animetix/core/adapters/pipeline/scripts directement (docs/plans/2026-07-05-unify-import-namespace-design.md)." }
 "src" = { msg = "Le namespace 'src' n'existe plus : importez pipeline.* directement." }
 
+[tool.ruff.lint.per-file-ignores]
+# Dans backend/, ruff résout les imports RELATIFS en chemins absolus backend.*
+# (backend/__init__.py existe) → le ban TID251 y produirait des faux positifs.
+# La protection y est assurée par le garde levant backend/__init__.py et par
+# tests/test_import_hygiene.py ; le ban ruff reste actif pour tests/ et scripts/.
+"backend/**" = ["TID251"]
+
 [tool.ruff.lint.isort]
 combine-as-imports = true
 force-single-line = false
