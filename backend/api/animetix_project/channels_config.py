@@ -23,6 +23,8 @@ def build_channel_layers(redis_url: Optional[str], is_production: bool) -> dict:
             )
         return {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
 
+    # channels_redis accepts each host as a plain URL string or a config dict.
+    hosts: list[str | dict[str, object]]
     if redis_url.startswith("rediss://"):
         # Mirror the CACHES connection kwargs: this Redis serves TLS with a cert
         # that fails strict verification, so django_redis already runs with
