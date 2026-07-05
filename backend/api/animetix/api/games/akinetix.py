@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from animetix.api.dependencies import get_session_service  # noqa: E402
+from animetix.api.throttles import CpuGameThrottle  # noqa: E402
 
 from ...containers import Container  # noqa: E402
 from ...models import GameplaySession  # noqa: E402
@@ -26,6 +27,9 @@ from ...serializers import (  # noqa: E402
 
 class AkinetixGameStateView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [
+        CpuGameThrottle
+    ]  # CPU game, no Bx: minute-cap only, never the day cap
 
     @inject
     def get(self, request, akinetix_service=Provide[Container.core.akinetix_service]):
@@ -58,6 +62,9 @@ class AkinetixGameStateView(APIView):
 )
 class AkinetixGameStartView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [
+        CpuGameThrottle
+    ]  # CPU game, no Bx: minute-cap only, never the day cap
 
     @inject
     def post(
@@ -122,6 +129,9 @@ class AkinetixGameStartView(APIView):
 )
 class AkinetixGameAnswerView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [
+        CpuGameThrottle
+    ]  # CPU game, no Bx: minute-cap only, never the day cap
 
     @inject
     def post(
@@ -185,6 +195,9 @@ class AkinetixGameAnswerView(APIView):
 )
 class AkinetixGameConfirmView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [
+        CpuGameThrottle
+    ]  # CPU game, no Bx: minute-cap only, never the day cap
 
     @inject
     def post(self, request, akinetix_service=Provide[Container.core.akinetix_service]):

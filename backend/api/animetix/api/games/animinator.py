@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 
 from animetix.api.billing import deduct_berrix
 from animetix.api.dependencies import get_session_service
+from animetix.api.throttles import CpuGameThrottle
 
 from ...containers import Container
 from ...models import GameplaySession
@@ -119,6 +120,9 @@ class AniminatorGuessView(APIView):
     # Pure comparison (no GPU) → AllowAny; a game only exists for someone who has
     # been asking (which requires login).
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [
+        CpuGameThrottle
+    ]  # CPU game, no Bx: minute-cap only, never the day cap
 
     @inject
     def post(

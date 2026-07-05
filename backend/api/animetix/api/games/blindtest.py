@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from animetix.api.dependencies import get_session_service
+from animetix.api.throttles import CpuGameThrottle
 
 from ...containers import Container
 from ...models import GameplaySession
@@ -27,6 +28,9 @@ class BlindtestTitlesView(APIView):
     """Anime titles for the guess autocomplete (same catalog used to validate)."""
 
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [
+        CpuGameThrottle
+    ]  # CPU game, no Bx: minute-cap only, never the day cap
 
     @inject
     def get(self, request, catalog_service=Provide[Container.core.catalog_service]):
@@ -37,6 +41,9 @@ class BlindtestTitlesView(APIView):
 
 class BlindtestGameStateView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [
+        CpuGameThrottle
+    ]  # CPU game, no Bx: minute-cap only, never the day cap
 
     @inject
     def get(
@@ -73,6 +80,9 @@ class BlindtestGameStateView(APIView):
 
 class BlindtestGameStartView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [
+        CpuGameThrottle
+    ]  # CPU game, no Bx: minute-cap only, never the day cap
 
     @inject
     def post(
@@ -140,6 +150,9 @@ class BlindtestGameStartView(APIView):
 
 class BlindtestGameGuessView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [
+        CpuGameThrottle
+    ]  # CPU game, no Bx: minute-cap only, never the day cap
 
     @inject
     def post(

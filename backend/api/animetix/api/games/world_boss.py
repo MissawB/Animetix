@@ -7,6 +7,8 @@ from django.db.models import F
 from django.utils import timezone
 from rest_framework import permissions, response, status, views
 
+from animetix.api.throttles import CpuGameThrottle
+
 from ...containers import Container
 from ...models import BossParticipation, GlobalBoss, Profile
 from ...serializers import BossParticipationSerializer, GlobalBossSerializer
@@ -177,6 +179,9 @@ class WorldBossAttackView(views.APIView):
 
 class WorldBossLeaderboardView(views.APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [
+        CpuGameThrottle
+    ]  # CPU game, no Bx: minute-cap only, never the day cap
 
     def get(self, request):
         boss_id = request.query_params.get("boss_id")

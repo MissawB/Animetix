@@ -18,6 +18,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from animetix.api.dependencies import get_session_service
+from animetix.api.throttles import CpuGameThrottle
 
 from ...containers import Container
 from ...models import GameplaySession
@@ -37,6 +38,9 @@ def _title(item):
 
 class QuiEstCeStartView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [
+        CpuGameThrottle
+    ]  # CPU game, no Bx: minute-cap only, never the day cap
 
     @inject
     def post(
@@ -128,6 +132,9 @@ class QuiEstCeStartView(APIView):
 
 class QuiEstCeAskView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [
+        CpuGameThrottle
+    ]  # CPU game, no Bx: minute-cap only, never the day cap
 
     @inject
     def post(
@@ -203,6 +210,9 @@ class QuiEstCeAskView(APIView):
 
 class QuiEstCeGuessView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [
+        CpuGameThrottle
+    ]  # CPU game, no Bx: minute-cap only, never the day cap
 
     @inject
     def post(

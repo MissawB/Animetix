@@ -112,6 +112,21 @@ def _cleanup_module_pollution():
         pass
 
 
+@pytest.fixture(autouse=True)
+def _clear_throttle_cache():
+    """Clear the Django cache before each test.
+
+    DRF throttles (``CpuGameThrottle``, ``BurstAnonRateThrottle``, ...) keep
+    their request counters in the default cache (LocMemCache in tests). Without
+    a reset, counters accumulate across tests and cause spurious 429s in tests
+    that don't expect throttling.
+    """
+    from django.core.cache import cache
+
+    cache.clear()
+    yield
+
+
 @pytest.fixture
 def sample_image():
     """Return JPEG bytes of a 256x256 RGB image for tests.
