@@ -23,10 +23,22 @@ const FIREBASE_AUTH_HOST = "animetix.firebaseapp.com";
 const isFirebaseReservedPath = (pathname) =>
   pathname.startsWith("/__/auth/") || pathname.startsWith("/__/firebase/");
 
+// AdSense authorised-sellers file, served straight from the edge at the domain
+// root. Vite's base is /static/, so a public/ file would land at /static/ads.txt,
+// but AdSense requires it at exactly /ads.txt — hence serving it from the Worker.
+const ADS_TXT = "google.com, pub-7900304271811221, DIRECT, f08c47fec0942fa0\n";
+
 export default {
   async fetch(request) {
     const url = new URL(request.url);
     const visitorHost = url.host; // animetix.xyz (or www.animetix.xyz)
+
+    // ads.txt → return directly from the edge, no origin round-trip.
+    if (url.pathname === "/ads.txt") {
+      return new Response(ADS_TXT, {
+        headers: { "content-type": "text/plain; charset=utf-8" },
+      });
+    }
 
     // Firebase reserved paths → proxy to the Firebase auth domain untouched.
     // fetch derives the Host header from the URL, so Firebase sees its own host.
