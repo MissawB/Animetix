@@ -17,6 +17,7 @@ from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
 from rest_framework import permissions, status, viewsets
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from ..containers import Container, get_container  # noqa: E402
@@ -151,6 +152,7 @@ class SingularityLabDataView(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
     throttle_scope = "gpu"
+    throttle_classes = [ScopedRateThrottle]
 
     def get(self, request):
         container = get_container()
@@ -504,6 +506,7 @@ class MangaVoiceLabView(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
     throttle_scope = "gpu"
+    throttle_classes = [ScopedRateThrottle]
 
     def post(self, request):
         import uuid  # noqa: E402
@@ -577,6 +580,7 @@ class VideoFateZeroLabView(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
     throttle_scope = "gpu"
+    throttle_classes = [ScopedRateThrottle]
 
     def post(self, request):
         container = get_container()

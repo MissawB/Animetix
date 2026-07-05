@@ -254,8 +254,17 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_CLASSES": [
         "rest_framework.throttling.AnonRateThrottle",
         "rest_framework.throttling.UserRateThrottle",
+        "animetix.api.throttles.BurstAnonRateThrottle",
+        "animetix.api.throttles.BurstUserRateThrottle",
     ],
-    "DEFAULT_THROTTLE_RATES": {"anon": "100/day", "user": "1000/day"},
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "100/day",
+        "user": "1000/day",
+        "anon_burst": "30/min",
+        "user_burst": "120/min",
+        "cpu_game": "60/min",
+        "gpu": "30/hour",
+    },
 }
 
 SPECTACULAR_SETTINGS = {

@@ -3,6 +3,8 @@ from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from animetix.api.throttles import CpuGameThrottle
+
 __all__ = ["UndercoverPublicRoomsView"]
 
 # Must match the index/room keys written by the Undercover WS consumer.
@@ -19,7 +21,9 @@ class UndercoverPublicRoomsView(APIView):
     """
 
     permission_classes = [permissions.AllowAny]
-    throttle_classes: list = []
+    throttle_classes = [
+        CpuGameThrottle
+    ]  # CPU game, no Bx: minute-cap only, never the day cap
 
     def get(self, request):
         codes = cache.get(INDEX_KEY) or []

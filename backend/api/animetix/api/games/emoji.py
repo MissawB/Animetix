@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from animetix.api.dependencies import get_session_service
+from animetix.api.throttles import CpuGameThrottle
 
 from ...containers import Container
 from ...models import GameplaySession
@@ -83,7 +84,9 @@ def _start_game(port, catalog_service, emoji_service, media_type, difficulty="No
 
 class EmojiGameStateView(APIView):
     permission_classes = [permissions.AllowAny]
-    throttle_classes: list = []  # CPU game, no Bx: must not hit the anon day cap
+    throttle_classes = [
+        CpuGameThrottle
+    ]  # CPU game, no Bx: minute-cap only, never the day cap
 
     @inject
     def get(
@@ -127,7 +130,9 @@ class EmojiGameStateView(APIView):
 
 class EmojiGameStartView(APIView):
     permission_classes = [permissions.AllowAny]
-    throttle_classes: list = []  # CPU game, no Bx
+    throttle_classes = [
+        CpuGameThrottle
+    ]  # CPU game, no Bx: minute-cap only, never the day cap
 
     @inject
     def post(
@@ -168,7 +173,9 @@ class EmojiGameStartView(APIView):
 
 class EmojiGameGuessView(APIView):
     permission_classes = [permissions.AllowAny]
-    throttle_classes: list = []  # CPU game, no Bx
+    throttle_classes = [
+        CpuGameThrottle
+    ]  # CPU game, no Bx: minute-cap only, never the day cap
 
     @inject
     def post(
@@ -280,7 +287,9 @@ class EmojiGameGiveUpView(APIView):
     """
 
     permission_classes = [permissions.AllowAny]
-    throttle_classes: list = []
+    throttle_classes = [
+        CpuGameThrottle
+    ]  # CPU game, no Bx: minute-cap only, never the day cap
 
     def post(self, request):
         port = get_session_service(request).port
@@ -325,7 +334,9 @@ class EmojiGameSuggestView(APIView):
     """
 
     permission_classes = [permissions.AllowAny]
-    throttle_classes: list = []
+    throttle_classes = [
+        CpuGameThrottle
+    ]  # CPU game, no Bx: minute-cap only, never the day cap
     MAX_SUGGESTIONS = 8
 
     @inject

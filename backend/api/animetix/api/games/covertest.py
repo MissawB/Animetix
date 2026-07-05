@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from animetix.api.dependencies import get_session_service
+from animetix.api.throttles import CpuGameThrottle
 
 from ...containers import Container
 from ...models import GameplaySession
@@ -73,9 +74,9 @@ class CovertestTitlesView(APIView):
     """
 
     permission_classes = [permissions.AllowAny]
-    throttle_classes: list = (
-        []
-    )  # CPU quiz, no Bx/GPU: gameplay must not hit the anon day cap
+    throttle_classes = [
+        CpuGameThrottle
+    ]  # CPU quiz, no Bx/GPU: minute-cap only, never the day cap
 
     @inject
     def get(
@@ -106,9 +107,9 @@ class CovertestTitlesView(APIView):
 
 class CovertestGameStateView(APIView):
     permission_classes = [permissions.AllowAny]
-    throttle_classes: list = (
-        []
-    )  # CPU quiz, no Bx/GPU: gameplay must not hit the anon day cap
+    throttle_classes = [
+        CpuGameThrottle
+    ]  # CPU quiz, no Bx/GPU: minute-cap only, never the day cap
 
     @inject
     def get(
@@ -141,9 +142,9 @@ class CovertestGameStateView(APIView):
 
 class CovertestGameStartView(APIView):
     permission_classes = [permissions.AllowAny]
-    throttle_classes: list = (
-        []
-    )  # CPU quiz, no Bx/GPU: gameplay must not hit the anon day cap
+    throttle_classes = [
+        CpuGameThrottle
+    ]  # CPU quiz, no Bx/GPU: minute-cap only, never the day cap
 
     @inject
     def post(
@@ -171,9 +172,9 @@ class CovertestGameRevealView(APIView):
     """Ends the round and reveals the answer (used on loss / give-up)."""
 
     permission_classes = [permissions.AllowAny]
-    throttle_classes: list = (
-        []
-    )  # CPU quiz, no Bx/GPU: gameplay must not hit the anon day cap
+    throttle_classes = [
+        CpuGameThrottle
+    ]  # CPU quiz, no Bx/GPU: minute-cap only, never the day cap
 
     def post(self, request):
         session_service = get_session_service(request)
@@ -189,9 +190,9 @@ class CovertestGameRevealView(APIView):
 
 class CovertestGameGuessView(APIView):
     permission_classes = [permissions.AllowAny]
-    throttle_classes: list = (
-        []
-    )  # CPU quiz, no Bx/GPU: gameplay must not hit the anon day cap
+    throttle_classes = [
+        CpuGameThrottle
+    ]  # CPU quiz, no Bx/GPU: minute-cap only, never the day cap
 
     @inject
     def post(
