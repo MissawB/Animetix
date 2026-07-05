@@ -17,8 +17,12 @@ line-length = 88
 target-version = "py312"
 
 [tool.ruff.lint]
-select = ["E", "F", "I"]
+select = ["E", "F", "I", "TID251"]
 ignore = ["E501"]  # Handled by black; strings/comments intentionally left long
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"backend" = { msg = "Racine canonique nue : importez animetix/core/adapters/pipeline/scripts directement (docs/plans/2026-07-05-unify-import-namespace-design.md)." }
+"src" = { msg = "Le namespace 'src' n'existe plus : importez pipeline.* directement." }
 
 [tool.ruff.lint.isort]
 combine-as-imports = true
