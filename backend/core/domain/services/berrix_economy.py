@@ -59,6 +59,7 @@ FEATURE_COMPUTE_USD: dict[str, float] = {
     "companion": 0.002,
     "agentic_rag": 0.002,
     "knowledge_graph": 0.001,
+    "video_rag": 0.002,  # vector/RAG search over indexed video embeddings
     "vn_script": 0.02,
     "creative_fusion": 0.03,
     "singularity_basic": 0.004,  # kernel / plasticity / quantum
@@ -69,6 +70,7 @@ FEATURE_COMPUTE_USD: dict[str, float] = {
     "voice_ingest": 0.005,
     "soundscape": 0.01,
     "speech_to_speech": 0.003,
+    "s2s_live": 0.004,  # Gemini Multimodal Live streaming session (flat, per-session)
     "manga_clean": 0.004,
     "manga_translate": 0.004,
     "voice_clone": 0.005,

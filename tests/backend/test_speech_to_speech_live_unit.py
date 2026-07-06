@@ -221,10 +221,23 @@ class FakeLiveSession:
 def _make_consumer(query_string=b""):
     """Instantiate the consumer with async I/O mocked and a fake live session."""
     consumer = s2s.SpeechToSpeechLiveConsumer()
-    consumer.scope = {"type": "websocket", "query_string": query_string}
+    authed_user = MagicMock()
+    authed_user.is_authenticated = True
+    authed_user.id = 1
+    consumer.scope = {
+        "type": "websocket",
+        "query_string": query_string,
+        "user": authed_user,
+        "subprotocols": [],
+    }
     consumer.accept = AsyncMock()
     consumer.send = AsyncMock()
     consumer.close = AsyncMock()
+    # Auth + billing are covered end-to-end in test_s2s_live_security.py; here we
+    # bypass the flat Bx charge and the 10-min deadline so connect() reaches its
+    # state-init path deterministically without a real wallet or a 600s task.
+    consumer._charge_session = AsyncMock(return_value=True)
+    consumer._enforce_deadline = AsyncMock()
     return consumer
 
 

@@ -112,8 +112,22 @@ async def test_speech_to_speech_live_consumer(
     mock_session = MockLiveSession()
     mock_client.aio.live.connect.return_value = mock_session
 
+    # The consumer now requires an authenticated, funded user (auth + flat Bx
+    # charge). Create one and attach it to the WS scope (session-auth path).
+    from animetix.models import Profile
+    from channels.db import database_sync_to_async
+    from django.contrib.auth.models import User
+
+    user = await database_sync_to_async(User.objects.create_user)(
+        username="s2s-e2e-user", password="pw"
+    )
+    await database_sync_to_async(Profile.objects.filter(user=user).update)(
+        wallet_balance=1000
+    )
+
     # Establish connection via Channels test communicator
     communicator = WebsocketCommunicator(application, "/ws/labs/s2s/live/")
+    communicator.scope["user"] = user
     connected, _ = await communicator.connect(timeout=10)
     assert connected
 
