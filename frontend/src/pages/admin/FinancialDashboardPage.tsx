@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Shield, Sparkles, AlertTriangle, Coins, RefreshCw, BarChart2, TrendingUp, HelpCircle } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
+import { useTranslation } from 'react-i18next';
 import { apiClient } from '../../utils/apiClient';
 
 interface FinancialData {
@@ -23,6 +24,7 @@ interface FinancialData {
 }
 
 const FinancialDashboardPage: React.FC = () => {
+  const { t } = useTranslation();
   const [data, setData] = useState<FinancialData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +43,7 @@ const FinancialDashboardPage: React.FC = () => {
       setError(null);
     } catch (err) {
       const error = err as Error;
-      setError(error.message || 'Erreur inconnue');
+      setError(error.message || t('common.unknown_error', 'Erreur inconnue'));
     } finally {
       setLoading(false);
     }
@@ -71,10 +73,10 @@ const FinancialDashboardPage: React.FC = () => {
     return (
       <div className="max-w-4xl mx-auto p-8 mt-12 bg-red-500/10 border border-red-500/30 rounded-2xl text-center">
         <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-        <h3 className="text-xl font-bold text-red-500">Erreur lors de la récupération des données financières</h3>
+        <h3 className="text-xl font-bold text-red-500">{t('admin.financials.fetch_error', 'Erreur lors de la récupération des données financières')}</h3>
         <p className="text-gray-400 mt-2">{error}</p>
         <button onClick={fetchData} className="mt-6 px-4 py-2 bg-red-500 text-white rounded-xl font-bold text-xs uppercase">
-          Réessayer
+          {t('common.retry', 'Réessayer')}
         </button>
       </div>
     );
@@ -104,13 +106,13 @@ const FinancialDashboardPage: React.FC = () => {
           {/* Header */}
           <div className="mb-12">
             <div className="flex items-center gap-3 text-blue-500 font-black uppercase tracking-widest text-xs mb-3">
-              <Shield size={16} /> Dashboard Financier Admin
+              <Shield size={16} /> {t('admin.financials.header_tag', 'Dashboard Financier Admin')}
             </div>
             <h1 className="text-5xl font-black italic manga-font tracking-tighter uppercase text-black dark:text-white leading-none">
               EQUILIBRE <span className="text-blue-500">FINANCIER</span>
             </h1>
             <p className="text-gray-500 font-bold uppercase tracking-widest mt-2 text-xs">
-              Calculez et équilibrez vos coûts d'IA avec la régie publicitaire
+              {t('admin.financials.subtitle', 'Calculez et équilibrez vos coûts d\'IA avec la régie publicitaire')}
             </p>
           </div>
 
@@ -119,53 +121,53 @@ const FinancialDashboardPage: React.FC = () => {
             <Card padding="md" className="border-2 border-red-500/20 bg-white dark:bg-[#0f0f1a]">
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-wider text-gray-500 mb-1">Coût Total IA</p>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-gray-500 mb-1">{t('admin.financials.total_ai_cost', 'Coût Total IA')}</p>
                   <h3 className="text-3xl font-black text-red-500">${data.total_ai_cost.toFixed(2)}</h3>
                 </div>
                 <Coins className="text-red-500 w-5 h-5" />
               </div>
-              <p className="text-[10px] text-gray-400 mt-3 font-mono">Consommation cumulée des API</p>
+              <p className="text-[10px] text-gray-400 mt-3 font-mono">{t('admin.financials.cumulative_consumption', 'Consommation cumulée des API')}</p>
             </Card>
 
             <Card padding="md" className="border-2 border-green-500/20 bg-white dark:bg-[#0f0f1a]">
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-wider text-gray-500 mb-1">Revenus Pubs (Simulés)</p>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-gray-500 mb-1">{t('admin.financials.simulated_ad_revenue', 'Revenus Pubs (Simulés)')}</p>
                   <h3 className="text-3xl font-black text-green-500">${simAdRevenue.toFixed(2)}</h3>
                 </div>
                 <TrendingUp className="text-green-500 w-5 h-5" />
               </div>
               <p className="text-[10px] text-gray-400 mt-3 font-mono">
-                {data.ad_stats.video_impressions} videos • {data.ad_stats.clicks} clics
+                {t('admin.financials.ad_stats_summary', '{{videos}} videos • {{clicks}} clics', { videos: data.ad_stats.video_impressions, clicks: data.ad_stats.clicks })}
               </p>
             </Card>
 
             <Card padding="md" className="border-2 border-yellow-500/20 bg-white dark:bg-[#0f0f1a]">
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-wider text-gray-500 mb-1">Dons (Sponsors Or)</p>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-gray-500 mb-1">{t('admin.financials.donations_gold_sponsors', 'Dons (Sponsors Or)')}</p>
                   <h3 className="text-3xl font-black text-yellow-500">${simDonations.toFixed(2)}</h3>
                 </div>
                 <Sparkles className="text-yellow-500 w-5 h-5" />
               </div>
               <p className="text-[10px] text-gray-400 mt-3 font-mono">
-                {data.donation_stats.gold_sponsors} sponsors or actifs
+                {t('admin.financials.active_gold_sponsors', '{{count}} sponsors or actifs', { count: data.donation_stats.gold_sponsors })}
               </p>
             </Card>
 
-            <Card padding="md" className={`border-2 bg-white dark:bg-[#0f0f1a] ${isDeficit ? 'border-red-500' : 'border-green-500'}`}>
+             <Card padding="md" className={`border-2 bg-white dark:bg-[#0f0f1a] ${isDeficit ? 'border-red-500' : 'border-green-500'}`}>
               <div className="flex justify-between items-start">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-wider text-gray-500 mb-1">Solde Net (Simulation)</p>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-gray-500 mb-1">{t('admin.financials.simulated_net_margin', 'Solde Net (Simulation)')}</p>
                   <h3 className={`text-3xl font-black ${isDeficit ? 'text-red-500' : 'text-green-500'}`}>
                     {isDeficit ? '-' : '+'}${deficitVal.toFixed(2)}
                   </h3>
                 </div>
                 <div className={`px-2 py-0.5 rounded text-[8px] font-black uppercase ${isDeficit ? 'bg-red-500/10 text-red-500 border border-red-500/30' : 'bg-green-500/10 text-green-500 border border-green-500/30'}`}>
-                  {isDeficit ? 'Déficit' : 'Bénéfice'}
+                  {isDeficit ? t('admin.financials.deficit', 'Déficit') : t('admin.financials.profit', 'Bénéfice')}
                 </div>
               </div>
-              <p className="text-[10px] text-gray-400 mt-3 font-mono">Total revenus - Coûts IA</p>
+              <p className="text-[10px] text-gray-400 mt-3 font-mono">{t('admin.financials.margin_explanation', 'Total revenus - Coûts IA')}</p>
             </Card>
           </div>
 
@@ -175,14 +177,14 @@ const FinancialDashboardPage: React.FC = () => {
             <div className="lg:col-span-2 space-y-6">
               <Card padding="lg" className="bg-white dark:bg-[#0f0f1a]">
                 <h3 className="text-xl font-black italic uppercase text-black dark:text-white mb-6 flex items-center gap-2">
-                  <BarChart2 className="w-5 h-5 text-blue-500" /> CONSOLE D'ÉGALISATION INTERACTIVE
+                  <BarChart2 className="w-5 h-5 text-blue-500" /> {t('admin.financials.interactive_equalizer_title', 'CONSOLE D\'ÉGALISATION INTERACTIVE')}
                 </h3>
                 
                 <div className="space-y-6">
                   {/* Slider 1: Video CPM */}
                   <div>
                     <div className="flex justify-between text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
-                      <span>CPM Vidéo (pour 1000 vues)</span>
+                      <span>{t('admin.financials.video_cpm_label', 'CPM Vidéo (pour 1000 vues)')}</span>
                       <span className="text-blue-500 font-mono">${videoCpm.toFixed(2)}</span>
                     </div>
                     <input
@@ -196,7 +198,7 @@ const FinancialDashboardPage: React.FC = () => {
                   {/* Slider 2: Banner CPM */}
                   <div>
                     <div className="flex justify-between text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
-                      <span>CPM Bannière (pour 1000 vues)</span>
+                      <span>{t('admin.financials.banner_cpm_label', 'CPM Bannière (pour 1000 vues)')}</span>
                       <span className="text-blue-500 font-mono">${bannerCpm.toFixed(2)}</span>
                     </div>
                     <input
@@ -210,7 +212,7 @@ const FinancialDashboardPage: React.FC = () => {
                   {/* Slider 3: CPC */}
                   <div>
                     <div className="flex justify-between text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
-                      <span>CPC (Revenu par clic pub)</span>
+                      <span>{t('admin.financials.cpc_label', 'CPC (Revenu par clic pub)')}</span>
                       <span className="text-blue-500 font-mono">${cpc.toFixed(2)}</span>
                     </div>
                     <input
@@ -224,7 +226,7 @@ const FinancialDashboardPage: React.FC = () => {
                   {/* Slider 4: Donation Value */}
                   <div>
                     <div className="flex justify-between text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
-                      <span>Valeur Don Unique (Sponsor Or)</span>
+                      <span>{t('admin.financials.donation_val_label', 'Valeur Don Unique (Sponsor Or)')}</span>
                       <span className="text-blue-500 font-mono">${donationVal.toFixed(2)}</span>
                     </div>
                     <input
@@ -242,35 +244,35 @@ const FinancialDashboardPage: React.FC = () => {
             <div className="space-y-6">
               <Card padding="lg" className="bg-[#0b0c15] text-white border border-blue-500/20">
                 <h3 className="text-md font-black italic uppercase text-yellow-500 mb-4 flex items-center gap-1.5">
-                  <AlertTriangle className="w-4 h-4" /> SEUIL DE RENTABILITÉ
+                  <AlertTriangle className="w-4 h-4" /> {t('admin.financials.breakeven_title', 'SEUIL DE RENTABILITÉ')}
                 </h3>
 
                 {isDeficit ? (
                   <div className="space-y-4">
                     <p className="text-xs text-gray-300 leading-relaxed font-mono">
-                      Pour compenser le déficit simulé de <span className="text-red-500 font-bold">${deficitVal.toFixed(2)}</span> avec les taux sélectionnés, le site doit générer au choix :
+                      {t('admin.financials.deficit_recom_desc', 'Pour compenser le déficit simulé de {{deficit}} avec les taux sélectionnés, le site doit générer au choix :', { deficit: deficitVal.toFixed(2) })}
                     </p>
                     <div className="bg-black/40 p-4 rounded-xl border border-white/5 space-y-3 font-mono">
                       <div className="flex justify-between text-xs">
-                        <span className="text-gray-400">Vues Vidéo Recom. :</span>
+                        <span className="text-gray-400">{t('admin.financials.video_views_needed', 'Vues Vidéo Recom. :')}</span>
                         <span className="text-yellow-400 font-bold">{neededVideoImpressions.toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between text-xs">
-                        <span className="text-gray-400">OU Clics Pubs :</span>
+                        <span className="text-gray-400">{t('admin.financials.ad_clicks_needed', 'OU Clics Pubs :')}</span>
                         <span className="text-yellow-400 font-bold">{neededClicks.toLocaleString()}</span>
                       </div>
                     </div>
                   </div>
                 ) : (
                   <div className="bg-green-500/10 border border-green-500/30 p-4 rounded-xl text-green-400 text-xs leading-relaxed font-mono font-bold">
-                    Félicitations ! Les paramètres actuels permettent de dégager un bénéfice de <span className="font-bold">${deficitVal.toFixed(2)}</span>. Aucun trafic publicitaire supplémentaire n'est nécessaire pour combler les coûts.
+                    {t('admin.financials.profit_message', 'Félicitations ! Les paramètres actuels permettent de dégager un bénéfice de {{profit}}. Aucun trafic publicitaire supplémentaire n\'est nécessaire pour combler les coûts.', { profit: deficitVal.toFixed(2) })}
                   </div>
                 )}
               </Card>
 
               <Card padding="lg" className="bg-white dark:bg-[#0f0f1a]">
                 <h3 className="text-md font-black italic uppercase text-blue-500 mb-4 flex items-center gap-1.5">
-                  <HelpCircle className="w-4 h-4" /> RECOMMANDATION GLOBALE
+                  <HelpCircle className="w-4 h-4" /> {t('admin.financials.recommendation_title', 'RECOMMANDATION GLOBALE')}
                 </h3>
                 <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed font-mono bg-gray-50 dark:bg-black/30 p-4 rounded-xl border border-gray-100 dark:border-white/5">
                   {data.recommendation}
@@ -282,11 +284,11 @@ const FinancialDashboardPage: React.FC = () => {
           {/* Engine Breakdown */}
           <Card padding="lg" className="bg-white dark:bg-[#0f0f1a]">
             <h3 className="text-lg font-black italic uppercase text-black dark:text-white mb-6">
-              RÉPARTITION DES COÛTS PAR MOTEUR D'IA
+              {t('admin.financials.cost_breakdown_title', 'RÉPARTITION DES COÛTS PAR MOTEUR D\'IA')}
             </h3>
             <div className="space-y-4">
               {Object.entries(data.cost_by_engine).length === 0 ? (
-                <p className="text-xs text-gray-500 font-mono">Aucun coût d'IA enregistré.</p>
+                <p className="text-xs text-gray-500 font-mono">{t('admin.financials.no_costs_recorded', 'Aucun coût d\'IA enregistré.')}</p>
               ) : (
                 Object.entries(data.cost_by_engine).map(([engine, cost]) => {
                   const percentage = data.total_ai_cost > 0 ? (cost / data.total_ai_cost) * 100 : 0;

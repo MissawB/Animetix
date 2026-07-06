@@ -17,10 +17,12 @@ import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { CardSkeleton } from "../../components/ui/Skeleton";
+import { useTranslation } from 'react-i18next';
 
 import { Appearance, Seiyuu } from '../../types';
 
 const CharacterDetailPage: React.FC = () => {
+  const { t } = useTranslation();
   const { characterId } = useParams<{ characterId: string }>();
 
   // In a real scenario, this would call a dedicated endpoint like /api/v1/media/Character/:id/
@@ -38,9 +40,9 @@ const CharacterDetailPage: React.FC = () => {
 
   if (isError || !character) return (
       <div className="max-w-7xl mx-auto px-6 py-32 text-center">
-          <h2 className="text-4xl font-black italic manga-font text-red-500 mb-6 uppercase">Personnage introuvable</h2>
-          <p className="text-gray-500 font-bold uppercase tracking-widest mb-12">Il semble s'être perdu dans l'espace latent...</p>
-          <Button as={Link} to="/explore/" variant="outline">RETOURNER AU NEXUS</Button>
+          <h2 className="text-4xl font-black italic manga-font text-red-500 mb-6 uppercase">{t('media.character.not_found', 'Personnage introuvable')}</h2>
+          <p className="text-gray-500 font-bold uppercase tracking-widest mb-12">{t('media.character.not_found_desc', 'Il semble s\'être perdu dans l\'espace latent...')}</p>
+          <Button as={Link} to="/explore/" variant="outline">{t('media.character.back_nexus', 'RETOURNER AU NEXUS')}</Button>
       </div>
   );
 
@@ -54,7 +56,7 @@ const CharacterDetailPage: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-6 py-16 relative z-10">
         <Link to="/explore/" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-white transition-colors mb-12 no-underline group">
-            <ArrowLeft className="w-3 h-3 group-hover:-translate-x-1 transition-transform" /> Retour au Nexus
+            <ArrowLeft className="w-3 h-3 group-hover:-translate-x-1 transition-transform" /> {t('media.character.back_nexus_link', 'Retour au Nexus')}
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
@@ -66,22 +68,22 @@ const CharacterDetailPage: React.FC = () => {
                         <img src={character.image} className="w-full aspect-[3/4] object-cover" alt={character.title} loading="lazy" decoding="async" />
                     </Card>
                     <Badge variant="primary" className="absolute top-6 left-6 shadow-xl bg-anime-accent font-black italic uppercase tracking-tighter">
-                        CHARACTÈRES
+                        {t('media.character.badge_characters', 'PERSONNAGES')}
                     </Badge>
                 </div>
 
                 <div className="space-y-4">
                     <div className="p-6 bg-navy-900/50 rounded-2xl border border-white/5 space-y-4">
                         <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-black opacity-30 uppercase">Archétype</span>
+                            <span className="text-[10px] font-black opacity-30 uppercase">{t('media.character.archetype', 'Archétype')}</span>
                             <span className="font-bold italic text-sm text-anime-accent">{character.metadata?.archetype || 'Analytique'}</span>
                         </div>
                         <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-black opacity-30 uppercase">Alignement</span>
+                            <span className="text-[10px] font-black opacity-30 uppercase">{t('media.character.alignment', 'Alignement')}</span>
                             <span className="font-bold italic text-sm text-blue-400">{character.metadata?.alignment || 'Neutre Bon'}</span>
                         </div>
                         <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-black opacity-30 uppercase">Popularité</span>
+                            <span className="text-[10px] font-black opacity-30 uppercase">{t('media.character.popularity', 'Popularité')}</span>
                             <span className="font-bold italic text-sm flex items-center gap-1">
                                 <TrendingUp className="w-3 h-3" /> #{character.popularity || '??'}
                             </span>
@@ -89,7 +91,7 @@ const CharacterDetailPage: React.FC = () => {
                     </div>
                     
                     <Button variant="outline" fullWidth className="py-4 border-white/5 bg-white/5 text-[10px] font-black uppercase tracking-widest hover:bg-white/10">
-                        <Network className="w-3 h-3 mr-2" /> Analyser dans le Graphe
+                        <Network className="w-3 h-3 mr-2" /> {t('media.character.analyze_graph', 'Analyser dans le Graphe')}
                     </Button>
                 </div>
             </div>
@@ -100,7 +102,7 @@ const CharacterDetailPage: React.FC = () => {
                     <div className="flex flex-wrap gap-2 mb-6">
                         {character.metadata?.traits?.map((t: string) => (
                             <Badge key={t} variant="neutral" className="bg-white/5 border-white/10 text-[9px] uppercase tracking-widest font-black italic">{t}</Badge>
-                        )) || <Badge variant="neutral" className="bg-white/5 border-white/10 text-[9px] uppercase tracking-widest font-black italic">Personnage Nexus</Badge>}
+                        )) || <Badge variant="neutral" className="bg-white/5 border-white/10 text-[9px] uppercase tracking-widest font-black italic">{t('media.character.fallback_type', 'Personnage Nexus')}</Badge>}
                     </div>
                     <h1 className="text-7xl font-black italic manga-font tracking-tighter uppercase mb-2 leading-none text-glow">
                         {character.title}
@@ -111,11 +113,11 @@ const CharacterDetailPage: React.FC = () => {
                 {/* Bio Section */}
                 <section>
                     <h3 className="text-xs font-black uppercase opacity-40 mb-6 tracking-widest flex items-center gap-2">
-                        <Info className="w-4 h-4 text-blue-400" /> Profil Cognitif
+                        <Info className="w-4 h-4 text-blue-400" /> {t('media.character.cognitive_profile', 'Profil Cognitif')}
                     </h3>
                     <Card padding="lg" className="bg-white/5 border-white/5 shadow-inner">
                         <p className="text-sm leading-relaxed opacity-80 font-medium italic">
-                            {character.description || "Les archives du Nexus n'ont pas encore indexé la biographie complète de ce sujet."}
+                            {character.description || t('media.character.no_description', "Les archives du Nexus n'ont pas encore indexé la biographie complète de ce sujet.")}
                         </p>
                     </Card>
                 </section>
@@ -123,7 +125,7 @@ const CharacterDetailPage: React.FC = () => {
                 {/* Linked Media / Appearances */}
                 <section>
                     <h3 className="text-xs font-black uppercase opacity-40 mb-8 tracking-widest flex items-center gap-2">
-                        <Play className="w-4 h-4 text-emerald-400" /> Apparitions majeures
+                        <Play className="w-4 h-4 text-emerald-400" /> {t('media.character.major_appearances', 'Apparitions majeures')}
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         {character.metadata?.appearances?.map((app: Appearance) => (
@@ -141,7 +143,7 @@ const CharacterDetailPage: React.FC = () => {
                         )) || (
                             <div className="col-span-2 p-12 border-2 border-dashed border-white/5 rounded-3xl flex flex-col items-center justify-center text-center">
                                 <Fingerprint className="w-12 h-12 opacity-10 mb-4" />
-                                <p className="text-xs font-bold uppercase opacity-20 tracking-widest">Calcul des relations en cours...</p>
+                                <p className="text-xs font-bold uppercase opacity-20 tracking-widest">{t('media.character.computing_relations', 'Calcul des relations en cours...')}</p>
                             </div>
                         )}
                     </div>
@@ -151,7 +153,7 @@ const CharacterDetailPage: React.FC = () => {
                 {character.metadata?.seiyuu && (
                     <section>
                         <h3 className="text-xs font-black uppercase opacity-40 mb-8 tracking-widest flex items-center gap-2">
-                            <Sparkles className="w-4 h-4 text-yellow-400" /> Voix Originale (Seiyuu)
+                            <Sparkles className="w-4 h-4 text-yellow-400" /> {t('media.character.seiyuu_title', 'Voix Originale (Seiyuu)')}
                         </h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             {character.metadata.seiyuu.map((actor: Seiyuu) => (

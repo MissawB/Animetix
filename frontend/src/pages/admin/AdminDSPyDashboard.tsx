@@ -19,6 +19,7 @@ import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface EvalFailure {
@@ -38,7 +39,8 @@ interface OptimizationResult {
 }
 
 const AdminDSPyDashboard: React.FC = () => {
-  const [template, setTemplate] = useState<string>("Réponds à la question suivante sur l'univers de l'anime : {query}");
+  const { t } = useTranslation();
+  const [template, setTemplate] = useState<string>(t('admin.dspy.default_template', "Réponds à la question suivante sur l'univers de l'anime : {query}"));
   const [result, setResult] = useState<OptimizationResult | null>(null);
   const [selectedFailure, setSelectedFailure] = useState<EvalFailure | null>(null);
 
@@ -100,7 +102,7 @@ const AdminDSPyDashboard: React.FC = () => {
                   <h1 className="text-6xl font-black italic manga-font tracking-tighter uppercase mb-2">
                       DSPy <span className="text-blue-500 text-glow">OPTIMIZER</span>
                   </h1>
-                  <p className="text-lg font-bold opacity-30 uppercase tracking-[0.3em]">Auto-tuning des prompts par mutation sémantique.</p>
+                  <p className="text-lg font-bold opacity-30 uppercase tracking-[0.3em]">{t('admin.dspy.subtitle', 'Auto-tuning des prompts par mutation sémantique.')}</p>
               </div>
               <div className="flex gap-4">
                   <Badge variant="neutral" className="bg-white/5 border-black/5 dark:border-white/10 text-[10px] py-2 px-4 italic font-black text-black dark:text-white">PHASE G.1 : SEMANTIC MUTATION</Badge>
@@ -114,19 +116,19 @@ const AdminDSPyDashboard: React.FC = () => {
                   {/* Template Editor Card */}
                   <Card padding="lg" className="bg-white dark:bg-[#0f0f1a] border-none shadow-2xl rounded-[3rem]">
                       <h3 className="text-xs font-black uppercase opacity-40 mb-8 tracking-widest flex items-center gap-2">
-                          <Settings className="w-4 h-4 text-blue-500" /> Configuration de l'Optimiseur
+                          <Settings className="w-4 h-4 text-blue-500" /> {t('admin.dspy.config_title', 'Configuration de l\'Optimiseur')}
                       </h3>
 
                       <form onSubmit={onSubmit} className="space-y-6">
                           <div>
-                              <label htmlFor="template-editor" className="text-[10px] font-black uppercase opacity-30 mb-2 block tracking-widest">Template d'origine</label>
+                              <label htmlFor="template-editor" className="text-[10px] font-black uppercase opacity-30 mb-2 block tracking-widest">{t('admin.dspy.original_template', 'Template d\'origine')}</label>
                               <textarea
                                   id="template-editor"
                                   aria-label="Template d'origine de l'optimiseur"
                                   value={template}
                                   onChange={(e) => setTemplate(e.target.value)}
                                   className="w-full bg-gray-50 dark:bg-black/20 border-2 border-black/5 dark:border-white/5 rounded-2xl p-6 text-sm font-bold min-h-[150px] focus:border-blue-500 outline-none transition-all font-mono text-black dark:text-white"
-                                  placeholder="Entrez le template avec le placeholder {query}..."
+                                  placeholder={t('admin.dspy.template_placeholder', 'Entrez le template avec le placeholder {query}...')}
                               />
                           </div>
 
@@ -144,12 +146,12 @@ const AdminDSPyDashboard: React.FC = () => {
 
                           <div className="grid grid-cols-2 gap-4">
                               <div className="p-4 bg-gray-50 dark:bg-white/5 rounded-2xl border border-black/5 dark:border-white/5">
-                                  <p className="text-[8px] font-black opacity-30 uppercase mb-1">Stratégie</p>
+                                  <p className="text-[8px] font-black opacity-30 uppercase mb-1">{t('admin.dspy.strategy', 'Stratégie')}</p>
                                   <p className="text-xs font-bold text-blue-500">BayesianMutation</p>
                               </div>
                               <div className="p-4 bg-gray-50 dark:bg-white/5 rounded-2xl border border-black/5 dark:border-white/5">
                                   <p className="text-[10px] font-black opacity-30 uppercase mb-1 tracking-widest">Variants</p>
-                                  <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">3 par cycle</p>
+                                  <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{t('admin.dspy.variants_val', '3 par cycle')}</p>
                               </div>
                           </div>
 
@@ -159,7 +161,7 @@ const AdminDSPyDashboard: React.FC = () => {
                               className="w-full bg-blue-600 hover:bg-blue-500 text-white py-6 rounded-2xl font-black italic uppercase shadow-xl hover:scale-105 active:scale-95 transition-all border-none"
                           >
                               {optimizeMutation.isPending ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Zap className="w-5 h-5 mr-2" />}
-                              LANCER L'OPTIMISATION
+                              {t('admin.dspy.optimize_btn', 'LANCER L\'OPTIMISATION')}
                           </Button>
                       </form>
                   </Card>
@@ -167,7 +169,7 @@ const AdminDSPyDashboard: React.FC = () => {
                   {/* Production Failures Log Card */}
                   <Card padding="lg" className="bg-white dark:bg-[#0f0f1a] border-none shadow-xl rounded-[3rem] overflow-hidden">
                       <h3 className="text-xs font-black uppercase opacity-40 mb-6 tracking-widest flex items-center gap-2">
-                          <ShieldAlert className="w-4 h-4 text-red-500" /> Erreurs de Raisonnement (Prod)
+                          <ShieldAlert className="w-4 h-4 text-red-500" /> {t('admin.dspy.prod_failures', 'Erreurs de Raisonnement (Prod)')}
                       </h3>
                       
                       <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
@@ -208,7 +210,7 @@ const AdminDSPyDashboard: React.FC = () => {
                           ) : (
                               <div className="py-12 text-center opacity-20">
                                   <CheckCircle2 className="w-8 h-8 mx-auto mb-4" />
-                                  <p className="text-[10px] font-black uppercase tracking-widest">Aucune erreur détectée</p>
+                                  <p className="text-[10px] font-black uppercase tracking-widest">{t('admin.dspy.no_errors', 'Aucune erreur détectée')}</p>
                               </div>
                           )}
                       </div>
@@ -219,7 +221,7 @@ const AdminDSPyDashboard: React.FC = () => {
                           <Database className="w-4 h-4 text-emerald-500" /> Evaluation Dataset
                       </h3>
                       <p className="text-[10px] font-bold opacity-40 leading-relaxed uppercase italic">
-                          L'optimiseur utilise le <b>Gold Dataset v2</b> complété par les échecs de production pour valider la robustesse.
+                          {t('admin.dspy.eval_dataset_desc', 'L\'optimiseur utilise le Gold Dataset v2 complété par les échecs de production pour valider la robustesse.')}
                       </p>
                   </Card>
               </div>
@@ -245,7 +247,7 @@ const AdminDSPyDashboard: React.FC = () => {
                                           <h3 className="text-3xl font-black italic manga-font uppercase">Best Score: {(result.best_score * 100).toFixed(1)}%</h3>
                                       </div>
                                       <div className="text-right">
-                                          <p className="text-[8px] font-black opacity-40 uppercase mb-1 tracking-widest">Gain de performance</p>
+                                          <p className="text-[8px] font-black opacity-40 uppercase mb-1 tracking-widest">{t('admin.dspy.gain_label', 'Gain de performance')}</p>
                                           <p className="text-xl font-black text-emerald-500">+12.4%</p>
                                       </div>
                                   </div>
@@ -266,7 +268,7 @@ const AdminDSPyDashboard: React.FC = () => {
                               {/* Mutation Tree Visualization (Simulated with cards) */}
                               <div>
                                   <h3 className="text-xs font-black uppercase opacity-40 mb-6 tracking-widest flex items-center gap-2 px-4">
-                                      <BarChart3 className="w-4 h-4 text-blue-500" /> Toutes les Mutations
+                                      <BarChart3 className="w-4 h-4 text-blue-500" /> {t('admin.dspy.all_mutations', 'Toutes les Mutations')}
                                   </h3>
                                   <div className="space-y-4">
                                       {result.all_mutations?.map((mut: string, i: number) => (
@@ -302,9 +304,9 @@ const AdminDSPyDashboard: React.FC = () => {
                                           <Cpu className="w-10 h-10 text-blue-500" />
                                       </div>
                                       <div>
-                                          <h4 className="text-xl font-black italic manga-font uppercase mb-1">Analyse des Hyper-paramètres</h4>
+                                          <h4 className="text-xl font-black italic manga-font uppercase mb-1">{t('admin.dspy.hyper_params_title', 'Analyse des Hyper-paramètres')}</h4>
                                           <p className="text-[10px] font-bold opacity-30 leading-relaxed uppercase tracking-widest">
-                                              Le moteur DSPy a identifié que l'ajout de contraintes de style "Elite Expert" améliore la précision de 8.2% sur les requêtes de Lore profond.
+                                              {t('admin.dspy.hyper_params_desc', 'Le moteur DSPy a identifié que l\'ajout de contraintes de style "Elite Expert" améliore la précision de 8.2% sur les requêtes de Lore profond.')}
                                           </p>
                                       </div>
                                   </div>
@@ -314,7 +316,7 @@ const AdminDSPyDashboard: React.FC = () => {
                           <div className="h-full flex flex-col items-center justify-center opacity-10 text-center py-48 border-4 border-dashed border-black/5 dark:border-white/5 rounded-[4rem]">
                               <Cpu className="w-24 h-24 mb-8" />
                               <h3 className="text-4xl font-black italic manga-font uppercase mb-4">Pipeline Idle</h3>
-                              <p className="text-sm font-bold uppercase tracking-[0.3em]">Configurez un template pour démarrer l'auto-tuning.</p>
+                              <p className="text-sm font-bold uppercase tracking-[0.3em]">{t('admin.dspy.idle_desc', 'Configurez un template pour démarrer l\'auto-tuning.')}</p>
                           </div>
                       )}
                   </AnimatePresence>
@@ -324,8 +326,7 @@ const AdminDSPyDashboard: React.FC = () => {
           {/* Global Warning / System Status */}
           <div className="mt-24 p-12 rounded-[4rem] bg-white dark:bg-[#0f0f1a] shadow-xl border border-black/5 dark:border-white/5 text-center">
               <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30 italic leading-relaxed">
-                  Avertissement : L'Optimisation DSPy est une phase expérimentale. <br />
-                  Les mutations sont générées par le modèle Champion actuel et validées via LLM-as-a-Judge.
+                  {t('admin.dspy.experimental_warning', 'Avertissement : L\'Optimisation DSPy est une phase expérimentale. Les mutations sont générées par le modèle Champion actuel et validées via LLM-as-a-Judge.')}
               </p>
           </div>
         </div>

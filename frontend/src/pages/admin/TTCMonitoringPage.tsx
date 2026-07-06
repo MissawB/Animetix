@@ -4,6 +4,7 @@ import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { Card } from "../../components/ui/Card";
 import { ArrowLeft, AlertTriangle, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { apiClient } from "../../utils/apiClient";
 
 interface TTCLog {
@@ -28,6 +29,7 @@ const fetchTTCStats = async (): Promise<TTCMonitoringData> => {
 };
 
 const TTCMonitoringPage: React.FC = () => {
+    const { t } = useTranslation();
     const { data, isLoading } = useQuery<TTCMonitoringData>({
         queryKey: ['ttc-monitoring'],
         queryFn: fetchTTCStats,
@@ -48,7 +50,7 @@ const TTCMonitoringPage: React.FC = () => {
             <div className="min-h-[calc(100vh-64px)] bg-[#fffcf0] dark:bg-[#1a1a2e] transition-colors duration-500 bg-manga-overlay">
                 <div className="max-w-7xl mx-auto px-6 py-16">
                     <Link to="/admin/dashboard/" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-black dark:hover:text-white mb-8 no-underline">
-                        <ArrowLeft className="w-4 h-4" /> Retour Administration
+                        <ArrowLeft className="w-4 h-4" /> {t('admin.common.back_admin', 'Retour Administration')}
                     </Link>
                     <h1 className="text-4xl font-black italic manga-font uppercase mb-12 text-black dark:text-white">
                       DYNAMIC <span className="text-blue-500">BUDGET</span> TTC
@@ -57,15 +59,15 @@ const TTCMonitoringPage: React.FC = () => {
                     {/* KPI Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12 text-black dark:text-white">
                         <Card padding="lg" className="bg-white dark:bg-[#0f0f1a] border-none shadow-xl">
-                            <p className="text-[10px] font-black uppercase opacity-40 mb-2">Budget Alloué (24h)</p>
+                            <p className="text-[10px] font-black uppercase opacity-40 mb-2">{t('admin.ttc.budget_allocated', 'Budget Alloué (24h)')}</p>
                             <p className="text-4xl font-black italic">{summary.total_allocated}</p>
                         </Card>
                         <Card padding="lg" className="bg-white dark:bg-[#0f0f1a] border-none shadow-xl">
-                            <p className="text-[10px] font-black uppercase opacity-40 mb-2">Consommation Réelle</p>
+                            <p className="text-[10px] font-black uppercase opacity-40 mb-2">{t('admin.ttc.actual_consumed', 'Consommation Réelle')}</p>
                             <p className="text-4xl font-black italic">{summary.total_consumed}</p>
                         </Card>
                         <Card padding="lg" className={`bg-white dark:bg-[#0f0f1a] border-none shadow-xl ${summary.efficiency > 100 ? 'text-red-500' : 'text-emerald-500'}`}>
-                            <p className="text-[10px] font-black uppercase opacity-40 mb-2 text-black dark:text-white">Efficacité Cognitive</p>
+                            <p className="text-[10px] font-black uppercase opacity-40 mb-2 text-black dark:text-white">{t('admin.ttc.cognitive_efficiency', 'Efficacité Cognitive')}</p>
                             <p className="text-4xl font-black italic">{summary.efficiency}%</p>
                         </Card>
                     </div>
@@ -77,9 +79,9 @@ const TTCMonitoringPage: React.FC = () => {
                               <thead className="bg-gray-50 dark:bg-black/40 text-[10px] uppercase font-black text-gray-400 border-b border-black/5 dark:border-white/5">
                                   <tr>
                                       <th className="p-6">Inference Engine</th>
-                                      <th className="p-6">Alloué</th>
-                                      <th className="p-6">Consommé</th>
-                                      <th className="p-6 text-right">Statut</th>
+                                      <th className="p-6">{t('admin.ttc.allocated', 'Alloué')}</th>
+                                      <th className="p-6">{t('admin.ttc.consumed', 'Consommé')}</th>
+                                      <th className="p-6 text-right">{t('common.status', 'Statut')}</th>
                                   </tr>
                               </thead>
                               <tbody className="divide-y divide-black/5 dark:divide-white/5">

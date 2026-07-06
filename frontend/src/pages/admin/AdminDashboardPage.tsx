@@ -3,101 +3,116 @@ import { Shield, Users, Activity, Brain, Database, BarChart3, Clock, ArrowRight,
 import { Link } from 'react-router-dom';
 import { Card } from "../../components/ui/Card";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
+import { useTranslation } from 'react-i18next';
 
 const AdminDashboardPage: React.FC = () => {
+  const { t } = useTranslation();
   const adminModules = [
-    {
-      title: 'User Management',
-      desc: 'Gérer les comptes, les droits admin et les accès.',
-      icon: <Users className="w-8 h-8 text-blue-500" />,
-      path: '/admin/users/',
-      color: 'blue'
-    },
-    {
-      title: 'AI Quality Control',
-      desc: 'Surveiller la précision et les hallucinations de l\'IA.',
-      icon: <Brain className="w-8 h-8 text-purple-500" />,
-      path: '/admin/eval/',
-      color: 'purple'
-    },
-    {
-      title: 'System Health',
-      desc: 'État des services, latence et performances.',
-      icon: <Activity className="w-8 h-8 text-emerald-500" />,
-      path: '/admin/health/',
-      color: 'emerald'
-    },
-    {
-      title: 'Data Curation',
-      desc: 'Valider et corriger les données du graphe.',
-      icon: <Database className="w-8 h-8 text-cyan-500" />,
-      path: '/admin/gold-dataset/',
-      color: 'cyan'
-    },
-    {
-      title: 'TTC Monitoring',
-      desc: 'Budget de tokens et efficacité de l\'inférence.',
-      icon: <Clock className="w-8 h-8 text-orange-500" />,
-      path: '/admin/ttc-monitoring/',
-      color: 'orange'
-    },
-    {
-      title: 'SOTA Benchmarks',
-      desc: 'Comparaison des performances modèles.',
-      icon: <BarChart3 className="w-8 h-8 text-pink-500" />,
-      path: '/admin/sota-benchmark/',
-      color: 'pink'
-    },
-    {
-      title: 'MLOps Dashboard',
-      desc: 'Supervision des pipelines d\'entraînement et déploiement.',
-      icon: <Workflow className="w-8 h-8 text-indigo-500" />,
-      path: '/admin/mlops/',
-      color: 'indigo'
-    },
-    {
-      title: 'Observability Console',
-      desc: 'Analyser le drift d\'archétype et ajuster les guardrails.',
-      icon: <Activity className="w-8 h-8 text-purple-500" />,
-      path: '/admin/observability/',
-      color: 'purple'
-    },
-    {
-      title: 'DSPy Optimizer',
-      desc: 'Optimisation automatique des prompts via DSPy.',
-      icon: <Target className="w-8 h-8 text-red-500" />,
-      path: '/admin/dspy/',
-      color: 'red'
-    },
-    {
-      title: 'Graph Debugger',
-      desc: 'Inspection visuelle et débogage du graphe Neo4j.',
-      icon: <Network className="w-8 h-8 text-emerald-400" />,
-      path: '/admin/graph-debugger/',
-      color: 'emerald'
-    },
-    {
-      title: 'Admin Curation',
-      desc: 'Interface avancée de validation humaine (RLHF).',
-      icon: <ListChecks className="w-8 h-8 text-amber-500" />,
-      path: '/admin/curation/',
-      color: 'amber'
-    },
-    {
-      title: 'Financial Dashboard',
-      desc: 'Calculer les coûts IA et égaliser avec les pubs/dons.',
-      icon: <Coins className="w-8 h-8 text-yellow-500" />,
-      path: '/admin/financials/',
-      color: 'yellow'
-    },
-    {
-      title: 'Economic Audit',
-      desc: 'Analyse de la masse monétaire et de l\'inflation des Berrix.',
-      icon: <TrendingUp className="w-8 h-8 text-emerald-500" />,
-      path: '/admin/economics/',
-      color: 'emerald'
-    }
-  ];
+  {
+    title: 'User Management',
+    descKey: 'admin.dashboard.module_users_desc',
+    descDefault: 'Gérer les comptes, les droits admin et les accès.',
+    icon: <Users className="w-8 h-8 text-blue-500" />,
+    path: '/admin/users/',
+    color: 'blue'
+  },
+  {
+    title: 'AI Quality Control',
+    descKey: 'admin.dashboard.module_eval_desc',
+    descDefault: 'Surveiller la précision et les hallucinations de l\'IA.',
+    icon: <Brain className="w-8 h-8 text-purple-500" />,
+    path: '/admin/eval/',
+    color: 'purple'
+  },
+  {
+    title: 'System Health',
+    descKey: 'admin.dashboard.module_health_desc',
+    descDefault: 'État des services, latence et performances.',
+    icon: <Activity className="w-8 h-8 text-emerald-500" />,
+    path: '/admin/health/',
+    color: 'emerald'
+  },
+  {
+    title: 'Data Curation',
+    descKey: 'admin.dashboard.module_gold_desc',
+    descDefault: 'Valider et corriger les données du graphe.',
+    icon: <Database className="w-8 h-8 text-cyan-500" />,
+    path: '/admin/gold-dataset/',
+    color: 'cyan'
+  },
+  {
+    title: 'TTC Monitoring',
+    descKey: 'admin.dashboard.module_ttc_desc',
+    descDefault: 'Budget de tokens et efficacité de l\'inférence.',
+    icon: <Clock className="w-8 h-8 text-orange-500" />,
+    path: '/admin/ttc-monitoring/',
+    color: 'orange'
+  },
+  {
+    title: 'SOTA Benchmarks',
+    descKey: 'admin.dashboard.module_sota_desc',
+    descDefault: 'Comparaison des performances modèles.',
+    icon: <BarChart3 className="w-8 h-8 text-pink-500" />,
+    path: '/admin/sota-benchmark/',
+    color: 'pink'
+  },
+  {
+    title: 'MLOps Dashboard',
+    descKey: 'admin.dashboard.module_mlops_desc',
+    descDefault: 'Supervision des pipelines d\'entraînement et déploiement.',
+    icon: <Workflow className="w-8 h-8 text-indigo-500" />,
+    path: '/admin/mlops/',
+    color: 'indigo'
+  },
+  {
+    title: 'Observability Console',
+    descKey: 'admin.dashboard.module_observability_desc',
+    descDefault: 'Analyser le drift d\'archétype et ajuster les guardrails.',
+    icon: <Activity className="w-8 h-8 text-purple-500" />,
+    path: '/admin/observability/',
+    color: 'purple'
+  },
+  {
+    title: 'DSPy Optimizer',
+    descKey: 'admin.dashboard.module_dspy_desc',
+    descDefault: 'Optimisation automatique des prompts via DSPy.',
+    icon: <Target className="w-8 h-8 text-red-500" />,
+    path: '/admin/dspy/',
+    color: 'red'
+  },
+  {
+    title: 'Graph Debugger',
+    descKey: 'admin.dashboard.module_graph_debugger_desc',
+    descDefault: 'Inspection visuelle et débogage du graphe Neo4j.',
+    icon: <Network className="w-8 h-8 text-emerald-400" />,
+    path: '/admin/graph-debugger/',
+    color: 'emerald'
+  },
+  {
+    title: 'Admin Curation',
+    descKey: 'admin.dashboard.module_curation_desc',
+    descDefault: 'Interface avancée de validation humaine (RLHF).',
+    icon: <ListChecks className="w-8 h-8 text-amber-500" />,
+    path: '/admin/curation/',
+    color: 'amber'
+  },
+  {
+    title: 'Financial Dashboard',
+    descKey: 'admin.dashboard.module_financials_desc',
+    descDefault: 'Calculer les coûts IA et égaliser avec les pubs/dons.',
+    icon: <Coins className="w-8 h-8 text-yellow-500" />,
+    path: '/admin/financials/',
+    color: 'yellow'
+  },
+  {
+    title: t('admin.dashboard.module_economics_title', 'Economic Audit'),
+    descKey: 'admin.dashboard.module_economics_desc',
+    descDefault: 'Analyse de la masse monétaire et de l\'inflation des Berrix.',
+    icon: <TrendingUp className="w-8 h-8 text-emerald-500" />,
+    path: '/admin/economics/',
+    color: 'emerald'
+  }
+];
 
   return (
     <AnimatedPage>
@@ -106,13 +121,13 @@ const AdminDashboardPage: React.FC = () => {
           
           <div className="mb-16">
             <div className="flex items-center gap-3 text-blue-600 dark:text-blue-400 font-black uppercase tracking-widest text-xs mb-4">
-              <Shield size={20} /> Accès Administrateur Sécurisé
+              <Shield size={20} /> {t('admin.dashboard.secure_access', 'Accès Administrateur Sécurisé')}
             </div>
             <h1 className="text-6xl font-black italic manga-font tracking-tighter uppercase text-black dark:text-white leading-none">
               COMMAND <span className="text-blue-600 dark:text-blue-400">CENTER</span>
             </h1>
             <p className="text-gray-600 dark:text-gray-400 font-bold uppercase tracking-widest mt-4">
-              Supervision globale de l'écosystème Animetix
+              {t('admin.dashboard.global_supervision', 'Supervision globale de l\'écosystème Animetix')}
             </p>
           </div>
 
@@ -133,11 +148,11 @@ const AdminDashboardPage: React.FC = () => {
                   </h3>
                   
                   <p className="text-sm text-gray-600 dark:text-gray-400 font-medium leading-relaxed mb-6">
-                    {module.desc}
+                    {t(module.descKey, module.descDefault)}
                   </p>
                   
                   <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                    Accéder au module <ArrowRight size={12} />
+                    {t('admin.dashboard.access_module', 'Accéder au module')} <ArrowRight size={12} />
                   </div>
                 </Card>
               </Link>

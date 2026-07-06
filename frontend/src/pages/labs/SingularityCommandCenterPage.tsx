@@ -1,5 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { apiClient } from "../../utils/apiClient";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { Card } from "../../components/ui/Card";
@@ -34,6 +35,7 @@ interface SingularityHealth {
 }
 
 const SingularityCommandCenterPage: React.FC = () => {
+    const { t } = useTranslation();
     const { data, isLoading } = useQuery<SingularityHealth>({
         queryKey: ['singularity-command-center'],
         queryFn: () => apiClient('/api/v1/singularity-lab/command-center/'),
@@ -64,7 +66,7 @@ const SingularityCommandCenterPage: React.FC = () => {
                             SINGULARITY <span className="text-cyan-500 text-glow-cyan">HUB</span>
                         </h1>
                         <p className="text-sm font-bold opacity-30 uppercase tracking-[0.2em] max-w-xl leading-relaxed italic">
-                            Interface de monitoring centralisée pour l'orchestration des modèles cognitifs avancés.
+                            {t('labs.singularity.subtitle', "Interface de monitoring centralisée pour l'orchestration des modèles cognitifs avancés.")}
                         </p>
                     </div>
 
@@ -154,7 +156,7 @@ const SingularityCommandCenterPage: React.FC = () => {
                             <div className="absolute top-0 right-0 p-8 opacity-10">
                                 <Shield className="w-24 h-24 text-cyan-500" />
                             </div>
-                            <h4 className="text-2xl font-black italic manga-font uppercase mb-6 tracking-tighter">Cluster Security : <span className="text-emerald-500">MAXIMUM</span></h4>
+                            <h4 className="text-2xl font-black italic manga-font uppercase mb-6 tracking-tighter">{t('labs.singularity.cluster_security', 'Cluster Security :')} <span className="text-emerald-500">MAXIMUM</span></h4>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                                 <div className="space-y-1">
                                     <span className="text-[8px] font-black uppercase opacity-30 tracking-widest block">Uptime</span>

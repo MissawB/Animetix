@@ -18,8 +18,10 @@ import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { CardSkeleton } from "../../components/ui/Skeleton";
 import { queryClient } from "../../utils/queryClient";
 import {CreativeFusion} from "../../types";
+import { useTranslation } from 'react-i18next';
 
 const CommunityFeedPage: React.FC = () => {
+  const { t } = useTranslation();
 
   const { data: feed, isLoading } = useQuery<CreativeFusion[]>({
     queryKey: ['fusions-feed'],
@@ -52,29 +54,29 @@ const CommunityFeedPage: React.FC = () => {
                     FUSION <span className="text-yellow-400 text-glow">FEED</span>
                 </h1>
                 <p className="text-xl font-bold opacity-30 uppercase tracking-[0.3em]">
-                    Découvrez les créations du Nexus Communautaire.
+                    {t('social.feed.subtitle', 'Découvrez les créations du Nexus Communautaire.')}
                 </p>
             </div>
             
             <div className="flex gap-4">
                 <Button as={Link} to="/forge/" variant="primary" className="bg-yellow-400 text-black border-none py-6 px-8 rounded-2xl shadow-xl hover:scale-105 transition-all group">
-                    <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-500" /> NOUVELLE FUSION
+                    <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-500" /> {t('social.feed.new_fusion', 'NOUVELLE FUSION')}
                 </Button>
             </div>
         </header>
 
         {/* Categories / Filter Bar (Visual only for now) */}
         <div className="flex gap-4 mb-12 overflow-x-auto pb-4 no-scrollbar">
-            <Badge variant="primary" className="bg-yellow-400 text-black px-6 py-2 cursor-pointer shadow-lg">🔥 TENDANCES</Badge>
-            <Badge variant="neutral" className="bg-white/5 border-white/10 px-6 py-2 cursor-pointer hover:bg-white/10">✨ RÉCENT</Badge>
-            <Badge variant="neutral" className="bg-white/5 border-white/10 px-6 py-2 cursor-pointer hover:bg-white/10">💎 POPULAIRE</Badge>
-            <Badge variant="neutral" className="bg-white/5 border-white/10 px-6 py-2 cursor-pointer hover:bg-white/10">🤖 IA PICKS</Badge>
+            <Badge variant="primary" className="bg-yellow-400 text-black px-6 py-2 cursor-pointer shadow-lg">{t('social.feed.filter_trends', '🔥 TENDANCES')}</Badge>
+            <Badge variant="neutral" className="bg-white/5 border-white/10 px-6 py-2 cursor-pointer hover:bg-white/10">{t('social.feed.filter_recent', '✨ RÉCENT')}</Badge>
+            <Badge variant="neutral" className="bg-white/5 border-white/10 px-6 py-2 cursor-pointer hover:bg-white/10">{t('social.feed.filter_popular', '💎 POPULAIRE')}</Badge>
+            <Badge variant="neutral" className="bg-white/5 border-white/10 px-6 py-2 cursor-pointer hover:bg-white/10">{t('social.feed.filter_ai_picks', '🤖 IA PICKS')}</Badge>
         </div>
 
         {!feed || feed.length === 0 ? (
           <div className="text-center py-32 opacity-20">
               <Sparkles className="w-24 h-24 mx-auto mb-6" />
-              <p className="text-2xl font-black italic manga-font uppercase">Le flux est vide... Soyez le premier à fusionner !</p>
+              <p className="text-2xl font-black italic manga-font uppercase">{t('social.feed.empty_feed', 'Le flux est vide... Soyez le premier à fusionner !')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
@@ -96,7 +98,7 @@ const CommunityFeedPage: React.FC = () => {
                         <div className="w-6 h-6 rounded-full bg-yellow-400 flex items-center justify-center text-[10px] font-black text-black">
                             {fusion.creator_name?.[0].toUpperCase() || '?'}
                         </div>
-                        <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">{fusion.creator_name || 'Anonyme'}</span>
+                        <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">{fusion.creator_name || t('social.feed.anonymous', 'Anonyme')}</span>
                     </div>
                     <h3 className="font-black italic text-2xl leading-none truncate uppercase manga-font text-white group-hover:text-yellow-400 transition-colors">
                         {fusion.title_a} <span className="text-yellow-400">×</span> {fusion.title_b}
@@ -154,7 +156,7 @@ const CommunityFeedPage: React.FC = () => {
             <div>
                 <h4 className="text-3xl font-black italic manga-font uppercase mb-4 tracking-tighter">Nexus Trends v2.0</h4>
                 <p className="text-sm font-bold opacity-40 uppercase leading-relaxed max-w-3xl italic">
-                    Les fusions les plus populaires sont automatiquement propulsées dans le Graphe de Lore global d'Animetix, créant ainsi de nouveaux canons narratifs validés par la communauté.
+                    {t('social.feed.trends_desc', "Les fusions les plus populaires sont automatiquement propulsées dans le Graphe de Lore global d'Animetix, créant ainsi de nouveaux canons narratifs validés par la communauté.")}
                 </p>
             </div>
         </div>

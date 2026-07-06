@@ -21,20 +21,21 @@ import { Skeleton } from "../../components/ui/Skeleton";
 
 import { useMutation } from '@tanstack/react-query';
 import { apiClient } from "../../utils/apiClient";
-
+import { useTranslation } from 'react-i18next';
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 
 const HealthPage: React.FC = () => {
+  const { t } = useTranslation();
   const { data, isLoading } = useHealth();
   const [lastAction, setLastAction] = useState<{msg: string, status: 'success'|'error'} | null>(null);
 
   const pipelineMutation = useMutation({
     mutationFn: (action: string) => 
         apiClient(`/api/v1/admin/pipelines/control/${action}/`, { method: 'POST' }),
-    onSuccess: (res) => setLastAction({ msg: res.status || "Action réussie", status: 'success' }),
+    onSuccess: (res) => setLastAction({ msg: res.status || t('admin.health.action_success', 'Action réussie'), status: 'success' }),
     onError: (err) => {
         const error = err as Error;
-        setLastAction({ msg: error.message || "Échec de l'action", status: 'error' });
+        setLastAction({ msg: error.message || t('admin.health.action_failed', "Échec de l'action"), status: 'error' });
     }
   });
 
@@ -48,7 +49,7 @@ const HealthPage: React.FC = () => {
                         <Activity className="w-12 h-12 text-blue-500" /> System <span className="text-blue-500">Core</span>
                     </h1>
                     <p className="text-xl font-bold opacity-30 uppercase tracking-[0.3em] mt-2">
-                        Monitoring en temps réel et pilotage des pipelines.
+                        {t('admin.health.subtitle', 'Monitoring en temps réel et pilotage des pipelines.')}
                     </p>
                 </div>
                 
@@ -99,21 +100,21 @@ const HealthPage: React.FC = () => {
                         <div className="space-y-6">
                             <ControlButton 
                                 label="Run Scrapers" 
-                                desc="Lancer l'extraction Jikan/AniList." 
+                                desc={t('admin.health.scrapers_desc', "Lancer l'extraction Jikan/AniList.")} 
                                 icon={RefreshCw} 
                                 onClick={() => pipelineMutation.mutate('run_scraper')}
                                 loading={pipelineMutation.isPending && pipelineMutation.variables === 'run_scraper'}
                             />
                             <ControlButton 
                                 label="Sync Neo4j" 
-                                desc="Synchroniser le Knowledge Graph." 
+                                desc={t('admin.health.neo4j_desc', 'Synchroniser le Knowledge Graph.')} 
                                 icon={Database} 
                                 onClick={() => pipelineMutation.mutate('sync_neo4j')}
                                 loading={pipelineMutation.isPending && pipelineMutation.variables === 'sync_neo4j'}
                             />
                             <ControlButton 
                                 label="Beam Ingestion" 
-                                desc="Déclencher le pipeline Lore Dataflow." 
+                                desc={t('admin.health.beam_desc', 'Déclencher le pipeline Lore Dataflow.')} 
                                 icon={ArrowRight} 
                                 onClick={() => pipelineMutation.mutate('run_beam_ingestion')}
                                 loading={pipelineMutation.isPending && pipelineMutation.variables === 'run_beam_ingestion'}
@@ -123,7 +124,7 @@ const HealthPage: React.FC = () => {
                         <div className="mt-12 pt-8 border-t border-black/5 dark:border-white/5">
                             <div className="flex items-center gap-3 text-emerald-500/40 text-[9px] font-black uppercase tracking-widest italic">
                                 <ShieldCheck size={14} />
-                                <span>Accès restreint au staff</span>
+                                <span>{t('admin.health.staff_only', 'Accès restreint au staff')}</span>
                             </div>
                         </div>
                     </Card>

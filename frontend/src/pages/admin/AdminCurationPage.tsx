@@ -20,11 +20,13 @@ import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { CardSkeleton } from "../../components/ui/Skeleton";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { AIFeedback, CurationTicket } from '../../types';
 
 const AdminCurationPage: React.FC = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'dpo' | 'graph'>('dpo');
   const { feedbacks, isLoading: isDPOLoading, curate, isSubmitting: isDPOSubmitting } = useDPO();
   const { tickets, isLoading: isGraphLoading, stats: graphStats, resolve, isResolving } = useCurationTickets();
@@ -53,7 +55,7 @@ const AdminCurationPage: React.FC = () => {
                 CURATION <span className="text-red-500 text-glow">CENTER</span>
               </h1>
               <p className="text-xs font-black opacity-40 uppercase tracking-[0.3em] text-black dark:text-white">
-                Alignement Sémantique & Intégrité du Knowledge Graph
+                {t('admin.curation.subtitle', 'Alignement Sémantique & Intégrité du Knowledge Graph')}
               </p>
             </div>
             
@@ -95,14 +97,14 @@ const AdminCurationPage: React.FC = () => {
                                 <div className="space-y-6">
                                     <div>
                                         <h4 className="text-[10px] font-black uppercase opacity-30 mb-3 flex items-center gap-2">
-                                            <Info className="w-3 h-3" /> Contexte Utilisateur
+                                            <Info className="w-3 h-3" /> {t('admin.curation.user_context', 'Contexte Utilisateur')}
                                         </h4>
                                         <div className="bg-gray-50 dark:bg-black/20 p-5 rounded-2xl text-xs font-medium italic border border-black/5 dark:border-white/5">
                                             "{fb.input_context}"
                                         </div>
                                     </div>
                                     <div>
-                                        <h4 className="text-[10px] font-black uppercase text-red-500/50 mb-3">Réponse Rejetée</h4>
+                                        <h4 className="text-[10px] font-black uppercase text-red-500/50 mb-3">{t('admin.curation.rejected_response', 'Réponse Rejetée')}</h4>
                                         <div className="bg-red-500/5 p-5 rounded-2xl text-xs font-bold border border-red-500/10 text-red-600 dark:text-red-400">
                                             {fb.output_text}
                                         </div>
@@ -112,15 +114,15 @@ const AdminCurationPage: React.FC = () => {
                                 <div className="flex flex-col justify-center">
                                     {editingDPOId === fb.id ? (
                                         <form onSubmit={handleSubmit((d) => onDPOSubmit(d, fb.id))} className="space-y-4">
-                                            <h4 className="text-[10px] font-black uppercase text-green-500/50">Réponse Idéale (Chosen)</h4>
+                                            <h4 className="text-[10px] font-black uppercase text-green-500/50">{t('admin.curation.ideal_response', 'Réponse Idéale (Chosen)')}</h4>
                                             <textarea 
                                                 {...register('chosen_text', { required: true })}
                                                 className="w-full p-6 rounded-2xl bg-green-500/5 border-2 border-green-500/20 focus:border-green-500 outline-none text-xs font-bold min-h-[150px] dark:text-white"
-                                                placeholder="Tapez la réponse parfaite..."
+                                                placeholder={t('admin.curation.ideal_placeholder', 'Tapez la réponse parfaite...')}
                                             />
                                             <div className="flex gap-3">
                                                 <Button type="submit" variant="success" size="sm" disabled={isDPOSubmitting}>
-                                                    <Save className="w-4 h-4" /> Valider
+                                                    <Save className="w-4 h-4" /> {t('common.validate', 'Valider')}
                                                 </Button>
                                                 <Button variant="outline" size="sm" onClick={() => setEditingDPOId(null)}>
                                                     <X className="w-4 h-4" />
@@ -133,7 +135,7 @@ const AdminCurationPage: React.FC = () => {
                                                 <ShieldAlert className="w-8 h-8" />
                                             </div>
                                             <Button variant="primary" onClick={() => setEditingDPOId(fb.id)}>
-                                                <Edit3 className="w-4 h-4" /> RÉPARER LE RAISONNEMENT
+                                                <Edit3 className="w-4 h-4" /> {t('admin.curation.fix_reasoning', 'RÉPARER LE RAISONNEMENT')}
                                             </Button>
                                         </div>
                                     )}
@@ -145,8 +147,7 @@ const AdminCurationPage: React.FC = () => {
                     {feedbacks.length === 0 && (
                         <div className="text-center py-24 opacity-20 uppercase font-black tracking-widest animate-pulse italic text-black dark:text-white">
                             <Check className="w-20 h-20 mx-auto mb-4" />
-                            Toutes les erreurs DPO ont été corrigées. <br />
-                            Modèle aligné avec les préférences humaines.
+                            {t('admin.curation.dpo_clean', 'Toutes les erreurs DPO ont été corrigées. Modèle aligné avec les préférences humaines.')}
                         </div>
                     )}
                 </motion.div>
@@ -161,7 +162,7 @@ const AdminCurationPage: React.FC = () => {
                     {/* Tickets List */}
                     <div className="lg:col-span-1 space-y-4">
                         <h3 className="text-xs font-black uppercase tracking-widest opacity-40 mb-6 flex items-center gap-2 text-black dark:text-white">
-                            <Clock size={14} /> Flux des Contradictions
+                            <Clock size={14} /> {t('admin.curation.contradictions_flow', 'Flux des Contradictions')}
                         </h3>
                         <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-2 no-scrollbar">
                             {tickets.map((ticket: CurationTicket) => (
@@ -177,7 +178,7 @@ const AdminCurationPage: React.FC = () => {
                                 >
                                     <div className="flex justify-between items-start mb-2">
                                         <Badge variant={ticket.is_resolved ? 'success' : 'neutral'} className="text-[8px]">
-                                            {ticket.is_resolved ? 'Résolu' : 'En Attente'}
+                                            {ticket.is_resolved ? t('admin.curation.resolved', 'Résolu') : t('admin.curation.pending', 'En Attente')}
                                         </Badge>
                                         <span className={`font-mono text-[9px] ${selectedTicket?.id === ticket.id ? 'text-white/50' : 'opacity-30'}`}>#{ticket.id}</span>
                                     </div>
@@ -190,7 +191,7 @@ const AdminCurationPage: React.FC = () => {
 
                             {tickets.length === 0 && (
                                 <div className="text-center py-12 opacity-20 uppercase font-black tracking-widest italic text-black dark:text-white">
-                                    Aucun ticket de contradiction.
+                                    {t('admin.curation.no_tickets', 'Aucun ticket de contradiction.')}
                                 </div>
                             )}
                         </div>
@@ -211,7 +212,7 @@ const AdminCurationPage: React.FC = () => {
                                         <div>
                                             <h2 className="text-3xl font-black italic uppercase tracking-tighter text-black dark:text-white">{selectedTicket.item_title}</h2>
                                             <div className="text-[10px] font-black opacity-30 uppercase tracking-[0.2em] mt-1 text-black dark:text-white">
-                                                Détecté le {new Date(selectedTicket.created_at).toLocaleString()}
+                                                {t('admin.curation.detected_at', 'Détecté le {{date}}', { date: new Date(selectedTicket.created_at).toLocaleString() })}
                                             </div>
                                         </div>
                                         {!selectedTicket.is_resolved && (
@@ -224,7 +225,7 @@ const AdminCurationPage: React.FC = () => {
                                                 variant="success"
                                                 className="rounded-2xl px-8 py-6 font-black italic uppercase tracking-widest shadow-lg shadow-green-500/20"
                                             >
-                                                <CheckCircle2 className="w-5 h-5 mr-2" /> Approuver le Healer
+                                                <CheckCircle2 className="w-5 h-5 mr-2" /> {t('admin.curation.approve_healer', 'Approuver le Healer')}
                                             </Button>
                                         )}
                                     </div>
@@ -232,7 +233,7 @@ const AdminCurationPage: React.FC = () => {
                                     <div className="p-8 space-y-8 text-black dark:text-white">
                                         <section>
                                             <h4 className="text-[10px] font-black uppercase tracking-widest text-cyan-500 mb-4 flex items-center gap-2">
-                                                <AlertCircle size={14} /> Rapport de Contradiction
+                                                <AlertCircle size={14} /> {t('admin.curation.contradiction_report', 'Rapport de Contradiction')}
                                             </h4>
                                             <div className="bg-gray-50 dark:bg-black/40 p-6 rounded-2xl text-xs italic leading-relaxed border-l-4 border-cyan-500 font-medium">
                                                 "{selectedTicket.issue_description}"
@@ -264,9 +265,9 @@ const AdminCurationPage: React.FC = () => {
                                     <div className="w-24 h-24 bg-cyan-500/10 text-cyan-500 rounded-full flex items-center justify-center mb-8 shadow-inner">
                                         <Database size={40} />
                                     </div>
-                                    <h3 className="text-2xl font-black italic uppercase text-black/20 dark:text-white/20">SÉLECTIONNEZ UN TICKET</h3>
+                                    <h3 className="text-2xl font-black italic uppercase text-black/20 dark:text-white/20">{t('admin.curation.select_ticket', 'SÉLECTIONNEZ UN TICKET')}</h3>
                                     <p className="text-black/30 dark:text-white/30 text-xs font-bold uppercase tracking-widest max-w-xs mx-auto mt-4">
-                                        Les agents IA "Healers" génèrent ces tickets lorsqu'ils détectent une dérive sémantique entre les bases de données.
+                                        {t('admin.curation.select_ticket_desc', 'Les agents IA "Healers" génèrent ces tickets lorsqu\'ils détectent une dérive sémantique entre les bases de données.')}
                                     </p>
                                 </div>
                             )}
@@ -285,17 +286,17 @@ const AdminCurationPage: React.FC = () => {
                   </div>
                   <div>
                       <h4 className="text-2xl font-black italic manga-font uppercase tracking-tighter">Curation System v4.2</h4>
-                      <p className="text-[10px] font-bold opacity-30 uppercase tracking-[0.3em]">Module de Supervision Cognitive</p>
+                      <p className="text-[10px] font-bold opacity-30 uppercase tracking-[0.3em]">{t('admin.curation.supervision_module', 'Module de Supervision Cognitive')}</p>
                   </div>
               </div>
               
               <div className="flex gap-12">
                   <div className="text-center">
-                      <p className="text-[10px] font-black uppercase opacity-30 mb-2">Santé du Graphe</p>
+                      <p className="text-[10px] font-black uppercase opacity-30 mb-2">{t('admin.curation.graph_health', 'Santé du Graphe')}</p>
                       <p className="text-4xl font-black italic manga-font text-cyan-500">{graphStats?.health_score || 0}%</p>
                   </div>
                   <div className="text-center">
-                      <p className="text-[10px] font-black uppercase opacity-30 mb-2">Alignement DPO</p>
+                      <p className="text-[10px] font-black uppercase opacity-30 mb-2">{t('admin.curation.dpo_alignment', 'Alignement DPO')}</p>
                       <p className="text-4xl font-black italic manga-font text-red-500">{feedbacks.length === 0 ? 'STABLE' : 'DRIFT'}</p>
                   </div>
               </div>

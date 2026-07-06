@@ -48,35 +48,35 @@ const SocialDashboard: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <DashboardLinkCard 
                 title="Archetype Nexus" 
-                desc="Votre profil neuronal." 
+                desc={t('social.dashboard.nexus_desc', 'Votre profil neuronal.')} 
                 icon={<Brain className="text-blue-500" />} 
                 to="/social/archetype-nexus/"
                 accent="blue"
             />
             <DashboardLinkCard 
                 title="AI Debate Arena" 
-                desc="Duels sémantiques." 
+                desc={t('social.dashboard.debate_desc', 'Duels sémantiques.')} 
                 icon={<Swords className="text-red-500" />} 
                 to="/social/debate-arena/"
                 accent="red"
             />
             <DashboardLinkCard 
                 title="Ma Collection" 
-                desc="Fusions & Favoris." 
+                desc={t('social.dashboard.collection_desc', 'Fusions & Favoris.')} 
                 icon={<Layers className="text-yellow-500" />} 
                 to="/social/collection/"
                 accent="yellow"
             />
             <DashboardLinkCard 
                 title="Clubs" 
-                desc="Communautés actives." 
+                desc={t('social.dashboard.clubs_desc', 'Communautés actives.')} 
                 icon={<Users className="text-emerald-500" />} 
                 to="/clubs/"
                 accent="emerald"
             />
             <DashboardLinkCard 
                 title="Neuro-Memory" 
-                desc="Gérez votre empreinte." 
+                desc={t('social.dashboard.neuro_desc', 'Gérez votre empreinte.')} 
                 icon={<Fingerprint className="text-purple-500" />} 
                 to="/social/neuro-memory/"
                 accent="purple"

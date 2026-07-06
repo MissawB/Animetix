@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { MangaReader } from '../../features/manga-reader';
@@ -10,6 +11,7 @@ import { ArrowLeft, BookOpen, ChevronRight, Settings, WifiOff } from 'lucide-rea
 import { useChapterPages } from '../../features/manga-reader/offline/useChapterPages';
 
 const MangaReaderPage: React.FC = () => {
+  const { t } = useTranslation();
   const { mediaId, chapterId } = useParams<{ mediaId: string; chapterId: string }>();
   const navigate = useNavigate();
   const { setPages, setCurrentPageIndex, currentPageIndex, pages: readerPages } = useReaderStore();
@@ -69,7 +71,7 @@ const MangaReaderPage: React.FC = () => {
                 Manga Reader
               </div>
               <h1 className="text-lg font-black italic manga-font uppercase flex items-center gap-2">
-                {manga?.title || 'Chargement...'}
+                {manga?.title || t('common.loading', 'Chargement...')}
                 <ChevronRight className="w-4 h-4 opacity-30" />
                 <span className="text-anime-accent">Chapter {chapterId}</span>
               </h1>
@@ -79,7 +81,7 @@ const MangaReaderPage: React.FC = () => {
           <div className="flex items-center gap-4">
             {source === 'offline' && (
               <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-500/10 text-green-400 text-[10px] font-black uppercase tracking-widest">
-                <WifiOff className="w-3 h-3" /> Hors-ligne
+                <WifiOff className="w-3 h-3" /> {t('common.offline', 'Hors-ligne')}
               </span>
             )}
             <button className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl transition-all border border-white/5">
@@ -93,9 +95,9 @@ const MangaReaderPage: React.FC = () => {
             <div className="flex flex-col items-center justify-center py-32 text-center gap-4">
               <WifiOff className="w-12 h-12 text-red-500" />
               <p className="text-sm font-black uppercase tracking-widest opacity-60">
-                Chapitre indisponible hors-ligne
+                {t('media.reader.unavailable_offline', 'Chapitre indisponible hors-ligne')}
               </p>
-              <p className="text-xs opacity-30">Téléchargez ce chapitre lorsque vous êtes connecté.</p>
+              <p className="text-xs opacity-30">{t('media.reader.download_online_hint', 'Téléchargez ce chapitre lorsque vous êtes connecté.')}</p>
             </div>
           ) : (
             <MangaReader />
@@ -110,14 +112,14 @@ const MangaReaderPage: React.FC = () => {
                   disabled={parseFloat(chapterId!) <= 1}
                   className="text-xs font-black uppercase tracking-tighter opacity-40 hover:opacity-100 transition-opacity disabled:hidden"
                 >
-                  Chapitre Précédent
+                  {t('media.reader.prev_chapter', 'Chapitre Précédent')}
                 </button>
                 <div className="w-px h-4 bg-white/10"></div>
                 <button 
                   onClick={handleNextChapter}
                   className="text-xs font-black uppercase tracking-tighter opacity-40 hover:opacity-100 transition-opacity"
                 >
-                  Chapitre Suivant
+                  {t('media.reader.next_chapter', 'Chapitre Suivant')}
                 </button>
             </div>
         </footer>

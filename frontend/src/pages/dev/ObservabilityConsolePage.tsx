@@ -18,6 +18,7 @@ import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
+import { useTranslation } from 'react-i18next';
 
 interface ObservabilityData {
     drift_status: string;
@@ -25,6 +26,7 @@ interface ObservabilityData {
 }
 
 const ObservabilityConsolePage: React.FC = () => {
+  const { t } = useTranslation();
   const [thresholds, setThresholds] = useState({
       hate: 0.7,
       violence: 0.8,
@@ -62,7 +64,7 @@ const ObservabilityConsolePage: React.FC = () => {
                   OBSERVABILITY <span className="text-purple-500 text-glow">CONSOLE</span>
               </h1>
               <p className="text-xl font-bold opacity-30 uppercase tracking-[0.3em] max-w-2xl leading-relaxed">
-                  Surveillez l'intégrité des modèles et ajustez les barrières cognitives en temps réel.
+                  {t('admin.observability.subtitle', 'Surveillez l\'intégrité des modèles et ajustez les barrières cognitives en temps réel.')}
               </p>
           </header>
 
@@ -97,14 +99,14 @@ const ObservabilityConsolePage: React.FC = () => {
                                           <Zap className="w-3 h-3 text-amber-500" /> Latent Shift
                                       </p>
                                       <p className="text-sm font-bold text-black dark:text-white leading-relaxed italic">
-                                          "{data?.drift_config || "Calcul en cours..."}"
+                                          "{data?.drift_config || t('admin.observability.calculating', 'Calcul en cours...')}"
                                       </p>
                                   </div>
                                   <div className="p-6 bg-gray-50 dark:bg-white/[0.03] rounded-3xl border border-black/5 dark:border-white/5">
                                       <p className="text-[9px] font-black uppercase opacity-30 mb-4 tracking-widest flex items-center gap-2">
                                           <Brain className="w-3 h-3 text-blue-500" /> Semantic Consistency
                                       </p>
-                                      <p className="text-sm font-bold text-black dark:text-white">Dernier contrôle : <span className="text-blue-500 italic">Il y a 5 min</span></p>
+                                      <p className="text-sm font-bold text-black dark:text-white">{t('admin.observability.last_check', 'Dernier contrôle : ')}<span className="text-blue-500 italic">{t('admin.observability.five_min_ago', 'Il y a 5 min')}</span></p>
                                   </div>
                               </div>
 
@@ -113,7 +115,7 @@ const ObservabilityConsolePage: React.FC = () => {
                                 variant="outline" 
                                 className="w-full border-black/10 dark:border-white/10 text-[10px] font-black uppercase tracking-widest py-4 hover:bg-purple-500/5 transition-all"
                               >
-                                  Ré-évaluer le Drift <RefreshCw className="ml-2 w-3 h-3" />
+                                  {t('admin.observability.reevaluate_drift', 'Ré-évaluer le Drift')} <RefreshCw className="ml-2 w-3 h-3" />
                               </Button>
                           </div>
                       )}
@@ -174,7 +176,7 @@ const ObservabilityConsolePage: React.FC = () => {
                               <ShieldAlert className="w-3 h-3" /> Security Impact
                           </h4>
                           <p className="text-[10px] font-bold text-black/50 dark:text-white/40 uppercase leading-relaxed italic">
-                              Les changements de seuils sont appliqués instantanément sur le cluster d'inférence ADMS.
+                              {t('admin.observability.security_impact_desc', 'Les changements de seuils sont appliqués instantanément sur le cluster d\'inférence ADMS.')}
                           </p>
                       </div>
 

@@ -146,7 +146,7 @@ export const OfflineMangaPage: React.FC = () => {
           {loading ? (
             <div className="flex flex-col items-center justify-center py-32 gap-4">
               <Loader2 className="w-8 h-8 animate-spin text-orange-400" />
-              <p className="text-xs font-black uppercase tracking-widest text-white/40">Initialisation du système...</p>
+              <p className="text-xs font-black uppercase tracking-widest text-white/40">{t('labs.offline_manga.system_init', 'Initialisation du système...')}</p>
             </div>
           ) : downloads.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 text-center gap-6 bg-white/5 border border-white/5 backdrop-blur-xl rounded-3xl p-8">

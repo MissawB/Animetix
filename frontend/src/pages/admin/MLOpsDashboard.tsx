@@ -19,13 +19,17 @@ import {
 import { Card } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
+import { useTranslation } from 'react-i18next';
 import ClusterHealthPanel from './ClusterHealthPanel';
 
 const MLOpsDashboard: React.FC = () => {
+  const { t } = useTranslation();
   const adminModules = [
     {
-      title: "Curation IA",
-      desc: "Corrigez les dérives sémantiques et les contradictions du Knowledge Graph.",
+      titleKey: "admin.mlops.module_curation_title",
+      titleDefault: "Curation IA",
+      descKey: "admin.mlops.module_curation_desc",
+      descDefault: "Corrigez les dérives sémantiques et les contradictions du Knowledge Graph.",
       icon: ShieldAlert,
       path: "/admin/curation/",
       color: "text-red-500",
@@ -33,88 +37,110 @@ const MLOpsDashboard: React.FC = () => {
       status: "Attention"
     },
     {
-      title: "Santé Système",
-      desc: "Monitoring en temps réel et pilotage des pipelines (Sync, Scrapers).",
+      titleKey: "admin.mlops.module_health_title",
+      titleDefault: "Santé Système",
+      descKey: "admin.mlops.module_health_desc",
+      descDefault: "Monitoring en temps réel et pilotage des pipelines (Sync, Scrapers).",
       icon: Activity,
       path: "/admin/health/",
       color: "text-cyan-500",
       status: "Stable"
     },
     {
-      title: "Évaluation IA",
-      desc: "Benchmarks de régression et tests de qualité sémantique automatisés.",
+      titleKey: "admin.mlops.module_eval_title",
+      titleDefault: "Évaluation IA",
+      descKey: "admin.mlops.module_eval_desc",
+      descDefault: "Benchmarks de régression et tests de qualité sémantique automatisés.",
       icon: BarChart2,
       path: "/admin/eval/",
       color: "text-purple-500",
       status: "Active"
     },
     {
-      title: "Audit Sécurité",
-      desc: "Surveillance des guardrails, blocages et tentatives de jailbreak.",
+      titleKey: "admin.mlops.module_safety_title",
+      titleDefault: "Audit Sécurité",
+      descKey: "admin.mlops.module_safety_desc",
+      descDefault: "Surveillance des guardrails, blocages et tentatives de jailbreak.",
       icon: Lock,
       path: "/admin/safety/",
       color: "text-red-500",
       status: "Critique"
     },
     {
-      title: "Gold Dataset",
-      desc: "Édition et validation des données d'entraînement haute fidélité (SOTA).",
+      titleKey: "admin.mlops.module_gold_title",
+      titleDefault: "Gold Dataset",
+      descKey: "admin.mlops.module_gold_desc",
+      descDefault: "Édition et validation des données d'entraînement haute fidélité (SOTA).",
       icon: Database,
       path: "/admin/gold-dataset/",
       color: "text-amber-500",
       status: "Actif"
     },
     {
-      title: "Knowledge Graph",
-      desc: "Gestion de Neo4j, résolution de conflits et audit de relations.",
+      titleKey: "admin.mlops.module_graph_title",
+      titleDefault: "Knowledge Graph",
+      descKey: "admin.mlops.module_graph_desc",
+      descDefault: "Gestion de Neo4j, résolution de conflits et audit de relations.",
       icon: Zap,
       path: "/admin/graph-debugger/",
       color: "text-purple-500",
       status: "Maintenance"
     },
     {
-      title: "Open Ledger",
-      desc: "Dashboard de transparence publique, éthique et coûts IA.",
+      titleKey: "admin.mlops.module_ledger_title",
+      titleDefault: "Open Ledger",
+      descKey: "admin.mlops.module_ledger_desc",
+      descDefault: "Dashboard de transparence publique, éthique et coûts IA.",
       icon: ShieldCheck,
       path: "/social/transparency/",
       color: "text-emerald-500",
       status: "Public"
     },
     {
-      title: "Benchmarks SOTA",
-      desc: "Suivi des performances mondiales des modèles (ELO score, MMLU accuracy).",
+      titleKey: "admin.mlops.module_sota_title",
+      titleDefault: "Benchmarks SOTA",
+      descKey: "admin.mlops.module_sota_desc",
+      descDefault: "Suivi des performances mondiales des modèles (ELO score, MMLU accuracy).",
       icon: Trophy,
       path: "/admin/sota-benchmark/",
       color: "text-cyan-500",
       status: "Global"
     },
     {
-      title: "Graph Healer",
-      desc: "Analyse et résolution des conflits de lore dans Neo4j.",
+      titleKey: "admin.mlops.module_healer_title",
+      titleDefault: "Graph Healer",
+      descKey: "admin.mlops.module_healer_desc",
+      descDefault: "Analyse et résolution des conflits de lore dans Neo4j.",
       icon: Network,
       path: "/admin/graph-debugger/",
       color: "text-purple-500",
       status: "Beta"
     },
     {
-      title: "Optimiseur DSPy",
-      desc: "Auto-optimisation des prompts et mutation de templates via DSPy.",
+      titleKey: "admin.mlops.module_dspy_title",
+      titleDefault: "Optimiseur DSPy",
+      descKey: "admin.mlops.module_dspy_desc",
+      descDefault: "Auto-optimisation des prompts et mutation de templates via DSPy.",
       icon: Wand2,
       path: "/admin/dspy/",
       color: "text-blue-500",
       status: "SOTA"
     },
     {
-      title: "Dynamic Budget TTC",
-      desc: "Monitoring de la consommation et de l'efficacité cognitive (Test-Time Compute).",
+      titleKey: "admin.mlops.module_ttc_title",
+      titleDefault: "Dynamic Budget TTC",
+      descKey: "admin.mlops.module_ttc_desc",
+      descDefault: "Monitoring de la consommation et de l'efficacité cognitive (Test-Time Compute).",
       icon: Brain,
       path: "/admin/ttc-monitoring/",
       color: "text-yellow-500",
       status: "Actif"
     },
     {
-      title: "Audit Économique",
-      desc: "Suivi de la masse monétaire, de l'inflation et de la vélocité des Berrix (Bx).",
+      titleKey: "admin.mlops.module_economics_title",
+      titleDefault: "Audit Économique",
+      descKey: "admin.mlops.module_economics_desc",
+      descDefault: "Suivi de la masse monétaire, de l'inflation et de la vélocité des Berrix (Bx).",
       icon: Coins,
       path: "/admin/economics/",
       color: "text-amber-500",
@@ -134,7 +160,7 @@ const MLOpsDashboard: React.FC = () => {
                     MLOPS <span className="text-cyan-500 text-glow">DASHBOARD</span>
                 </h1>
                 <p className="text-xl font-bold opacity-30 uppercase tracking-[0.3em] leading-relaxed">
-                    Pilotage de l'infrastructure neuronale et alignement éthique.
+                    {t('admin.mlops.subtitle', 'Pilotage de l\'infrastructure neuronale et alignement éthique.')}
                 </p>
             </div>
             
@@ -148,7 +174,7 @@ const MLOpsDashboard: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             {adminModules.map((m) => (
-                <Link key={m.title} to={m.path} className="no-underline group">
+                <Link key={m.titleKey} to={m.path} className="no-underline group">
                     <Card padding="lg" className="h-full bg-gray-900/40 border-white/5 hover:border-cyan-500/30 transition-all duration-300">
                         <div className="flex justify-between items-start mb-6">
                             <div className={`p-3 rounded-xl bg-white/5 group-hover:scale-110 transition-transform ${m.color}`}>
@@ -156,13 +182,13 @@ const MLOpsDashboard: React.FC = () => {
                             </div>
                             <Badge variant="neutral" className="text-[9px] uppercase font-black">{m.status}</Badge>
                         </div>
-                        <h3 className="text-lg font-black italic manga-font uppercase mb-2 group-hover:text-cyan-400 transition-colors">{m.title}</h3>
+                        <h3 className="text-lg font-black italic manga-font uppercase mb-2 group-hover:text-cyan-400 transition-colors">{t(m.titleKey, m.titleDefault)}</h3>
                         <p className="text-[10px] font-bold opacity-40 uppercase leading-relaxed tracking-wider mb-6">
-                            {m.desc}
+                            {t(m.descKey, m.descDefault)}
                         </p>
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-1 text-cyan-500 text-[10px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
-                                Accéder <ArrowRight className="w-3 h-3" />
+                                {t('common.access', 'Accéder')} <ArrowRight className="w-3 h-3" />
                             </div>
                             {m.count && <span className="text-xs font-black text-red-500">{m.count}</span>}
                         </div>
@@ -180,11 +206,11 @@ const MLOpsDashboard: React.FC = () => {
             {/* Quick Metrics */}
             <Card padding="lg" className="lg:col-span-2 bg-black border-white/10 shadow-2xl">
                 <h3 className="text-xs font-black uppercase opacity-40 mb-8 tracking-widest flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-cyan-400" /> Métriques d'Inférence (Global)
+                    <Activity className="w-4 h-4 text-cyan-400" /> {t('admin.mlops.inf_metrics_title', 'Métriques d\'Inférence (Global)')}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div className="space-y-2">
-                        <p className="text-[10px] font-black uppercase opacity-30">Latence Moyenne</p>
+                        <p className="text-[10px] font-black uppercase opacity-30">{t('admin.mlops.metric_latency', 'Latence Moyenne')}</p>
                         <div className="flex items-end gap-2">
                             <span className="text-4xl font-black italic manga-font text-white">420</span>
                             <span className="text-xs font-black opacity-30 mb-1">ms</span>
@@ -194,7 +220,7 @@ const MLOpsDashboard: React.FC = () => {
                         </div>
                     </div>
                     <div className="space-y-2">
-                        <p className="text-[10px] font-black uppercase opacity-30">Taux de Hallucination</p>
+                        <p className="text-[10px] font-black uppercase opacity-30">{t('admin.mlops.metric_hallucination', 'Taux de Hallucination')}</p>
                         <div className="flex items-end gap-2">
                             <span className="text-4xl font-black italic manga-font text-emerald-400">0.8</span>
                             <span className="text-xs font-black opacity-30 mb-1">%</span>
@@ -204,7 +230,7 @@ const MLOpsDashboard: React.FC = () => {
                         </div>
                     </div>
                     <div className="space-y-2">
-                        <p className="text-[10px] font-black uppercase opacity-30">Appels / min</p>
+                        <p className="text-[10px] font-black uppercase opacity-30">{t('admin.mlops.metric_calls', 'Appels / min')}</p>
                         <div className="flex items-end gap-2">
                             <span className="text-4xl font-black italic manga-font text-amber-400">12.5k</span>
                         </div>
@@ -219,9 +245,9 @@ const MLOpsDashboard: React.FC = () => {
             <Card padding="lg" className="bg-cyan-600 text-white border-none flex flex-col justify-between">
                 <div>
                     <Brain className="w-12 h-12 mb-6" />
-                    <h3 className="text-2xl font-black italic manga-font uppercase mb-4 leading-tight">État de la Singularité</h3>
+                    <h3 className="text-2xl font-black italic manga-font uppercase mb-4 leading-tight">{t('admin.mlops.singularity_status', 'État de la Singularité')}</h3>
                     <p className="text-sm font-bold italic opacity-90 leading-relaxed uppercase">
-                        Les poids synaptiques globaux sont stables. Le cluster DPO a ingéré 4.2k corrections cette semaine, augmentant la précision sémantique de 12%.
+                        {t('admin.mlops.singularity_desc', 'Les poids synaptiques globaux sont stables. Le cluster DPO a ingéré 4.2k corrections cette semaine, augmentant la précision sémantique de 12%.')}
                     </p>
                 </div>
                 <div className="mt-8 pt-8 border-t border-white/20 flex justify-between items-center">

@@ -7,6 +7,7 @@ import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { Shield, UserX, UserCheck, Calendar, Star, Search, RefreshCw } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface AdminUser {
   id: number;
@@ -20,6 +21,7 @@ interface AdminUser {
 }
 
 const UserManagementPage: React.FC = () => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = React.useState('');
 
@@ -54,7 +56,7 @@ const UserManagementPage: React.FC = () => {
                 USER <span className="text-blue-500">MANAGEMENT</span>
               </h1>
               <p className="text-xs font-black opacity-30 uppercase tracking-[0.3em]">
-                Contrôle des accès et permissions du système
+                {t('admin.users.subtitle', 'Contrôle des accès et permissions du système')}
               </p>
             </div>
             
@@ -63,8 +65,8 @@ const UserManagementPage: React.FC = () => {
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input
                     type="text"
-                    aria-label="Rechercher un utilisateur"
-                    placeholder="Rechercher un utilisateur..."
+                    aria-label={t('admin.users.search_aria', 'Rechercher un utilisateur')}
+                    placeholder={t('admin.users.search_placeholder', 'Rechercher un utilisateur...')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="bg-white dark:bg-black/20 border border-gray-100 dark:border-white/10 rounded-xl pl-12 pr-6 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500/20 w-64 transition-all"
@@ -81,24 +83,24 @@ const UserManagementPage: React.FC = () => {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-gray-50 dark:bg-black/40 text-[10px] font-black uppercase tracking-widest text-gray-400 border-b border-gray-100 dark:border-white/5">
-                    <th className="px-8 py-6">Utilisateur</th>
-                    <th className="px-8 py-6">Statut & Tier</th>
-                    <th className="px-8 py-6 text-center">Niveau</th>
-                    <th className="px-8 py-6">Date d'inscription</th>
-                    <th className="px-8 py-6 text-right">Actions</th>
+                    <th className="px-8 py-6">{t('admin.users.th_user', 'Utilisateur')}</th>
+                    <th className="px-8 py-6">{t('admin.users.th_status_tier', 'Statut & Tier')}</th>
+                    <th className="px-8 py-6 text-center">{t('admin.users.th_level', 'Niveau')}</th>
+                    <th className="px-8 py-6">{t('admin.users.th_joined_date', "Date d'inscription")}</th>
+                    <th className="px-8 py-6 text-right">{t('common.actions', 'Actions')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-white/5">
                   {isLoading ? (
                     <tr>
                       <td colSpan={5} className="px-8 py-20 text-center font-black italic opacity-20 uppercase tracking-[0.5em]">
-                        Chargement des archives...
+                        {t('admin.users.loading_archives', 'Chargement des archives...')}
                       </td>
                     </tr>
                   ) : filteredUsers?.length === 0 ? (
                     <tr>
                       <td colSpan={5} className="px-8 py-20 text-center font-black italic opacity-20 uppercase tracking-[0.5em]">
-                        Aucun utilisateur trouvé
+                        {t('admin.users.no_users_found', 'Aucun utilisateur trouvé')}
                       </td>
                     </tr>
                   ) : filteredUsers?.map((user) => (
@@ -126,7 +128,7 @@ const UserManagementPage: React.FC = () => {
                           </Badge>
                           {!user.is_active && (
                             <Badge variant="danger" className="bg-red-500/20 text-red-500 border-red-500/30">
-                              Banni
+                              {t('admin.users.banned', 'Banni')}
                             </Badge>
                           )}
                         </div>
@@ -147,8 +149,8 @@ const UserManagementPage: React.FC = () => {
                            <button
                              onClick={() => toggleStaffMutation.mutate(user.id)}
                              disabled={toggleStaffMutation.isPending}
-                             title={user.is_staff ? "Retirer les droits Admin" : "Donner les droits Admin"}
-                             aria-label={user.is_staff ? "Retirer les droits Admin" : "Donner les droits Admin"}
+                             title={user.is_staff ? t('admin.users.remove_admin', 'Retirer les droits Admin') : t('admin.users.give_admin', 'Donner les droits Admin')}
+                             aria-label={user.is_staff ? t('admin.users.remove_admin', 'Retirer les droits Admin') : t('admin.users.give_admin', 'Donner les droits Admin')}
                              className={`p-2 rounded-lg border-2 transition-all ${user.is_staff ? 'border-blue-500/20 bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white' : 'border-gray-100 dark:border-white/5 text-gray-400 hover:border-blue-500/50 hover:text-blue-500'}`}
                            >
                               <Shield className="w-4 h-4" />
@@ -156,8 +158,8 @@ const UserManagementPage: React.FC = () => {
                            <button
                              onClick={() => toggleActiveMutation.mutate(user.id)}
                              disabled={toggleActiveMutation.isPending}
-                             title={user.is_active ? "Désactiver le compte" : "Réactiver le compte"}
-                             aria-label={user.is_active ? "Désactiver le compte" : "Réactiver le compte"}
+                             title={user.is_active ? t('admin.users.deactivate_account', 'Désactiver le compte') : t('admin.users.reactivate_account', 'Réactiver le compte')}
+                             aria-label={user.is_active ? t('admin.users.deactivate_account', 'Désactiver le compte') : t('admin.users.reactivate_account', 'Réactiver le compte')}
                              className={`p-2 rounded-lg border-2 transition-all ${!user.is_active ? 'border-red-500/20 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white' : 'border-gray-100 dark:border-white/5 text-gray-400 hover:border-red-500/50 hover:text-red-500'}`}
                            >
                               {user.is_active ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
@@ -174,13 +176,13 @@ const UserManagementPage: React.FC = () => {
           <div className="mt-8 flex justify-center">
              <div className="bg-white dark:bg-[#0f0f1a] p-4 rounded-2xl shadow-lg border border-gray-100 dark:border-white/5 flex gap-4 text-[10px] font-black uppercase tracking-widest text-gray-400">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-blue-500"></div> Administrateur
+                  <div className="w-2 h-2 rounded-full bg-blue-500"></div> {t('admin.users.legend_admin', 'Administrateur')}
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-yellow-400"></div> Utilisateur Premium
+                  <div className="w-2 h-2 rounded-full bg-yellow-400"></div> {t('admin.users.legend_premium', 'Utilisateur Premium')}
                 </div>
                 <div className="flex items-center gap-2 text-red-500">
-                  <div className="w-2 h-2 rounded-full bg-red-500"></div> Compte Désactivé
+                  <div className="w-2 h-2 rounded-full bg-red-500"></div> {t('admin.users.legend_deactivated', 'Compte Désactivé')}
                 </div>
              </div>
           </div>

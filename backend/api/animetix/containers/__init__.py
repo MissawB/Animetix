@@ -43,6 +43,7 @@ class ProviderDelegate:
 
 container = Container()
 
+
 # Expose shortcuts for backward compatibility with legacy scripts/commands
 container.agentic_rag = ProviderDelegate(container.agentic.agentic_rag)
 container.rag_service = ProviderDelegate(container.agentic.rag_service)

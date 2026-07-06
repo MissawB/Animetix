@@ -21,10 +21,12 @@ import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 import { NeuroMemoryData, DeducedRule, NeuralSignal } from '../../types';
 
 const NeuroMemoryPage: React.FC = () => {
+  const { t } = useTranslation();
   const { data, isLoading, refetch } = useQuery<NeuroMemoryData>({
     queryKey: ['neuro-memory'],
     queryFn: () => apiClient('/api/v1/cognition/neuro-memory/'),
@@ -49,7 +51,7 @@ const NeuroMemoryPage: React.FC = () => {
   if (isLoading) return (
     <div className="min-h-screen w-full bg-[#0a0a12] flex flex-col items-center justify-center">
         <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-8 shadow-[0_0_20px_rgba(99,102,241,0.5)]"></div>
-        <p className="text-sm font-black uppercase tracking-[0.3em] animate-pulse opacity-40">Accessing Neural Engrams...</p>
+        <p className="text-sm font-black uppercase tracking-[0.3em] animate-pulse opacity-40">{t('social.neuro.loading', 'Accessing Neural Engrams...')}</p>
     </div>
   );
 
@@ -62,13 +64,13 @@ const NeuroMemoryPage: React.FC = () => {
           <header className="mb-16 relative">
               <div className="absolute -top-24 -left-24 w-96 h-96 bg-indigo-500/10 blur-[120px] rounded-full -z-10" />
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-4">
-                  <Fingerprint className="w-3 h-3" /> Cognitive Privacy Protocol
+                  <Fingerprint className="w-3 h-3" /> {t('social.neuro.privacy_badge', 'Cognitive Privacy Protocol')}
               </div>
               <h1 className="text-7xl font-black italic manga-font tracking-tighter uppercase mb-4">
                   NEURO <span className="text-indigo-500 text-glow">MEMORY</span>
               </h1>
               <p className="text-xl font-bold opacity-30 uppercase tracking-[0.3em] max-w-2xl leading-relaxed">
-                  Gérez les règles logiques déduites par l'IA et contrôlez votre empreinte cognitive.
+                  {t('social.neuro.subtitle', 'Gérez les règles logiques déduites par l\'IA et contrôlez votre empreinte cognitive.')}
               </p>
           </header>
 
@@ -84,7 +86,7 @@ const NeuroMemoryPage: React.FC = () => {
                           <ShieldCheck className="w-8 h-8" /> Trust Center
                       </h3>
                       <p className="text-sm font-bold opacity-90 leading-relaxed uppercase mb-8 relative z-10">
-                          Vous avez un contrôle total sur ce que le solveur Z3 déduit de vos interactions. Vous pouvez réinitialiser votre profil logique à tout moment.
+                          {t('social.neuro.trust_desc', 'Vous avez un contrôle total sur ce que le solveur Z3 déduit de vos interactions. Vous pouvez réinitialiser votre profil logique à tout moment.')}
                       </p>
                       <div className="bg-black/20 rounded-2xl p-6 mb-8 relative z-10">
                           <div className="flex justify-between items-center mb-2">
@@ -110,13 +112,13 @@ const NeuroMemoryPage: React.FC = () => {
                   </Card>
 
                   <Card padding="lg" className="bg-navy-950 border-white/5 opacity-50">
-                      <h4 className="text-[10px] font-black uppercase tracking-widest mb-4">Système de Déduction</h4>
+                      <h4 className="text-[10px] font-black uppercase tracking-widest mb-4">{t('social.neuro.deduction_system', 'Système de Déduction')}</h4>
                       <ul className="space-y-4">
                           <li className="flex gap-3 text-[10px] font-bold uppercase leading-relaxed">
                               <Target className="w-4 h-4 text-indigo-500 shrink-0" /> Formal Solver: Z3 Theorem Prover.
                           </li>
                           <li className="flex gap-3 text-[10px] font-bold uppercase leading-relaxed">
-                              <Scale className="w-4 h-4 text-indigo-500 shrink-0" /> Contraintes: Logique SAT binaire.
+                              <Scale className="w-4 h-4 text-indigo-500 shrink-0" /> {t('social.neuro.constraints', 'Contraintes: Logique SAT binaire.')}
                           </li>
                           <li className="flex gap-3 text-[10px] font-bold uppercase leading-relaxed">
                               <Lock className="w-4 h-4 text-indigo-500 shrink-0" /> Confidentialité: Local-first Inference.
@@ -151,7 +153,7 @@ const NeuroMemoryPage: React.FC = () => {
                                                   {item.rule.replace(' == ', ': ')}
                                               </h4>
                                               <p className="text-[9px] font-bold opacity-30 uppercase tracking-widest leading-relaxed">
-                                                  Déduit via analyse sémantique des feedbacks récents.
+                                                  {t('social.neuro.deduced_via', 'Déduit via analyse sémantique des feedbacks récents.')}
                                               </p>
                                           </div>
                                           <div className="mt-8 pt-6 border-t border-white/5 flex justify-between items-center">
@@ -182,7 +184,7 @@ const NeuroMemoryPage: React.FC = () => {
                                   <h3 className="text-2xl font-black italic manga-font uppercase flex items-center gap-3 text-emerald-500">
                                       <Activity className="w-6 h-6" /> Raw Signal Management
                                   </h3>
-                                  <p className="text-[10px] font-bold opacity-30 uppercase tracking-widest mt-1">Ajustez le poids de chaque interaction ou révoquez les signaux obsolètes.</p>
+                                  <p className="text-[10px] font-bold opacity-30 uppercase tracking-widest mt-1">{t('social.neuro.signal_desc', 'Ajustez le poids de chaque interaction ou révoquez les signaux obsolètes.')}</p>
                               </div>
                               <Badge variant="neutral" className="bg-emerald-500/10 text-emerald-500 border-none uppercase font-black italic">GRANULAR CONTROL</Badge>
                           </header>
@@ -211,7 +213,7 @@ const NeuroMemoryPage: React.FC = () => {
                                                   <div className="flex flex-col gap-1 w-32">
                                                       <input
                                                           type="range"
-                                                          aria-label="Poids du signal"
+                                                          aria-label={t('social.neuro.signal_weight_label', 'Poids du signal')}
                                                           min="0.1"
                                                           max="2.0"
                                                           step="0.1"
@@ -254,25 +256,25 @@ const NeuroMemoryPage: React.FC = () => {
                       <Brain className="w-64 h-64" />
                   </div>
                   <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3">
-                      <Sparkles className="w-5 h-5 text-indigo-400" /> Guide de l'Intelligence
+                      <Sparkles className="w-5 h-5 text-indigo-400" /> {t('social.neuro.guide_title', 'Guide de l\'Intelligence')}
                   </h4>
                   <div className="space-y-4 relative z-10">
                       <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                          <span className="text-indigo-400">Qu'est-ce que c'est ?</span> Cette page est votre "Panneau de Contrôle Cognitif". À chaque fois que vous interagissez avec Animetix, notre IA essaie de comprendre vos goûts, vos valeurs et vos habitudes.
+                          <span className="text-indigo-400">{t('social.neuro.guide_what_title', 'Qu\'est-ce que c\'est ?')}</span> {t('social.neuro.guide_what_desc', 'Cette page est votre "Panneau de Contrôle Cognitif". À chaque fois que vous interagissez avec Animetix, notre IA essaie de comprendre vos goûts, vos valeurs et vos habitudes.')}
                       </p>
                       <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                          <span className="text-indigo-400">Les Engrammes :</span> Ce sont les "règles" que l'IA a déduites sur vous (ex: "Vous préférez les héros solitaires"). Vous pouvez voir ces règles à droite et décider de les garder ou de les supprimer.
+                          <span className="text-indigo-400">{t('social.neuro.guide_engrams_title', 'Les Engrammes :')}</span> {t('social.neuro.guide_engrams_desc', 'Ce sont les "règles" que l\'IA a déduites sur vous (ex: "Vous préférez les héros solitaires"). Vous pouvez voir ces règles à droite et décider de les garder ou de les supprimer.')}
                       </p>
                       <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                          <span className="text-indigo-400">Pourquoi réinitialiser ?</span> Si vous sentez que l'IA se trompe sur vous ou que vous voulez repartir de zéro pour changer d'archétype, utilisez le bouton "RESET" en haut à gauche.
+                          <span className="text-indigo-400">{t('social.neuro.guide_reset_title', 'Pourquoi réinitialiser ?')}</span> {t('social.neuro.guide_reset_desc', 'Si vous sentez que l\'IA se trompe sur vous ou que vous voulez repartir de zéro pour changer d\'archétype, utilisez le bouton "RESET" en haut à gauche.')}
                       </p>
                   </div>
                   </Card>
 
                   <div className="p-12 rounded-[4rem] bg-gradient-to-br from-indigo-600/10 to-transparent border border-white/5 flex flex-col justify-center text-center">
                   <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-30 italic leading-relaxed">
-                      Avertissement : Les déductions neuro-symboliques sont basées sur des modèles stochastiques résolus en temps réel. <br />
-                      Le profil logique est synchronisé avec votre Archétype Nexus.
+                      {t('social.neuro.warning_line1', 'Avertissement : Les déductions neuro-symboliques sont basées sur des modèles stochastiques résolus en temps réel.')} <br />
+                      {t('social.neuro.warning_line2', 'Le profil logique est synchronisé avec votre Archétype Nexus.')}
                   </p>
                   </div>
                   </div>

@@ -7,10 +7,12 @@ import { Button } from "../../components/ui/Button";
 import { Link } from 'react-router-dom';
 import { User } from "../../types";
 import { useToastStore } from "../../store/toastStore";
+import { useTranslation } from 'react-i18next';
 import { useSocialDashboard } from "../../features/social/hooks/useSocialDashboard";
 
 const SocialHubPage: React.FC = () => {
   const { addToast } = useToastStore();
+  const { t } = useTranslation();
   const { data: dashboardData, isLoading: isDashboardLoading, toggleFollow } = useSocialDashboard();
   
   const [searchResults, setSearchUsers] = useState<(User & { is_following: boolean })[]>([]);
@@ -28,7 +30,7 @@ const SocialHubPage: React.FC = () => {
       setSearchUsers(results);
       setActiveTab('discovery');
     } catch (_err) {
-      addToast("Erreur lors de la recherche.", "error");
+      addToast(t('social.hub.search_error', 'Erreur lors de la recherche.'), "error");
     }
   };
 
@@ -36,23 +38,23 @@ const SocialHubPage: React.FC = () => {
     try {
       toggleFollow(userId, {
         onSuccess: () => {
-          addToast("Action effectuée avec succès !", "success");
+          addToast(t('social.hub.action_success', 'Action effectuée avec succès !'), "success");
           if (activeTab === 'discovery') {
             // Optimistic or manual update of search results if needed
             setSearchUsers(prev => prev.map(u => u.id === userId ? { ...u, is_following: !u.is_following } : u));
           }
         },
         onError: () => {
-          addToast("Action impossible.", "error");
+           addToast(t('social.hub.action_error', 'Action impossible.'), "error");
         }
       });
     } catch (_err) {
-      addToast("Action impossible.", "error");
+      addToast(t('social.hub.action_error', 'Action impossible.'), "error");
     }
   };
 
   if (isDashboardLoading) {
-    return <div className="p-20 text-center animate-pulse font-black uppercase tracking-widest">Initialisation du réseau social...</div>;
+    return <div className="p-20 text-center animate-pulse font-black uppercase tracking-widest">{t('social.hub.loading', 'Initialisation du réseau social...')}</div>;
   }
 
   return (
@@ -60,10 +62,10 @@ const SocialHubPage: React.FC = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6">
         <div>
           <h1 className="text-4xl font-black italic manga-font tracking-tighter uppercase flex items-center gap-3">
-            <Users className="w-10 h-10 text-yellow-500" /> HUB SOCIAL
+            <Users className="w-10 h-10 text-yellow-500" /> {t('social.hub.title', 'HUB SOCIAL')}
           </h1>
           <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mt-2">
-            Gérez vos connexions, découvrez de nouveaux héros et restez informé.
+            {t('social.hub.subtitle', 'Gérez vos connexions, découvrez de nouveaux héros et restez informé.')}
           </p>
         </div>
 
@@ -72,7 +74,7 @@ const SocialHubPage: React.FC = () => {
           <input
             type="text"
             aria-label="Rechercher un utilisateur"
-            placeholder="Rechercher un utilisateur..."
+            placeholder={t('social.hub.search_placeholder', 'Rechercher un utilisateur...')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-white dark:bg-navy-900 border-2 border-transparent focus:border-yellow-500 rounded-2xl px-6 py-4 outline-none font-bold shadow-sm transition-all pr-12"
@@ -86,7 +88,7 @@ const SocialHubPage: React.FC = () => {
       {/* Tabs */}
       <div className="flex gap-4 mb-8 overflow-x-auto pb-2 no-scrollbar">
         {(['following', 'followers', 'discovery'] as const).map(tabId => {
-          const tabLabel = tabId === 'following' ? 'Abonnements' : tabId === 'followers' ? 'Abonnés' : 'Découverte';
+          const tabLabel = tabId === 'following' ? t('social.hub.tab_following', 'Abonnements') : tabId === 'followers' ? t('social.hub.tab_followers', 'Abonnés') : t('social.hub.tab_discovery', 'Découverte');
           const tabCount = tabId === 'following' ? following.length : tabId === 'followers' ? followers.length : searchResults.length;
           
           return (
@@ -119,7 +121,7 @@ const SocialHubPage: React.FC = () => {
                   {item.username}
                 </Link>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="text-[10px] bg-gray-100 dark:bg-navy-800 px-2 py-0.5 rounded text-gray-500 font-black uppercase">Niv. {item.level}</span>
+                  <span className="text-[10px] bg-gray-100 dark:bg-navy-800 px-2 py-0.5 rounded text-gray-500 font-black uppercase">{t('social.hub.level_short', 'Niv. {{level}}', { level: item.level })}</span>
                 </div>
               </div>
               <Button variant="outline" size="sm" onClick={() => handleToggleFollow(item.to_user)} className="text-red-500 border-red-500/20 hover:bg-red-500 hover:text-white">
@@ -139,7 +141,7 @@ const SocialHubPage: React.FC = () => {
                 <Link to={`/profile/${item.username}/`} className="font-black uppercase tracking-tight hover:text-blue-500 transition-colors no-underline">
                   {item.username}
                 </Link>
-                <p className="text-[10px] text-gray-400 font-bold uppercase mt-0.5">Vous suit</p>
+                <p className="text-[10px] text-gray-400 font-bold uppercase mt-0.5">{t('social.hub.follows_you', 'Vous suit')}</p>
               </div>
               <Link to={`/profile/${item.username}/`} className="text-gray-400 hover:text-blue-500">
                 <ChevronRight className="w-5 h-5" />
@@ -158,7 +160,7 @@ const SocialHubPage: React.FC = () => {
                 <Link to={`/profile/${user.username}/`} className="font-black uppercase tracking-tight hover:text-yellow-500 transition-colors no-underline">
                   {user.username}
                 </Link>
-                <p className="text-[10px] text-gray-400 font-bold uppercase mt-0.5">Niveau {user.level || 1}</p>
+                <p className="text-[10px] text-gray-400 font-bold uppercase mt-0.5">{t('social.hub.level_label', 'Niveau {{level}}', { level: user.level || 1 })}</p>
               </div>
               <Button 
                 variant={user.is_following ? "outline" : "primary"} 
@@ -177,7 +179,7 @@ const SocialHubPage: React.FC = () => {
           (activeTab === 'discovery' && searchResults.length === 0)) && (
           <div className="col-span-full py-20 text-center opacity-40">
             <Users className="w-16 h-12 mx-auto mb-4" />
-            <p className="font-black uppercase tracking-widest text-sm">Rien à afficher ici pour le moment.</p>
+            <p className="font-black uppercase tracking-widest text-sm">{t('social.hub.empty_state', 'Rien à afficher ici pour le moment.')}</p>
           </div>
         )}
 

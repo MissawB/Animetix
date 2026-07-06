@@ -5,8 +5,10 @@ import { Card } from "../../components/ui/Card";
 import { Loader2, Play, Pause, Square, List } from 'lucide-react';
 import { apiClient } from "../../utils/apiClient";
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 
 const MLOpsConsolePage: React.FC = () => {
+  const { t } = useTranslation();
   // Fetch DPO status and metrics
   const dpoQuery = useQuery({
     queryKey: ['dpoStatus'],
@@ -36,13 +38,13 @@ const MLOpsConsolePage: React.FC = () => {
   return (
     <AnimatedPage>
       <div className="p-8 min-h-screen bg-[#0a0a12] text-white">
-        <h1 className="text-3xl font-black italic manga-font uppercase mb-8">Console MLOps</h1>
+        <h1 className="text-3xl font-black italic manga-font uppercase mb-8">{t('dev.mlops.title', 'Console MLOps')}</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* DPO Feedback Loop */}
           <Card padding="lg" className="bg-navy-950/50 border-white/10 rounded-xl shadow-2xl">
             <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><List className="w-5 h-5 text-purple-400" /> DPO Feedback Loop</h2>
-            <p>Statut: <span className={`font-bold ${dpoStatus === 'running' ? 'text-green-500' : dpoStatus === 'paused' ? 'text-yellow-500' : 'text-gray-500'}`}>{dpoStatus.toUpperCase()}</span></p>
+            <p>{t('common.status', 'Statut')}: <span className={`font-bold ${dpoStatus === 'running' ? 'text-green-500' : dpoStatus === 'paused' ? 'text-yellow-500' : 'text-gray-500'}`}>{dpoStatus.toUpperCase()}</span></p>
             <p>Last Loss: {metrics.last_loss?.toFixed(4) || 'N/A'}</p>
             <p>Last Accuracy: {metrics.last_accuracy?.toFixed(4) || 'N/A'}</p>
 
@@ -61,7 +63,7 @@ const MLOpsConsolePage: React.FC = () => {
 
           {/* Adapters Management */}
           <Card padding="lg" className="bg-navy-950/50 border-white/10 rounded-xl shadow-2xl">
-            <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><List className="w-5 h-5 text-blue-400" /> Gestion des Adaptateurs</h2>
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><List className="w-5 h-5 text-blue-400" /> {t('dev.mlops.adapters_mgmt', 'Gestion des Adaptateurs')}</h2>
             {Object.entries(adapters as Record<string, { active: string, available: string[] }>).map(([type, adapterInfo]) => (
               <div key={type} className="mb-4">
                 <h3 className="text-lg font-semibold capitalize">{type} Adapters:</h3>
@@ -74,7 +76,7 @@ const MLOpsConsolePage: React.FC = () => {
 
         {/* Placeholder for Logs */}
         <Card padding="lg" className="bg-navy-950/50 border-white/10 rounded-xl shadow-2xl mt-8">
-            <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><List className="w-5 h-5 text-yellow-400" /> Logs de Training</h2>
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><List className="w-5 h-5 text-yellow-400" /> {t('dev.mlops.training_logs', 'Logs de Training')}</h2>
             <div className="h-64 bg-black p-4 rounded-md overflow-auto text-sm font-mono text-gray-300">
                 <p>Log line 1...</p>
                 <p>Log line 2...</p>

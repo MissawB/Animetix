@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { BellOff, Info, CheckCircle2, AlertTriangle, Star } from 'lucide-react';
 import { Notification } from "../../types";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -11,6 +12,7 @@ import { useNotificationStore } from "../../store/notificationStore";
 
 
 const NotificationsPage: React.FC = () => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { clearUnread } = useNotificationStore();
 
@@ -54,9 +56,9 @@ const NotificationsPage: React.FC = () => {
         <div className="flex justify-between items-end mb-12">
           <div>
               <h1 className="text-5xl font-black italic manga-font tracking-tighter uppercase">
-              FLUX <span className="text-blue-500">SYSTÈME</span>
+              {t('social.notifications.title_prefix', 'FLUX')} <span className="text-blue-500">{t('social.notifications.title_accent', 'SYSTÈME')}</span>
               </h1>
-              <p className="text-xs font-black uppercase opacity-40 mt-2 tracking-widest">Tes interactions récentes</p>
+              <p className="text-xs font-black uppercase opacity-40 mt-2 tracking-widest">{t('social.notifications.subtitle', 'Tes interactions récentes')}</p>
           </div>
           {notifications && notifications.some(n => !n.is_read) && (
               <Button 
@@ -65,7 +67,7 @@ const NotificationsPage: React.FC = () => {
                 className="text-[10px] uppercase border-none text-blue-500 hover:text-blue-600"
                 onClick={() => markAllReadMutation.mutate()}
               >
-                  Tout marquer comme lu
+                  {t('social.notifications.mark_all_read', 'Tout marquer comme lu')}
               </Button>
           )}
         </div>
@@ -74,7 +76,7 @@ const NotificationsPage: React.FC = () => {
           {!notifications || notifications.length === 0 ? (
             <Card padding="lg" className="text-center py-20 bg-white/5 border-white/5">
               <BellOff className="w-16 h-16 text-white opacity-10 mx-auto mb-4" />
-              <p className="text-lg font-bold opacity-30 italic">Aucune notification pour le moment.</p>
+              <p className="text-lg font-bold opacity-30 italic">{t('social.notifications.empty', 'Aucune notification pour le moment.')}</p>
             </Card>
           ) : (
             notifications.map((n: Notification) => (

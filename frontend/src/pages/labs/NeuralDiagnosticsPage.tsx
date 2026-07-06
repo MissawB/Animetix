@@ -174,25 +174,25 @@ const NeuralDiagnosticsPage: React.FC = () => {
               <Brain className="w-64 h-64 text-blue-500" />
             </div>
             <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3">
-              <Sparkles className="w-5 h-5 text-blue-400" /> Guide des Diagnostics
+              <Sparkles className="w-5 h-5 text-blue-400" /> {t('labs.diagnostics.guide_title', 'Guide des Diagnostics')}
             </h4>
             <div className="space-y-4 relative z-10">
               <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                <span className="text-blue-400">Le Prompt :</span> Tapez une phrase et lancez le diagnostic : le modèle de langage l'analyse token par token et vous montre ce qui se passe à l'intérieur pendant l'inférence.
+                <span className="text-blue-400">{t('labs.diagnostics.guide_prompt_title', 'Le Prompt :')}</span> {t('labs.diagnostics.guide_prompt_desc', "Tapez une phrase et lancez le diagnostic : le modèle de langage l'analyse token par token et vous montre ce qui se passe à l'intérieur pendant l'inférence.")}
               </p>
               <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                <span className="text-blue-400">L'Entropie :</span> Chaque barre mesure l'hésitation du modèle sur un token. Une barre basse signifie qu'il est sûr de lui, une barre haute qu'il hésite entre plusieurs suites possibles.
+                <span className="text-blue-400">{t('labs.diagnostics.guide_entropy_title', "L'Entropie :")}</span> {t('labs.diagnostics.guide_entropy_desc', "Chaque barre mesure l'hésitation du modèle sur un token. Une barre basse signifie qu'il est sûr de lui, une barre haute qu'il hésite entre plusieurs suites possibles.")}
               </p>
               <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                <span className="text-blue-400">La Heatmap :</span> La carte "logit lens" montre comment la prédiction se précise couche après couche. Utile pour repérer des biais ou comprendre une sortie inattendue.
+                <span className="text-blue-400">{t('labs.diagnostics.guide_heatmap_title', 'La Heatmap :')}</span> {t('labs.diagnostics.guide_heatmap_desc', "La carte \"logit lens\" montre comment la prédiction se précise couche après couche. Utile pour repérer des biais ou comprendre une sortie inattendue.")}
               </p>
             </div>
           </Card>
 
           <div className="p-12 rounded-[4rem] bg-gradient-to-br from-blue-600/10 to-transparent border border-white/5 flex flex-col justify-center text-center">
             <p className="text-sm font-black uppercase tracking-[0.15em] italic leading-relaxed text-blue-200/60">
-              Diagnostic d'inférence réel : le prompt est envoyé à l'endpoint labs/diagnostics qui calcule l'entropie de la distribution de sortie par token, un score de confiance global et la trajectoire logit lens à travers les couches du modèle. <br />
-              Les graphiques visualisent ces métriques telles quelles, sans post-traitement.
+              {t('labs.diagnostics.guide_footer_1', "Diagnostic d'inférence réel : le prompt est envoyé à l'endpoint labs/diagnostics qui calcule l'entropie de la distribution de sortie par token, un score de confiance global et la trajectoire logit lens à travers les couches du modèle.")} <br />
+              {t('labs.diagnostics.guide_footer_2', "Les graphiques visualisent ces métriques telles quelles, sans post-traitement.")}
             </p>
           </div>
         </div>

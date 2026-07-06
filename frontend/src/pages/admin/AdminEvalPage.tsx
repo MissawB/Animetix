@@ -91,6 +91,7 @@ interface StatCardProps {
 }
 
 const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color }) => {
+  const { t } = useTranslation();
   const colors = {
     blue: 'text-blue-500 border-blue-500/20 bg-white dark:bg-[#0f0f1a]',
     emerald: 'text-emerald-500 border-emerald-500/20 bg-white dark:bg-[#0f0f1a]',
@@ -104,7 +105,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color }) => {
             {icon}
           </div>
           <div className="text-[10px] font-black opacity-20 uppercase tracking-widest group-hover:opacity-40 transition-opacity text-black dark:text-white">
-            Score Moyen
+            {t('admin.eval.average_score', 'Score Moyen')}
           </div>
         </div>
         <h3 className="text-xs font-black uppercase opacity-60 mb-2 tracking-widest text-black dark:text-white">{title}</h3>

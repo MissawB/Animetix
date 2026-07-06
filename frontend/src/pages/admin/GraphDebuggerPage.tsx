@@ -12,6 +12,7 @@ import {
   GitMerge
 } from 'lucide-react';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { apiClient } from "../../utils/apiClient";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
@@ -21,6 +22,7 @@ import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { GraphAudit } from '../../types';
 
 const GraphDebuggerPage: React.FC = () => {
+  const { t } = useTranslation();
   const [healingId, setHealingId] = useState('');
 
   const { data: audit, isLoading, refetch } = useQuery<GraphAudit>({
@@ -59,7 +61,7 @@ const GraphDebuggerPage: React.FC = () => {
   if (isLoading || !audit) return (
     <div className="max-w-7xl mx-auto px-6 py-32 flex flex-col items-center justify-center">
         <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mb-8 shadow-[0_0_20px_rgba(168,85,247,0.5)]"></div>
-        <p className="text-sm font-black uppercase tracking-[0.3em] animate-pulse opacity-40">Auditing Knowledge Graph...</p>
+        <p className="text-sm font-black uppercase tracking-[0.3em] animate-pulse opacity-40">{t('admin.graph.loading', 'Auditing Knowledge Graph...')}</p>
     </div>
   );
 
@@ -72,13 +74,13 @@ const GraphDebuggerPage: React.FC = () => {
           <header className="mb-16 relative text-black dark:text-white">
               <div className="absolute -top-24 -left-24 w-96 h-96 bg-purple-500/10 blur-[120px] rounded-full -z-10" />
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-black/5 dark:border-white/10 text-[10px] font-black uppercase tracking-widest text-purple-500 mb-4">
-                  <Network className="w-3 h-3" /> Lore Consistency Protocol
+                  <Network className="w-3 h-3" /> {t('admin.graph.protocol', 'Lore Consistency Protocol')}
               </div>
               <h1 className="text-7xl font-black italic manga-font tracking-tighter uppercase mb-4">
                   GRAPH <span className="text-purple-500 text-glow">HEALER</span>
               </h1>
               <p className="text-xl font-bold opacity-30 uppercase tracking-[0.3em] max-w-2xl leading-relaxed">
-                  Diagnostic et résolution des conflits de lore dans la base Neo4j.
+                  {t('admin.graph.subtitle', 'Diagnostic et résolution des conflits de lore dans la base Neo4j.')}
               </p>
           </header>
 
@@ -88,48 +90,48 @@ const GraphDebuggerPage: React.FC = () => {
                   <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform">
                       <AlertTriangle className="w-32 h-32" />
                   </div>
-                  <p className="text-[10px] font-black uppercase opacity-40 mb-4 tracking-widest">Isolated Nodes</p>
+                  <p className="text-[10px] font-black uppercase opacity-40 mb-4 tracking-widest">{t('admin.graph.isolated', 'Isolated Nodes')}</p>
                   <div className="flex items-baseline gap-2">
                       <span className="text-6xl font-black italic manga-font">{audit.isolated_nodes}</span>
-                      <span className="text-xs font-bold opacity-30 uppercase">Entities</span>
+                      <span className="text-xs font-bold opacity-30 uppercase">{t('admin.graph.entities', 'Entities')}</span>
                   </div>
-                  <p className="text-[10px] font-bold opacity-30 mt-4 leading-relaxed uppercase">Nœuds sans aucune relation sémantique ou temporelle.</p>
+                  <p className="text-[10px] font-bold opacity-30 mt-4 leading-relaxed uppercase">{t('admin.graph.isolated_desc', 'Nœuds sans aucune relation sémantique ou temporelle.')}</p>
               </Card>
 
               <Card padding="lg" className="bg-white dark:bg-[#0f0f1a] border-none shadow-xl relative overflow-hidden group">
                   <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform text-red-500">
                       <Zap className="w-32 h-32" />
                   </div>
-                  <p className="text-[10px] font-black uppercase opacity-40 mb-4 tracking-widest text-red-500">Lore Conflicts</p>
+                  <p className="text-[10px] font-black uppercase opacity-40 mb-4 tracking-widest text-red-500">{t('admin.graph.conflicts', 'Lore Conflicts')}</p>
                   <div className="flex items-baseline gap-2">
                       <span className="text-6xl font-black italic manga-font text-red-500">{audit.temporal_conflicts}</span>
-                      <span className="text-xs font-bold opacity-30 uppercase">Detected</span>
+                      <span className="text-xs font-bold opacity-30 uppercase">{t('admin.graph.detected', 'Detected')}</span>
                   </div>
-                  <p className="text-[10px] font-bold opacity-30 mt-4 leading-relaxed uppercase">Contradictions temporelles (ex: suites antérieures à l'original).</p>
+                  <p className="text-[10px] font-bold opacity-30 mt-4 leading-relaxed uppercase">{t('admin.graph.conflicts_desc', 'Contradictions temporelles (ex: suites antérieures à l\'original).')}</p>
               </Card>
 
               <Card padding="lg" className="bg-white dark:bg-[#0f0f1a] border-none shadow-xl relative overflow-hidden group">
                   <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform text-blue-500">
                       <Layers className="w-32 h-32" />
                   </div>
-                  <p className="text-[10px] font-black uppercase opacity-40 mb-4 tracking-widest text-blue-500">Orphan Entities</p>
+                  <p className="text-[10px] font-black uppercase opacity-40 mb-4 tracking-widest text-blue-500">{t('admin.graph.orphans', 'Orphan Entities')}</p>
                   <div className="flex items-baseline gap-2">
                       <span className="text-6xl font-black italic manga-font text-blue-500">{audit.orphan_entities}</span>
-                      <span className="text-xs font-bold opacity-30 uppercase">Entities</span>
+                      <span className="text-xs font-bold opacity-30 uppercase">{t('admin.graph.entities', 'Entities')}</span>
                   </div>
-                  <p className="text-[10px] font-bold opacity-30 mt-4 leading-relaxed uppercase">Entités extraites non rattachées à un média parent.</p>
+                  <p className="text-[10px] font-bold opacity-30 mt-4 leading-relaxed uppercase">{t('admin.graph.orphan_desc', 'Entités extraites non rattachées à un média parent.')}</p>
               </Card>
 
               <Card padding="lg" className="bg-white dark:bg-[#0f0f1a] border-none shadow-xl relative overflow-hidden group">
                   <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform text-purple-500">
                       <GitMerge className="w-32 h-32" />
                   </div>
-                  <p className="text-[10px] font-black uppercase opacity-40 mb-4 tracking-widest text-purple-500">Duplicate Entities</p>
+                  <p className="text-[10px] font-black uppercase opacity-40 mb-4 tracking-widest text-purple-500">{t('admin.graph.duplicates', 'Duplicate Entities')}</p>
                   <div className="flex items-baseline gap-2">
                       <span className="text-6xl font-black italic manga-font text-purple-500">{audit.duplicate_entities ?? 0}</span>
-                      <span className="text-xs font-bold opacity-30 uppercase">Entities</span>
+                      <span className="text-xs font-bold opacity-30 uppercase">{t('admin.graph.entities', 'Entities')}</span>
                   </div>
-                  <p className="text-[10px] font-bold opacity-30 mt-4 leading-relaxed uppercase">Entités doublons possédant le même nom/titre.</p>
+                  <p className="text-[10px] font-bold opacity-30 mt-4 leading-relaxed uppercase">{t('admin.graph.duplicate_desc', 'Entités doublons possédant le même nom/titre.')}</p>
               </Card>
           </div>
 
@@ -138,10 +140,10 @@ const GraphDebuggerPage: React.FC = () => {
               <div className="lg:col-span-4 space-y-8">
                   <Card padding="lg" className="bg-purple-600 text-white border-none shadow-2xl">
                       <h3 className="text-2xl font-black italic manga-font uppercase mb-6 flex items-center gap-3">
-                          <ShieldCheck className="w-8 h-8" /> Auto-Heal
+                          <ShieldCheck className="w-8 h-8" /> {t('admin.graph.auto_heal', 'Auto-Heal')}
                       </h3>
                       <p className="text-sm font-bold opacity-90 leading-relaxed uppercase mb-8">
-                          Lancer un cycle de nettoyage global pour supprimer les bruits d'extraction et les contradictions logiques triviales.
+                          {t('admin.graph.cleanup_desc', 'Lancer un cycle de nettoyage global pour supprimer les bruits d\'extraction et les contradictions logiques triviales.')}
                       </p>
                       <Button 
                           onClick={() => cleanupMutation.mutate()}
@@ -149,16 +151,16 @@ const GraphDebuggerPage: React.FC = () => {
                           fullWidth
                           className="bg-black text-white hover:bg-navy-900 py-6 rounded-2xl font-black italic text-lg uppercase shadow-xl hover:scale-105 active:scale-95 transition-all border-none"
                       >
-                          {cleanupMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : "EXECUTE CLEANUP"}
+                          {cleanupMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : t('admin.graph.cleanup_btn', 'EXECUTE CLEANUP')}
                       </Button>
                   </Card>
 
                   <Card padding="lg" className="bg-indigo-600 text-white border-none shadow-2xl">
                       <h3 className="text-2xl font-black italic manga-font uppercase mb-6 flex items-center gap-3">
-                          <GitMerge className="w-8 h-8" /> Merge Duplicates
+                          <GitMerge className="w-8 h-8" /> {t('admin.graph.merge', 'Merge Duplicates')}
                       </h3>
                       <p className="text-sm font-bold opacity-90 leading-relaxed uppercase mb-8">
-                          Fusionner les entités en doublon partageant le même nom et combiner leurs relations sémantiques.
+                          {t('admin.graph.merge_desc', 'Fusionner les entités en doublon partageant le même nom et combiner leurs relations sémantiques.')}
                       </p>
                       <Button 
                           onClick={() => mergeDuplicatesMutation.mutate()}

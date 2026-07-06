@@ -16,10 +16,12 @@ import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { CardSkeleton } from "../../components/ui/Skeleton";
 import { queryClient } from "../../utils/queryClient";
+import { useTranslation } from 'react-i18next';
 
 import { GoldDatasetEntry } from '../../types';
 
 const AdminGoldDatasetPage: React.FC = () => {
+  const { t } = useTranslation();
   const { data: entries, isLoading } = useQuery<GoldDatasetEntry[]>({
     queryKey: ['gold-dataset'],
     queryFn: goldDatasetService.getList,
@@ -58,7 +60,7 @@ const AdminGoldDatasetPage: React.FC = () => {
                       GOLD <span className="text-amber-500 text-glow">DATASET</span>
                   </h1>
                   <p className="text-xl font-bold opacity-30 uppercase tracking-[0.3em] text-black dark:text-white">
-                      Curation des données haute fidélité pour le Fine-Tuning.
+                      {t('admin.gold.subtitle', 'Curation des données haute fidélité pour le Fine-Tuning.')}
                   </p>
               </div>
               
@@ -77,7 +79,7 @@ const AdminGoldDatasetPage: React.FC = () => {
           {!entries || entries.length === 0 ? (
               <div className="text-center py-32 opacity-20 border-4 border-dashed border-black/5 dark:border-white/5 rounded-[4rem] text-black dark:text-white">
                   <Database className="w-24 h-24 mx-auto mb-6" />
-                  <p className="text-2xl font-black italic manga-font uppercase">Aucune donnée Gold en attente de curation</p>
+                  <p className="text-2xl font-black italic manga-font uppercase">{t('admin.gold.no_data', 'Aucune donnée Gold en attente de curation')}</p>
               </div>
           ) : (
               <div className="space-y-8">
@@ -90,7 +92,7 @@ const AdminGoldDatasetPage: React.FC = () => {
                                       <Clock className="w-3 h-3" /> {new Date(entry.created_at).toLocaleDateString()}
                                   </div>
                                   <Badge variant={entry.is_validated ? 'success' : 'neutral'} className="w-fit">
-                                      {entry.is_validated ? 'VALIDÉ' : 'À CURER'}
+                                      {entry.is_validated ? t('admin.gold.status_validated', 'VALIDÉ') : t('admin.gold.status_pending', 'À CURER')}
                                   </Badge>
                                   <div className="pt-4 border-t border-black/5 dark:border-white/5">
                                       <p className="text-[8px] font-black uppercase opacity-20 mb-1">Entry ID</p>
@@ -128,17 +130,17 @@ const AdminGoldDatasetPage: React.FC = () => {
                                           fullWidth 
                                           className="bg-emerald-600 hover:bg-emerald-500 border-none rounded-xl py-6"
                                       >
-                                          <ShieldCheck className="w-5 h-5" /> APPROUVER
+                                          <ShieldCheck className="w-5 h-5" /> {t('common.approve', 'APPROUVER')}
                                       </Button>
                                   )}
                                   <Button 
-                                      onClick={() => { if(confirm('Supprimer cette entrée ?')) deleteMutation.mutate(entry.id); }}
+                                      onClick={() => { if(confirm(t('admin.gold.confirm_delete', 'Supprimer cette entrée ?'))) deleteMutation.mutate(entry.id); }}
                                       disabled={deleteMutation.isPending}
                                       variant="outline" 
                                       fullWidth 
                                       className="border-red-500/20 text-red-500 hover:bg-red-500/10 rounded-xl py-4 text-[10px]"
                                   >
-                                      <Trash2 className="w-4 h-4" /> SUPPRIMER
+                                      <Trash2 className="w-4 h-4" /> {t('common.delete', 'SUPPRIMER')}
                                   </Button>
                               </div>
                           </div>
@@ -155,7 +157,7 @@ const AdminGoldDatasetPage: React.FC = () => {
               <div>
                   <h4 className="text-3xl font-black italic manga-font uppercase mb-4 tracking-tighter">Nexus Gold Pipeline v1.0</h4>
                   <p className="text-sm font-bold opacity-40 uppercase leading-relaxed max-w-3xl italic text-justify">
-                      Les entrées validées ici sont injectées dans le pipeline de fine-tuning LoRA. L'IA apprend ainsi des interactions humaines parfaites, réduisant drastiquement les hallucinations sémantiques dans les prochains cycles d'inférence.
+                      {t('admin.gold.legend_desc', 'Les entrées validées ici sont injectées dans le pipeline de fine-tuning LoRA. L\'IA apprend ainsi des interactions humaines parfaites, réduisant drastiquement les hallucinations sémantiques dans les prochains cycles d\'inférence.')}
                   </p>
               </div>
           </div>

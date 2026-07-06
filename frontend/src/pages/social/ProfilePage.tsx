@@ -148,7 +148,7 @@ const ProfilePage: React.FC = () => {
                 {/* Latest Achievements */}
                 <Card padding="lg" className="bg-gray-50 dark:bg-black/20 border-none shadow-xl">
                     <h3 className="text-xs font-black uppercase opacity-40 mb-8 tracking-widest flex items-center gap-2">
-                        <Award className="w-4 h-4 text-yellow-500" /> Succès Récents
+                        <Award className="w-4 h-4 text-yellow-500" /> {t('social.profile.recent_achievements', 'Succès Récents')}
                     </h3>
                     <div className="space-y-4">
                         {profile.recent_achievements?.map((ach: ApiAchievement, i: number) => (
@@ -163,12 +163,12 @@ const ProfilePage: React.FC = () => {
                             </div>
                         ))}
                         {(!profile.recent_achievements || profile.recent_achievements.length === 0) && (
-                            <p className="text-center py-8 opacity-20 italic">Aucun succès débloqué pour le moment.</p>
+                            <p className="text-center py-8 opacity-20 italic">{t('social.profile.no_achievements', 'Aucun succès débloqué pour le moment.')}</p>
                         )}
                     </div>
                     <div className="mt-8 pt-8 border-t border-black/5 dark:border-white/5">
                         <Link to="/achievements/" className="text-[10px] font-black uppercase tracking-widest text-blue-500 hover:text-blue-400 no-underline">
-                            Voir tous les succès <ArrowRight className="inline w-3 h-3 ml-1" />
+                            {t('social.profile.view_all_achievements', 'Voir tous les succès')} <ArrowRight className="inline w-3 h-3 ml-1" />
                         </Link>
                     </div>
                 </Card>
@@ -176,7 +176,7 @@ const ProfilePage: React.FC = () => {
                 {/* Favorite Fusions */}
                 <Card padding="lg" className="bg-gray-50 dark:bg-black/20 border-none shadow-xl">
                     <h3 className="text-xs font-black uppercase opacity-40 mb-8 tracking-widest flex items-center gap-2">
-                        <Zap className="w-4 h-4 text-blue-500" /> Fusions Favorites
+                        <Zap className="w-4 h-4 text-blue-500" /> {t('social.profile.favorite_fusions', 'Fusions Favorites')}
                     </h3>
                     <div className="grid grid-cols-2 gap-4">
                         {profile.top_fusions?.map((fusion: ApiCreativeFusion, i: number) => (
@@ -188,11 +188,11 @@ const ProfilePage: React.FC = () => {
                         ))}
                     </div>
                     {(!profile.top_fusions || profile.top_fusions.length === 0) && (
-                        <p className="text-center py-8 opacity-20 italic">La collection est vide.</p>
+                        <p className="text-center py-8 opacity-20 italic">{t('social.profile.empty_collection', 'La collection est vide.')}</p>
                     )}
                     <div className="mt-8 pt-8 border-t border-black/5 dark:border-white/5">
                         <Link to="/social/collection/" className="text-[10px] font-black uppercase tracking-widest text-blue-500 hover:text-blue-400 no-underline">
-                            Accéder à la collection <ArrowRight className="inline w-3 h-3 ml-1" />
+                            {t('social.profile.go_collection', 'Accéder à la collection')} <ArrowRight className="inline w-3 h-3 ml-1" />
                         </Link>
                     </div>
                 </Card>
@@ -206,10 +206,10 @@ const ProfilePage: React.FC = () => {
             {isOwnProfile && (
               <Card padding="lg" className="mt-12 bg-gray-50 dark:bg-black/20 border-none shadow-xl text-black dark:text-white">
                 <h3 className="text-xs font-black uppercase opacity-40 mb-8 tracking-widest flex items-center gap-2">
-                  <Link2 className="w-4 h-4 text-blue-500" /> Synchronisation des Trackers
+                  <Link2 className="w-4 h-4 text-blue-500" /> {t('social.profile.tracker_sync', 'Synchronisation des Trackers')}
                 </h3>
                 <p className="text-xs opacity-60 mb-6">
-                  Associez vos comptes pour synchroniser automatiquement votre progression de lecture de mangas.
+                  {t('social.profile.tracker_desc', 'Associez vos comptes pour synchroniser automatiquement votre progression de lecture de mangas.')}
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -219,17 +219,17 @@ const ProfilePage: React.FC = () => {
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-black italic uppercase text-sm">MyAnimeList</span>
                         {connections?.some(c => c.tracker === 'myanimelist') ? (
-                          <span className="text-[10px] bg-green-500/10 text-green-400 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">Connecté</span>
+                          <span className="text-[10px] bg-green-500/10 text-green-400 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">{t('social.profile.connected', 'Connecté')}</span>
                         ) : (
-                          <span className="text-[10px] bg-gray-500/10 text-gray-400 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">Non connecté</span>
+                          <span className="text-[10px] bg-gray-500/10 text-gray-400 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">{t('social.profile.not_connected', 'Non connecté')}</span>
                         )}
                       </div>
                       {connections?.some(c => c.tracker === 'myanimelist') ? (
                         <p className="text-xs opacity-60">
-                          Utilisateur : <span className="font-bold">{connections.find(c => c.tracker === 'myanimelist')?.username}</span>
+                          {t('social.profile.user_label', 'Utilisateur')} : <span className="font-bold">{connections.find(c => c.tracker === 'myanimelist')?.username}</span>
                         </p>
                       ) : (
-                        <p className="text-xs opacity-40 italic">Mettez à jour votre liste MAL en lisant vos mangas.</p>
+                        <p className="text-xs opacity-40 italic">{t('social.profile.mal_hint', 'Mettez à jour votre liste MAL en lisant vos mangas.')}</p>
                       )}
                     </div>
                     <div className="mt-4">
@@ -238,14 +238,14 @@ const ProfilePage: React.FC = () => {
                           onClick={() => unlinkMutation.mutate('myanimelist')}
                           className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 border-none cursor-pointer"
                         >
-                          <Link2Off className="w-3.5 h-3.5" /> Dissocier
+                          <Link2Off className="w-3.5 h-3.5" /> {t('social.profile.unlink', 'Dissocier')}
                         </button>
                       ) : (
                         <button
                           onClick={() => setLinkingTracker('myanimelist')}
                           className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 border-none cursor-pointer"
                         >
-                          <Link2 className="w-3.5 h-3.5" /> Associer MAL
+                          <Link2 className="w-3.5 h-3.5" /> {t('social.profile.link_mal', 'Associer MAL')}
                         </button>
                       )}
                     </div>
@@ -257,17 +257,17 @@ const ProfilePage: React.FC = () => {
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-black italic uppercase text-sm">AniList</span>
                         {connections?.some(c => c.tracker === 'anilist') ? (
-                          <span className="text-[10px] bg-green-500/10 text-green-400 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">Connecté</span>
+                          <span className="text-[10px] bg-green-500/10 text-green-400 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">{t('social.profile.connected', 'Connecté')}</span>
                         ) : (
-                          <span className="text-[10px] bg-gray-500/10 text-gray-400 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">Non connecté</span>
+                          <span className="text-[10px] bg-gray-500/10 text-gray-400 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">{t('social.profile.not_connected', 'Non connecté')}</span>
                         )}
                       </div>
                       {connections?.some(c => c.tracker === 'anilist') ? (
                         <p className="text-xs opacity-60">
-                          Utilisateur : <span className="font-bold">{connections.find(c => c.tracker === 'anilist')?.username}</span>
+                          {t('social.profile.user_label', 'Utilisateur')} : <span className="font-bold">{connections.find(c => c.tracker === 'anilist')?.username}</span>
                         </p>
                       ) : (
-                        <p className="text-xs opacity-40 italic">Mettez à jour votre liste AniList automatiquement.</p>
+                        <p className="text-xs opacity-40 italic">{t('social.profile.anilist_hint', 'Mettez à jour votre liste AniList automatiquement.')}</p>
                       )}
                     </div>
                     <div className="mt-4">
@@ -276,14 +276,14 @@ const ProfilePage: React.FC = () => {
                           onClick={() => unlinkMutation.mutate('anilist')}
                           className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 border-none cursor-pointer"
                         >
-                          <Link2Off className="w-3.5 h-3.5" /> Dissocier
+                          <Link2Off className="w-3.5 h-3.5" /> {t('social.profile.unlink', 'Dissocier')}
                         </button>
                       ) : (
                         <button
                           onClick={() => setLinkingTracker('anilist')}
                           className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 border-none cursor-pointer"
                         >
-                          <Link2 className="w-3.5 h-3.5" /> Associer AniList
+                          <Link2 className="w-3.5 h-3.5" /> {t('social.profile.link_anilist', 'Associer AniList')}
                         </button>
                       )}
                     </div>
@@ -295,19 +295,19 @@ const ProfilePage: React.FC = () => {
                   <div className="mt-8 p-6 bg-white/50 dark:bg-black/30 rounded-2xl border border-blue-500/30">
                     <div className="flex items-center justify-between mb-4">
                       <h4 className="text-xs font-black uppercase tracking-wider text-blue-400">
-                        Associer {linkingTracker === 'anilist' ? 'AniList' : 'MyAnimeList'}
+                        {t('social.profile.link_tracker', 'Associer')} {linkingTracker === 'anilist' ? 'AniList' : 'MyAnimeList'}
                       </h4>
-                      <button onClick={() => setLinkingTracker(null)} className="text-gray-400 hover:text-white text-xs border-none bg-transparent cursor-pointer font-bold">Annuler</button>
+                      <button onClick={() => setLinkingTracker(null)} className="text-gray-400 hover:text-white text-xs border-none bg-transparent cursor-pointer font-bold">{t('common.cancel', 'Annuler')}</button>
                     </div>
 
                     <form onSubmit={handleLinkSubmit} className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="flex flex-col gap-1.5">
-                          <label htmlFor="tracker-username" className="text-[9px] font-black uppercase tracking-widest opacity-60">Nom d'utilisateur</label>
+                          <label htmlFor="tracker-username" className="text-[9px] font-black uppercase tracking-widest opacity-60">{t('social.profile.username_label', 'Nom d\'utilisateur')}</label>
                           <input
                             id="tracker-username"
                             type="text"
-                            aria-label="Nom d'utilisateur"
+                            aria-label={t('social.profile.username_label', 'Nom d\'utilisateur')}
                             value={trackerUsername}
                             onChange={(e) => setTrackerUsername(e.target.value)}
                             required
@@ -316,15 +316,15 @@ const ProfilePage: React.FC = () => {
                           />
                         </div>
                         <div className="flex flex-col gap-1.5">
-                          <label htmlFor="tracker-token" className="text-[9px] font-black uppercase tracking-widest opacity-60">Jeton d'accès (Access Token)</label>
+                          <label htmlFor="tracker-token" className="text-[9px] font-black uppercase tracking-widest opacity-60">{t('social.profile.token_label', 'Jeton d\'accès (Access Token)')}</label>
                           <input
                             id="tracker-token"
                             type="password"
-                            aria-label="Jeton d'accès"
+                            aria-label={t('social.profile.token_label', 'Jeton d\'accès')}
                             value={trackerToken}
                             onChange={(e) => setTrackerToken(e.target.value)}
                             required
-                            placeholder="Entrez votre jeton API"
+                            placeholder={t('social.profile.token_placeholder', 'Entrez votre jeton API')}
                             className="bg-[#05050a]/50 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 font-semibold"
                           />
                         </div>
@@ -335,7 +335,7 @@ const ProfilePage: React.FC = () => {
                         disabled={linkMutation.isPending}
                         className="w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer border-none flex items-center justify-center gap-2"
                       >
-                        {linkMutation.isPending ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : 'Enregistrer la connexion'}
+                        {linkMutation.isPending ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : t('social.profile.save_connection', 'Enregistrer la connexion')}
                       </button>
                     </form>
                   </div>

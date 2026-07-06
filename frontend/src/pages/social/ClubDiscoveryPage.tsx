@@ -8,6 +8,7 @@ import { Button } from "../../components/ui/Button";
 import { Card } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
 import { queryClient } from "../../utils/queryClient";
+import { useTranslation } from 'react-i18next';
 
 interface Club {
   id: string;
@@ -18,6 +19,7 @@ interface Club {
 }
 
 const ClubDiscoveryPage: React.FC = () => {
+  const { t } = useTranslation();
   const [filter, setFilter] = useState('');
   const [selectedTheme, setSelectedTheme] = useState('All');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -51,13 +53,13 @@ const ClubDiscoveryPage: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-4xl font-black italic uppercase tracking-tighter mb-2 manga-font">Club <span className="text-blue-500">Discovery</span></h1>
-          <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest">Rejoignez une communauté ou créez la vôtre.</p>
+          <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest">{t('social.discovery.subtitle', 'Rejoignez une communauté ou créez la vôtre.')}</p>
         </div>
         <button 
             onClick={() => setIsModalOpen(true)}
             className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-black italic uppercase transition-all shadow-xl shadow-blue-500/20 hover:scale-105 active:scale-95"
         >
-          <Plus className="w-5 h-5" /> Créer un Club
+          <Plus className="w-5 h-5" /> {t('social.discovery.create_club', 'Créer un Club')}
         </button>
       </div>
 
@@ -66,26 +68,26 @@ const ClubDiscoveryPage: React.FC = () => {
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-6 animate-fade-in">
               <Card padding="none" className="w-full max-w-xl bg-navy-900 border-white/10 overflow-hidden rounded-[3rem] shadow-2xl">
                   <div className="p-8 border-b border-white/5 bg-white/5 flex justify-between items-center">
-                      <h2 className="text-2xl font-black italic manga-font uppercase">Nouveau Nexus Social</h2>
+                      <h2 className="text-2xl font-black italic manga-font uppercase">{t('social.discovery.new_nexus', 'Nouveau Nexus Social')}</h2>
                       <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-white/5 rounded-xl transition-colors"><X className="w-6 h-6 opacity-30" /></button>
                   </div>
                   <form className="p-10 space-y-8" onSubmit={(e) => { e.preventDefault(); createMutation.mutate(newClub); }}>
                       <div className="space-y-2">
-                          <label htmlFor="club-name" className="text-[10px] font-black uppercase opacity-40 tracking-widest ml-1">Nom du Club</label>
+                          <label htmlFor="club-name" className="text-[10px] font-black uppercase opacity-40 tracking-widest ml-1">{t('social.discovery.club_name', 'Nom du Club')}</label>
                           <input
                             id="club-name"
                             required
                             type="text"
-                            aria-label="Nom du club"
+                            aria-label={t('social.discovery.club_name', 'Nom du Club')}
                             className="w-full bg-black border-2 border-white/5 rounded-2xl py-4 px-6 text-sm font-bold focus:border-blue-500 outline-none transition-all"
-                            placeholder="ex: Les Héritiers du Lore"
+                            placeholder={t('social.discovery.club_name_placeholder', 'ex: Les Héritiers du Lore')}
                             value={newClub.name}
                             onChange={e => setNewClub({...newClub, name: e.target.value})}
                           />
                       </div>
                       <div className="grid grid-cols-2 gap-6">
                         <div className="space-y-2">
-                            <label htmlFor="club-theme" className="text-[10px] font-black uppercase opacity-40 tracking-widest ml-1">Thème Principal</label>
+                            <label htmlFor="club-theme" className="text-[10px] font-black uppercase opacity-40 tracking-widest ml-1">{t('social.discovery.main_theme', 'Thème Principal')}</label>
                             <select 
                                 id="club-theme"
                                 className="w-full bg-black border-2 border-white/5 rounded-2xl py-4 px-6 text-sm font-bold focus:border-blue-500 outline-none transition-all appearance-none"
@@ -96,30 +98,30 @@ const ClubDiscoveryPage: React.FC = () => {
                             </select>
                         </div>
                         <div className="space-y-2">
-                            <span className="text-[10px] font-black uppercase opacity-40 tracking-widest ml-1 block">Confidentialité</span>
+                            <span className="text-[10px] font-black uppercase opacity-40 tracking-widest ml-1 block">{t('social.discovery.confidentiality', 'Confidentialité')}</span>
                             <div className="flex bg-black rounded-2xl p-1 border-2 border-white/5">
                                 <button 
                                     type="button"
                                     onClick={() => setNewClub({...newClub, is_private: false})}
                                     className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${!newClub.is_private ? 'bg-blue-600 text-white' : 'text-white/20'}`}
-                                >Public</button>
+                                >{t('social.discovery.public', 'Public')}</button>
                                 <button 
                                     type="button"
                                     onClick={() => setNewClub({...newClub, is_private: true})}
                                     className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${newClub.is_private ? 'bg-red-600 text-white' : 'text-white/20'}`}
-                                >Privé</button>
+                                >{t('social.discovery.private', 'Privé')}</button>
                             </div>
                         </div>
                       </div>
                       <div className="space-y-2">
-                          <label htmlFor="club-description" className="text-[10px] font-black uppercase opacity-40 tracking-widest ml-1">Description (Lore)</label>
+                          <label htmlFor="club-description" className="text-[10px] font-black uppercase opacity-40 tracking-widest ml-1">{t('social.discovery.description', 'Description (Lore)')}</label>
                           <textarea
                             id="club-description"
                             required
                             rows={4}
-                            aria-label="Description du club"
+                            aria-label={t('social.discovery.description', 'Description (Lore)')}
                             className="w-full bg-black border-2 border-white/5 rounded-3xl py-4 px-6 text-sm font-bold focus:border-blue-500 outline-none transition-all resize-none"
-                            placeholder="Décrivez l'objectif du club..."
+                            placeholder={t('social.discovery.description_placeholder', "Décrivez l'objectif du club...")}
                             value={newClub.description}
                             onChange={e => setNewClub({...newClub, description: e.target.value})}
                           />
@@ -131,7 +133,7 @@ const ClubDiscoveryPage: React.FC = () => {
                         fullWidth 
                         className="py-6 rounded-2xl bg-blue-600 hover:bg-blue-500 border-none shadow-xl"
                       >
-                          {createMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : "INITIALISER LE CLUB"}
+                          {createMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : t('social.discovery.initialize_club', 'INITIALISER LE CLUB')}
                       </Button>
                   </form>
               </Card>
@@ -147,19 +149,19 @@ const ClubDiscoveryPage: React.FC = () => {
             </h3>
             <div className="space-y-8">
               <div className="space-y-2">
-                <label htmlFor="nexus-search" className="sr-only">Rechercher un club</label>
+                <label htmlFor="nexus-search" className="sr-only">{t('social.discovery.search_club', 'Rechercher un club')}</label>
                 <input
                   id="nexus-search"
                   type="text"
-                  aria-label="Rechercher un club"
-                  placeholder="Rechercher un club..."
+                  aria-label={t('social.discovery.search_club', 'Rechercher un club')}
+                  placeholder={t('social.discovery.search_club_placeholder', 'Rechercher un club...')}
                   className="w-full bg-gray-100 dark:bg-black/40 border-none rounded-xl px-4 py-4 text-xs font-bold focus:ring-2 ring-blue-500/20"
                   value={filter}
                   onChange={(e) => setFilter(e.target.value)}
                 />
               </div>
               <div className="space-y-4">
-                <span className="text-[8px] font-black text-gray-400 uppercase tracking-[0.2em] block">Secteur Thématique</span>
+                <span className="text-[8px] font-black text-gray-400 uppercase tracking-[0.2em] block">{t('social.discovery.thematic_sector', 'Secteur Thématique')}</span>
                 <div className="flex flex-col gap-2">
                   {themes.map(theme => (
                     <button
@@ -181,7 +183,7 @@ const ClubDiscoveryPage: React.FC = () => {
           
           <Card padding="lg" className="bg-blue-500/10 border-blue-500/20 text-blue-500/60">
               <Shield className="w-10 h-10 mb-4 opacity-20" />
-              <p className="text-[10px] font-bold leading-relaxed uppercase italic">Les clubs privés nécessitent une invitation ou une validation par un officier du cercle.</p>
+              <p className="text-[10px] font-bold leading-relaxed uppercase italic">{t('social.discovery.private_hint', 'Les clubs privés nécessitent une invitation ou une validation par un officier du cercle.')}</p>
           </Card>
         </div>
 
@@ -209,13 +211,13 @@ const ClubDiscoveryPage: React.FC = () => {
                   </p>
                   <div className="flex items-center justify-between mt-auto pt-6 border-t border-gray-50 dark:border-white/5">
                     <span className="text-[10px] font-black flex items-center gap-2 text-gray-400 uppercase tracking-widest">
-                      <Sparkles className="w-3 h-3 text-blue-400" /> {club.member_count} Membres
+                      <Sparkles className="w-3 h-3 text-blue-400" /> {t('social.discovery.member_count', '{{count}} Membres', { count: club.member_count })}
                     </span>
                     <Link 
                       to={`/clubs/${club.id}`}
                       className="bg-black dark:bg-white dark:text-black text-white px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-xl no-underline"
                     >
-                      Rejoindre
+                      {t('social.discovery.join', 'Rejoindre')}
                     </Link>
                   </div>
                 </div>
@@ -225,7 +227,7 @@ const ClubDiscoveryPage: React.FC = () => {
           {filteredClubs.length === 0 && (
             <div className="text-center py-32 opacity-10 border-4 border-dashed border-white/5 rounded-[4rem]">
               <Users className="w-24 h-24 mx-auto mb-6" />
-              <p className="text-2xl font-black italic manga-font uppercase">Aucun Nexus actif dans ce secteur</p>
+              <p className="text-2xl font-black italic manga-font uppercase">{t('social.discovery.no_nexus', 'Aucun Nexus actif dans ce secteur')}</p>
             </div>
           )}
         </div>

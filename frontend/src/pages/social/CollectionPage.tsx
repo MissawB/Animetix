@@ -8,8 +8,10 @@ import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { CardSkeleton } from "../../components/ui/Skeleton";
+import { useTranslation } from 'react-i18next';
 
 const CollectionPage: React.FC = () => {
+  const { t } = useTranslation();
 
   const { data: fusions, isLoading } = useQuery<CreativeFusion[]>({
     queryKey: ['collection'],
@@ -31,15 +33,15 @@ const CollectionPage: React.FC = () => {
     
       <div className="max-w-7xl mx-auto px-6 py-16">
         <h1 className="text-5xl font-black italic manga-font mb-12 text-center tracking-tighter uppercase">
-          MA <span className="text-yellow-400">COLLECTION</span>
+          {t('social.collection.title_my', 'MA')} <span className="text-yellow-400">{t('social.collection.title_collection', 'COLLECTION')}</span>
         </h1>
 
         {!fusions || fusions.length === 0 ? (
           <Card padding="lg" className="text-center py-20 bg-white/5 border-4 border-dashed border-white/10">
             <Bookmark className="w-20 h-20 text-white opacity-10 mx-auto mb-6" />
-            <p className="text-xl font-bold opacity-30 italic uppercase tracking-widest">Votre galerie est vide. Explorez l'Archetypist !</p>
+            <p className="text-xl font-bold opacity-30 italic uppercase tracking-widest">{t('social.collection.empty_gallery', "Votre galerie est vide. Explorez l'Archetypist !")}</p>
             <Button as={Link} to="/forge/" variant="primary" size="lg" className="mt-8 italic bg-yellow-400 text-black border-none px-12">
-              CRÉER UNE FUSION
+              {t('social.collection.create_fusion', 'CRÉER UNE FUSION')}
             </Button>
           </Card>
         ) : (

@@ -13,6 +13,7 @@ import {
 import { useSearchParams, Link } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import ForceGraph2D, { type ForceGraphMethods, type NodeObject, type LinkObject } from 'react-force-graph-2d';
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
@@ -51,6 +52,7 @@ interface GraphLink {
 
 const ExpertNexusPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { t } = useTranslation();
   const initialQuery = searchParams.get('q') || '';
   const [query, setQuery] = useState(initialQuery);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -94,7 +96,7 @@ const ExpertNexusPage: React.FC = () => {
     // Ce mode utilise l'IA (GPU) et consomme des Bx → login requis. On le détecte
     // en amont car EventSource ne peut pas lire un statut HTTP 401/402.
     if (!useAuthStore.getState().isAuthenticated) {
-      setError("Ce mode utilise l'IA (GPU) et coûte des Berrix. Connecte-toi pour lancer une analyse.");
+      setError(t('search.expert.auth_error', "Ce mode utilise l'IA (GPU) et coûte des Berrix. Connecte-toi pour lancer une analyse."));
       setErrorKind('auth');
       setIsStreaming(false);
       return;
@@ -219,7 +221,7 @@ const ExpertNexusPage: React.FC = () => {
       // évènement n'ait été reçu, c'est presque toujours un refus 402 (solde de Bx
       // insuffisant), l'utilisateur étant déjà authentifié à ce stade.
       if (!receivedAnyRef.current) {
-        setError('Analyse refusée. Vérifie ton solde de Berrix (ce mode IA en consomme) puis réessaie.');
+        setError(t('search.expert.payment_error', 'Analyse refusée. Vérifie ton solde de Berrix (ce mode IA en consomme) puis réessaie.'));
         setErrorKind('payment');
       }
       stopStreaming();
@@ -272,7 +274,7 @@ const ExpertNexusPage: React.FC = () => {
                         aria-label="Rechercher"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
-                        placeholder="Posez une question profonde sur un univers, une relation ou un arc narratif..."
+                        placeholder={t('search.expert.placeholder', 'Posez une question profonde sur un univers, une relation ou un arc narratif...')}
                         className="w-full bg-black border-2 border-white/5 rounded-[2.5rem] py-6 pl-16 pr-8 text-lg font-bold focus:border-blue-600 outline-none transition-all placeholder:opacity-20"
                     />
                 </div>
@@ -281,7 +283,7 @@ const ExpertNexusPage: React.FC = () => {
                     disabled={isStreaming || !query.trim()}
                     className="bg-blue-600 hover:bg-blue-500 text-white px-10 rounded-[2.5rem] font-black italic text-xl uppercase shadow-xl hover:scale-105 active:scale-95 transition-all border-none"
                 >
-                    {isStreaming ? <Zap className="w-6 h-6 animate-pulse" /> : "RÉSOUDRE"}
+                    {isStreaming ? <Zap className="w-6 h-6 animate-pulse" /> : t('search.expert.solve_btn', 'RÉSOUDRE')}
                 </Button>
             </form>
         </Card>
@@ -293,7 +295,7 @@ const ExpertNexusPage: React.FC = () => {
             <div className="lg:col-span-5 flex flex-col h-full min-h-[500px]">
                 <div className="flex items-center justify-between mb-6 px-4">
                     <h3 className="text-xs font-black uppercase opacity-40 tracking-widest flex items-center gap-2">
-                        <Network className="w-4 h-4" /> Arbre de Pensée (MCTS)
+                        <Network className="w-4 h-4" /> {t('search.expert.thought_tree', 'Arbre de Pensée (MCTS)')}
                     </h3>
                     {isStreaming && (
                         <Badge variant="primary" className="bg-blue-600 animate-pulse text-[8px]">ACTIVE REASONING</Badge>
@@ -328,7 +330,7 @@ const ExpertNexusPage: React.FC = () => {
                     ) : (
                         <div className="h-full flex flex-col items-center justify-center opacity-10 text-center py-24">
                             <Network className="w-16 h-16 mb-4" />
-                            <p className="text-xs font-black uppercase tracking-widest">En attente d'une requête complexe</p>
+                            <p className="text-xs font-black uppercase tracking-widest">{t('search.expert.waiting', 'En attente d\'une requête complexe')}</p>
                         </div>
                     )}
                 </Card>
@@ -338,7 +340,7 @@ const ExpertNexusPage: React.FC = () => {
             <div className="lg:col-span-7 flex flex-col h-full">
                 <div className="flex items-center gap-4 mb-6 px-4">
                     <h3 className="text-xs font-black uppercase opacity-40 tracking-widest flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-yellow-400" /> Synthèse Expert
+                        <Sparkles className="w-4 h-4 text-yellow-400" /> {t('search.expert.synthesis', 'Synthèse Expert')}
                     </h3>
                 </div>
 
@@ -351,14 +353,14 @@ const ExpertNexusPage: React.FC = () => {
                                 <AlertCircle className="w-12 h-12 flex-shrink-0" />
                                 <div className="flex-grow">
                                     <h4 className="text-xl font-black italic uppercase mb-1">
-                                        {errorKind === 'auth' ? 'Connexion requise' : errorKind === 'payment' ? 'Berrix insuffisants' : 'Erreur de Résolution'}
+                                        {errorKind === 'auth' ? t('search.expert.auth_required', 'Connexion requise') : errorKind === 'payment' ? t('search.expert.insufficient_bx', 'Berrix insuffisants') : t('search.expert.resolution_error', 'Erreur de Résolution')}
                                     </h4>
                                     <p className="text-sm font-bold opacity-80 uppercase tracking-wide">{error}</p>
                                     {errorKind === 'auth' && (
-                                        <Link to="/auth/login/"><Button variant="primary" className="mt-4">Se connecter</Button></Link>
+                                        <Link to="/auth/login/"><Button variant="primary" className="mt-4">{t('search.expert.login_btn', 'Se connecter')}</Button></Link>
                                     )}
                                     {errorKind === 'payment' && (
-                                        <Link to="/power-station/"><Button variant="primary" className="mt-4">Recharger des Berrix</Button></Link>
+                                        <Link to="/power-station/"><Button variant="primary" className="mt-4">{t('search.expert.recharge_btn', 'Recharger des Berrix')}</Button></Link>
                                     )}
                                 </div>
                             </div>
@@ -367,8 +369,8 @@ const ExpertNexusPage: React.FC = () => {
                         {!error && !finalAnswer && !isStreaming && (
                             <div className="h-full flex flex-col items-center justify-center opacity-10 text-center py-32">
                                 <Sparkles className="w-24 h-24 mb-8" />
-                                <h3 className="text-3xl font-black italic manga-font uppercase mb-4">Nexus en veille</h3>
-                                <p className="text-sm font-bold uppercase tracking-[0.3em]">L'IA de 5ème génération attend vos instructions.</p>
+                                <h3 className="text-3xl font-black italic manga-font uppercase mb-4">{t('search.expert.idle_title', 'Nexus en veille')}</h3>
+                                <p className="text-sm font-bold uppercase tracking-[0.3em]">{t('search.expert.idle_desc', 'L\'IA de 5ème génération attend vos instructions.')}</p>
                             </div>
                         )}
 

@@ -64,13 +64,6 @@ def test_start_requires_auth(api_client):
     assert resp.status_code in (401, 403)
 
 
-@pytest.mark.skip(
-    reason="archetypist.start @inject resolves Container.core.persistence."
-    "feedback_adapter (a Dependency placeholder not wired in the test container) "
-    "before serializer validation, so the 400 path 500s here. Covered behavior is "
-    "exercised by the other start tests; revisit when the test container wires "
-    "feedback_adapter."
-)
 @pytest.mark.django_db
 def test_start_invalid_serializer(api_client, user):
     """Missing required fields fail serializer validation -> 400.
@@ -89,7 +82,7 @@ def test_start_invalid_serializer(api_client, user):
     ):
         resp = api_client.post(
             reverse("api_archetypist_start"),
-            {},  # missing required title_A / title_B -> serializer 400
+            {"chaos_level": 150},  # invalid chaos_level (>100) -> serializer 400
             format="json",
         )
     assert resp.status_code == 400

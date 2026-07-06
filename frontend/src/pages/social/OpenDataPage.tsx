@@ -4,19 +4,22 @@ import { OpenDataset } from '../../types';
 import { Card } from "../../components/ui/Card";
 import { Share2, Download, FileText, Database, Loader2, ExternalLink } from 'lucide-react';
 import { useToastStore } from '../../store/toastStore';
+import { useTranslation } from 'react-i18next';
 
 // Jeux de données publiés sur le Hub Hugging Face (consultables / téléchargeables
 // directement là-bas).
 const HF_DATASETS = [
   {
     name: 'Otaku Expert Dataset',
-    description: "Jeu de données d'entraînement (SFT) expert pour les modèles de raisonnement Otaku, rédigé en français.",
+    descriptionKey: 'social.opendata.hf_expert_desc',
+    descriptionDefault: "Jeu de données d'entraînement (SFT) expert pour les modèles de raisonnement Otaku, rédigé en français.",
     tag: 'Text Generation · FR · ~10K–100K',
     url: 'https://huggingface.co/datasets/MissawB/otaku-expert-dataset',
   },
   {
     name: 'Otaku Gold Dataset',
-    description: "Jeu de données étalon (vérité terrain) pour évaluer la précision des modèles, l'extraction d'entités et les pipelines RAG.",
+    descriptionKey: 'social.opendata.hf_gold_desc',
+    descriptionDefault: "Jeu de données étalon (vérité terrain) pour évaluer la précision des modèles, l'extraction d'entités et les pipelines RAG.",
     tag: 'Question Answering · < 1K',
     url: 'https://huggingface.co/datasets/MissawB/otaku-gold-dataset',
   },
@@ -27,6 +30,7 @@ const OpenDataPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const addToast = useToastStore((state) => state.addToast);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const fetchDatasets = async () => {
@@ -37,7 +41,7 @@ const OpenDataPage: React.FC = () => {
         }
       } catch (err) {
         console.error("Erreur lors de la récupération des datasets :", err);
-        addToast("Impossible de charger les métadonnées des datasets.", "error");
+        addToast(t('social.opendata.load_error', 'Impossible de charger les métadonnées des datasets.'), "error");
       } finally {
         setIsLoading(false);
       }
@@ -49,12 +53,12 @@ const OpenDataPage: React.FC = () => {
     setDownloadingId(dataset.id);
     const originalFilename = dataset.id === 'dpo_pairs' ? 'dpo_train_validated.jsonl' : 'gameplay_sessions.jsonl';
     try {
-      addToast(`Téléchargement de ${dataset.name} en cours...`, "info");
+      addToast(t('social.opendata.downloading', 'Téléchargement de {{name}} en cours...', { name: dataset.name }), "info");
       await downloadDataset(dataset.id, originalFilename);
-      addToast(`${dataset.name} téléchargé avec succès !`, "success");
+      addToast(t('social.opendata.download_success', '{{name}} téléchargé avec succès !', { name: dataset.name }), "success");
     } catch (err) {
       console.error(`Erreur lors du téléchargement de ${dataset.id} :`, err);
-      addToast(`Échec du téléchargement de ${dataset.name}.`, "error");
+      addToast(t('social.opendata.download_fail', 'Échec du téléchargement de {{name}}.', { name: dataset.name }), "error");
     } finally {
       setDownloadingId(null);
     }
@@ -87,7 +91,7 @@ const OpenDataPage: React.FC = () => {
     return (
       <div className="p-20 text-center text-white font-black animate-pulse uppercase tracking-[0.3em] flex flex-col items-center justify-center gap-4">
         <Loader2 className="w-10 h-10 animate-spin text-brand-primary" />
-        Synchronisation avec le dépôt open-source...
+        {t('social.opendata.loading', 'Synchronisation avec le dépôt open-source...')}
       </div>
     );
   }
@@ -97,15 +101,15 @@ const OpenDataPage: React.FC = () => {
       {/* Header */}
       <div className="mb-12">
         <h1 className="text-4xl font-black italic manga-font tracking-tighter uppercase flex items-center gap-3">
-          <Share2 className="w-8 h-8 text-teal-400 animate-pulse" /> PORTAIL DE DONNÉES OUVERTES
+          <Share2 className="w-8 h-8 text-teal-400 animate-pulse" /> {t('social.opendata.title', 'PORTAIL DE DONNÉES OUVERTES')}
         </h1>
         <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mt-2">
-          Nos jeux de données publics — en téléchargement direct ou sur Hugging Face.
+          {t('social.opendata.subtitle', 'Nos jeux de données publics — en téléchargement direct ou sur Hugging Face.')}
         </p>
       </div>
 
       {/* Téléchargement direct */}
-      <h2 className="text-xs font-black uppercase tracking-[0.25em] text-teal-400 mb-4">Téléchargement direct</h2>
+      <h2 className="text-xs font-black uppercase tracking-[0.25em] text-teal-400 mb-4">{t('social.opendata.direct_download', 'Téléchargement direct')}</h2>
 
       {/* Dataset Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -128,7 +132,7 @@ const OpenDataPage: React.FC = () => {
                     {dataset.name}
                   </h4>
                   <span className="text-[9px] font-black uppercase text-gray-500 tracking-wider bg-white/5 dark:bg-black/20 px-2 py-0.5 rounded">
-                    Format {dataset.format}
+                    {t('social.opendata.format', 'Format')} {dataset.format}
                   </span>
                 </div>
               </div>
@@ -140,11 +144,11 @@ const OpenDataPage: React.FC = () => {
               {/* Metadata list */}
               <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5 text-[10px] font-black uppercase tracking-wider text-gray-500">
                 <div>
-                  <span className="block text-[8px] opacity-40">Taille du fichier</span>
+                  <span className="block text-[8px] opacity-40">{t('social.opendata.file_size', 'Taille du fichier')}</span>
                   <span className="text-white">{formatBytes(dataset.size_bytes)}</span>
                 </div>
                 <div>
-                  <span className="block text-[8px] opacity-40">Dernière mise à jour</span>
+                  <span className="block text-[8px] opacity-40">{t('social.opendata.last_update', 'Dernière mise à jour')}</span>
                   <span className="text-white">{formatDate(dataset.updated_at)}</span>
                 </div>
               </div>
@@ -159,12 +163,12 @@ const OpenDataPage: React.FC = () => {
                 {downloadingId === dataset.id ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin text-black" />
-                    Préparation...
+                    {t('social.opendata.preparing', 'Préparation...')}
                   </>
                 ) : (
                   <>
                     <Download className="w-4 h-4 text-black group-hover:translate-y-0.5 transition-transform" />
-                    Télécharger le dataset
+                    {t('social.opendata.download_btn', 'Télécharger le dataset')}
                   </>
                 )}
               </button>
@@ -175,13 +179,13 @@ const OpenDataPage: React.FC = () => {
         {datasets.length === 0 && (
           <Card padding="lg" className="col-span-full text-center py-20 border-dashed border-2 border-white/5">
             <Database className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-            <p className="font-bold text-gray-500 italic">Aucun dataset en téléchargement direct pour le moment.</p>
+            <p className="font-bold text-gray-500 italic">{t('social.opendata.empty', 'Aucun dataset en téléchargement direct pour le moment.')}</p>
           </Card>
         )}
       </div>
 
       {/* Sur Hugging Face */}
-      <h2 className="text-xs font-black uppercase tracking-[0.25em] text-teal-400 mt-14 mb-4">Sur Hugging Face</h2>
+      <h2 className="text-xs font-black uppercase tracking-[0.25em] text-teal-400 mt-14 mb-4">{t('social.opendata.on_hf', 'Sur Hugging Face')}</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {HF_DATASETS.map((ds) => (
           <a
@@ -189,7 +193,7 @@ const OpenDataPage: React.FC = () => {
             href={ds.url}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label={`${ds.name} — voir sur Hugging Face`}
+            aria-label={t('social.opendata.aria_label', '{{name}} — voir sur Hugging Face', { name: ds.name })}
             className="no-underline group"
           >
             <Card
@@ -212,13 +216,13 @@ const OpenDataPage: React.FC = () => {
                   </div>
                 </div>
                 <p className="text-xs text-gray-400 leading-relaxed font-medium">
-                  {ds.description}
+                  {t(ds.descriptionKey, ds.descriptionDefault)}
                 </p>
               </div>
               <div className="pt-6 mt-6 border-t border-white/5">
                 <span className="w-full inline-flex items-center justify-center gap-2 border border-teal-500/30 text-teal-400 group-hover:bg-teal-500/10 font-black uppercase text-xs tracking-widest py-3 px-6 rounded-xl transition-all duration-300">
                   <ExternalLink className="w-4 h-4" />
-                  Voir sur Hugging Face
+                  {t('social.opendata.view_hf', 'Voir sur Hugging Face')}
                 </span>
               </div>
             </Card>

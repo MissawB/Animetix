@@ -20,11 +20,13 @@ import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { CardSkeleton } from "../../components/ui/Skeleton";
 import { MediaDetail } from '../../types';
+import { useTranslation } from 'react-i18next';
 
 import { NotableWork } from '../../types';
 
 const StaffDetailPage: React.FC = () => {
   const { staffId } = useParams<{ staffId: string }>();
+  const { t } = useTranslation();
 
   // Use generic media detail for Actor/Staff types
   const { data: staff, isLoading, isError } = useQuery<MediaDetail>({
@@ -40,9 +42,9 @@ const StaffDetailPage: React.FC = () => {
 
   if (isError || !staff) return (
       <div className="max-w-7xl mx-auto px-6 py-32 text-center">
-          <h2 className="text-4xl font-black italic manga-font text-red-500 mb-6 uppercase">Artiste introuvable</h2>
-          <p className="text-gray-500 font-bold uppercase tracking-widest mb-12">Cette fiche semble avoir été purgée du Graphe.</p>
-          <Button as={Link} to="/explore/" variant="outline">RETOURNER AU NEXUS</Button>
+          <h2 className="text-4xl font-black italic manga-font text-red-500 mb-6 uppercase">{t('media.staff.not_found', 'Artiste introuvable')}</h2>
+          <p className="text-gray-500 font-bold uppercase tracking-widest mb-12">{t('media.staff.not_found_desc', 'Cette fiche semble avoir été purgée du Graphe.')}</p>
+          <Button as={Link} to="/explore/" variant="outline">{t('media.staff.back_nexus', 'RETOURNER AU NEXUS')}</Button>
       </div>
   );
 
@@ -63,7 +65,7 @@ const StaffDetailPage: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-6 py-16 relative z-10">
         <Link to="/explore/" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-white transition-colors mb-12 no-underline group">
-            <ArrowLeft className="w-3 h-3 group-hover:-translate-x-1 transition-transform" /> Retour au Nexus
+            <ArrowLeft className="w-3 h-3 group-hover:-translate-x-1 transition-transform" /> {t('media.staff.back_nexus_link', 'Retour au Nexus')}
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
@@ -80,7 +82,7 @@ const StaffDetailPage: React.FC = () => {
                         )}
                     </Card>
                     <Badge variant="primary" className="absolute top-6 left-6 shadow-xl bg-emerald-600 font-black italic uppercase tracking-tighter">
-                        CRÉATIF
+                        {t('media.staff.badge_creative', 'CRÉATIF')}
                     </Badge>
                 </div>
 
@@ -90,7 +92,7 @@ const StaffDetailPage: React.FC = () => {
                             <MapPin className="w-5 h-5" />
                         </div>
                         <div>
-                            <p className="text-[10px] font-black opacity-30 uppercase">Origine</p>
+                            <p className="text-[10px] font-black opacity-30 uppercase">{t('media.staff.origin', 'Origine')}</p>
                             <p className="font-bold italic text-sm">{meta?.location || 'Japon'}</p>
                         </div>
                     </div>
@@ -99,7 +101,7 @@ const StaffDetailPage: React.FC = () => {
                             <Calendar className="w-5 h-5" />
                         </div>
                         <div>
-                            <p className="text-[10px] font-black opacity-30 uppercase">Anniversaire</p>
+                            <p className="text-[10px] font-black opacity-30 uppercase">{t('media.staff.birthday', 'Anniversaire')}</p>
                             <p className="font-bold italic text-sm">{meta?.birth_date || '?? / ??'}</p>
                         </div>
                     </div>
@@ -108,14 +110,14 @@ const StaffDetailPage: React.FC = () => {
                             <Globe className="w-5 h-5" />
                         </div>
                         <div>
-                            <p className="text-[10px] font-black opacity-30 uppercase">Influence Nexus</p>
+                            <p className="text-[10px] font-black opacity-30 uppercase">{t('media.staff.nexus_influence', 'Influence Nexus')}</p>
                             <p className="font-bold italic text-sm text-emerald-400">High Tier</p>
                         </div>
                     </div>
                 </div>
 
                 <Button variant="outline" fullWidth className="py-4 border-white/5 bg-white/5 text-[10px] font-black uppercase tracking-widest hover:bg-white/10">
-                    <Film className="w-3 h-3 mr-2" /> Filmographie Complète
+                    <Film className="w-3 h-3 mr-2" /> {t('media.staff.full_filmography', 'Filmographie Complète')}
                 </Button>
             </div>
 
@@ -130,17 +132,17 @@ const StaffDetailPage: React.FC = () => {
                     <div className="flex flex-wrap gap-3">
                         {meta?.roles?.map((role: string) => (
                             <Badge key={role} className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 px-4 py-2 uppercase text-[10px] font-black">{role}</Badge>
-                        )) || <Badge className="bg-white/5 text-white/40 border-white/10 px-4 py-2 uppercase text-[10px] font-black">Professionnel de l'industrie</Badge>}
+                        )) || <Badge className="bg-white/5 text-white/40 border-white/10 px-4 py-2 uppercase text-[10px] font-black">{t('media.staff.fallback_role', "Professionnel de l'industrie")}</Badge>}
                     </div>
                 </header>
 
                 <section>
                     <h3 className="text-xs font-black uppercase opacity-40 mb-6 tracking-widest flex items-center gap-2">
-                        <Building2 className="w-4 h-4 text-blue-400" /> Biographie
+                        <Building2 className="w-4 h-4 text-blue-400" /> {t('media.staff.biography', 'Biographie')}
                     </h3>
                     <div className="prose prose-invert max-w-none">
                         <p className="text-lg leading-relaxed opacity-70 font-medium italic">
-                            {staff.description || "Biographie en cours de synchronisation avec les serveurs de production."}
+                            {staff.description || t('media.staff.biography_loading', 'Biographie en cours de synchronisation avec les serveurs de production.')}
                         </p>
                     </div>
                 </section>
@@ -148,7 +150,7 @@ const StaffDetailPage: React.FC = () => {
                 {/* Credits / Works */}
                 <section>
                     <h3 className="text-xs font-black uppercase opacity-40 mb-8 tracking-widest flex items-center gap-2">
-                        <Star className="w-4 h-4 text-yellow-400" /> Œuvres Notables
+                        <Star className="w-4 h-4 text-yellow-400" /> {t('media.staff.notable_works', 'Œuvres Notables')}
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         {meta?.notable_works?.map((work: NotableWork) => (
@@ -158,7 +160,7 @@ const StaffDetailPage: React.FC = () => {
                                         <img src={work.image || 'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?auto=format&fit=crop&q=80&w=200'} className="w-full h-full object-cover" alt="" loading="lazy" decoding="async" />
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-black opacity-30 uppercase mb-1">{work.role || 'Crédit'}</p>
+                                        <p className="text-[10px] font-black opacity-30 uppercase mb-1">{work.role || t('media.staff.role_credit', 'Crédit')}</p>
                                         <p className="font-black italic text-sm group-hover:text-emerald-400 transition-colors">{work.title}</p>
                                     </div>
                                 </Card>
@@ -166,7 +168,7 @@ const StaffDetailPage: React.FC = () => {
                         )) || (
                             <div className="col-span-2 p-12 border-2 border-dashed border-white/5 rounded-3xl flex flex-col items-center justify-center text-center">
                                 <ExternalLink className="w-12 h-12 opacity-10 mb-4" />
-                                <p className="text-xs font-bold uppercase opacity-20 tracking-widest">Indexation de la filmographie...</p>
+                                <p className="text-xs font-bold uppercase opacity-20 tracking-widest">{t('media.staff.indexing_filmography', 'Indexation de la filmographie...')}</p>
                             </div>
                         )}
                     </div>
@@ -176,8 +178,8 @@ const StaffDetailPage: React.FC = () => {
                 <div className="p-6 bg-emerald-500/5 border border-emerald-500/10 rounded-3xl flex items-center gap-6">
                     <ShieldCheck className="w-12 h-12 text-emerald-500 opacity-40" />
                     <div>
-                        <h4 className="text-xs font-black uppercase tracking-widest text-emerald-400 mb-1">Source Certifiée Nexus</h4>
-                        <p className="text-[10px] text-gray-500 font-bold uppercase">Les données de cet artiste sont validées par le protocole de consensus sémantique.</p>
+                        <h4 className="text-xs font-black uppercase tracking-widest text-emerald-400 mb-1">{t('media.staff.nexus_certified', 'Source Certifiée Nexus')}</h4>
+                        <p className="text-[10px] text-gray-500 font-bold uppercase">{t('media.staff.consensus_desc', 'Les données de cet artiste sont validées par le protocole de consensus sémantique.')}</p>
                     </div>
                 </div>
             </div>

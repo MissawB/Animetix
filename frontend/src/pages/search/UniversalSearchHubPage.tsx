@@ -22,6 +22,7 @@ import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { CardSkeleton } from "../../components/ui/Skeleton";
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 import { SearchItem, VideoSegment } from '../../types';
 
@@ -29,6 +30,7 @@ type SearchMode = 'global' | 'visual';
 
 const UniversalSearchHubPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { t } = useTranslation();
   const initialQuery = searchParams.get('q') || '';
   const initialMode = (searchParams.get('mode') as SearchMode) || 'global';
   
@@ -77,10 +79,10 @@ const UniversalSearchHubPage: React.FC = () => {
 
 
   const TABS = [
-    { id: 'all', label: 'TOUT', icon: Grid },
-    { id: 'Anime', label: 'ANIME', icon: Tv },
-    { id: 'Manga', label: 'MANGA', icon: Tv }, // Using Tv icon as placeholder or BookOpen if available
-    { id: 'Actor', label: 'SEIYUU', icon: Tv },
+    { id: 'all', label: t('search.hub.tab_all', 'TOUT'), icon: Grid },
+    { id: 'Anime', label: t('search.hub.tab_anime', 'ANIME'), icon: Tv },
+    { id: 'Manga', label: t('search.hub.tab_manga', 'MANGA'), icon: Tv },
+    { id: 'Actor', label: t('search.hub.tab_seiyuu', 'SEIYUU'), icon: Tv },
   ];
 
   return (
@@ -141,7 +143,7 @@ const UniversalSearchHubPage: React.FC = () => {
                         aria-label="Rechercher"
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
-                        placeholder={mode === 'global' ? "Rechercher un anime, manga, seiyuu..." : "Décrivez une scène visuelle ou un moment précis..."}
+                        placeholder={mode === 'global' ? t('search.hub.global_placeholder', 'Rechercher un anime, manga, seiyuu...') : t('search.hub.visual_placeholder', 'Décrivez une scène visuelle ou un moment précis...')}
                         className="w-full bg-black border-2 border-white/5 rounded-[2.5rem] py-6 pl-16 pr-8 text-lg font-bold focus:border-blue-500 outline-none transition-all placeholder:opacity-20"
                     />
                 </div>
@@ -187,7 +189,7 @@ const UniversalSearchHubPage: React.FC = () => {
                     ) : filteredGlobalResults.length === 0 ? (
                         <div className="text-center py-32 opacity-20 border-4 border-dashed border-white/5 rounded-[4rem]">
                             <Search className="w-24 h-24 mx-auto mb-6" />
-                            <p className="text-2xl font-black italic manga-font uppercase">Aucun résultat meta-data</p>
+                            <p className="text-2xl font-black italic manga-font uppercase">{t('search.hub.no_metadata', 'Aucun résultat meta-data')}</p>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -230,10 +232,10 @@ const UniversalSearchHubPage: React.FC = () => {
                     <div className="space-y-12">
                         <div className="flex items-center justify-between px-4">
                             <h3 className="text-xs font-black uppercase opacity-40 tracking-widest flex items-center gap-2">
-                                <Layers className="w-4 h-4 text-purple-400" /> Segments Temporels Identifiés
+                                <Layers className="w-4 h-4 text-purple-400" /> {t('search.hub.temporal_segments', 'Segments Temporels Identifiés')}
                             </h3>
                             {visualResults.length > 0 && (
-                                <Badge variant="primary" className="bg-purple-600 text-[8px] font-black">{visualResults.length} MOMENTS TROUVÉS</Badge>
+                                <Badge variant="primary" className="bg-purple-600 text-[8px] font-black">{t('search.hub.moments_found', '{{count}} MOMENTS TROUVÉS', { count: visualResults.length })}</Badge>
                             )}
                         </div>
 
@@ -263,7 +265,7 @@ const UniversalSearchHubPage: React.FC = () => {
                                         </div>
                                         <div className="p-6">
                                             <h4 className="font-black italic text-lg uppercase manga-font mb-2 truncate group-hover:text-purple-400 transition-colors">
-                                                {segment.media_title || `Vidéo #${segment.video_id}`}
+                                                {segment.media_title || t('search.hub.video_fallback', 'Vidéo #{{id}}', { id: segment.video_id })}
                                             </h4>
                                             <p className="text-[10px] font-bold opacity-40 uppercase leading-relaxed line-clamp-2 italic mb-4">
                                                 "{segment.description}"
@@ -275,8 +277,8 @@ const UniversalSearchHubPage: React.FC = () => {
                         ) : (
                             <div className="text-center py-48 opacity-10 border-4 border-dashed border-white/5 rounded-[4rem]">
                                 <Video className="w-32 h-32 mx-auto mb-8" />
-                                <h3 className="text-4xl font-black italic manga-font uppercase mb-4">Moteur Optique Prêt</h3>
-                                <p className="text-sm font-bold uppercase tracking-[0.3em]">Entrez une description pour scanner la base de clips.</p>
+                                <h3 className="text-4xl font-black italic manga-font uppercase mb-4">{t('search.hub.engine_ready', 'Moteur Optique Prêt')}</h3>
+                                <p className="text-sm font-bold uppercase tracking-[0.3em]">{t('search.hub.engine_desc', 'Entrez une description pour scanner la base de clips.')}</p>
                             </div>
                         )}
                     </div>
@@ -289,19 +291,19 @@ const UniversalSearchHubPage: React.FC = () => {
               <div className="space-y-4">
                   <Badge variant="neutral" className="bg-white/5 border-none">Multimodal RAG</Badge>
                   <p className="text-[10px] font-bold uppercase leading-relaxed tracking-wider">
-                      La recherche unifiée combine les métadonnées de MAL/AniList avec l'analyse d'images par Computer Vision.
+                      {t('search.hub.footer_rag', 'La recherche unifiée combine les métadonnées de MAL/AniList avec l\'analyse d\'images par Computer Vision.')}
                   </p>
               </div>
               <div className="space-y-4">
                   <Badge variant="neutral" className="bg-white/5 border-none">Knowledge Graph</Badge>
                   <p className="text-[10px] font-bold uppercase leading-relaxed tracking-wider">
-                      Toutes les entités sont reliées via Neo4j, permettant de trouver des corrélations thématiques entre anime et manga.
+                      {t('search.hub.footer_graph', 'Toutes les entités sont reliées via Neo4j, permettant de trouver des corrélations thématiques entre anime et manga.')}
                   </p>
               </div>
               <div className="space-y-4">
                   <Badge variant="neutral" className="bg-white/5 border-none">Temporal Index</Badge>
                   <p className="text-[10px] font-bold uppercase leading-relaxed tracking-wider">
-                      L'indexation temporelle permet de chercher directement des frames au sein des épisodes.
+                      {t('search.hub.footer_temporal', 'L\'indexation temporelle permet de chercher directement des frames au sein des épisodes.')}
                   </p>
               </div>
           </footer>

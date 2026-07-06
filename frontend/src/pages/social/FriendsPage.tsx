@@ -13,31 +13,34 @@ const FriendCard: React.FC<{
   friend: Friendship;
   type: 'following' | 'follower';
   onUnfollow?: (userId: number) => void;
-}> = ({ friend, type, onUnfollow }) => (
-  <div className="flex items-center justify-between p-5 bg-gray-50 dark:bg-navy-900/60 rounded-2xl hover:scale-[1.01] transition-all border border-gray-100 dark:border-white/5 group">
-    <Link to={`/profile/${friend.username}/`} className="flex items-center gap-4 no-underline text-current flex-1 min-w-0">
-      <div className="w-14 h-14 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center font-black italic text-xl border-2 border-black text-black shadow-lg group-hover:scale-110 transition-transform shrink-0">
-        {friend.username[0].toUpperCase()}
-      </div>
-      <div className="min-w-0">
-        <div className="font-black text-lg truncate">{friend.username}</div>
-        <div className="text-[10px] uppercase font-black opacity-40 tracking-widest">
-          Niveau {friend.level} • Depuis {new Date(friend.created_at).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })}
+}> = ({ friend, type, onUnfollow }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="flex items-center justify-between p-5 bg-gray-50 dark:bg-navy-900/60 rounded-2xl hover:scale-[1.01] transition-all border border-gray-100 dark:border-white/5 group">
+      <Link to={`/profile/${friend.username}/`} className="flex items-center gap-4 no-underline text-current flex-1 min-w-0">
+        <div className="w-14 h-14 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center font-black italic text-xl border-2 border-black text-black shadow-lg group-hover:scale-110 transition-transform shrink-0">
+          {friend.username[0].toUpperCase()}
         </div>
-      </div>
-    </Link>
-    {type === 'following' && onUnfollow && (
-      <Button
-        variant="danger"
-        size="sm"
-        className="rounded-full px-4 ml-4 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-        onClick={() => onUnfollow(friend.to_user)}
-      >
-        <UserMinus className="w-4 h-4" /> Unfollow
-      </Button>
-    )}
-  </div>
-);
+        <div className="min-w-0">
+          <div className="font-black text-lg truncate">{friend.username}</div>
+          <div className="text-[10px] uppercase font-black opacity-40 tracking-widest">
+            {t('social.friends.level_since', 'Niveau {{level}} • Depuis {{date}}', { level: friend.level, date: new Date(friend.created_at).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' }) })}
+          </div>
+        </div>
+      </Link>
+      {type === 'following' && onUnfollow && (
+        <Button
+          variant="danger"
+          size="sm"
+          className="rounded-full px-4 ml-4 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={() => onUnfollow(friend.to_user)}
+        >
+          <UserMinus className="w-4 h-4" /> Unfollow
+        </Button>
+      )}
+    </div>
+  );
+};
 
 const FriendsPage: React.FC = () => {
   const { t } = useTranslation();
@@ -61,13 +64,13 @@ const FriendsPage: React.FC = () => {
         {/* Header */}
         <header className="mb-16">
           <Link to="/social/dashboard/" className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity mb-8 no-underline text-current">
-            <ArrowLeft className="w-4 h-4" /> Retour au Dashboard
+            <ArrowLeft className="w-4 h-4" /> {t('social.friends.back_to_dashboard', 'Retour au Dashboard')}
           </Link>
           <h1 className="text-5xl md:text-7xl font-black italic manga-font tracking-tighter uppercase mb-2">
-            MON <span className="text-yellow-400 text-glow">RÉSEAU</span>
+            {t('social.friends.title_my', 'MON')} <span className="text-yellow-400 text-glow">{t('social.friends.title_network', 'RÉSEAU')}</span>
           </h1>
           <p className="text-xl font-bold opacity-30 uppercase tracking-[0.3em]">
-            Gérez vos abonnements et vos abonnés.
+            {t('social.friends.subtitle', 'Gérez vos abonnements et vos abonnés.')}
           </p>
         </header>
 
@@ -76,19 +79,19 @@ const FriendsPage: React.FC = () => {
           <Card padding="lg" className="text-center bg-gradient-to-br from-yellow-400/5 to-orange-500/5 border-yellow-500/10">
             <Users className="w-10 h-10 text-yellow-400 mx-auto mb-4" />
             <div className="text-4xl font-black italic manga-font text-yellow-400">{data.following.length}</div>
-            <div className="text-[10px] font-black uppercase tracking-widest opacity-40 mt-2">Abonnements</div>
+            <div className="text-[10px] font-black uppercase tracking-widest opacity-40 mt-2">{t('social.friends.following', 'Abonnements')}</div>
           </Card>
           <Card padding="lg" className="text-center bg-gradient-to-br from-red-400/5 to-pink-500/5 border-red-500/10">
             <Heart className="w-10 h-10 text-red-500 mx-auto mb-4" />
             <div className="text-4xl font-black italic manga-font text-red-500">{data.followers.length}</div>
-            <div className="text-[10px] font-black uppercase tracking-widest opacity-40 mt-2">Abonnés</div>
+            <div className="text-[10px] font-black uppercase tracking-widest opacity-40 mt-2">{t('social.friends.followers', 'Abonnés')}</div>
           </Card>
         </div>
 
         {/* Following */}
         <section className="mb-16">
           <h2 className="text-xs font-black uppercase opacity-40 mb-8 tracking-[0.3em] flex items-center gap-2 px-4">
-            <UserPlus className="w-4 h-4 text-yellow-400" /> Abonnements ({data.following.length})
+            <UserPlus className="w-4 h-4 text-yellow-400" /> {t('social.friends.following_count', 'Abonnements ({{count}})', { count: data.following.length })}
           </h2>
           <div className="space-y-4">
             {data.following.map((f: Friendship) => (
@@ -98,10 +101,10 @@ const FriendsPage: React.FC = () => {
               <div className="text-center py-16 opacity-20">
                 <Search className="w-16 h-16 mx-auto mb-4" />
                 <p className="text-lg font-black italic manga-font uppercase">
-                  Vous ne suivez personne pour l'instant.
+                  {t('social.friends.no_following', "Vous ne suivez personne pour l'instant.")}
                 </p>
                 <p className="text-xs opacity-60 mt-2">
-                  Explorez les profils et commencez à suivre d'autres joueurs !
+                  {t('social.friends.no_following_desc', "Explorez les profils et commencez à suivre d'autres joueurs !")}
                 </p>
               </div>
             )}
@@ -111,7 +114,7 @@ const FriendsPage: React.FC = () => {
         {/* Followers */}
         <section>
           <h2 className="text-xs font-black uppercase opacity-40 mb-8 tracking-[0.3em] flex items-center gap-2 px-4">
-            <Heart className="w-4 h-4 text-red-500" /> Abonnés ({data.followers.length})
+            <Heart className="w-4 h-4 text-red-500" /> {t('social.friends.followers_count', 'Abonnés ({{count}})', { count: data.followers.length })}
           </h2>
           <div className="space-y-4">
             {data.followers.map((f: Friendship) => (
@@ -121,10 +124,10 @@ const FriendsPage: React.FC = () => {
               <div className="text-center py-16 opacity-20">
                 <Users className="w-16 h-16 mx-auto mb-4" />
                 <p className="text-lg font-black italic manga-font uppercase">
-                  Pas encore d'abonnés.
+                  {t('social.friends.no_followers', "Pas encore d'abonnés.")}
                 </p>
                 <p className="text-xs opacity-60 mt-2">
-                  Jouez, créez des fusions et grimpez le classement pour attirer des abonnés !
+                  {t('social.friends.no_followers_desc', 'Jouez, créez des fusions et grimpez le classement pour attirer des abonnés !')}
                 </p>
               </div>
             )}

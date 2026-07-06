@@ -39,20 +39,20 @@ const LeaderboardPage: React.FC = () => {
       {/* ── Header ─────────────────────────────────────────────── */}
       <div className="text-center mb-14">
         <div className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.3em] text-yellow-700 dark:text-yellow-400 mb-4">
-          <Sparkles className="w-3.5 h-3.5" /> Classement mondial
+          <Sparkles className="w-3.5 h-3.5" /> {t('social.leaderboard.world_ranking', 'Classement mondial')}
         </div>
         <h1 className="text-5xl md:text-6xl font-black italic manga-font tracking-tighter uppercase leading-none">
           <span className="bg-gradient-to-r from-yellow-500 via-amber-600 to-orange-600 dark:from-yellow-400 dark:via-amber-500 dark:to-orange-500 bg-clip-text text-transparent">
             {t('social.leaderboard.title')}
           </span>
         </h1>
-        <p className="mt-4 text-sm font-bold text-gray-600 dark:text-gray-400">Les légendes qui ont décodé le plus de secrets.</p>
+        <p className="mt-4 text-sm font-bold text-gray-600 dark:text-gray-400">{t('social.leaderboard.subtitle', 'Les légendes qui ont décodé le plus de secrets.')}</p>
       </div>
 
       {leaders.length === 0 ? (
         <div className="text-center py-16 rounded-3xl border border-dashed border-gray-200 dark:border-white/10">
           <Trophy className="w-12 h-12 mx-auto mb-4 opacity-20" />
-          <p className="font-bold text-gray-600 dark:text-gray-400">Le panthéon est encore vide. À toi d'y entrer.</p>
+          <p className="font-bold text-gray-600 dark:text-gray-400">{t('social.leaderboard.empty', 'Le panthéon est encore vide. À toi d\'y entrer.')}</p>
         </div>
       ) : (
         <>

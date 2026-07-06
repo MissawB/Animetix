@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
+import { useTranslation } from 'react-i18next';
 import { apiClient } from '../../utils/apiClient';
 
 // ─── Types ───────────────────────────────────────────────────────────
@@ -160,6 +161,7 @@ const StatusDot: React.FC<{ status: string; size?: 'sm' | 'md' }> = ({ status, s
 
 // ─── Node Card ───────────────────────────────────────────────────────
 const NodeCard: React.FC<{ node: ClusterNode }> = ({ node }) => {
+  const { t } = useTranslation();
   const config = statusConfig[node.status as keyof typeof statusConfig] || statusConfig.offline;
   const IconComponent = nodeTypeIcon[node.type] || Server;
   const accentColor = nodeTypeAccent[node.type] || 'text-white';
@@ -194,7 +196,7 @@ const NodeCard: React.FC<{ node: ClusterNode }> = ({ node }) => {
       {node.latency_ms !== null && (
         <div className="flex items-center gap-2 mb-4 relative z-10">
           <Clock className="w-3 h-3 opacity-30" />
-          <span className="text-[10px] font-bold uppercase opacity-40">Latence</span>
+          <span className="text-[10px] font-bold uppercase opacity-40">{t('admin.cluster.latency', 'Latence')}</span>
           <span className={`text-sm font-black ml-auto ${
             node.latency_ms < 50 ? 'text-emerald-400' : node.latency_ms < 200 ? 'text-amber-400' : 'text-red-400'
           }`}>
@@ -218,7 +220,7 @@ const NodeCard: React.FC<{ node: ClusterNode }> = ({ node }) => {
           </div>
           <div className="grid grid-cols-2 gap-3 mt-3">
             <div>
-              <p className="text-[9px] font-black uppercase opacity-25 mb-1">Temp Moy.</p>
+              <p className="text-[9px] font-black uppercase opacity-25 mb-1">{t('admin.cluster.temp_avg', 'Temp Moy.')}</p>
               <p className={`text-lg font-black ${
                 (node.details.avg_temperature_c ?? 0) > 75 ? 'text-red-400' : (node.details.avg_temperature_c ?? 0) > 55 ? 'text-amber-400' : 'text-emerald-400'
               }`}>
@@ -226,7 +228,7 @@ const NodeCard: React.FC<{ node: ClusterNode }> = ({ node }) => {
               </p>
             </div>
             <div>
-              <p className="text-[9px] font-black uppercase opacity-25 mb-1">Util. Moy.</p>
+              <p className="text-[9px] font-black uppercase opacity-25 mb-1">{t('admin.cluster.util_avg', 'Util. Moy.')}</p>
               <p className="text-lg font-black text-cyan-400">{node.details.avg_utilization_pct}%</p>
             </div>
           </div>
@@ -245,7 +247,7 @@ const NodeCard: React.FC<{ node: ClusterNode }> = ({ node }) => {
           </div>
           {node.details.loaded_models && node.details.loaded_models.length > 0 && (
             <div>
-              <p className="text-[9px] font-black uppercase opacity-25 mb-2">Modèles Chargés ({node.details.model_count})</p>
+              <p className="text-[9px] font-black uppercase opacity-25 mb-2">{t('admin.cluster.loaded_models', 'Modèles Chargés')} ({node.details.model_count})</p>
               <div className="flex flex-wrap gap-1">
                 {node.details.loaded_models.slice(0, 6).map((m: string, i: number) => (
                   <span key={i} className="px-2 py-0.5 rounded-md bg-cyan-500/10 border border-cyan-500/20 text-[9px] font-bold text-cyan-400 uppercase">
@@ -301,13 +303,13 @@ const NodeCard: React.FC<{ node: ClusterNode }> = ({ node }) => {
         <div className="space-y-3 relative z-10">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <p className="text-[9px] font-black uppercase opacity-25 mb-1">File d'attente</p>
+              <p className="text-[9px] font-black uppercase opacity-25 mb-1">{t('admin.cluster.queue_length', "File d'attente")}</p>
               <p className="text-2xl font-black italic manga-font text-pink-400">
                 {node.details.queue_length || 0}
               </p>
             </div>
             <div>
-              <p className="text-[9px] font-black uppercase opacity-25 mb-1">Statut Worker</p>
+              <p className="text-[9px] font-black uppercase opacity-25 mb-1">{t('admin.cluster.worker_status', 'Statut Worker')}</p>
               <p className={`text-sm font-black uppercase ${
                 node.details.worker_status === 'active' ? 'text-pink-300' : 'text-emerald-400'
               }`}>
@@ -324,11 +326,11 @@ const NodeCard: React.FC<{ node: ClusterNode }> = ({ node }) => {
             </div>
           )}
           <div className="pt-3 border-t border-white/5 flex justify-between items-center">
-            <span className="text-[9px] font-bold opacity-25 uppercase">Repli API</span>
+            <span className="text-[9px] font-bold opacity-25 uppercase">{t('admin.cluster.api_fallback', 'Repli API')}</span>
             <Badge variant="neutral" className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${
               node.details.fallback_mode === 'active' ? 'text-amber-400 bg-amber-500/10 border-amber-500/30' : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30'
             }`}>
-              {node.details.fallback_mode === 'active' ? 'ACTIF (Budget Dépassé)' : 'NOMINAL'}
+              {node.details.fallback_mode === 'active' ? t('admin.cluster.fallback_active', 'ACTIF (Budget Dépassé)') : 'NOMINAL'}
             </Badge>
           </div>
         </div>
@@ -339,6 +341,7 @@ const NodeCard: React.FC<{ node: ClusterNode }> = ({ node }) => {
 
 // ─── Main Component ──────────────────────────────────────────────────
 const ClusterHealthPanel: React.FC = () => {
+  const { t } = useTranslation();
   const [data, setData] = useState<ClusterHealthData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -433,7 +436,11 @@ const ClusterHealthPanel: React.FC = () => {
               Cluster <span className={gStatus.color}>Status</span>
             </h2>
             <p className="text-[10px] font-bold uppercase opacity-30 tracking-widest mt-0.5">
-              {data?.online_count}/{data?.total_count} systèmes opérationnels • {data?.health_percentage}% disponibilité
+              {t('admin.cluster.status_summary', '{{online}}/{{total}} systèmes opérationnels • {{percentage}}% disponibilité', {
+                online: data?.online_count,
+                total: data?.total_count,
+                percentage: data?.health_percentage
+              })}
             </p>
           </div>
         </div>
@@ -441,7 +448,7 @@ const ClusterHealthPanel: React.FC = () => {
         <div className="flex items-center gap-3">
           {lastRefresh && (
             <span className="text-[9px] font-bold uppercase opacity-20 tracking-wider">
-              MAJ {lastRefresh.toLocaleTimeString('fr-FR')}
+              {t('admin.cluster.updated_at', 'MAJ')} {lastRefresh.toLocaleTimeString('fr-FR')}
             </span>
           )}
           <button

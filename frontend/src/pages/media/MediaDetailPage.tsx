@@ -20,10 +20,12 @@ import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { CardSkeleton } from "../../components/ui/Skeleton";
 import { ChapterList } from '../../features/manga-reader/components/ChapterList';
+import { useTranslation } from 'react-i18next';
 
 import { RelatedItem, MediaDetail } from '../../types';
 
 const MediaDetailPage: React.FC = () => {
+  const { t } = useTranslation();
   const { mediaType, itemId } = useParams<{ mediaType: string; itemId: string }>();
   const { data: item, isLoading, isError } = useMediaDetail(mediaType || 'Anime', itemId || '') as { data: MediaDetail | undefined, isLoading: boolean, isError: boolean };
 
@@ -35,9 +37,9 @@ const MediaDetailPage: React.FC = () => {
 
   if (isError || !item) return (
       <div className="max-w-7xl mx-auto px-6 py-32 text-center">
-          <h2 className="text-4xl font-black italic manga-font text-red-500 mb-6 uppercase">Œuvre introuvable</h2>
-          <p className="text-gray-500 font-bold uppercase tracking-widest mb-12">Le Nexus s'est peut-être effondré...</p>
-          <Button as={Link} to="/explore/" variant="outline">RETOURNER AU NEXUS</Button>
+          <h2 className="text-4xl font-black italic manga-font text-red-500 mb-6 uppercase">{t('media.detail.not_found', 'Œuvre introuvable')}</h2>
+          <p className="text-gray-500 font-bold uppercase tracking-widest mb-12">{t('media.detail.not_found_desc', 'Le Nexus s\'est peut-être effondré...')}</p>
+          <Button as={Link} to="/explore/" variant="outline">{t('media.detail.back_nexus', 'RETOURNER AU NEXUS')}</Button>
       </div>
   );
 
@@ -52,7 +54,7 @@ const MediaDetailPage: React.FC = () => {
       <div className="max-w-7xl mx-auto px-6 py-16 relative z-10">
         {/* Navigation */}
         <Link to="/explore/" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-white transition-colors mb-12 no-underline group">
-            <ArrowLeft className="w-3 h-3 group-hover:-translate-x-1 transition-transform" /> Retour au Nexus
+            <ArrowLeft className="w-3 h-3 group-hover:-translate-x-1 transition-transform" /> {t('media.detail.back_nexus_link', 'Retour au Nexus')}
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
@@ -72,23 +74,23 @@ const MediaDetailPage: React.FC = () => {
                 <div className="grid grid-cols-2 gap-4">
                     {mediaType?.toLowerCase() === 'manga' ? (
                         <Button as={Link} to={`/media/manga/${itemId}/1/`} variant="primary" fullWidth className="bg-anime-accent text-white border-none py-6 group col-span-2 shadow-[0_0_20px_rgba(255,0,120,0.3)]">
-                            <BookOpen className="w-5 h-5 group-hover:scale-110 transition-transform" /> LIRE LE MANGA
+                            <BookOpen className="w-5 h-5 group-hover:scale-110 transition-transform" /> {t('media.detail.read_manga', 'LIRE LE MANGA')}
                         </Button>
                     ) : (
                         <Button variant="primary" fullWidth className="bg-yellow-400 text-black border-none py-6 group">
-                            <Play className="w-5 h-5 group-hover:scale-110 transition-transform" /> VOIR
+                            <Play className="w-5 h-5 group-hover:scale-110 transition-transform" /> {t('media.detail.watch', 'VOIR')}
                         </Button>
                     )}
                     <Button variant="primary" fullWidth className="bg-white/10 text-white border-none py-6 group">
-                        <Bookmark className="w-5 h-5 group-hover:fill-current" /> AJOUTER
+                        <Bookmark className="w-5 h-5 group-hover:fill-current" /> {t('media.detail.add', 'AJOUTER')}
                     </Button>
                     <Button variant="outline" fullWidth className="py-6 border-white/10 hover:bg-red-500/10 hover:text-red-500 group">
-                        <Heart className="w-5 h-5 group-hover:fill-current" /> FAVORIS
+                        <Heart className="w-5 h-5 group-hover:fill-current" /> {t('media.detail.favorites', 'FAVORIS')}
                     </Button>
                 </div>
                 
                 <Button variant="outline" fullWidth className="py-4 border-white/5 bg-white/5 text-[10px] font-black uppercase tracking-widest hover:bg-white/10">
-                    <Share2 className="w-3 h-3" /> Partager dans le club
+                    <Share2 className="w-3 h-3" /> {t('media.detail.share_club', 'Partager dans le club')}
                 </Button>
             </div>
 
@@ -111,7 +113,7 @@ const MediaDetailPage: React.FC = () => {
                                 <Calendar className="w-5 h-5" />
                             </div>
                             <div>
-                                <p className="text-[10px] font-black opacity-30 uppercase">Sortie</p>
+                                <p className="text-[10px] font-black opacity-30 uppercase">{t('media.detail.release', 'Sortie')}</p>
                                 <p className="font-bold italic">{item.year || 'TBA'}</p>
                             </div>
                         </div>
@@ -120,7 +122,7 @@ const MediaDetailPage: React.FC = () => {
                                 <TrendingUp className="w-5 h-5" />
                             </div>
                             <div>
-                                <p className="text-[10px] font-black opacity-30 uppercase">Popularité</p>
+                                <p className="text-[10px] font-black opacity-30 uppercase">{t('media.detail.popularity', 'Popularité')}</p>
                                 <p className="font-bold italic">#{item.popularity || 'N/A'}</p>
                             </div>
                         </div>
@@ -143,7 +145,7 @@ const MediaDetailPage: React.FC = () => {
                     </h3>
                     <Card padding="lg" className="bg-white/5 border-white/5 shadow-inner">
                         <p className="text-sm leading-relaxed opacity-80 font-medium italic">
-                            {item.description || "Aucun synopsis disponible dans le Nexus."}
+                            {item.description || t('media.detail.no_synopsis', 'Aucun synopsis disponible dans le Nexus.')}
                         </p>
                     </Card>
                 </section>
@@ -156,7 +158,7 @@ const MediaDetailPage: React.FC = () => {
                     {/* Technical Stack */}
                     <section>
                         <h3 className="text-xs font-black uppercase opacity-40 mb-6 tracking-widest flex items-center gap-2">
-                            <Sparkles className="w-4 h-4 text-yellow-400" /> Équipe Créative
+                            <Sparkles className="w-4 h-4 text-yellow-400" /> {t('media.detail.creative_team', 'Équipe Créative')}
                         </h3>
                         <div className="space-y-4">
                             <div className="flex items-center justify-between p-4 bg-gray-900/50 rounded-2xl border border-white/5">
@@ -164,8 +166,8 @@ const MediaDetailPage: React.FC = () => {
                                 <span className="font-bold italic text-sm">{item.studios?.[0] || 'N/A'}</span>
                             </div>
                             <div className="flex items-center justify-between p-4 bg-gray-900/50 rounded-2xl border border-white/5">
-                                <span className="text-[10px] font-black opacity-30 uppercase">Auteur</span>
-                                <span className="font-bold italic text-sm text-yellow-400">{item.author || 'Inconnu'}</span>
+                                <span className="text-[10px] font-black opacity-30 uppercase">{t('media.detail.author', 'Auteur')}</span>
+                                <span className="font-bold italic text-sm text-yellow-400">{item.author || t('media.detail.unknown', 'Inconnu')}</span>
                             </div>
                         </div>
                     </section>
@@ -173,13 +175,13 @@ const MediaDetailPage: React.FC = () => {
                     {/* Semantic Tags */}
                     <section>
                         <h3 className="text-xs font-black uppercase opacity-40 mb-6 tracking-widest flex items-center gap-2">
-                            <Play className="w-4 h-4 text-emerald-400" /> Micro-Tags IA
+                            <Play className="w-4 h-4 text-emerald-400" /> {t('media.detail.micro_tags', 'Micro-Tags IA')}
                         </h3>
                         <div className="flex flex-wrap gap-2">
                             {item.micro_tags?.slice(0, 10).map((t: string) => (
                                 <Badge key={t} variant="neutral" className="bg-black text-[8px] uppercase tracking-tighter opacity-50">{t}</Badge>
                             ))}
-                            {(!item.micro_tags || item.micro_tags.length === 0) && <p className="text-xs opacity-20 italic">Analyse en cours...</p>}
+                            {(!item.micro_tags || item.micro_tags.length === 0) && <p className="text-xs opacity-20 italic">{t('media.detail.analysis_running', 'Analyse en cours...')}</p>}
                         </div>
                     </section>
                 </div>
@@ -188,7 +190,7 @@ const MediaDetailPage: React.FC = () => {
                 {item.related_items && item.related_items.length > 0 && (
                     <section>
                         <h3 className="text-xs font-black uppercase opacity-40 mb-8 tracking-widest flex items-center gap-2">
-                            <Network className="w-4 h-4 text-purple-400" /> Œuvres Liées dans le Graphe
+                            <Network className="w-4 h-4 text-purple-400" /> {t('media.detail.related_works', 'Œuvres Liées dans le Graphe')}
                         </h3>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
                             {item.related_items.map((rel: RelatedItem) => (

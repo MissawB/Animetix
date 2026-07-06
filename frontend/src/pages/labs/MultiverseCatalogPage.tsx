@@ -1,6 +1,7 @@
 import React from 'react';
 import { Loader2, Globe } from 'lucide-react';
 import { AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { AnimatedPage } from '../../components/ui/AnimatedPage';
 import { useMultiverseCatalog } from './multiverse-catalog/hooks/useMultiverseCatalog';
 import CatalogHeader from './multiverse-catalog/components/CatalogHeader';
@@ -13,6 +14,7 @@ import UniverseDetailPanel from './multiverse-catalog/components/UniverseDetailP
 
 // ─── Main Catalog Page ───────────────────────────────────────────────
 const MultiverseCatalogPage: React.FC = () => {
+  const { t } = useTranslation();
   const {
     search,
     debouncedSearch,
@@ -79,7 +81,7 @@ const MultiverseCatalogPage: React.FC = () => {
               {/* Results header */}
               <div className="flex items-center justify-between mb-6">
                 <p className="text-[10px] font-black uppercase opacity-30 tracking-widest">
-                  {data ? `${data.pagination.total} univers trouvé${data.pagination.total > 1 ? 's' : ''}` : ''}
+                  {data ? (data.pagination.total > 1 ? t('labs.multiverse.total_found_plural', '{{count}} universes found', { count: data.pagination.total }) : t('labs.multiverse.total_found_singular', '{{count}} universe found', { count: data.pagination.total })) : ''}
                   {debouncedSearch && ` pour "${debouncedSearch}"`}
                   {genre && ` • ${genre}`}
                 </p>
@@ -87,7 +89,7 @@ const MultiverseCatalogPage: React.FC = () => {
                   <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />
                 )}
               </div>
-
+ 
               {/* Loading state */}
               {isLoading && (
                 <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-3'}>
@@ -96,18 +98,18 @@ const MultiverseCatalogPage: React.FC = () => {
                   ))}
                 </div>
               )}
-
+ 
               {/* Empty state */}
               {!isLoading && data && data.results.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-24 text-center">
                   <Globe className="w-16 h-16 text-white/10 mb-6" />
-                  <h3 className="text-xl font-black italic manga-font uppercase text-white/40 mb-2">Aucun univers trouvé</h3>
+                  <h3 className="text-xl font-black italic manga-font uppercase text-white/40 mb-2">{t('labs.multiverse.no_universe_found', 'Aucun univers trouvé')}</h3>
                   <p className="text-[10px] font-bold uppercase opacity-20 tracking-wider mb-6">
-                    {debouncedSearch ? 'Essayez un autre terme de recherche' : 'Aucun univers synthétique ne correspond aux filtres sélectionnés'}
+                    {debouncedSearch ? t('labs.multiverse.try_another_term', 'Essayez un autre terme de recherche') : t('labs.multiverse.no_universe_filters', 'Aucun univers synthétique ne correspond aux filtres sélectionnés')}
                   </p>
                   {hasActiveFilters && (
                     <button onClick={handleClearFilters} className="px-6 py-3 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-[10px] font-black uppercase tracking-widest text-cyan-400 hover:bg-cyan-500/20 transition-colors">
-                      Réinitialiser les filtres
+                      {t('labs.multiverse.reset_filters', 'Réinitialiser les filtres')}
                     </button>
                   )}
                 </div>

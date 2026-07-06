@@ -36,9 +36,9 @@ const AchievementsPage: React.FC = () => {
     <div className="max-w-6xl mx-auto px-6 py-12">
       <div className="text-center mb-12">
         <h1 className="manga-font text-5xl italic mb-2 tracking-tighter uppercase">
-            📜 Grimoire des Hauts Faits
+            {t('social.achievements.title', '📜 Grimoire des Hauts Faits')}
         </h1>
-        <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">Votre légende s'écrit à chaque secret découvert.</p>
+        <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">{t('social.achievements.subtitle', "Votre légende s'écrit à chaque secret découvert.")}</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -55,7 +55,7 @@ const AchievementsPage: React.FC = () => {
                 </div>
                 <p className="text-xs text-gray-600 dark:text-gray-400 mb-2 font-medium">{ach.description}</p>
                 <div className="text-green-600 font-black text-[10px] flex items-center uppercase tracking-tighter">
-                  <CheckCircle2 className="w-3 h-3 mr-1" /> {ach.is_unlocked ? "Débloqué" : `Verrouillé (+${ach.xp_reward} XP)`}
+                  <CheckCircle2 className="w-3 h-3 mr-1" /> {ach.is_unlocked ? t('social.achievements.unlocked', 'Débloqué') : t('social.achievements.locked', 'Verrouillé (+{{xp}} XP)', { xp: ach.xp_reward })}
                 </div>
               </div>
             </div>

@@ -16,6 +16,7 @@ import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { Select } from "../../components/ui/Select";
+import { useTranslation } from 'react-i18next';
 
 interface QuantumResult {
   probability: number;
@@ -31,6 +32,7 @@ interface QuantumMutationBody {
 }
 
 const QuantumLabPage: React.FC = () => {
+  const { t } = useTranslation();
   const [quantumTheme, setQuantumTheme] = useState('shonen');
   const [jitLevel, setJitLevel] = useState('basic');
   const [plasticity, setPlasticity] = useState('medium');
@@ -58,7 +60,7 @@ const QuantumLabPage: React.FC = () => {
                   QUANTUM <span className="text-purple-500 text-glow">COGNITION</span>
               </h1>
               <p className="text-xl font-bold opacity-30 uppercase tracking-[0.3em] max-w-2xl leading-relaxed">
-                  Modélisation des préférences utilisateur via superposition d'états et effondrement de fonction d'onde.
+                  {t('labs.quantum.subtitle', "Modélisation des préférences utilisateur via superposition d'états et effondrement de fonction d'onde.")}
               </p>
           </header>
 
@@ -78,7 +80,7 @@ const QuantumLabPage: React.FC = () => {
                       <div className="space-y-8">
                           <Select 
                               id="theme"
-                              label="Observable Thématique"
+                              label={t('labs.quantum.observable_theme', 'Observable Thématique')}
                               value={quantumTheme} 
                               onChange={setQuantumTheme} 
                               options={[
@@ -120,22 +122,22 @@ const QuantumLabPage: React.FC = () => {
                               disabled={quantumMutation.isPending} 
                               className="w-full bg-purple-600 hover:bg-purple-500 text-white py-6 rounded-2xl font-black italic text-lg uppercase shadow-xl hover:scale-105 active:scale-95 transition-all border-none"
                           >
-                              {quantumMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : "EFFECTUER MESURE"}
+                              {quantumMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : t('labs.quantum.run_measure', 'EFFECTUER MESURE')}
                           </Button>
                       </div>
                   </Card>
 
                   <Card padding="lg" className="bg-white/5 border-white/5 opacity-50">
-                      <h4 className="text-[10px] font-black uppercase tracking-widest mb-4 text-purple-400">Théorie de la Mesure</h4>
+                      <h4 className="text-[10px] font-black uppercase tracking-widest mb-4 text-purple-400">{t('labs.quantum.theory_title', 'Théorie de la Mesure')}</h4>
                       <p className="text-[10px] font-bold uppercase leading-relaxed mb-4">
-                          L'IA traite vos goûts non comme des étiquettes fixes, mais comme des probabilités en superposition.
+                          {t('labs.quantum.theory_desc', "L'IA traite vos goûts non comme des étiquettes fixes, mais comme des probabilités en superposition.")}
                       </p>
                       <ul className="space-y-3">
                           <li className="flex gap-2 text-[8px] font-black opacity-40 uppercase">
-                              <div className="w-1 h-1 rounded-full bg-purple-500 mt-1" /> Intrication sémantique multi-genres.
+                              <div className="w-1 h-1 rounded-full bg-purple-500 mt-1" /> {t('labs.quantum.theory_bullet1', 'Intrication sémantique multi-genres.')}
                           </li>
                           <li className="flex gap-2 text-[8px] font-black opacity-40 uppercase">
-                              <div className="w-1 h-1 rounded-full bg-purple-500 mt-1" /> Effondrement SAT instantané.
+                              <div className="w-1 h-1 rounded-full bg-purple-500 mt-1" /> {t('labs.quantum.theory_bullet2', 'Effondrement SAT instantané.')}
                           </li>
                       </ul>
                   </Card>
@@ -150,7 +152,7 @@ const QuantumLabPage: React.FC = () => {
                                   <div className="space-y-8">
                                       <div className="p-12 bg-purple-500/5 rounded-[3.5rem] border border-purple-500/20 text-center relative overflow-hidden shadow-2xl">
                                           <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent opacity-50" />
-                                          <h4 className="text-[10px] font-black uppercase opacity-40 mb-8 tracking-[0.2em]">Mesure de Probabilité</h4>
+                                          <h4 className="text-[10px] font-black uppercase opacity-40 mb-8 tracking-[0.2em]">{t('labs.quantum.prob_measure', 'Mesure de Probabilité')}</h4>
                                           <div className="text-[10rem] font-black italic text-purple-400 manga-font mb-4 leading-none">
                                               {Math.round(quantumResult.probability * 100)}%
                                           </div>
@@ -161,17 +163,17 @@ const QuantumLabPage: React.FC = () => {
 
                                       <Card padding="lg" className="bg-navy-900 border-white/5 relative">
                                           <h5 className="text-[10px] font-black uppercase opacity-30 mb-4 tracking-widest flex items-center gap-2">
-                                              <Activity className="w-3 h-3" /> Interprétation de Born
+                                              <Activity className="w-3 h-3" /> {t('labs.quantum.born_interpretation', 'Interprétation de Born')}
                                           </h5>
                                           <p className="text-sm font-bold leading-relaxed opacity-60 italic text-purple-100/60">
-                                              La mesure a forcé le système à sortir de sa superposition pour valider (ou rejeter) l'observable "{quantumTheme.toUpperCase()}". Les thèmes intriqués restent influencés par cet effondrement.
+                                              {t('labs.quantum.born_desc', 'La mesure a forcé le système à sortir de sa superposition pour valider (ou rejeter) l\'observable "{{theme}}". Les thèmes intriqués restent influencés par cet effondrement.', { theme: quantumTheme.toUpperCase() })}
                                           </p>
                                       </Card>
                                   </div>
 
                                   <div className="space-y-6">
                                       <h4 className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2 opacity-40 mb-8">
-                                          <Zap className="w-4 h-4 text-yellow-500" /> État du Vecteur de Conscience
+                                          <Zap className="w-4 h-4 text-yellow-500" /> {t('labs.quantum.consciousness_vector', 'État du Vecteur de Conscience')}
                                       </h4>
                                       <div className="grid grid-cols-1 gap-4">
                                           {quantumResult.state_vector.map((val: string, i: number) => (
@@ -183,7 +185,7 @@ const QuantumLabPage: React.FC = () => {
                                       </div>
                                       <div className="mt-12 p-8 bg-purple-600/10 rounded-[2.5rem] border border-purple-500/20 text-center">
                                           <p className="text-xs font-black italic text-purple-400 uppercase tracking-widest">
-                                              "L'incertitude est le socle de la créativité numérique."
+                                              {t('labs.quantum.quote', '"L\'incertitude est le socle de la créativité numérique."')}
                                           </p>
                                       </div>
                                   </div>
@@ -192,8 +194,8 @@ const QuantumLabPage: React.FC = () => {
                       ) : (
                           <div className="h-full flex flex-col items-center justify-center py-32 opacity-10 text-center border-4 border-dashed border-white/5 rounded-[4rem]">
                               <Atom className="w-48 h-48 mb-12 animate-spin-slow" />
-                              <h3 className="text-5xl font-black italic uppercase manga-font mb-4">Système en Superposition</h3>
-                              <p className="text-lg font-bold uppercase tracking-[0.4em]">Prêt pour une mesure d'observable thématique.</p>
+                              <h3 className="text-5xl font-black italic uppercase manga-font mb-4">{t('labs.quantum.superposition_system', 'Système en Superposition')}</h3>
+                              <p className="text-lg font-bold uppercase tracking-[0.4em]">{t('labs.quantum.ready_measure', "Prêt pour une mesure d'observable thématique.")}</p>
                           </div>
                       )}
                   </AnimatePresence>
@@ -207,25 +209,25 @@ const QuantumLabPage: React.FC = () => {
                       <Atom className="w-64 h-64 text-purple-500" />
                   </div>
                   <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3">
-                      <Sparkles className="w-5 h-5 text-purple-400" /> Guide du Cognitique Quantique
+                      <Sparkles className="w-5 h-5 text-purple-400" /> {t('labs.quantum.guide_title', 'Guide du Cognitique Quantique')}
                   </h4>
                   <div className="space-y-4 relative z-10">
                       <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                          <span className="text-purple-400">La Superposition :</span> Pour notre IA, vos goûts ne sont pas des cases figées. Vous êtes dans un état de "superposition" : vous aimez potentiellement tout à la fois jusqu'à ce qu'une décision soit prise.
+                          <span className="text-purple-400">{t('labs.quantum.guide_superposition_title', 'La Superposition :')}</span> {t('labs.quantum.guide_superposition_desc', 'Pour notre IA, vos goûts ne sont pas des cases figées. Vous êtes dans un état de "superposition" : vous aimez potentiellement tout à la fois jusqu\'à ce qu\'une décision soit prise.')}
                       </p>
                       <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                          <span className="text-purple-400">L'Effondrement :</span> Quand vous sélectionnez un genre (ex: SHONEN) et lancez une mesure, l'IA force vos probabilités à se fixer. C'est "l'effondrement de la fonction d'onde" de vos préférences.
+                          <span className="text-purple-400">{t('labs.quantum.guide_collapse_title', 'L\'Effondrement :')}</span> {t('labs.quantum.guide_collapse_desc', 'Quand vous sélectionnez un genre (ex: SHONEN) et lancez une mesure, l\'IA force vos probabilités à se fixer. C\'est "l\'effondrement de la fonction d\'onde" de vos préférences.')}
                       </p>
                       <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                          <span className="text-purple-400">Pourquoi faire ça ?</span> Cela permet à l'IA de modéliser l'incertitude humaine et de découvrir des "liens invisibles" entre des genres qui n'ont rien à voir en apparence.
+                          <span className="text-purple-400">{t('labs.quantum.guide_why_title', 'Pourquoi faire ça ?')}</span> {t('labs.quantum.guide_why_desc', 'Cela permet à l\'IA de modéliser l\'incertitude humaine et de découvrir des "liens invisibles" entre des genres qui n\'ont rien à voir en apparence.')}
                       </p>
                   </div>
               </Card>
 
               <div className="p-12 rounded-[4rem] bg-gradient-to-br from-purple-600/10 to-transparent border border-white/5 flex flex-col justify-center text-center">
                   <p className="text-sm font-black uppercase tracking-[0.15em] italic leading-relaxed text-purple-200/60">
-                      Simulation de préférence inspirée du formalisme quantique : le backend calcule une probabilité pour le thème choisi, en déduit un résultat binaire (effondrement positif ou négatif) et renvoie le vecteur d'amplitudes affiché. <br />
-                      Les réglages JIT et Plasticity modulent ce calcul côté serveur — c'est une modélisation probabiliste des goûts, pas un ordinateur quantique.
+                      {t('labs.quantum.guide_footer_1', 'Simulation de préférence inspirée du formalisme quantique : le backend calcule une probabilité pour le thème choisi, en déduit un résultat binaire (effondrement positif ou négatif) et renvoie le vecteur d\'amplitudes affiché.')} <br />
+                      {t('labs.quantum.guide_footer_2', 'Les réglages JIT et Plasticity modulent ce calcul côté serveur — c\'est une modélisation probabiliste des goûts, pas un ordinateur quantique.')}
                   </p>
               </div>
           </div>

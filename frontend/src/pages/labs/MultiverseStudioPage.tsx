@@ -12,6 +12,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { apiClient } from "../../utils/apiClient";
+import { useTranslation } from 'react-i18next';
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
@@ -48,6 +49,7 @@ interface MultiverseData {
 }
 
 const MultiverseStudioPage: React.FC = () => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [activeSynthesis, setActiveSynthesis] = useState<MultiverseNode[]>([]);
   const [selectedNode, setSelectedNode] = useState<MultiverseNode | null>(null);
@@ -75,7 +77,7 @@ const MultiverseStudioPage: React.FC = () => {
 
   const handleDropSeed = (seed: string, x: number, y: number) => {
     const id = `latent_${Date.now()}`;
-    const latentNode: MultiverseNode = { id, name: `Synthesizing ${seed}...`, type: 'universe', x, y };
+    const latentNode: MultiverseNode = { id, name: t('labs.multiverse.synthesizing_seed', 'Synthesizing {{seed}}...', { seed }), type: 'universe', x, y };
     
     setActiveSynthesis(prev => [...prev, latentNode]);
     mutationsInProgress.current.add(id);
@@ -137,7 +139,7 @@ const MultiverseStudioPage: React.FC = () => {
                             className="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-white/60 hover:text-white hover:bg-white/5 transition-all flex items-center gap-2"
                         >
                             <LayoutGrid className="w-3.5 h-3.5" />
-                            Catalogue
+                            {t('labs.multiverse.catalog_btn', 'Catalogue')}
                         </Link>
                     </div>
                 </div>
@@ -147,7 +149,7 @@ const MultiverseStudioPage: React.FC = () => {
                     {isGraphLoading ? (
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#05050a] z-10">
                             <Loader2 className="w-12 h-12 text-cyan-500 animate-spin mb-4" />
-                            <p className="text-[10px] font-black uppercase tracking-widest text-cyan-500/50">Synchronisation du Nexus...</p>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-cyan-500/50">{t('labs.multiverse.sync_nexus', 'Synchronisation du Nexus...')}</p>
                         </div>
                     ) : (
                         <NexusMap
@@ -162,11 +164,11 @@ const MultiverseStudioPage: React.FC = () => {
                     <div className="absolute bottom-8 left-8 z-20 pointer-events-none hidden md:block">
                         <div className="flex gap-4">
                             <Card padding="sm" className="bg-black/40 backdrop-blur-xl border-white/5 pointer-events-auto min-w-[150px]">
-                                <span className="text-[8px] font-black uppercase opacity-30 block mb-1">Entités Graphe</span>
+                                <span className="text-[8px] font-black uppercase opacity-30 block mb-1">{t('labs.multiverse.graph_entities', 'Entités Graphe')}</span>
                                 <span className="text-xl font-black italic manga-font text-cyan-500">{mergedData.nodes.length || 0}</span>
                             </Card>
                             <Card padding="sm" className="bg-black/40 backdrop-blur-xl border-white/5 pointer-events-auto min-w-[150px]">
-                                <span className="text-[8px] font-black uppercase opacity-30 block mb-1">Liaisons Sémantiques</span>
+                                <span className="text-[8px] font-black uppercase opacity-30 block mb-1">{t('labs.multiverse.semantic_links', 'Liaisons Sémantiques')}</span>
                                 <span className="text-xl font-black italic manga-font text-emerald-500">{mergedData.links.length || 0}</span>
                             </Card>
                         </div>
@@ -189,7 +191,7 @@ const MultiverseStudioPage: React.FC = () => {
                             </div>
                             <div>
                                 <Badge variant="primary" className="mb-4 bg-cyan-500/10 text-cyan-400 border-cyan-500/20 px-4 py-1">
-                                    UNIVERS SYNTHÉTIQUE
+                                    {t('labs.multiverse.synthetic_universe', 'UNIVERS SYNTHÉTIQUE')}
                                 </Badge>
                                 <h2 className="text-4xl font-black italic tracking-tighter uppercase text-white leading-none">
                                     {selectedNode.name}
@@ -212,7 +214,7 @@ const MultiverseStudioPage: React.FC = () => {
                                 <div className="p-8 bg-white/[0.02] rounded-3xl border border-white/5 relative overflow-hidden group">
                                     <div className="absolute top-0 left-0 w-1 h-full bg-cyan-500 opacity-20 group-hover:opacity-100 transition-opacity" />
                                     <p className="text-sm font-bold leading-relaxed text-gray-300 italic whitespace-pre-wrap">
-                                    {selectedNode.metadata?.description || selectedNode.metadata?.cosmology || "Aucune description cosmologique disponible pour cet univers."}
+                                    {selectedNode.metadata?.description || selectedNode.metadata?.cosmology || t('labs.multiverse.no_cosmology', 'Aucune description cosmologique disponible pour cet univers.')}
                                     </p>
                                 </div>
                             </section>
@@ -221,7 +223,7 @@ const MultiverseStudioPage: React.FC = () => {
                                 <section className="space-y-6">
                                     <header className="flex items-center gap-3">
                                         <Users className="w-4 h-4 text-cyan-500" />
-                                        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-500/50">Entités du Nexus</h3>
+                                        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-500/50">{t('labs.multiverse.nexus_entities', 'Entités du Nexus')}</h3>
                                     </header>
                                     <div className="grid grid-cols-2 gap-4">
                                     {selectedNode.metadata.characters.map((char, idx) => (
@@ -238,7 +240,7 @@ const MultiverseStudioPage: React.FC = () => {
 
                             <div className="pt-8 border-t border-white/5">
                                 <Button className="w-full bg-cyan-600 hover:bg-cyan-500 text-white py-6 rounded-2xl font-black italic uppercase text-lg shadow-xl shadow-cyan-900/20">
-                                    ENTRER DANS L'UNIVERS
+                                    {t('labs.multiverse.enter_universe', "ENTRER DANS L'UNIVERS")}
                                 </Button>
                             </div>
                         </div>
@@ -257,25 +259,25 @@ const MultiverseStudioPage: React.FC = () => {
                         <Network className="w-64 h-64 text-cyan-500" />
                     </div>
                     <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3">
-                        <Sparkles className="w-5 h-5 text-cyan-400" /> Guide du Multivers
+                        <Sparkles className="w-5 h-5 text-cyan-400" /> {t('labs.multiverse.guide_title', 'Guide du Multivers')}
                     </h4>
                     <div className="space-y-4 relative z-10">
                         <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                            <span className="text-cyan-400">La Carte :</span> Chaque bulle de la Nexus Map est un genre ou un univers. Cliquez sur un univers pour lire sa cosmologie et découvrir ses personnages.
+                            <span className="text-cyan-400">{t('labs.multiverse.guide_map_title', 'La Carte :')}</span> {t('labs.multiverse.guide_map_desc', 'Chaque bulle de la Nexus Map est un genre ou un univers. Cliquez sur un univers pour lire sa cosmologie et découvrir ses personnages.')}
                         </p>
                         <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                            <span className="text-cyan-400">La Création :</span> Glissez une graine de genre depuis la boîte Genesis directement sur la carte. Un nouvel univers est synthétisé en quelques secondes.
+                            <span className="text-cyan-400">{t('labs.multiverse.guide_creation_title', 'La Création :')}</span> {t('labs.multiverse.guide_creation_desc', 'Glissez une graine de genre depuis la boîte Genesis directement sur la carte. Un nouvel univers est synthétisé en quelques secondes.')}
                         </p>
                         <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                            <span className="text-cyan-400">Le Catalogue :</span> Tous les univers créés sont conservés. Basculez sur la vue Catalogue pour les parcourir sous forme de liste.
+                            <span className="text-cyan-400">{t('labs.multiverse.guide_catalog_title', 'Le Catalogue :')}</span> {t('labs.multiverse.guide_catalog_desc', 'Tous les univers créés sont conservés. Basculez sur la vue Catalogue pour les parcourir sous forme de liste.')}
                         </p>
                     </div>
                 </Card>
 
                 <div className="p-12 rounded-[4rem] bg-gradient-to-br from-cyan-600/10 to-transparent border border-white/5 flex flex-col justify-center text-center">
                     <p className="text-sm font-black uppercase tracking-[0.15em] italic leading-relaxed text-cyan-200/60">
-                        La synthèse d'univers génère un lore cohérent (cosmologie, personnages) via LLM et le persiste dans le graphe Neo4j. <br />
-                        La Nexus Map affiche ce graphe — nœuds et liaisons sémantiques — et se resynchronise après chaque génération.
+                        {t('labs.multiverse.guide_footer_1', "La synthèse d'univers génère un lore cohérent (cosmologie, personnages) via LLM et le persiste dans le graphe Neo4j.")} <br />
+                        {t('labs.multiverse.guide_footer_2', 'La Nexus Map affiche ce graphe — nœuds et liaisons sémantiques — et se resynchronise après chaque génération.')}
                     </p>
                 </div>
             </div>

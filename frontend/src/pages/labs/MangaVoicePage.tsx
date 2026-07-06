@@ -11,6 +11,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
@@ -21,6 +22,7 @@ import { VoiceProfile } from '../../types';
 import { useToastStore } from '../../store/toastStore';
 
 const MangaVoicePage: React.FC = () => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState<boolean>(false);
   const [loadingAudio, setLoadingAudio] = useState<boolean>(false);
   const [text, setText] = useState<string>('');
@@ -106,7 +108,7 @@ const MangaVoicePage: React.FC = () => {
             MANGA <span className="text-orange-500 text-glow">VOICE</span> LAB
           </h1>
           <p className="text-xl font-bold opacity-30 uppercase tracking-[0.3em] max-w-2xl leading-relaxed">
-            Donnez vie à vos planches avec le doublage IA zero-shot et le clonage vocal instantané.
+            {t('labs.manga_voice.subtitle', 'Donnez vie à vos planches avec le doublage IA zero-shot et le clonage vocal instantané.')}
           </p>
         </header>
 
@@ -115,19 +117,19 @@ const MangaVoicePage: React.FC = () => {
           <Card padding="lg" className="lg:col-span-4 h-fit bg-gray-900/40 border-white/5 shadow-2xl space-y-6">
             <div>
               <h3 className="text-xs font-black uppercase opacity-40 mb-4 tracking-widest flex items-center gap-2">
-                <User className="w-4 h-4" /> Casting Vocal
+                <User className="w-4 h-4" /> {t('labs.manga_voice.casting_title', 'Casting Vocal')}
               </h3>
               <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                Choisissez une voix de la BDD ou chargez votre propre extrait.
+                {t('labs.manga_voice.casting_desc', 'Choisissez une voix de la BDD ou chargez votre propre extrait.')}
               </p>
             </div>
 
             {/* Language filter tab */}
             <div className="flex gap-1 bg-black/40 p-1 rounded-xl border border-white/5">
               {[
-                { label: 'Tous', value: '' },
-                { label: 'Seiyuu (JP)', value: 'japanese' },
-                { label: 'VF (FR)', value: 'french' }
+                { label: t('labs.manga_voice.filter_all', 'Tous'), value: '' },
+                { label: t('labs.manga_voice.filter_japanese', 'Seiyuu (JP)'), value: 'japanese' },
+                { label: t('labs.manga_voice.filter_french', 'VF (FR)'), value: 'french' }
               ].map(opt => (
                 <button
                   key={opt.value}
@@ -148,8 +150,8 @@ const MangaVoicePage: React.FC = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
               <input
                 type="text"
-                placeholder="Rechercher une voix..."
-                aria-label="Rechercher une voix"
+                placeholder={t('labs.manga_voice.search_placeholder', 'Rechercher une voix...')}
+                aria-label={t('labs.manga_voice.search_placeholder', 'Rechercher une voix...')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full bg-black/40 border border-white/5 rounded-xl pl-10 pr-4 py-3 font-bold text-xs outline-none focus:border-orange-500/50"
@@ -186,14 +188,14 @@ const MangaVoicePage: React.FC = () => {
                 ))
               ) : (
                 <div className="py-10 text-center text-white/20">
-                  <span className="text-[10px] font-black uppercase">Aucune voix trouvée</span>
+                  <span className="text-[10px] font-black uppercase">{t('labs.manga_voice.no_voice_found', 'Aucune voix trouvée')}</span>
                 </div>
               )}
             </div>
 
             <div className="pt-6 border-t border-white/5 space-y-4">
               <div>
-                <h4 className="text-[10px] font-black uppercase opacity-30 tracking-widest">Ou charger manuellement</h4>
+                <h4 className="text-[10px] font-black uppercase opacity-30 tracking-widest">{t('labs.manga_voice.manual_load_title', 'Ou charger manuellement')}</h4>
               </div>
               <Button
                 variant="outline"
@@ -201,16 +203,16 @@ const MangaVoicePage: React.FC = () => {
                 className="bg-black text-white hover:bg-gray-800 border-none rounded-xl py-4 flex items-center justify-center gap-2"
                 onClick={() => document.getElementById('audio-upload')?.click()}
               >
-                <Mic className="w-4 h-4" /> {refAudio && !selectedProfile ? 'VOIX MANUELLE CHARGÉE' : 'CHARGER UN WAV/MP3'}
+                <Mic className="w-4 h-4" /> {refAudio && !selectedProfile ? t('labs.manga_voice.manual_voice_loaded', 'VOIX MANUELLE CHARGÉE') : t('labs.manga_voice.load_file_btn', 'CHARGER UN WAV/MP3')}
               </Button>
-              <input type="file" id="audio-upload" className="hidden" accept="audio/*" onChange={handleFileChange} aria-label="Charger un fichier audio de référence" />
+              <input type="file" id="audio-upload" className="hidden" accept="audio/*" onChange={handleFileChange} aria-label={t('labs.manga_voice.load_file_aria', 'Charger un fichier audio de référence')} />
               {refAudio && (
                 <div className="p-3 bg-white/5 rounded-xl flex items-center justify-between text-xs font-bold">
                   <span className="truncate max-w-[200px] opacity-60">{refAudio.name}</span>
                   {loadingAudio ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin text-orange-500" />
                   ) : (
-                    <Badge variant="success" className="text-[8px] bg-orange-500">PRÊT</Badge>
+                    <Badge variant="success" className="text-[8px] bg-orange-500">{t('labs.manga_voice.ready', 'PRÊT')}</Badge>
                   )}
                 </div>
               )}
@@ -221,13 +223,13 @@ const MangaVoicePage: React.FC = () => {
           <div className="lg:col-span-8 space-y-8">
             <Card padding="lg" className="bg-black border-2 border-white/5 rounded-[3rem] shadow-2xl">
               <h3 className="text-xs font-black uppercase opacity-40 mb-6 tracking-widest flex items-center gap-2">
-                <MessageSquare className="w-4 h-4 text-orange-500" /> Script du Dialogue
+                <MessageSquare className="w-4 h-4 text-orange-500" /> {t('labs.manga_voice.script_title', 'Script du Dialogue')}
               </h3>
               <textarea
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                aria-label="Script du dialogue"
-                placeholder={refAudio ? `Entrez le texte que ${character} doit dire...` : "Sélectionnez d'abord un doubleur dans le menu de gauche..."}
+                aria-label={t('labs.manga_voice.script_title', 'Script du dialogue')}
+                placeholder={refAudio ? t('labs.manga_voice.script_placeholder', 'Entrez le texte que {{character}} doit dire...', { character }) : t('labs.manga_voice.script_placeholder_select', "Sélectionnez d'abord un doubleur dans le menu de gauche...")}
                 disabled={!refAudio}
                 className="w-full h-40 bg-gray-900/50 border border-white/5 rounded-2xl p-6 text-lg font-bold text-white outline-none focus:border-orange-500/50 transition-all resize-none placeholder:opacity-20"
               />
@@ -237,7 +239,7 @@ const MangaVoicePage: React.FC = () => {
                   disabled={!text || !refAudio || loading || loadingAudio}
                   className="bg-orange-500 hover:bg-orange-400 text-white px-12 py-8 rounded-2xl font-black italic text-xl uppercase shadow-xl shadow-orange-500/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
                 >
-                  {loading ? <Wand2 className="w-6 h-6 animate-spin" /> : "GÉNÉRER LE DUBBING"}
+                  {loading ? <Wand2 className="w-6 h-6 animate-spin" /> : t('labs.manga_voice.generate_dubbing', 'GÉNÉRER LE DUBBING')}
                 </Button>
               </div>
             </Card>
@@ -259,8 +261,8 @@ const MangaVoicePage: React.FC = () => {
                     </div>
 
                     <div className="text-center">
-                      <h3 className="text-2xl font-black italic manga-font uppercase mb-2 tracking-tighter">Dubbing Terminé</h3>
-                      <p className="text-xs font-bold opacity-50 uppercase tracking-widest">Le personnage de {character} est prêt à parler.</p>
+                      <h3 className="text-2xl font-black italic manga-font uppercase mb-2 tracking-tighter">{t('labs.manga_voice.dubbing_complete', 'Dubbing Terminé')}</h3>
+                      <p className="text-xs font-bold opacity-50 uppercase tracking-widest">{t('labs.manga_voice.character_ready', 'Le personnage de {{character}} est prêt à parler.', { character })}</p>
                     </div>
 
                     <audio controls src={audioUrl} className="w-full max-w-xl accent-orange-500" aria-label="Lecteur audio du doublage généré">
@@ -269,10 +271,10 @@ const MangaVoicePage: React.FC = () => {
 
                     <div className="flex gap-4">
                       <Button variant="outline" className="border-white/10 hover:bg-white/5 rounded-xl px-8">
-                        <Save className="w-4 h-4 mr-2" /> SAUVEGARDER
+                        <Save className="w-4 h-4 mr-2" /> {t('labs.manga_voice.save', 'SAUVEGARDER')}
                       </Button>
                       <Button variant="primary" className="bg-white text-black hover:bg-gray-200 border-none rounded-xl px-8 font-black uppercase italic">
-                        INJECTER DANS LA PLANCHE
+                        {t('labs.manga_voice.inject_btn', 'INJECTER DANS LA PLANCHE')}
                       </Button>
                     </div>
                   </Card>
@@ -283,7 +285,7 @@ const MangaVoicePage: React.FC = () => {
             {!audioUrl && !loading && (
               <div className="h-64 border-4 border-dashed border-white/5 rounded-[3rem] flex flex-col items-center justify-center opacity-20">
                 <Mic className="w-16 h-16 mb-4" />
-                <span className="font-black italic uppercase tracking-widest">En attente de génération</span>
+                <span className="font-black italic uppercase tracking-widest">{t('labs.manga_voice.waiting_generation', 'En attente de génération')}</span>
               </div>
             )}
           </div>
@@ -296,25 +298,25 @@ const MangaVoicePage: React.FC = () => {
                     <Mic className="w-64 h-64 text-orange-500" />
                 </div>
                 <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3">
-                    <Sparkles className="w-5 h-5 text-orange-600 dark:text-orange-400" /> Guide du Dubbing
+                    <Sparkles className="w-5 h-5 text-orange-600 dark:text-orange-400" /> {t('labs.manga_voice.guide_title', 'Guide du Dubbing')}
                 </h4>
                 <div className="space-y-4 relative z-10">
                     <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
-                        <span className="text-orange-600 dark:text-orange-400">Le Casting :</span> Choisissez un doubleur dans le catalogue (filtrable par langue JP/FR) ou chargez votre propre extrait WAV/MP3 comme voix de référence.
+                        <span className="text-orange-600 dark:text-orange-400">{t('labs.manga_voice.guide_casting_title', 'Le Casting :')}</span> {t('labs.manga_voice.guide_casting_desc', 'Choisissez un doubleur dans le catalogue (filtrable par langue JP/FR) ou chargez votre propre extrait WAV/MP3 comme voix de référence.')}
                     </p>
                     <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
-                        <span className="text-orange-600 dark:text-orange-400">Le Script :</span> Écrivez la réplique que le personnage doit dire, puis lancez la génération : la voix choisie prononce votre texte.
+                        <span className="text-orange-600 dark:text-orange-400">{t('labs.manga_voice.guide_script_title', 'Le Script :')}</span> {t('labs.manga_voice.guide_script_desc', 'Écrivez la réplique que le personnage doit dire, puis lancez la génération : la voix choisie prononce votre texte.')}
                     </p>
                     <p className="text-xs font-bold uppercase tracking-wider text-black/60 dark:text-white/60 leading-relaxed">
-                        <span className="text-orange-600 dark:text-orange-400">Le Résultat :</span> Écoutez le doublage dans le lecteur intégré : idéal pour donner de la voix à une planche de manga ou tester un casting.
+                        <span className="text-orange-600 dark:text-orange-400">{t('labs.manga_voice.guide_result_title', 'Le Résultat :')}</span> {t('labs.manga_voice.guide_result_desc', 'Écoutez le doublage dans le lecteur intégré : idéal pour donner de la voix à une planche de manga ou tester un casting.')}
                     </p>
                 </div>
             </Card>
 
             <div className="p-12 rounded-[4rem] bg-gradient-to-br from-orange-600/10 to-transparent border border-black/5 dark:border-white/5 flex flex-col justify-center text-center">
                 <p className="text-sm font-black uppercase tracking-[0.15em] italic leading-relaxed text-orange-800/70 dark:text-orange-200/60">
-                    Clonage vocal zero-shot : le texte et un échantillon audio de référence sont envoyés à l'endpoint manga-voice, qui conditionne la synthèse vocale sur ce timbre sans entraînement préalable. <br />
-                    Les profils du catalogue fournissent l'échantillon automatiquement ; la sortie est affinée via conversion RVC v2.
+                    {t('labs.manga_voice.guide_footer_1', "Clonage vocal zero-shot : le texte et un échantillon audio de référence sont envoyés à l'endpoint manga-voice, qui conditionne la synthèse vocale sur ce timbre sans entraînement préalable.")} <br />
+                    {t('labs.manga_voice.guide_footer_2', 'Les profils du catalogue fournissent l\'échantillon automatiquement ; la sortie est affinée via conversion RVC v2.')}
                 </p>
             </div>
         </div>

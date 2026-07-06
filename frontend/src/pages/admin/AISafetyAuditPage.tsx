@@ -18,6 +18,7 @@ import { Button } from "../../components/ui/Button";
 import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 interface AISafetyEvent {
   id: number;
@@ -32,6 +33,7 @@ interface AISafetyEvent {
 }
 
 const AISafetyAuditPage: React.FC = () => {
+  const { t } = useTranslation();
   const [selectedEvent, setSelectedEvent] = useState<AISafetyEvent | null>(null);
 
   const { data: events, isLoading, refetch } = useQuery<AISafetyEvent[]>({
@@ -62,7 +64,7 @@ const AISafetyAuditPage: React.FC = () => {
                   <h1 className="text-6xl font-black italic manga-font tracking-tighter uppercase mb-2">
                       SAFETY <span className="text-red-500 text-glow">AUDIT</span>
                   </h1>
-                  <p className="text-lg font-bold opacity-30 uppercase tracking-[0.3em]">Surveillance des Guardrails et Détection de Menaces.</p>
+                  <p className="text-lg font-bold opacity-30 uppercase tracking-[0.3em]">{t('admin.safety.subtitle', 'Surveillance des Guardrails et Détection de Menaces.')}</p>
               </div>
               <Button 
                 onClick={() => refetch()} 
@@ -102,7 +104,7 @@ const AISafetyAuditPage: React.FC = () => {
                                       }}
                                       role="button"
                                       tabIndex={0}
-                                      aria-label={`Détails de l'événement ${event.id}`}
+                                      aria-label={t('admin.safety.event_details_aria', 'Détails de l\'événement {{id}}', { id: event.id })}
                                       className={`p-8 border-b border-black/5 dark:border-white/5 transition-all cursor-pointer group flex items-start gap-6 ${selectedEvent?.id === event.id ? 'bg-red-500/[0.03] dark:bg-red-500/[0.05]' : 'hover:bg-gray-50 dark:hover:bg-white/[0.02]'}`}
                                   >
                                       <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border ${getActionColor(event.action)} shadow-lg shadow-current/10`}>

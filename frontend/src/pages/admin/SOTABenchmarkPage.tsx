@@ -14,10 +14,12 @@ import { apiClient } from "../../utils/apiClient";
 import { Card } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
+import { useTranslation } from 'react-i18next';
 
 import { BenchmarkData, ModelBenchmark } from '../../types';
 
 const SOTABenchmarkPage: React.FC = () => {
+  const { t } = useTranslation();
   const { data, isLoading, isError } = useQuery<BenchmarkData>({
     queryKey: ['sota-benchmarks'],
     queryFn: () => apiClient('/api/v1/mlops/sota/benchmarks/'),
@@ -33,7 +35,7 @@ const SOTABenchmarkPage: React.FC = () => {
   if (isError || !data) return (
     <div className="max-w-7xl mx-auto px-6 py-32 text-center text-red-500">
         <h2 className="text-3xl font-black italic uppercase">Sync Failure</h2>
-        <p className="opacity-50 mt-4">Impossible de récupérer les benchmarks en temps réel.</p>
+        <p className="opacity-50 mt-4">{t('admin.sota.sync_error', 'Impossible de récupérer les benchmarks en temps réel.')}</p>
     </div>
   );
 
@@ -54,7 +56,7 @@ const SOTABenchmarkPage: React.FC = () => {
                   SOTA <span className="text-blue-500 text-glow">BENCHMARK</span>
               </h1>
               <p className="text-xl font-bold opacity-30 uppercase tracking-[0.3em] max-w-2xl leading-relaxed">
-                  Suivi en temps réel de la domination algorithmique et des capacités cognitives des modèles IA.
+                  {t('admin.sota.subtitle', 'Suivi en temps réel de la domination algorithmique et des capacités cognitives des modèles IA.')}
               </p>
           </header>
 
@@ -173,18 +175,18 @@ const SOTABenchmarkPage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-black dark:text-white">
               <Card padding="lg" className="bg-white dark:bg-[#0f0f1a] border-none shadow-xl">
                   <Activity className="w-8 h-8 text-blue-500 mb-4" />
-                  <h4 className="text-xs font-black uppercase tracking-widest mb-2">Domination Anthropic</h4>
-                  <p className="text-[10px] font-bold opacity-30 uppercase leading-relaxed">Claude 3.5 Sonnet maintient un ratio de préférence utilisateur exceptionnel dans le domaine de la génération de code et du raisonnement complexe.</p>
+                  <h4 className="text-xs font-black uppercase tracking-widest mb-2">{t('admin.sota.footer_anthropic_title', 'Domination Anthropic')}</h4>
+                  <p className="text-[10px] font-bold opacity-30 uppercase leading-relaxed">{t('admin.sota.footer_anthropic_desc', 'Claude 3.5 Sonnet maintient un ratio de préférence utilisateur exceptionnel dans le domaine de la génération de code et du raisonnement complexe.')}</p>
               </Card>
               <Card padding="lg" className="bg-white dark:bg-[#0f0f1a] border-none shadow-xl">
                   <Cpu className="w-8 h-8 text-purple-500 mb-4" />
-                  <h4 className="text-xs font-black uppercase tracking-widest mb-2">Scaling Laws</h4>
-                  <p className="text-[10px] font-bold opacity-30 uppercase leading-relaxed">Llama-3.1-405B redéfinit la limite supérieure des modèles Open Weights, égalant les performances des solutions propriétaires fermées.</p>
+                  <h4 className="text-xs font-black uppercase tracking-widest mb-2">{t('admin.sota.footer_scaling_title', 'Scaling Laws')}</h4>
+                  <p className="text-[10px] font-bold opacity-30 uppercase leading-relaxed">{t('admin.sota.footer_scaling_desc', 'Llama-3.1-405B redéfinit la limite supérieure des modèles Open Weights, égalant les performances des solutions propriétaires fermées.')}</p>
               </Card>
               <Card padding="lg" className="bg-white dark:bg-[#0f0f1a] border-none shadow-xl">
                   <Sparkles className="w-8 h-8 text-yellow-500 mb-4" />
-                  <h4 className="text-xs font-black uppercase tracking-widest mb-2">Animetix Multi-Model</h4>
-                  <p className="text-[10px] font-bold opacity-30 uppercase leading-relaxed">Le backend Animetix route dynamiquement vos requêtes vers les modèles du Top 3 pour garantir une précision sémantique maximale.</p>
+                  <h4 className="text-xs font-black uppercase tracking-widest mb-2">{t('admin.sota.footer_multimodel_title', 'Animetix Multi-Model')}</h4>
+                  <p className="text-[10px] font-bold opacity-30 uppercase leading-relaxed">{t('admin.sota.footer_multimodel_desc', 'Le backend Animetix route dynamiquement vos requêtes vers les modèles du Top 3 pour garantir une précision sémantique maximale.')}</p>
               </Card>
           </div>
         </div>

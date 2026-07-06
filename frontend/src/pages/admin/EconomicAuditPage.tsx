@@ -20,6 +20,7 @@ import { Card } from "../../components/ui/Card";
 import { Badge } from "../../components/ui/Badge";
 import { Button } from "../../components/ui/Button";
 import { AnimatedPage } from "../../components/ui/AnimatedPage";
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 
 interface EconomicData {
@@ -38,6 +39,7 @@ interface EconomicData {
 }
 
 const EconomicAuditPage: React.FC = () => {
+  const { t } = useTranslation();
   const { data, isLoading } = useQuery<EconomicData>({
     queryKey: ['admin', 'economics'],
     queryFn: () => apiClient('/api/v1/admin/economics/')
@@ -58,7 +60,7 @@ const EconomicAuditPage: React.FC = () => {
                   BERRIX <span className="text-amber-500 text-glow">ECONOMY</span>
               </h1>
               <p className="text-xl font-bold opacity-30 uppercase tracking-[0.3em] max-w-2xl leading-relaxed">
-                  Surveillance de la masse monétaire, de l'inflation et de la vélocité des jetons.
+                  {t('admin.economics.subtitle', 'Surveillance de la masse monétaire, de l\'inflation et de la vélocité des jetons.')}
               </p>
           </header>
 
@@ -70,32 +72,32 @@ const EconomicAuditPage: React.FC = () => {
                   {/* Top Metrics Grid */}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                       <EconomicMetricCard 
-                        label="Masse Monétaire" 
+                        label={t('admin.economics.currency_supply', 'Masse Monétaire')} 
                         value={`${data.total_circulation.toLocaleString()} Bx`} 
                         icon={Database} 
                         color="text-amber-500"
-                        desc="Total en circulation"
+                        desc={t('admin.economics.total_circulation', 'Total en circulation')}
                       />
                       <EconomicMetricCard 
-                        label="Solde Moyen" 
+                        label={t('admin.economics.avg_balance', 'Solde Moyen')} 
                         value={`${data.avg_balance.toLocaleString()} Bx`} 
                         icon={Scale} 
                         color="text-blue-500"
-                        desc="Par profil actif"
+                        desc={t('admin.economics.per_active_profile', 'Par profil actif')}
                       />
                       <EconomicMetricCard 
-                        label="Flux Net (24h)" 
+                        label={t('admin.economics.net_flux_24h', 'Flux Net (24h)')} 
                         value={`${data.flux_24h.net > 0 ? '+' : ''}${data.flux_24h.net.toLocaleString()} Bx`} 
                         icon={data.flux_24h.net >= 0 ? TrendingUp : TrendingDown} 
                         color={data.flux_24h.net >= 0 ? "text-emerald-500" : "text-red-500"}
-                        desc="Mint vs Burn"
+                        desc={t('admin.economics.mint_vs_burn', 'Mint vs Burn')}
                       />
                       <EconomicMetricCard 
-                        label="Inflation Index" 
+                        label={t('admin.economics.inflation_index', 'Inflation Index')} 
                         value={data.inflation_index.toFixed(2)} 
                         icon={Activity} 
                         color={data.status === 'Stable' ? "text-emerald-500" : "text-amber-500"}
-                        desc={`Status: ${data.status.toUpperCase()}`}
+                        desc={`${t('common.status', 'Statut')}: ${data.status.toUpperCase()}`}
                       />
                   </div>
 
@@ -110,7 +112,7 @@ const EconomicAuditPage: React.FC = () => {
                               </div>
                               
                               <h3 className="text-xs font-black uppercase tracking-widest flex items-center gap-2 opacity-40 mb-10">
-                                  <TrendingUp className="w-4 h-4 text-amber-500" /> Répartition des Flux Historiques
+                                  <TrendingUp className="w-4 h-4 text-amber-500" /> {t('admin.economics.historical_flux_repartition', 'Répartition des Flux Historiques')}
                               </h3>
 
                               <div className="space-y-6 relative z-10">
@@ -140,7 +142,13 @@ const EconomicAuditPage: React.FC = () => {
                                   <ShieldCheck className="w-12 h-12 mb-8 opacity-40" />
                                   <h3 className="text-3xl font-black italic manga-font uppercase mb-4 leading-tight">Berrix Policy Engine</h3>
                                   <p className="text-sm font-bold italic opacity-90 leading-relaxed uppercase">
-                                      Le taux d'inflation actuel ({data.inflation_index}) indique un écosystème {data.status.toLowerCase()}. {data.inflation_index > 1.5 ? "Attention : Sur-émission de tokens détectée via le minage passif." : "L'équilibre entre la consommation IA et les revenus publicitaires est maintenu."}
+                                       {t('admin.economics.policy_engine_desc', 'Le taux d\'inflation actuel ({{inflation}}) indique un écosystème {{status}}. {{detail}}', {
+                                           inflation: data.inflation_index,
+                                           status: data.status.toLowerCase(),
+                                           detail: data.inflation_index > 1.5 
+                                               ? t('admin.economics.overissue_warning', 'Attention : Sur-émission de tokens détectée via le minage passif.') 
+                                               : t('admin.economics.equilibrium_message', 'L\'équilibre entre la consommation IA et les revenus publicitaires est maintenu.')
+                                       })}
                                   </p>
                               </div>
                               <div className="mt-8 flex justify-between items-center text-[10px] font-black uppercase tracking-widest opacity-60">
@@ -154,7 +162,7 @@ const EconomicAuditPage: React.FC = () => {
                       <div className="lg:col-span-5 space-y-8">
                           <Card padding="lg" className="bg-white dark:bg-navy-950 border-none shadow-2xl rounded-[3rem] h-full">
                               <h3 className="text-xs font-black uppercase tracking-widest flex items-center gap-2 opacity-40 mb-10">
-                                  <Zap className="w-4 h-4 text-amber-500" /> Flux 24h (Live)
+                                  <Zap className="w-4 h-4 text-amber-500" /> {t('admin.economics.flux_24h_live', 'Flux 24h (Live)')}
                               </h3>
 
                               <div className="space-y-12">
@@ -181,11 +189,11 @@ const EconomicAuditPage: React.FC = () => {
                                   <div className="pt-12 border-t border-black/5 dark:border-white/5">
                                       <div className="p-8 bg-gray-50 dark:bg-white/[0.03] rounded-[2.5rem] border border-black/5 dark:border-white/5">
                                           <div className="flex justify-between items-center mb-4">
-                                              <span className="text-[10px] font-black uppercase tracking-widest opacity-30">Plafond de Richesse</span>
+                                              <span className="text-[10px] font-black uppercase tracking-widest opacity-30">{t('admin.economics.wealth_ceiling', 'Plafond de Richesse')}</span>
                                               <Badge variant="neutral" className="bg-amber-500/10 text-amber-600 dark:text-amber-500 border-none text-[8px] font-black italic">TOP_WHALE</Badge>
                                           </div>
                                           <p className="text-2xl font-black italic manga-font">{data.max_balance.toLocaleString()} Bx</p>
-                                          <p className="text-[8px] font-bold opacity-30 uppercase mt-2">Plus gros portefeuille de l'écosystème</p>
+                                          <p className="text-[8px] font-bold opacity-30 uppercase mt-2">{t('admin.economics.largest_wallet', 'Plus gros portefeuille de l\'écosystème')}</p>
                                       </div>
                                   </div>
                               </div>
@@ -200,18 +208,18 @@ const EconomicAuditPage: React.FC = () => {
                           <Info className="w-10 h-10 text-amber-500" />
                       </div>
                       <div className="flex-grow">
-                          <h4 className="text-xl font-black italic manga-font uppercase mb-2">Note sur la Valeur Intrinsèque</h4>
+                          <h4 className="text-xl font-black italic manga-font uppercase mb-2">{t('admin.economics.intrinsic_value_note', 'Note sur la Valeur Intrinsèque')}</h4>
                           <p className="text-[10px] font-bold opacity-40 uppercase leading-relaxed max-w-3xl">
-                              Le Berrix (Bx) est un jeton utilitaire de plateforme sans valeur monétaire externe. Les flux macro-économiques sont ajustés via les algorithmes de la Power Station pour garantir l'accès gratuit aux services IA via le visionnage publicitaire.
+                              {t('admin.economics.intrinsic_value_desc', 'Le Berrix (Bx) est un jeton utilitaire de plateforme sans valeur monétaire externe. Les flux macro-économiques sont ajustés via les algorithmes de la Power Station pour garantir l\'accès gratuit aux services IA via le visionnage publicitaire.')}
                           </p>
                       </div>
                       <Button variant="outline" className="border-white/10 text-[10px] font-black uppercase tracking-widest whitespace-nowrap px-8 py-4 hover:bg-white/5 transition-all">
-                          Ajuster Monetary Policy
+                          {t('admin.economics.adjust_monetary_policy', 'Ajuster Monetary Policy')}
                       </Button>
                   </div>
               </div>
           ) : (
-              <div className="py-32 text-center opacity-20">Erreur de chargement des données.</div>
+              <div className="py-32 text-center opacity-20">{t('admin.economics.load_error', 'Erreur de chargement des données.')}</div>
           )}
 
         </div>

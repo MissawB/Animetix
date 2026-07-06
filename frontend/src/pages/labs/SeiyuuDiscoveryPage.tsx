@@ -17,6 +17,7 @@ import {
   Database,
 } from 'lucide-react';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { apiClient } from "../../utils/apiClient";
 import { Card } from "../../components/ui/Card";
 import { Button } from "../../components/ui/Button";
@@ -43,6 +44,7 @@ interface SeiyuuApiResponse {
 }
 
 const SeiyuuDiscoveryPage: React.FC = () => {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [langFilter, setLangFilter] = useState<string>('');
   const [originFilter, setOriginFilter] = useState<string>('');
@@ -103,7 +105,7 @@ const SeiyuuDiscoveryPage: React.FC = () => {
         body: JSON.stringify(payload),
       }),
     onSuccess: (response) => {
-      setIngestSuccess(`La voix de '${response.profile.name}' a été ingérée et nettoyée avec succès !`);
+      setIngestSuccess(t('labs.seiyuu.ingest_success', "La voix de '{{name}}' a été ingérée et nettoyée avec succès !", { name: response.profile.name }));
       setIngestName('');
       setIngestSource('');
       setIngestDef('');
@@ -118,7 +120,7 @@ const SeiyuuDiscoveryPage: React.FC = () => {
     },
     onError: (err: unknown) => {
       const message = err instanceof Error ? err.message : '';
-      setIngestError(message || "Une erreur est survenue lors du téléchargement ou du traitement audio.");
+      setIngestError(message || t('labs.seiyuu.ingest_error', "Une erreur est survenue lors du téléchargement ou du traitement audio."));
     }
   });
 
@@ -128,7 +130,7 @@ const SeiyuuDiscoveryPage: React.FC = () => {
     setIngestSuccess('');
 
     if (!ingestName || !ingestSource) {
-      setIngestError("Le nom et l'URL/requête YouTube sont obligatoires.");
+      setIngestError(t('labs.seiyuu.ingest_required', "Le nom et l'URL/requête YouTube sont obligatoires."));
       return;
     }
 
@@ -157,7 +159,7 @@ const SeiyuuDiscoveryPage: React.FC = () => {
                 SEIYUU <span className="text-emerald-500 text-glow">DISCOVERY</span>
               </h1>
               <p className="text-xl font-bold opacity-30 uppercase tracking-[0.3em] max-w-2xl leading-relaxed">
-                Explorez les voix cultes (Seiyuus & Doubleurs) et ingérez de nouvelles voix à la volée.
+                {t('labs.seiyuu.subtitle', 'Explorez les voix cultes (Seiyuus & Doubleurs) et ingérez de nouvelles voix à la volée.')}
               </p>
             </div>
             <div>
@@ -165,7 +167,7 @@ const SeiyuuDiscoveryPage: React.FC = () => {
                 onClick={() => setShowIngestForm(!showIngestForm)}
                 className="bg-emerald-600 hover:bg-emerald-500 border-none text-white font-black italic uppercase px-8 py-4 rounded-2xl flex items-center gap-2 shadow-lg hover:shadow-emerald-500/20 hover:scale-105 transition-all"
               >
-                {showIngestForm ? 'Fermer le panel' : <><Plus className="w-5 h-5" /> Ingestion YouTube</>}
+                {showIngestForm ? t('labs.seiyuu.close_panel', 'Fermer le panel') : <><Plus className="w-5 h-5" /> {t('labs.seiyuu.youtube_ingest', 'Ingestion YouTube')}</>}
               </Button>
             </div>
           </header>
@@ -181,16 +183,16 @@ const SeiyuuDiscoveryPage: React.FC = () => {
               >
                 <Card padding="lg" className="bg-[#12121e]/80 border border-emerald-500/20 backdrop-blur-xl rounded-[2.5rem] p-8">
                   <h3 className="text-2xl font-black italic uppercase manga-font flex items-center gap-3 mb-6 text-emerald-400">
-                    <Video className="w-6 h-6 text-red-500" /> Ingestion et extraction vocale
+                    <Video className="w-6 h-6 text-red-500" /> {t('labs.seiyuu.ingest_title', 'Ingestion et extraction vocale')}
                   </h3>
                   <p className="text-xs font-bold opacity-50 uppercase tracking-widest mb-6">
-                    Coût : <span className="text-emerald-400">30 Bx</span> — L'IA télécharge l'audio, isole les fréquences vocales (80Hz - 8000Hz) et découpe un échantillon de 10s sans silence.
+                    {t('labs.seiyuu.ingest_cost_label', 'Coût :')} <span className="text-emerald-400">30 Bx</span> {t('labs.seiyuu.ingest_cost_desc', "— L'IA télécharge l'audio, isole les fréquences vocales (80Hz - 8000Hz) et découpe un échantillon de 10s sans silence.")}
                   </p>
 
                   <form onSubmit={handleIngestSubmit} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label htmlFor="ingest-name" className="text-[10px] font-black uppercase tracking-wider opacity-60">Nom du Doubleur / Seiyuu</label>
+                        <label htmlFor="ingest-name" className="text-[10px] font-black uppercase tracking-wider opacity-60">{t('labs.seiyuu.ingest_name_label', 'Nom du Doubleur / Seiyuu')}</label>
                         <input
                           id="ingest-name"
                           aria-label="Nom du doubleur ou seiyuu"
@@ -202,22 +204,22 @@ const SeiyuuDiscoveryPage: React.FC = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label htmlFor="ingest-lang" className="text-[10px] font-black uppercase tracking-wider opacity-60">Langue / Spécialisation</label>
+                        <label htmlFor="ingest-lang" className="text-[10px] font-black uppercase tracking-wider opacity-60">{t('labs.seiyuu.ingest_lang_label', 'Langue / Spécialisation')}</label>
                         <select
                           id="ingest-lang"
                           value={ingestLang}
                           onChange={(e) => setIngestLang(e.target.value)}
                           className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 font-bold text-sm outline-none focus:border-emerald-500/50 text-white"
                         >
-                          <option value="japanese">Japonais (Seiyuu)</option>
-                          <option value="french">Français (Doubleur)</option>
-                          <option value="other">Autre</option>
+                          <option value="japanese">{t('labs.seiyuu.lang_option_ja', 'Japonais (Seiyuu)')}</option>
+                          <option value="french">{t('labs.seiyuu.lang_option_fr', 'Français (Doubleur)')}</option>
+                          <option value="other">{t('labs.seiyuu.lang_option_other', 'Autre')}</option>
                         </select>
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <label htmlFor="ingest-source" className="text-[10px] font-black uppercase tracking-wider opacity-60">URL YouTube ou requête de recherche</label>
+                      <label htmlFor="ingest-source" className="text-[10px] font-black uppercase tracking-wider opacity-60">{t('labs.seiyuu.ingest_source_label', 'URL YouTube ou requête de recherche')}</label>
                       <input
                         id="ingest-source"
                         aria-label="URL YouTube ou requête de recherche"
@@ -231,7 +233,7 @@ const SeiyuuDiscoveryPage: React.FC = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label htmlFor="ingest-def" className="text-[10px] font-black uppercase tracking-wider opacity-60">Définition / Description (optionnel)</label>
+                        <label htmlFor="ingest-def" className="text-[10px] font-black uppercase tracking-wider opacity-60">{t('labs.seiyuu.ingest_def_label', 'Définition / Description (optionnel)')}</label>
                         <textarea
                           id="ingest-def"
                           aria-label="Définition ou description du doubleur"
@@ -242,7 +244,7 @@ const SeiyuuDiscoveryPage: React.FC = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label htmlFor="ingest-roles" className="text-[10px] font-black uppercase tracking-wider opacity-60">Iconic Roles (séparés par des virgules)</label>
+                        <label htmlFor="ingest-roles" className="text-[10px] font-black uppercase tracking-wider opacity-60">{t('labs.seiyuu.ingest_roles_label', 'Iconic Roles (séparés par des virgules)')}</label>
                         <textarea
                           id="ingest-roles"
                           aria-label="Rôles emblématiques (séparés par des virgules)"
@@ -272,7 +274,7 @@ const SeiyuuDiscoveryPage: React.FC = () => {
                         variant="ghost"
                         onClick={() => setShowIngestForm(false)}
                       >
-                        Annuler
+                        {t('common.cancel', 'Annuler')}
                       </Button>
                       <Button
                         type="submit"
@@ -281,10 +283,10 @@ const SeiyuuDiscoveryPage: React.FC = () => {
                       >
                         {ingestMutation.isPending ? (
                           <>
-                            <Loader2 className="w-4 h-4 animate-spin" /> Ingestion en cours...
+                            <Loader2 className="w-4 h-4 animate-spin" /> {t('labs.seiyuu.ingestion_in_progress', 'Ingestion en cours...')}
                           </>
                         ) : (
-                          'Lancer l\'ingestion'
+                          t('labs.seiyuu.start_ingestion', "Lancer l'ingestion")
                         )}
                       </Button>
                     </div>
@@ -300,10 +302,10 @@ const SeiyuuDiscoveryPage: React.FC = () => {
               <div className="absolute inset-0 bg-emerald-500/20 blur-3xl opacity-0 group-focus-within:opacity-100 transition-opacity -z-10" />
               <input
                 type="text"
-                aria-label="Chercher par nom de doubleur ou de personnage"
+                aria-label={t('labs.seiyuu.search_placeholder', 'Chercher par nom de doubleur ou de personnage')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Chercher par nom de doubleur ou nom de personnage..."
+                placeholder={t('labs.seiyuu.search_placeholder', 'Chercher par nom de doubleur ou nom de personnage...')}
                 className="w-full bg-black/40 backdrop-blur-xl border-2 border-white/5 focus:border-emerald-500/50 rounded-[2.5rem] px-10 py-8 text-xl font-bold outline-none transition-all text-white placeholder:text-white/10"
               />
               <div className="absolute right-4 top-1/2 -translate-y-1/2 flex gap-4">
@@ -312,7 +314,7 @@ const SeiyuuDiscoveryPage: React.FC = () => {
                   disabled={isLoading || isRefetching}
                   className="bg-emerald-600 hover:bg-emerald-500 text-white px-10 py-5 rounded-2xl font-black italic uppercase shadow-xl transition-all border-none flex items-center gap-3"
                 >
-                  {isLoading || isRefetching ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Search className="w-5 h-5" /> RECHERCHER</>}
+                  {isLoading || isRefetching ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Search className="w-5 h-5" /> {t('labs.seiyuu.btn_search', 'RECHERCHER')}</>}
                 </Button>
               </div>
             </form>
@@ -321,13 +323,13 @@ const SeiyuuDiscoveryPage: React.FC = () => {
             <div className="flex flex-wrap items-center justify-between gap-6 px-4">
               <div className="flex flex-wrap gap-4 items-center">
                 <span className="text-[9px] font-black uppercase tracking-widest text-white/30 flex items-center gap-1">
-                  <Globe className="w-3 h-3" /> Langue:
+                  <Globe className="w-3 h-3" /> {t('labs.seiyuu.filter_lang', 'Langue:')}
                 </span>
                 <div className="flex gap-2">
                   {[
-                    { label: 'Tous', value: '' },
-                    { label: 'Japonais (Seiyuu)', value: 'japanese' },
-                    { label: 'Français (Doubleur)', value: 'french' },
+                    { label: t('labs.seiyuu.filter_all', 'Tous'), value: '' },
+                    { label: t('labs.seiyuu.lang_option_ja', 'Japonais (Seiyuu)'), value: 'japanese' },
+                    { label: t('labs.seiyuu.lang_option_fr', 'Français (Doubleur)'), value: 'french' },
                   ].map(opt => (
                     <button
                       key={opt.value}
@@ -346,13 +348,13 @@ const SeiyuuDiscoveryPage: React.FC = () => {
 
               <div className="flex flex-wrap gap-4 items-center">
                 <span className="text-[9px] font-black uppercase tracking-widest text-white/30 flex items-center gap-1">
-                  <Database className="w-3 h-3" /> Origine:
+                  <Database className="w-3 h-3" /> {t('labs.seiyuu.filter_origin', 'Origine:')}
                 </span>
                 <div className="flex gap-2">
                   {[
-                    { label: 'Tous', value: '' },
-                    { label: 'Dataset HF', value: 'dataset' },
-                    { label: 'YouTube Ingest', value: 'youtube' },
+                    { label: t('labs.seiyuu.filter_all', 'Tous'), value: '' },
+                    { label: t('labs.seiyuu.origin_dataset', 'Dataset HF'), value: 'dataset' },
+                    { label: t('labs.seiyuu.origin_youtube', 'YouTube Ingest'), value: 'youtube' },
                   ].map(opt => (
                     <button
                       key={opt.value}
@@ -406,7 +408,7 @@ const SeiyuuDiscoveryPage: React.FC = () => {
                                 </h3>
                                 <div className="flex gap-2 items-center">
                                   <Badge variant="neutral" className="bg-emerald-500/10 text-emerald-400 border-none text-[8px] italic font-black uppercase tracking-widest">
-                                    {seiyuu.origin === 'dataset' ? 'Dataset Hugging Face' : seiyuu.origin === 'youtube' ? 'Ingestion YouTube' : 'Manuel'}
+                                    {seiyuu.origin === 'dataset' ? t('labs.seiyuu.origin_dataset_full', 'Dataset Hugging Face') : seiyuu.origin === 'youtube' ? t('labs.seiyuu.origin_youtube_full', 'Ingestion YouTube') : t('labs.seiyuu.origin_manual', 'Manuel')}
                                   </Badge>
                                 </div>
                               </div>
@@ -430,7 +432,7 @@ const SeiyuuDiscoveryPage: React.FC = () => {
                             </header>
 
                             <p className="text-sm font-medium text-white/40 leading-relaxed italic">
-                              "{seiyuu.definition || 'Pas de description supplémentaire pour cette voix.'}"
+                              "{seiyuu.definition || t('labs.seiyuu.no_desc', 'Pas de description supplémentaire pour cette voix.')}"
                             </p>
 
                             {seiyuu.roles && (
@@ -460,7 +462,7 @@ const SeiyuuDiscoveryPage: React.FC = () => {
                                   rel="noopener noreferrer"
                                   className="text-[9px] font-black uppercase tracking-widest text-white/30 hover:text-emerald-400 transition-colors flex items-center gap-1"
                                 >
-                                  Source Originale <ChevronRight className="w-3 h-3" />
+                                  {t('labs.seiyuu.original_source', 'Source Originale')} <ChevronRight className="w-3 h-3" />
                                 </a>
                               )}
                             </div>
@@ -477,8 +479,8 @@ const SeiyuuDiscoveryPage: React.FC = () => {
                   className="py-32 text-center border-4 border-dashed border-white/5 rounded-[4rem]"
                 >
                   <Info className="w-20 h-24 mx-auto mb-8 text-white/10" />
-                  <h3 className="text-4xl font-black italic uppercase manga-font text-white/20">Aucun profil trouvé</h3>
-                  <p className="text-sm font-bold uppercase tracking-[0.4em] text-white/10">Essayez de lancer une ingestion depuis YouTube !</p>
+                  <h3 className="text-4xl font-black italic uppercase manga-font text-white/20">{t('labs.seiyuu.no_profile_found', 'Aucun profil trouvé')}</h3>
+                  <p className="text-sm font-bold uppercase tracking-[0.4em] text-white/10">{t('labs.seiyuu.try_youtube_ingest', 'Essayez de lancer une ingestion depuis YouTube !')}</p>
                 </motion.div>
               ) : !isLoading && !isRefetching && (
                 <div className="py-32 text-center opacity-10 flex flex-col items-center border-4 border-dashed border-white/5 rounded-[4rem]">
@@ -497,25 +499,25 @@ const SeiyuuDiscoveryPage: React.FC = () => {
                       <Mic2 className="w-64 h-64 text-emerald-500" />
                   </div>
                   <h4 className="text-xl font-black italic manga-font uppercase mb-4 flex items-center gap-3">
-                      <Sparkles className="w-5 h-5 text-emerald-400" /> Guide des Voix
+                      <Sparkles className="w-5 h-5 text-emerald-400" /> {t('labs.seiyuu.guide_title', 'Guide des Voix')}
                   </h4>
                   <div className="space-y-4 relative z-10">
                       <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                          <span className="text-emerald-400">La Recherche :</span> Tapez le nom d'un doubleur ou d'un personnage, puis filtrez par langue (japonais, français) et par origine du profil.
+                          <span className="text-emerald-400">{t('labs.seiyuu.guide_search_title', 'La Recherche :')}</span> {t('labs.seiyuu.guide_search_desc', "Tapez le nom d'un doubleur ou d'un personnage, puis filtrez par langue (japonais, français) et par origine du profil.")}
                       </p>
                       <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                          <span className="text-emerald-400">L'Écoute :</span> Chaque profil contient un échantillon audio. Appuyez sur Play pour vérifier instantanément la signature vocale.
+                          <span className="text-emerald-400">{t('labs.seiyuu.guide_listen_title', 'L\'Écoute :')}</span> {t('labs.seiyuu.guide_listen_desc', "Chaque profil contient un échantillon audio. Appuyez sur Play pour vérifier instantanément la signature vocale.")}
                       </p>
                       <p className="text-xs font-bold uppercase tracking-wider text-white/60 leading-relaxed">
-                          <span className="text-emerald-400">L'Ingestion :</span> Ajoutez une nouvelle voix depuis une vidéo YouTube (30 Bx). L'IA extrait, nettoie et indexe l'échantillon pour vous.
+                          <span className="text-emerald-400">{t('labs.seiyuu.guide_ingest_title', 'L\'Ingestion :')}</span> {t('labs.seiyuu.guide_ingest_desc', "Ajoutez une nouvelle voix depuis une vidéo YouTube (30 Bx). L'IA extrait, nettoie et indexe l'échantillon pour vous.")}
                       </p>
                   </div>
               </Card>
 
               <div className="p-12 rounded-[4rem] bg-gradient-to-br from-emerald-600/10 to-transparent border border-white/5 flex flex-col justify-center text-center">
                   <p className="text-sm font-black uppercase tracking-[0.15em] italic leading-relaxed text-emerald-200/60">
-                      Le catalogue combine un dataset Hugging Face et des voix ingérées depuis YouTube, indexées avec langue, rôles et description. <br />
-                      Le pipeline d'ingestion télécharge l'audio, isole la bande vocale (80 Hz – 8 000 Hz) et découpe un échantillon de 10 s sans silence.
+                      {t('labs.seiyuu.guide_footer_1', "Le catalogue combine un dataset Hugging Face et des voix ingérées depuis YouTube, indexées avec langue, rôles et description.")} <br />
+                      {t('labs.seiyuu.guide_footer_2', "Le pipeline d'ingestion télécharge l'audio, isole la bande vocale (80 Hz – 8 000 Hz) et découpe un échantillon de 10 s sans silence.")}
                   </p>
               </div>
           </div>
