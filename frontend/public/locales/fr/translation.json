@@ -682,6 +682,8 @@
       "anomaly": "Anomalie Détectée",
       "confirm_victory": "CONFIRMER LA VICTOIRE",
       "dont_know": "Je ne sais pas",
+      "game_over": "Analyse terminée : C'est un(e) {{guess}} ?",
+      "history": "Historique de transmission",
       "its_right": "C'EST BIEN ÇA !",
       "journal": "Journal d'Analyse",
       "lobby": {
@@ -742,6 +744,7 @@
       "tagline": "L'IA peut-elle lire dans vos pensées ?",
       "target_aria": "Nom exact du personnage",
       "target_placeholder": "Nom exact du personnage...",
+      "title": "Akinetix : Le Devin",
       "who_really": "À qui pensiez-vous réellement ?"
     },
     "animinator": {
@@ -1854,13 +1857,9 @@
       "explainer_text_card1": "Cette arène oppose deux IA dans un débat structuré, testant leurs compétences en raisonnement dialectique et en argumentation sur un sujet donné. Observez comment elles construisent et défendent leurs arguments.",
       "explainer_text_card2": "En analysant la dynamique du débat, vous pouvez obtenir des aperçus de la logique de l'IA, identifier les biais et comprendre les nuances des arguments générés par la machine, améliorant ainsi votre propre pensée critique.",
       "explainer_title": "À propos de l'Arène de Débat IA",
+      "protocol_text": "Protocole de débat : Deux LLM spécialisés engagent un dialogue multi-tours, générant des arguments, des contre-arguments et des réfutations, avec un troisième LLM agissant en tant que modérateur et agent de notation.",
       "subtitle": "Raisonnement Dialectique & Argumentation",
       "title": "Arène de Débat IA"
-    },
-    "akinetix": {
-      "game_over": "Analyse terminée : C'est un(e) {{guess}} ?",
-      "history": "Historique de transmission",
-      "title": "Akinetix : Le Devin"
     },
     "audio": {
       "cloning": "Clonage Vocal IA",
